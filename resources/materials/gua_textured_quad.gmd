@@ -1,0 +1,8 @@
+
+{
+	"shading_model" : "gua_textured_quad",
+	"uniforms" : 
+	{
+		"texture" : "gua_default_texture"
+	}
+}

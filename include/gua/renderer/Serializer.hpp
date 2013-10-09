@@ -1,0 +1,179 @@
+/******************************************************************************
+ * guacamole - delicious VR                                                   *
+ *                                                                            *
+ * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
+ * Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
+ *                                                                            *
+ * This program is free software: you can redistribute it and/or modify it    *
+ * under the terms of the GNU General Public License as published by the Free *
+ * Software Foundation, either version 3 of the License, or (at your option)  *
+ * any later version.                                                         *
+ *                                                                            *
+ * This program is distributed in the hope that it will be useful, but        *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY *
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License   *
+ * for more details.                                                          *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License along    *
+ * with this program. If not, see <http://www.gnu.org/licenses/>.             *
+ *                                                                            *
+ ******************************************************************************/
+
+#ifndef GUA_SERIALIZER_HPP
+#define GUA_SERIALIZER_HPP
+
+#include <stack>
+
+// guacamole headers
+#include <gua/renderer/SerializedScene.hpp>
+#include <gua/renderer/Camera.hpp>
+#include <gua/renderer/Frustum.hpp>
+#include <gua/renderer/enums.hpp>
+#include <gua/utils/Mask.hpp>
+#include <gua/scenegraph/NodeVisitor.hpp>
+
+namespace gua {
+
+class SceneGraph;
+
+/**
+ * This class is used to convert the scengraph to a (opimized) sequence.
+ *
+ * It serializes the scene graph.
+ */
+class Serializer : public NodeVisitor {
+ public:
+
+  /**
+   * Constructor.
+   *
+   * This constructs an Serializer.
+   */
+  Serializer();
+
+  /**
+   * Takes the Scengraph and processes geometry, light and camera
+   *        lists.
+   *
+   * \param scene_graph          The SceneGraph to be processed.
+   * \param render_mask          The mask to be applied to the nodes of
+   *                             the graph.
+   */
+  void check(SerializedScene* output,
+             SceneGraph const* scene_graph,
+             Camera const& camera,
+             Frustum const& frustum,
+             bool draw_bounding_boxes,
+             bool draw_rays,
+             bool enable_frustum_culling);
+
+  /**
+   * Visits a GroupNode
+   *
+   * This function provides the interface to visit a GroupNode
+   *
+   * \param cam   Pointer to GroupNode
+   */
+  /* virtual */ void visit(GroupNode* cam);
+
+  /**
+   * Visits a ViewNode
+   *
+   * This function provides the interface to visit a ViewNode
+   *
+   * \param cam   Pointer to ViewNode
+   */
+  /* virtual */ void visit(ViewNode* cam);
+
+  /**
+   * Visits a GeometryNode
+   *
+   * This function provides the interface to visit a GeometryNode
+   *
+   * \param geometry   Pointer to GeometryNode
+   */
+  /* virtual */ void visit(GeometryNode* geometry);
+
+  /**
+   * Visits a PointLightNode
+   *
+   * This function provides the interface to visit a PointLightNode
+   *
+   * \param pointlight   Pointer to PointLightNode
+   */
+  /* virtual */ void visit(PointLightNode* pointlight);
+
+  /**
+   * Visits a ScreenLightNode
+   *
+   * This function provides the interface to visit a ScreenLightNode
+   *
+   * \param screen   Pointer to ScreenLightNode
+   */
+  /* virtual */ void visit(ScreenNode* screen);
+
+  /**
+   * Visits a SpotLightNode
+   *
+   * This function provides the interface to visit a SpotLightNode
+   *
+   * \param spot   Pointer to SpotLightNode
+   */
+  /* virtual */ void visit(SpotLightNode* spot);
+
+  /**
+   * Visits a RayNode
+   *
+   * This function provides the interface to visit a RayNode
+   *
+   * \param spot   Pointer to RayNode
+   */
+  /* virtual */ void visit(RayNode* ray);
+
+  /**
+   * Visits a RigidBodyNode
+   *
+   * This function provides the interface to visit a RigidBodyNode
+   *
+   * \param cam   Pointer to RigidBodyNode
+   */
+  /* virtual */ void visit(physics::RigidBodyNode*) {}
+
+  /**
+   * Visits a CollisionShapeNode
+   *
+   * This function provides the interface to visit a CollisionShapeNode
+   *
+   * \param cam   Pointer to CollisionShapeNode
+   */
+  /* virtual */ void visit(physics::CollisionShapeNode*) {}
+
+  /**
+   * Visits a TexturedQuadNode
+   *
+   * This function provides the interface to visit a TexturedQuadNode
+   *
+   * \param node  Pointer to TexturedQuadNode
+   */
+  /* virtual */ void visit(TexturedQuadNode* node);
+
+ private:
+
+  bool is_visible(Node* node) const;
+  void add_bbox(Node* node) const;
+  void visit_children(Node* node);
+
+  Frustum current_frustum_;
+  Camera current_camera_;
+  Mask current_render_mask_;
+
+  SerializedScene* data_;
+  bool draw_bounding_boxes_;
+  bool draw_rays_;
+  bool enable_frustum_culling_;
+
+};
+
+}
+
+#endif  // GUA_SERIALIZER_HPP

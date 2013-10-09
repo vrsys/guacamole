@@ -1,0 +1,109 @@
+/******************************************************************************
+ * guacamole - delicious VR                                                   *
+ *                                                                            *
+ * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
+ * Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
+ *                                                                            *
+ * This program is free software: you can redistribute it and/or modify it    *
+ * under the terms of the GNU General Public License as published by the Free *
+ * Software Foundation, either version 3 of the License, or (at your option)  *
+ * any later version.                                                         *
+ *                                                                            *
+ * This program is distributed in the hope that it will be useful, but        *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY *
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License   *
+ * for more details.                                                          *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License along    *
+ * with this program. If not, see <http://www.gnu.org/licenses/>.             *
+ *                                                                            *
+ ******************************************************************************/
+
+#ifndef GUA_TRAITS_HPP
+#define GUA_TRAITS_HPP
+
+#include <boost/mpl/assert.hpp>
+
+#include <gua/math/math.hpp>
+
+namespace gua {
+namespace traits {
+
+// vector space meta functions
+
+template <typename T> struct scalar {
+  BOOST_MPL_ASSERT_MSG(false, NOT_IMPLEMENTED_FOR_THIS_VECTOR_TYPE, (types<T>));
+};
+
+template <> struct scalar<float> {
+  typedef float type;
+};
+template <> struct scalar<double> {
+  typedef double type;
+};
+
+template <> struct scalar<long double> {
+  typedef long double type;
+};
+
+template <> struct scalar<math::vec3> {
+  typedef float type;
+};
+
+template <typename T> struct dimension {
+  BOOST_MPL_ASSERT_MSG(false, NOT_IMPLEMENTED_FOR_THIS_VECTOR_TYPE, (types<T>));
+};
+
+template <> struct dimension<float> {
+  static const unsigned int value = 1;
+};
+template <> struct dimension<double> {
+  static const unsigned int value = 1;
+};
+template <> struct dimension<long double> {
+  static const unsigned int value = 1;
+};
+
+template <> struct dimension<math::vec2> {
+  static const unsigned int value = 2;
+};
+
+template <> struct dimension<math::vec3> {
+  static const unsigned int value = 3;
+};
+
+template <> struct dimension<math::vec4> {
+  static const unsigned int value = 4;
+};
+
+// Examples:
+//
+// template<>
+// struct scalar<glm::vec3>
+// {
+//   typedef glm::vec3::value_type type;
+// };
+//
+// template<>
+// struct dimension<glm::vec3>
+// {
+//   static const unsigned int value = 3;
+// };
+//
+// template<T,N>
+// struct scalar< ::scm::math::vec<T, N> >
+// {
+//   typedef typename ::scm::math::vec<T, N>::value_type type;
+// };
+//
+// template<T,N>
+// struct dimension< ::scm::math::vec<T, N> >
+// {
+//   static const unsigned int value = N;
+// };
+
+}
+
+}
+
+#endif  // #ifndef GUA_TRAITS_HPP
