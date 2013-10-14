@@ -45,10 +45,10 @@ void MaterialDatabase::load_materials_from(
     if (parse_string.length() - suffix_pos == 4) {
       auto name(parse_string.substr(0, suffix_pos));
 
-      auto mat(new Material(
-          name, MaterialDescription(dir.get_directory_name() + parse_string)));
+      auto mat = std::make_shared<Material>(
+          name, MaterialDescription(dir.get_directory_name() + parse_string));
 
-      instance()->add(name, std::shared_ptr<Material>(mat));
+      instance()->add(name, mat);
     }
   }
 }
