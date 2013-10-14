@@ -44,9 +44,9 @@ void ShadingModelDatabase::load_shading_models_from(
 
     if (parse_string.length() - suffix_pos == 4) {
       auto name(parse_string.substr(0, suffix_pos));
-      auto mod(new ShadingModel(name, dir.get_directory_name() + parse_string));
+      auto mod = std::make_shared<ShadingModel>(name, dir.get_directory_name() + parse_string);
 
-      instance()->add(name, std::shared_ptr<ShadingModel>(mod));
+      instance()->add(name, mod);
     }
   }
 }
