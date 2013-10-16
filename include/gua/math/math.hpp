@@ -96,7 +96,15 @@ inline math::vec3 get_translation(math::mat4 const& m)
 namespace gua {
 namespace traits {
 
+template <> struct scalar<math::vec2> {
+  typedef float type;
+};
+
 template <> struct scalar<math::vec3> {
+  typedef float type;
+};
+
+template <> struct scalar<math::vec4> {
   typedef float type;
 };
 
@@ -114,6 +122,5 @@ template <> struct dimension<math::vec4> {
 
 }
 }
-
 
 #endif // GUA_MATH_HPP
