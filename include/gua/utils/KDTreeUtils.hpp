@@ -22,6 +22,7 @@
 #ifndef GUA_KD_TREE_UTILS_HPP
 #define GUA_KD_TREE_UTILS_HPP
 
+#include <gua/math/math.hpp>
 #include <gua/math/BoundingBox.hpp>
 
 #include <vector>
