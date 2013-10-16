@@ -2,7 +2,7 @@
 #include <iostream>
 #include <array>
 #include <gua/math/BoundingBox.hpp>
-#include <gua/utils/traits.hpp>
+#include <gua/math/traits.hpp>
 
 namespace {
 struct vec3 {
