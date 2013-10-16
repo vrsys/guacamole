@@ -31,6 +31,8 @@
 #include <assimp/assimp.hpp>
 #endif
 
+#include <gua/utils/traits.hpp>
+
 namespace gua {
 namespace math {
 
@@ -90,5 +92,28 @@ inline math::vec3 get_translation(math::mat4 const& m)
 
 }
 }
+
+namespace gua {
+namespace traits {
+
+template <> struct scalar<math::vec3> {
+  typedef float type;
+};
+
+template <> struct dimension<math::vec2> {
+  static const unsigned int value = 2;
+};
+
+template <> struct dimension<math::vec3> {
+  static const unsigned int value = 3;
+};
+
+template <> struct dimension<math::vec4> {
+  static const unsigned int value = 4;
+};
+
+}
+}
+
 
 #endif // GUA_MATH_HPP
