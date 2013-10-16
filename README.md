@@ -12,7 +12,7 @@ Please report bugs via the
 Authors
 -------
 
-Simon Schneegans
-Felix Lauer
-Andreas Bernstein
-André Schollmeyer
+* Simon Schneegans
+* Felix Lauer
+* Andreas Bernstein
+* André Schollmeyer

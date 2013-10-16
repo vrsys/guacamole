@@ -32,13 +32,8 @@
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
-
 void TextureDatabase::load(std::string const& id) {
-  auto tex = new Texture(id, true);
-  instance()->add(id, std::shared_ptr<Texture>(tex));
+  instance()->add(id, std::make_shared<Texture>(id, true));
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 }
