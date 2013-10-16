@@ -31,7 +31,7 @@
 #include <assimp/assimp.hpp>
 #endif
 
-#include <gua/utils/traits.hpp>
+#include <gua/math/traits.hpp>
 
 namespace gua {
 namespace math {
