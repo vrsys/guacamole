@@ -28,3 +28,4 @@ src/gua/generated/*
 tags
 .nfs*
 .vim.custom
+tests/tests
