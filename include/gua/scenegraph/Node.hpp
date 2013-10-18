@@ -284,7 +284,6 @@ class Node {
   void*     get_user_data(unsigned handle) const;
   unsigned  add_user_data(void* data);
 
-  friend class Iterator;
   friend class SceneGraph;
   friend class GeometryLoader;
   friend class MeshLoader;

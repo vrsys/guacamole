@@ -22,9 +22,6 @@
 #ifndef GUA_INCLUDE_SCENEGRAPH_HPP
 #define GUA_INCLUDE_SCENEGRAPH_HPP
 
-// iterator headers
-#include <gua/scenegraph/Iterator.hpp>
-
 // scenegraph header
 #include <gua/scenegraph/SceneGraph.hpp>
 

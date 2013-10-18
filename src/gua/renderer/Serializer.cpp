@@ -39,7 +39,6 @@
 #include <gua/scenegraph/ScreenNode.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/scenegraph/Iterator.hpp>
 
 // external headers
 #include <stack>
