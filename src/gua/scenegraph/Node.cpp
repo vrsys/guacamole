@@ -159,33 +159,52 @@ math::vec3 Node::get_world_position() const {
 
 void Node::set_transform(math::mat4 const & transform) {
     transform_ = transform;
-
     set_dirty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Node::scale(float s) {
+    scale(s, s, s);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void Node::scale(float x, float y, float z) {
-
     transform_ = scm::math::make_scale(x, y, z) * transform_;
-
     set_dirty();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Node::scale(math::vec3 const& s) {
+    scale(s.x, s.y, s.z);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void Node::rotate(float angle, float x, float y, float z) {
     transform_ = scm::math::make_rotation(angle, x, y, z) * transform_;
-
     set_dirty();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Node::rotate(float angle, math::vec3 const& axis) {
+    rotate(angle, axis.x, axis.y, axis.z);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void Node::translate(float x, float y, float z) {
     transform_ = scm::math::make_translation(x, y, z) * transform_;
-
     set_dirty();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Node::translate(math::vec3 const& offset) {
+    translate(offset.x, offset.y, offset.z);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
