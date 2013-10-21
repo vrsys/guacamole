@@ -245,8 +245,4 @@ std::vector<std::shared_ptr<Texture> > const& GBuffer::get_color_buffers(
     return color_buffers_.find(type)->second;
 }
 
-std::shared_ptr<Texture> const& GBuffer::get_depth_buffer() const {
-    return depth_buffer_;
-}
-
 }

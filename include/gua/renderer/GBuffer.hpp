@@ -60,7 +60,10 @@ class GBuffer : public FrameBufferObject {
    */
   std::vector<std::shared_ptr<Texture> > const& get_color_buffers(
       BufferComponentType type) const;
-  std::shared_ptr<Texture> const& get_depth_buffer() const;
+
+  inline std::shared_ptr<Texture> const& get_depth_buffer() const {
+    return depth_buffer_;
+  }
 
  private:
   std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> >
