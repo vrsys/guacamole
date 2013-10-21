@@ -38,8 +38,10 @@ ShadowMapMeshShader::ShadowMapMeshShader() {
 void
 ShadowMapMeshShader::create_shadow_map_shader() {
   create_from_sources(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_lighting_mesh_shadow_vert),
-    Resources::lookup_shader(Resources::shaders_uber_shaders_lighting_mesh_shadow_frag)
+    Resources::lookup_shader(
+      Resources::shaders_uber_shaders_lighting_mesh_shadow_vert),
+    Resources::lookup_shader(
+      Resources::shaders_uber_shaders_lighting_mesh_shadow_frag)
   );
 }
 
