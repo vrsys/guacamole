@@ -31,7 +31,7 @@
 namespace gua {
 
 boost::optional<scm::gl::data_format>
-to_scm_colorformat(BufferComponent type) {
+to_scm_data_format(BufferComponent type) {
   switch (type) {
     case BufferComponent::I1:
       return boost::make_optional(scm::gl::FORMAT_R_16I);
@@ -134,7 +134,7 @@ void GBuffer::create(RenderContext const& ctx) {
               break;
             default:
               {
-                auto format = to_scm_colorformat(type);
+                auto format = to_scm_data_format(type);
                 if (format) {
                   color_buffers_[enums::get_type(type)].push_back(
                       std::make_shared<Texture>( width_,
