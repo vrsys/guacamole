@@ -35,6 +35,22 @@
 
 namespace gua {
 
+std::string subroutine_from_mode(Window::TextureDisplayMode mode) {
+  switch (mode) {
+    case Window::RED:
+      return "get_red";
+      break;
+    case Window::GREEN:
+      return "get_green";
+      break;
+    case Window::CYAN:
+      return "get_cyan";
+      break;
+    default:
+      return "get_full";
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 unsigned Window::last_context_id_ = 0;
@@ -253,21 +269,7 @@ void Window::display(std::shared_ptr<Texture> const& texture,
     if (warpBR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpBR_), "warpB");
   }
 
-  std::string subroutine;
-
-  switch (mode) {
-    case RED:
-      subroutine = "get_red";
-      break;
-    case GREEN:
-      subroutine = "get_green";
-      break;
-    case CYAN:
-      subroutine = "get_cyan";
-      break;
-    default:
-      subroutine = "get_full";
-  }
+  std::string subroutine = subroutine_from_mode(mode);
 
   fullscreen_shader_.set_subroutine(
       ctx_, scm::gl::STAGE_FRAGMENT_SHADER, "get_color", subroutine);
