@@ -9,4 +9,4 @@ before_install:
 
 install: true
 
-script: ./tests/run.sh
+script: ./tests/runTravis.sh
