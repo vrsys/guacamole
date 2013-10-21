@@ -52,10 +52,14 @@ class ShaderStage {
    */
   ShaderStage(Json::Value const& value);
 
-  std::unordered_map<std::string, UniformType>& get_uniforms();
-  std::unordered_map<std::string, BufferComponent>& get_outputs();
-  std::string& get_functions();
-  std::string& get_body();
+  inline std::unordered_map<std::string, UniformType>& get_uniforms() {
+    return uniforms_;
+  }
+  inline std::unordered_map<std::string, BufferComponent>& get_outputs() {
+      return outputs_;
+  }
+  inline std::string& get_functions() { return functions_; }
+  inline std::string& get_body() { return body_; }
 
   Json::Value const to_json_string() const;
 

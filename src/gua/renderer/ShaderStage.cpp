@@ -53,38 +53,7 @@ Json::Value const ShaderStage::to_json_string() const {
     return root_value;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::unordered_map<std::string, UniformType>& ShaderStage::get_uniforms() {
-
-    return uniforms_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::unordered_map<std::string, BufferComponent>& ShaderStage::get_outputs() {
-
-    return outputs_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string& ShaderStage::get_functions() {
-
-    return functions_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string& ShaderStage::get_body() {
-
-    return body_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void ShaderStage::construct_from_json_string(Json::Value const& value) {
-
     if (value["uniforms"] != Json::Value::null) {
         uniforms_ = json_to_uniform(value["uniforms"]);
     }
@@ -101,8 +70,6 @@ void ShaderStage::construct_from_json_string(Json::Value const& value) {
         body_ = value["body"].asString();
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 Json::Value const ShaderStage::uniforms_to_json(
     std::unordered_map<std::string, UniformType> const& uniforms) const {
