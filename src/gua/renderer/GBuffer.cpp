@@ -83,6 +83,74 @@ to_scm_data_format(BufferComponent type) {
     case BufferComponent::F4:
       return boost::make_optional(scm::gl::FORMAT_RGBA_16F);
       break;
+    case BufferComponent::DEPTH_16:
+      return boost::make_optional(scm::gl::FORMAT_D16);
+      break;
+    case BufferComponent::DEPTH_24:
+      return boost::make_optional(scm::gl::FORMAT_D24);
+      break;
+    default:
+      return boost::optional<scm::gl::data_format>();
+  }
+}
+
+boost::optional<scm::gl::data_format>
+to_scm_data_format_forUGLY(BufferComponent type) {
+  switch (type) {
+    case BufferComponent::I1:
+      return boost::make_optional(scm::gl::FORMAT_R_16I);
+      break;
+    case BufferComponent::I2:
+      return boost::make_optional(scm::gl::FORMAT_RG_16I);
+      break;
+    case BufferComponent::I3:
+      return boost::make_optional(scm::gl::FORMAT_RGB_16I);
+      break;
+    case BufferComponent::I4:
+      return boost::make_optional(scm::gl::FORMAT_RGBA_16I);
+      break;
+    case BufferComponent::U1:
+      return boost::make_optional(scm::gl::FORMAT_R_16UI);
+      break;
+    case BufferComponent::U2:
+      return boost::make_optional(scm::gl::FORMAT_RG_16UI);
+      break;
+    case BufferComponent::U3:
+      return boost::make_optional(scm::gl::FORMAT_RGB_16UI);
+      break;
+    case BufferComponent::U4:
+      return boost::make_optional(scm::gl::FORMAT_RGBA_16UI);
+      break;
+    case BufferComponent::H1:
+      return boost::make_optional(scm::gl::FORMAT_R_16F);
+      break;
+    case BufferComponent::H2:
+      return boost::make_optional(scm::gl::FORMAT_RG_16F);
+      break;
+    case BufferComponent::H3:
+      return boost::make_optional(scm::gl::FORMAT_RGB_16F);
+      break;
+    case BufferComponent::H4:
+      return boost::make_optional(scm::gl::FORMAT_RGBA_16F);
+      break;
+    case BufferComponent::F1:
+      return boost::make_optional(scm::gl::FORMAT_R_32F);
+      break;
+    case BufferComponent::F2:
+      return boost::make_optional(scm::gl::FORMAT_RG_32F);
+      break;
+    case BufferComponent::F3:
+      return boost::make_optional(scm::gl::FORMAT_RGB_32F);
+      break;
+    case BufferComponent::F4:
+      return boost::make_optional(scm::gl::FORMAT_RGBA_32F);
+      break;
+    case BufferComponent::DEPTH_16:
+      return boost::make_optional(scm::gl::FORMAT_D16);
+      break;
+    case BufferComponent::DEPTH_24:
+      return boost::make_optional(scm::gl::FORMAT_D24);
+      break;
     default:
       return boost::optional<scm::gl::data_format>();
   }
