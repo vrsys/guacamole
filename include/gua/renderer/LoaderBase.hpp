@@ -46,14 +46,14 @@ class LoaderBase {
    *
    * Constructs a new and empty LoaderBase.
    */
-  LoaderBase();
+  LoaderBase() {}
 
   /**
    * Destructor.
    *
    * Deletes the LoaderBase
    */
-  virtual ~LoaderBase();
+  virtual ~LoaderBase() {}
 
   /**
    * Interface for loading from a file.
