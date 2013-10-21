@@ -42,10 +42,12 @@ class GeometryLoader {
  public:
 
   enum Flags {
-    DEFAULTS = 0,
-    LOAD_MATERIALS = 1,
-    OPTIMIZE_GEOMETRY = 2,
-    MAKE_PICKABLE = 4
+    DEFAULTS            = 0,
+    LOAD_MATERIALS      = 1<<0,
+    OPTIMIZE_GEOMETRY   = 1<<1,
+    MAKE_PICKABLE       = 1<<2,
+    NORMALIZE_POSITION  = 1<<3,
+    NORMALIZE_SCALE     = 1<<4
   };
 
   GeometryLoader();

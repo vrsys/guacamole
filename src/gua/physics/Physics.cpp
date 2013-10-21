@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/scenegraph/Iterator.hpp>
 #include <gua/physics/RigidBodyNode.hpp>
 #include <gua/physics/CollisionShapeNode.hpp>
 #include <gua/databases/CollisionShapeDatabase.hpp>

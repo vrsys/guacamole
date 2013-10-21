@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/scenegraph/Iterator.hpp>
 #include <gua/scenegraph/GroupNode.hpp>
 #include <gua/scenegraph/ViewNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>

@@ -81,7 +81,27 @@ std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
     for (auto f : fileloaders_) {
       if (f->is_supported(file_name)) {
         cached_node = f->load(file_name, fallback_material, flags);
+        cached_node->update_cache();
+
         loaded_files_.insert(std::make_pair(key, cached_node));
+
+        // normalize mesh position and rotation
+        if (flags & GeometryLoader::NORMALIZE_POSITION || flags & GeometryLoader::NORMALIZE_SCALE) {
+          auto bbox = cached_node->get_bounding_box();
+
+          if (flags & GeometryLoader::NORMALIZE_POSITION) {
+            auto center((bbox.min + bbox.max)*0.5);
+            cached_node->translate(-center);
+          }
+
+          if (flags & GeometryLoader::NORMALIZE_SCALE) {
+            auto size(bbox.max - bbox.min);
+            auto max_size(std::max(std::max(size.x, size.y), size.z));
+            cached_node->scale(1.f/max_size);
+          }
+
+        }
+
         fileload_succeed = true;
         break;
       }

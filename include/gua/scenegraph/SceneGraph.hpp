@@ -45,9 +45,6 @@ class RayNode;
 class SceneGraph {
 
  public:
-  class Iterator;
-
- public:
 
   /**
    * Constructor.
@@ -140,42 +137,6 @@ class SceneGraph {
   void remove_node(std::string const& path_to_node);
   void remove_node(std::shared_ptr<Node> const& to_remove);
 
-  /**
-   * Returns an iterator to a Node.
-   *
-   * This function returns an iterator to a Node which may be used to
-   * apply operations.
-   *
-   * \param path_to_node   The location of the Node to be encapsulated in
-   *                       the Iterator.
-   *
-   * \return Iterator      An Iterator on the given Node.
-   */
-  Iterator get_iterator(std::string const& path_to_node) const;
-
-  /**
-   * Returns an iterator to the beginning of the SceneGraph.
-   *
-   * This function returns an iterator to the beginning of the
-   * SceneGraph which is a Node named "/".
-   *
-   * \return Iterator      An Iterator on the Node "/".
-   */
-  Iterator begin() const;
-
-  /**
-   * Returns an iterator to the "end" of the SceneGraph.
-   *
-   * Because the SceneGraph is structured as a non-cyclic graph is
-   * expected to be, there is no real "end". Therefore this function
-   * returns an Iterator on an imaginary end, which can be used to
-   * check whether an added Node is valid or an iteration over the graph
-   * has finished.
-   *
-   * \return Iterator      An Iterator on the "end" of the SceneGraph.
-   */
-  Iterator end() const;
-
   void set_name(std::string const& name);
   std::string const& get_name() const;
 
@@ -215,20 +176,6 @@ class SceneGraph {
   std::shared_ptr<Node> root_;
   std::string name_;
 };
-
-/**
- * The stream operator.
- *
- * This operator allows to stream the names of the SceneGraph's nodes into a
- * given ostream.
- *
- * \param os         The ostream the names will be streamed into.
- * \param graph      The SceneGraph to be streamed.
- *
- * \return ostream   A reference to the manipulated stream given to the
- *                  function.
- */
-std::ostream& operator<<(std::ostream& os, SceneGraph const& graph);
 
 }
 
