@@ -39,8 +39,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GBufferNURBSUberShader::
-GBufferNURBSUberShader()
+GBufferNURBSUberShader::GBufferNURBSUberShader()
   : UberShader                  (),
     transform_feedback_program_ ( new ShaderProgram ),
     vertex_shader_factory_      ( nullptr ),
@@ -66,8 +65,7 @@ GBufferNURBSUberShader()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GBufferNURBSUberShader::
-~GBufferNURBSUberShader()
+GBufferNURBSUberShader::~GBufferNURBSUberShader()
 {
   delete transform_feedback_program_;
 
@@ -78,8 +76,7 @@ GBufferNURBSUberShader::
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBufferNURBSUberShader::
-create(std::set<std::string> const& material_names)
+void GBufferNURBSUberShader::create(std::set<std::string> const& material_names)
 {
 
     // clear deprecated factory
@@ -124,19 +121,19 @@ std::string const GBufferNURBSUberShader::_transform_feedback_vertex_shader () c
         #extension GL_NV_gpu_shader5      : enable   \n\
                                                      \n\
         // input attributes                          \n\
-        layout (location = 0) in vec3 	position;    \n\
-        layout (location = 1) in uint  	index;       \n\
-        layout (location = 2) in vec4 	tesscoord;   \n\
+        layout (location = 0) in vec3  position;    \n\
+        layout (location = 1) in uint  index;       \n\
+        layout (location = 2) in vec4  tesscoord;   \n\
                                                      \n\
         // output attributes                         \n\
-        flat out vec3 	vPosition;                   \n\
-        flat out uint	  vIndex;                      \n\
-        flat out vec2 	vTessCoord;                  \n\
+        flat out vec3  vPosition;                   \n\
+        flat out uint   vIndex;                      \n\
+        flat out vec2  vTessCoord;                  \n\
                                                      \n\
         void main()                                  \n\
         {                                            \n\
           vPosition  = position;                     \n\
-          vIndex 		 = index;                        \n\
+          vIndex     = index;                        \n\
           vTessCoord = tesscoord.xy;                 \n\
         }                                            \n\
     ");
@@ -172,12 +169,12 @@ std::string const GBufferNURBSUberShader::_transform_feedback_tess_control_shade
         uniform float gua_texel_height;                      \n\
         uniform float gua_tesselation_max_error;             \n\
                                                              \n\
-        flat in vec3 	vPosition[];                           \n\
-        flat in uint 	vIndex[];                              \n\
-        flat in vec2 	vTessCoord[];                          \n\
+        flat in vec3  vPosition[];                           \n\
+        flat in uint  vIndex[];                              \n\
+        flat in vec2  vTessCoord[];                          \n\
                                                              \n\
         flat out vec3 tcPosition[];                          \n\
-        flat out uint	tcIndex[];                             \n\
+        flat out uint tcIndex[];                             \n\
         flat out vec2 tcTessCoord[];                         \n\
                                                              \n\
     ");
@@ -192,8 +189,8 @@ std::string const GBufferNURBSUberShader::_transform_feedback_tess_control_shade
                                                                                           \n\
         void main()                                                                       \n\
         {                                                                                 \n\
-          tcPosition[ID] 	= vPosition[ID];                                                \n\
-          tcIndex[ID] 	  = vIndex[ID];                                                   \n\
+          tcPosition[ID]  = vPosition[ID];                                                \n\
+          tcIndex[ID]     = vIndex[ID];                                                   \n\
           tcTessCoord[ID] = vTessCoord[ID];                                               \n\
                                                                                           \n\
           mat4 mvp_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix;   \n\
@@ -218,8 +215,8 @@ std::string const GBufferNURBSUberShader::_transform_feedback_tess_control_shade
                                                   int(1.0f/gua_texel_height));            \n\
                                                                                           \n\
             //      3                                                                     \n\
-            //	3------2                                                                  \n\
-            //	|      |                                                                  \n\
+            //  3------2                                                                  \n\
+            //  |      |                                                                  \n\
             //0 |      | 2                                                                \n\
             //  |      |                                                                  \n\
             //  0------1                                                                  \n\
@@ -275,12 +272,12 @@ std::string const GBufferNURBSUberShader::_transform_feedback_tess_evaluation_sh
                                                              \n\
         layout(quads, equal_spacing, ccw) in;                \n\
                                                              \n\
-        flat in vec3 	tcPosition[];                          \n\
-        flat in uint 	tcIndex[];                             \n\
-        flat in vec2 	tcTessCoord[];                         \n\
+        flat in vec3  tcPosition[];                          \n\
+        flat in uint  tcIndex[];                             \n\
+        flat in vec2  tcTessCoord[];                         \n\
                                                              \n\
         flat out vec3 tePosition;                            \n\
-        flat out uint	teIndex;                               \n\
+        flat out uint teIndex;                               \n\
         flat out vec2 teTessCoord;                           \n\
                                                              \n\
         // uniforms                                          \n\
@@ -318,8 +315,8 @@ std::string const GBufferNURBSUberShader::_transform_feedback_tess_evaluation_sh
                           uv,                                                  \n\
                           puv);                                                \n\
                                                                                \n\
-          tePosition 	= puv.xyz;                                               \n\
-          teIndex 	  = tcIndex[0];                                            \n\
+          tePosition  = puv.xyz;                                               \n\
+          teIndex     = tcIndex[0];                                            \n\
           teTessCoord = uv;                                                    \n\
         }                                                                      \n\
     ");
@@ -340,9 +337,9 @@ std::string const GBufferNURBSUberShader::_transform_feedback_geometry_shader ()
         layout(points, max_vertices = 4) out;                   \n\
                                                                 \n\
         // in attributes                                        \n\
-        flat in vec3 	tePosition[3];                            \n\
-        flat in uint 	teIndex[3];                               \n\
-        flat in vec2 	teTessCoord[3];                           \n\
+        flat in vec3  tePosition[3];                            \n\
+        flat in uint  teIndex[3];                               \n\
+        flat in vec2  teTessCoord[3];                           \n\
                                                                 \n\
         // out per fragment                                     \n\
         layout (location = 0)       out vec3 xfb_position;      \n\
@@ -432,22 +429,22 @@ std::string const GBufferNURBSUberShader::_final_vertex_shader () const
         #extension GL_NV_gpu_shader5      : enable  \n\
                                                     \n\
         // hard-coded in attributes                 \n\
-        layout (location = 0) in vec3 	position;   \n\
-        layout (location = 1) in uint 	index;      \n\
-        layout (location = 2) in vec2 	tesscoord;  \n\
+        layout (location = 0) in vec3  position;   \n\
+        layout (location = 1) in uint  index;      \n\
+        layout (location = 2) in vec2  tesscoord;  \n\
                                                     \n\
         // hard-coded output                        \n\
-        flat out vec3 	vPosition;                  \n\
-        flat out uint	  vIndex;                     \n\
-        flat out vec2 	vTessCoord;                 \n\
+        flat out vec3  vPosition;                  \n\
+        flat out uint  vIndex;                     \n\
+        flat out vec2  vTessCoord;                 \n\
     ");
 
     vertex_shader << std::string("                 \n\
         void main()                                \n\
         {                                          \n\
-            vPosition 	= position;                \n\
-            vIndex 		  = index;                   \n\
-            vTessCoord 	= tesscoord;               \n\
+            vPosition  = position;                \n\
+            vIndex     = index;                   \n\
+            vTessCoord = tesscoord;               \n\
         }                                          \n\
     ");
 
@@ -482,9 +479,9 @@ std::string const GBufferNURBSUberShader::_final_tess_control_shader () const
         uniform float gua_texel_width;                      \n\
         uniform float gua_texel_height;                     \n\
                                                             \n\
-        flat in vec3 	vPosition[];                          \n\
-        flat in uint 	vIndex[];                             \n\
-        flat in vec2 	vTessCoord[];                         \n\
+        flat in vec3  vPosition[];                          \n\
+        flat in uint  vIndex[];                             \n\
+        flat in vec2  vTessCoord[];                         \n\
                                                             \n\
         flat out uint tcIndex[];                            \n\
         flat out vec2 tcTessCoord[];                        \n\
@@ -503,7 +500,7 @@ std::string const GBufferNURBSUberShader::_final_tess_control_shader () const
                                                                                                                                   \n\
         void main()                                                                                                               \n\
         {                                                                                                                         \n\
-          tcIndex[ID] 	  = vIndex[ID];                                                                                           \n\
+          tcIndex[ID]     = vIndex[ID];                                                                                           \n\
           tcTessCoord[ID] = vTessCoord[ID];                                                                                       \n\
                                                                                                                                   \n\
           mat4 mvp_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix;                                           \n\
@@ -525,8 +522,8 @@ std::string const GBufferNURBSUberShader::_final_tess_control_shader () const
                                                     int(1.0f/gua_texel_width),                                                    \n\
                                                     int(1.0f/gua_texel_height) );                                                 \n\
                                                                                                                                   \n\
-            //	   3                                                                                                              \n\
-            //	3------2                                                                                                          \n\
+            //     3                                                                                                              \n\
+            //  3------2                                                                                                          \n\
             //  |      |                                                                                                          \n\
             // 0|      |2                                                                                                         \n\
             //  |      |                                                                                                          \n\
@@ -636,14 +633,14 @@ std::string const GBufferNURBSUberShader::_final_tess_evaluation_shader () const
                                                                 \n\
         layout(quads, equal_spacing, ccw) in;                   \n\
                                                                 \n\
-        flat in uint 	tcIndex[];                                \n\
-        flat in vec2 	tcTessCoord[];                            \n\
+        flat in uint  tcIndex[];                                \n\
+        flat in vec2  tcTessCoord[];                            \n\
                                                                 \n\
         flat out vec3   teBitangent;                            \n\
         flat out vec3   teTangent;                              \n\
-        flat out uint 	teIndex;                                \n\
-        flat out vec2 	teTessCoord;                            \n\
-        flat out vec4 	teNormal;                               \n\
+        flat out uint   teIndex;                                \n\
+        flat out vec2   teTessCoord;                            \n\
+        flat out vec4   teNormal;                               \n\
         flat out vec4   tePosition;                             \n\
                                                                 \n\
         // uniforms                                             \n\
@@ -687,9 +684,9 @@ std::string const GBufferNURBSUberShader::_final_tess_evaluation_shader () const
           tePosition  = vec4(p.xyz, 1.0);                                       \n\
           teBitangent = normalize(du.xyz);                                      \n\
           teTangent   = normalize(dv.xyz);                                      \n\
-          teIndex    	= tcIndex[0];                                             \n\
+          teIndex     = tcIndex[0];                                             \n\
           teTessCoord = uv;                                                     \n\
-          teNormal 	  = vec4(normalize(cross(du.xyz, dv.xyz)), 0.0);            \n\
+          teNormal    = vec4(normalize(cross(du.xyz, dv.xyz)), 0.0);            \n\
                                                                                 \n\
           vec4 nview  = gua_view_matrix * gua_model_matrix * teNormal;          \n\
           vec4 pview  = gua_view_matrix * gua_model_matrix * tePosition;        \n\
@@ -733,7 +730,7 @@ std::string const GBufferNURBSUberShader::_final_geometry_shader () const
         flat in vec4 tePosition[3];                          \n\
                                                              \n\
         flat out uint gIndex;                                \n\
-        out vec2 	    gTessCoord;                            \n\
+        out vec2      gTessCoord;                            \n\
                                                              \n\
         uniform samplerBuffer parameter_texture;             \n\
         uniform samplerBuffer attribute_texture;             \n\
@@ -777,8 +774,8 @@ std::string const GBufferNURBSUberShader::_final_geometry_shader () const
         {                                                                                                      \n\
             for ( int i = 0; i != 3; ++i )                                                                     \n\
             {                                                                                                  \n\
-                gIndex 	    = teIndex[i];                                                                      \n\
-                gTessCoord 	= teTessCoord[i];                                                                  \n\
+                gIndex      = teIndex[i];                                                                      \n\
+                gTessCoord  = teTessCoord[i];                                                                  \n\
                                                                                                                \n\
                 // write built-in input for material                                                           \n\
                 ///////////////////////////////////////////////////////                                        \n\
