@@ -26,8 +26,67 @@
 #include <gua/platform.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils/logger.hpp>
+#include <boost/optional.hpp>
 
 namespace gua {
+
+boost::optional<scm::gl::data_format>
+to_scm_colorformat(BufferComponent type) {
+  switch (type) {
+    case BufferComponent::I1:
+      return boost::make_optional(scm::gl::FORMAT_R_16I);
+      break;
+    case BufferComponent::I2:
+      return boost::make_optional(scm::gl::FORMAT_RG_16I);
+      break;
+    case BufferComponent::I3:
+      return boost::make_optional(scm::gl::FORMAT_RGB_16I);
+      break;
+    case BufferComponent::I4:
+      return boost::make_optional(scm::gl::FORMAT_RGBA_16I);
+      break;
+    case BufferComponent::U1:
+      return boost::make_optional(scm::gl::FORMAT_R_16UI);
+      break;
+    case BufferComponent::U2:
+      return boost::make_optional(scm::gl::FORMAT_RG_16UI);
+      break;
+    case BufferComponent::U3:
+      return boost::make_optional(scm::gl::FORMAT_RGB_16UI);
+      break;
+    case BufferComponent::U4:
+      return boost::make_optional(scm::gl::FORMAT_RGBA_16UI);
+      break;
+    case BufferComponent::H1:
+      return boost::make_optional(scm::gl::FORMAT_R_16F);
+      break;
+    case BufferComponent::H2:
+      return boost::make_optional(scm::gl::FORMAT_RG_16F);
+      break;
+    case BufferComponent::H3:
+      return boost::make_optional(scm::gl::FORMAT_RGB_16F);
+      break;
+    case BufferComponent::H4:
+      return boost::make_optional(scm::gl::FORMAT_RGBA_16F);
+      break;
+
+    ///TODO: Make it work with 32bit
+    case BufferComponent::F1:
+      return boost::make_optional(scm::gl::FORMAT_R_16F);
+      break;
+    case BufferComponent::F2:
+      return boost::make_optional(scm::gl::FORMAT_RG_16F);
+      break;
+    case BufferComponent::F3:
+      return boost::make_optional(scm::gl::FORMAT_RGB_16F);
+      break;
+    case BufferComponent::F4:
+      return boost::make_optional(scm::gl::FORMAT_RGBA_16F);
+      break;
+    default:
+      return boost::optional<scm::gl::data_format>();
+  }
+}
 
 GBuffer::GBuffer(
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> > const&
@@ -59,144 +118,12 @@ void GBuffer::remove_buffers(RenderContext const& ctx) {
 }
 
 void GBuffer::create(RenderContext const& ctx) {
-
     int color_attachment_count(0);
     for (auto const& layer : layer_types_) {
         BufferComponent type(layer.first);
         scm::gl::sampler_state_desc const& state(layer.second);
 
         switch (type) {
-            case BufferComponent::I1:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_R_16I,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::I2:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_RG_16I,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::I3:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_RGB_16I,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::I4:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_RGBA_16I,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::U1:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>(width_,
-                                             height_,
-                                             scm::gl::FORMAT_R_16UI,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::U2:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>(width_,
-                                             height_,
-                                             scm::gl::FORMAT_RG_16UI,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::U3:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>(width_,
-                                             height_,
-                                             scm::gl::FORMAT_RGB_16UI,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::U4:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_RGBA_16UI,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::H1:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_R_16F,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::H2:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_RG_16F,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::H3:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_RGB_16F,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::H4:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_RGBA_16F,
-                                             mipmap_layers_,
-                                             state));
-              break;
-
-
-            ///TODO: Make it work with 32bit
-            case BufferComponent::F1:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_R_16F,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::F2:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_RG_16F,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::F3:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_RGB_16F,
-                                             mipmap_layers_,
-                                             state));
-              break;
-            case BufferComponent::F4:
-              color_buffers_[enums::get_type(type)].push_back(
-                  std::make_shared<Texture>( width_,
-                                             height_,
-                                             scm::gl::FORMAT_RGBA_16F,
-                                             mipmap_layers_,
-                                             state));
-              break;
             case BufferComponent::DEPTH_16:
               depth_buffer_ = std::make_shared<Texture>(
                   width_, height_, scm::gl::FORMAT_D16, mipmap_layers_, state);
@@ -206,7 +133,17 @@ void GBuffer::create(RenderContext const& ctx) {
                   width_, height_, scm::gl::FORMAT_D24, mipmap_layers_, state);
               break;
             default:
-              ;
+              {
+                auto format = to_scm_colorformat(type);
+                if (format) {
+                  color_buffers_[enums::get_type(type)].push_back(
+                      std::make_shared<Texture>( width_,
+                                                 height_,
+                                                 *format,
+                                                 mipmap_layers_,
+                                                 state));
+                }
+              }
         }
 
         if (type == BufferComponent::DEPTH_16 || type == BufferComponent::DEPTH_24)
