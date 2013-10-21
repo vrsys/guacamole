@@ -37,10 +37,6 @@ GeometryPass::GeometryPass(Pipeline* pipeline) : Pass(pipeline) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GeometryPass::~GeometryPass() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void GeometryPass::render_scene(Camera const& camera, RenderContext const& ctx) {
 
   gbuffer_->clear(ctx);

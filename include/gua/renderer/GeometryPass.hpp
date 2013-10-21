@@ -56,7 +56,7 @@ class GeometryPass : public Pass {
    *
    * Deletes the GeometryPass and frees all associated data.
    */
-  virtual ~GeometryPass();
+  virtual ~GeometryPass() {}
 
   void render_scene(Camera const& camera, RenderContext const& ctx);
 
