@@ -75,30 +75,6 @@ void MaterialDescription::reload() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string& MaterialDescription::get_shading_model() { return shading_model_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string const& MaterialDescription::get_shading_model() const {
-    return shading_model_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::unordered_map<std::string, std::string>&
-MaterialDescription::get_uniforms() {
-    return uniforms_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::unordered_map<std::string, std::string> const&
-MaterialDescription::get_uniforms() const {
-    return uniforms_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MaterialDescription::save_to_file(std::string const& file_name) const {
     Json::Value uniforms;
     for (auto uniform : uniforms_) {
