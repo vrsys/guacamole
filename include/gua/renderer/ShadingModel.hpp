@@ -67,9 +67,9 @@ class ShadingModel {
 
   void reload();
 
-  std::string const& get_name() const;
+  inline std::string const& get_name() const { return name_; }
+  inline std::vector<ShaderStage>& get_stages() { return shader_stages_; }
 
-  std::vector<ShaderStage>& get_stages();
   ShaderStage& get_gbuffer_vertex_stage();
   ShaderStage& get_gbuffer_fragment_stage();
   ShaderStage& get_lbuffer_stage();

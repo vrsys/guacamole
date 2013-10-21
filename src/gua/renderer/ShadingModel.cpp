@@ -87,16 +87,6 @@ ShadingModel::ShadingModel(std::string const& name,
   construct_from_buffer(buffer, buffer_size);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::string const& ShadingModel::get_name() const { return name_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::vector<ShaderStage>& ShadingModel::get_stages() { return shader_stages_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
 ShaderStage& ShadingModel::get_gbuffer_vertex_stage() {
 
   return shader_stages_[GBUFFER_VERTEX_STAGE];
