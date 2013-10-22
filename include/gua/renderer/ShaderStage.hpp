@@ -59,7 +59,8 @@ class ShaderStage {
       return outputs_;
   }
   inline std::string& get_functions() { return functions_; }
-  inline std::string& get_body() { return body_; }
+  inline std::string const& get_body() const { return body_; }
+  inline void set_body(std::string const& s) { body_ = s; }
 
   Json::Value const to_json_string() const;
 
