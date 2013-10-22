@@ -151,7 +151,7 @@ std::string const MaterialLoader::load_material(
     std::string shading_model(load_shading_model(capabilities));
 
     MaterialDescription material_description;
-    material_description.get_shading_model() = shading_model;
+    material_description.set_shading_model(shading_model);
 
     if (capabilities & DIFFUSE_MAP)
       material_description.get_uniforms()["diffuse_map"] =
