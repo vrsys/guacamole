@@ -22,9 +22,12 @@
 #ifndef SCHEDULER_HPP_
 #define SCHEDULER_HPP_
 
-#include <ev++.h>
 #include <functional>
 #include <map>
+
+#include <boost/asio.hpp>
+
+#include <gua/events/MainLoop.hpp>
 
 namespace gua {
 namespace events {
@@ -34,12 +37,14 @@ class Scheduler {
   Scheduler();
   ~Scheduler();
 
-  void execute_delayed(std::function<void()> callback, double delay);
+  void execute_delayed(MainLoop& loop, std::function<void()> callback, double delay);
 
  private:
-  void self_callback(ev::timer& timer, int revents);
 
-  std::map<ev::timer*, std::function<void()> > tasks_;
+   void self_callback(boost::asio::deadline_timer* timer, int revents);
+
+   std::map<boost::asio::deadline_timer*, std::function<void()> > tasks_;
+
 };
 
 }

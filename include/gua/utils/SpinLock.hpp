@@ -27,14 +27,10 @@
 #define GUA_SPIN_LOCK_HPP
 
 #include <gua/platform.hpp>
-#if GUA_COMPILER == GUA_COMPILER_MSVC
-  #include <boost/atomic.hpp>
-  #include <boost/thread.hpp>
-#else
-  // external headers
-  #include <atomic>
-  #include <thread>
-#endif
+
+// external headers
+#include <atomic>
+#include <thread>
 
 //If 1, enables rescheduling of threads when a spinlock is acquired
 #define SPINLOCK_ENABLE_THREAD_YIELDING 1
@@ -60,31 +56,19 @@ public:
      * Creates a new spin lock.
      */
     SpinLock()
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-        : lk()
-#else
-          : lk(ATOMIC_FLAG_INIT)
-#endif
-            {
-  }
+      : lk()
+    {
+      lk.clear();
+    }
 
     /**
      * Acquires the lock.
      *
      */
     inline void lock() {
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-      while (lk.test_and_set(boost::memory_order_acquire)) {
-#else
         while (lk.test_and_set(std::memory_order_acquire)) {
-#endif
-
 #if SPINLOCK_ENABLE_THREAD_YIELDING
-  #if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-          boost::this_thread::yield();
-  #else
           std::this_thread::yield();
-  #endif
 #endif
         }
     }
@@ -94,12 +78,7 @@ public:
      * \return true if the lock was acquired successfully, otherwise false.
      */
     inline bool try_lock() {
-
-#if GUA_COMPILER == GUA_COMPILER_MSVC
-      return !lk.test_and_set(boost::memory_order_acquire);
-#else
       return !lk.test_and_set(std::memory_order_acquire);
-#endif
     }
 
     /**
@@ -107,32 +86,19 @@ public:
      *
      */
     inline void unlock() {
-#if GUA_COMPILER == GUA_COMPILER_MSVC
-        lk.clear(boost::memory_order_release);
-#else
-        lk.clear(std::memory_order_release);
-#endif
+      lk.clear(std::memory_order_release);
     }
 
     // No copying construction. No assignment.
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1600
-private:
-    SpinLock(const SpinLock&);
-    SpinLock& operator=(const SpinLock&);
-#else
+
     SpinLock(const SpinLock&) = delete;
     SpinLock& operator=(const SpinLock&) = delete;
-#endif
 
 private:
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-    boost::atomic_flag lk;
-#else
-    std::atomic_flag lk;
-#endif
-}
-;
+ std::atomic_flag lk;
+
+};
 
 }
 

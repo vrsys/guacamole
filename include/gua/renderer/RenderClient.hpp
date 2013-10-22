@@ -54,14 +54,14 @@ template <typename T> class RenderClient {
 
 #define FPS_CALCULATION_DELAY 20
 
-    forever_ = std::thread([&doublebuffer_, fun]() {
+    forever_ = std::thread([this, fun]() {
       float rendering_fps(0.f);
       unsigned rendering_frame_count(0);
       Timer rendering_timer;
       rendering_timer.start();
 
       while (true) {
-        auto sg = doublebuffer_.read();
+        auto sg = this->doublebuffer_.read();
         fun(sg, rendering_fps);
 
         if (++rendering_frame_count == FPS_CALCULATION_DELAY) {

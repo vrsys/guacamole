@@ -52,9 +52,9 @@ Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
   application_timer_.start();
   for (auto& pipeline : pipelines) {
     render_clients_.push_back(
-        gua::make_unique<renderclient_t>([pipeline, &application_fps_](
+      gua::make_unique<renderclient_t>([pipeline, this](
             std::shared_ptr<const_render_vec_t> const & sg, float render_fps) {
-      pipeline->process(*sg, application_fps_, render_fps);
+              pipeline->process(*sg, this->application_fps_, render_fps);
     }));
   }
 }

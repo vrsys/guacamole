@@ -78,10 +78,17 @@ math::mat4 const compute_frustum(math::vec4 const& eye_position,
  */
 math::mat4 const mat_ai_to_scm(aiMatrix4x4 const& ai_mat);
 
-template <typename T>
-constexpr T clamp(T const& x, T const& min, T const& max) {
-  return x < min ? min : (x > max ? max : x);
-}
+#if WIN32
+  template <typename T>
+  inline T clamp(T const& x, T const& min, T const& max) {
+    return x < min ? min : (x > max ? max : x);
+  }
+#else
+  template <typename T>
+  constexpr T clamp(T const& x, T const& min, T const& max) {
+    return x < min ? min : (x > max ? max : x);
+  }
+#endif
 
 inline math::vec3 get_translation(math::mat4 const& m)
 {

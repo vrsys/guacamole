@@ -1,0 +1,78 @@
+SET(JSON_INCLUDE_SEARCH_DIRS
+	${GLOBAL_EXT_DIR}/inc/json
+    /opt/json/current
+)
+
+SET(JSON_LIBRARY_SEARCH_DIRS
+	${GLOBAL_EXT_DIR}/lib
+    /opt/json/current/json-build
+)
+
+message("-- checking for JSON")
+
+IF (NOT JSON_INCLUDE_DIRS)
+
+    SET(_JSON_FOUND_INC_DIRS "")
+
+    FOREACH(_SEARCH_DIR ${JSON_INCLUDE_SEARCH_DIRS})
+        FIND_PATH(_CUR_SEARCH
+            NAMES jsoncpp/json/json.h
+                PATHS ${_SEARCH_DIR}
+                NO_DEFAULT_PATH)
+        IF (_CUR_SEARCH)
+            LIST(APPEND _JSON_FOUND_INC_DIRS ${_CUR_SEARCH})
+        ENDIF(_CUR_SEARCH)
+        SET(_CUR_SEARCH _CUR_SEARCH-NOTFOUND CACHE INTERNAL "internal use")
+    ENDFOREACH(_SEARCH_DIR ${JSON_INCLUDE_SEARCH_DIRS})
+
+    IF (NOT _JSON_FOUND_INC_DIRS)
+        MESSAGE(FATAL_ERROR "find_json.cmake: unable to find json headers")
+    ENDIF (NOT _JSON_FOUND_INC_DIRS)
+	
+	FOREACH(_INC_DIR ${_JSON_FOUND_INC_DIRS})
+        LIST(APPEND JSON_INCLUDE_DIRS ${_INC_DIR})
+    ENDFOREACH(_INC_DIR ${_BOOST_FOUND_INC_DIRS})
+    
+ENDIF(NOT JSON_INCLUDE_DIRS)
+
+IF(UNIX)
+	SET(JSON_LIB_FILENAME "libjsoncpp.so")
+ELSEIF(WIN32)
+	SET(JSON_LIB_FILENAME "json.lib")
+ENDIF(UNIX)
+
+IF (        JSON_INCLUDE_DIRS
+    AND NOT JSON_LIBRARIES)
+
+    SET(_JSON_FOUND_LIB_DIR "")
+    SET(_JSON_POSTFIX "")
+
+    FOREACH(_SEARCH_DIR ${JSON_LIBRARY_SEARCH_DIRS})
+        FIND_PATH(_CUR_SEARCH
+				NAMES ${JSON_LIB_FILENAME}
+                PATHS ${_SEARCH_DIR}
+				PATH_SUFFIXES debug release
+                NO_DEFAULT_PATH)
+        IF (_CUR_SEARCH)
+            LIST(APPEND _JSON_FOUND_LIB_DIR ${_SEARCH_DIR})
+        ENDIF(_CUR_SEARCH)
+        SET(_CUR_SEARCH _CUR_SEARCH-NOTFOUND CACHE INTERNAL "internal use")
+    ENDFOREACH(_SEARCH_DIR ${JSON_LIBRARY_SEARCH_DIRS})
+
+    IF (NOT _JSON_FOUND_LIB_DIR)
+        MESSAGE(FATAL_ERROR "find_json.cmake: unable to find json libraries")
+    ELSE (NOT _JSON_FOUND_LIB_DIR)
+		SET(JSON_LIBRARY_DIRS ${_JSON_FOUND_LIB_DIR} CACHE STRING "The json library directory")
+        message("--  found matching version")
+    ENDIF (NOT _JSON_FOUND_LIB_DIR)
+    
+    FOREACH(_LIB_DIR ${_JSON_FOUND_LIB_DIR})
+        LIST(APPEND JSON_LIBRARIES ${JSON_LIB_FILENAME})
+    ENDFOREACH(_LIB_DIR ${_JSON_FOUND_INC_DIRS})
+    
+
+ENDIF(        JSON_INCLUDE_DIRS
+      AND NOT JSON_LIBRARIES)
+
+
+

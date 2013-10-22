@@ -24,20 +24,33 @@
 
 #include <functional>
 
+#include <boost/asio.hpp>
+
 namespace gua {
-namespace events {
+  namespace events {
 
-class MainLoop {
- public:
-  MainLoop();
-  ~MainLoop();
+    class MainLoop 
+    {
+    public:
 
-  void start();
-  void stop();
+      friend class Ticker;
+      friend class Scheduler;
 
-};
+    public :
 
-}
+      MainLoop();
+      ~MainLoop();
+
+      void start();
+      void stop();
+
+    private:
+
+      boost::asio::io_service io_service;
+
+    };
+
+  }
 }
 
 #endif /* MAINLOOP_HPP_ */

@@ -55,16 +55,36 @@ class NURBSData {
 
   typedef scm::math::vec4f point;
 
-  template <typename T> struct buffer_data {
-    buffer_data() : data() {}
+  template <typename T> struct buffer_data 
+  {
     std::vector<T> data;
-    unsigned size() { return data.size(); }
-    void resize(int size) { data.resize(size); }
-    unsigned data_size() { return data.size() * sizeof(T); }
-    T* get() { return &data[0]; }
-    void push(T p) { data.push_back(p); }
-    std::vector<T>& original() { return data; }
-    T& operator[](int index) { return data[index]; }
+
+    unsigned size() { 
+      return data.size(); 
+    }
+
+    void resize(int size) { 
+      data.resize(size); 
+    }
+
+    unsigned data_size() { 
+      return unsigned(data.size() * sizeof(T)); 
+    }
+
+    T* get() { 
+      return &data[0]; 
+    }
+
+    void push(T p) { 
+      data.push_back(p); 
+    }
+    std::vector<T>& original() { 
+      return data; 
+    }
+
+    T& operator[](int index) { 
+      return data[index]; 
+    }
   };
 
   struct bbox {

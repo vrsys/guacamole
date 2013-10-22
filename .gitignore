@@ -17,6 +17,8 @@
 *.dot
 *.gsm
 
+*.opensdf
+
 build
 lib
 doc/html

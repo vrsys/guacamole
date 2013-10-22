@@ -101,7 +101,7 @@ struct PipelineConfiguration {
   GUA_ADD_PROPERTY(utils::Color3f, background_color, utils::Color3f());
 
   // ambient color
-  GUA_ADD_PROPERTY(utils::Color3f, ambient_color, utils::Color3f(0.1, 0.1, 0.1));
+  GUA_ADD_PROPERTY(utils::Color3f, ambient_color, utils::Color3f(0.1f, 0.1f, 0.1f));
 
   // vignette
   GUA_ADD_PROPERTY(bool, enable_vignette, false);

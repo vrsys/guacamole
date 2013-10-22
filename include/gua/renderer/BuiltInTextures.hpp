@@ -42,7 +42,12 @@ class DefaultTexture : public Texture {
   DefaultTexture();
 
  private:
+
+#if WIN32
+  static unsigned char pixel_data[64 * 64 * 3 + 1];
+#else
   static unsigned char pixel_data[256 * 256 * 3 + 1];
+#endif
 };
 
 }

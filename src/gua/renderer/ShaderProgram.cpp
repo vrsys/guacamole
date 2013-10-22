@@ -251,6 +251,8 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
 
         return true;
     }
+
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
