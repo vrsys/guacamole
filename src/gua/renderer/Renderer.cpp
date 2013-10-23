@@ -48,9 +48,9 @@ Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
   application_fps_.start();
   for (auto& pipeline : pipelines) {
 
-    auto fun = [pipeline, &application_fps_](
+    auto fun = [pipeline, this](
         std::shared_ptr<const_render_vec_t> const & sg, float render_fps) {
-      pipeline->process(*sg, application_fps_.fps, render_fps);
+      pipeline->process(*sg, this->application_fps_.fps, render_fps);
     };
 
     render_clients_.push_back(gua::make_unique<renderclient_t>(fun));

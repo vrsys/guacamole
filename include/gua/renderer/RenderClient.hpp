@@ -53,12 +53,12 @@ template <typename T> class RenderClient {
   //RenderClient(std::function<void(T const&, float)> const& fun)
   template <typename F> RenderClient(F&& fun) : forever_(), doublebuffer_() {
 
-    forever_ = std::thread([&doublebuffer_, fun]() {
+    forever_ = std::thread([this, fun]() {
       FpsCounter fpsc(20);
       fpsc.start();
 
       while (true) {
-        auto sg = doublebuffer_.read();
+        auto sg = this->doublebuffer_.read();
         fun(sg, fpsc.fps);
         fpsc.step();
       }
