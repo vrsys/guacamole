@@ -68,8 +68,9 @@ IF (        BULLET_INCLUDE_DIRS
         FIND_PATH(_CUR_SEARCH
 				NAMES ${BULLET_DYNAMICS_LIB}
                 PATHS ${_SEARCH_DIR}
-				PATH_SUFFIXES debug release
+                PATH_SUFFIXES debug release ${BULLET_DYNAMICS_LIB_SUFFIX}
                 NO_DEFAULT_PATH)
+              message(${_SEARCH_DIR})
         IF (_CUR_SEARCH)
             LIST(APPEND _BULLET_FOUND_LIB_DIR ${_SEARCH_DIR})
         ENDIF(_CUR_SEARCH)

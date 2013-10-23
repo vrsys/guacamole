@@ -6,7 +6,7 @@ MATH(EXPR GUA_BOOST_MIN_VERSION_NUM "${GUA_BOOST_MIN_VERSION_MAJOR}*10000 + ${GU
 
 SET(GUA_BOOST_INCLUDE_SEARCH_DIRS
     ${GLOBAL_EXT_DIR}/inc/boost
-    /opt/boost/default/include
+    /opt/boost/latest/include
     ${CMAKE_SYSTEM_INCLUDE_PATH}
     ${CMAKE_INCLUDE_PATH}
     /usr/include
@@ -14,7 +14,7 @@ SET(GUA_BOOST_INCLUDE_SEARCH_DIRS
 
 SET(GUA_BOOST_LIBRARY_SEARCH_DIRS
     ${GLOBAL_EXT_DIR}/lib
-    /opt/boost/default/lib
+    /opt/boost/latest/lib
     ${CMAKE_SYSTEM_LIBRARY_PATH}
     ${CMAKE_LIBRARY_PATH}
     /usr/lib64
@@ -32,7 +32,6 @@ IF (NOT BOOST_INCLUDE_DIRS)
                 PATHS ${_SEARCH_DIR}
                 NO_DEFAULT_PATH)
         IF (_CUR_SEARCH)
-            #MESSAGE(${_CUR_SEARCH})
             LIST(APPEND _GUA_BOOST_FOUND_INC_DIRS ${_CUR_SEARCH})
         ENDIF(_CUR_SEARCH)
         SET(_CUR_SEARCH _CUR_SEARCH-NOTFOUND CACHE INTERNAL "internal use")
@@ -81,7 +80,8 @@ IF (NOT BOOST_INCLUDE_DIRS)
     IF (GUA_BOOST_VERSION EQUAL 0)
         MESSAGE(FATAL_ERROR "found boost versions ${_BOOST_VERSION} to old (min. version ${GUA_BOOST_MIN_VERSION} required)")
     ELSE (GUA_BOOST_VERSION EQUAL 0)
-        SET(BOOST_INCLUDE_DIRS               ${BOOST_INCLUDE_DIRS}               CACHE STRING "The boost include directory")
+      #SET(BOOST_INCLUDE_DIRS               ${BOOST_INCLUDE_DIRS}               CACHE STRING "The boost include directory")
+        SET(BOOST_INCLUDE_DIRS               ${BOOST_INCLUDE_DIRS})
         SET(GUA_BOOST_VERSION               ${GUA_BOOST_VERSION}               CACHE STRING "The boost version number")
         SET(GUA_BOOST_LIB_SUFFIX            ${GUA_BOOST_LIB_SUFFIX}            CACHE STRING "The boost library suffix")
         SET(GUA_BOOST_LIB_VERSION           ${GUA_BOOST_LIB_VERSION}           CACHE STRING "The boost library version string")
@@ -90,15 +90,16 @@ IF (NOT BOOST_INCLUDE_DIRS)
 ENDIF(NOT BOOST_INCLUDE_DIRS)
 
 IF (        BOOST_INCLUDE_DIRS
-    AND NOT BOOST_LIBRARY_DIRS)
+    AND NOT BOOST_LIBRARIES)
+    #AND NOT BOOST_LIBRARY_DIRS)
 
     SET(_GUA_BOOST_FILESYSTEM_LIB "")
     SET(_GUA_BOOST_FOUND_LIB_DIR "")
     SET(_GUA_BOOST_POSTFIX "")
 
     if (UNIX)
-        LIST(APPEND _GUA_BOOST_FILESYSTEM_LIB   "${CMAKE_SHARED_LIBRARY_PREFIX}boost_filesystem-${GUA_COMPILER_SUFFIX}-mt-${GUA_BOOST_LIB_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX}${GUA_BOOST_LIB_SUFFIX}"
-                                                "${CMAKE_SHARED_LIBRARY_PREFIX}boost_filesystem-mt${CMAKE_SHARED_LIBRARY_SUFFIX}${GUA_BOOST_LIB_SUFFIX}"
+        LIST(APPEND _GUA_BOOST_FILESYSTEM_LIB   "${CMAKE_SHARED_LIBRARY_PREFIX}boost_filesystem${GUA_COMPILER_SUFFIX}${GUA_BOOST_LIB_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX}${GUA_BOOST_LIB_SUFFIX}"
+                                                "${CMAKE_SHARED_LIBRARY_PREFIX}boost_filesystem${CMAKE_SHARED_LIBRARY_SUFFIX}${GUA_BOOST_LIB_SUFFIX}"
                                                 "${CMAKE_SHARED_LIBRARY_PREFIX}boost_filesystem${CMAKE_SHARED_LIBRARY_SUFFIX}${GUA_BOOST_LIB_SUFFIX}")
     elseif (WIN32)
         LIST(APPEND _GUA_BOOST_FILESYSTEM_LIB   "${CMAKE_STATIC_LIBRARY_PREFIX}libboost_filesystem-${GUA_COMPILER_SUFFIX}-mt-${GUA_BOOST_LIB_VERSION}${CMAKE_STATIC_LIBRARY_SUFFIX}"
@@ -106,27 +107,24 @@ IF (        BOOST_INCLUDE_DIRS
     endif (UNIX)
 
 
-    #MESSAGE(${_GUA_BOOST_FILESYSTEM_LIB})
-
     FOREACH(_SEARCH_DIR ${GUA_BOOST_LIBRARY_SEARCH_DIRS})
         FIND_PATH(_CUR_SEARCH
                 NAMES ${_GUA_BOOST_FILESYSTEM_LIB}
                 PATHS ${_SEARCH_DIR}
-                PATH_SUFFIXES debug release
+                PATH_SUFFIXES debug release .
                 NO_DEFAULT_PATH)
         IF (_CUR_SEARCH)
-            #MESSAGE(${_CUR_SEARCH})
             LIST(APPEND _GUA_BOOST_FOUND_LIB_DIR ${_SEARCH_DIR})
             if (UNIX)
                 FIND_FILE(_CUR_SEARCH_FILE NAMES ${_GUA_BOOST_FILESYSTEM_LIB} PATHS ${_CUR_SEARCH})
                 if (_CUR_SEARCH_FILE)
-                    MESSAGE(${_CUR_SEARCH_FILE})
+                    LIST(APPEND BOOST_LIBRARIES ${_CUR_SEARCH_FILE})
+
                     STRING(REGEX REPLACE "${_CUR_SEARCH}/${CMAKE_SHARED_LIBRARY_PREFIX}boost_filesystem(.*).so(.*)" "\\2" _GUA_BOOST_UNIX_LIB_SUF ${_CUR_SEARCH_FILE})
-                    message(${_GUA_BOOST_UNIX_LIB_SUF})
                     if (${_GUA_BOOST_UNIX_LIB_SUF} STREQUAL ${GUA_BOOST_LIB_SUFFIX})
                         message("found matching version")
+                        list(APPEND BOOST_LIBRARIES _GUA_BOOST_FILESYSTEM_LIB)
                         STRING(REGEX REPLACE "${_CUR_SEARCH}/${CMAKE_SHARED_LIBRARY_PREFIX}boost_filesystem(.*).so(.*)" "\\1" _GUA_BOOST_POSTFIX ${_CUR_SEARCH_FILE})
-                        #MESSAGE(${_GUA_BOOST_POSTFIX})
                     endif (${_GUA_BOOST_UNIX_LIB_SUF} STREQUAL ${GUA_BOOST_LIB_SUFFIX})
                 endif (_CUR_SEARCH_FILE)
                 SET(_CUR_SEARCH_FILE _CUR_SEARCH_FILE-NOTFOUND CACHE INTERNAL "internal use")
@@ -135,13 +133,12 @@ IF (        BOOST_INCLUDE_DIRS
         SET(_CUR_SEARCH _CUR_SEARCH-NOTFOUND CACHE INTERNAL "internal use")
     ENDFOREACH(_SEARCH_DIR ${GUA_BOOST_LIBRARY_SEARCH_DIRS})
 
-    #MESSAGE(${_GUA_BOOST_FOUND_LIB_DIR})
-
     IF (NOT _GUA_BOOST_FOUND_LIB_DIR)
         MESSAGE(FATAL_ERROR "guacamole_boost.cmake: unable to find boost library")
     ELSE (NOT _GUA_BOOST_FOUND_LIB_DIR)
         SET(BOOST_LIBRARY_DIRS       ${_GUA_BOOST_FOUND_LIB_DIR}       CACHE STRING "The boost library directory")
 		message("--  found matching version")
+                file(GLOB BOOST_LIBRARIES ${_GUA_BOOST_FOUND_LIB_DIR}/*.so)
     ENDIF (NOT _GUA_BOOST_FOUND_LIB_DIR)
 
     if (UNIX)
@@ -167,8 +164,5 @@ IF (        BOOST_INCLUDE_DIRS
         set(GUA_BOOST_MT_S_DBG  "${GUA_COMPILER_SUFFIX}-mt-sgd-${GUA_BOOST_LIB_VERSION}" CACHE STRING "boost static library debug postfix")
     endif (UNIX)
 	
-ENDIF(        BOOST_INCLUDE_DIRS
-      AND NOT BOOST_LIBRARY_DIRS)
-
-
-
+ENDIF(BOOST_INCLUDE_DIRS AND NOT BOOST_LIBRARIES)
+#      AND NOT BOOST_LIBRARY_DIRS)
