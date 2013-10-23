@@ -26,7 +26,6 @@ IF (NOT BOOST_INCLUDE_DIRS)
 
     SET(_GUA_BOOST_FOUND_INC_DIRS "")
     FOREACH(_SEARCH_DIR ${GUA_BOOST_INCLUDE_SEARCH_DIRS})
-		MESSAGE(${_SEARCH_DIR})
         FIND_PATH(_CUR_SEARCH
                 NAMES boost/config.hpp
                 PATHS ${_SEARCH_DIR}
@@ -119,7 +118,6 @@ IF (        BOOST_INCLUDE_DIRS
                 FIND_FILE(_CUR_SEARCH_FILE NAMES ${_GUA_BOOST_FILESYSTEM_LIB} PATHS ${_CUR_SEARCH})
                 if (_CUR_SEARCH_FILE)
                     LIST(APPEND BOOST_LIBRARIES ${_CUR_SEARCH_FILE})
-
                     STRING(REGEX REPLACE "${_CUR_SEARCH}/${CMAKE_SHARED_LIBRARY_PREFIX}boost_filesystem(.*).so(.*)" "\\2" _GUA_BOOST_UNIX_LIB_SUF ${_CUR_SEARCH_FILE})
                     if (${_GUA_BOOST_UNIX_LIB_SUF} STREQUAL ${GUA_BOOST_LIB_SUFFIX})
                         message("found matching version")
@@ -138,7 +136,7 @@ IF (        BOOST_INCLUDE_DIRS
     ELSE (NOT _GUA_BOOST_FOUND_LIB_DIR)
         SET(BOOST_LIBRARY_DIRS       ${_GUA_BOOST_FOUND_LIB_DIR}       CACHE STRING "The boost library directory")
 		message("--  found matching version")
-                file(GLOB BOOST_LIBRARIES ${_GUA_BOOST_FOUND_LIB_DIR}/*.so)
+                FILE(GLOB BOOST_LIBRARIES ${_GUA_BOOST_FOUND_LIB_DIR}/*.so)
     ENDIF (NOT _GUA_BOOST_FOUND_LIB_DIR)
 
     if (UNIX)
