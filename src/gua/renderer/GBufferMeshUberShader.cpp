@@ -32,8 +32,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBufferMeshUberShader::
-create(std::set<std::string> const& material_names) {
+void GBufferMeshUberShader::create(std::set<std::string> const& material_names) {
 
   UberShaderFactory vshader_factory(
     ShadingModel::GBUFFER_VERTEX_STAGE, material_names

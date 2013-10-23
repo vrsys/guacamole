@@ -24,8 +24,6 @@
 
 #include <boost/mpl/assert.hpp>
 
-#include <gua/math/math.hpp>
-
 namespace gua {
 namespace traits {
 
@@ -46,10 +44,6 @@ template <> struct scalar<long double> {
   typedef long double type;
 };
 
-template <> struct scalar<math::vec3> {
-  typedef float type;
-};
-
 template <typename T> struct dimension {
   BOOST_MPL_ASSERT_MSG(false, NOT_IMPLEMENTED_FOR_THIS_VECTOR_TYPE, (types<T>));
 };
@@ -62,18 +56,6 @@ template <> struct dimension<double> {
 };
 template <> struct dimension<long double> {
   static const unsigned int value = 1;
-};
-
-template <> struct dimension<math::vec2> {
-  static const unsigned int value = 2;
-};
-
-template <> struct dimension<math::vec3> {
-  static const unsigned int value = 3;
-};
-
-template <> struct dimension<math::vec4> {
-  static const unsigned int value = 4;
 };
 
 // Examples:
@@ -103,7 +85,6 @@ template <> struct dimension<math::vec4> {
 // };
 
 }
-
 }
 
 #endif  // #ifndef GUA_TRAITS_HPP

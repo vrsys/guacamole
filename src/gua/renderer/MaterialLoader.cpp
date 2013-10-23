@@ -151,7 +151,7 @@ std::string const MaterialLoader::load_material(
     std::string shading_model(load_shading_model(capabilities));
 
     MaterialDescription material_description;
-    material_description.get_shading_model() = shading_model;
+    material_description.set_shading_model(shading_model);
 
     if (capabilities & DIFFUSE_MAP)
       material_description.get_uniforms()["diffuse_map"] =
@@ -373,8 +373,8 @@ std::string const MaterialLoader::load_shading_model(
                BufferComponent::F1,
                UniformType::FLOAT);
 
-    model->get_gbuffer_vertex_stage().get_body() = gbuffer_vertex_body;
-    model->get_gbuffer_fragment_stage().get_body() = gbuffer_fragment_body;
+    model->get_gbuffer_vertex_stage().set_body(gbuffer_vertex_body);
+    model->get_gbuffer_fragment_stage().set_body(gbuffer_fragment_body);
 
     // Lighting stage //////////////////////////////////////////////////////
 
@@ -411,7 +411,7 @@ std::string const MaterialLoader::load_shading_model(
       lighting_body += "    gua_light_specular = vec3(0.0);";
     }
 
-    model->get_lbuffer_stage().get_body() = lighting_body;
+    model->get_lbuffer_stage().set_body(lighting_body);
 
     // Final stage /////////////////////////////////////////////////////////
 
@@ -439,7 +439,7 @@ std::string const MaterialLoader::load_shading_model(
     final_body += "    gua_color = gua_color * (vec3(1.0) - my_emit_color) + "
                   "my_emit_color;";
 
-    model->get_final_shading_stage().get_body() = final_body;
+    model->get_final_shading_stage().set_body(final_body);
 
     ShadingModelDatabase::instance()->add(shading_model_name, model);
   }

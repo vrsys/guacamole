@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/utils/Mask.hpp>
-#include <gua/scenegraph/Iterator.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/math/math.hpp>
 

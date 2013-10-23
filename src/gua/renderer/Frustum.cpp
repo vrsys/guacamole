@@ -26,8 +26,6 @@
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
-
 Frustum::Frustum(math::mat4 const& camera_transform,
                  math::mat4 const& screen_transform,
                  float clip_near,
@@ -97,22 +95,6 @@ Frustum::Frustum(math::mat4 const& camera_transform,
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-math::vec3 const& Frustum::get_camera_position() const {
-  return camera_position_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-math::mat4 const& Frustum::get_projection() const { return projection_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-math::mat4 const& Frustum::get_view() const { return view_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool Frustum::is_inside(math::BoundingBox<math::vec3> const& bbox) const {
 
   auto distance = [](math::vec4 const & plane, math::vec3 const & point) {
@@ -138,7 +120,5 @@ bool Frustum::is_inside(math::BoundingBox<math::vec3> const& bbox) const {
 
   return true;
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 }

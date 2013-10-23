@@ -40,9 +40,11 @@ class Frustum {
           float clip_near,
           float clip_far);
 
-  math::vec3 const& get_camera_position() const;
-  math::mat4 const& get_projection() const;
-  math::mat4 const& get_view() const;
+  inline math::vec3 const& get_camera_position() const {
+    return camera_position_;
+  }
+  inline math::mat4 const& get_projection() const { return projection_; }
+  inline math::mat4 const& get_view() const { return view_; }
 
   bool is_inside(math::BoundingBox<math::vec3> const& bbox) const;
 

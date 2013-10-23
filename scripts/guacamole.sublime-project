@@ -1,0 +1,20 @@
+{
+	"folders":
+	[
+		{
+			"follow_symlinks": true,
+			"path": "..",
+            "folder_exclude_patterns": ["doc", "build", "lib"],
+            "file_exclude_patterns": ["*.nfs*"]
+		}
+	],
+	"build_systems":
+	[
+	  {
+	    "name": "guacamole-project",
+	    "file_regex": "^(..[^:]*):(.*)$",
+	    "working_dir": "${project_path}/..",
+	    "cmd":  ["./scripts/make.sh"]
+	  }
+	]
+}

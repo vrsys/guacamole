@@ -28,7 +28,6 @@
 #include <gua/physics/RigidBodyNode.hpp>
 #include <gua/physics/CollisionShapeNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/scenegraph/Iterator.hpp>
 
 // external headers
 #include <stack>

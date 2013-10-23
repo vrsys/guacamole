@@ -142,8 +142,8 @@ class FrameBufferObject {
   /**
    * Gets the size of the FrameBufferObject.
    */
-  unsigned width() const;
-  unsigned height() const;
+  inline unsigned width() const { return width_; }
+  inline unsigned height() const { return height_; }
   ///@}
 
  private:

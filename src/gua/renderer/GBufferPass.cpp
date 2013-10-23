@@ -317,8 +317,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
         mesh_shader_->use(ctx);  // re-use mesh_shader
 
-        for (auto const& bbox : scene.bounding_boxes_)
-            {
+        for (auto const& bbox : scene.bounding_boxes_) {
             math::mat4 bbox_transform(math::mat4::identity());
             auto scale(scm::math::make_scale((bbox.max - bbox.min) * 1.001f));
             auto translation(

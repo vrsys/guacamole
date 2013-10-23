@@ -19,66 +19,31 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LOADER_BASE_HPP
-#define GUA_LOADER_BASE_HPP
+#ifndef GUA_FPS_COUNTER_HPP
+#define GUA_FPS_COUNTER_HPP
 
-// guacamole headers
-
-// external headers
-#include <memory>
-#include <string>
-#include <vector>
+#include <gua/utils/Timer.hpp>
 
 namespace gua {
 
-class Node;
+struct FpsCounter
+{
+  FpsCounter(unsigned t) : fps(0.0f), frame_count(0), timer(), delay(t) {}
+  void step() {
+    if (++frame_count == delay) {
+      fps = 1.f * delay / float(timer.get_elapsed());
+      timer.reset();
+      frame_count = 0;
+    }
+  }
+  void start() { timer.start(); }
 
-/**
- * Virtual base class for any file loader
- *
- * This class provides the interface for any file loader generating nodes
- */
-class LoaderBase {
- public:
-
-  /**
-   * Default constructor.
-   *
-   * Constructs a new and empty LoaderBase.
-   */
-  LoaderBase() {}
-
-  /**
-   * Destructor.
-   *
-   * Deletes the LoaderBase
-   */
-  virtual ~LoaderBase() {}
-
-  /**
-   * Interface for loading from a file.
-   *
-   * Creates a new Node from a file
-   *
-   * \param flags        TODO: what does flags?
-   */
-  virtual std::shared_ptr<Node> load(std::string const& file_name,
-                                     std::string const& fallback_material,
-                                     unsigned flags) = 0;
-
-  /**
-   * Interface for file support
-   *
-   * returns if the filename is supported by this loader
-   *
-   * \param file_name        The file to load the data from.
-   */
-  virtual bool is_supported(std::string const& file_name) const = 0;
-
- private:
-
+  float    fps;
+  unsigned frame_count;
+  Timer    timer;
+  unsigned delay;
 };
 
 }
 
-#endif  // GUA_LOADER_BASE_HPP
+#endif  // GUA_FPS_COUNTER_HPP

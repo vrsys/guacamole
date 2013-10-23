@@ -19,6 +19,7 @@
  *                                                                            *
  ******************************************************************************/
 
+#include <gua/math/math.hpp>
 #include <gua/utils/KDTree.hpp>
 
 #include <gua/platform.hpp>

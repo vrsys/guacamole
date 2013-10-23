@@ -1,6 +1,8 @@
 Guacamole
 =========
 
+[![Build Status](https://secure.travis-ci.org/vrsys/guacamole.png)](http://travis-ci.org/vrsys/guacamole)
+
 Get involved!
 -------------
 

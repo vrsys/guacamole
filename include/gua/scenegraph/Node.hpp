@@ -214,7 +214,9 @@ class Node {
    * \param y         The y value of the scaling.
    * \param z         The z value of the scaling.
    */
+  virtual void scale(float s);
   virtual void scale(float x, float y, float z);
+  virtual void scale(math::vec3 const& s);
 
   /**
    * Applies a rotation on the Node's object's transformation.
@@ -225,6 +227,7 @@ class Node {
    * \param z         The z factor of the rotation.
    */
   virtual void rotate(float angle, float x, float y, float z);
+  virtual void rotate(float angle, math::vec3 const& axis);
 
   /**
    * Applies a translation on the Node's object's transformation.
@@ -234,6 +237,7 @@ class Node {
    * \param z         The z value of the translation.
    */
   virtual void translate(float x, float y, float z);
+  virtual void translate(math::vec3 const& offset);
 
   /**
    * Returns the Node's depth.
@@ -280,7 +284,6 @@ class Node {
   void*     get_user_data(unsigned handle) const;
   unsigned  add_user_data(void* data);
 
-  friend class Iterator;
   friend class SceneGraph;
   friend class GeometryLoader;
   friend class MeshLoader;

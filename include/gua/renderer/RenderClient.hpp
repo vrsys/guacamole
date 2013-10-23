@@ -26,6 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/utils/Timer.hpp>
 #include <gua/utils/Doublebuffer.hpp>
+#include <gua/utils/FpsCounter.hpp>
 
 // external headers
 #include <thread>
@@ -52,24 +53,14 @@ template <typename T> class RenderClient {
   //RenderClient(std::function<void(T const&, float)> const& fun)
   template <typename F> RenderClient(F&& fun) : forever_(), doublebuffer_() {
 
-#define FPS_CALCULATION_DELAY 20
-
-    forever_ = std::thread([&doublebuffer_, fun]() {
-      float rendering_fps(0.f);
-      unsigned rendering_frame_count(0);
-      Timer rendering_timer;
-      rendering_timer.start();
+    forever_ = std::thread([this, fun]() {
+      FpsCounter fpsc(20);
+      fpsc.start();
 
       while (true) {
-        auto sg = doublebuffer_.read();
-        fun(sg, rendering_fps);
-
-        if (++rendering_frame_count == FPS_CALCULATION_DELAY) {
-          rendering_fps = 1.f * FPS_CALCULATION_DELAY /
-                          float(rendering_timer.get_elapsed());
-          rendering_timer.reset();
-          rendering_frame_count = 0;
-        }
+        auto sg = this->doublebuffer_.read();
+        fun(sg, fpsc.fps);
+        fpsc.step();
       }
     });
   }

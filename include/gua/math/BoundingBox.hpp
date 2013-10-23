@@ -23,7 +23,7 @@
 #define GUA_BOUNDING_BOX_HPP
 
 #include <gua/platform.hpp>
-#include <gua/utils/traits.hpp>
+#include <gua/math/traits.hpp>
 #include <utility>
 #include <limits>
 #include <vector>

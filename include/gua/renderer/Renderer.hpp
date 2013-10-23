@@ -29,6 +29,7 @@
 #include <string>
 #include <memory>
 #include <gua/renderer/RenderClient.hpp>
+#include <gua/utils/FpsCounter.hpp>
 
 namespace gua {
 
@@ -68,9 +69,7 @@ class Renderer {
   typedef RenderClient<std::shared_ptr<const_render_vec_t> > renderclient_t;
   std::vector<std::unique_ptr<renderclient_t> > render_clients_;
 
-  float application_fps_;
-  unsigned application_frame_count_;
-  Timer application_timer_;
+  FpsCounter application_fps_;
 };
 
 }

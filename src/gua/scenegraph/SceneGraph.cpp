@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/scenegraph/Iterator.hpp>
 #include <gua/scenegraph/GroupNode.hpp>
 #include <gua/utils/PathParser.hpp>
 #include <gua/utils/DotGenerator.hpp>
@@ -58,25 +57,6 @@ void SceneGraph::remove_node(std::shared_ptr<Node> const& to_remove) {
         to_remove->get_parent()->remove_child(to_remove);
     }
 }
-
-SceneGraph::Iterator SceneGraph::get_iterator(std::string const& path_to_node) const {
-    return Iterator(find_node(path_to_node));
-}
-
-SceneGraph::Iterator SceneGraph::begin() const {
-
-    auto root_children(root_->get_children());
-    if (!root_children.empty())
-        return Iterator(root_);
-    else {
-        WARNING("You are trying to iterate over an empty graph!\
-              "
-                "   Returning iterator on end.");
-        return end();
-    }
-}
-
-SceneGraph::Iterator SceneGraph::end() const { return Iterator(); }
 
 void SceneGraph::set_name(std::string const& name) {
   name_ = name;
@@ -168,16 +148,6 @@ std::set<PickResult> const SceneGraph::ray_test(RayNode const& ray,
                                                 PickResult::Options options,
                                                 std::string const& mask) {
     return root_->ray_test(ray, options, mask);
-}
-
-std::ostream& operator<<(std::ostream & os, SceneGraph const & graph) {
-
-    for (SceneGraph::Iterator it(graph.begin()); it != graph.end(); ++it) {
-        for (int i(0); i < it->get_depth(); ++i)
-            os << "  ";
-        os << it->get_name() << std::endl;
-    }
-    return os;
 }
 
 }
