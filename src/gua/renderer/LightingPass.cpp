@@ -265,10 +265,10 @@ void LightingPass::render_shadow_map(RenderContext const & ctx,
                            pipeline_->config.far_clip());
 
     SerializedScene scene;
+    scene.frustum = shadow_frustum;
     serializer_->check(&scene,
                        pipeline_->get_current_graph(),
                        Camera("", "", scene_camera.render_mask),
-                       shadow_frustum,
                        false,
                        false,
                        true);
