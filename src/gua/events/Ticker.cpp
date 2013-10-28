@@ -21,16 +21,33 @@
 
 #include <gua/events/Ticker.hpp>
 
+#include <boost/bind.hpp>
+
 namespace gua {
-namespace events {
+  namespace events {
 
-Ticker::Ticker(double tick_time) {
+    Ticker::Ticker(MainLoop& mainloop, double tick_time) 
+      : timer_(new boost::asio::deadline_timer(mainloop.io_service, boost::posix_time::microseconds(1000000.0*tick_time))),
+        tick_time_(tick_time)
+    {
+      async_wait();
+    }
 
-  timer_.set<Ticker, &Ticker::self_callback>(this);
-  timer_.start(tick_time, tick_time);
+    Ticker::~Ticker()
+    {
+      delete timer_;
+    }
+
+    void Ticker::self_callback(int revents) 
+    { 
+      on_tick.emit(); 
+      async_wait();
+    }
+
+    void Ticker::async_wait() {
+      timer_->async_wait(boost::bind(&Ticker::self_callback, this, 0));
+    }
+       
+  }
 }
 
-void Ticker::self_callback(ev::timer& timer, int revents) { on_tick.emit(); }
-
-}
-}

@@ -32,11 +32,7 @@
 // external headers
 #include <stdexcept>
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC
-  #include <HACD/hacdHACD.h>
-#else
-  #include <hacdHACD.h>
-#endif
+#include <hacdHACD.h>
 
 namespace gua {
 namespace physics {

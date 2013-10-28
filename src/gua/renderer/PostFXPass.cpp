@@ -751,10 +751,12 @@ bool PostFXPass::pre_compile_shaders(RenderContext const& ctx) {
       if (shader) shader->upload_to(ctx);
     }
 
-    if (god_ray_shader_)            god_ray_shader_->upload_to(ctx);
-    if (fullscreen_texture_shader_) fullscreen_texture_shader_->upload_to(ctx);
-    if (glow_shader_)               glow_shader_->upload_to(ctx);
-    if (luminance_shader_)          luminance_shader_->upload_to(ctx);
+    if (god_ray_shader_)            return god_ray_shader_->upload_to(ctx);
+    if (fullscreen_texture_shader_) return fullscreen_texture_shader_->upload_to(ctx);
+    if (glow_shader_)               return glow_shader_->upload_to(ctx);
+    if (luminance_shader_)          return luminance_shader_->upload_to(ctx);
+
+    return false;
 }
 
 }

@@ -30,12 +30,8 @@
 // external headers
 #include <scm/gl_core.h>
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-#include <boost/thread.hpp>
-#else
 #include <mutex>
 #include <thread>
-#endif
 
 #include <vector>
 

@@ -92,8 +92,9 @@ void GBufferPass::print_shaders(std::string const& directory,
 ////////////////////////////////////////////////////////////////////////////////
 
 bool GBufferPass::pre_compile_shaders(RenderContext const& ctx) {
-    if (mesh_shader_)  mesh_shader_->upload_to(ctx);
-    if (nurbs_shader_) nurbs_shader_->upload_to(ctx);
+    if (mesh_shader_)  return mesh_shader_->upload_to(ctx);
+    if (nurbs_shader_) return nurbs_shader_->upload_to(ctx);
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

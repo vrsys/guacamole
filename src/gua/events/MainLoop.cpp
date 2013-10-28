@@ -20,25 +20,23 @@
  ******************************************************************************/
 
 #include <gua/events/MainLoop.hpp>
-#include <ev++.h>
+
 #include <iostream>
 
 namespace gua {
-namespace events {
+  namespace events {
 
-MainLoop::MainLoop() {}
+    MainLoop::MainLoop() {}
 
-MainLoop::~MainLoop() {}
+    MainLoop::~MainLoop() {}
 
-void MainLoop::start() {
-  struct ev_loop* loop = EV_DEFAULT;
-  ev_run(loop, 0);
-}
+    void MainLoop::start() {
+      io_service.run();
+    }
 
-void MainLoop::stop() {
-  struct ev_loop* loop = EV_DEFAULT;
-  ev_break(loop, EVBREAK_ONE);
-}
+    void MainLoop::stop() {
+      io_service.stop();
+    }
 
-}
+  }
 }
