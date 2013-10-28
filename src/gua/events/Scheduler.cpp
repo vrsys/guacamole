@@ -21,6 +21,8 @@
 
 #include <gua/events/Scheduler.hpp>
 
+#include <boost/bind.hpp>
+
 namespace gua {
 namespace events {
 
@@ -28,24 +30,24 @@ Scheduler::Scheduler() {}
 
 Scheduler::~Scheduler() {}
 
-void Scheduler::execute_delayed(std::function<void()> callback, double delay) {
+void Scheduler::execute_delayed(MainLoop& mainloop, std::function<void()> callback, double delay) {
 
-  ev::timer* timer = new ev::timer();
-  timer->set<Scheduler, &Scheduler::self_callback>(this);
-  timer->start(delay, 0);
+  boost::asio::deadline_timer* timer = new boost::asio::deadline_timer(mainloop.io_service, boost::posix_time::microseconds(1000000.0 * delay));
 
   tasks_.insert(std::make_pair(timer, callback));
+  timer->async_wait(boost::bind(&Scheduler::self_callback, this, timer, 0));
 }
 
-void Scheduler::self_callback(ev::timer& timer, int revents) {
-  auto callback(tasks_.find(&timer));
+void Scheduler::self_callback(boost::asio::deadline_timer* timer, int revents) {
+  auto callback(tasks_.find(timer));
 
   if (callback != tasks_.end()) {
     callback->second();
-    tasks_.erase(&timer);
-    delete& timer;
+    tasks_.erase(timer);
+    delete timer;
   }
 }
 
+  }
 }
-}
+

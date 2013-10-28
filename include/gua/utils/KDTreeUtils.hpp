@@ -27,7 +27,7 @@
 
 #include <vector>
 
-class aiMesh;
+struct aiMesh;
 
 namespace gua {
 

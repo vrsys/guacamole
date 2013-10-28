@@ -1,10 +1,12 @@
 SET(SCHISM_INCLUDE_SEARCH_DIRS
+	${GLOBAL_EXT_DIR}/inc/schism
     #/opt/schism/schism_debug
     /opt/schism/current
     #/opt/schism/schism_debug
 )
 
 SET(SCHISM_LIBRARY_SEARCH_DIRS
+	${GLOBAL_EXT_DIR}/lib	
     #/opt/schism/schism_debug/lib/linux_x86
     /opt/schism/current/lib/linux_x86
     #/opt/schism/schism_debug/lib/linux_x86
@@ -48,10 +50,18 @@ IF (        SCHISM_INCLUDE_DIRS
     SET(_SCHISM_POSTFIX "")
 
     FOREACH(_SEARCH_DIR ${SCHISM_LIBRARY_SEARCH_DIRS})
-        FIND_PATH(_CUR_SEARCH
-                NAMES libscm_gl_core.so
-                PATHS ${_SEARCH_DIR}
-                NO_DEFAULT_PATH)
+		IF (UNIX)
+			FIND_PATH(_CUR_SEARCH
+					NAMES libscm_gl_core.so
+					PATHS ${_SEARCH_DIR}
+					NO_DEFAULT_PATH)
+		ELSEIF(WIN32)
+			FIND_PATH(_CUR_SEARCH
+					NAMES scm_gl_core.lib
+					PATHS ${_SEARCH_DIR}
+					PATH_SUFFIXES debug release
+					NO_DEFAULT_PATH)
+		ENDIF(UNIX)
         IF (_CUR_SEARCH)
             LIST(APPEND _SCHISM_FOUND_LIB_DIR ${_SEARCH_DIR})
         ENDIF(_CUR_SEARCH)
@@ -61,11 +71,21 @@ IF (        SCHISM_INCLUDE_DIRS
     IF (NOT _SCHISM_FOUND_LIB_DIR)
         MESSAGE(FATAL_ERROR "find_schism.cmake: unable to find SCHISM library")
     ELSE (NOT _SCHISM_FOUND_LIB_DIR)
+		SET(SCHISM_LIBRARY_DIRS ${_SCHISM_FOUND_LIB_DIR} CACHE STRING "The schism library directory")
         message("--  found matching version")
     ENDIF (NOT _SCHISM_FOUND_LIB_DIR)
     
     FOREACH(_LIB_DIR ${_SCHISM_FOUND_LIB_DIR})
-        file(GLOB SCHISM_LIBRARIES ${_LIB_DIR}/*.so)
+		IF (UNIX)
+			file(GLOB SCHISM_LIBRARIES ${_LIB_DIR}/*.so)
+		ELSEIF(WIN32)
+			file(GLOB _SCHISM_LIBRARY_ABSOLUTE_PATHS ${_LIB_DIR}/release/scm*.lib)	
+			FOREACH (_SCHISM_LIB_PATH ${_SCHISM_LIBRARY_ABSOLUTE_PATHS})
+				SET(_SCHISM_LIB_FILENAME, "")
+				GET_FILENAME_COMPONENT(_SCHISM_LIB_FILENAME ${_SCHISM_LIB_PATH} NAME)
+				LIST(APPEND SCHISM_LIBRARIES ${_SCHISM_LIB_FILENAME})
+			ENDFOREACH(_SCHISM_LIB_PATH)
+		ENDIF(UNIX)
     ENDFOREACH(_LIB_DIR ${_SCHISM_FOUND_INC_DIRS})
     
 

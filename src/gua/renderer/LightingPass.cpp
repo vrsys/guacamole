@@ -90,9 +90,10 @@ LayerMapping const* LightingPass::get_gbuffer_mapping() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 bool LightingPass::pre_compile_shaders(RenderContext const& ctx) {
-    if (shader_) shader_->upload_to(ctx);
-    if (shadow_map_mesh_shader_) shadow_map_mesh_shader_->upload_to(ctx);
+    if (shader_)                 return shader_->upload_to(ctx);
+    if (shadow_map_mesh_shader_) return shadow_map_mesh_shader_->upload_to(ctx);
     // if (shadow_map_nurbs_shader_) shadow_map_nurbs_shader_->upload_to(ctx);
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

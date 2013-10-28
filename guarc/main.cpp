@@ -133,20 +133,15 @@ void read_file(fs::path const& file, std::string const& root) {
   std::string full_path(file.string());
   std::string rel_path(full_path.substr(root.length() + 1, std::string::npos));
 
-
+  // replace windows '\' with '/' for map key 
+  std::replace(rel_path.begin(), rel_path.end(), '\\', '/');
   std::cout << rel_path << std::endl;
-
+  
   // open the file:
-  std::ifstream s(file.string(), std::ios::binary);
+  std::ifstream s(file.string(), std::ios::in | std::ios::binary);
 
-  // get its size:
-  s.seekg(0, std::ios::end);
-  std::streampos file_size = s.tellg();
-  s.seekg(0, std::ios::beg);
-
-  // read the data:
-  data[rel_path] = std::vector<unsigned char>(file_size);
-  s.read((char*) &data[rel_path][0], file_size);
+  data[rel_path] = std::vector<unsigned char>(std::istreambuf_iterator<char>(s), std::istreambuf_iterator<char>());
+  //std::cout << "Read " << data[rel_path].size() << " bytes from " << file.string() << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

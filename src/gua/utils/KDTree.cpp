@@ -129,15 +129,7 @@ KDTree::KDNode* KDTree::build(
 
     // return leaf with one triangle if there is only one left
     if (sorted_triangles[dim].size() == 1) {
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-        std::vector<LeafData> leaves;
-        leaves.push_back(sorted_triangles[dim].front());
-        return new KDNode(leaves);
-#else
-        return new KDNode({
-      sorted_triangles[dim].front()
-    });
-#endif
+      return new KDNode(std::vector<LeafData>({sorted_triangles[dim].front()}));
     }
 
     // select splitting position as minimum point of median triangles bounding

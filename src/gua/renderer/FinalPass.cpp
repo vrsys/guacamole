@@ -46,7 +46,8 @@ void FinalPass::print_shaders(std::string const& directory,
 ////////////////////////////////////////////////////////////////////////////////
 
 bool FinalPass::pre_compile_shaders(RenderContext const& ctx) {
-    if (shader_) shader_->upload_to(ctx);
+    if (shader_) return shader_->upload_to(ctx);
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

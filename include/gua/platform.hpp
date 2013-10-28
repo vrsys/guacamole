@@ -87,10 +87,11 @@
 
 #define __gua_export(lib) \
   export_(BOOST_PP_EXPAND(BOOST_PP_CAT(GUA_BUILD_LIBRARY_, lib)))
-#define export_(lib) \
-  BOOST_PP_IF(       \
-      BOOST_PP_IS_NULLARY(lib), __declspec(dllexport), __declspec(dllimport))
-
+#ifndef export_
+  #define export_(lib) \
+    BOOST_PP_IF(       \
+        BOOST_PP_IS_NULLARY(lib), __declspec(dllexport), __declspec(dllimport))
+#endif
 #define __gua_private(lib)
 #else
 #error "unsupported windows platform compiler"
