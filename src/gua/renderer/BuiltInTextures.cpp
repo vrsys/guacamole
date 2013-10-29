@@ -456,7 +456,7 @@ k\204\205ke\217\211p\\~Z\303\224{(s\224Jxs\256s\245\30{\204|vn\241\214s<\
 
 NoiseTexture::
 NoiseTexture()
-  : Texture(64, 64, scm::gl::FORMAT_RGB_8, {pixel_data})
+  : Texture2D(64, 64, scm::gl::FORMAT_RGB_8, {pixel_data})
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7738,9 +7738,9 @@ I?????????????????????????????????????????????\225\225\225\225\225\225\225\
 DefaultTexture::
 DefaultTexture()
 #if WIN32
-  : Texture(64, 64, scm::gl::FORMAT_RGB_8, {pixel_data})
+  : Texture2D(64, 64, scm::gl::FORMAT_RGB_8, {pixel_data})
 #else
-  : Texture(256, 256, scm::gl::FORMAT_RGB_8, {pixel_data})
+  : Texture2D(256, 256, scm::gl::FORMAT_RGB_8, {pixel_data})
 #endif
 {}
 

@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/Texture.hpp>
+#include <gua/renderer/Texture2D.hpp>
 #include <gua/utils/Color3f.hpp>
 
 // external headers
@@ -72,7 +72,7 @@ class FrameBufferObject {
    */
   void attach_color_buffer(RenderContext const& context,
                            unsigned in_color_attachment,
-                           std::shared_ptr<Texture> const& buffer,
+                           std::shared_ptr<Texture2D> const& buffer,
                            int mip_level = 0,
                            int z_slice = 0);
 
@@ -87,7 +87,7 @@ class FrameBufferObject {
    * \param z_slice              The buffer's z_slice.
    */
   void attach_depth_stencil_buffer(RenderContext const& context,
-                                   std::shared_ptr<Texture> const& buffer,
+                                   std::shared_ptr<Texture2D> const& buffer,
                                    int mip_level = 0,
                                    int z_slice = 0);
 
@@ -147,7 +147,7 @@ class FrameBufferObject {
   ///@}
 
  private:
-  bool set_size(std::shared_ptr<Texture> const& buffer);
+  bool set_size(std::shared_ptr<Texture2D> const& buffer);
 
   unsigned width_, height_;
   mutable std::vector<scm::gl::frame_buffer_ptr> fbos_;

@@ -23,7 +23,7 @@
 #define GUA_WARP_MATRIX_HPP
 
 // guacamole headers
-#include <gua/renderer/Texture.hpp>
+#include <gua/renderer/Texture2D.hpp>
 
 namespace gua {
 
@@ -34,7 +34,7 @@ namespace gua {
  * when the projecting beamers for the colors red, green and blue don't
  * overlap exactly.
  */
-class WarpMatrix : public Texture {
+class WarpMatrix : public Texture2D {
  public:
 
   /**

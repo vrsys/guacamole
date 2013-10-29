@@ -33,12 +33,12 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpMatrix::WarpMatrix() : Texture(0, 0), data_() {}
+WarpMatrix::WarpMatrix() : Texture2D(0, 0), data_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 WarpMatrix::WarpMatrix(std::string const& file_name)
-    : Texture(0,
+    : Texture2D(0,
               0,
               scm::gl::FORMAT_RGBA_16F,
               1,

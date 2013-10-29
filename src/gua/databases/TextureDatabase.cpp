@@ -33,7 +33,7 @@
 namespace gua {
 
 void TextureDatabase::load(std::string const& id) {
-  instance()->add(id, std::make_shared<Texture>(id, true));
+  instance()->add(id, std::make_shared<Texture2D>(id, true));
 }
 
 }

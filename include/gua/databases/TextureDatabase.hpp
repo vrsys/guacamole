@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
-#include <gua/renderer/Texture.hpp>
+#include <gua/renderer/Texture2D.hpp>
 
 namespace gua {
 
@@ -35,7 +35,7 @@ namespace gua {
  * This Database stores texture data. It can be accessed via string
  * identifiers.
  */
-class TextureDatabase : public Database<Texture>,
+class TextureDatabase : public Database<Texture2D>,
                         public Singleton<TextureDatabase> {
  public:
 

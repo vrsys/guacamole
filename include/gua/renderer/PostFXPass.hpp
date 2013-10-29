@@ -81,7 +81,7 @@ class PostFXPass : public Pass {
                       CameraMode eye,
                       RenderContext const& ctx);
   void render_ssao(RenderContext const& ctx);
-  void render_hdr(RenderContext const& ctx, std::shared_ptr<Texture> const& texture);
+  void render_hdr(RenderContext const& ctx, std::shared_ptr<Texture2D> const& texture);
 
   // postfx_shaders 0:  SSAO, Fog, God Rays,
   // postfx_shaders 1:  Glow,

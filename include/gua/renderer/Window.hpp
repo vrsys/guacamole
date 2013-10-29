@@ -38,7 +38,7 @@
 namespace gua {
 
 class Geometry;
-class Texture;
+class Texture2D;
 class StereoBuffer;
 
 /**
@@ -131,10 +131,10 @@ class Window {
   /**
    *
    */
-  void display(std::shared_ptr<Texture> const& center_texture);
+  void display(std::shared_ptr<Texture2D> const& center_texture);
 
-  void display(std::shared_ptr<Texture> const& left_texture,
-               std::shared_ptr<Texture> const& right_texture);
+  void display(std::shared_ptr<Texture2D> const& left_texture,
+               std::shared_ptr<Texture2D> const& right_texture);
 
   /**
    * Get the RenderContext of this window.
@@ -147,7 +147,7 @@ class Window {
   RenderContext* get_context();
 
  private:
-  void display(std::shared_ptr<Texture> const& texture,
+  void display(std::shared_ptr<Texture2D> const& texture,
                math::vec2ui const& size,
                math::vec2ui const& position,
                TextureDisplayMode mode = FULL,

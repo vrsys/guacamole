@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/Texture.hpp>
+#include <gua/renderer/Texture2D.hpp>
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -35,7 +35,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Texture::Texture(unsigned width,
+Texture2D::Texture2D(unsigned width,
                  unsigned height,
                  scm::gl::data_format color_format,
                  std::vector<void*> const& data,
@@ -54,7 +54,7 @@ Texture::Texture(unsigned width,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Texture::Texture(unsigned width,
+Texture2D::Texture2D(unsigned width,
                  unsigned height,
                  scm::gl::data_format color_format,
                  unsigned mipmap_layers,
@@ -71,7 +71,7 @@ Texture::Texture(unsigned width,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Texture::Texture(std::string const& file,
+Texture2D::Texture2D(std::string const& file,
                  bool generate_mipmaps,
                  scm::gl::sampler_state_desc const& state_descripton)
     : width_(0),
@@ -86,13 +86,13 @@ Texture::Texture(std::string const& file,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Texture::~Texture() {
+Texture2D::~Texture2D() {
   make_non_resident();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Texture::generate_mipmaps(RenderContext const& context) {
+void Texture2D::generate_mipmaps(RenderContext const& context) {
 
   if (textures_.size() <= context.id || textures_[context.id] == 0)
     upload_to(context);
@@ -102,7 +102,7 @@ void Texture::generate_mipmaps(RenderContext const& context) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::vec2ui const Texture::get_handle(RenderContext const& context) const {
+math::vec2ui const Texture2D::get_handle(RenderContext const& context) const {
 
   if (textures_.size() <= context.id || textures_[context.id] == 0)
     upload_to(context);
@@ -114,7 +114,7 @@ math::vec2ui const Texture::get_handle(RenderContext const& context) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-scm::gl::texture_2d_ptr const& Texture::get_buffer(
+scm::gl::texture_2d_ptr const& Texture2D::get_buffer(
     RenderContext const& context) const {
 
   if (textures_.size() <= context.id || textures_[context.id] == 0)
@@ -125,7 +125,7 @@ scm::gl::texture_2d_ptr const& Texture::get_buffer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Texture::make_resident(RenderContext const& context) const {
+void Texture2D::make_resident(RenderContext const& context) const {
   context.render_context
       ->make_resident(textures_[context.id], sampler_states_[context.id]);
 
@@ -133,14 +133,14 @@ void Texture::make_resident(RenderContext const& context) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Texture::make_non_resident(RenderContext const& context) const {
+void Texture2D::make_non_resident(RenderContext const& context) const {
 
   context.render_context->make_non_resident(textures_[context.id]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Texture::make_non_resident() const {
+void Texture2D::make_non_resident() const {
 
   for (int i(0); i<textures_.size(); ++i ) {
     render_contexts_[i]->make_non_resident(textures_[i]);
@@ -149,15 +149,15 @@ void Texture::make_non_resident() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-unsigned Texture::width() const { return width_; }
+unsigned Texture2D::width() const { return width_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-unsigned Texture::height() const { return height_; }
+unsigned Texture2D::height() const { return height_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Texture::upload_to(RenderContext const& context) const {
+void Texture2D::upload_to(RenderContext const& context) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
 

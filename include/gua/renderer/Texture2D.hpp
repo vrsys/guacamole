@@ -47,7 +47,7 @@ namespace gua {
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-class Texture {
+class Texture2D {
  public:
 
   /**
@@ -61,7 +61,7 @@ class Texture {
    *                         texture.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture(unsigned width,
+  Texture2D(unsigned width,
           unsigned height,
           scm::gl::data_format color_format,
           std::vector<void*> const& data,
@@ -82,7 +82,7 @@ class Texture {
    *                         texture.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture(unsigned width,
+  Texture2D(unsigned width,
           unsigned height,
           scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
           unsigned mipmap_layers = 1,
@@ -99,14 +99,14 @@ class Texture {
    * \param file             The file which contains the texture data.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture(std::string const& file,
+  Texture2D(std::string const& file,
           bool generate_mipmaps = false,
           scm::gl::sampler_state_desc const& state_descripton =
               scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
                                           scm::gl::WRAP_REPEAT,
                                           scm::gl::WRAP_REPEAT));
 
-  virtual ~Texture();
+  virtual ~Texture2D();
 
   void generate_mipmaps(RenderContext const& context);
 
@@ -133,7 +133,7 @@ class Texture {
   /**
    * Gets the size.
    *
-   * Returns the size of the Texture.
+   * Returns the size of the Texture2D.
    */
   unsigned width() const;
   unsigned height() const;
