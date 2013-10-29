@@ -69,7 +69,7 @@ enum class UniformType {
   SAMPLER1D,
   SAMPLER2D,
   SAMPLER3D,
-  CUBEMAP,
+  SAMPLERCUBE,
   NONE
 };
 
