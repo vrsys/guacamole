@@ -138,8 +138,12 @@ std::string uniform_type_to_string(UniformType type) {
       return "mat3";
     case UniformType::MAT4:
       return "mat4";
+    case UniformType::SAMPLER1D:
+      return "sampler1D";
     case UniformType::SAMPLER2D:
       return "sampler2D";
+    case UniformType::SAMPLER3D:
+      return "sampler3D";
     case UniformType::CUBEMAP:
       return "samplerCube";
     default:
@@ -166,8 +170,12 @@ boost::optional<UniformType> parse_uniform_type(std::string const& type) {
     return boost::make_optional(UniformType::MAT3);
   if (type == "mat4")
     return boost::make_optional(UniformType::MAT4);
+  if (type == "sampler1D")
+    return boost::make_optional(UniformType::SAMPLER1D);
   if (type == "sampler2D")
     return boost::make_optional(UniformType::SAMPLER2D);
+  if (type == "sampler3D")
+    return boost::make_optional(UniformType::SAMPLER3D);
   if (type == "samplerCube")
     return boost::make_optional(UniformType::CUBEMAP);
 
@@ -232,8 +240,12 @@ std::string get_default_value(UniformType type) {
       string_utils::replace(s, "\n", ";");
       return s;
     }
+    case UniformType::SAMPLER1D:
+      return "path/to/texture.png";
     case UniformType::SAMPLER2D:
       return "path/to/texture.png";
+    case UniformType::SAMPLER3D:
+      return "path/to/volume.raw";
     case UniformType::CUBEMAP:
       return "path/to/cubemap.png";
     default:
@@ -271,7 +283,11 @@ bool is_valid_value(UniformType type, std::string& value) {
         return true;
       }
       return false;
+    case UniformType::SAMPLER1D:
+      return true;
     case UniformType::SAMPLER2D:
+      return true;
+    case UniformType::SAMPLER3D:
       return true;
     case UniformType::CUBEMAP:
       return true;
