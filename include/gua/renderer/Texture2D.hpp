@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TEXTURE_HPP
-#define GUA_TEXTURE_HPP
+#ifndef GUA_TEXTURE2D_HPP
+#define GUA_TEXTURE2D_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -162,4 +162,4 @@ class Texture2D {
 };
 
 }
-#endif  // GUA_TEXTURE_HPP
+#endif  // GUA_TEXTURE2D_HPP
