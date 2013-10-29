@@ -79,7 +79,7 @@ std::unique_ptr<UniformValueBase> create_from_string_and_type(
           string_utils::from_string<math::mat4>(value));
       break;
 
-    case UniformType::SAMPLER:
+    case UniformType::SAMPLER2D:
       return gua::make_unique<UniformValue<std::string> >(value);
       break;
 

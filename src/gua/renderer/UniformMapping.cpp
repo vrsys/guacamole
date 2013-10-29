@@ -89,7 +89,7 @@ std::string const UniformMapping::get_uniform_definition() const {
     int count(get_uniform_count(UniformType(t)));
 
     if (count > 0) {
-      if (UniformType(t) == UniformType::SAMPLER) {
+      if (UniformType(t) == UniformType::SAMPLER2D) {
         std::string type(enums::uniform_type_to_string(UniformType(t)));
         result << "uniform uvec2"
                << " gua_" << type << "s[" << count << "];" << std::endl;
