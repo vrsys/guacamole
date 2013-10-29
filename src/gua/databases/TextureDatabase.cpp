@@ -21,6 +21,7 @@
 
 // class header
 #include <gua/databases/TextureDatabase.hpp>
+#include <gua/renderer/Texture2D.hpp>
 
 // guacamole headers
 #include <gua/utils/Directory.hpp>
@@ -29,6 +30,7 @@
 // external headers
 #include <sstream>
 #include <iostream>
+#include <boost/filesystem.hpp>
 
 namespace gua {
 

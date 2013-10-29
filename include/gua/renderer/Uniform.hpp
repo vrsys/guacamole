@@ -23,6 +23,7 @@
 #define GUA_UNIFORM_HPP
 
 // guacamole headers
+#include <gua/renderer/Texture.hpp>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/databases/TextureDatabase.hpp>
 #include <gua/utils/Color3f.hpp>
@@ -108,6 +109,51 @@ template <typename T> class UniformValue : public UniformValueBase {
 
 
 template <>
+class UniformValue<std::shared_ptr<Texture> > : public UniformValueBase {
+ public:
+  UniformValue(std::shared_ptr<Texture> const& value)
+      : UniformValueBase(), value_(value) {}
+
+  void apply(RenderContext const& context,
+             scm::gl::program_ptr program,
+             std::string const& name,
+             unsigned position = 0) const {
+
+    program->uniform(name, position, value_->get_handle(context));
+  }
+
+  std::shared_ptr<Texture> const& value() const { return value_; }
+
+  void value(std::shared_ptr<Texture> const& value) { value_ = value; }
+
+ private:
+  std::shared_ptr<Texture> value_;
+};
+
+template <>
+class UniformValue<Texture*> : public UniformValueBase {
+ public:
+  UniformValue(Texture* value)
+      : UniformValueBase(), value_(value) {}
+
+  void apply(RenderContext const& context,
+             scm::gl::program_ptr program,
+             std::string const& name,
+             unsigned position = 0) const {
+
+    program->uniform(name, position, value_->get_handle(context));
+  }
+
+  Texture* value() const { return value_; }
+
+  void value(Texture* value) { value_ = value; }
+
+ private:
+  Texture* value_;
+};
+
+
+template <>
 class UniformValue<std::shared_ptr<Texture2D> > : public UniformValueBase {
  public:
   UniformValue(std::shared_ptr<Texture2D> const& value)
@@ -150,7 +196,6 @@ class UniformValue<Texture2D*> : public UniformValueBase {
  private:
   Texture2D* value_;
 };
-
 
 
 template <> class UniformValue<std::string> : public UniformValueBase {

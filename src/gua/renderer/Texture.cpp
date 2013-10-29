@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/Texture2D.hpp>
+#include <gua/renderer/Texture.hpp>
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -33,34 +33,91 @@
 
 namespace gua {
 
-Texture2D::Texture2D(unsigned width,
-                 unsigned height,
-                 scm::gl::data_format color_format,
+Texture::Texture(scm::gl::data_format color_format,
                  std::vector<void*> const& data,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : Texture(color_format, data, mipmap_layers, state_descripton),
-      width_(width),
-      height_(height) {}
+    : mipmap_layers_(mipmap_layers),
+      color_format_(color_format),
+      file_name_(""),
+      data_(data),
+      state_descripton_(state_descripton),
+      textures_(),
+      sampler_states_(),
+      upload_mutex_() {}
 
-Texture2D::Texture2D(unsigned width,
-                 unsigned height,
-                 scm::gl::data_format color_format,
+Texture::Texture(scm::gl::data_format color_format,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : Texture(color_format, mipmap_layers, state_descripton),
-      width_(width),
-      height_(height) {}
+    : mipmap_layers_(mipmap_layers),
+      color_format_(color_format),
+      file_name_(""),
+      state_descripton_(state_descripton),
+      textures_(),
+      sampler_states_(),
+      upload_mutex_() {}
 
-Texture2D::Texture2D(std::string const& file,
+Texture::Texture(std::string const& file,
                  bool generate_mipmaps,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : Texture(file, generate_mipmaps, state_descripton),
-      width_(0),
-      height_(0) {}
+    : 
+      mipmap_layers_(generate_mipmaps ? 1 : 0),
+      color_format_(scm::gl::FORMAT_NULL),
+      file_name_(file),
+      state_descripton_(state_descripton),
+      textures_(),
+      sampler_states_(),
+      upload_mutex_() {}
 
-void Texture2D::upload_to(RenderContext const& context) const {
+Texture::~Texture() {
+  make_non_resident();
+}
 
+void Texture::generate_mipmaps(RenderContext const& context) {
+
+  if (textures_.size() <= context.id || textures_[context.id] == 0)
+    upload_to(context);
+
+  context.render_context->generate_mipmaps(textures_[context.id]);
+}
+
+math::vec2ui const Texture::get_handle(RenderContext const& context) const {
+
+  if (textures_.size() <= context.id || textures_[context.id] == 0)
+    upload_to(context);
+
+  uint64_t handle(textures_[context.id]->native_handle());
+
+  return math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+}
+
+scm::gl::texture_image_ptr const& Texture::get_buffer(
+    RenderContext const& context) const {
+
+  if (textures_.size() <= context.id || textures_[context.id] == 0)
+    upload_to(context);
+
+  return textures_[context.id];
+}
+
+void Texture::make_resident(RenderContext const& context) const {
+  context.render_context
+      ->make_resident(textures_[context.id], sampler_states_[context.id]);
+
+}
+
+void Texture::make_non_resident(RenderContext const& context) const {
+  context.render_context->make_non_resident(textures_[context.id]);
+}
+
+void Texture::make_non_resident() const {
+  for (int i(0); i<textures_.size(); ++i ) {
+    render_contexts_[i]->make_non_resident(textures_[i]);
+  }
+}
+
+#if 0
+void Texture::upload_to(RenderContext const& context) const {
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
   if (textures_.size() <= context.id) {
@@ -100,5 +157,6 @@ void Texture2D::upload_to(RenderContext const& context) const {
 
   make_resident(context);
 }
+#endif
 
 }

@@ -19,13 +19,12 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TEXTURE2D_HPP
-#define GUA_TEXTURE2D_HPP
+#ifndef GUA_TEXTURE_HPP
+#define GUA_TEXTURE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/Texture.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/logger.hpp>
 
@@ -48,7 +47,7 @@ namespace gua {
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-class Texture2D : public Texture {
+class Texture {
  public:
 
   /**
@@ -56,15 +55,11 @@ class Texture2D : public Texture {
    *
    * This constructs a new texture with the given parameters.
    *
-   * \param width            The width of the resulting texture.
-   * \param height           The height of the resulting texture.
    * \param color_format     The color format of the resulting
    *                         texture.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture2D(unsigned width,
-          unsigned height,
-          scm::gl::data_format color_format,
+  Texture(scm::gl::data_format color_format,
           std::vector<void*> const& data,
           unsigned mipmap_layers = 1,
           scm::gl::sampler_state_desc const& state_descripton =
@@ -77,15 +72,11 @@ class Texture2D : public Texture {
    *
    * This constructs a new texture with the given parameters.
    *
-   * \param width            The width of the resulting texture.
-   * \param height           The height of the resulting texture.
    * \param color_format     The color format of the resulting
    *                         texture.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture2D(unsigned width,
-          unsigned height,
-          scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
+  Texture(scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
           unsigned mipmap_layers = 1,
           scm::gl::sampler_state_desc const& state_descripton =
               scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
@@ -100,31 +91,53 @@ class Texture2D : public Texture {
    * \param file             The file which contains the texture data.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture2D(std::string const& file,
+  Texture(std::string const& file,
           bool generate_mipmaps = false,
           scm::gl::sampler_state_desc const& state_descripton =
               scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
                                           scm::gl::WRAP_REPEAT,
                                           scm::gl::WRAP_REPEAT));
 
-  virtual ~Texture2D() {}
+  virtual ~Texture();
 
-  ///@{
+  void generate_mipmaps(RenderContext const& context);
+
   /**
-   * Gets the size.
    *
-   * Returns the size of the Texture2D.
    */
-  unsigned width() const { return width_; }
-  unsigned height() const { return height_; }
+  virtual math::vec2ui const get_handle(RenderContext const& context) const;
 
-  ///@}
+  /**
+   * Get the schism texture.
+   *
+   * \param context          The context for which the texture should be
+   *                         returned.
+   * \return                 A pointer to the schism texture.
+   */
+  virtual scm::gl::texture_image_ptr const& get_buffer(
+      RenderContext const& context) const;
+
+  void make_resident(RenderContext const& context) const;
+  void make_non_resident(RenderContext const& context) const;
+  void make_non_resident() const;
 
  protected:
-  mutable unsigned width_;
-  mutable unsigned height_;
+  mutable unsigned mipmap_layers_;
+  scm::gl::data_format color_format_;
+  scm::gl::sampler_state_desc state_descripton_;
+  mutable std::vector<scm::gl::texture_image_ptr> textures_;
+  mutable std::vector<scm::gl::sampler_state_ptr> sampler_states_;
+  mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
 
-  virtual void upload_to(RenderContext const& context) const;
+#if GUA_COMPILER == GUA_COMPILER_MSVC&& GUA_COMPILER_VER <= 1600
+  mutable boost::mutex upload_mutex_;
+#else
+  mutable std::mutex upload_mutex_;
+#endif
+  virtual void upload_to(RenderContext const& context) const = 0;
+
+  std::vector<void*> data_;
+  std::string file_name_;
 
  private:
 
