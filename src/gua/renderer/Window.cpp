@@ -124,6 +124,28 @@ void Window::open() {
   ctx_.id = last_context_id_++;
 
 
+
+
+  fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+      ctx_.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+
+  depth_stencil_state_ = ctx_.render_device
+      ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
+
+  blend_state_ = ctx_.render_device->create_blend_state(true,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool Window::get_is_open() const { return ctx_.window != nullptr; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Window::create_shader() {
   if (config.get_warp_matrix_red_right() == "" ||
       config.get_warp_matrix_green_right() == "" ||
       config.get_warp_matrix_blue_right() == "" ||
@@ -152,23 +174,7 @@ void Window::open() {
       Resources::lookup_shader(Resources::shaders_display_shader_warped_frag)
     );
   }
-
-  fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-      ctx_.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
-
-  depth_stencil_state_ = ctx_.render_device
-      ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
-
-  blend_state_ = ctx_.render_device->create_blend_state(true,
-                                                        scm::gl::FUNC_ONE,
-                                                        scm::gl::FUNC_ONE,
-                                                        scm::gl::FUNC_ONE,
-                                                        scm::gl::FUNC_ONE);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool Window::get_is_open() const { return ctx_.window != nullptr; }
 
 ////////////////////////////////////////////////////////////////////////////////
 

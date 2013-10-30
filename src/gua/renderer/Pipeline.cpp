@@ -121,6 +121,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   if (window_) {
     if (!window_->get_is_open()) {
       window_->open();
+      window_->create_shader();
     }
 
     set_context(window_->get_context());
@@ -162,63 +163,85 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     create_buffers();
   }
 
-  auto view_it((*current_graph_)[config.camera().view]);
 
-  if (!view_it) {
-    WARNING("Cannot render scene: No valid view specified");
-    return;
-  }
 
-  auto screen_it((*current_graph_)[config.camera().screen]);
 
-  if (!screen_it) {
-    WARNING("Cannot render scene: No valid screen specified");
-    return;
-  }
-
-  auto view(std::dynamic_pointer_cast<ViewNode>(view_it));
-  auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
 
   if (!config.get_enable_stereo()) {
+
+    auto eye((*current_graph_)[config.camera().eye_l]);
+    if (!eye) {
+      WARNING("Cannot render scene: No valid eye specified");
+      return;
+    }
+
+    auto screen_it((*current_graph_)[config.camera().screen_l]);
+    auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
+    if (!screen) {
+      WARNING("Cannot render scene: No valid screen specified");
+      return;
+    }
+
+    current_scenes_[0].frustum = Frustum(eye->get_world_transform(),
+                                         screen->get_scaled_world_transform(),
+                                         config.near_clip(),
+                                         config.far_clip());
 
     serializer_->check(&current_scenes_[0],
                        current_graph_,
                        config.camera(),
-                       Frustum(view->get_world_transform(),
-                               screen->get_scaled_world_transform(),
-                               config.near_clip(),
-                               config.far_clip()),
                        config.enable_bbox_display(),
                        config.enable_ray_display(),
                        config.enable_frustum_culling());
   } else {
 
-    math::mat4 camera_transform(view->get_world_transform());
-    scm::math::translate(
-        camera_transform, -view->data.get_stereo_width() * 0.5f, 0.f, 0.f);
+
+    auto eye_l((*current_graph_)[config.camera().eye_l]);
+    if (!eye_l) {
+      WARNING("Cannot render scene: No valid left eye specified");
+      return;
+    }
+
+    auto eye_r((*current_graph_)[config.camera().eye_r]);
+    if (!eye_r) {
+      WARNING("Cannot render scene: No valid right eye specified");
+      return;
+    }
+
+    auto screen_it_l((*current_graph_)[config.camera().screen_l]);
+    auto screen_l(std::dynamic_pointer_cast<ScreenNode>(screen_it_l));
+    if (!screen_l) {
+      WARNING("Cannot render scene: No valid left screen specified");
+      return;
+    }
+
+    auto screen_it_r((*current_graph_)[config.camera().screen_r]);
+    auto screen_r(std::dynamic_pointer_cast<ScreenNode>(screen_it_r));
+    if (!screen_r) {
+      WARNING("Cannot render scene: No valid right screen specified");
+      return;
+    }
+
+
+    current_scenes_[0].frustum = Frustum(eye_l->get_world_transform(),
+                                         screen_l->get_scaled_world_transform(),
+                                         config.near_clip(),
+                                         config.far_clip());
+    current_scenes_[1].frustum = Frustum(eye_r->get_world_transform(),
+                                         screen_r->get_scaled_world_transform(),
+                                         config.near_clip(),
+                                         config.far_clip());
 
     serializer_->check(&current_scenes_[0],
                        current_graph_,
                        config.camera(),
-                       Frustum(camera_transform,
-                               screen->get_scaled_world_transform(),
-                               config.near_clip(),
-                               config.far_clip()),
                        config.enable_bbox_display(),
                        config.enable_ray_display(),
                        config.enable_frustum_culling());
 
-    camera_transform = view->get_world_transform();
-    scm::math::translate(
-        camera_transform, view->data.get_stereo_width() * 0.5f, 0.f, 0.f);
-
     serializer_->check(&current_scenes_[1],
                        current_graph_,
                        config.camera(),
-                       Frustum(camera_transform,
-                               screen->get_scaled_world_transform(),
-                               config.near_clip(),
-                               config.far_clip()),
                        config.enable_bbox_display(),
                        config.enable_ray_display(),
                        config.enable_frustum_culling());

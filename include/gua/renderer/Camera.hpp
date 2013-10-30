@@ -34,12 +34,18 @@ namespace gua {
  */
 
 struct Camera {
-  Camera(std::string const& v = "unknown_view", std::string const& s = "unknown_screen",
+  Camera(std::string const& eye_l = "unknown_left_eye",
+         std::string const& eye_r = "unknown_right_eye",
+         std::string const& screen_l = "unknown_left_screen",
+         std::string const& screen_r = "unknown_right_screen",
          std::string const& g = "scene_graph", std::string const& m = "")
-      : view(v), screen(s), scene_graph(g), render_mask(m) {}
+      : eye_l(eye_l), eye_r(eye_r), screen_l(screen_l), screen_r(screen_r),
+        scene_graph(g), render_mask(m) {}
 
-  std::string view;
-  std::string screen;
+  std::string eye_l;
+  std::string eye_r;
+  std::string screen_l;
+  std::string screen_r;
   std::string scene_graph;
   std::string render_mask;
 };

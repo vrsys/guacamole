@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/renderer/MeshLoader.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
@@ -119,7 +119,7 @@ std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
     return copy;
   }
 
-  return std::make_shared<GroupNode>(node_name);
+  return std::make_shared<TransformNode>(node_name);
 }
 
 

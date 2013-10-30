@@ -20,23 +20,23 @@
  ******************************************************************************/
 
 // class header
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 
 // guacamole headers
 #include <gua/scenegraph/NodeVisitor.hpp>
 
 namespace gua {
 
-GroupNode::GroupNode(std::string const& name, math::mat4 const& transform)
+TransformNode::TransformNode(std::string const& name, math::mat4 const& transform)
     : Node(name, transform) {}
 
-/* virtual */ void GroupNode::accept(NodeVisitor& visitor) {
+/* virtual */ void TransformNode::accept(NodeVisitor& visitor) {
 
   visitor.visit(this);
 }
 
-std::shared_ptr<Node> GroupNode::copy() const {
-  return std::make_shared<GroupNode>(get_name(), get_transform());
+std::shared_ptr<Node> TransformNode::copy() const {
+  return std::make_shared<TransformNode>(get_name(), get_transform());
 }
 
 }

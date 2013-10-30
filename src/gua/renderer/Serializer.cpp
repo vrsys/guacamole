@@ -31,9 +31,8 @@
 #include <gua/databases/GeometryDatabase.hpp>
 
 #include <gua/scenegraph/Node.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/ViewNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
 #include <gua/scenegraph/ScreenNode.hpp>
@@ -64,7 +63,6 @@ Serializer::Serializer()
 void Serializer::check(SerializedScene* output,
                        SceneGraph const* scene_graph,
                        Camera const& camera,
-                       Frustum const& frustum,
                        bool draw_bounding_boxes,
                        bool draw_rays,
                        bool enable_frustum_culling) {
@@ -114,27 +112,15 @@ void Serializer::check(SerializedScene* output,
 
   current_camera_ = camera;
   current_render_mask_ = Mask(current_camera_.render_mask);
-  current_frustum_ = frustum;
+  current_frustum_ = output->frustum;
 
   scene_graph->accept(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(GroupNode* node) {
+/* virtual */ void Serializer::visit(TransformNode* node) {
   if (is_visible(node)) {
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(ViewNode* node) {
-  if (is_visible(node)) {
-    if (node->get_path() == current_camera_.view) {
-      data_->view_ = make_serialized_node(node->get_world_transform(), node->data);
-    }
-
     visit_children(node);
   }
 }
@@ -196,18 +182,6 @@ void Serializer::check(SerializedScene* output,
 
     data_->spot_lights_
         .push_back(make_serialized_node(node->get_world_transform(), node->data));
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(ScreenNode* node) {
-  if (is_visible(node)) {
-    if (node->get_path() == current_camera_.screen) {
-      data_->screen_ = make_serialized_node(node->get_scaled_world_transform(), node->data);
-    }
 
     visit_children(node);
   }
