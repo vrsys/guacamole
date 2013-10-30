@@ -26,7 +26,7 @@
 namespace gua {
   namespace events {
 
-    Ticker::Ticker(MainLoop& mainloop, double tick_time) 
+    Ticker::Ticker(MainLoop& mainloop, double tick_time)
       : timer_(new boost::asio::deadline_timer(mainloop.io_service, boost::posix_time::microseconds(1000000.0*tick_time))),
         tick_time_(tick_time)
     {
@@ -38,16 +38,17 @@ namespace gua {
       delete timer_;
     }
 
-    void Ticker::self_callback(int revents) 
-    { 
-      on_tick.emit(); 
+    void Ticker::self_callback(int revents)
+    {
       async_wait();
+      on_tick.emit();
     }
 
     void Ticker::async_wait() {
+      timer_->expires_from_now(boost::posix_time::microseconds(1000000.0*tick_time_));
       timer_->async_wait(boost::bind(&Ticker::self_callback, this, 0));
     }
-       
+
   }
 }
 
