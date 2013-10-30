@@ -63,7 +63,6 @@ class LoaderBase {
    * \param flags        TODO: what does flags?
    */
   virtual std::shared_ptr<Node> load(std::string const& file_name,
-                                     std::string const& fallback_material,
                                      unsigned flags) = 0;
 
   /**

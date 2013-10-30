@@ -75,7 +75,6 @@ class MeshLoader : public LoaderBase {
    * \param material_name    The material name that was set to the parent node
    */
   std::shared_ptr<Node> load(std::string const& file_name,
-                             std::string const& fallback_material,
                              unsigned flags);
 
   /**
@@ -98,7 +97,6 @@ class MeshLoader : public LoaderBase {
                 aiScene const* ai_scene,
                 aiNode* ai_root,
                 std::string const& file_name,
-                std::string const& fallback_material,
                 unsigned flags);
 
   unsigned node_counter_;
