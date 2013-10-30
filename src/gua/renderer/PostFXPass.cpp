@@ -37,8 +37,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PostFXPass::
-PostFXPass(Pipeline* pipeline):
+PostFXPass::PostFXPass(Pipeline* pipeline):
     Pass(pipeline),
     postfx_shaders_(),
     ping_buffer_(nullptr),
@@ -113,8 +112,7 @@ PostFXPass(Pipeline* pipeline):
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PostFXPass::
-~PostFXPass() {
+PostFXPass::~PostFXPass() {
 
   for (auto p: postfx_shaders_) {
     delete p;
@@ -168,75 +166,88 @@ PostFXPass::
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::
-create(RenderContext const& ctx, PipelineConfiguration const& config, std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc>> const& layers) {
-    Pass::create(ctx, config, layers);
+void PostFXPass::create(RenderContext const& ctx,
+    PipelineConfiguration const& config, std::vector<std::pair<BufferComponent,
+    scm::gl::sampler_state_desc>> const& layers) {
+  Pass::create(ctx, config, layers);
 
-    for (auto p: godray_buffers_) {
-      p->remove_buffers(ctx);
-      delete p;
-    }
+  for (auto p: godray_buffers_) {
+    p->remove_buffers(ctx);
+    delete p;
+  }
 
-    godray_buffers_.clear();
+  godray_buffers_.clear();
 
-    for (auto p: glow_buffers_) {
-      p->remove_buffers(ctx);
-      delete p;
-    }
+  for (auto p: glow_buffers_) {
+    p->remove_buffers(ctx);
+    delete p;
+  }
 
-    glow_buffers_.clear();
+  glow_buffers_.clear();
 
-    if (ping_buffer_) {
-      ping_buffer_->remove_buffers(ctx);
-      delete ping_buffer_;
-    }
+  if (ping_buffer_) {
+    ping_buffer_->remove_buffers(ctx);
+    delete ping_buffer_;
+  }
 
-    if (pong_buffer_) {
-      pong_buffer_->remove_buffers(ctx);
-      delete pong_buffer_;
-    }
+  if (pong_buffer_) {
+    pong_buffer_->remove_buffers(ctx);
+    delete pong_buffer_;
+  }
 
-    if (luminance_buffer_) {
-      luminance_buffer_->remove_buffers(ctx);
-      delete luminance_buffer_;
-    }
+  if (luminance_buffer_) {
+    luminance_buffer_->remove_buffers(ctx);
+    delete luminance_buffer_;
+  }
 
-    ping_buffer_ = new StereoBuffer(ctx, config, layers);
-    pong_buffer_ = new StereoBuffer(ctx, config, layers);
+  ping_buffer_ = new StereoBuffer(ctx, config, layers);
+  pong_buffer_ = new StereoBuffer(ctx, config, layers);
 
-    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE, scm::gl::WRAP_CLAMP_TO_EDGE);
+  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
+                                    scm::gl::WRAP_CLAMP_TO_EDGE,
+                                    scm::gl::WRAP_CLAMP_TO_EDGE);
 
-    std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc>> layer_3f_desc;
-    layer_3f_desc.push_back(std::make_pair(BufferComponent::F3, state));
+  std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc>> layer_3f_desc;
+  layer_3f_desc.push_back(std::make_pair(BufferComponent::F3, state));
 
-    godray_buffers_.push_back(new GBuffer(layer_3f_desc, config.get_left_resolution()[0]/2, config.get_left_resolution()[1]/2));
-    godray_buffers_.push_back(new GBuffer(layer_3f_desc, config.get_left_resolution()[0]/2, config.get_left_resolution()[1]/2));
-    godray_buffers_.push_back(new GBuffer(layer_3f_desc, config.get_left_resolution()[0]/2, config.get_left_resolution()[1]/2));
+  godray_buffers_.push_back(new GBuffer(layer_3f_desc,
+                                config.get_left_resolution()[0]/2,
+                                config.get_left_resolution()[1]/2));
+  godray_buffers_.push_back(new GBuffer(layer_3f_desc,
+                                config.get_left_resolution()[0]/2,
+                                config.get_left_resolution()[1]/2));
+  godray_buffers_.push_back(new GBuffer(layer_3f_desc,
+                                config.get_left_resolution()[0]/2,
+                                config.get_left_resolution()[1]/2));
 
-    for (auto buffer: godray_buffers_) {
-        buffer->create(ctx);
-    }
+  for (auto buffer: godray_buffers_) {
+      buffer->create(ctx);
+  }
 
-    glow_buffers_.push_back(new GBuffer(layer_3f_desc, config.get_left_resolution()[0]/2, config.get_left_resolution()[1]/2));
-    glow_buffers_.push_back(new GBuffer(layer_3f_desc, config.get_left_resolution()[0]/2, config.get_left_resolution()[1]/2));
+  glow_buffers_.push_back(new GBuffer(layer_3f_desc,
+                                      config.get_left_resolution()[0]/2,
+                                      config.get_left_resolution()[1]/2));
+  glow_buffers_.push_back(new GBuffer(layer_3f_desc,
+                                      config.get_left_resolution()[0]/2,
+                                      config.get_left_resolution()[1]/2));
 
-    for (auto buffer: glow_buffers_) {
-        buffer->create(ctx);
-    }
+  for (auto buffer: glow_buffers_) {
+      buffer->create(ctx);
+  }
 
-    std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc>> layer_1f_desc;
-    layer_1f_desc.push_back(std::make_pair(BufferComponent::F1, state));
+  std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc>> layer_1f_desc;
+  layer_1f_desc.push_back(std::make_pair(BufferComponent::F1, state));
 
-    // todo: luminance buffer resolution configurable
-    luminance_buffer_ = new GBuffer(layer_1f_desc, LUMINANCE_MAP_SIZE, LUMINANCE_MAP_SIZE, std::log(LUMINANCE_MAP_SIZE) / std::log(2));
-    luminance_buffer_->create_UGLY(ctx);
+  // todo: luminance buffer resolution configurable
+  luminance_buffer_ = new GBuffer(layer_1f_desc, LUMINANCE_MAP_SIZE,
+                                  LUMINANCE_MAP_SIZE,
+                                  std::log(LUMINANCE_MAP_SIZE) / std::log(2));
+  luminance_buffer_->create_UGLY(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::
-render_scene(Camera const& camera, RenderContext const& ctx) {
-
+void PostFXPass::render_scene(Camera const& camera, RenderContext const& ctx) {
     if (!depth_stencil_state_)
         depth_stencil_state_ = ctx.render_device->
             create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
@@ -373,8 +384,7 @@ render_scene(Camera const& camera, RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::
-render_fog(RenderContext const& ctx) {
+void PostFXPass::render_fog(RenderContext const& ctx) {
 
     postfx_shaders_[0]->set_uniform(ctx, pipeline_->config.enable_fog(), "gua_enable_fog");
 
@@ -392,31 +402,30 @@ render_fog(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::
-render_vignette(RenderContext const& ctx) {
-
-    postfx_shaders_[3]->set_uniform(ctx, pipeline_->config.enable_vignette(), "gua_enable_vignette");
+void PostFXPass::render_vignette(RenderContext const& ctx) {
+    postfx_shaders_[3]->set_uniform(ctx, pipeline_->config.enable_vignette(),
+                                    "gua_enable_vignette");
 
     if (pipeline_->config.enable_vignette()) {
-        postfx_shaders_[3]->set_uniform(ctx, pipeline_->config.vignette_coverage(), "gua_vignette_coverage");
-        postfx_shaders_[3]->set_uniform(ctx, pipeline_->config.vignette_softness(), "gua_vignette_softness");
-        postfx_shaders_[3]->set_uniform(ctx, pipeline_->config.vignette_color(), "gua_vignette_color");
+        postfx_shaders_[3]->set_uniform(ctx,
+                pipeline_->config.vignette_coverage(), "gua_vignette_coverage");
+        postfx_shaders_[3]->set_uniform(ctx,
+                pipeline_->config.vignette_softness(), "gua_vignette_softness");
+        postfx_shaders_[3]->set_uniform(ctx,
+                pipeline_->config.vignette_color(), "gua_vignette_color");
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::
-render_fxaa(RenderContext const& ctx) {
-
-    postfx_shaders_[3]->set_uniform(ctx, pipeline_->config.enable_fxaa(), "gua_enable_fxaa");
+void PostFXPass::render_fxaa(RenderContext const& ctx) {
+    postfx_shaders_[3]->set_uniform(ctx, pipeline_->config.enable_fxaa(),
+                                    "gua_enable_fxaa");
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool PostFXPass::
-render_godrays(Camera const& camera, SerializedScene const& scene, CameraMode eye, RenderContext const& ctx) {
+bool PostFXPass::render_godrays(Camera const& camera,
+                                SerializedScene const& scene,
+                                CameraMode eye, RenderContext const& ctx) {
 
     bool any_godrays(false);
     for (auto const& light: scene.point_lights_) {
@@ -512,9 +521,7 @@ render_godrays(Camera const& camera, SerializedScene const& scene, CameraMode ey
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::
-render_glow(CameraMode eye, RenderContext const& ctx) {
-
+void PostFXPass::render_glow(CameraMode eye, RenderContext const& ctx) {
     postfx_shaders_[1]->set_uniform(ctx, pipeline_->config.enable_bloom(), "gua_enable_glow");
 
     if (pipeline_->config.enable_bloom()) {
@@ -585,16 +592,19 @@ render_glow(CameraMode eye, RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::
-render_ssao(RenderContext const& ctx) {
+void PostFXPass::render_ssao(RenderContext const& ctx) {
 
     postfx_shaders_[0]->set_uniform(ctx, pipeline_->config.enable_ssao(), "gua_enable_ssao");
 
     if (pipeline_->config.enable_ssao()) {
-        postfx_shaders_[0]->set_uniform(ctx, noise_texture_.get_handle(ctx), "gua_noise_tex");
-        postfx_shaders_[0]->set_uniform(ctx, pipeline_->config.ssao_falloff(), "gua_ssao_falloff");
-        postfx_shaders_[0]->set_uniform(ctx, pipeline_->config.ssao_intensity(), "gua_ssao_intensity");
-        postfx_shaders_[0]->set_uniform(ctx, pipeline_->config.ssao_radius(), "gua_ssao_radius");
+        postfx_shaders_[0]->set_uniform(ctx, noise_texture_.get_handle(ctx),
+            "gua_noise_tex");
+        postfx_shaders_[0]->set_uniform(ctx, pipeline_->config.ssao_falloff(),
+            "gua_ssao_falloff");
+        postfx_shaders_[0]->set_uniform(ctx, pipeline_->config.ssao_intensity(),
+            "gua_ssao_intensity");
+        postfx_shaders_[0]->set_uniform(ctx, pipeline_->config.ssao_radius(),
+            "gua_ssao_radius");
     }
 }
 
@@ -628,11 +638,7 @@ render_hdr(RenderContext const& ctx, std::shared_ptr<Texture> const& texture) {
     postfx_shaders_[2]->set_uniform(ctx, pipeline_->config.get_hdr_key(), "gua_hdr_key");
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void PostFXPass::
-render_previews(CameraMode eye, RenderContext const& ctx) {
-
+void PostFXPass::render_previews(CameraMode eye, RenderContext const& ctx) {
 
     #if GUA_COMPILER == GUA_COMPILER_MSVC
         const std::string font("Consola.ttf");
@@ -719,27 +725,20 @@ render_previews(CameraMode eye, RenderContext const& ctx) {
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ LayerMapping const* PostFXPass::
-get_gbuffer_mapping() const
-{
+/* virtual */ LayerMapping const* PostFXPass::get_gbuffer_mapping() const {
     throw std::runtime_error("no gbuffer mapping available for postfx pass");
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-void PostFXPass::
-print_shaders(std::string const& directory, std::string const& name) const  {
-
+void PostFXPass::print_shaders(std::string const& directory,
+                               std::string const& name) const  {
     postfx_shaders_[0]->save_to_file(directory, name + "/stage_01");
     postfx_shaders_[1]->save_to_file(directory, name + "/stage_02");
     postfx_shaders_[2]->save_to_file(directory, name + "/stage_03");
     postfx_shaders_[3]->save_to_file(directory, name + "/stage_04");
 
     god_ray_shader_->save_to_file(directory, name + "/god_ray");
-    fullscreen_texture_shader_->save_to_file(directory, name + "/fullscreen_texture");
+    fullscreen_texture_shader_->save_to_file(directory,
+                                              name + "/fullscreen_texture");
     glow_shader_->save_to_file(directory, name + "/glow");
     luminance_shader_->save_to_file(directory, name + "/luminance");
 }
@@ -752,14 +751,12 @@ bool PostFXPass::pre_compile_shaders(RenderContext const& ctx) {
       if (shader) shader->upload_to(ctx);
     }
 
-    if (god_ray_shader_)            god_ray_shader_->upload_to(ctx);
-    if (fullscreen_texture_shader_) fullscreen_texture_shader_->upload_to(ctx);
-    if (glow_shader_)               glow_shader_->upload_to(ctx);
-    if (luminance_shader_)          luminance_shader_->upload_to(ctx);
+    if (god_ray_shader_)            return god_ray_shader_->upload_to(ctx);
+    if (fullscreen_texture_shader_) return fullscreen_texture_shader_->upload_to(ctx);
+    if (glow_shader_)               return glow_shader_->upload_to(ctx);
+    if (luminance_shader_)          return luminance_shader_->upload_to(ctx);
+
+    return false;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 }
-
-

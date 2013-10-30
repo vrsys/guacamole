@@ -75,11 +75,16 @@ class MaterialDescription {
 
   void reload();
 
-  std::string& get_shading_model();
-  std::string const& get_shading_model() const;
+  inline void set_shading_model(std::string const& s) { shading_model_ = s; }
+  inline std::string const& get_shading_model() const { return shading_model_; }
 
-  std::unordered_map<std::string, std::string>& get_uniforms();
-  std::unordered_map<std::string, std::string> const& get_uniforms() const;
+  inline std::unordered_map<std::string, std::string>& get_uniforms() {
+      return uniforms_;
+  }
+
+  inline std::unordered_map<std::string, std::string> const& get_uniforms() const {
+      return uniforms_;
+  }
 
   void save_to_file(std::string const& file_name) const;
 

@@ -78,7 +78,10 @@ class Geometry {
    *
    * \return                  The local bounding box of the geometry.
    */
-  math::BoundingBox<math::vec3> const& get_bounding_box() const;
+  inline math::BoundingBox<math::vec3> const& get_bounding_box() const {
+    return bounding_box_;
+  }
+
 
  protected:
 

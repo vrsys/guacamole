@@ -22,27 +22,34 @@
 #ifndef TICKER_HPP_
 #define TICKER_HPP_
 
-#include <ev++.h>
+#include <boost/asio.hpp>
+
 #include <gua/events/Scheduler.hpp>
 #include <gua/events/Signal.hpp>
+#include <gua/events/MainLoop.hpp>
 
 namespace gua {
-namespace events {
+  namespace events {
 
-class Ticker {
- public:
-  Ticker(double tick_time);
-  ~Ticker() {}
-  ;
+    class Ticker {
+    public:
 
-  Signal<> on_tick;
+      Ticker(MainLoop& mainloop, double tick_time);
+      ~Ticker();
 
- private:
-  void self_callback(ev::timer& timer, int revents);
-  ev::timer timer_;
-};
+      Signal<> on_tick;
 
-}
+    private:
+
+      void self_callback(int revents);
+
+      void async_wait ();
+
+      boost::asio::deadline_timer*  timer_;
+      double                        tick_time_;
+    };
+
+  }
 }
 
 #endif /* TICKER_HPP_ */

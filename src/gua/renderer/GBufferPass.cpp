@@ -92,8 +92,9 @@ void GBufferPass::print_shaders(std::string const& directory,
 ////////////////////////////////////////////////////////////////////////////////
 
 bool GBufferPass::pre_compile_shaders(RenderContext const& ctx) {
-    if (mesh_shader_)  mesh_shader_->upload_to(ctx);
-    if (nurbs_shader_) nurbs_shader_->upload_to(ctx);
+    if (mesh_shader_)  return mesh_shader_->upload_to(ctx);
+    if (nurbs_shader_) return nurbs_shader_->upload_to(ctx);
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -317,8 +318,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
         mesh_shader_->use(ctx);  // re-use mesh_shader
 
-        for (auto const& bbox : scene.bounding_boxes_)
-            {
+        for (auto const& bbox : scene.bounding_boxes_) {
             math::mat4 bbox_transform(math::mat4::identity());
             auto scale(scm::math::make_scale((bbox.max - bbox.min) * 1.001f));
             auto translation(

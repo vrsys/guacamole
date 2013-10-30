@@ -31,8 +31,6 @@
 #include <gua/utils.hpp>
 #include <gua/memory.hpp>
 
-#define FPS_CALCULATION_DELAY 20
-
 namespace gua {
 
 std::shared_ptr<Renderer::const_render_vec_t> garbage_collected_copy(
@@ -46,16 +44,15 @@ std::shared_ptr<Renderer::const_render_vec_t> garbage_collected_copy(
 
 Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
     : render_clients_(),
-      application_fps_(0.f),
-      application_frame_count_(0),
-      application_timer_() {
-  application_timer_.start();
+      application_fps_(20) {
+  application_fps_.start();
   for (auto& pipeline : pipelines) {
-    render_clients_.push_back(
-        gua::make_unique<renderclient_t>([pipeline, &application_fps_](
-            std::shared_ptr<const_render_vec_t> const & sg, float render_fps) {
-      pipeline->process(*sg, application_fps_, render_fps);
-    }));
+    auto fun = [pipeline, this](
+        std::shared_ptr<const_render_vec_t> const & sg, float render_fps) {
+      pipeline->process(*sg, this->application_fps_.fps, render_fps);
+    };
+
+    render_clients_.push_back(gua::make_unique<renderclient_t>(fun));
   }
 }
 
@@ -67,13 +64,7 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
   for (auto& rclient : render_clients_) {
     rclient->queue_draw(sgs);
   }
-
-  if (++application_frame_count_ == FPS_CALCULATION_DELAY) {
-    application_fps_ =
-        1.f * FPS_CALCULATION_DELAY / float(application_timer_.get_elapsed());
-    application_timer_.reset();
-    application_frame_count_ = 0;
-  }
+  application_fps_.step();
 }
 
 }

@@ -61,7 +61,7 @@ std::shared_ptr<Node> NURBSLoader::load(std::string const& file_name,
     surface_converter.convert(nurbs_object, bezier_object);
 
     GeometryDatabase::instance()->add(
-        file_name, std::shared_ptr<Geometry>(new NURBS(bezier_object)));
+        file_name, std::make_shared<NURBS>(bezier_object));
 
     auto result = std::make_shared<GeometryNode>("unnamed_nurbs");
     result->data.set_geometry(file_name);

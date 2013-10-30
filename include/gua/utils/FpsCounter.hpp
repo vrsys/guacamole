@@ -19,61 +19,31 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_KD_TREE_UTILS_HPP
-#define GUA_KD_TREE_UTILS_HPP
+#ifndef GUA_FPS_COUNTER_HPP
+#define GUA_FPS_COUNTER_HPP
 
-#include <gua/math/math.hpp>
-#include <gua/math/BoundingBox.hpp>
-
-#include <vector>
-
-struct aiMesh;
+#include <gua/utils/Timer.hpp>
 
 namespace gua {
 
-/**
- * This helper class represents a Ray.
- *
- * It has an origin, a direction and a length.
- */
-struct Ray {
+struct FpsCounter
+{
+  FpsCounter(unsigned t) : fps(0.0f), frame_count(0), timer(), delay(t) {}
+  void step() {
+    if (++frame_count == delay) {
+      fps = 1.f * delay / float(timer.get_elapsed());
+      timer.reset();
+      frame_count = 0;
+    }
+  }
+  void start() { timer.start(); }
 
-  Ray();
-  Ray(math::vec3 const& origin, math::vec3 const& direction, float t_max);
-
-  std::pair<float, float> intersect(
-      math::BoundingBox<math::vec3> const& box) const;
-  Ray const intersection(math::BoundingBox<math::vec3> const& box) const;
-
-  math::vec3 origin_;
-  math::vec3 direction_;
-  float t_max_;
-
-  static const float END;
-};
-
-/**
- * This helper class represents a triangle.
- *
- * It has three vertices, a normal and a visited-flag for internal KDTree usage.
- */
-struct Triangle {
-
-  Triangle();
-  Triangle(unsigned face_id);
-
-  float intersect(aiMesh* mesh,Ray const& ray) const;
-
-  math::vec3 get_vertex(aiMesh* mesh, unsigned vertex_id) const;
-  math::vec3 get_normal(aiMesh* mesh) const;
-  math::vec3 get_normal_interpolated(aiMesh* mesh, math::vec3 const& position) const;
-  math::vec2 get_texture_coords_interpolated(aiMesh* mesh, math::vec3 const& position) const;
-
-
-  unsigned face_id_;
-  mutable unsigned visit_flag_;
+  float    fps;
+  unsigned frame_count;
+  Timer    timer;
+  unsigned delay;
 };
 
 }
 
-#endif  // GUA_KD_TREE_UTILS_HPP
+#endif  // GUA_FPS_COUNTER_HPP

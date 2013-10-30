@@ -101,7 +101,7 @@ struct PipelineConfiguration {
   GUA_ADD_PROPERTY(utils::Color3f, background_color, utils::Color3f());
 
   // ambient color
-  GUA_ADD_PROPERTY(utils::Color3f, ambient_color, utils::Color3f(0.1, 0.1, 0.1));
+  GUA_ADD_PROPERTY(utils::Color3f, ambient_color, utils::Color3f(0.1f, 0.1f, 0.1f));
 
   // vignette
   GUA_ADD_PROPERTY(bool, enable_vignette, false);
@@ -147,13 +147,16 @@ class Pipeline {
   void print_shaders(std::string const& directory) const;
 
   void set_window(Window* window);
-  Window const* get_window() const;
+  inline Window const* get_window() const { return window_; }
 
   void set_prerender_pipelines(std::vector<Pipeline*> const& pipes);
-  std::vector<Pipeline*> const& get_prerender_pipelines() const;
+  std::vector<Pipeline*> const& get_prerender_pipelines() const {
+    return prerender_pipelines_;
+  }
 
-  float get_application_fps() const;
-  float get_rendering_fps() const;
+
+  inline float get_application_fps() const { return application_fps_; }
+  inline float get_rendering_fps() const { return rendering_fps_; }
 
   friend class Renderer;
   friend class GBufferPass;
@@ -172,7 +175,7 @@ class Pipeline {
   void create_buffers();
 
   SerializedScene const& get_current_scene(CameraMode mode) const;
-  SceneGraph const* get_current_graph() const;
+  inline SceneGraph const* get_current_graph() const { return current_graph_; }
 
 #if GUA_COMPILER == GUA_COMPILER_MSVC&& GUA_COMPILER_VER <= 1600
   mutable boost::mutex upload_mutex_;
