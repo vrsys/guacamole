@@ -133,12 +133,13 @@ void GeometryLoader::apply_fallback_material(std::shared_ptr<Node> const& root, 
 
   if (g_node) {
     if (g_node->data.get_material().empty()) {
+      std::cout << fallback_material << std::endl;
       g_node->data.set_material(fallback_material);
     }
+  }
 
-    for(auto& child: root->get_children()) {
-      apply_fallback_material(child, fallback_material);
-    }
+  for(auto& child: root->get_children()) {
+    apply_fallback_material(child, fallback_material);
   }
 
 }
