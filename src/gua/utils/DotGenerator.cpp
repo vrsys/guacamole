@@ -24,8 +24,7 @@
 
 // guacamole headers
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
-#include <gua/scenegraph/ViewNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
@@ -82,25 +81,11 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(GroupNode* cam) {
+/* virtual */ void DotGenerator::visit(TransformNode* cam) {
   pre_node_info(cam);
 
   std::string fillcolor("[fillcolor =");
   fillcolor += " \"#888888\"";
-  fillcolor += "]";
-
-  post_node_info(cam, fillcolor);
-
-  for (auto child : cam->children_)
-    child->accept(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(ViewNode* cam) {
-  pre_node_info(cam);
-
-  std::string fillcolor("[fillcolor =");
-  fillcolor += " \"#AAFFAA\"";
   fillcolor += "]";
 
   post_node_info(cam, fillcolor);

@@ -28,7 +28,7 @@
 #include <gua/physics/GuaMotionState.hpp>
 #include <gua/physics/CollisionShape.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/physics/PhysicsUtils.hpp>
 
 // external headers
@@ -391,7 +391,7 @@ void RigidBodyNode::sync_shapes(bool do_not_lock) {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Node> RigidBodyNode::copy() const {
-    return std::make_shared<GroupNode>(get_name(), get_transform());
+    return std::make_shared<TransformNode>(get_name(), get_transform());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

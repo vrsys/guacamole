@@ -27,11 +27,10 @@
 
 // node headers
 #include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/scenegraph/ScreenNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
-#include <gua/scenegraph/ViewNode.hpp>
 
 #endif  // GUA_INCLUDE_SCENEGRAPH_HPP

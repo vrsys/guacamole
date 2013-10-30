@@ -27,7 +27,7 @@
 #include <gua/utils/logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/renderer/GeometryLoader.hpp>
@@ -178,7 +178,7 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
   }
 
   // else: there are multiple children and meshes
-  auto group(std::make_shared<GroupNode>());
+  auto group(std::make_shared<TransformNode>());
 
   for (unsigned i(0); i < ai_root->mNumMeshes; ++i) {
     group->add_child(load_geometry(i));

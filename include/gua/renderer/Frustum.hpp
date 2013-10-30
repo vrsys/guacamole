@@ -35,6 +35,8 @@ class Frustum {
 
  public:
 
+  Frustum() {}
+
   Frustum(math::mat4 const& camera_transform,
           math::mat4 const& screen_transform,
           float clip_near,

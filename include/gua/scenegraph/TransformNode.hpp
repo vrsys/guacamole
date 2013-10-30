@@ -31,20 +31,20 @@
 
 namespace gua {
 
-class GroupNode : public Node {
+class TransformNode : public Node {
  public:
 
-  GroupNode() {};
+  TransformNode() {};
 
   /**
    * Constructor.
    *
-   * This constructs a GroupNode with the given parameters.
+   * This constructs a TransformNode with the given parameters.
    *
    * \param name       The Node's name
    * \param transform  The transformation of the object the Node contains.
    */
-  GroupNode(std::string const& name,
+  TransformNode(std::string const& name,
             math::mat4 const& transform = math::mat4::identity());
 
   /**
