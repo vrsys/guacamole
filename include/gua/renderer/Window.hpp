@@ -100,6 +100,8 @@ class Window {
   void open();
   bool get_is_open() const;
 
+  virtual void create_shader();
+
   void close();
 
   /**
@@ -127,9 +129,9 @@ class Window {
   /**
    *
    */
-  void display(std::shared_ptr<Texture> const& center_texture);
+  virtual void display(std::shared_ptr<Texture> const& center_texture);
 
-  void display(std::shared_ptr<Texture> const& left_texture,
+  virtual void display(std::shared_ptr<Texture> const& left_texture,
                std::shared_ptr<Texture> const& right_texture);
 
   /**
@@ -142,6 +144,14 @@ class Window {
    */
   RenderContext* get_context();
 
+protected:
+  ShaderProgram fullscreen_shader_;
+  scm::gl::quad_geometry_ptr fullscreen_quad_;
+
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+  scm::gl::blend_state_ptr blend_state_;
+  RenderContext ctx_;
+
  private:
   void display(std::shared_ptr<Texture> const& texture,
                math::vec2ui const& size,
@@ -152,15 +162,6 @@ class Window {
 
 
   static unsigned last_context_id_;
-
-
-  RenderContext ctx_;
-
-  ShaderProgram fullscreen_shader_;
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
-
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::blend_state_ptr blend_state_;
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
 };

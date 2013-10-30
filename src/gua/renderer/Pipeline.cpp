@@ -145,6 +145,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   if (window_) {
     if (!window_->get_is_open()) {
       window_->open();
+      window_->create_shader();
     }
 
     set_context(window_->get_context());
