@@ -35,7 +35,7 @@ if (UNIX)
 	pkg_check_modules(GL REQUIRED gl)
 	pkg_check_modules(GLEW REQUIRED glew)
 elseif (WIN32)
-	include(find_assimp)	
+	include(find_assimp)
 endif (UNIX)
 
 include(find_compiler)
@@ -112,8 +112,6 @@ file(GLOB_RECURSE RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     resources/*
 )
 
-MESSAGE(${RESOURCES})
-
 if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated)
 endif()
@@ -122,31 +120,46 @@ if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated)
 endif()
 
-# ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-	# COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/guarc/guarc
-    # ${CMAKE_CURRENT_SOURCE_DIR}/resources
-    # ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
-    # ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-	# DEPENDS ${RESOURCES} guarc
-# )
 
-ADD_CUSTOM_TARGET(CompileResources ALL
-   DEPENDS ${RESOURCES} guarc
-)
-
-SET (_GUARC_EXECUTABLE "")
 IF (UNIX)
-	SET (_GUARC_EXECUTABLE "/guarc/guarc")
-ELSEIF(WIN32)
-	SET (_GUARC_EXECUTABLE "/guarc/$(Configuration)/guarc.exe")
+    ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/guarc/guarc
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+      DEPENDS ${RESOURCES} guarc
+    )
+
+    ADD_CUSTOM_TARGET(CompileResources ALL
+       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+    )
+
+ELSEIF(MSVC)
+    ADD_CUSTOM_TARGET(CompileResources ALL
+       DEPENDS ${RESOURCES} guarc
+    )
+
+    SET (_GUARC_EXECUTABLE "")
+    SET (_GUARC_EXECUTABLE "/guarc/$(Configuration)/guarc.exe")
+
+    ADD_CUSTOM_COMMAND(TARGET CompileResources POST_BUILD
+    	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}${_GUARC_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+    )
 ENDIF(UNIX)
 
-ADD_CUSTOM_COMMAND(TARGET CompileResources POST_BUILD
-	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}${_GUARC_EXECUTABLE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-)
+
+
+
+
+
+
+
+
+
+
 
 ################################################################
 # Create libraries
