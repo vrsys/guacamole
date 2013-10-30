@@ -66,8 +66,10 @@ enum class UniformType {
   VEC4,
   MAT3,
   MAT4,
-  SAMPLER,
-  CUBEMAP,
+  SAMPLER1D,
+  SAMPLER2D,
+  SAMPLER3D,
+  SAMPLERCUBE,
   NONE
 };
 

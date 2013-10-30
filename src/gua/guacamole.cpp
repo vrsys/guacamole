@@ -42,7 +42,7 @@ void init(int argc, char** argv) {
                             Resources::materials_gua_textured_quad_gsd,
                             Resources::materials_gua_textured_quad_gmd);
 
-  gua::TextureDatabase::instance()->add("gua_default_texture", std::shared_ptr<Texture>(new DefaultTexture()));
+  gua::TextureDatabase::instance()->add("gua_default_texture", std::shared_ptr<Texture2D>(new DefaultTexture()));
 
   MeshLoader mesh_loader;
 

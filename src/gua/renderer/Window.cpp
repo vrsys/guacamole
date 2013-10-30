@@ -211,7 +211,7 @@ void Window::finish_frame() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::display(std::shared_ptr<Texture> const& center_texture) {
+void Window::display(std::shared_ptr<Texture2D> const& center_texture) {
 
   display(center_texture, config.get_left_resolution(),
           config.get_left_position(), Window::FULL, true, true);
@@ -220,8 +220,8 @@ void Window::display(std::shared_ptr<Texture> const& center_texture) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::display(std::shared_ptr<Texture> const& left_texture,
-                     std::shared_ptr<Texture> const& right_texture) {
+void Window::display(std::shared_ptr<Texture2D> const& left_texture,
+                     std::shared_ptr<Texture2D> const& right_texture) {
 
   switch (config.get_stereo_mode()) {
       case StereoMode::MONO:
@@ -255,7 +255,7 @@ RenderContext* Window::get_context() { return &ctx_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::display(std::shared_ptr<Texture> const& texture,
+void Window::display(std::shared_ptr<Texture2D> const& texture,
                      math::vec2ui const& size,
                      math::vec2ui const& position,
                      TextureDisplayMode mode,
@@ -266,13 +266,13 @@ void Window::display(std::shared_ptr<Texture> const& texture,
   fullscreen_shader_.set_uniform(ctx_, texture, "sampler");
 
   if (is_left) {
-    if (warpRL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpRL_), "warpR");
-    if (warpGL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpGL_), "warpG");
-    if (warpBL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpBL_), "warpB");
+    if (warpRL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpRL_), "warpR");
+    if (warpGL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpGL_), "warpG");
+    if (warpBL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpBL_), "warpB");
   } else {
-    if (warpRR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpRR_), "warpR");
-    if (warpGR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpGR_), "warpG");
-    if (warpBR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpBR_), "warpB");
+    if (warpRR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpRR_), "warpR");
+    if (warpGR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpGR_), "warpG");
+    if (warpBR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpBR_), "warpB");
   }
 
   std::string subroutine = subroutine_from_mode(mode);

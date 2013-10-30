@@ -118,7 +118,7 @@ void NURBS::upload_to(RenderContext const& context) const {
                                     scm::gl::FUNC_ONE,
                                     scm::gl::FUNC_ZERO);
 
-  //Initialize Texture Buffers
+  //Initialize Texture2D Buffers
   initialize_texture_buffers(context);
 
   //Initialize Vertex Data

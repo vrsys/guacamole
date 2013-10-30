@@ -611,7 +611,7 @@ void PostFXPass::render_ssao(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void PostFXPass::
-render_hdr(RenderContext const& ctx, std::shared_ptr<Texture> const& texture) {
+render_hdr(RenderContext const& ctx, std::shared_ptr<Texture2D> const& texture) {
 
     ctx.render_context->set_viewport(scm::gl::viewport(
             math::vec2(0,0), math::vec2(float(luminance_buffer_->width()),
@@ -673,7 +673,7 @@ void PostFXPass::render_previews(CameraMode eye, RenderContext const& ctx) {
             preview_text_renderer_ = new TextRenderer(ctx, 12, font);
         }
 
-        std::vector<std::pair<std::string, std::shared_ptr<Texture>>> previews;
+        std::vector<std::pair<std::string, std::shared_ptr<Texture2D>>> previews;
 
         for (unsigned input(0); input < inputs_.size(); ++input) {
 

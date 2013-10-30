@@ -265,7 +265,7 @@ std::string const MaterialLoader::load_shading_model(
     if (capabilities & OPACITY_MAP) {
 
       model->get_gbuffer_fragment_stage().get_uniforms()["opacity_map"] =
-          UniformType::SAMPLER;
+          UniformType::SAMPLER2D;
 
       gbuffer_fragment_body += std::string(
           "                     \n\
@@ -284,7 +284,7 @@ std::string const MaterialLoader::load_shading_model(
           BufferComponent::F3;
 
       model->get_gbuffer_fragment_stage().get_uniforms()["normal_map"] =
-          UniformType::SAMPLER;
+          UniformType::SAMPLER2D;
 
       gbuffer_vertex_body += std::string(
           "          \n\
@@ -326,7 +326,7 @@ std::string const MaterialLoader::load_shading_model(
         std::string layer("gua_" + name);
 
         model->get_gbuffer_fragment_stage().get_uniforms()[texture] =
-            UniformType::SAMPLER;
+            UniformType::SAMPLER2D;
         model->get_gbuffer_fragment_stage().get_outputs()[layer] = layer_type;
 
         gbuffer_fragment_body +=
