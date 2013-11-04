@@ -97,6 +97,27 @@ inline math::vec3 get_translation(math::mat4 const& m)
   return math::vec3(m[12], m[13], m[14]);
 }
 
+
+template <typename PosType, typename ValueType>
+ValueType interpolate(PosType const& position,
+                      std::pair<PosType, ValueType> const& a,
+                      std::pair<PosType, ValueType> const& b,
+                      std::pair<PosType, ValueType> const& c) {
+
+    // calculate vectors from position to vertices a, b and c:
+    auto f1 = a.first-position;
+    auto f2 = b.first-position;
+    auto f3 = c.first-position;
+
+    // calculate the areas and factors (order of parameters doesn't matter):
+    auto area = scm::math::length(scm::math::cross(a.first-b.first, a.first-c.first));
+    auto a1   = scm::math::length(scm::math::cross(f2, f3)) / area;
+    auto a2   = scm::math::length(scm::math::cross(f3, f1)) / area;
+    auto a3   = scm::math::length(scm::math::cross(f1, f2)) / area;
+
+    return a.second * a1 + b.second * a2 + c.second * a3;
+}
+
 }
 }
 
