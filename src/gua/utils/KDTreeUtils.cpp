@@ -174,7 +174,9 @@ math::vec3 Triangle::get_vertex(aiMesh* mesh, unsigned vertex_id) const {
 }
 
 math::vec3 Triangle::get_normal(aiMesh* mesh) const {
-  math::vec3 normal;
+
+  math::vec3 normal(0, 0, 0);
+
   if (mesh->HasNormals()) {
     for (unsigned i = 0; i < 3; ++i) {
     normal += math::vec3(
@@ -182,14 +184,52 @@ math::vec3 Triangle::get_normal(aiMesh* mesh) const {
                         mesh->mNormals[mesh->mFaces[face_id_].mIndices[i]].y,
                         mesh->mNormals[mesh->mFaces[face_id_].mIndices[i]].z);
     }
+
+    normal = scm::math::normalize(normal);
   }
 
-  return normal/3;
+  return normal;
 }
 
 math::vec3 Triangle::get_normal_interpolated(aiMesh* mesh, math::vec3 const& position) const {
-  /// TODO: actually interpolate
-  return get_normal(mesh);
+
+  math::vec3 normal(0, 0, 0);
+
+
+  if (mesh->HasNormals()) {
+
+    normal = math::interpolate(position,
+
+      std::make_pair(
+        math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].x,
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].y,
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].z),
+        math::vec3(mesh->mNormals[mesh->mFaces[face_id_].mIndices[0]].x,
+                   mesh->mNormals[mesh->mFaces[face_id_].mIndices[0]].y,
+                   mesh->mNormals[mesh->mFaces[face_id_].mIndices[0]].z)),
+
+      std::make_pair(
+        math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].x,
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].y,
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].z),
+        math::vec3(mesh->mNormals[mesh->mFaces[face_id_].mIndices[1]].x,
+                   mesh->mNormals[mesh->mFaces[face_id_].mIndices[1]].y,
+                   mesh->mNormals[mesh->mFaces[face_id_].mIndices[1]].z)),
+
+      std::make_pair(
+        math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].x,
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].y,
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].z),
+        math::vec3(mesh->mNormals[mesh->mFaces[face_id_].mIndices[2]].x,
+                   mesh->mNormals[mesh->mFaces[face_id_].mIndices[2]].y,
+                   mesh->mNormals[mesh->mFaces[face_id_].mIndices[2]].z))
+    );
+
+    normal = scm::math::normalize(normal);
+  }
+
+  return normal;
+
 }
 
 math::vec2 Triangle::get_texture_coords_interpolated(aiMesh* mesh, math::vec3 const& position) const {
@@ -202,24 +242,24 @@ math::vec2 Triangle::get_texture_coords_interpolated(aiMesh* mesh, math::vec3 co
 
       std::make_pair(
         math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].x,
-                    mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].y,
-                    mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].z),
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].y,
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].z),
         math::vec2(mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[0]].x,
-                    mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[0]].y)),
+                   mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[0]].y)),
 
       std::make_pair(
         math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].x,
-                    mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].y,
-                    mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].z),
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].y,
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].z),
         math::vec2(mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[1]].x,
-                    mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[1]].y)),
+                   mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[1]].y)),
 
       std::make_pair(
         math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].x,
-                    mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].y,
-                    mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].z),
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].y,
+                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].z),
         math::vec2(mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[2]].x,
-                    mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[2]].y))
+                   mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[2]].y))
     );
   }
 

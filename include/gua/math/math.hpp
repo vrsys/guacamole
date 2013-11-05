@@ -24,6 +24,7 @@
 
 #include <scm/core/math.h>
 #include <scm/gl_core/math.h>
+#include <iostream>
 
 #if ASSIMP_VERSION == 3
 #include <assimp/Importer.hpp>
@@ -92,8 +93,7 @@ math::mat4 const mat_ai_to_scm(aiMatrix4x4 const& ai_mat);
   }
 #endif
 
-inline math::vec3 get_translation(math::mat4 const& m)
-{
+inline math::vec3 get_translation(math::mat4 const& m) {
   return math::vec3(m[12], m[13], m[14]);
 }
 
@@ -103,6 +103,8 @@ ValueType interpolate(PosType const& position,
                       std::pair<PosType, ValueType> const& a,
                       std::pair<PosType, ValueType> const& b,
                       std::pair<PosType, ValueType> const& c) {
+
+    // TODO: Is there a more efficient way to interpolate?
 
     // calculate vectors from position to vertices a, b and c:
     auto f1 = a.first-position;

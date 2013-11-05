@@ -340,16 +340,21 @@ void KDTree::intersect_all(KDNode* node,
 
           if (intersection < Ray::END) {
             float const inf(std::numeric_limits<float>::max());
-            math::vec3 position(inf, inf, inf), normal(inf, inf, inf);
+            math::vec3 position(inf, inf, inf),
+                       world_position(inf, inf, inf),
+                       normal(inf, inf, inf),
+                       world_normal(inf, inf, inf);
             math::vec2 tex_coords;
 
             if (options & PickResult::GET_POSITIONS
+                || options & PickResult::GET_WORLD_POSITIONS
                 || options & PickResult::INTERPOLATE_NORMALS
                 || options & PickResult::GET_TEXTURE_COORDS) {
               position = ray.origin_ + intersection * ray.direction_;
             }
 
-            if (options & PickResult::GET_NORMALS) {
+            if (options & PickResult::GET_NORMALS
+                || options & PickResult::GET_WORLD_NORMALS) {
               if (options & PickResult::INTERPOLATE_NORMALS) {
                 normal =
                   triangles[triangle.id_].get_normal_interpolated(mesh, position);
@@ -364,8 +369,8 @@ void KDTree::intersect_all(KDNode* node,
             }
 
             hits.insert(PickResult(intersection, current_owner_,
-                                   position, position,
-                                   normal, normal,
+                                   position, world_position,
+                                   normal, world_normal,
                                    tex_coords));
           }
 
