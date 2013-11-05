@@ -63,42 +63,59 @@ void Texture2D::upload_to(RenderContext const& context) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
-  if (textures_.size() <= context.id) {
-    textures_.resize(context.id + 1);
-    sampler_states_.resize(context.id + 1);
-    render_contexts_.resize(context.id + 1);
-  }
+  // if texture has not been created yet
+  if (textures_.size() <= context.id || textures_[context.id] == 0) {
 
-  if (file_name_ == "") {
-
-
-    if (data_.size() == 0)
-      textures_[context.id] = context.render_device->create_texture_2d(
-          math::vec2ui(width_, height_), color_format_, mipmap_layers_);
-    else
-      textures_[context.id] = context.render_device->create_texture_2d(
-          scm::gl::texture_2d_desc(
-              math::vec2ui(width_, height_), color_format_, mipmap_layers_),
-          color_format_,
-          data_);
-  } else {
-    MESSAGE("Uploading texture file %s", file_name_.c_str());
-    scm::gl::texture_loader loader;
-    textures_[context.id] = loader.load_texture_2d(
-        *context.render_device, file_name_, mipmap_layers_ > 0);
-
-    if (textures_[context.id]) {
-      width_ = textures_[context.id]->dimensions()[0];
-      height_ = textures_[context.id]->dimensions()[1];
+    if (textures_.size() <= context.id) {
+      textures_.resize(context.id + 1);
+      sampler_states_.resize(context.id + 1);
+      render_contexts_.resize(context.id + 1);
+      dirty_flags_.resize(context.id + 1);
     }
+
+    dirty_flags_[context.id] = false;
+
+    if (file_name_ == "") {
+      if (data_.size() == 0) {
+        textures_[context.id] = context.render_device->create_texture_2d(
+            math::vec2ui(width_, height_), color_format_, mipmap_layers_);
+      } else {
+
+        std::cout << "new! " << width_ << " "<< height_ << " " << mipmap_layers_ <<std::endl;
+        textures_[context.id] = context.render_device->create_texture_2d(
+            scm::gl::texture_2d_desc(
+                math::vec2ui(width_, height_), color_format_, mipmap_layers_),
+            color_format_,
+            data_);
+        std::cout << "done! "<<std::endl;
+      }
+    } else {
+      MESSAGE("Uploading texture file %s", file_name_.c_str());
+      scm::gl::texture_loader loader;
+      textures_[context.id] = loader.load_texture_2d(
+          *context.render_device, file_name_, mipmap_layers_ > 0);
+
+      if (textures_[context.id]) {
+        width_ = textures_[context.id]->dimensions()[0];
+        height_ = textures_[context.id]->dimensions()[1];
+      }
+    }
+
+    sampler_states_[context.id] =
+        context.render_device->create_sampler_state(state_descripton_);
+
+    render_contexts_[context.id] = context.render_context;
+
+    make_resident(context);
+
+  } else {
+    // texture needs only update
+    std::cout << "old!" << width_ << " "<< height_ << std::endl;
+    context.render_context->update_sub_texture(
+      textures_[context.id],
+      scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width_, height_, 0)),
+      0, color_format_, &data_[0]);
   }
-
-  sampler_states_[context.id] =
-      context.render_device->create_sampler_state(state_descripton_);
-
-  render_contexts_[context.id] = context.render_context;
-
-  make_resident(context);
 }
 
 }

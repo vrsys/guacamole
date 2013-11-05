@@ -31,13 +31,8 @@
 // external headers
 #include <string>
 #include <vector>
-
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& GUA_COMPILER_VER <= 1600
-#include <boost/thread.hpp>
-#else
 #include <mutex>
 #include <thread>
-#endif
 
 namespace gua {
 
@@ -102,6 +97,8 @@ class Texture {
 
   void generate_mipmaps(RenderContext const& context);
 
+  void set_data(std::vector<void*> const& data);
+
   /**
    *
    */
@@ -122,18 +119,19 @@ class Texture {
   void make_non_resident() const;
 
  protected:
+  bool needs_update(RenderContext const& context) const;
+
   mutable unsigned mipmap_layers_;
   scm::gl::data_format color_format_;
   scm::gl::sampler_state_desc state_descripton_;
+
   mutable std::vector<scm::gl::texture_image_ptr> textures_;
   mutable std::vector<scm::gl::sampler_state_ptr> sampler_states_;
   mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
+  mutable std::vector<bool> dirty_flags_;
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& GUA_COMPILER_VER <= 1600
-  mutable boost::mutex upload_mutex_;
-#else
   mutable std::mutex upload_mutex_;
-#endif
+
   virtual void upload_to(RenderContext const& context) const = 0;
 
   std::vector<void*> data_;

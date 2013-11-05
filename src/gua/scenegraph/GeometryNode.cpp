@@ -95,35 +95,9 @@ void GeometryNode::ray_test_impl(RayNode const& ray, PickResult::Options options
       if (has_children()) {
         auto geometry_bbox(geometry->get_bounding_box());
 
-        math::BoundingBox<math::vec3> inner_bbox;
-        inner_bbox.expandBy(world_transform * geometry_bbox.min);
-        inner_bbox.expandBy(world_transform * geometry_bbox.max);
-        inner_bbox.expandBy(world_transform *
-                            math::vec3(geometry_bbox.min.x,
-                                       geometry_bbox.min.y,
-                                       geometry_bbox.max.z));
-        inner_bbox.expandBy(world_transform *
-                            math::vec3(geometry_bbox.min.x,
-                                       geometry_bbox.max.y,
-                                       geometry_bbox.min.z));
-        inner_bbox.expandBy(world_transform *
-                            math::vec3(geometry_bbox.min.x,
-                                       geometry_bbox.max.y,
-                                       geometry_bbox.max.z));
-        inner_bbox.expandBy(world_transform *
-                            math::vec3(geometry_bbox.max.x,
-                                       geometry_bbox.min.y,
-                                       geometry_bbox.max.z));
-        inner_bbox.expandBy(world_transform *
-                            math::vec3(geometry_bbox.max.x,
-                                       geometry_bbox.max.y,
-                                       geometry_bbox.min.z));
-        inner_bbox.expandBy(world_transform *
-                            math::vec3(geometry_bbox.max.x,
-                                       geometry_bbox.min.y,
-                                       geometry_bbox.min.z));
+        gua::math::transform(geometry_bbox, world_transform);
 
-        auto inner_hits(ray.intersect(inner_bbox));
+        auto inner_hits(ray.intersect(geometry_bbox));
         if (inner_hits.first == RayNode::END &&
             inner_hits.second == RayNode::END)
           check_kd_tree = false;

@@ -30,6 +30,7 @@
 // external headers
 #include <scm/gl_util/data/imaging/texture_loader.h>
 #include <iostream>
+#include <cstring>
 
 namespace gua {
 
@@ -44,6 +45,7 @@ Texture::Texture(scm::gl::data_format color_format,
       state_descripton_(state_descripton),
       textures_(),
       sampler_states_(),
+      dirty_flags_(),
       upload_mutex_() {}
 
 Texture::Texture(scm::gl::data_format color_format,
@@ -55,18 +57,20 @@ Texture::Texture(scm::gl::data_format color_format,
       state_descripton_(state_descripton),
       textures_(),
       sampler_states_(),
+      dirty_flags_(),
       upload_mutex_() {}
 
 Texture::Texture(std::string const& file,
                  bool generate_mipmaps,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : 
+    :
       mipmap_layers_(generate_mipmaps ? 1 : 0),
       color_format_(scm::gl::FORMAT_NULL),
       file_name_(file),
       state_descripton_(state_descripton),
       textures_(),
       sampler_states_(),
+      dirty_flags_(),
       upload_mutex_() {}
 
 Texture::~Texture() {
@@ -75,15 +79,27 @@ Texture::~Texture() {
 
 void Texture::generate_mipmaps(RenderContext const& context) {
 
-  if (textures_.size() <= context.id || textures_[context.id] == 0)
+  if (needs_update(context))
     upload_to(context);
 
   context.render_context->generate_mipmaps(textures_[context.id]);
 }
 
+void Texture::set_data(std::vector<void*> const& data) {
+  std::unique_lock<std::mutex> lock(upload_mutex_);
+
+  // std::memcpy(data_.data(), data, data_.size() * sizeof(void*));
+
+  // std::cout << "update " << data_.size() << std::endl;
+
+  data_ = data;
+
+  std::fill(dirty_flags_.begin(), dirty_flags_.end(), true);
+}
+
 math::vec2ui const Texture::get_handle(RenderContext const& context) const {
 
-  if (textures_.size() <= context.id || textures_[context.id] == 0)
+  if (needs_update(context))
     upload_to(context);
 
   uint64_t handle(textures_[context.id]->native_handle());
@@ -94,7 +110,7 @@ math::vec2ui const Texture::get_handle(RenderContext const& context) const {
 scm::gl::texture_image_ptr const& Texture::get_buffer(
     RenderContext const& context) const {
 
-  if (textures_.size() <= context.id || textures_[context.id] == 0)
+  if (needs_update(context))
     upload_to(context);
 
   return textures_[context.id];
@@ -114,6 +130,10 @@ void Texture::make_non_resident() const {
   for (int i(0); i<textures_.size(); ++i ) {
     render_contexts_[i]->make_non_resident(textures_[i]);
   }
+}
+
+bool Texture::needs_update(RenderContext const& context) const {
+  return textures_.size() <= context.id || textures_[context.id] == 0 || dirty_flags_[context.id];
 }
 
 #if 0

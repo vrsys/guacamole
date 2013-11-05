@@ -62,6 +62,9 @@ class TexturedQuadNode : public Node {
 
   /*virtual*/ void update_bounding_box() const;
 
+  /*virtual*/ void ray_test_impl(RayNode const& ray, PickResult::Options options,
+                                 Mask const& mask, std::set<PickResult>& hits);
+
  private:
   /**
    *
