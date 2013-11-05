@@ -45,11 +45,11 @@ Ray::Ray() : origin_(), direction_(), t_max_(-1.f) {}
 Ray::Ray(math::vec3 const& origin, math::vec3 const& direction, float t_max)
     : origin_(origin), direction_(direction), t_max_(t_max) {}
 
-std::pair<float, float> Ray::intersect(
-    math::BoundingBox<math::vec3> const& box) const {
+std::pair<float, float> intersect(Ray const& ray,
+    math::BoundingBox<math::vec3> const& box) {
 
-  math::vec3 t1((box.min - origin_) / direction_);
-  math::vec3 t2((box.max - origin_) / direction_);
+  math::vec3 t1((box.min - ray.origin_) / ray.direction_);
+  math::vec3 t2((box.max - ray.origin_) / ray.direction_);
 
   math::vec3 tmin1(
       std::min(t1[0], t2[0]), std::min(t1[1], t2[1]), std::min(t1[2], t2[2]));
@@ -61,25 +61,25 @@ std::pair<float, float> Ray::intersect(
 
   if (tmax >= tmin) {
     // there are two intersections
-    if (tmin > 0.0 && tmax < t_max_)
+    if (tmin > 0.0 && tmax < ray.t_max_)
       return std::make_pair(tmin, tmax);
 
     // there is only one intersection, the ray ends inside the box
     else if (tmin > 0.0)
-      return std::make_pair(tmin, END);
+      return std::make_pair(tmin, Ray::END);
 
     // there is only one intersection, the ray starts inside the box
     else
-      return std::make_pair(END, tmax);
+      return std::make_pair(Ray::END, tmax);
   }
 
   // there is no intersection
 
-  return std::make_pair(END, END);
+  return std::make_pair(Ray::END, Ray::END);
 }
 
 Ray const Ray::intersection(math::BoundingBox<math::vec3> const& box) const {
-  auto hits(intersect(box));
+  auto hits(intersect(*this,box));
 
   // there are to hits -> clamp ray on both sides
   if (hits.first != END && hits.first != END)

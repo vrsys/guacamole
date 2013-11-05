@@ -41,8 +41,6 @@ struct Ray {
   Ray();
   Ray(math::vec3 const& origin, math::vec3 const& direction, float t_max);
 
-  std::pair<float, float> intersect(
-      math::BoundingBox<math::vec3> const& box) const;
   Ray const intersection(math::BoundingBox<math::vec3> const& box) const;
 
   math::vec3 origin_;
@@ -51,6 +49,9 @@ struct Ray {
 
   static const float END;
 };
+
+std::pair<float, float> intersect(Ray const& ray,
+      math::BoundingBox<math::vec3> const& box);
 
 /**
  * This helper class represents a triangle.
