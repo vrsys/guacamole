@@ -98,7 +98,10 @@ inline math::vec3 get_translation(math::mat4 const& m) {
   return math::vec3(m[12], m[13], m[14]);
 }
 
-std::tuple<float,float,float> barycentric(math::vec3 const& a, math::vec3 const& b, math::vec3 const& c, math::vec3 const& p);
+std::tuple<float,float,float> barycentric(math::vec3 const& a,
+                                          math::vec3 const& b,
+                                          math::vec3 const& c,
+                                          math::vec3 const& p);
 
 template <typename ValueType>
 ValueType interpolate(math::vec3 const& position,
