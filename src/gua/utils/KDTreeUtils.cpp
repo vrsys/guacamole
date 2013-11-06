@@ -201,25 +201,19 @@ math::vec3 Triangle::get_normal_interpolated(aiMesh* mesh, math::vec3 const& pos
     normal = math::interpolate(position,
 
       std::make_pair(
-        math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].x,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].y,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].z),
+        get_vertex(mesh,0),
         math::vec3(mesh->mNormals[mesh->mFaces[face_id_].mIndices[0]].x,
                    mesh->mNormals[mesh->mFaces[face_id_].mIndices[0]].y,
                    mesh->mNormals[mesh->mFaces[face_id_].mIndices[0]].z)),
 
       std::make_pair(
-        math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].x,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].y,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].z),
+        get_vertex(mesh,1),
         math::vec3(mesh->mNormals[mesh->mFaces[face_id_].mIndices[1]].x,
                    mesh->mNormals[mesh->mFaces[face_id_].mIndices[1]].y,
                    mesh->mNormals[mesh->mFaces[face_id_].mIndices[1]].z)),
 
       std::make_pair(
-        math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].x,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].y,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].z),
+        get_vertex(mesh,2),
         math::vec3(mesh->mNormals[mesh->mFaces[face_id_].mIndices[2]].x,
                    mesh->mNormals[mesh->mFaces[face_id_].mIndices[2]].y,
                    mesh->mNormals[mesh->mFaces[face_id_].mIndices[2]].z))
@@ -241,23 +235,17 @@ math::vec2 Triangle::get_texture_coords_interpolated(aiMesh* mesh, math::vec3 co
     tex_coords = math::interpolate(position,
 
       std::make_pair(
-        math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].x,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].y,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[0]].z),
+        get_vertex(mesh,0),
         math::vec2(mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[0]].x,
                    mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[0]].y)),
 
       std::make_pair(
-        math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].x,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].y,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[1]].z),
+        get_vertex(mesh,1),
         math::vec2(mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[1]].x,
                    mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[1]].y)),
 
       std::make_pair(
-        math::vec3(mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].x,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].y,
-                   mesh->mVertices[mesh->mFaces[face_id_].mIndices[2]].z),
+        get_vertex(mesh,2),
         math::vec2(mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[2]].x,
                    mesh->mTextureCoords[0][mesh->mFaces[face_id_].mIndices[2]].y))
     );
