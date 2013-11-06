@@ -53,7 +53,10 @@ inline math::vec3 aiMesh_normal(aiMesh* mesh, unsigned face, unsigned i) {
                     mesh->mNormals[mesh->mFaces[face].mIndices[i]].z);
 }
 
-inline math::vec2 aiMesh_texcoord(aiMesh* mesh, unsigned face, unsigned i, unsigned j) {
+inline math::vec2 aiMesh_texcoord(aiMesh* mesh, 
+                                  unsigned face, 
+                                  unsigned i, 
+                                  unsigned j) {
   return math::vec2(mesh->mTextureCoords[i][mesh->mFaces[face].mIndices[j]].x,
                     mesh->mTextureCoords[i][mesh->mFaces[face].mIndices[j]].y);
 }
@@ -195,7 +198,6 @@ math::vec3 Triangle::get_vertex(aiMesh* mesh, unsigned vertex_id) const {
 }
 
 math::vec3 Triangle::get_normal(aiMesh* mesh) const {
-
   math::vec3 normal(0, 0, 0);
 
   if (mesh->HasNormals()) {
@@ -212,28 +214,37 @@ math::vec3 Triangle::get_normal(aiMesh* mesh) const {
   return normal;
 }
 
-math::vec3 Triangle::get_normal_interpolated(aiMesh* mesh, math::vec3 const& position) const {
+math::vec3 Triangle::get_normal_interpolated(aiMesh* mesh, 
+                                             math::vec3 const& position) const {
   math::vec3 normal(0, 0, 0);
 
   if (mesh->HasNormals()) {
     normal = math::interpolate(position,
-      std::make_pair(aiMesh_vertex(mesh,face_id_,0), aiMesh_normal(mesh,face_id_,0)),
-      std::make_pair(aiMesh_vertex(mesh,face_id_,1), aiMesh_normal(mesh,face_id_,1)),
-      std::make_pair(aiMesh_vertex(mesh,face_id_,2), aiMesh_normal(mesh,face_id_,2)));
+      std::make_pair(aiMesh_vertex(mesh,face_id_,0), 
+                     aiMesh_normal(mesh,face_id_,0)),
+      std::make_pair(aiMesh_vertex(mesh,face_id_,1), 
+                     aiMesh_normal(mesh,face_id_,1)),
+      std::make_pair(aiMesh_vertex(mesh,face_id_,2), 
+                     aiMesh_normal(mesh,face_id_,2)));
     normal = scm::math::normalize(normal);
   }
 
   return normal;
 }
 
-math::vec2 Triangle::get_texture_coords_interpolated(aiMesh* mesh, math::vec3 const& position) const {
+math::vec2 Triangle::get_texture_coords_interpolated(
+    aiMesh* mesh, 
+    math::vec3 const& position) const {
   math::vec2 tex_coords(0, 0);
 
   if (mesh->HasTextureCoords(0)) {
     tex_coords = math::interpolate(position,
-      std::make_pair(aiMesh_vertex(mesh,face_id_,0), aiMesh_texcoord(mesh,face_id_,0,0)),
-      std::make_pair(aiMesh_vertex(mesh,face_id_,1), aiMesh_texcoord(mesh,face_id_,0,1)),
-      std::make_pair(aiMesh_vertex(mesh,face_id_,2), aiMesh_texcoord(mesh,face_id_,0,2))
+      std::make_pair(aiMesh_vertex(mesh,face_id_,0), 
+                     aiMesh_texcoord(mesh,face_id_,0,0)),
+      std::make_pair(aiMesh_vertex(mesh,face_id_,1), 
+                     aiMesh_texcoord(mesh,face_id_,0,1)),
+      std::make_pair(aiMesh_vertex(mesh,face_id_,2), 
+                     aiMesh_texcoord(mesh,face_id_,0,2))
     );
   }
 
