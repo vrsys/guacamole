@@ -78,4 +78,20 @@ math::mat4 const math::mat_ai_to_scm(aiMatrix4x4 const& ai_mat) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+std::tuple<float,float,float> barycentric(math::vec3 const& a,
+                                          math::vec3 const& b,
+                                          math::vec3 const& c,
+                                          math::vec3 const& p) {
+  auto ap = a-p;
+  auto bp = b-p;
+  auto cp = c-p;
+
+  auto area = scm::math::length(scm::math::cross(a-b, a-c));
+  auto a1   = scm::math::length(scm::math::cross(bp, cp)) / area;
+  auto a2   = scm::math::length(scm::math::cross(cp, ap)) / area;
+  auto a3   = 1.0 - a1 - a2;
+
+  return std::make_tuple(a1,a2,a3);
+}
+
 }
