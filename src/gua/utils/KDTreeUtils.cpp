@@ -36,6 +36,30 @@
 
 namespace gua {
 
+namespace {
+
+// helper function to access mesh attributes
+// no bounds checking!
+// local to this translation unit
+inline math::vec3 aiMesh_vertex(aiMesh* mesh, unsigned face, unsigned i) {
+  return math::vec3(mesh->mVertices[mesh->mFaces[face].mIndices[i]].x,
+                    mesh->mVertices[mesh->mFaces[face].mIndices[i]].y,
+                    mesh->mVertices[mesh->mFaces[face].mIndices[i]].z);
+}
+
+inline math::vec3 aiMesh_normal(aiMesh* mesh, unsigned face, unsigned i) {
+  return math::vec3(mesh->mNormals[mesh->mFaces[face].mIndices[i]].x,
+                    mesh->mNormals[mesh->mFaces[face].mIndices[i]].y,
+                    mesh->mNormals[mesh->mFaces[face].mIndices[i]].z);
+}
+
+inline math::vec2 aiMesh_texcoord(aiMesh* mesh, unsigned face, unsigned i, unsigned j) {
+  return math::vec2(mesh->mTextureCoords[i][mesh->mFaces[face].mIndices[j]].x,
+                    mesh->mTextureCoords[i][mesh->mFaces[face].mIndices[j]].y);
+}
+
+}
+
 // Ray -------------------------------------------------------------------------
 
 const float Ray::END(std::numeric_limits<float>::max());
