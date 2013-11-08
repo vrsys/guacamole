@@ -19,14 +19,55 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+@include "shaders/common/header.glsl"
 
-// renderer headers
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
-#include <gua/renderer/VolumeLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/Renderer.hpp>
+// input from vertex shader ----------------------------------------------------
+in vec3 gua_position_varying;
+@input_definition
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+// uniforms
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+
+// material specific uniforms
+@uniform_definition
+
+// outputs ---------------------------------------------------------------------
+@output_definition
+
+// methods ---------------------------------------------------------------------
+
+// global gua_* methods
+vec2 gua_get_quad_coords() {
+  return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
+}
+
+@include "shaders/uber_shaders/common/get_sampler_casts.glsl"
+
+uint gua_get_material_id() {
+  return gua_uint_gbuffer_varying_0.x;
+}
+
+vec3 gua_get_position() {
+  return gua_position_varying;
+}
+
+void gua_set_position(vec3 world_position) {
+    vec4 pos = gua_projection_matrix * gua_view_matrix * vec4(world_position, 1.0);
+    float ndc = pos.z/pos.w;
+    gl_FragDepth = (((gl_DepthRange.diff) * ndc) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
+}
+
+// material specific methods
+@material_methods
+
+// main ------------------------------------------------------------------------
+void main() {
+
+  gl_FragDepth = gl_FragCoord.z;
+
+  // big switch, one case for each material
+  @material_switch
+
+  gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
+}
+

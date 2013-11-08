@@ -59,6 +59,11 @@ struct SerializedScene {
    */
   std::vector<SerializedNode<GeometryNode::Configuration> > nurbsnodes_;
 
+  ///**
+  //* All Volumes nodes.
+  //*/
+  std::vector<SerializedNode<GeometryNode::Configuration> > volumenodes_;
+
   /**
    * All point light nodes.
    */
