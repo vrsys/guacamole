@@ -81,13 +81,11 @@ void Texture2D::upload_to(RenderContext const& context) const {
             math::vec2ui(width_, height_), color_format_, mipmap_layers_);
       } else {
 
-        std::cout << "new! " << width_ << " "<< height_ << " " << mipmap_layers_ <<std::endl;
         textures_[context.id] = context.render_device->create_texture_2d(
             scm::gl::texture_2d_desc(
                 math::vec2ui(width_, height_), color_format_, mipmap_layers_),
             color_format_,
             data_);
-        std::cout << "done! "<<std::endl;
       }
     } else {
       // MESSAGE("Uploading texture file %s", file_name_.c_str());
@@ -110,10 +108,9 @@ void Texture2D::upload_to(RenderContext const& context) const {
 
   } else {
     // texture needs only update
-    std::cout << "old!" << width_ << " "<< height_ << std::endl;
     context.render_context->update_sub_texture(
       textures_[context.id],
-      scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width_, height_, 0)),
+      scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width_, height_, 1)),
       0, color_format_, &data_[0]);
   }
 }

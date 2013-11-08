@@ -95,13 +95,13 @@ void TexturedQuadNode::ray_test_impl(RayNode const& ray, PickResult::Options opt
 
       bool check_kd_tree(true);
 
-      math::mat4 world_transform(get_world_transform());
+      math::mat4 world_transform(get_scaled_world_transform());
 
       // check for bounding box intersection of contained geometry if node
       // has children (in this case, the bbox might be larger
       // than the actual geometry)
       if (has_children()) {
-        auto geometry_bbox(geometry->get_bounding_box());
+        math::BoundingBox<math::vec3> geometry_bbox(math::vec3(-0.5, -0.5, 0), math::vec3(0.5, 0.5, 0));
 
         gua::math::transform(geometry_bbox, world_transform);
 
