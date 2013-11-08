@@ -429,10 +429,10 @@ KDTree::LeafData::LeafData() : id_(-1), bbox_() {}
 
 KDTree::LeafData::LeafData(aiMesh* mesh, Triangle const & triangle, unsigned id)
     : id_(id), bbox_() {
-      for (auto i(0); i < 3; ++i) {
-        bbox_.expandBy(triangle.get_vertex(mesh, i));
-      }
+    for (auto i(0); i < 3; ++i) {
+      bbox_.expandBy(triangle.get_vertex(mesh, i));
     }
+}
 
 KDTree::LeafData::LeafData(math::BoundingBox<math::vec3> const & bbox,
                            unsigned id)

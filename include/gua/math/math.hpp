@@ -25,6 +25,7 @@
 #include <scm/core/math.h>
 #include <scm/gl_core/math.h>
 #include <iostream>
+#include <tuple>
 
 #if ASSIMP_VERSION == 3
 #include <assimp/Importer.hpp>
@@ -97,27 +98,19 @@ inline math::vec3 get_translation(math::mat4 const& m) {
   return math::vec3(m[12], m[13], m[14]);
 }
 
+std::tuple<float,float,float> barycentric(math::vec3 const& a,
+                                          math::vec3 const& b,
+                                          math::vec3 const& c,
+                                          math::vec3 const& p);
 
-template <typename PosType, typename ValueType>
-ValueType interpolate(PosType const& position,
-                      std::pair<PosType, ValueType> const& a,
-                      std::pair<PosType, ValueType> const& b,
-                      std::pair<PosType, ValueType> const& c) {
-
-    // TODO: Is there a more efficient way to interpolate?
-
-    // calculate vectors from position to vertices a, b and c:
-    auto f1 = a.first-position;
-    auto f2 = b.first-position;
-    auto f3 = c.first-position;
-
-    // calculate the areas and factors (order of parameters doesn't matter):
-    auto area = scm::math::length(scm::math::cross(a.first-b.first, a.first-c.first));
-    auto a1   = scm::math::length(scm::math::cross(f2, f3)) / area;
-    auto a2   = scm::math::length(scm::math::cross(f3, f1)) / area;
-    auto a3   = scm::math::length(scm::math::cross(f1, f2)) / area;
-
-    return a.second * a1 + b.second * a2 + c.second * a3;
+template <typename ValueType>
+ValueType interpolate(math::vec3 const& position,
+                      std::pair<math::vec3, ValueType> const& a,
+                      std::pair<math::vec3, ValueType> const& b,
+                      std::pair<math::vec3, ValueType> const& c) {
+    float u, v, w;
+    std::tie(u,v,w) = barycentric(a.first,b.first,c.first,position);
+    return u * a.second + v * b.second + w * c.second;
 }
 
 }
