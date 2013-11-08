@@ -82,7 +82,7 @@ void Texture2D::upload_to(RenderContext const& context) const {
           color_format_,
           data_);
   } else {
-    MESSAGE("Uploading texture file %s", file_name_.c_str());
+    // MESSAGE("Uploading texture file %s", file_name_.c_str());
     scm::gl::texture_loader loader;
     textures_[context.id] = loader.load_texture_2d(
         *context.render_device, file_name_, mipmap_layers_ > 0);

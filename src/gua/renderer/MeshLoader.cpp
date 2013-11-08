@@ -49,7 +49,7 @@ std::shared_ptr<Node> MeshLoader::load(std::string const& file_name,
   node_counter_ = 0;
   TextFile file(file_name);
 
-  MESSAGE("Loading mesh file %s", file_name.c_str());
+  // MESSAGE("Loading mesh file %s", file_name.c_str());
 
   if (file.is_valid()) {
     auto importer = std::make_shared<Assimp::Importer>();
