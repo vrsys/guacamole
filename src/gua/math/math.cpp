@@ -76,10 +76,10 @@ math::mat4 const math::mat_ai_to_scm(aiMatrix4x4 const& ai_mat) {
   return scm_mat;
 }
 
-std::tuple<float,float,float> barycentric(math::vec3 const& a,
-                                          math::vec3 const& b,
-                                          math::vec3 const& c,
-                                          math::vec3 const& p) {
+std::tuple<float,float,float> math::barycentric(math::vec3 const& a,
+                                                math::vec3 const& b,
+                                                math::vec3 const& c,
+                                                math::vec3 const& p) {
   auto pa = a-p;
   auto pb = b-p;
   auto pc = c-p;
