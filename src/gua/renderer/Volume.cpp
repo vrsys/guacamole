@@ -39,6 +39,7 @@
 #endif
 
 #include <scm/gl_util/data/volume/volume_loader.h>
+#include <scm/gl_util/data/imaging/texture_loader.h>
 #include <scm/gl_util/primitives/box_volume.h>
 
 namespace {
@@ -95,16 +96,24 @@ namespace gua {
 
 		if (_volume_boxes_ptr.size() <= ctx.id){
 			_volume_texture_ptr.resize(ctx.id + 1);
+			_transfer_texture_ptr.resize(ctx.id + 1);
 			_volume_boxes_ptr.resize(ctx.id + 1);
+			_sstate.resize(ctx.id + 1);
 		}
 
 		scm::gl::volume_loader scm_volume_loader;
 		_volume_texture_ptr[ctx.id] = scm_volume_loader.load_volume_data(_volume_file_path);
 
+		scm::gl::texture_loader scm_image_loader; 
+		_volume_texture_ptr[ctx.id] = scm_image_loader.load_image_data(_volume_file_path + ".png");
+
+
 		//box_volume_geometry
 		_volume_boxes_ptr[ctx.id] =
 			scm::gl::box_volume_geometry_ptr(new scm::gl::box_volume_geometry(ctx.render_device, bounding_box_.min, bounding_box_.max));
 		
+		_sstate[ctx.id] = ctx.render_device->create_sampler_state(
+			scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -118,8 +127,11 @@ namespace gua {
 
 		scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
+		ctx.render_context->bind_texture( _volume_texture_ptr[ctx.id], _sstate[ctx.id], 5);
+		ctx.render_context->bind_texture(_transfer_texture_ptr[ctx.id], _sstate[ctx.id], 6);
 		scm::gl::program_ptr p = ctx.render_context->current_program();
 		p->uniform("volume_texture", 5);
+		p->uniform("transfer_texture", 6);
 
 		ctx.render_context->apply();
 		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);

@@ -76,7 +76,7 @@ void main() {
   gua_object_normal =     gua_in_normal;
   gua_object_tangent =    gua_in_tangent;
   gua_object_bitangent =  gua_in_bitangent;
-  gua_object_position =   gua_in_position;
+  gua_object_position =   gua_in_position * 0.5;
 
   gua_world_normal =      normalize((gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz);
   gua_world_tangent =     normalize((gua_normal_matrix * vec4(gua_in_tangent, 0.0)).xyz);

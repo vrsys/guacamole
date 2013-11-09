@@ -28,6 +28,7 @@ in vec3 gua_position_varying;
 // uniforms
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
+
 // material specific uniforms
 @uniform_definition
 
@@ -67,6 +68,8 @@ void main() {
 
   // big switch, one case for each material
   @material_switch
+
+  color_res = compositn();
 
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
 }

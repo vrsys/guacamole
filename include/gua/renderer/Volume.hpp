@@ -108,6 +108,11 @@ namespace gua {
 		mutable std::vector<scm::gl::texture_3d_ptr>
 			_volume_texture_ptr;
 
+		mutable std::vector<scm::gl::texture_2d_ptr>
+			_transfer_texture_ptr;
+
+		mutable std::vector<scm::gl::sampler_state_ptr> _sstate;
+
 #if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
 		mutable boost::mutex upload_mutex_;
 #else
