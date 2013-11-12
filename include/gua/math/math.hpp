@@ -27,11 +27,7 @@
 #include <iostream>
 #include <tuple>
 
-#if ASSIMP_VERSION == 3
-#include <assimp/Importer.hpp>
-#else
-#include <assimp/assimp.hpp>
-#endif
+class aiMatrix4x4;
 
 #include <gua/math/traits.hpp>
 
