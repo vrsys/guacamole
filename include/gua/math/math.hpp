@@ -56,6 +56,9 @@ typedef scm::math::vec<int, 2> vec2i;
 typedef scm::math::vec<unsigned, 4> vec4ui;
 typedef scm::math::vec<unsigned, 3> vec3ui;
 typedef scm::math::vec<unsigned, 2> vec2ui;
+
+typedef scm::math::quat<float> quatf;
+typedef scm::math::quat<double> quatd;
 ///@}
 
 /**
