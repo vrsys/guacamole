@@ -27,7 +27,7 @@
 #include <iostream>
 #include <tuple>
 
-class aiMatrix4x4;
+struct aiMatrix4x4;
 
 #include <gua/math/traits.hpp>
 

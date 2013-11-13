@@ -26,6 +26,12 @@
 #include <iostream>
 #include <sstream>
 
+#if ASSIMP_VERSION == 3
+#include <assimp/Importer.hpp>
+#else
+#include <assimp/assimp.hpp>
+#endif
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////

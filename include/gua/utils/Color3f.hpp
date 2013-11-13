@@ -104,6 +104,8 @@ struct Color3f {
    */
   static const Color3f random();
 
+  friend bool operator==(Color3f const& lhs, Color3f const& rhs);
+
  private:
   void set_hsv(float hue, float saturation, float value);
 
