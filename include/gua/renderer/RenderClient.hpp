@@ -27,10 +27,8 @@
 #include <functional>
 
 // guacamole headers
-//#include <gua/platform.hpp>
-//#include <gua/utils/Timer.hpp>
 #include <gua/utils/Doublebuffer.hpp>
-//#include <gua/utils/FpsCounter.hpp>
+#include <gua/utils/FpsCounter.hpp>
 
 namespace gua {
 
