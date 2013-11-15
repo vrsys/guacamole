@@ -28,12 +28,14 @@
 
 // external headers
 #include <scm/gl_core.h>
-#include <scm/gl_util/data/volume/volume_loader.h>
 
 #include <scm/gl_core/gl_core_fwd.h>
 #include <scm/gl_core/data_types.h>
 #include <scm/gl_core/state_objects.h>
 
+#include <scm/gl_util/data/volume/volume_loader.h>
+#include <scm/gl_util/data/analysis/transfer_function/piecewise_function_1d.h>
+#include <scm/gl_util/data/analysis/transfer_function/build_lookup_table.h>
 #include <scm/gl_util/primitives/primitives_fwd.h>
 #include <scm/gl_util/primitives/geometry.h>
 
@@ -91,6 +93,17 @@ namespace gua {
 		void ray_test(Ray const& ray, PickResult::Options options,
 			Node* owner, std::set<PickResult>& hits);
 
+		scm::gl::texture_2d_ptr create_color_map(RenderContext const& context,
+											unsigned in_size,
+											const scm::data::piecewise_function_1d<float, float>& in_alpha,
+											const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
+
+		bool update_color_map(RenderContext const& context,
+							scm::gl::texture_2d_ptr transfer_texture_ptr,
+							unsigned in_size,
+							const scm::data::piecewise_function_1d<float, float>& in_alpha,
+							const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
+
 	private:
 		void upload_to(RenderContext const& context) const;
 
@@ -118,6 +131,9 @@ namespace gua {
 #else
 		mutable std::mutex upload_mutex_;
 #endif
+
+		scm::data::piecewise_function_1d<float, float>                 _alpha_transfer;
+		scm::data::piecewise_function_1d<float, scm::math::vec3f>      _color_transfer;
 
 	public:
 

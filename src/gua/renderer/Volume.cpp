@@ -68,7 +68,8 @@ namespace gua {
 		upload_mutex_()
 	{
 		scm::gl::volume_loader scm_volume_loader;
-		scm::math::vec3ui volume_dimensions = scm_volume_loader.read_dimensions(file_name);
+		//scm::math::vec3ui volume_dimensions = scm_volume_loader.read_dimensions(file_name);
+		scm::math::vec3ui volume_dimensions = scm::math::vec3ui(256, 256, 225);
 
 		unsigned max_dimension_volume = scm::math::max(scm::math::max(volume_dimensions.x, volume_dimensions.y), volume_dimensions.z);
 
@@ -77,7 +78,7 @@ namespace gua {
 			(float)volume_dimensions.z / (float)max_dimension_volume);
 
 		MESSAGE("%f %f %f", scaled_max_vertex_pos.x, scaled_max_vertex_pos.y, scaled_max_vertex_pos.z);
-		getchar();
+		//getchar();
 
 		bounding_box_ = math::BoundingBox<math::vec3>(math::vec3::zero(), scaled_max_vertex_pos);
 		
@@ -102,18 +103,116 @@ namespace gua {
 		}
 
 		scm::gl::volume_loader scm_volume_loader;
-		_volume_texture_ptr[ctx.id] = scm_volume_loader.load_volume_data(_volume_file_path);
+		_volume_texture_ptr[ctx.id] = scm_volume_loader.load_volume_data(*(ctx.render_device.get()), _volume_file_path);
 
-		scm::gl::texture_loader scm_image_loader; 
-		_volume_texture_ptr[ctx.id] = scm_image_loader.load_image_data(_volume_file_path + ".png");
+		MESSAGE("%s loaded!", _volume_file_path.c_str());
 
+		//scm::gl::texture_loader scm_image_loader; 
+		_transfer_texture_ptr[ctx.id] = ctx.render_device->create_texture_2d(scm::gl::texture_2d_desc(scm::math::vec2ui(255, 1),
+																			 scm::gl::data_format::FORMAT_RGBA_32F));
+			
 
 		//box_volume_geometry
 		_volume_boxes_ptr[ctx.id] =
-			scm::gl::box_volume_geometry_ptr(new scm::gl::box_volume_geometry(ctx.render_device, bounding_box_.min, bounding_box_.max));
+			scm::gl::box_volume_geometry_ptr(new scm::gl::box_volume_geometry(ctx.render_device, scm::math::vec3(0.0), scm::math::vec3(1.0)));
 		
 		_sstate[ctx.id] = ctx.render_device->create_sampler_state(
-			scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+			scm::gl::FILTER_MIN_MAG_MIP_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+	}
+
+
+	scm::gl::texture_2d_ptr Volume::create_color_map(RenderContext const& ctx,
+														unsigned in_size,
+														const scm::data::piecewise_function_1d<float, float>& in_alpha,
+														const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const
+	{
+			using namespace scm::gl;
+			using namespace scm::math;
+
+			scm::scoped_array<scm::math::vec3f>  color_lut;
+			scm::scoped_array<float>             alpha_lut;
+
+			color_lut.reset(new vec3f[in_size]);
+			alpha_lut.reset(new float[in_size]);
+
+			if (!scm::data::build_lookup_table(color_lut, in_color, in_size)
+				|| !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {
+				std::cout << "demo_app::create_color_map(): error during lookuptable generation" << std::endl;
+				return (texture_2d_ptr());
+			}
+			scm::scoped_array<float> combined_lut;
+
+			combined_lut.reset(new float[in_size * 4]);
+
+			for (unsigned i = 0; i < in_size; ++i) {
+				combined_lut[i * 4] = color_lut[i].x;
+				combined_lut[i * 4 + 1] = color_lut[i].y;
+				combined_lut[i * 4 + 2] = color_lut[i].z;
+				combined_lut[i * 4 + 3] = alpha_lut[i];
+			}
+
+			std::vector<void*> in_data;
+			in_data.push_back(combined_lut.get());
+
+			texture_2d_ptr new_tex = ctx.render_device->create_texture_2d(scm::math::vec2ui(in_size, 1), FORMAT_RGBA_8, 1, 1, 1, FORMAT_RGBA_32F, in_data);
+
+			if (!new_tex) {
+				std::cout << "demo_app::create_color_map(): error during color map texture generation." << std::endl;
+				return (texture_2d_ptr());
+			}
+
+			return (new_tex);
+		}
+
+	bool Volume::update_color_map(RenderContext const& ctx,
+		scm::gl::texture_2d_ptr transfer_texture_ptr,
+		unsigned in_size,
+		const scm::data::piecewise_function_1d<float, float>& in_alpha,
+		const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const
+	{
+		using namespace scm::gl;
+		using namespace scm::math;
+
+		scm::scoped_array<scm::math::vec3f>  color_lut;
+		scm::scoped_array<float>             alpha_lut;
+
+		color_lut.reset(new vec3f[in_size]);
+		alpha_lut.reset(new float[in_size]);
+
+		if (!scm::data::build_lookup_table(color_lut, in_color, in_size)
+			|| !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {
+			std::cout << "demo_app::update_color_map(): error during lookuptable generation" << std::endl;
+			return false;// (transfer_texture_ptr);
+		}
+		scm::scoped_array<float> combined_lut;
+
+		combined_lut.reset(new float[in_size * 4]);
+
+		for (unsigned i = 0; i < in_size; ++i) {
+			combined_lut[i * 4] = color_lut[i].x;
+			combined_lut[i * 4 + 1] = color_lut[i].y;
+			combined_lut[i * 4 + 2] = color_lut[i].z;
+			combined_lut[i * 4 + 3] = alpha_lut[i];
+		}
+
+		std::vector<void*> in_data;
+		in_data.push_back(combined_lut.get());
+
+		//texture_2d_ptr new_tex = ctx.render_device->create_texture_2d(scm::math::vec2ui(in_size, 1), FORMAT_RGBA_8, 1, 1, 1, FORMAT_RGBA_32F, in_data);
+		
+
+		if (!ctx.render_context->update_sub_texture(transfer_texture_ptr,
+													scm::gl::texture_region(scm::math::vec3ui(0, 0, 0),
+													scm::math::vec3ui(in_size, 1, 0)),
+													1u,
+													FORMAT_RGBA_8,
+													in_data)) 
+		{
+			std::cout << "demo_app::updatecolor_map(): error during color map texture generation." << std::endl;
+			return false;
+		}
+
+		return true;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -130,9 +229,11 @@ namespace gua {
 		ctx.render_context->bind_texture( _volume_texture_ptr[ctx.id], _sstate[ctx.id], 5);
 		ctx.render_context->bind_texture(_transfer_texture_ptr[ctx.id], _sstate[ctx.id], 6);
 		scm::gl::program_ptr p = ctx.render_context->current_program();
-		p->uniform("volume_texture", 5);
 		p->uniform("transfer_texture", 6);
-
+		p->uniform_sampler("volume_texture", 5);		
+		p->uniform("sampling_distance", 1.f/255.f);
+		p->uniform("iso_value", 0.8f);
+		
 		ctx.render_context->apply();
 		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);
 		//ctx.render_context->draw_elements(mesh_->mNumFaces * 3);

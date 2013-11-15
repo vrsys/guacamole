@@ -38,6 +38,11 @@ uniform uint gua_material_id;
 
 // outputs ---------------------------------------------------------------------
 out vec3 gua_position_varying;
+out vec3 object_position_varying;
+out vec3 object_world_position_varying;
+out vec3 object_normal_varying;
+out vec3 object_world_normal_varying;
+out vec3 object_ray;
 
 @output_definition
 
@@ -76,7 +81,7 @@ void main() {
   gua_object_normal =     gua_in_normal;
   gua_object_tangent =    gua_in_tangent;
   gua_object_bitangent =  gua_in_bitangent;
-  gua_object_position =   gua_in_position * 0.5;
+  gua_object_position =   gua_in_position;
 
   gua_world_normal =      normalize((gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz);
   gua_world_tangent =     normalize((gua_normal_matrix * vec4(gua_in_tangent, 0.0)).xyz);
@@ -85,6 +90,15 @@ void main() {
 
   // big switch, one case for each material
   @material_switch
+
+  object_position_varying = gua_object_position;
+  object_world_position_varying = gua_world_position;
+  object_normal_varying = gua_object_normal;
+  object_world_normal_varying = gua_world_normal;
+
+  mat4 gua_invers_model_matrix = inverse(gua_model_matrix);
+
+  object_ray = normalize(gua_object_position - (gua_invers_model_matrix * vec4(gua_camera_position, 1.0)).xyz);
 
   gua_uint_gbuffer_varying_0.x = gua_material_id;
   gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_position_varying.xyz, 1.0);
