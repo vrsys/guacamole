@@ -136,12 +136,11 @@ void main() {
   bool iso_hit = false;
 
   vec3 normal = vec3(0.0);
-
-  float alpha = 1.0;
+  vec4 color = vec4(0.0);
 
   int step_count = 0;
 
-
+#if 0
 while (inside_volume && !iso_hit) 
 {
       // get sample
@@ -162,11 +161,35 @@ while (inside_volume && !iso_hit)
           //normal = normalize(gradient);
       }
   }
+
+	if(!iso_hit)
+		gua_float_gbuffer_out_1.xyz = vec3(step_count/255.f);
+	else
+		gua_float_gbuffer_out_1.xyz = vec3(0.0, 1.0, 0.0);
+#endif
+
+#if 1
+      while (inside_volume) {
+        // get sample
+        float s = texture(volume_texture, sampling_pos).r;
+        vec4 src = texture(transfer_texture, vec2(s, 0.5));
+
+        // increment ray
+        sampling_pos  += ray_increment;
+        inside_volume  = inside_volume_bounds(sampling_pos) && (color.a < 0.99);
+        // compositing
+        float omda_sa = (1.0 - color.a) * src.a;
+        color.rgb += omda_sa * src.rgb;
+        color.a   += omda_sa;
+    }
+
+	gua_float_gbuffer_out_1.rgb = color.rgb;
+
+#endif
   
-  if(!iso_hit)
-    gua_float_gbuffer_out_1.xyz = vec3(step_count/255.f);
-  else
-    gua_float_gbuffer_out_1.xyz = vec3(0.0, 1.0, 0.0);
+  vec4 trans_c = texture(transfer_texture, object_position_varying.xy);
+  
+  //gua_float_gbuffer_out_1 = trans_c.rgb * trans_c.a + object_position_varying.xyz * 0.5;
 
   gua_float_gbuffer_out_0.xyz = normal;
     

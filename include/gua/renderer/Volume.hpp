@@ -100,7 +100,6 @@ namespace gua {
 
 		bool update_color_map(RenderContext const& context,
 							scm::gl::texture_2d_ptr transfer_texture_ptr,
-							unsigned in_size,
 							const scm::data::piecewise_function_1d<float, float>& in_alpha,
 							const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
 
