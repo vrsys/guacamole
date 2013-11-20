@@ -27,11 +27,7 @@
 #include <iostream>
 #include <tuple>
 
-#if ASSIMP_VERSION == 3
-#include <assimp/Importer.hpp>
-#else
-#include <assimp/assimp.hpp>
-#endif
+struct aiMatrix4x4;
 
 #include <gua/math/traits.hpp>
 
@@ -56,6 +52,8 @@ typedef scm::math::vec<int, 2> vec2i;
 typedef scm::math::vec<unsigned, 4> vec4ui;
 typedef scm::math::vec<unsigned, 3> vec3ui;
 typedef scm::math::vec<unsigned, 2> vec2ui;
+
+typedef scm::math::quat<float> quat;
 ///@}
 
 /**
