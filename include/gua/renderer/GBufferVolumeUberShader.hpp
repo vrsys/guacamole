@@ -19,47 +19,21 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GROUP_NODE_HPP
-#define GUA_GROUP_NODE_HPP
+#ifndef GUA_G_BUFFER_VOLUME_UBER_SHADER_HPP
+#define GUA_G_BUFFER_VOLUME_UBER_SHADER_HPP
 
-#include <gua/scenegraph/Node.hpp>
-
-/**
- * This class is used to represent an empty node in the SceneGraph.
- *
- */
+// guacamole headers
+#include <gua/renderer/UberShader.hpp>
 
 namespace gua {
 
-class GroupNode : public Node {
+class GBufferVolumeUberShader : public UberShader {
  public:
 
-  GroupNode() {};
+  void create(std::set<std::string> const& material_names);
 
-  /**
-   * Constructor.
-   *
-   * This constructs a GroupNode with the given parameters.
-   *
-   * \param name       The Node's name
-   * \param transform  The transformation of the object the Node contains.
-   */
-  GroupNode(std::string const& name,
-            math::mat4 const& transform = math::mat4::identity());
-
-  /**
-   * Accepts a visitor and calls concrete visit method
-   *
-   * This method implements the visitor pattern for Nodes
-   *
-   */
-  /* virtual */ void accept(NodeVisitor&);
-
- private:
-
-  std::shared_ptr<Node> copy() const;
 };
 
 }
 
-#endif  // GUA_GROUP_NODE_HPP
+#endif  // GUA_G_BUFFER_VOLUME_UBER_SHADER_HPP

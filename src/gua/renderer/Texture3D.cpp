@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/Texture.hpp>
+#include <gua/renderer/Texture3D.hpp>
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -28,96 +28,44 @@
 #include <gua/math/math.hpp>
 
 // external headers
-#include <scm/gl_util/data/imaging/texture_loader.h>
+#include <scm/gl_util/data/volume/volume_loader.h>
 #include <iostream>
 
 namespace gua {
 
-Texture::Texture(scm::gl::data_format color_format,
+Texture3D::Texture3D(unsigned width,
+                 unsigned height,
+                 unsigned depth,
+                 scm::gl::data_format color_format,
                  std::vector<void*> const& data,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : mipmap_layers_(mipmap_layers),
-      color_format_(color_format),
-      file_name_(""),
-      data_(data),
-      state_descripton_(state_descripton),
-      textures_(),
-      sampler_states_(),
-      upload_mutex_() {}
+    : Texture(color_format, data, mipmap_layers, state_descripton),
+      width_(width),
+      height_(height),
+      depth_(depth) {}
 
-Texture::Texture(scm::gl::data_format color_format,
+Texture3D::Texture3D(unsigned width,
+                 unsigned height,
+                 unsigned depth,
+                 scm::gl::data_format color_format,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : mipmap_layers_(mipmap_layers),
-      color_format_(color_format),
-      file_name_(""),
-      state_descripton_(state_descripton),
-      textures_(),
-      sampler_states_(),
-      upload_mutex_() {}
+    : Texture(color_format, mipmap_layers, state_descripton),
+      width_(width),
+      height_(height),
+      depth_(depth) {}
 
-Texture::Texture(std::string const& file,
+Texture3D::Texture3D(std::string const& file,
                  bool generate_mipmaps,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : 
-      mipmap_layers_(generate_mipmaps ? 1 : 0),
-      color_format_(scm::gl::FORMAT_NULL),
-      file_name_(file),
-      state_descripton_(state_descripton),
-      textures_(),
-      sampler_states_(),
-      upload_mutex_() {}
+    : Texture(file, generate_mipmaps, state_descripton),
+      width_(0),
+      height_(0),
+      depth_(0) {}
 
-Texture::~Texture() {
-  make_non_resident();
-}
+void Texture3D::upload_to(RenderContext const& context) const {
 
-void Texture::generate_mipmaps(RenderContext const& context) {
-
-  if (textures_.size() <= context.id || textures_[context.id] == 0)
-    upload_to(context);
-
-  context.render_context->generate_mipmaps(textures_[context.id]);
-}
-
-math::vec2ui const Texture::get_handle(RenderContext const& context) const {
-
-  if (textures_.size() <= context.id || textures_[context.id] == 0)
-    upload_to(context);
-
-  uint64_t handle(textures_[context.id]->native_handle());
-
-  return math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
-}
-
-scm::gl::texture_image_ptr const& Texture::get_buffer(
-    RenderContext const& context) const {
-
-  if (textures_.size() <= context.id || textures_[context.id] == 0)
-    upload_to(context);
-
-  return textures_[context.id];
-}
-
-void Texture::make_resident(RenderContext const& context) const {
-  context.render_context
-      ->make_resident(textures_[context.id], sampler_states_[context.id]);
-
-}
-
-void Texture::make_non_resident(RenderContext const& context) const {
-  context.render_context->make_non_resident(textures_[context.id]);
-}
-
-void Texture::make_non_resident() const {
-  for (int i(0); i<textures_.size(); ++i ) {
-    render_contexts_[i]->make_non_resident(textures_[i]);
-  }
-}
-
-#if 0
-void Texture::upload_to(RenderContext const& context) const {
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
   if (textures_.size() <= context.id) {
@@ -130,23 +78,24 @@ void Texture::upload_to(RenderContext const& context) const {
 
 
     if (data_.size() == 0)
-      textures_[context.id] = context.render_device->create_texture_2d(
-          math::vec2ui(width_, height_), color_format_, mipmap_layers_);
+      textures_[context.id] = context.render_device->create_texture_3d(
+          math::vec3ui(width_, height_, depth_), color_format_, mipmap_layers_);
     else
-      textures_[context.id] = context.render_device->create_texture_2d(
-          scm::gl::texture_2d_desc(
-              math::vec2ui(width_, height_), color_format_, mipmap_layers_),
+      textures_[context.id] = context.render_device->create_texture_3d(
+          scm::gl::texture_3d_desc(
+              math::vec3ui(width_, height_, depth_), color_format_, mipmap_layers_),
           color_format_,
           data_);
   } else {
-    MESSAGE("Uploading texture file %s", file_name_.c_str());
-    scm::gl::texture_loader loader;
-    textures_[context.id] = loader.load_texture_2d(
+    // MESSAGE("Uploading texture file %s", file_name_.c_str());
+    scm::gl::volume_loader loader;
+    textures_[context.id] = loader.load_texture_3d(
         *context.render_device, file_name_, mipmap_layers_ > 0);
 
     if (textures_[context.id]) {
-      width_ = textures_[context.id]->dimensions()[0];
+      width_  = textures_[context.id]->dimensions()[0];
       height_ = textures_[context.id]->dimensions()[1];
+      depth_  = textures_[context.id]->dimensions()[2];
     }
   }
 
@@ -157,6 +106,5 @@ void Texture::upload_to(RenderContext const& context) const {
 
   make_resident(context);
 }
-#endif
 
 }

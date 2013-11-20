@@ -26,7 +26,7 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/TextRenderer.hpp>
-#include <gua/renderer/Texture.hpp>
+#include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/Mask.hpp>
 

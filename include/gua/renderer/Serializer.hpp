@@ -62,28 +62,18 @@ class Serializer : public NodeVisitor {
   void check(SerializedScene* output,
              SceneGraph const* scene_graph,
              Camera const& camera,
-             Frustum const& frustum,
              bool draw_bounding_boxes,
              bool draw_rays,
              bool enable_frustum_culling);
 
   /**
-   * Visits a GroupNode
+   * Visits a TransformNode
    *
-   * This function provides the interface to visit a GroupNode
+   * This function provides the interface to visit a TransformNode
    *
-   * \param cam   Pointer to GroupNode
+   * \param cam   Pointer to TransformNode
    */
-  /* virtual */ void visit(GroupNode* cam);
-
-  /**
-   * Visits a ViewNode
-   *
-   * This function provides the interface to visit a ViewNode
-   *
-   * \param cam   Pointer to ViewNode
-   */
-  /* virtual */ void visit(ViewNode* cam);
+  /* virtual */ void visit(TransformNode* cam);
 
   /**
    * Visits a GeometryNode
@@ -102,15 +92,6 @@ class Serializer : public NodeVisitor {
    * \param pointlight   Pointer to PointLightNode
    */
   /* virtual */ void visit(PointLightNode* pointlight);
-
-  /**
-   * Visits a ScreenLightNode
-   *
-   * This function provides the interface to visit a ScreenLightNode
-   *
-   * \param screen   Pointer to ScreenLightNode
-   */
-  /* virtual */ void visit(ScreenNode* screen);
 
   /**
    * Visits a SpotLightNode

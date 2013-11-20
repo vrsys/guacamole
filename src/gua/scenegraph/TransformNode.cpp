@@ -19,58 +19,24 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_VIEW_NODE_HPP
-#define GUA_VIEW_NODE_HPP
+// class header
+#include <gua/scenegraph/TransformNode.hpp>
 
-#include <gua/scenegraph/Node.hpp>
-#include <gua/utils/configuration_macro.hpp>
-
-/**
- * This class is used to represent a camera in the SceneGraph.
- *
- */
+// guacamole headers
+#include <gua/scenegraph/NodeVisitor.hpp>
 
 namespace gua {
 
-class ViewNode : public Node {
- public:
+TransformNode::TransformNode(std::string const& name, math::mat4 const& transform)
+    : Node(name, transform) {}
 
-  struct Configuration {
-    GUA_ADD_PROPERTY(float, stereo_width, 0.07f);
-  };
+/* virtual */ void TransformNode::accept(NodeVisitor& visitor) {
 
-  Configuration data;
-
-  ViewNode() {}
-
-  /**
-   * Constructor.
-   *
-   * This constructs a ViewNode with the given parameters and calls
-   * the constructor of base class Core with the type CAMERA.
-   *
-   * \param stereo_width  The gap between the eyes.
-   */
-  ViewNode(std::string const& name,
-             Configuration const& configuration = Configuration(),
-             math::mat4 const& transform = math::mat4::identity());
-
-  /**
-   * Accepts a visitor and calls concrete visit method
-   *
-   * This method implements the visitor pattern for Nodes
-   *
-   */
-  /* virtual */ void accept(NodeVisitor&);
-
- private:
-
-  /**
-   *
-   */
-  std::shared_ptr<Node> copy() const;
-};
-
+  visitor.visit(this);
 }
 
-#endif  // GUA_VIEW_NODE_HPP
+std::shared_ptr<Node> TransformNode::copy() const {
+  return std::make_shared<TransformNode>(get_name(), get_transform());
+}
+
+}

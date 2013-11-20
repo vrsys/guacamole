@@ -57,7 +57,6 @@ class NURBSLoader : public LoaderBase {
    * \param unsigned         Special flag
    */
   /* virtual */ std::shared_ptr<Node> load(std::string const& file_name,
-                                           std::string const& fallback_material,
                                            unsigned flags);
 
   /* virtual */ bool is_supported(std::string const& file_name) const;

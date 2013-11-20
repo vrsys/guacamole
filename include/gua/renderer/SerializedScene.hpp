@@ -23,7 +23,6 @@
 #define GUA_SERIALIZED_SCENE_HPP
 
 // guacamole headers
-#include <gua/scenegraph/ViewNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
@@ -32,6 +31,7 @@
 #include <gua/scenegraph/TexturedQuadNode.hpp>
 #include <gua/renderer/SerializedNode.hpp>
 #include <gua/math/BoundingBox.hpp>
+#include <gua/renderer/Frustum.hpp>
 
 // external headers
 #include <vector>
@@ -59,6 +59,11 @@ struct SerializedScene {
    */
   std::vector<SerializedNode<GeometryNode::Configuration> > nurbsnodes_;
 
+  ///**
+  //* All Volumes nodes.
+  //*/
+  std::vector<SerializedNode<GeometryNode::Configuration> > volumenodes_;
+
   /**
    * All point light nodes.
    */
@@ -70,14 +75,9 @@ struct SerializedScene {
   std::vector<SerializedNode<SpotLightNode::Configuration> > spot_lights_;
 
   /**
-   * All cameras.
+   * The frustum.
    */
-  SerializedNode<ViewNode::Configuration> view_;
-
-  /**
-   * All screens.
-   */
-  SerializedNode<ScreenNode::Configuration> screen_;
+  Frustum frustum;
 
   /**
    * All used materials.

@@ -28,9 +28,8 @@
 #include <gua/math/math.hpp>
 
 #include <gua/scenegraph/Node.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/ViewNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
 #include <gua/scenegraph/ScreenNode.hpp>
@@ -100,9 +99,7 @@ class CollisionShapeNodeVisitor : public NodeVisitor {
    * \param node    Pointer to Node
    */
 
-  /* virtual */ void visit(GroupNode* node) { generic_visit(node); }
-
-  /* virtual */ void visit(ViewNode* node) { generic_visit(node); }
+  /* virtual */ void visit(TransformNode* node) { generic_visit(node); }
 
   /* virtual */ void visit(GeometryNode* node) { generic_visit(node); }
 

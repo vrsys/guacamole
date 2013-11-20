@@ -27,13 +27,13 @@
 #include <gua/renderer/SerializedNode.hpp>
 #include <gua/renderer/Mesh.hpp>
 #include <gua/renderer/NURBS.hpp>
+#include <gua/renderer/Volume.hpp>
 
 #include <gua/databases/GeometryDatabase.hpp>
 
 #include <gua/scenegraph/Node.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/ViewNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
 #include <gua/scenegraph/ScreenNode.hpp>
@@ -64,7 +64,6 @@ Serializer::Serializer()
 void Serializer::check(SerializedScene* output,
                        SceneGraph const* scene_graph,
                        Camera const& camera,
-                       Frustum const& frustum,
                        bool draw_bounding_boxes,
                        bool draw_rays,
                        bool enable_frustum_culling) {
@@ -73,6 +72,7 @@ void Serializer::check(SerializedScene* output,
 
   std::size_t mesh_count = data_->meshnodes_.size();
   std::size_t nurbs_count = data_->nurbsnodes_.size();
+  std::size_t volumes_count = data_->volumenodes_.size();
   std::size_t point_light_count = data_->point_lights_.size();
   std::size_t spot_light_count = data_->spot_lights_.size();
   std::size_t ray_count = data_->rays_.size();
@@ -80,6 +80,7 @@ void Serializer::check(SerializedScene* output,
 
   data_->meshnodes_.clear();
   data_->nurbsnodes_.clear();
+  data_->volumenodes_.clear();
   data_->point_lights_.clear();
   data_->spot_lights_.clear();
   data_->textured_quads_.clear();
@@ -91,7 +92,7 @@ void Serializer::check(SerializedScene* output,
   if (draw_bounding_boxes_) {
     data_->materials_.insert("gua_bounding_box");
     data_->bounding_boxes_
-        .reserve(mesh_count + nurbs_count + point_light_count +
+		.reserve(mesh_count + nurbs_count + volumes_count + point_light_count +
                  spot_light_count + ray_count);
   }
 
@@ -106,6 +107,7 @@ void Serializer::check(SerializedScene* output,
   // reserving the old size might save some time
   data_->meshnodes_.reserve(mesh_count);
   data_->nurbsnodes_.reserve(nurbs_count);
+  data_->volumenodes_.reserve(volumes_count);
   data_->point_lights_.reserve(point_light_count);
   data_->spot_lights_.reserve(spot_light_count);
   data_->textured_quads_.reserve(textured_quad_count);
@@ -114,27 +116,15 @@ void Serializer::check(SerializedScene* output,
 
   current_camera_ = camera;
   current_render_mask_ = Mask(current_camera_.render_mask);
-  current_frustum_ = frustum;
+  current_frustum_ = output->frustum;
 
   scene_graph->accept(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(GroupNode* node) {
+/* virtual */ void Serializer::visit(TransformNode* node) {
   if (is_visible(node)) {
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(ViewNode* node) {
-  if (is_visible(node)) {
-    if (node->get_path() == current_camera_.view) {
-      data_->view_ = make_serialized_node(node->get_world_transform(), node->data);
-    }
-
     visit_children(node);
   }
 }
@@ -162,7 +152,15 @@ void Serializer::check(SerializedScene* output,
 
         if (nurbs_ptr) {
           data_->nurbsnodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
-        }
+		}
+		else {
+			std::shared_ptr<Volume> volume_ptr = std::dynamic_pointer_cast<Volume>(
+				gua::GeometryDatabase::instance()->lookup(node->data.get_geometry()));
+
+			if (volume_ptr) {
+				data_->volumenodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
+			}
+		}
       }
     }
 
@@ -196,18 +194,6 @@ void Serializer::check(SerializedScene* output,
 
     data_->spot_lights_
         .push_back(make_serialized_node(node->get_world_transform(), node->data));
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(ScreenNode* node) {
-  if (is_visible(node)) {
-    if (node->get_path() == current_camera_.screen) {
-      data_->screen_ = make_serialized_node(node->get_scaled_world_transform(), node->data);
-    }
 
     visit_children(node);
   }

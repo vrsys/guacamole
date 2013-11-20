@@ -107,26 +107,9 @@ void Pass::set_camera_matrices(ShaderProgram const& shader,
                                CameraMode eye,
                                RenderContext const& ctx) const {
 
-  auto view(scene.view_);
-  auto screen(scene.screen_);
-
-  math::mat4 view_transform(view.transform);
-  if (eye == CameraMode::LEFT) {
-    scm::math::translate(
-        view_transform, -view.data.get_stereo_width() * 0.5f, 0.f, 0.f);
-  } else if (eye == CameraMode::RIGHT) {
-    scm::math::translate(
-        view_transform, view.data.get_stereo_width() * 0.5f, 0.f, 0.f);
-  }
-
-  Frustum frustum(view_transform,
-                  screen.transform,
-                  pipeline_->config.near_clip(),
-                  pipeline_->config.far_clip());
-
-  auto camera_position(frustum.get_camera_position());
-  auto projection(frustum.get_projection());
-  auto view_matrix(frustum.get_view());
+  auto camera_position(scene.frustum.get_camera_position());
+  auto projection(scene.frustum.get_projection());
+  auto view_matrix(scene.frustum.get_view());
 
   shader.set_uniform(ctx, camera_position, "gua_camera_position");
   shader.set_uniform(ctx, projection, "gua_projection_matrix");

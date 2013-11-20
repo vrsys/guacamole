@@ -29,8 +29,7 @@
 namespace gua {
 
 class Node;
-class GroupNode;
-class ViewNode;
+class TransformNode;
 class GeometryNode;
 class PointLightNode;
 class ScreenNode;
@@ -67,31 +66,22 @@ class NodeVisitor {
   virtual ~NodeVisitor();
 
   /**
-   * Visits a GroupNode
+   * Visits a TransformNode
    *
-   * This function provides the interface to visit a GroupNode
+   * This function provides the interface to visit a TransformNode
    *
-   * \param cam   Pointer to GroupNode
+   * \param cam   Pointer to TransformNode
    */
   virtual void visit(Node* node) {};
 
   /**
-   * Visits a GroupNode
+   * Visits a TransformNode
    *
-   * This function provides the interface to visit a GroupNode
+   * This function provides the interface to visit a TransformNode
    *
-   * \param cam   Pointer to GroupNode
+   * \param cam   Pointer to TransformNode
    */
-  virtual void visit(GroupNode* node) { visit(reinterpret_cast<Node*>(node)); }
-
-  /**
-   * Visits a ViewNode
-   *
-   * This function provides the interface to visit a ViewNode
-   *
-   * \param cam   Pointer to ViewNode
-   */
-  virtual void visit(ViewNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(TransformNode* node) { visit(reinterpret_cast<Node*>(node)); }
 
   /**
    * Visits a GeometryNode

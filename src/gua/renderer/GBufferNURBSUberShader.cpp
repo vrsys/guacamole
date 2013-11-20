@@ -700,7 +700,6 @@ std::string const GBufferNURBSUberShader::_final_tess_evaluation_shader () const
     return tess_eval.str();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 std::string const GBufferNURBSUberShader::_final_geometry_shader () const
 {

@@ -27,6 +27,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBufferMeshUberShader.hpp>
 #include <gua/renderer/GBufferNURBSUberShader.hpp>
+#include <gua/renderer/GBufferVolumeUberShader.hpp>
 #include <gua/renderer/MeshLoader.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases.hpp>
@@ -41,7 +42,8 @@ namespace gua {
 GBufferPass::GBufferPass(Pipeline* pipeline)
     : GeometryPass(pipeline),
       mesh_shader_(new GBufferMeshUberShader),
-      nurbs_shader_(new GBufferNURBSUberShader),
+	  nurbs_shader_(new GBufferNURBSUberShader),
+	  volume_shader_(new GBufferVolumeUberShader),
       bfc_rasterizer_state_(),
       no_bfc_rasterizer_state_(),
       bbox_rasterizer_state_(),
@@ -60,6 +62,8 @@ GBufferPass::~GBufferPass() {
       delete mesh_shader_;
     if (nurbs_shader_)
       delete nurbs_shader_;
+	if (volume_shader_)
+		delete volume_shader_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,14 +90,16 @@ void GBufferPass::create(
 void GBufferPass::print_shaders(std::string const& directory,
                                 std::string const& name) const {
     mesh_shader_->save_to_file(directory, name + "/mesh");
-    nurbs_shader_->save_to_file(directory, name + "/nurbs");
+	nurbs_shader_->save_to_file(directory, name + "/nurbs");
+	volume_shader_->save_to_file(directory, name + "/volume");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool GBufferPass::pre_compile_shaders(RenderContext const& ctx) {
     if (mesh_shader_)  return mesh_shader_->upload_to(ctx);
-    if (nurbs_shader_) return nurbs_shader_->upload_to(ctx);
+	if (nurbs_shader_) return nurbs_shader_->upload_to(ctx);
+	if (volume_shader_) return volume_shader_->upload_to(ctx);
     return false;
 }
 
@@ -131,8 +137,8 @@ void GBufferPass::rendering(SerializedScene const& scene,
                                                     : no_bfc_rasterizer_state_);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-
-    if (!scene.meshnodes_.empty() || scene.textured_quads_.empty() || (pipeline_->config.enable_bbox_display() && !scene.bounding_boxes_.empty())) {
+		
+    if (!scene.meshnodes_.empty() || !scene.textured_quads_.empty() || (pipeline_->config.enable_bbox_display() && !scene.bounding_boxes_.empty())) {
         mesh_shader_->set_material_uniforms(
             scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
         mesh_shader_->set_material_uniforms(
@@ -220,7 +226,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                         geometry->draw(ctx);
                     }
                 } else {
-                    WARNING("Failed to render TexturedQuad: Texture \"%s\" not found!", texture_name.c_str());
+                    WARNING("Failed to render TexturedQuad: Texture2D \"%s\" not found!", texture_name.c_str());
                 }
             }
         }
@@ -304,6 +310,91 @@ void GBufferPass::rendering(SerializedScene const& scene,
         }
     }
 
+#if 0
+	if (!scene.volumenodes_.empty()) {
+
+		mesh_shader_->set_material_uniforms(
+			scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+		mesh_shader_->set_material_uniforms(
+			scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+
+		Pass::bind_inputs(*volume_shader_, eye, ctx);
+		Pass::set_camera_matrices(*volume_shader_,
+			camera,
+			pipeline_->get_current_scene(eye),
+			eye,
+			ctx);
+
+		// draw volumes
+		mesh_shader_->use(ctx);
+		{
+			for (auto const& node : scene.volumenodes_) {
+				auto geometry =
+					GeometryDatabase::instance()->lookup(node.data.get_geometry());
+				auto material =
+					MaterialDatabase::instance()->lookup(node.data.get_material());
+
+				if (material && geometry) {
+					mesh_shader_->set_uniform(
+						ctx, material->get_id(), "gua_material_id");
+					mesh_shader_->set_uniform(
+						ctx, node.transform, "gua_model_matrix");
+					mesh_shader_->set_uniform(
+						ctx,
+						scm::math::transpose(
+						scm::math::inverse(node.transform)),
+						"gua_normal_matrix");
+
+					geometry->draw(ctx);
+				}
+			}
+		}
+		mesh_shader_->unuse(ctx);
+	}
+#else
+	if (!scene.volumenodes_.empty()) {
+
+		volume_shader_->set_material_uniforms(
+			scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+		volume_shader_->set_material_uniforms(
+			scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+
+		Pass::bind_inputs(*volume_shader_, eye, ctx);
+		Pass::set_camera_matrices(*volume_shader_,
+			camera,
+			pipeline_->get_current_scene(eye),
+			eye,
+			ctx);
+
+		// draw volumes
+		volume_shader_->use(ctx);
+		{
+			for (auto const& node : scene.volumenodes_) {
+				auto geometry =
+					GeometryDatabase::instance()->lookup(node.data.get_geometry());
+				auto material =
+					MaterialDatabase::instance()->lookup(node.data.get_material());
+
+				if (material && geometry) {
+					volume_shader_->set_uniform(
+						ctx, material->get_id(), "gua_material_id");
+					volume_shader_->set_uniform(
+						ctx, node.transform, "gua_model_matrix");
+					volume_shader_->set_uniform(
+						ctx,
+						scm::math::transpose(
+						scm::math::inverse(node.transform)),
+						"gua_normal_matrix");
+
+					geometry->draw(ctx);
+				}
+			}
+		}
+		volume_shader_->unuse(ctx);
+	}
+#endif
+
+
     ctx.render_context->set_rasterizer_state(bbox_rasterizer_state_);
     std::shared_ptr<Material> bbox_material;
 
@@ -370,6 +461,7 @@ void GBufferPass::apply_material_mapping(std::set<std::string> const &
                                          materials) const {
   mesh_shader_->create(materials);
   nurbs_shader_->create(materials);
+  volume_shader_->create(materials);
 }
 
 

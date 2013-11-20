@@ -19,24 +19,47 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/scenegraph/GroupNode.hpp>
+#ifndef GUA_GROUP_NODE_HPP
+#define GUA_GROUP_NODE_HPP
 
-// guacamole headers
-#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/scenegraph/Node.hpp>
+
+/**
+ * This class is used to represent an empty node in the SceneGraph.
+ *
+ */
 
 namespace gua {
 
-GroupNode::GroupNode(std::string const& name, math::mat4 const& transform)
-    : Node(name, transform) {}
+class TransformNode : public Node {
+ public:
 
-/* virtual */ void GroupNode::accept(NodeVisitor& visitor) {
+  TransformNode() {};
 
-  visitor.visit(this);
+  /**
+   * Constructor.
+   *
+   * This constructs a TransformNode with the given parameters.
+   *
+   * \param name       The Node's name
+   * \param transform  The transformation of the object the Node contains.
+   */
+  TransformNode(std::string const& name,
+            math::mat4 const& transform = math::mat4::identity());
+
+  /**
+   * Accepts a visitor and calls concrete visit method
+   *
+   * This method implements the visitor pattern for Nodes
+   *
+   */
+  /* virtual */ void accept(NodeVisitor&);
+
+ private:
+
+  std::shared_ptr<Node> copy() const;
+};
+
 }
 
-std::shared_ptr<Node> GroupNode::copy() const {
-  return std::make_shared<GroupNode>(get_name(), get_transform());
-}
-
-}
+#endif  // GUA_GROUP_NODE_HPP

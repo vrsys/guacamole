@@ -62,6 +62,8 @@ class GeometryLoader {
 
  private:
 
+  void apply_fallback_material(std::shared_ptr<Node> const& root, std::string const& fallback_material) const;
+
   static std::unordered_map<std::string, std::shared_ptr<Node>> loaded_files_;
 
   std::string parent_material_name_;

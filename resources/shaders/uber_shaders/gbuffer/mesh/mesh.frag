@@ -51,11 +51,19 @@ vec3 gua_get_position() {
   return gua_position_varying;
 }
 
+void gua_set_position(vec3 world_position) {
+    vec4 pos = gua_projection_matrix * gua_view_matrix * vec4(world_position, 1.0);
+    float ndc = pos.z/pos.w;
+    gl_FragDepth = (((gl_DepthRange.diff) * ndc) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
+}
+
 // material specific methods
 @material_methods
 
 // main ------------------------------------------------------------------------
 void main() {
+
+  gl_FragDepth = gl_FragCoord.z;
 
   // big switch, one case for each material
   @material_switch

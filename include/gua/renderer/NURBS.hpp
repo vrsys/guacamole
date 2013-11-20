@@ -71,16 +71,16 @@ class NURBS : public Geometry {
   NURBSData* _data;
   scm::gl::fill_mode _fill_mode;
 
-  //Texture Buffer for Parametric Data
+  //Texture2D Buffer for Parametric Data
   mutable std::vector<scm::gl::texture_buffer_ptr> _parametric_texture_buffer;
 
-  //Texture Buffer for Attributes
+  //Texture2D Buffer for Attributes
   mutable std::vector<scm::gl::texture_buffer_ptr> _attribute_texture_buffer;
 
-  //Texture Buffer for Domain
+  //Texture2D Buffer for Domain
   mutable std::vector<scm::gl::texture_buffer_ptr> _domain_texture_buffer;
 
-  //Texture Buffers for Trim Data
+  //Texture2D Buffers for Trim Data
   mutable std::vector<scm::gl::texture_buffer_ptr>
       _trim_partition_texture_buffer;
   mutable std::vector<scm::gl::texture_buffer_ptr>

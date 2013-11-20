@@ -28,6 +28,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+
 #include <gua/renderer/RenderClient.hpp>
 #include <gua/utils/FpsCounter.hpp>
 

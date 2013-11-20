@@ -33,7 +33,9 @@ Frustum::Frustum(math::mat4 const& camera_transform,
     : camera_position_(),
       projection_(math::mat4::identity()),
       view_(math::mat4::identity()),
-      planes_(6) {
+      planes_(6),
+      clip_near_(clip_near),
+      clip_far_(clip_far) {
 
   projection_ = math::compute_frustum(
       camera_transform.column(3), screen_transform, clip_near, clip_far);

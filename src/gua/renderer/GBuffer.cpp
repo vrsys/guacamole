@@ -167,10 +167,10 @@ GBuffer::GBuffer(
       height_(height),
       mipmap_layers_(mipmap_layers) {
 
-    color_buffers_[TYPE_INTEGER] = std::vector<std::shared_ptr<Texture> >();
-    color_buffers_[TYPE_UNSIGNED] = std::vector<std::shared_ptr<Texture> >();
-    color_buffers_[TYPE_HALF] = std::vector<std::shared_ptr<Texture> >();
-    color_buffers_[TYPE_FLOAT] = std::vector<std::shared_ptr<Texture> >();
+    color_buffers_[TYPE_INTEGER] = std::vector<std::shared_ptr<Texture2D> >();
+    color_buffers_[TYPE_UNSIGNED] = std::vector<std::shared_ptr<Texture2D> >();
+    color_buffers_[TYPE_HALF] = std::vector<std::shared_ptr<Texture2D> >();
+    color_buffers_[TYPE_FLOAT] = std::vector<std::shared_ptr<Texture2D> >();
 }
 
 void GBuffer::remove_buffers(RenderContext const& ctx) {
@@ -194,12 +194,12 @@ void GBuffer::create(RenderContext const& ctx) {
         auto format = to_scm_data_format(type);
         if (format) {
             if (type == BufferComponent::DEPTH_16 || type == BufferComponent::DEPTH_24) {
-                depth_buffer_ = std::make_shared<Texture>(
+                depth_buffer_ = std::make_shared<Texture2D>(
                     width_, height_, *format, mipmap_layers_, state);
                 attach_depth_stencil_buffer(ctx, depth_buffer_);
             } else if (type != BufferComponent::NONE) {
                 color_buffers_[enums::get_type(type)].push_back(
-                    std::make_shared<Texture>( width_,
+                    std::make_shared<Texture2D>( width_,
                                                height_,
                                                *format,
                                                mipmap_layers_,
@@ -221,12 +221,12 @@ void GBuffer::create_UGLY(RenderContext const & ctx) {
         auto format = to_scm_data_format(type);
         if (format) {
             if (type == BufferComponent::DEPTH_16 || type == BufferComponent::DEPTH_24) {
-                depth_buffer_ = std::make_shared<Texture>(
+                depth_buffer_ = std::make_shared<Texture2D>(
                     width_, height_, *format, mipmap_layers_, state);
                 attach_depth_stencil_buffer(ctx, depth_buffer_);
             } else if (type != BufferComponent::NONE) {
                 color_buffers_[enums::get_type(type)].push_back(
-                    std::make_shared<Texture>( width_,
+                    std::make_shared<Texture2D>( width_,
                                                height_,
                                                *format,
                                                mipmap_layers_,
@@ -240,7 +240,7 @@ void GBuffer::create_UGLY(RenderContext const & ctx) {
     }
 }
 
-std::vector<std::shared_ptr<Texture> > const& GBuffer::get_color_buffers(
+std::vector<std::shared_ptr<Texture2D> > const& GBuffer::get_color_buffers(
     BufferComponentType type) const {
     return color_buffers_.find(type)->second;
 }

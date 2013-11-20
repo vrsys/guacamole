@@ -24,9 +24,10 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/renderer/MeshLoader.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
+#include <gua/renderer/VolumeLoader.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/utils/logger.hpp>
 
@@ -45,6 +46,7 @@ std::unordered_map<std::string, std::shared_ptr<Node>>
 GeometryLoader::GeometryLoader() : fileloaders_() {
   fileloaders_.push_back(new MeshLoader);
   fileloaders_.push_back(new NURBSLoader);
+  fileloaders_.push_back(new VolumeLoader);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +82,7 @@ std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
     bool fileload_succeed = false;
     for (auto f : fileloaders_) {
       if (f->is_supported(file_name)) {
-        cached_node = f->load(file_name, fallback_material, flags);
+        cached_node = f->load(file_name, flags);
         cached_node->update_cache();
 
         loaded_files_.insert(std::make_pair(key, cached_node));
@@ -115,13 +117,33 @@ std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
 
   if (cached_node) {
     auto copy(cached_node->deep_copy());
+
+    apply_fallback_material(copy, fallback_material);
+
     copy->set_name(node_name);
     return copy;
   }
 
-  return std::make_shared<GroupNode>(node_name);
+  return std::make_shared<TransformNode>(node_name);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void GeometryLoader::apply_fallback_material(std::shared_ptr<Node> const& root, std::string const& fallback_material) const {
+
+  auto g_node(std::dynamic_pointer_cast<GeometryNode>(root));
+
+  if (g_node) {
+    if (g_node->data.get_material().empty()) {
+      g_node->data.set_material(fallback_material);
+    }
+  }
+
+  for(auto& child: root->get_children()) {
+    apply_fallback_material(child, fallback_material);
+  }
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

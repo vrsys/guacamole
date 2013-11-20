@@ -20,52 +20,46 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/WarpMatrix.hpp>
+#include <gua/renderer/Texture2D.hpp>
 
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/utils/logger.hpp>
+#include <gua/math/math.hpp>
 
 // external headers
-#include <fstream>
+#include <scm/gl_util/data/imaging/texture_loader.h>
+#include <iostream>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
+Texture2D::Texture2D(unsigned width,
+                 unsigned height,
+                 scm::gl::data_format color_format,
+                 std::vector<void*> const& data,
+                 unsigned mipmap_layers,
+                 scm::gl::sampler_state_desc const& state_descripton)
+    : Texture(color_format, data, mipmap_layers, state_descripton),
+      width_(width),
+      height_(height) {}
 
-WarpMatrix::WarpMatrix() : Texture2D(0, 0), data_() {}
+Texture2D::Texture2D(unsigned width,
+                 unsigned height,
+                 scm::gl::data_format color_format,
+                 unsigned mipmap_layers,
+                 scm::gl::sampler_state_desc const& state_descripton)
+    : Texture(color_format, mipmap_layers, state_descripton),
+      width_(width),
+      height_(height) {}
 
-////////////////////////////////////////////////////////////////////////////////
+Texture2D::Texture2D(std::string const& file,
+                 bool generate_mipmaps,
+                 scm::gl::sampler_state_desc const& state_descripton)
+    : Texture(file, generate_mipmaps, state_descripton),
+      width_(0),
+      height_(0) {}
 
-WarpMatrix::WarpMatrix(std::string const& file_name)
-    : Texture2D(0,
-              0,
-              scm::gl::FORMAT_RGBA_16F,
-              1,
-              scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR)),
-      data_() {
-
-  std::ifstream file(file_name, std::ios::binary);
-
-  if (file) {
-    file.read((char*)&width_, sizeof(unsigned));
-    file.read((char*)&height_, sizeof(unsigned));
-
-    data_ = std::vector<float>(width_ * height_ * 4);
-
-    file.read((char*)&data_[0], sizeof(float) * data_.size());
-
-    file.close();
-  } else {
-    WARNING("Unable to load Warpmatrix! File %s does "
-            "not exist.",
-            file_name.c_str());
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void WarpMatrix::upload_to(RenderContext const& context) const {
+void Texture2D::upload_to(RenderContext const& context) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
@@ -75,14 +69,29 @@ void WarpMatrix::upload_to(RenderContext const& context) const {
     render_contexts_.resize(context.id + 1);
   }
 
-  std::vector<void*> tmp_data;
-  tmp_data.push_back(&data_[0]);
+  if (file_name_ == "") {
 
-  textures_[context.id] = context.render_device->create_texture_2d(
-      scm::gl::texture_2d_desc(scm::math::vec2ui(width_, height_),
-                               color_format_),
-      scm::gl::FORMAT_RGBA_32F,
-      tmp_data);
+
+    if (data_.size() == 0)
+      textures_[context.id] = context.render_device->create_texture_2d(
+          math::vec2ui(width_, height_), color_format_, mipmap_layers_);
+    else
+      textures_[context.id] = context.render_device->create_texture_2d(
+          scm::gl::texture_2d_desc(
+              math::vec2ui(width_, height_), color_format_, mipmap_layers_),
+          color_format_,
+          data_);
+  } else {
+    // MESSAGE("Uploading texture file %s", file_name_.c_str());
+    scm::gl::texture_loader loader;
+    textures_[context.id] = loader.load_texture_2d(
+        *context.render_device, file_name_, mipmap_layers_ > 0);
+
+    if (textures_[context.id]) {
+      width_ = textures_[context.id]->dimensions()[0];
+      height_ = textures_[context.id]->dimensions()[1];
+    }
+  }
 
   sampler_states_[context.id] =
       context.render_device->create_sampler_state(state_descripton_);
@@ -91,7 +100,5 @@ void WarpMatrix::upload_to(RenderContext const& context) const {
 
   make_resident(context);
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 }
