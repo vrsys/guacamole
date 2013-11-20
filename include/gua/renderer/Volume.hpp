@@ -93,18 +93,26 @@ namespace gua {
 		void ray_test(Ray const& ray, PickResult::Options options,
 			Node* owner, std::set<PickResult>& hits);
 
-		scm::gl::texture_2d_ptr create_color_map(RenderContext const& context,
-											unsigned in_size,
-											const scm::data::piecewise_function_1d<float, float>& in_alpha,
-											const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
 
-		bool update_color_map(RenderContext const& context,
-							scm::gl::texture_2d_ptr transfer_texture_ptr,
-							const scm::data::piecewise_function_1d<float, float>& in_alpha,
-							const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
+		float step_size() const;
+		void step_size(const float size);
+
+		void set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color);
 
 	private:
 		void upload_to(RenderContext const& context) const;
+
+		scm::gl::texture_2d_ptr create_color_map(RenderContext const& context,
+			unsigned in_size,
+			const scm::data::piecewise_function_1d<float, float>& in_alpha,
+			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
+
+		bool update_color_map(RenderContext const& context,
+			scm::gl::texture_2d_ptr transfer_texture_ptr,
+			const scm::data::piecewise_function_1d<float, float>& in_alpha,
+			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
+		
+		mutable bool _update_transfer_function;
 
 		////Volume files
 		//mutable std::vector<std::string>
@@ -125,7 +133,7 @@ namespace gua {
 
 		mutable std::vector<scm::gl::sampler_state_ptr> _sstate;
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
+#if GUA_COMPILER == GUA_COMPILER_MSVC && SCM_COMPILER_VER <= 1700
 		mutable boost::mutex upload_mutex_;
 #else
 		mutable std::mutex upload_mutex_;
@@ -133,6 +141,11 @@ namespace gua {
 
 		scm::data::piecewise_function_1d<float, float>                 _alpha_transfer;
 		scm::data::piecewise_function_1d<float, scm::math::vec3f>      _color_transfer;
+
+		///Volume Info
+		math::vec3ui	_volume_dimensions;
+		math::vec3		_volume_dimensions_normalized;
+		float			_step_size;
 
 	public:
 

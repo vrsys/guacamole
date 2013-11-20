@@ -63,7 +63,7 @@ namespace gua {
 		}
 		catch (std::exception & e) {
 			WARNING("Warning: \"%s\" \n", e.what());
-			WARNING("Failed to load NURBS object \"%s\": ", file_name.c_str());
+			WARNING("Failed to load Volume object \"%s\": ", file_name.c_str());
 			return nullptr;
 		}
 	}
@@ -90,9 +90,12 @@ namespace gua {
 	//}
 
 	bool VolumeLoader::is_supported(std::string const& file_name) const {
-		auto point_pos(file_name.find_last_of("."));
-		Assimp::Importer importer;
-		return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
+		std::vector<std::string> filename_decomposition =
+			gua::string_utils::split(file_name, '.');
+		return filename_decomposition.empty()
+			? false
+			: _supported_file_extensions.count(filename_decomposition.back()) >
+			0;
 	}
 
 	

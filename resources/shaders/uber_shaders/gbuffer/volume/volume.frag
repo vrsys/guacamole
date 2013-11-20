@@ -34,6 +34,7 @@ in vec3 object_ray;
 uniform sampler2D transfer_texture;
 uniform sampler3D volume_texture;
 uniform float sampling_distance;
+uniform vec3 volume_bounds;
 
 // material specific uniforms
 @uniform_definition
@@ -112,7 +113,7 @@ bool
 inside_volume_bounds(const in vec3 sampling_position)
 {
     return (   all(greaterThanEqual(sampling_position, vec3(0.0)))
-            && all(lessThanEqual(sampling_position, vec3(1.0))));
+            && all(lessThanEqual(sampling_position, volume_bounds)));
 }
 
 // material specific methods
@@ -130,6 +131,8 @@ void main() {
   //vec3 ray_increment      = normalize(ray_entry_position - gua_camera_position) * sampling_distance;
   vec3 ray_increment      = object_ray * sampling_distance;
   vec3 sampling_pos       = ray_entry_position + ray_increment; // test, increment just to be sure we are in the volume
+
+  vec3 obj_to_tex         = vec3(1.0) / volume_bounds;
     
   bool inside_volume = inside_volume_bounds(sampling_pos);
     
@@ -171,7 +174,7 @@ while (inside_volume && !iso_hit)
 #if 1
       while (inside_volume) {
         // get sample
-        float s = texture(volume_texture, sampling_pos).r;
+        float s = texture(volume_texture, sampling_pos * obj_to_tex).r;
         vec4 src = texture(transfer_texture, vec2(s, 0.5));
 
         // increment ray
@@ -189,8 +192,6 @@ while (inside_volume && !iso_hit)
   
   vec4 trans_c = texture(transfer_texture, object_position_varying.xy);
   
-  //gua_float_gbuffer_out_1 = trans_c.rgb * trans_c.a + object_position_varying.xyz * 0.5;
-
   gua_float_gbuffer_out_0.xyz = normal;
     
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;

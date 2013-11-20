@@ -68,19 +68,21 @@ namespace gua {
 		upload_mutex_()
 	{
 		scm::gl::volume_loader scm_volume_loader;
-		scm::math::vec3ui volume_dimensions = scm_volume_loader.read_dimensions(file_name);
+		_volume_dimensions = scm_volume_loader.read_dimensions(file_name);
 		//scm::math::vec3ui volume_dimensions = scm::math::vec3ui(256, 256, 225);
 
-		unsigned max_dimension_volume = scm::math::max(scm::math::max(volume_dimensions.x, volume_dimensions.y), volume_dimensions.z);
+		unsigned max_dimension_volume = scm::math::max(scm::math::max(_volume_dimensions.x, _volume_dimensions.y), _volume_dimensions.z);
 
-		gua::math::vec3 scaled_max_vertex_pos((float)volume_dimensions.x / (float)max_dimension_volume,
-			(float)volume_dimensions.y / (float)max_dimension_volume,
-			(float)volume_dimensions.z / (float)max_dimension_volume);
+		step_size(0.5f / (float)max_dimension_volume);
 
-		MESSAGE("%f %f %f", scaled_max_vertex_pos.x, scaled_max_vertex_pos.y, scaled_max_vertex_pos.z);
+		_volume_dimensions_normalized = math::vec3((float)_volume_dimensions.x / (float)max_dimension_volume,
+													(float)_volume_dimensions.y / (float)max_dimension_volume,
+													(float)_volume_dimensions.z / (float)max_dimension_volume);
+
+		MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
 		//getchar();
 
-		bounding_box_ = math::BoundingBox<math::vec3>(math::vec3::zero(), scaled_max_vertex_pos);
+		bounding_box_ = math::BoundingBox<math::vec3>(math::vec3::zero(), _volume_dimensions_normalized);
 
 		// initialize transfer functions //////////////////////////////////////////////////////////////
 		_alpha_transfer.clear();
@@ -88,26 +90,21 @@ namespace gua {
 
 #if 0
 		_alpha_transfer.add_stop(0, 1.0f);
-		_alpha_transfer.add_stop(0.33f, 0.5f);
-		_alpha_transfer.add_stop(0.40f, 0.0f);
-		_alpha_transfer.add_stop(0.60f, 0.0f);
-		_alpha_transfer.add_stop(0.66f, 0.5f);
+		_alpha_transfer.add_stop(0.45f, 0.0f);
+		_alpha_transfer.add_stop(0.50f, 0.0f);
+		_alpha_transfer.add_stop(0.55f, 0.0f);
 		_alpha_transfer.add_stop(1.0f, 1.0f);
 #else
 		_alpha_transfer.add_stop(0.0f, 0.0f);
-		_alpha_transfer.add_stop(0.5f, 0.0f);
+		_alpha_transfer.add_stop(0.5f, 0.2f);
 		_alpha_transfer.add_stop(1.0f, 1.0f);
 #endif
 
-#if 0
+#if 1
 		// blue-grey-orange
-		_color_transfer.add_stop(0,			scm::math::vec3f(0.0f, 1.0f, 1.0f));
-		_color_transfer.add_stop(0.25f,		scm::math::vec3f(0.0f, 0.0f, 1.0f));
-		_color_transfer.add_stop(0.375f,	scm::math::vec3f(0.256637f, 0.243243f, 0.245614f));
-		_color_transfer.add_stop(0.50f,		scm::math::vec3f(0.765487f, 0.738739f, 0.72807f));
-		_color_transfer.add_stop(0.625f,	scm::math::vec3f(0.530973f, 0.27027f, 0.0f));
-		_color_transfer.add_stop(0.75f,		scm::math::vec3f(1.0f, 0.333333f, 0.0f));
-		_color_transfer.add_stop(1.0f,		scm::math::vec3f(1.0f, 1.0f, 0.0f));
+		_color_transfer.add_stop(0,		scm::math::vec3f(1.0f, 0.0f, 0.0f));
+		_color_transfer.add_stop(0.5,	scm::math::vec3f(0.3f, 0.3f, 0.3f));
+		_color_transfer.add_stop(1.0f,	scm::math::vec3f(1.0f, 0.0f, 1.0f));
 #else
 		// blue-white-red
 		_color_transfer.add_stop(0.0f, scm::math::vec3f(0.0f, 0.0f, 1.0f));
@@ -136,7 +133,14 @@ namespace gua {
 		}
 
 		scm::gl::volume_loader scm_volume_loader;
-		_volume_texture_ptr[ctx.id] = scm_volume_loader.load_volume_data(*(ctx.render_device.get()), _volume_file_path);
+
+		//texture_3d_ptr              load_texture_3d(render_device&       in_device,
+		//	const std::string&   in_image_path,
+		//	bool                 in_create_mips,
+		//	bool                 in_color_mips = false,
+		//	const data_format    in_force_internal_format = FORMAT_NULL);
+
+		_volume_texture_ptr[ctx.id] = scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
 
 		MESSAGE("%s loaded!", _volume_file_path.c_str());
 
@@ -146,7 +150,7 @@ namespace gua {
 
 		//box_volume_geometry
 		_volume_boxes_ptr[ctx.id] =
-			scm::gl::box_volume_geometry_ptr(new scm::gl::box_volume_geometry(ctx.render_device, scm::math::vec3(0.0), scm::math::vec3(1.0)));
+			scm::gl::box_volume_geometry_ptr(new scm::gl::box_volume_geometry(ctx.render_device, scm::math::vec3(0.0), _volume_dimensions_normalized));
 		
 		_sstate[ctx.id] = ctx.render_device->create_sampler_state(
 			scm::gl::FILTER_MIN_MAG_MIP_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
@@ -155,9 +159,9 @@ namespace gua {
 
 	scm::gl::texture_2d_ptr 
 	Volume::create_color_map(RenderContext const& ctx,
-														unsigned in_size,
-														const scm::data::piecewise_function_1d<float, float>& in_alpha,
-														const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const
+									unsigned in_size,
+									const scm::data::piecewise_function_1d<float, float>& in_alpha,
+									const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const
 	{
 			using namespace scm::gl;
 			using namespace scm::math;
@@ -264,6 +268,14 @@ namespace gua {
 			upload_to(ctx);
 		}
 
+		if (_update_transfer_function){
+			for (auto color_map_texture : _transfer_texture_ptr)
+			{
+				update_color_map(ctx, color_map_texture, _alpha_transfer, _color_transfer);
+			}
+			_update_transfer_function = false;
+		}
+
 		scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
 		ctx.render_context->bind_texture( _volume_texture_ptr[ctx.id], _sstate[ctx.id], 5);
@@ -271,8 +283,9 @@ namespace gua {
 		scm::gl::program_ptr p = ctx.render_context->current_program();
 		p->uniform_sampler("volume_texture", 5);			
 		p->uniform_sampler("transfer_texture", 6);
-		p->uniform("sampling_distance", 1.f/255.f);
-		p->uniform("iso_value", 0.8f);
+		p->uniform("sampling_distance", _step_size);
+		//p->uniform("iso_value", 0.8f);
+		p->uniform("volume_bounds", _volume_dimensions_normalized);
 		
 		ctx.render_context->apply();
 		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);
@@ -288,5 +301,25 @@ namespace gua {
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
+	
+	float Volume::step_size() const
+	{
+		return _step_size;
+	}
 
+	void Volume::step_size(const float in_step_size)
+	{
+		_step_size = in_step_size;
+	}
+		
+	void Volume::set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color)
+	{
+		_alpha_transfer.clear();
+		_color_transfer.clear();
+
+		_alpha_transfer = in_alpha;
+		_color_transfer = in_color;
+
+		_update_transfer_function = true;
+	}
 }

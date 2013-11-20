@@ -98,7 +98,13 @@ void main() {
 
   mat4 gua_invers_model_matrix = inverse(gua_model_matrix);
 
+  //vec3 object_dir = gua_object_position - (gua_invers_model_matrix * vec4(gua_camera_position, 1.0)).xyz;
+  //object_ray = (gua_model_matrix * vec4( normalize(object_dir), 1.0)).xyz;
+  
   object_ray = normalize(gua_object_position - (gua_invers_model_matrix * vec4(gua_camera_position, 1.0)).xyz);
+  //object_ray = normalize(gua_object_position - gua_camera_position);
+  //object_ray = normalize(gua_world_position - gua_camera_position);
+  //object_ray = normalize( (vec4((gua_world_position - gua_camera_position), 1.0) ).xyz);//(gua_invers_model_matrix * vec4(gua_camera_position, 1.0)).xyz);
 
   gua_uint_gbuffer_varying_0.x = gua_material_id;
   gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_position_varying.xyz, 1.0);
