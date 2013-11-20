@@ -31,13 +31,8 @@
 // external headers
 #include <string>
 #include <vector>
-
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& GUA_COMPILER_VER <= 1600
-#include <boost/thread.hpp>
-#else
 #include <mutex>
 #include <thread>
-#endif
 
 namespace gua {
 

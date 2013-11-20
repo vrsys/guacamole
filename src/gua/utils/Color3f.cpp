@@ -179,6 +179,13 @@ Color3f operator-(Color3f const& lhs, Color3f const& rhs) {
   return result;
 }
 
+bool operator==(Color3f const& lhs, Color3f const& rhs) {
+  return lhs.r() == rhs.r() &&
+         lhs.g() == rhs.g() &&
+         lhs.b() == rhs.b();
+
+}
+
 std::ostream& operator<<(std::ostream& os, Color3f const& color) {
   os << color.r() << " " << color.g() << " " << color.b() << std::endl;
   return os;

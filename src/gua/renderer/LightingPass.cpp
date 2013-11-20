@@ -176,7 +176,7 @@ void LightingPass::rendering(SerializedScene const& scene,
 
             ctx.render_context->set_viewport(scm::gl::viewport(
                 math::vec2(0, 0),
-                math::vec2(target->width(), target->height())));
+                math::vec2(float(target->width()), float(target->height()))));
 
             ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
             ctx.render_context->set_rasterizer_state(rasterizer_state_);

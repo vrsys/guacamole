@@ -24,12 +24,10 @@
 
 #include <scm/core/math.h>
 #include <scm/gl_core/math.h>
+#include <iostream>
+#include <tuple>
 
-#if ASSIMP_VERSION == 3
-#include <assimp/Importer.hpp>
-#else
-#include <assimp/assimp.hpp>
-#endif
+struct aiMatrix4x4;
 
 #include <gua/math/traits.hpp>
 
@@ -54,6 +52,8 @@ typedef scm::math::vec<int, 2> vec2i;
 typedef scm::math::vec<unsigned, 4> vec4ui;
 typedef scm::math::vec<unsigned, 3> vec3ui;
 typedef scm::math::vec<unsigned, 2> vec2ui;
+
+typedef scm::math::quat<float> quat;
 ///@}
 
 /**
@@ -92,9 +92,23 @@ math::mat4 const mat_ai_to_scm(aiMatrix4x4 const& ai_mat);
   }
 #endif
 
-inline math::vec3 get_translation(math::mat4 const& m)
-{
+inline math::vec3 get_translation(math::mat4 const& m) {
   return math::vec3(m[12], m[13], m[14]);
+}
+
+std::tuple<float,float,float> barycentric(math::vec3 const& a,
+                                          math::vec3 const& b,
+                                          math::vec3 const& c,
+                                          math::vec3 const& p);
+
+template <typename ValueType>
+ValueType interpolate(math::vec3 const& position,
+                      std::pair<math::vec3, ValueType> const& a,
+                      std::pair<math::vec3, ValueType> const& b,
+                      std::pair<math::vec3, ValueType> const& c) {
+    float u, v, w;
+    std::tie(u,v,w) = barycentric(a.first,b.first,c.first,position);
+    return u * a.second + v * b.second + w * c.second;
 }
 
 }
