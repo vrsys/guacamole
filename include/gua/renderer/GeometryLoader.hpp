@@ -38,7 +38,7 @@ class Node;
  * This DataBase stores geometry data. It can be accessed via string
  * identifiers.
  */
-class GeometryLoader {
+class GUA_DLL GeometryLoader {
  public:
 
   enum Flags {

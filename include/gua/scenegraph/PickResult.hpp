@@ -23,6 +23,7 @@
 #define GUA_PICK_RESULT_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/math/math.hpp>
 
 
@@ -30,7 +31,7 @@ namespace gua {
 
 class Node;
 
-struct PickResult {
+struct GUA_DLL PickResult {
 
   enum Options { PICK_ALL                 = 0,
                  PICK_ONLY_FIRST_OBJECT   = 1<<1,

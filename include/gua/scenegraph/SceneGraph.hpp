@@ -22,6 +22,7 @@
 #ifndef GUA_SCENE_GRAPH_HPP
 #define GUA_SCENE_GRAPH_HPP
 
+#include <gua/platform.hpp>
 #include <gua/scenegraph/Node.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/logger.hpp>
@@ -42,7 +43,7 @@ class RayNode;
  * all its contents. It provides an interface to set up and have access to
  * a graph consisting of several Nodes in order to build a scene abstraction.
  */
-class SceneGraph {
+class GUA_DLL SceneGraph {
 
  public:
 

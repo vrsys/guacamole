@@ -23,11 +23,12 @@
 #define GUA_NOISE_TEXTURE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/Texture2D.hpp>
 
 namespace gua {
 
-class NoiseTexture : public Texture2D {
+class GUA_DLL NoiseTexture : public Texture2D {
  public:
 
   NoiseTexture();
@@ -36,7 +37,7 @@ class NoiseTexture : public Texture2D {
   static unsigned char pixel_data[64 * 64 * 3 + 1];
 };
 
-class DefaultTexture : public Texture2D {
+class GUA_DLL DefaultTexture : public Texture2D {
  public:
 
   DefaultTexture();

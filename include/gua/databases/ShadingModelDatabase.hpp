@@ -35,8 +35,8 @@ namespace gua {
  * This Database stores shading model data. It can be accessed via string
  * identifiers.
  */
-class ShadingModelDatabase : public Database<ShadingModel>,
-                             public Singleton<ShadingModelDatabase> {
+class GUA_DLL ShadingModelDatabase : public Database<ShadingModel>,
+                                     public Singleton<ShadingModelDatabase> {
  public:
 
   /**

@@ -22,6 +22,8 @@
 #ifndef GUA_BUFFER_DESCRIPTIONS_HPP
 #define GUA_BUFFER_DESCRIPTIONS_HPP
 
+#include <gua/platform.hpp>
+
 // external headers
 #include <string>
 
@@ -32,7 +34,7 @@ namespace gua {
  *
  * This struct is used to create new color buffers in render passes.
  */
-struct ColorBufferDescription {
+struct GUA_DLL ColorBufferDescription {
   ColorBufferDescription(std::string const& name,
                          unsigned location,
                          scm::gl::data_format format =

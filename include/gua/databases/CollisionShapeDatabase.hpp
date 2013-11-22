@@ -23,6 +23,7 @@
 #define GUA_COLLISION_SHAPE_DATABASE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
 #include <gua/physics/CollisionShape.hpp>
@@ -36,7 +37,7 @@ namespace physics {
  * This Database stores collision shapes that can be shared among rigid bodies.
  * It can be accessed via string identifiers.
  */
-class CollisionShapeDatabase : public Database<CollisionShape>,
+class GUA_DLL CollisionShapeDatabase : public Database<CollisionShape>,
                                public Singleton<CollisionShapeDatabase> {
  public:
 

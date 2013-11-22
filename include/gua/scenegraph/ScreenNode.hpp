@@ -22,6 +22,7 @@
 #ifndef GUA_SCREEN_CORE_HPP
 #define GUA_SCREEN_CORE_HPP
 
+#include <gua/platform.hpp>
 #include <gua/scenegraph/Node.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
@@ -32,7 +33,7 @@
 
 namespace gua {
 
-class ScreenNode : public Node {
+class GUA_DLL ScreenNode : public Node {
  public:
 
   struct Configuration {

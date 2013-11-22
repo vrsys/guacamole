@@ -29,6 +29,7 @@
 
 struct aiMatrix4x4;
 
+#include <gua/platform.hpp>
 #include <gua/math/traits.hpp>
 
 namespace gua {
@@ -66,7 +67,7 @@ typedef scm::math::quat<float> quat;
  *
  * \return                  A frustum matrix.
  */
-math::mat4 const compute_frustum(math::vec4 const& eye_position,
+math::mat4 const GUA_DLL compute_frustum(math::vec4 const& eye_position,
                                  math::mat4 const& screen_transform,
                                  float near_plane,
                                  float far_plane);
@@ -78,7 +79,7 @@ math::mat4 const compute_frustum(math::vec4 const& eye_position,
  *
  * \return        A schism matrix.
  */
-math::mat4 const mat_ai_to_scm(aiMatrix4x4 const& ai_mat);
+math::mat4 const GUA_DLL mat_ai_to_scm(aiMatrix4x4 const& ai_mat);
 
 #if WIN32
   template <typename T>
@@ -96,10 +97,10 @@ inline math::vec3 get_translation(math::mat4 const& m) {
   return math::vec3(m[12], m[13], m[14]);
 }
 
-std::tuple<float,float,float> barycentric(math::vec3 const& a,
-                                          math::vec3 const& b,
-                                          math::vec3 const& c,
-                                          math::vec3 const& p);
+std::tuple<float, float, float> GUA_DLL barycentric(math::vec3 const& a,
+                                                    math::vec3 const& b,
+                                                    math::vec3 const& c,
+                                                    math::vec3 const& p);
 
 template <typename ValueType>
 ValueType interpolate(math::vec3 const& position,

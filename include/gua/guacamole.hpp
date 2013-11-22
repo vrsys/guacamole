@@ -40,7 +40,8 @@ namespace gua {
  * using guacamole.
  */
 
-void init(int argc, char** argv);
+  void GUA_DLL init(int argc, char** argv);
+
 }
 
 #endif  // GUA_GUACAMOLE_HPP

@@ -23,6 +23,7 @@
 #define GUA_SPHERE_SHAPE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/physics/CollisionShape.hpp>
 
 class btSphereShape;
@@ -36,7 +37,7 @@ namespace physics {
  * This class is a sphere primitive around the origin with the given radius.
  * The sphere shape can be used for both static and dynamic rigid bodies.
  */
-class SphereShape : public CollisionShape {
+class GUA_DLL SphereShape : public CollisionShape {
  public:
 
   /**

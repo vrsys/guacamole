@@ -24,6 +24,7 @@
 
 #include <boost/asio.hpp>
 
+#include <gua/platform.hpp>
 #include <gua/events/Scheduler.hpp>
 #include <gua/events/Signal.hpp>
 #include <gua/events/MainLoop.hpp>
@@ -31,7 +32,7 @@
 namespace gua {
   namespace events {
 
-    class Ticker {
+    class GUA_DLL Ticker {
     public:
 
       Ticker(MainLoop& mainloop, double tick_time);

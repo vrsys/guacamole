@@ -23,6 +23,7 @@
 #define GUA_NODE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/math/math.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/scenegraph/PickResult.hpp>
@@ -56,7 +57,7 @@ class RayNode;
 
 namespace physics { class CollisionShapeNodeVisitor; }
 
-class Node {
+class GUA_DLL Node {
  public:
 
   /**

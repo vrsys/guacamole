@@ -42,6 +42,12 @@ std::shared_ptr<Renderer::const_render_vec_t> garbage_collected_copy(
   return sgs;
 }
 
+Renderer::~Renderer() {
+  for (auto rc : render_clients_) {
+    if (rc) delete rc;
+  }
+}
+
 Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
     : render_clients_(),
       application_fps_(20) {
@@ -52,7 +58,7 @@ Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
       pipeline->process(*sg, this->application_fps_.fps, render_fps);
     };
 
-    render_clients_.push_back(gua::make_unique<renderclient_t>(fun));
+    render_clients_.push_back(new renderclient_t(fun));
   }
 }
 

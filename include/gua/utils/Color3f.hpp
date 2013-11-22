@@ -22,6 +22,7 @@
 #ifndef COLOR_3F_HPP
 #define COLOR_3F_HPP
 
+#include <gua/platform.hpp>
 #include <gua/math/math.hpp>
 
 namespace gua {
@@ -34,7 +35,7 @@ namespace utils {
  * interface as well.
  */
 
-struct Color3f {
+struct GUA_DLL Color3f {
  public:
 
   /**

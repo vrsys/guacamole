@@ -27,6 +27,7 @@
 #include <string>
 
 // guacamole header
+#include <gua/platform.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 
 namespace gua {
@@ -42,7 +43,7 @@ class SpotLightNode;
 /**
  * This class may be used to parse a path.
  */
-class DotGenerator : public NodeVisitor {
+class GUA_DLL DotGenerator : public NodeVisitor {
  public:
 
   DotGenerator();

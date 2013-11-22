@@ -23,6 +23,7 @@
 #define GUA_PIPELINE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/Camera.hpp>
 #include <gua/renderer/Window.hpp>
 #include <gua/renderer/SerializedScene.hpp>
@@ -125,7 +126,7 @@ struct PipelineConfiguration {
  * of (or the entire) SceneGraph to buffers. These buffers may be used as input
  * for other passes. One final buffer of a final pass is shown on the screen.
  */
-class Pipeline {
+class GUA_DLL Pipeline {
  public:
 
   /**
@@ -162,6 +163,7 @@ class Pipeline {
   friend class GBufferPass;
   friend class LightingPass;
   friend class FinalPass;
+  friend class CompositePass;
   friend class PostFXPass;
   friend class GeometryPass;
   friend class FullscreenPass;
@@ -177,11 +179,7 @@ class Pipeline {
   SerializedScene const& get_current_scene(CameraMode mode) const;
   inline SceneGraph const* get_current_graph() const { return current_graph_; }
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& GUA_COMPILER_VER <= 1600
-  mutable boost::mutex upload_mutex_;
-#else
   mutable std::mutex upload_mutex_;
-#endif
 
   Window* window_;
   RenderContext* context_;

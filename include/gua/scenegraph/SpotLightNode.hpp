@@ -22,6 +22,7 @@
 #ifndef GUA_SPOT_LIGHT_NODE_HPP
 #define GUA_SPOT_LIGHT_NODE_HPP
 
+#include <gua/platform.hpp>
 #include <gua/scenegraph/Node.hpp>
 
 #include <gua/utils/Color3f.hpp>
@@ -36,7 +37,7 @@
 
 namespace gua {
 
-class SpotLightNode : public Node {
+class GUA_DLL SpotLightNode : public Node {
  public:
 
   struct Configuration {

@@ -33,12 +33,9 @@
 #include <string>
 #include <vector>
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& GUA_COMPILER_VER <= 1600
-#include <boost/thread.hpp>
-#else
 #include <mutex>
 #include <thread>
-#endif
+
 
 namespace gua {
 
@@ -48,7 +45,7 @@ namespace gua {
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-class Texture3D : public Texture {
+class GUA_DLL Texture3D : public Texture {
  public:
 
   /**

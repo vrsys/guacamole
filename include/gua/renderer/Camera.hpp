@@ -22,6 +22,8 @@
 #ifndef GUA_CAMERA_HPP
 #define GUA_CAMERA_HPP
 
+#include <gua/platform.hpp>
+
 // external headers
 #include <string>
 
@@ -33,7 +35,7 @@ namespace gua {
  *  It is defined by a screen, a view point a a render mask.
  */
 
-struct Camera {
+struct GUA_DLL Camera {
   Camera(std::string const& eye_l = "unknown_left_eye",
          std::string const& eye_r = "unknown_right_eye",
          std::string const& screen_l = "unknown_left_screen",

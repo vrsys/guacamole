@@ -22,6 +22,7 @@
 #ifndef GUA_GROUP_NODE_HPP
 #define GUA_GROUP_NODE_HPP
 
+#include <gua/platform.hpp>
 #include <gua/scenegraph/Node.hpp>
 
 /**
@@ -31,7 +32,7 @@
 
 namespace gua {
 
-class TransformNode : public Node {
+class GUA_DLL TransformNode : public Node {
  public:
 
   TransformNode() {};

@@ -24,13 +24,15 @@
 
 #include <string>
 
+#include <gua/platform.hpp>
+
 /**
  *
  */
 
 namespace gua {
 
-class Timer {
+class GUA_DLL Timer {
 
  public:
   void start();

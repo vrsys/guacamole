@@ -36,7 +36,7 @@
 
 namespace gua {
 
-class GeometryNode : public Node {
+class GUA_DLL GeometryNode : public Node {
   public:
 
     struct Configuration {

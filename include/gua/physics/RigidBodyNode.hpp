@@ -43,7 +43,7 @@ class CollisionShape;
  *
  *
  */
-class RigidBodyNode : public Node {
+class GUA_DLL RigidBodyNode : public Node {
   friend class Physics;
   friend class CollisionShapeNodeVisitor;
 

@@ -23,6 +23,7 @@
 #define GUA_MATERIAL_LOADER_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/Mesh.hpp>
 
 // external headers
@@ -52,7 +53,7 @@ class GeometryNode;
  * This class can load mesh data from files and display them in multiple
  * contexts. A MaterialLoader object is made of several Mesh objects.
  */
-class MaterialLoader {
+class GUA_DLL MaterialLoader {
  public:
 
   enum ShadingCapabilities {

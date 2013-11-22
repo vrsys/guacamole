@@ -28,11 +28,8 @@
 #include <gua/utils/Color3f.hpp>
 
 // external headers
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-#include <boost/thread.hpp>
-#else
 #include <mutex>
-#endif
+
 
 #include <vector>
 
@@ -46,7 +43,7 @@ struct RenderContext;
  * This class allows to bind textures to a FBO. This FBO
  * can be used as drawing target for an rendering context.
  */
-class FrameBufferObject {
+class GUA_DLL FrameBufferObject {
  public:
 
   /**

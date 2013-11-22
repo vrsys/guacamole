@@ -22,6 +22,8 @@
 #ifndef GUA_DIRECTORY_HPP
 #define GUA_DIRECTORY_HPP
 
+#include <gua/platform.hpp>
+
 #include <string>
 
 /**
@@ -30,7 +32,7 @@
 
 namespace gua {
 
-class Directory {
+class GUA_DLL Directory {
 
  public:
 

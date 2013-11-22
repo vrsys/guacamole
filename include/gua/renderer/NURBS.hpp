@@ -23,6 +23,7 @@
 #define GUA_NURBS_HPP_INCLUDED
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/Geometry.hpp>
 #include <gua/renderer/nurbs_geometry/NURBSData.hpp>
@@ -46,7 +47,7 @@
 
 namespace gua {
 
-class NURBS : public Geometry {
+class GUA_DLL NURBS : public Geometry {
 
  public:
   NURBS(std::shared_ptr<TrimmedBezierSurfaceObject> const& object,

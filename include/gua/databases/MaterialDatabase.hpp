@@ -23,6 +23,7 @@
 #define GUA_MATERIAL_DATABASE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
 #include <gua/renderer/Material.hpp>
@@ -35,8 +36,8 @@ namespace gua {
  * This Database stores material data. It can be accessed via string
  * identifiers.
  */
-class MaterialDatabase : public Database<Material>,
-                         public Singleton<MaterialDatabase> {
+class GUA_DLL MaterialDatabase : public Database<Material>,
+                                 public Singleton<MaterialDatabase> {
  public:
 
   /**

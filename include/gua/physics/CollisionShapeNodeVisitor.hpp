@@ -23,6 +23,7 @@
 #define GUA_COLLISION_SHAPE_NODE_VISITOR_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/utils/Mask.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/math/math.hpp>

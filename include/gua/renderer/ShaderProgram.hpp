@@ -28,11 +28,7 @@
 #include <gua/renderer/Uniform.hpp>
 
 // external headers
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-#include <boost/thread.hpp>
-#else
 #include <mutex>
-#endif
 
 #include <map>
 #include <list>

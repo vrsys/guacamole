@@ -32,7 +32,7 @@
 
 namespace gua {
 
-class TexturedQuadNode : public Node {
+class GUA_DLL TexturedQuadNode : public Node {
  public:
 
   struct Configuration {

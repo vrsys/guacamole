@@ -27,6 +27,8 @@
 #include <vector>
 #include <set>
 
+#include <gua/platform.hpp>
+
 namespace gua {
 
 /**
@@ -43,7 +45,7 @@ namespace gua {
  * ) --- closing parenthesis
  * Whitespaces are ignored and all other characters are treated as group names.
  */
-class Mask {
+class GUA_DLL Mask {
  public:
 
   /**

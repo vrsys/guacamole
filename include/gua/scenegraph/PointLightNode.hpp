@@ -22,6 +22,7 @@
 #ifndef GUA_POINT_LIGHT_NODE_HPP
 #define GUA_POINT_LIGHT_NODE_HPP
 
+#include <gua/platform.hpp>
 #include <gua/scenegraph/Node.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
@@ -36,7 +37,7 @@
 
 namespace gua {
 
-class PointLightNode : public Node {
+class GUA_DLL PointLightNode : public Node {
  public:
 
   struct Configuration {

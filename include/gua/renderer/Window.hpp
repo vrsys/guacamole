@@ -23,6 +23,7 @@
 #define GUA_WINDOW_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/WarpMatrix.hpp>
@@ -46,7 +47,7 @@ class StereoBuffer;
  *
  * It's a window which can display OpenGL stuff.
  */
-class Window {
+class GUA_DLL Window {
  public:
 
   enum TextureDisplayMode {

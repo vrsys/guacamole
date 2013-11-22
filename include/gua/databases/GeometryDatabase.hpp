@@ -35,8 +35,8 @@ namespace gua {
  * This Database stores geometry data. It can be accessed via string
  * identifiers.
  */
-class GeometryDatabase : public Database<Geometry>,
-                         public Singleton<GeometryDatabase> {
+class GUA_DLL GeometryDatabase : public Database<Geometry>,
+                                 public Singleton<GeometryDatabase> {
  public:
 
   /**
