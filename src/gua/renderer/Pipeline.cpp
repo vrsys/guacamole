@@ -29,6 +29,7 @@
 #include <gua/renderer/FinalUberShader.hpp>
 #include <gua/renderer/StereoBuffer.hpp>
 #include <gua/renderer/GBufferPass.hpp>
+#include <gua/renderer/CompositePass.hpp>
 #include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/FinalPass.hpp>
 #include <gua/renderer/PostFXPass.hpp>
@@ -76,10 +77,11 @@ void Pipeline::print_shaders(std::string const& directory) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
-  passes_[0]->print_shaders(directory, "/0_gbuffer");
-  passes_[1]->print_shaders(directory, "/1_lighting");
-  passes_[2]->print_shaders(directory, "/2_final");
-  passes_[3]->print_shaders(directory, "/3_postFX");
+  passes_[PipelineStage::geometry]->print_shaders(directory, "/0_gbuffer");
+  passes_[PipelineStage::lighting]->print_shaders(directory, "/1_lighting");
+  passes_[PipelineStage::shading]->print_shaders(directory, "/2_final");
+  passes_[PipelineStage::compositing]->print_shaders(directory, "/3_composite");
+  passes_[PipelineStage::postfx]->print_shaders(directory, "/4_postFX");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,18 +249,18 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                        config.enable_frustum_culling());
   }
 
-  for (int i(0); i < passes_.size(); ++i) {
-    passes_[i]->render_scene(config.camera(), *context_);
+  for (auto pass : passes_) {
+    pass->render_scene(config.camera(), *context_);
   }
 
   if (window_) {
     if (config.get_enable_stereo()) {
-        window_->display(passes_[3]->get_gbuffer()->get_eye_buffers()[0]
+        window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
                              ->get_color_buffers(TYPE_FLOAT)[0],
-                         passes_[3]->get_gbuffer()->get_eye_buffers()[1]
+                             passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[1]
                              ->get_color_buffers(TYPE_FLOAT)[0]);
     } else {
-      window_->display(passes_[3]->get_gbuffer()->get_eye_buffers()[0]
+      window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
                            ->get_color_buffers(TYPE_FLOAT)[0]);
     }
 
@@ -282,7 +284,6 @@ void Pipeline::create_passes() {
 
   if (passes_need_reload_) {
 
-
     auto materials(MaterialDatabase::instance()->list_all());
 
     auto pre_pass = new GBufferPass(this);
@@ -299,37 +300,40 @@ void Pipeline::create_passes() {
     auto final_pass = new FinalPass(this);
     final_pass->apply_material_mapping(materials, layer_mapping);
 
+    auto composite_pass = new CompositePass(this);
+
     auto post_fx_pass = new PostFXPass(this);
 
-    bool compilation_succeeded = false;
+    bool compilation_succeeded = true;
 
     passes_need_reload_ = false;
 
     // try compilation if context is already present
     if (context_) {
 
-      if (pre_pass->pre_compile_shaders(*context_))
-      if (light_pass->pre_compile_shaders(*context_))
-      if (final_pass->pre_compile_shaders(*context_))
-      if (post_fx_pass->pre_compile_shaders(*context_))
+        for (auto pass : passes_) {
 
-        compilation_succeeded = true;
+          if (!pass->pre_compile_shaders(*context_)) {
+            compilation_succeeded = false;
+          }
 
+        }
     } else {
       compilation_succeeded = true;
     }
 
     if (compilation_succeeded) {
 
-      for (int i(0); i < passes_.size(); ++i) {
-        delete passes_[i];
+      for (auto pass : passes_) {
+        delete pass;
       }
-
+      
       passes_.clear();
 
       passes_.push_back(pre_pass);
       passes_.push_back(light_pass);
       passes_.push_back(final_pass);
+      passes_.push_back(composite_pass);
       passes_.push_back(post_fx_pass);
 
       buffers_need_reload_ = true;
@@ -339,6 +343,7 @@ void Pipeline::create_passes() {
       delete pre_pass;
       delete light_pass;
       delete final_pass;
+      delete composite_pass;
       delete post_fx_pass;
     }
   }
@@ -349,48 +354,36 @@ void Pipeline::create_passes() {
 void Pipeline::create_buffers() {
 
   if (buffers_need_reload_) {
-    passes_[0]->create(*context_, config,
-                       passes_[0]->get_gbuffer_mapping()->get_layers());
-
-    passes_[1]->create(*context_, config,
-                       passes_[1]->get_gbuffer_mapping()->get_layers());
-
+     
     std::vector<std::shared_ptr<StereoBuffer>> stereobuffers;
-    stereobuffers.push_back(passes_[0]->get_gbuffer());
 
-    passes_[1]->set_inputs(stereobuffers);
+    passes_[PipelineStage::geometry]->create(*context_, config, passes_[PipelineStage::geometry]->get_gbuffer_mapping()->get_layers());
+    stereobuffers.push_back(passes_[PipelineStage::geometry]->get_gbuffer());
 
-    stereobuffers.push_back(passes_[1]->get_gbuffer());
+    passes_[PipelineStage::lighting]->create(*context_, config, passes_[PipelineStage::lighting]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::lighting]->set_inputs(stereobuffers);
+    stereobuffers.push_back(passes_[PipelineStage::lighting]->get_gbuffer());
 
-    passes_[2]->create(*context_,
-                       config,
-                       passes_[2]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::shading]->create(*context_, config, passes_[PipelineStage::shading]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::shading]->set_inputs(stereobuffers);
+    stereobuffers.push_back(passes_[PipelineStage::shading]->get_gbuffer());
 
-    passes_[2]->set_inputs(stereobuffers);
-
-    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
+    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR, 
                                       scm::gl::WRAP_REPEAT,
                                       scm::gl::WRAP_REPEAT);
 
-  #if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-    std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> >
-        layer_desc;
-    layer_desc.push_back(std::make_pair(BufferComponent::F3, state));
-    passes_[3]->create(*context_, config, layer_desc);
-  #else
-    passes_[3]->create(*context_, config,
-                       {
-      { BufferComponent::F3, state }
-    });
-  #endif
-    stereobuffers.push_back(passes_[2]->get_gbuffer());
-    passes_[3]->set_inputs(stereobuffers);
+    passes_[PipelineStage::compositing]->create(*context_, config, { { BufferComponent::F3, state } });
+    passes_[PipelineStage::compositing]->set_inputs(stereobuffers);
+    stereobuffers.push_back(passes_[PipelineStage::compositing]->get_gbuffer());
+
+    passes_[PipelineStage::postfx]->create(*context_, config, { { BufferComponent::F3, state } });
+    passes_[PipelineStage::postfx]->set_inputs(stereobuffers);
 
     if (!config.get_enable_stereo()) {
-      TextureDatabase::instance()->add(config.output_texture_name(), passes_[3]->get_gbuffer()->get_eye_buffers()[0]->get_color_buffers(TYPE_FLOAT)[0]);
+      TextureDatabase::instance()->add(config.output_texture_name(), passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]->get_color_buffers(TYPE_FLOAT)[0]);
     } else {
-      TextureDatabase::instance()->add(config.output_texture_name() + "_left",  passes_[3]->get_gbuffer()->get_eye_buffers()[0]->get_color_buffers(TYPE_FLOAT)[0]);
-      TextureDatabase::instance()->add(config.output_texture_name() + "_right", passes_[3]->get_gbuffer()->get_eye_buffers()[1]->get_color_buffers(TYPE_FLOAT)[0]);
+      TextureDatabase::instance()->add(config.output_texture_name() + "_left",  passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]->get_color_buffers(TYPE_FLOAT)[0]);
+      TextureDatabase::instance()->add(config.output_texture_name() + "_right", passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[1]->get_color_buffers(TYPE_FLOAT)[0]);
     }
 
 

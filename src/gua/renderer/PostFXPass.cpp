@@ -288,11 +288,11 @@ void PostFXPass::render_scene(Camera const& camera, RenderContext const& ctx) {
         any_godrays = render_godrays(camera, pipeline_->get_current_scene(eye), eye, ctx);
         render_glow(eye, ctx);
 
-        auto input_tex(inputs_[2]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
+        auto input_tex(inputs_[Pipeline::compositing]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
         auto ping_tex(ping_buffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
         auto pong_tex(pong_buffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
-        auto normal_tex(inputs_[0]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
-        auto depth_tex(inputs_[0]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_depth_buffer());
+        auto normal_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
+        auto depth_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_depth_buffer());
 
 
         Pass::set_camera_matrices(*postfx_shaders_[0], camera, pipeline_->get_current_scene(eye), eye, ctx);
@@ -449,7 +449,7 @@ bool PostFXPass::render_godrays(Camera const& camera,
     if (any_godrays) {
         Pass::set_camera_matrices(*god_ray_shader_, camera, scene, eye, ctx);
 
-        auto depth_buffer(inputs_[0]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_depth_buffer());
+        auto depth_buffer(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_depth_buffer());
         god_ray_shader_->set_uniform(ctx, 1.0f * godray_buffers_[0]->width() / godray_buffers_[0]->height(), "gua_aspect_ratio");
         ctx.render_context->set_viewport(scm::gl::viewport(
                              math::vec2(0.0f,0.0f), math::vec2(float(godray_buffers_[0]->width()), float(godray_buffers_[0]->height()))));
@@ -533,7 +533,7 @@ void PostFXPass::render_glow(CameraMode eye, RenderContext const& ctx) {
         glow_shader_->set_uniform(ctx, pipeline_->config.bloom_threshold(), "gua_glow_threshold");
 
 
-        auto color_buffer(inputs_[2]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
+        auto color_buffer(inputs_[Pipeline::compositing]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
         ctx.render_context->set_viewport(scm::gl::viewport(
                 math::vec2(0,0), math::vec2(float(glow_buffers_[0]->width()),
                                             float(glow_buffers_[0]->height()))));

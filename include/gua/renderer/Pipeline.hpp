@@ -129,6 +129,15 @@ struct PipelineConfiguration {
 class GUA_DLL Pipeline {
  public:
 
+   enum PipelineStage {  geometry = 0,
+                         lighting = 1,
+                         shading = 2,
+                         compositing = 3,
+                         postfx = 4
+                      };
+
+ public:
+
   /**
    * Constructor.
    *

@@ -19,69 +19,58 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RENDERER_HPP
-#define GUA_RENDERER_HPP
+#ifndef GUA_COMPOSITE_PASS_HPP
+#define GUA_COMPOSITE_PASS_HPP
 
-// external headers
-#include <vector>
-#include <string>
-#include <memory>
-
-#include <gua/platform.hpp>
-#include <gua/renderer/RenderClient.hpp>
-#include <gua/utils/FpsCounter.hpp>
-
-#define USE_RAW_POINTER_RENDER_CLIENTS 1
+// guacamole headers
+#include <gua/renderer/BuiltInTextures.hpp>
+#include <gua/renderer/Pass.hpp>
 
 namespace gua {
 
-class SceneGraph;
-class Pipeline;
+class GBuffer;
+struct PipelineConfiguration;
 
 /**
- * Manages the rendering on multiple contexts.
  *
- * This class is used to provide a renderer frontend interface to the user.
  */
-class GUA_DLL Renderer {
+class CompositePass : public Pass {
  public:
-  typedef std::vector<std::unique_ptr<const SceneGraph> > render_vec_t;
-  typedef render_vec_t const const_render_vec_t;
 
   /**
-   * Constructor.
    *
-   * This constructs a new Renderer.
-   *
-   * \param pipelines        A vector of Pipelines to process. For each
-   *                         pipeline a RenderClient is created.
    */
-  Renderer(std::vector<Pipeline*> const& pipelines);
+	 CompositePass(Pipeline* pipeline);
 
   /**
-  * 
-  */
-  ~Renderer();
-
-  /**
-   * Request a redraw of all RenderClients.
-   *
-   * Takes a Scenegraph and asks all clients to draw it.
-   *
-   * \param scene_graphs      The SceneGraphs to be processed.
+   * 
    */
-  void queue_draw(std::vector<SceneGraph const*> const& scene_graphs);
+	virtual ~CompositePass();
+
+  void create(
+      RenderContext const& ctx,
+      PipelineConfiguration const& config,
+      std::vector<std::pair<BufferComponent,
+                            scm::gl::sampler_state_desc> > const& layers);
+
+  void render_scene(Camera const& camera, RenderContext const& ctx);
+
+  /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
+
+  void print_shaders(std::string const& directory,
+                     std::string const& name) const;
+
+  bool pre_compile_shaders(RenderContext const& ctx);
 
  private:
-  typedef RenderClient<std::shared_ptr<const_render_vec_t> > renderclient_t;
-#if USE_RAW_POINTER_RENDER_CLIENTS
-  std::vector<renderclient_t*> render_clients_;
-#else
-  std::vector<std::unique_ptr<renderclient_t> > render_clients_;
-#endif
-  FpsCounter application_fps_;
+
+  void apply_material_mapping();
+
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+  scm::gl::quad_geometry_ptr fullscreen_quad_;
+  ShaderProgram* composite_shader_;
 };
 
 }
 
-#endif  // GUA_RENDERER_HPP
+#endif  // GUA_COMPOSITE_PASS_HPP
