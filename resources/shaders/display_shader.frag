@@ -50,6 +50,20 @@ vec3 get_cyan() {
 }
 
 subroutine( GetColorType )
+vec3 get_checker_even() {
+  if (mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) == 0.0)
+    return vec3(texture2D( get_tex(sampler), tex_coord).rgb);
+  else discard;
+}
+
+subroutine( GetColorType )
+vec3 get_checker_odd() {
+  if (mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) == 1.0)
+    return vec3(texture2D( get_tex(sampler), tex_coord).rgb);
+  else discard;
+}
+
+subroutine( GetColorType )
 vec3 get_full() {
   return vec3(texture2D( get_tex(sampler), tex_coord).rgb);
 }
