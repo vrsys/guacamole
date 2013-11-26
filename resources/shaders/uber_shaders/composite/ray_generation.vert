@@ -19,68 +19,24 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_COMPOSITE_PASS_HPP
-#define GUA_COMPOSITE_PASS_HPP
+@include "shaders/common/header.glsl"
 
-// guacamole headers
-#include <gua/renderer/BuiltInTextures.hpp>
-#include <gua/renderer/GeometryPass.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
+// uniforms
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
-namespace gua {
+// input
+layout(location=0) in vec3 gua_in_position;
 
-class GBuffer;
-struct PipelineConfiguration;
+// output
+out vec3 gua_position_varying;
 
-/**
- *
- */
-class CompositePass : public GeometryPass {
- public:
+void main() {
 
-  /**
-   *
-   */
-	 CompositePass(Pipeline* pipeline);
+    gua_position_varying = gua_in_position;
 
-  /**
-   * 
-   */
-	virtual ~CompositePass();
+    vec3 gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
 
-  void create( RenderContext const& ctx,
-               PipelineConfiguration const& config,
-               std::vector<std::pair<BufferComponent,
-               scm::gl::sampler_state_desc> > const& layers);
-
-  /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
-
-  void print_shaders(std::string const& directory,
-                     std::string const& name) const;
-
-  bool pre_compile_shaders(RenderContext const& ctx);
-
-protected :
-
-  /* virtual */ void rendering( SerializedScene const& scene,
-                                RenderContext const& ctx,
-                                CameraMode eye,
-                                Camera const& camera,
-                                FrameBufferObject* target);
-
-  void init_ressources (RenderContext const& ctx);
-
- private:
-
-  GBuffer* volume_raygeneration_;
-
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
-
-  ShaderProgram* composite_shader_;
-  ShaderProgram* ray_generation_shader_;
-};
-
+    //gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position.xyz, 1.0);
+    gl_Position = vec4(gua_in_position, 1.0);
 }
 
-#endif  // GUA_COMPOSITE_PASS_HPP

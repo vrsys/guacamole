@@ -42,6 +42,7 @@ void GeometryPass::render_scene(Camera const& camera, RenderContext const& ctx) 
   gbuffer_->clear(ctx);
 
   for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
+
     FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
 
     CameraMode eye(CameraMode::CENTER);

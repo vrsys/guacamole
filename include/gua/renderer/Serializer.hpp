@@ -85,6 +85,15 @@ class Serializer : public NodeVisitor {
   /* virtual */ void visit(GeometryNode* geometry);
 
   /**
+  * Visits a VolumeNode
+  *
+  * This function provides the interface to visit a VolumeNode
+  *
+  * \param volume   Pointer to VolumeNode
+  */
+  /* virtual */ void visit(VolumeNode* volume);
+
+  /**
    * Visits a PointLightNode
    *
    * This function provides the interface to visit a PointLightNode

@@ -19,68 +19,52 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_COMPOSITE_PASS_HPP
-#define GUA_COMPOSITE_PASS_HPP
+#ifndef GUA_VOLUME_NODE_HPP
+#define GUA_VOLUME_NODE_HPP
 
 // guacamole headers
-#include <gua/renderer/BuiltInTextures.hpp>
-#include <gua/renderer/GeometryPass.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
+#include <gua/scenegraph/Node.hpp>
+#include <gua/utils/configuration_macro.hpp>
+
+// external headers
+#include <string>
+
+/**
+ * This class is used to represent a volume in the SceneGraph.
+ *
+ */
 
 namespace gua {
 
-class GBuffer;
-struct PipelineConfiguration;
+class GUA_DLL VolumeNode : public Node {
+  public:
 
-/**
- *
- */
-class CompositePass : public GeometryPass {
- public:
+    struct Configuration {
+      GUA_ADD_PROPERTY(std::string, volume, "gua_volume_default");
+    };
 
-  /**
-   *
-   */
-	 CompositePass(Pipeline* pipeline);
+    Configuration data;
 
-  /**
-   * 
-   */
-	virtual ~CompositePass();
+    VolumeNode() {};
 
-  void create( RenderContext const& ctx,
-               PipelineConfiguration const& config,
-               std::vector<std::pair<BufferComponent,
-               scm::gl::sampler_state_desc> > const& layers);
+    VolumeNode(std::string const& name,
+               Configuration const& configuration = Configuration(),
+               math::mat4 const& transform = math::mat4::identity());
 
-  /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
+    /*virtual*/ void accept(NodeVisitor&);
 
-  void print_shaders(std::string const& directory,
-                     std::string const& name) const;
+    /*virtual*/ void update_bounding_box() const;
 
-  bool pre_compile_shaders(RenderContext const& ctx);
+    /*virtual*/ void ray_test_impl(RayNode const& ray, 
+                                   PickResult::Options options,
+                                   Mask const& mask, 
+                                   std::set<PickResult>& hits);
 
-protected :
+  private:
 
-  /* virtual */ void rendering( SerializedScene const& scene,
-                                RenderContext const& ctx,
-                                CameraMode eye,
-                                Camera const& camera,
-                                FrameBufferObject* target);
-
-  void init_ressources (RenderContext const& ctx);
-
- private:
-
-  GBuffer* volume_raygeneration_;
-
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
-
-  ShaderProgram* composite_shader_;
-  ShaderProgram* ray_generation_shader_;
+    std::shared_ptr<Node> copy() const;
 };
 
 }
 
-#endif  // GUA_COMPOSITE_PASS_HPP
+#endif  // GUA_VOLUME_NODE_HPP

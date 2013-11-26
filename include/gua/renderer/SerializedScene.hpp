@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
 #include <gua/scenegraph/ScreenNode.hpp>
@@ -58,6 +59,11 @@ struct SerializedScene {
    * All NURBS nodes.
    */
   std::vector<SerializedNode<GeometryNode::Configuration> > nurbsnodes_;
+
+  /**
+  * All Volume nodes.
+  */
+  std::vector<SerializedNode<VolumeNode::Configuration> > volumenodes_;
 
   /**
    * All point light nodes.

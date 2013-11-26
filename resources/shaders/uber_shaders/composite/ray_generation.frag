@@ -19,68 +19,16 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_COMPOSITE_PASS_HPP
-#define GUA_COMPOSITE_PASS_HPP
+@include "shaders/common/header.glsl"
 
-// guacamole headers
-#include <gua/renderer/BuiltInTextures.hpp>
-#include <gua/renderer/GeometryPass.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
+// input 
+in vec3 gua_position_varying;
 
-namespace gua {
+// write outputs 
+layout(location=0) out vec3 gua_out_color;
 
-class GBuffer;
-struct PipelineConfiguration;
-
-/**
- *
- */
-class CompositePass : public GeometryPass {
- public:
-
-  /**
-   *
-   */
-	 CompositePass(Pipeline* pipeline);
-
-  /**
-   * 
-   */
-	virtual ~CompositePass();
-
-  void create( RenderContext const& ctx,
-               PipelineConfiguration const& config,
-               std::vector<std::pair<BufferComponent,
-               scm::gl::sampler_state_desc> > const& layers);
-
-  /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
-
-  void print_shaders(std::string const& directory,
-                     std::string const& name) const;
-
-  bool pre_compile_shaders(RenderContext const& ctx);
-
-protected :
-
-  /* virtual */ void rendering( SerializedScene const& scene,
-                                RenderContext const& ctx,
-                                CameraMode eye,
-                                Camera const& camera,
-                                FrameBufferObject* target);
-
-  void init_ressources (RenderContext const& ctx);
-
- private:
-
-  GBuffer* volume_raygeneration_;
-
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
-
-  ShaderProgram* composite_shader_;
-  ShaderProgram* ray_generation_shader_;
-};
-
+// main ------------------------------------------------------------------------
+void main() {
+  gua_out_color = gua_position_varying;
 }
 
-#endif  // GUA_COMPOSITE_PASS_HPP

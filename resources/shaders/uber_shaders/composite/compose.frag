@@ -25,6 +25,7 @@
 uniform uvec2 gua_depth_gbuffer_in;
 uniform uvec2 gua_color_gbuffer_in;
 uniform uvec2 gua_normal_gbuffer_in;
+uniform uvec2 gua_ray_entry_in;
 
 // uniforms
 @include "shaders/uber_shaders/common/get_sampler_casts.glsl"
@@ -43,7 +44,9 @@ layout(location=0) out vec3 gua_out_color;
 // main ------------------------------------------------------------------------
 void main() {
   // compose
-  gua_out_color = texture2D(gua_get_float_sampler(gua_color_gbuffer_in), gua_get_quad_coords()).xyz +
-                  texture2D(gua_get_float_sampler(gua_normal_gbuffer_in), gua_get_quad_coords()).xyz;
+  if ( length ( texture2D(gua_get_float_sampler(gua_color_gbuffer_in), gua_get_quad_coords()).xyz) > 0.0 )
+  {
+    gua_out_color = texture2D(gua_get_float_sampler(gua_ray_entry_in), gua_get_quad_coords()).xyz;
+  }
 }
 
