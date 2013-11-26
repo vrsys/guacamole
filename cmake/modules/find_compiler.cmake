@@ -1,26 +1,26 @@
 if (WIN32)
     if (MSVC71)
-        set (GUA_COMPILER_SUFFIX "vc71")
+        set (COMPILER_SUFFIX "vc71")
     endif(MSVC71)
 
     if (MSVC80)
-        set (GUA_COMPILER_SUFFIX "vc80")
+        set (COMPILER_SUFFIX "vc80")
     endif(MSVC80)
 
     if (MSVC90)
-        set (GUA_COMPILER_SUFFIX "vc90")
+        set (COMPILER_SUFFIX "vc90")
     endif(MSVC90)
 
     if (MSVC10)
-        set (GUA_COMPILER_SUFFIX "vc100")
+        set (COMPILER_SUFFIX "vc100")
     endif(MSVC10)
 
     if (MSVC11)
-        set (GUA_COMPILER_SUFFIX "vc110")
+        set (COMPILER_SUFFIX "vc110")
     endif(MSVC11)
 	
 	if (MSVC12)
-        set (GUA_COMPILER_SUFFIX "vc120")
+        set (COMPILER_SUFFIX "vc120")
     endif(MSVC12)
 endif (WIN32)
 
