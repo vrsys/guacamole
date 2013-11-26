@@ -46,6 +46,12 @@ std::string subroutine_from_mode(Window::TextureDisplayMode mode) {
     case Window::CYAN:
       return "get_cyan";
       break;
+    case Window::CHECKER_EVEN:
+      return "get_checker_even";
+      break;
+    case Window::CHECKER_ODD:
+      return "get_checker_odd";
+      break;
     default:
       return "get_full";
   }
@@ -146,6 +152,7 @@ bool Window::get_is_open() const { return ctx_.window != nullptr; }
 ////////////////////////////////////////////////////////////////////////////////
 
 void Window::create_shader() {
+
   if (config.get_warp_matrix_red_right() == "" ||
       config.get_warp_matrix_green_right() == "" ||
       config.get_warp_matrix_blue_right() == "" ||
@@ -224,28 +231,34 @@ void Window::display(std::shared_ptr<Texture2D> const& left_texture,
                      std::shared_ptr<Texture2D> const& right_texture) {
 
   switch (config.get_stereo_mode()) {
-      case StereoMode::MONO:
-        display(left_texture);
-        break;
-      case StereoMode::SIDE_BY_SIDE:
-        display(left_texture, config.get_left_resolution(),
-                config.get_left_position(), Window::FULL, true, true);
-        display(right_texture, config.get_right_resolution(),
-                config.get_right_position(), Window::FULL, false, true);
-        break;
-      case StereoMode::ANAGLYPH_RED_CYAN:
-        display(left_texture, config.get_left_resolution(),
-                config.get_left_position(), Window::RED, true, true);
-        display(right_texture, config.get_right_resolution(),
-                config.get_right_position(), Window::CYAN, false, false);
-        break;
-      case StereoMode::ANAGLYPH_RED_GREEN:
-        display(left_texture, config.get_left_resolution(),
-                config.get_left_position(), Window::RED, true, true);
-        display(right_texture, config.get_right_resolution(),
-                config.get_right_position(), Window::GREEN, false, false);
-        break;
-    }
+    case StereoMode::MONO:
+      display(left_texture);
+      break;
+    case StereoMode::SIDE_BY_SIDE:
+      display(left_texture, config.get_left_resolution(),
+              config.get_left_position(), Window::FULL, true, true);
+      display(right_texture, config.get_right_resolution(),
+              config.get_right_position(), Window::FULL, false, true);
+      break;
+    case StereoMode::ANAGLYPH_RED_CYAN:
+      display(left_texture, config.get_left_resolution(),
+              config.get_left_position(), Window::RED, true, true);
+      display(right_texture, config.get_right_resolution(),
+              config.get_right_position(), Window::CYAN, false, false);
+      break;
+    case StereoMode::ANAGLYPH_RED_GREEN:
+      display(left_texture, config.get_left_resolution(),
+              config.get_left_position(), Window::RED, true, true);
+      display(right_texture, config.get_right_resolution(),
+              config.get_right_position(), Window::GREEN, false, false);
+      break;
+    case StereoMode::CHECKERBOARD:
+      display(left_texture, config.get_left_resolution(),
+              config.get_left_position(), Window::CHECKER_EVEN, true, true);
+      display(right_texture, config.get_right_resolution(),
+              config.get_right_position(), Window::CHECKER_ODD, false, true);
+      break;
+  }
 
 }
 

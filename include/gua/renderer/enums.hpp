@@ -51,7 +51,8 @@ enum class StereoMode {
   MONO = 0,
   SIDE_BY_SIDE,
   ANAGLYPH_RED_GREEN,
-  ANAGLYPH_RED_CYAN
+  ANAGLYPH_RED_CYAN,
+  CHECKERBOARD
 };
 
 /**

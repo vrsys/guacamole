@@ -54,7 +54,9 @@ class GUA_DLL Window {
     FULL,
     RED,
     GREEN,
-    CYAN
+    CYAN,
+    CHECKER_EVEN,
+    CHECKER_ODD
   };
 
   /**
