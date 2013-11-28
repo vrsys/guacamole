@@ -21,7 +21,9 @@ ADD_EXECUTABLE( ${_EXE_NAME}
 
 ADD_DEPENDENCIES(${_EXE_NAME} guacamole-oculus)
 
-TARGET_LINK_LIBRARIES( ${_EXE_NAME} debug ${LIBS} guacamole-oculus optimized ${LIBS} guacamole-oculus)
+LIST(APPEND LIBS guacamole-oculus guacamole ${OVR_LIBRARIES})
+
+TARGET_LINK_LIBRARIES( ${_EXE_NAME} debug ${LIBS} optimized ${LIBS})
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
     "root_ape",
     geometry,
     "Stones"
-    ));
+  ));
 
   auto root_monkey = graph.add_node("/", monkey_geometry);
   root_monkey->scale(0.5, 0.5, 0.5);
@@ -126,89 +126,49 @@ int main(int argc, char** argv) {
 
   auto pos = graph.add_node<gua::TransformNode>("/", "pos");
   pos->translate(0, 0, 2);
-  auto nav1 = graph.add_node<gua::TransformNode>("/pos", "nav1");
-  auto nav2 = graph.add_node<gua::TransformNode>("/pos", "nav2");
+  auto nav = graph.add_node<gua::TransformNode>("/pos", "nav");
 
-  // hmd1
-  auto screen = graph.add_node<gua::ScreenNode>("/pos/nav1", "screen_l");
+  auto screen = graph.add_node<gua::ScreenNode>("/pos/nav", "screen_l");
   screen->data.set_size(gua::math::vec2(0.08, 0.1));
   screen->translate(-0.04, 0, -0.05f);
 
-  screen = graph.add_node<gua::ScreenNode>("/pos/nav1", "screen_r");
+  screen = graph.add_node<gua::ScreenNode>("/pos/nav", "screen_r");
   screen->data.set_size(gua::math::vec2(0.08, 0.1));
   screen->translate(0.04, 0, -0.05f);
 
-  // hmd2
-  screen = graph.add_node<gua::ScreenNode>("/pos/nav2", "screen_l");
-  screen->data.set_size(gua::math::vec2(0.08, 0.1));
-  screen->translate(-0.04, 0, -0.05f);
-
-  screen = graph.add_node<gua::ScreenNode>("/pos/nav2", "screen_r");
-  screen->data.set_size(gua::math::vec2(0.08, 0.1));
-  screen->translate(0.04, 0, -0.05f);
-  
-  // eye1
-  auto eye = graph.add_node<gua::TransformNode>("/pos/nav1", "eye_l");
+  auto eye = graph.add_node<gua::TransformNode>("/pos/nav", "eye_l");
   eye->translate(-0.032, 0, 0);
 
-  eye = graph.add_node<gua::TransformNode>("/pos/nav1", "eye_r");
+  eye = graph.add_node<gua::TransformNode>("/pos/nav", "eye_r");
   eye->translate(0.032, 0, 0);
 
-  // eye2
-  eye = graph.add_node<gua::TransformNode>("/pos/nav2", "eye_l");
-  eye->translate(-0.032, 0, 0);
-
-  eye = graph.add_node<gua::TransformNode>("/pos/nav2", "eye_r");
-  eye->translate(0.032, 0, 0);
-
-  unsigned width = 1280 / 2;
+  unsigned width = 1280/2;
   unsigned height = 800;
 
-  std::array<gua::Pipeline*,3> pipes;
+  auto pipe = new gua::Pipeline();
+  pipe->config.set_camera(gua::Camera("/pos/nav/eye_l", "/pos/nav/eye_r", "/pos/nav/screen_l", "/pos/nav/screen_r", "main_scenegraph"));
+  pipe->config.set_left_resolution(gua::math::vec2ui(width, height));
+  pipe->config.set_right_resolution(gua::math::vec2ui(width, height));
+  pipe->config.set_enable_fps_display(true);
+  pipe->config.set_enable_frustum_culling(true);
+  pipe->config.set_enable_stereo(true);
 
-  unsigned npipe = 0;
-  for (auto pipe : pipes)
-  {
-    pipe = new gua::Pipeline();
+  pipe->config.set_enable_ssao(true);
+  pipe->config.set_ssao_intensity(2.f);
+  pipe->config.set_enable_fxaa(true);
+  pipe->config.set_enable_hdr(true);
+  pipe->config.set_hdr_key(5.f);
+  pipe->config.set_enable_bloom(true);
+  pipe->config.set_bloom_radius(10.f);
+  pipe->config.set_bloom_threshold(0.8f);
+  pipe->config.set_bloom_intensity(0.8f);
 
-    if (npipe == 0) {
-      pipe->config.set_camera(gua::Camera("/pos/nav1/eye_l", "/pos/nav1/eye_r", "/pos/nav1/screen_l", "/pos/nav1/screen_r", "main_scenegraph"));
-    } else {
-      pipe->config.set_camera(gua::Camera("/pos/nav2/eye_l", "/pos/nav2/eye_r", "/pos/nav2/screen_l", "/pos/nav2/screen_r", "main_scenegraph"));
-    }
-    pipe->config.set_left_resolution(gua::math::vec2ui(width, height));
-    pipe->config.set_right_resolution(gua::math::vec2ui(width, height));
-    pipe->config.set_enable_fps_display(true);
-    pipe->config.set_enable_frustum_culling(true);
-    pipe->config.set_enable_stereo(true);
-    pipe->config.set_enable_ssao(true);
-    pipe->config.set_ssao_intensity(2.f);
-    pipe->config.set_enable_fxaa(true);
-    pipe->config.set_enable_hdr(true);
-    pipe->config.set_hdr_key(5.f);
-    pipe->config.set_enable_bloom(true);
-    pipe->config.set_bloom_radius(10.f);
-    pipe->config.set_bloom_threshold(0.8f);
-    pipe->config.set_bloom_intensity(0.8f);
 
-    ++npipe;
-  }
-
-#if WIN32
-  auto oculus_rift1(new gua::OculusRift("\\\\.\\DISPLAY1"));
-  auto oculus_rift2(new gua::OculusRift("\\\\.\\DISPLAY1"));
-  auto window(new gua::Window);
-#else
   auto oculus_rift(new gua::OculusRift(":0.0"));
-#endif
-  pipes[0]->set_window(oculus_rift1);
-  pipes[1]->set_window(oculus_rift2);
-  pipes[2]->set_window(window);
+  pipe->set_window(oculus_rift);
 
   gua::Renderer renderer({
-    pipes[0],
-    pipes[1],
-    pipes[2]
+    pipe
   });
 
   gua::Timer timer;
@@ -244,8 +204,7 @@ int main(int argc, char** argv) {
     graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
     //graph["/screen"]->rotate(20*frame_time, 0, 1, 0);
 
-    nav1->set_transform(oculus_rift1->get_transform());
-    nav2->set_transform(oculus_rift2->get_transform());
+    nav->set_transform(oculus_rift->get_transform());
 
     renderer.queue_draw({&graph});
   });

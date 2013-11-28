@@ -80,7 +80,7 @@ ELSEIF(WIN32)
 	SET(JSON_LIB_FILENAME "json.lib")
 ENDIF(UNIX)
 
-IF ( JSON_INCLUDE_DIRS AND NOT JSON_LIBRARIES )
+IF ( JSON_INCLUDE_DIRS AND NOT JSON_LIBRARY_DIRS )
 
     SET(_JSON_FOUND_LIB_DIR "")
     SET(_JSON_POSTFIX "")
@@ -100,15 +100,15 @@ IF ( JSON_INCLUDE_DIRS AND NOT JSON_LIBRARIES )
     IF (NOT _JSON_FOUND_LIB_DIR)
       request_json_search_directories()
     ELSE (NOT _JSON_FOUND_LIB_DIR)
-        SET(JSON_LIBRARY_DIRS ${_JSON_FOUND_LIB_DIR} CACHE STRING "The json library directory.")
-        message(STATUS "--  found matching version")
+        SET(JSON_LIBRARY_DIRS ${_JSON_FOUND_LIB_DIR})
+		SET(JSON_LIBRARY_DIRS ${JSON_LIBRARY_DIRS} CACHE STRING "The json library directory.")
     ENDIF (NOT _JSON_FOUND_LIB_DIR)
     
     IF (_JSON_FOUND_LIB_DIR)
         SET(JSON_LIBRARIES ${JSON_LIB_FILENAME} CACHE STRING "The json library.")
     ENDIF (_JSON_FOUND_LIB_DIR)
     
-ENDIF( JSON_INCLUDE_DIRS AND NOT JSON_LIBRARIES )
+ENDIF( JSON_INCLUDE_DIRS AND NOT JSON_LIBRARY_DIRS )
 
 ##############################################################################
 # verify

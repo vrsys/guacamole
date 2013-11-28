@@ -22,6 +22,8 @@ ADD_LIBRARY( guacamole-oculus SHARED
     ${GUACAMOLE_OCULUS_SRC}
 )
 
+ADD_DEPENDENCIES(guacamole-oculus guacamole)
+
 IF (MSVC)
 	set_target_properties(guacamole-oculus PROPERTIES COMPILE_FLAGS "-D GUA_OCULUS_LIBRARY")
 ENDIF (MSVC)
