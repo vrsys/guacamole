@@ -55,27 +55,16 @@ float get_depth_z(vec3 world_position) {
     float ndc = pos.z/pos.w;
     return ((gl_DepthRange.diff * ndc) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
 
-	//gd = (((gl_DepthRange.diff) * ndc) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
-	//gd * 2.0 - gl_DepthRange.near + gl_DepthRange.far) = gl_DepthRange.diff * ndc;
-	//(gd * 2.0 - gl_DepthRange.near + gl_DepthRange.far)/gl_DepthRange.diff = ndc;
 }
 
 float get_depth_linear(float depth_buffer_d) {
-    //float z_n = 2.0 * depth_buffer_d - 1.0;
-	//float z_e = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
-    //float z_e = 2.0 * gl_DepthRange.near * gl_DepthRange.far / (gl_DepthRange.far + gl_DepthRange.near - z_n * (gl_DepthRange.far - gl_DepthRange.near));
-    //return z_e;
 
 	float ndc = (depth_buffer_d * 2.0 - gl_DepthRange.near - gl_DepthRange.far)/gl_DepthRange.diff;
-
 	vec4 enit = vec4(gl_FragCoord.xy * 2.0 - vec2(1.0), ndc, 1.0);
-
 	vec4 enit_inv = (gua_inverse_projection_view_matrix * enit);
 	enit_inv /= enit_inv.w;
-
 	return enit_inv.z;
 }
-
 
 bool
 inside_volume_bounds(const in vec3 sampling_position)
@@ -85,11 +74,13 @@ inside_volume_bounds(const in vec3 sampling_position)
 }
 
 vec4 get_raycast_color(vec3 gua_object_volume_position,
-						vec3 object_ray, 
-						float d_gbuffer, 
-						float d_volume,
-						float d_step){
+					float d_gbuffer,
+					float d_volume){
 
+  mat4 gua_invers_model_matrix = inverse(gua_model_matrix);
+  vec3 object_ray = normalize(gua_object_volume_position - (gua_invers_model_matrix * vec4(gua_camera_position, 1.0)).xyz);
+  float d_step = abs(-1.0 * get_depth_linear(get_depth_z((gua_model_matrix * vec4(gua_object_volume_position + object_ray * sampling_distance, 1.0)).xyz)) - d_volume);
+	
   vec3 obj_to_tex         = vec3(1.0) / volume_bounds;
   vec3 ray_increment      = object_ray * sampling_distance;
   vec3 sampling_pos       = gua_object_volume_position + ray_increment; // test, increment just to be sure we are in the volume
@@ -101,8 +92,6 @@ vec4 get_raycast_color(vec3 gua_object_volume_position,
   int d_steps = int(abs(d_volume - d_gbuffer) / d_step);
   int d_step_cur = 0;
   
-  //return vec4(d_diff, d_diff, d_diff, 1.0);
-
   while (inside_volume && (d_step_cur < d_steps)) {
 		++d_step_cur;
         // get sample
@@ -140,10 +129,7 @@ void main() {
      gua_object_volume_position.y != 0.00 || 
 	 gua_object_volume_position.z != 0.00))
   {
-	mat4 gua_invers_model_matrix = inverse(gua_model_matrix);
-	vec3 object_ray = normalize(gua_object_volume_position - (gua_invers_model_matrix * vec4(gua_camera_position, 1.0)).xyz);
-	float d_step = abs(-1.0 * get_depth_linear(get_depth_z((gua_model_matrix * vec4(gua_object_volume_position + object_ray * sampling_distance, 1.0)).xyz)) - d_volume);
-	vec4 compositing_color = get_raycast_color(gua_object_volume_position, object_ray, d_gbuffer, d_volume, d_step);
+	vec4 compositing_color = get_raycast_color(gua_object_volume_position, d_gbuffer, d_volume);
 	
 	vec3 gbuffer_color     = texture2D(gua_get_float_sampler(gua_color_gbuffer_in), gua_get_quad_coords()).xyz;
 	
