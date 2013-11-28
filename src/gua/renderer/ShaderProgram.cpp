@@ -92,17 +92,9 @@ void ShaderProgram::create_from_files(std::string const & v_file,
   programs_.clear();
   interleaved_stream_capture_.clear();
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1600
-  stages_.clear();
-  stages_.push_back(
-      ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, v_file, false));
-  stages_.push_back(
-      ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_file, false));
-#else
   stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, v_file, false),
               ShaderProgramStage(
                   scm::gl::STAGE_FRAGMENT_SHADER, f_file, false) };
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,17 +110,9 @@ void ShaderProgram::create_from_sources(std::string const & v_source,
   programs_.clear();
   interleaved_stream_capture_.clear();
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1600
-  stages_.clear();
-  stages_.push_back(
-      ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, v_source, true));
-  stages_.push_back(
-      ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_source, true));
-#else
   stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, v_source, true),
               ShaderProgramStage(
                   scm::gl::STAGE_FRAGMENT_SHADER, f_source, true) };
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////

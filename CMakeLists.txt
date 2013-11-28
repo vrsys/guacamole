@@ -38,10 +38,11 @@ elseif (WIN32)
 	include(find_assimp)
 endif (UNIX)
 
+include(define_macros)
 include(find_compiler)
 include(find_schism)
 include(find_boost)
-include(find_cuda)
+#include(find_cuda)
 include(find_bullet)
 include(find_json)
 
@@ -52,7 +53,6 @@ set(LIBS
     ${JSON_LIBRARIES}
     ${GL_LIBRARIES}
     ${GLEW_LIBRARIES}
-    ${EV_LIBRARIES}
     ${BULLET_LIBRARIES}
 	${CUDA_LIBRARIES}
     #profiler
@@ -79,7 +79,6 @@ set(INCLUDE_PATHS
     ${JSON_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
-    ${EV_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
 	${CUDA_INCLUDE_DIRS}
 )
@@ -150,16 +149,6 @@ ELSEIF(MSVC)
 ENDIF(UNIX)
 
 
-
-
-
-
-
-
-
-
-
-
 ################################################################
 # Create libraries
 ################################################################
@@ -169,52 +158,54 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 add_subdirectory(src)
 
 ################################################################
+# Create plugins
+################################################################
+
+add_subdirectory(plugins)
+
+################################################################
 # Summary
 ################################################################
 
-message( "" )
-message( "Summary:" )
-message( " build type: ${CMAKE_BUILD_TYPE}" )
-message( "" )
-message( " schism:" )
-message( "   library: ${SCHISM_LIBRARIES}" )
-message( "   library path: ${SCHISM_LIBRARY_DIRS}" )
-message( "   include: ${SCHISM_INCLUDE_DIRS}" )
-message( "" )
-message( " boost:" )
-message( "   library: ${BOOST_LIBRARIES}" )
-message( "   library path: ${BOOST_LIBRARY_DIRS}" )
-message( "   include: ${BOOST_INCLUDE_DIRS}" )
-message( "" )
-message( " assimp:" )
-message( "   library: ${ASSIMP_LIBRARIES}" )
-message( "   library path: ${ASSIMP_LIBRARY_DIRS}" )
-message( "   include: ${ASSIMP_INCLUDE_DIRS}" )
-message( "" )
-message( " json:" )
-message( "   library: ${JSON_LIBRARIES}" )
-message( "   library path: ${JSON_LIBRARY_DIRS}" )
-message( "   include: ${JSON_INCLUDE_DIRS}" )
-message( "" )
-message( " cuda:" )
-message( "   library: ${CUDA_LIBRARIES}" )
-message( "   library path: ${CUDA_LIBRARY_DIRS}" )
-message( "   include: ${CUDA_INCLUDE_DIRS}" )
-message( "" )
-message( " gl:" )
-message( "   library: ${GL_LIBRARIES}" )
-message( "   include: ${GL_INCLUDE_DIRS}" )
-message( "" )
-message( " glew:" )
-message( "   library: ${GLEW_LIBRARIES}" )
-message( "   include: ${GLEW_INCLUDE_DIRS}" )
-message( "" )
-message( " ev:" )
-message( "   library: ${EV_LIBRARIES}" )
-message( "   include: ${EV_INCLUDE_DIRS}" )
-message( "" )
-message( " bullet:" )
-message( "   library: ${BULLET_LIBRARIES}" )
-message( "   library path: ${BULLET_LIBRARY_DIRS}" )
-message( "   include: ${BULLET_INCLUDE_DIRS}" )
-message( "" )
+message(STATUS "" )
+message(STATUS "Summary:" )
+message(STATUS " build type: ${CMAKE_BUILD_TYPE}" )
+message(STATUS "" )
+message(STATUS " schism:" )
+message(STATUS "   library: ${SCHISM_LIBRARIES}" )
+message(STATUS "   library path: ${SCHISM_LIBRARY_DIRS}" )
+message(STATUS "   include: ${SCHISM_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " boost:" )
+message(STATUS "   library: ${BOOST_LIBRARIES}" )
+message(STATUS "   library path: ${BOOST_LIBRARY_DIRS}" )
+message(STATUS "   include: ${BOOST_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " assimp:" )
+message(STATUS "   library: ${ASSIMP_LIBRARIES}" )
+message(STATUS "   library path: ${ASSIMP_LIBRARY_DIRS}" )
+message(STATUS "   include: ${ASSIMP_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " json:" )
+message(STATUS "   library: ${JSON_LIBRARIES}" )
+message(STATUS "   library path: ${JSON_LIBRARY_DIRS}" )
+message(STATUS "   include: ${JSON_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " cuda:" )
+message(STATUS "   library: ${CUDA_LIBRARIES}" )
+message(STATUS "   library path: ${CUDA_LIBRARY_DIRS}" )
+message(STATUS "   include: ${CUDA_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " gl:" )
+message(STATUS "   library: ${GL_LIBRARIES}" )
+message(STATUS "   include: ${GL_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " glew:" )
+message(STATUS "   library: ${GLEW_LIBRARIES}" )
+message(STATUS "   include: ${GLEW_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " bullet:" )
+message(STATUS "   library: ${BULLET_LIBRARIES}" )
+message(STATUS "   library path: ${BULLET_LIBRARY_DIRS}" )
+message(STATUS "   include: ${BULLET_INCLUDE_DIRS}" )
+message(STATUS "" )

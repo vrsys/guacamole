@@ -1,0 +1,9 @@
+*.out
+build
+*.gv
+*.o
+*.so
+guacamole_editor
+tags
+*.sublime-workspace
+.nfs*
