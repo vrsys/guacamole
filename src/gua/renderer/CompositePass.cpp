@@ -50,7 +50,7 @@ CompositePass::CompositePass(Pipeline* pipeline) :
 
   ray_generation_shader_->create_from_sources(ray_generation_vertex_shader, ray_generation_fragment_shader);
 
-  print_shaders("debug", "composite.txt");
+  // print_shaders("debug", "composite.txt");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,9 +147,9 @@ void CompositePass::create(RenderContext const& ctx,
   // bind target fbo and set viewport
   target->bind(ctx);
   ctx.render_context->set_viewport(scm::gl::viewport(
-                                    math::vec2(0, 0), 
+                                    math::vec2(0, 0),
                                     ::scm::math::vec2f(target->width(), target->height())));
-    
+
   composite_shader_->use(ctx);
   {
     fullscreen_quad_->draw(ctx.render_context);
