@@ -30,6 +30,7 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/configuration_macro.hpp>
+#include <gua/events/Signal.hpp>
 
 // external headers
 #include <memory>
@@ -106,8 +107,6 @@ class GUA_DLL Window {
   bool should_close() const;
   bool get_is_open() const;
 
-  virtual void create_shader();
-
   void close();
 
   void process_events();
@@ -134,16 +133,22 @@ class GUA_DLL Window {
    */
   void finish_frame() const;
 
+  events::Signal<math::vec2ui> on_resize;
+
+  friend class Pipeline;
+
+private:
   /**
    *
    */
+  virtual void create_shader();
+
   virtual void display(std::shared_ptr<Texture2D> const& center_texture);
 
   virtual void display(std::shared_ptr<Texture2D> const& left_texture,
                std::shared_ptr<Texture2D> const& right_texture);
 
 
-  void on_resize(int width, int height);
 
   /**
    * Get the RenderContext of this window.

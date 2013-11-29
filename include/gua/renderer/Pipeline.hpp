@@ -208,6 +208,8 @@ class GUA_DLL Pipeline {
   bool buffers_need_reload_;
 
   unsigned last_shading_model_revision_;
+  math::vec2ui last_left_resolution_;
+  math::vec2ui last_right_resolution_;
 };
 
 }

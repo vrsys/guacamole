@@ -36,8 +36,11 @@
 
 namespace gua {
 
-void on_window_resize(GLFWwindow* window, int width, int height) {
-  static_cast<Window*>(glfwGetWindowUserPointer(window))->on_resize(width, height);
+void on_window_resize(GLFWwindow* glfw_window, int width, int height) {
+  auto window(static_cast<Window*>(glfwGetWindowUserPointer(glfw_window)));
+
+  window->config.set_size(math::vec2ui(width, height));
+  window->on_resize.emit(window->config.get_size());
 }
 
 std::string subroutine_from_mode(Window::TextureDisplayMode mode) {
@@ -313,15 +316,6 @@ void Window::display(std::shared_ptr<Texture2D> const& left_texture,
       break;
   }
 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Window::on_resize(int width, int height) {
-  config.size().x = width;
-  config.size().y = height;
-
-  std::cout << width << " " << height << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

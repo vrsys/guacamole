@@ -56,7 +56,9 @@ Pipeline::Pipeline()
       current_scenes_(2),
       passes_need_reload_(true),
       buffers_need_reload_(true),
-      last_shading_model_revision_(0) {
+      last_shading_model_revision_(0),
+      last_left_resolution_(0, 0),
+      last_right_resolution_(0, 0) {
 
         create_passes();
       }
@@ -118,6 +120,15 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   if (ShadingModel::current_revision != last_shading_model_revision_) {
     passes_need_reload_ = true;
     last_shading_model_revision_ = ShadingModel::current_revision;
+  }
+
+  if (config.left_resolution() != last_left_resolution_ ||
+      config.right_resolution() != last_right_resolution_) {
+
+    buffers_need_reload_ = true;
+
+    last_left_resolution_ = config.left_resolution();
+    last_right_resolution_ = config.right_resolution();
   }
 
   if (window_) {
