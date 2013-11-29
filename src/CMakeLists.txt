@@ -21,4 +21,4 @@ ENDIF(MSVC)
 
 TARGET_LINK_LIBRARIES( guacamole debug ${LIBS} optimized ${LIBS})
 
-ADD_DEPENDENCIES(guacamole guarc)
+ADD_DEPENDENCIES(guacamole guarc CompileResources)

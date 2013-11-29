@@ -42,7 +42,6 @@ include(define_macros)
 include(find_compiler)
 include(find_schism)
 include(find_boost)
-#include(find_cuda)
 include(find_bullet)
 include(find_json)
 
@@ -54,9 +53,6 @@ set(LIBS
     ${GL_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${BULLET_LIBRARIES}
-	${CUDA_LIBRARIES}
-    #profiler
-    #tcmalloc
 )
 
 set(LIB_PATHS
@@ -67,7 +63,6 @@ set(LIB_PATHS
 	${BOOST_LIBRARY_DIRS}
 	${BULLET_LIBRARY_DIRS}
 	${SCHISM_LIBRARY_DIRS}
-	${CUDA_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS
@@ -80,7 +75,6 @@ set(INCLUDE_PATHS
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
-	${CUDA_INCLUDE_DIRS}
 )
 
 if (NOT CMAKE_BUILD_TYPE)
