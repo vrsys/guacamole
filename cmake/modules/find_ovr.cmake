@@ -2,7 +2,7 @@
 # search paths
 ##############################################################################
 SET(OVR_INCLUDE_SEARCH_DIRS
-  ${GLOBAL_EXT_DIR}/inc/OculusSDK
+  ${GLOBAL_EXT_DIR}/inc/ovr
   ${OVR_INCLUDE_DIRS}
   ${OVR_INCLUDE_SEARCH_DIR}
   /opt/OculusSDK/LibOVR/Include
@@ -86,6 +86,7 @@ IF ( NOT OVR_LIBRARY_DIRS )
         FIND_PATH(_CUR_SEARCH
 				        NAMES ${OVR_LIB_FILENAME}
                 PATHS ${_SEARCH_DIR}
+				PATH_SUFFIXES debug release 
                 NO_DEFAULT_PATH)
         IF (_CUR_SEARCH)
             LIST(APPEND _OVR_FOUND_LIB_DIR ${_SEARCH_DIR})

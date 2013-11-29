@@ -33,7 +33,7 @@
 
 namespace gua {
 
-class RayNode : public Node {
+class GUA_DLL RayNode : public Node {
  public:
 
   RayNode() {}
