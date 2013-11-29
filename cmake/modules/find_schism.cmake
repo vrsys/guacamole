@@ -2,13 +2,13 @@
 # search paths
 ##############################################################################
 SET(SCHISM_INCLUDE_SEARCH_DIRS
-  ${GLOBAL_EXT_DIR}/inc/schism
+  ${SCHISM_INCLUDE_DIRS}
   ${SCHISM_INCLUDE_SEARCH_DIR}
   /opt/schism/current
 )
 
 SET(SCHISM_LIBRARY_SEARCH_DIRS
-  ${GLOBAL_EXT_DIR}/lib
+  ${SCHISM_LIBRARY_DIRS}
   ${SCHISM_LIBRARY_SEARCH_DIR}
   ../
   /opt/schism/current/lib/linux_x86
@@ -18,7 +18,7 @@ SET(SCHISM_LIBRARY_SEARCH_DIRS
 # feedback to provide user-defined paths to search for schism
 ##############################################################################
 MACRO (request_schism_search_directories)
-    
+
     IF ( NOT SCHISM_INCLUDE_DIRS AND NOT SCHISM_LIBRARY_DIRS )
         SET(SCHISM_INCLUDE_SEARCH_DIR "Please provide schism include path." CACHE PATH "path to schism headers.")
         SET(SCHISM_LIBRARY_SEARCH_DIR "Please provide schism library path." CACHE PATH "path to schism libraries.")
@@ -37,7 +37,7 @@ MACRO (request_schism_search_directories)
         MESSAGE(FATAL_ERROR "find_schism.cmake: unable to find schism libraries.")
     ELSE ( NOT SCHISM_LIBRARY_DIRS )
         UNSET(SCHISM_LIBRARY_SEARCH_DIR CACHE)
-    ENDIF ( NOT SCHISM_LIBRARY_DIRS ) 
+    ENDIF ( NOT SCHISM_LIBRARY_DIRS )
 
 ENDMACRO (request_schism_search_directories)
 
@@ -62,7 +62,7 @@ IF ( NOT SCHISM_INCLUDE_DIRS )
     IF (NOT _SCHISM_FOUND_INC_DIRS)
         request_schism_search_directories()
     ENDIF (NOT _SCHISM_FOUND_INC_DIRS)
-    
+
     FOREACH(_INC_DIR ${_SCHISM_FOUND_INC_DIRS})
         LIST(APPEND _SCHISM_INCLUDE_DIRS ${_INC_DIR}/scm_cl_core/src)
         LIST(APPEND _SCHISM_INCLUDE_DIRS ${_INC_DIR}/scm_core/src)
@@ -107,14 +107,14 @@ IF ( SCHISM_INCLUDE_DIRS AND ( NOT SCHISM_LIBRARY_DIRS OR NOT SCHISM_LIBRARIES))
     ELSE (NOT _SCHISM_FOUND_LIB_DIR)
 		    SET(SCHISM_LIBRARY_DIRS ${_SCHISM_FOUND_LIB_DIR} CACHE STRING "The schism library directory.")
     ENDIF (NOT _SCHISM_FOUND_LIB_DIR)
-    
+
     SET(_SCHISM_LIBRARIES "")
 
     FOREACH(_LIB_DIR ${_SCHISM_FOUND_LIB_DIR})
 		    IF (UNIX)
-			    file(GLOB SCHISM_LIBRARIES ${_LIB_DIR}/*.so)
+			    file(GLOB _SCHISM_LIBRARIES ${_LIB_DIR}/*.so)
 		    ELSEIF(WIN32)
-			    file(GLOB _SCHISM_LIBRARY_ABSOLUTE_PATHS ${_LIB_DIR}/release/scm*.lib)	
+			    file(GLOB _SCHISM_LIBRARY_ABSOLUTE_PATHS ${_LIB_DIR}/release/scm*.lib)
 			    FOREACH (_SCHISM_LIB_PATH ${_SCHISM_LIBRARY_ABSOLUTE_PATHS})
 				    SET(_SCHISM_LIB_FILENAME "")
 				    GET_FILENAME_COMPONENT(_SCHISM_LIB_FILENAME ${_SCHISM_LIB_PATH} NAME)
@@ -126,7 +126,7 @@ IF ( SCHISM_INCLUDE_DIRS AND ( NOT SCHISM_LIBRARY_DIRS OR NOT SCHISM_LIBRARIES))
     IF (_SCHISM_FOUND_LIB_DIR)
         SET(SCHISM_LIBRARIES ${_SCHISM_LIBRARIES} CACHE STRING "schism libraries.")
     ENDIF (_SCHISM_FOUND_LIB_DIR)
-    
+
 ENDIF ( SCHISM_INCLUDE_DIRS AND ( NOT SCHISM_LIBRARY_DIRS OR NOT SCHISM_LIBRARIES))
 
 ##############################################################################
