@@ -31,9 +31,7 @@ namespace gua {
 ScreenNode::ScreenNode(std::string const& name,
                        Configuration const& configuration,
                        math::mat4 const& transform)
-    : Node(name, transform), data(configuration) {
-        std::cout << "screen!" << std::endl;
-    }
+    : Node(name, transform), data(configuration) {}
 
 /* virtual */ void ScreenNode::accept(NodeVisitor& visitor) {
 
