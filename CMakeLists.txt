@@ -33,16 +33,18 @@ if (UNIX)
 	pkg_check_modules(ASSIMP REQUIRED assimp)
 	pkg_check_modules(JSON REQUIRED jsoncpp)
 	pkg_check_modules(GL REQUIRED gl)
-	pkg_check_modules(GLEW REQUIRED glew)
+    pkg_check_modules(GLEW REQUIRED glew)
+    include(find_x11)
+
 elseif (WIN32)
-	include(find_assimp)
+    include(find_assimp)
 endif (UNIX)
 
 include(define_macros)
 include(find_compiler)
 include(find_schism)
 include(find_boost)
-#include(find_cuda)
+include(find_glfw)
 include(find_bullet)
 include(find_json)
 
@@ -54,7 +56,8 @@ set(LIBS
     ${GL_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${BULLET_LIBRARIES}
-	${CUDA_LIBRARIES}
+    ${GLFW_LIBRARIES}
+	${X11_LIBRARIES}
     #profiler
     #tcmalloc
 )
@@ -67,7 +70,8 @@ set(LIB_PATHS
 	${BOOST_LIBRARY_DIRS}
 	${BULLET_LIBRARY_DIRS}
 	${SCHISM_LIBRARY_DIRS}
-	${CUDA_LIBRARY_DIRS}
+    ${GLFW_LIBRARY_DIRS}
+	${X11_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS
@@ -80,7 +84,8 @@ set(INCLUDE_PATHS
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
-	${CUDA_INCLUDE_DIRS}
+    ${GLFW_INCLUDE_DIRS}
+	${X11_INCLUDE_DIRS}
 )
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -191,10 +196,15 @@ message(STATUS "   library: ${JSON_LIBRARIES}" )
 message(STATUS "   library path: ${JSON_LIBRARY_DIRS}" )
 message(STATUS "   include: ${JSON_INCLUDE_DIRS}" )
 message(STATUS "" )
-message(STATUS " cuda:" )
-message(STATUS "   library: ${CUDA_LIBRARIES}" )
-message(STATUS "   library path: ${CUDA_LIBRARY_DIRS}" )
-message(STATUS "   include: ${CUDA_INCLUDE_DIRS}" )
+message(STATUS " glfw:" )
+message(STATUS "   library: ${GLFW_LIBRARIES}" )
+message(STATUS "   library path: ${GLFW_LIBRARY_DIRS}" )
+message(STATUS "   include: ${GLFW_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " x11:" )
+message(STATUS "   library: ${X11_LIBRARIES}" )
+message(STATUS "   library path: ${X11_LIBRARY_DIRS}" )
+message(STATUS "   include: ${X11_INCLUDE_DIRS}" )
 message(STATUS "" )
 message(STATUS " gl:" )
 message(STATUS "   library: ${GL_LIBRARIES}" )

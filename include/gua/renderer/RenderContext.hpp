@@ -42,21 +42,6 @@ namespace gua {
 struct RenderContext {
 
   /**
-   * The schism context of this RenderContext.
-   */
-  scm::gl::wm::context_ptr context;
-
-  /**
-   * The display where this context was opened.
-   */
-  scm::gl::wm::display_ptr display;
-
-  /**
-   * The window associated with this context.
-   */
-  scm::gl::wm::window_ptr window;
-
-  /**
    * The schism render constext associated with this context.
    */
   scm::gl::render_context_ptr render_context;

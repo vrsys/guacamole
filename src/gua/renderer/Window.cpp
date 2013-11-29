@@ -32,8 +32,13 @@
 // external headers
 #include <sstream>
 #include <iostream>
+#include <GLFW/glfw3.h>
 
 namespace gua {
+
+void on_window_resize(GLFWwindow* window, int width, int height) {
+  static_cast<Window*>(glfwGetWindowUserPointer(window))->on_resize(width, height);
+}
 
 std::string subroutine_from_mode(Window::TextureDisplayMode mode) {
   switch (mode) {
@@ -73,7 +78,8 @@ Window::Window(Configuration const& configuration)
       warpBR_(nullptr),
       warpRL_(nullptr),
       warpGL_(nullptr),
-      warpBL_(nullptr) {}
+      warpBL_(nullptr),
+      glfw_window_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -86,40 +92,35 @@ Window::~Window() {
 
 void Window::open() {
 
-  if (ctx_.window) {
-    ctx_.window->hide();
+  int monitor_count(0);
+  auto monitors(glfwGetMonitors(&monitor_count));
+
+  if (monitor_count == 0) {
+    WARNING("Failed to open window: No monitor found!");
+    glfwTerminate();
+    return;
   }
 
-  ctx_.context.reset();
-  ctx_.display.reset();
-  ctx_.window.reset();
+  if (config.monitor() >=monitor_count) {
+    WARNING("Failed to open window: There is no monitor with the number %d!", config.monitor());
+    glfwTerminate();
+    return;
+  }
 
-  scm::gl::wm::surface::format_desc window_format(
-      scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_D24_S8, true, false);
+  glfw_window_ = glfwCreateWindow(
+    config.get_size().x, config.get_size().y,
+    config.get_title().c_str(), NULL/*monitors[config.monitor()]*/, NULL
+  );
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC
-  scm::gl::wm::context::attribute_desc context_attribs(
-      4, 3, false, false, false);
-#else
-  scm::gl::wm::context::attribute_desc context_attribs(
-      4, 2, false, false, false);
-#endif
+  glfwSetWindowUserPointer(glfw_window_, this);
 
-  ctx_.display =
-      scm::gl::wm::display_ptr(new scm::gl::wm::display(config.get_display_name()));
+  glfwSetWindowSizeCallback(glfw_window_, &on_window_resize);
 
-  ctx_.window = scm::gl::wm::window_ptr(new scm::gl::wm::window(
-      ctx_.display,
-      0,
-      config.get_title(),
-      math::vec2i(0, 0),
-      math::vec2ui(config.get_size().x, config.get_size().y),
-      window_format));
-
-  ctx_.context = scm::gl::wm::context_ptr(
-      new scm::gl::wm::context(ctx_.window, context_attribs));
-
-  ctx_.window->show();
+  if (!glfw_window_) {
+    WARNING("Failed to open window: Could not create glfw window!");
+    glfwTerminate();
+    return;
+  }
 
   set_active(true);
 
@@ -128,6 +129,44 @@ void Window::open() {
   ctx_.render_device = scm::gl::render_device_ptr(new scm::gl::render_device());
   ctx_.render_context = ctx_.render_device->main_context();
   ctx_.id = last_context_id_++;
+
+
+
+
+//   scm::gl::wm::surface::format_desc window_format(
+//       scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_D24_S8, true, false);
+
+// #if GUA_COMPILER == GUA_COMPILER_MSVC
+//   scm::gl::wm::context::attribute_desc context_attribs(
+//       4, 3, false, false, false);
+// #else
+//   scm::gl::wm::context::attribute_desc context_attribs(
+//       4, 2, false, false, false);
+// #endif
+
+//   ctx_.display =
+//       scm::gl::wm::display_ptr(new scm::gl::wm::display(config.get_display_name()));
+
+//   ctx_.window = scm::gl::wm::window_ptr(new scm::gl::wm::window(
+//       ctx_.display,
+//       0,
+//       config.get_title(),
+//       math::vec2i(0, 0),
+//       math::vec2ui(config.get_size().x, config.get_size().y),
+//       window_format));
+
+//   ctx_.context = scm::gl::wm::context_ptr(
+//       new scm::gl::wm::context(ctx_.window, context_attribs));
+
+//   ctx_.window->show();
+
+//   set_active(true);
+
+//   ctx_.width = config.get_size().x;
+//   ctx_.height = config.get_size().y;
+//   ctx_.render_device = scm::gl::render_device_ptr(new scm::gl::render_device());
+//   ctx_.render_context = ctx_.render_device->main_context();
+//   ctx_.id = last_context_id_++;
 
 
 
@@ -147,7 +186,15 @@ void Window::open() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool Window::get_is_open() const { return ctx_.window != nullptr; }
+bool Window::get_is_open() const {
+  return glfw_window_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool Window::should_close() const {
+  return glfw_window_ && glfwWindowShouldClose(glfw_window_);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -187,16 +234,20 @@ void Window::create_shader() {
 
 void Window::close() {
   if (get_is_open()) {
-
-    ctx_.window->hide();
+    glfwDestroyWindow(glfw_window_);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::set_active(bool active) const {
+void Window::process_events() {
+  glfwPollEvents();
+}
 
-  ctx_.context->make_current(ctx_.window, active);
+////////////////////////////////////////////////////////////////////////////////
+
+void Window::set_active(bool active) const {
+  glfwMakeContextCurrent(glfw_window_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +264,9 @@ void Window::start_frame() const {
 void Window::finish_frame() const {
 
   set_active(true);
-  ctx_.window->swap_buffers(config.get_enable_vsync());
+
+  glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
+  glfwSwapBuffers(glfw_window_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,6 +313,15 @@ void Window::display(std::shared_ptr<Texture2D> const& left_texture,
       break;
   }
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Window::on_resize(int width, int height) {
+  config.size().x = width;
+  config.size().y = height;
+
+  std::cout << width << " " << height << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

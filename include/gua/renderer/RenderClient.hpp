@@ -49,13 +49,13 @@ template <typename T> class RenderClient {
    *
    */
   //RenderClient(std::function<void(T const&, float)> const& fun)
-  template <typename F> RenderClient(F&& fun) : forever_(), doublebuffer_() {
+  template <typename F> RenderClient(F&& fun) : forever_(), doublebuffer_(), stop_requested_(false) {
 
     forever_ = std::thread([this, fun]() {
       FpsCounter fpsc(20);
       fpsc.start();
 
-      while (true) {
+      while (!stop_requested_) {
         auto sg = this->doublebuffer_.read();
         fun(sg, fpsc.fps);
         fpsc.step();
@@ -84,9 +84,14 @@ template <typename T> class RenderClient {
     doublebuffer_.write_blocked(scene_graphs);
   }
 
+  void stop() {
+    stop_requested_ = true;
+  }
+
  private:
   std::thread forever_;
   utils::Doublebuffer<T> doublebuffer_;
+  bool stop_requested_;
 };
 
 }

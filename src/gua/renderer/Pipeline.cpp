@@ -265,6 +265,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     }
 
     window_->finish_frame();
+
   }
 }
 
@@ -327,7 +328,7 @@ void Pipeline::create_passes() {
       for (auto pass : passes_) {
         delete pass;
       }
-      
+
       passes_.clear();
 
       passes_.push_back(pre_pass);
@@ -354,7 +355,7 @@ void Pipeline::create_passes() {
 void Pipeline::create_buffers() {
 
   if (buffers_need_reload_) {
-     
+
     std::vector<std::shared_ptr<StereoBuffer>> stereobuffers;
 
     passes_[PipelineStage::geometry]->create(*context_, config, passes_[PipelineStage::geometry]->get_gbuffer_mapping()->get_layers());
@@ -368,7 +369,7 @@ void Pipeline::create_buffers() {
     passes_[PipelineStage::shading]->set_inputs(stereobuffers);
     stereobuffers.push_back(passes_[PipelineStage::shading]->get_gbuffer());
 
-    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR, 
+    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
                                       scm::gl::WRAP_REPEAT,
                                       scm::gl::WRAP_REPEAT);
 

@@ -36,6 +36,8 @@
 #include <string>
 #include <scm/gl_util/primitives/quad.h>
 
+class GLFWwindow;
+
 namespace gua {
 
 class Geometry;
@@ -68,11 +70,7 @@ class GUA_DLL Window {
 
     GUA_ADD_PROPERTY(math::vec2ui, size, math::vec2ui(800, 600));
     GUA_ADD_PROPERTY(std::string, title, "guacamole");
-#if WIN32
-    GUA_ADD_PROPERTY(std::string, display_name, "\\\\.\\DISPLAY1");
-#else
-    GUA_ADD_PROPERTY(std::string, display_name, ":0.0");
-#endif
+    GUA_ADD_PROPERTY(int, monitor, 0);
     GUA_ADD_PROPERTY(StereoMode, stereo_mode, StereoMode::MONO);
     GUA_ADD_PROPERTY(math::vec2ui, left_resolution, math::vec2ui(800, 600));
     GUA_ADD_PROPERTY(math::vec2ui, left_position, math::vec2ui(0, 0));
@@ -105,11 +103,14 @@ class GUA_DLL Window {
   virtual ~Window();
 
   void open();
+  bool should_close() const;
   bool get_is_open() const;
 
   virtual void create_shader();
 
   void close();
+
+  void process_events();
 
   /**
    * Activate the context of this window.
@@ -141,6 +142,9 @@ class GUA_DLL Window {
   virtual void display(std::shared_ptr<Texture2D> const& left_texture,
                std::shared_ptr<Texture2D> const& right_texture);
 
+
+  void on_resize(int width, int height);
+
   /**
    * Get the RenderContext of this window.
    *
@@ -171,6 +175,8 @@ protected:
   static unsigned last_context_id_;
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
+
+  GLFWwindow* glfw_window_;
 };
 
 }

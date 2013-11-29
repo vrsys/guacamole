@@ -59,7 +59,7 @@ class GUA_DLL Renderer {
   Renderer(std::vector<Pipeline*> const& pipelines);
 
   /**
-  * 
+  *
   */
   ~Renderer();
 
@@ -72,6 +72,8 @@ class GUA_DLL Renderer {
    */
   void queue_draw(std::vector<SceneGraph const*> const& scene_graphs);
 
+  void stop();
+
  private:
   typedef RenderClient<std::shared_ptr<const_render_vec_t> > renderclient_t;
 #if USE_RAW_POINTER_RENDER_CLIENTS
@@ -80,6 +82,7 @@ class GUA_DLL Renderer {
   std::vector<std::unique_ptr<renderclient_t> > render_clients_;
 #endif
   FpsCounter application_fps_;
+  bool stop_requested_;
 };
 
 }
