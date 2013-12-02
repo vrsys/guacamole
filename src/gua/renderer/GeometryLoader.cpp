@@ -27,6 +27,7 @@
 #include <gua/scenegraph/TransformNode.hpp>
 #include <gua/renderer/MeshLoader.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
+#include <gua/renderer/VolumeLoader.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/utils/logger.hpp>
 
@@ -45,6 +46,7 @@ std::unordered_map<std::string, std::shared_ptr<Node>>
 GeometryLoader::GeometryLoader() : fileloaders_() {
   fileloaders_.push_back(new MeshLoader);
   fileloaders_.push_back(new NURBSLoader);
+  fileloaders_.push_back(new VolumeLoader);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

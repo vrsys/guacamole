@@ -287,6 +287,7 @@ class GUA_DLL Node {
 
   friend class SceneGraph;
   friend class GeometryLoader;
+  friend class VolumeLoader;
   friend class MeshLoader;
   friend class Serializer;
   friend class DotGenerator;

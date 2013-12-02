@@ -19,14 +19,21 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_G_BUFFER_VOLUME_UBER_SHADER_HPP
+#define GUA_G_BUFFER_VOLUME_UBER_SHADER_HPP
 
-// renderer headers
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
-#include <gua/renderer/VolumeLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/Renderer.hpp>
+// guacamole headers
+#include <gua/renderer/UberShader.hpp>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+namespace gua {
+
+class GBufferVolumeUberShader : public UberShader {
+ public:
+
+  void create(std::set<std::string> const& material_names);
+
+};
+
+}
+
+#endif  // GUA_G_BUFFER_VOLUME_UBER_SHADER_HPP
