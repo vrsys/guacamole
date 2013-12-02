@@ -68,7 +68,7 @@ void Texture2D::upload_to(RenderContext const& context) const {
     sampler_states_.resize(context.id + 1);
     render_contexts_.resize(context.id + 1);
   }
-
+  
   if (file_name_ == "") {
 
 
@@ -77,7 +77,7 @@ void Texture2D::upload_to(RenderContext const& context) const {
           math::vec2ui(width_, height_), color_format_, mipmap_layers_);
     else
       textures_[context.id] = context.render_device->create_texture_2d(
-          scm::gl::texture_2d_desc(
+	  scm::gl::texture_2d_desc(
               math::vec2ui(width_, height_), color_format_, mipmap_layers_),
           color_format_,
           data_);

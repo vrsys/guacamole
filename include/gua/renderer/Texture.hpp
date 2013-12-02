@@ -116,6 +116,8 @@ class GUA_DLL Texture {
   void make_non_resident(RenderContext const& context) const;
   void make_non_resident() const;
 
+  virtual void upload_to(RenderContext const& context) const = 0;
+
  protected:
   mutable unsigned mipmap_layers_;
   scm::gl::data_format color_format_;
@@ -129,8 +131,7 @@ class GUA_DLL Texture {
 #else
   mutable std::mutex upload_mutex_;
 #endif
-  virtual void upload_to(RenderContext const& context) const = 0;
-
+  
   std::vector<void*> data_;
   std::string file_name_;
 

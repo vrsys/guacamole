@@ -114,14 +114,14 @@ namespace gua {
   unsigned width() const { return width_; }
   unsigned height() const { return height_; }
 
+  virtual void upload_to(RenderContext const& context) const;
+
   ///@}
 
  protected:
   mutable unsigned width_;
   mutable unsigned height_;
-
-  virtual void upload_to(RenderContext const& context) const;
-
+  
  private:
 
 };

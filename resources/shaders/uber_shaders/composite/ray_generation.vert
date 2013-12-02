@@ -34,9 +34,9 @@ void main() {
 
     gua_position_varying = gua_in_position;
 
-    vec3 gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
-
-    //gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position.xyz, 1.0);
-    gl_Position = vec4(gua_in_position, 1.0);
+    //vec3 gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
+	
+    gl_Position = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(gua_in_position.xyz, 1.0);
+    //gl_Position = vec4(gua_in_position, 1.0);
 }
 
