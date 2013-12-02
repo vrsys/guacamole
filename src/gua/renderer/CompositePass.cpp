@@ -108,7 +108,7 @@ void CompositePass::create(RenderContext const& ctx,
   FrameBufferObject* target) 
 {
 	///TODO: Toplevel
-	if (!scene.volumenodes_.empty()) 
+	if (!scene.volumenodes_.empty() /*|| !scene.transparentnodes_.empty()*/) 
 	{
 		init_ressources(ctx);
 
@@ -131,13 +131,15 @@ void CompositePass::create(RenderContext const& ctx,
 
 			//fullscreen_quad_->draw(ctx.render_context);			
 			for (auto const& node : scene.volumenodes_) {
-				
+								
 				auto volume =
 					std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
 
 				if (volume) {
 					ray_generation_shader_->set_uniform(
 						ctx, node.transform, "gua_model_matrix");
+
+					//volume->set_uniforms(ctx, ray_generation_shader_);
 										
 					ray_generation_shader_->use(ctx);
 					{
@@ -193,9 +195,9 @@ void CompositePass::create(RenderContext const& ctx,
 
 
 		target->unbind(ctx);
+	
+		ctx.render_context->reset_state_objects();
 	}
-
-  ctx.render_context->reset_state_objects();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
