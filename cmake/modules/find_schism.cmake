@@ -2,13 +2,13 @@
 # search paths
 ##############################################################################
 SET(SCHISM_INCLUDE_SEARCH_DIRS
-  ${SCHISM_INCLUDE_DIRS}
+  ${GLOBAL_EXT_DIR}/inc/schism
   ${SCHISM_INCLUDE_SEARCH_DIR}
   /opt/schism/current
 )
 
 SET(SCHISM_LIBRARY_SEARCH_DIRS
-  ${SCHISM_LIBRARY_DIRS}
+  ${GLOBAL_EXT_DIR}/lib
   ${SCHISM_LIBRARY_SEARCH_DIR}
   ../
   /opt/schism/current/lib/linux_x86
