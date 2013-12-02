@@ -2,7 +2,7 @@
 # search paths
 ##############################################################################
 SET(OVR_INCLUDE_SEARCH_DIRS
-  ${GLOBAL_EXT_DIR}/inc/ovr
+  ${GLOBAL_EXT_DIR}/inc/ovr/include
   ${OVR_INCLUDE_DIRS}
   ${OVR_INCLUDE_SEARCH_DIR}
   /opt/OculusSDK/LibOVR/Include
