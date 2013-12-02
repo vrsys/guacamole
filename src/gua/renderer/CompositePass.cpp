@@ -108,7 +108,7 @@ void CompositePass::create(RenderContext const& ctx,
   FrameBufferObject* target) 
 {
 	///TODO: Toplevel
-	if (!scene.volumenodes_.empty() /*|| !scene.transparentnodes_.empty()*/) 
+	if (!scene.volumenodes_.empty() /*|| !scene.transparentnodes_.empty()*/)
 	{
 		init_ressources(ctx);
 
@@ -131,7 +131,7 @@ void CompositePass::create(RenderContext const& ctx,
 
 			//fullscreen_quad_->draw(ctx.render_context);			
 			for (auto const& node : scene.volumenodes_) {
-								
+
 				auto volume =
 					std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
 
@@ -195,7 +195,7 @@ void CompositePass::create(RenderContext const& ctx,
 
 
 		target->unbind(ctx);
-	
+
 		ctx.render_context->reset_state_objects();
 	}
 }
