@@ -32,6 +32,12 @@
 #include <scm/gl_core/window_management/surface.h>
 #include <scm/gl_core/window_management/window.h>
 
+#if SCM_LARGE_DATA == 1
+	#include <scm/large_data/virtual_texture/vtexture_system.h>
+	#include <scm/large_data/virtual_texture/vtexture_2d_context.h>
+	#include <scm/large_data/virtual_texture/vtexture_3d_context.h>
+#endif
+
 namespace gua {
 
 /**
@@ -65,7 +71,14 @@ struct RenderContext {
    * The schism render device associated with this context.
    */
   scm::gl::render_device_ptr render_device;
-
+#if SCM_LARGE_DATA == 1
+  /**
+  * The schism render device associated with this context.
+  */
+  scm::gl::render_device_ptr			     _vtexture_device;
+  scm::data::vtexture_2d_context_ptr         _vtexture_2d_context;
+  scm::data::vtexture_3d_context_ptr         _vtexture_3d_context;
+#endif
   /**
    * The width of the window.
    */

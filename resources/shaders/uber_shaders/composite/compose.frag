@@ -38,8 +38,6 @@ uniform vec3 volume_bounds;
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
 
-
-
 // methods ---------------------------------------------------------------------
 
 // global gua_* methods
