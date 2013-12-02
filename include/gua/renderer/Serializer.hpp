@@ -73,7 +73,7 @@ class Serializer : public NodeVisitor {
    *
    * \param cam   Pointer to TransformNode
    */
-  /* virtual */ void visit(TransformNode* cam);
+  /* virtual */ void visit(Node* node);
 
   /**
    * Visits a GeometryNode

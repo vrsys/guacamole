@@ -19,61 +19,60 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RAY_NODE_HPP
-#define GUA_RAY_NODE_HPP
+#ifndef GUA_OCULUS_RIFT_HPP
+#define GUA_OCULUS_RIFT_HPP
 
-#include <gua/scenegraph/Node.hpp>
-#include <gua/utils/configuration_macro.hpp>
-#include <gua/utils/KDTree.hpp>
+#if defined (_MSC_VER)
+  #if defined (GUA_OCULUS_LIBRARY)
+    #define GUA_OCULUS_DLL __declspec( dllexport )
+  #else
+#define GUA_OCULUS_DLL __declspec( dllimport )
+  #endif
+#else
+  #define GUA_OCULUS_DLL
+#endif // #if defined(_MSC_VER)
 
-/**
- * This class is used to represent a camera in the SceneGraph.
- *
- */
+// guacamole headers
+#include <gua/renderer/Window.hpp>
+
+namespace OVR {
+  class SensorFusion;
+  class DeviceManager;
+  class HMDDevice;
+  class SensorDevice;
+}
 
 namespace gua {
 
-class GUA_DLL RayNode : public Node {
+class GUA_OCULUS_DLL OculusRift : public Window {
  public:
 
-  RayNode() {}
+  static void init();
 
-  /**
-   * Constructor.
-   *
-   * This constructs a RayNode with the given parameters and calls
-   * the constructor of base class Core with the type CAMERA.
-   *
-   * \param stereo_width  The gap between the eyes.
-   */
-  RayNode(std::string const& name,
-          math::mat4 const& transform = math::mat4::identity());
+  OculusRift(std::string const& display);
+  virtual ~OculusRift();
 
-  /**
-   * Accepts a visitor and calls concrete visit method
-   *
-   * This method implements the visitor pattern for Nodes
-   *
-   */
-  /* virtual */ void accept(NodeVisitor&);
+  void create_shader();
 
-  std::pair<float, float> intersect(
-      math::BoundingBox<math::vec3> const& box) const;
+  // virtual
+  void display(std::shared_ptr<Texture2D> const& left_texture,
+               std::shared_ptr<Texture2D> const& right_texture);
 
-  Ray const get_world_ray() const;
+  math::mat4 const get_transform() const;
 
-  void update_bounding_box() const;
+  private:
+    void display(std::shared_ptr<Texture2D> const& texture,
+                 math::vec2ui const& size,
+                 math::vec2ui const& position,
+                 bool left);
 
-  static const float END;
+    math::vec4 distortion_;
 
- private:
-
-  /**
-   *
-   */
-  std::shared_ptr<Node> copy() const;
+    OVR::SensorDevice*  sensor_;
+    OVR::SensorFusion*  sensor_fusion_;
+    OVR::HMDDevice*     device_;
 };
 
 }
 
-#endif  // GUA_RAY_NODE_HPP
+#endif  // GUA_OCULUS_RIFT_HPP

@@ -57,7 +57,7 @@ struct ShaderProgramStage {
  * It combines data from a FragmentShader and a VertexShader in order to
  * achieve different visual appearances of the same mesh.
  */
-class ShaderProgram {
+class GUA_DLL ShaderProgram {
  public:
 
   friend class GBufferNURBSUberShader;

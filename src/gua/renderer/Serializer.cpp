@@ -123,7 +123,7 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(TransformNode* node) {
+/* virtual */ void Serializer::visit(Node* node) {
   if (is_visible(node)) {
     visit_children(node);
   }
