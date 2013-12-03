@@ -56,7 +56,8 @@ Pipeline::Pipeline()
       current_scenes_(2),
       passes_need_reload_(true),
       buffers_need_reload_(true),
-      last_shading_model_revision_(0) {
+      last_shading_model_revision_(0),
+      display_loading_screen_(true) {
 
         create_passes();
       }
@@ -157,114 +158,148 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     return;
   }
 
-  if (passes_need_reload_) {
-    create_passes();
-  }
+  if (display_loading_screen_) {
+    display_loading_screen_ = false;
 
-  if (buffers_need_reload_) {
-    create_buffers();
-  }
+    if (window_) {
+      auto loading_texture(std::dynamic_pointer_cast<Texture2D>(TextureDatabase::instance()->lookup("gua_loading_texture")));
+      if (config.get_enable_stereo()) {
 
+          auto tmp_left_resolution(window_->config.left_resolution());
+          auto tmp_right_resolution(window_->config.right_resolution());
 
+          auto tmp_left_position(window_->config.left_position());
+          auto tmp_right_position(window_->config.right_position());
 
+          window_->display(loading_texture, loading_texture);
+      } else {
 
+        auto tmp_left_resolution(window_->config.left_resolution());
+        auto tmp_left_position(window_->config.left_position());
 
-  if (!config.get_enable_stereo()) {
+        math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
 
-    auto eye((*current_graph_)[config.camera().eye_l]);
-    if (!eye) {
-      WARNING("Cannot render scene: No valid eye specified");
-      return;
+        window_->config.set_left_resolution(loading_texture_size);
+        window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
+
+        window_->display(loading_texture);
+
+        window_->config.set_left_position(tmp_left_position);
+        window_->config.set_left_resolution(tmp_left_resolution);
+
+      }
+
+      window_->finish_frame();
     }
 
-    auto screen_it((*current_graph_)[config.camera().screen_l]);
-    auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
-    if (!screen) {
-      WARNING("Cannot render scene: No valid screen specified");
-      return;
-    }
-
-    current_scenes_[0].frustum = Frustum(eye->get_world_transform(),
-                                         screen->get_scaled_world_transform(),
-                                         config.near_clip(),
-                                         config.far_clip());
-
-    serializer_->check(&current_scenes_[0],
-                       current_graph_,
-                       config.camera(),
-                       config.enable_bbox_display(),
-                       config.enable_ray_display(),
-                       config.enable_frustum_culling());
   } else {
 
-
-    auto eye_l((*current_graph_)[config.camera().eye_l]);
-    if (!eye_l) {
-      WARNING("Cannot render scene: No valid left eye specified");
-      return;
+    if (passes_need_reload_) {
+      create_passes();
     }
 
-    auto eye_r((*current_graph_)[config.camera().eye_r]);
-    if (!eye_r) {
-      WARNING("Cannot render scene: No valid right eye specified");
-      return;
-    }
-
-    auto screen_it_l((*current_graph_)[config.camera().screen_l]);
-    auto screen_l(std::dynamic_pointer_cast<ScreenNode>(screen_it_l));
-    if (!screen_l) {
-      WARNING("Cannot render scene: No valid left screen specified");
-      return;
-    }
-
-    auto screen_it_r((*current_graph_)[config.camera().screen_r]);
-    auto screen_r(std::dynamic_pointer_cast<ScreenNode>(screen_it_r));
-    if (!screen_r) {
-      WARNING("Cannot render scene: No valid right screen specified");
-      return;
+    if (buffers_need_reload_) {
+      create_buffers();
     }
 
 
-    current_scenes_[0].frustum = Frustum(eye_l->get_world_transform(),
-                                         screen_l->get_scaled_world_transform(),
-                                         config.near_clip(),
-                                         config.far_clip());
-    current_scenes_[1].frustum = Frustum(eye_r->get_world_transform(),
-                                         screen_r->get_scaled_world_transform(),
-                                         config.near_clip(),
-                                         config.far_clip());
+    if (!config.get_enable_stereo()) {
 
-    serializer_->check(&current_scenes_[0],
-                       current_graph_,
-                       config.camera(),
-                       config.enable_bbox_display(),
-                       config.enable_ray_display(),
-                       config.enable_frustum_culling());
+      auto eye((*current_graph_)[config.camera().eye_l]);
+      if (!eye) {
+        WARNING("Cannot render scene: No valid eye specified");
+        return;
+      }
 
-    serializer_->check(&current_scenes_[1],
-                       current_graph_,
-                       config.camera(),
-                       config.enable_bbox_display(),
-                       config.enable_ray_display(),
-                       config.enable_frustum_culling());
-  }
+      auto screen_it((*current_graph_)[config.camera().screen_l]);
+      auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
+      if (!screen) {
+        WARNING("Cannot render scene: No valid screen specified");
+        return;
+      }
 
-  for (auto pass : passes_) {
-    pass->render_scene(config.camera(), *context_);
-  }
+      current_scenes_[0].frustum = Frustum(eye->get_world_transform(),
+                                           screen->get_scaled_world_transform(),
+                                           config.near_clip(),
+                                           config.far_clip());
 
-  if (window_) {
-    if (config.get_enable_stereo()) {
-        window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-                             ->get_color_buffers(TYPE_FLOAT)[0],
-                             passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[1]
-                             ->get_color_buffers(TYPE_FLOAT)[0]);
+      serializer_->check(&current_scenes_[0],
+                         current_graph_,
+                         config.camera(),
+                         config.enable_bbox_display(),
+                         config.enable_ray_display(),
+                         config.enable_frustum_culling());
     } else {
-      window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-                           ->get_color_buffers(TYPE_FLOAT)[0]);
+
+
+      auto eye_l((*current_graph_)[config.camera().eye_l]);
+      if (!eye_l) {
+        WARNING("Cannot render scene: No valid left eye specified");
+        return;
+      }
+
+      auto eye_r((*current_graph_)[config.camera().eye_r]);
+      if (!eye_r) {
+        WARNING("Cannot render scene: No valid right eye specified");
+        return;
+      }
+
+      auto screen_it_l((*current_graph_)[config.camera().screen_l]);
+      auto screen_l(std::dynamic_pointer_cast<ScreenNode>(screen_it_l));
+      if (!screen_l) {
+        WARNING("Cannot render scene: No valid left screen specified");
+        return;
+      }
+
+      auto screen_it_r((*current_graph_)[config.camera().screen_r]);
+      auto screen_r(std::dynamic_pointer_cast<ScreenNode>(screen_it_r));
+      if (!screen_r) {
+        WARNING("Cannot render scene: No valid right screen specified");
+        return;
+      }
+
+
+      current_scenes_[0].frustum = Frustum(eye_l->get_world_transform(),
+                                           screen_l->get_scaled_world_transform(),
+                                           config.near_clip(),
+                                           config.far_clip());
+      current_scenes_[1].frustum = Frustum(eye_r->get_world_transform(),
+                                           screen_r->get_scaled_world_transform(),
+                                           config.near_clip(),
+                                           config.far_clip());
+
+      serializer_->check(&current_scenes_[0],
+                         current_graph_,
+                         config.camera(),
+                         config.enable_bbox_display(),
+                         config.enable_ray_display(),
+                         config.enable_frustum_culling());
+
+      serializer_->check(&current_scenes_[1],
+                         current_graph_,
+                         config.camera(),
+                         config.enable_bbox_display(),
+                         config.enable_ray_display(),
+                         config.enable_frustum_culling());
     }
 
-    window_->finish_frame();
+    for (auto pass : passes_) {
+      pass->render_scene(config.camera(), *context_);
+    }
+
+    if (window_) {
+      if (config.get_enable_stereo()) {
+          window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
+                               ->get_color_buffers(TYPE_FLOAT)[0],
+                               passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[1]
+                               ->get_color_buffers(TYPE_FLOAT)[0]);
+      } else {
+        window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
+                             ->get_color_buffers(TYPE_FLOAT)[0]);
+      }
+
+      window_->finish_frame();
+    }
   }
 }
 
@@ -327,7 +362,7 @@ void Pipeline::create_passes() {
       for (auto pass : passes_) {
         delete pass;
       }
-      
+
       passes_.clear();
 
       passes_.push_back(pre_pass);
@@ -354,7 +389,7 @@ void Pipeline::create_passes() {
 void Pipeline::create_buffers() {
 
   if (buffers_need_reload_) {
-     
+
     std::vector<std::shared_ptr<StereoBuffer>> stereobuffers;
 
     passes_[PipelineStage::geometry]->create(*context_, config, passes_[PipelineStage::geometry]->get_gbuffer_mapping()->get_layers());
@@ -368,7 +403,7 @@ void Pipeline::create_buffers() {
     passes_[PipelineStage::shading]->set_inputs(stereobuffers);
     stereobuffers.push_back(passes_[PipelineStage::shading]->get_gbuffer());
 
-    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR, 
+    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
                                       scm::gl::WRAP_REPEAT,
                                       scm::gl::WRAP_REPEAT);
 

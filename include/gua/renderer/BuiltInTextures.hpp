@@ -51,6 +51,15 @@ class GUA_DLL DefaultTexture : public Texture2D {
 #endif
 };
 
+class GUA_DLL LoadingTexture : public Texture2D {
+ public:
+
+  LoadingTexture();
+
+ private:
+  static unsigned char pixel_data[128 * 39 * 3 + 1];
+};
+
 }
 
 #endif  // GUA_NOISE_TEXTURE_HPP
