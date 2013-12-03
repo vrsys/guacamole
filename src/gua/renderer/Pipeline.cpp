@@ -163,21 +163,35 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
     if (window_) {
       auto loading_texture(std::dynamic_pointer_cast<Texture2D>(TextureDatabase::instance()->lookup("gua_loading_texture")));
+      math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
+
       if (config.get_enable_stereo()) {
 
-          auto tmp_left_resolution(window_->config.left_resolution());
-          auto tmp_right_resolution(window_->config.right_resolution());
+        auto tmp_left_resolution(window_->config.left_resolution());
+        auto tmp_right_resolution(window_->config.right_resolution());
 
-          auto tmp_left_position(window_->config.left_position());
-          auto tmp_right_position(window_->config.right_position());
+        auto tmp_left_position(window_->config.left_position());
+        auto tmp_right_position(window_->config.right_position());
 
-          window_->display(loading_texture, loading_texture);
+        window_->config.set_left_resolution(loading_texture_size);
+        window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
+
+        window_->config.set_right_resolution(loading_texture_size);
+        window_->config.set_right_position(tmp_right_position + 0.5*(tmp_right_resolution - loading_texture_size));
+
+        window_->display(loading_texture, loading_texture);
+
+        window_->config.set_left_position(tmp_left_position);
+        window_->config.set_left_resolution(tmp_left_resolution);
+
+        window_->config.set_right_position(tmp_right_position);
+        window_->config.set_right_resolution(tmp_right_resolution);
+
       } else {
 
         auto tmp_left_resolution(window_->config.left_resolution());
         auto tmp_left_position(window_->config.left_position());
 
-        math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
 
         window_->config.set_left_resolution(loading_texture_size);
         window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
