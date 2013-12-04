@@ -65,6 +65,12 @@ struct SerializedScene {
   */
   std::vector<SerializedNode<VolumeNode::Configuration> > volumenodes_;
 
+
+  /**
+  * All Volume nodes.
+  */
+  std::vector<SerializedNode<VolumeNode::Configuration> > vvolumenodes_;
+
   /**
    * All point light nodes.
    */

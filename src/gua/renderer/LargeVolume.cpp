@@ -20,7 +20,16 @@
 ******************************************************************************/
 
 // class header
-#include <gua/renderer/Volume.hpp>
+#include <gua/renderer/LargeVolume.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <exception>
+#include <iostream>
+#include <fstream>
+#include <limits>
+#include <memory>
+#include <stdexcept>
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -38,42 +47,120 @@
 #include <assimp/aiScene.h>
 #endif
 
+#include <scm/core/io/iomanip.h>
+#include <scm/core/io/file.h>
+
 #include <scm/gl_util/data/volume/volume_loader.h>
 #include <scm/gl_util/data/imaging/texture_loader.h>
 #include <scm/gl_util/primitives/box_volume.h>
 
-namespace {
-	struct Vertex {
-		scm::math::vec3f pos;
-		scm::math::vec2f tex;
-		scm::math::vec3f normal;
-		scm::math::vec3f tangent;
-		scm::math::vec3f bitangent;
-	};
-}
+#include <scm/large_data/virtual_texture/context_vtexture_guard.h>
+#include <scm/large_data/virtual_texture/vtexture_2d_context.h>
+#include <scm/large_data/virtual_texture/vtexture_3d.h>
+#include <scm/large_data/virtual_texture/vtexture_3d_context.h>
+#include <scm/large_data/virtual_texture/vtexture_system.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/numeric/conversion/bounds.hpp>
 
 namespace gua {
 
+	LargeVolume::renderer_settings::renderer_settings()
+		: //_render_method(VRM_RC_DVR_01)
+		//, 
+		_vtexture_fixed_lod_enabled(false)
+		, _vtexture_fixed_lod(0.0)
+		, _dvr_use_preintegration(false)
+		, _dvr_use_adjacent_blend(true)
+		, _dvr_use_animated_blend(false)
+		, _dvr_use_gauss_fitting(true)
+		, _dvr_use_texture_view(false)
+		, _dvr_use_lod_adaptive_sampling(true)
+		, _dvr_embedded_octree(false)
+		, _dvr_show_iteration_count(false)
+	{
+	}
+
+	bool
+	LargeVolume::renderer_settings::operator==(const renderer_settings& rhs) const
+	{
+			return    //_render_method == rhs._render_method
+				//&& 
+				_vtexture_fixed_lod_enabled == rhs._vtexture_fixed_lod_enabled
+				//&& _vtexture_fixed_lod         == rhs._vtexture_fixed_lod
+				&& _dvr_use_preintegration == rhs._dvr_use_preintegration
+				&& _dvr_use_adjacent_blend == rhs._dvr_use_adjacent_blend
+				&& _dvr_use_animated_blend == rhs._dvr_use_animated_blend
+				&& _dvr_use_gauss_fitting == rhs._dvr_use_gauss_fitting
+				&& _dvr_use_texture_view == rhs._dvr_use_texture_view
+				&& _dvr_use_lod_adaptive_sampling == rhs._dvr_use_lod_adaptive_sampling
+				&& _dvr_embedded_octree == rhs._dvr_embedded_octree
+				&& _dvr_show_iteration_count == rhs._dvr_show_iteration_count;
+		}
+
+
 	////////////////////////////////////////////////////////////////////////////////
 
-	Volume::Volume()
+	LargeVolume::LargeVolume()
 		: _volume_boxes_ptr(), upload_mutex_() {}
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	Volume::Volume(std::string const& file_name)
+	LargeVolume::LargeVolume(std::string const&	vfile_name,							
+							scm::size_t			vol_hdd_cache_size,
+							scm::size_t			vol_gpu_cache_size
+							)
 		: 
-		_volume_file_path(file_name),
+		_volume_file_path(vfile_name),
+		_vtexture_info(),
+		_renderer_settings(),
 		_volume_boxes_ptr(),
 		upload_mutex_()
 	{
-		scm::gl::volume_loader scm_volume_loader;
-		_volume_dimensions = scm_volume_loader.read_dimensions(file_name);
-		//scm::math::vec3ui volume_dimensions = scm::math::vec3ui(256, 256, 225);
+#if 0
+		std::shared_ptr<scm::io::file> octree_file;
+		octree_file.reset(new scm::io::file());
+		if (!octree_file->open(vfile_name.c_str(), std::ios::in												
+												| std::ios::binary, false))
+		{
+			WARNING("unable to read octree file ( %c ) ", vfile_name);
+			octree_file->close();
+		}
+
+		octree_file->read(&(_vtexture_info.octree_header), 0, sizeof(scm::data::volume_octree_file_header));
+		octree_file->close();
+#else
+
+		std::fstream octree_file(vfile_name.c_str(), std::fstream::in | std::fstream::binary);
+		octree_file.read(reinterpret_cast<char*>(&(_vtexture_info.octree_header)), sizeof(scm::data::volume_octree_file_header));
+		octree_file.close();
+
+#endif
+
+		_vtexture_info.vfile_name = vfile_name;
+		_vtexture_info.vol_hdd_cache_size = vol_hdd_cache_size;
+		_vtexture_info.vol_gpu_cache_size = vol_gpu_cache_size;
+		_vtexture_info.vol_data_format = scm::gl::FORMAT_R_8;
+
+
+		if (_vtexture_info.octree_header._data_channel_count == 1 && _vtexture_info.octree_header._data_channel_byte_per_channel == 4)
+			_vtexture_info.vol_data_format = scm::gl::FORMAT_R_32F;
+		else
+		if (_vtexture_info.octree_header._data_channel_count == 2 && _vtexture_info.octree_header._data_channel_byte_per_channel == 1)
+			_vtexture_info.vol_data_format = scm::gl::FORMAT_RG_8;
+		else
+			WARNING("unsupportet octree data format ( %c ) ", vfile_name);
+
+		std::cout << _vtexture_info.vfile_name << std::endl
+			<< "VVolume Dimensions: "<< _vtexture_info.octree_header._volume_dimensions << std::endl;
+
+		//_volume_vtexture_ptr = vcontext->create_vtexture(vtex_file);
+		//_volume_dimensions = _volume_vtexture_ptr->dimensions();
+		_volume_dimensions = _vtexture_info.octree_header._volume_dimensions;
 
 		unsigned max_dimension_volume = scm::math::max(scm::math::max(_volume_dimensions.x, _volume_dimensions.y), _volume_dimensions.z);
 
-		step_size(0.5f / (float)max_dimension_volume);
+		sample_distance(0.5f / (float)max_dimension_volume);
 
 		_volume_dimensions_normalized = math::vec3((float)_volume_dimensions.x / (float)max_dimension_volume,
 													(float)_volume_dimensions.y / (float)max_dimension_volume,
@@ -119,25 +206,39 @@ namespace gua {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	void Volume::upload_to(RenderContext const& ctx) const {
-				
+	void LargeVolume::upload_to(RenderContext const& ctx) const {
+
 		//if (!_volume_texture_ptr[ctx.id]) {
-		//	WARNING("Unable to load Volume! Has no volume data.");
+		//	WARNING("Unable to load LargeVolume! Has no volume data.");
 		//	return;
 		//}
-
-		//std::cout << "Window width: " << ctx.width << " Window width: " << ctx.height << std::endl;
 
 		std::unique_lock<std::mutex> lock(upload_mutex_);
 
 		if (_volume_boxes_ptr.size() <= ctx.id){
-			_volume_texture_ptr.resize(ctx.id + 1);
+			//_volume_texture_ptr.resize(ctx.id + 1);
 			_transfer_texture_ptr.resize(ctx.id + 1);
+			_gauss_texture_ptr.resize(ctx.id + 1);
 			_volume_boxes_ptr.resize(ctx.id + 1);
 			_sstate.resize(ctx.id + 1);
 		}
-			
 
+		_vtexture_system = boost::make_shared<scm::data::vtexture_system>(ctx.render_device, scm::math::vec2ui(ctx.width, ctx.height));		
+		_vtexture_system->profile_timing(false);
+		_vtexture_system->debug_switches()._use_feedback_image_path = false;
+		_vtexture_system->debug_switches()._use_feedback_lists_path = true;
+
+		_vtexture_context_volume = _vtexture_system->create_vtexture_3d_context(_vtexture_info.vol_hdd_cache_size, _vtexture_info.vol_gpu_cache_size, _vtexture_info.octree_header._octree_brick_size, _vtexture_info.vol_data_format);
+
+		_volume_vtexture_ptr = _vtexture_context_volume->create_vtexture(_volume_file_path);
+
+		if (!_volume_vtexture_ptr){
+			std::cout << _volume_file_path << std::endl;
+			WARNING("%s error!", _volume_file_path.c_str());
+		}
+		else{
+			MESSAGE("%s loaded!", _volume_file_path.c_str());
+		}
 		//scm::gl::volume_loader scm_volume_loader;
 
 		//texture_3d_ptr              load_texture_3d(render_device&       in_device,
@@ -146,14 +247,19 @@ namespace gua {
 		//	bool                 in_color_mips = false,
 		//	const data_format    in_force_internal_format = FORMAT_NULL);
 
-		_volume_texture_ptr[ctx.id] = std::shared_ptr<Texture3D>(new Texture3D(_volume_file_path));// scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
-		_volume_texture_ptr[ctx.id]->upload_to(ctx);
+		//_volume_texture_ptr[ctx.id] = std::shared_ptr<Texture3D>(new Texture3D(_volume_file_path));// scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
+		//_volume_texture_ptr[ctx.id]->upload_to(ctx);
 
-		MESSAGE("%s loaded!", _volume_file_path.c_str());
+		
+
+		unsigned transfer_texture_width = 255u;
 
 		//scm::gl::texture_loader scm_image_loader; 
-		_transfer_texture_ptr[ctx.id] = create_color_map(ctx, 255, _alpha_transfer, _color_transfer);
+		_transfer_texture_ptr[ctx.id] = create_color_map(ctx, transfer_texture_width, _alpha_transfer, _color_transfer);
 		_transfer_texture_ptr[ctx.id]->upload_to(ctx);
+
+		_gauss_texture_ptr[ctx.id] = std::shared_ptr<Texture2D>(new Texture2D(transfer_texture_width, transfer_texture_width, scm::gl::FORMAT_RGBA_32F));
+		_gauss_texture_ptr[ctx.id]->upload_to(ctx);
 
 		//box_volume_geometry
 		_volume_boxes_ptr[ctx.id] =
@@ -164,7 +270,7 @@ namespace gua {
 	}
 
 	std::shared_ptr<Texture2D>
-	Volume::create_color_map(RenderContext const& ctx,
+	LargeVolume::create_color_map(RenderContext const& ctx,
 	unsigned in_size,
 	const scm::data::piecewise_function_1d<float, float>& in_alpha,
 	const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const
@@ -180,7 +286,7 @@ namespace gua {
 
 		if (!scm::data::build_lookup_table(color_lut, in_color, in_size)
 			|| !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {
-			std::cout << "Volume::create_color_map(): error during lookuptable generation" << std::endl;
+			std::cout << "LargeVolume::create_color_map(): error during lookuptable generation" << std::endl;
 			return (std::shared_ptr<Texture2D>(new Texture2D(in_size, 1)));
 		}
 		scm::scoped_array<float> combined_lut;
@@ -208,16 +314,16 @@ namespace gua {
 			std::shared_ptr<Texture2D>(new Texture2D(in_size, 1, FORMAT_RGBA_32F, in_data));// ctx.render_device->create_texture_2d(scm::math::vec2ui(in_size, 1), FORMAT_RGBA_8, 1, 1, 1, FORMAT_RGBA_32F, in_data);
 
 		if (!new_tex) {
-			std::cerr << "Volume::create_color_map(): error during color map texture generation." << std::endl;
+			std::cerr << "LargeVolume::create_color_map(): error during color map texture generation." << std::endl;
 			return (std::shared_ptr<Texture2D>(new Texture2D(in_size, 1)));
 		}
 		else{
-			std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
+			std::cout << "LargeVolume::create_color_map(): color map texture generated." << std::endl;
 			return (new_tex);
 		}
 	}
 
-	bool Volume::update_color_map(RenderContext const& ctx,
+	bool LargeVolume::update_color_map(RenderContext const& ctx,
 		std::shared_ptr<Texture2D> transfer_texture_ptr,
 		const scm::data::piecewise_function_1d<float, float>& in_alpha,
 		const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const
@@ -259,7 +365,7 @@ namespace gua {
 		MESSAGE("uploading texture data done.");
 
 		if (!res) {
-			MESSAGE("Volume::update_color_alpha_map(): error during color map texture generation.");
+			MESSAGE("LargeVolume::update_color_alpha_map(): error during color map texture generation.");
 			return false;
 		}
 
@@ -268,7 +374,7 @@ namespace gua {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	void Volume::draw(RenderContext const& ctx) const {
+	void LargeVolume::draw(RenderContext const& ctx) const {
 
 		// upload to GPU if neccessary
 		if (_volume_boxes_ptr.size() <= ctx.id || _volume_boxes_ptr[ctx.id] == nullptr) {
@@ -285,12 +391,12 @@ namespace gua {
 
 		scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
-		ctx.render_context->bind_texture( _volume_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 5);
-		ctx.render_context->bind_texture(_transfer_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 6);
+//		ctx.render_context->bind_texture( _volume_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 5);
+//		ctx.render_context->bind_texture(_transfer_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 6);
 		scm::gl::program_ptr p = ctx.render_context->current_program();
 		p->uniform_sampler("volume_texture", 5);			
 		p->uniform_sampler("transfer_texture", 6);
-		p->uniform("sampling_distance", _step_size);
+		p->uniform("sampling_distance", _sample_distance);
 		//p->uniform("iso_value", 0.8f);
 		p->uniform("volume_bounds", _volume_dimensions_normalized);
 		
@@ -298,7 +404,7 @@ namespace gua {
 		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);		
 	}
 
-	void Volume::draw_proxy(RenderContext const& ctx) const {
+	void LargeVolume::draw_proxy(RenderContext const& ctx) const {
 
 		// upload to GPU if neccessary
 		if (_volume_boxes_ptr.size() <= ctx.id || _volume_boxes_ptr[ctx.id] == nullptr) {
@@ -308,10 +414,10 @@ namespace gua {
 		scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
 		ctx.render_context->apply();
-		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);
+		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);		
 	}
 
-	void Volume::set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const
+	void LargeVolume::set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const
 	{
 		if (_update_transfer_function){
 			for (auto color_map_texture : _transfer_texture_ptr)
@@ -329,9 +435,9 @@ namespace gua {
 			return;
 		}
 		
-		cs->set_uniform(ctx, _volume_texture_ptr[ctx.id], "volume_texture");
+		//cs->set_uniform(ctx, _volume_texture_ptr[ctx.id], "volume_texture");
 		cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id], "transfer_texture");
-		cs->set_uniform(ctx, _step_size, "sampling_distance");
+		cs->set_uniform(ctx, _sample_distance, "sampling_distance");
 		cs->set_uniform(ctx, _volume_dimensions_normalized, "volume_bounds");
 
 		//_volume_texture_ptr[ctx.id]->make_non_resident(ctx);
@@ -341,7 +447,7 @@ namespace gua {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	void Volume::ray_test(Ray const& ray, PickResult::Options options,
+	void LargeVolume::ray_test(Ray const& ray, PickResult::Options options,
 		Node* owner, std::set<PickResult>& hits) {
 
 		//kd_tree_.ray_test(ray, mesh_, options, owner, hits);
@@ -349,17 +455,17 @@ namespace gua {
 
 	////////////////////////////////////////////////////////////////////////////////
 	
-	float Volume::step_size() const
+	float LargeVolume::sample_distance() const
 	{
-		return _step_size;
+		return _sample_distance;
 	}
 
-	void Volume::step_size(const float in_step_size)
+	void LargeVolume::sample_distance(const float in_sample_distance)
 	{
-		_step_size = in_step_size;
+		_sample_distance = in_sample_distance;
 	}
 		
-	void Volume::set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color)
+	void LargeVolume::set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color)
 	{
 		_alpha_transfer.clear();
 		_color_transfer.clear();

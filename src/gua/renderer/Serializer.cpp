@@ -27,6 +27,8 @@
 #include <gua/renderer/SerializedNode.hpp>
 #include <gua/renderer/Mesh.hpp>
 #include <gua/renderer/NURBS.hpp>
+#include <gua/renderer/Volume.hpp>
+#include <gua/renderer/LargeVolume.hpp>
 
 #include <gua/databases/GeometryDatabase.hpp>
 
@@ -73,6 +75,7 @@ void Serializer::check(SerializedScene* output,
   std::size_t mesh_count = data_->meshnodes_.size();
   std::size_t nurbs_count = data_->nurbsnodes_.size();
   std::size_t volume_count = data_->volumenodes_.size();
+  std::size_t vvolume_count = data_->vvolumenodes_.size();
   std::size_t point_light_count = data_->point_lights_.size();
   std::size_t spot_light_count = data_->spot_lights_.size();
   std::size_t ray_count = data_->rays_.size();
@@ -81,6 +84,7 @@ void Serializer::check(SerializedScene* output,
   data_->meshnodes_.clear();
   data_->nurbsnodes_.clear();
   data_->volumenodes_.clear();
+  data_->vvolumenodes_.clear();
   data_->point_lights_.clear();
   data_->spot_lights_.clear();
   data_->textured_quads_.clear();
@@ -107,7 +111,8 @@ void Serializer::check(SerializedScene* output,
   // reserving the old size might save some time
   data_->meshnodes_.reserve(mesh_count);
   data_->nurbsnodes_.reserve(nurbs_count);
-  data_->volumenodes_.reserve(nurbs_count);
+  data_->volumenodes_.reserve(volume_count);
+  data_->vvolumenodes_.reserve(vvolume_count);
   data_->point_lights_.reserve(point_light_count);
   data_->spot_lights_.reserve(spot_light_count);
   data_->textured_quads_.reserve(textured_quad_count);
@@ -169,7 +174,21 @@ void Serializer::check(SerializedScene* output,
   if ( is_visible(node) ) {
     if ( !node->data.get_volume().empty() ) {
       add_bbox(node);
-      data_->volumenodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));	  
+
+	  std::shared_ptr<Volume> volume_ptr = std::dynamic_pointer_cast<Volume>(
+		  gua::GeometryDatabase::instance()->lookup(node->data.get_volume()));
+	  
+	  if (volume_ptr) {
+		  data_->volumenodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
+	  } else {
+
+		  std::shared_ptr<LargeVolume> large_volume_ptr = std::dynamic_pointer_cast<LargeVolume>(
+			  gua::GeometryDatabase::instance()->lookup(node->data.get_volume()));
+
+		  if (large_volume_ptr) {
+			  data_->vvolumenodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
+		  }
+	  }
     }
 
     visit_children(node);

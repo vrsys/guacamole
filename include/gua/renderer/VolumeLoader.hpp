@@ -26,6 +26,7 @@
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
 #include <gua/renderer/LoaderBase.hpp>
+#include <gua/math.hpp>
 
 // external headers
 #include <string>
@@ -74,8 +75,18 @@ namespace gua {
 													  std::string const& file_name,
 													  unsigned flags);
 
-		std::shared_ptr<Node> load(std::string const& file_name,
-								   unsigned flags);
+		std::shared_ptr<Node> create_volume_from_file(  std::string const&	node_name,
+														std::string const&	vfile_name,
+														unsigned			flags,
+														scm::size_t			vol_hdd_cache_size,
+														scm::size_t			vol_gpu_cache_size
+														);
+
+		std::shared_ptr<Node> load(std::string const& file_name, unsigned flags);
+
+		std::shared_ptr<Node> load(std::string const& vfile_name,									
+									scm::size_t			vol_hdd_cache_size,
+									scm::size_t			vol_gpu_cache_size);
 
 		/**
 		* Constructor from memory buffer.
@@ -89,12 +100,14 @@ namespace gua {
 		//	unsigned buffer_size);
 
 		/* virtual */ bool is_supported(std::string const& file_name) const;
+		/* virtual */ bool is_supported(boost::unordered_set<std::string> supported_file_extensions, std::string const& file_name) const;
 
 	private:
 		
 		static std::unordered_map<std::string, std::shared_ptr<Node>> loaded_files_;
 		
 		boost::unordered_set<std::string> _supported_file_extensions;
+		boost::unordered_set<std::string> _supported_vfile_extensions;
 
 	};
 
