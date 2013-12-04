@@ -1,5 +1,5 @@
 
-#include "preint_table_generator.h"
+#include <gua/renderer/large_volume/preint_table_generator.h>
 
 #include <exception>
 #include <sstream>
