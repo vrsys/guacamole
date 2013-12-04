@@ -59,12 +59,12 @@ class GUA_DLL GeometryLoader {
                                         std::string const& fallback_material,
                                         unsigned flags = DEFAULTS);
 
-  std::shared_ptr<Node> GeometryLoader::create_volume_from_file(std::string const& node_name,
+  std::shared_ptr<Node> create_volume_from_file(std::string const& node_name,
 																std::string const& file_name,
 																unsigned flags = DEFAULTS);
 	  
 
-  std::shared_ptr<Node> GeometryLoader::create_vvolume_from_file(std::string const&	node_name,
+  std::shared_ptr<Node> create_vvolume_from_file(std::string const&	node_name,
 															  std::string const&	vfile_name,
 															  unsigned				flags = DEFAULTS,
 															  scm::size_t			vol_hdd_cache_size = 2147483648,
