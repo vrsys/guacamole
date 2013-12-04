@@ -1,5 +1,5 @@
 
-#include "gauss_table_generator.h"
+#include <gua/renderer/large_volume/gauss_table_generator.h>
 
 #include <exception>
 #include <sstream>

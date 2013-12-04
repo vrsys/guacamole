@@ -75,6 +75,7 @@ set(INCLUDE_PATHS
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
+    /opt/schism/current/projects/schism_large_data/scm_large_data/src
 )
 
 if (NOT CMAKE_BUILD_TYPE)

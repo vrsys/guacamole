@@ -149,7 +149,7 @@ namespace gua {
 		if (_vtexture_info.octree_header._data_channel_count == 2 && _vtexture_info.octree_header._data_channel_byte_per_channel == 1)
 			_vtexture_info.vol_data_format = scm::gl::FORMAT_RG_8;
 		else
-			WARNING("unsupportet octree data format ( %c ) ", vfile_name);
+			WARNING("unsupportet octree data format ( %c ) ", vfile_name.c_str());
 
 		std::cout << _vtexture_info.vfile_name << std::endl
 			<< "VVolume Dimensions: "<< _vtexture_info.octree_header._volume_dimensions << std::endl;
