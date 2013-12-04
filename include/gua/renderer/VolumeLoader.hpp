@@ -88,6 +88,7 @@ namespace gua {
 									scm::size_t			vol_hdd_cache_size,
 									scm::size_t			vol_gpu_cache_size);
 
+
 		/**
 		* Constructor from memory buffer.
 		*

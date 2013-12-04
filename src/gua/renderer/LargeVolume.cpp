@@ -445,6 +445,14 @@ namespace gua {
 
 	}
 
+	void	LargeVolume::pre_frame_update(RenderContext const& context){
+		_vtexture_system->pre_frame_update(context.render_device, context.render_context);
+	}
+	
+	void    LargeVolume::post_frame_update(RenderContext const& context){
+		_vtexture_system->post_frame_update(context.render_context);
+	}
+
 	////////////////////////////////////////////////////////////////////////////////
 
 	void LargeVolume::ray_test(Ray const& ray, PickResult::Options options,

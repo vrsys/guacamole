@@ -172,6 +172,14 @@ namespace gua {
 
 		void set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color);
 
+		/**
+		* VTexture Functions
+		*
+		*/
+
+		void                                pre_frame_update(RenderContext const& context);
+		void                                post_frame_update(RenderContext const& context);
+
 	private:
 		void upload_to(RenderContext const& context) const;
 

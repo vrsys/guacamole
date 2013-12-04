@@ -152,11 +152,14 @@ void CompositePass::create(RenderContext const& ctx,
 				}
 
 				for (auto const& node : scene.vvolumenodes_) {
-
-					auto volume =
+										
+					auto vlargeolume =
 						std::static_pointer_cast<gua::LargeVolume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
 
-					if (volume) {
+					if (vlargeolume) {
+
+						vlargeolume->pre_frame_update(ctx);
+
 						ray_generation_shader_->set_uniform(
 							ctx, node.transform, "gua_model_matrix");
 
@@ -164,9 +167,11 @@ void CompositePass::create(RenderContext const& ctx,
 
 						ray_generation_shader_->use(ctx);
 						{
-							volume->draw_proxy(ctx);
+							vlargeolume->draw_proxy(ctx);
 						}
 						ray_generation_shader_->unuse(ctx);
+
+						vlargeolume->post_frame_update(ctx);
 					}
 				}
 			}
