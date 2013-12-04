@@ -132,6 +132,11 @@ std::vector<Mesh*> const MeshLoader::load_from_buffer(char const* buffer_name,
 bool MeshLoader::is_supported(std::string const& file_name) const {
   auto point_pos(file_name.find_last_of("."));
   Assimp::Importer importer;
+
+  if (file_name.substr(point_pos + 1) == "raw"){
+	  return false;
+  }
+
   return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
 }
 
