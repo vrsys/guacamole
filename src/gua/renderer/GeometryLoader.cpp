@@ -27,7 +27,9 @@
 #include <gua/scenegraph/TransformNode.hpp>
 #include <gua/renderer/MeshLoader.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
+#include <gua/renderer/VolumeLoader.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/utils/logger.hpp>
 
 // external headers
@@ -45,6 +47,7 @@ std::unordered_map<std::string, std::shared_ptr<Node>>
 GeometryLoader::GeometryLoader() : fileloaders_() {
   fileloaders_.push_back(new MeshLoader);
   fileloaders_.push_back(new NURBSLoader);
+  fileloaders_.push_back(new VolumeLoader);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +126,131 @@ std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
   }
 
   return std::make_shared<TransformNode>(node_name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Node> GeometryLoader::create_volume_from_file(std::string const& node_name,
+	std::string const& file_name,
+	unsigned flags)
+{
+
+	std::shared_ptr<Node> cached_node;
+	std::string key(file_name + "_" + string_utils::to_string(flags));
+
+	auto searched(loaded_files_.find(key));
+	if (searched != loaded_files_.end()) {
+
+		cached_node = searched->second;
+
+	}
+	else {
+
+		bool fileload_succeed = false;
+		for (auto f : fileloaders_) {
+			if (f->is_supported(file_name)) {
+				cached_node = f->load(file_name, flags);
+				cached_node->update_cache();
+				loaded_files_.insert(std::make_pair(key, cached_node));
+
+				// normalize volume position and rotation
+				if (flags & VolumeLoader::NORMALIZE_POSITION || flags & VolumeLoader::NORMALIZE_SCALE) {
+					auto bbox = cached_node->get_bounding_box();
+
+					if (flags & VolumeLoader::NORMALIZE_POSITION) {
+						auto center((bbox.min + bbox.max)*0.5);
+						cached_node->translate(-center);
+					}
+
+					if (flags & VolumeLoader::NORMALIZE_SCALE) {
+						auto size(bbox.max - bbox.min);
+						auto max_size(std::max(std::max(size.x, size.y), size.z));
+						cached_node->scale(1.f / max_size);
+					}
+
+				}
+			}
+				fileload_succeed = true;
+				break;
+		}
+
+		if (!cached_node) {
+			WARNING("Unable to load %s: Volume Type is not supported!", file_name.c_str());
+		}
+	}
+
+	if (cached_node) {
+		auto copy(cached_node->deep_copy());
+
+		copy->set_name(node_name);
+		return copy;
+	}
+
+	return std::make_shared<TransformNode>(node_name);
+}
+
+std::shared_ptr<Node> GeometryLoader::create_vvolume_from_file(
+												std::string const&	node_name,
+												std::string const&	vfile_name,
+												unsigned			flags,
+												scm::size_t			vol_hdd_cache_size,
+												scm::size_t			vol_gpu_cache_size
+												)
+{
+
+	std::shared_ptr<Node> cached_node;
+	std::string key(vfile_name + "_" + string_utils::to_string(flags));
+
+	auto searched(loaded_files_.find(key));
+	if (searched != loaded_files_.end()) {
+
+		cached_node = searched->second;
+
+	}
+	else {
+
+		bool fileload_succeed = false;
+		for (auto f : fileloaders_) {
+			if (f->is_supported(vfile_name)) {
+				cached_node = static_cast<VolumeLoader*>(f)->load(vfile_name, vol_hdd_cache_size, vol_gpu_cache_size);
+				cached_node->update_cache();
+				loaded_files_.insert(std::make_pair(key, cached_node));
+
+				// normalize volume position and rotation
+				if (flags & VolumeLoader::NORMALIZE_POSITION || flags & VolumeLoader::NORMALIZE_SCALE) {
+					auto bbox = cached_node->get_bounding_box();
+
+					if (flags & VolumeLoader::NORMALIZE_POSITION) {
+						auto center((bbox.min + bbox.max)*0.5);
+						cached_node->translate(-center);
+					}
+
+					if (flags & VolumeLoader::NORMALIZE_SCALE) {
+						auto size(bbox.max - bbox.min);
+						auto max_size(std::max(std::max(size.x, size.y), size.z));
+						cached_node->scale(1.f / max_size);
+					}
+
+				}
+			
+				fileload_succeed = true;
+				break;
+			}
+		}
+
+		if (!cached_node) {
+			WARNING("Unable to load %s: Volume Type is not supported!", vfile_name.c_str());
+		}
+	}
+
+	if (cached_node) {
+		auto copy(cached_node->deep_copy());
+
+		copy->set_name(node_name);
+		return copy;
+	}
+
+	return std::make_shared<TransformNode>(node_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
