@@ -357,18 +357,21 @@ void Pipeline::create_passes() {
 
     passes_need_reload_ = false;
 
+    std::vector<Pass*> new_passes;
+    new_passes.push_back(pre_pass);
+    new_passes.push_back(light_pass);
+    new_passes.push_back(final_pass);
+    new_passes.push_back(composite_pass);
+    new_passes.push_back(post_fx_pass);
+
     // try compilation if context is already present
     if (context_) {
-
-        for (auto pass : passes_) {
-
-          if (!pass->pre_compile_shaders(*context_)) {
-            compilation_succeeded = false;
-          }
-
+      for (auto pass : new_passes) {
+        if (!pass->pre_compile_shaders(*context_)) {
+          compilation_succeeded = false;
+          break;
         }
-    } else {
-      compilation_succeeded = true;
+      }
     }
 
     if (compilation_succeeded) {
@@ -389,11 +392,11 @@ void Pipeline::create_passes() {
 
     } else {
 
-      delete pre_pass;
-      delete light_pass;
-      delete final_pass;
-      delete composite_pass;
-      delete post_fx_pass;
+      WARNING("Failed to recompile shaders!");
+
+      for (auto pass : new_passes) {
+        delete pass;
+      }
     }
   }
 }
