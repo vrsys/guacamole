@@ -420,13 +420,13 @@ void Pipeline::create_buffers() {
     passes_[PipelineStage::shading]->set_inputs(stereobuffers);
     stereobuffers.push_back(passes_[PipelineStage::shading]->get_gbuffer());
 
+    passes_[PipelineStage::compositing]->set_inputs(stereobuffers);
+    passes_[PipelineStage::compositing]->create(*context_, config, {} );
+    stereobuffers.push_back(passes_[PipelineStage::compositing]->get_gbuffer());
+
     scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
                                       scm::gl::WRAP_REPEAT,
                                       scm::gl::WRAP_REPEAT);
-
-    passes_[PipelineStage::compositing]->create(*context_, config, { { BufferComponent::F3, state } });
-    passes_[PipelineStage::compositing]->set_inputs(stereobuffers);
-    stereobuffers.push_back(passes_[PipelineStage::compositing]->get_gbuffer());
 
     passes_[PipelineStage::postfx]->create(*context_, config, { { BufferComponent::F3, state } });
     passes_[PipelineStage::postfx]->set_inputs(stereobuffers);

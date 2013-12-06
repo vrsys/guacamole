@@ -154,8 +154,8 @@ std::string const GBufferNURBSUberShader::_transform_feedback_tess_control_shade
                                                              \n\
         layout(vertices = 4) out;                            \n\
                                                              \n\
-        layout(binding=5) uniform samplerBuffer parameter_texture;             \n\
-        layout(binding=6) uniform samplerBuffer attribute_texture;             \n\
+        uniform samplerBuffer parameter_texture;             \n\
+        uniform samplerBuffer attribute_texture;             \n\
                                                              \n\
         // uniforms                                          \n\
         uniform mat4 gua_projection_matrix;                  \n\
@@ -288,8 +288,8 @@ std::string const GBufferNURBSUberShader::_transform_feedback_tess_evaluation_sh
         uniform mat4 gua_inverse_projection_view_matrix;     \n\
         uniform vec3 gua_camera_position;                    \n\
                                                              \n\
-        layout(binding=5) uniform samplerBuffer parameter_texture;             \n\
-        layout(binding=6) uniform samplerBuffer attribute_texture;             \n\
+        uniform samplerBuffer parameter_texture;             \n\
+        uniform samplerBuffer attribute_texture;             \n\
     ");
 
     tess_eval << NURBSShader::surface_horner_evaluation();
@@ -346,8 +346,8 @@ std::string const GBufferNURBSUberShader::_transform_feedback_geometry_shader ()
         layout (location = 1) flat  out uint xfb_index;         \n\
         layout (location = 2)       out vec2 xfb_tesscoord;     \n\
                                                                 \n\
-        layout(binding=5) uniform samplerBuffer parameter_texture;                \n\
-        layout(binding=6) uniform samplerBuffer attribute_texture;                \n\
+        uniform samplerBuffer parameter_texture;                \n\
+        uniform samplerBuffer attribute_texture;                \n\
     ");
 
     tf_geom << NURBSShader::surface_horner_evaluation();
@@ -464,8 +464,8 @@ std::string const GBufferNURBSUberShader::_final_tess_control_shader () const
                                                             \n\
         layout(vertices = 4) out;                           \n\
                                                             \n\
-        layout(binding=5) uniform samplerBuffer parameter_texture;            \n\
-        layout(binding=6) uniform samplerBuffer attribute_texture;            \n\
+        uniform samplerBuffer parameter_texture;            \n\
+        uniform samplerBuffer attribute_texture;            \n\
                                                             \n\
         uniform mat4 gua_projection_matrix;                 \n\
         uniform mat4 gua_view_matrix;                       \n\
@@ -651,8 +651,8 @@ std::string const GBufferNURBSUberShader::_final_tess_evaluation_shader () const
         uniform mat4 gua_inverse_projection_view_matrix;        \n\
         uniform vec3 gua_camera_position;                       \n\
                                                                 \n\
-        layout(binding=5) uniform samplerBuffer parameter_texture;                \n\
-        layout(binding=6) uniform samplerBuffer attribute_texture;                \n\
+        uniform samplerBuffer parameter_texture;                \n\
+        uniform samplerBuffer attribute_texture;                \n\
     ");
 
     tess_eval << NURBSShader::surface_horner_evaluation();
@@ -732,8 +732,8 @@ std::string const GBufferNURBSUberShader::_final_geometry_shader () const
         flat out uint gIndex;                                \n\
         out vec2      gTessCoord;                            \n\
                                                              \n\
-        layout(binding=5) uniform samplerBuffer parameter_texture;             \n\
-        layout(binding=6) uniform samplerBuffer attribute_texture;             \n\
+        uniform samplerBuffer parameter_texture;             \n\
+        uniform samplerBuffer attribute_texture;             \n\
     ");
 
     // generated material-dependent uniform definitions
@@ -853,13 +853,13 @@ std::string const GBufferNURBSUberShader::_final_fragment_shader () const
     fragment_shader << "// hard-coded uniform input";
     fragment_shader << std::string("                 \n\
                                                      \n\
-        layout(binding=6) uniform samplerBuffer attribute_texture;     \n\
+        uniform samplerBuffer attribute_texture;     \n\
                                                      \n\
-        layout(binding=7) uniform samplerBuffer trim_partition;        \n\
-        layout(binding=8) uniform samplerBuffer trim_contourlist;      \n\
-        layout(binding=9) uniform samplerBuffer trim_curvelist;        \n\
-        layout(binding=10) uniform samplerBuffer trim_curvedata;        \n\
-        layout(binding=11) uniform samplerBuffer trim_pointdata;        \n\
+        uniform samplerBuffer trim_partition;        \n\
+        uniform samplerBuffer trim_contourlist;      \n\
+        uniform samplerBuffer trim_curvelist;        \n\
+        uniform samplerBuffer trim_curvedata;        \n\
+        uniform samplerBuffer trim_pointdata;        \n\
                                                      \n\
     ");
 
