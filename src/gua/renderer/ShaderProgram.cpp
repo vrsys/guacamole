@@ -239,6 +239,11 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
     return false;
 }
 
+scm::gl::program_ptr const& ShaderProgram::get_program_ptr(RenderContext const& context) const{
+
+	return programs_[context.id];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 }

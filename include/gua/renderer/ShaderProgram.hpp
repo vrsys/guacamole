@@ -172,6 +172,12 @@ class GUA_DLL ShaderProgram {
                       std::string const& uniform_name,
                       std::string const& routine_name) const;
 
+  /**
+  * Used for scm_large_data
+  */
+  scm::gl::program_ptr const& get_program_ptr(RenderContext const& context) const;
+
+
   virtual bool upload_to(RenderContext const& context) const;
 
  protected:  // attributes
