@@ -288,7 +288,7 @@ void PostFXPass::render_scene(Camera const& camera, RenderContext const& ctx) {
         any_godrays = render_godrays(camera, pipeline_->get_current_scene(eye), eye, ctx);
         render_glow(eye, ctx);
 
-        auto input_tex(inputs_[Pipeline::compositing]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
+        auto input_tex(inputs_[Pipeline::shading]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
         auto ping_tex(ping_buffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
         auto pong_tex(pong_buffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
         auto normal_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);

@@ -278,7 +278,7 @@ void CompositePass::create(RenderContext const& ctx,
 			composite_shader_->unuse(ctx);
 		}
 		target->unbind(ctx);
-	
+
 		ctx.render_context->reset_state_objects();
 	
 }

@@ -206,6 +206,7 @@ class GUA_DLL Pipeline {
 
   bool passes_need_reload_;
   bool buffers_need_reload_;
+  bool display_loading_screen_;
 
   unsigned last_shading_model_revision_;
 };
