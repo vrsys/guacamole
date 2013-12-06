@@ -47,6 +47,7 @@ include(find_json)
 
 set(LIBS
     ${SCHISM_LIBRARIES}
+    scm_large_data
     ${BOOST_LIBRARIES}
     ${ASSIMP_LIBRARIES}
     ${JSON_LIBRARIES}
