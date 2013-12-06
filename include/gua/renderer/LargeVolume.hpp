@@ -180,6 +180,9 @@ namespace gua {
 		void                                pre_frame_update(RenderContext const& context);
 		void                                post_frame_update(RenderContext const& context);
 
+		void	bind_vtexture(RenderContext const& context) const;
+		void	program_uniform(RenderContext const& context, gua::ShaderProgram* shader_prg, std::string const& uniform_name) const;
+
 	private:
 		void upload_to(RenderContext const& context) const;
 
@@ -222,7 +225,8 @@ namespace gua {
 			_gauss_texture_ptr;
 
 		mutable std::vector<scm::gl::sampler_state_ptr> _sstate;
-
+		mutable std::vector<scm::gl::rasterizer_state_ptr> _rstate;
+		
 		//gauss_table_generator_ptr       _gauss_gen;
 
 #if GUA_COMPILER == GUA_COMPILER_MSVC && SCM_COMPILER_VER <= 1700

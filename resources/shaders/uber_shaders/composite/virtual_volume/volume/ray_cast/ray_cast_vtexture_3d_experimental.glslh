@@ -1,0 +1,634 @@
+
+#ifndef SCM_LDATA_VVOLUME_RAY_CAST_RAY_CAST_VTEXTURE_3D_EXPERIMENTAL_GLSLH_INCLUDED
+#define SCM_LDATA_VVOLUME_RAY_CAST_RAY_CAST_VTEXTURE_3D_EXPERIMENTAL_GLSLH_INCLUDED
+
+#include </scm/data/vtexture/vtexture.glslh>
+#include </scm/data/vtexture/vtexture_debug.glslh>
+
+#include </scm/data/ray/ray.glslh>
+#include </scm/data/ray/ray_cast_result.glslh>
+#include </scm/data/utilities/float_utils.glslh>
+
+#include </scm/data/volume/ray_cast/ray_cast_vtexture_3d.glslh>
+
+// implementation /////////////////////////////////////////////////////////////////////////////////
+
+struct vrc_runtime_data
+{
+    bool                node_in_progress;
+
+    vec4                dst_color;
+    ray                 r;
+    vec2                r_tspan;
+    float               r_last_t;
+    vec4                r_last_sample;
+    float               r_d;
+
+    float               octree_epsilon;
+    vec3                octree_position;
+
+    float               p_last_blend_v;
+
+    float               n_lvl_size;
+    vec3                n_lvl_pos;
+    float               n_lod_optimal;
+    vec3                n_bbmin;
+    vec3                n_bbmax;
+    float               n_tnext;
+    vec2                n_tspan;
+    vec3                n_pmask;
+    ray_cast_trav_info  n_tinfo;
+
+}; // struct vrc_runtime_data
+
+vrc_runtime_data
+make_vrc_runtime_data()
+{
+    vrc_runtime_data rtdata;
+
+    rtdata.node_in_progress = false;
+    rtdata.octree_epsilon   = -1.0;
+    rtdata.dst_color        = vec4(0.0);
+
+    rtdata.p_last_blend_v = 1.0;
+
+    return rtdata;
+}
+
+bool
+valid_vrc_rt_data(in vrc_runtime_data rtd)
+{
+    return rtd.octree_epsilon > 0.0;
+}
+
+
+void
+vrc_blend_node_dvr_exp(inout vrc_runtime_data rs, 
+                        inout ray_cast_result result)
+{
+    // transform ray into atlas node
+    const float ots_tb   = rs.n_tspan.x;//fceil(t_span.x, d);
+    const float ots_te   = rs.n_tspan.y;//ffloor(t_span.y, d);//
+    const vec3 ots_o     = ots_tb * rs.r.direction + rs.r.origin;
+    const vec3 ots_e     = ots_te * rs.r.direction + rs.r.origin;
+    const vec3 ots_s     = ots_e - ots_o;
+    const float ots_sl   = length(ots_s);
+
+    const vec3  ats_o    = ots_to_ats(ots_o, rs.n_tinfo);
+    const vec3  ats_e    = ots_to_ats(ots_e, rs.n_tinfo);
+    const vec3  ats_s    = ats_e - ats_o;
+    const float ats_sl   = length(ats_s);
+    const float to_ats_l = ats_sl / ots_sl;
+    const float to_ots_l = ots_sl / ats_sl;
+    
+#if VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+    int dlvl_fact = 1 << (int(vtex_volume.max_level) - rs.n_tinfo.vpage_level - 0);
+    dlvl_fact = max(dlvl_fact, 1);
+#else // VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+    int dlvl_fact = 1;
+#endif // VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+
+    const float ats_d_ref = rs.r_d * to_ats_l;
+    //float ats_d     = ats_d_ref;
+    float ats_d_inc = ats_d_ref * float(dlvl_fact);
+
+
+    const ray nr = make_ray(ats_o, normalize(ats_s));
+
+    vec2        ats_tspan     = vec2(0.0, (rs.n_tspan.y - rs.n_tspan.x) * to_ats_l);
+    const float ats_rspan_max = (rs.r_tspan.y - rs.n_tspan.x) * to_ats_l;
+
+    float ats_last_t = (rs.r_last_t - rs.n_tspan.x) * to_ats_l;
+
+    //rs.dst_color = vec4(0.0,0.0,1.0,1.0);
+
+    while (ats_tspan.x < ats_tspan.y && rs.dst_color.a < opacity_saturation) {
+        
+        check_iter_count_and_break(result._iter_count);
+
+        // traverse ray in atlas cell
+        const vec3  as  = ats_tspan.x * nr.direction + nr.origin; // atlas sample pos
+
+        composite_sample_atlas_space(rs.dst_color, (ats_tspan.x - ats_last_t) / ats_d_ref, as, rs.n_tinfo);
+        //composite_sample_atlas_space(rs.dst_color, 1.0, as, rs.n_tinfo);
+
+#if VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+// not correct but shows less artifacts on node borders
+//#if 1
+        //while (((ats_tspan.x + ats_d_inc) >= ats_tspan.y) && (dlvl_fact > 1)) {
+            //dlvl_fact /= 2;
+            //ats_d_inc  = ats_d_ref * float(dlvl_fact);//0.5;//d * float(dlvl_fact) * to_ats_l;
+        //}
+//#else
+        //if ((ats_tspan.x + ats_d_inc) >= ats_tspan.y) {
+            //ats_d_inc = ats_d_ref;
+        //}
+//#endif
+#endif
+
+        ats_last_t   = ats_tspan.x;
+        ats_tspan.x += ats_d_inc;
+        //ats_tspan.x = ffloor(ats_tspan.x, ats_d_inc) + ats_d_inc;
+        //ats_tspan.x = fceil(ats_tspan.x+ ats_d_inc, ats_d_inc) ;
+
+        ++result._iter_count;
+    }
+
+#if 0
+    if (ats_tspan.x >= ats_rspan_max) {
+
+        ats_tspan.x = ats_rspan_max;
+        // traverse ray in atlas cell
+        const vec3  as  = ats_rspan_max * nr.direction + nr.origin; // atlas sample pos
+
+        composite_sample_atlas_space(rs.dst_color, (ats_rspan_max - ats_last_t) / ats_d_ref, as, rs.n_tinfo);
+        //composite_sample_atlas_space(rs.dst_color, 1.0, as, rs.n_tinfo);
+
+
+        ats_last_t   = ats_rspan_max;
+        ats_tspan.x  = ats_rspan_max;
+    }
+#endif
+
+    rs.r_last_t  = rs.n_tspan.x + ats_last_t  * to_ots_l;//rs.n_tspan.x + ats_tspan.x * to_ots_l;
+    rs.n_tspan.x = rs.n_tspan.x + ats_tspan.x * to_ots_l;
+}
+
+void
+vrc_blend_node_dvr_blend_exp(inout vrc_runtime_data rs, 
+                        inout vrc_runtime_data prs, 
+                        inout ray_cast_result result)
+{
+
+#if VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+    float dlvl_fact = 1 << (int(vtex_volume.max_level) - rs.n_tinfo.vpage_level);
+    float dlvl_fact_up = 1 << (int(vtex_volume.max_level) - rs.n_tinfo.vpage_level + 1);
+    //dlvl_fact = max(dlvl_fact, 1);
+#else // VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+    float dlvl_fact = 1;
+#endif // VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+
+	dlvl_fact += rand(vec2(rs.r.direction.x * 100, rs.r.direction.y * 200));
+
+    // trasform ray into atlas node
+    const float ots_tb   = rs.n_tspan.x;//fceil(t_span.x, d);
+    const float ots_te   = rs.n_tspan.y;//ffloor(t_span.y, d);//
+    const vec3 ots_o     = ots_tb * rs.r.direction + rs.r.origin;
+    const vec3 ots_e     = ots_te * rs.r.direction + rs.r.origin;
+    const vec3 ots_s     = ots_e - ots_o;
+    const float ots_sl   = length(ots_s);
+
+    const vec3  ats_o    = ots_to_ats(ots_o, rs.n_tinfo);
+    const vec3  ats_e    = ots_to_ats(ots_e, rs.n_tinfo);
+    const vec3  ats_s    = ats_e - ats_o;
+    const float ats_sl   = length(ats_s);
+    const float to_ats_l = ats_sl / ots_sl;
+    const float to_ots_l = ots_sl / ats_sl;
+        
+    const float ats_d_ref = rs.r_d * to_ats_l;
+    float ats_d_inc = ats_d_ref * float(dlvl_fact);
+    const ray nr = make_ray(ats_o, normalize(ats_s));
+        
+    vec2        ats_tspan     = vec2(0.0, (rs.n_tspan.y - rs.n_tspan.x) * to_ats_l);
+    const float ats_rspan_max = (rs.r_tspan.y - rs.n_tspan.x) * to_ats_l;
+
+    float ats_last_t = (rs.r_last_t - rs.n_tspan.x) * to_ats_l;
+    
+    //---
+    const float pots_tb = prs.n_tspan.x;//fceil(t_span.x, d);
+	const float pots_te = prs.n_tspan.y;//ffloor(t_span.y, d);//
+	const vec3  pots_o  = pots_tb * prs.r.direction + prs.r.origin;
+	const vec3  pots_e  = pots_te * prs.r.direction + prs.r.origin;
+	const vec3  pots_s  = pots_e - pots_o;
+	const float pots_sl = length(pots_s);
+	
+	const vec3  pats_o  = ots_to_ats(pots_o, prs.n_tinfo);
+	const vec3  pats_e  = ots_to_ats(pots_e, prs.n_tinfo);
+	const vec3  pats_s  = pats_e - pats_o;
+	const float pats_sl = length(pats_s);
+	const float to_pats_l = pats_sl / pots_sl;
+	const float to_pots_l = pots_sl / pats_sl;
+    
+    
+    const float pats_d_ref = prs.r_d * to_pats_l;
+    float pats_d_inc = pats_d_ref * float(dlvl_fact);        
+    const ray pnr = make_ray(pats_o, normalize(pats_s));
+    
+    vec2        pats_tspan     = vec2(0.0, (prs.n_tspan.y - prs.n_tspan.x) * to_pats_l);
+    const float pats_rspan_max = (prs.r_tspan.y - prs.n_tspan.x) * to_pats_l;
+
+    float pats_last_t = (prs.r_last_t - prs.n_tspan.x) * to_pats_l;
+
+    //---
+    while (ats_tspan.x < ats_tspan.y && rs.dst_color.a < opacity_saturation) {
+        
+        check_iter_count_and_break(result._iter_count);
+
+        // traverse ray in atlas cell
+        const vec3  as  = ats_tspan.x * nr.direction + nr.origin; // atlas sample pos
+        
+        const vec3  pas  = pats_tspan.x * pnr.direction + pnr.origin; // atlas sample pos
+        vec3 cbspos = (as / vtex_volume.page_atlas.size_pages_rec - vec3(rs.n_tinfo.vpage_index_data.xyz));
+		cbspos = cbspos / vtex_volume.page_core_size - vtex_volume.page_border_size;        
+
+        const float bw = calc_blend_weight(rs.n_tinfo, cbspos);
+        //const float bw = 0.0;
+
+#if 1
+        composite_sample_atlas_space_blend(rs.dst_color, 
+                                            (ats_tspan.x - ats_last_t) / ats_d_ref, 
+                                            as, 
+                                            pas, 
+                                            rs.n_tinfo, 
+                                            prs.n_tinfo, 
+                                            bw);
+#else   
+        //rs.dst_color = vec4(bw, 0.0, 0.0, 1.0); 
+#if 0
+        rs.dst_color = vec4(0.0, 0.0, bw, 1.0); 
+        //rs.dst_color = texture(color_map, vec2(dlvl_fact / 10.0, 0.0));
+#else
+        float dlvl_fact_f =  mix(float(1 << (int(vtex_volume.max_level) - rs.n_tinfo.vpage_level + 1)), float(1 << (int(vtex_volume.max_level) - rs.n_tinfo.vpage_level)), 1.0 - bw);
+        rs.dst_color += vec4(0.0,  dlvl_fact_f / 10.0, 0.0,1.0); 
+        //rs.dst_color = texture(color_map, vec2(dlvl_fact_f / 10.0, 0.0));
+        rs.dst_color.a = 1.0;
+#endif
+        
+        rs.dst_color.a = 1.0;
+
+#endif
+
+        //composite_sample_atlas_space(rs.dst_color, 1.0, as, rs.n_tinfo);
+
+        //rs.dst_color = vec4(ats_tspan, 0.0, 1.0);
+        //rs.dst_color = vec4(pas ,1.0);
+        //rs.dst_color = vec4(0.0,0.0, bw, 1.0);
+
+        //if(bw > 0.0001)
+        //{
+        //    ats_last_t   = ats_tspan.x;
+        //    ats_tspan.x += ats_d_inc - (0.5 * ats_d_inc);
+
+
+        //    pats_last_t   = pats_tspan.x;
+        //    pats_tspan.x += pats_d_inc  - (0.5 * pats_d_inc);
+        //}
+        //else
+        //{
+        //    ats_last_t   = ats_tspan.x;
+        //    ats_tspan.x += ats_d_inc;
+
+        //    pats_last_t   = pats_tspan.x;
+        //    pats_tspan.x += pats_d_inc;        
+        //}
+
+
+
+
+
+#if 0
+
+#if 1
+        //float dlvl_fact_f = mix(float(1 << (int(vtex_volume.max_level) - (rs.n_tinfo.vpage_level - 1))), float(int(vtex_volume.max_level) - (rs.n_tinfo.vpage_level)),  bw);
+        //float dlvl_fact_f =  mix(float(1 << (int(vtex_volume.max_level) - rs.n_tinfo.vpage_level + 1)), float(1 << (int(vtex_volume.max_level) - rs.n_tinfo.vpage_level)), 1.0 - bw);
+        float blend = bw + (1.0 - rs.dst_color.a);
+        //blend = max(blend, 1.0);
+        
+        float dlvl_fact_f =  mix(float(dlvl_fact), float(dlvl_fact_up), bw);
+        //dlvl_fact_f = mix( float(dlvl_fact), dlvl_fact_f, 1.0 - ( rs.dst_color.a * rs.dst_color.a));
+        //dlvl_fact_f = mix( float(dlvl_fact), dlvl_fact_f, 1.0 - rs.dst_color.a);        
+        //rs.dst_color = vec4(0.0, dlvl_fact_f / 24.0, 0.0, 1.0); 
+        //rs.dst_color = vec4(0.0, dlvl_fact / 24.0, 0.0, 1.0); 
+        rs.dst_color = vec4(0.0, 0.0, bw, 1.0); 
+        //dlvl_fact_f = max(float(dlvl_fact_up), dlvl_fact_f);
+
+        ats_d_inc = ats_d_ref * dlvl_fact_f;
+        pats_d_inc = pats_d_ref * dlvl_fact_f;
+#endif
+        ats_last_t   = ats_tspan.x;
+        ats_tspan.x += ats_d_inc;
+
+        pats_last_t   = pats_tspan.x;
+        pats_tspan.x += pats_d_inc;
+
+
+#else
+        ats_last_t   = ats_tspan.x;
+        ats_tspan.x += ats_d_inc + (bw * ats_d_inc);
+
+
+        pats_last_t   = pats_tspan.x;
+        pats_tspan.x += pats_d_inc  + (bw * pats_d_inc);
+
+#endif
+        ++result._iter_count;
+    }
+
+    rs.r_last_t  = rs.n_tspan.x + ats_last_t  * to_ots_l;//rs.n_tspan.x + ats_tspan.x * to_ots_l;
+    rs.n_tspan.x = rs.n_tspan.x + ats_tspan.x * to_ots_l;
+
+    prs.r_last_t  = prs.n_tspan.x + pats_last_t  * to_pots_l;//rs.n_tspan.x + ats_tspan.x * to_ots_l;
+    prs.n_tspan.x = prs.n_tspan.x + pats_tspan.x * to_pots_l;
+}
+
+//subroutine (generate_color)
+vec4 volume_ray_cast_octree_exp(in ray r, 
+                                in vec2 t_span,                                 
+                                in float d, 
+                                out ray_cast_result res)
+{
+    float entry_fc = fceil(t_span.x, d);
+    float t_step   = entry_fc >= t_span.x ? entry_fc - t_span.x : d;
+
+    //t_span.x = entry_fc;
+    //t_step   = d;
+//
+    // ray casting setup
+    const float oeps = 0.5 / float(1 << int(vtex_volume.max_level)); // octree epsilon
+    const float nlvl = vrc_node_level();
+    vec3        cpos = clamp(r.origin + t_span.x * r.direction, 0.0, 1.0);
+        
+    vrc_runtime_data  rs = make_vrc_runtime_data();
+
+    rs.r       = r;
+    rs.r_d     = d;
+    ray_cast_octree_traverse(vtex_volume, cpos, nlvl, rs.n_tinfo);
+
+    { // take first sample at entry
+        composite_sample_atlas_space(rs.dst_color, 
+                                     0.2, 
+                                     ots_to_ats(t_span.x * r.direction + r.origin, rs.n_tinfo), 
+                                     rs.n_tinfo);
+    }
+
+    rs.r_last_t = t_span.x;
+    rs.r_tspan  = vec2(entry_fc, t_span.y);
+
+    //rs.dst_color = vec4(rs.r_tspan, 0.0, 1.0);
+    //rs.dst_color = vec4(rs.r_tspan, 0.0, 1.0);
+
+    while (rs.r_tspan.x < rs.r_tspan.y && rs.dst_color.a < opacity_saturation) {
+
+        check_iter_count_and_break(res._iter_count);
+
+        // request lod ////////////////////////////////////////////////////////////////////////////
+        vrc_vtexture_require(cpos);
+
+        float lsize = float(1 << rs.n_tinfo.vpage_level);
+        vec3 lpos   = floor(cpos * lsize);
+        vec3 nmin   = (lpos + 0.0) / lsize;
+        vec3 nmax   = (lpos + 1.0) / lsize;
+
+        float t_next = 0.0;
+        ray_node_exit_intersect(r, nmin, nmax, t_next, rs.n_pmask);
+        t_next = min(t_next, rs.r_tspan.y);
+
+        // do something with node data ;) /////////////////////////////////////////////////////////
+#if VTEX_VRM_RC_DVR_OCTREE == 1
+        {
+            vrc_blend_octree_node(rs.dst_color, r, rs.n_tinfo, rs.n_pmask);
+            rs.r_tspan.x = t_next;
+        }
+#else 
+        {
+            rs.n_tspan = vec2(rs.r_tspan.x, t_next);
+            {
+                vrc_blend_node_dvr_exp(rs, res);//dst_col, r, t_step, d, t_span, node_tspan, res, rc_tinfo, p_mask);
+                //t_span.x = fceil(t_next, d);
+                rs.r_tspan.x = rs.n_tspan.x;
+            }
+        }
+#endif
+
+#if VTEX_VRM_RC_OTREE_PCOORD == 1
+        vrc_blend_octree_node(rs.dst_color, r, rs.n_tinfo, rs.n_pmask);
+#endif
+        // advance ray ////////////////////////////////////////////////////////////////////////////
+        cpos     = clamp(r.origin + rs.r_tspan.x * r.direction + oeps * rs.n_pmask * r.direction, 0.0, 1.0);
+
+        // retrieve otree node ////////////////////////////////////////////////////////////////////
+        ray_cast_octree_traverse(vtex_volume, cpos, nlvl, rs.n_tinfo);
+
+        ++res._iter_count;
+    }
+
+    if (rs.dst_color.a > 0.1) {
+        res._t      = rs.r_tspan.x;
+        res._pos    = r.origin + res._t * r.direction;
+    }
+    else {
+        res._t      = float_max;//2.0 * t_span.y;
+    }
+
+    return rs.dst_color;
+}
+
+//subroutine (generate_color)
+vec4 volume_ray_cast_octree_blend_exp(in ray r, 
+                                in vec2 t_span, 
+                                in float d, 
+                                out ray_cast_result res)
+{
+    float entry_fc = fceil(t_span.x, d);
+    float t_step   = entry_fc >= t_span.x ? entry_fc - t_span.x : d;
+
+    // ray casting setup
+    const float oeps = 0.5 / float(1 << int(vtex_volume.max_level)); // octree epsilon
+    const float nlvl = vrc_node_level();
+    vec3        cpos = clamp(r.origin + t_span.x * r.direction, 0.0, 1.0);
+
+    
+    vrc_runtime_data  rs = make_vrc_runtime_data();
+    vrc_runtime_data  prs = make_vrc_runtime_data();
+    
+    rs.r       = r;
+    rs.r_d     = d;
+
+    prs.r      = r;
+    prs.r_d    = d;
+
+    rs.n_tspan.x = fceil(t_span.x,  d);
+    rs.n_tspan.y = ffloor(t_span.y, d);
+
+    rs.r_last_t = t_span.x;
+    rs.r_tspan  = vec2(entry_fc, t_span.y);
+
+    //ray_cast_octree_traverse(vtex_volume, cpos, nlvl, rs.n_tinfo);
+    ray_cast_octree_traverse_blend(vtex_volume, cpos, nlvl, rs.n_tinfo, prs.n_tinfo);
+
+    uint bb = rs.n_tinfo.vpage_index_data.w & 0x7fffu;  
+        
+
+    //if(bb > 0)
+    if(true)   
+    {
+        const float ots_tb   = rs.n_tspan.x;//fceil(t_span.x, d);
+        const float ots_te   = rs.n_tspan.y;//ffloor(t_span.y, d);//
+        const vec3 ots_o     = ots_tb * rs.r.direction + rs.r.origin;
+        const vec3 ots_e     = ots_te * rs.r.direction + rs.r.origin;
+        const vec3 ots_s     = ots_e - ots_o;
+        const float ots_sl   = length(ots_s);
+
+        const vec3  ats_o    = ots_to_ats(ots_o, rs.n_tinfo);
+        const vec3  ats_e    = ots_to_ats(ots_e, rs.n_tinfo);
+        const vec3  ats_s    = ats_e - ats_o;
+        const float ats_sl   = length(ats_s);
+        const float to_ats_l = ats_sl / ots_sl;
+        //const float to_ots_l = ots_sl / ats_sl;
+
+        float plsize = float(1 << prs.n_tinfo.vpage_level);
+        vec3 plpos   = floor(cpos * plsize);
+        vec3 pnmin   = (plpos + 0.0) / plsize;
+        vec3 pnmax   = (plpos + 1.0) / plsize;
+        
+        float pt_next = 0.0;
+
+        ray_node_exit_intersect(prs.r, pnmin, pnmax, pt_next, prs.n_pmask);
+        
+        pt_next = min(pt_next, rs.n_tspan.y);
+
+        prs.n_tspan = vec2(rs.r_tspan.x, pt_next);
+
+	    const float pots_tb = prs.n_tspan.x;//fceil(t_span.x, d);
+	    const float pots_te = prs.n_tspan.y;//ffloor(t_span.y, d);//
+	    const vec3  pots_o  = pots_tb * r.direction + r.origin;
+	    const vec3  pots_e  = pots_te * r.direction + r.origin;
+	    const vec3  pots_s  = pots_e - pots_o;
+	    const float pots_sl = length(pots_s);
+	
+	    const vec3  pats_o  = ots_to_ats(pots_o, prs.n_tinfo);
+	    const vec3  pats_e  = ots_to_ats(pots_e, prs.n_tinfo);
+	    const vec3  pats_s  = pats_e - pats_o;
+	    const float pats_sl = length(pats_s);
+	    const float to_pats_l = pats_sl / pots_sl;
+	    const float to_pots_l = pots_sl / pats_sl;
+        const float pats_d    = d * to_pats_l;
+        
+        const ray nr = make_ray(ats_o, normalize(ats_s));
+        const ray pnr = make_ray(pats_o, normalize(pats_s));
+
+        vec2 ats_tspan  = vec2(0.0, (rs.n_tspan.y - rs.n_tspan.x) * to_ats_l);
+        vec2 pats_tspan = vec2(0.0, (prs.n_tspan.y - prs.n_tspan.x) * to_pats_l);
+    
+        const vec3  as  = ats_tspan.x * nr.direction + nr.origin; // atlas sample pos
+        const vec3  pas  = pats_tspan.x * nr.direction + nr.origin; // atlas sample pos
+        vec3 cbspos = (as / vtex_volume.page_atlas.size_pages_rec - vec3(rs.n_tinfo.vpage_index_data.xyz));
+	    cbspos = cbspos / vtex_volume.page_core_size - vtex_volume.page_border_size;        
+
+        const float bw = calc_blend_weight(rs.n_tinfo, cbspos);
+    
+        // take first sample at entry
+
+        composite_sample_atlas_space_blend(rs.dst_color, 
+                                           1.0, 
+                                           ots_to_ats(rs.n_tspan.x * rs.r.direction + rs.r.origin, rs.n_tinfo), 
+                                           ots_to_ats(rs.n_tspan.x * prs.r.direction + prs.r.origin, prs.n_tinfo), 
+                                           rs.n_tinfo, 
+                                           prs.n_tinfo, 
+                                           bw);
+
+        //rs.dst_color = vec4(pats_tspan, 0.0, 1.0);
+    }
+    else
+    {
+        // take first sample at entry
+        composite_sample_atlas_space(rs.dst_color, 
+                                     1.0, 
+                                     ots_to_ats(t_span.x * r.direction + r.origin, rs.n_tinfo), 
+                                     rs.n_tinfo);  
+
+        //rs.dst_color += vec4(0.0, 0.1, 0.0, 0.0);
+    }
+    
+    rs.r_last_t = t_span.x;
+    prs.r_last_t = t_span.x;
+    rs.r_tspan  = vec2(entry_fc, t_span.y);
+        
+    //rs.dst_color = vec4(cbspos, 1.0);
+    //rs.dst_color = vec4(prs.n_tspan, 0.0, 1.0);
+    //rs.dst_color = vec4(pt_next, 0.0, 0.0, 1.0);
+    //rs.dst_color = vec4(0.0, 0.0, bw, 1.0);
+
+    // request lod ////////////////////////////////////////////////////////////////////////////
+    //vrc_vtexture_require(cpos);
+
+    
+    while (rs.r_tspan.x < rs.r_tspan.y && rs.dst_color.a < opacity_saturation) {
+
+        uint bb = rs.n_tinfo.vpage_index_data.w & 0x7fffu;  
+
+
+        check_iter_count_and_break(res._iter_count);
+
+        // request lod ////////////////////////////////////////////////////////////////////////////
+        vrc_vtexture_require(cpos);
+
+        float lsize = float(1 << rs.n_tinfo.vpage_level);
+        vec3 lpos   = floor(cpos * lsize);
+        vec3 nmin   = (lpos + 0.0) / lsize;
+        vec3 nmax   = (lpos + 1.0) / lsize;
+
+        float t_next = 0.0;
+        
+        ray_node_exit_intersect(r, nmin, nmax, t_next, rs.n_pmask);
+
+        t_next  = min(t_next,  rs.r_tspan.y);
+
+        if(true){
+            float plsize = float(1 << prs.n_tinfo.vpage_level);
+            vec3 plpos   = floor(cpos * plsize);
+            vec3 pnmin   = (plpos + 0.0) / plsize;
+            vec3 pnmax   = (plpos + 1.0) / plsize;
+                
+            float pt_next = 0.0;
+        
+            ray_node_exit_intersect(r, pnmin, pnmax, pt_next, prs.n_pmask);
+            
+            prs.n_tnext = pt_next;
+
+            pt_next = min(pt_next, rs.r_tspan.y);
+
+            rs.n_tspan  = vec2(rs.r_tspan.x, t_next);
+            prs.n_tspan = vec2(rs.r_tspan.x, pt_next);
+            
+            vrc_blend_node_dvr_blend_exp(rs, prs, res);//dst_col, r, t_step, d, t_span, node_tspan, res, rc_tinfo, p_mask);
+            //rs.dst_color = vec4(prs.n_tspan,0.0,1.0);
+            //rs.dst_color = vec4(cpos,1.0);
+             
+        }
+        else{
+            rs.n_tspan  = vec2(prs.r_tspan.x, t_next);            
+            vrc_blend_node_dvr_exp(rs, res);//dst_col, r, t_step, d, t_span, node_tspan, res, rc_tinfo, p_mask);          
+            //rs.dst_color += vec4(0.0, 0.1, 0.0, 0.0);
+        }
+                
+        rs.r_tspan.x = rs.n_tspan.x;
+
+#if VTEX_VRM_RC_OTREE_PCOORD == 1
+        vrc_blend_octree_node(rs.dst_color, r, rs.n_tinfo, rs.n_pmask);
+#endif
+        // advance ray ////////////////////////////////////////////////////////////////////////////
+        cpos     = clamp(r.origin + rs.r_tspan.x * r.direction + oeps * rs.n_pmask * r.direction, 0.0, 1.0);
+
+        // retrieve otree node ////////////////////////////////////////////////////////////////////
+        ray_cast_octree_traverse_blend(vtex_volume, cpos, nlvl, rs.n_tinfo, prs.n_tinfo);
+
+        ++res._iter_count;
+
+         //rs.dst_color = vec4(rs.n_tspan, 0.0, 1.0);
+    }
+
+    if (rs.dst_color.a > 0.1) {
+        res._t      = rs.r_tspan.x;
+        res._pos    = r.origin + res._t * r.direction;
+    }
+    else {
+        res._t      = float_max;//2.0 * t_span.y;
+    }
+
+    return rs.dst_color;
+}
+
+
+
+#endif // SCM_LDATA_VVOLUME_RAY_CAST_RAY_CAST_VTEXTURE_3D_EXPERIMENTAL_GLSLH_INCLUDED

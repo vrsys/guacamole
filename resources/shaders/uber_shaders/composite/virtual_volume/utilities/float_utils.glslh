@@ -1,0 +1,19 @@
+
+#ifndef SCM_LDATA_FLOAT_UTILS_GLSLH_INCLUDED
+#define SCM_LDATA_FLOAT_UTILS_GLSLH_INCLUDED
+
+float
+fceil(in float v, in float d)
+{
+    precise float f = ceil(v / d) * d;
+    return f;
+}
+
+float
+ffloor(in float v, in float d)
+{
+    precise float f = floor(v / d) * d;
+    return f;
+}
+
+#endif // SCM_LDATA_FLOAT_UTILS_GLSLH_INCLUDED

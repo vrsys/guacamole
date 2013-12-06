@@ -1,0 +1,159 @@
+
+#ifndef SCM_LDATA_VVOLUME_RAY_CAST_DEBUG_VIS_GLSLH_INCLUDED
+#define SCM_LDATA_VVOLUME_RAY_CAST_DEBUG_VIS_GLSLH_INCLUDED
+
+#include </scm/data/vtexture/vtexture.glslh>
+#include </scm/data/vtexture/vtexture_debug.glslh>
+
+#include </scm/data/ray/ray.glslh>
+#include </scm/data/ray/ray_cast_result.glslh>
+
+#include </scm/data/volume/ray_cast/uniforms.glslh>
+
+//subroutine (generate_color)
+vec4 volume_visualize_texcoord(in ray r, in vec2 t_span, in float d, out ray_cast_result res)
+{
+    res._t      = t_span.x;
+    res._pos    = r.origin + t_span.x * r.direction;
+    res._iter_count = 1;
+
+#if VTEX_USE_FBACK_IMAGE == 1
+    vtexture_require(vtex_volume,     res._pos / vtex_volume.texcoord_scale);
+#endif
+#if VTEX_USE_FBACK_LISTS == 1
+    vtexture_add_request(vtex_volume, res._pos / vtex_volume.texcoord_scale);
+#endif
+
+    return vec4(res._pos, 1.0);
+}
+
+//subroutine (generate_color)
+vec4 volume_draw_vtexture(in ray r, in vec2 t_span, in float d, out ray_cast_result res)
+{
+    res._t          = t_span.x;
+    res._pos        = r.origin + t_span.x * r.direction;
+    res._iter_count = 1;
+    //return vec4(texture(gauss_color_map, res._pos.xy / vtex_volume.texcoord_scale.xy).rgba);
+    //return vec4(texture(color_map, vtexture(vtex_volume, tc).rr).rgb, 1.0);
+    //return vec4(vtexture(vtex_volume, tc).rrr, 1.0);
+
+#if VTEX_USE_FBACK_IMAGE == 1
+    vtexture_require(vtex_volume,     res._pos / vtex_volume.texcoord_scale);
+#endif
+#if VTEX_USE_FBACK_LISTS == 1
+    vtexture_add_request(vtex_volume, res._pos / vtex_volume.texcoord_scale);
+#endif
+
+    //return vec4(texture(preint_color_map, (res._ots_pos / vtex_volume.texcoord_scale).xy).rgb, 1.0);
+
+
+
+#if VTEX_VRM_RC_DVR_GAUSSFIT == 1
+#if VTEX_VRM_VTEXTURE_FIXED_LOD == 1
+    vec2 v = vtexture_octree_lod_quadrilinear_ots(vtex_volume, res._pos, vtex_volume_fixed_lod).xy;
+#else
+    vec2 v = vtexture_octree_quadrilinear_ots(vtex_volume, res._pos).xy;
+#endif // VTEX_VRM_VTEXTURE_FIXED_LOD == 1
+    vec4 col_a = texture(gauss_color_map, v);
+
+    return vec4(col_a.rgb / col_a.a, 1.0);
+#else // VTEX_VRM_RC_DVR_GAUSSFIT == 1
+
+#if VTEX_VRM_VTEXTURE_FIXED_LOD == 1
+    float v = vtexture_octree_lod_quadrilinear_ots(vtex_volume, res._pos, vtex_volume_fixed_lod).r;
+#else
+    float v = vtexture_octree_quadrilinear_ots(vtex_volume, res._pos).r;
+#endif // VTEX_VRM_VTEXTURE_FIXED_LOD == 1
+    v = (v - volume_data.value_range.x) * volume_data.value_range.w;
+
+    return vec4(texture(gua_get_float_sampler(color_map), vec2(v)).rgb, 1.0);
+#endif // VTEX_VRM_RC_DVR_GAUSSFIT == 1
+}
+
+//subroutine (generate_color)
+vec4 volume_draw_vtexture_lod(in ray r, in vec2 t_span, in float d, out ray_cast_result res)
+{
+    res._t      = t_span.x;
+    res._pos    = r.origin + t_span.x * r.direction;
+    res._iter_count = 1;
+
+    //return texture(color_map, vtexture(vtex_volume, tc).rr);
+    //return vec4(texture(color_map, vtexture_lod(vtex_volume, tc, vtex_volume_fixed_lod).rr).rgb, 1.0);
+    //return vec4(vtexture_lod(vtex_volume, tc, vtex_volume_fixed_lod).rrr, 1.0);
+
+#if VTEX_USE_FBACK_IMAGE == 1
+    vtexture_require(vtex_volume,     res._pos / vtex_volume.texcoord_scale);
+#endif
+#if VTEX_USE_FBACK_LISTS == 1
+    vtexture_add_request(vtex_volume, res._pos / vtex_volume.texcoord_scale);
+#endif
+
+    return vec4(vtexture_octree_lod_quadrilinear_ots(vtex_volume, res._pos, vtex_volume_fixed_lod).rrr, 1.0);
+    //return vec4(vtexture_octree_lod_trilinear_ots(vtex_volume, res._pos, vtex_volume_fixed_lod).rrr, 1.0);
+}
+
+//subroutine (generate_color)
+vec4 volume_draw_debug_atlas(in ray r, in vec2 t_span, in float d, out ray_cast_result res)
+{
+    res._t      = t_span.x;
+    res._pos    = r.origin + t_span.x * r.direction;
+    res._iter_count = 1;
+
+#if VTEX_USE_FBACK_IMAGE == 1
+    vtexture_require(vtex_volume,     res._pos / vtex_volume.texcoord_scale);
+#endif
+#if VTEX_USE_FBACK_LISTS == 1
+    vtexture_add_request(vtex_volume, res._pos / vtex_volume.texcoord_scale);
+#endif
+
+    return vec4(vtexture_debug_atlas(vtex_volume, res._pos / (vtex_volume.texcoord_scale * volume_data.scale_obj_to_tex.xyz)).rrr, 1.0);
+	//return vec4(res._pos / (vtex_volume.texcoord_scale * volume_data.scale_obj_to_tex.xyz).r, 1.0);
+	//return vec4(texture(gua_get_float_sampler(color_map), vtexture_debug_atlas(vtex_volume, res._pos / (vtex_volume.texcoord_scale * volume_data.scale_obj_to_tex.xyz)).rr));
+}
+
+//subroutine (generate_color)
+vec4 volume_draw_debug_page_quadrilinear(in ray r, in vec2 t_span, in float d, out ray_cast_result res)
+{
+    res._t      = t_span.x;
+    res._pos    = r.origin + t_span.x * r.direction;
+    res._iter_count = 1;
+
+
+#if VTEX_USE_FBACK_IMAGE == 1
+    vtexture_require(vtex_volume,     res._pos / vtex_volume.texcoord_scale);
+#endif
+#if VTEX_USE_FBACK_LISTS == 1
+    vtexture_add_request(vtex_volume, res._pos / vtex_volume.texcoord_scale);
+#endif
+
+#if VTEX_VRM_VTEXTURE_FIXED_LOD == 1
+    return vtexture_debug_page_lod_quadrilinear(vtex_volume, res._pos / vtex_volume.texcoord_scale, vtex_volume_fixed_lod);
+#else
+    return vtexture_debug_page_quadrilinear(vtex_volume, res._pos / vtex_volume.texcoord_scale);
+#endif // VTEX_VRM_VTEXTURE_FIXED_LOD == 1
+}
+
+//subroutine (generate_color)
+vec4 volume_draw_debug_quadtree(in ray r, in vec2 t_span, in float d, out ray_cast_result res)
+{
+    res._t      = t_span.x;
+    res._pos    = r.origin + t_span.x * r.direction;
+    res._iter_count = 1;
+
+
+#if VTEX_USE_FBACK_IMAGE == 1
+    vtexture_require(vtex_volume,     res._pos / vtex_volume.texcoord_scale);
+#endif
+#if VTEX_USE_FBACK_LISTS == 1
+    vtexture_add_request(vtex_volume, res._pos / vtex_volume.texcoord_scale);
+#endif
+
+#if VTEX_VRM_VTEXTURE_FIXED_LOD == 1
+    return vtexture_debug_octree_lod(vtex_volume, res._pos / vtex_volume.texcoord_scale, vtex_volume_fixed_lod);
+#else
+    return vtexture_debug_octree(vtex_volume, res._pos / vtex_volume.texcoord_scale);
+#endif // VTEX_VRM_VTEXTURE_FIXED_LOD == 1
+}
+
+
+#endif // SCM_LDATA_VVOLUME_RAY_CAST_DEBUG_VIS_GLSLH_INCLUDED

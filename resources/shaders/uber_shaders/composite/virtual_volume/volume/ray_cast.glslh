@@ -1,0 +1,12 @@
+
+#ifndef SCM_LDATA_VVOLUME_RAY_CAST_RAY_CAST_GLSLH_INCLUDED
+#define SCM_LDATA_VVOLUME_RAY_CAST_RAY_CAST_GLSLH_INCLUDED
+
+#include </scm/data/volume/ray_cast/constants.glslh>
+#include </scm/data/volume/ray_cast/debug_vis.glslh>
+#include </scm/data/volume/ray_cast/ray_cast_vtexture_3d.glslh>
+#include </scm/data/volume/ray_cast/ray_setup.glslh>
+#include </scm/data/volume/ray_cast/uniforms.glslh>
+#include </scm/data/volume/ray_cast/utilities.glslh>
+
+#endif // SCM_LDATA_VVOLUME_RAY_CAST_RAY_CAST_GLSLH_INCLUDED

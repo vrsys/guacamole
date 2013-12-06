@@ -1,0 +1,57 @@
+
+#ifndef SCM_LDATA_RAY_RAY_GLSLH_INCLUDED
+#define SCM_LDATA_RAY_RAY_GLSLH_INCLUDED
+
+#include </scm/data/global_constants.glslh>
+
+// type definitions ///////////////////////////////////////////////////////////////////////////////
+struct ray
+{
+    vec3    origin;
+    vec3    direction;
+    vec3    direction_rec;
+}; // struct ray
+
+void
+make_ray(in vec3  entry,
+         in vec3  exit,
+         in float dir_scale,
+         out ray  gen_ray)
+{
+    gen_ray.origin        = entry;
+    gen_ray.direction     = normalize(exit - entry) * dir_scale;
+    gen_ray.direction_rec = vec3(1.0) / gen_ray.direction;
+}
+
+ray
+make_ray(in vec3  entry,
+         in vec3  dir)
+{
+    ray gen_ray;
+    gen_ray.origin        = entry;
+    gen_ray.direction     = dir;
+    gen_ray.direction_rec = vec3(1.0) / gen_ray.direction;
+
+    return gen_ray;
+}
+
+ray
+make_safe_ray(in vec3  entry,
+              in vec3  dir)
+{
+    ray gen_ray;
+    gen_ray.origin        = entry;
+    gen_ray.direction     = dir;
+
+    vec3 ray_sign = sign(gen_ray.direction);
+
+    if (abs(dir.x) < epsilon) gen_ray.direction.x = ray_sign.x < 0.0 ? -epsilon : epsilon; // sign can return 0.0
+    if (abs(dir.y) < epsilon) gen_ray.direction.y = ray_sign.y < 0.0 ? -epsilon : epsilon; // sign can return 0.0
+    if (abs(dir.z) < epsilon) gen_ray.direction.z = ray_sign.z < 0.0 ? -epsilon : epsilon; // sign can return 0.0
+
+    gen_ray.direction_rec = vec3(1.0) / gen_ray.direction;
+
+    return gen_ray;
+}
+
+#endif // SCM_LDATA_RAY_RAY_GLSLH_INCLUDED

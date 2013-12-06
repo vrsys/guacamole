@@ -1,0 +1,873 @@
+
+#ifndef SCM_LDATA_VVOLUME_RAY_CAST_RAY_CAST_VTEXTURE_3D_GLSLH_INCLUDED
+#define SCM_LDATA_VVOLUME_RAY_CAST_RAY_CAST_VTEXTURE_3D_GLSLH_INCLUDED
+
+#include </scm/data/vtexture/vtexture.glslh>
+#include </scm/data/vtexture/vtexture_debug.glslh>
+
+#include </scm/data/ray/ray.glslh>
+#include </scm/data/ray/ray_cast_result.glslh>
+#include </scm/data/utilities/float_utils.glslh>
+
+#if SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+#include </scm/data/volume/ray_cast/octree_traversal_bindless.glslh>
+#else // SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+#include </scm/data/volume/ray_cast/octree_traversal.glslh>
+#endif // SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+
+#include </scm/data/volume/ray_cast/uniforms.glslh>
+#include </scm/data/volume/ray_cast/utilities.glslh>
+
+// declarations ///////////////////////////////////////////////////////////////////////////////////
+//vec3 ots_to_ats(in vec3 ots_p, in uvec4 page_idx, in int page_lvl);
+float calc_blend_weight(in ray_cast_trav_info rc_tinfo, in vec3 cbspos);
+vec3 ots_to_ats(in vec3 ots_p, in ray_cast_trav_info rc_tinfo);
+vec4 texture_page(in ray_cast_trav_info rc_tinfo, in vec3 page_tc);
+vec4 texture_page_view(in ray_cast_trav_info rc_tinfo, in vec3 page_tc);
+
+void ray_node_exit_intersect(in ray r, in vec3 bbmin, in vec3 bbmax, out float tmax, out vec3 pmask);
+
+float vrc_node_level();
+void  vrc_vtexture_require(in vec3 ots_pos);
+void  vrc_blend_octree_node(inout vec4 dst_col, in ray r, in ray_cast_trav_info rc_tinfo, in vec3 p_mask);
+
+
+// implementation /////////////////////////////////////////////////////////////////////////////////
+#define VTEX_VRM_RC_DVR_SAVE_ITER_MODE 1
+
+#if VTEX_VRM_RC_DVR_SAVE_ITER_MODE == 1
+#   define check_iter_count_and_break(x) if ((x) > max_ray_iterations) break;
+#else
+#   define check_iter_count_and_break(x)
+#endif // VTEX_VRM_RC_DVR_SAVE_ITER_MODE == 1
+
+
+float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+vec4
+scale_value_range(in vec4 v)
+{
+    return (v - volume_data.value_range.x) * volume_data.value_range.w;
+    //return (v - (-154784.0)) * (1.0/(154784 + 154784));
+}
+
+void
+vrc_blend_octree_node(inout vec4 dst_col, in ray r, in ray_cast_trav_info rc_tinfo, in vec3 p_mask)
+{
+    vec4 c = vec4(rc_tinfo.vpage_coord, 0.3);
+
+    if (true) {
+        const vec3 nt = normalize(p_mask);
+        //const vec3 nt = normalize((volume_data.m_matrix_inverse_transpose * vec4(p_mask, 0.0)).xyz);
+        const vec3 n = (dot(nt, r.direction) < 0.0) ? nt : -nt;
+        //const vec3 l = normalize((volume_data.m_matrix_inverse_transpose * vec4(1.0, 1.0, 1.0, 0.0)).xyz); // assume parallel light!
+        //const vec3 l = normalize(vec3(1.0, 1.0, 1.0)); // assume parallel light!
+        const vec3 l = normalize(r.direction);
+
+        //c = c * (abs(dot(n, l)) * 0.5 + 0.5);
+        c.rgb = c.rgb * max(0.0, abs(dot(n, l)));
+        //c = n;
+    }
+    vec4 src = c;
+
+    // compositing
+    float omda_sa = (1.0 - dst_col.a) * src.a;
+    dst_col.rgb += omda_sa * src.rgb;
+    dst_col.a   += omda_sa;
+}
+
+void
+vrc_blend_node_dvr_00(inout vec4               dst_col,
+                      in    ray                r,
+                      in    float              d,
+                      inout vec2               t_span,
+                      inout ray_cast_result    res,
+                      in    ray_cast_trav_info rc_tinfo,
+                      in    vec3               p_mask)
+{
+    while (t_span.x < t_span.y && dst_col.a < opacity_saturation) {
+        check_iter_count_and_break(res._iter_count);
+        // traverse ray in atlas cell
+        //vec3  as  = clamp(t_span.x * r.direction + r.origin, vec3(0.0), vec3(1.0)); // atlas sample pos
+        vec3 as = t_span.x * r.direction + r.origin; // atlas sample pos
+        as = ots_to_ats(as, rc_tinfo);
+
+        float ad  = texture_page(rc_tinfo, as).r;
+        vec4  src = texture(gua_get_float_sampler(color_map), vec2(ad, 0.0));
+
+        src.a = 1.0 - pow(1.0 - src.a, volume_data.sampling_distance.y);
+            
+        float omda_sa = (1.0 - dst_col.a) * src.a;
+        dst_col.rgb += omda_sa * src.rgb;
+        dst_col.a   += omda_sa;
+
+        t_span.x += d;
+        ++res._iter_count;
+    }
+}
+
+void
+composite_sample_atlas_space(inout vec4  dst_col, // target color
+                             in    float seg_len, // segment length      
+                             in    vec3  atc,     // atlas texture coordinate
+                             in    ray_cast_trav_info rc_tinfo)
+{
+#if VTEX_VRM_RC_DVR_GAUSSFIT == 1
+    vec2  md;//     = texture_page(rc_tinfo, atc).rg;//texture(vtex_volume.page_atlas.atlas_texture, as).rg;    
+#if VTEX_VRM_RC_DVR_TEXTUREVIEW == 1
+    if(rc_tinfo.vpage_level == vtex_volume.max_level || rc_tinfo.vpage_level == vtex_volume.max_level - 1){
+    //if(rc_tinfo.vpage_level == vtex_volume.max_level){
+        md     = vec2(texture_page(rc_tinfo, atc).r, 0.0);
+    }
+    else{
+        md     = texture_page_view(rc_tinfo, atc).rg;
+       
+        //md.r -= 0.09; 
+        md.g /= 16.0;
+    } 
+#else //VTEX_VRM_RC_DVR_TEXTUREVIEW == 1
+    md     = texture_page_view(rc_tinfo, atc).rg;
+#endif
+    
+    /*const*/ vec4  src_nc = texture(gauss_color_map, vec2(md.x, md.y));
+
+    if(src_nc.a > 0.999)
+        src_nc.a = 1.0;
+
+    const float alpha_corr = 1.0 - pow(1.0 - src_nc.a, seg_len * volume_data.sampling_distance.y);
+    //const float alpha_corr = 1.0 - pow(1.0 - src_nc.a, seg_len * volume_data.sampling_distance.y * (rc_tinfo.vpage_level * rc_tinfo.vpage_level) / 8);
+
+    vec4  src;
+    if(src_nc.a > 0.00000001){
+        src  = vec4(src_nc.rgb * (alpha_corr/src_nc.a), alpha_corr);
+    }
+    else{
+        src  = vec4(src_nc.rgb, src_nc.a);
+        //src  = vec4(1.0 ,0.0,0.0, src_nc.a);
+    }
+                 
+    //src  = vec4(md.g, 0.0,0.0, src_nc.a);
+    //const vec4  src    = vec4(1.0) - pow(vec4(1.0) - src_nc, vec4(seg_len));
+    //const vec4  src    = vec4(src_nc.rgb, 1.0 - pow(1.0 - src_nc.a, volume_data.sampling_distance.y * seg_len));
+#else // VTEX_VRM_RC_DVR_GAUSSFIT == 1
+    float ad = 0.0;
+#if VTEX_VRM_RC_DVR_TEXTUREVIEW == 1
+    if(rc_tinfo.vpage_level == vtex_volume.max_level || rc_tinfo.vpage_level == vtex_volume.max_level - 1){
+        ad     = texture_page(rc_tinfo, atc).r;             
+    }
+    else{
+        ad     = texture_page_view(rc_tinfo, atc).r;
+        //ad.r -= 0.09;
+    }
+#else //VTEX_VRM_RC_DVR_TEXTUREVIEW == 1
+        ad     = texture_page(rc_tinfo, atc).r;             
+#endif // VTEX_VRM_RC_DVR_TEXTUREVIEW == 1
+    const vec4  src_nc = texture(gua_get_float_sampler(color_map), vec2(ad, 0.0));
+
+    const float alpha_corr = 1.0 - pow(1.0 - src_nc.a, volume_data.sampling_distance.y * seg_len);
+
+    const vec4  src    = vec4(src_nc.rgb, alpha_corr);
+        
+#endif // VTEX_VRM_RC_DVR_GAUSSFIT == 1
+
+        const float omda_sa = (1.0 - dst_col.a) * src.a;
+#if VTEX_VRM_RC_DVR_GAUSSFIT == 1
+        dst_col.rgb += (1.0 - dst_col.a) * src.rgb;
+        //dst_col.rgb += omda_sa * src.rgb;
+#else // VTEX_VRM_RC_DVR_GAUSSFIT == 1
+        dst_col.rgb += omda_sa * src.rgb;
+#endif // VTEX_VRM_RC_DVR_GAUSSFIT == 1
+        dst_col.a   += omda_sa;
+
+        //dst_col = vec4(1.0, 1.0, 0.0, 1.0);
+}
+
+void
+composite_sample_atlas_space_blend(inout vec4  dst_col, // target color
+                             in    float seg_len, // segment length      
+                             in    vec3  atc,     // atlas texture coordinate
+                             in    vec3  patc,     // atlas texture coordinate
+                             in    ray_cast_trav_info rc_tinfo,
+                             in    ray_cast_trav_info rc_par_tinfo,
+                             in    float blend_weight)
+{
+
+
+
+#if VTEX_VRM_RC_DVR_GAUSSFIT == 1
+        vec2  md;//        = texture_page(rc_tinfo, atc).rg;//texture(vtex_volume.page_atlas.atlas_texture, as).rg;
+        vec2  pmd;// = texture_page(rc_par_tinfo, patc).rg;//texture(vtex_volume.page_atlas.atlas_texture, as).rg;
+
+#if VTEX_VRM_RC_DVR_TEXTUREVIEW == 1
+        if(rc_tinfo.vpage_level == vtex_volume.max_level || rc_tinfo.vpage_level == vtex_volume.max_level - 1){
+        //if(rc_tinfo.vpage_level == vtex_volume.max_level || rc_tinfo.vpage_level == vtex_volume.max_level - 1){
+            md     = vec2(texture_page(rc_tinfo, atc).r, 0.0);
+        }
+        else{
+            md     = texture_page_view(rc_tinfo, atc).rg; 
+                    //md.r -= 0.09; 
+            md.g /= 16.0;// + 0.01;
+        }   
+
+        if(rc_tinfo.vpage_level - 1 == vtex_volume.max_level || rc_tinfo.vpage_level - 1 == vtex_volume.max_level - 1){
+           pmd    = vec2(texture_page(rc_par_tinfo, patc).r, 0.0);           
+        }
+        else{           
+            pmd    = texture_page_view(rc_par_tinfo, patc).rg;  
+                    //pmd.r -= 0.09; 
+            pmd.g /= 16.0;// + 0.01;
+        }   
+#else // VTEX_VRM_RC_DVR_TEXTUREVIEW == 1
+        md     = texture_page_view(rc_tinfo, atc).rg; 
+        pmd    = texture_page_view(rc_par_tinfo, patc).rg;  
+#endif
+        //blend_weight = 1.0;
+
+        //md = mix(md, pmd, blend_weight);
+        //md = pmd;
+        
+  //      if(rc_tinfo.vpage_level == 3)
+  //      {
+  ////          md = pmd;
+  //      }
+        
+               
+        vec4  src_nc = texture(gauss_color_map, vec2(md.x, md.y));
+        /*const*/ vec4  psrc_nc = texture(gauss_color_map, vec2(pmd.x, pmd.y));
+
+        if(src_nc.a > 0.9){
+            src_nc.a = 1.0;
+            psrc_nc.a = 1.0;
+        }
+
+        src_nc.rgba = mix(src_nc.rgba, psrc_nc.rgba, blend_weight);
+
+
+        //src_nc.rgba = psrc_nc;
+
+        //const float corr   = volume_data.sampling_distance.y * seg_len;
+        //const vec4  src    = vec4(src_nc.rgb * corr, 1.0 - pow(1.0 - src_nc.a, corr));
+        //const vec4  src    = vec4(src_nc.rgb, 1.0 - pow(1.0 - src_nc.a, ));
+        //const vec4  src    = vec4(1.0) - pow(vec4(1.0) - src_nc, vec4(seg_len/volume_data.sampling_distance.y));
+        
+        //const float alpha_corr = 1.0 - pow(1.0 - src_nc.a, seg_len * volume_data.sampling_distance.y);
+        //const float alpha_corr = 1.0 - pow(1.0 - src_nc.a, seg_len * (volume_data.sampling_distance.y * (1 + blend_weight)));
+        
+        float alpha_corr = 1.0 - pow(1.0 - src_nc.a, seg_len * volume_data.sampling_distance.y );
+        //const float alpha_corr = 1.0 - pow(1.0 - src_nc.a, seg_len * volume_data.sampling_distance.y * (rc_tinfo.vpage_level * rc_tinfo.vpage_level) / 8);
+        
+        vec4  src;
+        if(src_nc.a > 0.00000001){
+            //src  = mix(vec4(src_nc.rgb * (alpha_corr/src_nc.a), alpha_corr), vec4(psrc_nc.rgb * (alpha_corr/psrc_nc.a), alpha_corr));
+            src  = vec4(src_nc.rgb * (alpha_corr/src_nc.a), alpha_corr);
+        }
+        else{
+            src  = vec4(src_nc.rgb, src_nc.a);
+            //src  = vec4(1.0 ,0.0,0.0, src_nc.a);
+        }
+
+        //src  = vec4(src_nc.rgb, 1.0);
+        //src  = vec4(1.0 ,0.0,0.0, src_nc.a);
+          
+#else // VTEX_VRM_RC_DVR_GAUSSFIT == 1    
+
+        float ad     = texture_page(rc_tinfo, atc).r;
+        float pad     = texture_page(rc_par_tinfo, patc).r;
+#if VTEX_VRM_RC_DVR_TEXTUREVIEW == 1
+        if(rc_tinfo.vpage_level == vtex_volume.max_level || rc_tinfo.vpage_level == vtex_volume.max_level - 1){
+            ad     = texture_page(rc_tinfo, atc).r;             
+        }
+        else{
+            ad     = texture_page_view(rc_tinfo, atc).r;
+            //ad.r -= 0.09;
+        }
+        
+        if(rc_tinfo.vpage_level == vtex_volume.max_level || rc_tinfo.vpage_level == vtex_volume.max_level - 1){
+            pad     = texture_page(rc_tinfo, patc).r;             
+        }
+        else{
+            pad     = texture_page_view(rc_tinfo, patc).r;
+            //ad.r -= 0.09;
+        }
+#else // VTEX_VRM_RC_DVR_TEXTUREVIEW == 1     
+        ad     = texture_page(rc_tinfo, atc).r; 
+        pad     = texture_page(rc_tinfo, patc).r; 
+#endif
+
+        ad = mix(ad, pad, blend_weight);
+
+        const vec4  src_nc = texture(gua_get_float_sampler(color_map), vec2(ad, 0.0));
+        
+        float alpha_corr = 1.0 - pow(1.0 - src_nc.a, seg_len * volume_data.sampling_distance.y);
+        
+        const vec4  src    = vec4(src_nc.rgb, alpha_corr);
+        //const vec4  src    = vec4(src_nc.rgb, 1.0 - pow(1.0 - src_nc.a, seg_len));
+#endif // VTEX_VRM_RC_DVR_GAUSSFIT == 1
+
+        const float omda_sa = (1.0 - dst_col.a) * src.a;
+#if VTEX_VRM_RC_DVR_GAUSSFIT == 1
+        dst_col.rgb += (1.0 - dst_col.a) * src.rgb;
+        //dst_col.rgb += omda_sa * src.rgb;
+#else // VTEX_VRM_RC_DVR_GAUSSFIT == 1
+        dst_col.rgb += omda_sa * src.rgb;
+#endif // VTEX_VRM_RC_DVR_GAUSSFIT == 1
+        dst_col.a   += omda_sa;
+
+#if 0
+        dst_col.rgb = vec3(0.0,0.0, blend_weight);
+        dst_col.a   = 1.0;
+#endif
+
+}
+
+void
+vrc_blend_node_dvr_01(inout vec4               dst_col,
+                      in    ray                r,
+                      in    float              d,
+                      inout vec2               t_span,
+                      inout ray_cast_result    res,
+                      in    ray_cast_trav_info rc_tinfo,
+                      in    vec3               p_mask)
+{
+    // trasform ray into atlas node
+    const float ots_tb = t_span.x;//fceil(t_span.x, d);
+    const float ots_te = t_span.y;//ffloor(t_span.y, d);//
+    const vec3 ots_o = ots_tb * r.direction + r.origin;
+    const vec3 ots_e = ots_te * r.direction + r.origin;
+    const vec3 ots_s = ots_e - ots_o;
+    const float ots_sl = length(ots_s);
+
+    const vec3  ats_o  = ots_to_ats(ots_o, rc_tinfo);
+    const vec3  ats_e  = ots_to_ats(ots_e, rc_tinfo);
+    const vec3  ats_s  = ats_e - ats_o;
+    const float ats_sl = length(ats_s);
+    const float to_ats_l = ats_sl / ots_sl;
+    const float to_ots_l = ots_sl / ats_sl;
+    
+#if VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+    int dlvl_fact = 1 << (int(vtex_volume.max_level) - rc_tinfo.vpage_level);
+#else // VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+    int dlvl_fact = 1;
+#endif // VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+
+    const float ats_d_ref = d * to_ats_l;
+    float ats_d     = ats_d_ref;
+    float ats_d_inc = ats_d_ref * float(dlvl_fact);
+    float atsd_flast = 1.0;//dlvl_fact;//1.0;
+
+    const ray nr = make_ray(ats_o, normalize(ats_s));
+
+    vec2 ats_tspan = vec2(0.0, (t_span.y - t_span.x) * to_ats_l);
+    //vec2 ats_tspan = vec2(0.0, ats_sl);
+    //int test_x = 0;
+
+    //dst_col = vec4(0.0,0.0,1.0,1.0);
+
+    while (ats_tspan.x < ats_tspan.y && dst_col.a < opacity_saturation) {
+        
+        check_iter_count_and_break(res._iter_count);
+
+        // traverse ray in atlas cell
+        const vec3  as  = ats_tspan.x * nr.direction + nr.origin; // atlas sample pos
+
+        composite_sample_atlas_space(dst_col, ats_d / ats_d_ref, as, rc_tinfo);
+
+
+#if VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+#if 0
+        //if ((ats_tspan.x + (ats_d * float(dlvl_fact))) >= ats_tspan.y) {
+        if ((ats_tspan.x + ats_d) >= ats_tspan.y) {
+            if (rc_tinfo.vpage_level == int(vtex_volume.max_level)) {
+                dst_col.rgb += (1.0 - dst_col.a) * 0.6 * green;
+            }
+            else {
+                dst_col.rgb += (1.0 - dst_col.a) * 0.6 * red;
+            }
+            dst_col.a   += (1.0 - dst_col.a) * 0.6;
+
+            dlvl_fact  = 1;
+            ats_d      = d * to_ats_l;
+        }
+#else
+        //while (((ats_tspan.x + (ats_d * float(dlvl_fact))) >= ats_tspan.y) && (dlvl_fact > 1)) {
+        while (((ats_tspan.x + ats_d_inc) >= ats_tspan.y) && (dlvl_fact > 1)) {
+            //if (rc_tinfo.vpage_level == int(vtex_volume.max_level)) {
+                //dst_col.rgb += (1.0 - dst_col.a) * 1.0 * green;
+                //dst_col.a   += (1.0 - dst_col.a) * 1.0;
+            //}
+            //else {
+                //dst_col.rgb += (1.0 - dst_col.a) * 0.2 * red;
+                //dst_col.a   += (1.0 - dst_col.a) * 0.2;
+            //}
+//
+            //dlvl_fact = 1;
+            //ats_d_inc = ats_d;
+            dlvl_fact /= 2;
+            ats_d_inc  = ats_d_ref * float(dlvl_fact);//0.5;//d * float(dlvl_fact) * to_ats_l;
+        }
+#endif
+#endif // VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING == 1
+
+        //ats_tspan.x += (ats_d * float(dlvl_fact));
+        ats_tspan.x += ats_d_inc;
+        ats_d = ats_d_inc;
+        atsd_flast   = float(dlvl_fact);
+        //++test_x;
+        ++res._iter_count;
+    }
+    t_span.x = t_span.x + ats_tspan.x * to_ots_l;
+    //t_span.x = t_span.x + float(test_x) * d;
+    //t_span.x = (ots_sl * ats_tspan.x) / ats_sl;
+    //t_span.y = (ots_sl * ats_tspan.y) / ats_sl;
+    //t_span.x = ots_tb + d * float(test_x + 1);
+    //t_span.x += (ats_tspan.x * d) / ats_d;// / ats_scale;
+    //t_span.x = (t_span.x < t_next) ? t_next : t_span.x;
+}
+
+void
+vrc_blend_node_dvr_preint_01(inout vec4               dst_col,
+                             inout float              last_sample,
+                             in    ray                r,
+                             in    float              d,
+                             inout vec2               t_span,
+                             inout ray_cast_result    res,
+                             in    ray_cast_trav_info rc_tinfo,
+                             in    vec3               p_mask)
+{
+    // trasform ray into atlas node
+    const float ots_tb = t_span.x;//fceil(t_span.x, d);
+    const float ots_te = t_span.y;//ffloor(t_span.y, d);//
+    const vec3 ots_o = ots_tb * r.direction + r.origin;
+    const vec3 ots_e = ots_te * r.direction + r.origin;
+    const vec3 ots_s = ots_e - ots_o;
+    const float ots_sl = length(ots_s);
+
+    const vec3  ats_o    = ots_to_ats(ots_o, rc_tinfo);
+    const vec3  ats_e    = ots_to_ats(ots_e, rc_tinfo);
+    const vec3  ats_s    = ats_e - ats_o;
+    const float ats_sl   = length(ats_s);
+    const float to_ats_l = ats_sl / ots_sl;
+    const float to_ots_l = ots_sl / ats_sl;
+    const float ats_d    = d * to_ats_l;
+
+    const ray nr = make_ray(ats_o, normalize(ats_s));
+
+    vec2 ats_tspan = vec2(0.0, (t_span.y - t_span.x) * to_ats_l);
+
+    while (ats_tspan.x < ats_tspan.y && dst_col.a < opacity_saturation) {
+        check_iter_count_and_break(res._iter_count);
+        // traverse ray in atlas cell
+        vec3  ats_spos  = ats_tspan.x * nr.direction + nr.origin; // atlas sample pos
+        float cur_sample = texture_page(rc_tinfo, ats_spos).r;
+
+        vec4  src = texture(preint_color_map, vec2(last_sample, cur_sample));
+        last_sample = cur_sample;
+
+        float omda_sa = (1.0 - dst_col.a) * src.a;
+        dst_col.rgb += omda_sa * src.rgb;
+        dst_col.a   += omda_sa;
+
+        ats_tspan.x += ats_d;
+        ++res._iter_count;
+    }
+    t_span.x = t_span.x + ats_tspan.x * to_ots_l;
+}
+
+//subroutine (generate_color)
+vec4 volume_ray_cast_octree(in ray r, in vec2 t_span, in float d, out ray_cast_result res)
+{
+#if VTEX_VRM_RC_DVR_PREINT == 1 && VTEX_VRM_RC_DVR_PREINT == 1
+    float t_entry      = t_span.x;//t_span.x;
+#else
+    t_span.x = fceil(t_span.x,  d);
+#endif // VTEX_VRM_RC_DVR_PREINT == 1 && VTEX_VRM_RC_DVR_PREINT == 1
+    t_span.y = ffloor(t_span.y, d);
+
+    // ray casting setup
+    const float oeps = 0.5 / float(1 << int(vtex_volume.max_level)); // octree epsilon
+    const float nlvl = vrc_node_level();
+    vec3        cpos = clamp(r.origin + t_span.x * r.direction, 0.0, 1.0);
+    ray_cast_trav_info rc_tinfo;
+    ray_cast_octree_traverse(vtex_volume, cpos, nlvl, rc_tinfo);
+
+#if VTEX_VRM_RC_DVR_PREINT == 1 && VTEX_VRM_RC_DVR_PREINT == 1
+    float last_sample = texture_page(rc_tinfo, ots_to_ats(t_entry * r.direction + r.origin, rc_tinfo)).r;
+    //float last_sample = texture(vtex_volume.page_atlas.atlas_texture,
+                                //ots_to_ats(t_entry * r.direction + r.origin, rc_tinfo)).r;
+#endif // VTEX_VRM_RC_DVR_PREINT == 1 && VTEX_VRM_RC_DVR_PREINT == 1
+
+    vec4 dst_col = vec4(0.0);
+
+    while (t_span.x < t_span.y && dst_col.a < opacity_saturation) {
+
+        check_iter_count_and_break(res._iter_count);
+
+        // request lod ////////////////////////////////////////////////////////////////////////////
+        vrc_vtexture_require(cpos);
+
+        float lsize = float(1 << rc_tinfo.vpage_level);
+        vec3 lpos   = floor(cpos * lsize);
+        vec3 nmin   = (lpos + 0.0) / lsize;
+        vec3 nmax   = (lpos + 1.0) / lsize;
+
+        float t_next = 0.0;
+        vec3  p_mask = vec3(0.0);
+        ray_node_exit_intersect(r, nmin, nmax, t_next, p_mask);
+        t_next = min(t_next, t_span.y);
+
+        // do something with node data ;) /////////////////////////////////////////////////////////
+#if VTEX_VRM_RC_DVR_OCTREE == 1
+        {
+            vrc_blend_octree_node(dst_col, r, rc_tinfo, p_mask);
+            t_span.x = t_next;
+        }
+
+#elif VTEX_VRM_RC_DVR_00 == 1 || VTEX_VRM_RC_DVR_01 == 1
+#if VTEX_VRM_RC_DVR_00 == 1
+        {
+            vec2 node_tspan = vec2(t_span.x, t_next);
+            vrc_blend_node_dvr_00(dst_col, r, d, node_tspan, res, rc_tinfo, p_mask);
+
+            //t_span.x = node_tspan.x;
+            t_span.x = fceil(t_next, d);
+        }
+#elif VTEX_VRM_RC_DVR_01 == 1
+        {
+            //vec2 node_tspan = vec2(t_span.x, ffloor(t_next, d));
+            vec2 node_tspan = vec2(t_span.x, t_next);
+
+            //if (   t_next > t_span.x)
+            {
+#if VTEX_VRM_RC_DVR_PREINT == 1
+                vrc_blend_node_dvr_preint_01(dst_col, last_sample, r, d, node_tspan, res, rc_tinfo, p_mask);
+                //t_span.x = fceil(t_next, d) - t_entry_diff;
+                t_span.x = node_tspan.x;
+#else
+                vrc_blend_node_dvr_01(dst_col, r, d, node_tspan, res, rc_tinfo, p_mask);
+                t_span.x = fceil(t_next, d);
+#endif // VTEX_VRM_RC_DVR_PREINT == 1
+
+                //t_span.x = node_tspan.x;
+
+                //t_span.x = t_span.y * 2.0;
+            }
+
+            //t_span.x = fceil(t_next, d);
+        }
+#endif
+
+#if VTEX_VRM_RC_OTREE_PCOORD == 1
+        vrc_blend_octree_node(dst_col, r, rc_tinfo, p_mask);
+#endif
+#endif
+        // advance ray ////////////////////////////////////////////////////////////////////////////
+        //cpos     = clamp(r.origin + (t_next + epsilon) * r.direction, 0.0, 1.0);
+        cpos     = clamp(r.origin + t_span.x * r.direction + oeps * p_mask * r.direction, 0.0, 1.0);
+        //cpos     = clamp(r.origin + t_span.x * r.direction + oeps * p_mask * sign(r.direction), 0.0, 1.0);
+
+        // retrieve otree node ////////////////////////////////////////////////////////////////////
+        ray_cast_octree_traverse(vtex_volume, cpos, nlvl, rc_tinfo);
+
+
+        ++res._iter_count;
+    }
+
+    if (dst_col.a > 0.1) {
+        res._t      = t_span.x;
+        res._pos    = r.origin + res._t * r.direction;
+    }
+    else {
+        res._t      = float_max;//2.0 * t_span.y;
+    }
+    //res._iter_count = 0;
+    //return vec4(rc_tinfo.vpage_coord, 1.0);
+    return dst_col;
+
+    //return vec4(vtexture_octree_quadrilinear_ots(vtex_volume, res._pos).rrr, 1.0);
+}
+
+#if 0
+struct vrc_rt_data
+{
+
+    bool                node_in_progress;
+
+    float               octree_epsilon;
+    float               node_level;
+    vec3                cur_position;
+    ray_cast_trav_info  rc_tinfo;
+
+    float               cur_lvl_size;
+    vec3                cur_lvl_pos;
+    vec3                node_min;
+    vec3                node_max;
+    float               node_t_next;
+    vec3                node_p_mask;
+
+#if VTEX_VRM_RC_DVR_PREINT == 1 && VTEX_VRM_RC_DVR_PREINT == 1
+    float               last_sample;
+#endif // VTEX_VRM_RC_DVR_PREINT == 1 && VTEX_VRM_RC_DVR_PREINT == 1
+}; // struct vrc_rt_data
+
+vrc_rt_data
+make_vrc_rt_data()
+{
+    vrc_rt_data rtdata;
+
+    rtdata.octree_epsilon = -1.0;
+
+    return rtdata;
+}
+
+bool
+valid_vrc_rt_data(in vrc_rt_data rtd)
+{
+    return rtd.octree_epsilon > 0.0;
+}
+
+//subroutine (generate_color)
+vec4 volume_ray_cast_octree_interruptible(inout vrc_rt_data     rt_data,
+                                          in    ray             r,
+                                          inout vec2            t_span,
+                                          in    float           d,
+                                          out   ray_cast_result res)
+{
+#if VTEX_VRM_RC_DVR_PREINT == 1 && VTEX_VRM_RC_DVR_PREINT == 1
+    float t_entry      = t_span.x;//t_span.x;
+#else
+    t_span.x = fceil(t_span.x,  d);
+#endif // VTEX_VRM_RC_DVR_PREINT == 1 && VTEX_VRM_RC_DVR_PREINT == 1
+    t_span.y = ffloor(t_span.y, d);
+
+    if (!valid_vrc_rt_data(rt_data)) {
+        // ray casting setup
+        rt_data.octree_epsilon = 0.5 / float(1 << int(vtex_volume.max_level)); // octree epsilon
+        rt_data.node_level     = vrc_node_level();
+        rt_data.cur_position   = clamp(r.origin + t_span.x * r.direction, 0.0, 1.0);
+
+        ray_cast_octree_traverse(vtex_volume, rt_data.cur_position, rt_data.node_level, rt_data.rc_tinfo);
+
+#if VTEX_VRM_RC_DVR_PREINT == 1 && VTEX_VRM_RC_DVR_PREINT == 1
+        rt_data.last_sample = texture_page(rt_data.rc_tinfo, ots_to_ats(t_entry * r.direction + r.origin, rt_data.rc_tinfo)).r;
+#endif // VTEX_VRM_RC_DVR_PREINT == 1 && VTEX_VRM_RC_DVR_PREINT == 1
+    }
+
+    vec4 dst_col = vec4(0.0);
+
+    while (t_span.x < t_span.y && dst_col.a < opacity_saturation) {
+
+        check_iter_count_and_break(res._iter_count);
+
+        // request lod ////////////////////////////////////////////////////////////////////////////
+        vrc_vtexture_require(rt_data.cur_position);
+
+        rt_data.cur_lvl_size = float(1 << rt_data.rc_tinfo.vpage_level);
+        rt_data.cur_lvl_pos  = floor(rt_data.cur_position * rt_data.cur_lvl_size);
+        rt_data.node_min     = (rt_data.cur_lvl_pos + 0.0) / rt_data.cur_lvl_size;
+        rt_data.node_max     = (rt_data.cur_lvl_pos + 1.0) / rt_data.cur_lvl_size;
+
+        rt_data.node_t_next = 0.0;
+        rt_data.node_p_mask = vec3(0.0);
+        ray_node_exit_intersect(r, rt_data.node_min, rt_data.node_max, rt_data.node_t_next, rt_data.node_p_mask);
+        rt_data.node_t_next = min(rt_data.node_t_next, t_span.y);
+
+        // do something with node data ;) /////////////////////////////////////////////////////////
+#if VTEX_VRM_RC_DVR_OCTREE == 1
+        {
+            vrc_blend_octree_node(dst_col, r, rt_data.rc_tinfo, rt_data.node_p_mask);
+            t_span.x = rt_data.node_t_next;
+        }
+
+#elif VTEX_VRM_RC_DVR_00 == 1 || VTEX_VRM_RC_DVR_01 == 1
+#if VTEX_VRM_RC_DVR_00 == 1
+        {
+            vec2 node_tspan = vec2(t_span.x, rt_data.node_t_next);
+            vrc_blend_node_dvr_00(dst_col, r, d, node_tspan, res, rt_data.rc_tinfo, rt_data.node_p_mask);
+
+            //t_span.x = node_tspan.x;
+            t_span.x = fceil(rt_data.node_t_next, d);
+        }
+#elif VTEX_VRM_RC_DVR_01 == 1
+        {
+            vec2 node_tspan = vec2(t_span.x, rt_data.node_t_next);
+            {
+#if VTEX_VRM_RC_DVR_PREINT == 1
+                vrc_blend_node_dvr_preint_01(dst_col, rt_data.last_sample, r, d, node_tspan, res, rt_data.rc_tinfo, rt_data.node_p_mask);
+                t_span.x = node_tspan.x;
+#else
+                vrc_blend_node_dvr_01(dst_col, r, d, node_tspan, res, rt_data.rc_tinfo, rt_data.node_p_mask);
+                t_span.x = fceil(rt_data.node_t_next, d);
+#endif // VTEX_VRM_RC_DVR_PREINT == 1
+            }
+        }
+#endif
+
+#if VTEX_VRM_RC_OTREE_PCOORD == 1
+        vrc_blend_octree_node(dst_col, r, rt_data.rc_tinfo, rt_data.node_p_mask);
+#endif
+#endif
+        // advance ray ////////////////////////////////////////////////////////////////////////////
+        rt_data.cur_position     = clamp(r.origin + t_span.x * r.direction + rt_data.octree_epsilon * rt_data.node_p_mask * r.direction, 0.0, 1.0);
+
+        // retrieve otree node ////////////////////////////////////////////////////////////////////
+        ray_cast_octree_traverse(vtex_volume, rt_data.cur_position, rt_data.node_level, rt_data.rc_tinfo);
+        ++res._iter_count;
+    }
+
+    if (dst_col.a > 0.1) {
+        res._t      = t_span.x;
+        res._pos    = r.origin + res._t * r.direction;
+    }
+    else {
+        res._t      = float_max;//2.0 * t_span.y;
+    }
+
+    return dst_col;
+}
+#endif
+
+float
+calc_blend_weight(in ray_cast_trav_info rc_tinfo, in vec3 cbspos)
+{
+    const uint bb  = rc_tinfo.vpage_index_data.w & 0x7fffu;	
+
+    const float b000 = float( bb & 0x0001u);			//0
+	const float b100 = float((bb & 0x0002u) >> 1u);		//1
+	const float b110 = float((bb & 0x0004u) >> 2u);		//2
+	const float b010 = float((bb & 0x0008u) >> 3u);		//3		
+	const float b001 = float((bb & 0x0010u) >> 4u);		//4		
+	const float b101 = float((bb & 0x0020u) >> 5u);		//5
+	const float b111 = float((bb & 0x0040u) >> 6u);		//6
+	const float b011 = float((bb & 0x0080u) >> 7u);		//7
+
+    const float bx00 = mix(b000, b100, cbspos.x);
+	const float bx10 = mix(b010, b110, cbspos.x);
+	const float bx01 = mix(b001, b101, cbspos.x);
+	const float bx11 = mix(b011, b111, cbspos.x);
+
+	const float by0 = mix(bx00, bx10, cbspos.y);
+	const float by1 = mix(bx01, bx11, cbspos.y);
+
+	return mix(by0, by1, cbspos.z);
+}
+
+float
+vrc_node_level()
+{
+#if VTEX_VRM_VTEXTURE_FIXED_LOD == 1
+    return max(0.0, vtex_volume.max_level - vtex_volume_fixed_lod);
+#else
+    return max(0.0, vtex_volume.max_level);// - mip_map_level(cpos, vtex_volume.size_max_level));
+#endif
+}
+
+void
+vrc_vtexture_require(in vec3 ots_pos)
+{
+#if VTEX_USE_FBACK_IMAGE == 1
+        vtexture_require(vtex_volume,     ots_pos / vtex_volume.texcoord_scale);
+#endif
+#if VTEX_USE_FBACK_LISTS == 1
+        vtexture_add_request(vtex_volume, ots_pos / vtex_volume.texcoord_scale);
+#endif
+}
+
+vec3
+ots_to_ats(in vec3 ots_p, in ray_cast_trav_info rc_tinfo)
+{
+    //vec3 pcp  = fract(ots_p * float(1 << rc_tinfo.vpage_level));
+
+    vec3 pcp  = ots_p * rc_tinfo.octree_nodes_per_level - rc_tinfo.octree_node_pos;
+    //vec3 pcp  = fract(clamp(ots_p, vec3(0.0), vec3(1.0)) * float(1 << page_lvl));
+    vec3 pc   = pcp * vtex_volume.page_core_size + vtex_volume.page_border_size;
+#if SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+    return pc;
+#else // SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+    return vtex_volume.page_atlas.size_pages_rec * (vec3(rc_tinfo.vpage_index_data.xyz) + pc);
+#endif // SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+}
+
+vec4
+texture_page(in ray_cast_trav_info rc_tinfo,
+             in vec3               page_tc)
+{
+#if SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+    //uvec2     page_tex_enc = texelFetch(vtex_volume.page_atlas.atlas_textures, int(rc_tinfo.vpage_index_data.x)).xy;
+    //uint64_t  vpage_hndl   = packUint2x32(page_tex_enc);
+    //return vec4(texture(sampler3D(rc_tinfo.vpage_hndl), rc_tinfo.vpage_coord).rgb, 1.0);//page_tc);
+
+    return scale_value_range(texture(sampler3D(rc_tinfo.vpage_hndl), page_tc));
+    //return texture(rc_tinfo.vpage, page_tc);//page_tc);
+    //return texture(sampler3D(vpage_hndl), page_tc);//page_tc);
+#else // SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+    return scale_value_range(texture(vtex_volume.page_atlas.atlas_texture_view, page_tc));
+#endif // SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+}
+
+vec4
+texture_page_view(in ray_cast_trav_info rc_tinfo,
+             in vec3               page_tc)
+{
+#if SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+    //uvec2     page_tex_enc = texelFetch(vtex_volume.page_atlas.atlas_textures, int(rc_tinfo.vpage_index_data.x)).xy;
+    //uint64_t  vpage_hndl   = packUint2x32(page_tex_enc);
+    //return vec4(texture(sampler3D(rc_tinfo.vpage_hndl), rc_tinfo.vpage_coord).rgb, 1.0);//page_tc);
+
+    return scale_value_range(texture(sampler3D(rc_tinfo.vpage_hndl), page_tc));
+    //return texture(rc_tinfo.vpage, page_tc);//page_tc);
+    //return texture(sampler3D(vpage_hndl), page_tc);//page_tc);
+#else // SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+
+#if VTEX_VRM_RC_DVR_TEXTUREVIEW == 1
+    return texture(vtex_volume.page_atlas.atlas_texture, page_tc)* 255.0;    
+#else
+    return scale_value_range(texture(vtex_volume.page_atlas.atlas_texture, page_tc));
+#endif
+    //return scale_value_range(texture(vtex_volume.page_atlas.atlas_texture_view, page_tc)) + 0.03;
+    
+#endif // SCM_LDATA_VTEX_BINDLESS_TEXTURE == 1
+}
+
+void
+ray_node_exit_intersect(in ray    r,
+                        in vec3   bbmin,
+                        in vec3   bbmax,
+                        out float tmax,
+                        out vec3  pmask)
+{
+    vec3 t1 = (bbmin - r.origin) * r.direction_rec;
+    vec3 t2 = (bbmax - r.origin) * r.direction_rec;
+
+    vec3 m = max(t1, t2);
+
+#if 1
+    if (m.x < m.y) {
+        if (m.x < m.z) {
+            tmax  = m.x;
+            pmask = vec3(1.0, 0.0, 0.0);
+        }
+        else {
+            tmax = m.z;
+            pmask = vec3(0.0, 0.0, 1.0);
+        }
+    }
+    else {
+        if (m.y < m.z) {
+            tmax = m.y;
+            pmask = vec3(0.0, 1.0, 0.0);
+        }
+        else {
+            tmax = m.z;
+            pmask = vec3(0.0, 0.0, 1.0);
+        }
+    }
+#else
+    tmax = min(min(m.x, m.y), m.z);
+#endif
+}
+
+
+
+#endif // SCM_LDATA_VVOLUME_RAY_CAST_RAY_CAST_VTEXTURE_3D_GLSLH_INCLUDED

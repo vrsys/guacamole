@@ -1,0 +1,17 @@
+
+#ifndef SCM_LDATA_VVOLUME_RAY_CAST_UNIFORMS_GLSLH_INCLUDED
+#define SCM_LDATA_VVOLUME_RAY_CAST_UNIFORMS_GLSLH_INCLUDED
+
+#include </scm/data/vtexture/vtexture.glslh>
+//#include </scm/data/volume/volume_uniform_block.glslh>
+
+/*layout(binding =  0..3)*/ uniform vtexture3D  vtex_volume;
+//layout(binding = 4)   uniform sampler2D   color_map;
+layout(binding = 5)   uniform sampler2D   preint_color_map;
+layout(binding = 6)   uniform sampler2D   gauss_color_map;
+                      uniform float       vtex_volume_fixed_lod;
+
+                      uniform vec2            viewport_size;
+                      uniform vec2            viewport_size_inv;
+
+#endif // SCM_LDATA_VVOLUME_RAY_CAST_UNIFORMS_GLSLH_INCLUDED

@@ -1,0 +1,88 @@
+
+
+#ifndef SCM_LDATA_VOLUME_RAY_CAST_VOLUME_TRACE_GLSLH_INCLUDED
+#define SCM_LDATA_VOLUME_RAY_CAST_VOLUME_TRACE_GLSLH_INCLUDED
+
+#include </scm/gl_util/camera_block.glslh>
+
+#include </scm/data/vtexture/vtexture.glslh>
+#include </scm/data/vtexture/vtexture_debug.glslh>
+
+#include </scm/data/ray/ray.glslh>
+#include </scm/data/ray/intersect_utils.glslh>
+
+#include </scm/data/volume/ray_cast.glslh>
+#include </scm/data/volume/ray_cast/ray_cast_vtexture_3d_experimental.glslh>
+
+vec4
+trace_volume(in ray r, inout vec2 t_span, in float d, out ray_cast_result res)
+{
+    vec4 rcol       = vec4(0.0);
+
+#if   VTEX_VRM_VTEXTURE == 1
+        rcol = volume_draw_vtexture(r, t_span, d, res);
+#elif VTEX_VRM_VTEXTURE_ATLAS == 1
+        rcol = volume_draw_debug_atlas(r, t_span, d, res);
+#elif VTEX_VRM_VTEXTURE_PAGE_QUADRILIN == 1
+        rcol = volume_draw_debug_page_quadrilinear(r, t_span, d, res);
+#elif VTEX_VRM_VTEXTURE_PAGE_OCTREE == 1
+        rcol = volume_draw_debug_quadtree(r, t_span, d, res);
+#elif VTEX_VRM_RC_DVR_00 == 1 || VTEX_VRM_RC_DVR_01 == 1 || VTEX_VRM_RC_DVR_OCTREE == 1
+        rcol = volume_ray_cast_octree(r, t_span, d, res);
+#endif
+
+#if VTEX_VRM_RC_ITER_COUNT == 1
+    if (res._iter_count > max_ray_iterations / 2) {
+        rcol.rgb = red;
+    }
+    else {
+        rcol.rgb = vec3(float(res._iter_count) / (max_ray_iterations / 2));
+    }
+    rcol.a   = 1.0;
+#endif // VTEX_VRM_RC_ITER_COUNT == 1
+
+    return rcol;
+}
+
+vec4
+trace_volume_interruptible(inout vrc_runtime_data   rt_data,
+                           in ray r, inout vec2 t_span, in float d, out ray_cast_result res)
+{
+    vec4 rcol       = vec4(0.0);
+
+#if   VTEX_VRM_VTEXTURE == 1
+        rcol = volume_draw_vtexture(r, t_span, d, res);
+        rt_data.dst_color.rgb = rt_data.dst_color.rgb + (1.0 - rt_data.dst_color.a) * rcol.a * rcol.rgb;
+        rt_data.dst_color.a   = rt_data.dst_color.a   + (1.0 - rt_data.dst_color.a) * rcol.a;
+#elif VTEX_VRM_VTEXTURE_ATLAS == 1
+        rcol = volume_draw_debug_atlas(r, t_span, d, res);
+        rt_data.dst_color.rgb = rt_data.dst_color.rgb + (1.0 - rt_data.dst_color.a) * rcol.a * rcol.rgb;
+        rt_data.dst_color.a   = rt_data.dst_color.a   + (1.0 - rt_data.dst_color.a) * rcol.a;
+#elif VTEX_VRM_VTEXTURE_PAGE_QUADRILIN == 1
+        rcol = volume_draw_debug_page_quadrilinear(r, t_span, d, res);
+        rt_data.dst_color.rgb = rt_data.dst_color.rgb + (1.0 - rt_data.dst_color.a) * rcol.a * rcol.rgb;
+        rt_data.dst_color.a   = rt_data.dst_color.a   + (1.0 - rt_data.dst_color.a) * rcol.a;
+#elif VTEX_VRM_VTEXTURE_PAGE_OCTREE == 1
+        rcol = volume_draw_debug_quadtree(r, t_span, d, res);
+        rt_data.dst_color.rgb = rt_data.dst_color.rgb + (1.0 - rt_data.dst_color.a) * rcol.a * rcol.rgb;
+        rt_data.dst_color.a   = rt_data.dst_color.a   + (1.0 - rt_data.dst_color.a) * rcol.a;
+#elif VTEX_VRM_RC_DVR_00 == 1 || VTEX_VRM_RC_DVR_01 == 1 || VTEX_VRM_RC_DVR_OCTREE == 1
+        rcol = volume_ray_cast_octree_interruptible(rt_data, r, t_span, d, res);
+#endif
+
+#if VTEX_VRM_RC_ITER_COUNT == 1
+    if (res._iter_count > max_ray_iterations / 2) {
+        rcol.rgb = red;
+    }
+    else {
+        rcol.rgb = vec3(float(res._iter_count) / (max_ray_iterations / 2));
+    }
+    rcol.a   = 1.0;
+    rt_data.dst_color.rgb = rt_data.dst_color.rgb + (1.0 - rt_data.dst_color.a) * rcol.a * rcol.rgb;
+    rt_data.dst_color.a   = rt_data.dst_color.a   + (1.0 - rt_data.dst_color.a) * rcol.a;
+#endif // VTEX_VRM_RC_ITER_COUNT == 1
+
+    return rcol;
+}
+
+#endif // SCM_LDATA_VOLUME_RAY_CAST_VOLUME_TRACE_GLSLH_INCLUDED

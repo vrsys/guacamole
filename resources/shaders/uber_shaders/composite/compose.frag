@@ -113,6 +113,9 @@ vec4 get_raycast_color(vec3 gua_object_volume_position,
 void main() {
 
   vec3 gua_object_volume_position = texture2D(gua_get_float_sampler(gua_ray_entry_in), gua_get_quad_coords()).xyz;
+  ///ANOTHER BAD HACK
+  int volume_type = (int)texture2D(gua_get_float_sampler(gua_ray_entry_in), gua_get_quad_coords()).w;
+
   vec3 gua_world_volume_position = (gua_model_matrix * vec4(gua_object_volume_position, 1.0)).xyz;
 
   float d_gbuffer = texture2D(gua_get_float_sampler(gua_depth_gbuffer_in), gua_get_quad_coords()).x;
@@ -122,7 +125,8 @@ void main() {
   d_volume = -1.0 * get_depth_linear(d_volume);
   
   // compose  
-  if(d_gbuffer > d_volume &&
+  if(volume_type <= 0.1 &&
+	d_gbuffer > d_volume &&
 	(gua_object_volume_position.x != 0.00 || 
      gua_object_volume_position.y != 0.00 || 
 	 gua_object_volume_position.z != 0.00))
@@ -136,8 +140,7 @@ void main() {
   else{
 	gua_out_color = texture2D(gua_get_float_sampler(gua_color_gbuffer_in), gua_get_quad_coords()).xyz;
   }
-
-   
+    
 
 }
 

@@ -72,12 +72,13 @@ protected :
 
  private:
 
-  GBuffer* volume_raygeneration_;
+  GBuffer* volume_raygeneration_buffer_;
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::quad_geometry_ptr fullscreen_quad_;
 
   ShaderProgram* composite_shader_;
+  ShaderProgram* v_composite_shader_;
   ShaderProgram* ray_generation_shader_;
 };
 

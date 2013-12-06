@@ -114,6 +114,7 @@ namespace gua {
 		_volume_file_path(vfile_name),
 		_vtexture_info(),
 		_renderer_settings(),
+		_sample_distance(10.0),
 		_volume_boxes_ptr(),
 		upload_mutex_()
 	{
@@ -160,7 +161,7 @@ namespace gua {
 
 		unsigned max_dimension_volume = scm::math::max(scm::math::max(_volume_dimensions.x, _volume_dimensions.y), _volume_dimensions.z);
 
-		sample_distance(0.5f / (float)max_dimension_volume);
+		sample_distance(10000.0);
 
 		_volume_dimensions_normalized = math::vec3((float)_volume_dimensions.x / (float)max_dimension_volume,
 													(float)_volume_dimensions.y / (float)max_dimension_volume,
@@ -175,11 +176,9 @@ namespace gua {
 		_alpha_transfer.clear();
 		_color_transfer.clear();
 
-#if 0
+#if 1
 		_alpha_transfer.add_stop(0, 1.0f);
-		_alpha_transfer.add_stop(0.45f, 0.0f);
-		_alpha_transfer.add_stop(0.50f, 0.0f);
-		_alpha_transfer.add_stop(0.55f, 0.0f);
+		_alpha_transfer.add_stop(0.5f, 1.0f);
 		_alpha_transfer.add_stop(1.0f, 1.0f);
 #else
 		_alpha_transfer.add_stop(0.0f, 0.0f);
@@ -189,12 +188,16 @@ namespace gua {
 		_alpha_transfer.add_stop(1.0f, 1.0f);
 #endif
 
-#if 0
-		// blue-white-red
-		_color_transfer.add_stop(0,		scm::math::vec3f(1.0f, 0.0f, 0.0f));
-		_color_transfer.add_stop(0.5,	scm::math::vec3f(1.0f, 1.0f, 1.0f));
-		_color_transfer.add_stop(1.0f,	scm::math::vec3f(0.0f, 0.0f, 1.0f));
-#else
+#if 1
+		// blue-grey-orange
+		_color_transfer.add_stop(0, scm::math::vec3f(0.0f, 1.0f, 1.0f));
+		_color_transfer.add_stop(0.25f, scm::math::vec3f(0.0f, 0.0f, 1.0f));
+		_color_transfer.add_stop(0.375f, scm::math::vec3f(0.256637f, 0.243243f, 0.245614f));
+		_color_transfer.add_stop(0.50f, scm::math::vec3f(0.765487f, 0.738739f, 0.72807f));
+		_color_transfer.add_stop(0.625f, scm::math::vec3f(0.530973f, 0.27027f, 0.0f));
+		_color_transfer.add_stop(0.75f, scm::math::vec3f(1.0f, 0.333333f, 0.0f));
+		_color_transfer.add_stop(1.0f, scm::math::vec3f(1.0f, 1.0f, 0.0f));
+#else	
 		// blue-white-red
 		_color_transfer.add_stop(0.0f, scm::math::vec3f(0.0f, 0.0f, 0.0f));
 		_color_transfer.add_stop(0.5f, scm::math::vec3f(0.4f, 0.0f, 0.4f));
@@ -221,6 +224,7 @@ namespace gua {
 			_gauss_texture_ptr.resize(ctx.id + 1);
 			_volume_boxes_ptr.resize(ctx.id + 1);
 			_sstate.resize(ctx.id + 1);
+			_rstate.resize(ctx.id + 1);
 		}
 
 		_vtexture_system = boost::make_shared<scm::data::vtexture_system>(ctx.render_device, scm::math::vec2ui(ctx.width, ctx.height));		
@@ -250,8 +254,6 @@ namespace gua {
 		//_volume_texture_ptr[ctx.id] = std::shared_ptr<Texture3D>(new Texture3D(_volume_file_path));// scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
 		//_volume_texture_ptr[ctx.id]->upload_to(ctx);
 
-		
-
 		unsigned transfer_texture_width = 255u;
 
 		//scm::gl::texture_loader scm_image_loader; 
@@ -267,6 +269,11 @@ namespace gua {
 		
 		_sstate[ctx.id] = ctx.render_device->create_sampler_state(
 			scm::gl::FILTER_MIN_MAG_MIP_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+
+		_rstate[ctx.id] = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, 
+																		scm::gl::CULL_FRONT, 
+																		scm::gl::ORIENT_CCW, 
+																		true);
 	}
 
 	std::shared_ptr<Texture2D>
@@ -395,7 +402,7 @@ namespace gua {
 //		ctx.render_context->bind_texture(_transfer_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 6);
 		scm::gl::program_ptr p = ctx.render_context->current_program();
 		p->uniform_sampler("volume_texture", 5);			
-		p->uniform_sampler("transfer_texture", 6);
+		p->uniform_sampler("color_map", 6);
 		p->uniform("sampling_distance", _sample_distance);
 		//p->uniform("iso_value", 0.8f);
 		p->uniform("volume_bounds", _volume_dimensions_normalized);
@@ -411,7 +418,9 @@ namespace gua {
 			upload_to(ctx);
 		}
 
-		scm::gl::context_vertex_input_guard vig(ctx.render_context);
+		scm::gl::context_all_guard vig(ctx.render_context);
+
+		ctx.render_context->set_rasterizer_state(_rstate[ctx.id]);
 
 		ctx.render_context->apply();
 		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);		
@@ -436,7 +445,7 @@ namespace gua {
 		}
 		
 		//cs->set_uniform(ctx, _volume_texture_ptr[ctx.id], "volume_texture");
-		cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id], "transfer_texture");
+		cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id], "color_map");
 		cs->set_uniform(ctx, _sample_distance, "sampling_distance");
 		cs->set_uniform(ctx, _volume_dimensions_normalized, "volume_bounds");
 
@@ -482,5 +491,16 @@ namespace gua {
 		_color_transfer = in_color;
 
 		_update_transfer_function = true;
+	}
+		
+	void LargeVolume::bind_vtexture(RenderContext const& context) const
+	{
+		_vtexture_system->bind_vtexture(context.render_context, _volume_vtexture_ptr, _sstate[context.id], 0);
+		
+	}
+	
+	void LargeVolume::program_uniform(RenderContext const& context, gua::ShaderProgram* shader_prg, std::string const& uniform_name) const
+	{
+		_vtexture_system->program_uniform(shader_prg->get_program_ptr(context), uniform_name, _volume_vtexture_ptr, 0);
 	}
 }

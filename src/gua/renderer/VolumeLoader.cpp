@@ -124,7 +124,7 @@ namespace gua {
 
 		std::shared_ptr<Node> cached_node;
 		std::string key(vfile_name + "_" + string_utils::to_string(flags));
-
+		
 		auto searched(loaded_files_.find(key));
 		if (searched != loaded_files_.end()) {
 

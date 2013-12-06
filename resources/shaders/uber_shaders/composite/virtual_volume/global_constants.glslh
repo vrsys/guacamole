@@ -1,0 +1,17 @@
+
+#ifndef SCM_LDATA_GLOBAL_CONSTANTS_GLSLH_INCLUDED
+#define SCM_LDATA_GLOBAL_CONSTANTS_GLSLH_INCLUDED
+
+// global constants ///////////////////////////////////////////////////////////////////////////////
+const float epsilon         = 0.0001;
+const float float_max       = 3.402823466e+38F;
+
+const vec3 white = vec3(1.0, 1.0, 1.0);
+const vec3 black = vec3(0.0, 0.0, 0.0);
+const vec3 dgrey = vec3(0.3, 0.3, 0.3);
+const vec3 red   = vec3(1.0, 0.0, 0.0);
+const vec3 green = vec3(0.0, 1.0, 0.0);
+const vec3 blue  = vec3(0.0, 0.0, 1.0);
+const vec3 lblue = vec3(0.2, 0.7, 0.9);
+
+#endif // SCM_LDATA_GLOBAL_CONSTANTS_GLSLH_INCLUDED

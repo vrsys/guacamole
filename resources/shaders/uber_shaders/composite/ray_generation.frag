@@ -21,14 +21,17 @@
 
 @include "shaders/common/header.glsl"
 
+// uniforms
+uniform int volume_frag_id;
+
 // input 
 in vec3 gua_position_varying;
 
 // write outputs 
-layout(location=0) out vec3 gua_out_color;
+layout(location=0) out vec4 gua_out_color;
 
 // main ------------------------------------------------------------------------
 void main() {
-  gua_out_color = gua_position_varying;
+  gua_out_color = vec4(gua_position_varying, volume_frag_id);
 }
 
