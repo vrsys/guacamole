@@ -533,7 +533,7 @@ void PostFXPass::render_glow(CameraMode eye, RenderContext const& ctx) {
         glow_shader_->set_uniform(ctx, pipeline_->config.bloom_threshold(), "gua_glow_threshold");
 
 
-        auto color_buffer(inputs_[Pipeline::shading]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
+        auto color_buffer(inputs_[Pipeline::compositing]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
         ctx.render_context->set_viewport(scm::gl::viewport(
                 math::vec2(0,0), math::vec2(float(glow_buffers_[0]->width()),
                                             float(glow_buffers_[0]->height()))));

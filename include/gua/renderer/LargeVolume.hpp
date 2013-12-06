@@ -49,6 +49,7 @@
 #include <scm/large_data/virtual_texture/vtexture_fwd.h>
 #include <scm/large_data/volume_data/volume_header.h>
 
+#include <gua/renderer/large_volume/gauss_table_generator.h>
 
 #include <mutex>
 #include <thread>
@@ -72,6 +73,8 @@ namespace gua {
 	*/
 	class LargeVolume : public Geometry {
 	public:
+
+		typedef std::shared_ptr<scm::data::gauss_table_generator>          gauss_table_generator_ptr;
 
 		struct renderer_settings {
 			//render_method   _render_method;
@@ -211,8 +214,8 @@ namespace gua {
 		//Texture3D for volume data for each volume
 		//mutable std::vector<std::shared_ptr<Texture3D>>
 		//	_volume_texture_ptr;
-		vtexture3d_info								_vtexture_info;
-		renderer_settings							_renderer_settings;
+		vtexture3d_info										_vtexture_info;
+		renderer_settings									_renderer_settings;
 
 		mutable scm::data::vtexture_system_ptr				_vtexture_system;
 		mutable scm::data::vtexture_3d_context_ptr			_vtexture_context_volume;
@@ -221,6 +224,7 @@ namespace gua {
 		mutable std::vector<std::shared_ptr<Texture2D>>
 			_transfer_texture_ptr;
 
+		mutable gauss_table_generator_ptr				_gauss_gen;
 		mutable std::vector<std::shared_ptr<Texture2D>>
 			_gauss_texture_ptr;
 

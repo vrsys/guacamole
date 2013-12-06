@@ -130,6 +130,14 @@ float get_depth_linear(float depth_buffer_d) {
 	return enit_inv.z;
 }
 
+vec3 get_object_world_position_from_depth(float depth_buffer_d) {
+
+	float ndc = (depth_buffer_d * 2.0 - gl_DepthRange.near - gl_DepthRange.far) / gl_DepthRange.diff;
+	vec4 enit = vec4(gl_FragCoord.xy * 2.0 - vec2(1.0), ndc, 1.0);
+	vec4 enit_inv = (gua_inverse_projection_view_matrix * enit);	
+	return enit_inv.xyz;
+}
+
 // implementation /////////////////////////////////////////////////////////////////////////////////
 void main()
 {
@@ -146,14 +154,15 @@ void main()
 
 	d_gbuffer = -1.0 * get_depth_linear(d_gbuffer);
 	d_volume = -1.0 * get_depth_linear(d_volume);
-
+	
 	// compose  
-	if (volume_type_id >= 0.9 && 
-		d_gbuffer > d_volume &&
+	if (volume_type_id >= 0.9 && 		
 		(gua_object_volume_position.x != 0.00 ||
 		gua_object_volume_position.y != 0.00 ||
 		gua_object_volume_position.z != 0.00))
 	{
+
+
 		camera_transform.ws_position = vec4(gua_camera_position, 1.0);
 		camera_transform.ws_near_plane = vec4(gl_DepthRange.near);
 		camera_transform.v_matrix = gua_view_matrix;
@@ -178,17 +187,41 @@ void main()
 
 		//////////////////////////////////////////???//!! PSEUDO UNIFORMS UGLY HACK
 
-		vec3 ray_entry_os = texture2D(gua_get_float_sampler(gua_ray_entry_in), gua_get_quad_coords()).xyz;
 
 		ray                 prim_r; // intersection ray
 		vec2                t_span; // ray parameter interval
 		float               sdist;  // sampling distance
 		int                 i = 0; // iteration counter
 		ray_cast_result     rc_res = make_ray_cast_result();
+		
+		vec3 ray_entry_os = texture2D(gua_get_float_sampler(gua_ray_entry_in), gua_get_quad_coords()).xyz;
 
 		vvolume_ray_setup_ots(ray_entry_os.xyz, prim_r, t_span, sdist);
+		
+		vec3 gua_object_volume_position_front = (prim_r.origin + t_span.x * prim_r.direction);
+		vec3 gua_world_volume_position_front = (gua_model_matrix * vec4(gua_object_volume_position_front, 1.0)).xyz;
+		float d_volume_front = get_depth_z(gua_world_volume_position_front);
+		d_volume_front = -1.0 * get_depth_linear(d_volume_front);
 
-		sdist = 0.01;
+		if (d_gbuffer < d_volume_front){
+			gua_out_color = texture2D(gua_get_float_sampler(gua_color_gbuffer_in), gua_get_quad_coords()).xyz;
+			return;
+		}
+
+		if (d_gbuffer < d_volume){ // there is geometry between inside			
+			//float t_norm = t_span.y - t_span.x;
+			float dg = d_gbuffer - d_volume_front;
+			float dv = d_volume - d_volume_front;
+			t_span.y -= (t_span.y - t_span.x) * dg/dv;
+
+
+
+			//ray_entry_os = get_object_world_position_from_depth(d_gbuffer);// , 1.0)).xyz;
+			//vvolume_ray_setup_ots(ray_entry_os.xyz, prim_r, t_span, sdist);
+		}
+
+		gua_out_color = gua_object_volume_position_front;// vec3(t_span.y);
+		return;
 
 		vec4 out_color = vec4(0.0);
 		//gua_out_color = texture(gua_get_float_sampler(color_map), gua_object_volume_position.xy).rgb;
@@ -225,10 +258,12 @@ void main()
 		//vec3 pos = t_span.y * prim_r.direction + prim_r.origin;
 		//pos.rgb = pos.xyz /(vtex_volume.texcoord_scale * volume_data.scale_obj_to_tex.xyz);
 		//out_color.rgb = pos.xyz;///= out_color.a;
-		out_color.rgb /= out_color.a;
+		//out_color.rgb /= out_color.a;
 		//out_color.a = 1.0;
-
-		gua_out_color = out_color.rgb;
+		
+		vec3 gbuffer_color = texture2D(gua_get_float_sampler(gua_color_gbuffer_in), gua_get_quad_coords()).xyz;
+		gua_out_color = gbuffer_color * (1.0 - out_color.a) + out_color.rgb/out_color.a;
+		//gua_out_color = out_color.rgb / out_color.a;
 		//gua_out_color += vec3(0.0, 0.8, 0.0);
 
 		//if (t_span.x < t_span.y) {

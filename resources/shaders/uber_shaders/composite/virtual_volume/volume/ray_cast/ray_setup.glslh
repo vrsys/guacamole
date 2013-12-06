@@ -19,29 +19,20 @@ vvolume_ray_setup_ots(in  vec3 os_ray_entry,
     t = vec2(float_max, -float_max);
 
     const vec3 object_to_ots = volume_data.scale_obj_to_tex.xyz * vtex_volume.texcoord_scale;
-    //vec3 ots_bbox_min  = vec3(0.0);
-    //vec3 ots_bbox_max  = volume_data.volume_extends.xyz * object_to_ots;
     const vec3 ots_bbox_min  = volume_data.volume_bbox_min.xyz * object_to_ots;
     const vec3 ots_bbox_max  = volume_data.volume_bbox_max.xyz * object_to_ots;
-
-    //const vec3 os_fragment   = unproject_depth(depth_buffer, vec2(gl_FragCoord.xy), volume_data.mvp_matrix_inverse);
+	    
     const vec3 os_origin     = volume_data.os_camera_position.xyz;
     const vec3 os_exit       = os_ray_entry;//v_in.ray_entry_os.xyz;
     const vec3 os_seg        = os_exit - os_origin;
-
-    //const vec3 ots_fragment  = os_fragment * object_to_ots;
+	    
     const vec3 ots_origin    = os_origin * object_to_ots;
     const vec3 ots_exit      = os_exit   * object_to_ots;
     const vec3 ots_seg       = ots_exit - ots_origin;
     const vec3 ots_dir       = normalize(ots_seg);
-
-    //if (dot(os_seg, os_seg) < epsilon) {
-        //return false;
-    //}
-
+	    
     d = (length(ots_seg) * volume_data.sampling_distance.x) / length(os_seg);
-
-    //float s        = sqrt(dot(ots_seg, ots_seg) / dot(os_seg, os_seg));
+	   
     r              = make_safe_ray(ots_origin, ots_dir /** s*/);
 
     //float t_fragm = -1.0;
@@ -49,18 +40,12 @@ vvolume_ray_setup_ots(in  vec3 os_ray_entry,
     float t_exit  = -1.0;
     float t_near  = -1.0;
 
-    //vec4 ts_near_plane = ((volume_data.m_matrix_inverse)_inverse_transpose * camera_transform.ws_near_plane) / vec4(object_to_ots, 1.0); // inverse transpose of the scale
     vec4 ts_near_plane = (volume_data.m_matrix_transpose * camera_transform.ws_near_plane) / vec4(object_to_ots, 1.0); // inverse transpose of the scale
     ts_near_plane /= length(ts_near_plane.xyz);
 
     ray_box_intersection(r, ots_bbox_min, ots_bbox_max, t_entry, t_exit);
     ray_plane_intersection(r, ts_near_plane, t_near);
 
-    //vec3 fragts = (ots_fragment - r.origin) * r.direction_rec;
-
-    //t_fragm = length(ots_fragment - r.origin) / length(r.direction);
-
-    //t_exit  = min(t_exit, t_fragm);
     t_entry = max(t_entry, t_near);
 
     t = vec2(t_entry, t_exit);

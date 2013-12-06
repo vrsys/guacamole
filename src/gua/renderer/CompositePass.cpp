@@ -41,7 +41,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 CompositePass::CompositePass(Pipeline* pipeline) :
-	GeometryPass(pipeline),
+	Pass(pipeline),
 	composite_shader_(new ShaderProgram),
 	v_composite_shader_(new ShaderProgram),
 	ray_generation_shader_(new ShaderProgram),
@@ -75,7 +75,7 @@ CompositePass::~CompositePass() {
   if (v_composite_shader_) {
 	  delete v_composite_shader_;
   }
-
+  
   if (volume_raygeneration_buffer_) {
     delete volume_raygeneration_buffer_;
   }
@@ -91,7 +91,9 @@ void CompositePass::create(RenderContext const& ctx,
     PipelineConfiguration const& config, std::vector<std::pair<BufferComponent,
     scm::gl::sampler_state_desc>> const& layers) {
 
-  Pass::create(ctx, config, layers);
+  // reuse gbuffer from shading-pass
+  gbuffer_ = inputs_[Pipeline::PipelineStage::shading];
+
 
   if (volume_raygeneration_buffer_) {
     volume_raygeneration_buffer_->remove_buffers(ctx);
@@ -105,9 +107,11 @@ void CompositePass::create(RenderContext const& ctx,
   std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc>> layer_4f_desc;
   layer_4f_desc.push_back(std::make_pair(BufferComponent::F4, state));
 
+
   volume_raygeneration_buffer_ = new GBuffer(layer_4f_desc,
                                       config.get_left_resolution()[0],
                                       config.get_left_resolution()[1]);
+
   volume_raygeneration_buffer_->create(ctx);
 }
 
@@ -119,166 +123,170 @@ void CompositePass::create(RenderContext const& ctx,
   Camera const& camera,
   FrameBufferObject* target) 
 {
-		init_ressources(ctx);
+	init_ressources(ctx);
 
-		ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+	ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
-		// 1. render proxy geometry into fbo
-		volume_raygeneration_buffer_->bind(ctx);
-		{
-			scm::math::vec2f resolution(volume_raygeneration_buffer_->width(), volume_raygeneration_buffer_->height());
-			ctx.render_context->set_viewport(scm::gl::viewport(math::vec2(0, 0), resolution));
+	// 1. render proxy geometry into fbo
+	volume_raygeneration_buffer_->bind(ctx);
+	{
+		scm::math::vec2f resolution(volume_raygeneration_buffer_->width(), volume_raygeneration_buffer_->height());
+		ctx.render_context->set_viewport(scm::gl::viewport(math::vec2(0, 0), resolution));
 			
+		volume_raygeneration_buffer_->clear_color_buffers(ctx, gua::utils::Color3f(0.0f, 0.0f, 0.0f));
+		volume_raygeneration_buffer_->clear_depth_stencil_buffer(ctx);
+			
+		///TODO: Toplevel
+		if (!scene.volumenodes_.empty() || !scene.vvolumenodes_.empty()/*|| !scene.transparentnodes_.empty()*/)
+		{
+			// gather input textures and set uniforms
+			Pass::set_camera_matrices(*ray_generation_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+
+			ray_generation_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->width(), "gua_texel_width");
+			ray_generation_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->height(), "gua_texel_height");
+
+
 			volume_raygeneration_buffer_->clear_color_buffers(ctx, gua::utils::Color3f(0.0f, 0.0f, 0.0f));
 			volume_raygeneration_buffer_->clear_depth_stencil_buffer(ctx);
-			
-			///TODO: Toplevel
-			if (!scene.volumenodes_.empty() || !scene.vvolumenodes_.empty()/*|| !scene.transparentnodes_.empty()*/)
-			{
-				// gather input textures and set uniforms
-				Pass::set_camera_matrices(*ray_generation_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
-
-				ray_generation_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->width(), "gua_texel_width");
-				ray_generation_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->height(), "gua_texel_height");
-
-
-				for (auto const& node : scene.volumenodes_) {
-								
-					auto volume =
-						std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
-
-					if (volume) {
-						ray_generation_shader_->set_uniform(
-							ctx, node.transform, "gua_model_matrix");
-
-						ray_generation_shader_->set_uniform(
-							ctx, 0, "volume_frag_id");
-																						
-						ray_generation_shader_->use(ctx);
-						{
-							volume->draw_proxy(ctx);
-						}
-						ray_generation_shader_->unuse(ctx);
-					}
-				}
-
-				for (auto const& node : scene.vvolumenodes_) {
-										
-					auto vlargevolume =
-						std::static_pointer_cast<gua::LargeVolume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
-
-					if (vlargevolume) {
-
-						ray_generation_shader_->set_uniform(
-							ctx, node.transform, "gua_model_matrix");
-
-						ray_generation_shader_->set_uniform(
-							ctx, 1, "volume_frag_id");
-
-						ray_generation_shader_->use(ctx);
-						{
-							vlargevolume->draw_proxy(ctx);
-						}
-						ray_generation_shader_->unuse(ctx);
-						
-					}
-				}
-			}
-		}
-		volume_raygeneration_buffer_->unbind(ctx);
-	
-		scm::gl::context_all_guard      cug(ctx.render_context);
-		scm::gl::context_vtexture_guard vtg(ctx.render_context);
-		
-		// 2. render fullscreen quad for compositing and volume ray castinG
-		Pass::set_camera_matrices(*composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
-		Pass::set_camera_matrices(*v_composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
-
-		auto input_tex(inputs_[Pipeline::shading]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
-		auto normal_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
-		auto depth_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_depth_buffer());
-		auto raygen_tex(volume_raygeneration_buffer_->get_color_buffers(TYPE_FLOAT)[0]);
-
-		composite_shader_->set_uniform(ctx, input_tex, "gua_color_gbuffer_in");
-		composite_shader_->set_uniform(ctx, normal_tex, "gua_normal_gbuffer_in");
-		composite_shader_->set_uniform(ctx, depth_tex, "gua_depth_gbuffer_in");
-		composite_shader_->set_uniform(ctx, raygen_tex, "gua_ray_entry_in");
-				
-		composite_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->width(), "gua_texel_width");
-		composite_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->height(), "gua_texel_height");
-
-		v_composite_shader_->set_uniform(ctx, input_tex, "gua_color_gbuffer_in");
-		v_composite_shader_->set_uniform(ctx, normal_tex, "gua_normal_gbuffer_in");
-		v_composite_shader_->set_uniform(ctx, depth_tex, "gua_depth_gbuffer_in");
-		v_composite_shader_->set_uniform(ctx, raygen_tex, "gua_ray_entry_in");
-		
-		v_composite_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->width(), "gua_texel_width");
-		v_composite_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->height(), "gua_texel_height");
-
-
-		// bind target fbo and set viewport
-		target->bind(ctx);
-		ctx.render_context->set_viewport(scm::gl::viewport(
-			math::vec2(0, 0),
-			::scm::math::vec2f(target->width(), target->height())));
-
-		if (!scene.volumenodes_.empty() || !scene.vvolumenodes_.empty()){
 
 			for (auto const& node : scene.volumenodes_) {
-
+								
 				auto volume =
 					std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
 
 				if (volume) {
-					composite_shader_->set_uniform(
+					ray_generation_shader_->set_uniform(
 						ctx, node.transform, "gua_model_matrix");
 
-					volume->set_uniforms(ctx, composite_shader_);
-
-					composite_shader_->use(ctx);
+					ray_generation_shader_->set_uniform(
+						ctx, 0, "volume_frag_id");
+																						
+					ray_generation_shader_->use(ctx);
 					{
-						fullscreen_quad_->draw(ctx.render_context);
+						volume->draw_proxy(ctx);
 					}
-					composite_shader_->unuse(ctx);
+					ray_generation_shader_->unuse(ctx);
 				}
 			}
 
 			for (auto const& node : scene.vvolumenodes_) {
-
+										
 				auto vlargevolume =
 					std::static_pointer_cast<gua::LargeVolume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
 
 				if (vlargevolume) {
-					v_composite_shader_->set_uniform(
+
+					ray_generation_shader_->set_uniform(
 						ctx, node.transform, "gua_model_matrix");
 
-					vlargevolume->set_uniforms(ctx, v_composite_shader_);
+					ray_generation_shader_->set_uniform(
+						ctx, 1, "volume_frag_id");
 
-					vlargevolume->pre_frame_update(ctx);
-					
-					vlargevolume->bind_vtexture(ctx);
-					vlargevolume->program_uniform(ctx, v_composite_shader_, "vtex_volume");
-					
-					v_composite_shader_->use(ctx);
+					ray_generation_shader_->use(ctx);
 					{
-						fullscreen_quad_->draw(ctx.render_context);
+						vlargevolume->draw_proxy(ctx);
 					}
-					v_composite_shader_->unuse(ctx);
-
-					vlargevolume->post_frame_update(ctx);
+					volume_raygeneration_buffer_->unbind(ctx);
+						
 				}
 			}
 		}
-		else{
-			composite_shader_->use(ctx);
-			{
-				fullscreen_quad_->draw(ctx.render_context);
-			}
-			composite_shader_->unuse(ctx);
-		}
-		target->unbind(ctx);
+	}
+	volume_raygeneration_buffer_->unbind(ctx);
+	
+	scm::gl::context_all_guard      cug(ctx.render_context);
+	scm::gl::context_vtexture_guard vtg(ctx.render_context);
+		
+	// 2. render fullscreen quad for compositing and volume ray castinG
+	Pass::set_camera_matrices(*composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+	Pass::set_camera_matrices(*v_composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
 
-		ctx.render_context->reset_state_objects();
+	auto input_tex(inputs_[Pipeline::shading]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
+	auto normal_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
+	auto depth_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_depth_buffer());
+
+	auto raygen_tex(volume_raygeneration_buffer_->get_color_buffers(TYPE_FLOAT)[0]);
+
+	composite_shader_->set_uniform(ctx, input_tex, "gua_color_gbuffer_in");
+	composite_shader_->set_uniform(ctx, normal_tex, "gua_normal_gbuffer_in");
+	composite_shader_->set_uniform(ctx, depth_tex, "gua_depth_gbuffer_in");
+	composite_shader_->set_uniform(ctx, raygen_tex, "gua_ray_entry_in");
+				
+	composite_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->width(), "gua_texel_width");
+	composite_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->height(), "gua_texel_height");
+
+	v_composite_shader_->set_uniform(ctx, input_tex, "gua_color_gbuffer_in");
+	v_composite_shader_->set_uniform(ctx, normal_tex, "gua_normal_gbuffer_in");
+	v_composite_shader_->set_uniform(ctx, depth_tex, "gua_depth_gbuffer_in");
+	v_composite_shader_->set_uniform(ctx, raygen_tex, "gua_ray_entry_in");
+		
+	v_composite_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->width(), "gua_texel_width");
+	v_composite_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->height(), "gua_texel_height");
+
+
+	// bind target fbo and set viewport
+	target->bind(ctx);
+	ctx.render_context->set_viewport(scm::gl::viewport(
+		math::vec2(0, 0),
+		::scm::math::vec2f(target->width(), target->height())));
+
+	if (!scene.volumenodes_.empty() || !scene.vvolumenodes_.empty()){
+
+		for (auto const& node : scene.volumenodes_) {
+
+			auto volume =
+				std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
+
+			if (volume) {
+				composite_shader_->set_uniform(
+					ctx, node.transform, "gua_model_matrix");
+
+				volume->set_uniforms(ctx, composite_shader_);
+
+				composite_shader_->use(ctx);
+				{
+					fullscreen_quad_->draw(ctx.render_context);
+				}
+				composite_shader_->unuse(ctx);
+			}
+		}
+
+		for (auto const& node : scene.vvolumenodes_) {
+
+			auto vlargevolume =
+				std::static_pointer_cast<gua::LargeVolume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
+
+			if (vlargevolume) {
+				v_composite_shader_->set_uniform(
+					ctx, node.transform, "gua_model_matrix");
+
+				vlargevolume->set_uniforms(ctx, v_composite_shader_);
+
+				vlargevolume->pre_frame_update(ctx);
+					
+				vlargevolume->bind_vtexture(ctx);
+				vlargevolume->program_uniform(ctx, v_composite_shader_, "vtex_volume");
+					
+				v_composite_shader_->use(ctx);
+				{
+					fullscreen_quad_->draw(ctx.render_context);
+				}
+				v_composite_shader_->unuse(ctx);
+
+				vlargevolume->post_frame_update(ctx);
+			}
+		}
+	}
+	else{
+		composite_shader_->use(ctx);
+		{
+			fullscreen_quad_->draw(ctx.render_context);
+		}
+		composite_shader_->unuse(ctx);
+	}
+	target->unbind(ctx);
+
+	ctx.render_context->reset_state_objects();
 	
 }
 
@@ -323,6 +331,31 @@ bool CompositePass::pre_compile_shaders(RenderContext const& ctx) {
     if (ray_generation_shader_)       return ray_generation_shader_->upload_to(ctx);
 
     return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void CompositePass::render_scene(Camera const& camera, RenderContext const& ctx) {
+
+  for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
+
+    FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
+
+    CameraMode eye(CameraMode::CENTER);
+    if (gbuffer_->get_eye_buffers().size() > 1 && i == 0)
+      eye = CameraMode::LEFT;
+    if (gbuffer_->get_eye_buffers().size() > 1 && i == 1)
+      eye = CameraMode::RIGHT;
+
+    fbo->bind(ctx);
+
+    ctx.render_context->set_viewport(scm::gl::viewport(
+      math::vec2(0, 0), ::scm::math::vec2f(fbo->width(), fbo->height())));
+
+    rendering(pipeline_->get_current_scene(eye), ctx, eye, camera, fbo);
+
+    fbo->unbind(ctx);
+}
 }
 
 }

@@ -37,6 +37,7 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/logger.hpp>
 
+
 // external headers
 #if ASSIMP_VERSION == 3
 #include <assimp/postprocess.h>
@@ -116,6 +117,7 @@ namespace gua {
 		_renderer_settings(),
 		_sample_distance(10.0),
 		_volume_boxes_ptr(),
+		_update_transfer_function(false),
 		upload_mutex_()
 	{
 #if 0
@@ -177,14 +179,19 @@ namespace gua {
 		_color_transfer.clear();
 
 #if 1
-		_alpha_transfer.add_stop(0, 1.0f);
-		_alpha_transfer.add_stop(0.5f, 1.0f);
+		_alpha_transfer.add_stop(0, 1.0f);		
+		//_alpha_transfer.add_stop(0.45f, 0.0f);
+		_alpha_transfer.add_stop(0.5f, 0.0f);
+		//_alpha_transfer.add_stop(0.55f, 0.0f);
 		_alpha_transfer.add_stop(1.0f, 1.0f);
-#else
+#elif 0
 		_alpha_transfer.add_stop(0.0f, 0.0f);
 		_alpha_transfer.add_stop(0.3f, 0.0f);
 		_alpha_transfer.add_stop(0.4f, 0.2f);
 		_alpha_transfer.add_stop(0.7f, 0.0f);
+		_alpha_transfer.add_stop(1.0f, 1.0f);
+#else
+		_alpha_transfer.add_stop(0, 1.0f);		
 		_alpha_transfer.add_stop(1.0f, 1.0f);
 #endif
 
@@ -227,14 +234,38 @@ namespace gua {
 			_rstate.resize(ctx.id + 1);
 		}
 
-		_vtexture_system = boost::make_shared<scm::data::vtexture_system>(ctx.render_device, scm::math::vec2ui(ctx.width, ctx.height));		
+		try {
+			_gauss_gen.reset(new scm::data::gauss_table_generator(ctx));
+		}
+		catch (const std::exception& e) {
+			throw std::runtime_error(std::string("LargeVolume::upload_to(): error creating scm::data::gauss generator: ") + e.what());
+		}
+
+		try {
+			_vtexture_system = boost::make_shared<scm::data::vtexture_system>(ctx.render_device, scm::math::vec2ui(ctx.width, ctx.height));		
+		}
+		catch (const std::exception& e) {
+			throw std::runtime_error(std::string("LargeVolume::upload_to(): error creating _vtexture_system: ") + e.what());
+		}
+
 		_vtexture_system->profile_timing(false);
 		_vtexture_system->debug_switches()._use_feedback_image_path = false;
 		_vtexture_system->debug_switches()._use_feedback_lists_path = true;
+		
+		try {
+			_vtexture_context_volume = _vtexture_system->create_vtexture_3d_context(_vtexture_info.vol_hdd_cache_size, _vtexture_info.vol_gpu_cache_size, _vtexture_info.octree_header._octree_brick_size, _vtexture_info.vol_data_format);
+		}
+		catch (const std::exception& e) {
+			throw std::runtime_error(std::string("LargeVolume::upload_to(): error create_vtexture_3d_context: ") + e.what());
+		}
 
-		_vtexture_context_volume = _vtexture_system->create_vtexture_3d_context(_vtexture_info.vol_hdd_cache_size, _vtexture_info.vol_gpu_cache_size, _vtexture_info.octree_header._octree_brick_size, _vtexture_info.vol_data_format);
+		try {
+			_volume_vtexture_ptr = _vtexture_context_volume->create_vtexture(_volume_file_path);
+		}
+		catch (const std::exception& e) {
+			throw std::runtime_error(std::string("LargeVolume::upload_to(): error create_vtexture: ") + e.what());
+		}
 
-		_volume_vtexture_ptr = _vtexture_context_volume->create_vtexture(_volume_file_path);
 
 		if (!_volume_vtexture_ptr){
 			std::cout << _volume_file_path << std::endl;
@@ -262,6 +293,7 @@ namespace gua {
 
 		_gauss_texture_ptr[ctx.id] = std::shared_ptr<Texture2D>(new Texture2D(transfer_texture_width, transfer_texture_width, scm::gl::FORMAT_RGBA_32F));
 		_gauss_texture_ptr[ctx.id]->upload_to(ctx);
+
 
 		//box_volume_geometry
 		_volume_boxes_ptr[ctx.id] =
@@ -403,6 +435,7 @@ namespace gua {
 		scm::gl::program_ptr p = ctx.render_context->current_program();
 		p->uniform_sampler("volume_texture", 5);			
 		p->uniform_sampler("color_map", 6);
+		p->uniform_sampler("gausscolor_map", 7);
 		p->uniform("sampling_distance", _sample_distance);
 		//p->uniform("iso_value", 0.8f);
 		p->uniform("volume_bounds", _volume_dimensions_normalized);
@@ -429,10 +462,10 @@ namespace gua {
 	void LargeVolume::set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const
 	{
 		if (_update_transfer_function){
-			for (auto color_map_texture : _transfer_texture_ptr)
-			{
-				update_color_map(ctx, color_map_texture, _alpha_transfer, _color_transfer);
-			}
+
+			update_color_map(ctx, _transfer_texture_ptr[ctx.id], _alpha_transfer, _color_transfer);
+			_gauss_gen->generate_table(ctx, _transfer_texture_ptr[ctx.id], _gauss_texture_ptr[ctx.id]);
+
 			_update_transfer_function = false;
 		}
 
@@ -446,6 +479,7 @@ namespace gua {
 		
 		//cs->set_uniform(ctx, _volume_texture_ptr[ctx.id], "volume_texture");
 		cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id], "color_map");
+		cs->set_uniform(ctx, _gauss_texture_ptr[ctx.id], "gauss_color_map");
 		cs->set_uniform(ctx, _sample_distance, "sampling_distance");
 		cs->set_uniform(ctx, _volume_dimensions_normalized, "volume_bounds");
 
