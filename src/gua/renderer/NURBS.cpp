@@ -168,15 +168,6 @@ void NURBS::predraw(RenderContext const& context) const {
     in_context->bind_texture(
         _trim_pointdata_texture_buffer[context.id], _sstate[context.id], 11);
 
-    scm::gl::program_ptr p = in_context->current_program();
-    p->uniform("parameter_texture", 5);
-    p->uniform("attribute_texture", 6);
-    p->uniform("trim_partition", 7);
-    p->uniform("trim_contourlist", 8);
-    p->uniform("trim_curvelist", 9);
-    p->uniform("trim_curvedata", 10);
-    p->uniform("trim_pointdata", 11);
-
     in_context->apply();
 
     in_context->draw_elements(_data->index_data.size());
@@ -237,15 +228,6 @@ void NURBS::draw(RenderContext const& context) const {
       _trim_curvedata_texture_buffer[context.id], _sstate[context.id], 10);
   in_context->bind_texture(
       _trim_pointdata_texture_buffer[context.id], _sstate[context.id], 11);
-
-  scm::gl::program_ptr p = in_context->current_program();
-  p->uniform("parameter_texture", 5);
-  p->uniform("attribute_texture", 6);
-  p->uniform("trim_partition", 7);
-  p->uniform("trim_contourlist", 8);
-  p->uniform("trim_curvelist", 9);
-  p->uniform("trim_curvedata", 10);
-  p->uniform("trim_pointdata", 11);
 
   in_context->apply();
 

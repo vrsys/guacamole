@@ -32,7 +32,7 @@
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
-#define DEBUG_XFB_OUTPUT
+// #define DEBUG_XFB_OUTPUT
 
 namespace gua {
 
