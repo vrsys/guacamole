@@ -119,7 +119,6 @@ void CompositePass::create(RenderContext const& ctx,
   Camera const& camera,
   FrameBufferObject* target) 
 {
-
 		init_ressources(ctx);
 
 		ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
