@@ -143,6 +143,8 @@ void NURBS::predraw(RenderContext const& context) const {
   scm::gl::context_image_units_guard cig(in_context);
   scm::gl::context_texture_units_guard ctg(in_context);
 
+  context.render_context->set_rasterizer_state(_rstate_ms_solid[context.id], 1.0f);
+
   //Transform Feedback Stage Begins
   in_context->begin_transform_feedback(_transform_feedback[context.id],
                                        scm::gl::PRIMITIVE_POINTS);
@@ -167,6 +169,14 @@ void NURBS::predraw(RenderContext const& context) const {
         _trim_curvedata_texture_buffer[context.id], _sstate[context.id], 10);
     in_context->bind_texture(
         _trim_pointdata_texture_buffer[context.id], _sstate[context.id], 11);
+
+    in_context->current_program()->uniform_sampler("parameter_texture", 5);
+    in_context->current_program()->uniform_sampler("attribute_texture", 6);
+    in_context->current_program()->uniform_sampler("trim_partition", 7);
+    in_context->current_program()->uniform_sampler("trim_contourlist", 8);
+    in_context->current_program()->uniform_sampler("trim_curvelist", 9);
+    in_context->current_program()->uniform_sampler("trim_curvedata", 10);
+    in_context->current_program()->uniform_sampler("trim_pointdata", 11);
 
     in_context->apply();
 
@@ -212,6 +222,8 @@ void NURBS::draw(RenderContext const& context) const {
   scm::gl::context_image_units_guard cig1(in_context);
   scm::gl::context_texture_units_guard ctg1(in_context);
 
+  context.render_context->set_rasterizer_state(_rstate_ms_solid[context.id], 1.0f);
+
   in_context->bind_vertex_array(_transform_feedback_vao[context.id]);
 
   in_context->bind_texture(
@@ -228,6 +240,14 @@ void NURBS::draw(RenderContext const& context) const {
       _trim_curvedata_texture_buffer[context.id], _sstate[context.id], 10);
   in_context->bind_texture(
       _trim_pointdata_texture_buffer[context.id], _sstate[context.id], 11);
+
+  in_context->current_program()->uniform_sampler("parameter_texture", 5);
+  in_context->current_program()->uniform_sampler("attribute_texture", 6);
+  in_context->current_program()->uniform_sampler("trim_partition", 7);
+  in_context->current_program()->uniform_sampler("trim_contourlist", 8);
+  in_context->current_program()->uniform_sampler("trim_curvelist", 9);
+  in_context->current_program()->uniform_sampler("trim_curvedata", 10);
+  in_context->current_program()->uniform_sampler("trim_pointdata", 11);
 
   in_context->apply();
 

@@ -35,7 +35,7 @@ struct PipelineConfiguration;
 /**
  *
  */
-class CompositePass : public GeometryPass {
+class CompositePass : public Pass {
  public:
 
   /**
@@ -48,10 +48,10 @@ class CompositePass : public GeometryPass {
    */
 	virtual ~CompositePass();
 
-  void create( RenderContext const& ctx,
-               PipelineConfiguration const& config,
-               std::vector<std::pair<BufferComponent,
-               scm::gl::sampler_state_desc> > const& layers);
+  virtual void create(RenderContext const& ctx,
+                      PipelineConfiguration const& config,
+                      std::vector<std::pair<BufferComponent,
+                      scm::gl::sampler_state_desc> > const& layers);
 
   /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
 
@@ -59,6 +59,8 @@ class CompositePass : public GeometryPass {
                      std::string const& name) const;
 
   bool pre_compile_shaders(RenderContext const& ctx);
+
+  /* virtual */ void render_scene(Camera const& camera, RenderContext const& ctx);
 
 protected :
 
@@ -72,7 +74,7 @@ protected :
 
  private:
 
-  GBuffer* volume_raygeneration_;
+  GBuffer* volume_raygeneration_buffer_;
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::quad_geometry_ptr fullscreen_quad_;
