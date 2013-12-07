@@ -79,7 +79,7 @@ namespace gua {
 													(float)_volume_dimensions.y / (float)max_dimension_volume,
 													(float)_volume_dimensions.z / (float)max_dimension_volume);
 
-		MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
+		//MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
 		//getchar();
 
 		bounding_box_ = math::BoundingBox<math::vec3>(math::vec3::zero(), _volume_dimensions_normalized);
@@ -146,7 +146,7 @@ namespace gua {
 		_volume_texture_ptr[ctx.id] = std::shared_ptr<Texture3D>(new Texture3D(_volume_file_path));// scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
 		_volume_texture_ptr[ctx.id]->upload_to(ctx);
 
-		MESSAGE("%s loaded!", _volume_file_path.c_str());
+		//MESSAGE("%s loaded!", _volume_file_path.c_str());
 
 		//scm::gl::texture_loader scm_image_loader; 
 		_transfer_texture_ptr[ctx.id] = create_color_map(ctx, 255, _alpha_transfer, _color_transfer);
