@@ -209,7 +209,7 @@ namespace gua {
 			return (std::shared_ptr<Texture2D>(new Texture2D(in_size, 1)));
 		}
 		else{
-			std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
+			//std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
 			return (new_tex);
 		}
 	}
@@ -246,14 +246,14 @@ namespace gua {
 			combined_lut[i * 4 + 3] = alpha_lut[i];
 		}
 
-		MESSAGE("generating color map texture data done.");
+		//MESSAGE("generating color map texture data done.");
 
-		MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
+		//MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
 
 		texture_region ur(vec3ui(0u), vec3ui(in_size, 1, 1));
 		bool res = ctx.render_context->update_sub_texture(transfer_texture_ptr->get_buffer(ctx), ur, 0u, FORMAT_RGBA_32F, combined_lut.get());
 
-		MESSAGE("uploading texture data done.");
+		//MESSAGE("uploading texture data done.");
 
 		if (!res) {
 			MESSAGE("Volume::update_color_alpha_map(): error during color map texture generation.");
