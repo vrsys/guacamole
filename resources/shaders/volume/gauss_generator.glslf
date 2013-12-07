@@ -19,7 +19,7 @@ layout(location = 0, index = 0) out vec4 out_int_color;
 const float sqrt_ttpi = 2.506628274631000502415765284811;
 
 // uniform input definitions //////////////////////////////////////////////////////////////////////
-uniform uvec2	  ca_map;
+uniform uvec2	  color_map;
 uniform int       gauss_steps;
 
 sampler2D gua_get_float_sampler(in uvec2 handle) {
@@ -28,7 +28,10 @@ sampler2D gua_get_float_sampler(in uvec2 handle) {
 
 void main()
 {
-    //const float pi_f = 2.0 * asin(1.0);
+
+    //out_int_color = texture(gua_get_float_sampler(color_map), v_in.value_range);// , 0.0, 1.0);
+    //out_int_color = vec4(v_in.value_range, 1.0, 1.0);
+    ///return;
 
     vec4    d     = vec4(0.0);
 
@@ -44,7 +47,7 @@ void main()
     
 #if 1
     if(dev <= s_inc){
-		d = texture(gua_get_float_sampler(ca_map), vec2(mean, 0.0));
+        d = texture(gua_get_float_sampler(color_map), vec2(mean, 0.0));
         d.rgb *= d.a;
     }
     else
@@ -58,7 +61,7 @@ void main()
             gau = 1.0/(n) * e;
 
             // get sample
-			vec4 c = texture(gua_get_float_sampler(ca_map), vec2(s, 0.0));
+            vec4 c = texture(gua_get_float_sampler(color_map), vec2(s, 0.0));
             s += s_inc;
 
             // compositing        

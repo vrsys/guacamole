@@ -95,11 +95,12 @@ namespace gua {
 		_alpha_transfer.add_stop(0.55f, 0.0f);
 		_alpha_transfer.add_stop(1.0f, 1.0f);
 #else
-		_alpha_transfer.add_stop(0.0f, 0.0f);
-		_alpha_transfer.add_stop(0.3f, 0.0f);
-		_alpha_transfer.add_stop(0.4f, 0.2f);
-		_alpha_transfer.add_stop(0.7f, 0.0f);
-		_alpha_transfer.add_stop(1.0f, 1.0f);
+        _alpha_transfer.add_stop(0.0f, 0.0f);
+        _alpha_transfer.add_stop(50.f / 255, 0.01f);
+        _alpha_transfer.add_stop(100.f / 255 , 0.01f);
+        _alpha_transfer.add_stop(110.f / 255, 0.0f);
+        _alpha_transfer.add_stop(160.0f / 255, 0.8f);
+        _alpha_transfer.add_stop(255.0f / 255, 1.0f);
 #endif
 
 #if 0
@@ -109,10 +110,12 @@ namespace gua {
 		_color_transfer.add_stop(1.0f,	scm::math::vec3f(0.0f, 0.0f, 1.0f));
 #else
 		// blue-white-red
-		_color_transfer.add_stop(0.0f, scm::math::vec3f(0.0f, 0.0f, 0.0f));
-		_color_transfer.add_stop(0.5f, scm::math::vec3f(0.4f, 0.0f, 0.4f));
-		_color_transfer.add_stop(0.7f, scm::math::vec3f(1.0f, 1.0f, 1.0f));
-		_color_transfer.add_stop(1.0f, scm::math::vec3f(1.0f, 1.0f, 1.0f));
+        _color_transfer.add_stop(0.0f, scm::math::vec3f(0.0f, 0.0f, 0.0f));
+        _color_transfer.add_stop(80.f / 255, scm::math::vec3f(1.0f, 0.0f, 1.0f));
+        _color_transfer.add_stop(90.f / 255, scm::math::vec3f(0.0f, 1.0f, 0.0f));
+        _color_transfer.add_stop(128.f / 255, scm::math::vec3f(1.0f, 1.0f, 1.0f));
+        _color_transfer.add_stop(200.0f / 255, scm::math::vec3f(1.0f, 1.0f, 1.0f));
+        _color_transfer.add_stop(255.0f / 255, scm::math::vec3f(1.0f, 1.0f, 1.0f));
 #endif
 		
 	}
@@ -149,7 +152,7 @@ namespace gua {
 		_volume_texture_ptr[ctx.id] = std::shared_ptr<Texture3D>(new Texture3D(_volume_file_path));// scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
 		_volume_texture_ptr[ctx.id]->upload_to(ctx);
 
-		MESSAGE("%s loaded!", _volume_file_path.c_str());
+		//MESSAGE("%s loaded!", _volume_file_path.c_str());
 
 		//scm::gl::texture_loader scm_image_loader; 
 		_transfer_texture_ptr[ctx.id] = create_color_map(ctx, 255, _alpha_transfer, _color_transfer);

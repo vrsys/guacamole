@@ -131,7 +131,7 @@ composite_sample_atlas_space(inout vec4  dst_col, // target color
     md     = texture_page_view(rc_tinfo, atc).rg;
 #endif
     
-    /*const*/ vec4  src_nc = texture(gauss_color_map, vec2(md.x, md.y));
+    /*const*/ vec4  src_nc = texture(gua_get_float_sampler(gauss_color_map), vec2(md.x, md.y));
 
     if(src_nc.a > 0.999)
         src_nc.a = 1.0;
@@ -234,8 +234,8 @@ composite_sample_atlas_space_blend(inout vec4  dst_col, // target color
   //      }
         
                
-        vec4  src_nc = texture(gauss_color_map, vec2(md.x, md.y));
-        /*const*/ vec4  psrc_nc = texture(gauss_color_map, vec2(pmd.x, pmd.y));
+        vec4  src_nc = texture(gua_get_float_sampler(gauss_color_map), vec2(md.x, md.y));
+        /*const*/ vec4  psrc_nc = texture(gua_get_float_sampler(gauss_color_map), vec2(pmd.x, pmd.y));
 
         if(src_nc.a > 0.9){
             src_nc.a = 1.0;

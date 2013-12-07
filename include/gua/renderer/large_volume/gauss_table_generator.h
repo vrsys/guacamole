@@ -32,15 +32,15 @@ public:
 
 protected:
     //gl::program_ptr             _gauss_program;
-	gua::ShaderProgram			_gauss_program;
-	gua::FrameBufferObject		_fbo;
+    gua::ShaderProgram*                         _gauss_program;
+	std::shared_ptr<gua::FrameBufferObject>		_fbo;
 
-    gl::depth_stencil_state_ptr _dstate;
-    gl::rasterizer_state_ptr    _rstate;
-    gl::blend_state_ptr         _bstate;
-    gl::sampler_state_ptr       _sstate_linear;
+    gl::depth_stencil_state_ptr                 _dstate;
+    gl::rasterizer_state_ptr                    _rstate;
+    gl::blend_state_ptr                         _bstate;
+    gl::sampler_state_ptr                       _sstate_linear;
 
-	scm::gl::quad_geometry_ptr  _fullscreen_quad;
+	scm::gl::quad_geometry_ptr                  _fullscreen_quad;
 
     //gl::fullscreen_triangle_ptr _fs_geom;
 

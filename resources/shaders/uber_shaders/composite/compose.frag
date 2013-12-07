@@ -121,8 +121,8 @@ void main() {
   float d_gbuffer = texture2D(gua_get_float_sampler(gua_depth_gbuffer_in), gua_get_quad_coords()).x;
   float d_volume = get_depth_z(gua_world_volume_position);
 
-  d_gbuffer = -1.0 * get_depth_linear(d_gbuffer);
-  d_volume = -1.0 * get_depth_linear(d_volume);
+  d_gbuffer = abs(get_depth_linear(d_gbuffer));
+  d_volume = abs(get_depth_linear(d_volume));
   
   // compose  
   if(volume_type <= 0.1 &&

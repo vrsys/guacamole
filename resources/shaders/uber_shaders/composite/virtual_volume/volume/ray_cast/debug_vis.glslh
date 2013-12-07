@@ -54,7 +54,7 @@ vec4 volume_draw_vtexture(in ray r, in vec2 t_span, in float d, out ray_cast_res
 #else
     vec2 v = vtexture_octree_quadrilinear_ots(vtex_volume, res._pos).xy;
 #endif // VTEX_VRM_VTEXTURE_FIXED_LOD == 1
-    vec4 col_a = texture(gauss_color_map, v);
+    vec4 col_a = texture(gua_get_float_sampler(gauss_color_map), v);
 
     return vec4(col_a.rgb / col_a.a, 1.0);
 #else // VTEX_VRM_RC_DVR_GAUSSFIT == 1

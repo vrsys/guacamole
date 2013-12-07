@@ -8,7 +8,7 @@
 /*layout(binding =  0..3)*/ uniform vtexture3D  vtex_volume;
 //layout(binding = 4)   uniform sampler2D   color_map;
 layout(binding = 5)   uniform sampler2D   preint_color_map;
-layout(binding = 6)   uniform sampler2D   gauss_color_map;
+//layout(binding = 6)   uniform sampler2D   gauss_color_map;
                       uniform float       vtex_volume_fixed_lod;
 
                       uniform vec2            viewport_size;

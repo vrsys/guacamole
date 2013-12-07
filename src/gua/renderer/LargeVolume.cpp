@@ -117,7 +117,7 @@ namespace gua {
 		_renderer_settings(),
 		_sample_distance(0.01),
 		_volume_boxes_ptr(),
-		_update_transfer_function(false),
+		_update_transfer_function(true),
 		upload_mutex_()
 	{
 #if 0
@@ -291,8 +291,13 @@ namespace gua {
 		_transfer_texture_ptr[ctx.id] = create_color_map(ctx, transfer_texture_width, _alpha_transfer, _color_transfer);
 		_transfer_texture_ptr[ctx.id]->upload_to(ctx);
 
-		_gauss_texture_ptr[ctx.id] = std::shared_ptr<Texture2D>(new Texture2D(transfer_texture_width, transfer_texture_width, scm::gl::FORMAT_RGBA_32F));
-		_gauss_texture_ptr[ctx.id]->upload_to(ctx);
+        scm::scoped_array<float> combined_lut;
+
+        int in_size = 255;
+        _gauss_texture_ptr[ctx.id] = std::shared_ptr<Texture2D>(new Texture2D(in_size, in_size, scm::gl::FORMAT_RGBA_32F));
+        _gauss_texture_ptr[ctx.id]->upload_to(ctx);
+
+        _gauss_gen->generate_table(ctx, _transfer_texture_ptr[ctx.id], _gauss_texture_ptr[ctx.id]);
 
 
 		//box_volume_geometry
@@ -357,7 +362,7 @@ namespace gua {
 			return (std::shared_ptr<Texture2D>(new Texture2D(in_size, 1)));
 		}
 		else{
-			std::cout << "LargeVolume::create_color_map(): color map texture generated." << std::endl;
+			//std::cout << "LargeVolume::create_color_map(): color map texture generated." << std::endl;
 			return (new_tex);
 		}
 	}
@@ -433,9 +438,9 @@ namespace gua {
 //		ctx.render_context->bind_texture( _volume_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 5);
 //		ctx.render_context->bind_texture(_transfer_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 6);
 		scm::gl::program_ptr p = ctx.render_context->current_program();
-		p->uniform_sampler("volume_texture", 5);			
+		//p->uniform_sampler("volume_texture", 5);			
 		p->uniform_sampler("color_map", 6);
-		p->uniform_sampler("gausscolor_map", 7);
+		p->uniform_sampler("gauss_color_map", 7);
 		p->uniform("sampling_distance", _sample_distance);
 		//p->uniform("iso_value", 0.8f);
 		p->uniform("volume_bounds", _volume_dimensions_normalized);
