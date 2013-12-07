@@ -23,7 +23,7 @@
 #define VTEX_VRM_RC_DVR_ANIMATED_BLEND					0
 #define VTEX_VRM_RC_DVR_GAUSSFIT						0
 #define VTEX_VRM_RC_DVR_TEXTUREVIEW						0
-#define VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING			0
+#define VTEX_VRM_RC_DVR_LOD_ADAPTIVE_SAMPLING			1
 #define VTEX_VRM_VTEXTURE_FIXED_LOD						0
 #define VTEX_VRM_RC_OTREE_PCOORD						0
 #define VTEX_VRM_RC_ITER_COUNT							0
@@ -37,8 +37,8 @@ uniform uvec2 gua_normal_gbuffer_in;
 uniform uvec2 gua_ray_entry_in;
 uniform uvec2 color_map;
 
-uniform float sampling_distance;
-uniform vec3 volume_bounds;
+uniform float uni_sampling_distance;
+uniform vec3 uni_volume_bounds;
 
 //////////////////////////////////////////???//!! PSEUDO UNIFORMS UGLY HACK
 struct {                                   
@@ -171,9 +171,9 @@ void main()
 		mat4 gua_invers_model_matrix = inverse(gua_model_matrix);
 
 		volume_data.volume_bbox_min = vec4(0.0, 0.0, 0.0, 0.0);    // w unused
-		volume_data.volume_bbox_max = vec4(volume_bounds, 1.0);    // w unused
-		volume_data.scale_obj_to_tex = vec4(vec3(1.0) / volume_bounds, 1.0);   // w unused
-		volume_data.sampling_distance = vec4(sampling_distance, sampling_distance, 0.0, 0.0);  // x - os sampling distance, y opacity correction factor, zw unused
+		volume_data.volume_bbox_max = vec4(uni_volume_bounds, 0.0);    // w unused
+		volume_data.scale_obj_to_tex = vec4(vec3(1.0) / uni_volume_bounds, 1.0);   // w unused
+		volume_data.sampling_distance = vec4(uni_sampling_distance, 1.0, uni_sampling_distance, 0.0);  // x - os sampling distance, y opacity correction factor, zw unused
 		volume_data.os_camera_position = gua_invers_model_matrix * vec4(gua_camera_position, 1.0);
 		volume_data.value_range = vec4(0.0, 1.0, 1.0, 1.0);        // vec4f(min_value(), max_value(), max_value() - min_value(), 1.0f / (max_value() - min_value()));
 
@@ -197,10 +197,11 @@ void main()
 		vec3 ray_entry_os = texture2D(gua_get_float_sampler(gua_ray_entry_in), gua_get_quad_coords()).xyz;
 
 		vvolume_ray_setup_ots(ray_entry_os.xyz, prim_r, t_span, sdist);
-		
-		vec3 gua_object_volume_position_front = (prim_r.origin + t_span.x * prim_r.direction);
+
+		vec3 gua_object_volume_position_front = (prim_r.origin + t_span.x * prim_r.direction) * 2.0;
 		vec3 gua_world_volume_position_front = (gua_model_matrix * vec4(gua_object_volume_position_front, 1.0)).xyz;
-		float d_volume_front = get_depth_z(gua_world_volume_position_front);
+		
+		float d_volume_front = get_depth_z(gua_world_volume_position_front);		
 		d_volume_front = -1.0 * get_depth_linear(d_volume_front);
 
 		if (d_gbuffer < d_volume_front){
@@ -212,20 +213,15 @@ void main()
 			//float t_norm = t_span.y - t_span.x;
 			float dg = d_gbuffer - d_volume_front;
 			float dv = d_volume - d_volume_front;
-			t_span.y -= (t_span.y - t_span.x) * dg/dv;
-
-
-
+			t_span.y -= (t_span.y - t_span.x) * 0.5;
+			
 			//ray_entry_os = get_object_world_position_from_depth(d_gbuffer);// , 1.0)).xyz;
 			//vvolume_ray_setup_ots(ray_entry_os.xyz, prim_r, t_span, sdist);
 		}
 
-		gua_out_color = gua_object_volume_position_front;// vec3(t_span.y);
-		return;
-
 		vec4 out_color = vec4(0.0);
 		//gua_out_color = texture(gua_get_float_sampler(color_map), gua_object_volume_position.xy).rgb;
-		//gua_out_color = gua_object_volume_position.xyz;
+		//gua_out_color = volume_data.volume_bbox_max.xyz;
 		//return;
 
 		if (t_span.x < t_span.y) {
@@ -262,8 +258,7 @@ void main()
 		//out_color.a = 1.0;
 		
 		vec3 gbuffer_color = texture2D(gua_get_float_sampler(gua_color_gbuffer_in), gua_get_quad_coords()).xyz;
-		gua_out_color = gbuffer_color * (1.0 - out_color.a) + out_color.rgb/out_color.a;
-		//gua_out_color = out_color.rgb / out_color.a;
+		gua_out_color = gbuffer_color * (1.0 - out_color.a) + out_color.rgb * out_color.a;
 		//gua_out_color += vec3(0.0, 0.8, 0.0);
 
 		//if (t_span.x < t_span.y) {
@@ -284,7 +279,7 @@ void main()
 	{
 		gua_out_color = texture2D(gua_get_float_sampler(gua_color_gbuffer_in), gua_get_quad_coords()).xyz;
 	}
-
+	
 	//gua_out_color = texture(gua_get_float_sampler(color_map), gua_get_quad_coords()).rgb;// texture(gua_get_float_sampler(color_map), gua_object_volume_position.xy).rgb;
 }
 

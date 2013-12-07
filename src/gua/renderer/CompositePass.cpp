@@ -57,9 +57,15 @@ CompositePass::CompositePass(Pipeline* pipeline) :
 
   ray_generation_shader_->create_from_sources(ray_generation_vertex_shader, ray_generation_fragment_shader);
     
+#if 0
   v_composite_shader_->create_from_files("H:\\guacamole\\git_gua\\guacamole\\resources\\shaders\\uber_shaders\\composite\\virtual_volume\\vtexture_volume.glslv",
 									     "H:\\guacamole\\git_gua\\guacamole\\resources\\shaders\\uber_shaders\\composite\\virtual_volume\\vtexture_volume.glslf");
+#else
+  std::string v_vertex_shader(Resources::lookup_shader(Resources::shaders_uber_shaders_composite_virtual_volume_vtexture_volume_glslv));
+  std::string v_fragment_shader(Resources::lookup_shader(Resources::shaders_uber_shaders_composite_virtual_volume_vtexture_volume_glslf));
 
+  v_composite_shader_->create_from_sources(v_vertex_shader, v_fragment_shader);
+#endif
 
   //print_shaders("debug", "composite.txt");
 }

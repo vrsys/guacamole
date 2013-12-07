@@ -115,7 +115,7 @@ namespace gua {
 		_volume_file_path(vfile_name),
 		_vtexture_info(),
 		_renderer_settings(),
-		_sample_distance(10.0),
+		_sample_distance(0.01),
 		_volume_boxes_ptr(),
 		_update_transfer_function(false),
 		upload_mutex_()
@@ -163,7 +163,7 @@ namespace gua {
 
 		unsigned max_dimension_volume = scm::math::max(scm::math::max(_volume_dimensions.x, _volume_dimensions.y), _volume_dimensions.z);
 
-		sample_distance(10000.0);
+		sample_distance(1.0 / max_dimension_volume);
 
 		_volume_dimensions_normalized = math::vec3((float)_volume_dimensions.x / (float)max_dimension_volume,
 													(float)_volume_dimensions.y / (float)max_dimension_volume,
@@ -180,9 +180,9 @@ namespace gua {
 
 #if 1
 		_alpha_transfer.add_stop(0, 1.0f);		
-		//_alpha_transfer.add_stop(0.45f, 0.0f);
+		_alpha_transfer.add_stop(0.45f, 0.0f);
 		_alpha_transfer.add_stop(0.5f, 0.0f);
-		//_alpha_transfer.add_stop(0.55f, 0.0f);
+		_alpha_transfer.add_stop(0.55f, 0.0f);
 		_alpha_transfer.add_stop(1.0f, 1.0f);
 #elif 0
 		_alpha_transfer.add_stop(0.0f, 0.0f);
@@ -456,7 +456,9 @@ namespace gua {
 		ctx.render_context->set_rasterizer_state(_rstate[ctx.id]);
 
 		ctx.render_context->apply();
-		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);		
+		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);
+
+		std::cout << "bla bla" << std::endl;
 	}
 
 	void LargeVolume::set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const
@@ -480,8 +482,8 @@ namespace gua {
 		//cs->set_uniform(ctx, _volume_texture_ptr[ctx.id], "volume_texture");
 		cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id], "color_map");
 		cs->set_uniform(ctx, _gauss_texture_ptr[ctx.id], "gauss_color_map");
-		cs->set_uniform(ctx, _sample_distance, "sampling_distance");
-		cs->set_uniform(ctx, _volume_dimensions_normalized, "volume_bounds");
+		cs->set_uniform(ctx, _sample_distance, "uni_sampling_distance");
+		cs->set_uniform(ctx, _volume_dimensions_normalized, "uni_volume_bounds");
 
 		//_volume_texture_ptr[ctx.id]->make_non_resident(ctx);
 		//_transfer_texture_ptr[ctx.id]->make_non_resident(ctx);

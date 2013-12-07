@@ -16,6 +16,8 @@
 
 #include <scm/gl_util/primitives/quad.h>
 
+#include <gua/databases.hpp>
+
 namespace scm {
 namespace data {
 
@@ -40,10 +42,15 @@ namespace data {
     // framebuffer objects ////////////////////////////////////////////////////////////////////////
 	//FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
 	//_fbo = gua::FrameBufferObject();
-
+#if 0
 	_gauss_program.create_from_files("H:\\guacamole\\git_gua\\guacamole\\resources\\shaders\\volume\\gauss_generator.glslv",
 									 "H:\\guacamole\\git_gua\\guacamole\\resources\\shaders\\volume\\gauss_generator.glslf");
+#else
+	std::string gauss_vertex_shader(gua::Resources::lookup_shader(gua::Resources::shaders_volume_gauss_generator_glslv));
+	std::string gauss_fragment_shader(gua::Resources::lookup_shader(gua::Resources::shaders_volume_gauss_generator_glslf));
 
+	_gauss_program.create_from_sources(gauss_vertex_shader, gauss_fragment_shader);
+#endif
     //if (!_fbo) {
     //    throw std::runtime_error("gauss_table_generator::gauss_table_generator(): error creating framebuffer object.");
     //}
