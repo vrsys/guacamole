@@ -458,7 +458,6 @@ namespace gua {
 		ctx.render_context->apply();
 		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);
 
-		std::cout << "bla bla" << std::endl;
 	}
 
 	void LargeVolume::set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const
