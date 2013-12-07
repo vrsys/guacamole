@@ -134,128 +134,125 @@ std::shared_ptr<Node> GeometryLoader::create_volume_from_file(std::string const&
 	std::string const& file_name,
 	unsigned flags)
 {
+    std::shared_ptr<Node> cached_node;
+    std::string key(file_name + "_" + string_utils::to_string(flags));
 
-	std::shared_ptr<Node> cached_node;
-	std::string key(file_name + "_" + string_utils::to_string(flags));
+    auto searched(loaded_files_.find(key));
+    if (searched != loaded_files_.end()) {
+        cached_node = searched->second;
+    } else {
 
-	auto searched(loaded_files_.find(key));
-	if (searched != loaded_files_.end()) {
+        bool fileload_succeed = false;
+        for (auto f : fileloaders_) {
+            if (f->is_supported(file_name)) {
+                cached_node = f->load(file_name, flags);
+                cached_node->update_cache();
+                loaded_files_.insert(std::make_pair(key, cached_node));
 
-		cached_node = searched->second;
+                // normalize volume position and rotation
+                if ( flags & VolumeLoader::NORMALIZE_POSITION 
+                  || flags & VolumeLoader::NORMALIZE_SCALE) {
+                      auto bbox = cached_node->get_bounding_box();
 
-	}
-	else {
+                      if (flags & VolumeLoader::NORMALIZE_POSITION) {
+                            auto center((bbox.min + bbox.max)*0.5);
+                            cached_node->translate(-center);
+                      }
 
-		bool fileload_succeed = false;
-		for (auto f : fileloaders_) {
-			if (f->is_supported(file_name)) {
-				cached_node = f->load(file_name, flags);
-				cached_node->update_cache();
-				loaded_files_.insert(std::make_pair(key, cached_node));
+                      if (flags & VolumeLoader::NORMALIZE_SCALE) {
+                            auto size(bbox.max - bbox.min);
+                            auto max_size(std::max(std::max(size.x, size.y),
+                                                  size.z));
+                            cached_node->scale(1.f / max_size);
+                      }
 
-				// normalize volume position and rotation
-				if (flags & VolumeLoader::NORMALIZE_POSITION || flags & VolumeLoader::NORMALIZE_SCALE) {
-					auto bbox = cached_node->get_bounding_box();
+                }
+            }
+            fileload_succeed = true;
+            break;
+        }
 
-					if (flags & VolumeLoader::NORMALIZE_POSITION) {
-						auto center((bbox.min + bbox.max)*0.5);
-						cached_node->translate(-center);
-					}
+        if (!cached_node) {
+            WARNING("Unable to load %s: Volume Type is not supported!",
+                    file_name.c_str());
+        }
+    }
 
-					if (flags & VolumeLoader::NORMALIZE_SCALE) {
-						auto size(bbox.max - bbox.min);
-						auto max_size(std::max(std::max(size.x, size.y), size.z));
-						cached_node->scale(1.f / max_size);
-					}
+    if (cached_node) {
+        auto copy(cached_node->deep_copy());
 
-				}
-			}
-				fileload_succeed = true;
-				break;
-		}
+        copy->set_name(node_name);
+        return copy;
+    }
 
-		if (!cached_node) {
-			WARNING("Unable to load %s: Volume Type is not supported!", file_name.c_str());
-		}
-	}
-
-	if (cached_node) {
-		auto copy(cached_node->deep_copy());
-
-		copy->set_name(node_name);
-		return copy;
-	}
-
-	return std::make_shared<TransformNode>(node_name);
+    return std::make_shared<TransformNode>(node_name);
 }
 
 std::shared_ptr<Node> GeometryLoader::create_vvolume_from_file(
-												std::string const&	node_name,
-												std::string const&	vfile_name,
-												unsigned			flags,
-												scm::size_t			vol_hdd_cache_size,
-												scm::size_t			vol_gpu_cache_size
-												)
-{
+        std::string const& node_name,
+        std::string const& vfile_name,
+        unsigned           flags,
+        scm::size_t        vol_hdd_cache_size,
+        scm::size_t        vol_gpu_cache_size) {
 
-	std::shared_ptr<Node> cached_node;
-	std::string key(vfile_name + "_" + string_utils::to_string(flags));
+  std::shared_ptr<Node> cached_node;
+  std::string key(vfile_name + "_" + string_utils::to_string(flags));
 
-	auto searched(loaded_files_.find(key));
-	if (searched != loaded_files_.end()) {
+  auto searched(loaded_files_.find(key));
+  if (searched != loaded_files_.end()) {
+    cached_node = searched->second;
+  } else {
+    bool fileload_succeed = false;
+    for (auto f : fileloaders_) {
+      if (f->is_supported(vfile_name)) {
+        cached_node = static_cast<VolumeLoader*>(f)->load(vfile_name,
+                                vol_hdd_cache_size, vol_gpu_cache_size);
+        cached_node->update_cache();
+        loaded_files_.insert(std::make_pair(key, cached_node));
 
-		cached_node = searched->second;
+        // normalize volume position and rotation
+        if ( flags & VolumeLoader::NORMALIZE_POSITION
+          || flags & VolumeLoader::NORMALIZE_SCALE) {
+          auto bbox = cached_node->get_bounding_box();
 
-	}
-	else {
+          if (flags & VolumeLoader::NORMALIZE_POSITION) {
+            auto center((bbox.min + bbox.max)*0.5);
+            cached_node->translate(-center);
+          }
 
-		bool fileload_succeed = false;
-		for (auto f : fileloaders_) {
-			if (f->is_supported(vfile_name)) {
-				cached_node = static_cast<VolumeLoader*>(f)->load(vfile_name, vol_hdd_cache_size, vol_gpu_cache_size);
-				cached_node->update_cache();
-				loaded_files_.insert(std::make_pair(key, cached_node));
+          if (flags & VolumeLoader::NORMALIZE_SCALE) {
+            auto size(bbox.max - bbox.min);
+            auto max_size(std::max(std::max(size.x, size.y),
+                                   size.z));
+            cached_node->scale(1.f / max_size);
+          }
 
-				// normalize volume position and rotation
-				if (flags & VolumeLoader::NORMALIZE_POSITION || flags & VolumeLoader::NORMALIZE_SCALE) {
-					auto bbox = cached_node->get_bounding_box();
+        }
+        fileload_succeed = true;
+        break;
+      }
+    }
 
-					if (flags & VolumeLoader::NORMALIZE_POSITION) {
-						auto center((bbox.min + bbox.max)*0.5);
-						cached_node->translate(-center);
-					}
+    if (!cached_node) {
+        WARNING("Unable to load %s: Volume Type is not supported!",
+                vfile_name.c_str());
+    }
+  }
 
-					if (flags & VolumeLoader::NORMALIZE_SCALE) {
-						auto size(bbox.max - bbox.min);
-						auto max_size(std::max(std::max(size.x, size.y), size.z));
-						cached_node->scale(1.f / max_size);
-					}
+  if (cached_node) {
+      auto copy(cached_node->deep_copy());
 
-				}
-			
-				fileload_succeed = true;
-				break;
-			}
-		}
+      copy->set_name(node_name);
+      return copy;
+  }
 
-		if (!cached_node) {
-			WARNING("Unable to load %s: Volume Type is not supported!", vfile_name.c_str());
-		}
-	}
-
-	if (cached_node) {
-		auto copy(cached_node->deep_copy());
-
-		copy->set_name(node_name);
-		return copy;
-	}
-
-	return std::make_shared<TransformNode>(node_name);
+  return std::make_shared<TransformNode>(node_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GeometryLoader::apply_fallback_material(std::shared_ptr<Node> const& root, std::string const& fallback_material) const {
+void GeometryLoader::apply_fallback_material(std::shared_ptr<Node> const& root,
+                                   std::string const& fallback_material) const {
 
   auto g_node(std::dynamic_pointer_cast<GeometryNode>(root));
 
