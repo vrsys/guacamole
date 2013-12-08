@@ -57,7 +57,7 @@ CompositePass::CompositePass(Pipeline* pipeline) :
 
   ray_generation_shader_->create_from_sources(ray_generation_vertex_shader, ray_generation_fragment_shader);
     
-#if 1
+#if 0
   v_composite_shader_->create_from_files("H:\\guacamole\\git_gua\\guacamole\\resources\\shaders\\uber_shaders\\composite\\virtual_volume\\vtexture_volume.glslv",
 									     "H:\\guacamole\\git_gua\\guacamole\\resources\\shaders\\uber_shaders\\composite\\virtual_volume\\vtexture_volume.glslf");
 #else

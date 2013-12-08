@@ -154,8 +154,8 @@ namespace gua {
 		else
 			WARNING("unsupportet octree data format ( %c ) ", vfile_name.c_str());
 
-		std::cout << _vtexture_info.vfile_name << std::endl
-			<< "VVolume Dimensions: "<< _vtexture_info.octree_header._volume_dimensions << std::endl;
+		//std::cout << _vtexture_info.vfile_name << std::endl
+		//	<< "VVolume Dimensions: "<< _vtexture_info.octree_header._volume_dimensions << std::endl;
 
 		//_volume_vtexture_ptr = vcontext->create_vtexture(vtex_file);
 		//_volume_dimensions = _volume_vtexture_ptr->dimensions();
@@ -169,7 +169,7 @@ namespace gua {
 													(float)_volume_dimensions.y / (float)max_dimension_volume,
 													(float)_volume_dimensions.z / (float)max_dimension_volume);
 
-		MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
+		//MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
 		//getchar();
 
 		bounding_box_ = math::BoundingBox<math::vec3>(math::vec3::zero(), _volume_dimensions_normalized);
@@ -271,9 +271,9 @@ namespace gua {
 			std::cout << _volume_file_path << std::endl;
 			WARNING("%s error!", _volume_file_path.c_str());
 		}
-		else{
-			MESSAGE("%s loaded!", _volume_file_path.c_str());
-		}
+		//else{
+			//MESSAGE("%s loaded!", _volume_file_path.c_str());
+		//}
 		//scm::gl::volume_loader scm_volume_loader;
 
 		//texture_3d_ptr              load_texture_3d(render_device&       in_device,
@@ -399,14 +399,14 @@ namespace gua {
 			combined_lut[i * 4 + 3] = alpha_lut[i];
 		}
 
-		MESSAGE("generating color map texture data done.");
+		//MESSAGE("generating color map texture data done.");
 
-		MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
+		//MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
 
 		texture_region ur(vec3ui(0u), vec3ui(in_size, 1, 1));
 		bool res = ctx.render_context->update_sub_texture(transfer_texture_ptr->get_buffer(ctx), ur, 0u, FORMAT_RGBA_32F, combined_lut.get());
 
-		MESSAGE("uploading texture data done.");
+		//MESSAGE("uploading texture data done.");
 
 		if (!res) {
 			MESSAGE("LargeVolume::update_color_alpha_map(): error during color map texture generation.");

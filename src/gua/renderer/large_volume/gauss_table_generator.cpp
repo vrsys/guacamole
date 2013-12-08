@@ -44,7 +44,7 @@ namespace data {
     }
 
     // program objects ////////////////////////////////////////////////////////////////////////////
-#if 1
+#if 0
 	_gauss_program->create_from_files("H:\\guacamole\\git_gua\\guacamole\\resources\\shaders\\volume\\gauss_generator.glslv",
 									 "H:\\guacamole\\git_gua\\guacamole\\resources\\shaders\\volume\\gauss_generator.glslf");
 #else
