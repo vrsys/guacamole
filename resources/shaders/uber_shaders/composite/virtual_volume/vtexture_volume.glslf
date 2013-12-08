@@ -19,7 +19,7 @@
 #define VTEX_VRM_RC_DVR_01								1
 #define VTEX_VRM_BLEND_WEIGHTS							0
 #define VTEX_VRM_RC_DVR_PREINT							0
-#define VTEX_VRM_RC_DVR_ADJACENT_BLEND					0
+#define VTEX_VRM_RC_DVR_ADJACENT_BLEND					1
 #define VTEX_VRM_RC_DVR_ANIMATED_BLEND					0
 #define VTEX_VRM_RC_DVR_GAUSSFIT						1
 #define VTEX_VRM_RC_DVR_TEXTUREVIEW						0
@@ -148,7 +148,11 @@ void main()
     int volume_type_id = (int)texture2D(gua_get_float_sampler(gua_ray_entry_in), gua_get_quad_coords()).w;
     //gua_out_color = texture2D(gua_get_float_sampler(gauss_color_map), gua_get_quad_coords()).xyz;
     //return;
-
+    //float d_gbuffer = texture2D(gua_get_float_sampler(gua_depth_gbuffer_in), gua_get_quad_coords()).x;
+    //d_gbuffer = -1.0 * (get_depth_linear(d_gbuffer));
+    //gua_out_color = vec3(d_gbuffer, 0.0, 0.0);
+    //return;
+    
     // compose  
     if (volume_type_id >= 0.9 && volume_type_id <= 20000.0)
     {
@@ -175,9 +179,9 @@ void main()
 
         volume_data.mvp_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix;
 
+
         //////////////////////////////////////////???//!! PSEUDO UNIFORMS UGLY HACK
-
-
+        
         ray                 prim_r; // intersection ray
         vec2                t_span; // ray parameter interval
         float               sdist;  // sampling distance
@@ -193,15 +197,15 @@ void main()
 
         vec3 gua_object_volume_position_back = texture2D(gua_get_float_sampler(gua_ray_entry_in), gua_get_quad_coords()).xyz;
         vec3 gua_world_volume_position_back = (gua_model_matrix * vec4(gua_object_volume_position_back, 1.0)).xyz;
-
+        
         float d_gbuffer = texture2D(gua_get_float_sampler(gua_depth_gbuffer_in), gua_get_quad_coords()).x;
         float d_volume_back = get_depth_z(gua_world_volume_position_back);
         float d_volume_front = get_depth_z(gua_world_volume_position_front);
-
-        d_gbuffer = -1.0 * (get_depth_linear(d_gbuffer));
-        d_volume_back = -1.0 * (get_depth_linear(d_volume_back));
-        d_volume_front = -1.0 * (get_depth_linear(d_volume_front));
-
+        
+        d_gbuffer = abs((get_depth_linear(d_gbuffer)));
+        d_volume_back = abs((get_depth_linear(d_volume_back)));
+        d_volume_front = abs((get_depth_linear(d_volume_front)));
+        
         if (d_gbuffer < d_volume_front){ // geometry in front of --> works
             gua_out_color = texture2D(gua_get_float_sampler(gua_color_gbuffer_in), gua_get_quad_coords()).xyz;
             //gua_out_color = gua_object_volume_position_front;
@@ -220,15 +224,13 @@ void main()
             t_span.y -= (t_abs * (1.0 - norm_dg));
             //ray_entry_os = get_object_world_position_from_depth(d_gbuffer);// , 1.0)).xyz;
             //vvolume_ray_setup_ots(ray_entry_os.xyz, prim_r, t_span, sdist);
-            //gua_out_color = vec3(norm_dg);
+            //gua_out_color = vec3(prim_r.direction.z);
             //return;
         }
-
-
-
+        
         vec4 out_color = vec4(0.0);
         //gua_out_color = texture(gua_get_float_sampler(color_map), gua_object_volume_position.xy).rgb;
-        //gua_out_color = volume_data.volume_bbox_max.xyz;
+        //gua_out_color = vec3(d_gbuffer, 0.0, 0.0);
         //return;
 
         if (t_span.x < t_span.y) {
@@ -242,9 +244,9 @@ void main()
             //    out_color = volume_draw_debug_quadtree(prim_r, t_span, sdist, rc_res);
             //#elif VTEX_VRM_RC_DVR_00 == 1 || VTEX_VRM_RC_DVR_01 == 1 || VTEX_VRM_RC_DVR_OCTREE == 1
             //#if VTEX_VRM_RC_DVR_ADJACENT_BLEND
-            out_color = volume_ray_cast_octree_exp(prim_r, t_span, sdist, rc_res);
+            //out_color = volume_ray_cast_octree_exp(prim_r, t_span, sdist, rc_res);
             //#else 
-            //    out_color = volume_ray_cast_octree_blend_exp(prim_r, t_span, sdist, rc_res);
+                out_color = volume_ray_cast_octree_blend_exp(prim_r, t_span, sdist, rc_res);
             //#endif
             //#endif
         }

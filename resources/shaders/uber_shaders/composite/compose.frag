@@ -52,7 +52,6 @@ float get_depth_z(vec3 world_position) {
     vec4 pos = gua_projection_matrix * gua_view_matrix * vec4(world_position, 1.0);
     float ndc = pos.z/pos.w;
     return ((gl_DepthRange.diff * ndc) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
-
 }
 
 float get_depth_linear(float depth_buffer_d) {
