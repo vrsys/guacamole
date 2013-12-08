@@ -198,21 +198,22 @@ void main()
         vec3 gua_object_volume_position_back = texture2D(gua_get_float_sampler(gua_ray_entry_in), gua_get_quad_coords()).xyz;
         vec3 gua_world_volume_position_back = (gua_model_matrix * vec4(gua_object_volume_position_back, 1.0)).xyz;
         
-        float d_gbuffer = texture2D(gua_get_float_sampler(gua_depth_gbuffer_in), gua_get_quad_coords()).x;
-        float d_volume_back = get_depth_z(gua_world_volume_position_back);
-        float d_volume_front = get_depth_z(gua_world_volume_position_front);
+        float d_gbuffer_z = texture2D(gua_get_float_sampler(gua_depth_gbuffer_in), gua_get_quad_coords()).x;
+        float d_volume_back_z = get_depth_z(gua_world_volume_position_back);
+        float d_volume_front_z = get_depth_z(gua_world_volume_position_front);
         
-        d_gbuffer = abs((get_depth_linear(d_gbuffer)));
-        d_volume_back = abs((get_depth_linear(d_volume_back)));
-        d_volume_front = abs((get_depth_linear(d_volume_front)));
+        float d_gbuffer = abs((get_depth_linear(d_gbuffer_z)));
+        float d_volume_back = abs((get_depth_linear(d_volume_back_z)));
+        float d_volume_front = abs((get_depth_linear(d_volume_front_z)));
         
-        if (d_gbuffer < d_volume_front){ // geometry in front of --> works
+        if (d_gbuffer_z < d_volume_front_z){ // geometry in front of --> works
             gua_out_color = texture2D(gua_get_float_sampler(gua_color_gbuffer_in), gua_get_quad_coords()).xyz;
             //gua_out_color = gua_object_volume_position_front;
             return;
         }
 
-        if (d_gbuffer < d_volume_back){ // there is geometry between inside	--> dont work
+        if (d_gbuffer_z < d_volume_back_z){ // there is geometry between inside	--> dont work
+                       
 
             float d_abs = d_volume_back - d_volume_front;
             float t_abs = t_span.y - t_span.x;
@@ -224,7 +225,7 @@ void main()
             t_span.y -= (t_abs * (1.0 - norm_dg));
             //ray_entry_os = get_object_world_position_from_depth(d_gbuffer);// , 1.0)).xyz;
             //vvolume_ray_setup_ots(ray_entry_os.xyz, prim_r, t_span, sdist);
-            //gua_out_color = vec3(prim_r.direction.z);
+            //gua_out_color = vec3(norm_dg);
             //return;
         }
         

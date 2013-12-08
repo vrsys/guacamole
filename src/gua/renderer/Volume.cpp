@@ -79,9 +79,8 @@ namespace gua {
 													(float)_volume_dimensions.y / (float)max_dimension_volume,
 													(float)_volume_dimensions.z / (float)max_dimension_volume);
 
-		MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
-		//getchar();
-
+		//MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
+		
 		bounding_box_ = math::BoundingBox<math::vec3>(math::vec3::zero(), _volume_dimensions_normalized);
 
 		// initialize transfer functions //////////////////////////////////////////////////////////////
@@ -215,7 +214,7 @@ namespace gua {
 			return (std::shared_ptr<Texture2D>(new Texture2D(in_size, 1)));
 		}
 		else{
-			std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
+			//std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
 			return (new_tex);
 		}
 	}
@@ -238,7 +237,7 @@ namespace gua {
 
 		if (!scm::data::build_lookup_table(color_lut, in_color, in_size)
 			|| !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {
-			MESSAGE("volume_data::update_color_alpha_map(): error during lookuptable generation");
+            WARNING("volume_data::update_color_alpha_map(): error during lookuptable generation");
 			return false;
 		}
 		scm::scoped_array<float> combined_lut;
@@ -252,17 +251,17 @@ namespace gua {
 			combined_lut[i * 4 + 3] = alpha_lut[i];
 		}
 
-		MESSAGE("generating color map texture data done.");
+		//MESSAGE("generating color map texture data done.");
 
-		MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
+		//MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
 
 		texture_region ur(vec3ui(0u), vec3ui(in_size, 1, 1));
 		bool res = ctx.render_context->update_sub_texture(transfer_texture_ptr->get_buffer(ctx), ur, 0u, FORMAT_RGBA_32F, combined_lut.get());
 
-		MESSAGE("uploading texture data done.");
+		//MESSAGE("uploading texture data done.");
 
 		if (!res) {
-			MESSAGE("Volume::update_color_alpha_map(): error during color map texture generation.");
+			WARNING("Volume::update_color_alpha_map(): error during color map texture generation.");
 			return false;
 		}
 
