@@ -30,49 +30,43 @@ namespace gua
 	OVR::HMDDevice* OculusDeviceManager::getNextAvailableDevice()
 	{
 		OVR::HMDDevice* deviceToReturn(nullptr);
-    
-    std::cout << "Getting some device" << std::endl;
-  
-		if (numberOfDevicesCreated == 0)
-		{
-      std::cout << "Getting first device" << std::endl;
-			deviceToReturn = device_manager_->EnumerateDevices<OVR::HMDDevice>().CreateDevice();
-		}
-		else if (numberOfDevicesCreated == 1)
-		{
-      std::cout << "Getting second device" << std::endl;
-			auto enumerator = device_manager_->EnumerateDevices<OVR::HMDDevice>();
-			enumerator.Next();
-			deviceToReturn = enumerator.CreateDevice();
-		}
+	
+    	auto enumerator = device_manager_->EnumerateDevices<OVR::HMDDevice>();
+    	//Surprisingly, it is not needed to call enumerator.Next() here
+    	deviceToReturn = enumerator.CreateDevice();
 
-		if (deviceToReturn != nullptr)
+    	if (deviceToReturn != nullptr)
+		{
 			++numberOfDevicesCreated;
+		}
 
-		/*	// Probably a better solution, to be used instead of the upper one as it supports more than 2 devices
-			auto enumerator = device_manager_->EnumerateDevices<OVR::HMDDevice>();
-			int currentDevice(1);
-			bool deviceAvailable(true);
-
-			while(currentDevice < numberOfDevicesCreated + 1)
-			{
-				if (enumerator.GetType() == Device_None)
-				{
-					deviceAvailable = false;
-					break;
-				}
-				
-				enumerator.Next();
-				++currentDevice;
-			}
-			
-			if (deviceAvailable)
-			{
-				deviceToReturn = enumerator.CreateDevice();
-				++numberOfDevicesCreated;
-			}	
-		*/
+		std::cout << "Next device is number " << numberOfDevicesCreated << std::endl;
 
 		return deviceToReturn;
+	}
+
+	//Redefined function from the Oculus SDK in order to support multiple Oculus Rifts
+	OVR::SensorDevice* OculusDeviceManager::getNextSensor()
+	{
+	    //Gets a sensor in order to attach it to a device
+
+	    OVR::SensorDevice* sensor(nullptr);
+
+	    auto enumerator = device_manager_->EnumerateDevices<OVR::SensorDevice>();
+
+	    int i(1);
+	    while (i < numberOfDevicesCreated)
+	    {
+	       enumerator.Next();
+	       ++i;
+	    }
+
+	    sensor = enumerator.CreateDevice();
+
+	    if (sensor)
+	        sensor->SetCoordinateFrame(OVR::SensorDevice::Coord_HMD);
+	    else
+	    	--numberOfDevicesCreated;	// If no sensor was detected for a device, the number of devices created is decreased again
+	    return sensor;
 	}
 }
