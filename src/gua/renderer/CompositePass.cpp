@@ -52,8 +52,6 @@ CompositePass::CompositePass(Pipeline* pipeline) :
   std::string ray_generation_fragment_shader(Resources::lookup_shader(Resources::shaders_uber_shaders_composite_ray_generation_frag));
 
   ray_generation_shader_->create_from_sources(ray_generation_vertex_shader, ray_generation_fragment_shader);
-
-  print_shaders("debug", "composite.txt");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,9 +102,9 @@ void CompositePass::create(RenderContext const& ctx,
 
 /* virtual */ void CompositePass::rendering(SerializedScene const& scene,
   RenderContext const& ctx,
-  CameraMode eye, 
+  CameraMode eye,
   Camera const& camera,
-  FrameBufferObject* target) 
+  FrameBufferObject* target)
 {
     init_ressources(ctx);
 
@@ -158,10 +156,10 @@ void CompositePass::create(RenderContext const& ctx,
     volume_raygeneration_buffer_->unbind(ctx);
 
     scm::gl::context_all_guard      cug(ctx.render_context);
-    
+
     // 2. render fullscreen quad for compositing and volume ray castinG
     Pass::set_camera_matrices(*composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
-    
+
     auto input_tex(inputs_[Pipeline::shading]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
     auto normal_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
     auto depth_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_depth_buffer());
