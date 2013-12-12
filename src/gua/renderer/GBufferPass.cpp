@@ -132,19 +132,17 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
-    if (!scene.meshnodes_.empty() || scene.textured_quads_.empty() || (pipeline_->config.enable_bbox_display() && !scene.bounding_boxes_.empty())) {
-        mesh_shader_->set_material_uniforms(
-            scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
-        mesh_shader_->set_material_uniforms(
-            scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+    mesh_shader_->set_material_uniforms(
+        scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+    mesh_shader_->set_material_uniforms(
+        scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
 
-        Pass::bind_inputs(*mesh_shader_, eye, ctx);
-        Pass::set_camera_matrices(*mesh_shader_,
-                                  camera,
-                                  pipeline_->get_current_scene(eye),
-                                  eye,
-                                  ctx);
-    }
+    Pass::bind_inputs(*mesh_shader_, eye, ctx);
+    Pass::set_camera_matrices(*mesh_shader_,
+                              camera,
+                              pipeline_->get_current_scene(eye),
+                              eye,
+                              ctx);
 
     if (!scene.meshnodes_.empty()) {
 
