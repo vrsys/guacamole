@@ -201,10 +201,20 @@ void GBufferPass::rendering(SerializedScene const& scene,
                 if (TextureDatabase::instance()->is_supported(texture_name)) {
                     auto texture =
                         TextureDatabase::instance()->lookup(texture_name);
-                    auto mapped(
+                    auto mapped_texture(
                         mesh_shader_->get_uniform_mapping()->get_mapping("gua_textured_quad", "texture"));
 
-                    mesh_shader_->set_uniform(ctx, texture, mapped.first, mapped.second);
+                    mesh_shader_->set_uniform(ctx, texture, mapped_texture.first, mapped_texture.second);
+
+                    auto mapped_flip_x(
+                        mesh_shader_->get_uniform_mapping()->get_mapping("gua_textured_quad", "flip_x"));
+
+                    mesh_shader_->set_uniform(ctx, node.data.get_flip_x(), mapped_flip_x.first, mapped_flip_x.second);
+
+                    auto mapped_flip_y(
+                        mesh_shader_->get_uniform_mapping()->get_mapping("gua_textured_quad", "flip_y"));
+
+                    mesh_shader_->set_uniform(ctx, node.data.get_flip_y(), mapped_flip_y.first, mapped_flip_y.second);
 
                     if (material && geometry) {
                         mesh_shader_->set_uniform(

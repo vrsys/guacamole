@@ -3,6 +3,8 @@
 	"shading_model" : "gua_textured_quad",
 	"uniforms" : 
 	{
+		"flip_x" : "0",
+		"flip_y" : "0",
 		"texture" : "gua_default_texture"
 	}
 }
