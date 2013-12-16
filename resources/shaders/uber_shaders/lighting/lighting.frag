@@ -123,10 +123,10 @@ float gua_get_shadow() {
   return shadow;
 }
 
-// base lighting calculations for point lights ---------------------------------
 subroutine void CalculateLightType();
 subroutine uniform CalculateLightType compute_light;
 
+// base lighting calculations for point lights ---------------------------------
 subroutine(CalculateLightType)
 void gua_calculate_point_light() {
   vec3 light_position = gua_lightinfo1;
@@ -187,6 +187,33 @@ void gua_calculate_spot_light() {
   radial_attenuation = pow(1.0 - radial_attenuation, gua_light_softness);
 
   gua_light_intensity = radial_attenuation * length_attenuation * shadow;
+}
+
+// base lighting calculations for point lights ---------------------------------
+subroutine(CalculateLightType)
+void gua_calculate_sun_light() {
+  vec3 light_direction = gua_lightinfo1;
+  vec3 gbuffer_normal = texture2D(gua_get_float_sampler(gua_float_gbuffer_in_1[0]),
+                        gua_get_quad_coords()).xyz;
+
+  gua_light_direction = light_direction;
+  gua_light_distance  = 0.0;
+
+  if (dot(gbuffer_normal, gua_light_direction) < 0)
+    discard;
+
+  float shadow = 0.25;
+  float depth = gua_get_depth();
+
+  if (depth < 0.94) {
+    shadow = 1.0;
+  } else if (depth < 0.98) {
+    shadow = 0.75;
+  } else if (depth < 0.99) {
+    shadow = 0.5;
+  }
+
+  gua_light_intensity = 1.0 * shadow;
 }
 
 // material specific methods

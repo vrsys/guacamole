@@ -39,10 +39,10 @@ out mat4  gua_lightinfo4;
 
 // BASE LIGHTING CALCULATIONS --------------------------------------------------
 
-// base lighting calculations for point lights
 subroutine void CalculateLightType();
 subroutine uniform CalculateLightType compute_light;
 
+// base lighting calculations for point lights
 subroutine( CalculateLightType )
 void gua_calculate_point_light() {
 
@@ -52,6 +52,9 @@ void gua_calculate_point_light() {
   gua_lightinfo1 = light_position;
   gua_lightinfo2 = vec3(0.0, 0.0, 0.0);
   gua_lightinfo3 = light_radius;
+
+  vec3 position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
+  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(position, 1.0);
 }
 
 // base lighting calculations for spot lights
@@ -72,11 +75,22 @@ void gua_calculate_spot_light() {
   gua_lightinfo2 = beam_direction;
   gua_lightinfo3 = half_beam_angle;
   gua_lightinfo4 = shadow_map_coords_mat;
+
+  vec3 position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
+  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(position, 1.0);
+}
+
+// base lighting calculations for sun lights
+subroutine( CalculateLightType )
+void gua_calculate_sun_light() {
+
+  vec3 light_direction = normalize((gua_model_matrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz);
+  gua_lightinfo1 = light_direction;
+
+  gl_Position = vec4(gua_in_position, 1.0);
 }
 
 // main ------------------------------------------------------------------------
 void main() {
   compute_light();
-  vec3 position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
-  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(position, 1.0);
 }

@@ -19,46 +19,62 @@
  *                                                                            *
  ******************************************************************************/
 
-@include "shaders/common/header.glsl"
+#ifndef GUA_SUN_LIGHT_NODE_HPP
+#define GUA_SUN_LIGHT_NODE_HPP
 
-// input
-layout(location=0) in vec3 gua_in_position;
-layout(location=2) in vec2 gua_in_texcoord;
+#include <gua/platform.hpp>
+#include <gua/scenegraph/Node.hpp>
 
-uniform mat4 gua_projection_matrix;
-uniform mat4 gua_view_matrix;
-uniform vec3 gua_light_position_direction;
+#include <gua/utils/Color3f.hpp>
+#include <gua/utils/configuration_macro.hpp>
 
-// output
-out vec3 gua_light_position_screen_space;
-out vec2 gua_quad_coords;
+#include <string>
 
-subroutine void CalculatePositionType();
-subroutine uniform CalculatePositionType compute_position;
+/**
+ * This class is used to represent light in the SceneGraph.
+ *
+ */
 
-subroutine(CalculatePositionType)
-void gua_calculate_by_direction() {
-  vec4 tmp = gua_view_matrix * vec4(gua_light_position_direction, 0.0);
+namespace gua {
 
-  if (tmp.z > 0) {
-    // hide sun on wrong side
-    gua_light_position_screen_space = vec3(-10);
-  } else {
-    tmp = gua_projection_matrix * tmp;
-    gua_light_position_screen_space = (tmp/tmp.w).xyz;
-    gua_light_position_screen_space = gua_light_position_screen_space/gua_light_position_screen_space.z;
-  }
+class GUA_DLL SunLightNode : public Node {
+ public:
+
+  struct Configuration {
+    GUA_ADD_PROPERTY(utils::Color3f,  color,                    utils::Color3f(1.f, 1.f, 1.f));
+    GUA_ADD_PROPERTY(bool,            enable_shadows,           false);
+    GUA_ADD_PROPERTY(bool,            enable_godrays,           false);
+    GUA_ADD_PROPERTY(bool,            enable_diffuse_shading,   true);
+    GUA_ADD_PROPERTY(bool,            enable_specular_shading,  true);
+    GUA_ADD_PROPERTY(unsigned,        shadow_map_size,          512);
+    GUA_ADD_PROPERTY(float,           shadow_offset,            0.001f);
+  };
+
+  Configuration data;
+
+  SunLightNode() {}
+
+  SunLightNode(std::string const& name,
+                Configuration const& configuration = Configuration(),
+                math::mat4 const& transform = math::mat4::identity());
+
+  /**
+   * Accepts a visitor and calls concrete visit method
+   *
+   * This method implements the visitor pattern for Nodes
+   *
+   */
+  /* virtual */ void accept(NodeVisitor&);
+
+  void update_bounding_box() const;
+
+ private:
+  /**
+   *
+   */
+  std::shared_ptr<Node> copy() const;
+};
+
 }
 
-subroutine(CalculatePositionType)
-void gua_calculate_by_position() {
-  vec4 tmp = gua_projection_matrix * gua_view_matrix * vec4(gua_light_position_direction, 1.0);
-  gua_light_position_screen_space = (tmp/tmp.w).xyz;
-}
-
-// body
-void main() {
-  gua_quad_coords = gua_in_texcoord;
-  compute_position();
-  gl_Position = vec4(gua_in_position, 1.0);
-}
+#endif  // GUA_SUN_LIGHT_NODE_HPP

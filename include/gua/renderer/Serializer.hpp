@@ -111,6 +111,15 @@ class Serializer : public NodeVisitor {
    */
   /* virtual */ void visit(SpotLightNode* spot);
 
+   /**
+   * Visits a SunLightNode
+   *
+   * This function provides the interface to visit a SunLightNode
+   *
+   * \param spot   Pointer to SunLightNode
+   */
+  /* virtual */ void visit(SunLightNode* sun);
+
   /**
    * Visits a RayNode
    *

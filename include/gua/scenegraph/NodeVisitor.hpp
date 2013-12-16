@@ -35,6 +35,7 @@ class VolumeNode;
 class PointLightNode;
 class ScreenNode;
 class SpotLightNode;
+class SunLightNode;
 class RayNode;
 class TexturedQuadNode;
 
@@ -119,6 +120,15 @@ class NodeVisitor {
    * \param cam   Pointer to SpotLightNode
    */
   virtual void visit(SpotLightNode* node) { visit(reinterpret_cast<Node*>(node)); }
+
+  /**
+   * Visits a SunLightNode
+   *
+   * This function provides the interface to visit a SunLightNode
+   *
+   * \param cam   Pointer to SunLightNode
+   */
+  virtual void visit(SunLightNode* node) { visit(reinterpret_cast<Node*>(node)); }
 
   /**
    * Visits a SpotLightNode

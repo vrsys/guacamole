@@ -36,6 +36,7 @@
 #include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
+#include <gua/scenegraph/SunLightNode.hpp>
 #include <gua/scenegraph/ScreenNode.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
@@ -75,6 +76,7 @@ void Serializer::check(SerializedScene* output,
   std::size_t volume_count = data_->volumenodes_.size();
   std::size_t point_light_count = data_->point_lights_.size();
   std::size_t spot_light_count = data_->spot_lights_.size();
+  std::size_t sun_light_count = data_->sun_lights_.size();
   std::size_t ray_count = data_->rays_.size();
   std::size_t textured_quad_count = data_->textured_quads_.size();
 
@@ -83,12 +85,14 @@ void Serializer::check(SerializedScene* output,
   data_->volumenodes_.clear();
   data_->point_lights_.clear();
   data_->spot_lights_.clear();
+  data_->sun_lights_.clear();
   data_->textured_quads_.clear();
 
   data_->bounding_boxes_.clear();
   data_->rays_.clear();
   draw_bounding_boxes_ = draw_bounding_boxes;
   draw_rays_ = draw_rays;
+
   if (draw_bounding_boxes_) {
     data_->materials_.insert("gua_bounding_box");
     data_->bounding_boxes_
@@ -110,6 +114,7 @@ void Serializer::check(SerializedScene* output,
   data_->volumenodes_.reserve(nurbs_count);
   data_->point_lights_.reserve(point_light_count);
   data_->spot_lights_.reserve(spot_light_count);
+  data_->sun_lights_.reserve(sun_light_count);
   data_->textured_quads_.reserve(textured_quad_count);
 
   enable_frustum_culling_ = enable_frustum_culling;
@@ -169,7 +174,7 @@ void Serializer::check(SerializedScene* output,
   if ( is_visible(node) ) {
     if ( !node->data.get_volume().empty() ) {
       add_bbox(node);
-      data_->volumenodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));	  
+      data_->volumenodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
     }
 
     visit_children(node);
@@ -199,6 +204,18 @@ void Serializer::check(SerializedScene* output,
     add_bbox(node);
 
     data_->spot_lights_
+        .push_back(make_serialized_node(node->get_world_transform(), node->data));
+
+    visit_children(node);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+/* virtual */ void Serializer::visit(SunLightNode* node) {
+
+  if (is_visible(node)) {
+    data_->sun_lights_
         .push_back(make_serialized_node(node->get_world_transform(), node->data));
 
     visit_children(node);

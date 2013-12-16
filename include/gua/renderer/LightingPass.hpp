@@ -83,6 +83,7 @@ class LightingPass : public GeometryPass {
   LightingUberShader* shader_;
   std::shared_ptr<Geometry> light_sphere_;
   std::shared_ptr<Geometry> light_cone_;
+  scm::gl::quad_geometry_ptr fullscreen_quad_;
 
   Serializer* serializer_;
 
@@ -94,7 +95,8 @@ class LightingPass : public GeometryPass {
   math::mat4 shadow_map_projection_view_matrix_;
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::rasterizer_state_ptr rasterizer_state_;
+  scm::gl::rasterizer_state_ptr rasterizer_state_front_;
+  scm::gl::rasterizer_state_ptr rasterizer_state_back_;
   scm::gl::blend_state_ptr blend_state_;
 };
 

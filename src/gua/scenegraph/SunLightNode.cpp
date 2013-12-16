@@ -19,46 +19,35 @@
  *                                                                            *
  ******************************************************************************/
 
-@include "shaders/common/header.glsl"
+// class header
+#include <gua/scenegraph/SunLightNode.hpp>
 
-// input
-layout(location=0) in vec3 gua_in_position;
-layout(location=2) in vec2 gua_in_texcoord;
+// guacamole header
+#include <gua/platform.hpp>
+#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
-uniform mat4 gua_projection_matrix;
-uniform mat4 gua_view_matrix;
-uniform vec3 gua_light_position_direction;
+namespace gua {
 
-// output
-out vec3 gua_light_position_screen_space;
-out vec2 gua_quad_coords;
+SunLightNode::SunLightNode(std::string const& name,
+                             Configuration const& configuration,
+                             math::mat4 const& transform)
+    : Node(name, transform), data(configuration) {}
 
-subroutine void CalculatePositionType();
-subroutine uniform CalculatePositionType compute_position;
-
-subroutine(CalculatePositionType)
-void gua_calculate_by_direction() {
-  vec4 tmp = gua_view_matrix * vec4(gua_light_position_direction, 0.0);
-
-  if (tmp.z > 0) {
-    // hide sun on wrong side
-    gua_light_position_screen_space = vec3(-10);
-  } else {
-    tmp = gua_projection_matrix * tmp;
-    gua_light_position_screen_space = (tmp/tmp.w).xyz;
-    gua_light_position_screen_space = gua_light_position_screen_space/gua_light_position_screen_space.z;
-  }
+/* virtual */ void SunLightNode::accept(NodeVisitor& visitor) {
+    visitor.visit(this);
 }
 
-subroutine(CalculatePositionType)
-void gua_calculate_by_position() {
-  vec4 tmp = gua_projection_matrix * gua_view_matrix * vec4(gua_light_position_direction, 1.0);
-  gua_light_position_screen_space = (tmp/tmp.w).xyz;
+void SunLightNode::update_bounding_box() const {
+    bounding_box_ = math::BoundingBox<math::vec3>(
+        math::vec3(std::numeric_limits<math::vec3::value_type>::lowest()),
+        math::vec3(std::numeric_limits<math::vec3::value_type>::max())
+    );
 }
 
-// body
-void main() {
-  gua_quad_coords = gua_in_texcoord;
-  compute_position();
-  gl_Position = vec4(gua_in_position, 1.0);
+std::shared_ptr<Node> SunLightNode::copy() const {
+    return std::make_shared<SunLightNode>(get_name(), data, get_transform());
+}
+
 }
