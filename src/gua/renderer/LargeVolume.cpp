@@ -420,33 +420,8 @@ namespace gua {
 
 	void LargeVolume::draw(RenderContext const& ctx) const {
 
-		// upload to GPU if neccessary
-		if (_volume_boxes_ptr.size() <= ctx.id || _volume_boxes_ptr[ctx.id] == nullptr) {
-			upload_to(ctx);
-		}
+        ///not used		
 
-		if (_update_transfer_function){
-			for (auto color_map_texture : _transfer_texture_ptr)
-			{
-				update_color_map(ctx, color_map_texture, _alpha_transfer, _color_transfer);
-			}
-			_update_transfer_function = false;
-		}
-
-		scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-//		ctx.render_context->bind_texture( _volume_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 5);
-//		ctx.render_context->bind_texture(_transfer_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 6);
-		scm::gl::program_ptr p = ctx.render_context->current_program();
-		//p->uniform_sampler("volume_texture", 5);			
-		p->uniform_sampler("color_map", 6);
-		p->uniform_sampler("gauss_color_map", 7);
-		p->uniform("sampling_distance", _sample_distance);
-		//p->uniform("iso_value", 0.8f);
-		p->uniform("volume_bounds", _volume_dimensions_normalized);
-		
-		ctx.render_context->apply();
-		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);		
 	}
 
 	void LargeVolume::draw_proxy(RenderContext const& ctx) const {
@@ -488,6 +463,8 @@ namespace gua {
 		cs->set_uniform(ctx, _gauss_texture_ptr[ctx.id], "gauss_color_map");
 		cs->set_uniform(ctx, _sample_distance, "uni_sampling_distance");
 		cs->set_uniform(ctx, _volume_dimensions_normalized, "uni_volume_bounds");
+
+       
 
 		//_volume_texture_ptr[ctx.id]->make_non_resident(ctx);
 		//_transfer_texture_ptr[ctx.id]->make_non_resident(ctx);

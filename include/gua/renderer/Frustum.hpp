@@ -47,9 +47,10 @@ class Frustum {
   }
   inline math::mat4 const& get_projection() const { return projection_; }
   inline math::mat4 const& get_view() const { return view_; }
+  inline math::vec4 const& get_clip_near_plane() const{ return planes_[4]; }
   inline float get_clip_near() const { return clip_near_; }
   inline float get_clip_far() const { return clip_far_; }
-
+  
   bool is_inside(math::BoundingBox<math::vec3> const& bbox) const;
 
  private:

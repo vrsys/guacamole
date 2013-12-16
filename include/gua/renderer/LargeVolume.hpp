@@ -135,11 +135,7 @@ namespace gua {
 
 		void draw(const scm::gl::render_context_ptr& context,
 							const scm::data::vtexture_system_ptr&    vsystem) const;
-		void update(const scm::gl::render_device_ptr&  device,
-										const scm::gl::render_context_ptr& context,
-										const scm::data::vtexture_system_ptr&    vsystem,
-										const scm::gl::camera&             cam);
-
+		
 		/**
 		* Draws the LargeVolume.
 		*
@@ -173,7 +169,8 @@ namespace gua {
 		void                            update_volume_lens_box(const scm::gl::box& lb);
 		void                            update_volume_lens_box_normalized(const scm::gl::box& lb);
 
-		void set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color);
+		void set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, 
+                                   const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color);
 
 		/**
 		* VTexture Functions
@@ -184,7 +181,9 @@ namespace gua {
 		void                                post_frame_update(RenderContext const& context);
 
 		void	bind_vtexture(RenderContext const& context) const;
-		void	program_uniform(RenderContext const& context, gua::ShaderProgram* shader_prg, std::string const& uniform_name) const;
+		void	program_uniform(RenderContext const& context, 
+                                gua::ShaderProgram* shader_prg, 
+                                std::string const& uniform_name) const;
 
 	private:
 		void upload_to(RenderContext const& context) const;

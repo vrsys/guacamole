@@ -40,6 +40,7 @@ uniform uvec2 gauss_color_map;
 
 uniform float uni_sampling_distance;
 uniform vec3 uni_volume_bounds;
+uniform vec4 near_plane;
 
 //////////////////////////////////////////???//!! PSEUDO UNIFORMS UGLY HACK
 struct {
@@ -158,7 +159,7 @@ void main()
     {
 
         camera_transform.ws_position = vec4(gua_camera_position, 1.0);
-        camera_transform.ws_near_plane = vec4(gl_DepthRange.near);
+        camera_transform.ws_near_plane = near_plane;
         camera_transform.v_matrix = gua_view_matrix;
         camera_transform.v_matrix_inverse = inverse(gua_view_matrix);
 
