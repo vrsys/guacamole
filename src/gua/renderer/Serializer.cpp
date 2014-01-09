@@ -33,6 +33,7 @@
 #include <gua/scenegraph/Node.hpp>
 #include <gua/scenegraph/TransformNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/Video3DNode.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
@@ -157,6 +158,20 @@ void Serializer::check(SerializedScene* output,
     }
 
     data_->materials_.insert(node->data.get_material());
+
+    visit_children(node);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+/* virtual */ void Serializer::visit(Video3DNode* node) {
+
+  if ( is_visible(node) ) {
+    if ( !node->data.get_kinectFile().empty() ) {
+      add_bbox(node);
+      data_->video3dnodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));   
+    }
 
     visit_children(node);
   }
