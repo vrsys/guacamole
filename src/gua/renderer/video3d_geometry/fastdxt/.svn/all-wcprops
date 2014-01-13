@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/oculus_rift/!svn/ver/10/trunk/kinect/src/fastdxt
+END
+util.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/oculus_rift/!svn/ver/10/trunk/kinect/src/fastdxt/util.cpp
+END
+dxt.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/oculus_rift/!svn/ver/10/trunk/kinect/src/fastdxt/dxt.cpp
+END
+libdxt.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/oculus_rift/!svn/ver/10/trunk/kinect/src/fastdxt/libdxt.cpp
+END

@@ -25,6 +25,8 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/Geometry.hpp>
+#include <gua/renderer/video3d_geometry/KinectCalibrationFile.hpp>
+#include <gua/renderer/video3d_geometry/FileBuffer.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -81,6 +83,7 @@ class Video3D : public Geometry {
 
  private:
   void upload_to(RenderContext const& context) const;
+  void update_buffers(RenderContext const& context) const;
   
   mutable std::vector<scm::gl::buffer_ptr> proxy_vertices_;
   mutable std::vector<scm::gl::buffer_ptr> proxy_indices_;
@@ -91,7 +94,14 @@ class Video3D : public Geometry {
   mutable std::vector<scm::gl::texture_2d_ptr> depth_texArrays_;
   mutable std::vector<float*> depth_buffers_; //std::vector< std::vector<float*> > for multiple kinects per Video3D
 
+  mutable KinectCalibrationFile* calib_file_;
+  mutable unsigned depth_size_;
+  mutable unsigned depth_size_byte_;
+  mutable unsigned color_size_;
+
+  mutable std::vector<FileBuffer*> file_buffers_;
   //members
+
   //width & height??
   //calibartion file??
   //receiver??

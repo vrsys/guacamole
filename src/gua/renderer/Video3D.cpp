@@ -26,7 +26,11 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/video3d_geometry/DXTCompressor.h>
 #include <gua/utils/logger.hpp>
+
+// external headers
+#include <iostream>
 
 namespace {
 struct Vertex {
@@ -48,8 +52,17 @@ Video3D::Video3D(std::string const& kinectFile) :
   color_buffers_(),
   depth_texArrays_(),
   depth_buffers_(),
+  calib_file_(nullptr),
+  depth_size_(),
+  depth_size_byte_(),
+  color_size_(),
+  file_buffers_(),
   upload_mutex_()
-{}
+{
+  calib_file = new KinectCalibrationFile((kinectFile  + ".yml").c_str());
+  calib_file_->parse();
+  calib_file_->updateMatrices();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,6 +89,11 @@ void Video3D::upload_to(RenderContext const& ctx) const {
     proxy_vertices_.resize(ctx.id + 1);
     proxy_indices_.resize(ctx.id + 1);
     proxy_vertex_array_.resize(ctx.id + 1);
+    color_texArrays_.resize(ctx.id + 1);
+    color_buffers_.resize(ctx.id + 1);
+    depth_texArrays_.resize(ctx.id + 1);
+    depth_buffers_.resize(ctx.id + 1);
+    file_buffers_.resize(ctx.id + 1);
   }
 
   proxy_vertices_[ctx.id] =
@@ -89,7 +107,7 @@ void Video3D::upload_to(RenderContext const& ctx) const {
   Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
       proxy_vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
   
-  //compute vertex data (proxy mesh)
+  //compute vertex data (proxy mesh)ddd
   const scm::math::vec3f& p(0.0f); //point of origin
   unsigned v(0);
   for (float h = 0.5*step; h < height*step; h += step)
@@ -143,7 +161,7 @@ void Video3D::upload_to(RenderContext const& ctx) const {
                                                     (0, 2, TYPE_VEC2F, sizeof(Vertex)),
                                        buffer_arrays);
 
-  //initialize Texture Arrays (kinect depths & colors)
+  // initialize Texture Arrays (kinect depths & colors)
   depth_texArrays[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(640, 480),
                                                        scm::gl::FORMAT_R_32F,
                                                        0,
@@ -157,6 +175,38 @@ void Video3D::upload_to(RenderContext const& ctx) const {
                                                        1, //kinect count
                                                        1
                                                    );
+
+  // init filebuffers
+
+  file_buffers_[ctx.id] = new sys::FileBuffer((kinectFile + ".stream").c_str());
+
+  if(!file_buffers_[ctx.id]->open("r")){
+        std::cerr << "ERROR opening " << kinectFile << ".stream exiting..." << std::endl;
+        exit(1);
+    }
+  file_buffers_[ctx.id]->setLooping(true);
+
+  const unsigned pixelcountc = calib_file_->getWidthC() * calib_file_->getHeightC();
+
+  depth_size_ = calib_file_->getWidth() * calib_file_->getHeight(); //== pixelcount
+
+  color_size_ = pixelcountc * 3 * sizeof(unsigned char);
+
+    if(calib_file_->isCompressedRGB()){
+        mvt::DXTCompressor dxt;
+        dxt.init(calib_file_->getWidthC(), calib_file_->getHeightC(), FORMAT_DXT1);
+        _colorSize = dxt.getStorageSize();
+    }
+
+    if(calib_file_->isCompressedDepth()){
+        _depthSize =  calib_file_->getWidth() * calib_file_->getHeight() * sizeof(unsigned char);
+    }
+
+    color_buffers_[ctx.id] = new unsigned char[color_size_];
+    depth_buffers_[ctx.id] = new float[depth_size_];
+    depth_size_byte_ = depth_size_ * sizeof(float);
+
+    //
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,6 +224,8 @@ void Video3D::draw(RenderContext const& ctx) const {
 
   ctx.render_context->bind_index_buffer(
       proxy_indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
+
+  update_buffers(ctx);
 
   //update kinect color & depth texture array for given context
   _context->update_sub_texture(depth_texArrays[ctx.id],
@@ -194,8 +246,22 @@ void Video3D::draw(RenderContext const& ctx) const {
                                 (void*) color_buffers_[ctx.id]
                               );
 
+
+  // last lines*
   ctx.render_context->apply();
   ctx.render_context->draw_elements(479 * 639 * 2);//mesh_->mNumFaces * 3
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Video3D::update_buffers(RenderContext const& ctx) const
+{
+  if(file_buffers_[ctx.id]->read( (void*) color_buffers_[ctx.id], color_size_) != color_size_){
+        std::cerr << "ERROR reading color BufferData\n";
+  }
+
+  if(file_buffers_[ctx.id]->read( (void*) depth_buffers_[ctx.id], depth_size_byte_) != depth_size_byte_){
+        std::cerr << "ERROR reading depth BufferData\n";
+  }
 }
 
 }
