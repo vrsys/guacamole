@@ -3,7 +3,7 @@
 
 
 #include <ctime>
-#include <fastdxt/libdxt.h>
+#include <gua/renderer/video3d_geometry/fastdxt/libdxt.h>
 
 
 

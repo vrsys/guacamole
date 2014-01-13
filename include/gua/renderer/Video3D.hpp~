@@ -25,8 +25,6 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/Geometry.hpp>
-#include <gua/renderer/video3d_geometry/KinectCalibrationFile.hpp>
-#include <gua/renderer/video3d_geometry/FileBuffer.h>
 
 // external headers
 #include <scm/gl_core.h>
@@ -41,7 +39,7 @@
 
 namespace gua {
 
-struct RenderContext;
+struct RenderContext;{kljhkhgkjg
 
 /**
  * Stores geometry data.
@@ -83,10 +81,7 @@ class Video3D : public Geometry {
 
  private:
   void upload_to(RenderContext const& context) const;
-  void update_buffers(RenderContext const& context) const;
   
-  std::string kinect_file_;
-
   mutable std::vector<scm::gl::buffer_ptr> proxy_vertices_;
   mutable std::vector<scm::gl::buffer_ptr> proxy_indices_;
   mutable std::vector<scm::gl::vertex_array_ptr> proxy_vertex_array_;
@@ -96,16 +91,9 @@ class Video3D : public Geometry {
   mutable std::vector<scm::gl::texture_2d_ptr> depth_texArrays_;
   mutable std::vector<float*> depth_buffers_; //std::vector< std::vector<float*> > for multiple kinects per Video3D
 
-  KinectCalibrationFile* calib_file_;
-  mutable unsigned depth_size_;
-  mutable unsigned depth_size_byte_;
-  mutable unsigned color_size_;
-
-  mutable std::vector<sys::FileBuffer*> file_buffers_;
-  
   //members
-
   //width & height??
+  //calibartion file??
   //receiver??
   //flags??
   //toss out buffers

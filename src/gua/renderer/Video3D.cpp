@@ -45,6 +45,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 Video3D::Video3D(std::string const& kinectFile) :
+  kinect_file_(kinectFile),
   proxy_vertices_(),
   proxy_indices_(),
   proxy_vertex_array_(),
@@ -59,7 +60,7 @@ Video3D::Video3D(std::string const& kinectFile) :
   file_buffers_(),
   upload_mutex_()
 {
-  calib_file = new KinectCalibrationFile((kinectFile  + ".yml").c_str());
+  calib_file_ = new KinectCalibrationFile((kinect_file_  + ".yml").c_str());
   calib_file_->parse();
   calib_file_->updateMatrices();
 }
@@ -97,8 +98,8 @@ void Video3D::upload_to(RenderContext const& ctx) const {
   }
 
   proxy_vertices_[ctx.id] =
-      ctx.render_device->create_buffer(BIND_VERTEX_BUFFER,
-                                       USAGE_STATIC_DRAW,
+      ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
+                                       scm::gl::USAGE_STATIC_DRAW,
                                        num_vertices * sizeof(Vertex),
                                        0);
 
@@ -108,15 +109,15 @@ void Video3D::upload_to(RenderContext const& ctx) const {
       proxy_vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
   
   //compute vertex data (proxy mesh)ddd
-  const scm::math::vec3f& p(0.0f); //point of origin
+  //const scm::math::vec3f& p(0.0f); //point of origin
   unsigned v(0);
   for (float h = 0.5*step; h < height*step; h += step)
   {
     for (float w = 0.5*step; w < width*step; w += step)
     {
-        data[v].pos = scm::math::vec3f(p.x+w, p.y+h,0);
+        data[v].pos = scm::math::vec3f(w, h, 0.0f);
         data[v].nrm = scm::math::vec3f(0.0f, 0.0f, 1.0f);
-        data[v].tex = scm::math::vec2f(p.x+w, p.y+h);
+        data[v].tex = scm::math::vec2f(w, h);
         ++v;
     }
   }
@@ -156,20 +157,20 @@ void Video3D::upload_to(RenderContext const& ctx) const {
   buffer_arrays.push_back(proxy_vertices_[ctx.id]);
 
   proxy_vertex_array_[ctx.id] = ctx.render_device->create_vertex_array
-                                      (vertex_format(0, 0, TYPE_VEC3F, sizeof(Vertex))
-                                                    (0, 1, TYPE_VEC3F, sizeof(Vertex))
-                                                    (0, 2, TYPE_VEC2F, sizeof(Vertex)),
+                                      (scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))
+                                                    (0, 1, scm::gl::TYPE_VEC3F, sizeof(Vertex))
+                                                    (0, 2, scm::gl::TYPE_VEC2F, sizeof(Vertex)),
                                        buffer_arrays);
 
   // initialize Texture Arrays (kinect depths & colors)
-  depth_texArrays[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(640, 480),
+  depth_texArrays_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(640, 480),
                                                        scm::gl::FORMAT_R_32F,
                                                        0,
                                                        1, //kinect count
                                                        1
                                                     );
 
-  color_texArrays[ctx.id] = ctx.render_device->create_texture_2d( scm::math::vec2ui(640, 480),
+  color_texArrays_[ctx.id] = ctx.render_device->create_texture_2d( scm::math::vec2ui(640, 480),
                                                        scm::gl::FORMAT_BC1_RGBA,
                                                        0,
                                                        1, //kinect count
@@ -178,10 +179,10 @@ void Video3D::upload_to(RenderContext const& ctx) const {
 
   // init filebuffers
 
-  file_buffers_[ctx.id] = new sys::FileBuffer((kinectFile + ".stream").c_str());
+  file_buffers_[ctx.id] = new sys::FileBuffer((kinect_file_ + ".stream").c_str());
 
   if(!file_buffers_[ctx.id]->open("r")){
-        std::cerr << "ERROR opening " << kinectFile << ".stream exiting..." << std::endl;
+        std::cerr << "ERROR opening " << kinect_file_ << ".stream exiting..." << std::endl;
         exit(1);
     }
   file_buffers_[ctx.id]->setLooping(true);
@@ -195,11 +196,11 @@ void Video3D::upload_to(RenderContext const& ctx) const {
     if(calib_file_->isCompressedRGB()){
         mvt::DXTCompressor dxt;
         dxt.init(calib_file_->getWidthC(), calib_file_->getHeightC(), FORMAT_DXT1);
-        _colorSize = dxt.getStorageSize();
+        color_size_ = dxt.getStorageSize();
     }
 
     if(calib_file_->isCompressedDepth()){
-        _depthSize =  calib_file_->getWidth() * calib_file_->getHeight() * sizeof(unsigned char);
+        depth_size_ =  calib_file_->getWidth() * calib_file_->getHeight() * sizeof(unsigned char);
     }
 
     color_buffers_[ctx.id] = new unsigned char[color_size_];
@@ -228,7 +229,7 @@ void Video3D::draw(RenderContext const& ctx) const {
   update_buffers(ctx);
 
   //update kinect color & depth texture array for given context
-  _context->update_sub_texture(depth_texArrays[ctx.id],
+  ctx.render_context->update_sub_texture(depth_texArrays_[ctx.id],
                                 //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
                                 scm::gl::texture_region(scm::math::vec3ui(0, 0, 0),
                                                        scm::math::vec3ui(640, 480, 1)),
@@ -237,7 +238,7 @@ void Video3D::draw(RenderContext const& ctx) const {
                                 (void*) depth_buffers_[ctx.id]
                               );
 
-  _context->update_sub_texture(color_texArrays[ctx.id],
+  ctx.render_context->update_sub_texture(color_texArrays_[ctx.id],
                                 //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
                                 scm::gl::texture_region(scm::math::vec3ui(0, 0 , 0),
                                                        scm::math::vec3ui(640, 480, 1)),

@@ -22,8 +22,8 @@
  *
  *****************************************************************************/
 
-#include "fastdxt/dxt.h"
-#include "fastdxt/util.h"
+#include <gua/renderer/video3d_geometry/fastdxt/dxt.h>
+#include <gua/renderer/video3d_geometry/fastdxt/util.h>
 
 #define FORMAT_DXT1      1
 #define FORMAT_DXT5      2
