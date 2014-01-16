@@ -31,6 +31,7 @@
 
 // external headers
 #include <iostream>
+#include <gua/utils/string_utils.hpp>
 
 namespace {
 struct Vertex {
@@ -44,8 +45,8 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Video3D::Video3D(std::string const& kinectFile) :
-  kinect_file_(kinectFile),
+Video3D::Video3D(std::string const& video3d) :
+  video3d_(video3d),
   proxy_vertices_(),
   proxy_indices_(),
   proxy_vertex_array_(),
@@ -60,7 +61,9 @@ Video3D::Video3D(std::string const& kinectFile) :
   file_buffers_(),
   upload_mutex_()
 {
-  calib_file_ = new KinectCalibrationFile((kinect_file_  + ".yml").c_str());
+  std::vector<std::string> filename_decomposition =
+  gua::string_utils::split(video3d, '.');
+  calib_file_ = new KinectCalibrationFile((filename_decomposition[0] + ".yml").c_str());
   calib_file_->parse();
   calib_file_->updateMatrices();
 }
@@ -179,10 +182,10 @@ void Video3D::upload_to(RenderContext const& ctx) const {
 
   // init filebuffers
 
-  file_buffers_[ctx.id] = new sys::FileBuffer((kinect_file_ + ".stream").c_str());
+  file_buffers_[ctx.id] = new sys::FileBuffer((video3d_ + ".stream").c_str());
 
   if(!file_buffers_[ctx.id]->open("r")){
-        std::cerr << "ERROR opening " << kinect_file_ << ".stream exiting..." << std::endl;
+        std::cerr << "ERROR opening " << video3d_ << ".stream exiting..." << std::endl;
         exit(1);
     }
   file_buffers_[ctx.id]->setLooping(true);
@@ -264,6 +267,12 @@ void Video3D::update_buffers(RenderContext const& ctx) const
   if(file_buffers_[ctx.id]->read( (void*) depth_buffers_[ctx.id], depth_size_byte_) != depth_size_byte_){
         std::cerr << "ERROR reading depth BufferData\n";
   }
+}
+
+void Video3D::set_uniforms(RenderContext const& ctx, ShaderProgram* cs){
+     // TO DO
+    //cs->set_uniform(ctx, color_texArrays_[ctx.id], "color_video3d_texture");
+
 }
 
 }

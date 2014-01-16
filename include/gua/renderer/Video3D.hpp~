@@ -55,10 +55,10 @@ class Video3D : public Geometry {
   /**
    * constructor.
    *
-   * Creates a new Video3D from a given kinectFile string.
-   * \param kinectFile      Holds information about kinect streams.
+   * Creates a new Video3D from a given video3d string.
+   * \param video3d      Holds information about kinect streams.
   */
-  Video3D(std::string const& kinectFile);
+  Video3D(std::string const& video3d);
 
   /**
    * Draws the Video3D

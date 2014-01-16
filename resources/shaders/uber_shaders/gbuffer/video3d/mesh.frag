@@ -19,48 +19,57 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/Video3DLoader.hpp>
+@include "shaders/common/header.glsl"
 
-// guacamole headers
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/renderer/Video3D.hpp>
+// input from vertex shader ----------------------------------------------------
+in vec3 gua_position_varying;
+@input_definition
 
-namespace gua {
+// uniforms
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+uniform uvec2 color_video3d_texture;
+
+// material specific uniforms
+@uniform_definition
+
+// outputs ---------------------------------------------------------------------
+@output_definition
+
+// methods ---------------------------------------------------------------------
+
+// global gua_* methods
+vec2 gua_get_quad_coords() {
+  return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
+}
+
+@include "shaders/uber_shaders/common/get_sampler_casts.glsl"
+
+uint gua_get_material_id() {
+  return gua_uint_gbuffer_varying_0.x;
+}
+
+vec3 gua_get_position() {
+  return gua_position_varying;
+}
+
+void gua_set_position(vec3 world_position) {
+    vec4 pos = gua_projection_matrix * gua_view_matrix * vec4(world_position, 1.0);
+    float ndc = pos.z/pos.w;
+    gl_FragDepth = (((gl_DepthRange.diff) * ndc) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
+}
+
+// material specific methods
+@material_methods
+
+// main ------------------------------------------------------------------------
+void main() {
+
+  gl_FragDepth = gl_FragCoord.z;
+
+  // big switch, one case for each material
+  // @material_switch
+
+  gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
   
-Video3DLoader::Video3DLoader() : LoaderBase(), _supported_file_extensions() {
-  _supported_file_extensions.insert("ks");    
 }
 
-
-std::shared_ptr<Node> Video3DLoader::load(std::string const& file_name,
-                                       unsigned flags) {
-  try {
-      GeometryDatabase::instance()->add(
-        file_name, std::make_shared<Video3D>(file_name));
-
-      auto result = std::make_shared<Video3DNode>("unnamed_video3D");
-      result->data.set_video3d(file_name);     
-
-      return result;
-
-    }
-    catch (std::exception &e) {
-      WARNING("Warning: \"%s\" \n", e.what());
-      WARNING("Failed to load Video3D object \"%s\": ", file_name.c_str());
-      return nullptr;
-    }
-}
-
-  bool Video3DLoader::is_supported(std::string const& file_name) const {
-    return true; // TODO check for file ending!!!!!!!!!!!!!!!!
-    std::vector<std::string> filename_decomposition =
-      gua::string_utils::split(file_name, '.');
-    return filename_decomposition.empty()
-      ? false
-      : _supported_file_extensions.count(filename_decomposition.back()) > 0;
-  }
-
-
-}

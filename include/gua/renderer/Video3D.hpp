@@ -27,6 +27,8 @@
 #include <gua/renderer/Geometry.hpp>
 #include <gua/renderer/video3d_geometry/KinectCalibrationFile.hpp>
 #include <gua/renderer/video3d_geometry/FileBuffer.h>
+#include <gua/renderer/Texture2D.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -57,10 +59,10 @@ class Video3D : public Geometry {
   /**
    * constructor.
    *
-   * Creates a new Video3D from a given kinectFile string.
-   * \param kinectFile      Holds information about kinect streams.
+   * Creates a new Video3D from a given video3d string.
+   * \param video3d      Holds information about kinect streams.
   */
-  Video3D(std::string const& kinectFile);
+  Video3D(std::string const& video3d);
 
   /**
    * Draws the Video3D
@@ -81,11 +83,13 @@ class Video3D : public Geometry {
                 Node* owner, std::set<PickResult>& hits) 
   {}
 
+  void set_uniforms(RenderContext const& ctx, ShaderProgram* cs);
+
  private:
   void upload_to(RenderContext const& context) const;
   void update_buffers(RenderContext const& context) const;
   
-  std::string kinect_file_;
+  std::string video3d_;
 
   mutable std::vector<scm::gl::buffer_ptr> proxy_vertices_;
   mutable std::vector<scm::gl::buffer_ptr> proxy_indices_;

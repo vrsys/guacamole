@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/GBufferMeshUberShader.hpp>
+#include <gua/renderer/GBufferVideo3DUberShader.hpp>
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -32,7 +32,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBufferMeshUberShader::create(std::set<std::string> const& material_names) {
+void GBufferVideo3DUberShader::create(std::set<std::string> const& material_names) {
 
   UberShaderFactory vshader_factory(
     ShadingModel::GBUFFER_VERTEX_STAGE, material_names
@@ -54,7 +54,7 @@ void GBufferMeshUberShader::create(std::set<std::string> const& material_names) 
 
   // VERTEX SHADER -------------------------------------------------------------
   std::string vertex_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_mesh_mesh_vert)
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_mesh_vert)
   );
 
   // material specific uniforms
@@ -75,7 +75,7 @@ void GBufferMeshUberShader::create(std::set<std::string> const& material_names) 
 
   // FRAGMENT SHADER -----------------------------------------------------------
   std::string fragment_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_mesh_mesh_frag)
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_mesh_frag)
   );
 
   // input from vertex shader
@@ -100,7 +100,18 @@ void GBufferMeshUberShader::create(std::set<std::string> const& material_names) 
 
   create_from_sources(vertex_shader, fragment_shader);
 
- 
+  /*   std::vector<ShaderProgramStage> shader_stages;
+    shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          _final_vertex_shader()));
+    shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_TESS_CONTROL_SHADER,    _final_tess_control_shader()));
+    shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_TESS_EVALUATION_SHADER, _final_tess_evaluation_shader()));
+    shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_GEOMETRY_SHADER,        _final_geometry_shader()));
+    shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        _final_fragment_shader()));
+
+    // generate shader source
+    set_shaders ( shader_stages );*/
+
+       // save shader sources for debugging
+     //save_to_file(".", "final_pass");
 }
 
 }

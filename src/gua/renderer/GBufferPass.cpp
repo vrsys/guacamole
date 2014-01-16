@@ -27,7 +27,9 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBufferMeshUberShader.hpp>
 #include <gua/renderer/GBufferNURBSUberShader.hpp>
+#include <gua/renderer/GBufferVideo3DUberShader.hpp>
 #include <gua/renderer/MeshLoader.hpp>
+#include <gua/renderer/Video3D.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
@@ -42,6 +44,7 @@ GBufferPass::GBufferPass(Pipeline* pipeline)
     : GeometryPass(pipeline),
       mesh_shader_(new GBufferMeshUberShader),
       nurbs_shader_(new GBufferNURBSUberShader),
+      video3D_shader_(new GBufferVideo3DUberShader),
       bfc_rasterizer_state_(),
       no_bfc_rasterizer_state_(),
       bbox_rasterizer_state_(),
@@ -60,6 +63,8 @@ GBufferPass::~GBufferPass() {
       delete mesh_shader_;
     if (nurbs_shader_)
       delete nurbs_shader_;
+    if (video3D_shader_)
+      delete video3D_shader_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,6 +92,7 @@ void GBufferPass::print_shaders(std::string const& directory,
                                 std::string const& name) const {
     mesh_shader_->save_to_file(directory, name + "/mesh");
     nurbs_shader_->save_to_file(directory, name + "/nurbs");
+    video3D_shader_->save_to_file(directory, name + "/video3d");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,6 +100,10 @@ void GBufferPass::print_shaders(std::string const& directory,
 bool GBufferPass::pre_compile_shaders(RenderContext const& ctx) {
     if (mesh_shader_)  return mesh_shader_->upload_to(ctx);
     if (nurbs_shader_) return nurbs_shader_->upload_to(ctx);
+    if (video3D_shader_) return video3D_shader_->upload_to(ctx);
+
+    print_shaders("/tmp","");
+
     return false;
 }
 
@@ -173,6 +183,8 @@ void GBufferPass::rendering(SerializedScene const& scene,
         }
         mesh_shader_->unuse(ctx);
     }
+
+
 
     if (!scene.textured_quads_.empty()) {
 
@@ -310,6 +322,40 @@ void GBufferPass::rendering(SerializedScene const& scene,
             }
             nurbs_shader_->unuse(ctx);
         }
+    }
+
+    if (!scene.video3Dnodes_.empty()) {
+
+        // draw meshes
+        video3D_shader_->use(ctx);
+        {
+
+            for (auto const& node : scene.video3Dnodes_) {
+                auto video3d =
+                    std::static_pointer_cast<gua::Video3D>(GeometryDatabase::instance()->lookup(node.data.get_video3d()));
+                //auto video3d =
+                    //GeometryDatabase::instance()->lookup(node.data.get_video3d());
+                //auto material =
+                //    MaterialDatabase::instance()->lookup(node.data.get_material());
+
+                if (/*material &&*/ video3d) {
+                    //mesh_shader_->set_uniform(
+                    //    ctx, material->get_id(), "gua_material_id");
+                    video3D_shader_->set_uniform(
+                        ctx, node.transform, "gua_model_matrix");
+                    video3D_shader_->set_uniform(
+                        ctx,
+                        scm::math::transpose(
+                            scm::math::inverse(node.transform)),
+                        "gua_normal_matrix");
+
+                    video3d->set_uniforms(ctx, video3D_shader_);
+
+                    video3d->draw(ctx);
+                }
+            }
+        }
+        video3D_shader_->unuse(ctx);
     }
 
     ctx.render_context->set_rasterizer_state(bbox_rasterizer_state_);

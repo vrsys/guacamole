@@ -40,7 +40,7 @@ class GUA_DLL Video3DNode : public Node {
   public:
 
     struct Configuration {
-      GUA_ADD_PROPERTY(std::string,     kinectFile,   "gua_default_kinectFile");
+      GUA_ADD_PROPERTY(std::string,     video3d,   "gua_default_video3d"); //get_video3d is key in geomtryDatabase
     };
 
     Configuration data;

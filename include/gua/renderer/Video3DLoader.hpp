@@ -47,6 +47,13 @@ class Video3DNode;
 class Video3DLoader : public LoaderBase { //GUA_DLL??? siehe VolumeLoader
  public:
 
+  enum Flags {
+    DEFAULTS = 0,
+    MAKE_PICKABLE = 1 << 0, //Danger: critical due to no update of bounding box and no triangle intersection with avatar
+    NORMALIZE_POSITION = 1 << 1,
+    NORMALIZE_SCALE = 1 << 2
+  };
+
   /**
    * Default constructor.
    *
@@ -68,6 +75,7 @@ class Video3DLoader : public LoaderBase { //GUA_DLL??? siehe VolumeLoader
   bool is_supported(std::string const& file_name) const;
 
  private:
+    boost::unordered_set<std::string> _supported_file_extensions;
 
 };
 

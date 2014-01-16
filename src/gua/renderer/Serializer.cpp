@@ -74,6 +74,7 @@ void Serializer::check(SerializedScene* output,
 
   std::size_t mesh_count = data_->meshnodes_.size();
   std::size_t nurbs_count = data_->nurbsnodes_.size();
+  std::size_t video3d_count = data_->video3Dnodes_.size();
   std::size_t volume_count = data_->volumenodes_.size();
   std::size_t point_light_count = data_->point_lights_.size();
   std::size_t spot_light_count = data_->spot_lights_.size();
@@ -82,6 +83,7 @@ void Serializer::check(SerializedScene* output,
 
   data_->meshnodes_.clear();
   data_->nurbsnodes_.clear();
+  data_->video3Dnodes_.clear();
   data_->volumenodes_.clear();
   data_->point_lights_.clear();
   data_->spot_lights_.clear();
@@ -109,6 +111,7 @@ void Serializer::check(SerializedScene* output,
   // reserving the old size might save some time
   data_->meshnodes_.reserve(mesh_count);
   data_->nurbsnodes_.reserve(nurbs_count);
+  data_->video3Dnodes_.reserve(video3d_count);
   data_->volumenodes_.reserve(nurbs_count);
   data_->point_lights_.reserve(point_light_count);
   data_->spot_lights_.reserve(spot_light_count);
@@ -169,9 +172,9 @@ void Serializer::check(SerializedScene* output,
 /* virtual */ void Serializer::visit(Video3DNode* node) {
 
   if ( is_visible(node) ) {
-    if ( !node->data.get_kinectFile().empty() ) {
+    if ( !node->data.get_video3d().empty() ) {
       add_bbox(node);
-      data_->video3dnodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));   
+      data_->video3Dnodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));   
     }
 
     visit_children(node);
