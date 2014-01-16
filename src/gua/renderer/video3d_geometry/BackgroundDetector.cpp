@@ -1,4 +1,4 @@
-#include "BackgroundDetector.h"
+#include <gua/renderer/video3d_geometry/BackgroundDetector.h>
 
 #include <iostream>
 

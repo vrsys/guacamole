@@ -22,7 +22,7 @@
  *
  *****************************************************************************/
 
-#include "fastdxt/util.h"
+#include <gua/renderer/video3d_geometry/fastdxt/util.h>
 
 
 #if defined(WIN32)

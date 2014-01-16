@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include "KinectCalibrationFile.hpp"
+#include <gua/renderer/video3d_geometry/KinectCalibrationFile.hpp>
 
 /*static*/ bool KinectCalibrationFile::s_compress   = false;
 /*static*/ int  KinectCalibrationFile::s_compress_rgb = -1;

@@ -19,91 +19,58 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MESH_LOADER_HPP
-#define GUA_MESH_LOADER_HPP
+#ifndef GUA_VIDEO3D_LOADER_HPP
+#define GUA_VIDEO3D_LOADER_HPP
 
 // guacamole headers
-#include <gua/renderer/Mesh.hpp>
-
 #include <gua/renderer/LoaderBase.hpp>
+#include <gua/databases/Database.hpp>
 
 // external headers
 #include <string>
 #include <list>
 #include <memory>
 
-#if ASSIMP_VERSION == 3
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#else
-#include <assimp/assimp.hpp>
-#include <assimp/aiPostProcess.h>
-#include <assimp/aiScene.h>
-#endif
-
-namespace Assimp { class Importer; }
 
 namespace gua {
 
 class Node;
 class InnerNode;
-class GeometryNode;
+class Video3DNode;
 
 /**
- * Loads and draws meshes.
+ * Loads and draws Video3D.
  *
- * This class can load mesh data from files and display them in multiple
- * contexts. A MeshLoader object is made of several Mesh objects.
+ * This class can load Video3D data from files and display them in multiple
+ * contexts. A MeshLoader object is made of several Video3D objects.
  */
-class MeshLoader : public LoaderBase {
+class Video3DLoader : public LoaderBase { //GUA_DLL??? siehe VolumeLoader
  public:
 
   /**
    * Default constructor.
    *
-   * Constructs a new and empty MeshLoader.
+   * Constructs a new and empty Video3D.
    */
-  MeshLoader();
+  Video3DLoader();
 
   /**
    * Constructor from a file.
    *
-   * Creates a new MeshLoader from a given file.
+   * Creates a new Video3D from a given file.
    *
-   * \param file_name        The file to load the meshs data from.
+   * \param file_name        The file to load the Video3Ds data from.
    * \param material_name    The material name that was set to the parent node
    */
   std::shared_ptr<Node> load(std::string const& file_name,
                              unsigned flags);
 
-  /**
-   * Constructor from memory buffer.
-   *
-   * Creates a new MeshLoader from a existing memory buffer.
-   *
-   * \param buffer_name      The buffer to load the meh's data from.
-   * \param buffer_size      The buffer's size.
-   */
-  std::vector<Mesh*> const load_from_buffer(char const* buffer_name,
-                                            unsigned buffer_size,
-                                            bool build_kd_tree);
-
   bool is_supported(std::string const& file_name) const;
 
  private:
 
-  std::shared_ptr<Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
-                aiScene const* ai_scene,
-                aiNode* ai_root,
-                std::string const& file_name,
-                unsigned flags);
-
-  unsigned node_counter_;
-
-  static unsigned mesh_counter_;
 };
 
 }
 
-#endif  // GUA_MESH_LOADER_HPP
+#endif  // GUA_VIDEO3D_LOADER_HPP

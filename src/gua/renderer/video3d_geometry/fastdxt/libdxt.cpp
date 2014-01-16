@@ -22,7 +22,7 @@
  *
  *****************************************************************************/
 
-#include "fastdxt/libdxt.h"
+#include <gua/renderer/video3d_geometry/fastdxt/libdxt.h>
 
 #if defined(__APPLE__)
 #define memalign(x,y) malloc((y))

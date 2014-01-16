@@ -254,6 +254,7 @@ void Video3D::draw(RenderContext const& ctx) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 void Video3D::update_buffers(RenderContext const& ctx) const
 {
   if(file_buffers_[ctx.id]->read( (void*) color_buffers_[ctx.id], color_size_) != color_size_){

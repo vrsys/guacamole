@@ -3,8 +3,8 @@
 //    May 20th 2006 J.M.P. van Waveren
 //    (c) 2006, Id Software, Inc.
 
-#include "fastdxt/dxt.h"
-#include "fastdxt/util.h"
+#include <gua/renderer/video3d_geometry/fastdxt/dxt.h>
+#include <gua/renderer/video3d_geometry/fastdxt/util.h>
 
 #include <iostream>
 

@@ -1,6 +1,6 @@
-#include "DXTCompressor.h"
+#include <gua/renderer/video3d_geometry/DXTCompressor.h>
 
-#include <BackgroundDetector.h>
+#include <gua/renderer/video3d_geometry/BackgroundDetector.h>
 
 #include <boost/thread/thread.hpp>
 #include <boost/bind.hpp>
