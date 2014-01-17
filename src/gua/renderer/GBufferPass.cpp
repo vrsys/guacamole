@@ -102,6 +102,8 @@ bool GBufferPass::pre_compile_shaders(RenderContext const& ctx) {
     if (nurbs_shader_) return nurbs_shader_->upload_to(ctx);
     if (video3D_shader_) return video3D_shader_->upload_to(ctx);
 
+    std::cout << "Print Shaders: " << std::endl;
+    getchar();
     print_shaders("/tmp","");
 
     return false;
@@ -330,6 +332,8 @@ void GBufferPass::rendering(SerializedScene const& scene,
         video3D_shader_->use(ctx);
         {
 
+            std::cout << "draw kinect" << std::endl;
+
             for (auto const& node : scene.video3Dnodes_) {
                 auto video3d =
                     std::static_pointer_cast<gua::Video3D>(GeometryDatabase::instance()->lookup(node.data.get_video3d()));
@@ -424,6 +428,7 @@ void GBufferPass::apply_material_mapping(std::set<std::string> const &
                                          materials) const {
   mesh_shader_->create(materials);
   nurbs_shader_->create(materials);
+  video3D_shader_->create(materials);
 }
 
 

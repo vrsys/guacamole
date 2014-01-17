@@ -62,7 +62,7 @@ Video3D::Video3D(std::string const& video3d) :
   upload_mutex_()
 {
   std::vector<std::string> filename_decomposition =
-  gua::string_utils::split(video3d, '.');
+  gua::string_utils::split(video3d_, '.');
   calib_file_ = new KinectCalibrationFile((filename_decomposition[0] + ".yml").c_str());
   calib_file_->parse();
   calib_file_->updateMatrices();
@@ -181,11 +181,12 @@ void Video3D::upload_to(RenderContext const& ctx) const {
                                                    );
 
   // init filebuffers
-
-  file_buffers_[ctx.id] = new sys::FileBuffer((video3d_ + ".stream").c_str());
+  std::vector<std::string> filename_decomposition =
+      gua::string_utils::split(video3d_, '.');
+  file_buffers_[ctx.id] = new sys::FileBuffer((filename_decomposition[0] + ".stream").c_str());
 
   if(!file_buffers_[ctx.id]->open("r")){
-        std::cerr << "ERROR opening " << video3d_ << ".stream exiting..." << std::endl;
+      std::cerr << "ERROR opening " << filename_decomposition[0] << ".stream exiting..." << std::endl;
         exit(1);
     }
   file_buffers_[ctx.id]->setLooping(true);

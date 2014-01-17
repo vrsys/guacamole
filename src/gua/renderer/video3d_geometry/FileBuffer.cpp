@@ -56,8 +56,13 @@ namespace sys{
   FileBuffer::open(const char* mode, unsigned buffersize){
 
     m_file = fopen(m_path.c_str(), mode);
-    if(lstat(m_path.c_str(),&m_fstat) < 0)
+#if !WIN32 
+    if(lstat(m_path.c_str(),&m_fstat) < 0) 
       return false;
+#else
+    // TODO Windows port
+#endif
+
     if(0 == m_file)
       return false;
 

@@ -27,7 +27,6 @@ in vec3 gua_position_varying;
 
 // uniforms
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
-uniform uvec2 color_video3d_texture;
 
 // material specific uniforms
 @uniform_definition
@@ -67,7 +66,7 @@ void main() {
   gl_FragDepth = gl_FragCoord.z;
 
   // big switch, one case for each material
-  // @material_switch
+  @material_switch
 
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
   

@@ -97,7 +97,7 @@ void Serializer::check(SerializedScene* output,
     data_->materials_.insert("gua_bounding_box");
     data_->bounding_boxes_
         .reserve(mesh_count + nurbs_count + point_light_count +
-                 spot_light_count + ray_count);
+                 spot_light_count + ray_count + video3d_count);
   }
 
   if (draw_rays_) {
@@ -176,7 +176,6 @@ void Serializer::check(SerializedScene* output,
       add_bbox(node);
       data_->video3Dnodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));   
     }
-
     visit_children(node);
   }
 }

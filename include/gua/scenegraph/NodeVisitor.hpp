@@ -31,6 +31,7 @@ namespace gua {
 class Node;
 class TransformNode;
 class GeometryNode;
+class Video3DNode;
 class VolumeNode;
 class PointLightNode;
 class ScreenNode;
@@ -94,6 +95,15 @@ class NodeVisitor {
   virtual void visit(GeometryNode* node) { visit(reinterpret_cast<Node*>(node)); }
 
   /**
+  * Visits a Video3DNode
+  *
+  * This function provides the interface to visit a Video3DNode
+  *
+  * \param video3d   Pointer to Video3DNode
+  */
+  virtual  void visit(Video3DNode* node) { visit(reinterpret_cast<Node*>(node)); }
+
+  /**
   * Visits a GeometryNode
   *
   * This function provides the interface to visit a GeometryNode
@@ -101,6 +111,7 @@ class NodeVisitor {
   * \param cam   Pointer to GeometryNode
   */
   virtual void visit(VolumeNode* node) { visit(reinterpret_cast<Node*>(node)); }
+
 
   /**
    * Visits a PointLightNode
