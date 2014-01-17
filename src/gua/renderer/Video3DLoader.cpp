@@ -41,7 +41,8 @@ std::shared_ptr<Node> Video3DLoader::load(std::string const& file_name,
         file_name, std::make_shared<Video3D>(file_name));
 
       auto result = std::make_shared<Video3DNode>("unnamed_video3D");
-      result->data.set_video3d(file_name);     
+      result->data.set_video3d(file_name);
+      result->data.set_material("");     
 
       return result;
 

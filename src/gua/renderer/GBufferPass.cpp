@@ -116,6 +116,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                             CameraMode eye,
                             Camera const& camera,
                             FrameBufferObject* target) {
+
     if (!depth_stencil_state_)
         depth_stencil_state_ =
             ctx.render_device->create_depth_stencil_state(true, true);
@@ -149,8 +150,20 @@ void GBufferPass::rendering(SerializedScene const& scene,
     mesh_shader_->set_material_uniforms(
         scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
 
+    video3D_shader_->set_material_uniforms( //TODO
+        scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+    video3D_shader_->set_material_uniforms(
+        scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+
     Pass::bind_inputs(*mesh_shader_, eye, ctx);
     Pass::set_camera_matrices(*mesh_shader_,
+                              camera,
+                              pipeline_->get_current_scene(eye),
+                              eye,
+                              ctx);
+
+    Pass::bind_inputs(*video3D_shader_, eye, ctx);
+    Pass::set_camera_matrices(*video3D_shader_,
                               camera,
                               pipeline_->get_current_scene(eye),
                               eye,
@@ -329,22 +342,21 @@ void GBufferPass::rendering(SerializedScene const& scene,
     if (!scene.video3Dnodes_.empty()) {
 
         // draw meshes
+        //video3D_shader_->use(ctx);
         video3D_shader_->use(ctx);
         {
-
-            std::cout << "draw kinect" << std::endl;
 
             for (auto const& node : scene.video3Dnodes_) {
                 auto video3d =
                     std::static_pointer_cast<gua::Video3D>(GeometryDatabase::instance()->lookup(node.data.get_video3d()));
                 //auto video3d =
                     //GeometryDatabase::instance()->lookup(node.data.get_video3d());
-                //auto material =
-                //    MaterialDatabase::instance()->lookup(node.data.get_material());
+                auto material =
+                    MaterialDatabase::instance()->lookup(node.data.get_material());
 
-                if (/*material &&*/ video3d) {
-                    //mesh_shader_->set_uniform(
-                    //    ctx, material->get_id(), "gua_material_id");
+                if (material && video3d) {
+                    video3D_shader_->set_uniform(
+                        ctx, material->get_id(), "gua_material_id");
                     video3D_shader_->set_uniform(
                         ctx, node.transform, "gua_model_matrix");
                     video3D_shader_->set_uniform(

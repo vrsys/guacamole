@@ -36,8 +36,10 @@
 namespace {
 struct Vertex {
   scm::math::vec3f pos;
-  scm::math::vec3f nrm;
   scm::math::vec2f tex;
+  scm::math::vec3f normal;
+  scm::math::vec3f tangent;
+  scm::math::vec3f bitangent;
 };
 }
 
@@ -58,12 +60,17 @@ Video3D::Video3D(std::string const& video3d) :
   depth_size_(),
   depth_size_byte_(),
   color_size_(),
+  width_(640),//640
+  height_(480),//480
   file_buffers_(),
   upload_mutex_()
 {
   std::vector<std::string> filename_decomposition =
   gua::string_utils::split(video3d_, '.');
-  calib_file_ = new KinectCalibrationFile((filename_decomposition[0] + ".yml").c_str());
+  calib_file_ = new KinectCalibrationFile(("." +
+                                          filename_decomposition[filename_decomposition.size() - 2] +
+                                          ".yml").c_str()
+                                          );
   calib_file_->parse();
   calib_file_->updateMatrices();
 }
@@ -72,19 +79,13 @@ Video3D::Video3D(std::string const& video3d) :
 
 void Video3D::upload_to(RenderContext const& ctx) const {
   
-  //proxy mesh config
-  unsigned int height = 480;
-  unsigned int width  = 640;
-
-  int num_vertices = height * width;
-  int num_indices  = height * width;
-  int num_triangles           = ((height-1) * (width-1)) * 2;
+  int num_vertices = height_ * width_;
+  int num_indices  = height_ * width_;
+  int num_triangles           = ((height_-1) * (width_-1)) * 2;
   int num_triangle_indices    = 3 * num_triangles;
-  int num_line_indices        = (height -1)*((width-1)*3 + 1) + (width-1);
+  int num_line_indices        = (height_ -1)*((width_-1)*3 + 1) + (width_-1);
 
-  float stepX = 1.0f / width * height;
-  float stepY = 1.0f / height * height;
-  float step = 1.0f / width;
+  float step = 1.0f / width_;
 
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
@@ -113,15 +114,20 @@ void Video3D::upload_to(RenderContext const& ctx) const {
   
   //compute vertex data (proxy mesh)ddd
   //const scm::math::vec3f& p(0.0f); //point of origin
+
   unsigned v(0);
-  for (float h = 0.5*step; h < height*step; h += step)
+  int pCount(0);
+  for (float h = 0.5*step; h < height_*step; h += step)
   {
-    for (float w = 0.5*step; w < width*step; w += step)
+    for (float w = 0.5*step; w < width_*step; w += step)
     {
         data[v].pos = scm::math::vec3f(w, h, 0.0f);
-        data[v].nrm = scm::math::vec3f(0.0f, 0.0f, 1.0f);
         data[v].tex = scm::math::vec2f(w, h);
+        data[v].normal = scm::math::vec3f(0.0f, 0.0f, 1.0f);
+        data[v].tangent = scm::math::vec3(0.f, 0.f, 0.f);
+        data[v].bitangent = scm::math::vec3(0.f, 0.f, 0.f);
         ++v;
+        ++pCount;
     }
   }
 
@@ -131,29 +137,33 @@ void Video3D::upload_to(RenderContext const& ctx) const {
 
   //coumpute index array (proxy mesh)
   v = 0;
-  for (unsigned h(0); h < (height-1); ++h)
+  for (unsigned h(0); h < (height_-1); ++h)
   {
-    for (unsigned w(0); w < (width-1); ++w)
+    for (unsigned w(0); w < (width_-1); ++w)
     {
-            index_array[v] = (w + h * width);
+            index_array[v] = (w + h * width_);
             ++v;
-            index_array[v] = (w + h * width + 1);
+            index_array[v] = (w + h * width_ + 1);
             ++v;
-            index_array[v] = (w + h * width + width);
+            index_array[v] = (w + h * width_ + width_);
             ++v;
-            index_array[v] = (w + h * width + width);
+            index_array[v] = (w + h * width_ + width_);
             ++v;
-            index_array[v] = (w + h * width + 1);
+            index_array[v] = (w + h * width_ + 1);
             ++v;
-            index_array[v] = (w + h * width + 1 + width);
+            index_array[v] = (w + h * width_ + 1 + width_);
             ++v;
     }
   }
 
+  std::cout << "Vertex Count: " << pCount << "\n";
+  std::cout << "Triangles Count: " << num_triangles << "\n";
+  std::cout << "Triangle Indices: " << num_triangle_indices << "\n";
+
   proxy_indices_[ctx.id] =
       ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
                                        scm::gl::USAGE_STATIC_DRAW,
-                                       num_triangle_indices * sizeof(unsigned),
+                                       num_triangle_indices * sizeof(unsigned int),
                                        &index_array[0]);
 
   std::vector<scm::gl::buffer_ptr> buffer_arrays;
@@ -161,19 +171,21 @@ void Video3D::upload_to(RenderContext const& ctx) const {
 
   proxy_vertex_array_[ctx.id] = ctx.render_device->create_vertex_array
                                       (scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))
-                                                    (0, 1, scm::gl::TYPE_VEC3F, sizeof(Vertex))
-                                                    (0, 2, scm::gl::TYPE_VEC2F, sizeof(Vertex)),
+                                                    (0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))
+                                                    (0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))
+                                                    (0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))
+                                                    (0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex)),
                                        buffer_arrays);
 
   // initialize Texture Arrays (kinect depths & colors)
-  depth_texArrays_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(640, 480),
+  depth_texArrays_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(width_, height_),
                                                        scm::gl::FORMAT_R_32F,
                                                        0,
                                                        1, //kinect count
                                                        1
                                                     );
 
-  color_texArrays_[ctx.id] = ctx.render_device->create_texture_2d( scm::math::vec2ui(640, 480),
+  color_texArrays_[ctx.id] = ctx.render_device->create_texture_2d( scm::math::vec2ui(width_, height_),
                                                        scm::gl::FORMAT_BC1_RGBA,
                                                        0,
                                                        1, //kinect count
@@ -182,8 +194,11 @@ void Video3D::upload_to(RenderContext const& ctx) const {
 
   // init filebuffers
   std::vector<std::string> filename_decomposition =
-      gua::string_utils::split(video3d_, '.');
-  file_buffers_[ctx.id] = new sys::FileBuffer((filename_decomposition[0] + ".stream").c_str());
+  gua::string_utils::split(video3d_, '.');
+  file_buffers_[ctx.id] = new sys::FileBuffer(("." +
+                                               filename_decomposition[filename_decomposition.size() - 2] +
+                                               ".stream").c_str()
+                                              );
 
   if(!file_buffers_[ctx.id]->open("r")){
       std::cerr << "ERROR opening " << filename_decomposition[0] << ".stream exiting..." << std::endl;
@@ -217,7 +232,6 @@ void Video3D::upload_to(RenderContext const& ctx) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Video3D::draw(RenderContext const& ctx) const {
-
   // upload to GPU if neccessary
   if (proxy_vertices_.size() <= ctx.id || proxy_vertices_[ctx.id] == nullptr) {
     upload_to(ctx);
@@ -236,7 +250,7 @@ void Video3D::draw(RenderContext const& ctx) const {
   ctx.render_context->update_sub_texture(depth_texArrays_[ctx.id],
                                 //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
                                 scm::gl::texture_region(scm::math::vec3ui(0, 0, 0),
-                                                       scm::math::vec3ui(640, 480, 1)),
+                                                       scm::math::vec3ui(width_, height_, 1)),
                                 0, //mip-mapping level
                                 scm::gl::FORMAT_R_32F,
                                 (void*) depth_buffers_[ctx.id]
@@ -245,7 +259,7 @@ void Video3D::draw(RenderContext const& ctx) const {
   ctx.render_context->update_sub_texture(color_texArrays_[ctx.id],
                                 //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
                                 scm::gl::texture_region(scm::math::vec3ui(0, 0 , 0),
-                                                       scm::math::vec3ui(640, 480, 1)),
+                                                       scm::math::vec3ui(width_, height_, 1)),
                                 0, //mip-mapping level
                                 scm::gl::FORMAT_BC1_RGBA,
                                 (void*) color_buffers_[ctx.id]
@@ -254,7 +268,7 @@ void Video3D::draw(RenderContext const& ctx) const {
 
   // last lines*
   ctx.render_context->apply();
-  ctx.render_context->draw_elements(479 * 639 * 2);//mesh_->mNumFaces * 3
+  ctx.render_context->draw_elements(6 * (height_-1) * (width_-1));//mesh_->mNumFaces * 3
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,7 +287,6 @@ void Video3D::update_buffers(RenderContext const& ctx) const
 void Video3D::set_uniforms(RenderContext const& ctx, ShaderProgram* cs){
      // TO DO
     //cs->set_uniform(ctx, color_texArrays_[ctx.id], "color_video3d_texture");
-
 }
 
 }

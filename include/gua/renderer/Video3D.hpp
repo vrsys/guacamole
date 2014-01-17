@@ -105,6 +105,9 @@ class Video3D : public Geometry {
   mutable unsigned depth_size_byte_;
   mutable unsigned color_size_;
 
+  mutable unsigned width_;
+  mutable unsigned height_;
+
   mutable std::vector<sys::FileBuffer*> file_buffers_;
   
   //members

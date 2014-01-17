@@ -57,8 +57,6 @@ void GBufferVideo3DUberShader::create(std::set<std::string> const& material_name
   // FRAGMENT SHADER -----------------------------------------------------------
   //see _final_fragment_shader(UberShaderFactory const& fshader_factory)
 
-  //&create_from_sources(vertex_shader, fragment_shader);
-
   std::vector<ShaderProgramStage> shader_stages;
   shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          _final_vertex_shader(vshader_factory, vshader_output_mapping)));
   //shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_GEOMETRY_SHADER,        _final_geometry_shader()));

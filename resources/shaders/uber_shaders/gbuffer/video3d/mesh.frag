@@ -69,6 +69,5 @@ void main() {
   @material_switch
 
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
-  
 }
 
