@@ -54,7 +54,7 @@ std::shared_ptr<Node> Video3DLoader::load(std::string const& file_name,
 }
 
   bool Video3DLoader::is_supported(std::string const& file_name) const {
-    return true; // TODO check for file ending!!!!!!!!!!!!!!!!
+    //return true; // TODO check for file ending!!!!!!!!!!!!!!!!
     std::vector<std::string> filename_decomposition =
       gua::string_utils::split(file_name, '.');
     return filename_decomposition.empty()

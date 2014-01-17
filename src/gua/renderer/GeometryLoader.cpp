@@ -48,8 +48,8 @@ std::unordered_map<std::string, std::shared_ptr<Node>>
 GeometryLoader::GeometryLoader() : fileloaders_() {  
   fileloaders_.push_back(new MeshLoader);
   fileloaders_.push_back(new NURBSLoader);
-  fileloaders_.push_back(new VolumeLoader);
   fileloaders_.push_back(new Video3DLoader);
+  fileloaders_.push_back(new VolumeLoader);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
