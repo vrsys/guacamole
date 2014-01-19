@@ -95,6 +95,9 @@ class Video3D : public Geometry {
   mutable std::vector<scm::gl::buffer_ptr> proxy_indices_;
   mutable std::vector<scm::gl::vertex_array_ptr> proxy_vertex_array_;
 
+  mutable std::vector<scm::gl::sampler_state_ptr> sstate_;
+  mutable std::vector<scm::gl::rasterizer_state_ptr> rstate_solid_;
+
   mutable std::vector<scm::gl::texture_2d_ptr> color_texArrays_;
   mutable std::vector<unsigned char*> color_buffers_; //std::vector< std::vector<unsigned char*> > for multiple kinects per Video3D
   mutable std::vector<scm::gl::texture_2d_ptr> depth_texArrays_;

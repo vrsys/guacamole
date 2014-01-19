@@ -52,6 +52,8 @@ Video3D::Video3D(std::string const& video3d) :
   proxy_vertices_(),
   proxy_indices_(),
   proxy_vertex_array_(),
+  sstate_(),
+  rstate_solid_(),
   color_texArrays_(),
   color_buffers_(),
   depth_texArrays_(),
@@ -94,6 +96,8 @@ void Video3D::upload_to(RenderContext const& ctx) const {
     proxy_vertices_.resize(ctx.id + 1);
     proxy_indices_.resize(ctx.id + 1);
     proxy_vertex_array_.resize(ctx.id + 1);
+    sstate_.resize(ctx.id + 1);
+    rstate_solid_.resize(ctx.id + 1);
     color_texArrays_.resize(ctx.id + 1);
     color_buffers_.resize(ctx.id + 1);
     depth_texArrays_.resize(ctx.id + 1);
@@ -192,6 +196,15 @@ void Video3D::upload_to(RenderContext const& ctx) const {
                                                        1
                                                    );
 
+  sstate_[ctx.id] = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST,
+                                                            scm::gl::WRAP_CLAMP_TO_EDGE);
+
+  rstate_solid_[ctx.id] = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, 
+                                                                     scm::gl::CULL_NONE,
+                                                                     scm::gl::ORIENT_CCW,
+                                                                     true);
+
+
   // init filebuffers
   std::vector<std::string> filename_decomposition =
   gua::string_utils::split(video3d_, '.');
@@ -287,6 +300,16 @@ void Video3D::update_buffers(RenderContext const& ctx) const
 void Video3D::set_uniforms(RenderContext const& ctx, ShaderProgram* cs){
      // TO DO
     //cs->set_uniform(ctx, color_texArrays_[ctx.id], "color_video3d_texture");
+    ctx.render_context->bind_texture(depth_texArrays_[ctx.id], sstate_[ctx.id], 0);
+    ctx.render_context->current_program()->uniform_sampler("depth_video3d_texture", 0);
+
+    cs->set_uniform(ctx, calib_file_->getImageDToEyeD(), "image_d_to_eye_d");
+    cs->set_uniform(ctx, calib_file_->getEyeDToWorld(), "eye_d_to_world");
+    cs->set_uniform(ctx, calib_file_->getEyeDToEyeRGB(), "eye_d_to_eye_rgb");
+    cs->set_uniform(ctx, calib_file_->getEyeRGBToImageRGB(), "eye_rgb_to_image_rgb");
+
+    //cs->set_uniform(ctx, depth_texArrays_[ctx.id], "depth_video3d_texture");
+    
 }
 
 }
