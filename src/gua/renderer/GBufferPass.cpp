@@ -117,6 +117,8 @@ void GBufferPass::rendering(SerializedScene const& scene,
                             Camera const& camera,
                             FrameBufferObject* target) {
 
+
+
     if (!depth_stencil_state_)
         depth_stencil_state_ =
             ctx.render_device->create_depth_stencil_state(true, true);

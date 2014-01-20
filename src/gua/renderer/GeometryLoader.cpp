@@ -30,6 +30,7 @@
 #include <gua/renderer/Video3DLoader.hpp>
 #include <gua/renderer/VolumeLoader.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/Video3DNode.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/utils/logger.hpp>
 
@@ -196,13 +197,21 @@ void GeometryLoader::apply_fallback_material(std::shared_ptr<Node> const& root,
                                    std::string const& fallback_material) const {
 
   auto g_node(std::dynamic_pointer_cast<GeometryNode>(root));
-
+  
   if (g_node) {
     if (g_node->data.get_material().empty()) {
       g_node->data.set_material(fallback_material);
     }
   }
-
+  else{
+      auto v_node = std::dynamic_pointer_cast<Video3DNode>(root);
+      if (v_node) {
+          if (v_node->data.get_material().empty()) {
+              v_node->data.set_material(fallback_material);
+          }
+      }
+  }
+  
   for(auto& child: root->get_children()) {
     apply_fallback_material(child, fallback_material);
   }
