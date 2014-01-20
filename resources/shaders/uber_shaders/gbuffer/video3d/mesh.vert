@@ -78,6 +78,8 @@ uint gua_get_material_id() {
 
 // main ------------------------------------------------------------------------
 void main() {
+  float depth = texture2DArray(depth_video3d_texture, vec3(gua_in_texcoords.xy, 0)).r;
+
   gua_position_varying = vec3(0);
 
   gua_texcoords = gua_in_texcoords;

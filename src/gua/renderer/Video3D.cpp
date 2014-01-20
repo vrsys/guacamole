@@ -301,14 +301,17 @@ void Video3D::update_buffers(RenderContext const& ctx) const
 void Video3D::set_uniforms(RenderContext const& ctx, ShaderProgram* cs){
     
     // upload to GPU if neccessary
-    //if (proxy_vertices_.size() <= ctx.id || proxy_vertices_[ctx.id] == nullptr) {
-    //    upload_to(ctx);
-    //}
+    if (proxy_vertices_.size() <= ctx.id) {
+       //upload_to(ctx);
+      return;
+    }
 
      // TO DO
     //cs->set_uniform(ctx, color_texArrays_[ctx.id], "color_video3d_texture");
-    //ctx.render_context->bind_texture(depth_texArrays_[ctx.id], sstate_[ctx.id], 0);
-    //ctx.render_context->current_program()->uniform_sampler("depth_video3d_texture", 0);
+    ctx.render_context->bind_texture(depth_texArrays_[ctx.id], sstate_[ctx.id], 5);
+    ctx.render_context->current_program()->uniform_sampler("depth_video3d_texture", 5);
+    ctx.render_context->bind_texture(color_texArrays_[ctx.id], sstate_[ctx.id], 6);
+    ctx.render_context->current_program()->uniform_sampler("color_video3d_texture", 6);
 
     cs->set_uniform(ctx, calib_file_->getImageDToEyeD(), "image_d_to_eye_d");
     cs->set_uniform(ctx, calib_file_->getEyeDToWorld(), "eye_d_to_world");

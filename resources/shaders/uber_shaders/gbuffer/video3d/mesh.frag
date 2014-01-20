@@ -28,6 +28,9 @@ in vec3 gua_position_varying;
 // uniforms
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
+//video3d
+uniform sampler2DArray color_video3d_texture;
+
 // material specific uniforms
 @uniform_definition
 
