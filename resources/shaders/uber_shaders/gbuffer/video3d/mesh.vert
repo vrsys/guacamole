@@ -43,8 +43,8 @@ uniform mat4  eye_d_to_eye_rgb;
 uniform mat4  eye_rgb_to_image_rgb;
 
 //kinect depths
-uniform sampler2DArray depth_video3d_texture;
-uniform sampler2DArray color_video3d_texture;
+layout (binding = 5) uniform sampler2DArray depth_video3d_texture;
+layout (binding = 6) uniform sampler2DArray color_video3d_texture;
 
 // material specific uniforms
 @uniform_definition
@@ -114,7 +114,7 @@ void main() {
   gua_object_bitangent =  gua_in_bitangent;
   gua_object_position =   POS_ws.xyz;
   if(depth > 0)
-   gua_object_position =   vec3(gua_in_position.xy, sin(depth));
+   gua_object_position =   vec3(0.0);//vec3(gua_in_position.xy, sin(depth));
   else
    gua_object_position =   gua_in_position;
 
@@ -123,7 +123,7 @@ void main() {
   gua_world_tangent =     normalize((gua_normal_matrix * vec4(gua_in_tangent, 0.0)).xyz);
   gua_world_bitangent =   normalize((gua_normal_matrix * vec4(gua_in_bitangent, 0.0)).xyz);
   if(depth > 0)
-   gua_world_position =    (gua_model_matrix * vec4(gua_in_position.xy, sin(depth), 1.0)).xyz;
+   gua_world_position =    (gua_model_matrix * vec4(vec3(0.0), 1.0)).xyz;//(gua_model_matrix * vec4(gua_in_position.xy, sin(depth), 1.0)).xyz;
   else
     gua_world_position =    (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
 

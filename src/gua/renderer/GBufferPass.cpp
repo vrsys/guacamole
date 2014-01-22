@@ -343,8 +343,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     if (!scene.video3Dnodes_.empty()) {
 
-        // draw meshes
-        //video3D_shader_->use(ctx);
+        // draw video3Ds
         video3D_shader_->use(ctx);
         {
 

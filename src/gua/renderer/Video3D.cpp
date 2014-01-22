@@ -260,6 +260,23 @@ void Video3D::draw(RenderContext const& ctx) const {
 
   update_buffers(ctx);
 
+  // last lines*
+  ctx.render_context->apply();
+  ctx.render_context->draw_elements(6 * (height_-1) * (width_-1));//mesh_->mNumFaces * 3
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Video3D::update_buffers(RenderContext const& ctx) const
+{
+  if(file_buffers_[ctx.id]->read( (void*) color_buffers_[ctx.id], color_size_) != color_size_){
+        std::cerr << "ERROR reading color BufferData\n";
+  }
+
+  if(file_buffers_[ctx.id]->read( (void*) depth_buffers_[ctx.id], depth_size_byte_) != depth_size_byte_){
+        std::cerr << "ERROR reading depth BufferData\n";
+  }
+
   //update kinect color & depth texture array for given context
   ctx.render_context->update_sub_texture(depth_texArrays_[ctx.id],
                                 //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
@@ -278,24 +295,6 @@ void Video3D::draw(RenderContext const& ctx) const {
                                 scm::gl::FORMAT_BC1_RGBA,
                                 (void*) color_buffers_[ctx.id]
                               );
-
-
-  // last lines*
-  ctx.render_context->apply();
-  ctx.render_context->draw_elements(6 * (height_-1) * (width_-1));//mesh_->mNumFaces * 3
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Video3D::update_buffers(RenderContext const& ctx) const
-{
-  if(file_buffers_[ctx.id]->read( (void*) color_buffers_[ctx.id], color_size_) != color_size_){
-        std::cerr << "ERROR reading color BufferData\n";
-  }
-
-  if(file_buffers_[ctx.id]->read( (void*) depth_buffers_[ctx.id], depth_size_byte_) != depth_size_byte_){
-        std::cerr << "ERROR reading depth BufferData\n";
-  }
 }
 
 void Video3D::set_uniforms(RenderContext const& ctx, ShaderProgram* cs){
@@ -309,15 +308,18 @@ void Video3D::set_uniforms(RenderContext const& ctx, ShaderProgram* cs){
      // TO DO
     //cs->set_uniform(ctx, color_texArrays_[ctx.id], "color_video3d_texture");
     ctx.render_context->bind_texture(depth_texArrays_[ctx.id], sstate_[ctx.id], 5);
+    //ctx.render_context->current_program()->uniform("depth_video3d_texture", 5); //use with explicit shader binding
     ctx.render_context->current_program()->uniform_sampler("depth_video3d_texture", 5);
+    
     ctx.render_context->bind_texture(color_texArrays_[ctx.id], sstate_[ctx.id], 6);
+    //ctx.render_context->current_program()->uniform("color_video3d_texture", 6); //use with explicit shader binding
     ctx.render_context->current_program()->uniform_sampler("color_video3d_texture", 6);
 
     cs->set_uniform(ctx, calib_file_->getImageDToEyeD(), "image_d_to_eye_d");
     cs->set_uniform(ctx, calib_file_->getEyeDToWorld(), "eye_d_to_world");
     cs->set_uniform(ctx, calib_file_->getEyeDToEyeRGB(), "eye_d_to_eye_rgb");
     cs->set_uniform(ctx, calib_file_->getEyeRGBToImageRGB(), "eye_rgb_to_image_rgb");
-
+    
     //cs->set_uniform(ctx, depth_texArrays_[ctx.id], "depth_video3d_texture");
     
 }
