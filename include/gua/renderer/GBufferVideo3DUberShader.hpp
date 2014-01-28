@@ -35,9 +35,10 @@ class GBufferVideo3DUberShader : public UberShader {
 
  private:
   std::string const _final_vertex_shader(UberShaderFactory const& vshader_factory,
-  	                                     LayerMapping const& vshader_output_mapping) const;
-  std::string const _final_geometry_shader() const;
-  std::string const _final_fragment_shader(UberShaderFactory const& fshader_factory, 
+  	                                       LayerMapping const& vshader_output_mapping) const;
+  std::string const _final_geometry_shader(UberShaderFactory const& vshader_factory,
+                                           LayerMapping const& vshader_output_mapping) const;
+  std::string const _final_fragment_shader(UberShaderFactory const& fshader_factory,
   	                                       LayerMapping const& vshader_output_mapping) const;
 
 };

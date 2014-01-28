@@ -20,6 +20,9 @@
  ******************************************************************************/
 
 @include "shaders/common/header.glsl"
+#extension GL_ARB_explicit_uniform_location : enable
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_EXT_texture_array : enable
 
 // input -----------------------------------------------------------------------
 layout(location=0) in vec3 gua_in_position;
@@ -40,7 +43,8 @@ uniform mat4  eye_d_to_eye_rgb;
 uniform mat4  eye_rgb_to_image_rgb;
 
 //kinect depths
-uniform sampler2DArray depth_video3d_texture;
+layout (binding = 5) uniform sampler2DArray depth_video3d_texture;
+layout (binding = 6) uniform sampler2DArray color_video3d_texture;
 
 // material specific uniforms
 @uniform_definition
@@ -78,6 +82,29 @@ uint gua_get_material_id() {
 
 // main ------------------------------------------------------------------------
 void main() {
+  float depth = texture2DArray(depth_video3d_texture, vec3(gua_in_texcoords.xy, 0)).r; 
+
+  vec4 POS_d = depth * image_d_to_eye_d * vec4(gua_in_position.xy, depth, 1.0);
+  POS_d.z = depth;
+
+  POS_d.w = 1.0;
+  vec3 pos_d   = POS_d.xyz;
+
+  vec4 POS_rgb = eye_d_to_eye_rgb * POS_d;
+
+  if(POS_rgb.z > 0.0)
+      gua_texcoords = (eye_rgb_to_image_rgb * vec4( (POS_rgb.xy/POS_rgb.z) ,0.0,1.0)).xy;
+  else
+      gua_texcoords = vec2(0.0);
+
+  vec4 POS_ws =  eye_d_to_world * POS_d;
+
+  if(POS_ws.y < 0.0)
+    POS_ws.y = 0.0;
+
+  gua_world_position = (gua_model_matrix * POS_ws).xyz;
+  
+  ////////////////////////////////////////////////////////////////////////////////////
   gua_position_varying = vec3(0);
 
   gua_texcoords = gua_in_texcoords;
@@ -85,16 +112,24 @@ void main() {
   gua_object_normal =     gua_in_normal;
   gua_object_tangent =    gua_in_tangent;
   gua_object_bitangent =  gua_in_bitangent;
-  gua_object_position =   gua_in_position;
+  gua_object_position =   POS_ws.xyz;
+  if(depth > 0)
+   gua_object_position =   vec3(0.0);//vec3(gua_in_position.xy, sin(depth));
+  else
+   gua_object_position =   gua_in_position;
+
 
   gua_world_normal =      normalize((gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz);
   gua_world_tangent =     normalize((gua_normal_matrix * vec4(gua_in_tangent, 0.0)).xyz);
   gua_world_bitangent =   normalize((gua_normal_matrix * vec4(gua_in_bitangent, 0.0)).xyz);
-  gua_world_position =    (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
+  if(depth > 0)
+   gua_world_position =    (gua_model_matrix * vec4(vec3(0.0), 1.0)).xyz;//(gua_model_matrix * vec4(gua_in_position.xy, sin(depth), 1.0)).xyz;
+  else
+    gua_world_position =    (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
 
   // big switch, one case for each material
   @material_switch
 
   gua_uint_gbuffer_varying_0.x = gua_material_id;
-  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_position_varying.xyz, 1.0);
+  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position.xyz, 1.0);
 }

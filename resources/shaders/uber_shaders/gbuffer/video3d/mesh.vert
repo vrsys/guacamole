@@ -43,8 +43,8 @@ uniform mat4  eye_d_to_eye_rgb;
 uniform mat4  eye_rgb_to_image_rgb;
 
 //kinect depths
-layout (binding = 5) uniform sampler2DArray depth_video3d_texture;
-layout (binding = 6) uniform sampler2DArray color_video3d_texture;
+uniform sampler2DArray depth_video3d_texture;
+uniform sampler2DArray color_video3d_texture;
 
 // material specific uniforms
 @uniform_definition
@@ -131,5 +131,5 @@ void main() {
   @material_switch
 
   gua_uint_gbuffer_varying_0.x = gua_material_id;
-  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_position_varying.xyz, 1.0);
+  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position.xyz, 1.0);
 }

@@ -29,6 +29,8 @@
 #include <gua/renderer/video3d_geometry/DXTCompressor.h>
 #include <gua/utils/logger.hpp>
 
+#include <scm/gl_core/render_device/opengl/gl_core.h>
+
 // external headers
 #include <iostream>
 #include <gua/utils/string_utils.hpp>
@@ -80,7 +82,9 @@ Video3D::Video3D(std::string const& video3d) :
 ////////////////////////////////////////////////////////////////////////////////
 
 void Video3D::upload_to(RenderContext const& ctx) const {
-  
+
+  std::cout << "context ID: " << ctx.id << std::endl;
+
   int num_vertices = height_ * width_;
   int num_indices  = height_ * width_;
   int num_triangles           = ((height_-1) * (width_-1)) * 2;
@@ -115,7 +119,7 @@ void Video3D::upload_to(RenderContext const& ctx) const {
 
   Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
       proxy_vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
-  
+
   //compute vertex data (proxy mesh)ddd
   //const scm::math::vec3f& p(0.0f); //point of origin
 
@@ -181,6 +185,8 @@ void Video3D::upload_to(RenderContext const& ctx) const {
                                                     (0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex)),
                                        buffer_arrays);
 
+  std::cout << "allocating depth texture of size " << width_ << " x " << height_ << std::endl;
+
   // initialize Texture Arrays (kinect depths & colors)
   depth_texArrays_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(width_, height_),
                                                        scm::gl::FORMAT_R_32F,
@@ -199,7 +205,7 @@ void Video3D::upload_to(RenderContext const& ctx) const {
   sstate_[ctx.id] = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST,
                                                             scm::gl::WRAP_CLAMP_TO_EDGE);
 
-  rstate_solid_[ctx.id] = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, 
+  rstate_solid_[ctx.id] = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID,
                                                                      scm::gl::CULL_NONE,
                                                                      scm::gl::ORIENT_CCW,
                                                                      true);
@@ -245,7 +251,7 @@ void Video3D::upload_to(RenderContext const& ctx) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Video3D::draw(RenderContext const& ctx) const {
-    
+
     // upload to GPU if neccessary
     if (proxy_vertices_.size() <= ctx.id || proxy_vertices_[ctx.id] == nullptr) {
         upload_to(ctx);
@@ -262,7 +268,7 @@ void Video3D::draw(RenderContext const& ctx) const {
 
   // last lines*
   ctx.render_context->apply();
-  ctx.render_context->draw_elements(6 * (height_-1) * (width_-1));//mesh_->mNumFaces * 3
+  ctx.render_context->draw_elements(6  * (height_-1) * (width_-1));//mesh_->mNumFaces * 3
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -281,16 +287,22 @@ void Video3D::update_buffers(RenderContext const& ctx) const
   ctx.render_context->update_sub_texture(depth_texArrays_[ctx.id],
                                 //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
                                 scm::gl::texture_region(scm::math::vec3ui(0, 0, 0),
-                                                       scm::math::vec3ui(width_, height_, 1)),
+                                                        scm::math::vec3ui(width_, height_, 1)),
                                 0, //mip-mapping level
                                 scm::gl::FORMAT_R_32F,
                                 (void*) depth_buffers_[ctx.id]
                               );
 
+  if ( 0 != ctx.render_context->opengl_api().glGetError() )
+  {
+    std::cerr << "GL error" << std::endl;
+  }
+
+
   ctx.render_context->update_sub_texture(color_texArrays_[ctx.id],
                                 //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
                                 scm::gl::texture_region(scm::math::vec3ui(0, 0 , 0),
-                                                       scm::math::vec3ui(width_, height_, 1)),
+                                                        scm::math::vec3ui(width_, height_, 1)),
                                 0, //mip-mapping level
                                 scm::gl::FORMAT_BC1_RGBA,
                                 (void*) color_buffers_[ctx.id]
@@ -298,7 +310,7 @@ void Video3D::update_buffers(RenderContext const& ctx) const
 }
 
 void Video3D::set_uniforms(RenderContext const& ctx, ShaderProgram* cs){
-    
+
     // upload to GPU if neccessary
     if (proxy_vertices_.size() <= ctx.id) {
        //upload_to(ctx);
@@ -306,22 +318,23 @@ void Video3D::set_uniforms(RenderContext const& ctx, ShaderProgram* cs){
     }
 
      // TO DO
-    //cs->set_uniform(ctx, color_texArrays_[ctx.id], "color_video3d_texture");
-    ctx.render_context->bind_texture(depth_texArrays_[ctx.id], sstate_[ctx.id], 5);
+
+    ctx.render_context->bind_texture(depth_texArrays_[ctx.id], sstate_[ctx.id], 1);
     //ctx.render_context->current_program()->uniform("depth_video3d_texture", 5); //use with explicit shader binding
-    ctx.render_context->current_program()->uniform_sampler("depth_video3d_texture", 5);
-    
-    ctx.render_context->bind_texture(color_texArrays_[ctx.id], sstate_[ctx.id], 6);
+    //cs->set_uniform(ctx, 5, "color_video3d_texture");
+    ctx.render_context->current_program()->uniform_sampler("depth_video3d_texture", 1);
+
+    //ctx.render_context->bind_texture(color_texArrays_[ctx.id], sstate_[ctx.id], 6);
     //ctx.render_context->current_program()->uniform("color_video3d_texture", 6); //use with explicit shader binding
-    ctx.render_context->current_program()->uniform_sampler("color_video3d_texture", 6);
+    //ctx.render_context->current_program()->uniform_sampler("color_video3d_texture", 6);
 
     cs->set_uniform(ctx, calib_file_->getImageDToEyeD(), "image_d_to_eye_d");
     cs->set_uniform(ctx, calib_file_->getEyeDToWorld(), "eye_d_to_world");
     cs->set_uniform(ctx, calib_file_->getEyeDToEyeRGB(), "eye_d_to_eye_rgb");
     cs->set_uniform(ctx, calib_file_->getEyeRGBToImageRGB(), "eye_rgb_to_image_rgb");
-    
+
     //cs->set_uniform(ctx, depth_texArrays_[ctx.id], "depth_video3d_texture");
-    
+
 }
 
 }

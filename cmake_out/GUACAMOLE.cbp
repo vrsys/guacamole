@@ -1,0 +1,994 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="GUACAMOLE" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;CMake Files\cmake\;CMake Files\cmake\modules\;CMake Files\guarc\;CMake Files\src\;CMake Files\plugins\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="CompileResources">
+         <Option working_dir="/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 CompileResources" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="edit_cache">
+         <Option working_dir="/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 edit_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rebuild_cache">
+         <Option working_dir="/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 rebuild_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="guarc">
+         <Option output="/home/buda8714/Documents/oculusRift/github/guacamole/guarc/guarc" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/buda8714/Documents/oculusRift/github/guacamole/guarc" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/buda8714/Documents/oculusRift/github/guacamole/guarc/guarc" />
+            <Add directory="/opt/boost/latest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/4.6" />
+            <Add directory="/usr/include/c++/4.6/backward" />
+            <Add directory="/usr/include/c++/4.6/x86_64-linux-gnu/." />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.6/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.6/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/guarc/Makefile&quot;  VERBOSE=1 guarc" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/guarc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/guarc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/guarc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="guarc/fast">
+         <Option output="/home/buda8714/Documents/oculusRift/github/guacamole/guarc/guarc" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/buda8714/Documents/oculusRift/github/guacamole/guarc" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/buda8714/Documents/oculusRift/github/guacamole/guarc/guarc" />
+            <Add directory="/opt/boost/latest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/4.6" />
+            <Add directory="/usr/include/c++/4.6/backward" />
+            <Add directory="/usr/include/c++/4.6/x86_64-linux-gnu/." />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.6/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.6/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/guarc/Makefile&quot;  VERBOSE=1 guarc/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/guarc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/guarc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/guarc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="guacamole">
+         <Option output="/home/buda8714/Documents/oculusRift/github/guacamole/lib/libguacamole.so" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src" />
+         <Option object_output="./" />
+         <Option type="3" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/buda8714/Documents/oculusRift/github/guacamole/build" />
+            <Add directory="/home/buda8714/Documents/oculusRift/github/guacamole/include" />
+            <Add directory="/home/buda8714/Documents/oculusRift/github/guacamole/src/guacamole" />
+            <Add directory="/opt/boost/latest/include" />
+            <Add directory="/opt/bullet/current/Extras/HACD" />
+            <Add directory="/opt/bullet/current/src" />
+            <Add directory="/opt/schism/current/scm_cl_core/src" />
+            <Add directory="/opt/schism/current/scm_core/src" />
+            <Add directory="/opt/schism/current/scm_gl_core/src" />
+            <Add directory="/opt/schism/current/scm_gl_util/src" />
+            <Add directory="/opt/schism/current/scm_input/src" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/assimp" />
+            <Add directory="/usr/include/c++/4.6" />
+            <Add directory="/usr/include/c++/4.6/backward" />
+            <Add directory="/usr/include/c++/4.6/x86_64-linux-gnu/." />
+            <Add directory="/usr/include/jsoncpp" />
+            <Add directory="/usr/include/libdrm" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.6/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.6/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src/Makefile&quot;  VERBOSE=1 guacamole" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="guacamole/fast">
+         <Option output="/home/buda8714/Documents/oculusRift/github/guacamole/lib/libguacamole.so" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src" />
+         <Option object_output="./" />
+         <Option type="3" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/buda8714/Documents/oculusRift/github/guacamole/build" />
+            <Add directory="/home/buda8714/Documents/oculusRift/github/guacamole/include" />
+            <Add directory="/home/buda8714/Documents/oculusRift/github/guacamole/src/guacamole" />
+            <Add directory="/opt/boost/latest/include" />
+            <Add directory="/opt/bullet/current/Extras/HACD" />
+            <Add directory="/opt/bullet/current/src" />
+            <Add directory="/opt/schism/current/scm_cl_core/src" />
+            <Add directory="/opt/schism/current/scm_core/src" />
+            <Add directory="/opt/schism/current/scm_gl_core/src" />
+            <Add directory="/opt/schism/current/scm_gl_util/src" />
+            <Add directory="/opt/schism/current/scm_input/src" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/assimp" />
+            <Add directory="/usr/include/c++/4.6" />
+            <Add directory="/usr/include/c++/4.6/backward" />
+            <Add directory="/usr/include/c++/4.6/x86_64-linux-gnu/." />
+            <Add directory="/usr/include/jsoncpp" />
+            <Add directory="/usr/include/libdrm" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.6/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/4.6/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src/Makefile&quot;  VERBOSE=1 guacamole/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/guarc/main.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/databases/CollisionShapeDatabase.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/databases/GeometryDatabase.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/databases/MaterialDatabase.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/databases/Resources.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/databases/ShadingModelDatabase.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/databases/TextureDatabase.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/events/MainLoop.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/events/Scheduler.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/events/Ticker.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/guacamole.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/math/BoundingBoxAlgo.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/math/math.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/math/random.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/BoxShape.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/CollisionShape.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/CollisionShapeNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/CollisionShapeNodeVisitor.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/Constraint.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/ConvexHullShape.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/CylinderShape.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/FixedConstraint.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/GuaMotionState.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/HingeConstraint.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/Physics.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/PlaneShape.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/Point2PointConstraint.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/RigidBodyNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/SliderConstraint.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/SphereShape.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/physics/TriangleMeshShape.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/BuiltInTextures.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/CompositePass.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/DisplayData.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/FinalPass.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/FinalUberShader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/FrameBufferObject.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Frustum.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/FullscreenPass.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/GBuffer.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/GBufferMeshUberShader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/GBufferNURBSUberShader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/GBufferPass.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/GBufferVideo3DUberShader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Geometry.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/GeometryLoader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/GeometryPass.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/GuaMethodsFactory.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/LayerMapping.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/LightingPass.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/LightingUberShader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/LoaderBase.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Material.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/MaterialDescription.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/MaterialLoader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Mesh.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/MeshLoader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/NURBS.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/NURBSLoader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/NURBSShader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Pass.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Pipeline.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/PostFXPass.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Renderer.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Serializer.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/ShaderProgram.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/ShaderStage.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/ShadingModel.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/ShadowMapMeshShader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/ShadowMapNURBSShader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/StereoBuffer.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/TextRenderer.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Texture.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Texture2D.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Texture3D.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/UberShader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/UberShaderFactory.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/UniformMapping.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Video3D.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Video3DLoader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Volume.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/VolumeLoader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/WarpMatrix.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/Window.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/enums.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/NURBSData.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/TrimDomain.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/TrimDomainSerializer.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/TrimDomainSerializer_BinaryContourMap.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/TrimmedBezierSurface.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/TrimmedBezierSurfaceObject.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/TrimmedNurbsSurface.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/TrimmedNurbsSurfaceObject.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/TrimmedSurfaceConverter.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/import/igs/igs_loader.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/import/igs/igs_stack.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/video3d_geometry/BackgroundDetector.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/video3d_geometry/DXTCompressor.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/video3d_geometry/FileBuffer.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/video3d_geometry/KinectCalibrationFile.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/video3d_geometry/fastdxt/dxt.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/video3d_geometry/fastdxt/libdxt.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/video3d_geometry/fastdxt/util.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/GeometryNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/Node.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/NodeVisitor.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/PickResult.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/PointLightNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/RayNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/SceneGraph.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/ScreenNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/SpotLightNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/TexturedQuadNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/TransformNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/Video3DNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/scenegraph/VolumeNode.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/AnimatedValue.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/Color3f.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/Directory.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/DotGenerator.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/KDTree.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/KDTreeUtils.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/Mask.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/PathParser.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/Profiler.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/TextFile.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/Timer.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/utils/string_utils.cpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/databases.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/databases/CollisionShapeDatabase.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/databases/Database.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/databases/GeometryDatabase.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/databases/MaterialDatabase.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/databases/Resources.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/databases/ShadingModelDatabase.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/databases/TextureDatabase.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events/MainLoop.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events/Properties.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events/Scheduler.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events/Signal.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events/Ticker.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events/properties/LogicalProperty.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events/properties/NumericProperty.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events/properties/Property.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events/properties/SortableProperty.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/events/properties/StreamableProperty.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/guacamole.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/math.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/math/BoundingBox.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/math/BoundingBoxAlgo.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/math/math.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/math/random.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/math/traits.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/memory.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/BoxShape.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/CollisionShape.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/CollisionShapeNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/CollisionShapeNodeVisitor.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/Constraint.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/ConvexHullShape.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/CylinderShape.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/FixedConstraint.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/GuaMotionState.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/HingeConstraint.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/Physics.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/PhysicsUtils.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/PlaneShape.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/Point2PointConstraint.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/RigidBodyNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/SliderConstraint.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/SphereShape.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/physics/TriangleMeshShape.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/platform.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/BufferDescriptions.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/BuiltInTextures.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Camera.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/CompositePass.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/DisplayData.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/FinalPass.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/FinalUberShader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/FrameBufferObject.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Frustum.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/FullscreenPass.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/GBuffer.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/GBufferMeshUberShader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/GBufferNURBSUberShader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/GBufferPass.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/GBufferVideo3DUberShader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Geometry.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/GeometryLoader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/GeometryPass.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/GuaMethodsFactory.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/LayerMapping.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/LightingPass.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/LightingUberShader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/LoaderBase.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Material.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/MaterialDescription.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/MaterialLoader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Mesh.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/MeshLoader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/NURBS.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/NURBSLoader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/NURBSShader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Pass.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Pipeline.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/PostFXPass.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/RenderClient.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/RenderContext.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Renderer.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/SerializedNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/SerializedScene.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Serializer.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/ShaderProgram.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/ShaderStage.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/ShadingModel.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/ShadowMapMeshShader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/ShadowMapNURBSShader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/StereoBuffer.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/TextRenderer.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Texture.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Texture2D.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Texture3D.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/UberShader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/UberShaderFactory.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Uniform.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/UniformMapping.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Video3D.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Video3DLoader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Volume.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/VolumeLoader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/WarpMatrix.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/Window.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/enums.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/IGSGeometry.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/IGSGeometryBase.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/IGSGeometryNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/NURBSData.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/TrimDomain.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/TrimDomainSerializer.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/TrimDomainSerializer_BinaryContourMap.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/TrimmedBezierSurface.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/TrimmedBezierSurfaceObject.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/TrimmedNurbsSurface.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/TrimmedNurbsSurfaceObject.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/TrimmedSurfaceConverter.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/import/igs.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/import/igs/igs_actor.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/import/igs/igs_grammar.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/import/igs/igs_loader.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/import/igs/igs_stack.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/abstract_boundingbox.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/axis_aligned_boundingbox.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/axis_aligned_boundingbox_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/binomial_coefficient.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/compare.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/gcd.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/glsl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/halffloat.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/interval.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/interval_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/matrix.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/matrix_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/oriented_boundingbox.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/oriented_boundingbox_axis_aligned_policy.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/oriented_boundingbox_covariance_policy.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/oriented_boundingbox_greedy_policy.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/oriented_boundingbox_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/oriented_boundingbox_partial_derivative_policy.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/oriented_boundingbox_random_policy.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/algorithm/bezierclipping2d.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/algorithm/converter.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/algorithm/converter_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/algorithm/decasteljau.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/algorithm/evaluator.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/algorithm/horner.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/algorithm/maximal_coordinates.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/algorithm/minimal_coordinates.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/algorithm/newton_raphson.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/algorithm/space_adapter.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/beziercurve.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/beziersurface.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/beziervolume.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/beziercurve_segment.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/beziercurve_segment_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/contour.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/contour_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/contour_map_base.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/contour_map_base_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/contour_map_binary.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/contour_map_binary_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/contour_map_kd.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/contour_map_kd_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/contour_segment.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/contour_segment_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/determine_dimension_from_endpoints.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/determine_splits_from_endpoints.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/end_event.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/event_structure.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/face.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/line.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/linear_curve_filter.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/partition.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/partition_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/previous_next_set.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/start_event.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/status_event.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/status_structure.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/uniform_cell.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/uniform_cell_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/vertical_interval.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/domain/vertical_interval_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/implementation/beziercurve_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/implementation/beziersurface_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/implementation/beziervolume_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/implementation/nurbscurve_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/implementation/nurbssurface_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/implementation/nurbsvolume_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/implementation/point_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/implementation/pointmesh2d_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/implementation/pointmesh3d_impl.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/nurbscurve.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/nurbssurface.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/nurbsvolume.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/point.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/pointmesh2d.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/parametric/pointmesh3d.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/polynomial.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/pow.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/rapid.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/concatenate.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/copy_constructor_adapter.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/copy_if.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/discretizer2d.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/discretizer3d.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/erase_if.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/gauss2d.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/pair_adaptor.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/polar_conversion.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/prefilter2d.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/prefilter3d.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/nurbs_geometry/tml/util/signed_gradient.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/video3d_geometry/BackgroundDetector.h">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/video3d_geometry/DXTCompressor.h">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/video3d_geometry/FileBuffer.h">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/video3d_geometry/KinectCalibrationFile.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/video3d_geometry/fastdxt/dxt.h">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/video3d_geometry/fastdxt/libdxt.h">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/renderer/video3d_geometry/fastdxt/util.h">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/GeometryNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/Node.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/NodeVisitor.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/PickResult.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/PointLightNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/RayNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/SceneGraph.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/ScreenNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/SpotLightNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/TexturedQuadNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/TransformNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/Video3DNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/scenegraph/VolumeNode.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/AnimatedValue.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/Color3f.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/Directory.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/DotGenerator.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/Doublebuffer.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/FpsCounter.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/KDTree.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/KDTreeUtils.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/KnownObject.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/Mask.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/PathParser.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/Profiler.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/Singleton.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/SpinLock.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/TextFile.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/Timer.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/configuration_macro.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/logger.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/include/gua/utils/string_utils.hpp">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/shader/igs_shiny.frag.c">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/shader/igs_shiny.geo.c">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/shader/igs_shiny.tc.c">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/shader/igs_shiny.te.c">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/shader/igs_shiny.vert.c">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/shader/igs_shiny_transform.geo.c">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/shader/igs_shiny_transform.tc.c">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/gua/renderer/nurbs_geometry/shader/igs_shiny_transform.vert.c">
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/cmake/modules/define_macros.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/cmake/modules/find_compiler.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/cmake/modules/find_schism.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/cmake/modules/find_boost.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/cmake/modules/find_bullet.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/cmake/modules/find_json.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/guarc/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\guarc\" />
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/src/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\" />
+      </Unit>
+      <Unit filename="/home/buda8714/Documents/oculusRift/github/guacamole/plugins/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\plugins\" />
+      </Unit>
+   </Project>
+</CodeBlocks_project_file>
