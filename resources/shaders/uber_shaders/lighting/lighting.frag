@@ -28,6 +28,9 @@ in vec3  gua_lightinfo1;
 in vec3  gua_lightinfo2;
 in float gua_lightinfo3;
 in mat4  gua_lightinfo4;
+in mat4  gua_lightinfo5;
+in mat4  gua_lightinfo6;
+in mat4  gua_lightinfo7;
 
 // input from gbuffer
 uniform uvec2 gua_depth_gbuffer_in;
@@ -35,6 +38,11 @@ uniform uvec2 gua_depth_gbuffer_in;
 
 // uniforms
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+
+uniform mat4 gua_light_shadow_map_projection_view_matrix_0;
+uniform mat4 gua_light_shadow_map_projection_view_matrix_1;
+uniform mat4 gua_light_shadow_map_projection_view_matrix_2;
+uniform mat4 gua_light_shadow_map_projection_view_matrix_3;
 
 uniform vec3  gua_light_color;
 uniform float gua_light_falloff;
@@ -103,13 +111,12 @@ float gua_get_shadow(vec4 smap_coords) {
   );
 }
 
-float gua_get_shadow() {
+float gua_get_shadow(mat4 shadow_map_coords_matrix, vec2 lookup_offset) {
   if(!gua_light_casts_shadow)
     return 1.0;
 
-  mat4 shadow_map_coords_matrix = gua_lightinfo4;
   vec3 position = gua_get_position();
-  vec4 smap_coords = shadow_map_coords_matrix * vec4(position, 1.0);
+  vec4 smap_coords = shadow_map_coords_matrix * vec4(position, 1.0) + vec4(lookup_offset, 0, 0);
 
   float sum = 0;
   int x, y;
@@ -123,10 +130,16 @@ float gua_get_shadow() {
   return shadow;
 }
 
-// base lighting calculations for point lights ---------------------------------
+bool gua_is_inside_frustum(mat4 frustum, vec3 position) {
+  vec4 proj = frustum * vec4(position, 1.0);
+  proj /= proj.w;
+  return (abs(proj.x) <= 1 && abs(proj.y) <= 1 && abs(proj.z) <= 1);
+}
+
 subroutine void CalculateLightType();
 subroutine uniform CalculateLightType compute_light;
 
+// base lighting calculations for point lights ---------------------------------
 subroutine(CalculateLightType)
 void gua_calculate_point_light() {
   vec3 light_position = gua_lightinfo1;
@@ -172,7 +185,7 @@ void gua_calculate_spot_light() {
   if (dot(gbuffer_normal, gua_light_direction) < 0)
     discard;
 
-  float shadow = gua_get_shadow();
+  float shadow = gua_get_shadow(gua_lightinfo4, vec2(0));
 
   if(shadow <= 0.0)
     discard;
@@ -187,6 +200,38 @@ void gua_calculate_spot_light() {
   radial_attenuation = pow(1.0 - radial_attenuation, gua_light_softness);
 
   gua_light_intensity = radial_attenuation * length_attenuation * shadow;
+}
+
+// base lighting calculations for point lights ---------------------------------
+subroutine(CalculateLightType)
+void gua_calculate_sun_light() {
+  vec3 light_direction = gua_lightinfo1;
+  vec3 gbuffer_normal = texture2D(gua_get_float_sampler(gua_float_gbuffer_in_1[0]),
+                        gua_get_quad_coords()).xyz;
+
+  gua_light_direction = light_direction;
+  gua_light_distance  = 0.0;
+
+  if (dot(gbuffer_normal, gua_light_direction) < 0)
+    discard;
+
+
+  vec3 position = gua_get_position();
+
+  float shadow = 1.0;
+
+  if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_0, position)) {
+    shadow = gua_get_shadow(gua_lightinfo4, vec2(0, 0));
+  } else if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_1, position)) {
+    shadow = gua_get_shadow(gua_lightinfo5, vec2(1, 0));
+  } else if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_2, position)) {
+    shadow = gua_get_shadow(gua_lightinfo6, vec2(0, 1));
+  } else {
+    shadow = gua_get_shadow(gua_lightinfo7, vec2(1, 1));
+  }
+
+
+  gua_light_intensity = 1.0 * shadow;
 }
 
 // material specific methods

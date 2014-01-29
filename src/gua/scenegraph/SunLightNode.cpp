@@ -19,51 +19,35 @@
  *                                                                            *
  ******************************************************************************/
 
-@include "shaders/common/header.glsl"
+// class header
+#include <gua/scenegraph/SunLightNode.hpp>
 
-subroutine float GetColorType(vec2 texcoords);
-subroutine uniform GetColorType get_color;
+// guacamole header
+#include <gua/platform.hpp>
+#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
-uniform uvec2 gua_ray_texture;
-uniform float gua_filter_length;
-uniform float gua_aspect_ratio;
-uniform vec3 gua_light_color;
+namespace gua {
 
-in vec3 gua_light_position_screen_space;
-in vec2 gua_quad_coords;
+SunLightNode::SunLightNode(std::string const& name,
+                             Configuration const& configuration,
+                             math::mat4 const& transform)
+    : Node(name, transform), data(configuration) {}
 
-// outputs
-layout(location=0) out vec3 gua_out_color;
-
-
-@include "shaders/uber_shaders/common/get_sampler_casts.glsl"
-
-subroutine( GetColorType )
-float get_color_clamped(vec2 texcoords) {
-    float depth = texture2D( gua_get_float_sampler(gua_ray_texture), texcoords).r * 2 -1;
-    float intensity = depth >= gua_light_position_screen_space.z ? 1.0 : 0.0;
-    intensity *= max(0.0, 1.0-length((gua_quad_coords - gua_light_position_screen_space.xy * 0.5 - 0.5)/vec2(1.0, gua_aspect_ratio)));
-    return pow(intensity, 15.0);
+/* virtual */ void SunLightNode::accept(NodeVisitor& visitor) {
+    visitor.visit(this);
 }
 
-subroutine( GetColorType )
-float get_color_smooth(vec2 texcoords) {
-    return texture2D( gua_get_float_sampler(gua_ray_texture), texcoords).r;
+void SunLightNode::update_bounding_box() const {
+    bounding_box_ = math::BoundingBox<math::vec3>(
+        math::vec3(std::numeric_limits<math::vec3::value_type>::lowest()),
+        math::vec3(std::numeric_limits<math::vec3::value_type>::max())
+    );
 }
 
-void main() {
-    const float samples = 6.0;
+std::shared_ptr<Node> SunLightNode::copy() const {
+    return std::make_shared<SunLightNode>(get_name(), data, get_transform());
+}
 
-    vec2 light_position = gua_light_position_screen_space.xy * 0.5 + 0.5;
-    vec2 delta = light_position - gua_quad_coords;
-    vec2 stepv =  delta / (samples * gua_filter_length);
-    vec2 texcoords = gua_quad_coords;
-
-    float col = 0.0;
-    for (float i = 0.0; i < samples; i += 1.0) {
-        col += get_color(texcoords);
-        texcoords += stepv;
-    }
-
-    gua_out_color = col / samples * gua_light_color;
 }

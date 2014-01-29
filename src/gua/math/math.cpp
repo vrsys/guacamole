@@ -36,10 +36,12 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::mat4 const math::compute_frustum(math::vec4 const& eye_position,
+math::mat4 const math::compute_perspective_frustum(math::vec4 const& eye_position,
                                        math::mat4 const& screen_transform,
                                        float near_plane,
                                        float far_plane) {
+
+  math::mat4 frustum(math::mat4::identity());
 
   math::vec4 relative_eye_position(scm::math::inverse(screen_transform) *
                                    eye_position);
@@ -47,8 +49,6 @@ math::mat4 const math::compute_frustum(math::vec4 const& eye_position,
   float d(relative_eye_position[2]);
   float ox(-relative_eye_position[0]);
   float oy(-relative_eye_position[1]);
-
-  math::mat4 frustum(math::mat4::identity());
 
   frustum[0] = 2 * d;
   frustum[5] = 2 * d;
@@ -58,6 +58,34 @@ math::mat4 const math::compute_frustum(math::vec4 const& eye_position,
   frustum[11] = -1.f;
   frustum[14] = -2 * near_plane * far_plane / (far_plane - near_plane);
   frustum[15] = 0.f;
+
+  return frustum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::mat4 const math::compute_orthographic_frustum(math::vec4 const& eye_position,
+                                       math::mat4 const& screen_transform,
+                                 float near_plane,
+                                 float far_plane) {
+
+  math::mat4 frustum(math::mat4::identity());
+
+
+  math::vec4 relative_eye_position(scm::math::inverse(screen_transform) *
+                                   eye_position);
+
+  // float d(relative_eye_position[2]);
+  float ox(-relative_eye_position[0]);
+  float oy(-relative_eye_position[1]);
+
+  frustum[0] = 2.0f;
+  frustum[5] = 2.0f;
+  frustum[10] = 2.0f / (near_plane - far_plane);
+  frustum[12] = -2.0f * ox;
+  frustum[13] = -2.0f * oy;
+  frustum[14] = (far_plane + near_plane) / (near_plane - far_plane);
+  frustum[15] = 1.f;
 
   return frustum;
 }

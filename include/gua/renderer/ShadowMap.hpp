@@ -19,71 +19,80 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LIGHTING_PASS_HPP
-#define GUA_LIGHTING_PASS_HPP
+#ifndef GUA_SHADOW_MAP_HPP
+#define GUA_SHADOW_MAP_HPP
 
 // guacamole headers
-#include <gua/renderer/GeometryPass.hpp>
-#include <gua/renderer/ShadowMap.hpp>
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/Geometry.hpp>
+#include <gua/math.hpp>
+#include <gua/renderer/RenderContext.hpp>
 
 namespace gua {
 
-class LightingUberShader;
 class Serializer;
-class LayerMapping;
+class GBuffer;
+class Frustum;
+class Camera;
+class Pipeline;
+class ShadowMapMeshShader;
+class ShadowMapNURBSShader;
 
 /**
  *
  */
-class LightingPass : public GeometryPass {
+class ShadowMap {
  public:
 
   /**
    *
    */
-  LightingPass(Pipeline* pipeline);
+  ShadowMap(Pipeline* pipeline);
 
-  /**
-   * Destructor.
-   *
-   * Deletes the FullscreenPass and frees all associated data.
-   */
-  virtual ~LightingPass();
+  virtual ~ShadowMap();
 
-  void apply_material_mapping(
-      std::set<std::string> const& material_names,
-      std::vector<LayerMapping const*> const& inputs) const;
+  void render(RenderContext const& ctx,
+              Camera const& scene_camera,
+              math::mat4 const& transform,
+              unsigned map_size);
 
-  LayerMapping const* get_gbuffer_mapping() const;
+  void render_cascaded(RenderContext const& ctx,
+              Frustum const& scene_frustum,
+              Camera const& scene_camera,
+              math::mat4 const& transform,
+              unsigned map_size,
+              float split_0,
+              float split_1,
+              float split_2,
+              float split_3,
+              float split_4,
+              float near_clipping_in_sun_direction);
 
-  /* virtual */ void print_shaders(std::string const& directory,
-                                   std::string const& name) const;
+  void print_shaders(std::string const& directory,
+                     std::string const& name) const;
 
   bool pre_compile_shaders(RenderContext const& ctx);
 
-public:
-  ShadowMap shadow_map_;
+  GBuffer*                       get_buffer() const {return buffer_;}
+  std::vector<math::mat4> const& get_projection_view_matrices() const {return projection_view_matrices_;}
 
  private:
-  void rendering(SerializedScene const& scene,
-                 RenderContext const& ctx,
-                 CameraMode eye,
-                 Camera const& camera,
-                 FrameBufferObject* target);
 
-  LightingUberShader* shader_;
-  std::shared_ptr<Geometry> light_sphere_;
-  std::shared_ptr<Geometry> light_cone_;
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
+  void update_members(RenderContext const& ctx, unsigned map_size);
+  void render_geometry(RenderContext const & ctx, Frustum const& shadow_frustum, Camera const& scene_camera, unsigned cascade);
+
+  GBuffer* buffer_;
+
+  Serializer* serializer_;
+
+  Pipeline* pipeline_;
+
+  ShadowMapMeshShader* mesh_shader_;
+  ShadowMapNURBSShader* nurbs_shader_;
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::rasterizer_state_ptr rasterizer_state_front_;
-  scm::gl::rasterizer_state_ptr rasterizer_state_back_;
-  scm::gl::blend_state_ptr blend_state_;
+  scm::gl::rasterizer_state_ptr rasterizer_state_;
+  std::vector<math::mat4> projection_view_matrices_;
 };
 
 }
 
-#endif  // GUA_LIGHTING_PASS_HPP
+#endif  // GUA_SHADOW_MAP_HPP

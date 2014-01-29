@@ -27,16 +27,39 @@ layout(location=2) in vec2 gua_in_texcoord;
 
 uniform mat4 gua_projection_matrix;
 uniform mat4 gua_view_matrix;
-uniform vec3 gua_light_position;
+uniform vec3 gua_light_position_direction;
 
 // output
 out vec3 gua_light_position_screen_space;
 out vec2 gua_quad_coords;
 
+subroutine void CalculatePositionType();
+subroutine uniform CalculatePositionType compute_position;
+
+subroutine(CalculatePositionType)
+void gua_calculate_by_direction() {
+  vec4 tmp = gua_view_matrix * vec4(gua_light_position_direction, 0.0);
+
+  if (tmp.z > 0) {
+    // hide sun on wrong side
+    gua_light_position_screen_space = vec3(-10);
+  } else {
+
+    tmp = gua_projection_matrix * tmp;
+    gua_light_position_screen_space = (tmp/tmp.w).xyz;
+    gua_light_position_screen_space = gua_light_position_screen_space/gua_light_position_screen_space.z;
+  }
+}
+
+subroutine(CalculatePositionType)
+void gua_calculate_by_position() {
+  vec4 tmp = gua_projection_matrix * gua_view_matrix * vec4(gua_light_position_direction, 1.0);
+  gua_light_position_screen_space = (tmp/tmp.w).xyz;
+}
+
 // body
 void main() {
-    gua_quad_coords = gua_in_texcoord;
-    vec4 tmp = gua_projection_matrix * gua_view_matrix * vec4(gua_light_position, 1.0);
-    gua_light_position_screen_space = (tmp/tmp.w).xyz;
-    gl_Position = vec4(gua_in_position, 1.0);
+  gua_quad_coords = gua_in_texcoord;
+  compute_position();
+  gl_Position = vec4(gua_in_position, 1.0);
 }
