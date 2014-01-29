@@ -159,6 +159,7 @@ void LightingPass::rendering(SerializedScene const& scene,
                 split_2 = light.data.get_shadow_cascaded_splits()[2];
                 split_3 = light.data.get_shadow_cascaded_splits()[3];
                 split_4 = light.data.get_shadow_cascaded_splits()[4];
+
             } else {
                 WARNING("Exactly 5 splits have to be defined for cascaded shadow maps!");
             }

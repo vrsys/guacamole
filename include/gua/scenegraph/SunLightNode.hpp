@@ -46,10 +46,10 @@ class GUA_DLL SunLightNode : public Node {
     GUA_ADD_PROPERTY(bool,                enable_godrays,                         false);
     GUA_ADD_PROPERTY(bool,                enable_diffuse_shading,                 true);
     GUA_ADD_PROPERTY(bool,                enable_specular_shading,                true);
-    GUA_ADD_PROPERTY(unsigned,            shadow_map_size,                        512);
+    GUA_ADD_PROPERTY(unsigned,            shadow_map_size,                        1024);
     GUA_ADD_PROPERTY(float,               shadow_offset,                          0.001f);
-    GUA_ADD_PROPERTY(std::vector<float>,  shadow_cascaded_splits,                 std::vector<float>({0,0,0,0,0}));
-    GUA_ADD_PROPERTY(float,               shadow_near_clipping_in_sun_direction,  0);
+    GUA_ADD_PROPERTY(std::vector<float>,  shadow_cascaded_splits,                 std::vector<float>({0.1f, 2, 10, 50, 100.f}));
+    GUA_ADD_PROPERTY(float,               shadow_near_clipping_in_sun_direction,  100.f);
   };
 
   Configuration data;
