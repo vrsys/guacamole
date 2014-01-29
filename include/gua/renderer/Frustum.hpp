@@ -52,7 +52,7 @@ class Frustum {
   inline math::vec3 get_camera_position() const {
     return math::vec3(camera_transform_.column(3)[0],
                       camera_transform_.column(3)[1],
-                      camera_transform_.column(3)[2]);;
+                      camera_transform_.column(3)[2]);
   }
 
   inline math::mat4 const& get_camera_transform() const { return camera_transform_; }

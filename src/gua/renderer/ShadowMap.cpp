@@ -260,64 +260,12 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
         )
       );
 
-
       // // render geometries
       mesh_shader_->use(ctx);
       render_geometry(ctx, shadow_frustum, scene_camera, cascade);
       mesh_shader_->unuse(ctx);
     }
   }
-
-
-
-
-  // for (int y(0); y<2; ++y) {
-  //   for (int x(0); x<2; ++x) {
-
-  //     int cascade(y*2 + x);
-
-  //     ctx.render_context->set_viewport(scm::gl::viewport(
-  //         math::vec2(x * map_size, y * map_size),
-  //         math::vec2(map_size, map_size)));
-
-  //     Frustum cropped_frustum(Frustum::perspective(
-  //       scene_frustum.get_camera_transform(),
-  //       scene_frustum.get_screen_transform(),
-  //       splits[cascade], splits[cascade+1]
-  //     ));
-
-  //     auto cropped_frustum_corners(cropped_frustum.get_corners());
-  //     math::BoundingBox<math::vec3> extends_in_sun_space;
-
-  //     auto inverse_sun_transform(scm::math::inverse(transform));
-  //     for (auto const& corner: cropped_frustum_corners) {
-  //       auto corner_in_sun_space(inverse_sun_transform * corner);
-  //       extends_in_sun_space.expandBy(corner_in_sun_space);
-  //     }
-
-  //     auto center((extends_in_sun_space.min + extends_in_sun_space.max)/2);
-  //     auto size(extends_in_sun_space.max - extends_in_sun_space.min);
-  //     auto screen_in_sun_space(scm::math::make_translation(center) * scm::math::make_scale(size[0], size[1], 1.0f));
-
-  //     auto sun_screen_transform(transform * screen_in_sun_space);
-  //     auto sun_camera_transform(transform * scm::math::make_translation(center));
-  //     auto sun_camera_depth(transform * math::vec4(0, 0, size[2], 0.0f));
-
-  //     auto shadow_frustum(
-  //       Frustum::orthographic(
-  //         sun_camera_transform,
-  //         sun_screen_transform,
-  //         0,
-  //         scm::math::length(sun_camera_depth)
-  //       )
-  //     );
-
-  //     // // render geometries
-  //     mesh_shader_->use(ctx);
-  //     render_geometry(ctx, shadow_frustum, scene_camera, cascade);
-  //     mesh_shader_->unuse(ctx);
-  //   }
-  // }
 
   ctx.render_context->reset_state_objects();
 
