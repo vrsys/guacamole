@@ -58,8 +58,13 @@ class ShadowMap {
               Frustum const& scene_frustum,
               Camera const& scene_camera,
               math::mat4 const& transform,
-              unsigned map_size, float split_1,
-              float split_2, float split_3);
+              unsigned map_size,
+              float split_0,
+              float split_1,
+              float split_2,
+              float split_3,
+              float split_4,
+              float near_clipping_in_sun_direction);
 
   void print_shaders(std::string const& directory,
                      std::string const& name) const;

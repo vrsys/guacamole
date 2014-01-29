@@ -185,8 +185,10 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
               Frustum const& scene_frustum,
               Camera const& scene_camera,
               math::mat4 const& transform,
-              unsigned map_size, float split_1,
-              float split_2, float split_3) {
+              unsigned map_size, float split_0,
+              float split_1, float split_2,
+              float split_3, float split_4,
+              float near_clipping_in_sun_direction) {
 
   update_members(ctx, map_size*2);
   projection_view_matrices_ = std::vector<math::mat4>(4);
@@ -198,12 +200,10 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
   ctx.render_context->set_rasterizer_state(rasterizer_state_);
 
   std::vector<float> splits({
-    pipeline_->config.near_clip(),
-    split_1, split_2, split_3,
-    pipeline_->config.far_clip()
+    split_0, split_1, split_2, split_3, split_4
   });
 
-  if (pipeline_->config.near_clip() >= split_1 || pipeline_->config.far_clip() <= split_3) {
+  if (pipeline_->config.near_clip() > split_0 || pipeline_->config.far_clip() < split_4) {
     WARNING("Splits of cascaded shadow maps are not inside clipping range! Fallback to equidistant splits used.");
     float clipping_range(pipeline_->config.far_clip() - pipeline_->config.near_clip());
     splits = {
@@ -243,13 +243,13 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
 
       auto center(math::vec3((extends_in_sun_space.min[0] + extends_in_sun_space.max[0])/2,
                              (extends_in_sun_space.min[1] + extends_in_sun_space.max[1])/2,
-                              extends_in_sun_space.max[2]+50));
+                              extends_in_sun_space.max[2] + near_clipping_in_sun_direction));
 
       auto screen_in_sun_space(scm::math::make_translation(center) * scm::math::make_scale(size[0], size[1], 1.0f));
 
       auto sun_screen_transform(transform * screen_in_sun_space);
       auto sun_camera_transform(scm::math::make_translation(sun_screen_transform.column(3)[0], sun_screen_transform.column(3)[1], sun_screen_transform.column(3)[2]));
-      auto sun_camera_depth(transform * math::vec4(0, 0, size[2]+50, 0.0f));
+      auto sun_camera_depth(transform * math::vec4(0, 0, size[2] + near_clipping_in_sun_direction, 0.0f));
 
       auto shadow_frustum(
         Frustum::orthographic(
