@@ -31,6 +31,8 @@
 #include <gua/utils.hpp>
 #include <gua/renderer/DisplayData.hpp>
 
+#include <gua/renderer/LightingPass.hpp>
+
 #define LUMINANCE_MAP_SIZE 512
 
 namespace gua {

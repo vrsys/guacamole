@@ -28,6 +28,9 @@ in vec3  gua_lightinfo1;
 in vec3  gua_lightinfo2;
 in float gua_lightinfo3;
 in mat4  gua_lightinfo4;
+in mat4  gua_lightinfo5;
+in mat4  gua_lightinfo6;
+in mat4  gua_lightinfo7;
 
 // input from gbuffer
 uniform uvec2 gua_depth_gbuffer_in;
@@ -35,6 +38,11 @@ uniform uvec2 gua_depth_gbuffer_in;
 
 // uniforms
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+
+uniform mat4 gua_light_shadow_map_projection_view_matrix_0;
+uniform mat4 gua_light_shadow_map_projection_view_matrix_1;
+uniform mat4 gua_light_shadow_map_projection_view_matrix_2;
+uniform mat4 gua_light_shadow_map_projection_view_matrix_3;
 
 uniform vec3  gua_light_color;
 uniform float gua_light_falloff;
@@ -103,13 +111,12 @@ float gua_get_shadow(vec4 smap_coords) {
   );
 }
 
-float gua_get_shadow() {
+float gua_get_shadow(mat4 shadow_map_coords_matrix, vec2 lookup_offset) {
   if(!gua_light_casts_shadow)
     return 1.0;
 
-  mat4 shadow_map_coords_matrix = gua_lightinfo4;
   vec3 position = gua_get_position();
-  vec4 smap_coords = shadow_map_coords_matrix * vec4(position, 1.0);
+  vec4 smap_coords = shadow_map_coords_matrix * vec4(position, 1.0) + vec4(lookup_offset, 0, 0);
 
   float sum = 0;
   int x, y;
@@ -121,6 +128,12 @@ float gua_get_shadow() {
   float shadow = sum / 9.0;
 
   return shadow;
+}
+
+bool gua_is_inside_frustum(mat4 frustum, vec3 position) {
+  vec4 proj = frustum * vec4(position, 1.0);
+  proj /= proj.w;
+  return (abs(proj.x) <= 1 && abs(proj.y) <= 1 && abs(proj.z) <= 1);
 }
 
 subroutine void CalculateLightType();
@@ -172,7 +185,7 @@ void gua_calculate_spot_light() {
   if (dot(gbuffer_normal, gua_light_direction) < 0)
     discard;
 
-  float shadow = gua_get_shadow();
+  float shadow = gua_get_shadow(gua_lightinfo4, vec2(0));
 
   if(shadow <= 0.0)
     discard;
@@ -202,16 +215,21 @@ void gua_calculate_sun_light() {
   if (dot(gbuffer_normal, gua_light_direction) < 0)
     discard;
 
-  float shadow = 0.25;
-  float depth = gua_get_depth();
 
-  if (depth < 0.94) {
-    shadow = 1.0;
-  } else if (depth < 0.98) {
-    shadow = 0.75;
-  } else if (depth < 0.99) {
-    shadow = 0.5;
+  vec3 position = gua_get_position();
+
+  float shadow = 1.0;
+
+  if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_0, position)) {
+    shadow = gua_get_shadow(gua_lightinfo4, vec2(0, 0));
+  } else if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_1, position)) {
+    shadow = gua_get_shadow(gua_lightinfo5, vec2(1, 0));
+  } else if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_2, position)) {
+    shadow = gua_get_shadow(gua_lightinfo6, vec2(0, 1));
+  } else {
+    shadow = gua_get_shadow(gua_lightinfo7, vec2(1, 1));
   }
+
 
   gua_light_intensity = 1.0 * shadow;
 }

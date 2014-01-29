@@ -168,14 +168,10 @@ class GUA_DLL Pipeline {
   inline float get_application_fps() const { return application_fps_; }
   inline float get_rendering_fps() const { return rendering_fps_; }
 
+  SerializedScene const& get_current_scene(CameraMode mode) const;
+  inline SceneGraph const* get_current_graph() const { return current_graph_; }
+
   friend class Renderer;
-  friend class GBufferPass;
-  friend class LightingPass;
-  friend class FinalPass;
-  friend class CompositePass;
-  friend class PostFXPass;
-  friend class GeometryPass;
-  friend class FullscreenPass;
 
  private:
   void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
@@ -184,9 +180,6 @@ class GUA_DLL Pipeline {
   void set_context(RenderContext* ctx);
   void create_passes();
   void create_buffers();
-
-  SerializedScene const& get_current_scene(CameraMode mode) const;
-  inline SceneGraph const* get_current_graph() const { return current_graph_; }
 
   mutable std::mutex upload_mutex_;
 

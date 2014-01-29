@@ -35,16 +35,29 @@ class Frustum {
 
  public:
 
-  Frustum() {}
+  Frustum();
 
-  Frustum(math::mat4 const& camera_transform,
-          math::mat4 const& screen_transform,
-          float clip_near,
-          float clip_far);
+  static Frustum perspective(math::mat4 const& camera_transform,
+                             math::mat4 const& screen_transform,
+                             float clip_near,
+                             float clip_far);
 
-  inline math::vec3 const& get_camera_position() const {
-    return camera_position_;
+  static Frustum orthographic(math::mat4 const& camera_transform,
+                              math::mat4 const& screen_transform,
+                              float clip_near,
+                              float clip_far);
+
+  std::vector<math::vec3> get_corners() const;
+
+  inline math::vec3 get_camera_position() const {
+    return math::vec3(camera_transform_.column(3)[0],
+                      camera_transform_.column(3)[1],
+                      camera_transform_.column(3)[2]);;
   }
+
+  inline math::mat4 const& get_camera_transform() const { return camera_transform_; }
+  inline math::mat4 const& get_screen_transform() const { return screen_transform_; }
+
   inline math::mat4 const& get_projection() const { return projection_; }
   inline math::mat4 const& get_view() const { return view_; }
   inline float get_clip_near() const { return clip_near_; }
@@ -54,7 +67,12 @@ class Frustum {
 
  private:
 
-  math::vec3 camera_position_;
+  static void init_frustum_members(math::mat4 const& camera_transform,
+                         math::mat4 const& screen_transform,
+                         Frustum& frustum);
+
+  math::mat4 camera_transform_;
+  math::mat4 screen_transform_;
   math::mat4 projection_;
   math::mat4 view_;
   std::vector<math::vec4> planes_;

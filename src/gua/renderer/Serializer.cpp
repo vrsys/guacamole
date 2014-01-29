@@ -52,10 +52,7 @@ Serializer::Serializer()
     : data_(nullptr),
       current_camera_("", "", ""),
       current_render_mask_(""),
-      current_frustum_(math::mat4::identity(),
-                       math::mat4::identity(),
-                       0.f,
-                       0.f),
+      current_frustum_(),
       draw_bounding_boxes_(false),
       draw_rays_(false),
       enable_frustum_culling_(false) {}
