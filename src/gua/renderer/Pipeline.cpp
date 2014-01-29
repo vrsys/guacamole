@@ -114,6 +114,10 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                        float application_fps,
                        float rendering_fps) {
 
+  if (!config.get_enabled()) {
+    return;
+  }
+
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
   if (ShadingModel::current_revision != last_shading_model_revision_) {
@@ -232,10 +236,17 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
         return;
       }
 
-      current_scenes_[0].frustum = Frustum::perspective(eye->get_world_transform(),
-                                           screen->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
+      if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
+        current_scenes_[0].frustum = Frustum::perspective(eye->get_world_transform(),
+                                             screen->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      } else {
+        current_scenes_[0].frustum = Frustum::orthographic(eye->get_world_transform(),
+                                             screen->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      }
 
       serializer_->check(&current_scenes_[0],
                          current_graph_,
