@@ -50,6 +50,9 @@ struct PipelineConfiguration {
   // camera for this pipeline
   GUA_ADD_PROPERTY(Camera, camera, Camera());
 
+  // if set to false, this pipeline won't render anything
+  GUA_ADD_PROPERTY(bool, enabled, true);
+
   // the final image of this pipeline will be stored in the texture database
   // with this name. if enable_stereo is set to true, two images with postfixes
   // _left and _right will be stored

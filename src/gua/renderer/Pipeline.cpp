@@ -114,6 +114,10 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                        float application_fps,
                        float rendering_fps) {
 
+  if (!config.get_enabled()) {
+    return;
+  }
+
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
   if (ShadingModel::current_revision != last_shading_model_revision_) {
