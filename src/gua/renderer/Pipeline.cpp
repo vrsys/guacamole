@@ -232,10 +232,17 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
         return;
       }
 
-      current_scenes_[0].frustum = Frustum::perspective(eye->get_world_transform(),
-                                           screen->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
+      if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
+        current_scenes_[0].frustum = Frustum::perspective(eye->get_world_transform(),
+                                             screen->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      } else {
+        current_scenes_[0].frustum = Frustum::orthographic(eye->get_world_transform(),
+                                             screen->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      }
 
       serializer_->check(&current_scenes_[0],
                          current_graph_,

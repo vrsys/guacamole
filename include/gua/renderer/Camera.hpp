@@ -36,13 +36,20 @@ namespace gua {
  */
 
 struct GUA_DLL Camera {
-  Camera(std::string const& eye_l = "unknown_left_eye",
-         std::string const& eye_r = "unknown_right_eye",
-         std::string const& screen_l = "unknown_left_screen",
-         std::string const& screen_r = "unknown_right_screen",
-         std::string const& g = "scene_graph", std::string const& m = "")
+
+  enum ProjectionMode {
+    PERSPECTIVE,
+    ORTHOGRAPHIC
+  };
+
+  Camera(std::string const& eye_l =     "unknown_left_eye",
+         std::string const& eye_r =     "unknown_right_eye",
+         std::string const& screen_l =  "unknown_left_screen",
+         std::string const& screen_r =  "unknown_right_screen",
+         std::string const& g =         "scene_graph", std::string const& m = "",
+         ProjectionMode     p =         PERSPECTIVE)
       : eye_l(eye_l), eye_r(eye_r), screen_l(screen_l), screen_r(screen_r),
-        scene_graph(g), render_mask(m) {}
+        scene_graph(g), render_mask(m), mode(p) {}
 
   std::string eye_l;
   std::string eye_r;
@@ -50,6 +57,7 @@ struct GUA_DLL Camera {
   std::string screen_r;
   std::string scene_graph;
   std::string render_mask;
+  ProjectionMode mode;
 };
 
 }
