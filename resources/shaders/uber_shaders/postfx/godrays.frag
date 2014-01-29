@@ -41,7 +41,7 @@ layout(location=0) out vec3 gua_out_color;
 subroutine( GetColorType )
 float get_color_clamped(vec2 texcoords) {
     float depth = texture2D( gua_get_float_sampler(gua_ray_texture), texcoords).r * 2 -1;
-    float intensity = depth > gua_light_position_screen_space.z ? 1.0 : 0.0;
+    float intensity = depth >= gua_light_position_screen_space.z ? 1.0 : 0.0;
     intensity *= max(0.0, 1.0-length((gua_quad_coords - gua_light_position_screen_space.xy * 0.5 - 0.5)/vec2(1.0, gua_aspect_ratio)));
     return pow(intensity, 15.0);
 }

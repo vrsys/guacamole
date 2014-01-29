@@ -44,6 +44,7 @@ void gua_calculate_by_direction() {
     // hide sun on wrong side
     gua_light_position_screen_space = vec3(-10);
   } else {
+
     tmp = gua_projection_matrix * tmp;
     gua_light_position_screen_space = (tmp/tmp.w).xyz;
     gua_light_position_screen_space = gua_light_position_screen_space/gua_light_position_screen_space.z;
