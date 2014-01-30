@@ -114,6 +114,10 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                        float application_fps,
                        float rendering_fps) {
 
+  if (!config.get_enabled()) {
+    return;
+  }
+
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
   if (ShadingModel::current_revision != last_shading_model_revision_) {
@@ -232,10 +236,17 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
         return;
       }
 
-      current_scenes_[0].frustum = Frustum(eye->get_world_transform(),
-                                           screen->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
+      if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
+        current_scenes_[0].frustum = Frustum::perspective(eye->get_world_transform(),
+                                             screen->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      } else {
+        current_scenes_[0].frustum = Frustum::orthographic(eye->get_world_transform(),
+                                             screen->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      }
 
       serializer_->check(&current_scenes_[0],
                          current_graph_,
@@ -273,11 +284,11 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       }
 
 
-      current_scenes_[0].frustum = Frustum(eye_l->get_world_transform(),
+      current_scenes_[0].frustum = Frustum::perspective(eye_l->get_world_transform(),
                                            screen_l->get_scaled_world_transform(),
                                            config.near_clip(),
                                            config.far_clip());
-      current_scenes_[1].frustum = Frustum(eye_r->get_world_transform(),
+      current_scenes_[1].frustum = Frustum::perspective(eye_r->get_world_transform(),
                                            screen_r->get_scaled_world_transform(),
                                            config.near_clip(),
                                            config.far_clip());
@@ -309,7 +320,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                                ->get_color_buffers(TYPE_FLOAT)[0]);
       } else {
         window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-                             ->get_color_buffers(TYPE_FLOAT)[0]);
+                               ->get_color_buffers(TYPE_FLOAT)[0]);
       }
 
       window_->finish_frame();

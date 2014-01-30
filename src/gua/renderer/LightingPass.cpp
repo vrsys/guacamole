@@ -40,11 +40,7 @@ LightingPass::LightingPass(Pipeline* pipeline)
       shader_(new LightingUberShader),
       light_sphere_(nullptr),
       light_cone_(nullptr),
-      serializer_(new Serializer),
-      shadow_map_mesh_shader_(new ShadowMapMeshShader),
-      shadow_map_nurbs_shader_(new ShadowMapNURBSShader),
-      shadow_map_(nullptr),
-      shadow_map_projection_view_matrix_(math::mat4::identity()) {
+      shadow_map_(pipeline) {
     light_sphere_ = GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
     light_cone_ = GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
 }
@@ -53,12 +49,6 @@ LightingPass::LightingPass(Pipeline* pipeline)
 ////////////////////////////////////////////////////////////////////////////////
 
 LightingPass::~LightingPass() {
-    if (shadow_map_mesh_shader_)
-      delete shadow_map_mesh_shader_;
-    if (shadow_map_nurbs_shader_)
-      delete shadow_map_nurbs_shader_;
-    if (serializer_)
-      delete serializer_;
     if (shader_)
       delete shader_;
 }
@@ -83,17 +73,19 @@ LayerMapping const* LightingPass::get_gbuffer_mapping() const {
 /* virtual */ void LightingPass::print_shaders(std::string const& directory,
                                                std::string const& name) const {
   shader_->save_to_file(directory, name + "/lighting");
-  shadow_map_mesh_shader_->save_to_file(directory, name + "/shadow/mesh");
-  shadow_map_nurbs_shader_->save_to_file(directory, name + "/shadow/nurbs");
+  shadow_map_.print_shaders(directory, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool LightingPass::pre_compile_shaders(RenderContext const& ctx) {
-    if (shader_)                 return shader_->upload_to(ctx);
-    if (shadow_map_mesh_shader_) return shadow_map_mesh_shader_->upload_to(ctx);
-    // if (shadow_map_nurbs_shader_) shadow_map_nurbs_shader_->upload_to(ctx);
-    return false;
+
+    bool success(false);
+
+    if (shader_) success = shader_->upload_to(ctx);
+    if (success) success = shadow_map_.pre_compile_shaders(ctx);
+
+    return success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,9 +99,13 @@ void LightingPass::rendering(SerializedScene const& scene,
         depth_stencil_state_ =
             ctx.render_device->create_depth_stencil_state(false, false);
 
-    if (!rasterizer_state_)
-        rasterizer_state_ = ctx.render_device
+    if (!rasterizer_state_front_)
+        rasterizer_state_front_ = ctx.render_device
             ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT);
+
+    if (!rasterizer_state_back_)
+        rasterizer_state_back_ = ctx.render_device
+            ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
 
     if (!blend_state_)
         blend_state_ = ctx.render_device->create_blend_state(true,
@@ -118,12 +114,100 @@ void LightingPass::rendering(SerializedScene const& scene,
                                                              scm::gl::FUNC_ONE,
                                                              scm::gl::FUNC_ONE);
 
+    if (!fullscreen_quad_)
+      fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+        ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-    ctx.render_context->set_rasterizer_state(rasterizer_state_);
+    ctx.render_context->set_rasterizer_state(rasterizer_state_back_);
     ctx.render_context->set_blend_state(blend_state_);
 
     shader_->set_material_uniforms(
         scene.materials_, ShadingModel::LIGHTING_STAGE, ctx);
+    shader_->use(ctx);
+
+    Pass::bind_inputs(*shader_, eye, ctx);
+    Pass::set_camera_matrices(
+        *shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+
+
+    // -------------------------- sun lights -----------------------------------
+    shader_->set_subroutine(ctx,
+                            scm::gl::STAGE_VERTEX_SHADER,
+                            "compute_light",
+                            "gua_calculate_sun_light");
+
+    shader_->set_subroutine(ctx,
+                            scm::gl::STAGE_FRAGMENT_SHADER,
+                            "compute_light",
+                            "gua_calculate_sun_light");
+
+
+    for (auto const& light : scene.sun_lights_) {
+
+        if (light.data.get_enable_shadows()) {
+            shader_->unuse(ctx);
+            target->unbind(ctx);
+            ctx.render_context->reset_state_objects();
+
+            float split_0(0.f), split_1(0.f), split_2(0.f), split_3(0.f), split_4(0.f);
+
+            if (light.data.get_shadow_cascaded_splits().size() == 5) {
+
+                split_0 = light.data.get_shadow_cascaded_splits()[0];
+                split_1 = light.data.get_shadow_cascaded_splits()[1];
+                split_2 = light.data.get_shadow_cascaded_splits()[2];
+                split_3 = light.data.get_shadow_cascaded_splits()[3];
+                split_4 = light.data.get_shadow_cascaded_splits()[4];
+
+            } else {
+                WARNING("Exactly 5 splits have to be defined for cascaded shadow maps!");
+            }
+
+            shadow_map_.render_cascaded(ctx, scene.frustum, camera,
+                                        light.transform,
+                                        light.data.get_shadow_map_size(),
+                                        split_0, split_1, split_2, split_3, split_4,
+                                        light.data.get_shadow_near_clipping_in_sun_direction());
+
+            shader_->use(ctx);
+            target->bind(ctx);
+
+            ctx.render_context->set_viewport(scm::gl::viewport(
+                math::vec2(0, 0),
+                math::vec2(float(target->width()), float(target->height()))));
+
+            ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+            ctx.render_context->set_rasterizer_state(rasterizer_state_back_);
+            ctx.render_context->set_blend_state(blend_state_);
+
+            shader_->set_uniform(ctx, shadow_map_.get_buffer()->get_depth_buffer(), "gua_light_shadow_map");
+
+            float shadow_map_portion(1.f * light.data.get_shadow_map_size() / shadow_map_.get_buffer()->width());
+            shader_->set_uniform(ctx, shadow_map_portion, "gua_light_shadow_map_portion");
+
+            for (int i(0); i<4; ++i) {
+              shader_->set_uniform(ctx, shadow_map_.get_projection_view_matrices()[i], "gua_light_shadow_map_projection_view_matrix_" + string_utils::to_string(i));
+            }
+        }
+
+        shader_->set_uniform(
+            ctx, light.data.get_enable_diffuse_shading(), "gua_light_diffuse_enable");
+        shader_->set_uniform(ctx,
+                             light.data.get_enable_specular_shading(),
+                             "gua_light_specular_enable");
+        shader_->set_uniform(ctx, light.transform, "gua_model_matrix");
+        shader_->set_uniform(ctx, light.data.get_color().vec3(), "gua_light_color");
+        shader_->set_uniform(ctx, light.data.get_enable_shadows(), "gua_light_casts_shadow");
+        shader_->set_uniform(
+            ctx, light.data.get_shadow_offset(), "gua_shadow_offset");
+        fullscreen_quad_->draw(ctx.render_context);
+    }
+
+    // ------------------------- point lights ----------------------------------
+
+    ctx.render_context->set_rasterizer_state(rasterizer_state_front_);
+
     shader_->set_subroutine(ctx,
                             scm::gl::STAGE_VERTEX_SHADER,
                             "compute_light",
@@ -134,11 +218,6 @@ void LightingPass::rendering(SerializedScene const& scene,
                             "compute_light",
                             "gua_calculate_point_light");
 
-    shader_->use(ctx);
-
-    Pass::bind_inputs(*shader_, eye, ctx);
-    Pass::set_camera_matrices(
-        *shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
 
     for (auto const& light : scene.point_lights_) {
         shader_->set_uniform(
@@ -153,6 +232,8 @@ void LightingPass::rendering(SerializedScene const& scene,
         light_sphere_->draw(ctx);
     }
 
+
+    // -------------------------- spot lights ----------------------------------
     shader_->set_subroutine(ctx,
                             scm::gl::STAGE_VERTEX_SHADER,
                             "compute_light",
@@ -169,7 +250,7 @@ void LightingPass::rendering(SerializedScene const& scene,
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
-            render_shadow_map(ctx, camera, light.transform, light.data.get_shadow_map_size());
+            shadow_map_.render(ctx, camera, light.transform, light.data.get_shadow_map_size());
 
             shader_->use(ctx);
             target->bind(ctx);
@@ -179,20 +260,14 @@ void LightingPass::rendering(SerializedScene const& scene,
                 math::vec2(float(target->width()), float(target->height()))));
 
             ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-            ctx.render_context->set_rasterizer_state(rasterizer_state_);
+            ctx.render_context->set_rasterizer_state(rasterizer_state_front_);
             ctx.render_context->set_blend_state(blend_state_);
 
-            shader_->set_uniform(
-                ctx, shadow_map_->get_depth_buffer(), "gua_light_shadow_map");
+            shader_->set_uniform(ctx, shadow_map_.get_buffer()->get_depth_buffer(), "gua_light_shadow_map");
 
-            float shadow_map_portion(1.f * light.data.get_shadow_map_size() / shadow_map_->width());
-            shader_->set_uniform(
-                ctx, shadow_map_portion, "gua_light_shadow_map_portion");
-
-            shader_->set_uniform(ctx,
-                                 shadow_map_projection_view_matrix_,
-                                 "gua_light_shadow_map_projection_view_matrix");
-
+            float shadow_map_portion(1.f * light.data.get_shadow_map_size() / shadow_map_.get_buffer()->width());
+            shader_->set_uniform(ctx, shadow_map_portion, "gua_light_shadow_map_portion");
+            shader_->set_uniform(ctx, shadow_map_.get_projection_view_matrices()[0], "gua_light_shadow_map_projection_view_matrix_0");
         }
 
         shader_->set_uniform(
@@ -214,100 +289,6 @@ void LightingPass::rendering(SerializedScene const& scene,
     shader_->unuse(ctx);
 
     ctx.render_context->reset_state_objects();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void LightingPass::render_shadow_map(RenderContext const & ctx,
-                                     Camera const& scene_camera,
-                                     math::mat4 const & transform,
-                                     unsigned map_size) {
-
-    //check whether shadow map size is sufficient
-    if (shadow_map_ && shadow_map_->width() < map_size) {
-      shadow_map_->remove_buffers(ctx);
-      delete shadow_map_;
-      shadow_map_ = nullptr;
-    }
-
-    if (!shadow_map_) {
-        scm::gl::sampler_state_desc state;
-        state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
-
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-        std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> >
-            gbuffer_desc;
-        gbuffer_desc.push_back(std::make_pair(BufferComponent::DEPTH_16, state));
-        shadow_map_ = new GBuffer(gbuffer_desc, map_size, map_size);
-#else
-        shadow_map_ = new GBuffer({
-          { BufferComponent::DEPTH_16, state }
-        },
-                                  map_size,
-                                  map_size);
-#endif
-        shadow_map_->create(ctx);
-    }
-
-    shadow_map_->bind(ctx);
-
-    ctx.render_context->set_viewport(scm::gl::viewport(
-        math::vec2(0, 0),
-        math::vec2(map_size, map_size)));
-
-    shadow_map_->clear_depth_stencil_buffer(ctx);
-
-    math::mat4 screen_transform(scm::math::make_translation(0.f, 0.f, -1.f));
-    screen_transform = transform * screen_transform;
-
-    Frustum shadow_frustum(transform,
-                           screen_transform,
-                           pipeline_->config.near_clip(),
-                           pipeline_->config.far_clip());
-
-    SerializedScene scene;
-    scene.frustum = shadow_frustum;
-    serializer_->check(&scene,
-                       pipeline_->get_current_graph(),
-                       Camera("", "", scene_camera.render_mask),
-                       false,
-                       false,
-                       true);
-
-    shadow_map_projection_view_matrix_ =
-        shadow_frustum.get_projection() * shadow_frustum.get_view();
-
-    shadow_map_mesh_shader_->set_uniform(
-        ctx, shadow_map_projection_view_matrix_, "gua_projection_view_matrix");
-    shadow_map_mesh_shader_->use(ctx);
-
-    // let derived class render all geometries
-    if (!shadow_map_depth_stencil_state_)
-        shadow_map_depth_stencil_state_ =
-            ctx.render_device->create_depth_stencil_state(true, true);
-
-    if (!shadow_map_rasterizer_state_)
-        shadow_map_rasterizer_state_ = ctx.render_device
-            ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
-
-    ctx.render_context->set_depth_stencil_state(shadow_map_depth_stencil_state_);
-    ctx.render_context->set_rasterizer_state(shadow_map_rasterizer_state_);
-
-    for (auto const& node : scene.meshnodes_) {
-        auto geometry = GeometryDatabase::instance()->lookup(node.data.get_geometry());
-
-        if (geometry) {
-            shadow_map_mesh_shader_->set_uniform(
-                ctx, node.transform, "gua_model_matrix");
-            geometry->draw(ctx);
-        }
-    }
-
-    ctx.render_context->reset_state_objects();
-
-    shadow_map_mesh_shader_->unuse(ctx);
-
-    shadow_map_->unbind(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
