@@ -61,7 +61,7 @@ class Serializer : public NodeVisitor {
    */
   void check(SerializedScene* output,
              SceneGraph const* scene_graph,
-             Camera const& camera,
+             std::string const& render_mask,
              bool draw_bounding_boxes,
              bool draw_rays,
              bool enable_frustum_culling);
@@ -163,7 +163,6 @@ class Serializer : public NodeVisitor {
   void visit_children(Node* node);
 
   Frustum current_frustum_;
-  Camera current_camera_;
   Mask current_render_mask_;
 
   SerializedScene* data_;
