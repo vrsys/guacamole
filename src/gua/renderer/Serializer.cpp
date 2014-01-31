@@ -50,7 +50,6 @@ namespace gua {
 
 Serializer::Serializer()
     : data_(nullptr),
-      current_camera_("", "", ""),
       current_render_mask_(""),
       current_frustum_(),
       draw_bounding_boxes_(false),
@@ -61,7 +60,7 @@ Serializer::Serializer()
 
 void Serializer::check(SerializedScene* output,
                        SceneGraph const* scene_graph,
-                       Camera const& camera,
+                       std::string const& render_mask,
                        bool draw_bounding_boxes,
                        bool draw_rays,
                        bool enable_frustum_culling) {
@@ -116,8 +115,7 @@ void Serializer::check(SerializedScene* output,
 
   enable_frustum_culling_ = enable_frustum_culling;
 
-  current_camera_ = camera;
-  current_render_mask_ = Mask(current_camera_.render_mask);
+  current_render_mask_ = Mask(render_mask);
   current_frustum_ = output->frustum;
 
   scene_graph->accept(*this);

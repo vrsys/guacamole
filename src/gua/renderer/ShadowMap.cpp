@@ -112,7 +112,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx, Frustum const& shadow
   scene.frustum = shadow_frustum;
   serializer_->check(&scene,
                      pipeline_->get_current_graph(),
-                     Camera("", "", scene_camera.render_mask),
+                     scene_camera.render_mask,
                      false,
                      false,
                      true);

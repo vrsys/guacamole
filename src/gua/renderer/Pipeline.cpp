@@ -250,7 +250,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
       serializer_->check(&current_scenes_[0],
                          current_graph_,
-                         config.camera(),
+                         config.camera().render_mask,
                          config.enable_bbox_display(),
                          config.enable_ray_display(),
                          config.enable_frustum_culling());
@@ -295,14 +295,14 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
       serializer_->check(&current_scenes_[0],
                          current_graph_,
-                         config.camera(),
+                         config.camera().render_mask,
                          config.enable_bbox_display(),
                          config.enable_ray_display(),
                          config.enable_frustum_culling());
 
       serializer_->check(&current_scenes_[1],
                          current_graph_,
-                         config.camera(),
+                         config.camera().render_mask,
                          config.enable_bbox_display(),
                          config.enable_ray_display(),
                          config.enable_frustum_culling());
