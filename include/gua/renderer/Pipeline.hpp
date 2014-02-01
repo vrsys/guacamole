@@ -45,6 +45,12 @@ class FinalUberShader;
 class PostFXShader;
 class Serializer;
 
+enum BackgroundMode {
+  COLOR = 0,
+  SKYMAP_TEXTURE = 1,
+  QUAD_TEXTURE = 2,
+};
+
 struct PipelineConfiguration {
 
   // camera for this pipeline
@@ -101,6 +107,7 @@ struct PipelineConfiguration {
   GUA_ADD_PROPERTY(utils::Color3f, fog_color, utils::Color3f());
 
   // background image / color
+  GUA_ADD_PROPERTY(BackgroundMode, background_mode, BackgroundMode::SKYMAP_TEXTURE);
   GUA_ADD_PROPERTY(std::string, background_texture, "");
   GUA_ADD_PROPERTY(utils::Color3f, background_color, utils::Color3f());
 
@@ -132,12 +139,13 @@ struct PipelineConfiguration {
 class GUA_DLL Pipeline {
  public:
 
-   enum PipelineStage {  geometry = 0,
-                         lighting = 1,
-                         shading = 2,
-                         compositing = 3,
-                         postfx = 4
-                      };
+   enum PipelineStage {
+    geometry = 0,
+    lighting = 1,
+    shading = 2,
+    compositing = 3,
+    postfx = 4
+  };
 
  public:
 
