@@ -1,67 +1,76 @@
+/******************************************************************************
+ * guacamole - delicious VR                                                   *
+ *                                                                            *
+ * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
+ * Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
+ *                                                                            *
+ * This program is free software: you can redistribute it and/or modify it    *
+ * under the terms of the GNU General Public License as published by the Free *
+ * Software Foundation, either version 3 of the License, or (at your option)  *
+ * any later version.                                                         *
+ *                                                                            *
+ * This program is distributed in the hope that it will be useful, but        *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY *
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License   *
+ * for more details.                                                          *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License along    *
+ * with this program. If not, see <http://www.gnu.org/licenses/>.             *
+ *                                                                            *
+ ******************************************************************************/
 
-// Copyright (c) 2012 Christopher Lux <christopherlux@gmail.com>
-// Distributed under the Modified BSD License, see license.txt.
+@include "shaders/common/header.glsl"
 
-#version 420 core
+// input from vertex shader ----------------------------------------------------
+in vec3 gua_position_varying;
+@input_definition
 
-#extension GL_EXT_gpu_shader5 : enable
-#extension GL_ARB_explicit_uniform_location : enable
-#extension GL_EXT_texture_array : enable
+// uniforms
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
-in VertexData {
-    vec3 normal;
-    vec2 texture_coord;
-    vec3 view_dir;
-} VertexIn;
+//video3d
+//uniform sampler2DArray color_video3d_texture;
 
-uniform vec3    light_ambient;
-uniform vec3    light_diffuse;
-uniform vec3    light_specular;
-uniform vec3    light_position;
-uniform vec3    kColorIntesity;
+// material specific uniforms
+@uniform_definition
 
-uniform int layer;
+// outputs ---------------------------------------------------------------------
+@output_definition
 
-uniform vec3    material_ambient;
-uniform vec3    material_diffuse;
-uniform vec3    material_specular;
-uniform float   material_shininess;
-uniform float   material_opacity;
+// methods ---------------------------------------------------------------------
 
-layout (binding = 0) uniform sampler2DArray kinect_colors;
-layout (binding = 2) uniform sampler2D sample_colors;
+// global gua_* methods
+vec2 gua_get_quad_coords() {
+  return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
+}
 
+@include "shaders/uber_shaders/common/get_sampler_casts.glsl"
 
-layout(location = 0) out vec4        out_color;
+uint gua_get_material_id() {
+  return gua_uint_gbuffer_varying_0.x;
+}
 
-void main()
-{
-    vec4 res;
-    vec3 n = normalize(VertexIn.normal);
-    vec3 l = normalize(light_position); // assume parallel light!
-    vec3 v = normalize(VertexIn.view_dir);
-    vec3 h = normalize(l + v);//gl_LightSource[0].halfVector);//
+vec3 gua_get_position() {
+  return gua_position_varying;
+}
 
-    vec4 txlC = texture(sample_colors, VertexIn.texture_coord);
-    vec4 txlK = texture2DArray(kinect_colors, vec3(VertexIn.texture_coord.xy, layer) );
+void gua_set_position(vec3 world_position) {
+    vec4 pos = gua_projection_matrix * gua_view_matrix * vec4(world_position, 1.0);
+    float ndc = pos.z/pos.w;
+    gl_FragDepth = (((gl_DepthRange.diff) * ndc) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
+}
 
-    vec4 txl = vec4( kColorIntesity.r * txlK.r + (1-kColorIntesity.r) * txlC.r,
-                kColorIntesity.g * txlK.g + (1-kColorIntesity.g) * txlC.g,
-                kColorIntesity.b * txlK.b + (1-kColorIntesity.b) * txlC.b,
-                txlC.a);
+// material specific methods
+@material_methods
 
-    //vec4 txl = texture(kinect_depths, VertexIn.texture_coord);
+// main ------------------------------------------------------------------------
+void main() {
 
-    if(light_position != vec3(0.0, 0.0, 0.0)){
-        res.rgb =  light_ambient * material_ambient
-             + light_diffuse * txl.rgb * max(0.0, dot(n, l))
-             + light_specular * material_specular * pow(max(0.0, dot(n, h)), material_shininess);
-        res.a = material_opacity;
-    }
-    else{
-        res = txl;
-    }
+  gl_FragDepth = gl_FragCoord.z;
 
-    out_color = res;
+  // big switch, one case for each material
+  @material_switch
+
+  gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
 }
 

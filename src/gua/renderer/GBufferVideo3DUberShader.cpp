@@ -71,13 +71,11 @@ void GBufferVideo3DUberShader::create(std::set<std::string> const& material_name
 
 std::string const GBufferVideo3DUberShader::_final_vertex_shader(UberShaderFactory const& vshader_factory, LayerMapping const& vshader_output_mapping) const
 {
-#if 0
   std::string vertex_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_mesh_vert) //TODO gbuffer_video3d_video3d_vert
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_video3d_vert) //TODO gbuffer_video3d_video3d_vert
   );
-#else
 
-std::string vertex_shader = R"(
+/*std::string vertex_shader = R"(
 
 // header
 #version 420
@@ -158,9 +156,7 @@ void main() {
 
   gl_Position = gua_projection_matrix * gua_view_matrix * gua_model_matrix * POS_ws;
 }
-)";
-
-#endif
+)";*/
 
 
   return vertex_shader;
@@ -168,13 +164,11 @@ void main() {
 
 std::string const GBufferVideo3DUberShader::_final_geometry_shader(UberShaderFactory const& vshader_factory, LayerMapping const& vshader_output_mapping) const
 {
-#if 0
   std::string geometry_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_video3d_geom) //TODO gbuffer_video3d_video3d_vert
   );
-#else
 
-std::string geometry_shader = R"(
+/*std::string geometry_shader = R"(
 
 // header
 #version 420
@@ -336,9 +330,9 @@ void main()
       EndPrimitive();
   }
 }
-  )";
+  )";*/
 
-     // material specific uniforms
+  // material specific uniforms
   string_utils::replace(geometry_shader, "@uniform_definition",
     get_uniform_mapping()->get_uniform_definition());
 
@@ -353,7 +347,7 @@ void main()
   // print main switch(es)
   string_utils::replace(geometry_shader, "@material_switch",
     UberShader::print_material_switch(vshader_factory));
-#endif
+
 
   return geometry_shader;
   //TODO
@@ -362,7 +356,7 @@ void main()
 std::string const GBufferVideo3DUberShader::_final_fragment_shader(UberShaderFactory const& fshader_factory, LayerMapping const& vshader_output_mapping) const
 {
   std::string fragment_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_mesh_frag)//TODO gbuffer_video3d_video3d_frag
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_video3d_frag)//TODO gbuffer_video3d_video3d_frag
     );
 
   // input from vertex shader
