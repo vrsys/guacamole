@@ -137,6 +137,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
     mesh_shader_->set_material_uniforms(
         scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
 
+    mesh_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
+    mesh_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+
     Pass::bind_inputs(*mesh_shader_, eye, ctx);
     Pass::set_camera_matrices(*mesh_shader_,
                               camera,
@@ -252,6 +255,10 @@ void GBufferPass::rendering(SerializedScene const& scene,
             scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
         nurbs_shader_->set_material_uniforms(
             scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+
+        // TODO: add this functionality to NURBS!
+        // nurbs_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
+        // nurbs_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
 
         nurbs_shader_->set_uniform(ctx,
                                    pipeline_->config.get_max_tesselation(),

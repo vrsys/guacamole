@@ -59,6 +59,10 @@ struct PipelineConfiguration {
   // if set to false, this pipeline won't render anything
   GUA_ADD_PROPERTY(bool, enabled, true);
 
+  // global clipping plane nothing
+  GUA_ADD_PROPERTY(bool, enable_global_clipping_plane, false);
+  GUA_ADD_PROPERTY(math::vec4, global_clipping_plane, math::vec4(0, 1, 0, 0));
+
   // the final image of this pipeline will be stored in the texture database
   // with this name. if enable_stereo is set to true, two images with postfixes
   // _left and _right will be stored

@@ -85,6 +85,8 @@ struct SerializedScene {
    * The frustum.
    */
   Frustum frustum;
+  bool enable_global_clipping_plane;
+  math::vec4 global_clipping_plane;
 
   /**
    * All used materials.

@@ -248,6 +248,9 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                                              config.far_clip());
       }
 
+      current_scenes_[0].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
+      current_scenes_[0].global_clipping_plane = config.get_global_clipping_plane();
+
       serializer_->check(&current_scenes_[0],
                          current_graph_,
                          config.camera().render_mask,
@@ -283,15 +286,30 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
         return;
       }
 
+      if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
+        current_scenes_[0].frustum = Frustum::perspective(eye_l->get_world_transform(),
+                                             screen_l->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+        current_scenes_[1].frustum = Frustum::perspective(eye_r->get_world_transform(),
+                                             screen_r->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      } else {
+        current_scenes_[0].frustum = Frustum::orthographic(eye_l->get_world_transform(),
+                                             screen_l->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+        current_scenes_[1].frustum = Frustum::orthographic(eye_r->get_world_transform(),
+                                             screen_r->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      }
 
-      current_scenes_[0].frustum = Frustum::perspective(eye_l->get_world_transform(),
-                                           screen_l->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-      current_scenes_[1].frustum = Frustum::perspective(eye_r->get_world_transform(),
-                                           screen_r->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
+      current_scenes_[0].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
+      current_scenes_[0].global_clipping_plane = config.get_global_clipping_plane();
+      current_scenes_[1].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
+      current_scenes_[1].global_clipping_plane = config.get_global_clipping_plane();
 
       serializer_->check(&current_scenes_[0],
                          current_graph_,
