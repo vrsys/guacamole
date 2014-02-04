@@ -454,8 +454,8 @@ void Pipeline::create_buffers() {
     stereobuffers.push_back(passes_[PipelineStage::compositing]->get_gbuffer());
 
     scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
-                                      scm::gl::WRAP_REPEAT,
-                                      scm::gl::WRAP_REPEAT);
+                                      scm::gl::WRAP_MIRRORED_REPEAT,
+                                      scm::gl::WRAP_MIRRORED_REPEAT);
 
     passes_[PipelineStage::postfx]->create(*context_, config, { { BufferComponent::F3, state } });
     passes_[PipelineStage::postfx]->set_inputs(stereobuffers);

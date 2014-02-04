@@ -71,8 +71,8 @@ void GBufferPass::create(
         layers) {
 
     scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_MIP_NEAREST,
-                                      scm::gl::WRAP_CLAMP_TO_EDGE,
-                                      scm::gl::WRAP_CLAMP_TO_EDGE);
+                                      scm::gl::WRAP_MIRRORED_REPEAT,
+                                      scm::gl::WRAP_MIRRORED_REPEAT);
 
     auto tmp(layers);
     tmp.insert(tmp.begin(), std::make_pair(BufferComponent::DEPTH_24, state));
