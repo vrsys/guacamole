@@ -32,6 +32,7 @@
 
 #include <gua/scenegraph/Node.hpp>
 #include <gua/scenegraph/TransformNode.hpp>
+#include <gua/scenegraph/LODNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
@@ -52,6 +53,7 @@ Serializer::Serializer()
     : data_(nullptr),
       current_render_mask_(""),
       current_frustum_(),
+      current_center_of_interest_(),
       draw_bounding_boxes_(false),
       draw_rays_(false),
       enable_frustum_culling_(false) {}
@@ -117,6 +119,7 @@ void Serializer::check(SerializedScene* output,
 
   current_render_mask_ = Mask(render_mask);
   current_frustum_ = output->frustum;
+  current_center_of_interest_ = output->center_of_interest;
 
   scene_graph->accept(*this);
 }
@@ -126,6 +129,33 @@ void Serializer::check(SerializedScene* output,
 /* virtual */ void Serializer::visit(Node* node) {
   if (is_visible(node)) {
     visit_children(node);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+/* virtual */ void Serializer::visit(LODNode* node) {
+  if (is_visible(node)) {
+
+    float distance_to_camera(scm::math::length(node->get_world_position() - current_center_of_interest_));
+
+    unsigned child_index(0);
+
+    if (!node->data.get_lod_distances().empty()) {
+
+      child_index = node->get_children().size();
+
+      for (unsigned i(0); i < node->data.get_lod_distances().size(); ++i) {
+        if (node->data.get_lod_distances()[i] > distance_to_camera) {
+          child_index = i;
+          break;
+        }
+      }
+    }
+
+    if (child_index < node->get_children().size()) {
+      node->get_children()[child_index]->accept(*this);
+    }
   }
 }
 

@@ -50,11 +50,13 @@ class ShadowMap {
   virtual ~ShadowMap();
 
   void render(RenderContext const& ctx,
+              math::vec3 const& center_of_interest,
               Camera const& scene_camera,
               math::mat4 const& transform,
               unsigned map_size);
 
   void render_cascaded(RenderContext const& ctx,
+              math::vec3 const& center_of_interest,
               Frustum const& scene_frustum,
               Camera const& scene_camera,
               math::mat4 const& transform,
@@ -77,7 +79,11 @@ class ShadowMap {
  private:
 
   void update_members(RenderContext const& ctx, unsigned map_size);
-  void render_geometry(RenderContext const & ctx, Frustum const& shadow_frustum, Camera const& scene_camera, unsigned cascade);
+  void render_geometry(RenderContext const & ctx,
+                       math::vec3 const& center_of_interest,
+                       Frustum const& shadow_frustum,
+                       Camera const& scene_camera,
+                       unsigned cascade);
 
   GBuffer* buffer_;
 

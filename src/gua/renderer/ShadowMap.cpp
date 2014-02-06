@@ -107,9 +107,14 @@ void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::render_geometry(RenderContext const & ctx, Frustum const& shadow_frustum, Camera const& scene_camera, unsigned cascade) {
+void ShadowMap::render_geometry(RenderContext const & ctx,
+                                math::vec3 const& center_of_interest,
+                                Frustum const& shadow_frustum,
+                                Camera const& scene_camera,
+                                unsigned cascade) {
   SerializedScene scene;
   scene.frustum = shadow_frustum;
+  scene.center_of_interest = center_of_interest;
   serializer_->check(&scene,
                      pipeline_->get_current_graph(),
                      scene_camera.render_mask,
@@ -139,6 +144,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx, Frustum const& shadow
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render(RenderContext const& ctx,
+                       math::vec3 const& center_of_interest,
                        Camera const& scene_camera,
                        math::mat4 const& transform,
                        unsigned map_size) {
@@ -171,7 +177,7 @@ void ShadowMap::render(RenderContext const& ctx,
 
     // render geometries
     mesh_shader_->use(ctx);
-    render_geometry(ctx, shadow_frustum, scene_camera, 0);
+    render_geometry(ctx, center_of_interest, shadow_frustum, scene_camera, 0);
     mesh_shader_->unuse(ctx);
 
     ctx.render_context->reset_state_objects();
@@ -182,6 +188,7 @@ void ShadowMap::render(RenderContext const& ctx,
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render_cascaded(RenderContext const& ctx,
+              math::vec3 const& center_of_interest,
               Frustum const& scene_frustum,
               Camera const& scene_camera,
               math::mat4 const& transform,
@@ -262,7 +269,7 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
 
       // // render geometries
       mesh_shader_->use(ctx);
-      render_geometry(ctx, shadow_frustum, scene_camera, cascade);
+      render_geometry(ctx, center_of_interest, shadow_frustum, scene_camera, cascade);
       mesh_shader_->unuse(ctx);
     }
   }

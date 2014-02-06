@@ -164,7 +164,7 @@ void LightingPass::rendering(SerializedScene const& scene,
                 WARNING("Exactly 5 splits have to be defined for cascaded shadow maps!");
             }
 
-            shadow_map_.render_cascaded(ctx, scene.frustum, camera,
+            shadow_map_.render_cascaded(ctx, scene.center_of_interest, scene.frustum, camera,
                                         light.transform,
                                         light.data.get_shadow_map_size(),
                                         split_0, split_1, split_2, split_3, split_4,
@@ -250,7 +250,7 @@ void LightingPass::rendering(SerializedScene const& scene,
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
-            shadow_map_.render(ctx, camera, light.transform, light.data.get_shadow_map_size());
+            shadow_map_.render(ctx, scene.center_of_interest, camera, light.transform, light.data.get_shadow_map_size());
 
             shader_->use(ctx);
             target->bind(ctx);

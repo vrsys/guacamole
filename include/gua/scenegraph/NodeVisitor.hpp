@@ -30,6 +30,7 @@ namespace gua {
 
 class Node;
 class TransformNode;
+class LODNode;
 class GeometryNode;
 class VolumeNode;
 class PointLightNode;
@@ -84,6 +85,15 @@ class NodeVisitor {
    * \param cam   Pointer to TransformNode
    */
   virtual void visit(TransformNode* node) { visit(reinterpret_cast<Node*>(node)); }
+
+  /**
+   * Visits an LODNode
+   *
+   * This function provides the interface to visit an LODNode
+   *
+   * \param cam   Pointer to LODNode
+   */
+  virtual void visit(LODNode* node) { visit(reinterpret_cast<Node*>(node)); }
 
   /**
    * Visits a GeometryNode

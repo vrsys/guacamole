@@ -76,6 +76,15 @@ class Serializer : public NodeVisitor {
   /* virtual */ void visit(Node* node);
 
   /**
+   * Visits an LODNode
+   *
+   * This function provides the interface to visit an LODNode
+   *
+   * \param cam   Pointer to LODNode
+   */
+  /* virtual */ void visit(LODNode* lod);
+
+  /**
    * Visits a GeometryNode
    *
    * This function provides the interface to visit a GeometryNode
@@ -164,6 +173,7 @@ class Serializer : public NodeVisitor {
 
   Frustum current_frustum_;
   Mask current_render_mask_;
+  math::vec3 current_center_of_interest_;
 
   SerializedScene* data_;
   bool draw_bounding_boxes_;

@@ -89,6 +89,11 @@ struct SerializedScene {
   math::vec4 global_clipping_plane;
 
   /**
+   * The center of interest.
+   */
+  math::vec3 center_of_interest;
+
+  /**
    * All used materials.
    */
   std::set<std::string> materials_;
