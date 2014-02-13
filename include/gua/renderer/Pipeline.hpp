@@ -111,7 +111,7 @@ struct PipelineConfiguration {
   GUA_ADD_PROPERTY(utils::Color3f, fog_color, utils::Color3f());
 
   // background image / color
-  GUA_ADD_PROPERTY(BackgroundMode, background_mode, BackgroundMode::SKYMAP_TEXTURE);
+  GUA_ADD_PROPERTY(BackgroundMode, background_mode, BackgroundMode::COLOR);
   GUA_ADD_PROPERTY(std::string, background_texture, "");
   GUA_ADD_PROPERTY(utils::Color3f, background_color, utils::Color3f());
 
