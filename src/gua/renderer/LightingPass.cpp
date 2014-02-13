@@ -60,6 +60,7 @@ void LightingPass::apply_material_mapping(
     std::set<std::string> const& material_names,
     std::vector<LayerMapping const*> const& inputs) const {
   shader_->create(material_names, inputs);
+  shadow_map_.apply_material_mapping(material_names);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
