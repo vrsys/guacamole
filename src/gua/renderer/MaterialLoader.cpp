@@ -270,7 +270,7 @@ std::string const MaterialLoader::load_shading_model(
       gbuffer_fragment_body += std::string(
           "                     \n\
                 if (texture2D(opacity_map, "
-          "varying_texcoords).r < 0.9) \n\
+          "varying_texcoords).r < 0.5) \n\
                     discard;        "
           "                                   \n\
             ");

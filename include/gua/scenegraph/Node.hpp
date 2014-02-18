@@ -127,6 +127,15 @@ class GUA_DLL Node {
   }
 
   /**
+   * Removes a child.
+   *
+   * This removes a Node from the Node's children list.
+   *
+   * \param child     The Node to be removed.
+   */
+  void remove_child(std::shared_ptr<Node> const& child);
+
+  /**
    * Returns the Node's children list.
    *
    * \return list     The Node's children list.
@@ -312,15 +321,6 @@ class GUA_DLL Node {
   virtual void update_bounding_box() const;
 
  private:
-
-  /**
-   * Removes a child.
-   *
-   * This removes a Node from the Node's children list.
-   *
-   * \param child     The Node to be removed.
-   */
-  void remove_child(std::shared_ptr<Node> const& child);
 
   /**
    * Sets the Node's parent.

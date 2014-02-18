@@ -30,11 +30,13 @@ namespace gua {
 
 class Node;
 class TransformNode;
+class LODNode;
 class GeometryNode;
 class VolumeNode;
 class PointLightNode;
 class ScreenNode;
 class SpotLightNode;
+class SunLightNode;
 class RayNode;
 class TexturedQuadNode;
 
@@ -85,6 +87,15 @@ class NodeVisitor {
   virtual void visit(TransformNode* node) { visit(reinterpret_cast<Node*>(node)); }
 
   /**
+   * Visits an LODNode
+   *
+   * This function provides the interface to visit an LODNode
+   *
+   * \param cam   Pointer to LODNode
+   */
+  virtual void visit(LODNode* node) { visit(reinterpret_cast<Node*>(node)); }
+
+  /**
    * Visits a GeometryNode
    *
    * This function provides the interface to visit a GeometryNode
@@ -119,6 +130,15 @@ class NodeVisitor {
    * \param cam   Pointer to SpotLightNode
    */
   virtual void visit(SpotLightNode* node) { visit(reinterpret_cast<Node*>(node)); }
+
+  /**
+   * Visits a SunLightNode
+   *
+   * This function provides the interface to visit a SunLightNode
+   *
+   * \param cam   Pointer to SunLightNode
+   */
+  virtual void visit(SunLightNode* node) { visit(reinterpret_cast<Node*>(node)); }
 
   /**
    * Visits a SpotLightNode

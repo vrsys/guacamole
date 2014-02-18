@@ -19,40 +19,46 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TEXTURED_QUAD_NODE_HPP
-#define GUA_TEXTURED_QUAD_NODE_HPP
+#ifndef GUA_SUN_LIGHT_NODE_HPP
+#define GUA_SUN_LIGHT_NODE_HPP
 
+#include <gua/platform.hpp>
 #include <gua/scenegraph/Node.hpp>
+
+#include <gua/utils/Color3f.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
+#include <string>
+
 /**
- * This class is used to represent a screen in the SceneGraph.
+ * This class is used to represent light in the SceneGraph.
  *
  */
 
 namespace gua {
 
-class GUA_DLL TexturedQuadNode : public Node {
+class GUA_DLL SunLightNode : public Node {
  public:
 
   struct Configuration {
-    GUA_ADD_PROPERTY(std::string,   texture,            "");
-    GUA_ADD_PROPERTY(math::vec2,    size,               math::vec2(1.f, 1.f));
-    GUA_ADD_PROPERTY(bool,          is_stereo_texture,  false);
-    GUA_ADD_PROPERTY(bool,          flip_x,  false);
-    GUA_ADD_PROPERTY(bool,          flip_y,  false);
+    GUA_ADD_PROPERTY(utils::Color3f,      color,                                  utils::Color3f(1.f, 1.f, 1.f));
+    GUA_ADD_PROPERTY(bool,                enable_shadows,                         false);
+    GUA_ADD_PROPERTY(bool,                enable_godrays,                         false);
+    GUA_ADD_PROPERTY(bool,                enable_diffuse_shading,                 true);
+    GUA_ADD_PROPERTY(bool,                enable_specular_shading,                true);
+    GUA_ADD_PROPERTY(unsigned,            shadow_map_size,                        1024);
+    GUA_ADD_PROPERTY(float,               shadow_offset,                          0.001f);
+    GUA_ADD_PROPERTY(std::vector<float>,  shadow_cascaded_splits,                 std::vector<float>({0.1f, 2, 10, 50, 100.f}));
+    GUA_ADD_PROPERTY(float,               shadow_near_clipping_in_sun_direction,  100.f);
   };
 
   Configuration data;
 
-  TexturedQuadNode() {}
+  SunLightNode() {}
 
-  TexturedQuadNode(std::string const& name,
-                   Configuration const& configuration = Configuration(),
-                   math::mat4 const& transform = math::mat4::identity());
-
-  math::mat4 get_scaled_transform() const;
-  math::mat4 get_scaled_world_transform() const;
+  SunLightNode(std::string const& name,
+                Configuration const& configuration = Configuration(),
+                math::mat4 const& transform = math::mat4::identity());
 
   /**
    * Accepts a visitor and calls concrete visit method
@@ -62,16 +68,15 @@ class GUA_DLL TexturedQuadNode : public Node {
    */
   /* virtual */ void accept(NodeVisitor&);
 
-  /*virtual*/ void update_bounding_box() const;
+  void update_bounding_box() const;
 
  private:
   /**
    *
    */
   std::shared_ptr<Node> copy() const;
-
 };
 
 }
 
-#endif  // GUA_TEXTURED_QUAD_NODE_HPP
+#endif  // GUA_SUN_LIGHT_NODE_HPP

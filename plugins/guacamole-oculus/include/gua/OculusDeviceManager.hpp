@@ -27,6 +27,7 @@ namespace gua
 			virtual ~OculusDeviceManager();
 
 			OVR::HMDDevice* getNextAvailableDevice();
+			OVR::SensorDevice* getNextSensor();
 
 		protected:
 			OculusDeviceManager();

@@ -67,7 +67,12 @@ typedef scm::math::quat<float> quat;
  *
  * \return                  A frustum matrix.
  */
-math::mat4 const GUA_DLL compute_frustum(math::vec4 const& eye_position,
+math::mat4 const GUA_DLL compute_perspective_frustum(math::vec4 const& eye_position,
+                                 math::mat4 const& screen_transform,
+                                 float near_plane,
+                                 float far_plane);
+
+math::mat4 const GUA_DLL compute_orthographic_frustum(math::vec4 const& eye_position,
                                  math::mat4 const& screen_transform,
                                  float near_plane,
                                  float far_plane);

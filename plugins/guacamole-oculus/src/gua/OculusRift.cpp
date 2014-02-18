@@ -25,6 +25,7 @@
 
 // external headers
 #include <OVR.h>
+#include <iostream>
 
 namespace gua {
 
@@ -48,7 +49,7 @@ OculusRift::OculusRift(std::string const& display):
   config.set_right_resolution(math::vec2ui(1280/2, 800));
   config.set_right_position(math::vec2ui(1280/2, 0));
 
-  //Every time an Oculus Rift Window is created, it is checked if an additional Oculus is connected
+  //Every time an Oculus Rift Window is created, it is associated to the next available OR-device
   device_ = OculusDeviceManager::getInstance().getNextAvailableDevice();
 
   if (!device_) {
@@ -66,7 +67,7 @@ OculusRift::OculusRift(std::string const& display):
     distortion_[3] = hmd.DistortionK[3];
   }
 
-  sensor_         = device_->GetSensor();
+  sensor_         = OculusDeviceManager::getInstance().getNextSensor();
   sensor_fusion_  = new OVR::SensorFusion();
 
   if (sensor_) {

@@ -31,6 +31,8 @@
 #include <gua/utils.hpp>
 #include <gua/renderer/DisplayData.hpp>
 
+#include <gua/renderer/LightingPass.hpp>
+
 #define LUMINANCE_MAP_SIZE 512
 
 namespace gua {
@@ -444,6 +446,15 @@ bool PostFXPass::render_godrays(Camera const& camera,
         }
     }
 
+    if (!any_godrays) {
+        for (auto const& light: scene.sun_lights_) {
+            if (light.data.get_enable_godrays()) {
+                any_godrays = true;
+                break;
+            }
+        }
+    }
+
     postfx_shaders_[0]->set_uniform(ctx, any_godrays, "gua_enable_godrays");
 
     if (any_godrays) {
@@ -491,12 +502,17 @@ bool PostFXPass::render_godrays(Camera const& camera,
             ctx.render_context->reset_state_objects();
         };
 
+        god_ray_shader_->set_subroutine(ctx,
+                            scm::gl::STAGE_VERTEX_SHADER,
+                            "compute_position",
+                            "gua_calculate_by_position");
+
         for (auto const& light: scene.point_lights_) {
             if (light.data.get_enable_godrays()) {
                 god_ray_shader_->set_uniform(ctx, light.data.get_color().vec3(), "gua_light_color");
                 god_ray_shader_->set_uniform(ctx, math::vec3(light.transform.column(3)[0],
                                                              light.transform.column(3)[1],
-                                                             light.transform.column(3)[2]), "gua_light_position");
+                                                             light.transform.column(3)[2]), "gua_light_position_direction");
                 render();
             }
         }
@@ -506,7 +522,22 @@ bool PostFXPass::render_godrays(Camera const& camera,
                 god_ray_shader_->set_uniform(ctx, light.data.get_color().vec3(), "gua_light_color");
                 god_ray_shader_->set_uniform(ctx, math::vec3(light.transform.column(3)[0],
                                                              light.transform.column(3)[1],
-                                                             light.transform.column(3)[2]), "gua_light_position");
+                                                             light.transform.column(3)[2]), "gua_light_position_direction");
+                render();
+            }
+        }
+
+        god_ray_shader_->set_subroutine(ctx,
+                            scm::gl::STAGE_VERTEX_SHADER,
+                            "compute_position",
+                            "gua_calculate_by_direction");
+
+        for (auto const& light: scene.sun_lights_) {
+            if (light.data.get_enable_godrays()) {
+                god_ray_shader_->set_uniform(ctx, light.data.get_color().vec3(), "gua_light_color");
+                math::vec3 direction(0, 0, 1);
+                direction = light.transform * direction;
+                god_ray_shader_->set_uniform(ctx, direction, "gua_light_position_direction");
                 render();
             }
         }

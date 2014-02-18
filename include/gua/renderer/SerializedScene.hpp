@@ -27,6 +27,7 @@
 #include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
+#include <gua/scenegraph/SunLightNode.hpp>
 #include <gua/scenegraph/ScreenNode.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/scenegraph/TexturedQuadNode.hpp>
@@ -82,9 +83,21 @@ struct SerializedScene {
   std::vector<SerializedNode<SpotLightNode::Configuration> > spot_lights_;
 
   /**
+   * All sun light nodes.
+   */
+  std::vector<SerializedNode<SunLightNode::Configuration> > sun_lights_;
+
+  /**
    * The frustum.
    */
   Frustum frustum;
+  bool enable_global_clipping_plane;
+  math::vec4 global_clipping_plane;
+
+  /**
+   * The center of interest.
+   */
+  math::vec3 center_of_interest;
 
   /**
    * All used materials.

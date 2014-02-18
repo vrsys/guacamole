@@ -26,6 +26,8 @@ in vec3 gua_position_varying;
 @input_definition
 
 // uniforms
+uniform bool gua_enable_global_clipping_plane;
+uniform vec4 gua_global_clipping_plane;
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
 // material specific uniforms
@@ -37,6 +39,7 @@ in vec3 gua_position_varying;
 // methods ---------------------------------------------------------------------
 
 // global gua_* methods
+
 vec2 gua_get_quad_coords() {
   return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
 }
@@ -57,11 +60,20 @@ void gua_set_position(vec3 world_position) {
     gl_FragDepth = (((gl_DepthRange.diff) * ndc) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
 }
 
+void gua_clip_against_global_clipping_plane() {
+  if (gua_enable_global_clipping_plane) {
+    if (dot(gua_get_position(), gua_global_clipping_plane.xyz) + gua_global_clipping_plane.w < 0) {
+      discard;
+    }
+  }
+}
+
 // material specific methods
 @material_methods
 
 // main ------------------------------------------------------------------------
 void main() {
+  gua_clip_against_global_clipping_plane();
 
   gl_FragDepth = gl_FragCoord.z;
 

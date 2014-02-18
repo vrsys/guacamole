@@ -19,51 +19,57 @@
  *                                                                            *
  ******************************************************************************/
 
-@include "shaders/common/header.glsl"
+#ifndef GUA_LOD_NODE_HPP
+#define GUA_LOD_NODE_HPP
 
-subroutine float GetColorType(vec2 texcoords);
-subroutine uniform GetColorType get_color;
+#include <gua/platform.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
+#include <gua/utils/configuration_macro.hpp>
 
-uniform uvec2 gua_ray_texture;
-uniform float gua_filter_length;
-uniform float gua_aspect_ratio;
-uniform vec3 gua_light_color;
+/**
+ * This class is used to represent an empty node in the SceneGraph.
+ *
+ */
 
-in vec3 gua_light_position_screen_space;
-in vec2 gua_quad_coords;
+namespace gua {
 
-// outputs
-layout(location=0) out vec3 gua_out_color;
+class GUA_DLL LODNode : public TransformNode {
+ public:
+
+  struct Configuration {
+      GUA_ADD_PROPERTY(std::vector<float>,  lod_distances,   std::vector<float>());
+  };
+
+  Configuration data;
+
+  LODNode() {};
+
+  /**
+   * Constructor.
+   *
+   * This constructs a LODNode with the given parameters.
+   *
+   * \param name       The Node's name
+   * \param transform  The transformation of the object the Node contains.
+   */
+  LODNode(std::string const& name,
+          Configuration const& configuration = Configuration(),
+          math::mat4 const& transform = math::mat4::identity());
 
 
-@include "shaders/uber_shaders/common/get_sampler_casts.glsl"
+  /**
+   * Accepts a visitor and calls concrete visit method
+   *
+   * This method implements the visitor pattern for Nodes
+   *
+   */
+  /* virtual */ void accept(NodeVisitor&);
 
-subroutine( GetColorType )
-float get_color_clamped(vec2 texcoords) {
-    float depth = texture2D( gua_get_float_sampler(gua_ray_texture), texcoords).r * 2 -1;
-    float intensity = depth >= gua_light_position_screen_space.z ? 1.0 : 0.0;
-    intensity *= max(0.0, 1.0-length((gua_quad_coords - gua_light_position_screen_space.xy * 0.5 - 0.5)/vec2(1.0, gua_aspect_ratio)));
-    return pow(intensity, 15.0);
+ private:
+
+  std::shared_ptr<Node> copy() const;
+};
+
 }
 
-subroutine( GetColorType )
-float get_color_smooth(vec2 texcoords) {
-    return texture2D( gua_get_float_sampler(gua_ray_texture), texcoords).r;
-}
-
-void main() {
-    const float samples = 6.0;
-
-    vec2 light_position = gua_light_position_screen_space.xy * 0.5 + 0.5;
-    vec2 delta = light_position - gua_quad_coords;
-    vec2 stepv =  delta / (samples * gua_filter_length);
-    vec2 texcoords = gua_quad_coords;
-
-    float col = 0.0;
-    for (float i = 0.0; i < samples; i += 1.0) {
-        col += get_color(texcoords);
-        texcoords += stepv;
-    }
-
-    gua_out_color = col / samples * gua_light_color;
-}
+#endif  // GUA_LOD_NODE_HPP

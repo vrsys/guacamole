@@ -45,10 +45,23 @@ class FinalUberShader;
 class PostFXShader;
 class Serializer;
 
+enum BackgroundMode {
+  COLOR = 0,
+  SKYMAP_TEXTURE = 1,
+  QUAD_TEXTURE = 2,
+};
+
 struct PipelineConfiguration {
 
   // camera for this pipeline
   GUA_ADD_PROPERTY(Camera, camera, Camera());
+
+  // if set to false, this pipeline won't render anything
+  GUA_ADD_PROPERTY(bool, enabled, true);
+
+  // global clipping plane nothing
+  GUA_ADD_PROPERTY(bool, enable_global_clipping_plane, false);
+  GUA_ADD_PROPERTY(math::vec4, global_clipping_plane, math::vec4(0, 1, 0, 0));
 
   // the final image of this pipeline will be stored in the texture database
   // with this name. if enable_stereo is set to true, two images with postfixes
@@ -98,6 +111,7 @@ struct PipelineConfiguration {
   GUA_ADD_PROPERTY(utils::Color3f, fog_color, utils::Color3f());
 
   // background image / color
+  GUA_ADD_PROPERTY(BackgroundMode, background_mode, BackgroundMode::SKYMAP_TEXTURE);
   GUA_ADD_PROPERTY(std::string, background_texture, "");
   GUA_ADD_PROPERTY(utils::Color3f, background_color, utils::Color3f());
 
@@ -129,12 +143,13 @@ struct PipelineConfiguration {
 class GUA_DLL Pipeline {
  public:
 
-   enum PipelineStage {  geometry = 0,
-                         lighting = 1,
-                         shading = 2,
-                         compositing = 3,
-                         postfx = 4
-                      };
+   enum PipelineStage {
+    geometry = 0,
+    lighting = 1,
+    shading = 2,
+    compositing = 3,
+    postfx = 4
+  };
 
  public:
 
@@ -168,14 +183,10 @@ class GUA_DLL Pipeline {
   inline float get_application_fps() const { return application_fps_; }
   inline float get_rendering_fps() const { return rendering_fps_; }
 
+  SerializedScene const& get_current_scene(CameraMode mode) const;
+  inline SceneGraph const* get_current_graph() const { return current_graph_; }
+
   friend class Renderer;
-  friend class GBufferPass;
-  friend class LightingPass;
-  friend class FinalPass;
-  friend class CompositePass;
-  friend class PostFXPass;
-  friend class GeometryPass;
-  friend class FullscreenPass;
 
  private:
   void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
@@ -184,9 +195,6 @@ class GUA_DLL Pipeline {
   void set_context(RenderContext* ctx);
   void create_passes();
   void create_buffers();
-
-  SerializedScene const& get_current_scene(CameraMode mode) const;
-  inline SceneGraph const* get_current_graph() const { return current_graph_; }
 
   mutable std::mutex upload_mutex_;
 

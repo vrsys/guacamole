@@ -19,51 +19,26 @@
  *                                                                            *
  ******************************************************************************/
 
-@include "shaders/common/header.glsl"
+// class header
+#include <gua/scenegraph/LODNode.hpp>
 
-subroutine float GetColorType(vec2 texcoords);
-subroutine uniform GetColorType get_color;
+// guacamole headers
+#include <gua/scenegraph/NodeVisitor.hpp>
 
-uniform uvec2 gua_ray_texture;
-uniform float gua_filter_length;
-uniform float gua_aspect_ratio;
-uniform vec3 gua_light_color;
+namespace gua {
 
-in vec3 gua_light_position_screen_space;
-in vec2 gua_quad_coords;
-
-// outputs
-layout(location=0) out vec3 gua_out_color;
+LODNode::LODNode(std::string const& name, Configuration const& configuration, math::mat4 const& transform)
+    : TransformNode(name, transform), data(configuration) {}
 
 
-@include "shaders/uber_shaders/common/get_sampler_casts.glsl"
+/* virtual */ void LODNode::accept(NodeVisitor& visitor) {
 
-subroutine( GetColorType )
-float get_color_clamped(vec2 texcoords) {
-    float depth = texture2D( gua_get_float_sampler(gua_ray_texture), texcoords).r * 2 -1;
-    float intensity = depth >= gua_light_position_screen_space.z ? 1.0 : 0.0;
-    intensity *= max(0.0, 1.0-length((gua_quad_coords - gua_light_position_screen_space.xy * 0.5 - 0.5)/vec2(1.0, gua_aspect_ratio)));
-    return pow(intensity, 15.0);
+  visitor.visit(this);
 }
 
-subroutine( GetColorType )
-float get_color_smooth(vec2 texcoords) {
-    return texture2D( gua_get_float_sampler(gua_ray_texture), texcoords).r;
+std::shared_ptr<Node> LODNode::copy() const {
+  return std::make_shared<LODNode>(get_name(), data, get_transform());
 }
 
-void main() {
-    const float samples = 6.0;
 
-    vec2 light_position = gua_light_position_screen_space.xy * 0.5 + 0.5;
-    vec2 delta = light_position - gua_quad_coords;
-    vec2 stepv =  delta / (samples * gua_filter_length);
-    vec2 texcoords = gua_quad_coords;
-
-    float col = 0.0;
-    for (float i = 0.0; i < samples; i += 1.0) {
-        col += get_color(texcoords);
-        texcoords += stepv;
-    }
-
-    gua_out_color = col / samples * gua_light_color;
 }
