@@ -73,7 +73,7 @@ namespace gua {
 
 		unsigned max_dimension_volume = scm::math::max(scm::math::max(_volume_dimensions.x, _volume_dimensions.y), _volume_dimensions.z);
 
-		step_size(0.5f / (float)max_dimension_volume);
+		step_size(1.0f / (float)max_dimension_volume);
 
 		_volume_dimensions_normalized = math::vec3((float)_volume_dimensions.x / (float)max_dimension_volume,
 													(float)_volume_dimensions.y / (float)max_dimension_volume,
@@ -133,13 +133,14 @@ namespace gua {
 		std::unique_lock<std::mutex> lock(upload_mutex_);
 
 		if (_volume_boxes_ptr.size() <= ctx.id){
+            std::cout << "Resize Ressoures for ctx.id " << ctx.id << std::endl;
 			_volume_texture_ptr.resize(ctx.id + 1);
 			_transfer_texture_ptr.resize(ctx.id + 1);
 			_volume_boxes_ptr.resize(ctx.id + 1);
-			_sstate.resize(ctx.id + 1);
+            _sstate.resize(ctx.id + 1);
+            _rstate.resize(ctx.id + 1);
 		}
 			
-
 		//scm::gl::volume_loader scm_volume_loader;
 
 		//texture_3d_ptr              load_texture_3d(render_device&       in_device,
@@ -159,10 +160,15 @@ namespace gua {
 
 		//box_volume_geometry
 		_volume_boxes_ptr[ctx.id] =
-			scm::gl::box_volume_geometry_ptr(new scm::gl::box_volume_geometry(ctx.render_device, scm::math::vec3(0.0), _volume_dimensions_normalized));
+            scm::gl::box_volume_geometry_ptr(new scm::gl::box_volume_geometry(ctx.render_device, bounding_box_.min, bounding_box_.max));
 		
 		_sstate[ctx.id] = ctx.render_device->create_sampler_state(
 			scm::gl::FILTER_MIN_MAG_MIP_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+
+        _rstate[ctx.id] = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID,
+                                                                        scm::gl::CULL_FRONT,
+                                                                        scm::gl::ORIENT_CCW,
+                                                                        true);
 	}
 
 	std::shared_ptr<Texture2D>
@@ -307,7 +313,9 @@ namespace gua {
 			upload_to(ctx);
 		}
 
-		scm::gl::context_vertex_input_guard vig(ctx.render_context);
+        scm::gl::context_all_guard vig(ctx.render_context);
+
+        ctx.render_context->set_rasterizer_state(_rstate[ctx.id]);
 
 		ctx.render_context->apply();
 		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);
@@ -333,9 +341,20 @@ namespace gua {
 		
 		cs->set_uniform(ctx, _volume_texture_ptr[ctx.id], "volume_texture");
 		cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id], "transfer_texture");
-		cs->set_uniform(ctx, _step_size, "sampling_distance");
-		cs->set_uniform(ctx, _volume_dimensions_normalized, "volume_bounds");
+        cs->set_uniform(ctx, math::vec3(_step_size, 1.0f, _step_size), "sampling_distance");
+        cs->set_uniform(ctx, math::vec3::zero(), "volume_bbox_min");
+        cs->set_uniform(ctx, _volume_dimensions_normalized, "volume_bbox_max");
+        cs->set_uniform(ctx, math::vec3(1.0) / math::vec3(_volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z), "scale_obj_to_tex");
+        cs->set_uniform(ctx, math::vec2(0.0, 1.0), "value_range");
 
+        //std::cout << "_volume_block->_volume_bbox_min    " << math::vec3::zero() << std::endl;
+        //std::cout << "_volume_block->_volume_bbox_max    " << _volume_dimensions_normalized << std::endl;
+        //std::cout << "_volume_block->_scale_obj_to_tex   " << math::vec3(1.0) / _volume_dimensions_normalized << std::endl;
+        //std::cout << "_volume_block->_sampling_distance  " << math::vec3(_step_size, 1.0f, _step_size) << std::endl;
+        ////std::cout << "_volume_block->_os_camera_position " << _volume_block->_os_camera_position << std::endl;
+
+        //getchar();
+        //
 		//_volume_texture_ptr[ctx.id]->make_non_resident(ctx);
 		//_transfer_texture_ptr[ctx.id]->make_non_resident(ctx);
 

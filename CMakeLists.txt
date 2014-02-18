@@ -69,6 +69,7 @@ set(LIB_PATHS
 set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/build
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+	${SCHISM_LARGE_DATA_SHADER_DIR}
     ${SCHISM_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIRS}
@@ -141,6 +142,20 @@ ELSEIF(MSVC)
         ${CMAKE_CURRENT_SOURCE_DIR}/resources
         ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
         ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+    )
+
+    ADD_CUSTOM_TARGET(CompileResourcesSCMLargeData ALL
+       DEPENDS ${RESOURCES} guarc
+    )
+
+    SET (_GUARC_EXECUTABLE "")
+    SET (_GUARC_EXECUTABLE "/guarc/$(Configuration)/guarc.exe")
+
+    ADD_CUSTOM_COMMAND(TARGET CompileResourcesSCMLargeData POST_BUILD
+    	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}${_GUARC_EXECUTABLE}
+        ${SCHISM_LARGE_DATA_SHADER_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R_LD.inl
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R_LD.inl
     )
 ENDIF(UNIX)
 

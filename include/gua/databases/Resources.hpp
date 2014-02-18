@@ -39,7 +39,8 @@ namespace Resources {
   std::vector<unsigned char> const& lookup(std::string const& file);
 
   // generated header
-  #include <gua/generated/R.inl>
+    #include <gua/generated/R.inl>
+    #include <gua/generated/R_LD.inl>
 
 }
 }

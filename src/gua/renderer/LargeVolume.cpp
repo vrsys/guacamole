@@ -115,7 +115,7 @@ namespace gua {
 		_volume_file_path(vfile_name),
 		_vtexture_info(),
 		_renderer_settings(),
-		_sample_distance(0.01),
+		_step_size(0.01),
 		_volume_boxes_ptr(),
 		_update_transfer_function(true),
 		upload_mutex_()
@@ -178,11 +178,11 @@ namespace gua {
 		_alpha_transfer.clear();
 		_color_transfer.clear();
 
-#if 1
+#if 0
 		_alpha_transfer.add_stop(0, 1.0f);		
-		_alpha_transfer.add_stop(0.45f, 0.0f);
+		_alpha_transfer.add_stop(0.40f, 0.0f);
 		_alpha_transfer.add_stop(0.5f, 0.0f);
-		_alpha_transfer.add_stop(0.55f, 0.0f);
+		_alpha_transfer.add_stop(0.60f, 0.0f);
 		_alpha_transfer.add_stop(1.0f, 1.0f);
 #elif 0
 		_alpha_transfer.add_stop(0.0f, 0.0f);
@@ -190,12 +190,25 @@ namespace gua {
 		_alpha_transfer.add_stop(0.4f, 0.2f);
 		_alpha_transfer.add_stop(0.7f, 0.0f);
 		_alpha_transfer.add_stop(1.0f, 1.0f);
-#else
+#elif 0
 		_alpha_transfer.add_stop(0, 1.0f);		
 		_alpha_transfer.add_stop(1.0f, 1.0f);
+#elif 0
+        _alpha_transfer.add_stop(0, 1.0f);
+        _alpha_transfer.add_stop(0.45f, 0.0f);
+        _alpha_transfer.add_stop(0.50f, 0.0f);
+        _alpha_transfer.add_stop(0.55f, 0.0f);
+        _alpha_transfer.add_stop(1.0f, 1.0f);
+#else
+        _alpha_transfer.add_stop(0.0f, 0.0f);
+        _alpha_transfer.add_stop(50.f / 255, 0.01f);
+        _alpha_transfer.add_stop(100.f / 255, 0.01f);
+        _alpha_transfer.add_stop(110.f / 255, 0.0f);
+        _alpha_transfer.add_stop(160.0f / 255, 0.8f);
+        _alpha_transfer.add_stop(255.0f / 255, 1.0f);
 #endif
 
-#if 1
+#if 0
 		// blue-grey-orange
 		_color_transfer.add_stop(0, scm::math::vec3f(0.0f, 1.0f, 1.0f));
 		_color_transfer.add_stop(0.25f, scm::math::vec3f(0.0f, 0.0f, 1.0f));
@@ -204,12 +217,25 @@ namespace gua {
 		_color_transfer.add_stop(0.625f, scm::math::vec3f(0.530973f, 0.27027f, 0.0f));
 		_color_transfer.add_stop(0.75f, scm::math::vec3f(1.0f, 0.333333f, 0.0f));
 		_color_transfer.add_stop(1.0f, scm::math::vec3f(1.0f, 1.0f, 0.0f));
-#else	
+#elif 0	
 		// blue-white-red
 		_color_transfer.add_stop(0.0f, scm::math::vec3f(0.0f, 0.0f, 0.0f));
 		_color_transfer.add_stop(0.5f, scm::math::vec3f(0.4f, 0.0f, 0.4f));
 		_color_transfer.add_stop(0.7f, scm::math::vec3f(1.0f, 1.0f, 1.0f));
 		_color_transfer.add_stop(1.0f, scm::math::vec3f(1.0f, 1.0f, 1.0f));
+#elif 0
+        // blue-white-red
+        _color_transfer.add_stop(0, scm::math::vec3f(1.0f, 0.0f, 0.0f));
+        _color_transfer.add_stop(0.5, scm::math::vec3f(1.0f, 1.0f, 1.0f));
+        _color_transfer.add_stop(1.0f, scm::math::vec3f(0.0f, 0.0f, 1.0f));
+#else
+        // blue-white-red
+        _color_transfer.add_stop(0.0f, scm::math::vec3f(0.0f, 0.0f, 0.0f));
+        _color_transfer.add_stop(80.f / 255, scm::math::vec3f(1.0f, 0.0f, 1.0f));
+        _color_transfer.add_stop(90.f / 255, scm::math::vec3f(0.0f, 1.0f, 0.0f));
+        _color_transfer.add_stop(128.f / 255, scm::math::vec3f(1.0f, 1.0f, 1.0f));
+        _color_transfer.add_stop(200.0f / 255, scm::math::vec3f(1.0f, 1.0f, 1.0f));
+        _color_transfer.add_stop(255.0f / 255, scm::math::vec3f(1.0f, 1.0f, 1.0f));
 #endif
 		
 	}
@@ -457,12 +483,19 @@ namespace gua {
 			std::cerr << "No Transfer Texture2D ptr!" << std::endl;
 			return;
 		}
-		
-		//cs->set_uniform(ctx, _volume_texture_ptr[ctx.id], "volume_texture");
+
+        //cs->set_uniform(ctx, _volume_texture_ptr[ctx.id], "volume_texture");
+        cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id], "transfer_texture");
+        cs->set_uniform(ctx, math::vec3(_step_size, 1.0f, _step_size), "sampling_distance");
+        cs->set_uniform(ctx, math::vec3::zero(), "volume_bbox_min");
+        cs->set_uniform(ctx, _volume_dimensions_normalized, "volume_bbox_max");
+        cs->set_uniform(ctx, math::vec3(1.0) / math::vec3(_volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z), "scale_obj_to_tex");
+        cs->set_uniform(ctx, math::vec2(0.0, 1.0), "value_range");
+				
 		cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id], "color_map");
 		cs->set_uniform(ctx, _gauss_texture_ptr[ctx.id], "gauss_color_map");
-		cs->set_uniform(ctx, _sample_distance, "uni_sampling_distance");
-		cs->set_uniform(ctx, _volume_dimensions_normalized, "uni_volume_bounds");
+		//cs->set_uniform(ctx, _sample_distance, "uni_sampling_distance");
+		//cs->set_uniform(ctx, _volume_dimensions_normalized, "uni_volume_bounds");
 
        
 
@@ -491,12 +524,12 @@ namespace gua {
 	
 	float LargeVolume::sample_distance() const
 	{
-		return _sample_distance;
+		return _step_size;
 	}
 
 	void LargeVolume::sample_distance(const float in_sample_distance)
 	{
-		_sample_distance = in_sample_distance;
+		_step_size = in_sample_distance;
 	}
 		
 	void LargeVolume::set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color)

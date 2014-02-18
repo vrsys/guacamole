@@ -80,7 +80,7 @@ protected :
   scm::gl::quad_geometry_ptr fullscreen_quad_;
 
   ShaderProgram* composite_shader_;
-  ShaderProgram* v_composite_shader_;
+  //ShaderProgram* v_composite_shader_;
   ShaderProgram* ray_generation_shader_;
 };
 

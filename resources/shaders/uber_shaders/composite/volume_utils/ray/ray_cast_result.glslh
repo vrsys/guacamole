@@ -1,9 +1,4 @@
 
-#ifndef SCM_LDATA_VSEISMIC_RAY_RAY_CAST_RESULT_GLSLH_INCLUDED
-#define SCM_LDATA_VSEISMIC_RAY_RAY_CAST_RESULT_GLSLH_INCLUDED
-
-#include </scm/data/global_constants.glslh>
-
 struct ray_cast_result {
     float       _t;
     vec3        _pos;
@@ -19,5 +14,3 @@ make_ray_cast_result() {
     r._iter_count = 0;
     return r;
 }
-
-#endif // SCM_LDATA_VSEISMIC_RAY_RAY_CAST_RESULT_GLSLH_INCLUDED

@@ -1,9 +1,4 @@
 
-#ifndef SCM_LDATA_RAY_RAY_GLSLH_INCLUDED
-#define SCM_LDATA_RAY_RAY_GLSLH_INCLUDED
-
-#include </scm/data/global_constants.glslh>
-
 // type definitions ///////////////////////////////////////////////////////////////////////////////
 struct ray
 {
@@ -53,5 +48,3 @@ make_safe_ray(in vec3  entry,
 
     return gen_ray;
 }
-
-#endif // SCM_LDATA_RAY_RAY_GLSLH_INCLUDED

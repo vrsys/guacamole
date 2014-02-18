@@ -6,9 +6,9 @@
 //#include </scm/data/volume/volume_uniform_block.glslh>
 
 /*layout(binding =  0..3)*/ uniform vtexture3D  vtex_volume;
-//layout(binding = 4)   uniform sampler2D   color_map;
-layout(binding = 5)   uniform sampler2D   preint_color_map;
-//layout(binding = 6)   uniform sampler2D   gauss_color_map;
+//layout(binding = 4)   uniform sampler2D   transfer_texture;
+//layout(binding = 5)   uniform sampler2D   preint_transfer_texture;
+//layout(binding = 6)   uniform sampler2D   gauss_transfer_texture;
                       uniform float       vtex_volume_fixed_lod;
 
                       uniform vec2            viewport_size;

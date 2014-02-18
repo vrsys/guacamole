@@ -1,0 +1,38 @@
+
+vec4 get_raycast_color(in ray r,
+    in vec2 t_span,
+    in float d,
+    out ray_cast_result res)
+{
+
+    float entry_fc = fceil(t_span.x, d);
+    float t_step = d;
+
+    vec3 sampling_pos = clamp(r.origin + t_span.x * r.direction, 0.0, 1.0);
+
+    t_span.x += t_step;
+    vec4 color = vec4(0.0);
+
+    while (t_span.x < t_span.y && color.a < 0.99f) {
+
+        // get sample
+        float s = texture(gua_get_float_sampler3D(volume_texture), sampling_pos).x;//texture3D(volume_texture, sampling_pos * scale_obj_to_tex).r;
+        vec4 src = texture2D(gua_get_float_sampler(transfer_texture), vec2(s, 0.5));
+
+        // increment ray
+        sampling_pos = clamp(r.origin + t_span.x * r.direction, 0.0, 1.0);
+        t_span.x += t_step;
+
+        // compositing
+        float omda_sa = (1.0f - color.a) * src.a;
+        color.rgb += omda_sa * src.rgb;
+        color.a += omda_sa;
+
+    }
+
+    if (color.a > 0.9f){
+        gl_FragDepth = get_depth_z((gua_model_matrix * vec4(sampling_pos, 1.0)).xyz);
+    }
+
+    return color;
+}

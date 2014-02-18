@@ -5,11 +5,11 @@
 #include </scm/data/vtexture/vtexture.glslh>
 #include </scm/data/vtexture/vtexture_debug.glslh>
 
-#include </scm/data/ray/ray.glslh>
-#include </scm/data/ray/ray_cast_result.glslh>
-#include </scm/data/utilities/float_utils.glslh>
+//#include </scm/data/ray/ray.glslh>
+//#include </scm/data/ray/ray_cast_result.glslh>
+//#include </scm/data/utilities/float_utils.glslh>
 
-#include </scm/data/volume/ray_cast/ray_cast_vtexture_3d.glslh>
+#include </scm/virtual_volume/ray_cast_vtexture_3d.glslh>
 
 // implementation /////////////////////////////////////////////////////////////////////////////////
 

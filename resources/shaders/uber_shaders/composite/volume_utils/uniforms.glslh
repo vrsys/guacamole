@@ -1,0 +1,26 @@
+
+uniform uvec2 transfer_texture;
+
+uniform uvec2 volume_texture;
+uniform vec4 near_plane;
+uniform float near_plane_d;
+uniform float far_plane_d;
+uniform float diff_plane_d;
+
+uniform vec3 volume_bbox_min;    // w unused
+uniform vec3 volume_bbox_max;    // w unused
+uniform vec3 scale_obj_to_tex;   // w unused
+uniform vec3 sampling_distance;  // x - os sampling distance, y opacity correction factor, zw unused
+uniform vec2 value_range;        // vec4f(min_value(), max_value(), max_value() - min_value(), 1.0f / (max_value() - min_value()));
+
+// vtexture vrenderer uniforms
+uniform uvec2 color_texture;
+uniform uvec2 gauss_transfer_texture;
+uniform uvec2 preint_transfer_texture;
+
+struct volume_uniform_data
+{
+    vec3 scale_obj_to_tex;   // w unused
+    vec3 sampling_distance;  // x - os sampling distance, y opacity correction factor, zw unused
+    vec4 value_range;        // vec4f(min_value(), max_value(), max_value() - min_value(), 1.0f / (max_value() - min_value()));
+} volume_data;

@@ -242,9 +242,9 @@ namespace gua {
 		scm::data::piecewise_function_1d<float, scm::math::vec3f>      _color_transfer;
 
 		///LargeVolume Info
-		math::vec3ui	_volume_dimensions;
-		math::vec3		_volume_dimensions_normalized;
-		float			_sample_distance;
+        math::vec3ui	_volume_dimensions;
+        math::vec3		_volume_dimensions_normalized;
+        float			_step_size;
 
 		//std::shared_ptr<vtex_volume>      _vtex_volume;
 
