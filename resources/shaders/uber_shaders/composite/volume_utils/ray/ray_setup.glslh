@@ -119,7 +119,7 @@ out float d)
 
 #if 1
 
-    vec3 gua_object_volume_position_front = (r.origin + t.x * r.direction) / (scale_obj_to_tex.xyz);
+    vec3 gua_object_volume_position_front = (r.origin + t.x * r.direction) / (scale_obj_to_tex.xyz * vtex_volume.texcoord_scale);
     vec3 gua_world_volume_position_front = (gua_model_matrix * vec4(gua_object_volume_position_front, 1.0)).xyz;
     vec3 gua_world_volume_position_back = (gua_model_matrix * vec4(os_ray_entry, 1.0)).xyz;
 

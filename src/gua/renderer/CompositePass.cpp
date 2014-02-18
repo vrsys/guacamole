@@ -53,7 +53,7 @@ CompositePass::CompositePass(Pipeline* pipeline) :
 
     ray_generation_shader_->create_from_sources(ray_generation_vertex_shader, ray_generation_fragment_shader);
 
-#if 1
+#if 0
     composite_shader_->create_from_files("compos_n.vert",
                                          "compos_n.frag");
 #else
