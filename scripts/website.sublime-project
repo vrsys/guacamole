@@ -19,7 +19,7 @@
 				"*.nfs*"
 			],
 			"follow_symlinks": true,
-			"path": "/home/rufu1194/simmesimme.github.com"
+			"path": ".."
 		},
 		{
 			"follow_symlinks": true,
