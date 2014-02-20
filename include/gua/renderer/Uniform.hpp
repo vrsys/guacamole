@@ -252,7 +252,9 @@ template <> class UniformValue<std::string> : public UniformValueBase {
              unsigned position = 0) const {
 
     auto texture(TextureDatabase::instance()->lookup(value_));
-    program->uniform(name, position, texture->get_handle(context));
+    if (texture) {
+      program->uniform(name, position, texture->get_handle(context));
+    }
   }
 
   std::string const& value() const { return value_; }
