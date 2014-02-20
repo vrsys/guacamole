@@ -1,0 +1,33 @@
+{
+	"build_systems":
+	[
+		{
+			"cmd":
+			[
+				"./scripts/make.sh"
+			],
+			"file_regex": "^(..[^:]*):(.*)$",
+			"name": "guacamole-website",
+			"working_dir": "${project_path}/.."
+		}
+	],
+	"folders":
+	[
+		{
+			"file_exclude_patterns":
+			[
+				"*.nfs*"
+			],
+			"follow_symlinks": true,
+			"path": "/home/rufu1194/simmesimme.github.com"
+		},
+		{
+			"follow_symlinks": true,
+			"path": "../_includes/themes/hooligan"
+		},
+		{
+			"follow_symlinks": true,
+			"path": "../assets/themes/hooligan/_sass"
+		}
+	]
+}

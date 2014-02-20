@@ -1,0 +1,43 @@
+
+.page-header {
+  background: url(../images/bgs/header-bg.jpg) center center;
+  @include background-size(cover);
+  min-height: 200px;
+  position: relative;
+
+  h1 {
+    position: absolute;
+    font-size: 7em;
+    bottom: 0;
+    font-weight: lighter;
+    text-shadow: 1px 1px 15px #000;
+  }
+
+  @media (max-width: 767px) {
+    h1 {
+      font-size: 4em;
+      bottom: 50px;
+    }
+  }
+
+  small {
+    color: #fff;
+  }
+}
+
+.container {
+  position: relative;
+}
+
+.page-footer {
+  @include box-shadow(
+     rgba(255, 255, 255, 0.1) 0 1px 0,
+     rgba(0, 0, 0, 0.8) 0 1px 7px 0px inset
+  );
+  background: #202020;
+  background-color: rgba(0, 0, 0, 0.3);
+
+  margin-top: 20px;
+  padding-bottom: 20px;
+  padding-top: 50px;
+}
