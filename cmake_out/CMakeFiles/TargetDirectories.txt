@@ -1,3 +1,0 @@
-/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/CMakeFiles/CompileResources.dir
-/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/src/CMakeFiles/guacamole.dir
-/home/buda8714/Documents/oculusRift/github/guacamole/cmake_out/guarc/CMakeFiles/guarc.dir
