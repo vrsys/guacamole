@@ -12,3 +12,37 @@ Thumbs.db
 .rvmrc
 
 assets/themes/hooligan/.sass-cache/*
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+*.out
+*.gv
+*.dot
+*.gsm
+
+*.opensdf
+
+build
+lib
+doc/html
+editor/guacamole_editor
+guarc/guarc
+guacamole.sublime-workspace
+include/gua/generated/*
+src/gua/generated/*
+tags
+.nfs*
+.vim.custom
+tests/tests

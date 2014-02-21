@@ -5,12 +5,41 @@ tagline: delicious VR
 ---
 {% include JB/setup %}
 <div class="page-header-wrapper">
-    <div class="page-header teaser">
-        <h1>guacamole is an extendable and efficient rendering system for visualizing different data types.</h1>
+  <div class="page-header teaser">
+    <div class="row">
+      <div class="span6">
+        <h1>
+          guacamole is an extendable scengraph based on modern deferred shading.
+        </h1>
+      </div>
     </div>
+    <div class="row">
+      <div class="span2">
+        <a href="{{ BASE_PATH }}/features.html">
+          <div class="teaser-button">
+            EXPLORE <br>FEATURES
+          </div>
+        </a>
+      </div>
+      <div class="span2">
+        <a href="{{ BASE_PATH }}/documentation.html">
+          <div class="teaser-button">
+            READ <br>DOCUMENTATION
+          </div>
+        </a>
+      </div>
+      <div class="span2">
+        <a href="https://github.com/vrsys/guacamole">
+          <div class="teaser-button">
+            VIEW ON <br>GITHUB
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 
-guacamole is an extendable and efficient rendering system for visualizing different data types. It features a lightweight scene graph and a modern deferred shading system. Many common post processing effects are already integrated, e.g. screen space ambient occlusion, HDR, FXAA, volumetric light effects, bloom and fog.
+
 
 
 

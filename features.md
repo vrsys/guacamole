@@ -7,6 +7,8 @@ group: navigation
 {% include JB/setup %}
 {% include themes/hooligan/page_header.html %}
 
+guacamole is an extendable and efficient rendering system for visualizing different data types. It features a lightweight scene graph and a modern deferred shading system. Many common post processing effects are already integrated, e.g. screen space ambient occlusion, HDR, FXAA, volumetric light effects, bloom and fog.
+
 <div class="row">
   <div class="span4">
     <div class="well">
