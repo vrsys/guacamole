@@ -352,7 +352,24 @@ div.posts article div.date time {
   padding: 5px 10px;
 }
 
-/* line 2, ../_sass/_custom.scss */
+/* line 4, ../_sass/_custom.scss */
+html, body {
+  height: 100%;
+}
+
+/* line 8, ../_sass/_custom.scss */
+html > body {
+  min-height: 100%;
+  height: auto;
+  position: relative;
+}
+
+/* line 14, ../_sass/_custom.scss */
+.content {
+  margin-bottom: 80px;
+}
+
+/* line 18, ../_sass/_custom.scss */
 .page-header {
   background: url(../images/bgs/header-bg.jpg) center center;
   -webkit-background-size: cover;
@@ -362,7 +379,7 @@ div.posts article div.date time {
   min-height: 200px;
   position: relative;
 }
-/* line 8, ../_sass/_custom.scss */
+/* line 24, ../_sass/_custom.scss */
 .page-header h1 {
   position: absolute;
   font-size: 7em;
@@ -371,30 +388,39 @@ div.posts article div.date time {
   text-shadow: 1px 1px 15px #000;
 }
 @media (max-width: 767px) {
-  /* line 17, ../_sass/_custom.scss */
+  /* line 33, ../_sass/_custom.scss */
   .page-header h1 {
     font-size: 4em;
     bottom: 50px;
   }
 }
-/* line 23, ../_sass/_custom.scss */
+/* line 39, ../_sass/_custom.scss */
 .page-header small {
   color: #fff;
 }
 
-/* line 28, ../_sass/_custom.scss */
-.container {
-  position: relative;
+/* line 48, ../_sass/_custom.scss */
+.footer-wrapper {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  min-width: 100%;
 }
-
-/* line 32, ../_sass/_custom.scss */
-.page-footer {
+/* line 55, ../_sass/_custom.scss */
+.footer-wrapper .page-footer {
+  padding: 20px 20px 10px;
+  margin: 20px -20px 0px;
+  -moz-border-radius-topleft: 5px;
+  -webkit-border-top-left-radius: 5px;
+  border-top-left-radius: 5px;
+  -moz-border-radius-topright: 5px;
+  -webkit-border-top-right-radius: 5px;
+  border-top-right-radius: 5px;
   -webkit-box-shadow: rgba(255, 255, 255, 0.1) 0 1px 0, rgba(0, 0, 0, 0.8) 0 1px 7px 0px inset;
   -moz-box-shadow: rgba(255, 255, 255, 0.1) 0 1px 0, rgba(0, 0, 0, 0.8) 0 1px 7px 0px inset;
   box-shadow: rgba(255, 255, 255, 0.1) 0 1px 0, rgba(0, 0, 0, 0.8) 0 1px 7px 0px inset;
   background: #202020;
   background-color: rgba(0, 0, 0, 0.3);
-  margin-top: 20px;
   padding-bottom: 20px;
   padding-top: 50px;
 }

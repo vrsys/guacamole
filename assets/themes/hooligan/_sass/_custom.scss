@@ -1,4 +1,20 @@
 
+$footer-height: 80px;
+
+html, body {
+  height: 100%;
+}
+
+html>body {
+  min-height: 100%;
+  height: auto;
+  position: relative;
+}
+
+.content {
+  margin-bottom: $footer-height;
+}
+
 .page-header {
   background: url(../images/bgs/header-bg.jpg) center center;
   @include background-size(cover);
@@ -26,18 +42,31 @@
 }
 
 .container {
-  position: relative;
+  //position: relative;
 }
 
-.page-footer {
-  @include box-shadow(
-     rgba(255, 255, 255, 0.1) 0 1px 0,
-     rgba(0, 0, 0, 0.8) 0 1px 7px 0px inset
-  );
-  background: #202020;
-  background-color: rgba(0, 0, 0, 0.3);
+.footer-wrapper {
 
-  margin-top: 20px;
-  padding-bottom: 20px;
-  padding-top: 50px;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  min-width: 100%;
+
+  .page-footer {
+    padding: 20px 20px 10px;
+    margin: 20px -20px 0px;
+
+    @include border-top-left-radius;
+    @include border-top-right-radius;
+
+    @include box-shadow(
+       rgba(255, 255, 255, 0.1) 0 1px 0,
+       rgba(0, 0, 0, 0.8) 0 1px 7px 0px inset
+    );
+    background: #202020;
+    background-color: rgba(0, 0, 0, 0.3);
+
+    padding-bottom: 20px;
+    padding-top: 50px;
+  }
 }
