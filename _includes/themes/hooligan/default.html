@@ -110,10 +110,18 @@
     <div class="footer-wrapper">
       <div class="container">
         <footer class="page-footer">
-          <p>&copy; {{ site.time | date: '%Y' }} {{ site.author.name }}
-            with help from <a href="http://jekyllbootstrap.com" target="_blank" title="The Definitive Jekyll Blogging Framework">Jekyll Bootstrap</a>
-            and <a href="http://github.com/dhulihan/hooligan" target="_blank">The Hooligan Theme</a>
-          </p>
+          <div class="row">
+            <div class="span4">
+              <p>&copy; {{ site.time | date: '%Y' }} <a href="https://github.com/vrsys">{{ site.author.name }}</a>
+                with help from <a href="http://jekyllbootstrap.com" target="_blank" title="The Definitive Jekyll Blogging Framework">Jekyll Bootstrap</a>
+                and <a href="http://github.com/dhulihan/hooligan" target="_blank">The Hooligan Theme</a>
+              </p>
+            </div>
+            <div class="span8 text-right">
+              <p>Proudly hosted by <a href="https://github.com/"><img src="{{ ASSET_PATH }}/images/github.png"></a>
+              </p>
+            </div>
+          </div>
         </footer>
       </div> <!-- /container -->
     </div>

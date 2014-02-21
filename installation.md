@@ -5,7 +5,7 @@ header : Installation
 group: navigation
 ---
 {% include JB/setup %}
-
+{% include themes/hooligan/page_header.html %}
 
 You need a NVIDIA GPU that supports OpenGL 4.2 and CUDA.
 
@@ -30,3 +30,5 @@ You need schism, boost, CUDA, bullet, assimp, libjson, and cmake.
  * [assimp](https://github.com/assimp/assimp)
 
 Configure with cmake and build with make.
+
+    ./scripts/make.sh
