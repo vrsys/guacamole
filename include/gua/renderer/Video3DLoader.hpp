@@ -19,19 +19,66 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+#ifndef GUA_VIDEO3D_LOADER_HPP
+#define GUA_VIDEO3D_LOADER_HPP
 
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
+// guacamole headers
+#include <gua/renderer/LoaderBase.hpp>
+#include <gua/databases/Database.hpp>
 
-// node headers
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
-#include <gua/scenegraph/PointLightNode.hpp>
-#include <gua/scenegraph/RayNode.hpp>
-#include <gua/scenegraph/ScreenNode.hpp>
-#include <gua/scenegraph/SpotLightNode.hpp>
+// external headers
+#include <string>
+#include <list>
+#include <memory>
 
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+
+namespace gua {
+
+class Node;
+class InnerNode;
+class Video3DNode;
+
+/**
+ * Loads and draws Video3D.
+ *
+ * This class can load Video3D data from files and display them in multiple
+ * contexts. A MeshLoader object is made of several Video3D objects.
+ */
+class Video3DLoader : public LoaderBase { //GUA_DLL??? siehe VolumeLoader
+ public:
+
+  enum Flags {
+    DEFAULTS = 0,
+    MAKE_PICKABLE = 1 << 0, //Danger: critical due to no update of bounding box and no triangle intersection with avatar
+    NORMALIZE_POSITION = 1 << 1,
+    NORMALIZE_SCALE = 1 << 2
+  };
+
+  /**
+   * Default constructor.
+   *
+   * Constructs a new and empty Video3D.
+   */
+  Video3DLoader();
+
+  /**
+   * Constructor from a file.
+   *
+   * Creates a new Video3D from a given file.
+   *
+   * \param file_name        The file to load the Video3Ds data from.
+   * \param material_name    The material name that was set to the parent node
+   */
+  std::shared_ptr<Node> load(std::string const& file_name,
+                             unsigned flags);
+
+  bool is_supported(std::string const& file_name) const;
+
+ private:
+    boost::unordered_set<std::string> _supported_file_extensions;
+
+};
+
+}
+
+#endif  // GUA_VIDEO3D_LOADER_HPP

@@ -99,6 +99,8 @@ void GBufferMeshUberShader::create(std::set<std::string> const& material_names) 
     UberShader::print_material_switch(fshader_factory));
 
   create_from_sources(vertex_shader, fragment_shader);
+
+ 
 }
 
 }

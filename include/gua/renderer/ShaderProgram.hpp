@@ -174,6 +174,8 @@ class GUA_DLL ShaderProgram {
 
   virtual bool upload_to(RenderContext const& context) const;
 
+  inline scm::gl::program_ptr const& get_program ( RenderContext const& ctx ) const { return programs_[ctx.id]; }
+
  protected:  // attributes
 
   mutable std::vector<scm::gl::program_ptr> programs_;

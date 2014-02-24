@@ -71,7 +71,7 @@ class MeshLoader : public LoaderBase {
    *
    * Creates a new MeshLoader from a given file.
    *
-   * \param file_name        The file to load the meh's data from.
+   * \param file_name        The file to load the meshs data from.
    * \param material_name    The material name that was set to the parent node
    */
   std::shared_ptr<Node> load(std::string const& file_name,

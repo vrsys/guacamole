@@ -19,19 +19,66 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+#ifndef GUA_VIDEO3D_NODE_HPP
+#define GUA_VIDEO3D_NODE_HPP
 
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
+// guacamole headers
+#include <gua/scenegraph/Node.hpp>
+#include <gua/utils/configuration_macro.hpp>
 
-// node headers
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
-#include <gua/scenegraph/PointLightNode.hpp>
-#include <gua/scenegraph/RayNode.hpp>
-#include <gua/scenegraph/ScreenNode.hpp>
-#include <gua/scenegraph/SpotLightNode.hpp>
+// external headers
+#include <string>
 
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+/**
+ * This class is used to represent geometry in the SceneGraph.
+ *
+ */
+
+namespace gua {
+
+class GUA_DLL Video3DNode : public Node {
+  public:
+
+    struct Configuration {
+      GUA_ADD_PROPERTY(std::string,     video3d,   "gua_default_video3d");
+      GUA_ADD_PROPERTY(std::string,     material,   "gua_default_material");
+    };
+
+    Configuration data;
+
+    Video3DNode() {};
+
+    /**
+     * Constructor.
+     *
+     * This constructs a GeometryNode with the given parameters and calls
+     * the constructor of base class Core with the type GEOMETRY.
+     *
+     * \param geometry  The name of the GeometryNode's geometry.
+     * \param material  The name of the GeometryNodeCore's material.
+     */
+    Video3DNode(std::string const& name,
+                 Configuration const& configuration = Configuration(),
+                 math::mat4 const& transform = math::mat4::identity());
+
+    /**
+     * Accepts a visitor and calls concrete visit method
+     *
+     * This method implements the visitor pattern for Nodes
+     *
+     */
+    /*virtual*/ void accept(NodeVisitor&);
+
+    /*virtual*/ void update_bounding_box() const;
+
+    /*virtual*/ void ray_test_impl(RayNode const& ray, PickResult::Options options,
+                            Mask const& mask, std::set<PickResult>& hits);
+
+  private:
+
+    std::shared_ptr<Node> copy() const;
+};
+
+}
+
+#endif  // GUA_VIDEO3D_NODE_HPP

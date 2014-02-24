@@ -19,19 +19,44 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
-
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
-
-// node headers
-#include <gua/scenegraph/GeometryNode.hpp>
+// class header
 #include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
-#include <gua/scenegraph/PointLightNode.hpp>
-#include <gua/scenegraph/RayNode.hpp>
-#include <gua/scenegraph/ScreenNode.hpp>
-#include <gua/scenegraph/SpotLightNode.hpp>
 
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+// guacamole headers
+#include <gua/platform.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/renderer/GeometryLoader.hpp> //***Video3DLoader???
+#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/scenegraph/RayNode.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
+
+namespace gua {
+//TODO BOUNDING BOX!!
+Video3DNode::Video3DNode(std::string const& name,
+                           Configuration const& configuration,
+                           math::mat4 const& transform)
+    : Node(name, transform), data(configuration) 
+{
+    bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-100.0,-100.0,-100.0),
+                          math::vec3(100.0,100.0,100.0)); 
+}
+
+/* virtual */ void Video3DNode::accept(NodeVisitor& visitor) {
+
+  visitor.visit(this);
+}
+
+void Video3DNode::update_bounding_box() const {
+  //TODO
+}
+
+void Video3DNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
+                           Mask const& mask, std::set<PickResult>& hits) {
+  //TODO
+}
+
+std::shared_ptr<Node> Video3DNode::copy() const {
+  return std::make_shared<Video3DNode>(get_name(), data, get_transform());
+}
+
+}

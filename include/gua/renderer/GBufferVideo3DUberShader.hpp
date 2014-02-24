@@ -19,19 +19,30 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+#ifndef GUA_G_BUFFER_VIDEO3D_UBER_SHADER_HPP
+#define GUA_G_BUFFER_VIDEO3D_UBER_SHADER_HPP
 
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
+// guacamole headers
+#include <gua/renderer/UberShader.hpp>
+ #include <gua/renderer/UberShaderFactory.hpp>
 
-// node headers
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
-#include <gua/scenegraph/PointLightNode.hpp>
-#include <gua/scenegraph/RayNode.hpp>
-#include <gua/scenegraph/ScreenNode.hpp>
-#include <gua/scenegraph/SpotLightNode.hpp>
+namespace gua {
 
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+class GBufferVideo3DUberShader : public UberShader {
+ public:
+
+  void create(std::set<std::string> const& material_names);
+
+ private:
+  std::string const _final_vertex_shader(UberShaderFactory const& vshader_factory,
+  	                                       LayerMapping const& vshader_output_mapping) const;
+  std::string const _final_geometry_shader(UberShaderFactory const& vshader_factory,
+                                           LayerMapping const& vshader_output_mapping) const;
+  std::string const _final_fragment_shader(UberShaderFactory const& fshader_factory,
+  	                                       LayerMapping const& vshader_output_mapping) const;
+
+};
+
+}
+
+#endif  // GUA_G_BUFFER_VIDEO3D_UBER_SHADER_HPP
