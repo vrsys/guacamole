@@ -73,8 +73,7 @@ CompositePass::~CompositePass() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CompositePass::create(RenderContext const& ctx,
-    PipelineConfiguration const& config, std::vector<std::pair<BufferComponent,
+void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<BufferComponent,
     scm::gl::sampler_state_desc>> const& layers) {
 
   // reuse gbuffer from shading-pass
@@ -93,8 +92,8 @@ void CompositePass::create(RenderContext const& ctx,
   layer_3f_desc.push_back(std::make_pair(BufferComponent::F3, state));
 
   volume_raygeneration_buffer_ = new GBuffer(layer_3f_desc,
-                                      config.get_left_resolution()[0],
-                                      config.get_left_resolution()[1]);
+                                      pipeline_->config.get_left_resolution()[0],
+                                      pipeline_->config.get_left_resolution()[1]);
   volume_raygeneration_buffer_->create(ctx);
 }
 
