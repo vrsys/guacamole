@@ -441,26 +441,26 @@ void Pipeline::create_buffers() {
 
     std::vector<std::shared_ptr<StereoBuffer>> stereobuffers;
 
-    passes_[PipelineStage::geometry]->create(*context_, config, passes_[PipelineStage::geometry]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::geometry]->create(*context_, passes_[PipelineStage::geometry]->get_gbuffer_mapping()->get_layers());
     stereobuffers.push_back(passes_[PipelineStage::geometry]->get_gbuffer());
 
-    passes_[PipelineStage::lighting]->create(*context_, config, passes_[PipelineStage::lighting]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::lighting]->create(*context_, passes_[PipelineStage::lighting]->get_gbuffer_mapping()->get_layers());
     passes_[PipelineStage::lighting]->set_inputs(stereobuffers);
     stereobuffers.push_back(passes_[PipelineStage::lighting]->get_gbuffer());
 
-    passes_[PipelineStage::shading]->create(*context_, config, passes_[PipelineStage::shading]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::shading]->create(*context_, passes_[PipelineStage::shading]->get_gbuffer_mapping()->get_layers());
     passes_[PipelineStage::shading]->set_inputs(stereobuffers);
     stereobuffers.push_back(passes_[PipelineStage::shading]->get_gbuffer());
 
     passes_[PipelineStage::compositing]->set_inputs(stereobuffers);
-    passes_[PipelineStage::compositing]->create(*context_, config, {} );
+    passes_[PipelineStage::compositing]->create(*context_, {} );
     stereobuffers.push_back(passes_[PipelineStage::compositing]->get_gbuffer());
 
     scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
                                       scm::gl::WRAP_MIRRORED_REPEAT,
                                       scm::gl::WRAP_MIRRORED_REPEAT);
 
-    passes_[PipelineStage::postfx]->create(*context_, config, { { BufferComponent::F3, state } });
+    passes_[PipelineStage::postfx]->create(*context_, { { BufferComponent::F3, state } });
     passes_[PipelineStage::postfx]->set_inputs(stereobuffers);
 
     if (!config.get_enable_stereo()) {

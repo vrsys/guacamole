@@ -26,13 +26,13 @@
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/utils/KDTree.hpp>
 
+namespace gua {
+
 /**
  * This class is used to represent a camera in the SceneGraph.
  *
+ * \ingroup gua_scenegraph
  */
-
-namespace gua {
-
 class GUA_DLL RayNode : public Node {
  public:
 

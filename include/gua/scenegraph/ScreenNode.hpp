@@ -26,13 +26,13 @@
 #include <gua/scenegraph/Node.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
+namespace gua {
+
 /**
  * This class is used to represent a screen in the SceneGraph.
  *
+ * \ingroup gua_scenegraph
  */
-
-namespace gua {
-
 class GUA_DLL ScreenNode : public Node {
  public:
 

@@ -38,6 +38,11 @@
 
 namespace gua {
 
+class NodeVisitor;
+class RayNode;
+
+namespace physics { class CollisionShapeNodeVisitor; }
+
 /**
  * This class is used as a base class to provide basic node behaviour.
  *
@@ -46,13 +51,8 @@ namespace gua {
  * parent Node. Furthermore, Nodes can be assigned a group name which allows for
  * user-defined grouping concerning similar properties etc.
  *
+ * \ingroup gua_scenegraph
  */
-
-class NodeVisitor;
-class RayNode;
-
-namespace physics { class CollisionShapeNodeVisitor; }
-
 class GUA_DLL Node {
  public:
 

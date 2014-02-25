@@ -29,13 +29,13 @@
 // external headers
 #include <string>
 
+namespace gua {
+
 /**
  * This class is used to represent a volume in the SceneGraph.
  *
+ * \ingroup gua_scenegraph
  */
-
-namespace gua {
-
 class GUA_DLL VolumeNode : public Node {
   public:
 
@@ -55,9 +55,9 @@ class GUA_DLL VolumeNode : public Node {
 
     /*virtual*/ void update_bounding_box() const;
 
-    /*virtual*/ void ray_test_impl(RayNode const& ray, 
+    /*virtual*/ void ray_test_impl(RayNode const& ray,
                                    PickResult::Options options,
-                                   Mask const& mask, 
+                                   Mask const& mask,
                                    std::set<PickResult>& hits);
 
   private:

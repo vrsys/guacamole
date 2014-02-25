@@ -30,13 +30,13 @@
 
 #include <string>
 
+namespace gua {
+
 /**
  * This class is used to represent light in the SceneGraph.
  *
+ * \ingroup gua_scenegraph
  */
-
-namespace gua {
-
 class GUA_DLL SpotLightNode : public Node {
  public:
 

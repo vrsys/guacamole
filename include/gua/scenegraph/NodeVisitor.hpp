@@ -50,6 +50,7 @@ class CollisionShapeNode;
 /**
  * This class is used to recursively visit nodes in a SceneGraph
  *
+ * \ingroup gua_scenegraph
  */
 class NodeVisitor {
  public:
