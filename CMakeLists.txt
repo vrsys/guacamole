@@ -158,6 +158,18 @@ add_subdirectory(src)
 add_subdirectory(plugins)
 
 ################################################################
+# Testing
+################################################################
+
+set (GUACAMOLE_TESTS "false" CACHE BOOL "Set to enable testing.")
+
+if (GUACAMOLE_TESTS)
+  add_subdirectory(tests)
+  enable_testing()
+  add_test( NAME testGUA COMMAND runTests )
+endif (GUACAMOLE_TESTS)
+
+################################################################
 # Summary
 ################################################################
 
