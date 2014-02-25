@@ -33,7 +33,7 @@
 namespace gua {
 
 /**
- * This class is used to represent light in the SceneGraph.
+ * This class is used to represent a point light in the SceneGraph.
  *
  * \ingroup gua_scenegraph
  */
