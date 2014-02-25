@@ -60,7 +60,7 @@ class GUA_DLL SpotLightNode : public Node {
     GUA_ADD_PROPERTY(float,           softness,                 0.5f);
 
     /**
-     * Triggers if the light casts shadows.
+     * Triggers whether the light casts shadows.
      */
     GUA_ADD_PROPERTY(bool,            enable_shadows,           false);
 
@@ -88,7 +88,7 @@ class GUA_DLL SpotLightNode : public Node {
     GUA_ADD_PROPERTY(unsigned,        shadow_map_size,          512);
 
     /**
-     * Sets the distance between shadow casting object and shadow edge.
+     * Sets the offset between a shadow casting object and the shadow's edge.
      * Increase this value to reduce artefacts (especially shadow acne).
      */
     GUA_ADD_PROPERTY(float,           shadow_offset,            0.001f);
