@@ -45,11 +45,24 @@ class GUA_DLL LODNode : public TransformNode {
  public:
 
   struct Configuration {
+      /**
+       * A vector storing distances. Indices are mapped to the indices of the
+       * LODNode's children vector.
+       */
       GUA_ADD_PROPERTY(std::vector<float>,  lod_distances,   std::vector<float>());
   };
 
+  /**
+   * The LODNode's configuration.
+   */
   Configuration data;
 
+  /**
+   * Constructor.
+   *
+   * This constructs an empty LODNode.
+   *
+   */
   LODNode() {};
 
   /**

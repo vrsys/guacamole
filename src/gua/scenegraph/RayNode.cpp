@@ -43,7 +43,7 @@ RayNode::RayNode(std::string const& name, math::mat4 const& transform)
 
 std::pair<float, float> RayNode::intersect(
     math::BoundingBox<math::vec3> const& box) const {
-    return ::gua::intersect(get_world_ray(),box);
+    return ::gua::intersect(get_world_ray(), box);
 }
 
 Ray const RayNode::get_world_ray() const {
