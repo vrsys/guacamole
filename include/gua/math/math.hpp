@@ -102,6 +102,11 @@ inline math::vec3 get_translation(math::mat4 const& m) {
   return math::vec3(m[12], m[13], m[14]);
 }
 
+inline math::mat4 get_rotation(math::mat4 const& m) {
+  math::quat q = ::scm::math::quat<float>::from_matrix(m);
+  return q.to_matrix();
+}
+
 std::tuple<float, float, float> GUA_DLL barycentric(math::vec3 const& a,
                                                     math::vec3 const& b,
                                                     math::vec3 const& c,
