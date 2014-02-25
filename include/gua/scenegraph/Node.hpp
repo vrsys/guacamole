@@ -96,8 +96,8 @@ class GUA_DLL Node {
    * This adds a Node to the Node's children vector and returns a shared pointer
    * to the new child.
    *
-   * \param child The Node to be added as a child.
-   * \tparam T The type of the Node to be added as child.
+   * \param node_name The name of the new Node to be added as a child.
+   * \tparam T The type of the new Node to be added as a child.
    */
   template<typename T>
   std::shared_ptr<T> add_child(std::string const& node_name) {
@@ -106,6 +106,15 @@ class GUA_DLL Node {
     return add_child(new_node);
   }
 
+  /**
+   * Adds a child.
+   *
+   * This adds a Node to the Node's children vector and returns a shared pointer
+   * to the new child.
+   *
+   * \param new_node The new Node to be added as a child.
+   * \tparam T The type of the new Node to be added as a child.
+   */
   template<typename T>
   std::shared_ptr<T> add_child(std::shared_ptr<T> const& new_node) {
 
