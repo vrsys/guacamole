@@ -52,38 +52,79 @@ class GUA_DLL PointLightNode : public Node {
      * E.g. a value of 2 means quadratic falloff, 1 means linear falloff
      */
     GUA_ADD_PROPERTY(float,           falloff,                  1.f);
+
+    /**
+     * Triggers if the light casts shadows. NOTE: Not implemented yet!
+     */
     GUA_ADD_PROPERTY(bool,            enable_shadows,           false);
+
+    /**
+     * Triggers volumetric screen-space effects for the light source.
+     */
     GUA_ADD_PROPERTY(bool,            enable_godrays,           false);
+
+    /**
+     * Triggers whether or not the light source has influence on objects'
+     * diffuse shading.
+     */
     GUA_ADD_PROPERTY(bool,            enable_diffuse_shading,   true);
+
+    /**
+     * Triggers whether or not the light source has influence on objects'
+     * specular shading.
+     */
     GUA_ADD_PROPERTY(bool,            enable_specular_shading,  true);
+
+    /**
+     * Sets the size in pixel of the texture used for shadow map generation.
+     * Choose wisely!
+     */
     GUA_ADD_PROPERTY(unsigned,        shadow_map_size,          512);
   };
 
+  /**
+   * The PointLightNode's configuration.
+   */
   Configuration data;
 
   /**
    * Constructor.
    *
-   * This constructs a PointLightNode with the given parameters and calls
-   * the constructor of base class Core with the type LIGHT.
+   * This constructs an empty PointLightNode.
    *
-   * \param color   The light's color.
    */
-
   PointLightNode() {}
 
+  /**
+   * Constructor.
+   *
+   * This constructs a PointLightNode with the given parameters.
+   *
+   * \param name           The name of the new PointLightNode.
+   * \param configuration  A configuration struct to define the PointLightNode's
+   *                       properties.
+   * \param transform      A matrix to describe the PointLightNode's
+   *                       transformation.
+   */
   PointLightNode(std::string const& name,
                  Configuration const& configuration = Configuration(),
                  math::mat4 const& transform = math::mat4::identity());
 
   /**
-   * Accepts a visitor and calls concrete visit method
+   * Accepts a visitor and calls concrete visit method.
    *
-   * This method implements the visitor pattern for Nodes
+   * This method implements the visitor pattern for Nodes.
    *
+   * \param visitor  A visitor to process the PointLightNode's data.
    */
   /* virtual */ void accept(NodeVisitor&);
 
+  /**
+   * Updates a PointLightNode's BoundingBox.
+   *
+   * The bounding box is updated according to the transformation matrices of
+   * all children.
+   */
   void update_bounding_box() const;
 
  private:

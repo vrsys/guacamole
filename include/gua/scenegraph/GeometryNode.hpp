@@ -44,12 +44,28 @@ class GUA_DLL GeometryNode : public Node {
   public:
 
     struct Configuration {
+      /**
+       * A string referring to an entry in GeometryDatabase.
+       */
       GUA_ADD_PROPERTY(std::string,     geometry,   "gua_default_geometry");
+
+      /**
+       * A string referring to an entry in MaterialDatabase.
+       */
       GUA_ADD_PROPERTY(std::string,     material,   "gua_default_material");
     };
 
+    /**
+     * The GeometryNode's configuration.
+     */
     Configuration data;
 
+    /**
+     * Constructor.
+     *
+     * This constructs an empty GeometryNode.
+     *
+     */
     GeometryNode() {};
 
     /**
