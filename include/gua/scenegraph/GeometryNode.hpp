@@ -45,12 +45,12 @@ class GUA_DLL GeometryNode : public Node {
 
     struct Configuration {
       /**
-       * A string referring to an entry in GeometryDatabase.
+       * A string referring to an entry in guacamole's GeometryDatabase.
        */
       GUA_ADD_PROPERTY(std::string,     geometry,   "gua_default_geometry");
 
       /**
-       * A string referring to an entry in MaterialDatabase.
+       * A string referring to an entry in guacamole's MaterialDatabase.
        */
       GUA_ADD_PROPERTY(std::string,     material,   "gua_default_material");
     };
