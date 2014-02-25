@@ -25,13 +25,13 @@
 #include <gua/platform.hpp>
 #include <gua/scenegraph/Node.hpp>
 
+namespace gua {
+
 /**
  * This class is used to represent an empty node in the SceneGraph.
  *
+ * \ingroup gua_scenegraph
  */
-
-namespace gua {
-
 class GUA_DLL TransformNode : public Node {
  public:
 

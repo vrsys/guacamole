@@ -42,6 +42,8 @@ class RayNode;
  * This class is used to build and structure a graph describing a scene with
  * all its contents. It provides an interface to set up and have access to
  * a graph consisting of several Nodes in order to build a scene abstraction.
+ *
+ * \ingroup gua_scenegraph
  */
 class GUA_DLL SceneGraph {
 

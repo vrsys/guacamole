@@ -29,16 +29,17 @@
 // external headers
 #include <string>
 
+namespace gua {
+
 /**
  * This class is used to represent geometry in the SceneGraph.
  *
  * A GeometryNode only stores references to existing rendering assets stored in
  * guacamole's databases. GeometryNodes typically aren't instantiated directly
  * but by utilizing guacamole's GeometryLoader.
+ *
+ * \ingroup gua_scenegraph
  */
-
-namespace gua {
-
 class GUA_DLL GeometryNode : public Node {
   public:
 

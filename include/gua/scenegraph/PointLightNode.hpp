@@ -30,18 +30,27 @@
 
 #include <string>
 
+namespace gua {
+
 /**
  * This class is used to represent light in the SceneGraph.
  *
+ * \ingroup gua_scenegraph
  */
-
-namespace gua {
-
 class GUA_DLL PointLightNode : public Node {
  public:
 
   struct Configuration {
-    GUA_ADD_PROPERTY(utils::Color3f,  color,                    utils::Color3f(1.f, 1.f, 1.f));
+    /**
+     * The color of the light source.
+     * It's possible to use negative values and values > 1.
+     */
+    GUA_ADD_PROPERTY(utils::Color3f, color, utils::Color3f(1.f, 1.f, 1.f));
+
+    /**
+     * The exponent of distance attenuation.
+     * E.g. a value of 2 means quadratic falloff, 1 means linear falloff
+     */
     GUA_ADD_PROPERTY(float,           falloff,                  1.f);
     GUA_ADD_PROPERTY(bool,            enable_shadows,           false);
     GUA_ADD_PROPERTY(bool,            enable_godrays,           false);

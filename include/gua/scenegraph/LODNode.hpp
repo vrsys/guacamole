@@ -26,6 +26,8 @@
 #include <gua/scenegraph/TransformNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
+namespace gua {
+
 /**
  * This class is used to represent a level of detail node in the SceneGraph.
  *
@@ -37,10 +39,8 @@
  * therefore describes upto which distance between the current camera and the
  * LODNode the LODNode's child with the same index shall be visible.
  *
+ * \ingroup gua_scenegraph
  */
-
-namespace gua {
-
 class GUA_DLL LODNode : public TransformNode {
  public:
 

@@ -40,6 +40,8 @@ namespace gua {
  *
  * It can store any type of Data. The data is mapped on strings,
  * which then can be used to access this data.
+ *
+ * \ingroup gua_databases
  */
 template <typename T> class Database {
  public:
