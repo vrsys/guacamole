@@ -69,7 +69,8 @@ class GUA_DLL ScreenNode : public Node {
    * \param configuration  A configuration struct to define the ScreenNode's
    *                       properties.
    * \param transform      A matrix to describe the ScreenNode's
-   *                       transformation.
+   *                       transformation. By default, the ScreenNode is aligned
+   *                       with the xy-plane and facing in +z direction.
    */
   ScreenNode(std::string const& name,
              Configuration const& configuration = Configuration(),
@@ -98,7 +99,7 @@ class GUA_DLL ScreenNode : public Node {
    *
    * \param visitor  A visitor to process the ScreenNode's data.
    */
-  /* virtual */ void accept(NodeVisitor&);
+  /* virtual */ void accept(NodeVisitor& visitor);
 
  private:
 

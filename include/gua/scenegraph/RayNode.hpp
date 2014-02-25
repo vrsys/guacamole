@@ -65,7 +65,7 @@ class GUA_DLL RayNode : public Node {
    *
    * \param visitor  A visitor to process the RayNode's data.
    */
-  /* virtual */ void accept(NodeVisitor&);
+  /* virtual */ void accept(NodeVisitor& visitor);
 
   /**
    * Updates a RayNode's BoundingBox.

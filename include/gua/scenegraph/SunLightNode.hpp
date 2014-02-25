@@ -132,7 +132,7 @@ class GUA_DLL SunLightNode : public Node {
    *
    * \param visitor  A visitor to process the SunLightNode's data.
    */
-  /* virtual */ void accept(NodeVisitor&);
+  /* virtual */ void accept(NodeVisitor& visitor);
 
   /**
    * Updates a SunLightNode's BoundingBox.

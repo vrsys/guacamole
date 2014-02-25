@@ -116,7 +116,7 @@ class GUA_DLL SpotLightNode : public Node {
    * \param configuration  A configuration struct to define the SpotLightNode's
    *                       properties.
    * \param transform      A matrix to describe the SpotLightNode's
-   *                       transformation.
+   *                       transformation. The default light direction is -y.
    */
   SpotLightNode(std::string const& name,
                 Configuration const& configuration = Configuration(),
@@ -129,7 +129,7 @@ class GUA_DLL SpotLightNode : public Node {
    *
    * \param visitor  A visitor to process the SpotLightNode's data.
    */
-  /* virtual */ void accept(NodeVisitor&);
+  /* virtual */ void accept(NodeVisitor& visitor);
 
   /**
    * Updates a SpotLightNode's BoundingBox.
