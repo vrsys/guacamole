@@ -32,6 +32,9 @@
 /**
  * This class is used to represent geometry in the SceneGraph.
  *
+ * A GeometryNode only stores references to existing rendering assets stored in
+ * guacamole's databases. GeometryNodes typically aren't instantiated directly
+ * but by utilizing guacamole's GeometryLoader.
  */
 
 namespace gua {
@@ -51,24 +54,33 @@ class GUA_DLL GeometryNode : public Node {
     /**
      * Constructor.
      *
-     * This constructs a GeometryNode with the given parameters and calls
-     * the constructor of base class Core with the type GEOMETRY.
+     * This constructs a GeometryNode with the given parameters.
      *
-     * \param geometry  The name of the GeometryNode's geometry.
-     * \param material  The name of the GeometryNodeCore's material.
+     * \param name           The name of the new GeometryNode.
+     * \param configuration  A configuration struct to define the GeometryNode's
+     *                       properties.
+     * \param transform      A matrix to describe the GeometryNode's
+     *                       transformation.
      */
     GeometryNode(std::string const& name,
                  Configuration const& configuration = Configuration(),
                  math::mat4 const& transform = math::mat4::identity());
 
     /**
-     * Accepts a visitor and calls concrete visit method
+     * Accepts a visitor and calls concrete visit method.
      *
-     * This method implements the visitor pattern for Nodes
+     * This method implements the visitor pattern for Nodes.
      *
+     * \param visitor  A visitor to process the GeometryNode's data.
      */
-    /* virtual */ void accept(NodeVisitor&);
+    /* virtual */ void accept(NodeVisitor& visitor);
 
+    /**
+     * Updates a GeometryNode's BoundingBox.
+     *
+     * The bounding box is updated according to the transformation matrices of
+     * all children.
+     */
     /*virtual*/ void update_bounding_box() const;
 
     /*virtual*/ void ray_test_impl(RayNode const& ray, PickResult::Options options,
