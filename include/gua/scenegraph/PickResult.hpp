@@ -33,9 +33,19 @@ class Node;
 
 struct GUA_DLL PickResult {
 
-  enum Options { PICK_ALL                 = 0,
+  enum Options {
+                 /// A PickResult is returned for each hit Node along a RayNode's
+                 /// length. This is the default value for picking.
+                 PICK_ALL                 = 0,
+                 /// Only the first hit Node is used as a PickResult. The
+                 /// intersection process is terminated after hitting one Node.
                  PICK_ONLY_FIRST_OBJECT   = 1<<1,
+                 /// Only the first face of each hit Node is used as a
+                 /// PickResult.
                  PICK_ONLY_FIRST_FACE     = 1<<2,
+                 /// If set, the positions of all intersection points in the hit
+                 /// Nodes' object coordinates are written to the respective
+                 /// PickResult.
                  GET_POSITIONS            = 1<<3,
                  GET_WORLD_POSITIONS      = 1<<4,
                  GET_NORMALS              = 1<<5,
@@ -44,6 +54,23 @@ struct GUA_DLL PickResult {
                  GET_TEXTURE_COORDS       = 1<<8
                };
 
+  /**
+   * Constructor.
+   *
+   * This constructs a PickResult with the given parameters. A PickResult is
+   * instantiated for each successful intersection of a RayNode with a
+   * GeometryNode.
+   *
+   * \param d   The distance between the RayNode's origin and the
+   *            intersection point.
+   * \param o   The Node beeing hit.
+   * \param p   The hit's position in the hit Node's object coordinates.
+   * \param wp  The hit's position in world coordinates.
+   * \param n   The surface normal at the hit's position the hit Node's object
+   *            coordinates.
+   * \param wn  The surface normal at the hit's position in world coordinates.
+   * \param t   The hit object's texture coordinates at the hit's position.
+   */
   PickResult(float d, Node* o,
              math::vec3 const& p, math::vec3 const& wp,
              math::vec3 const& n, math::vec3 const& wn,
@@ -53,12 +80,19 @@ struct GUA_DLL PickResult {
       normal(n), world_normal(wn),
       texture_coords(t) {}
 
+  /// The distance between a RayNode's origin and the intersection point.
   float                distance;
+  /// The Node beeing hit.
   Node*                object;
+  /// The Node beeing hit.
   mutable math::vec3   position;
+  /// The hit's position in the hit Node's object coordinates.
   mutable math::vec3   world_position;
+  /// The surface normal at the hit's position the hit Node's object coordinates.
   mutable math::vec3   normal;
+  /// The surface normal at the hit's position in world coordinates.
   mutable math::vec3   world_normal;
+  /// The hit object's texture coordinates at the hit's position.
   mutable math::vec2   texture_coords;
 
   bool operator<(PickResult const& lhs) const {
