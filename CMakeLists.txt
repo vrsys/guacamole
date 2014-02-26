@@ -43,7 +43,7 @@ include(find_compiler)
 include(find_schism)
 include(find_boost)
 include(find_bullet)
-include(find_json)
+include(FindJson)
 
 set(LIBS
     ${SCHISM_LIBRARIES}
