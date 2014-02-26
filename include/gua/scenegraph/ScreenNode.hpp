@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SCREEN_CORE_HPP
-#define GUA_SCREEN_CORE_HPP
+#ifndef GUA_SCREEN_NODE_HPP
+#define GUA_SCREEN_NODE_HPP
 
 #include <gua/platform.hpp>
 #include <gua/scenegraph/Node.hpp>
@@ -31,42 +31,82 @@ namespace gua {
 /**
  * This class is used to represent a screen in the SceneGraph.
  *
+ * A ScreenNode is used to specify arbitrary viewing frustra. For that purpose,
+ * additionally any of guacamole's Nodes may serve as eye representation. To
+ * combine ScreenNode and eye, a Camera has to be specified.
+ *
  * \ingroup gua_scenegraph
  */
 class GUA_DLL ScreenNode : public Node {
  public:
 
   struct Configuration {
+    /**
+     * A vector containing width and height of the ScreenNode.
+     */
     GUA_ADD_PROPERTY(math::vec2, size, math::vec2(1.f, 1.f));
   };
 
+  /**
+   * The ScreenNode's configuration.
+   */
   Configuration data;
 
+  /**
+   * Constructor.
+   *
+   * This constructs an empty ScreenNode.
+   *
+   */
   ScreenNode() {}
 
+  /**
+   * Constructor.
+   *
+   * This constructs a ScreenNode with the given parameters.
+   *
+   * \param name           The name of the new ScreenNode.
+   * \param configuration  A configuration struct to define the ScreenNode's
+   *                       properties.
+   * \param transform      A matrix to describe the ScreenNode's
+   *                       transformation. By default, the ScreenNode is aligned
+   *                       with the xy-plane and facing in +z direction.
+   */
   ScreenNode(std::string const& name,
              Configuration const& configuration = Configuration(),
              math::mat4 const& transform = math::mat4::identity());
 
+  /**
+   * Returns the ScreenNode's transformation, considering the scaling specified
+   * in the Configuration.
+   *
+   * \return math::mat4  The ScreenNode's scaled transformation.
+   */
   math::mat4 get_scaled_transform() const;
+
+  /**
+   * Returns the ScreenNode's world transformation, considering the scaling
+   * specified in the Configuration.
+   *
+   * \return math::mat4  The ScreenNode's scaled world transformation.
+   */
   math::mat4 get_scaled_world_transform() const;
 
   /**
-   * Accepts a visitor and calls concrete visit method
+   * Accepts a visitor and calls concrete visit method.
    *
-   * This method implements the visitor pattern for Nodes
+   * This method implements the visitor pattern for Nodes.
    *
+   * \param visitor  A visitor to process the ScreenNode's data.
    */
-  /* virtual */ void accept(NodeVisitor&);
+  /* virtual */ void accept(NodeVisitor& visitor);
 
  private:
-  /**
-   *
-   */
+
   std::shared_ptr<Node> copy() const;
 
 };
 
 }
 
-#endif  // GUA_SCREEN_CORE_HPP
+#endif  // GUA_SCREEN_NODE_HPP

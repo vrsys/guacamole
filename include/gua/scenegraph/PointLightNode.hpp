@@ -33,7 +33,7 @@
 namespace gua {
 
 /**
- * This class is used to represent light in the SceneGraph.
+ * This class is used to represent a point light in the SceneGraph.
  *
  * \ingroup gua_scenegraph
  */
@@ -54,7 +54,7 @@ class GUA_DLL PointLightNode : public Node {
     GUA_ADD_PROPERTY(float,           falloff,                  1.f);
 
     /**
-     * Triggers if the light casts shadows. NOTE: Not implemented yet!
+     * Triggers whether the light casts shadows. NOTE: Not implemented yet!
      */
     GUA_ADD_PROPERTY(bool,            enable_shadows,           false);
 
@@ -117,7 +117,7 @@ class GUA_DLL PointLightNode : public Node {
    *
    * \param visitor  A visitor to process the PointLightNode's data.
    */
-  /* virtual */ void accept(NodeVisitor&);
+  /* virtual */ void accept(NodeVisitor& visitor);
 
   /**
    * Updates a PointLightNode's BoundingBox.
