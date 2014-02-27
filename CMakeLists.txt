@@ -35,15 +35,15 @@ if (UNIX)
 	pkg_check_modules(GL REQUIRED gl)
 	pkg_check_modules(GLEW REQUIRED glew)
 elseif (WIN32)
-	include(find_assimp)
+	include(FindAssimp)
 endif (UNIX)
 
 include(define_macros)
 include(find_compiler)
-include(find_schism)
-include(find_boost)
-include(find_bullet)
-find_package(Json)
+include(FindSchism)
+include(FindBoost)
+include(FindBullet)
+find_package(Json REQUIRED)
 
 set(LIBS
     ${SCHISM_LIBRARIES}
