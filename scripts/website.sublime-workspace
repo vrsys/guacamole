@@ -1,0 +1,1823 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"bac",
+				"background-color"
+			],
+			[
+				"nav",
+				"navpath"
+			],
+			[
+				"re",
+				"removeClass"
+			],
+			[
+				"paddin",
+				"padding-bottom"
+			],
+			[
+				"marg",
+				"margin-bottom"
+			],
+			[
+				"pos",
+				"position"
+			],
+			[
+				"wid",
+				"width"
+			],
+			[
+				"fon",
+				"font-size"
+			],
+			[
+				"sha",
+				"shadow_map_"
+			],
+			[
+				"mes",
+				"mesh_shader_"
+			],
+			[
+				"pr",
+				"projection_mode"
+			],
+			[
+				"vec",
+				"vec3"
+			],
+			[
+				"ve",
+				"vec3"
+			],
+			[
+				"gu",
+				"gua_out_color"
+			],
+			[
+				"sh",
+				"shadow"
+			],
+			[
+				"gua_ge",
+				"gua_get_position"
+			],
+			[
+				"in",
+				"inputs_"
+			],
+			[
+				"ex",
+				"extends_in_sun_space"
+			],
+			[
+				"ca",
+				"cascade"
+			],
+			[
+				"co",
+				"corner_in_sun_space"
+			],
+			[
+				"cr",
+				"cropped_frustum_corners"
+			],
+			[
+				"inv",
+				"inverse_transform"
+			],
+			[
+				"spl",
+				"split_1"
+			],
+			[
+				"crop",
+				"cropped_clip_near"
+			],
+			[
+				"render_",
+				"render_geometry"
+			],
+			[
+				"prin",
+				"print_shaders"
+			],
+			[
+				"n",
+				"near_plane"
+			],
+			[
+				"tp",
+				"top"
+			],
+			[
+				"cl",
+				"clip_far"
+			],
+			[
+				"com",
+				"compute_position"
+			],
+			[
+				"lensE",
+				"lensEyeR	statement"
+			],
+			[
+				"len",
+				"lens"
+			],
+			[
+				"le",
+				"lens"
+			],
+			[
+				"fil",
+				"file"
+			],
+			[
+				"file",
+				"filename"
+			],
+			[
+				"new",
+				"new_passes"
+			],
+			[
+				"lo",
+				"loading_texture_height"
+			],
+			[
+				"loa",
+				"loading_texture_width"
+			],
+			[
+				"mon",
+				"monitor_count"
+			],
+			[
+				"las",
+				"last_left_resolution_"
+			],
+			[
+				"on",
+				"on_window_resize"
+			],
+			[
+				"scm",
+				"scm_core"
+			],
+			[
+				"gl",
+				"glfw_window_"
+			],
+			[
+				"mo",
+				"monitor"
+			],
+			[
+				"moi",
+				"monitor_count"
+			],
+			[
+				"mouse",
+				"mouseMoveEvent	function"
+			],
+			[
+				"te",
+				"test_btn	statement"
+			],
+			[
+				"update",
+				"updateScene	function"
+			],
+			[
+				"get_sc",
+				"get_scaled_world_transform"
+			],
+			[
+				"__n",
+				"__node	statement"
+			],
+			[
+				"G",
+				"GuiElement	class"
+			],
+			[
+				"Tex",
+				"TexturedQuadNode"
+			],
+			[
+				"geom",
+				"geometry_bbox"
+			],
+			[
+				"tra",
+				"transform"
+			],
+			[
+				"dat",
+				"data"
+			],
+			[
+				"da",
+				"data_"
+			],
+			[
+				"de",
+				"depth_"
+			],
+			[
+				"h",
+				"height_"
+			],
+			[
+				"i",
+				"id"
+			],
+			[
+				"di",
+				"dirty_flags_"
+			],
+			[
+				"fal",
+				"fallback_material"
+			],
+			[
+				"nex",
+				"next_node"
+			],
+			[
+				"CMA",
+				"CMAKE_SOURCE_DIR"
+			],
+			[
+				"fi",
+				"file_name_"
+			],
+			[
+				"ma",
+				"max"
+			],
+			[
+				"vis",
+				"visit_children"
+			],
+			[
+				"is",
+				"is_visible"
+			],
+			[
+				"tr",
+				"transform"
+			],
+			[
+				"set",
+				"set_dirty"
+			],
+			[
+				"no",
+				"node"
+			],
+			[
+				"add",
+				"add_all_geometries"
+			],
+			[
+				"chi",
+				"child_dirty_"
+			],
+			[
+				"spo",
+				"sponza_rb"
+			],
+			[
+				"Ro",
+				"RigidBodyNode"
+			],
+			[
+				"dire",
+				"direction"
+			],
+			[
+				"get_",
+				"get_size"
+			],
+			[
+				"node",
+				"node_name"
+			],
+			[
+				"a",
+				"auto"
+			],
+			[
+				"to",
+				"to_remove"
+			],
+			[
+				"ser",
+				"searched_node"
+			],
+			[
+				"po",
+				"positions"
+			],
+			[
+				"st",
+				"state"
+			],
+			[
+				"obe",
+				"objects"
+			],
+			[
+				"fa",
+				"fail_result"
+			],
+			[
+				"set_s",
+				"set_size"
+			],
+			[
+				"pip",
+				"pipeline_"
+			],
+			[
+				"li",
+				"light_rb"
+			],
+			[
+				"make_",
+				"make_shared"
+			],
+			[
+				"con",
+				"config"
+			],
+			[
+				"pa",
+				"parent"
+			],
+			[
+				"dynamic_",
+				"dynamic_pointer_cast"
+			],
+			[
+				"Geometry",
+				"GeometryNode"
+			],
+			[
+				"look",
+				"lookup_string"
+			],
+			[
+				"en",
+				"endl"
+			],
+			[
+				"un",
+				"unordered_map"
+			],
+			[
+				"rea",
+				"read_directory"
+			],
+			[
+				"Oc",
+				"OculusRift"
+			],
+			[
+				"inc",
+				"include"
+			],
+			[
+				"scre",
+				"screen"
+			],
+			[
+				"screen_",
+				"screen_right"
+			],
+			[
+				"screen_r",
+				"screen_right_it"
+			],
+			[
+				"screen_l",
+				"screen_left_it"
+			],
+			[
+				"cre",
+				"create"
+			],
+			[
+				"OCULUS_RIFT_",
+				"OCULUS_RIFT_RIGHT"
+			],
+			[
+				"ret",
+				"return"
+			],
+			[
+				"Con",
+				"Configuration"
+			],
+			[
+				"cur",
+				"current_directoy_"
+			],
+			[
+				"get_main",
+				"get_main_methods"
+			],
+			[
+				"as",
+				"asString"
+			],
+			[
+				"fun",
+				"functions"
+			],
+			[
+				"with",
+				"with_top_code"
+			],
+			[
+				"e",
+				"endl"
+			],
+			[
+				"gua_in",
+				"gua_in_position"
+			],
+			[
+				"gua_in_t",
+				"gua_in_tangent"
+			],
+			[
+				"GB",
+				"GBUFFER_FRAGMENT_STAGE"
+			],
+			[
+				"str",
+				"string"
+			],
+			[
+				"UNI",
+				"UNIFORM_CUBEMAP"
+			],
+			[
+				"main",
+				"main_pos"
+			],
+			[
+				"ge",
+				"get_name"
+			],
+			[
+				"_ta",
+				"_targetCameraPos"
+			],
+			[
+				"_in",
+				"_initMembers"
+			],
+			[
+				"han",
+				"handles"
+			],
+			[
+				"Dis",
+				"Display3D"
+			],
+			[
+				"marke",
+				"markerInterval"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"contents": "#!/bin/sh\n\n# get directory of script and cd to doc folder\nDIR=\"$( cd \"$( dirname \"$0\" )\" && pwd )\"\ncd $DIR/../doc\n\ndoxygen\n\ncp *.css doc/html\ncp *.png doc/html\n",
+			"file": "make_doc.sh",
+			"file_size": 160,
+			"file_write_time": 130379623100925502,
+			"settings":
+			{
+				"buffer_size": 160,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/rufu1194/Desktop/guacamole/doc/style.css",
+			"settings":
+			{
+				"buffer_size": 27215,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/xhtml;charset=UTF-8\"/>\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=9\"/>\n<!--BEGIN PROJECT_NAME--><title>$projectname: $title</title><!--END PROJECT_NAME-->\n<!--BEGIN !PROJECT_NAME--><title>$title</title><!--END !PROJECT_NAME-->\n\n<link href=\"$relpath$bootstrap.min.css\" rel=\"stylesheet\">\n<link href=\"$relpath$darkstrap.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\">\n<link href=\"$relpath$style.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\">\n\n<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js\"></script>\n\n<script>\n$( document ).ready(function() {\n\n	$(\"div.headertitle\").addClass(\"page-header\");\n    $(\"div.title\").addClass(\"h1\");\n\n    $(\".header\").removeClass(\"header\");\n    $(\".page-header\").addClass(\"well\");\n    $(\".page-header\").removeClass(\"page-header\");\n\n    $(\".indexkey\").removeClass(\"indexkey\");\n    $(\".indexvalue\").removeClass(\"indexvalue\");\n\n    $(\".contents\").removeClass(\"contents\");\n\n\n	$('li > a[href=\"index.html\"] > span').before(\"<i class='fa fa-cog'></i> \");\n	$('li > a[href=\"index.html\"] > span').text(\"guacamole\");\n	$('li > a[href=\"modules.html\"] > span').before(\"<i class='fa fa-square'></i> \");\n	$('li > a[href=\"namespaces.html\"] > span').before(\"<i class='fa fa-bars'></i> \");\n	$('li > a[href=\"annotated.html\"] > span').before(\"<i class='fa fa-list-ul'></i> \");\n	$('li > a[href=\"classes.html\"] > span').before(\"<i class='fa fa-book'></i> \");\n	$('li > a[href=\"inherits.html\"] > span').before(\"<i class='fa fa-sitemap'></i> \");\n	$('li > a[href=\"functions.html\"] > span').before(\"<i class='fa fa-list'></i> \");\n	$('li > a[href=\"functions_func.html\"] > span').before(\"<i class='fa fa-list'></i> \");\n	$('li > a[href=\"functions_vars.html\"] > span').before(\"<i class='fa fa-list'></i> \");\n	$('li > a[href=\"functions_enum.html\"] > span').before(\"<i class='fa fa-list'></i> \");\n	$('li > a[href=\"functions_eval.html\"] > span').before(\"<i class='fa fa-list'></i> \");\n	$('img[src=\"ftv2ns.png\"]').replaceWith('<span class=\"label label-danger\">N</span> ');\n	$('img[src=\"ftv2cl.png\"]').replaceWith('<span class=\"label label-danger\">C</span> ');\n\n	$(\"ul.tablist\").addClass(\"nav nav-tabs nav-justified\");\n	$(\"ul.tablist\").css(\"margin-top\", \"0.5em\");\n	$(\"ul.tablist\").css(\"margin-bottom\", \"0.5em\");\n	$(\"li.current\").addClass(\"active\");\n	$(\"iframe\").attr(\"scrolling\", \"yes\");\n\n    $(\"#nav-path > ul\").addClass(\"breadcrumb\");\n	$(\".navpath\").removeClass(\"navpath\");\n\n	$(\"table.params\").addClass(\"table\");\n	$(\"div.ingroups\").wrapInner(\"<small></small>\");\n	$(\"div.levels\").css(\"margin\", \"0.5em\");\n	$(\"div.levels > span\").addClass(\"btn btn-default btn-xs\");\n	$(\"div.levels > span\").css(\"margin-right\", \"0.25em\");\n\n	$(\"table.directory\").addClass(\"table table-striped\");\n	$(\"div.summary > a\").addClass(\"btn btn-default btn-xs\");\n	$(\"table.fieldtable\").addClass(\"table\");\n	$(\".fragment\").removeClass(\"fragment\");\n\n    $(\".memitem\").addClass(\"well\");\n	$(\".memitem\").removeClass(\"memitem\");\n\n    $(\".memproto\").addClass(\"well\");\n    $(\".memproto\").removeClass(\"memproto\");\n\n	$(\".memdoc\").removeClass(\"memdoc\");\n\n	$(\"span.mlabel\").addClass(\"label label-info\");\n\n	$(\"table.memberdecls\").addClass(\"table\");\n	$(\"[class^=memitem]\").addClass(\"active\");\n\n	$(\"div.ah\").addClass(\"btn btn-default\");\n	$(\"span.mlabels\").addClass(\"pull-right\");\n	$(\"table.mlabels\").css(\"width\", \"100%\")\n	$(\"td.mlabels-right\").addClass(\"pull-right\");\n\n	$(\"div.ttc\").addClass(\"panel panel-info\");\n	$(\"div.ttname\").addClass(\"panel-heading\");\n	$(\"div.ttdef,div.ttdoc,div.ttdeci\").addClass(\"panel-body\");\n});\n</script>\n\n$treeview\n$search\n$mathjax\n</head>\n<body>\n<div id=\"top\"><!-- do not remove this div! -->\n\n<!--BEGIN TITLEAREA-->\n<div id=\"titlearea\">\n<table cellspacing=\"0\" cellpadding=\"0\">\n <tbody>\n <tr style=\"height: 56px;\">\n  <!--BEGIN PROJECT_LOGO-->\n  <td id=\"projectlogo\"><img alt=\"Logo\" src=\"$relpath$$projectlogo\"/></td>\n  <!--END PROJECT_LOGO-->\n  <!--BEGIN PROJECT_NAME-->\n  <td style=\"padding-left: 0.5em;\">\n   <div id=\"projectname\">$projectname\n   <!--BEGIN PROJECT_NUMBER-->&#160;<span id=\"projectnumber\">$projectnumber</span><!--END PROJECT_NUMBER-->\n   </div>\n   <!--BEGIN PROJECT_BRIEF--><div id=\"projectbrief\">$projectbrief</div><!--END PROJECT_BRIEF-->\n  </td>\n  <!--END PROJECT_NAME-->\n  <!--BEGIN !PROJECT_NAME-->\n   <!--BEGIN PROJECT_BRIEF-->\n    <td style=\"padding-left: 0.5em;\">\n    <div id=\"projectbrief\">$projectbrief</div>\n    </td>\n   <!--END PROJECT_BRIEF-->\n  <!--END !PROJECT_NAME-->\n  <!--BEGIN DISABLE_INDEX-->\n   <!--BEGIN SEARCHENGINE-->\n   <td>$searchbox</td>\n   <!--END SEARCHENGINE-->\n  <!--END DISABLE_INDEX-->\n </tr>\n </tbody>\n</table>\n</div>\n<!--END TITLEAREA-->\n",
+			"file": "/home/rufu1194/Desktop/guacamole/doc/header.html",
+			"file_size": 4822,
+			"file_write_time": 130379623093685261,
+			"settings":
+			{
+				"buffer_size": 4822,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/rufu1194/Desktop/avango/examples/touch_example/main.py",
+			"settings":
+			{
+				"buffer_size": 2963,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "make.sh",
+			"settings":
+			{
+				"buffer_size": 284,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 375.0,
+		"selected_items":
+		[
+			[
+				"color",
+				"Color picker"
+			],
+			[
+				"colo",
+				"Color picker"
+			],
+			[
+				"ins",
+				"Package Control: Install Package"
+			],
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"view",
+				"View: Toggle Menu"
+			],
+			[
+				"new",
+				"Git: New Branch"
+			],
+			[
+				"pu",
+				"Git: Push Current Branch"
+			],
+			[
+				"cha",
+				"Git: Change Branch"
+			],
+			[
+				"com",
+				"Git: Commit"
+			],
+			[
+				"ad",
+				"Git: Add..."
+			],
+			[
+				"push",
+				"Git: Push Current Branch"
+			],
+			[
+				"mer",
+				"Git: Merge Branch"
+			],
+			[
+				"chan",
+				"Git: Change Branch"
+			],
+			[
+				"add",
+				"Git: Add..."
+			],
+			[
+				"comm",
+				"Git: Commit"
+			],
+			[
+				"git add",
+				"Git: Add..."
+			],
+			[
+				"git che",
+				"Git: Checkout Current File"
+			],
+			[
+				"git chec",
+				"Git: Checkout Current File"
+			],
+			[
+				"git res",
+				"Git: Reset (unstage) Current File"
+			],
+			[
+				"git a",
+				"Git: Add..."
+			],
+			[
+				"pus",
+				"Git: Push Current Branch"
+			],
+			[
+				"pul",
+				"Git: Pull Current Branch"
+			],
+			[
+				"git:",
+				"Git: Gui"
+			],
+			[
+				"pull",
+				"Git: Pull Current Branch"
+			],
+			[
+				"stas",
+				"Git: Stash Changes"
+			],
+			[
+				"in",
+				"Package Control: Install Package"
+			],
+			[
+				"rem",
+				"Package Control: Remove Package"
+			],
+			[
+				"pac",
+				"Package Control: Install Package"
+			],
+			[
+				"syn co",
+				"Set Syntax: CoffeeScript"
+			],
+			[
+				"pack",
+				"Package Control: Remove Package"
+			],
+			[
+				"re",
+				"Package Control: Remove Package"
+			],
+			[
+				"pa",
+				"Package Control: Remove Package"
+			],
+			[
+				"ena",
+				"Package Control: Enable Package"
+			],
+			[
+				"en",
+				"Package Control: Enable Package"
+			],
+			[
+				"dis",
+				"Package Control: Disable Package"
+			],
+			[
+				"enab",
+				"Package Control: Enable Package"
+			],
+			[
+				"the",
+				"QuickThemes: next"
+			],
+			[
+				"them",
+				"QuickThemes: next"
+			],
+			[
+				"Package Control: ",
+				"Package Control: Enable Package"
+			],
+			[
+				"key",
+				"Preferences: Key Bindings - User"
+			],
+			[
+				"remo",
+				"Package Control: Remove Package"
+			],
+			[
+				"gi",
+				"Git: Status"
+			],
+			[
+				"select",
+				"Bookmarks: Select All"
+			],
+			[
+				"git",
+				"Git: Status"
+			],
+			[
+				"packa",
+				"Package Control: Remove Package"
+			],
+			[
+				"sublmi",
+				"Preferences: SublimeLinter Settings – Default"
+			]
+		],
+		"width": 435.0
+	},
+	"console":
+	{
+		"height": 139.0,
+		"history":
+		[
+			"a",
+			"a = 5",
+			"env",
+			"ls",
+			"bash",
+			"ls"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/rufu1194/Desktop/guacamole/include/gua/databases/Database.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/databases/MaterialDatabase.cpp",
+		"/home/rufu1194/Desktop/guacamole/documentation.md",
+		"/home/rufu1194/Desktop/guacamole/scripts/start_localhost.sh",
+		"/home/rufu1194/Desktop/guacamole/_config.yml",
+		"/opt/guacamole/examples/cluster/multi-user/lib/Navigation.py",
+		"/opt/guacamole/examples/cluster/multi-user/lib/Device.py",
+		"/home/rufu1194/simmesimme.github.com/index.md",
+		"/home/rufu1194/simmesimme.github.com/_config.yml",
+		"/home/rufu1194/simmesimme.github.com/features.md",
+		"/home/rufu1194/simmesimme.github.com/installation.md",
+		"/home/rufu1194/simmesimme.github.com/documentation.md",
+		"/home/rufu1194/simmesimme.github.com/news.html",
+		"/home/rufu1194/simmesimme.github.com/_includes/themes/hooligan/page.html",
+		"/home/rufu1194/Desktop/avango/avango-gua/include/avango/gua/scenegraph/Node.hpp",
+		"/home/rufu1194/simmesimme.github.com/README.md",
+		"/home/rufu1194/simmesimme.github.com/.gitignore",
+		"/home/rufu1194/Desktop/guacamole/doc/Doxyfile",
+		"/home/rufu1194/simmesimme.github.com/_includes/themes/hooligan/default.html",
+		"/home/rufu1194/simmesimme.github.com/scripts/start_localhost.sh",
+		"/home/rufu1194/simmesimme.github.com/assets/themes/hooligan/_sass/style.scss",
+		"/home/rufu1194/simmesimme.github.com/scripts/website.sublime-project",
+		"/home/rufu1194/Desktop/guacamole/scripts/guacamole.sublime-project",
+		"/home/rufu1194/simmesimme.github.com/assets/themes/hooligan/_sass/_base.scss",
+		"/home/rufu1194/simmesimme.github.com/assets/themes/hooligan/config.rb",
+		"/home/rufu1194/simmesimme.github.com/scripts/make.sh",
+		"/home/rufu1194/simmesimme.github.com/assets/themes/hooligan/_sass/config.rb",
+		"/home/rufu1194/simmesimme.github.com/assets/themes/hooligan/css/darkstrap.css",
+		"/home/rufu1194/simmesimme.github.com/assets/themes/hooligan/css/pygments.css",
+		"/home/rufu1194/simmesimme.github.com/assets/themes/hooligan/css/style.css",
+		"/home/rufu1194/simmesimme.github.com/_theme_packages/hooligan/README.md",
+		"/home/rufu1194/simmesimme.github.com/_theme_packages/hooligan/assets/themes/hooligan/css/style.css",
+		"/home/rufu1194/simmesimme.github.com/_theme_packages/hooligan/manifest.yml",
+		"/home/rufu1194/simmesimme.github.com/_theme_packages/hooligan/packager.yml",
+		"/home/rufu1194/simmesimme.github.com/_includes/themes/hooligan/settings.yml",
+		"/home/rufu1194/simmesimme.github.com/_includes/themes/hooligan/post.html",
+		"/home/rufu1194/simmesimme.github.com/_theme_packages/hooligan/_includes/themes/hooligan/page.html",
+		"/home/rufu1194/simmesimme.github.com/_theme_packages/hooligan/_includes/themes/hooligan/default.html",
+		"/home/rufu1194/simmesimme.github.com/_theme_packages/hooligan/_includes/themes/hooligan/post.html",
+		"/home/rufu1194/simmesimme.github.com/_posts/2014-02-20-hello-world.md",
+		"/home/rufu1194/simmesimme.github.com/_posts/core-samples/test.md",
+		"/home/rufu1194/Desktop/guacamole/stylesheets/stylesheet.css",
+		"/home/rufu1194/Desktop/guacamole/index.html",
+		"/home/rufu1194/.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap",
+		"/home/rufu1194/.config/sublime-text-3/Packages/User/Preferences.sublime-settings",
+		"/home/rufu1194/.config/sublime-text-3/Packages/Schemr/Default (Linux).sublime-keymap",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/lighting/mesh/shadow.vert",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/lighting/mesh/shadow.frag",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/LightingPass.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/LightingPass.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/ShadowMap.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/Uniform.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/UberShader.cpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/GBufferPass.cpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/Pass.cpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/Pipeline.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/DisplayData.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/DisplayData.cpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/utils/DotGenerator.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/Pass.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/GBufferPass.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/Renderer.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/Renderer.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/BufferDescriptions.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/nurbs_geometry/tml/oriented_boundingbox_partial_derivative_policy.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/databases/Resources.cpp",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/gbuffer/mesh/mesh.frag",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/gbuffer/mesh/mesh.vert",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/lighting/lighting.vert",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/lighting/lighting.frag",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/Pipeline.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/ShadowMapNURBSShader.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/MeshLoader.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/MeshLoader.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/Mesh.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/Mesh.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/math/math.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/utils/Mask.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/memory.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/ShadingModel.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/ShaderStage.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/ShaderProgram.hpp",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/common/get_position.glsl",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/common/get_depth.glsl",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/Frustum.cpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/Serializer.cpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/ShadowMap.cpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/LayerMapping.cpp",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/final/final.frag",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/MaterialLoader.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/SerializedScene.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/scenegraph/Node.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/ShadingModel.cpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/scenegraph/SceneGraph.cpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/MaterialDescription.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/MaterialLoader.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/LayerMapping.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/Frustum.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/GBuffer.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/Serializer.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/SerializedNode.hpp",
+		"/home/rufu1194/Desktop/avango/examples/zmq_distribution/Readme.txt",
+		"/home/rufu1194/Desktop/avango/examples/zmq_distribution/start-server.sh",
+		"/home/rufu1194/Desktop/avango/examples/zmq_distribution/start-client.sh",
+		"/home/rufu1194/Desktop/avango/examples/zmq_distribution/simpleviewer-srv.py",
+		"/home/rufu1194/Desktop/avango/examples/zmq_distribution/simpleviewer-clnt.py",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/PostFXPass.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/Camera.hpp",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/postfx/godrays.vert",
+		"/home/rufu1194/Desktop/guacamole/src/gua/physics/CollisionShapeNode.cpp",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/postfx/godrays.frag",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/PostFXPass.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/math/math.hpp",
+		"/home/rufu1194/Desktop/guacamole/plugins/guacamole-oculus/include/gua/OculusRift.hpp",
+		"/home/rufu1194/Desktop/guacamole/resources/shaders/uber_shaders/common/get_material_id.glsl",
+		"/home/rufu1194/Desktop/guacamole/include/gua/utils/Directory.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/scenegraph/PointLightNode.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/LightingUberShader.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/LightingUberShader.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/databases/Resources.hpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/LoaderBase.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/math/BoundingBoxAlgo.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/GBuffer.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/ShadowMapMeshShader.cpp",
+		"/home/rufu1194/Desktop/guacamole/include/gua/renderer/ShadowMapMeshShader.hpp",
+		"/home/rufu1194/Desktop/guacamole/src/gua/renderer/ShadowMapNURBSShader.cpp",
+		"/home/rufu1194/Desktop/guacamole/make"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 93.0,
+		"where_history":
+		[
+			"",
+			"/home/rufu1194/Desktop/guacamole/include/gua",
+			"",
+			"/home/rufu1194/Desktop/guacamole/src",
+			"/home/rufu1194/Desktop/guacamole",
+			"/home/rufu1194/Desktop/guacamole/src",
+			"/home/rufu1194/Desktop/guacamole/include",
+			"/home/rufu1194/Desktop/guacamole/src"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"indexvalue",
+			"memitem",
+			"'",
+			"indexkey",
+			"key",
+			"pills",
+			"body",
+			"incl",
+			"News",
+			"Advent",
+			"header",
+			"head",
+			"page-h",
+			"alt",
+			"shader.",
+			"rendering",
+			"current_scenes_[0]",
+			"mesh_s",
+			"global_clipping_plane",
+			"enable_global_clipping_plane",
+			"/sc",
+			"screen",
+			"Screen",
+			"screen",
+			"render_go",
+			"gua_get_position()",
+			"shadow_pos",
+			"gua_get_shadow",
+			"render_godrays",
+			"godr",
+			"result",
+			"vec3",
+			"0",
+			"vec3",
+			"push_back",
+			"bbox.max",
+			"min",
+			".z",
+			".y",
+			".x",
+			"tmp",
+			"camera",
+			"camera_transform",
+			"gua_light_shadow_map_projection_view_matrix",
+			"shadow_map_",
+			"LightingPass",
+			"shadow_map_",
+			"frustum[",
+			"result",
+			"compute_frustum",
+			"frustum",
+			"Frustum",
+			"camera_position_",
+			"view_",
+			"planes_",
+			"scal_type",
+			"update_b",
+			"update",
+			"spot",
+			"render_godrays",
+			"CalculateLightType",
+			"godra",
+			"rasterizer_state_",
+			"spot_light_count",
+			"SpotLightNode",
+			"gua_calculate_point_light",
+			"SpotLightNode",
+			"GUA_SPOT_LIGHT_NODE_HPP",
+			"= 0",
+			"head",
+			"236",
+			"GroupNode",
+			"convert_osg_to_gua",
+			"camera",
+			"Camera",
+			"ViewNode",
+			"gua_textured_quad",
+			"new_passes",
+			"passes_",
+			"reload_all",
+			"samplerBuffer",
+			"trim_pointdata",
+			"trim_curvedata",
+			"trim_curvelist",
+			"trim_contourlist",
+			"trim_partition",
+			"uniform",
+			"trim_partition",
+			"attribute_texture",
+			"parameter_texture",
+			"nurbs",
+			"cout",
+			"max_screen_error",
+			"new NURBS",
+			"left",
+			"resolution",
+			"left",
+			"glfw_LIBRARIES",
+			"glfw_INCLUDE_DIRS",
+			"GLFW",
+			"CUDA",
+			"GLFW_INCLUDE_DIR",
+			"GLFW_LIBRARY",
+			"filena",
+			"request_GLFW_search_directories",
+			"find_GLFW",
+			"GUACAMOLE",
+			"my_constructor",
+			"Pipeline",
+			"floo",
+			"Stones",
+			"scene",
+			"__view",
+			"size",
+			"btn",
+			"__view",
+			"__image",
+			"initUI",
+			"__updateTexture",
+			"__scene",
+			"navigation",
+			"\"\\n",
+			"needs_update",
+			"textures_.size() <= context.id || textures_[context.id] == 0 || dirty_flags_[context.id]",
+			"cout",
+			"####",
+			"GroupNode",
+			");\n"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"TransformNode",
+			"math::mat4::Zero()",
+			"@_",
+			" @",
+			"",
+			"# ===========",
+			"this.",
+			"@",
+			"----------------------------------------------------------------------------",
+			"this.",
+			"@_my",
+			""
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 3,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "make_doc.sh",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 160,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								142,
+								142
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "/home/rufu1194/Desktop/guacamole/doc/style.css",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 27215,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								15630,
+								15630
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/CSS/CSS.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 15832.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/home/rufu1194/Desktop/guacamole/doc/header.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4822,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								758,
+								758
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 258.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/home/rufu1194/Desktop/avango/examples/touch_example/main.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2963,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 596.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "make.sh",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 284,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 25.0
+	},
+	"input":
+	{
+		"height": 31.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 112.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"project": "website.sublime-project",
+	"replace":
+	{
+		"height": 46.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"data",
+				"include/gua/databases/Database.hpp"
+			],
+			[
+				"unifo",
+				"include/gua/renderer/Uniform.hpp"
+			],
+			[
+				"uber",
+				"src/gua/renderer/UberShader.cpp"
+			],
+			[
+				"pass",
+				"src/gua/renderer/Pass.cpp"
+			],
+			[
+				"gbu",
+				"src/gua/renderer/GBufferPass.cpp"
+			],
+			[
+				"renderer",
+				"src/gua/renderer/Renderer.cpp"
+			],
+			[
+				"pip",
+				"src/gua/renderer/Pipeline.cpp"
+			],
+			[
+				"passc",
+				"src/gua/renderer/Pass.cpp"
+			],
+			[
+				"light",
+				"src/gua/renderer/LightingPass.cpp"
+			],
+			[
+				"shadoe",
+				"resources/shaders/uber_shaders/lighting/mesh/shadow.vert"
+			],
+			[
+				"shadow",
+				"resources/shaders/uber_shaders/lighting/mesh/shadow.frag"
+			],
+			[
+				"mesh",
+				"resources/shaders/uber_shaders/gbuffer/mesh/mesh.vert"
+			],
+			[
+				"mehs",
+				"resources/shaders/uber_shaders/gbuffer/mesh/mesh.frag"
+			],
+			[
+				"pas",
+				"include/gua/renderer/Pass.hpp"
+			],
+			[
+				"sha",
+				"include/gua/renderer/ShadowMap.hpp"
+			],
+			[
+				"gbuffer",
+				"src/gua/renderer/GBufferPass.cpp"
+			],
+			[
+				"mater",
+				"src/gua/renderer/MaterialLoader.cpp"
+			],
+			[
+				"mappin",
+				"src/gua/renderer/LayerMapping.cpp"
+			],
+			[
+				"frus",
+				"src/gua/renderer/Frustum.cpp"
+			],
+			[
+				"seria",
+				"src/gua/renderer/Serializer.cpp"
+			],
+			[
+				"node",
+				"include/gua/scenegraph/Node.hpp"
+			],
+			[
+				"gbuf",
+				"include/gua/renderer/GBufferPass.hpp"
+			],
+			[
+				"camer",
+				"include/gua/renderer/Camera.hpp"
+			],
+			[
+				"shamap",
+				"src/gua/renderer/ShadowMap.cpp"
+			],
+			[
+				"cam",
+				"include/gua/renderer/Camera.hpp"
+			],
+			[
+				"math",
+				"src/gua/math/math.cpp"
+			],
+			[
+				"fru",
+				"include/gua/renderer/Frustum.hpp"
+			],
+			[
+				"gord",
+				"resources/shaders/uber_shaders/postfx/godrays.vert"
+			],
+			[
+				"godr",
+				"resources/shaders/uber_shaders/postfx/godrays.frag"
+			],
+			[
+				"post",
+				"src/gua/renderer/PostFXPass.cpp"
+			],
+			[
+				"p",
+				"include/gua/renderer/Pass.hpp"
+			],
+			[
+				"res",
+				"src/gua/databases/Resources.cpp"
+			],
+			[
+				"ligh",
+				"src/gua/renderer/LightingPass.cpp"
+			],
+			[
+				"messhadow",
+				"resources/shaders/uber_shaders/lighting/mesh/shadow.vert"
+			],
+			[
+				"bound",
+				"src/gua/math/BoundingBoxAlgo.cpp"
+			],
+			[
+				"fr",
+				"src/gua/renderer/Frustum.cpp"
+			],
+			[
+				"gb",
+				"src/gua/renderer/GBufferPass.cpp"
+			],
+			[
+				"seri",
+				"src/gua/renderer/Serializer.cpp"
+			],
+			[
+				"sun",
+				"include/gua/scenegraph/SunLightNode.hpp"
+			],
+			[
+				"node.cpp",
+				"src/gua/scenegraph/Node.cpp"
+			],
+			[
+				"tran",
+				"include/gua/scenegraph/TransformNode.hpp"
+			],
+			[
+				"tra",
+				"src/gua/scenegraph/TransformNode.cpp"
+			],
+			[
+				"sce",
+				"src/gua/scenegraph/SceneGraph.cpp"
+			],
+			[
+				"vis",
+				"include/gua/scenegraph/NodeVisitor.hpp"
+			],
+			[
+				"serial",
+				"include/gua/renderer/Serializer.hpp"
+			],
+			[
+				"fina",
+				"src/gua/renderer/FinalPass.cpp"
+			],
+			[
+				"fulls",
+				"src/gua/renderer/FullscreenPass.cpp"
+			],
+			[
+				"full",
+				"include/gua/renderer/FullscreenPass.hpp"
+			],
+			[
+				"spo",
+				"include/gua/scenegraph/SpotLightNode.hpp"
+			],
+			[
+				"node.h",
+				"include/gua/scenegraph/Node.hpp"
+			],
+			[
+				"tick",
+				"include/gua/events/Ticker.hpp"
+			],
+			[
+				"ticker",
+				"src/gua/events/Ticker.cpp"
+			],
+			[
+				"sign",
+				"include/gua/events/Signal.hpp"
+			],
+			[
+				"unif",
+				"include/gua/renderer/Uniform.hpp"
+			],
+			[
+				"singl",
+				"include/gua/utils/Singleton.hpp"
+			],
+			[
+				"geom",
+				"include/gua/databases/GeometryDatabase.hpp"
+			],
+			[
+				"geome",
+				"include/gua/scenegraph/GeometryNode.hpp"
+			],
+			[
+				"pick",
+				"include/gua/scenegraph/PickResult.hpp"
+			],
+			[
+				"scen",
+				"include/gua/scenegraph/SceneGraph.hpp"
+			],
+			[
+				"no",
+				"include/gua/scenegraph/Node.hpp"
+			],
+			[
+				"node.c",
+				"src/gua/scenegraph/Node.cpp"
+			],
+			[
+				"gbuff",
+				"src/gua/renderer/GBufferPass.cpp"
+			],
+			[
+				"pipe",
+				"src/gua/renderer/Pipeline.cpp"
+			],
+			[
+				"datab",
+				"include/gua/databases.hpp"
+			],
+			[
+				"materia",
+				"src/gua/renderer/Material.cpp"
+			],
+			[
+				"nursh",
+				"src/gua/renderer/GBufferNURBSUberShader.cpp"
+			],
+			[
+				"nuubers",
+				"src/gua/renderer/GBufferNURBSUberShader.cpp"
+			],
+			[
+				"nurb",
+				"include/gua/renderer/NURBS.hpp"
+			],
+			[
+				"igslo",
+				"src/gua/renderer/nurbs_geometry/import/igs/igs_loader.cpp"
+			],
+			[
+				"nudata",
+				"include/gua/renderer/nurbs_geometry/NURBSData.hpp"
+			],
+			[
+				"grap",
+				"include/gua/scenegraph/SceneGraph.hpp"
+			],
+			[
+				"nurbs",
+				"src/gua/renderer/NURBSLoader.cpp"
+			],
+			[
+				"bui",
+				"src/gua/renderer/BuiltInTextures.cpp"
+			],
+			[
+				"buil",
+				"include/gua/renderer/BuiltInTextures.hpp"
+			],
+			[
+				"tic",
+				"include/gua/events/Ticker.hpp"
+			],
+			[
+				"renc",
+				"include/gua/renderer/RenderClient.hpp"
+			],
+			[
+				"ren",
+				"src/gua/renderer/Renderer.cpp"
+			],
+			[
+				"render",
+				"include/gua/renderer/Renderer.hpp"
+			],
+			[
+				"gua",
+				"src/gua/guacamole.cpp"
+			],
+			[
+				"win",
+				"src/gua/renderer/Window.cpp"
+			],
+			[
+				"text2d",
+				"src/gua/renderer/Texture2D.cpp"
+			],
+			[
+				"texc",
+				"src/gua/renderer/Texture.cpp"
+			],
+			[
+				"texture",
+				"include/gua/renderer/Texture.hpp"
+			],
+			[
+				"te",
+				"src/gua/scenegraph/TexturedQuadNode.cpp"
+			],
+			[
+				"mathcp",
+				"src/gua/math/math.cpp"
+			],
+			[
+				"scre",
+				"include/gua/scenegraph/ScreenNode.hpp"
+			],
+			[
+				"nodhpp",
+				"include/gua/scenegraph/Node.hpp"
+			],
+			[
+				"gecp",
+				"src/gua/scenegraph/GeometryNode.cpp"
+			],
+			[
+				"texq",
+				"src/gua/scenegraph/TexturedQuadNode.cpp"
+			],
+			[
+				"textqu",
+				"include/gua/scenegraph/TexturedQuadNode.hpp"
+			],
+			[
+				"built",
+				"src/gua/renderer/BuiltInTextures.cpp"
+			],
+			[
+				"3d",
+				"src/gua/renderer/Texture3D.cpp"
+			],
+			[
+				"text",
+				"src/gua/renderer/Texture2D.cpp"
+			],
+			[
+				"textu",
+				"src/gua/renderer/Texture.cpp"
+			],
+			[
+				"ser",
+				"include/gua/renderer/Serializer.hpp"
+			],
+			[
+				"iter",
+				"include/gua/scenegraph/Iterator.hpp"
+			],
+			[
+				"bou",
+				"include/gua/math/BoundingBox.hpp"
+			],
+			[
+				"rigi",
+				"src/gua/physics/RigidBodyNode.cpp"
+			],
+			[
+				"main",
+				"examples/big_scenegraph_example/main.cpp"
+			],
+			[
+				"lgeomoader",
+				"include/gua/renderer/GeometryLoader.hpp"
+			],
+			[
+				"tria",
+				"src/gua/physics/TriangleMeshShape.cpp"
+			],
+			[
+				"meshlo",
+				"src/gua/renderer/MeshLoader.cpp"
+			],
+			[
+				"trian",
+				"src/gua/physics/TriangleMeshShape.cpp"
+			],
+			[
+				"geomnode",
+				"src/gua/scenegraph/GeometryNode.cpp"
+			],
+			[
+				"coll",
+				"src/gua/physics/CollisionShapeNode.cpp"
+			],
+			[
+				"ubersh",
+				"src/gua/renderer/UberShaderFactory.cpp"
+			],
+			[
+				"ubers",
+				"src/gua/renderer/UberShader.cpp"
+			],
+			[
+				"meshub",
+				"src/gua/renderer/GBufferMeshUberShader.cpp"
+			],
+			[
+				"nurbsu",
+				"src/gua/renderer/GBufferNURBSUberShader.cpp"
+			],
+			[
+				"collisionshapenodevisitor",
+				"include/gua/physics/CollisionShapeNodeVisitor.hpp"
+			],
+			[
+				"phy",
+				"src/gua/physics/Physics.cpp"
+			],
+			[
+				"oilr",
+				"examples/multipipe_example/OilrigScene.cpp"
+			],
+			[
+				"tex",
+				"include/gua/scenegraph/TexturedQuadNode.hpp"
+			],
+			[
+				"scree",
+				"include/gua/scenegraph/ScreenNode.hpp"
+			],
+			[
+				"colli",
+				"include/gua/physics/CollisionShapeNode.hpp"
+			],
+			[
+				"group",
+				"include/gua/scenegraph/GroupNode.hpp"
+			],
+			[
+				"windo",
+				"include/gua/renderer/Window.hpp"
+			],
+			[
+				"point",
+				"include/gua/scenegraph/PointLightNode.hpp"
+			],
+			[
+				"rayn",
+				"include/gua/scenegraph/RayNode.hpp"
+			],
+			[
+				"view",
+				"include/gua/scenegraph/ViewNode.hpp"
+			],
+			[
+				"spot",
+				"src/gua/scenegraph/SpotLightNode.cpp"
+			],
+			[
+				"load",
+				"include/gua/renderer/LoaderBase.hpp"
+			],
+			[
+				"scene",
+				"include/gua/scenegraph/SceneGraph.hpp"
+			],
+			[
+				"inner",
+				"src/gua/scenegraph/InnerNode.cpp"
+			],
+			[
+				"grou",
+				"src/gua/scenegraph/GroupNode.cpp"
+			],
+			[
+				"trav",
+				"include/gua/scenegraph/TraversalStateStack.hpp"
+			],
+			[
+				"dot",
+				"src/gua/utils/DotGenerator.cpp"
+			],
+			[
+				"geomno",
+				"include/gua/scenegraph/GeometryNode.hpp"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"selected_items":
+		[
+			[
+				"",
+				"~/Desktop/avango/scripts/avango.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 248.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
