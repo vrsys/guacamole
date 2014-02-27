@@ -168,10 +168,9 @@ PostFXPass::~PostFXPass() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::create(RenderContext const& ctx,
-    PipelineConfiguration const& config, std::vector<std::pair<BufferComponent,
+void PostFXPass::create(RenderContext const& ctx, std::vector<std::pair<BufferComponent,
     scm::gl::sampler_state_desc>> const& layers) {
-  Pass::create(ctx, config, layers);
+  Pass::create(ctx, layers);
 
   for (auto p: godray_buffers_) {
     p->remove_buffers(ctx);
@@ -202,8 +201,8 @@ void PostFXPass::create(RenderContext const& ctx,
     delete luminance_buffer_;
   }
 
-  ping_buffer_ = new StereoBuffer(ctx, config, layers);
-  pong_buffer_ = new StereoBuffer(ctx, config, layers);
+  ping_buffer_ = new StereoBuffer(ctx, pipeline_->config, layers);
+  pong_buffer_ = new StereoBuffer(ctx, pipeline_->config, layers);
 
   scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
                                     scm::gl::WRAP_CLAMP_TO_EDGE,
@@ -213,25 +212,25 @@ void PostFXPass::create(RenderContext const& ctx,
   layer_3f_desc.push_back(std::make_pair(BufferComponent::F3, state));
 
   godray_buffers_.push_back(new GBuffer(layer_3f_desc,
-                                config.get_left_resolution()[0]/2,
-                                config.get_left_resolution()[1]/2));
+                                pipeline_->config.get_left_resolution()[0]/2,
+                                pipeline_->config.get_left_resolution()[1]/2));
   godray_buffers_.push_back(new GBuffer(layer_3f_desc,
-                                config.get_left_resolution()[0]/2,
-                                config.get_left_resolution()[1]/2));
+                                pipeline_->config.get_left_resolution()[0]/2,
+                                pipeline_->config.get_left_resolution()[1]/2));
   godray_buffers_.push_back(new GBuffer(layer_3f_desc,
-                                config.get_left_resolution()[0]/2,
-                                config.get_left_resolution()[1]/2));
+                                pipeline_->config.get_left_resolution()[0]/2,
+                                pipeline_->config.get_left_resolution()[1]/2));
 
   for (auto buffer: godray_buffers_) {
       buffer->create(ctx);
   }
 
   glow_buffers_.push_back(new GBuffer(layer_3f_desc,
-                                      config.get_left_resolution()[0]/2,
-                                      config.get_left_resolution()[1]/2));
+                                      pipeline_->config.get_left_resolution()[0]/2,
+                                      pipeline_->config.get_left_resolution()[1]/2));
   glow_buffers_.push_back(new GBuffer(layer_3f_desc,
-                                      config.get_left_resolution()[0]/2,
-                                      config.get_left_resolution()[1]/2));
+                                      pipeline_->config.get_left_resolution()[0]/2,
+                                      pipeline_->config.get_left_resolution()[1]/2));
 
   for (auto buffer: glow_buffers_) {
       buffer->create(ctx);

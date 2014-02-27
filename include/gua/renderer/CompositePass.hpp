@@ -30,7 +30,6 @@
 namespace gua {
 
 class GBuffer;
-struct PipelineConfiguration;
 
 /**
  *
@@ -44,12 +43,11 @@ class CompositePass : public Pass {
 	 CompositePass(Pipeline* pipeline);
 
   /**
-   * 
+   *
    */
 	virtual ~CompositePass();
 
   virtual void create(RenderContext const& ctx,
-                      PipelineConfiguration const& config,
                       std::vector<std::pair<BufferComponent,
                       scm::gl::sampler_state_desc> > const& layers);
 
