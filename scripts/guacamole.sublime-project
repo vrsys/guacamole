@@ -21,7 +21,7 @@
 	    "file_regex": "^(..[^:]*):(.*)$",
 	    "working_dir": "${project_path}/../doc/",
 	    "shell" : "true",
-	    "cmd":  ["doxygen && xdg-open \"doc/html/index.html\""]
+	    "cmd":  ["doxygen"]
 	  }
 	]
 }
