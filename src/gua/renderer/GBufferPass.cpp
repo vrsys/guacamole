@@ -66,7 +66,6 @@ GBufferPass::~GBufferPass() {
 
 void GBufferPass::create(
     RenderContext const& ctx,
-    PipelineConfiguration const& config,
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> > const&
         layers) {
 
@@ -77,7 +76,7 @@ void GBufferPass::create(
     auto tmp(layers);
     tmp.insert(tmp.begin(), std::make_pair(BufferComponent::DEPTH_24, state));
 
-    Pass::create(ctx, config, tmp);
+    Pass::create(ctx, tmp);
 }
 
 

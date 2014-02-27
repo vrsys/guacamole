@@ -38,6 +38,9 @@ namespace gua {
       Ticker(MainLoop& mainloop, double tick_time);
       ~Ticker();
 
+      void set_tick_time(double tick_time);
+      double get_tick_time() const;
+
       Signal<> on_tick;
 
     private:

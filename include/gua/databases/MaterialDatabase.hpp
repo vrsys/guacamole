@@ -35,6 +35,8 @@ namespace gua {
  *
  * This Database stores material data. It can be accessed via string
  * identifiers.
+ *
+ * \ingroup gua_databases
  */
 class GUA_DLL MaterialDatabase : public Database<Material>,
                                  public Singleton<MaterialDatabase> {

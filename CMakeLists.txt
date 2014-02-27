@@ -35,15 +35,15 @@ if (UNIX)
 	pkg_check_modules(GL REQUIRED gl)
 	pkg_check_modules(GLEW REQUIRED glew)
 elseif (WIN32)
-	include(find_assimp)
+	include(FindAssimp)
 endif (UNIX)
 
 include(define_macros)
 include(find_compiler)
-include(find_schism)
-include(find_boost)
-include(find_bullet)
-include(find_json)
+include(FindSchism)
+include(FindBoost)
+include(FindBullet)
+find_package(Json REQUIRED)
 
 set(LIBS
     ${SCHISM_LIBRARIES}
@@ -156,6 +156,18 @@ add_subdirectory(src)
 ################################################################
 
 add_subdirectory(plugins)
+
+################################################################
+# Testing
+################################################################
+
+set (GUACAMOLE_TESTS "false" CACHE BOOL "Set to enable testing.")
+
+if (GUACAMOLE_TESTS)
+  add_subdirectory(tests)
+  enable_testing()
+  add_test( NAME testGUA COMMAND runTests )
+endif (GUACAMOLE_TESTS)
 
 ################################################################
 # Summary

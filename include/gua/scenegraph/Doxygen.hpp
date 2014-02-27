@@ -19,29 +19,12 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RESOURCES_HPP
-#define GUA_RESOURCES_HPP
+#ifndef GUA_SCENEGRAPH_DOXYGEN_HPP
+#define GUA_SCENEGRAPH_DOXYGEN_HPP
 
-// external headers
-#include <vector>
-#include <string>
+/**
+ * \defgroup gua_scenegraph guacamole scenegraph
+ */
 
-namespace gua {
+#endif // GUA_SCENEGRAPH_DOXYGEN_HPP
 
-namespace Resources {
-
-  std::string                       lookup_string(std::string const& file);
-  std::string                       lookup_string(std::vector<unsigned char> const& resource);
-
-  std::string                       lookup_shader(std::string const& file);
-  std::string                       lookup_shader(std::vector<unsigned char> const& resource);
-
-  std::vector<unsigned char> const& lookup(std::string const& file);
-
-  // generated header
-  #include <gua/generated/R.inl>
-
-}
-}
-
-#endif  // GUA_RESOURCES_HPP

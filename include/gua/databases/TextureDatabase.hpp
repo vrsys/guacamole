@@ -35,6 +35,8 @@ namespace gua {
  *
  * This Database stores texture data. It can be accessed via string
  * identifiers.
+ *
+ * \ingroup gua_databases
  */
 class GUA_DLL TextureDatabase : public Database<Texture>,
                                 public Singleton<TextureDatabase> {
