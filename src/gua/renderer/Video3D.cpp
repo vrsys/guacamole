@@ -283,31 +283,35 @@ void Video3D::update_buffers(RenderContext const& ctx) const
         std::cerr << "ERROR reading depth BufferData\n";
   }
 
+  //update kinect color & depth texture array for given context
   for(int i = 0; i <= 2; ++i) {
     /* content submitted foreach layer in texArray
       NOTE: textureArrays do NOT work for ONLY ONE LAYER
       for now texArray contains 3 similar layers
       TODO retrieve info from other kinects in the setup */
     ctx.render_context->update_sub_texture(depth_texArrays_[ctx.id],
-                                  //first_layer scm::gl::texture_region(scm::math::vec3ui(0, 0, 0),
-                                  scm::gl::texture_region(scm::math::vec3ui(0, 0, i), // i = layer
+                                  //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
+                                  scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
                                                           scm::math::vec3ui(width_, height_, 1)),
                                   0, //mip-mapping level
                                   scm::gl::FORMAT_R_32F,
                                   (void*) depth_buffers_[ctx.id]
                                 );
+  
+
+    if ( 0 != ctx.render_context->opengl_api().glGetError() )
+    {
+      std::cerr << "GL error" << std::endl;
+    }
 
     ctx.render_context->update_sub_texture(color_texArrays_[ctx.id],
-                                  //first_layer  scm::gl::texture_region(scm::math::vec3ui(0, 0, 0),
-                                  scm::gl::texture_region(scm::math::vec3ui(0, 0 , i), // i = layer
+                                  //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
+                                  scm::gl::texture_region(scm::math::vec3ui(0, 0 , i),
                                                           scm::math::vec3ui(width_, height_, 1)),
                                   0, //mip-mapping level
                                   scm::gl::FORMAT_BC1_RGBA,
                                   (void*) color_buffers_[ctx.id]
                                 );
-
-    if ( 0 != ctx.render_context->opengl_api().glGetError() )
-      std::cerr << "GL error" << std::endl;
   }
 
 }
