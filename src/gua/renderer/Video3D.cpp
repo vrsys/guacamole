@@ -191,14 +191,14 @@ void Video3D::upload_to(RenderContext const& ctx) const {
   depth_texArrays_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(width_, height_),
                                                        scm::gl::FORMAT_R_32F,
                                                        0,
-                                                       1, //kinect count
+                                                       3, //kinect count (layers in texArray)
                                                        1
                                                     );
 
   color_texArrays_[ctx.id] = ctx.render_device->create_texture_2d( scm::math::vec2ui(width_, height_),
                                                        scm::gl::FORMAT_BC1_RGBA,
                                                        0,
-                                                       1, //kinect count
+                                                       3, //kinect count (layers in texArray)
                                                        1
                                                    );
 
@@ -283,58 +283,53 @@ void Video3D::update_buffers(RenderContext const& ctx) const
         std::cerr << "ERROR reading depth BufferData\n";
   }
 
-  //update kinect color & depth texture array for given context
-  ctx.render_context->update_sub_texture(depth_texArrays_[ctx.id],
-                                //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
-                                scm::gl::texture_region(scm::math::vec3ui(0, 0, 0),
-                                                        scm::math::vec3ui(width_, height_, 1)),
-                                0, //mip-mapping level
-                                scm::gl::FORMAT_R_32F,
-                                (void*) depth_buffers_[ctx.id]
-                              );
+  for(int i = 0; i <= 2; ++i) {
+    /* content submitted foreach layer in texArray
+      NOTE: textureArrays do NOT work for ONLY ONE LAYER
+      for now texArray contains 3 similar layers
+      TODO retrieve info from other kinects in the setup */
+    ctx.render_context->update_sub_texture(depth_texArrays_[ctx.id],
+                                  //first_layer scm::gl::texture_region(scm::math::vec3ui(0, 0, 0),
+                                  scm::gl::texture_region(scm::math::vec3ui(0, 0, i), // i = layer
+                                                          scm::math::vec3ui(width_, height_, 1)),
+                                  0, //mip-mapping level
+                                  scm::gl::FORMAT_R_32F,
+                                  (void*) depth_buffers_[ctx.id]
+                                );
 
-  if ( 0 != ctx.render_context->opengl_api().glGetError() )
-  {
-    std::cerr << "GL error" << std::endl;
+    ctx.render_context->update_sub_texture(color_texArrays_[ctx.id],
+                                  //first_layer  scm::gl::texture_region(scm::math::vec3ui(0, 0, 0),
+                                  scm::gl::texture_region(scm::math::vec3ui(0, 0 , i), // i = layer
+                                                          scm::math::vec3ui(width_, height_, 1)),
+                                  0, //mip-mapping level
+                                  scm::gl::FORMAT_BC1_RGBA,
+                                  (void*) color_buffers_[ctx.id]
+                                );
+
+    if ( 0 != ctx.render_context->opengl_api().glGetError() )
+      std::cerr << "GL error" << std::endl;
   }
 
-
-  ctx.render_context->update_sub_texture(color_texArrays_[ctx.id],
-                                //scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
-                                scm::gl::texture_region(scm::math::vec3ui(0, 0 , 0),
-                                                        scm::math::vec3ui(width_, height_, 1)),
-                                0, //mip-mapping level
-                                scm::gl::FORMAT_BC1_RGBA,
-                                (void*) color_buffers_[ctx.id]
-                              );
 }
 
 void Video3D::set_uniforms(RenderContext const& ctx, ShaderProgram* cs){
 
     // upload to GPU if neccessary
     if (proxy_vertices_.size() <= ctx.id) {
-       //upload_to(ctx);
+       //upload_to(ctx); //CONTEXT ID BUG
       return;
     }
 
-     // TO DO
-
     ctx.render_context->bind_texture(depth_texArrays_[ctx.id], sstate_[ctx.id], 1);
-    //ctx.render_context->current_program()->uniform("depth_video3d_texture", 5); //use with explicit shader binding
-    //cs->set_uniform(ctx, 5, "color_video3d_texture");
     ctx.render_context->current_program()->uniform_sampler("depth_video3d_texture", 1);
 
-    //ctx.render_context->bind_texture(color_texArrays_[ctx.id], sstate_[ctx.id], 6);
-    //ctx.render_context->current_program()->uniform("color_video3d_texture", 6); //use with explicit shader binding
-    //ctx.render_context->current_program()->uniform_sampler("color_video3d_texture", 6);
+    ctx.render_context->bind_texture(color_texArrays_[ctx.id], sstate_[ctx.id], 2);
+    ctx.render_context->current_program()->uniform_sampler("color_video3d_texture", 2);
 
     cs->set_uniform(ctx, calib_file_->getImageDToEyeD(), "image_d_to_eye_d");
     cs->set_uniform(ctx, calib_file_->getEyeDToWorld(), "eye_d_to_world");
     cs->set_uniform(ctx, calib_file_->getEyeDToEyeRGB(), "eye_d_to_eye_rgb");
     cs->set_uniform(ctx, calib_file_->getEyeRGBToImageRGB(), "eye_rgb_to_image_rgb");
-
-    //cs->set_uniform(ctx, depth_texArrays_[ctx.id], "depth_video3d_texture");
-
 }
 
 }

@@ -21,10 +21,10 @@ uniform mat4  eye_d_to_eye_rgb;
 uniform mat4  eye_rgb_to_image_rgb;
 
 //kinect depths
-//uniform sampler2DArray depth_video3d_texture;
-//uniform sampler2DArray color_video3d_texture;
-uniform sampler2D depth_video3d_texture;
-uniform sampler2D color_video3d_texture;
+uniform sampler2DArray depth_video3d_texture;
+uniform sampler2DArray color_video3d_texture;
+//uniform sampler2D depth_video3d_texture;
+//uniform sampler2D color_video3d_texture;
 
 // outputs ---------------------------------------------------------------------
 out VertexData {
@@ -39,8 +39,8 @@ out VertexData {
 
 // main ------------------------------------------------------------------------
 void main() {
-	//VertexOut.depth = texture2DArray(depth_video3d_texture, vec3(gua_in_texcoords.xy, 0)).r;
-  VertexOut.depth = texture(depth_video3d_texture, gua_in_texcoords.xy).r;
+	VertexOut.depth = texture2DArray(depth_video3d_texture, vec3(gua_in_texcoords.xy, 0)).r;
+  //VertexOut.depth = texture(depth_video3d_texture, gua_in_texcoords.xy).r;
 
   vec4 POS_d = VertexOut.depth * image_d_to_eye_d * vec4(gua_in_position.xy, VertexOut.depth, 1.0);
   POS_d.z = VertexOut.depth;
