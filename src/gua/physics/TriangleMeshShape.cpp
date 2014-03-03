@@ -32,7 +32,7 @@
 // external headers
 #include <stdexcept>
 
-#include <hacdHACD.h>
+#include <HACD/hacdHACD.h>
 
 namespace gua {
 namespace physics {
