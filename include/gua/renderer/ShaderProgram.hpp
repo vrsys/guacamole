@@ -28,11 +28,7 @@
 #include <gua/renderer/Uniform.hpp>
 
 // external headers
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-#include <boost/thread.hpp>
-#else
 #include <mutex>
-#endif
 
 #include <map>
 #include <list>
@@ -61,7 +57,7 @@ struct ShaderProgramStage {
  * It combines data from a FragmentShader and a VertexShader in order to
  * achieve different visual appearances of the same mesh.
  */
-class ShaderProgram {
+class GUA_DLL ShaderProgram {
  public:
 
   friend class GBufferNURBSUberShader;

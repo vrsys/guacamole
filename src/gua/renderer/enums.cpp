@@ -138,9 +138,13 @@ std::string uniform_type_to_string(UniformType type) {
       return "mat3";
     case UniformType::MAT4:
       return "mat4";
-    case UniformType::SAMPLER:
+    case UniformType::SAMPLER1D:
+      return "sampler1D";
+    case UniformType::SAMPLER2D:
       return "sampler2D";
-    case UniformType::CUBEMAP:
+    case UniformType::SAMPLER3D:
+      return "sampler3D";
+    case UniformType::SAMPLERCUBE:
       return "samplerCube";
     default:
       return "undefined";
@@ -166,10 +170,14 @@ boost::optional<UniformType> parse_uniform_type(std::string const& type) {
     return boost::make_optional(UniformType::MAT3);
   if (type == "mat4")
     return boost::make_optional(UniformType::MAT4);
+  if (type == "sampler1D")
+    return boost::make_optional(UniformType::SAMPLER1D);
   if (type == "sampler2D")
-    return boost::make_optional(UniformType::SAMPLER);
+    return boost::make_optional(UniformType::SAMPLER2D);
+  if (type == "sampler3D")
+    return boost::make_optional(UniformType::SAMPLER3D);
   if (type == "samplerCube")
-    return boost::make_optional(UniformType::CUBEMAP);
+    return boost::make_optional(UniformType::SAMPLERCUBE);
 
   return boost::optional<UniformType>();
 }
@@ -232,9 +240,13 @@ std::string get_default_value(UniformType type) {
       string_utils::replace(s, "\n", ";");
       return s;
     }
-    case UniformType::SAMPLER:
+    case UniformType::SAMPLER1D:
       return "path/to/texture.png";
-    case UniformType::CUBEMAP:
+    case UniformType::SAMPLER2D:
+      return "path/to/texture.png";
+    case UniformType::SAMPLER3D:
+      return "path/to/volume.raw";
+    case UniformType::SAMPLERCUBE:
       return "path/to/cubemap.png";
     default:
       return "undefined";
@@ -271,9 +283,13 @@ bool is_valid_value(UniformType type, std::string& value) {
         return true;
       }
       return false;
-    case UniformType::SAMPLER:
+    case UniformType::SAMPLER1D:
       return true;
-    case UniformType::CUBEMAP:
+    case UniformType::SAMPLER2D:
+      return true;
+    case UniformType::SAMPLER3D:
+      return true;
+    case UniformType::SAMPLERCUBE:
       return true;
     default:
       return false;
@@ -403,7 +419,7 @@ std::set<std::string> list_uniform_types() {
   std::set<std::string> result;
 
   for (int t(0); t < static_cast<int>(UniformType::NONE); ++t) {
-    if (t != static_cast<int>(UniformType::CUBEMAP))
+    if (t != static_cast<int>(UniformType::SAMPLERCUBE))
       result.insert(uniform_type_to_string(static_cast<UniformType>(t)));
   }
 

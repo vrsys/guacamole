@@ -20,26 +20,64 @@
  ******************************************************************************/
 
 // class header
-#include <gua/scenegraph/ViewNode.hpp>
+#include <gua/scenegraph/VolumeNode.hpp>
 
 // guacamole headers
-#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/platform.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/renderer/VolumeLoader.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/scenegraph/RayNode.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
 
-ViewNode::ViewNode(std::string const& name,
-                   Configuration const& configuration,
-                   math::mat4 const& transform)
+  /////////////////////////////////////////////////////////////////////////////
+
+  VolumeNode::VolumeNode(std::string const& name,
+                           Configuration const& configuration,
+                           math::mat4 const& transform)
     : Node(name, transform), data(configuration) {}
 
-/* virtual */ void ViewNode::accept(NodeVisitor& visitor) {
+  /////////////////////////////////////////////////////////////////////////////
 
-  visitor.visit(this);
-}
+  /* virtual */ void VolumeNode::accept(NodeVisitor& visitor) {
+    visitor.visit(this);
+  }
 
-std::shared_ptr<Node> ViewNode::copy() const {
-  return std::make_shared<ViewNode>(get_name(), data, get_transform());
-}
+  /////////////////////////////////////////////////////////////////////////////
 
-}
+  void VolumeNode::update_bounding_box() const {
+
+    if (data.get_volume() != "") {
+
+      auto geometry_bbox(GeometryDatabase::instance()->lookup(data.get_volume())->get_bounding_box());
+      bounding_box_ = transform(geometry_bbox, world_transform_);
+
+      for (auto child : get_children()) {
+        bounding_box_.expandBy(child->get_bounding_box());
+      }
+    } else {
+      Node::update_bounding_box();
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  void VolumeNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
+                           Mask const& mask, std::set<PickResult>& hits) {
+
+    // first of all, check bbox
+    auto box_hits(ray.intersect(bounding_box_));
+
+	return;
+
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  std::shared_ptr<Node> VolumeNode::copy() const {
+    return std::make_shared<VolumeNode>(get_name(), data, get_transform());
+  }
+
+} // namespace gua

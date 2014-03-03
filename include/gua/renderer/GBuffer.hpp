@@ -58,10 +58,10 @@ class GBuffer : public FrameBufferObject {
   /**
    *
    */
-  std::vector<std::shared_ptr<Texture> > const& get_color_buffers(
+  std::vector<std::shared_ptr<Texture2D> > const& get_color_buffers(
       BufferComponentType type) const;
 
-  inline std::shared_ptr<Texture> const& get_depth_buffer() const {
+  inline std::shared_ptr<Texture2D> const& get_depth_buffer() const {
     return depth_buffer_;
   }
 
@@ -70,9 +70,9 @@ class GBuffer : public FrameBufferObject {
       layer_types_;
   unsigned width_, height_, mipmap_layers_;
 
-  std::map<BufferComponentType, std::vector<std::shared_ptr<Texture> > >
+  std::map<BufferComponentType, std::vector<std::shared_ptr<Texture2D> > >
       color_buffers_;
-  std::shared_ptr<Texture> depth_buffer_;
+  std::shared_ptr<Texture2D> depth_buffer_;
 };
 
 }

@@ -38,7 +38,7 @@ class Node;
  * This DataBase stores geometry data. It can be accessed via string
  * identifiers.
  */
-class GeometryLoader {
+class GUA_DLL GeometryLoader {
  public:
 
   enum Flags {
@@ -59,8 +59,13 @@ class GeometryLoader {
                                         std::string const& fallback_material,
                                         unsigned flags = DEFAULTS);
 
+  std::shared_ptr<Node> create_volume_from_file(std::string const& node_name,
+                                                std::string const& file_name,
+                                                unsigned flags = DEFAULTS);
 
  private:
+
+  void apply_fallback_material(std::shared_ptr<Node> const& root, std::string const& fallback_material) const;
 
   static std::unordered_map<std::string, std::shared_ptr<Node>> loaded_files_;
 

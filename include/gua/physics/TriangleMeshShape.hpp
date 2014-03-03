@@ -23,6 +23,7 @@
 #define GUA_TRIANGLE_SHAPE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/math/math.hpp>
 #include <gua/physics/CollisionShape.hpp>
 #include <gua/renderer/GeometryLoader.hpp>
@@ -48,7 +49,7 @@ namespace physics {
  * For dynamic rigid bodies this class uses Hierarchical Approximate Convex
  * Decomposition (HACD).
  */
-class TriangleMeshShape : public CollisionShape {
+class GUA_DLL TriangleMeshShape : public CollisionShape {
  public:
 
   /**

@@ -67,7 +67,7 @@ void FullscreenPass::render_scene(Camera const& camera, RenderContext const& ctx
     fbo->bind(ctx);
 
     ctx.render_context->set_viewport(scm::gl::viewport(
-        math::vec2(0, 0), math::vec2(fbo->width(), fbo->height())));
+        math::vec2(0, 0), math::vec2(float(fbo->width()), float(fbo->height()))));
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
     rendering(camera, pipeline_->get_current_scene(eye), eye, ctx);

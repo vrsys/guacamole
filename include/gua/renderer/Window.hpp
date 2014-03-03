@@ -23,6 +23,7 @@
 #define GUA_WINDOW_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/WarpMatrix.hpp>
@@ -38,7 +39,7 @@
 namespace gua {
 
 class Geometry;
-class Texture;
+class Texture2D;
 class StereoBuffer;
 
 /**
@@ -46,14 +47,16 @@ class StereoBuffer;
  *
  * It's a window which can display OpenGL stuff.
  */
-class Window {
+class GUA_DLL Window {
  public:
 
   enum TextureDisplayMode {
     FULL,
     RED,
     GREEN,
-    CYAN
+    CYAN,
+    CHECKER_EVEN,
+    CHECKER_ODD
   };
 
   /**
@@ -104,6 +107,8 @@ class Window {
   void open();
   bool get_is_open() const;
 
+  virtual void create_shader();
+
   void close();
 
   /**
@@ -131,10 +136,10 @@ class Window {
   /**
    *
    */
-  void display(std::shared_ptr<Texture> const& center_texture);
+  virtual void display(std::shared_ptr<Texture2D> const& center_texture);
 
-  void display(std::shared_ptr<Texture> const& left_texture,
-               std::shared_ptr<Texture> const& right_texture);
+  virtual void display(std::shared_ptr<Texture2D> const& left_texture,
+               std::shared_ptr<Texture2D> const& right_texture);
 
   /**
    * Get the RenderContext of this window.
@@ -146,8 +151,16 @@ class Window {
    */
   RenderContext* get_context();
 
+protected:
+  ShaderProgram fullscreen_shader_;
+  scm::gl::quad_geometry_ptr fullscreen_quad_;
+
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+  scm::gl::blend_state_ptr blend_state_;
+  RenderContext ctx_;
+
  private:
-  void display(std::shared_ptr<Texture> const& texture,
+  void display(std::shared_ptr<Texture2D> const& texture,
                math::vec2ui const& size,
                math::vec2ui const& position,
                TextureDisplayMode mode = FULL,
@@ -156,15 +169,6 @@ class Window {
 
 
   static unsigned last_context_id_;
-
-
-  RenderContext ctx_;
-
-  ShaderProgram fullscreen_shader_;
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
-
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::blend_state_ptr blend_state_;
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
 };

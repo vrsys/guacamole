@@ -33,17 +33,11 @@
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
-
-Texture::Texture(unsigned width,
-                 unsigned height,
-                 scm::gl::data_format color_format,
+Texture::Texture(scm::gl::data_format color_format,
                  std::vector<void*> const& data,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : width_(width),
-      height_(height),
-      mipmap_layers_(mipmap_layers),
+    : mipmap_layers_(mipmap_layers),
       color_format_(color_format),
       file_name_(""),
       data_(data),
@@ -52,16 +46,10 @@ Texture::Texture(unsigned width,
       sampler_states_(),
       upload_mutex_() {}
 
-////////////////////////////////////////////////////////////////////////////////
-
-Texture::Texture(unsigned width,
-                 unsigned height,
-                 scm::gl::data_format color_format,
+Texture::Texture(scm::gl::data_format color_format,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : width_(width),
-      height_(height),
-      mipmap_layers_(mipmap_layers),
+    : mipmap_layers_(mipmap_layers),
       color_format_(color_format),
       file_name_(""),
       state_descripton_(state_descripton),
@@ -69,13 +57,10 @@ Texture::Texture(unsigned width,
       sampler_states_(),
       upload_mutex_() {}
 
-////////////////////////////////////////////////////////////////////////////////
-
 Texture::Texture(std::string const& file,
                  bool generate_mipmaps,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : width_(0),
-      height_(0),
+    : 
       mipmap_layers_(generate_mipmaps ? 1 : 0),
       color_format_(scm::gl::FORMAT_NULL),
       file_name_(file),
@@ -84,13 +69,9 @@ Texture::Texture(std::string const& file,
       sampler_states_(),
       upload_mutex_() {}
 
-////////////////////////////////////////////////////////////////////////////////
-
 Texture::~Texture() {
   make_non_resident();
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 void Texture::generate_mipmaps(RenderContext const& context) {
 
@@ -99,8 +80,6 @@ void Texture::generate_mipmaps(RenderContext const& context) {
 
   context.render_context->generate_mipmaps(textures_[context.id]);
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 math::vec2ui const Texture::get_handle(RenderContext const& context) const {
 
@@ -112,9 +91,7 @@ math::vec2ui const Texture::get_handle(RenderContext const& context) const {
   return math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-scm::gl::texture_2d_ptr const& Texture::get_buffer(
+scm::gl::texture_image_ptr const& Texture::get_buffer(
     RenderContext const& context) const {
 
   if (textures_.size() <= context.id || textures_[context.id] == 0)
@@ -123,42 +100,24 @@ scm::gl::texture_2d_ptr const& Texture::get_buffer(
   return textures_[context.id];
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 void Texture::make_resident(RenderContext const& context) const {
   context.render_context
       ->make_resident(textures_[context.id], sampler_states_[context.id]);
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 void Texture::make_non_resident(RenderContext const& context) const {
-
   context.render_context->make_non_resident(textures_[context.id]);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 void Texture::make_non_resident() const {
-
   for (int i(0); i<textures_.size(); ++i ) {
     render_contexts_[i]->make_non_resident(textures_[i]);
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-unsigned Texture::width() const { return width_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-unsigned Texture::height() const { return height_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
+#if 0
 void Texture::upload_to(RenderContext const& context) const {
-
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
   if (textures_.size() <= context.id) {
@@ -198,7 +157,6 @@ void Texture::upload_to(RenderContext const& context) const {
 
   make_resident(context);
 }
-
-////////////////////////////////////////////////////////////////////////////////
+#endif
 
 }

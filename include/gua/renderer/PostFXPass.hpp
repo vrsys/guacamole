@@ -30,7 +30,6 @@ namespace gua {
 
 class PostGBufferMeshUberShader;
 class GBuffer;
-struct PipelineConfiguration;
 
 /**
  *
@@ -52,7 +51,6 @@ class PostFXPass : public Pass {
 
   void create(
       RenderContext const& ctx,
-      PipelineConfiguration const& config,
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 
@@ -81,7 +79,7 @@ class PostFXPass : public Pass {
                       CameraMode eye,
                       RenderContext const& ctx);
   void render_ssao(RenderContext const& ctx);
-  void render_hdr(RenderContext const& ctx, std::shared_ptr<Texture> const& texture);
+  void render_hdr(RenderContext const& ctx, std::shared_ptr<Texture2D> const& texture);
 
   // postfx_shaders 0:  SSAO, Fog, God Rays,
   // postfx_shaders 1:  Glow,

@@ -1,0 +1,12 @@
+
+{
+	"shading_model" : "ComplexTexture",
+	"uniforms" : 
+	{
+		"diffuse_map" : "data/textures/stones_diffuse.jpg",
+		"emit" : "0.1",
+		"normal_map" : "data/textures/stones_normal.jpg",
+		"shinyness" : "50",
+		"specular_map" : "data/textures/stones_specular.jpg"
+	}
+}

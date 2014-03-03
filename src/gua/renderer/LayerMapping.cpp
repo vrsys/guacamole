@@ -434,8 +434,8 @@ std::vector<
         }
 
         scm::gl::sampler_state_desc state(scm::gl::FILTER_ANISOTROPIC,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE);
+                                          scm::gl::WRAP_MIRRORED_REPEAT,
+                                          scm::gl::WRAP_MIRRORED_REPEAT);
 
         result.push_back(std::make_pair(get_largest(output_sums), state));
     }

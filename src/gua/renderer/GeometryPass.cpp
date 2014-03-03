@@ -42,6 +42,7 @@ void GeometryPass::render_scene(Camera const& camera, RenderContext const& ctx) 
   gbuffer_->clear(ctx);
 
   for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
+
     FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
 
     CameraMode eye(CameraMode::CENTER);
@@ -53,7 +54,7 @@ void GeometryPass::render_scene(Camera const& camera, RenderContext const& ctx) 
     fbo->bind(ctx);
 
     ctx.render_context->set_viewport(scm::gl::viewport(
-        math::vec2(0, 0), math::vec2(fbo->width(), fbo->height())));
+        math::vec2(0, 0), ::scm::math::vec2f(fbo->width(), fbo->height())));
 
     rendering(pipeline_->get_current_scene(eye), ctx, eye, camera, fbo);
 

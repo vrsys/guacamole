@@ -74,7 +74,7 @@ class Constraint;
  * rigid bodies and constraints as well as provides scene graph traversal
  * capability and methods to tune simulation parameters.
  */
-class Physics {
+class GUA_DLL Physics {
 public:
 
     /**

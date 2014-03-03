@@ -31,13 +31,8 @@
 // external headers
 #include <string>
 #include <vector>
-
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& GUA_COMPILER_VER <= 1600
-#include <boost/thread.hpp>
-#else
 #include <mutex>
 #include <thread>
-#endif
 
 namespace gua {
 
@@ -47,7 +42,7 @@ namespace gua {
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-class Texture {
+class GUA_DLL Texture {
  public:
 
   /**
@@ -55,15 +50,11 @@ class Texture {
    *
    * This constructs a new texture with the given parameters.
    *
-   * \param width            The width of the resulting texture.
-   * \param height           The height of the resulting texture.
    * \param color_format     The color format of the resulting
    *                         texture.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture(unsigned width,
-          unsigned height,
-          scm::gl::data_format color_format,
+  Texture(scm::gl::data_format color_format,
           std::vector<void*> const& data,
           unsigned mipmap_layers = 1,
           scm::gl::sampler_state_desc const& state_descripton =
@@ -76,15 +67,11 @@ class Texture {
    *
    * This constructs a new texture with the given parameters.
    *
-   * \param width            The width of the resulting texture.
-   * \param height           The height of the resulting texture.
    * \param color_format     The color format of the resulting
    *                         texture.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture(unsigned width,
-          unsigned height,
-          scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
+  Texture(scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
           unsigned mipmap_layers = 1,
           scm::gl::sampler_state_desc const& state_descripton =
               scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
@@ -122,28 +109,20 @@ class Texture {
    *                         returned.
    * \return                 A pointer to the schism texture.
    */
-  virtual scm::gl::texture_2d_ptr const& get_buffer(
+  virtual scm::gl::texture_image_ptr const& get_buffer(
       RenderContext const& context) const;
 
   void make_resident(RenderContext const& context) const;
   void make_non_resident(RenderContext const& context) const;
   void make_non_resident() const;
 
-  ///@{
-  /**
-   * Gets the size.
-   *
-   * Returns the size of the Texture.
-   */
-  unsigned width() const;
-  unsigned height() const;
-  ///@}
+  virtual void upload_to(RenderContext const& context) const = 0;
 
  protected:
-  mutable unsigned width_, height_, mipmap_layers_;
+  mutable unsigned mipmap_layers_;
   scm::gl::data_format color_format_;
   scm::gl::sampler_state_desc state_descripton_;
-  mutable std::vector<scm::gl::texture_2d_ptr> textures_;
+  mutable std::vector<scm::gl::texture_image_ptr> textures_;
   mutable std::vector<scm::gl::sampler_state_ptr> sampler_states_;
   mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
 
@@ -152,8 +131,7 @@ class Texture {
 #else
   mutable std::mutex upload_mutex_;
 #endif
-  virtual void upload_to(RenderContext const& context) const;
-
+  
   std::vector<void*> data_;
   std::string file_name_;
 
@@ -162,4 +140,4 @@ class Texture {
 };
 
 }
-#endif  // GUA_TEXTURE_HPP
+#endif  // GUA_TEXTURE2D_HPP

@@ -34,8 +34,8 @@ uniform uvec2 gua_depth_gbuffer_in;
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
 uniform vec3  gua_ambient_color;
+uniform int   gua_background_mode;
 uniform vec3  gua_background_color;
-uniform bool  gua_background_is_color;
 uniform uvec2 gua_background_texture;
 
 // material specific uniforms
@@ -65,6 +65,11 @@ float gua_my_atan2(float a, float b) {
 }
 
 void gua_apply_background_texture() {
+  gua_float_gbuffer_out_0.rgb = texture2D(
+    gua_get_float_sampler(gua_background_texture), gua_quad_coords).xyz;
+}
+
+void gua_apply_skymap_texture() {
   vec3 pos = gua_get_position();
   vec3 view = normalize(pos - gua_camera_position);
 
@@ -86,10 +91,15 @@ void gua_apply_background_color() {
 void main() {
 
   if (gua_get_material_id() == 0) {
-    if (gua_background_is_color) {
-      gua_apply_background_color();
-    } else {
-      gua_apply_background_texture();
+    switch (gua_background_mode) {
+      case 0: // color
+        gua_apply_background_color();
+        break;
+      case 1: // skymap texture
+        gua_apply_skymap_texture();
+        break;
+      default: // quad texture
+        gua_apply_background_texture();
     }
   } else {
 

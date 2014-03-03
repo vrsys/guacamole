@@ -22,15 +22,13 @@
 #ifndef GUA_RENDERCLIENT_HPP
 #define GUA_RENDERCLIENT_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/utils/Timer.hpp>
-#include <gua/utils/Doublebuffer.hpp>
-#include <gua/utils/FpsCounter.hpp>
-
 // external headers
 #include <thread>
 #include <functional>
+
+// guacamole headers
+#include <gua/utils/Doublebuffer.hpp>
+#include <gua/utils/FpsCounter.hpp>
 
 namespace gua {
 

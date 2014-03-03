@@ -22,11 +22,12 @@
 #ifndef GUA_FPS_COUNTER_HPP
 #define GUA_FPS_COUNTER_HPP
 
+#include <gua/platform.hpp>
 #include <gua/utils/Timer.hpp>
 
 namespace gua {
 
-struct FpsCounter
+struct GUA_DLL FpsCounter
 {
   FpsCounter(unsigned t) : fps(0.0f), frame_count(0), timer(), delay(t) {}
   void step() {

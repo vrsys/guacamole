@@ -23,7 +23,7 @@
 #include <gua/physics/CollisionShapeNode.hpp>
 
 // guacamole headers
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 
 namespace gua {
@@ -49,7 +49,7 @@ CollisionShapeNode::~CollisionShapeNode() {}
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<GroupNode>(get_name(), get_transform());
+  return std::make_shared<TransformNode>(get_name(), get_transform());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

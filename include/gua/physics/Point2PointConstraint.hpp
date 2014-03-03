@@ -23,6 +23,7 @@
 #define POINT_2_POINT_CONSTRAINT_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/physics/Constraint.hpp>
 
 namespace gua {
@@ -34,7 +35,7 @@ namespace physics {
  *
  * This constraint represents a ball socket joint.
  */
-class Point2PointConstraint : public Constraint {
+class GUA_DLL Point2PointConstraint : public Constraint {
  public:
 
   /**

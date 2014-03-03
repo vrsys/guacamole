@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/renderer/MaterialDescription.hpp>
 #include <gua/renderer/Uniform.hpp>
+#include <gua/platform.hpp>
 
 // external headers
 #include <memory>

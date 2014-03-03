@@ -24,6 +24,8 @@
 
 // guacamole headers
 #include <gua/renderer/Texture.hpp>
+#include <gua/renderer/Texture2D.hpp>
+#include <gua/renderer/Texture3D.hpp>
 #include <gua/databases/TextureDatabase.hpp>
 #include <gua/utils/Color3f.hpp>
 #include <gua/utils/logger.hpp>
@@ -152,6 +154,93 @@ class UniformValue<Texture*> : public UniformValueBase {
 };
 
 
+template <>
+class UniformValue<std::shared_ptr<Texture2D> > : public UniformValueBase {
+ public:
+  UniformValue(std::shared_ptr<Texture2D> const& value)
+      : UniformValueBase(), value_(value) {}
+
+  void apply(RenderContext const& context,
+             scm::gl::program_ptr program,
+             std::string const& name,
+             unsigned position = 0) const {
+
+    program->uniform(name, position, value_->get_handle(context));
+  }
+
+  std::shared_ptr<Texture2D> const& value() const { return value_; }
+
+  void value(std::shared_ptr<Texture2D> const& value) { value_ = value; }
+
+ private:
+  std::shared_ptr<Texture2D> value_;
+};
+
+template <>
+class UniformValue<Texture2D*> : public UniformValueBase {
+ public:
+  UniformValue(Texture2D* value)
+      : UniformValueBase(), value_(value) {}
+
+  void apply(RenderContext const& context,
+             scm::gl::program_ptr program,
+             std::string const& name,
+             unsigned position = 0) const {
+
+    program->uniform(name, position, value_->get_handle(context));
+  }
+
+  Texture2D* value() const { return value_; }
+
+  void value(Texture2D* value) { value_ = value; }
+
+ private:
+  Texture2D* value_;
+};
+
+template <>
+class UniformValue<std::shared_ptr<Texture3D> > : public UniformValueBase {
+ public:
+  UniformValue(std::shared_ptr<Texture3D> const& value)
+      : UniformValueBase(), value_(value) {}
+
+  void apply(RenderContext const& context,
+             scm::gl::program_ptr program,
+             std::string const& name,
+             unsigned position = 0) const {
+
+    program->uniform(name, position, value_->get_handle(context));
+  }
+
+  std::shared_ptr<Texture3D> const& value() const { return value_; }
+
+  void value(std::shared_ptr<Texture3D> const& value) { value_ = value; }
+
+ private:
+  std::shared_ptr<Texture3D> value_;
+};
+
+template <>
+class UniformValue<Texture3D*> : public UniformValueBase {
+ public:
+  UniformValue(Texture3D* value)
+      : UniformValueBase(), value_(value) {}
+
+  void apply(RenderContext const& context,
+             scm::gl::program_ptr program,
+             std::string const& name,
+             unsigned position = 0) const {
+
+    program->uniform(name, position, value_->get_handle(context));
+  }
+
+  Texture3D* value() const { return value_; }
+
+  void value(Texture3D* value) { value_ = value; }
+
+ private:
+  Texture3D* value_;
+};
 
 template <> class UniformValue<std::string> : public UniformValueBase {
  public:
@@ -163,7 +252,9 @@ template <> class UniformValue<std::string> : public UniformValueBase {
              unsigned position = 0) const {
 
     auto texture(TextureDatabase::instance()->lookup(value_));
-    program->uniform(name, position, texture->get_handle(context));
+    if (texture) {
+      program->uniform(name, position, texture->get_handle(context));
+    }
   }
 
   std::string const& value() const { return value_; }

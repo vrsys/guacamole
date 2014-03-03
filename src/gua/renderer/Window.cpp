@@ -46,6 +46,12 @@ std::string subroutine_from_mode(Window::TextureDisplayMode mode) {
     case Window::CYAN:
       return "get_cyan";
       break;
+    case Window::CHECKER_EVEN:
+      return "get_checker_even";
+      break;
+    case Window::CHECKER_ODD:
+      return "get_checker_odd";
+      break;
     default:
       return "get_full";
   }
@@ -124,6 +130,29 @@ void Window::open() {
   ctx_.id = last_context_id_++;
 
 
+
+
+  fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+      ctx_.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+
+  depth_stencil_state_ = ctx_.render_device
+      ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
+
+  blend_state_ = ctx_.render_device->create_blend_state(true,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool Window::get_is_open() const { return ctx_.window != nullptr; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Window::create_shader() {
+
   if (config.get_warp_matrix_red_right() == "" ||
       config.get_warp_matrix_green_right() == "" ||
       config.get_warp_matrix_blue_right() == "" ||
@@ -152,23 +181,7 @@ void Window::open() {
       Resources::lookup_shader(Resources::shaders_display_shader_warped_frag)
     );
   }
-
-  fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-      ctx_.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
-
-  depth_stencil_state_ = ctx_.render_device
-      ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
-
-  blend_state_ = ctx_.render_device->create_blend_state(true,
-                                                        scm::gl::FUNC_ONE,
-                                                        scm::gl::FUNC_ONE,
-                                                        scm::gl::FUNC_ONE,
-                                                        scm::gl::FUNC_ONE);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool Window::get_is_open() const { return ctx_.window != nullptr; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -205,7 +218,7 @@ void Window::finish_frame() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::display(std::shared_ptr<Texture> const& center_texture) {
+void Window::display(std::shared_ptr<Texture2D> const& center_texture) {
 
   display(center_texture, config.get_left_resolution(),
           config.get_left_position(), Window::FULL, true, true);
@@ -214,32 +227,38 @@ void Window::display(std::shared_ptr<Texture> const& center_texture) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::display(std::shared_ptr<Texture> const& left_texture,
-                     std::shared_ptr<Texture> const& right_texture) {
+void Window::display(std::shared_ptr<Texture2D> const& left_texture,
+                     std::shared_ptr<Texture2D> const& right_texture) {
 
   switch (config.get_stereo_mode()) {
-      case StereoMode::MONO:
-        display(left_texture);
-        break;
-      case StereoMode::SIDE_BY_SIDE:
-        display(left_texture, config.get_left_resolution(),
-                config.get_left_position(), Window::FULL, true, true);
-        display(right_texture, config.get_right_resolution(),
-                config.get_right_position(), Window::FULL, false, true);
-        break;
-      case StereoMode::ANAGLYPH_RED_CYAN:
-        display(left_texture, config.get_left_resolution(),
-                config.get_left_position(), Window::RED, true, true);
-        display(right_texture, config.get_right_resolution(),
-                config.get_right_position(), Window::CYAN, false, false);
-        break;
-      case StereoMode::ANAGLYPH_RED_GREEN:
-        display(left_texture, config.get_left_resolution(),
-                config.get_left_position(), Window::RED, true, true);
-        display(right_texture, config.get_right_resolution(),
-                config.get_right_position(), Window::GREEN, false, false);
-        break;
-    }
+    case StereoMode::MONO:
+      display(left_texture);
+      break;
+    case StereoMode::SIDE_BY_SIDE:
+      display(left_texture, config.get_left_resolution(),
+              config.get_left_position(), Window::FULL, true, true);
+      display(right_texture, config.get_right_resolution(),
+              config.get_right_position(), Window::FULL, false, true);
+      break;
+    case StereoMode::ANAGLYPH_RED_CYAN:
+      display(left_texture, config.get_left_resolution(),
+              config.get_left_position(), Window::RED, true, true);
+      display(right_texture, config.get_right_resolution(),
+              config.get_right_position(), Window::CYAN, false, false);
+      break;
+    case StereoMode::ANAGLYPH_RED_GREEN:
+      display(left_texture, config.get_left_resolution(),
+              config.get_left_position(), Window::RED, true, true);
+      display(right_texture, config.get_right_resolution(),
+              config.get_right_position(), Window::GREEN, false, false);
+      break;
+    case StereoMode::CHECKERBOARD:
+      display(left_texture, config.get_left_resolution(),
+              config.get_left_position(), Window::CHECKER_EVEN, true, true);
+      display(right_texture, config.get_right_resolution(),
+              config.get_right_position(), Window::CHECKER_ODD, false, true);
+      break;
+  }
 
 }
 
@@ -249,7 +268,7 @@ RenderContext* Window::get_context() { return &ctx_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::display(std::shared_ptr<Texture> const& texture,
+void Window::display(std::shared_ptr<Texture2D> const& texture,
                      math::vec2ui const& size,
                      math::vec2ui const& position,
                      TextureDisplayMode mode,
@@ -260,13 +279,13 @@ void Window::display(std::shared_ptr<Texture> const& texture,
   fullscreen_shader_.set_uniform(ctx_, texture, "sampler");
 
   if (is_left) {
-    if (warpRL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpRL_), "warpR");
-    if (warpGL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpGL_), "warpG");
-    if (warpBL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpBL_), "warpB");
+    if (warpRL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpRL_), "warpR");
+    if (warpGL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpGL_), "warpG");
+    if (warpBL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpBL_), "warpB");
   } else {
-    if (warpRR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpRR_), "warpR");
-    if (warpGR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpGR_), "warpG");
-    if (warpBR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture>(warpBR_), "warpB");
+    if (warpRR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpRR_), "warpR");
+    if (warpGR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpGR_), "warpG");
+    if (warpBR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpBR_), "warpB");
   }
 
   std::string subroutine = subroutine_from_mode(mode);

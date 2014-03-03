@@ -19,47 +19,15 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GROUP_NODE_HPP
-#define GUA_GROUP_NODE_HPP
+@include "shaders/common/header.glsl"
 
-#include <gua/scenegraph/Node.hpp>
+// uniforms
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
-/**
- * This class is used to represent an empty node in the SceneGraph.
- *
- */
+// input
+layout(location=0) in vec3 gua_in_position;
 
-namespace gua {
-
-class GroupNode : public Node {
- public:
-
-  GroupNode() {};
-
-  /**
-   * Constructor.
-   *
-   * This constructs a GroupNode with the given parameters.
-   *
-   * \param name       The Node's name
-   * \param transform  The transformation of the object the Node contains.
-   */
-  GroupNode(std::string const& name,
-            math::mat4 const& transform = math::mat4::identity());
-
-  /**
-   * Accepts a visitor and calls concrete visit method
-   *
-   * This method implements the visitor pattern for Nodes
-   *
-   */
-  /* virtual */ void accept(NodeVisitor&);
-
- private:
-
-  std::shared_ptr<Node> copy() const;
-};
-
+void main() {
+    gl_Position = vec4(gua_in_position, 1.0);
 }
 
-#endif  // GUA_GROUP_NODE_HPP

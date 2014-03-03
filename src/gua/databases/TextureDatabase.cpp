@@ -21,6 +21,8 @@
 
 // class header
 #include <gua/databases/TextureDatabase.hpp>
+#include <gua/renderer/Texture2D.hpp>
+#include <gua/renderer/Texture3D.hpp>
 
 // guacamole headers
 #include <gua/utils/Directory.hpp>
@@ -29,11 +31,22 @@
 // external headers
 #include <sstream>
 #include <iostream>
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp> 
 
 namespace gua {
 
 void TextureDatabase::load(std::string const& id) {
-  instance()->add(id, std::make_shared<Texture>(id, true));
+  boost::filesystem::path fp(id);
+  std::string extension(fp.extension().string());
+  boost::algorithm::to_lower(extension);
+
+  if (extension == ".png" || extension == ".jpg" || extension == ".bmp" ||
+      extension == ".tif" || extension == ".tga") {
+    instance()->add(id, std::make_shared<Texture2D>(id, true));
+  } else if (extension == ".vol") {
+    instance()->add(id, std::make_shared<Texture3D>(id, true));
+  }
 }
 
 }

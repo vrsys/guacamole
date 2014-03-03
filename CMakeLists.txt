@@ -35,16 +35,17 @@ if (UNIX)
 	pkg_check_modules(GL REQUIRED gl)
 	pkg_check_modules(GLEW REQUIRED glew)
 elseif (WIN32)
-	include(find_assimp)	
+	include(FindAssimp)
 endif (UNIX)
 
+include(define_macros)
 include(find_compiler)
-include(find_schism)
-include(find_boost)
-include(find_cuda)
-#include(find_ev)
-include(find_bullet)
-include(find_json)
+include(FindSchism)
+include(FindBoost)
+
+set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
+find_package(Bullet)
+find_package(Json REQUIRED)
 
 set(LIBS
     ${SCHISM_LIBRARIES}
@@ -53,11 +54,7 @@ set(LIBS
     ${JSON_LIBRARIES}
     ${GL_LIBRARIES}
     ${GLEW_LIBRARIES}
-    ${EV_LIBRARIES}
     ${BULLET_LIBRARIES}
-	${CUDA_LIBRARIES}
-    #profiler
-    #tcmalloc
 )
 
 set(LIB_PATHS
@@ -68,7 +65,6 @@ set(LIB_PATHS
 	${BOOST_LIBRARY_DIRS}
 	${BULLET_LIBRARY_DIRS}
 	${SCHISM_LIBRARY_DIRS}
-	${CUDA_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS
@@ -80,9 +76,7 @@ set(INCLUDE_PATHS
     ${JSON_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
-    ${EV_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
-	${CUDA_INCLUDE_DIRS}
 )
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -90,10 +84,10 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 IF (UNIX)
-	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++0x -fpermissive")
-	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++0x -fpermissive")
+	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++0x")
+	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++0x")
 ELSEIF(MSVC)
-	set(CMAKE_CXX_FLAGS_RELEASE "-D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
+	set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
 	set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG /MDd /Zi")
 ENDIF(UNIX)
 
@@ -112,8 +106,6 @@ file(GLOB_RECURSE RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     resources/*
 )
 
-MESSAGE(${RESOURCES})
-
 if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated)
 endif()
@@ -122,31 +114,36 @@ if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated)
 endif()
 
-# ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-	# COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/guarc/guarc
-    # ${CMAKE_CURRENT_SOURCE_DIR}/resources
-    # ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
-    # ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-	# DEPENDS ${RESOURCES} guarc
-# )
 
-ADD_CUSTOM_TARGET(CompileResources ALL
-   DEPENDS ${RESOURCES} guarc
-)
-
-SET (_GUARC_EXECUTABLE "")
 IF (UNIX)
-	SET (_GUARC_EXECUTABLE "/guarc/guarc")
-ELSEIF(WIN32)
-	SET (_GUARC_EXECUTABLE "/guarc/$(Configuration)/guarc.exe")
+    ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/guarc/guarc
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+      DEPENDS ${RESOURCES} guarc
+    )
+
+    ADD_CUSTOM_TARGET(CompileResources ALL
+       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+    )
+
+ELSEIF(MSVC)
+    ADD_CUSTOM_TARGET(CompileResources ALL
+       DEPENDS ${RESOURCES} guarc
+    )
+
+    SET (_GUARC_EXECUTABLE "")
+    SET (_GUARC_EXECUTABLE "/guarc/$(Configuration)/guarc.exe")
+
+    ADD_CUSTOM_COMMAND(TARGET CompileResources POST_BUILD
+    	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}${_GUARC_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+    )
 ENDIF(UNIX)
 
-ADD_CUSTOM_COMMAND(TARGET CompileResources POST_BUILD
-	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}${_GUARC_EXECUTABLE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-)
 
 ################################################################
 # Create libraries
@@ -157,52 +154,66 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 add_subdirectory(src)
 
 ################################################################
+# Create plugins
+################################################################
+
+add_subdirectory(plugins)
+
+################################################################
+# Testing
+################################################################
+
+set (GUACAMOLE_TESTS "false" CACHE BOOL "Set to enable testing.")
+
+if (GUACAMOLE_TESTS)
+  add_subdirectory(tests)
+  enable_testing()
+  add_test( NAME testGUA COMMAND runTests )
+endif (GUACAMOLE_TESTS)
+
+################################################################
 # Summary
 ################################################################
 
-message( "" )
-message( "Summary:" )
-message( " build type: ${CMAKE_BUILD_TYPE}" )
-message( "" )
-message( " schism:" )
-message( "   library: ${SCHISM_LIBRARIES}" )
-message( "   library path: ${SCHISM_LIBRARY_DIRS}" )
-message( "   include: ${SCHISM_INCLUDE_DIRS}" )
-message( "" )
-message( " boost:" )
-message( "   library: ${BOOST_LIBRARIES}" )
-message( "   library path: ${BOOST_LIBRARY_DIRS}" )
-message( "   include: ${BOOST_INCLUDE_DIRS}" )
-message( "" )
-message( " assimp:" )
-message( "   library: ${ASSIMP_LIBRARIES}" )
-message( "   library path: ${ASSIMP_LIBRARY_DIRS}" )
-message( "   include: ${ASSIMP_INCLUDE_DIRS}" )
-message( "" )
-message( " json:" )
-message( "   library: ${JSON_LIBRARIES}" )
-message( "   library path: ${JSON_LIBRARY_DIRS}" )
-message( "   include: ${JSON_INCLUDE_DIRS}" )
-message( "" )
-message( " cuda:" )
-message( "   library: ${CUDA_LIBRARIES}" )
-message( "   library path: ${CUDA_LIBRARY_DIRS}" )
-message( "   include: ${CUDA_INCLUDE_DIRS}" )
-message( "" )
-message( " gl:" )
-message( "   library: ${GL_LIBRARIES}" )
-message( "   include: ${GL_INCLUDE_DIRS}" )
-message( "" )
-message( " glew:" )
-message( "   library: ${GLEW_LIBRARIES}" )
-message( "   include: ${GLEW_INCLUDE_DIRS}" )
-message( "" )
-message( " ev:" )
-message( "   library: ${EV_LIBRARIES}" )
-message( "   include: ${EV_INCLUDE_DIRS}" )
-message( "" )
-message( " bullet:" )
-message( "   library: ${BULLET_LIBRARIES}" )
-message( "   library path: ${BULLET_LIBRARY_DIRS}" )
-message( "   include: ${BULLET_INCLUDE_DIRS}" )
-message( "" )
+message(STATUS "" )
+message(STATUS "Summary:" )
+message(STATUS " build type: ${CMAKE_BUILD_TYPE}" )
+message(STATUS "" )
+message(STATUS " schism:" )
+message(STATUS "   library: ${SCHISM_LIBRARIES}" )
+message(STATUS "   library path: ${SCHISM_LIBRARY_DIRS}" )
+message(STATUS "   include: ${SCHISM_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " boost:" )
+message(STATUS "   library: ${BOOST_LIBRARIES}" )
+message(STATUS "   library path: ${BOOST_LIBRARY_DIRS}" )
+message(STATUS "   include: ${BOOST_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " assimp:" )
+message(STATUS "   library: ${ASSIMP_LIBRARIES}" )
+message(STATUS "   library path: ${ASSIMP_LIBRARY_DIRS}" )
+message(STATUS "   include: ${ASSIMP_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " json:" )
+message(STATUS "   library: ${JSON_LIBRARIES}" )
+message(STATUS "   library path: ${JSON_LIBRARY_DIRS}" )
+message(STATUS "   include: ${JSON_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " cuda:" )
+message(STATUS "   library: ${CUDA_LIBRARIES}" )
+message(STATUS "   library path: ${CUDA_LIBRARY_DIRS}" )
+message(STATUS "   include: ${CUDA_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " gl:" )
+message(STATUS "   library: ${GL_LIBRARIES}" )
+message(STATUS "   include: ${GL_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " glew:" )
+message(STATUS "   library: ${GLEW_LIBRARIES}" )
+message(STATUS "   include: ${GLEW_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " bullet:" )
+message(STATUS "   library: ${BULLET_LIBRARIES}" )
+message(STATUS "   library path: ${BULLET_LIBRARY_DIRS}" )
+message(STATUS "   include: ${BULLET_INCLUDE_DIRS}" )
+message(STATUS "" )

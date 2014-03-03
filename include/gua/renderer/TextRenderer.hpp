@@ -23,6 +23,7 @@
 #define GUA_TEXT_RENDERER_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/FrameBufferObject.hpp>
 
 // external headers
@@ -39,7 +40,7 @@ class StereoBuffer;
  *
  * It can write some predefined strings and information on a given FBO.
  */
-class TextRenderer {
+class GUA_DLL TextRenderer {
  public:
 
   /**

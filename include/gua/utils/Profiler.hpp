@@ -23,6 +23,7 @@
 #define GUA_PROFILER_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 
 // external headers
@@ -37,7 +38,7 @@ namespace gua {
  *
  *
  */
-class Profiler {
+class GUA_DLL Profiler {
  public:
 
   class Timer {

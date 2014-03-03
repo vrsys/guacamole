@@ -27,6 +27,7 @@
 #include <string>
 
 // guacamole header
+#include <gua/platform.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 
 namespace gua {
@@ -34,7 +35,6 @@ namespace gua {
 class SceneGraph;
 
 class Node;
-class ViewNode;
 class GeometryNode;
 class PointLightNode;
 class ScreenNode;
@@ -43,7 +43,7 @@ class SpotLightNode;
 /**
  * This class may be used to parse a path.
  */
-class DotGenerator : public NodeVisitor {
+class GUA_DLL DotGenerator : public NodeVisitor {
  public:
 
   DotGenerator();
@@ -65,9 +65,9 @@ class DotGenerator : public NodeVisitor {
    * Visiters for each Node type
    */
   /*virtual*/ void visit(Node* node);
-  /*virtual*/ void visit(GroupNode* cam);
-  /*virtual*/ void visit(ViewNode* cam);
+  /*virtual*/ void visit(TransformNode* cam);
   /*virtual*/ void visit(GeometryNode* geometry);
+  /*virtual*/ void visit(VolumeNode* volume);
   /*virtual*/ void visit(PointLightNode* pointlight);
   /*virtual*/ void visit(ScreenNode* screen);
   /*virtual*/ void visit(SpotLightNode* spotlight);

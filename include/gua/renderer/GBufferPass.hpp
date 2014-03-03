@@ -52,7 +52,6 @@ class GBufferPass : public GeometryPass {
 
   void create(
       RenderContext const& ctx,
-      PipelineConfiguration const& config,
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 

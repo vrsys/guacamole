@@ -27,7 +27,7 @@
 #include <gua/utils/logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/renderer/GeometryLoader.hpp>
@@ -44,13 +44,12 @@ MeshLoader::MeshLoader()
     : node_counter_(0) {}
 
 std::shared_ptr<Node> MeshLoader::load(std::string const& file_name,
-                                       std::string const& fallback_material,
                                        unsigned flags) {
 
   node_counter_ = 0;
   TextFile file(file_name);
 
-  MESSAGE("Loading mesh file %s", file_name.c_str());
+  // MESSAGE("Loading mesh file %s", file_name.c_str());
 
   if (file.is_valid()) {
     auto importer = std::make_shared<Assimp::Importer>();
@@ -93,7 +92,7 @@ std::shared_ptr<Node> MeshLoader::load(std::string const& file_name,
       // new_node = std::make_shared(new GeometryNode("unnamed",
       //                             GeometryNode::Configuration("", ""),
       //                             math::mat4::identity()));
-      new_node = get_tree(importer, scene, scene->mRootNode, file_name, fallback_material, flags);
+      new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags);
 
     } else {
       WARNING("Failed to load object \"%s\": No valid root node contained!",
@@ -133,6 +132,11 @@ std::vector<Mesh*> const MeshLoader::load_from_buffer(char const* buffer_name,
 bool MeshLoader::is_supported(std::string const& file_name) const {
   auto point_pos(file_name.find_last_of("."));
   Assimp::Importer importer;
+
+  if (file_name.substr(point_pos + 1) == "raw"){
+	  return false;
+  }
+
   return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
 }
 
@@ -140,7 +144,6 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
                                            aiScene const* ai_scene,
                                            aiNode* ai_root,
                                            std::string const& file_name,
-                                           std::string const& fallback_material,
                                            unsigned flags) {
 
   // creates a geometry node and returns it
@@ -150,7 +153,7 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
     GeometryDatabase::instance()->add(mesh_name, std::make_shared<Mesh>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & GeometryLoader::MAKE_PICKABLE));
 
     // load material
-    std::string material_name(fallback_material);
+    std::string material_name("");
     unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]->mMaterialIndex);
 
     if (material_index != 0 && flags & GeometryLoader::LOAD_MATERIALS) {
@@ -170,7 +173,7 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
   if (ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0) {
     return get_tree(
       importer, ai_scene, ai_root->mChildren[0],
-      file_name, fallback_material, flags
+      file_name, flags
     );
   }
 
@@ -180,7 +183,7 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
   }
 
   // else: there are multiple children and meshes
-  auto group(std::make_shared<GroupNode>());
+  auto group(std::make_shared<TransformNode>());
 
   for (unsigned i(0); i < ai_root->mNumMeshes; ++i) {
     group->add_child(load_geometry(i));
@@ -190,7 +193,7 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
     group->add_child(
       get_tree(
         importer, ai_scene, ai_root->mChildren[i],
-        file_name, fallback_material, flags
+        file_name, flags
       )
     );
   }
