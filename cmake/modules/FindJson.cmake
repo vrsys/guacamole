@@ -34,4 +34,6 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Json DEFAULT_MSG
                                   JSON_LIBRARY JSON_INCLUDE_DIR)
 
+# Mark the named cached variables as advanced. An advanced variable will not be
+# displayed in any of the cmake GUIs unless the show advanced option is on.
 mark_as_advanced(JSON_INCLUDE_DIR JSON_LIBRARY )
