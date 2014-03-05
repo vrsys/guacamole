@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 #include <gua/guacamole.hpp>
-#include <gua/OculusRift.hpp>
+#include <gua/OculusWindow.hpp>
 
 const std::string geometry("data/objects/monkey.obj");
 // const std::string geometry("data/objects/cube.obj");
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
 
   // initialize guacamole
   gua::init(argc, argv);
-  gua::OculusRift::init();
+  //gua::OculusRift::init();
 
   gua::ShadingModelDatabase::load_shading_models_from("data/materials/");
   gua::MaterialDatabase::load_materials_from("data/materials/");
@@ -164,8 +164,8 @@ int main(int argc, char** argv) {
   pipe->config.set_bloom_intensity(0.8f);
 
 
-  auto oculus_rift(new gua::OculusRift(":0.0"));
-  pipe->set_window(oculus_rift);
+  auto oculus_window(new gua::OculusWindow(":0.0"));
+  pipe->set_window(oculus_window);
 
   gua::Renderer renderer({
     pipe
@@ -204,7 +204,7 @@ int main(int argc, char** argv) {
     graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
     //graph["/screen"]->rotate(20*frame_time, 0, 1, 0);
 
-    nav->set_transform(oculus_rift->get_transform());
+    //nav->set_transform(oculus_rift->get_transform());
 
     renderer.queue_draw({&graph});
   });
