@@ -44,7 +44,7 @@ include(FindSchism)
 include(FindBoost)
 
 set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
-find_package(Bullet)
+find_package(Bullet REQUIRED)
 find_package(Json REQUIRED)
 
 set(LIBS
