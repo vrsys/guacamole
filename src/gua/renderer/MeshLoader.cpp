@@ -150,7 +150,7 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
   // creates a geometry node and returns it
   auto load_geometry = [&](int i) {
     // load geometry
-    std::string mesh_name("type='file'&file='" + file_name + "'&id=" + string_utils::to_string(mesh_count++) + "&flags=" + string_utils::to_string(flags));
+    std::string mesh_name("type=file&file=" + file_name + "&id=" + string_utils::to_string(mesh_count++) + "&flags=" + string_utils::to_string(flags));
     GeometryDatabase::instance()->add(mesh_name, std::make_shared<Mesh>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & GeometryLoader::MAKE_PICKABLE));
 
     // load material
@@ -164,8 +164,8 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
     }
 
     auto result(std::make_shared<GeometryNode>(mesh_name));
-    result->data.set_geometry(mesh_name);
-    result->data.set_material(material_name);
+    result->set_geometry(mesh_name);
+    result->set_material(material_name);
 
     return result;
   };

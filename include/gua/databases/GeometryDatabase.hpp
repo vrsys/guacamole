@@ -41,16 +41,6 @@ class GUA_DLL GeometryDatabase : public Database<Geometry>,
                                  public Singleton<GeometryDatabase> {
  public:
 
-  /**
-   * Loads a geometry file to the database.
-   *
-   * This method loads a geometry to the data base.
-   *
-   * \param id  An absolute or relative path to the
-   *            geometry file.
-   */
-  void load(std::string const& id);
-
   friend class Singleton<GeometryDatabase>;
 
  private:

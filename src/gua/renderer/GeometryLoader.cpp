@@ -63,12 +63,7 @@ GeometryLoader::~GeometryLoader() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
-                                            (std::string const& node_name,
-                                             std::string const& file_name,
-                                             std::string const& fallback_material,
-                                             unsigned flags) {
-
+std::shared_ptr<Node> GeometryLoader::load_geometry(std::string const& file_name, unsigned flags) {
   std::shared_ptr<Node> cached_node;
   std::string key(file_name + "_" + string_utils::to_string(flags));
 
@@ -116,6 +111,19 @@ std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
     }
   }
 
+  return cached_node;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
+                                            (std::string const& node_name,
+                                             std::string const& file_name,
+                                             std::string const& fallback_material,
+                                             unsigned flags) {
+
+  auto cached_node(load_geometry(file_name, flags));
+
   if (cached_node) {
     auto copy(cached_node->deep_copy());
 
@@ -150,7 +158,7 @@ std::shared_ptr<Node> GeometryLoader::create_volume_from_file(std::string const&
                 loaded_files_.insert(std::make_pair(key, cached_node));
 
                 // normalize volume position and rotation
-                if ( flags & VolumeLoader::NORMALIZE_POSITION 
+                if ( flags & VolumeLoader::NORMALIZE_POSITION
                   || flags & VolumeLoader::NORMALIZE_SCALE) {
                       auto bbox = cached_node->get_bounding_box();
 
@@ -196,8 +204,8 @@ void GeometryLoader::apply_fallback_material(std::shared_ptr<Node> const& root,
   auto g_node(std::dynamic_pointer_cast<GeometryNode>(root));
 
   if (g_node) {
-    if (g_node->data.get_material().empty()) {
-      g_node->data.set_material(fallback_material);
+    if (g_node->get_material().empty()) {
+      g_node->set_material(fallback_material);
     }
   }
 

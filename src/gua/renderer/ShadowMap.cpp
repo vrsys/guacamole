@@ -154,8 +154,8 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   mesh_shader_->set_uniform(ctx, scm::math::inverse(projection * view_matrix), "gua_inverse_projection_view_matrix");
 
   for (auto const& node : scene.meshnodes_) {
-      auto geometry = GeometryDatabase::instance()->lookup(node->data.get_geometry());
-      auto material = MaterialDatabase::instance()->lookup(node->data.get_material());
+      auto geometry = GeometryDatabase::instance()->lookup(node->get_geometry());
+      auto material = MaterialDatabase::instance()->lookup(node->get_material());
       if (geometry) {
           mesh_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");

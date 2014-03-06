@@ -43,8 +43,8 @@ void ShadingModelDatabase::load_shading_models_from(
     unsigned suffix_pos = unsigned(parse_string.find(".gsd"));
 
     if (parse_string.length() - suffix_pos == 4) {
-      auto name(parse_string.substr(0, suffix_pos));
-      auto mod = std::make_shared<ShadingModel>(name, dir.get_directory_name() + parse_string);
+      auto name(dir.get_directory_name() + parse_string);
+      auto mod = std::make_shared<ShadingModel>(name, name);
 
       instance()->add(name, mod);
     }

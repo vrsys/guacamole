@@ -154,9 +154,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
             for (auto const& node : scene.meshnodes_) {
                 auto geometry =
-                    GeometryDatabase::instance()->lookup(node->data.get_geometry());
+                    GeometryDatabase::instance()->lookup(node->get_geometry());
                 auto material =
-                    MaterialDatabase::instance()->lookup(node->data.get_material());
+                    MaterialDatabase::instance()->lookup(node->get_material());
 
                 if (material && geometry) {
                     mesh_shader_->set_uniform(
@@ -266,9 +266,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
         for (auto const& node : scene.nurbsnodes_)
             {
             auto geometry =
-                GeometryDatabase::instance()->lookup(node->data.get_geometry());
+                GeometryDatabase::instance()->lookup(node->get_geometry());
             auto material =
-                MaterialDatabase::instance()->lookup(node->data.get_material());
+                MaterialDatabase::instance()->lookup(node->get_material());
 
 #ifdef DEBUG_XFB_OUTPUT
             scm::gl::transform_feedback_statistics_query_ptr q = ctx

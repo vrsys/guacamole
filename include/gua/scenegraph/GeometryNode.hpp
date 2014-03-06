@@ -43,22 +43,17 @@ namespace gua {
 class GUA_DLL GeometryNode : public Node {
   public:
 
-    struct Configuration {
-      /**
-       * A string referring to an entry in guacamole's GeometryDatabase.
-       */
-      GUA_ADD_PROPERTY(std::string,     geometry,   "gua_default_geometry");
-
-      /**
-       * A string referring to an entry in guacamole's MaterialDatabase.
-       */
-      GUA_ADD_PROPERTY(std::string,     material,   "gua_default_material");
-    };
+    /**
+    * A string referring to an entry in guacamole's GeometryDatabase.
+    */
+    std::string const& get_geometry() const { return geometry_; }
+    void set_geometry(std::string const& v) { geometry_ = v; geometry_changed_ = self_dirty_ = true; }
 
     /**
-     * The GeometryNode's configuration.
-     */
-    Configuration data;
+    * A string referring to an entry in guacamole's MaterialDatabase.
+    */
+    std::string const& get_material() const { return material_; }
+    void set_material(std::string const& v) { material_ = v; material_changed_ = self_dirty_ = true; }
 
     /**
      * Constructor.
@@ -80,7 +75,8 @@ class GUA_DLL GeometryNode : public Node {
      *                       transformation.
      */
     GeometryNode(std::string const& name,
-                 Configuration const& configuration = Configuration(),
+                 std::string const& geometry = "gua_default_geometry",
+                 std::string const& material = "gua_default_material",
                  math::mat4 const& transform = math::mat4::identity());
 
     /**
@@ -100,12 +96,20 @@ class GUA_DLL GeometryNode : public Node {
      */
     /*virtual*/ void update_bounding_box() const;
 
+    /*virtual*/ void update_cache();
+
     /*virtual*/ void ray_test_impl(RayNode const& ray, PickResult::Options options,
                             Mask const& mask, std::set<PickResult>& hits);
 
   private:
 
     std::shared_ptr<Node> copy() const;
+
+    std::string geometry_;
+    std::string material_;
+
+    bool geometry_changed_;
+    bool material_changed_;
 };
 
 }

@@ -64,8 +64,8 @@ std::shared_ptr<Node> NURBSLoader::load(std::string const& file_name,
         file_name, std::make_shared<NURBS>(bezier_object));
 
     auto result = std::make_shared<GeometryNode>("unnamed_nurbs");
-    result->data.set_geometry(file_name);
-    result->data.set_material("");
+    result->set_geometry(file_name);
+    result->set_material("");
 
     return result;
 

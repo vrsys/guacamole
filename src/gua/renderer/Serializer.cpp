@@ -163,12 +163,12 @@ void Serializer::check(SerializedScene* output,
 /* virtual */ void Serializer::visit(GeometryNode* node) {
 
   if (is_visible(node)) {
-    if (!node->data.get_geometry().empty() && !node->data.get_material().empty()) {
+    if (!node->get_geometry().empty() && !node->get_material().empty()) {
 
       add_bbox(node);
 
       std::shared_ptr<Mesh> mesh_ptr = std::dynamic_pointer_cast<Mesh>(
-          gua::GeometryDatabase::instance()->lookup(node->data.get_geometry()));
+          gua::GeometryDatabase::instance()->lookup(node->get_geometry()));
 
       if (mesh_ptr) {
 
@@ -177,7 +177,7 @@ void Serializer::check(SerializedScene* output,
       } else {
 
         std::shared_ptr<NURBS> nurbs_ptr = std::dynamic_pointer_cast<NURBS>(
-            gua::GeometryDatabase::instance()->lookup(node->data.get_geometry()));
+            gua::GeometryDatabase::instance()->lookup(node->get_geometry()));
 
         if (nurbs_ptr) {
           data_->nurbsnodes_.push_back(node);
@@ -185,7 +185,7 @@ void Serializer::check(SerializedScene* output,
       }
     }
 
-    data_->materials_.insert(node->data.get_material());
+    data_->materials_.insert(node->get_material());
 
     visit_children(node);
   }
