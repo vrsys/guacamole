@@ -6,8 +6,8 @@ PROJECT(GUACAMOLE CXX)
 
 # version number
 set(GUACAMOLE_MAJOR 0)
-set(GUACAMOLE_MINOR 1)
-set(GUACAMOLE_PATCH 0)
+set(GUACAMOLE_MINOR 4)
+set(GUACAMOLE_PATCH 2)
 set(GUACAMOLE_VERSION ${GUACAMOLE_MAJOR}.${GUACAMOLE_MINOR}.${GUACAMOLE_PATCH})
 set(GUACAMOLE_DESCRIPTION "GUACAMOLE - an astonishing virtual reality engine")
 set(GUACAMOLE_HOMEPAGE "http://www.GUACAMOLE.org")
@@ -42,7 +42,9 @@ include(define_macros)
 include(find_compiler)
 include(FindSchism)
 include(FindBoost)
-include(FindBullet)
+
+set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
+find_package(Bullet REQUIRED)
 find_package(Json REQUIRED)
 
 set(LIBS

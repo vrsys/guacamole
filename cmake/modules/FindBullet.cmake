@@ -1,148 +1,88 @@
-SET(BULLET_INCLUDE_SEARCH_DIRS
-  ${GLOBAL_EXT_DIR}/inc/bullet
-  ${BULLET_INCLUDE_SEARCH_DIR}
-  ${BULLET_INCLUDE_DIRS}
-  /opt/bullet/current
+# - Try to find the Bullet physics engine
+#
+#  This module defines the following variables
+#
+#  BULLET_FOUND - Was bullet found
+#  BULLET_INCLUDE_DIRS - the Bullet include directories
+#  BULLET_LIBRARIES - Link to this, by default it includes
+#                     all bullet components (Dynamics,
+#                     Collision, LinearMath, & SoftBody)
+#
+#  This module accepts the following variables
+#
+#  BULLET_ROOT - Can be set to bullet install path or Windows build path
+#
+
+#=============================================================================
+# Copyright 2009 Kitware, Inc.
+# Copyright 2009 Philip Lowman <philip@yhbt.com>
+#
+# Distributed under the OSI-approved BSD License (the "License");
+# see accompanying file Copyright.txt for details.
+#
+# This software is distributed WITHOUT ANY WARRANTY; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the License for more information.
+#=============================================================================
+# (To distribute this file outside of CMake, substitute the full
+#  License text for the above reference.)
+
+macro(_FIND_BULLET_LIBRARY _var)
+  find_library(${_var}
+     NAMES
+        ${ARGN}
+     HINTS
+        ${BULLET_ROOT}
+        ${BULLET_ROOT}/lib/Release
+        ${BULLET_ROOT}/lib/Debug
+        ${BULLET_ROOT}/out/release8/libs
+        ${BULLET_ROOT}/out/debug8/libs
+     PATH_SUFFIXES lib
+  )
+  mark_as_advanced(${_var})
+endmacro()
+
+macro(_BULLET_APPEND_LIBRARIES _list _release)
+   set(_debug ${_release}_DEBUG)
+   if(${_debug})
+      set(${_list} ${${_list}} optimized ${${_release}} debug ${${_debug}})
+   else()
+      set(${_list} ${${_list}} ${${_release}})
+   endif()
+endmacro()
+
+find_path(BULLET_INCLUDE_DIR NAMES btBulletCollisionCommon.h
+  HINTS
+    ${BULLET_ROOT}/include
+    ${BULLET_ROOT}/src
+  PATH_SUFFIXES bullet
 )
 
-SET(BULLET_LIBRARY_SEARCH_DIRS
-  ${GLOBAL_EXT_DIR}/lib
-  ${BULLET_LIBRARY_SEARCH_DIR}
-  ${BULLET_LIBRARY_DIRS}
-    /opt/bullet/current/bullet-build
-)
+# Find the libraries
 
-##############################################################################
-# feedback to provide user-defined paths to search for bullet
-##############################################################################
-MACRO (request_bullet_search_directories)
-    
-    IF ( NOT BULLET_INCLUDE_DIRS AND NOT BULLET_LIBRARY_DIRS )
-        SET(BULLET_INCLUDE_SEARCH_DIR "Please provide bullet include path." CACHE PATH "path to bullet headers.")
-        SET(BULLET_LIBRARY_SEARCH_DIR "Please provide bullet library path." CACHE PATH "path to bullet libraries.")
-        MESSAGE(FATAL_ERROR "find_bullet.cmake: unable to find bullet.")
-    ENDIF ( NOT BULLET_INCLUDE_DIRS AND NOT BULLET_LIBRARY_DIRS )
-
-    IF ( NOT BULLET_INCLUDE_DIRS )
-        SET(BULLET_INCLUDE_SEARCH_DIR "Please provide bullet include path." CACHE PATH "path to bullet headers.")
-        MESSAGE(FATAL_ERROR "find_bullet.cmake: unable to find bullet headers.")
-    ELSE ( NOT BULLET_INCLUDE_DIRS )
-        UNSET(BULLET_INCLUDE_SEARCH_DIR CACHE)
-    ENDIF ( NOT BULLET_INCLUDE_DIRS )
-
-    IF ( NOT BULLET_LIBRARY_DIRS )
-        SET(BULLET_LIBRARY_SEARCH_DIR "Please provide bullet library path." CACHE PATH "path to bullet libraries.")
-        MESSAGE(FATAL_ERROR "find_bullet.cmake: unable to find bullet libraries.")
-    ELSE ( NOT BULLET_LIBRARY_DIRS )
-        UNSET(BULLET_LIBRARY_SEARCH_DIR CACHE)
-    ENDIF ( NOT BULLET_LIBRARY_DIRS ) 
-
-ENDMACRO (request_bullet_search_directories)
-
-##############################################################################
-# search
-##############################################################################
-message(STATUS "-- checking for BULLET")
-
-IF (NOT BULLET_INCLUDE_DIRS)
-
-    SET(_BULLET_FOUND_INC_DIRS "")
-
-    FOREACH(_SEARCH_DIR ${BULLET_INCLUDE_SEARCH_DIRS})
-        FIND_PATH(_CUR_SEARCH
-            NAMES src/btBulletDynamicsCommon.h
-                PATHS ${_SEARCH_DIR}
-                NO_DEFAULT_PATH)
-        IF (_CUR_SEARCH)
-            LIST(APPEND _BULLET_FOUND_INC_DIRS ${_CUR_SEARCH})
-        ENDIF(_CUR_SEARCH)
-        SET(_CUR_SEARCH _CUR_SEARCH-NOTFOUND CACHE INTERNAL "internal use")
-    ENDFOREACH(_SEARCH_DIR ${BULLET_INCLUDE_SEARCH_DIRS})
-
-    IF (NOT _BULLET_FOUND_INC_DIRS)
-        request_bullet_search_directories()
-    ENDIF (NOT _BULLET_FOUND_INC_DIRS)
-    
-    FOREACH(_INC_DIR ${_BULLET_FOUND_INC_DIRS})
-        LIST(APPEND _BULLET_INCLUDE_DIRS ${_INC_DIR}/src)
-        LIST(APPEND _BULLET_INCLUDE_DIRS ${_INC_DIR}/Extras/HACD)
-    ENDFOREACH(_INC_DIR ${_BOOST_FOUND_INC_DIRS})
-
-    IF (_BULLET_FOUND_INC_DIRS)
-        SET(BULLET_INCLUDE_DIRS ${_BULLET_INCLUDE_DIRS} CACHE PATH "paths to bullet headers.")
-    ENDIF (_BULLET_FOUND_INC_DIRS)
-
-ENDIF(NOT BULLET_INCLUDE_DIRS)
+_FIND_BULLET_LIBRARY(BULLET_DYNAMICS_LIBRARY        BulletDynamics)
+_FIND_BULLET_LIBRARY(BULLET_DYNAMICS_LIBRARY_DEBUG  BulletDynamics_Debug BulletDynamics_d)
+_FIND_BULLET_LIBRARY(BULLET_COLLISION_LIBRARY       BulletCollision)
+_FIND_BULLET_LIBRARY(BULLET_COLLISION_LIBRARY_DEBUG BulletCollision_Debug BulletCollision_d)
+_FIND_BULLET_LIBRARY(BULLET_MATH_LIBRARY            BulletMath LinearMath)
+_FIND_BULLET_LIBRARY(BULLET_MATH_LIBRARY_DEBUG      BulletMath_Debug BulletMath_d LinearMath_Debug LinearMath_d)
+_FIND_BULLET_LIBRARY(BULLET_SOFTBODY_LIBRARY        BulletSoftBody)
+_FIND_BULLET_LIBRARY(BULLET_HACD_LIBRARY            HACD)
+_FIND_BULLET_LIBRARY(BULLET_SOFTBODY_LIBRARY_DEBUG  BulletSoftBody_Debug BulletSoftBody_d)
 
 
-IF(UNIX)
-	SET(BULLET_DYNAMICS_LIB_SUFFIX 		"src/BulletDynamics/")
-	SET(BULLET_COLLISION_LIB_SUFFIX 		"src/BulletCollision/")
-	SET(BULLET_LINEAR_MATH_LIB_SUFFIX "src/LinearMath/")
-	SET(BULLET_HACD_LIB_SUFFIX 				"Extras/HACD/")
-	SET(BULLET_DYNAMICS_LIB 					"libBulletDynamics.so")
-	SET(BULLET_COLLISION_LIB 					"libBulletCollision.so")
-	SET(BULLET_LINEAR_MATH_LIB 				"libLinearMath.so")
-	SET(BULLET_HACD_LIB 							"libHACD.so")
-ELSEIF(WIN32)
-	SET(BULLET_DYNAMICS_LIB_SUFFIX 		"")
-	SET(BULLET_COLLISION_LIB_SUFFIX 		"")
-	SET(BULLET_LINEAR_MATH_LIB_SUFFIX "")
-	SET(BULLET_HACD_LIB_SUFFIX 				"")
-	SET(BULLET_DYNAMICS_LIB 					"BulletDynamics.lib")
-	SET(BULLET_COLLISION_LIB 					"BulletCollision.lib")
-	SET(BULLET_LINEAR_MATH_LIB 				"LinearMath.lib")
-	SET(BULLET_HACD_LIB 							"HACD.lib")
-ENDIF(UNIX)
+# handle the QUIETLY and REQUIRED arguments and set BULLET_FOUND to TRUE if
+# all listed variables are TRUE
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Bullet DEFAULT_MSG
+    BULLET_DYNAMICS_LIBRARY BULLET_COLLISION_LIBRARY BULLET_MATH_LIBRARY
+    BULLET_SOFTBODY_LIBRARY BULLET_HACD_LIBRARY BULLET_INCLUDE_DIR)
 
-
-IF (        BULLET_INCLUDE_DIRS
-    AND NOT BULLET_LIBRARIES)
-
-    SET(_BULLET_FOUND_LIB_DIR "")
-    SET(_BULLET_POSTFIX "")
-
-    FOREACH(_SEARCH_DIR ${BULLET_LIBRARY_SEARCH_DIRS})
-        FIND_PATH(_CUR_SEARCH
-				NAMES ${BULLET_DYNAMICS_LIB}
-                PATHS ${_SEARCH_DIR}
-                PATH_SUFFIXES debug release ${BULLET_DYNAMICS_LIB_SUFFIX}
-                NO_DEFAULT_PATH)
-        IF (_CUR_SEARCH)
-            LIST(APPEND _BULLET_FOUND_LIB_DIR ${_SEARCH_DIR})
-        ENDIF(_CUR_SEARCH)
-        SET(_CUR_SEARCH _CUR_SEARCH-NOTFOUND CACHE INTERNAL "internal use")
-    ENDFOREACH(_SEARCH_DIR ${BULLET_LIBRARY_SEARCH_DIRS})
-
-    IF (NOT _BULLET_FOUND_LIB_DIR)
-        request_bullet_search_directories()
-    ELSE (NOT _BULLET_FOUND_LIB_DIR)
-		    SET(BULLET_LIBRARY_DIRS ${_BULLET_FOUND_LIB_DIR} CACHE STRING "The bullet library directory")
-    ENDIF (NOT _BULLET_FOUND_LIB_DIR)
-    
-    FOREACH(_LIB_DIR ${_BULLET_FOUND_LIB_DIR})
-        LIST(APPEND BULLET_LIBRARY_DIRS ${_LIB_DIR}/${BULLET_DYNAMICS_LIB_SUFFIX})
-        LIST(APPEND BULLET_LIBRARY_DIRS ${_LIB_DIR}/${BULLET_COLLISION_LIB_SUFFIX})
-        LIST(APPEND BULLET_LIBRARY_DIRS ${_LIB_DIR}/${BULLET_LINEAR_MATH_LIB_SUFFIX})
-        LIST(APPEND BULLET_LIBRARY_DIRS ${_LIB_DIR}/${BULLET_HACD_LIB_SUFFIX})
-    ENDFOREACH(_LIB_DIR ${_BULLET_FOUND_INC_DIRS})
-
-	LIST(APPEND BULLET_LIBRARIES ${BULLET_DYNAMICS_LIB})
-	LIST(APPEND BULLET_LIBRARIES ${BULLET_COLLISION_LIB})
-	LIST(APPEND BULLET_LIBRARIES ${BULLET_LINEAR_MATH_LIB})
-	LIST(APPEND BULLET_LIBRARIES ${BULLET_HACD_LIB})
-	
-ENDIF(        BULLET_INCLUDE_DIRS
-      AND NOT BULLET_LIBRARIES)
-
-##############################################################################
-# verify
-##############################################################################
-IF ( NOT BULLET_INCLUDE_DIRS OR NOT BULLET_LIBRARY_DIRS )
-    request_bullet_search_directories()
-ELSE ( NOT BULLET_INCLUDE_DIRS OR NOT BULLET_LIBRARY_DIRS )
-    UNSET(BULLET_INCLUDE_SEARCH_DIR CACHE)
-    UNSET(BULLET_LIBRARY_SEARCH_DIR CACHE)
-    MESSAGE(STATUS "--  found matching bullet version")
-ENDIF ( NOT BULLET_INCLUDE_DIRS OR NOT BULLET_LIBRARY_DIRS )
-
+set(BULLET_INCLUDE_DIRS ${BULLET_INCLUDE_DIR})
+if(BULLET_FOUND)
+   _BULLET_APPEND_LIBRARIES(BULLET_LIBRARIES BULLET_DYNAMICS_LIBRARY)
+   _BULLET_APPEND_LIBRARIES(BULLET_LIBRARIES BULLET_COLLISION_LIBRARY)
+   _BULLET_APPEND_LIBRARIES(BULLET_LIBRARIES BULLET_MATH_LIBRARY)
+   _BULLET_APPEND_LIBRARIES(BULLET_LIBRARIES BULLET_SOFTBODY_LIBRARY)
+   _BULLET_APPEND_LIBRARIES(BULLET_LIBRARIES BULLET_HACD_LIBRARY)
+endif()
