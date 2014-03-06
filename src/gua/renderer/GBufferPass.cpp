@@ -154,19 +154,19 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
             for (auto const& node : scene.meshnodes_) {
                 auto geometry =
-                    GeometryDatabase::instance()->lookup(node.data.get_geometry());
+                    GeometryDatabase::instance()->lookup(node->data.get_geometry());
                 auto material =
-                    MaterialDatabase::instance()->lookup(node.data.get_material());
+                    MaterialDatabase::instance()->lookup(node->data.get_material());
 
                 if (material && geometry) {
                     mesh_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");
                     mesh_shader_->set_uniform(
-                        ctx, node.transform, "gua_model_matrix");
+                        ctx, node->get_world_transform(), "gua_model_matrix");
                     mesh_shader_->set_uniform(
                         ctx,
                         scm::math::transpose(
-                            scm::math::inverse(node.transform)),
+                            scm::math::inverse(node->get_world_transform())),
                         "gua_normal_matrix");
 
                     geometry->draw(ctx);
@@ -188,8 +188,8 @@ void GBufferPass::rendering(SerializedScene const& scene,
                 auto material =
                     MaterialDatabase::instance()->lookup("gua_textured_quad");
 
-                std::string texture_name(node.data.get_texture());
-                if (node.data.get_is_stereo_texture()) {
+                std::string texture_name(node->data.get_texture());
+                if (node->data.get_is_stereo_texture()) {
 
                   if (eye == CameraMode::LEFT) {
                     texture_name += "_left";
@@ -209,22 +209,22 @@ void GBufferPass::rendering(SerializedScene const& scene,
                     auto mapped_flip_x(
                         mesh_shader_->get_uniform_mapping()->get_mapping("gua_textured_quad", "flip_x"));
 
-                    mesh_shader_->set_uniform(ctx, node.data.get_flip_x(), mapped_flip_x.first, mapped_flip_x.second);
+                    mesh_shader_->set_uniform(ctx, node->data.get_flip_x(), mapped_flip_x.first, mapped_flip_x.second);
 
                     auto mapped_flip_y(
                         mesh_shader_->get_uniform_mapping()->get_mapping("gua_textured_quad", "flip_y"));
 
-                    mesh_shader_->set_uniform(ctx, node.data.get_flip_y(), mapped_flip_y.first, mapped_flip_y.second);
+                    mesh_shader_->set_uniform(ctx, node->data.get_flip_y(), mapped_flip_y.first, mapped_flip_y.second);
 
                     if (material && geometry) {
                         mesh_shader_->set_uniform(
                             ctx, material->get_id(), "gua_material_id");
                         mesh_shader_->set_uniform(
-                            ctx, node.transform, "gua_model_matrix");
+                            ctx, node->get_scaled_world_transform(), "gua_model_matrix");
                         mesh_shader_->set_uniform(
                             ctx,
                             scm::math::transpose(
-                                scm::math::inverse(node.transform)),
+                                scm::math::inverse(node->get_scaled_world_transform())),
                             "gua_normal_matrix");
 
                         geometry->draw(ctx);
@@ -266,9 +266,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
         for (auto const& node : scene.nurbsnodes_)
             {
             auto geometry =
-                GeometryDatabase::instance()->lookup(node.data.get_geometry());
+                GeometryDatabase::instance()->lookup(node->data.get_geometry());
             auto material =
-                MaterialDatabase::instance()->lookup(node.data.get_material());
+                MaterialDatabase::instance()->lookup(node->data.get_material());
 
 #ifdef DEBUG_XFB_OUTPUT
             scm::gl::transform_feedback_statistics_query_ptr q = ctx
@@ -279,10 +279,10 @@ void GBufferPass::rendering(SerializedScene const& scene,
             nurbs_shader_->get_pre_shader().use(ctx);
             {
                 nurbs_shader_->get_pre_shader()
-                    .set_uniform(ctx, node.transform, "gua_model_matrix");
+                    .set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
                 nurbs_shader_->get_pre_shader().set_uniform(
                     ctx,
-                    scm::math::transpose(scm::math::inverse(node.transform)),
+                    scm::math::transpose(scm::math::inverse(node->get_world_transform())),
                     "gua_normal_matrix");
 
                 ctx.render_context->apply();
@@ -304,11 +304,11 @@ void GBufferPass::rendering(SerializedScene const& scene,
                     nurbs_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");
                     nurbs_shader_->set_uniform(
-                        ctx, node.transform, "gua_model_matrix");
+                        ctx, node->get_world_transform(), "gua_model_matrix");
                     nurbs_shader_->set_uniform(
                         ctx,
                         scm::math::transpose(
-                            scm::math::inverse(node.transform)),
+                            scm::math::inverse(node->get_world_transform())),
                         "gua_normal_matrix");
 
                     geometry->draw(ctx);
@@ -358,15 +358,14 @@ void GBufferPass::rendering(SerializedScene const& scene,
         mesh_shader_->use(ctx);  // re-use mesh_shader
 
         for (auto const& ray : scene.rays_) {
-            auto geometry =
-                GeometryDatabase::instance()->lookup(ray.data.get_geometry());
+            auto geometry = GeometryDatabase::instance()->lookup("gua_ray_geometry");
 
             mesh_shader_->set_uniform(
                 ctx, bbox_material->get_id(), "gua_material_id");
-            mesh_shader_->set_uniform(ctx, ray.transform, "gua_model_matrix");
+            mesh_shader_->set_uniform(ctx, ray->get_world_transform(), "gua_model_matrix");
             mesh_shader_->set_uniform(
                 ctx,
-                scm::math::transpose(scm::math::inverse(ray.transform)),
+                scm::math::transpose(scm::math::inverse(ray->get_world_transform())),
                 "gua_normal_matrix");
 
             geometry->draw(ctx);

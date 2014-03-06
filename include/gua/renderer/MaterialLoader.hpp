@@ -73,7 +73,7 @@ class GUA_DLL MaterialLoader {
   };
 
   std::string const load_material(aiMaterial const* material,
-                                  std::string const& name_prefix) const;
+                                  std::string const& file_name) const;
 
  private:
   std::string const load_shading_model(unsigned capabilities) const;

@@ -430,7 +430,7 @@ bool PostFXPass::render_godrays(Camera const& camera,
 
     bool any_godrays(false);
     for (auto const& light: scene.point_lights_) {
-        if (light.data.get_enable_godrays()) {
+        if (light->data.get_enable_godrays()) {
             any_godrays = true;
             break;
         }
@@ -438,7 +438,7 @@ bool PostFXPass::render_godrays(Camera const& camera,
 
     if (!any_godrays) {
         for (auto const& light: scene.spot_lights_) {
-            if (light.data.get_enable_godrays()) {
+            if (light->data.get_enable_godrays()) {
                 any_godrays = true;
                 break;
             }
@@ -447,7 +447,7 @@ bool PostFXPass::render_godrays(Camera const& camera,
 
     if (!any_godrays) {
         for (auto const& light: scene.sun_lights_) {
-            if (light.data.get_enable_godrays()) {
+            if (light->data.get_enable_godrays()) {
                 any_godrays = true;
                 break;
             }
@@ -507,21 +507,21 @@ bool PostFXPass::render_godrays(Camera const& camera,
                             "gua_calculate_by_position");
 
         for (auto const& light: scene.point_lights_) {
-            if (light.data.get_enable_godrays()) {
-                god_ray_shader_->set_uniform(ctx, light.data.get_color().vec3(), "gua_light_color");
-                god_ray_shader_->set_uniform(ctx, math::vec3(light.transform.column(3)[0],
-                                                             light.transform.column(3)[1],
-                                                             light.transform.column(3)[2]), "gua_light_position_direction");
+            if (light->data.get_enable_godrays()) {
+                god_ray_shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
+                god_ray_shader_->set_uniform(ctx, math::vec3(light->get_world_transform().column(3)[0],
+                                                             light->get_world_transform().column(3)[1],
+                                                             light->get_world_transform().column(3)[2]), "gua_light_position_direction");
                 render();
             }
         }
 
         for (auto const& light: scene.spot_lights_) {
-            if (light.data.get_enable_godrays()) {
-                god_ray_shader_->set_uniform(ctx, light.data.get_color().vec3(), "gua_light_color");
-                god_ray_shader_->set_uniform(ctx, math::vec3(light.transform.column(3)[0],
-                                                             light.transform.column(3)[1],
-                                                             light.transform.column(3)[2]), "gua_light_position_direction");
+            if (light->data.get_enable_godrays()) {
+                god_ray_shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
+                god_ray_shader_->set_uniform(ctx, math::vec3(light->get_world_transform().column(3)[0],
+                                                             light->get_world_transform().column(3)[1],
+                                                             light->get_world_transform().column(3)[2]), "gua_light_position_direction");
                 render();
             }
         }
@@ -532,10 +532,10 @@ bool PostFXPass::render_godrays(Camera const& camera,
                             "gua_calculate_by_direction");
 
         for (auto const& light: scene.sun_lights_) {
-            if (light.data.get_enable_godrays()) {
-                god_ray_shader_->set_uniform(ctx, light.data.get_color().vec3(), "gua_light_color");
+            if (light->data.get_enable_godrays()) {
+                god_ray_shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
                 math::vec3 direction(0, 0, 1);
-                direction = light.transform * direction;
+                direction = light->get_world_transform() * direction;
                 god_ray_shader_->set_uniform(ctx, direction, "gua_light_position_direction");
                 render();
             }

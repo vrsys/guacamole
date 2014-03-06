@@ -39,7 +39,7 @@ namespace gua {
 
 std::string const MaterialLoader::load_material(
     aiMaterial const* ai_material,
-    std::string const& name_prefix) const {
+    std::string const& file_name) const {
 
   auto get_color =
       [&](const char * pKey, unsigned int type, unsigned int idx)->std::string {
@@ -71,12 +71,12 @@ std::string const MaterialLoader::load_material(
 
   aiString ai_material_name;
   ai_material->Get(AI_MATKEY_NAME, ai_material_name);
-  std::string material_name(name_prefix + "/" + ai_material_name.data);
+  std::string material_name("type='generated'&source='" + file_name + "'&name='" + ai_material_name.data + "'");
 
   if (!MaterialDatabase::instance()->is_supported(material_name)) {
 
     PathParser path;
-    path.parse(name_prefix);
+    path.parse(file_name);
     std::string assets_directory(path.get_path(true));
 
     unsigned capabilities = 0;

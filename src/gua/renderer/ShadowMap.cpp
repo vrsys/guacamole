@@ -154,17 +154,17 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   mesh_shader_->set_uniform(ctx, scm::math::inverse(projection * view_matrix), "gua_inverse_projection_view_matrix");
 
   for (auto const& node : scene.meshnodes_) {
-      auto geometry = GeometryDatabase::instance()->lookup(node.data.get_geometry());
-      auto material = MaterialDatabase::instance()->lookup(node.data.get_material());
+      auto geometry = GeometryDatabase::instance()->lookup(node->data.get_geometry());
+      auto material = MaterialDatabase::instance()->lookup(node->data.get_material());
       if (geometry) {
           mesh_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");
           mesh_shader_->set_uniform(
-              ctx, node.transform, "gua_model_matrix");
+              ctx, node->get_world_transform(), "gua_model_matrix");
           mesh_shader_->set_uniform(
                         ctx,
                         scm::math::transpose(
-                            scm::math::inverse(node.transform)),
+                            scm::math::inverse(node->get_world_transform())),
                         "gua_normal_matrix");
           geometry->draw(ctx);
       }

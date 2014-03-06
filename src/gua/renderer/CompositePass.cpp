@@ -134,11 +134,11 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
             for (auto const& node : scene.volumenodes_) {
 
                 auto volume =
-                    std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
+                    std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node->data.get_volume()));
 
                 if (volume) {
                     ray_generation_shader_->set_uniform(
-                        ctx, node.transform, "gua_model_matrix");
+                        ctx, node->get_world_transform(), "gua_model_matrix");
 
                     ray_generation_shader_->set_uniform(
                         ctx, 0, "volume_frag_id");
@@ -184,11 +184,11 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
         for (auto const& node : scene.volumenodes_) {
 
             auto volume =
-                std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
+                std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node->data.get_volume()));
 
             if (volume) {
                 composite_shader_->set_uniform(
-                    ctx, node.transform, "gua_model_matrix");
+                    ctx, node->get_world_transform(), "gua_model_matrix");
 
                 volume->set_uniforms(ctx, composite_shader_);
 

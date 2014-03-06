@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/SerializedNode.hpp>
 #include <gua/renderer/Mesh.hpp>
 #include <gua/renderer/NURBS.hpp>
 
@@ -173,7 +172,7 @@ void Serializer::check(SerializedScene* output,
 
       if (mesh_ptr) {
 
-        data_->meshnodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
+        data_->meshnodes_.push_back(node);
 
       } else {
 
@@ -181,7 +180,7 @@ void Serializer::check(SerializedScene* output,
             gua::GeometryDatabase::instance()->lookup(node->data.get_geometry()));
 
         if (nurbs_ptr) {
-          data_->nurbsnodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
+          data_->nurbsnodes_.push_back(node);
         }
       }
     }
@@ -199,7 +198,7 @@ void Serializer::check(SerializedScene* output,
   if ( is_visible(node) ) {
     if ( !node->data.get_volume().empty() ) {
       add_bbox(node);
-      data_->volumenodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
+      data_->volumenodes_.push_back(node);
     }
 
     visit_children(node);
@@ -214,7 +213,7 @@ void Serializer::check(SerializedScene* output,
 
     add_bbox(node);
 
-    data_->point_lights_.push_back(make_serialized_node(node->get_world_transform(), node->data));
+    data_->point_lights_.push_back(node);
 
     visit_children(node);
   }
@@ -228,8 +227,7 @@ void Serializer::check(SerializedScene* output,
 
     add_bbox(node);
 
-    data_->spot_lights_
-        .push_back(make_serialized_node(node->get_world_transform(), node->data));
+    data_->spot_lights_.push_back(node);
 
     visit_children(node);
   }
@@ -240,8 +238,7 @@ void Serializer::check(SerializedScene* output,
 /* virtual */ void Serializer::visit(SunLightNode* node) {
 
   if (is_visible(node)) {
-    data_->sun_lights_
-        .push_back(make_serialized_node(node->get_world_transform(), node->data));
+    data_->sun_lights_.push_back(node);
 
     visit_children(node);
   }
@@ -254,10 +251,7 @@ void Serializer::check(SerializedScene* output,
   if (is_visible(node)) {
 
     if (draw_rays_) {
-      GeometryNode::Configuration config;
-      config.set_geometry("gua_ray_geometry");
-      config.set_material("gua_bounding_box");
-      data_->rays_.push_back(make_serialized_node(node->get_world_transform(), config));
+      data_->rays_.push_back(node);
     }
 
     visit_children(node);
@@ -272,8 +266,7 @@ void Serializer::check(SerializedScene* output,
 
     add_bbox(node);
 
-    data_->textured_quads_
-        .push_back(make_serialized_node(node->get_scaled_world_transform(), node->data));
+    data_->textured_quads_.push_back(node);
 
     visit_children(node);
   }

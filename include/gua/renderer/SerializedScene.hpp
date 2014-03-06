@@ -31,7 +31,6 @@
 #include <gua/scenegraph/ScreenNode.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/scenegraph/TexturedQuadNode.hpp>
-#include <gua/renderer/SerializedNode.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/renderer/Frustum.hpp>
 
@@ -54,32 +53,32 @@ struct SerializedScene {
   /**
    * All geometry nodes.
    */
-  std::vector<SerializedNode<GeometryNode::Configuration> > meshnodes_;
+  std::vector<GeometryNode*> meshnodes_;
 
   /**
    * All NURBS nodes.
    */
-  std::vector<SerializedNode<GeometryNode::Configuration> > nurbsnodes_;
+  std::vector<GeometryNode*> nurbsnodes_;
 
   /**
   * All Volume nodes.
   */
-  std::vector<SerializedNode<VolumeNode::Configuration> > volumenodes_;
+  std::vector<VolumeNode*> volumenodes_;
 
   /**
    * All point light nodes.
    */
-  std::vector<SerializedNode<PointLightNode::Configuration> > point_lights_;
+  std::vector<PointLightNode*> point_lights_;
 
   /**
    * All spot light nodes.
    */
-  std::vector<SerializedNode<SpotLightNode::Configuration> > spot_lights_;
+  std::vector<SpotLightNode*> spot_lights_;
 
   /**
    * All sun light nodes.
    */
-  std::vector<SerializedNode<SunLightNode::Configuration> > sun_lights_;
+  std::vector<SunLightNode*> sun_lights_;
 
   /**
    * The frustum.
@@ -106,12 +105,12 @@ struct SerializedScene {
   /**
    * All bounding boxes.
    */
-  std::vector<SerializedNode<GeometryNode::Configuration> > rays_;
+  std::vector<RayNode*> rays_;
 
   /**
    * All textured quads.
    */
-  std::vector<SerializedNode<TexturedQuadNode::Configuration> > textured_quads_;
+  std::vector<TexturedQuadNode*> textured_quads_;
 };
 
 }
