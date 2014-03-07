@@ -46,11 +46,12 @@ class GUA_DLL ShadingModelDatabase : public Database<ShadingModel>,
    *
    * This method loads gsd shading models to the data base.
    *
-   * \param path_to_shading_models    An absolute or relative path to the
-   *                                  directory containing gsd files.
+   * \param directory    An absolute or relative path to the
+   *                     directory containing gsd files.
    */
-  static void load_shading_models_from(
-      std::string const& path_to_shading_models);
+  static void load_shading_models_from(std::string const& directory);
+
+  static void load_shading_model(std::string const& filename);
 
   void reload_all();
 
