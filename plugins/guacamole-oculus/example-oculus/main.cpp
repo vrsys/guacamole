@@ -43,7 +43,7 @@ std::vector<std::shared_ptr<gua::TransformNode>> add_lights(gua::SceneGraph& gra
       loader.create_geometry_from_file(
       "sphere" + gua::string_utils::to_string(i),
       "data/objects/light_sphere.obj",
-      "White"
+      "data/materials/White.gmd"
     ));
 
     sphere_geometry->scale(0.04, 0.04, 0.04);
@@ -80,7 +80,7 @@ void setup_scene(gua::SceneGraph& graph,
       auto monkey_geometry(loader.create_geometry_from_file(
         "monkey",
         geometry,
-        "Stones"
+        "data/materials/Stones.gmd"
       ));
 
       auto monkey = root_monkey->add_child(monkey_geometry);
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
   auto monkey_geometry(loader.create_geometry_from_file(
     "root_ape",
     geometry,
-    "Stones"
+    "data/materials/Stones.gmd"
   ));
 
   auto root_monkey = graph.add_node("/", monkey_geometry);
