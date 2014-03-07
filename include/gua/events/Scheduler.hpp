@@ -27,12 +27,13 @@
 
 #include <boost/asio.hpp>
 
+#include <gua/platform.hpp>
 #include <gua/events/MainLoop.hpp>
 
 namespace gua {
 namespace events {
 
-class Scheduler {
+class GUA_DLL Scheduler {
  public:
   Scheduler();
   ~Scheduler();

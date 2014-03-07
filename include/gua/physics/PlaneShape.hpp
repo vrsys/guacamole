@@ -23,6 +23,7 @@
 #define GUA_PLANE_SHAPE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/physics/CollisionShape.hpp>
 #include <gua/math.hpp>
 
@@ -36,7 +37,7 @@ namespace physics {
  *
  * The plane shape can only be used for static rigid bodies.
  */
-class PlaneShape : public CollisionShape {
+class GUA_DLL PlaneShape : public CollisionShape {
  public:
 
   /**

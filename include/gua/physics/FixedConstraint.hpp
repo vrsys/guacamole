@@ -22,6 +22,7 @@
 #define FIXED_CONSTRAINT_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/physics/Constraint.hpp>
 
 namespace gua {
@@ -34,7 +35,7 @@ namespace physics {
  * The constraint restricts mutual rotations and translations between rigid
  * bodies or between a rigid body and static environment.
  */
-class FixedConstraint : public Constraint {
+class GUA_DLL FixedConstraint : public Constraint {
  public:
 
   /**

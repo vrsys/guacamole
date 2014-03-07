@@ -22,14 +22,16 @@
 #ifndef GUA_RENDERER_HPP
 #define GUA_RENDERER_HPP
 
-#include <gua/platform.hpp>
-
 // external headers
 #include <vector>
 #include <string>
 #include <memory>
+
+#include <gua/platform.hpp>
 #include <gua/renderer/RenderClient.hpp>
 #include <gua/utils/FpsCounter.hpp>
+
+#define USE_RAW_POINTER_RENDER_CLIENTS 1
 
 namespace gua {
 
@@ -41,7 +43,7 @@ class Pipeline;
  *
  * This class is used to provide a renderer frontend interface to the user.
  */
-class Renderer {
+class GUA_DLL Renderer {
  public:
   typedef std::vector<std::unique_ptr<const SceneGraph> > render_vec_t;
   typedef render_vec_t const const_render_vec_t;
@@ -57,6 +59,11 @@ class Renderer {
   Renderer(std::vector<Pipeline*> const& pipelines);
 
   /**
+  * 
+  */
+  ~Renderer();
+
+  /**
    * Request a redraw of all RenderClients.
    *
    * Takes a Scenegraph and asks all clients to draw it.
@@ -67,8 +74,11 @@ class Renderer {
 
  private:
   typedef RenderClient<std::shared_ptr<const_render_vec_t> > renderclient_t;
+#if USE_RAW_POINTER_RENDER_CLIENTS
+  std::vector<renderclient_t*> render_clients_;
+#else
   std::vector<std::unique_ptr<renderclient_t> > render_clients_;
-
+#endif
   FpsCounter application_fps_;
 };
 

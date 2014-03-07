@@ -42,6 +42,14 @@ std::shared_ptr<Renderer::const_render_vec_t> garbage_collected_copy(
   return sgs;
 }
 
+Renderer::~Renderer() {
+#if USE_RAW_POINTER_RENDER_CLIENTS
+  for (auto rc : render_clients_) {
+    if (rc) delete rc;
+  }
+#endif
+}
+
 Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
     : render_clients_(),
       application_fps_(20) {
@@ -51,8 +59,11 @@ Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
         std::shared_ptr<const_render_vec_t> const & sg, float render_fps) {
       pipeline->process(*sg, this->application_fps_.fps, render_fps);
     };
-
+#if USE_RAW_POINTER_RENDER_CLIENTS
+    render_clients_.push_back(new renderclient_t(fun));
+#else
     render_clients_.push_back(gua::make_unique<renderclient_t>(fun));
+#endif
   }
 }
 

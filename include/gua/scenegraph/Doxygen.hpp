@@ -19,58 +19,12 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_VIEW_NODE_HPP
-#define GUA_VIEW_NODE_HPP
-
-#include <gua/scenegraph/Node.hpp>
-#include <gua/utils/configuration_macro.hpp>
+#ifndef GUA_SCENEGRAPH_DOXYGEN_HPP
+#define GUA_SCENEGRAPH_DOXYGEN_HPP
 
 /**
- * This class is used to represent a camera in the SceneGraph.
- *
+ * \defgroup gua_scenegraph guacamole scenegraph
  */
 
-namespace gua {
+#endif // GUA_SCENEGRAPH_DOXYGEN_HPP
 
-class ViewNode : public Node {
- public:
-
-  struct Configuration {
-    GUA_ADD_PROPERTY(float, stereo_width, 0.07f);
-  };
-
-  Configuration data;
-
-  ViewNode() {}
-
-  /**
-   * Constructor.
-   *
-   * This constructs a ViewNode with the given parameters and calls
-   * the constructor of base class Core with the type CAMERA.
-   *
-   * \param stereo_width  The gap between the eyes.
-   */
-  ViewNode(std::string const& name,
-             Configuration const& configuration = Configuration(),
-             math::mat4 const& transform = math::mat4::identity());
-
-  /**
-   * Accepts a visitor and calls concrete visit method
-   *
-   * This method implements the visitor pattern for Nodes
-   *
-   */
-  /* virtual */ void accept(NodeVisitor&);
-
- private:
-
-  /**
-   *
-   */
-  std::shared_ptr<Node> copy() const;
-};
-
-}
-
-#endif  // GUA_VIEW_NODE_HPP

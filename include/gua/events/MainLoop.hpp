@@ -26,10 +26,12 @@
 
 #include <boost/asio.hpp>
 
+#include <gua/platform.hpp>
+
 namespace gua {
   namespace events {
 
-    class MainLoop 
+    class GUA_DLL MainLoop
     {
     public:
 

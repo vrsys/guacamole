@@ -79,7 +79,7 @@ std::unique_ptr<UniformValueBase> create_from_string_and_type(
           string_utils::from_string<math::mat4>(value));
       break;
 
-    case UniformType::SAMPLER:
+    case UniformType::SAMPLER2D:
       return gua::make_unique<UniformValue<std::string> >(value);
       break;
 
@@ -114,10 +114,17 @@ void Material::reload() {
 void Material::load_description() {
   uniform_values_.clear();
 
-  auto shading_model(ShadingModelDatabase::instance()->lookup(
-      description_.get_shading_model()));
+  std::string shading_model(description_.get_shading_model());
+  std::shared_ptr<ShadingModel> mod;
 
-  for (auto& stage : shading_model->get_stages()) {
+  if (!ShadingModelDatabase::instance()->is_supported(shading_model)) {
+    mod = std::make_shared<ShadingModel>(shading_model, shading_model);
+    ShadingModelDatabase::instance()->add(shading_model, mod);
+  } else {
+    mod = ShadingModelDatabase::instance()->lookup(shading_model);
+  }
+
+  for (auto& stage : mod->get_stages()) {
     for (auto const& uniform : stage.get_uniforms()) {
       std::string value(description_.get_uniforms()[uniform.first]);
       uniform_values_[uniform.first] =

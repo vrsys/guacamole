@@ -23,6 +23,7 @@
 #define GUA_GEOMETRY_HPP
 
 // guacamole_headers
+#include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/scenegraph/PickResult.hpp>
@@ -39,7 +40,7 @@ struct Ray;
 /**
  * Base class for different geometries.
  */
-class Geometry {
+class GUA_DLL Geometry {
  public:
 
   /**

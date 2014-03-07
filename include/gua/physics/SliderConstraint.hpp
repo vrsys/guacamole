@@ -23,6 +23,7 @@
 #define SLIDER_CONSTRAINT_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/physics/Constraint.hpp>
 
 namespace gua {
@@ -35,7 +36,7 @@ namespace physics {
  * The constraint allows the body to rotate around one axis and translate
  * along this axis.
  */
-class SliderConstraint : public Constraint {
+class GUA_DLL SliderConstraint : public Constraint {
  public:
 
   /**

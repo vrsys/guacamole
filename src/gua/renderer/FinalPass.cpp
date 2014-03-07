@@ -69,10 +69,10 @@ void FinalPass::set_uniforms(SerializedScene const& scene,
   shader_->set_uniform(
       ctx, pipeline_->config.ambient_color(), "gua_ambient_color");
   shader_->set_uniform(ctx,
-                       pipeline_->config.background_texture().empty(),
-                       "gua_background_is_color");
+                       static_cast<int>(pipeline_->config.background_mode()),
+                       "gua_background_mode");
 
-  if (pipeline_->config.background_texture().empty())
+  if (pipeline_->config.background_mode() == Pipeline::BackgroundMode::COLOR || pipeline_->config.background_texture() == "")
     shader_->set_uniform(
         ctx, pipeline_->config.background_color(), "gua_background_color");
   else

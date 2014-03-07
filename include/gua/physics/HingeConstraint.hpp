@@ -23,6 +23,7 @@
 #define HINGE_CONSTRAINT_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/physics/Constraint.hpp>
 
 namespace gua {
@@ -36,7 +37,7 @@ namespace physics {
  * a given axis. This constraint can be useful to represent doors or wheels
  * rotating around one axis.
  */
-class HingeConstraint : public Constraint {
+class GUA_DLL HingeConstraint : public Constraint {
  public:
 
   /**

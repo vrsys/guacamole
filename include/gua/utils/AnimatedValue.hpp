@@ -22,13 +22,15 @@
 #ifndef GUA_ANIMATEDVALUE_HPP
 #define GUA_ANIMATEDVALUE_HPP
 
+#include <gua/platform.hpp>
+
 namespace gua {
 namespace utils {
 
 /**
  * A class for smooth value interpolation.
  */
-class AnimatedValue {
+class GUA_DLL AnimatedValue {
  public:
   enum Direction {
     In,

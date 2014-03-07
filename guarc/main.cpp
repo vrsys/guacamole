@@ -41,6 +41,7 @@ void read_directory(fs::path const& directory, std::string const& root);
 void read_file(fs::path const& file, std::string const& root);
 void write_output(fs::path const& hpp_file, fs::path const& cpp_file);
 void make_variable_name(std::string& file);
+bool is_temporary_file(std::string const& file);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -113,7 +114,13 @@ void read_directory(fs::path const& directory, std::string const& root) {
         read_directory(dir_itr->path(), root);
 
       } else if (fs::is_regular_file(dir_itr->status())) {
-        read_file(dir_itr->path(), root);
+
+        if (!is_temporary_file(dir_itr->path().filename().string())) {
+          read_file(dir_itr->path(), root);
+        } else {
+          std::cout << "Skipping temporary file ";
+          std::cout << dir_itr->path().filename() << std::endl;
+        }
 
       } else {
         std::cout << "Skipping non-regular file ";
@@ -133,10 +140,10 @@ void read_file(fs::path const& file, std::string const& root) {
   std::string full_path(file.string());
   std::string rel_path(full_path.substr(root.length() + 1, std::string::npos));
 
-  // replace windows '\' with '/' for map key 
+  // replace windows '\' with '/' for map key
   std::replace(rel_path.begin(), rel_path.end(), '\\', '/');
-  std::cout << rel_path << std::endl;
-  
+  std::cout << "Embedding " << rel_path << " ..." << std::endl;
+
   // open the file:
   std::ifstream s(file.string(), std::ios::in | std::ios::binary);
 
@@ -189,11 +196,12 @@ void write_output(fs::path const& hpp_file, fs::path const& cpp_file) {
 
       cpp << "0x" << hex.str();
 
-      if (i<entry.second.size()-1)
+      if (i<entry.second.size()-1) {
         cpp << ", ";
-      else
-        cpp << "};" << std::endl;
+      }
     }
+
+    cpp << "};" << std::endl;
 
   }
 
@@ -225,4 +233,13 @@ void make_variable_name(std::string& file) {
   std::replace(file.begin(), file.end(), '(',  '_');
   std::replace(file.begin(), file.end(), ')',  '_');
   std::replace(file.begin(), file.end(), ' ',  '_');
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool is_temporary_file(std::string const& file) {
+
+  if (*file.rbegin() == '~') return true;
+
+  return false;
 }

@@ -22,6 +22,8 @@
 #ifndef GUA_COLLISION_SHAPE_HPP
 #define GUA_COLLISION_SHAPE_HPP
 
+#include <gua/platform.hpp>
+
 class btCollisionShape;
 class btCompoundShape;
 class btTransform;
@@ -35,7 +37,7 @@ namespace physics {
  * This abstract class provides an interface for collision shapes that can be
  * shared among multiple rigid bodies.
  */
-class CollisionShape {
+class GUA_DLL CollisionShape {
   friend class RigidBodyNode;
 
  public:

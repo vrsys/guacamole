@@ -51,7 +51,8 @@ enum class StereoMode {
   MONO = 0,
   SIDE_BY_SIDE,
   ANAGLYPH_RED_GREEN,
-  ANAGLYPH_RED_CYAN
+  ANAGLYPH_RED_CYAN,
+  CHECKERBOARD
 };
 
 /**
@@ -66,8 +67,10 @@ enum class UniformType {
   VEC4,
   MAT3,
   MAT4,
-  SAMPLER,
-  CUBEMAP,
+  SAMPLER1D,
+  SAMPLER2D,
+  SAMPLER3D,
+  SAMPLERCUBE,
   NONE
 };
 

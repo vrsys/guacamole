@@ -22,6 +22,7 @@
 #ifndef GUA_COLLISION_SHAPE_NODE_HPP
 #define GUA_COLLISION_SHAPE_NODE_HPP
 
+#include <gua/platform.hpp>
 #include <gua/scenegraph/Node.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
@@ -33,7 +34,7 @@
 namespace gua {
 namespace physics {
 
-class CollisionShapeNode : public Node {
+class GUA_DLL CollisionShapeNode : public Node {
  public:
 
   struct Configuration {

@@ -19,24 +19,60 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/scenegraph/GroupNode.hpp>
+#ifndef GUA_GROUP_NODE_HPP
+#define GUA_GROUP_NODE_HPP
 
-// guacamole headers
-#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/platform.hpp>
+#include <gua/scenegraph/Node.hpp>
 
 namespace gua {
 
-GroupNode::GroupNode(std::string const& name, math::mat4 const& transform)
-    : Node(name, transform) {}
+/**
+ * This class is used to represent an transformation node in the SceneGraph.
+ *
+ * Because any of guacamole's Nodes stores children and transformation, the
+ * TransformationNode only exists for the convenience of explicitly limiting a
+ * Node's purpose to the transformation of several children.
+ *
+ * \ingroup gua_scenegraph
+ */
+class GUA_DLL TransformNode : public Node {
+ public:
 
-/* virtual */ void GroupNode::accept(NodeVisitor& visitor) {
+  /**
+   * Constructor.
+   *
+   * This constructs an empty TransformNode.
+   *
+   */
+  TransformNode() {};
 
-  visitor.visit(this);
+  /**
+   * Constructor.
+   *
+   * This constructs a TransformNode with the given parameters.
+   *
+   * \param name           The name of the new TransformNode.
+   * \param transform      A matrix to describe the TransformNode's
+   *                       transformation.
+   */
+  TransformNode(std::string const& name,
+            math::mat4 const& transform = math::mat4::identity());
+
+  /**
+   * Accepts a visitor and calls concrete visit method.
+   *
+   * This method implements the visitor pattern for Nodes.
+   *
+   * \param visitor  A visitor to process the TransformNode's data.
+   */
+  /* virtual */ void accept(NodeVisitor& visitor);
+
+ private:
+
+  std::shared_ptr<Node> copy() const;
+};
+
 }
 
-std::shared_ptr<Node> GroupNode::copy() const {
-  return std::make_shared<GroupNode>(get_name(), get_transform());
-}
-
-}
+#endif  // GUA_GROUP_NODE_HPP

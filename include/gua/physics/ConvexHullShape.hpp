@@ -23,6 +23,7 @@
 #define GUA_CONVEX_HULL_SHAPE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/physics/CollisionShape.hpp>
 #include <gua/physics/PhysicsUtils.hpp>
 #include <gua/renderer/GeometryLoader.hpp>
@@ -38,7 +39,7 @@ namespace physics {
  * This class implements an implicit convex hull of an array of vertices.
  * The convex hull shape can be used for both static and dynamic rigid bodies.
  */
-class ConvexHullShape : public CollisionShape {
+class GUA_DLL ConvexHullShape : public CollisionShape {
  public:
 
   /**

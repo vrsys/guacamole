@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/utils/PathParser.hpp>
 #include <gua/utils/DotGenerator.hpp>
 #include <gua/utils/Mask.hpp>
@@ -36,7 +36,7 @@
 namespace gua {
 
 SceneGraph::SceneGraph(std::string const& name)
-    : root_(new GroupNode("/", math::mat4::identity())),
+    : root_(new TransformNode("/", math::mat4::identity())),
       name_(name) {}
 
 SceneGraph::SceneGraph(SceneGraph const& graph)

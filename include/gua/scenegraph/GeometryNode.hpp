@@ -29,47 +29,74 @@
 // external headers
 #include <string>
 
+namespace gua {
+
 /**
  * This class is used to represent geometry in the SceneGraph.
  *
+ * A GeometryNode only stores references to existing rendering assets stored in
+ * guacamole's databases. GeometryNodes typically aren't instantiated directly
+ * but by utilizing guacamole's GeometryLoader.
+ *
+ * \ingroup gua_scenegraph
  */
-
-namespace gua {
-
-class GeometryNode : public Node {
+class GUA_DLL GeometryNode : public Node {
   public:
 
-    struct Configuration {
-      GUA_ADD_PROPERTY(std::string,     geometry,   "gua_default_geometry");
-      GUA_ADD_PROPERTY(std::string,     material,   "gua_default_material");
-    };
+    /**
+    * A string referring to an entry in guacamole's GeometryDatabase.
+    */
+    std::string const& get_geometry() const { return geometry_; }
+    void set_geometry(std::string const& v) { geometry_ = v; geometry_changed_ = self_dirty_ = true; }
 
-    Configuration data;
+    /**
+    * A string referring to an entry in guacamole's MaterialDatabase.
+    */
+    std::string const& get_material() const { return material_; }
+    void set_material(std::string const& v) { material_ = v; material_changed_ = self_dirty_ = true; }
 
+    /**
+     * Constructor.
+     *
+     * This constructs an empty GeometryNode.
+     *
+     */
     GeometryNode() {};
 
     /**
      * Constructor.
      *
-     * This constructs a GeometryNode with the given parameters and calls
-     * the constructor of base class Core with the type GEOMETRY.
+     * This constructs a GeometryNode with the given parameters.
      *
-     * \param geometry  The name of the GeometryNode's geometry.
-     * \param material  The name of the GeometryNodeCore's material.
+     * \param name           The name of the new GeometryNode.
+     * \param configuration  A configuration struct to define the GeometryNode's
+     *                       properties.
+     * \param transform      A matrix to describe the GeometryNode's
+     *                       transformation.
      */
     GeometryNode(std::string const& name,
-                 Configuration const& configuration = Configuration(),
+                 std::string const& geometry = "gua_default_geometry",
+                 std::string const& material = "gua_default_material",
                  math::mat4 const& transform = math::mat4::identity());
 
     /**
-     * Accepts a visitor and calls concrete visit method
+     * Accepts a visitor and calls concrete visit method.
      *
-     * This method implements the visitor pattern for Nodes
+     * This method implements the visitor pattern for Nodes.
      *
+     * \param visitor  A visitor to process the GeometryNode's data.
      */
-    /* virtual */ void accept(NodeVisitor&);
+    /* virtual */ void accept(NodeVisitor& visitor);
 
+    /**
+     * Updates a GeometryNode's BoundingBox.
+     *
+     * The bounding box is updated according to the transformation matrices of
+     * all children.
+     */
     /*virtual*/ void update_bounding_box() const;
+
+    /*virtual*/ void update_cache();
 
     /*virtual*/ void ray_test_impl(RayNode const& ray, PickResult::Options options,
                             Mask const& mask, std::set<PickResult>& hits);
@@ -77,6 +104,12 @@ class GeometryNode : public Node {
   private:
 
     std::shared_ptr<Node> copy() const;
+
+    std::string geometry_;
+    std::string material_;
+
+    bool geometry_changed_;
+    bool material_changed_;
 };
 
 }

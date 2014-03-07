@@ -49,7 +49,7 @@ class RigidBodyNode;
  * This abstract class is the base class for rigid body constraints.
  *
  */
-class Constraint {
+class GUA_DLL Constraint {
   friend class Physics;
 
  public:

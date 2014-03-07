@@ -22,6 +22,7 @@
 #ifndef GUA_DISPLAY_DATA_HPP
 #define GUA_DISPLAY_DATA_HPP
 
+#include <gua/platform.hpp>
 #include <boost/chrono.hpp>
 
 namespace gua {
@@ -30,7 +31,7 @@ namespace gua {
  * Temporary class that holds data for the PostFXPass.
  */
 
-class DisplayData {
+class GUA_DLL DisplayData {
  public:
 
   void set_physics_fps(float fps);

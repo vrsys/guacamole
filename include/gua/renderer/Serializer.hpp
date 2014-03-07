@@ -61,29 +61,28 @@ class Serializer : public NodeVisitor {
    */
   void check(SerializedScene* output,
              SceneGraph const* scene_graph,
-             Camera const& camera,
-             Frustum const& frustum,
+             std::string const& render_mask,
              bool draw_bounding_boxes,
              bool draw_rays,
              bool enable_frustum_culling);
 
   /**
-   * Visits a GroupNode
+   * Visits a TransformNode
    *
-   * This function provides the interface to visit a GroupNode
+   * This function provides the interface to visit a TransformNode
    *
-   * \param cam   Pointer to GroupNode
+   * \param cam   Pointer to TransformNode
    */
-  /* virtual */ void visit(GroupNode* cam);
+  /* virtual */ void visit(Node* node);
 
   /**
-   * Visits a ViewNode
+   * Visits an LODNode
    *
-   * This function provides the interface to visit a ViewNode
+   * This function provides the interface to visit an LODNode
    *
-   * \param cam   Pointer to ViewNode
+   * \param cam   Pointer to LODNode
    */
-  /* virtual */ void visit(ViewNode* cam);
+  /* virtual */ void visit(LODNode* lod);
 
   /**
    * Visits a GeometryNode
@@ -95,6 +94,15 @@ class Serializer : public NodeVisitor {
   /* virtual */ void visit(GeometryNode* geometry);
 
   /**
+  * Visits a VolumeNode
+  *
+  * This function provides the interface to visit a VolumeNode
+  *
+  * \param volume   Pointer to VolumeNode
+  */
+  /* virtual */ void visit(VolumeNode* volume);
+
+  /**
    * Visits a PointLightNode
    *
    * This function provides the interface to visit a PointLightNode
@@ -104,15 +112,6 @@ class Serializer : public NodeVisitor {
   /* virtual */ void visit(PointLightNode* pointlight);
 
   /**
-   * Visits a ScreenLightNode
-   *
-   * This function provides the interface to visit a ScreenLightNode
-   *
-   * \param screen   Pointer to ScreenLightNode
-   */
-  /* virtual */ void visit(ScreenNode* screen);
-
-  /**
    * Visits a SpotLightNode
    *
    * This function provides the interface to visit a SpotLightNode
@@ -120,6 +119,15 @@ class Serializer : public NodeVisitor {
    * \param spot   Pointer to SpotLightNode
    */
   /* virtual */ void visit(SpotLightNode* spot);
+
+   /**
+   * Visits a SunLightNode
+   *
+   * This function provides the interface to visit a SunLightNode
+   *
+   * \param spot   Pointer to SunLightNode
+   */
+  /* virtual */ void visit(SunLightNode* sun);
 
   /**
    * Visits a RayNode
@@ -164,8 +172,8 @@ class Serializer : public NodeVisitor {
   void visit_children(Node* node);
 
   Frustum current_frustum_;
-  Camera current_camera_;
   Mask current_render_mask_;
+  math::vec3 current_center_of_interest_;
 
   SerializedScene* data_;
   bool draw_bounding_boxes_;

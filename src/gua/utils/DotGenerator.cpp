@@ -24,9 +24,9 @@
 
 // guacamole headers
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/scenegraph/GroupNode.hpp>
-#include <gua/scenegraph/ViewNode.hpp>
+#include <gua/scenegraph/TransformNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
 #include <gua/scenegraph/ScreenNode.hpp>
@@ -82,25 +82,11 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(GroupNode* cam) {
+/* virtual */ void DotGenerator::visit(TransformNode* cam) {
   pre_node_info(cam);
 
   std::string fillcolor("[fillcolor =");
   fillcolor += " \"#888888\"";
-  fillcolor += "]";
-
-  post_node_info(cam, fillcolor);
-
-  for (auto child : cam->children_)
-    child->accept(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(ViewNode* cam) {
-  pre_node_info(cam);
-
-  std::string fillcolor("[fillcolor =");
-  fillcolor += " \"#AAFFAA\"";
   fillcolor += "]";
 
   post_node_info(cam, fillcolor);
@@ -115,10 +101,10 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   std::string fillcolor("[fillcolor =");
   fillcolor += " \"#CCCCCC\"";
-  if (geometry->data.get_geometry() != "")
-    parse_data_ += "| geometry: " + geometry->data.get_geometry();
-  if (geometry->data.get_material() != "")
-    parse_data_ += "| material: " + geometry->data.get_material();
+  if (geometry->get_geometry() != "")
+    parse_data_ += "| geometry: " + geometry->get_geometry();
+  if (geometry->get_material() != "")
+    parse_data_ += "| material: " + geometry->get_material();
 
   fillcolor += "]";
 
@@ -126,6 +112,24 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   for (auto child : geometry->children_)
     child->accept(*this);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/* virtual */ void DotGenerator::visit(VolumeNode* volume) {
+	pre_node_info(volume);
+
+	std::string fillcolor("[fillcolor =");
+	fillcolor += " \"#CCEECC\"";
+	if (volume->data.get_volume() != "")
+		parse_data_ += "| volume: " + volume->data.get_volume();
+
+	fillcolor += "]";
+
+	post_node_info(volume, fillcolor);
+
+	for (auto child : volume->children_)
+		child->accept(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

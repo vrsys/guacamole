@@ -26,7 +26,7 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/TextRenderer.hpp>
-#include <gua/renderer/Texture.hpp>
+#include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/Mask.hpp>
 
@@ -38,7 +38,6 @@
 namespace gua {
 
 class Pipeline;
-struct PipelineConfiguration;
 struct SerializedScene;
 struct Camera;
 class LayerMapping;
@@ -76,7 +75,6 @@ class Pass {
 
   virtual void create(
       RenderContext const& ctx,
-      PipelineConfiguration const& config,
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 

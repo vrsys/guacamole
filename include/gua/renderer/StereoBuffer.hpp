@@ -24,10 +24,10 @@
 
 // guacamole headers
 #include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/Pipeline.hpp>
 
 namespace gua {
 
-struct PipelineConfiguration;
 /**
  *
  */
@@ -38,7 +38,7 @@ class StereoBuffer {
    */
   StereoBuffer(
       RenderContext const& ctx,
-      PipelineConfiguration const& config,
+      Pipeline::Configuration const& config,
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 

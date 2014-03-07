@@ -19,6 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
+#include <gua/platform.hpp>
+
 namespace gua {
 namespace math {
 namespace random {
@@ -28,14 +30,14 @@ namespace random {
  *
  * \param seed  The new seed.
  */
-void set_seed(unsigned int seed);
+void GUA_DLL set_seed(unsigned int seed);
 
 /**
  * Gets the current seed.
  *
  * \return      The current seed.
  */
-unsigned int get_seed();
+unsigned int GUA_DLL get_seed();
 
 /**
  * Returns a random floating point value.
@@ -45,7 +47,7 @@ unsigned int get_seed();
  *
  * \return        A random floating point value.
  */
-float get(float begin, float end);
+float GUA_DLL get(float begin, float end);
 
 /**
  * Returns a random integer value.
@@ -55,7 +57,7 @@ float get(float begin, float end);
  *
  * \return        A random integer value.
  */
-int get(int begin, int end);
+int GUA_DLL get(int begin, int end);
 }
 }
 }

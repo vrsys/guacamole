@@ -23,6 +23,7 @@
 #define GUA_TEXTURE_DATABASE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
 #include <gua/renderer/Texture.hpp>
@@ -34,9 +35,11 @@ namespace gua {
  *
  * This Database stores texture data. It can be accessed via string
  * identifiers.
+ *
+ * \ingroup gua_databases
  */
-class TextureDatabase : public Database<Texture>,
-                        public Singleton<TextureDatabase> {
+class GUA_DLL TextureDatabase : public Database<Texture>,
+                                public Singleton<TextureDatabase> {
  public:
 
   /**

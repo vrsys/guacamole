@@ -23,6 +23,7 @@
 #define GUA_BOX_SHAPE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/physics/CollisionShape.hpp>
 #include <gua/physics/PhysicsUtils.hpp>
 
@@ -38,7 +39,7 @@ namespace physics {
  * length specified by half extents, in local shape coordinates.
  * The box shape can be used for both static and dynamic rigid bodies.
  */
-class BoxShape : public CollisionShape {
+class GUA_DLL BoxShape : public CollisionShape {
  public:
 
   /**
