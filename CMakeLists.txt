@@ -43,7 +43,12 @@ include(find_compiler)
 include(FindSchism)
 include(FindBoost)
 
-set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
+if (UNIX)
+	set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
+elseif (WIN32)
+	set (BULLET_ROOT "externals/" CACHE PATH "Set to your bullet install path.")
+endif (UNIX)
+
 find_package(Bullet REQUIRED)
 find_package(Json REQUIRED)
 
