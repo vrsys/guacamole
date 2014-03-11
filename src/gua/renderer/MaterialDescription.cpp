@@ -70,6 +70,10 @@ void MaterialDescription::reload() {
                     "File does not exist!",
                     file_name_.c_str());
         }
+
+        PathParser p;
+        p.parse(file_name_);
+        shading_model_ = p.get_path(true) + shading_model_;
     }
 }
 

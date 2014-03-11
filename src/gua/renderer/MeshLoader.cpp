@@ -92,7 +92,8 @@ std::shared_ptr<Node> MeshLoader::load(std::string const& file_name,
       // new_node = std::make_shared(new GeometryNode("unnamed",
       //                             GeometryNode::Configuration("", ""),
       //                             math::mat4::identity()));
-      new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags);
+      unsigned count(0);
+      new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
 
     } else {
       WARNING("Failed to load object \"%s\": No valid root node contained!",
@@ -132,6 +133,11 @@ std::vector<Mesh*> const MeshLoader::load_from_buffer(char const* buffer_name,
 bool MeshLoader::is_supported(std::string const& file_name) const {
   auto point_pos(file_name.find_last_of("."));
   Assimp::Importer importer;
+
+  if (file_name.substr(point_pos + 1) == "raw"){
+	  return false;
+  }
+
   return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
 }
 
@@ -139,12 +145,12 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
                                            aiScene const* ai_scene,
                                            aiNode* ai_root,
                                            std::string const& file_name,
-                                           unsigned flags) {
+                                           unsigned flags, unsigned& mesh_count) {
 
   // creates a geometry node and returns it
   auto load_geometry = [&](int i) {
     // load geometry
-    std::string mesh_name("mesh_" + string_utils::to_string(mesh_counter_++));
+    std::string mesh_name("type=file&file=" + file_name + "&id=" + string_utils::to_string(mesh_count++) + "&flags=" + string_utils::to_string(flags));
     GeometryDatabase::instance()->add(mesh_name, std::make_shared<Mesh>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & GeometryLoader::MAKE_PICKABLE));
 
     // load material
@@ -158,8 +164,8 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
     }
 
     auto result(std::make_shared<GeometryNode>(mesh_name));
-    result->data.set_geometry(mesh_name);
-    result->data.set_material(material_name);
+    result->set_geometry(mesh_name);
+    result->set_material(material_name);
 
     return result;
   };
@@ -168,7 +174,7 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
   if (ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0) {
     return get_tree(
       importer, ai_scene, ai_root->mChildren[0],
-      file_name, flags
+      file_name, flags, mesh_count
     );
   }
 
@@ -188,7 +194,7 @@ std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> con
     group->add_child(
       get_tree(
         importer, ai_scene, ai_root->mChildren[i],
-        file_name, flags
+        file_name, flags, mesh_count
       )
     );
   }

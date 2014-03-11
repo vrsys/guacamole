@@ -21,7 +21,8 @@
 
 build
 lib
-doc/html
+doc/doc/*
+doc/libpeerconnection.log
 editor/guacamole_editor
 guarc/guarc
 guacamole.sublime-workspace
@@ -31,3 +32,4 @@ tags
 .nfs*
 .vim.custom
 tests/tests
+plugins/guacamole-oculus/example-oculus/example-oculus

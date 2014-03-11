@@ -106,14 +106,12 @@ void gua_apply_fxaa() {
 
 void apply_vignette() {
 
-    float hardness = gua_vignette_softness;
-    float offset = 0.5 - gua_vignette_coverage*0.5;
-
-    float dist = length(gua_get_quad_coords() - vec2(0.5));
-    float fac = (dist - offset)/hardness;
-    fac = 1.0 - pow(clamp(fac, 0.0, 1.0), 2);
-
-    gua_out_color = gua_out_color * fac + (1.0 - fac) * gua_vignette_color;
+    // inigo quilez's great vigneting effect!
+    float a = -gua_vignette_coverage/gua_vignette_softness;
+    float b = 1.0/gua_vignette_softness;
+    vec2 q = gua_get_quad_coords();
+    float fac = min(1, a + b*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 ));
+	  gua_out_color = gua_out_color * fac + (1.0 - fac) * gua_vignette_color;
 }
 
 /////////////////////////////// main ///////////////////////////////////

@@ -6,7 +6,7 @@ PROJECT(GUACAMOLE CXX)
 
 # version number
 set(GUACAMOLE_MAJOR 0)
-set(GUACAMOLE_MINOR 1)
+set(GUACAMOLE_MINOR 5)
 set(GUACAMOLE_PATCH 0)
 set(GUACAMOLE_VERSION ${GUACAMOLE_MAJOR}.${GUACAMOLE_MINOR}.${GUACAMOLE_PATCH})
 set(GUACAMOLE_DESCRIPTION "GUACAMOLE - an astonishing virtual reality engine")
@@ -35,15 +35,17 @@ if (UNIX)
 	pkg_check_modules(GL REQUIRED gl)
 	pkg_check_modules(GLEW REQUIRED glew)
 elseif (WIN32)
-	include(find_assimp)
+	include(FindAssimp)
 endif (UNIX)
 
 include(define_macros)
 include(find_compiler)
-include(find_schism)
-include(find_boost)
-include(find_bullet)
-include(find_json)
+include(FindSchism)
+include(FindBoost)
+
+set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
+find_package(Bullet REQUIRED)
+find_package(Json REQUIRED)
 
 set(LIBS
     ${SCHISM_LIBRARIES}
@@ -156,6 +158,18 @@ add_subdirectory(src)
 ################################################################
 
 add_subdirectory(plugins)
+
+################################################################
+# Testing
+################################################################
+
+set (GUACAMOLE_TESTS "false" CACHE BOOL "Set to enable testing.")
+
+if (GUACAMOLE_TESTS)
+  add_subdirectory(tests)
+  enable_testing()
+  add_test( NAME testGUA COMMAND runTests )
+endif (GUACAMOLE_TESTS)
 
 ################################################################
 # Summary

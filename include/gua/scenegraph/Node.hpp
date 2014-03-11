@@ -38,25 +38,21 @@
 
 namespace gua {
 
-/**
- * This class is used to build the internal structure of a SceneGraph.
- *
- * Nodes have a name and hold objects and there transforms. Furthermore they
- * keep track of which Nodes are attached to them (children) an to which Node
- * they are attached to (parent). Nodes can be assigned a group name which
- * allows to group them concerning similar properties etc.
- *
- * NOTE: This class is ment to be used inside the SceneGraph class only!
- *       All interaction with the graph must be handled with Iterators and via
- *       the SceneGraph interface.
- *
- */
-
 class NodeVisitor;
 class RayNode;
 
 namespace physics { class CollisionShapeNodeVisitor; }
 
+/**
+ * This class is used as a base class to provide basic node behaviour.
+ *
+ * A Node stores a name and, a tansformation matrix and an axis-aligned
+ * BoundingBox. Each of guacamole's Nodes may have multiple child Nodes and one
+ * parent Node. Furthermore, Nodes can be assigned a group name which allows for
+ * user-defined grouping concerning similar properties etc.
+ *
+ * \ingroup gua_scenegraph
+ */
 class GUA_DLL Node {
  public:
 
@@ -65,10 +61,8 @@ class GUA_DLL Node {
    *
    * This constructs a Node with the given parameters.
    *
-   * \param name      The Node's name
-   * \param transform The transformation of the object the Node contains.
-   * \param core      The Core of the node, representing its containing
-   *                 object.
+   * \param name        The Node's name
+   * \param transform   The Node's transformation.
    */
   Node(std::string const& name = "",
        math::mat4 const& transform = math::mat4::identity());
@@ -81,32 +75,29 @@ class GUA_DLL Node {
    */
   virtual ~Node();
 
-  /**
-   * Accepts a visitor and calls concrete visit method
-   *
-   * This method implements the visitor pattern for Nodes
-   *
-   * \param visitor  A concrete NodeVisitor
-   */
-  virtual void accept(NodeVisitor& visitor) = 0;
-
-  virtual void update_cache();
 
   /**
    * Returns the Node's name.
    *
-   * \return string   The Node's name.
+   * \return std::string  The Node's name.
    */
   inline std::string const& get_name() const { return name_; }
 
+  /**
+   * Sets the Node's name.
+   *
+   * \param name   The Node's new name.
+   */
   inline void set_name(std::string const& name) { name_ = name; }
 
   /**
    * Adds a child.
    *
-   * This adds a Node to the Node's children list.
+   * This adds a Node to the Node's children vector and returns a shared pointer
+   * to the new child.
    *
-   * \param child     The Node to be added as a child.
+   * \param node_name The name of the new Node to be added as a child.
+   * \tparam T The type of the new Node to be added as a child.
    */
   template<typename T>
   std::shared_ptr<T> add_child(std::string const& node_name) {
@@ -115,6 +106,15 @@ class GUA_DLL Node {
     return add_child(new_node);
   }
 
+  /**
+   * Adds a child.
+   *
+   * This adds a Node to the Node's children vector and returns a shared pointer
+   * to the new child.
+   *
+   * \param new_node The new Node to be added as a child.
+   * \tparam T The type of the new Node to be added as a child.
+   */
   template<typename T>
   std::shared_ptr<T> add_child(std::shared_ptr<T> const& new_node) {
 
@@ -127,12 +127,25 @@ class GUA_DLL Node {
   }
 
   /**
-   * Returns the Node's children list.
+   * Removes a child.
    *
-   * \return list     The Node's children list.
+   * This removes a Node from the Node's children vector.
+   *
+   * \param child  The Node to be removed.
+   */
+  void remove_child(std::shared_ptr<Node> const& child);
+
+  /**
+   * Returns the Node's children vector.
+   *
+   * \return std::vector<std::shared_ptr<Node>>  The Node's children vector.
    */
   inline std::vector<std::shared_ptr<Node>> const& get_children() const { return children_; }
 
+  /**
+   * Clears the Node's children vector. Additionally, the parent node pointer of
+   * each child is set to nullptr.
+   */
   void clear_children();
 
   /**
@@ -159,17 +172,17 @@ class GUA_DLL Node {
   /**
    * Checks whether the Node is in a certain group.
    *
-   * \param group        The name of the group to be checked.
+   * \param group   The name of the group to be checked.
    *
-   * \return is_in_group Returns true if the Node is in the given group,
-   *                     else false.
+   * \return bool   Returns true if the Node is in the given group,
+   *                else false.
    */
   bool is_in_group(std::string const& group) const;
 
   /**
-   * Gets the groups the Node is in.
+   * Returns the groups the Node is in.
    *
-   * \return groups   Returns all groups the Node is in.
+   * \return std::set<std::string>  Returns all groups the Node is in.
    */
   inline std::set<std::string> const& get_groups() const {
     return group_list_;
@@ -177,50 +190,66 @@ class GUA_DLL Node {
 
 
   /**
-   * Returns the transformation of the object the Node contains.
+   * Returns the Node's transformation.
    *
-   * Returns the transformation accumulated with its parents so the
-   * resulting matrix represents the transformation in world
-   * coordinates.
-   *
-   * \return transform The Object's transformation.
+   * \return math::mat4  The Object's transformation.
    */
   inline virtual math::mat4 get_transform() const { return transform_; }
 
 
   /**
-   * Returns the transformation of the object the Node contains.
+   * Returns the Node's world transformation.
    *
-   * Returns the transformation accumulated with its parents so the
-   * resulting matrix represents the transformation in world
-   * coordinates.
+   * Returns the Node's transformation accumulated with its parent's
+   * transformation
    *
-   * \return transform The Object's transformation.
+   * \return math::mat4  The Node's world transformation.
    */
   math::mat4 get_world_transform() const;
+  math::mat4 get_cached_world_transform() const;
 
+  /**
+   * Returns the Node's world postion.
+   *
+   * Accumulates the Node's transformation with its parent's transformation
+   * and returns the translational part of the resulting matrix.
+   *
+   * \return math::vec3  The Node's world position.
+   */
   math::vec3 get_world_position() const;
 
   /**
-   * Sets the transformation of the object the Node contains.
+   * Sets the Node's transformation.
    *
-   * \param transform The new transformation of the Node's object.
+   * \param transform The Node's new transformation.
    */
   virtual void set_transform(math::mat4 const& transform);
 
   /**
-   * Applies a scaling on the Node's object's transformation.
+   * Applies a scaling on the Node's transformation.
    *
    * \param x         The x value of the scaling.
    * \param y         The y value of the scaling.
    * \param z         The z value of the scaling.
    */
-  virtual void scale(float s);
   virtual void scale(float x, float y, float z);
+
+  /**
+   * Applies a scaling on the Node's transformation.
+   *
+   * \param s         The scaling vector to be used.
+   */
   virtual void scale(math::vec3 const& s);
 
   /**
-   * Applies a rotation on the Node's object's transformation.
+   * Applies a uniform scaling on the Node's transformation.
+   *
+   * \param s         The scaling value for all axes.
+   */
+  virtual void scale(float s);
+
+  /**
+   * Applies a rotation on the Node's transformation.
    *
    * \param angle     The angle of the rotation in degrees.
    * \param x         The x factor of the rotation.
@@ -228,16 +257,29 @@ class GUA_DLL Node {
    * \param z         The z factor of the rotation.
    */
   virtual void rotate(float angle, float x, float y, float z);
+
+  /**
+   * Applies a rotation on the Node's transformation.
+   *
+   * \param angle     The angle of the rotation in degrees.
+   * \param axis      A vector containing the rotation's axis values.
+   */
   virtual void rotate(float angle, math::vec3 const& axis);
 
   /**
-   * Applies a translation on the Node's object's transformation.
+   * Applies a translation on the Node's transformation.
    *
    * \param x         The x value of the translation.
    * \param y         The y value of the translation.
    * \param z         The z value of the translation.
    */
   virtual void translate(float x, float y, float z);
+
+  /**
+   * Applies a translation on the Node's transformation.
+   *
+   * \param offset    The translation vector.
+   */
   virtual void translate(math::vec3 const& offset);
 
   /**
@@ -251,39 +293,111 @@ class GUA_DLL Node {
   int get_depth() const;
 
   /**
-   * Returns if the Node has Children
+   * Returns if the Node has children
    *
-   * \return bool     Has the Node any children
+   * \return bool  The return value is true if the Node has any children, else
+   *               false.
    */
   inline bool has_children() const { return !children_.empty(); }
 
   /**
    * Returns the full path to the node.
    *
-   * This function recursively computes the full path of the Node.
+   * This function recursively computes the full path of the Node. A Node's path
+   * contains the names of all of its parents, concatenated by "/".
    *
-   * \return path     The full path to the Node.
+   * \return std::string  The full path to the Node.
    */
   std::string get_path() const;
 
   /**
-   * Returns the Node's parent.
+   * Returns a raw pointer to the Node's parent.
    *
-   * \return Node     The Node's parent.
+   * \return Node*  The Node's parent.
    */
   inline Node* get_parent() const { return parent_; }
+
+  /**
+   * Returns a shared pointer to the Node's parent.
+   *
+   * \return std::shared_ptr<Node>  The Node's parent.
+   */
   std::shared_ptr<Node> get_parent_shared() const;
 
+  /**
+   * Returns the Node's BoundingBox.
+   *
+   * \return math::BoundingBox<math::vec3>  The Node's BoundingBox.
+   */
   virtual inline math::BoundingBox<math::vec3> const& get_bounding_box() const {
       return bounding_box_;
   }
 
+  /**
+   * Updates a Node's BoundingBox.
+   *
+   * The bounding box is updated according to the transformation matrices of
+   * all children.
+   */
+  virtual void update_bounding_box() const;
+
+  /**
+   * Intersects a Node with a given RayNode.
+   *
+   * The function checks wheter a given RayNode intersects the Node or not. If
+   * an intersection was found, a std::set<PickResult> is returned, containing
+   * information about individual hits. The user may specify PickResult::Options
+   * and a mask (referring to Nodes' group names) to configure the intersection
+   * process.
+   *
+   * \param ray       The RayNode used to check for intersections.
+   * \param options   PickResult::Options to configure the intersection process.
+   * \param mask      A mask to restrict the intersection to certain Nodes.
+   */
   virtual std::set<PickResult> const ray_test(RayNode const& ray,
                                             PickResult::Options options = PickResult::PICK_ALL,
                                             std::string const& mask = "");
 
-  void*     get_user_data(unsigned handle) const;
+  /**
+   * Accepts a visitor and calls concrete visit method
+   *
+   * This method must be implemented by derived classes.
+   *
+   * \param visitor  A visitor to process the Node's data
+   */
+  virtual void accept(NodeVisitor& visitor) = 0;
+
+  /**
+   * Updates the Node's cache.
+   *
+   * For optimization purposes, a Node caches data each time the rendering is
+   * being processed. This function computes and stores the Node's current
+   * BoundingBox and world transformation.
+   */
+  virtual void update_cache();
+
+  /**
+   * Adds user-defined data to a Node.
+   *
+   * A user may store any data within one of guacamole's Nodes. This function
+   * returns a handle which can be used to regain the information later.
+   *
+   * \param data        A pointer to the data to be stored.
+   *
+   * \return unsigned   A handle for later access.
+   */
   unsigned  add_user_data(void* data);
+
+  /**
+   * Returns user-defined data for a given handle.
+   *
+   *
+   * \param handle  The handle belonging to the wanted data.
+   *
+   * \return void*  The user-defined data. This defaults to nullptr if the given
+   *                handle is invalid.
+   */
+  void*     get_user_data(unsigned handle) const;
 
   friend class SceneGraph;
   friend class GeometryLoader;
@@ -309,18 +423,8 @@ class GUA_DLL Node {
    */
   inline bool is_root() const { return parent_ == nullptr; }
 
-  virtual void update_bounding_box() const;
 
  private:
-
-  /**
-   * Removes a child.
-   *
-   * This removes a Node from the Node's children list.
-   *
-   * \param child     The Node to be removed.
-   */
-  void remove_child(std::shared_ptr<Node> const& child);
 
   /**
    * Sets the Node's parent.

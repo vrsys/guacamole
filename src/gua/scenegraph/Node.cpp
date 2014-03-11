@@ -151,6 +151,13 @@ math::mat4 Node::get_world_transform() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+math::mat4 Node::get_cached_world_transform() const {
+
+    return world_transform_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 math::vec3 Node::get_world_position() const {
     return gua::math::get_translation(get_world_transform());
 }
@@ -303,8 +310,9 @@ std::shared_ptr<Node> Node::deep_copy() const {
     for (auto child : children_)
         copied_node->add_child(child->deep_copy());
 
-    copied_node->bounding_box_ = bounding_box_;
-    copied_node->user_data_    = user_data_;
+    copied_node->bounding_box_      = bounding_box_;
+    copied_node->user_data_         = user_data_;
+    copied_node->world_transform_   = world_transform_;
 
     return copied_node;
 }

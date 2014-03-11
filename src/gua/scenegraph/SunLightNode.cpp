@@ -19,49 +19,35 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SERIALIZED_NODE_HPP
-#define GUA_SERIALIZED_NODE_HPP
+// class header
+#include <gua/scenegraph/SunLightNode.hpp>
 
-// guacamole headers
-#include <gua/math/math.hpp>
+// guacamole header
+#include <gua/platform.hpp>
+#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
 
-/**
- * Stores information on a light for rendering.
- *
- * This is a struct used for serializing the graph.
- *
- * essentially the same as a std::pair<math::mat4, configuration_type>
- */
-template <typename configuration_type> struct SerializedNode {
+SunLightNode::SunLightNode(std::string const& name,
+                             Configuration const& configuration,
+                             math::mat4 const& transform)
+    : Node(name, transform), data(configuration) {}
 
-  SerializedNode() : transform(math::mat4::identity()), data() {}
+/* virtual */ void SunLightNode::accept(NodeVisitor& visitor) {
+    visitor.visit(this);
+}
 
-  /**
-   * Constructor.
-   *
-   * This creates a new serialized node.
-   *
-   * \param transform        The global transformation of this node.
-   * \param color            The color of the light.
-   */
-  SerializedNode(math::mat4 const& t, configuration_type const& d)
-      : transform(t), data(d) {}
+void SunLightNode::update_bounding_box() const {
+    bounding_box_ = math::BoundingBox<math::vec3>(
+        math::vec3(std::numeric_limits<math::vec3::value_type>::lowest()),
+        math::vec3(std::numeric_limits<math::vec3::value_type>::max())
+    );
+}
 
-  /**
-   * The global transformation of this node.
-   */
-  math::mat4 transform;
-  configuration_type data;
-};
-
-template <typename T>
-inline SerializedNode<T> make_serialized_node(math::mat4 const& t, T const& d)
-{
-  return SerializedNode<T>(t, d);
+std::shared_ptr<Node> SunLightNode::copy() const {
+    return std::make_shared<SunLightNode>(get_name(), data, get_transform());
 }
 
 }
-
-#endif  // GUA_SERIALIZED_NODE_HPP

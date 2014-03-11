@@ -79,7 +79,7 @@ namespace gua {
 													(float)_volume_dimensions.y / (float)max_dimension_volume,
 													(float)_volume_dimensions.z / (float)max_dimension_volume);
 
-		MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
+		//MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
 		//getchar();
 
 		bounding_box_ = math::BoundingBox<math::vec3>(math::vec3::zero(), _volume_dimensions_normalized);
@@ -146,7 +146,7 @@ namespace gua {
 		_volume_texture_ptr[ctx.id] = std::shared_ptr<Texture3D>(new Texture3D(_volume_file_path));// scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
 		_volume_texture_ptr[ctx.id]->upload_to(ctx);
 
-		MESSAGE("%s loaded!", _volume_file_path.c_str());
+		//MESSAGE("%s loaded!", _volume_file_path.c_str());
 
 		//scm::gl::texture_loader scm_image_loader; 
 		_transfer_texture_ptr[ctx.id] = create_color_map(ctx, 255, _alpha_transfer, _color_transfer);
@@ -209,7 +209,7 @@ namespace gua {
 			return (std::shared_ptr<Texture2D>(new Texture2D(in_size, 1)));
 		}
 		else{
-			std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
+			//std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
 			return (new_tex);
 		}
 	}
@@ -246,14 +246,14 @@ namespace gua {
 			combined_lut[i * 4 + 3] = alpha_lut[i];
 		}
 
-		MESSAGE("generating color map texture data done.");
+		//MESSAGE("generating color map texture data done.");
 
-		MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
+		//MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
 
 		texture_region ur(vec3ui(0u), vec3ui(in_size, 1, 1));
 		bool res = ctx.render_context->update_sub_texture(transfer_texture_ptr->get_buffer(ctx), ur, 0u, FORMAT_RGBA_32F, combined_lut.get());
 
-		MESSAGE("uploading texture data done.");
+		//MESSAGE("uploading texture data done.");
 
 		if (!res) {
 			MESSAGE("Volume::update_color_alpha_map(): error during color map texture generation.");

@@ -54,11 +54,16 @@ class GUA_DLL GeometryLoader {
 
   virtual ~GeometryLoader();
 
+  std::shared_ptr<Node> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS);
+
   std::shared_ptr<Node> create_geometry_from_file(std::string const& node_name,
                                         std::string const& file_name,
                                         std::string const& fallback_material,
                                         unsigned flags = DEFAULTS);
 
+  std::shared_ptr<Node> create_volume_from_file(std::string const& node_name,
+                                                std::string const& file_name,
+                                                unsigned flags = DEFAULTS);
 
  private:
 

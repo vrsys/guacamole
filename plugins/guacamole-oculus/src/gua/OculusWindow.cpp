@@ -20,24 +20,16 @@
  ******************************************************************************/
 
 // class header
-#include <gua/OculusRift.hpp>
-#include <gua/OculusDeviceManager.hpp>
+#include <gua/OculusWindow.hpp>
 
 // external headers
-#include <OVR.h>
+#include <iostream>
 
 namespace gua {
 
-void OculusRift::init() {
-  OVR::System::Init(OVR::Log::ConfigureDefaultLog(OVR::LogMask_All));
-}
-
-OculusRift::OculusRift(std::string const& display):
+OculusWindow::OculusWindow(std::string const& display):
   Window(),
-  distortion_(4),
-  sensor_fusion_(nullptr),
-  sensor_(nullptr),
-  device_(nullptr) {
+  distortion_(4) {
 
   config.set_size(math::vec2ui(1280, 800));
   config.set_title("guacamole");
@@ -48,44 +40,20 @@ OculusRift::OculusRift(std::string const& display):
   config.set_right_resolution(math::vec2ui(1280/2, 800));
   config.set_right_position(math::vec2ui(1280/2, 0));
 
-  //Every time an Oculus Rift Window is created, it is checked if an additional Oculus is connected
-  device_ = OculusDeviceManager::getInstance().getNextAvailableDevice();
+  // for now fixed distortion values TODO should be set dynamically by OVR
+  set_distortion(1.0, 0.22, 0.24, 0.0);
 
-  if (!device_) {
-    WARNING("Failed to initialize an Oculus Rift device! Are enough Oculus Rifts attached?");
-    return;
-  }
-
-  OVR::HMDInfo hmd;
-  if (device_->GetDeviceInfo(&hmd)) {
-    MESSAGE("Oculus EyeDistance: %f", hmd.InterpupillaryDistance);
-
-    distortion_[0] = hmd.DistortionK[0];
-    distortion_[1] = hmd.DistortionK[1];
-    distortion_[2] = hmd.DistortionK[2];
-    distortion_[3] = hmd.DistortionK[3];
-  }
-
-  sensor_         = device_->GetSensor();
-  sensor_fusion_  = new OVR::SensorFusion();
-
-  if (sensor_) {
-    sensor_fusion_->AttachToSensor(sensor_);
-  } else {
-    WARNING("Failed to get Oculus gyroskop data");
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-OculusRift::~OculusRift() {
-  if (sensor_fusion_)
-    delete sensor_fusion_;
+OculusWindow::~OculusWindow() {
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusRift::create_shader() {
+void OculusWindow::create_shader() {
   fullscreen_shader_.create_from_sources(R"(
       #version 420
       #extension GL_NV_bindless_texture : require
@@ -145,7 +113,22 @@ void OculusRift::create_shader() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusRift::display(std::shared_ptr<Texture2D> const& left_texture,
+void OculusWindow::set_distortion(math::vec4 const& distortion) {
+  distortion_ = distortion;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void OculusWindow::set_distortion(float distortion0, float distortion1, float distortion2, float distortion3) {
+  distortion_[0] = distortion0;
+  distortion_[1] = distortion1;
+  distortion_[2] = distortion2;
+  distortion_[3] = distortion3;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void OculusWindow::display(std::shared_ptr<Texture2D> const& left_texture,
                          std::shared_ptr<Texture2D> const& right_texture) {
 
   display(left_texture, config.get_left_resolution(), config.get_left_position(), true);
@@ -154,23 +137,7 @@ void OculusRift::display(std::shared_ptr<Texture2D> const& left_texture,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::mat4 const OculusRift::get_transform() const {
-  if (sensor_fusion_) {
-    OVR::Quatf orient = sensor_fusion_->GetPredictedOrientation();
-    OVR::Matrix4f ovr_mat(orient.Inverted());
-
-    return math::mat4(ovr_mat.M[0][0], ovr_mat.M[0][1], ovr_mat.M[0][2], ovr_mat.M[0][3],
-                      ovr_mat.M[1][0], ovr_mat.M[1][1], ovr_mat.M[1][2], ovr_mat.M[1][3],
-                      ovr_mat.M[2][0], ovr_mat.M[2][1], ovr_mat.M[2][2], ovr_mat.M[2][3],
-                      ovr_mat.M[3][0], ovr_mat.M[3][1], ovr_mat.M[3][2], ovr_mat.M[3][3]);
-  }
-
-  return math::mat4::identity();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void OculusRift::display(std::shared_ptr<Texture2D> const& texture,
+void OculusWindow::display(std::shared_ptr<Texture2D> const& texture,
                      math::vec2ui const& size,
                      math::vec2ui const& position,
                      bool left) {

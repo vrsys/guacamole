@@ -32,7 +32,7 @@
 // external headers
 #include <stdexcept>
 
-#include <hacdHACD.h>
+#include <HACD/hacdHACD.h>
 
 namespace gua {
 namespace physics {
@@ -169,7 +169,7 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
 
         auto gnode = std::dynamic_pointer_cast<GeometryNode>(node);
         if (gnode) {
-            geom_list.push_back(gnode->data.get_geometry());
+            geom_list.push_back(gnode->get_geometry());
         }
 
         for (auto const& n: node->get_children()) {

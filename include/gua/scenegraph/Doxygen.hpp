@@ -19,60 +19,12 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_OCULUS_RIFT_HPP
-#define GUA_OCULUS_RIFT_HPP
+#ifndef GUA_SCENEGRAPH_DOXYGEN_HPP
+#define GUA_SCENEGRAPH_DOXYGEN_HPP
 
-#if defined (_MSC_VER)
-  #if defined (GUA_OCULUS_LIBRARY)
-    #define GUA_OCULUS_DLL __declspec( dllexport )
-  #else
-#define GUA_OCULUS_DLL __declspec( dllimport )
-  #endif
-#else
-  #define GUA_OCULUS_DLL
-#endif // #if defined(_MSC_VER)
+/**
+ * \defgroup gua_scenegraph guacamole scenegraph
+ */
 
-// guacamole headers
-#include <gua/renderer/Window.hpp>
+#endif // GUA_SCENEGRAPH_DOXYGEN_HPP
 
-namespace OVR {
-  class SensorFusion;
-  class DeviceManager;
-  class HMDDevice;
-  class SensorDevice;
-}
-
-namespace gua {
-
-class GUA_OCULUS_DLL OculusRift : public Window {
- public:
-
-  static void init();
-
-  OculusRift(std::string const& display);
-  virtual ~OculusRift();
-
-  void create_shader();
-
-  // virtual
-  void display(std::shared_ptr<Texture2D> const& left_texture,
-               std::shared_ptr<Texture2D> const& right_texture);
-
-  math::mat4 const get_transform() const;
-
-  private:
-    void display(std::shared_ptr<Texture2D> const& texture,
-                 math::vec2ui const& size,
-                 math::vec2ui const& position,
-                 bool left);
-
-    math::vec4 distortion_;
-
-    OVR::SensorDevice*  sensor_;
-    OVR::SensorFusion*  sensor_fusion_;
-    OVR::HMDDevice*     device_;
-};
-
-}
-
-#endif  // GUA_OCULUS_RIFT_HPP

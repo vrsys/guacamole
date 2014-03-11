@@ -39,7 +39,7 @@ namespace gua {
 
 std::string const MaterialLoader::load_material(
     aiMaterial const* ai_material,
-    std::string const& name_prefix) const {
+    std::string const& file_name) const {
 
   auto get_color =
       [&](const char * pKey, unsigned int type, unsigned int idx)->std::string {
@@ -71,12 +71,12 @@ std::string const MaterialLoader::load_material(
 
   aiString ai_material_name;
   ai_material->Get(AI_MATKEY_NAME, ai_material_name);
-  std::string material_name(name_prefix + "/" + ai_material_name.data);
+  std::string material_name("type='generated'&source='" + file_name + "'&name='" + ai_material_name.data + "'");
 
   if (!MaterialDatabase::instance()->is_supported(material_name)) {
 
     PathParser path;
-    path.parse(name_prefix);
+    path.parse(file_name);
     std::string assets_directory(path.get_path(true));
 
     unsigned capabilities = 0;
@@ -250,7 +250,7 @@ std::string const MaterialLoader::load_shading_model(
         ");
 
     if (capabilities & (DIFFUSE_MAP | SPECULAR_MAP | EMIT_MAP | NORMAL_MAP |
-                        SHININESS_MAP)) {
+                        SHININESS_MAP | AMBIENT_MAP)) {
 
       model->get_gbuffer_vertex_stage().get_outputs()["varying_texcoords"] =
           BufferComponent::F2;
@@ -262,6 +262,20 @@ std::string const MaterialLoader::load_shading_model(
             ");
     }
 
+    if (capabilities & DIFFUSE_MAP) {
+
+      model->get_gbuffer_fragment_stage().get_uniforms()["diffuse_map"] =
+          UniformType::SAMPLER2D;
+
+      gbuffer_fragment_body += std::string(
+          "                     \n\
+                if (texture2D(diffuse_map, "
+          "varying_texcoords).a < 0.5) \n\
+                    discard;        "
+          "                                   \n\
+            ");
+    }
+
     if (capabilities & OPACITY_MAP) {
 
       model->get_gbuffer_fragment_stage().get_uniforms()["opacity_map"] =
@@ -270,7 +284,7 @@ std::string const MaterialLoader::load_shading_model(
       gbuffer_fragment_body += std::string(
           "                     \n\
                 if (texture2D(opacity_map, "
-          "varying_texcoords).r < 0.9) \n\
+          "varying_texcoords).r < 0.5) \n\
                     discard;        "
           "                                   \n\
             ");
@@ -372,6 +386,12 @@ std::string const MaterialLoader::load_shading_model(
                "r",
                BufferComponent::F1,
                UniformType::FLOAT);
+    add_output(capabilities & AMBIENT_MAP,
+               capabilities & AMBIENT_COLOR,
+               "ambient",
+               "r",
+               BufferComponent::F1,
+               UniformType::VEC3);
 
     model->get_gbuffer_vertex_stage().set_body(gbuffer_vertex_body);
     model->get_gbuffer_fragment_stage().set_body(gbuffer_fragment_body);
@@ -429,9 +449,13 @@ std::string const MaterialLoader::load_shading_model(
     else
       final_body += "vec3 my_emit_color = vec3(0.0);";
 
-    final_body += "    gua_color = my_diffuse_color * gua_light_diffuse + "
-                  "(vec3(1.0) / (vec3(1.0) + gua_light_diffuse)) * "
-                  "gua_ambient_color * my_diffuse_color;";
+    if (capabilities & (AMBIENT_MAP | AMBIENT_COLOR))
+      final_body += "float my_ambient_color = gua_ambient;";
+    else
+      final_body += "float my_ambient_color = 0.5;";
+
+    final_body += "gua_color = my_diffuse_color * gua_light_diffuse;";
+    final_body += "gua_color += gua_ambient_color * my_diffuse_color * my_ambient_color * (1.0 - min(1, max(max(gua_light_diffuse.r, gua_light_diffuse.g), gua_light_diffuse.b)));";
 
     if (capabilities & (SPECULAR_COLOR | SPECULAR_MAP))
       final_body += "gua_color += gua_light_specular;";

@@ -114,6 +114,10 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                        float application_fps,
                        float rendering_fps) {
 
+  if (!config.get_enabled()) {
+    return;
+  }
+
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
   if (ShadingModel::current_revision != last_shading_model_revision_) {
@@ -232,14 +236,25 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
         return;
       }
 
-      current_scenes_[0].frustum = Frustum(eye->get_world_transform(),
-                                           screen->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
+      if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
+        current_scenes_[0].frustum = Frustum::perspective(eye->get_world_transform(),
+                                             screen->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      } else {
+        current_scenes_[0].frustum = Frustum::orthographic(eye->get_world_transform(),
+                                             screen->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      }
+
+      current_scenes_[0].center_of_interest = eye->get_world_position();
+      current_scenes_[0].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
+      current_scenes_[0].global_clipping_plane = config.get_global_clipping_plane();
 
       serializer_->check(&current_scenes_[0],
                          current_graph_,
-                         config.camera(),
+                         config.camera().render_mask,
                          config.enable_bbox_display(),
                          config.enable_ray_display(),
                          config.enable_frustum_culling());
@@ -272,26 +287,43 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
         return;
       }
 
+      if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
+        current_scenes_[0].frustum = Frustum::perspective(eye_l->get_world_transform(),
+                                             screen_l->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+        current_scenes_[1].frustum = Frustum::perspective(eye_r->get_world_transform(),
+                                             screen_r->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      } else {
+        current_scenes_[0].frustum = Frustum::orthographic(eye_l->get_world_transform(),
+                                             screen_l->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+        current_scenes_[1].frustum = Frustum::orthographic(eye_r->get_world_transform(),
+                                             screen_r->get_scaled_world_transform(),
+                                             config.near_clip(),
+                                             config.far_clip());
+      }
 
-      current_scenes_[0].frustum = Frustum(eye_l->get_world_transform(),
-                                           screen_l->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-      current_scenes_[1].frustum = Frustum(eye_r->get_world_transform(),
-                                           screen_r->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
+      current_scenes_[0].center_of_interest = eye_l->get_world_position();
+      current_scenes_[0].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
+      current_scenes_[0].global_clipping_plane = config.get_global_clipping_plane();
+      current_scenes_[1].center_of_interest = eye_r->get_world_position();
+      current_scenes_[1].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
+      current_scenes_[1].global_clipping_plane = config.get_global_clipping_plane();
 
       serializer_->check(&current_scenes_[0],
                          current_graph_,
-                         config.camera(),
+                         config.camera().render_mask,
                          config.enable_bbox_display(),
                          config.enable_ray_display(),
                          config.enable_frustum_culling());
 
       serializer_->check(&current_scenes_[1],
                          current_graph_,
-                         config.camera(),
+                         config.camera().render_mask,
                          config.enable_bbox_display(),
                          config.enable_ray_display(),
                          config.enable_frustum_culling());
@@ -309,7 +341,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                                ->get_color_buffers(TYPE_FLOAT)[0]);
       } else {
         window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-                             ->get_color_buffers(TYPE_FLOAT)[0]);
+                               ->get_color_buffers(TYPE_FLOAT)[0]);
       }
 
       window_->finish_frame();
@@ -409,33 +441,36 @@ void Pipeline::create_buffers() {
 
     std::vector<std::shared_ptr<StereoBuffer>> stereobuffers;
 
-    passes_[PipelineStage::geometry]->create(*context_, config, passes_[PipelineStage::geometry]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::geometry]->create(*context_, passes_[PipelineStage::geometry]->get_gbuffer_mapping()->get_layers());
     stereobuffers.push_back(passes_[PipelineStage::geometry]->get_gbuffer());
 
-    passes_[PipelineStage::lighting]->create(*context_, config, passes_[PipelineStage::lighting]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::lighting]->create(*context_, passes_[PipelineStage::lighting]->get_gbuffer_mapping()->get_layers());
     passes_[PipelineStage::lighting]->set_inputs(stereobuffers);
     stereobuffers.push_back(passes_[PipelineStage::lighting]->get_gbuffer());
 
-    passes_[PipelineStage::shading]->create(*context_, config, passes_[PipelineStage::shading]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::shading]->create(*context_, passes_[PipelineStage::shading]->get_gbuffer_mapping()->get_layers());
     passes_[PipelineStage::shading]->set_inputs(stereobuffers);
     stereobuffers.push_back(passes_[PipelineStage::shading]->get_gbuffer());
 
     passes_[PipelineStage::compositing]->set_inputs(stereobuffers);
-    passes_[PipelineStage::compositing]->create(*context_, config, {} );
+    passes_[PipelineStage::compositing]->create(*context_, {} );
     stereobuffers.push_back(passes_[PipelineStage::compositing]->get_gbuffer());
 
     scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
-                                      scm::gl::WRAP_REPEAT,
-                                      scm::gl::WRAP_REPEAT);
+                                      scm::gl::WRAP_MIRRORED_REPEAT,
+                                      scm::gl::WRAP_MIRRORED_REPEAT);
 
-    passes_[PipelineStage::postfx]->create(*context_, config, { { BufferComponent::F3, state } });
+    passes_[PipelineStage::postfx]->create(*context_, { { BufferComponent::F3, state } });
     passes_[PipelineStage::postfx]->set_inputs(stereobuffers);
 
     if (!config.get_enable_stereo()) {
       TextureDatabase::instance()->add(config.output_texture_name(), passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]->get_color_buffers(TYPE_FLOAT)[0]);
+      TextureDatabase::instance()->add(config.output_texture_name() + "_depth", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[0]->get_depth_buffer());
     } else {
       TextureDatabase::instance()->add(config.output_texture_name() + "_left",  passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]->get_color_buffers(TYPE_FLOAT)[0]);
       TextureDatabase::instance()->add(config.output_texture_name() + "_right", passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[1]->get_color_buffers(TYPE_FLOAT)[0]);
+      TextureDatabase::instance()->add(config.output_texture_name() + "_depth_left", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[0]->get_depth_buffer());
+      TextureDatabase::instance()->add(config.output_texture_name() + "_depth_right", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[1]->get_depth_buffer());
     }
 
 

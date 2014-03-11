@@ -13,4 +13,4 @@ script: ./tests/runTravis.sh
 
 branches:
   only:
-    - develop
+    - master

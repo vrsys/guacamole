@@ -24,10 +24,9 @@
 
 // guacamole headers
 #include <gua/renderer/GeometryPass.hpp>
+#include <gua/renderer/ShadowMap.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Geometry.hpp>
-#include <gua/renderer/ShadowMapMeshShader.hpp>
-#include <gua/renderer/ShadowMapNURBSShader.hpp>
 
 namespace gua {
 
@@ -64,9 +63,8 @@ class LightingPass : public GeometryPass {
 
   bool pre_compile_shaders(RenderContext const& ctx);
 
- public:  // attributes
-
-  GBuffer* shadow_map_;
+public:
+  ShadowMap shadow_map_;
 
  private:
   void rendering(SerializedScene const& scene,
@@ -75,26 +73,14 @@ class LightingPass : public GeometryPass {
                  Camera const& camera,
                  FrameBufferObject* target);
 
-  void render_shadow_map(RenderContext const& ctx,
-                         Camera const& scene_camera,
-                         math::mat4 const& transform,
-                         unsigned map_size);
-
   LightingUberShader* shader_;
   std::shared_ptr<Geometry> light_sphere_;
   std::shared_ptr<Geometry> light_cone_;
-
-  Serializer* serializer_;
-
-  ShadowMapMeshShader* shadow_map_mesh_shader_;
-  ShadowMapNURBSShader* shadow_map_nurbs_shader_;
-
-  scm::gl::depth_stencil_state_ptr shadow_map_depth_stencil_state_;
-  scm::gl::rasterizer_state_ptr shadow_map_rasterizer_state_;
-  math::mat4 shadow_map_projection_view_matrix_;
+  scm::gl::quad_geometry_ptr fullscreen_quad_;
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::rasterizer_state_ptr rasterizer_state_;
+  scm::gl::rasterizer_state_ptr rasterizer_state_front_;
+  scm::gl::rasterizer_state_ptr rasterizer_state_back_;
   scm::gl::blend_state_ptr blend_state_;
 };
 
