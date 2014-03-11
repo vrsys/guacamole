@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <fstream>
@@ -57,9 +57,7 @@ WarpMatrix::WarpMatrix(std::string const& file_name)
 
     file.close();
   } else {
-    WARNING("Unable to load Warpmatrix! File %s does "
-            "not exist.",
-            file_name.c_str());
+    Logger::LOG_WARNING << "Unable to load Warpmatrix! File " << file_name << " does not exist." << std::endl;
   }
 }
 

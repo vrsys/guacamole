@@ -27,7 +27,7 @@
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/Texture.hpp>
 #include <gua/math/math.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <string>
@@ -121,7 +121,7 @@ namespace gua {
  protected:
   mutable unsigned width_;
   mutable unsigned height_;
-  
+
  private:
 
 };

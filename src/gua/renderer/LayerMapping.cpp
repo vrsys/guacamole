@@ -135,10 +135,8 @@ std::string const LayerMapping::get_output_string(
         output_type = output->second;
 
     if (output_type == BufferComponent::NONE) {
-        WARNING("Failed to generate gbuffer output string: There is no output "
-                "\"%s\" defined in shading model \"%s\"!",
-                output_name.c_str(),
-                shading_model_name.c_str());
+        Logger::LOG_WARNING << "Failed to generate gbuffer output string: There is no output "
+                "\"" << output_name << "\" defined in shading model \"" << shading_model_name << "\"!" << std::endl;
         return "";
     }
 
@@ -209,10 +207,8 @@ std::string const LayerMapping::get_output_string(
         }
     }
 
-    WARNING("Failed to generate gbuffer output string: The output \"%s\" for "
-            "shading model \"%s\" is not mapped!",
-            output_name.c_str(),
-            shading_model_name.c_str());
+    Logger::LOG_WARNING << "Failed to generate gbuffer output string: The output \"" << output_name << "\" for "
+            "shading model \"" << shading_model_name << "\" is not mapped!" << std::endl;
 
     return "";
 }
@@ -236,11 +232,8 @@ std::string const LayerMapping::get_input_string(
         input_type = input->second;
 
     if (input_type == BufferComponent::NONE) {
-        WARNING("Failed to generate gbuffer input string: There is no input "
-                "\"%s\" defined in shading model \"%s\" in stage %d!",
-                input_name.c_str(),
-                shading_model_name.c_str(),
-                stage_);
+        Logger::LOG_WARNING << "Failed to generate gbuffer input string: There is no input "
+                "\"" << input_name << "\" defined in shading model \"" << shading_model_name << "\" in stage " << stage_ << "!" << std::endl;
         return "";
     }
 
@@ -314,11 +307,8 @@ std::string const LayerMapping::get_input_string(
         }
     }
 
-    WARNING("Failed to generate gbuffer input string: The input \"%s\" for "
-            "shading model \"%s\" is not mapped!",
-            input_name.c_str(),
-            shading_model_name.c_str());
-
+    Logger::LOG_WARNING << "Failed to generate gbuffer input string: The input \"" << input_name << "\" for "
+            "shading model \"" << shading_model_name << "\" is not mapped!" << std::endl;
 
     return "";
 }

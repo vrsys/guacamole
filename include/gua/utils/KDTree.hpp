@@ -22,7 +22,7 @@
 #ifndef GUA_KD_TREE_HPP
 #define GUA_KD_TREE_HPP
 
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/utils/KDTreeUtils.hpp>

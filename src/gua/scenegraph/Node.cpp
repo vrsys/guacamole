@@ -25,7 +25,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>

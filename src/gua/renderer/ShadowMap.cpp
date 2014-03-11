@@ -242,7 +242,7 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
   });
 
   if (pipeline_->config.near_clip() > split_0 || pipeline_->config.far_clip() < split_4) {
-    WARNING("Splits of cascaded shadow maps are not inside clipping range! Fallback to equidistant splits used.");
+    Logger::LOG_WARNING << "Splits of cascaded shadow maps are not inside clipping range! Fallback to equidistant splits used." << std::endl;
     float clipping_range(pipeline_->config.far_clip() - pipeline_->config.near_clip());
     splits = {
       pipeline_->config.near_clip(),

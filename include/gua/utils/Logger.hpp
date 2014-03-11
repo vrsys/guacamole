@@ -35,10 +35,10 @@ class Logger {
   static bool enable_warning;
   static bool enable_error;
 
-  #define debug()   debug_impl  (__FILE__, __LINE__)
-  #define message() message_impl(__FILE__, __LINE__)
-  #define warning() warning_impl(__FILE__, __LINE__)
-  #define error()   error_impl  (__FILE__, __LINE__)
+  #define LOG_DEBUG   debug_impl  (__FILE__, __LINE__)
+  #define LOG_MESSAGE message_impl(__FILE__, __LINE__)
+  #define LOG_WARNING warning_impl(__FILE__, __LINE__)
+  #define LOG_ERROR   error_impl  (__FILE__, __LINE__)
 
   static std::ostream& debug_impl(const char* file, int line);
   static std::ostream& message_impl(const char* file, int line);
