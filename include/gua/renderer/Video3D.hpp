@@ -65,6 +65,15 @@ class Video3D : public Geometry {
   Video3D(std::string const& video3d);
 
   /**
+   * destructor.
+   */
+  ~Video3D();
+  /**
+   *
+   */
+  void init();
+
+  /**
    * Draws the Video3D
    *
    * Draws the Mesh to the given context.
@@ -89,37 +98,36 @@ class Video3D : public Geometry {
   void upload_to(RenderContext const& context) const;
   void update_buffers(RenderContext const& context) const;
   
-  std::string video3d_;
+  std::string                         ks_filename_;
+  std::vector<std::shared_ptr<KinectCalibrationFile>> calib_files_;
+  std::string                         server_endpoint_;
 
-  mutable std::vector<scm::gl::buffer_ptr> proxy_vertices_;
-  mutable std::vector<scm::gl::buffer_ptr> proxy_indices_;
+  // gl resources
+  mutable std::vector<scm::gl::buffer_ptr>       proxy_vertices_;
+  mutable std::vector<scm::gl::buffer_ptr>       proxy_indices_;
   mutable std::vector<scm::gl::vertex_array_ptr> proxy_vertex_array_;
 
-  mutable std::vector<scm::gl::sampler_state_ptr> sstate_;
+  mutable std::vector<scm::gl::sampler_state_ptr>    sstate_;
   mutable std::vector<scm::gl::rasterizer_state_ptr> rstate_solid_;
 
   mutable std::vector<scm::gl::texture_2d_ptr> color_texArrays_;
-  mutable std::vector<unsigned char*> color_buffers_; //std::vector< std::vector<unsigned char*> > for multiple kinects per Video3D
   mutable std::vector<scm::gl::texture_2d_ptr> depth_texArrays_;
-  mutable std::vector<float*> depth_buffers_; //std::vector< std::vector<float*> > for multiple kinects per Video3D
 
-  KinectCalibrationFile* calib_file_;
+  // cpu resources
+  mutable std::vector<unsigned char*>   color_buffers_; 
+  mutable std::vector<float*>           depth_buffers_; 
+  mutable std::vector<sys::FileBuffer*> file_buffers_;  
+
   mutable unsigned depth_size_;
   mutable unsigned depth_size_byte_;
   mutable unsigned color_size_;
 
-  mutable unsigned width_;
-  mutable unsigned height_;
+  mutable unsigned width_depthimage_;
+  mutable unsigned height_depthimage_;
 
-  mutable std::vector<sys::FileBuffer*> file_buffers_;
+  mutable unsigned width_colorimage_;
+  mutable unsigned height_colorimage_;
   
-  //members
-
-  //width & height??
-  //receiver??
-  //flags??
-  //toss out buffers
-
   mutable std::mutex upload_mutex_;
 };
 

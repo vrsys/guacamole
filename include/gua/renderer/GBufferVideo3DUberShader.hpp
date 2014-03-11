@@ -22,25 +22,50 @@
 #ifndef GUA_G_BUFFER_VIDEO3D_UBER_SHADER_HPP
 #define GUA_G_BUFFER_VIDEO3D_UBER_SHADER_HPP
 
+#include <array>
+
 // guacamole headers
 #include <gua/renderer/UberShader.hpp>
- #include <gua/renderer/UberShaderFactory.hpp>
+#include <gua/renderer/UberShaderFactory.hpp>
 
 namespace gua {
+
+class ShaderProgram;
+class FrameBufferObject;
 
 class GBufferVideo3DUberShader : public UberShader {
  public:
 
   void create(std::set<std::string> const& material_names);
 
- private:
-  std::string const _final_vertex_shader(UberShaderFactory const& vshader_factory,
-  	                                       LayerMapping const& vshader_output_mapping) const;
-  std::string const _final_geometry_shader(UberShaderFactory const& vshader_factory,
-                                           LayerMapping const& vshader_output_mapping) const;
-  std::string const _final_fragment_shader(UberShaderFactory const& fshader_factory,
-  	                                       LayerMapping const& vshader_output_mapping) const;
+  /* virtual */ bool upload_to(RenderContext const& context) const;
 
+ private:
+
+  std::string const _warp_pass_vertex_shader   () const;
+  std::string const _warp_pass_geometry_shader () const;
+  std::string const _warp_pass_fragment_shader () const;
+
+  std::string const _blend_pass_vertex_shader   (UberShaderFactory const& vshader_factory,
+  	                                             LayerMapping const& vshader_output_mapping) const;
+  std::string const _blend_pass_geometry_shader (UberShaderFactory const& vshader_factory,
+                                                 LayerMapping const& vshader_output_mapping) const;
+  std::string const _blend_pass_fragment_shader (UberShaderFactory const& fshader_factory,
+  	                                             LayerMapping const& vshader_output_mapping) const;
+ 
+
+  std::unique_ptr<ShaderProgram>      	  		  		  warp_pass_shader_;
+
+  static const unsigned 			      		  		  MAX_NUMBER_KINECT_ = 6;
+
+  mutable std::vector<scm::gl::texture_2d_ptr>	  		  warp_depth_result_;
+  mutable std::vector<scm::gl::texture_2d_ptr>	          warp_color_result_;
+  //mutable std::vector<std::array<scm::gl::frame_buffer_object_ptr, MAX_NUMBER_KINECT_>> warp_result_fbos_;
+  
+  scm::gl::depth_stencil_state_ptr 		  		  		  depth_stencil_state_;
+  scm::gl::quad_geometry_ptr 			  		          fullscreen_quad_;
+
+  
 };
 
 }

@@ -25,6 +25,8 @@ class KinectCalibrationFile{
 
         void updateMatrices();
 
+        std::string get_stream_filename() const;
+
         /////////////////GETTER/SETTER//////////////////
         scm::math::mat4f& getImageDToEyeD();
         scm::math::mat4f& getEyeDToImageD();

@@ -129,9 +129,6 @@ void Window::open() {
   ctx_.render_context = ctx_.render_device->main_context();
   ctx_.id = last_context_id_++;
 
-
-
-
   fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
       ctx_.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
 

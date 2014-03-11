@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <gua/renderer/video3d_geometry/KinectCalibrationFile.hpp>
 
+#include <boost/filesystem.hpp>
+
 /*static*/ bool KinectCalibrationFile::s_compress   = false;
 /*static*/ int  KinectCalibrationFile::s_compress_rgb = -1;
 
@@ -610,6 +612,16 @@ void KinectCalibrationFile::updateMatrices(){
     scm::math::mat4f eye_rgb_to_eye_d(_eye_d_to_eye_rgb);
     eye_rgb_to_eye_d = scm::math::inverse(eye_rgb_to_eye_d);
     _eye_rgb_to_world = _eye_d_to_world * eye_rgb_to_eye_d;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+std::string 
+KinectCalibrationFile::get_stream_filename() const
+{
+  std::string e_filepath(_filePath.c_str());
+  e_filepath.replace( e_filepath.end() - 3, e_filepath.end(), "stream");
+  return e_filepath;
 }
 
 //////////////////////GET/SET//////////////////////////
