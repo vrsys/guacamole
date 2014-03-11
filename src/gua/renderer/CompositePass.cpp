@@ -81,6 +81,11 @@ void CompositePass::create(RenderContext const& ctx,
 
   // reuse gbuffer from shading-pass
   gbuffer_ = inputs_[Pipeline::PipelineStage::shading];
+  /*scm::gl::sampler_state_desc tmp(scm::gl::FILTER_MIN_MAG_LINEAR,
+    scm::gl::WRAP_CLAMP_TO_EDGE,
+    scm::gl::WRAP_CLAMP_TO_EDGE);
+  Pass::create(ctx, config, { { BufferComponent::F3, tmp } });*/
+
 
   if (volume_raygeneration_buffer_) {
     volume_raygeneration_buffer_->remove_buffers(ctx);
@@ -241,7 +246,7 @@ bool CompositePass::pre_compile_shaders(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void CompositePass::render_scene(Camera const& camera, RenderContext const& ctx) {
-
+#if 0
   for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
 
     FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
@@ -261,6 +266,7 @@ void CompositePass::render_scene(Camera const& camera, RenderContext const& ctx)
 
     fbo->unbind(ctx);
   }
+#endif
 }
 
 }
