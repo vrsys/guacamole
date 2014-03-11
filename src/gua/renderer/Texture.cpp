@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/math/math.hpp>
 
 // external headers
@@ -60,7 +60,7 @@ Texture::Texture(scm::gl::data_format color_format,
 Texture::Texture(std::string const& file,
                  bool generate_mipmaps,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : 
+    :
       mipmap_layers_(generate_mipmaps ? 1 : 0),
       color_format_(scm::gl::FORMAT_NULL),
       file_name_(file),

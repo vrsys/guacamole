@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #if ASSIMP_VERSION == 3
@@ -85,7 +85,7 @@ Mesh::Mesh(aiMesh* mesh, std::shared_ptr<Assimp::Importer> const& importer,
 void Mesh::upload_to(RenderContext const& ctx) const {
 
   if (!mesh_->HasPositions()) {
-    WARNING("Unable to load Mesh! Has no vertex data.");
+    Logger::LOG_WARNING << "Unable to load Mesh! Has no vertex data." << std::endl;
     return;
   }
 

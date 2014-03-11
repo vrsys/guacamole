@@ -27,7 +27,7 @@
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/Texture.hpp>
 #include <gua/math/math.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <string>
@@ -128,7 +128,7 @@ class GUA_DLL Texture3D : public Texture {
   mutable unsigned height_;
   mutable unsigned depth_;
 
-  
+
 
  private:
 

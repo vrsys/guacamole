@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/math/math.hpp>
 
 // external headers
@@ -68,7 +68,7 @@ void Texture2D::upload_to(RenderContext const& context) const {
     sampler_states_.resize(context.id + 1);
     render_contexts_.resize(context.id + 1);
   }
-  
+
   if (file_name_ == "") {
 
 

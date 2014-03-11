@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <iostream>
@@ -75,19 +75,15 @@ Mask::BasicExpression::BasicExpression(std::string const& expression)
                 --open_brackets;
 
                 if (open_brackets < 0) {
-                    WARNING("Failed to parse expression %s: "
-                            "Unexpected ) at %u",
-                            expr.c_str(),
-                            i);
+                    Logger::LOG_WARNING << "Failed to parse expression " << expr << ": " <<
+                            "Unexpected ) at " << i << "." << std::endl;
                     return;
                 } else if (open_brackets == 0 && curr_expr != "") {
                     if (curr_expr[curr_expr.size() - 1] == '(' ||
                         curr_expr[curr_expr.size() - 1] == '!') {
 
-                        WARNING("Failed to parse expression %s: "
-                                "Unexpected ) at %u",
-                                expr.c_str(),
-                                i);
+                        Logger::LOG_WARNING << "Failed to parse expression " << expr << ": " <<
+                                "Unexpected ) at " << i << "." << std::endl;
                         return;
                     }
 
@@ -101,11 +97,8 @@ Mask::BasicExpression::BasicExpression(std::string const& expression)
             case '&': {
 
                 if (child_expressions.size() == 0 && curr_expr == "") {
-                    WARNING("Failed to parse expression %s: "
-                            "Unexpected & at %u",
-                            expr.c_str(),
-                            i);
-                    return;
+                    Logger::LOG_WARNING << "Failed to parse expression " << expr << ": " <<
+                            "Unexpected & at " << i << "." << std::endl;
                 } else if (open_brackets == 0) {
                     if (curr_expr != "") {
                         child_expressions.push_back(curr_expr);
@@ -113,12 +106,10 @@ Mask::BasicExpression::BasicExpression(std::string const& expression)
                     }
 
                     if (type_ == OR) {
-                        WARNING("Failed to parse expression %s: "
-                                "Unexpected & at %u. Don't mix & "
+                        Logger::LOG_WARNING << "Failed to parse expression " << expr << ": " <<
+                                "Unexpected & at " << i << ". Don't mix & "
                                 "and | in one expression. Please "
-                                "use brackets!",
-                                expr.c_str(),
-                                i);
+                                "use brackets!" << std::endl;
                         return;
                     }
 
@@ -132,10 +123,8 @@ Mask::BasicExpression::BasicExpression(std::string const& expression)
             case '|': {
 
                 if (child_expressions.size() == 0 && curr_expr == "") {
-                    WARNING("Failed to parse expression %s: "
-                            "Unexpected | at %u",
-                            expr.c_str(),
-                            i);
+                    Logger::LOG_WARNING << "Failed to parse expression " << expr << ": " <<
+                            "Unexpected | at " << i << "." << std::endl;
                     return;
                 } else if (open_brackets == 0) {
                     if (curr_expr != "") {
@@ -144,12 +133,10 @@ Mask::BasicExpression::BasicExpression(std::string const& expression)
                     }
 
                     if (type_ == AND) {
-                        WARNING("Failed to parse expression %s: "
-                                "Unexpected | at %u. Don't mix & "
+                        Logger::LOG_WARNING << "Failed to parse expression " << expr << ": " <<
+                                "Unexpected | at " << i << ". Don't mix & "
                                 "and | in one expression. Please "
-                                "use brackets!",
-                                expr.c_str(),
-                                i);
+                                "use brackets!" << std::endl;
                         return;
                     }
 
@@ -165,10 +152,8 @@ Mask::BasicExpression::BasicExpression(std::string const& expression)
                 if (open_brackets == 0 && curr_expr == "") {
                     curr_expr += '!';
                 } else if (open_brackets <= 0) {
-                    WARNING("Failed to parse expression %s: "
-                            "Unexpected ! at %u.",
-                            expr.c_str(),
-                            i);
+                    Logger::LOG_WARNING << "Failed to parse expression " << expr << ": " <<
+                            "Unexpected ! at " << i << "." << std::endl;
                     return;
                 } else if (open_brackets > 0) {
                     curr_expr += '!';
@@ -185,9 +170,8 @@ Mask::BasicExpression::BasicExpression(std::string const& expression)
     }
 
     if (open_brackets > 0) {
-        WARNING("Failed to parse expression %s: "
-                "Expected ) at end of input.",
-                expr.c_str());
+        Logger::LOG_WARNING << "Failed to parse expression " << expr << ": " <<
+                "Expected ) at end of input." << std::endl;
         return;
     }
 
@@ -196,7 +180,7 @@ Mask::BasicExpression::BasicExpression(std::string const& expression)
 
     if (child_expressions.size() == 1 && child_expressions[0][0] == '!') {
         if (child_expressions[0].size() == 1) {
-            WARNING("Failed to parse expression %s.", expr.c_str());
+            Logger::LOG_WARNING << "Failed to parse expression " << expr << "." << std::endl;
             return;
         }
 

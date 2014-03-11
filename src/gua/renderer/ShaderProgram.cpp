@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/Uniform.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
 
@@ -71,7 +71,7 @@ void ShaderProgram::save_to_file(std::string const& directory,
             file_extension = ".tctrl";
             break;
           default:
-            WARNING("Shader stage undefined or unsupported");
+            Logger::LOG_WARNING << "Shader stage undefined or unsupported" << std::endl;
       }
       ;
 
@@ -225,7 +225,7 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
         }
 
         if (!programs_[context.id]) {
-          WARNING("Failed to create shaders!");
+          Logger::LOG_WARNING << "Failed to create shaders!" << std::endl;
 
           return false;
         }

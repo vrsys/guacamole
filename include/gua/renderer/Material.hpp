@@ -91,9 +91,7 @@ class Material {
     auto uniform(uniform_values_.find(name));
 
     if (uniform == uniform_values_.end()) {
-      WARNING("Failed to set uniform: Material %s has no uniform called %s!",
-              name_.c_str(),
-              name.c_str());
+      Logger::LOG_WARNING << "Failed to set uniform: Material " << name_ << " has no uniform called " << name << "!" << std::endl;
       return;
     }
 

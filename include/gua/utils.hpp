@@ -25,7 +25,7 @@
 // util headers
 #include <gua/utils/Directory.hpp>
 #include <gua/utils/DotGenerator.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/PathParser.hpp>
 #include <gua/utils/Profiler.hpp>
 #include <gua/utils/string_utils.hpp>

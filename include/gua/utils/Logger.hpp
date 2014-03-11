@@ -19,48 +19,33 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/scenegraph/TexturedQuadNode.hpp>
+#ifndef GUA_LOGGER_HPP
+#define GUA_LOGGER_HPP
 
-// guacamole header
-#include <gua/scenegraph/NodeVisitor.hpp>
-#include <gua/utils/Logger.hpp>
-#include <gua/math/BoundingBoxAlgo.hpp>
+#include <iostream>
 
 namespace gua {
 
-TexturedQuadNode::TexturedQuadNode(std::string const& name,
-                       Configuration const& configuration,
-                       math::mat4 const& transform)
-    : Node(name, transform), data(configuration) {}
+class Logger {
 
-/* virtual */ void TexturedQuadNode::accept(NodeVisitor& visitor) {
+ public:
 
-  visitor.visit(this);
-}
+  static bool enable_debug;
+  static bool enable_message;
+  static bool enable_warning;
+  static bool enable_error;
 
-void TexturedQuadNode::update_bounding_box() const {
-  math::BoundingBox<math::vec3> geometry_bbox(math::vec3(-0.5*data.get_size().x, -0.5*data.get_size().y, 0), math::vec3(0.5*data.get_size().x, 0.5*data.get_size().y, 0));
-  bounding_box_ = transform(geometry_bbox, world_transform_);
+  #define LOG_DEBUG   debug_impl  (__FILE__, __LINE__)
+  #define LOG_MESSAGE message_impl(__FILE__, __LINE__)
+  #define LOG_WARNING warning_impl(__FILE__, __LINE__)
+  #define LOG_ERROR   error_impl  (__FILE__, __LINE__)
 
-  for (auto child : get_children()) {
-      bounding_box_.expandBy(child->get_bounding_box());
-  }
-
-}
-
-math::mat4 TexturedQuadNode::get_scaled_transform() const {
-    math::mat4 scale(scm::math::make_scale(data.get_size().x, data.get_size().y, 1.f));
-    return get_transform() * scale;
-}
-
-math::mat4 TexturedQuadNode::get_scaled_world_transform() const {
-    math::mat4 scale(scm::math::make_scale(data.get_size().x, data.get_size().y, 1.f));
-    return get_world_transform() * scale;
-}
-
-std::shared_ptr<Node> TexturedQuadNode::copy() const {
-  return std::make_shared<TexturedQuadNode>(get_name(), data, get_transform());
-}
+  static std::ostream& debug_impl(const char* file, int line);
+  static std::ostream& message_impl(const char* file, int line);
+  static std::ostream& warning_impl(const char* file, int line);
+  static std::ostream& error_impl(const char* file, int line);
+};
 
 }
+
+#endif  // GUA_LOGGER_HPP

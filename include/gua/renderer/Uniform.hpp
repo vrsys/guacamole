@@ -28,7 +28,7 @@
 #include <gua/renderer/Texture3D.hpp>
 #include <gua/databases/TextureDatabase.hpp>
 #include <gua/utils/Color3f.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <string>
@@ -69,7 +69,7 @@ class UniformValueBase {
     if (casted) {
       casted->value(value);
     } else {
-      WARNING("Unable to set uniform value: Types do not match!");
+      Logger::LOG_WARNING << "Unable to set uniform value: Types do not match!" << std::endl;
     }
   }
 
@@ -80,7 +80,7 @@ class UniformValueBase {
     if (casted) {
       return casted->value();
     } else {
-      WARNING("Unable to get value of uniform: Types do not match!");
+      Logger::LOG_WARNING << "Unable to get value of uniform: Types do not match!" << std::endl;
     }
   }
 };

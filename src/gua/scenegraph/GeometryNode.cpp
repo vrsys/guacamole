@@ -90,13 +90,13 @@ void GeometryNode::update_cache() {
                 loader.load_geometry(filename, flags);
 
               } else {
-                WARNING("Failed to auto-load geometry %s: Failed to extract filename and/or loading flags!", geometry_.c_str());
+                Logger::LOG_WARNING << "Failed to auto-load geometry " << geometry_ << ": Failed to extract filename and/or loading flags!" << std::endl;
               }
             } else {
-              WARNING("Failed to auto-load geometry %s: Type is not supported!", geometry_.c_str());
+              Logger::LOG_WARNING << "Failed to auto-load geometry " << geometry_ << ": Type is not supported!" << std::endl;
             }
           } else {
-            WARNING("Failed to auto-load geometry %s: The name does not contain a type, file, id and flag parameter!", geometry_.c_str());
+            Logger::LOG_WARNING << "Failed to auto-load geometry " << geometry_ << ": The name does not contain a type, file, id and flag parameter!" << std::endl;
           }
         }
       }

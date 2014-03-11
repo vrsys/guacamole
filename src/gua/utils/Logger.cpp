@@ -19,11 +19,11 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LOGGER_HPP
-#define GUA_LOGGER_HPP
+// class header
+#include <gua/utils/Logger.hpp>
 
-#include <cstring>
-#include <cstdio>
+#include <sstream>
+#include <boost/iostreams/stream.hpp>
 
 #define PRINT_RED "\x001b[0;31m"
 #define PRINT_GREEN "\x001b[0;32m"
@@ -41,48 +41,63 @@
 
 #define PRINT_RESET "\x001b[0m"
 
-#define GETFILENAME(_path) \
-  std::string(_path).substr(std::string(_path).find_last_of('/') + 1).c_str()
+namespace gua {
 
-#define WHERE_STR "[%s:%d] "
-#define WHERE_ARG GETFILENAME(__FILE__), __LINE__
+bool Logger::enable_debug = true;
+bool Logger::enable_message = true;
+bool Logger::enable_warning = true;
+bool Logger::enable_error = true;
 
-#define MESSAGE(_fmt, ...)                                        \
-  printf(PRINT_GREEN "[GUA][M]" WHERE_STR PRINT_RESET _fmt "\n", \
-         WHERE_ARG,                                               \
-         ##__VA_ARGS__)
-#ifndef MESSAGE
-#define MESSAGE(...)
-#endif
+namespace {
+  namespace io = boost::iostreams;
+  io::null_sink                     null_sink;
+  io::stream_buffer<io::null_sink>  null_buffer(null_sink);
+  std::ostream                      dev_null(&null_buffer);
 
-#define WARNING(_fmt, ...)                                         \
-  printf(PRINT_YELLOW "[GUA][W]" WHERE_STR PRINT_RESET _fmt "\n", \
-         WHERE_ARG,                                                \
-         ##__VA_ARGS__)
-#ifndef WARNING
-#define WARNING(...)
-#endif
+  std::string location_string(const char* f, int l) {
+    std::string file(std::string(f).substr(std::string(f).find_last_of('/') + 1).c_str());
+    std::stringstream sstr;
+    sstr << "[" << file << ":" << l << "]";
+    return sstr.str();
+  }
 
-#define ERROR(_fmt, ...)                                        \
-  printf(PRINT_RED "[GUA][E]" WHERE_STR PRINT_RESET _fmt "\n", \
-         WHERE_ARG,                                             \
-         ##__VA_ARGS__)
-#ifndef ERROR
-#define ERROR(...)
-#endif
+  std::ostream& print(bool enable, std::string const& header,
+                      std::string const& color,
+                      const char* file, int line) {
+    if (enable) {
+      return std::cout << color << header
+                       << location_string(file, line)
+                       << PRINT_RESET << " ";
+    } else {
+      return dev_null;
+    }
+  }
+}
 
-#define DEBUG(_fmt, ...)                                         \
-  printf(PRINT_BLUE "[GUA][D]" WHERE_STR PRINT_RESET _fmt "\n", \
-         WHERE_ARG,                                              \
-         ##__VA_ARGS__)
-#ifndef DEBUG
-#define DEBUG(...)
-#endif
+////////////////////////////////////////////////////////////////////////////////
 
-#define PROFILING(_fmt, ...) \
-  printf(PRINT_PURPLE "[GUA][P]" PRINT_RESET _fmt "\n", ##__VA_ARGS__)
-#ifndef PROFILING
-#define PROFILING(...)
-#endif
+std::ostream& Logger::debug_impl(const char* file, int line) {
+  return print(enable_debug, "[GUA][D]", PRINT_BLUE, file, line);
+}
 
-#endif  // GUA_LOGGER_HPP
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& Logger::message_impl(const char* file, int line) {
+  return print(enable_message, "[GUA][M]", PRINT_GREEN, file, line);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& Logger::warning_impl(const char* file, int line) {
+  return print(enable_warning, "[GUA][W]", PRINT_YELLOW, file, line);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& Logger::error_impl(const char* file, int line) {
+  return print(enable_error, "[GUA][E]", PRINT_RED, file, line);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+}
