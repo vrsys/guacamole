@@ -27,7 +27,9 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBufferMeshUberShader.hpp>
 #include <gua/renderer/GBufferNURBSUberShader.hpp>
+#include <gua/renderer/GBufferVideo3DUberShader.hpp>
 #include <gua/renderer/MeshLoader.hpp>
+#include <gua/renderer/Video3D.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
@@ -42,6 +44,7 @@ GBufferPass::GBufferPass(Pipeline* pipeline)
     : GeometryPass(pipeline),
       mesh_shader_(new GBufferMeshUberShader),
       nurbs_shader_(new GBufferNURBSUberShader),
+      video3D_shader_(new GBufferVideo3DUberShader),
       bfc_rasterizer_state_(),
       no_bfc_rasterizer_state_(),
       bbox_rasterizer_state_(),
@@ -60,6 +63,8 @@ GBufferPass::~GBufferPass() {
       delete mesh_shader_;
     if (nurbs_shader_)
       delete nurbs_shader_;
+    if (video3D_shader_)
+      delete video3D_shader_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +91,7 @@ void GBufferPass::print_shaders(std::string const& directory,
                                 std::string const& name) const {
     mesh_shader_->save_to_file(directory, name + "/mesh");
     nurbs_shader_->save_to_file(directory, name + "/nurbs");
+    video3D_shader_->save_to_file(directory, name + "/video3d");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,6 +99,12 @@ void GBufferPass::print_shaders(std::string const& directory,
 bool GBufferPass::pre_compile_shaders(RenderContext const& ctx) {
     if (mesh_shader_)  return mesh_shader_->upload_to(ctx);
     if (nurbs_shader_) return nurbs_shader_->upload_to(ctx);
+    if (video3D_shader_) return video3D_shader_->upload_to(ctx);
+
+    std::cout << "Print Shaders: " << std::endl;
+    getchar();
+    print_shaders("/tmp","");
+
     return false;
 }
 
@@ -103,6 +115,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
                             CameraMode eye,
                             Camera const& camera,
                             FrameBufferObject* target) {
+
+
+
     if (!depth_stencil_state_)
         depth_stencil_state_ =
             ctx.render_device->create_depth_stencil_state(true, true);
@@ -139,8 +154,20 @@ void GBufferPass::rendering(SerializedScene const& scene,
     mesh_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
     mesh_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
 
+    video3D_shader_->set_material_uniforms( //TODO
+        scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+    video3D_shader_->set_material_uniforms(
+        scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+
     Pass::bind_inputs(*mesh_shader_, eye, ctx);
     Pass::set_camera_matrices(*mesh_shader_,
+                              camera,
+                              pipeline_->get_current_scene(eye),
+                              eye,
+                              ctx);
+
+    Pass::bind_inputs(*video3D_shader_, eye, ctx);
+    Pass::set_camera_matrices(*video3D_shader_,
                               camera,
                               pipeline_->get_current_scene(eye),
                               eye,
@@ -175,6 +202,8 @@ void GBufferPass::rendering(SerializedScene const& scene,
         }
         mesh_shader_->unuse(ctx);
     }
+
+
 
     if (!scene.textured_quads_.empty()) {
 
@@ -318,6 +347,40 @@ void GBufferPass::rendering(SerializedScene const& scene,
         }
     }
 
+    if (!scene.video3Dnodes_.empty()) {
+
+        // draw video3Ds
+        video3D_shader_->use(ctx);
+        {
+
+            for (auto const& node : scene.video3Dnodes_) {
+                auto video3d =
+                    std::static_pointer_cast<gua::Video3D>(GeometryDatabase::instance()->lookup(node.data.get_video3d()));
+                //auto video3d =
+                    //GeometryDatabase::instance()->lookup(node.data.get_video3d());
+                auto material =
+                    MaterialDatabase::instance()->lookup(node.data.get_material());
+
+                if (material && video3d) {
+                    video3D_shader_->set_uniform(
+                        ctx, material->get_id(), "gua_material_id");
+                    video3D_shader_->set_uniform(
+                        ctx, node.transform, "gua_model_matrix");
+                    video3D_shader_->set_uniform(
+                        ctx,
+                        scm::math::transpose(
+                            scm::math::inverse(node.transform)),
+                        "gua_normal_matrix");
+
+                    video3d->set_uniforms(ctx, video3D_shader_);
+
+                    video3d->draw(ctx);
+                }
+            }
+        }
+        video3D_shader_->unuse(ctx);
+    }
+
     ctx.render_context->set_rasterizer_state(bbox_rasterizer_state_);
     std::shared_ptr<Material> bbox_material;
 
@@ -383,6 +446,7 @@ void GBufferPass::apply_material_mapping(std::set<std::string> const &
                                          materials) const {
   mesh_shader_->create(materials);
   nurbs_shader_->create(materials);
+  video3D_shader_->create(materials);
 }
 
 

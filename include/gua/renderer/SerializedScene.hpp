@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/Video3DNode.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
@@ -64,6 +65,11 @@ struct SerializedScene {
   * All Volume nodes.
   */
   std::vector<VolumeNode*> volumenodes_;
+
+  /**
+  * All Video3D nodes.
+  */
+  std::vector<SerializedNode<Video3DNode::Configuration> > video3Dnodes_;
 
   /**
    * All point light nodes.
