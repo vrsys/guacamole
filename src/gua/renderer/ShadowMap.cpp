@@ -160,11 +160,11 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
           mesh_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");
           mesh_shader_->set_uniform(
-              ctx, node->get_world_transform(), "gua_model_matrix");
+              ctx, node->get_cached_world_transform(), "gua_model_matrix");
           mesh_shader_->set_uniform(
                         ctx,
                         scm::math::transpose(
-                            scm::math::inverse(node->get_world_transform())),
+                            scm::math::inverse(node->get_cached_world_transform())),
                         "gua_normal_matrix");
           geometry->draw(ctx);
       }

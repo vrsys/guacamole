@@ -162,11 +162,11 @@ void GBufferPass::rendering(SerializedScene const& scene,
                     mesh_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");
                     mesh_shader_->set_uniform(
-                        ctx, node->get_world_transform(), "gua_model_matrix");
+                        ctx, node->get_cached_world_transform(), "gua_model_matrix");
                     mesh_shader_->set_uniform(
                         ctx,
                         scm::math::transpose(
-                            scm::math::inverse(node->get_world_transform())),
+                            scm::math::inverse(node->get_cached_world_transform())),
                         "gua_normal_matrix");
 
                     geometry->draw(ctx);
@@ -279,10 +279,10 @@ void GBufferPass::rendering(SerializedScene const& scene,
             nurbs_shader_->get_pre_shader().use(ctx);
             {
                 nurbs_shader_->get_pre_shader()
-                    .set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
+                    .set_uniform(ctx, node->get_cached_world_transform(), "gua_model_matrix");
                 nurbs_shader_->get_pre_shader().set_uniform(
                     ctx,
-                    scm::math::transpose(scm::math::inverse(node->get_world_transform())),
+                    scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
                     "gua_normal_matrix");
 
                 ctx.render_context->apply();
@@ -304,11 +304,11 @@ void GBufferPass::rendering(SerializedScene const& scene,
                     nurbs_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");
                     nurbs_shader_->set_uniform(
-                        ctx, node->get_world_transform(), "gua_model_matrix");
+                        ctx, node->get_cached_world_transform(), "gua_model_matrix");
                     nurbs_shader_->set_uniform(
                         ctx,
                         scm::math::transpose(
-                            scm::math::inverse(node->get_world_transform())),
+                            scm::math::inverse(node->get_cached_world_transform())),
                         "gua_normal_matrix");
 
                     geometry->draw(ctx);
@@ -362,10 +362,10 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
             mesh_shader_->set_uniform(
                 ctx, bbox_material->get_id(), "gua_material_id");
-            mesh_shader_->set_uniform(ctx, ray->get_world_transform(), "gua_model_matrix");
+            mesh_shader_->set_uniform(ctx, ray->get_cached_world_transform(), "gua_model_matrix");
             mesh_shader_->set_uniform(
                 ctx,
-                scm::math::transpose(scm::math::inverse(ray->get_world_transform())),
+                scm::math::transpose(scm::math::inverse(ray->get_cached_world_transform())),
                 "gua_normal_matrix");
 
             geometry->draw(ctx);

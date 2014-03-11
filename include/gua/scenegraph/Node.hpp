@@ -206,6 +206,7 @@ class GUA_DLL Node {
    * \return math::mat4  The Node's world transformation.
    */
   math::mat4 get_world_transform() const;
+  math::mat4 get_cached_world_transform() const;
 
   /**
    * Returns the Node's world postion.

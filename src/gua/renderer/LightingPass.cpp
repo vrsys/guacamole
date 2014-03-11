@@ -166,7 +166,7 @@ void LightingPass::rendering(SerializedScene const& scene,
             }
 
             shadow_map_.render_cascaded(ctx, scene.center_of_interest, scene.frustum, camera,
-                                        light->get_world_transform(),
+                                        light->get_cached_world_transform(),
                                         light->data.get_shadow_map_size(),
                                         split_0, split_1, split_2, split_3, split_4,
                                         light->data.get_shadow_near_clipping_in_sun_direction());
@@ -197,7 +197,7 @@ void LightingPass::rendering(SerializedScene const& scene,
         shader_->set_uniform(ctx,
                              light->data.get_enable_specular_shading(),
                              "gua_light_specular_enable");
-        shader_->set_uniform(ctx, light->get_world_transform(), "gua_model_matrix");
+        shader_->set_uniform(ctx, light->get_cached_world_transform(), "gua_model_matrix");
         shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
         shader_->set_uniform(ctx, light->data.get_enable_shadows(), "gua_light_casts_shadow");
         shader_->set_uniform(
@@ -226,7 +226,7 @@ void LightingPass::rendering(SerializedScene const& scene,
         shader_->set_uniform(ctx,
                              light->data.get_enable_specular_shading(),
                              "gua_light_specular_enable");
-        shader_->set_uniform(ctx, light->get_world_transform(), "gua_model_matrix");
+        shader_->set_uniform(ctx, light->get_cached_world_transform(), "gua_model_matrix");
         shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
         shader_->set_uniform(ctx, light->data.get_falloff(), "gua_light_falloff");
         shader_->set_uniform(ctx, false, "gua_light_casts_shadow");
@@ -251,7 +251,7 @@ void LightingPass::rendering(SerializedScene const& scene,
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
-            shadow_map_.render(ctx, scene.center_of_interest, camera, light->get_world_transform(), light->data.get_shadow_map_size());
+            shadow_map_.render(ctx, scene.center_of_interest, camera, light->get_cached_world_transform(), light->data.get_shadow_map_size());
 
             shader_->use(ctx);
             target->bind(ctx);
@@ -278,7 +278,7 @@ void LightingPass::rendering(SerializedScene const& scene,
         shader_->set_uniform(ctx,
                              light->data.get_enable_specular_shading(),
                              "gua_light_specular_enable");
-        shader_->set_uniform(ctx, light->get_world_transform(), "gua_model_matrix");
+        shader_->set_uniform(ctx, light->get_cached_world_transform(), "gua_model_matrix");
         shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
         shader_->set_uniform(ctx, light->data.get_falloff(), "gua_light_falloff");
         shader_->set_uniform(ctx, light->data.get_softness(), "gua_light_softness");
