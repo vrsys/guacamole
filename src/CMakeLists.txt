@@ -1,17 +1,98 @@
-# determine source and header files
-file(GLOB_RECURSE GUACAMOLE_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    gua/*.c
-    gua/*.cpp
-    ../include/gua/*.h
-    ../include/gua/*.hpp
-)
+###############################################################################
+# determine source files
+###############################################################################
+FILE(GLOB         GUACAMOLE_CORE_SRC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/*.cpp)
+FILE(GLOB         GUACAMOLE_RENDERER_SRC       RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/renderer/*.cpp)
+FILE(GLOB_RECURSE GUACAMOLE_RENDERER_NURBS_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/renderer/nurbs_geometry/*.cpp)
+FILE(GLOB_RECURSE GUACAMOLE_RENDERER_VIDEO_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/renderer/video3d_geometry/*.cpp)
+
+FILE(GLOB_RECURSE GUACAMOLE_SCENEGRAPH_SRC     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/scenegraph/*.cpp)
+FILE(GLOB_RECURSE GUACAMOLE_UTILS_SRC          RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/utils/*.cpp)
+FILE(GLOB_RECURSE GUACAMOLE_PHYSICS_SRC        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/physics/*.cpp)
+FILE(GLOB_RECURSE GUACAMOLE_MATH_SRC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/math/*.cpp)
+
+FILE(GLOB_RECURSE GUACAMOLE_EVENTS_SRC         RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/events/*.cpp)
+FILE(GLOB_RECURSE GUACAMOLE_DATABASES_SRC      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/databases/*.cpp)
+
+###############################################################################
+# determine header files
+###############################################################################
+FILE(GLOB         GUACAMOLE_CORE_INC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/*.hpp)
+FILE(GLOB         GUACAMOLE_RENDERER_INC       RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/renderer/*.hpp)
+FILE(GLOB_RECURSE GUACAMOLE_RENDERER_NURBS_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/renderer/nurbs_geometry/*.hpp)
+FILE(GLOB_RECURSE GUACAMOLE_RENDERER_VIDEO_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/renderer/video3d_geometry/*.hpp)
+                                                                                   
+FILE(GLOB_RECURSE GUACAMOLE_SCENEGRAPH_INC     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/scenegraph/*.hpp)
+FILE(GLOB_RECURSE GUACAMOLE_UTILS_INC          RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/utils/*.hpp)
+FILE(GLOB_RECURSE GUACAMOLE_PHYSICS_INC        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/physics/*.hpp)
+FILE(GLOB_RECURSE GUACAMOLE_MATH_INC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/math/*.hpp)
+FILE(GLOB_RECURSE GUACAMOLE_GENERATED_INC      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/generated/*.inl)
+FILE(GLOB_RECURSE GUACAMOLE_EVENTS_INC         RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/events/*.hpp)
+FILE(GLOB_RECURSE GUACAMOLE_DATABASES_INC      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/databases/*.hpp)
+
+###############################################################################
+# assign source and header files to source groups
+###############################################################################
+SOURCE_GROUP("" FILES ${GUACAMOLE_CORE_INC})
+SOURCE_GROUP("" FILES ${GUACAMOLE_CORE_SRC})
+
+SOURCE_GROUP("renderer" FILES ${GUACAMOLE_RENDERER_INC})
+SOURCE_GROUP("renderer" FILES ${GUACAMOLE_RENDERER_SRC})
+
+SOURCE_GROUP("renderer\\nurbs" FILES ${GUACAMOLE_RENDERER_NURBS_INC})
+SOURCE_GROUP("renderer\\nurbs" FILES ${GUACAMOLE_RENDERER_NURBS_SRC})
+
+SOURCE_GROUP("renderer\\video3d" FILES ${GUACAMOLE_RENDERER_VIDEO_INC})
+SOURCE_GROUP("renderer\\video3d" FILES ${GUACAMOLE_RENDERER_VIDEO_SRC})
+
+SOURCE_GROUP("scenegraph" FILES ${GUACAMOLE_SCENEGRAPH_INC})
+SOURCE_GROUP("scenegraph" FILES ${GUACAMOLE_SCENEGRAPH_SRC})
+
+SOURCE_GROUP("utils" FILES ${GUACAMOLE_UTILS_INC})
+SOURCE_GROUP("utils" FILES ${GUACAMOLE_UTILS_SRC})
+
+SOURCE_GROUP("physics" FILES ${GUACAMOLE_PHYSICS_INC})
+SOURCE_GROUP("physics" FILES ${GUACAMOLE_PHYSICS_SRC})
+
+SOURCE_GROUP("math" FILES ${GUACAMOLE_MATH_INC})
+SOURCE_GROUP("math" FILES ${GUACAMOLE_MATH_SRC})
+
+SOURCE_GROUP("generated" FILES ${GUACAMOLE_GENERATED_INC})
+SOURCE_GROUP("generated" FILES ${GUACAMOLE_GENERATED_SRC})
+
+SOURCE_GROUP("events" FILES ${GUACAMOLE_EVENTS_INC})
+SOURCE_GROUP("events" FILES ${GUACAMOLE_EVENTS_SRC})
+
+SOURCE_GROUP("databases" FILES ${GUACAMOLE_DATABASES_INC})
+SOURCE_GROUP("databases" FILES ${GUACAMOLE_DATABASES_SRC})
 
 LINK_DIRECTORIES(${LIB_PATHS})
 
 INCLUDE_DIRECTORIES(guacamole ${INCLUDE_PATHS})
 
 ADD_LIBRARY( guacamole SHARED
-    ${GUACAMOLE_SRC}
+    ${GUACAMOLE_CORE_INC}
+    ${GUACAMOLE_CORE_SRC}
+    ${GUACAMOLE_RENDERER_INC}
+    ${GUACAMOLE_RENDERER_SRC}
+    ${GUACAMOLE_RENDERER_NURBS_INC}
+    ${GUACAMOLE_RENDERER_NURBS_SRC}
+    ${GUACAMOLE_RENDERER_VIDEO_INC}
+    ${GUACAMOLE_RENDERER_VIDEO_SRC}
+    ${GUACAMOLE_SCENEGRAPH_INC}
+    ${GUACAMOLE_SCENEGRAPH_SRC}
+    ${GUACAMOLE_UTILS_INC}
+    ${GUACAMOLE_UTILS_SRC}
+    ${GUACAMOLE_PHYSICS_INC}
+    ${GUACAMOLE_PHYSICS_SRC}
+    ${GUACAMOLE_MATH_INC}
+    ${GUACAMOLE_MATH_SRC}
+    ${GUACAMOLE_GENERATED_INC}
+    ${GUACAMOLE_GENERATED_SRC}
+    ${GUACAMOLE_EVENTS_INC}
+    ${GUACAMOLE_EVENTS_SRC}
+    ${GUACAMOLE_DATABASES_INC}
+    ${GUACAMOLE_DATABASES_SRC}
 )
 
 IF (MSVC)
@@ -19,6 +100,31 @@ IF (MSVC)
     SET_TARGET_PROPERTIES(guacamole PROPERTIES COMPILE_FLAGS "-D GUA_LIBRARY -D _WIN32_WINNT=${WIN_VERSION}")
 ENDIF(MSVC)
 
-TARGET_LINK_LIBRARIES( guacamole debug ${LIBS} optimized ${LIBS})
+# link static libraries
+TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES})
+TARGET_LINK_LIBRARIES( guacamole general ${ASSIMP_LIBRARIES})
 
+IF (UNIX)
+    TARGET_LINK_LIBRARIES( guacamole general ${BOOST_LIBRARIES})
+    TARGET_LINK_LIBRARIES( guacamole general ${GL_LIBRARIES})
+ELSEIF (MSVC)
+    # use boost autolink feature
+    # not necessary to link GL on msvc
+ENDIF (UNIX)
+
+# link release libraries
+TARGET_LINK_LIBRARIES( guacamole optimized ${JSON_LIBRARY})
+TARGET_LINK_LIBRARIES( guacamole optimized ${BULLET_DYNAMICS_LIBRARY})
+TARGET_LINK_LIBRARIES( guacamole optimized ${BULLET_COLLISION_LIBRARY})
+TARGET_LINK_LIBRARIES( guacamole optimized ${BULLET_MATH_LIBRARY})
+TARGET_LINK_LIBRARIES( guacamole optimized ${BULLET_HACD_LIBRARY})
+
+# link debug libraries
+TARGET_LINK_LIBRARIES( guacamole debug ${JSON_LIBRARY_DEBUG})
+TARGET_LINK_LIBRARIES( guacamole debug ${BULLET_DYNAMICS_LIBRARY_DEBUG})
+TARGET_LINK_LIBRARIES( guacamole debug ${BULLET_COLLISION_LIBRARY_DEBUG})
+TARGET_LINK_LIBRARIES( guacamole debug ${BULLET_MATH_LIBRARY_DEBUG})
+TARGET_LINK_LIBRARIES( guacamole debug ${BULLET_HACD_LIBRARY_DEBUG})
+
+# set dependencies
 ADD_DEPENDENCIES(guacamole guarc CompileResources)
