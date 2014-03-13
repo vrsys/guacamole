@@ -39,12 +39,17 @@ namespace gua {
 class GUA_DLL Video3DNode : public Node {
   public:
 
-    struct Configuration {
-      GUA_ADD_PROPERTY(std::string,     video3d,   "gua_default_video3d");
-      GUA_ADD_PROPERTY(std::string,     material,   "gua_default_material");
-    };
+    /**
+    * A string referring to an entry in guacamole's GeometryDatabase.
+    */
+    std::string const& get_ksfile () const { return ksfile_; }
+    void set_ksfile(std::string const& v) { ksfile_ = v; video_changed_ = self_dirty_ = true; }
 
-    Configuration data;
+    /**
+    * A string referring to an entry in guacamole's MaterialDatabase.
+    */
+    std::string const& get_material() const { return material_; }
+    void set_material(std::string const& v) { material_ = v; material_changed_ = self_dirty_ = true; }
 
     Video3DNode() {};
 
@@ -58,8 +63,9 @@ class GUA_DLL Video3DNode : public Node {
      * \param material  The name of the GeometryNodeCore's material.
      */
     Video3DNode(std::string const& name,
-                 Configuration const& configuration = Configuration(),
-                 math::mat4 const& transform = math::mat4::identity());
+                std::string const& ksfile = "gua_default_ksfile",
+                std::string const& material = "video3D",
+                math::mat4 const& transform = math::mat4::identity());
 
     /**
      * Accepts a visitor and calls concrete visit method
@@ -77,6 +83,12 @@ class GUA_DLL Video3DNode : public Node {
   private:
 
     std::shared_ptr<Node> copy() const;
+
+    std::string ksfile_;
+    std::string material_;
+
+    bool video_changed_;
+    bool material_changed_;
 };
 
 }

@@ -31,6 +31,7 @@
 #include <gua/renderer/MeshLoader.hpp>
 #include <gua/renderer/Video3D.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/Video3DDatabase.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
@@ -354,23 +355,23 @@ void GBufferPass::rendering(SerializedScene const& scene,
         {
 
             for (auto const& node : scene.video3Dnodes_) {
-                auto video3d =
-                    std::static_pointer_cast<gua::Video3D>(GeometryDatabase::instance()->lookup(node.data.get_video3d()));
-                //auto video3d =
-                    //GeometryDatabase::instance()->lookup(node.data.get_video3d());
-                auto material =
-                    MaterialDatabase::instance()->lookup(node.data.get_material());
 
-                if (material && video3d) {
+                auto video3d =
+                  Video3DDatabase::instance()->lookup(node->get_ksfile());
+                auto material =
+                  MaterialDatabase::instance()->lookup(node->get_material());
+
+                if (material && video3d) 
+                {
                     video3D_shader_->set_uniform(
-                        ctx, material->get_id(), "gua_material_id");
+                      ctx, material->get_id(), "gua_material_id");
                     video3D_shader_->set_uniform(
-                        ctx, node.transform, "gua_model_matrix");
+                      ctx, node->get_cached_world_transform(), "gua_model_matrix");
                     video3D_shader_->set_uniform(
-                        ctx,
-                        scm::math::transpose(
-                            scm::math::inverse(node.transform)),
-                        "gua_normal_matrix");
+                      ctx,
+                      scm::math::transpose(
+                      scm::math::inverse(node->get_cached_world_transform())),
+                      "gua_normal_matrix");
 
                     video3d->set_uniforms(ctx, video3D_shader_);
 

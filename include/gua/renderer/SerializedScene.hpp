@@ -69,7 +69,7 @@ struct SerializedScene {
   /**
   * All Video3D nodes.
   */
-  std::vector<SerializedNode<Video3DNode::Configuration> > video3Dnodes_;
+  std::vector<Video3DNode*> video3Dnodes_;
 
   /**
    * All point light nodes.

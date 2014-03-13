@@ -19,49 +19,35 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/Video3DLoader.hpp>
+#ifndef GUA_VIDEO3D_DATABASE_HPP
+#define GUA_VIDEO3D_DATABASE_HPP
 
 // guacamole headers
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/scenegraph/Video3DNode.hpp>
+#include <gua/utils/Singleton.hpp>
+#include <gua/databases/Database.hpp>
 #include <gua/renderer/Video3D.hpp>
 
 namespace gua {
-  
-Video3DLoader::Video3DLoader() : LoaderBase(), _supported_file_extensions() {
-  _supported_file_extensions.insert("ks");    
-}
 
+/**
+ * This Database stores video data. It can be accessed via string
+ * identifiers.
+ *
+ * \ingroup gua_databases
+ */
+class GUA_DLL Video3DDatabase : public Database<Video3D>,
+                                public Singleton<Video3DDatabase> {
+ public:
 
-std::shared_ptr<Node> Video3DLoader::load(std::string const& file_name,
-                                       unsigned flags) {
-  try {
-      GeometryDatabase::instance()->add(
-        file_name, std::make_shared<Video3D>(file_name));
+   friend class Singleton<Video3DDatabase>;
 
-      auto result = std::make_shared<Video3DNode>("unnamed_video3D");
-      result->set_ksfile(file_name);
-      result->set_material("");     
+ private:
+  // this class is a Singleton --- private c'tor and d'tor
+   Video3DDatabase() {}
+   ~Video3DDatabase() {}
 
-      return result;
-
-    }
-    catch (std::exception &e) {
-      WARNING("Warning: \"%s\" \n", e.what());
-      WARNING("Failed to load Video3D object \"%s\": ", file_name.c_str());
-      return nullptr;
-    }
-}
-
-  bool Video3DLoader::is_supported(std::string const& file_name) const {
-    //return true; // TODO check for file ending!!!!!!!!!!!!!!!!
-    std::vector<std::string> filename_decomposition =
-      gua::string_utils::split(file_name, '.');
-    return filename_decomposition.empty()
-      ? false
-      : _supported_file_extensions.count(filename_decomposition.back()) > 0;
-  }
-
+};
 
 }
+
+#endif  // GUA_GEOMETRY_DATABASE_HPP

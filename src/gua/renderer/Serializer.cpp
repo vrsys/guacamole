@@ -202,10 +202,12 @@ void Serializer::check(SerializedScene* output,
 
   if ( is_visible(node) ) {
 
-    if ( !node->data.get_video3d().empty() && !node->data.get_material().empty() ) {
+    if (!node->get_ksfile().empty() && !node->get_material().empty()) {
+
       add_bbox(node);
-      data_->video3Dnodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
-      data_->materials_.insert(node->data.get_material());
+      data_->video3Dnodes_.push_back(node);
+      data_->materials_.insert(node->get_material());
+
     }
 
     visit_children(node);

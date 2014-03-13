@@ -211,15 +211,7 @@ void GeometryLoader::apply_fallback_material(std::shared_ptr<Node> const& root,
       g_node->set_material(fallback_material);
     }
   }
-  else{
-      auto v_node = std::dynamic_pointer_cast<Video3DNode>(root);
-      if (v_node) {
-          if (v_node->data.get_material().empty()) {
-              v_node->data.set_material(fallback_material);
-          }
-      }
-  }
-  
+
   for(auto& child: root->get_children()) {
     apply_fallback_material(child, fallback_material);
   }
