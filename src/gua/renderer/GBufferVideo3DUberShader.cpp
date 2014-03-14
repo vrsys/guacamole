@@ -836,7 +836,25 @@ void main() {
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
 )";
 
-fragment_shader += fshader_factory.get_output_mapping().get_output_string("Video3D", "video_color");
+// todo : make Video3D material a ressource!
+std::string path_to_shading_model;
+std::string const video3d_shading_model_name;
+for (auto shading_model_name : ShadingModelDatabase::instance()->list_all())
+{
+  auto video_shading_model_found = std::string::npos != shading_model_name.find("Video3D.gsd");
+  if (video_shading_model_found) {
+    path_to_shading_model = shading_model_name;
+  }
+}
+
+if (path_to_shading_model.empty())
+{
+  WARNING("Could not find shading model \"%s\": "
+    "File does not exist!",
+    video3d_shading_model_name.c_str());
+}
+
+fragment_shader += fshader_factory.get_output_mapping().get_output_string(path_to_shading_model, "video_color");
 fragment_shader +=  R"( = texture2DArray(color_video3d_texture, vec3(gua_texcoords_varying.xy, layer)).rgb;
 }
 )";

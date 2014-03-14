@@ -127,6 +127,15 @@ std::string const LayerMapping::get_output_string(
     }
 
     auto model_ptr(ShadingModelDatabase::instance()->lookup(shading_model_name));
+
+    if (!model_ptr) {
+      WARNING("Failed to retrieve shadel model from database"
+        "\"%s\" defined in shading model \"%s\"!",
+        output_name.c_str(),
+        shading_model_name.c_str());
+      return "";
+    }
+
     auto output_type(BufferComponent::NONE);
 
     auto output(model_ptr->get_stages()[stage_]

@@ -32,11 +32,15 @@
 #include <scm/gl_core/render_device/opengl/gl_core.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/asio/ip/host_name.hpp>
+#include <boost/algorithm/string.hpp> 
 
 // external headers
 #include <iostream>
 #include <fstream>
 #include <gua/utils/string_utils.hpp>
+
+
 
 namespace {
 
@@ -47,18 +51,6 @@ namespace {
     scm::math::vec3f tangent;
     scm::math::vec3f bitangent;
   };
-
-  std::string get_hostname ()
-  {
-    std::fstream istr ( "/etc/hostname", std::ios::in );
-    std::string host;
-    if (istr) {
-      istr >> host;
-      return host;
-    } else {
-      return "localhost";
-    }
-  }
 }
 
 namespace gua {
@@ -149,14 +141,15 @@ void Video3D::init()
       }
     }
 
-    std::string hostname = get_hostname();
+    std::string hostname = boost::asio::ip::host_name();
+    boost::algorithm::to_lower(hostname);
 
     if ( std::find(hostnames.begin(), hostnames.end(), hostname) != hostnames.end() )
     {
       for ( auto calib_file : calib_files_ )
       {
-        sys::FileBuffer* tmp = new sys::FileBuffer(calib_file->get_stream_filename().c_str());
-        tmp->open("r");
+        sys::FileBuffer* tmp = new sys::FileBuffer(calib_file->get_stream_filename());
+        tmp->open();
         tmp->setLooping(true);
         file_buffers_.push_back(tmp);
 
@@ -198,6 +191,8 @@ void Video3D::init()
 ////////////////////////////////////////////////////////////////////////////////
 
 void Video3D::upload_to(RenderContext const& ctx) const {
+
+  if (ctx.id > 10 || ctx.id < 0) return;
 
   int num_vertices = height_depthimage_ * width_depthimage_;
   int num_indices  = height_depthimage_ * width_depthimage_;
@@ -356,6 +351,12 @@ void Video3D::update_buffers(RenderContext const& ctx) const
   {
     for(unsigned i = 0; i < calib_files_.size(); ++i) 
     {
+      std::cout << color_size_ << std::endl;
+      std::cout << depth_size_byte_ << std::endl;
+      std::cout << file_buffers_.size() << std::endl;
+      std::cout << color_buffers_.size() << std::endl;
+      std::cout << depth_buffers_.size() << std::endl;
+
       if(file_buffers_[i]->read( (void*) color_buffers_[i], color_size_) != color_size_){
             std::cerr << "ERROR reading color BufferData\n";
       }

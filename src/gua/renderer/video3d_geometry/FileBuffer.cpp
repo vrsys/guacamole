@@ -1,5 +1,6 @@
 #include <gua/renderer/video3d_geometry/FileBuffer.h>
 
+#include <boost/filesystem.hpp>
 
 #include <iostream>
 /*
@@ -29,57 +30,45 @@ A call to this function is equivalent to calling setvbuf with _IOFBF as mode and
 */
 namespace sys{
 
-  FileBuffer::FileBuffer(const char* path)
+  FileBuffer::FileBuffer(std::string const& path)
     : m_path(path),
-      m_file(0),
-      m_buffer(0),
+      m_file(),
       m_bytes_r(0),
-      m_bytes_w(0),
-      m_fstat(),
+      m_filesize(0),
       m_looping(false)
   {}
 
 
-  FileBuffer::~FileBuffer(){
-    if(0 != m_file)
-      fclose(m_file);
-    if(0 != m_buffer)
-      delete [] m_buffer;
+  FileBuffer::~FileBuffer() {
+    close();
   }
 
   bool
-  FileBuffer::isOpen(){
-    return m_file != 0;
+  FileBuffer::is_open(){
+    return m_file.is_open();
   }
 
   bool
-  FileBuffer::open(const char* mode, unsigned buffersize){
+  FileBuffer::open(){
+    close();
 
-    m_file = fopen(m_path.c_str(), mode);
-#if !WIN32 
-    if(lstat(m_path.c_str(),&m_fstat) < 0) 
+    m_filesize = boost::filesystem::file_size(m_path);
+    m_file.open(m_path, std::ios::in | std::ios::binary);
+
+    if (!m_file.good())
+    {
+      std::cerr << "Could not open " << m_path << std::endl;
       return false;
-#else
-    // TODO Windows port
-#endif
-
-    if(0 == m_file)
-      return false;
-
-    if(0 != buffersize){
-      m_buffer = new char [buffersize];
-      setvbuf (m_file, m_buffer, _IOFBF, buffersize);
     }
-
-    std::cerr << "FileBuffer " << this << " opening " << m_path << std::endl;
+    
     return true;
   }
 
   void
   FileBuffer::close(){
-    if(0 != m_file)
-      fclose(m_file);
-    m_file = 0;
+    if (is_open()) {
+      m_file.close();
+    }
   }
 
 
@@ -96,43 +85,38 @@ namespace sys{
 
   unsigned
   FileBuffer::read (void* buffer, unsigned numbytes){
-    if(0 == m_file)
+    if (!m_file.good()) {
+      std::cerr << "FileBuffer::read () : Could to read from " << m_path << std::endl;
       return 0;
+    }
 
-    if((m_bytes_r + numbytes) > m_fstat.st_size){
-      if(m_looping){
-	//std::cerr << "FileBuffer " << this << " rewinding " << m_path << " filesize is " << m_fstat.st_size << std::endl;
-	rewind(m_file);
-	m_bytes_r = 0;
+    if ((m_bytes_r + numbytes) > m_filesize) {
+      if(m_looping) {
+        m_file.seekg(std::ios_base::beg);
+	      m_bytes_r = 0;
       }
       else{
-	return 0;
+	      return 0;
       }
     }
 
-    unsigned bytes = fread(buffer, sizeof (unsigned char), numbytes, m_file);
+    std::cout << numbytes << std::endl;
+
+    std::size_t strpos_before_read = m_file.tellg();
+    m_file.read((char*)buffer, numbytes);
+    std::size_t strpos_after_read = m_file.tellg();
+    std::size_t  bytes = strpos_after_read - strpos_before_read;
+    std::cout << bytes << std::endl;
+
     m_bytes_r += bytes;
 
     return bytes;
   }
 
-  unsigned
-  FileBuffer::write(void* buffer, unsigned numbytes){
-    if(0 == m_file)
-      return 0;
-    unsigned bytes = fwrite(buffer, sizeof (unsigned char), numbytes, m_file);
-    m_bytes_w += bytes;
-    return bytes;
-  }
 
   unsigned
-  FileBuffer::numBytesR() const{
+  FileBuffer::bytes_read() const{
     return m_bytes_r;
-  }
-
-  unsigned
-  FileBuffer::numBytesW() const{
-    return m_bytes_w;
   }
 
 }
