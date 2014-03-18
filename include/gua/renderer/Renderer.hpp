@@ -74,7 +74,7 @@ class GUA_DLL Renderer {
  private:
 
   typedef std::pair<ConstRenderVectorPtr, float> Item;
-  typedef std::shared_ptr<gua::utils::Doublebuffer<Item> > Mailbox;
+  typedef std::shared_ptr<gua::concurrent::Doublebuffer<Item> > Mailbox;
   typedef std::pair<Mailbox, std::thread> Renderclient;
 
   Renderclient make_renderclient(Pipeline* pipe);

@@ -35,8 +35,8 @@
 namespace gua {
 
 template <class T>
-std::pair<std::shared_ptr<gua::utils::Doublebuffer<T> >, std::shared_ptr<gua::utils::Doublebuffer<T> > > spawnDoublebufferred() {
-  auto db = std::make_shared<gua::utils::Doublebuffer<T> >();
+std::pair<std::shared_ptr<gua::concurrent::Doublebuffer<T> >, std::shared_ptr<gua::concurrent::Doublebuffer<T> > > spawnDoublebufferred() {
+  auto db = std::make_shared<gua::concurrent::Doublebuffer<T> >();
   return {db, db};
 }
 
@@ -58,7 +58,7 @@ void Renderer::renderclient(Mailbox& in, Pipeline* pipe) {
   FpsCounter fpsc(20);
   fpsc.start();
 
-  for (auto& x : gua::utils::pull_items_range<Item, Mailbox>(in)) {
+  for (auto& x : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
     pipe->process(*(x.first), x.second, fpsc.fps);
     fpsc.step();
   }

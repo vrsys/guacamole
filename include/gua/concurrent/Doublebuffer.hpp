@@ -30,7 +30,7 @@
 #include <boost/optional.hpp>
 
 namespace gua {
-namespace utils {
+namespace concurrent {
 
 template <typename T> class Doublebuffer {
  public:

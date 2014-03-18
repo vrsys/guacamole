@@ -27,7 +27,7 @@
 #include <boost/range/iterator_range.hpp>
 
 namespace gua {
-namespace utils {
+namespace concurrent {
 
 template< class T , class Container>
 class pull_items_range
