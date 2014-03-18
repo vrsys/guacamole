@@ -28,8 +28,8 @@
 #include <gua/scenegraph.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils.hpp>
-#include <gua/utils/Doublebuffer.hpp>
-#include <gua/utils/pull_items_iterator.hpp>
+#include <gua/concurrent/Doublebuffer.hpp>
+#include <gua/concurrent/pull_items_iterator.hpp>
 #include <gua/memory.hpp>
 
 namespace gua {

@@ -29,7 +29,7 @@
 
 #include <gua/platform.hpp>
 #include <gua/utils/FpsCounter.hpp>
-#include <gua/utils/Doublebuffer.hpp>
+#include <gua/concurrent/Doublebuffer.hpp>
 
 namespace gua {
 
