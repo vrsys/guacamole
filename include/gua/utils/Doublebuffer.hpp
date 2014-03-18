@@ -22,8 +22,12 @@
 #ifndef GUA_DOUBLEBUFFER_HPP
 #define GUA_DOUBLEBUFFER_HPP
 
+#include <atomic>
+#include <mutex>
 #include <thread>
+#include <iostream>
 #include <condition_variable>
+#include <boost/optional.hpp>
 
 namespace gua {
 namespace utils {
@@ -31,9 +35,17 @@ namespace utils {
 template <typename T> class Doublebuffer {
  public:
   Doublebuffer()
-      : front_(), back_(), updated_(false), copy_mutex_(), copy_cond_var_() {}
+      : front_()
+      , back_()
+      , updated_(false)
+      , copy_mutex_()
+      , copy_cond_var_()
+      , shutdown_(false)
+    {}
 
-  void write_blocked(T const& scene_graphs) {
+  bool push_back(T const& scene_graphs) {
+    if (shutdown_)
+      return false;
     {
       // blocks until ownership can be obtained for the current thread.
       std::lock_guard<std::mutex> lock(copy_mutex_);
@@ -41,32 +53,33 @@ template <typename T> class Doublebuffer {
       updated_ = true;
     }
     copy_cond_var_.notify_one();
+    return true;
   }
 
-  template <typename F> void with(F&& f) {
-    // f(front_);
+  boost::optional<T> read() {
+    if (shutdown_) {
+      return boost::optional<T>();
+    }
     {
       std::unique_lock<std::mutex> lock(copy_mutex_);
-      while (!updated_) {
+      while (!updated_ && !shutdown_) {
         copy_cond_var_.wait(lock);
+      }
+      if (shutdown_) {
+        return boost::optional<T>();
       }
       updated_ = false;
       std::swap(front_, back_);
     }
-    f(front_);
+
+    return boost::make_optional(front_);
+  }
+  inline void close() {
+    shutdown_ = true;
+    copy_cond_var_.notify_all();
   }
 
-  T read() {
-    {
-      std::unique_lock<std::mutex> lock(copy_mutex_);
-      while (!updated_) {
-        copy_cond_var_.wait(lock);
-      }
-      updated_ = false;
-      std::swap(front_, back_);
-    }
-    return front_;
-  }
+  bool closed() { return shutdown_; }
 
  private:
   T front_;
@@ -75,6 +88,7 @@ template <typename T> class Doublebuffer {
 
   std::mutex copy_mutex_;
   std::condition_variable copy_cond_var_;
+  std::atomic<bool> shutdown_;
 };
 
 }

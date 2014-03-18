@@ -55,9 +55,9 @@ template <typename T> class RenderClient {
       FpsCounter fpsc(20);
       fpsc.start();
 
-      while (true) {
-        auto sg = this->doublebuffer_.read();
-        fun(sg, fpsc.fps);
+      auto sg = this->doublebuffer_.read();
+      while (sg) {
+        fun(*sg, fpsc.fps);
         fpsc.step();
       }
     });
@@ -81,7 +81,7 @@ template <typename T> class RenderClient {
    *                         should be drawn.
    */
   inline void queue_draw(T const& scene_graphs) {
-    doublebuffer_.write_blocked(scene_graphs);
+    doublebuffer_.push_back(scene_graphs);
   }
 
  private:
