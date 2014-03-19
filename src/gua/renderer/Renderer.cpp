@@ -65,17 +65,15 @@ void Renderer::renderclient(Mailbox& in, Pipeline* pipe) {
 
 }
 
-Renderer::Renderclient Renderer::make_renderclient(Pipeline* pipe) {
-  auto p = spawnDoublebufferred<Item>();
-  return {p.first, std::thread{&Renderer::renderclient, this, p.second, pipe}};
-}
-
 Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
     : render_clients_(),
       application_fps_(20) {
   application_fps_.start();
   for (auto& pipe : pipelines) {
-    render_clients_.push_back(make_renderclient(pipe));
+    auto p = spawnDoublebufferred<Item>();
+    render_clients_.emplace_back(
+        std::make_pair(p.first,
+          std::thread(&Renderer::renderclient, this, p.second, pipe)));
   }
 }
 
