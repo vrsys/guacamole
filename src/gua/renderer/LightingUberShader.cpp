@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/UberShaderFactory.hpp>
 #include <gua/databases.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <sstream>

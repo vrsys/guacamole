@@ -30,7 +30,7 @@
 #include <gua/renderer/VolumeLoader.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <iostream>
@@ -63,12 +63,7 @@ GeometryLoader::~GeometryLoader() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
-                                            (std::string const& node_name,
-                                             std::string const& file_name,
-                                             std::string const& fallback_material,
-                                             unsigned flags) {
-
+std::shared_ptr<Node> GeometryLoader::load_geometry(std::string const& file_name, unsigned flags) {
   std::shared_ptr<Node> cached_node;
   std::string key(file_name + "_" + string_utils::to_string(flags));
 
@@ -112,9 +107,22 @@ std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
 
     if (!fileload_succeed) {
 
-      WARNING("Unable to load %s: Type is not supported!", file_name.c_str());
+      Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
     }
   }
+
+  return cached_node;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Node> GeometryLoader::create_geometry_from_file
+                                            (std::string const& node_name,
+                                             std::string const& file_name,
+                                             std::string const& fallback_material,
+                                             unsigned flags) {
+
+  auto cached_node(load_geometry(file_name, flags));
 
   if (cached_node) {
     auto copy(cached_node->deep_copy());
@@ -134,17 +142,13 @@ std::shared_ptr<Node> GeometryLoader::create_volume_from_file(std::string const&
 	std::string const& file_name,
 	unsigned flags)
 {
-
 	std::shared_ptr<Node> cached_node;
 	std::string key(file_name + "_" + string_utils::to_string(flags));
 
 	auto searched(loaded_files_.find(key));
 	if (searched != loaded_files_.end()) {
-
 		cached_node = searched->second;
-
-	}
-	else {
+    } else {
 
 		bool fileload_succeed = false;
 		for (auto f : fileloaders_) {
@@ -154,7 +158,8 @@ std::shared_ptr<Node> GeometryLoader::create_volume_from_file(std::string const&
 				loaded_files_.insert(std::make_pair(key, cached_node));
 
 				// normalize volume position and rotation
-				if (flags & VolumeLoader::NORMALIZE_POSITION || flags & VolumeLoader::NORMALIZE_SCALE) {
+                if ( flags & VolumeLoader::NORMALIZE_POSITION
+                  || flags & VolumeLoader::NORMALIZE_SCALE) {
 					auto bbox = cached_node->get_bounding_box();
 
 					if (flags & VolumeLoader::NORMALIZE_POSITION) {
@@ -164,7 +169,8 @@ std::shared_ptr<Node> GeometryLoader::create_volume_from_file(std::string const&
 
 					if (flags & VolumeLoader::NORMALIZE_SCALE) {
 						auto size(bbox.max - bbox.min);
-						auto max_size(std::max(std::max(size.x, size.y), size.z));
+                            auto max_size(std::max(std::max(size.x, size.y),
+                                                  size.z));
 						cached_node->scale(1.f / max_size);
 					}
 
@@ -175,7 +181,7 @@ std::shared_ptr<Node> GeometryLoader::create_volume_from_file(std::string const&
 		}
 
 		if (!cached_node) {
-			WARNING("Unable to load %s: Volume Type is not supported!", file_name.c_str());
+            Logger::LOG_WARNING << "Unable to load " << file_name << ": Volume Type is not supported!" << std::endl;
 		}
 	}
 
@@ -189,13 +195,14 @@ std::shared_ptr<Node> GeometryLoader::create_volume_from_file(std::string const&
 	return std::make_shared<TransformNode>(node_name);
 }
 
+
 std::shared_ptr<Node> GeometryLoader::create_vvolume_from_file(
-												std::string const&	node_name,
-												std::string const&	vfile_name,
-												unsigned			flags,
-												scm::size_t			vol_hdd_cache_size,
-												scm::size_t			vol_gpu_cache_size
-												)
+	std::string const&	node_name,
+	std::string const&	vfile_name,
+	unsigned			flags,
+	scm::size_t			vol_hdd_cache_size,
+	scm::size_t			vol_gpu_cache_size
+	)
 {
 
 	std::shared_ptr<Node> cached_node;
@@ -232,14 +239,14 @@ std::shared_ptr<Node> GeometryLoader::create_vvolume_from_file(
 					}
 
 				}
-			
+
 				fileload_succeed = true;
 				break;
 			}
 		}
 
 		if (!cached_node) {
-			WARNING("Unable to load %s: Volume Type is not supported!", vfile_name.c_str());
+			Logger::LOG_WARNING << "Unable to load " << vfile_name << ": Virtual Volume Type is not supported!" << std::endl;
 		}
 	}
 
@@ -253,15 +260,17 @@ std::shared_ptr<Node> GeometryLoader::create_vvolume_from_file(
 	return std::make_shared<TransformNode>(node_name);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
-void GeometryLoader::apply_fallback_material(std::shared_ptr<Node> const& root, std::string const& fallback_material) const {
+void GeometryLoader::apply_fallback_material(std::shared_ptr<Node> const& root,
+                                   std::string const& fallback_material) const {
 
   auto g_node(std::dynamic_pointer_cast<GeometryNode>(root));
 
   if (g_node) {
-    if (g_node->data.get_material().empty()) {
-      g_node->data.set_material(fallback_material);
+    if (g_node->get_material().empty()) {
+      g_node->set_material(fallback_material);
     }
   }
 

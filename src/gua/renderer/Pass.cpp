@@ -38,7 +38,6 @@ Pass::Pass(Pipeline* pipeline) : gbuffer_(nullptr), pipeline_(pipeline) {}
 
 void Pass::create(
     RenderContext const& ctx,
-    PipelineConfiguration const& config,
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> > const&
         layers) {
 
@@ -46,7 +45,7 @@ void Pass::create(
     gbuffer_->remove_buffers(ctx);
   }
 
-  gbuffer_ = std::make_shared<StereoBuffer>(ctx, config, layers);
+  gbuffer_ = std::make_shared<StereoBuffer>(ctx, pipeline_->config, layers);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -23,6 +23,7 @@
 #define GUA_ADD_PROPERTY_HPP
 
 #define GUA_ADD_PROPERTY(TYPE, NAME, VALUE)           \
+   /** \cond */                                                                \
   struct NAME##_struct {                              \
    public:                                            \
     NAME##_struct() : val_(VALUE) {}                  \
@@ -33,7 +34,11 @@
    private:                                           \
     TYPE val_;                                        \
   } NAME;                                             \
-  void set_##NAME(TYPE const & val) { NAME() = val; } \
+  /** \endcond */                                                              \
+  Configuration& set_##NAME(TYPE const & val) { NAME() = val; return *this; }  \
+  /**
+  The default value is VALUE.
+   */                                                                          \
   TYPE const& get_##NAME() const { return NAME(); }
 
 #endif  // GUA_ADD_PROPERTY_HPP

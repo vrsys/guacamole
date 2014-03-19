@@ -30,7 +30,6 @@
 namespace gua {
 
 class GBuffer;
-struct PipelineConfiguration;
 
 /**
  *
@@ -49,7 +48,6 @@ class CompositePass : public Pass {
 	virtual ~CompositePass();
 
   virtual void create(RenderContext const& ctx,
-                      PipelineConfiguration const& config,
                       std::vector<std::pair<BufferComponent,
                       scm::gl::sampler_state_desc> > const& layers);
 
@@ -80,7 +78,6 @@ protected :
   scm::gl::quad_geometry_ptr fullscreen_quad_;
 
   ShaderProgram* composite_shader_;
-  //ShaderProgram* v_composite_shader_;
   ShaderProgram* ray_generation_shader_;
 };
 

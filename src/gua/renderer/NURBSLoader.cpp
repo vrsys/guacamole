@@ -64,14 +64,13 @@ std::shared_ptr<Node> NURBSLoader::load(std::string const& file_name,
         file_name, std::make_shared<NURBS>(bezier_object));
 
     auto result = std::make_shared<GeometryNode>("unnamed_nurbs");
-    result->data.set_geometry(file_name);
-    result->data.set_material("");
+    result->set_geometry(file_name);
+    result->set_material("");
 
     return result;
 
   } catch (std::exception & e) {
-    WARNING("Warning: \"%s\" \n", e.what());
-    WARNING("Failed to load NURBS object \"%s\": ", file_name.c_str());
+    Logger::LOG_WARNING << "Failed to load NURBS object \"" << file_name << "\": " << e.what() << std::endl;
     return nullptr;
   }
 }

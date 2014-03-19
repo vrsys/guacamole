@@ -26,22 +26,43 @@
 #include <gua/scenegraph/TransformNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
-/**
- * This class is used to represent an empty node in the SceneGraph.
- *
- */
-
 namespace gua {
 
+/**
+ * This class is used to represent a level of detail node in the SceneGraph.
+ *
+ * While processing the LODNode, guacamole's renderer computes the distance
+ * between the LODNode's translation and the current camera's translation in
+ * world coordinates. The computed value is checked against a user-defined
+ * distances vector. That vector contains distance values which are being mapped
+ * to the LODNode's children sequentially. An entrance in the distances vector
+ * therefore describes upto which distance between the current camera and the
+ * LODNode the LODNode's child with the same index shall be visible.
+ *
+ * \ingroup gua_scenegraph
+ */
 class GUA_DLL LODNode : public TransformNode {
  public:
 
   struct Configuration {
+      /**
+       * A vector storing distances. Indices are mapped to the indices of the
+       * LODNode's children vector.
+       */
       GUA_ADD_PROPERTY(std::vector<float>,  lod_distances,   std::vector<float>());
   };
 
+  /**
+   * The LODNode's configuration.
+   */
   Configuration data;
 
+  /**
+   * Constructor.
+   *
+   * This constructs an empty LODNode.
+   *
+   */
   LODNode() {};
 
   /**
@@ -49,8 +70,11 @@ class GUA_DLL LODNode : public TransformNode {
    *
    * This constructs a LODNode with the given parameters.
    *
-   * \param name       The Node's name
-   * \param transform  The transformation of the object the Node contains.
+   * \param name           The name of the new LODNode.
+   * \param configuration  A configuration struct to define the LODNode's
+   *                       properties.
+   * \param transform      A matrix to describe the LODNode's
+   *                       transformation.
    */
   LODNode(std::string const& name,
           Configuration const& configuration = Configuration(),
@@ -58,12 +82,13 @@ class GUA_DLL LODNode : public TransformNode {
 
 
   /**
-   * Accepts a visitor and calls concrete visit method
+   * Accepts a visitor and calls concrete visit method.
    *
-   * This method implements the visitor pattern for Nodes
+   * This method implements the visitor pattern for Nodes.
    *
+   * \param visitor  A visitor to process the LODNode's data.
    */
-  /* virtual */ void accept(NodeVisitor&);
+  /* virtual */ void accept(NodeVisitor& visitor);
 
  private:
 

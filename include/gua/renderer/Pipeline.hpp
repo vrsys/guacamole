@@ -45,13 +45,23 @@ class FinalUberShader;
 class PostFXShader;
 class Serializer;
 
+/**
+ * A rendering pipeline describes how an image is generated.
+ *
+ * A rendering pipeline consists of multiple passes. These are rendering parts
+ * of (or the entire) SceneGraph to buffers. These buffers may be used as input
+ * for other passes. One final buffer of a final pass is shown on the screen.
+ */
+class GUA_DLL Pipeline {
+ public:
+
 enum BackgroundMode {
   COLOR = 0,
   SKYMAP_TEXTURE = 1,
   QUAD_TEXTURE = 2,
 };
 
-struct PipelineConfiguration {
+  struct Configuration {
 
   // camera for this pipeline
   GUA_ADD_PROPERTY(Camera, camera, Camera());
@@ -111,7 +121,7 @@ struct PipelineConfiguration {
   GUA_ADD_PROPERTY(utils::Color3f, fog_color, utils::Color3f());
 
   // background image / color
-  GUA_ADD_PROPERTY(BackgroundMode, background_mode, BackgroundMode::SKYMAP_TEXTURE);
+    GUA_ADD_PROPERTY(BackgroundMode, background_mode, BackgroundMode::COLOR);
   GUA_ADD_PROPERTY(std::string, background_texture, "");
   GUA_ADD_PROPERTY(utils::Color3f, background_color, utils::Color3f());
 
@@ -132,16 +142,6 @@ struct PipelineConfiguration {
   GUA_ADD_PROPERTY(int, max_tesselation, 4);
   GUA_ADD_PROPERTY(float, tesselation_max_error, 8.0f);
 };
-
-/**
- * A rendering pipeline describes how an image is generated.
- *
- * A rendering pipeline consists of multiple passes. These are rendering parts
- * of (or the entire) SceneGraph to buffers. These buffers may be used as input
- * for other passes. One final buffer of a final pass is shown on the screen.
- */
-class GUA_DLL Pipeline {
- public:
 
    enum PipelineStage {
     geometry = 0,
@@ -167,7 +167,7 @@ class GUA_DLL Pipeline {
    */
   virtual ~Pipeline();
 
-  PipelineConfiguration config;
+  Configuration config;
 
   void print_shaders(std::string const& directory) const;
 

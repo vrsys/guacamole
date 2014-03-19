@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/MaterialDatabase.hpp>
 #include <gua/renderer/GeometryLoader.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/scenegraph/RayNode.hpp>
@@ -33,19 +34,23 @@
 namespace gua {
 
 GeometryNode::GeometryNode(std::string const& name,
-                           Configuration const& configuration,
+                           std::string const& geometry,
+                           std::string const& material,
                            math::mat4 const& transform)
-    : Node(name, transform), data(configuration) {}
+    : Node(name, transform), geometry_(geometry), material_(material),
+      geometry_changed_(false), material_changed_(false) {}
 
 /* virtual */ void GeometryNode::accept(NodeVisitor& visitor) {
 
   visitor.visit(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void GeometryNode::update_bounding_box() const {
 
-  if (data.get_geometry() != "") {
-    auto geometry_bbox(GeometryDatabase::instance()->lookup(data.get_geometry())->get_bounding_box());
+  if (get_geometry() != "") {
+    auto geometry_bbox(GeometryDatabase::instance()->lookup(get_geometry())->get_bounding_box());
     bounding_box_ = transform(geometry_bbox, world_transform_);
 
     for (auto child : get_children()) {
@@ -56,6 +61,69 @@ void GeometryNode::update_bounding_box() const {
     Node::update_bounding_box();
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GeometryNode::update_cache() {
+
+    // The code below auto-loads a geometry if it's not already supported by
+    // the GeometryDatabase. It expects a geometry name like
+    //
+    // "type='file'&file='data/objects/monkey.obj'&id=0&flags=0"
+
+    if (geometry_changed_) {
+      if (geometry_ != "") {
+        if (!GeometryDatabase::instance()->is_supported(geometry_)) {
+          auto params(string_utils::split(geometry_, '&'));
+          if (params.size() == 4) {
+            if (params[0] == "type=file") {
+              auto tmp_filename(string_utils::split(params[1], '='));
+              auto tmp_flags(string_utils::split(params[3], '='));
+              if (tmp_filename.size() == 2 && tmp_flags.size() == 2) {
+                std::string filename(tmp_filename[1]);
+                std::string flags_string(tmp_flags[1]);
+                unsigned flags(0);
+                std::stringstream sstr(flags_string);
+                sstr >> flags;
+
+                GeometryLoader loader;
+                loader.load_geometry(filename, flags);
+
+              } else {
+                Logger::LOG_WARNING << "Failed to auto-load geometry " << geometry_ << ": Failed to extract filename and/or loading flags!" << std::endl;
+              }
+            } else {
+              Logger::LOG_WARNING << "Failed to auto-load geometry " << geometry_ << ": Type is not supported!" << std::endl;
+            }
+          } else {
+            Logger::LOG_WARNING << "Failed to auto-load geometry " << geometry_ << ": The name does not contain a type, file, id and flag parameter!" << std::endl;
+          }
+        }
+      }
+
+      geometry_changed_ = false;
+    }
+
+    // The code below auto-loads a material if it's not already supported by
+    // the MaterialDatabase. It expects a material name like
+    //
+    // data/materials/Stones.gmd
+
+    if (material_changed_) {
+      if (material_ != "") {
+        if (!MaterialDatabase::instance()->is_supported(material_)) {
+          auto mat = std::make_shared<Material>(material_, MaterialDescription(material_));
+          MaterialDatabase::instance()->add(material_, mat);
+        }
+      }
+
+      material_changed_ = false;
+    }
+
+    Node::update_cache();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void GeometryNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
                            Mask const& mask, std::set<PickResult>& hits) {
@@ -79,9 +147,9 @@ void GeometryNode::ray_test_impl(RayNode const& ray, PickResult::Options options
   }
 
   // bbox is intersected, but check geometry only if mask tells us to check
-  if (data.get_geometry() != "" && mask.check(get_groups())) {
+  if (get_geometry() != "" && mask.check(get_groups())) {
 
-    auto geometry(GeometryDatabase::instance()->lookup(data.get_geometry()));
+    auto geometry(GeometryDatabase::instance()->lookup(get_geometry()));
 
     if (geometry) {
 
@@ -183,7 +251,7 @@ void GeometryNode::ray_test_impl(RayNode const& ray, PickResult::Options options
 }
 
 std::shared_ptr<Node> GeometryNode::copy() const {
-  return std::make_shared<GeometryNode>(get_name(), data, get_transform());
+  return std::make_shared<GeometryNode>(get_name(), geometry_, material_, get_transform());
 }
 
 }

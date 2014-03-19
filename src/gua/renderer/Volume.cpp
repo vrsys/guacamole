@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #if ASSIMP_VERSION == 3
@@ -73,7 +73,7 @@ namespace gua {
 
 		unsigned max_dimension_volume = scm::math::max(scm::math::max(_volume_dimensions.x, _volume_dimensions.y), _volume_dimensions.z);
 
-		step_size(1.0f / (float)max_dimension_volume);
+		step_size(0.5f / (float)max_dimension_volume);
 
 		_volume_dimensions_normalized = math::vec3((float)_volume_dimensions.x / (float)max_dimension_volume,
 													(float)_volume_dimensions.y / (float)max_dimension_volume,
@@ -133,7 +133,6 @@ namespace gua {
 		std::unique_lock<std::mutex> lock(upload_mutex_);
 
 		if (_volume_boxes_ptr.size() <= ctx.id){
-            std::cout << "Resize Ressoures for ctx.id " << ctx.id << std::endl;
 			_volume_texture_ptr.resize(ctx.id + 1);
 			_transfer_texture_ptr.resize(ctx.id + 1);
 			_volume_boxes_ptr.resize(ctx.id + 1);
@@ -243,7 +242,7 @@ namespace gua {
 
 		if (!scm::data::build_lookup_table(color_lut, in_color, in_size)
 			|| !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {
-            WARNING("volume_data::update_color_alpha_map(): error during lookuptable generation");
+			Logger::LOG_WARNING << "volume_data::update_color_alpha_map(): error during lookuptable generation" << std::endl;
 			return false;
 		}
 		scm::scoped_array<float> combined_lut;
@@ -267,7 +266,7 @@ namespace gua {
 		//MESSAGE("uploading texture data done.");
 
 		if (!res) {
-			WARNING("Volume::update_color_alpha_map(): error during color map texture generation.");
+			Logger::LOG_WARNING << "Volume::update_color_alpha_map(): error during color map texture generation." << std::endl;
 			return false;
 		}
 
@@ -313,7 +312,7 @@ namespace gua {
 			upload_to(ctx);
 		}
 
-        scm::gl::context_all_guard vig(ctx.render_context);
+        scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
         ctx.render_context->set_rasterizer_state(_rstate[ctx.id]);
 

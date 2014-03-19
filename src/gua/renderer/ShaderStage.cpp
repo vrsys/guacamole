@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
 
@@ -132,8 +132,7 @@ ShaderStage::json_to_uniform(Json::Value const & value) {
 std::set<std::string> ShaderStage::json_to_set(Json::Value const & value) {
     std::set<std::string> set;
     if (!value.isArray()) {
-        WARNING("Unable to parse Element: %s doesn't contain an array!",
-                value.asCString());
+        Logger::LOG_WARNING << "Unable to parse Element: " << value.asCString() << " doesn't contain an array!" << std::endl;
         return set;
     }
 

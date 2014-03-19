@@ -29,13 +29,12 @@
 #include <gua/renderer/NURBSLoader.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/renderer/Volume.hpp>
 #include <gua/renderer/LargeVolume.hpp>
 
 
 #include <gua/utils/TextFile.hpp>
-#include <gua/utils/logger.hpp>
 #include <gua/utils/string_utils.hpp>
 
 
@@ -75,7 +74,7 @@ namespace gua {
 		}
 		else {
 						
-			if (is_supported(_supported_file_extensions, file_name)) {
+			if (is_supported(file_name)) {				
 				cached_node = load(file_name, flags);
 				cached_node->update_cache();
 				loaded_files_.insert(std::make_pair(key, cached_node));
@@ -99,7 +98,7 @@ namespace gua {
 			}
 			
 			if (!cached_node) {
-				WARNING("Unable to load %s: Volume Type is not supported!", file_name.c_str());
+				Logger::LOG_WARNING << "Unable to load " << file_name << ": Volume Type is not supported!" << std::endl;
 			}
 		}
 				
@@ -133,7 +132,7 @@ namespace gua {
 		}
 		else {
 			
-			if (is_supported(_supported_file_extensions, vfile_name)) {
+			if (is_supported(vfile_name)) {
 				cached_node = load(vfile_name, vol_hdd_cache_size, vol_gpu_cache_size);
 				cached_node->update_cache();
 				loaded_files_.insert(std::make_pair(key, cached_node));
@@ -157,7 +156,7 @@ namespace gua {
 			}
 
 			if (!cached_node) {
-				WARNING("Unable to load %s: Volume Type is not supported!", vfile_name.c_str());
+				Logger::LOG_WARNING << "Unable to load " << vfile_name << ": Volume Type is not supported!" << std::endl;
 			}
 		}
 
@@ -185,8 +184,7 @@ namespace gua {
 
 		}
 		catch (std::exception &e) {
-			WARNING("Warning: \"%s\" \n", e.what());
-			WARNING("Failed to load Volume object \"%s\": ", file_name.c_str());
+			Logger::LOG_WARNING << "Failed to load Volume object \"" << file_name << "\": " << e.what() << std::endl;
 			return nullptr;
 		}
 	}
@@ -208,8 +206,7 @@ namespace gua {
 
 		}
 		catch (std::exception &e) {
-			WARNING("Warning: \"%s\" \n", e.what());
-			WARNING("Failed to load Volume object \"%s\": ", file_name.c_str());
+			Logger::LOG_WARNING << "Failed to load Volume object \"" << file_name << "\": " << e.what() << std::endl;
 			return nullptr;
 		}
 	}
@@ -224,13 +221,4 @@ namespace gua {
 			0;
 	}
 
-	bool VolumeLoader::is_supported(boost::unordered_set<std::string> supported_file_extensions, std::string const& file_name) const {
-		std::vector<std::string> filename_decomposition =
-			gua::string_utils::split(file_name, '.');
-		return filename_decomposition.empty()
-			? false
-			: supported_file_extensions.count(filename_decomposition.back()) >
-			0;
-	}
-	
 }

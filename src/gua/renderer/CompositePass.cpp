@@ -53,7 +53,7 @@ CompositePass::CompositePass(Pipeline* pipeline) :
 
     ray_generation_shader_->create_from_sources(ray_generation_vertex_shader, ray_generation_fragment_shader);
 
-#if 0
+#if 1
     composite_shader_->create_from_files("compos_n.vert",
                                          "compos_n.frag");
 #else
@@ -90,13 +90,11 @@ CompositePass::~CompositePass() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CompositePass::create(RenderContext const& ctx,
-    PipelineConfiguration const& config, std::vector<std::pair<BufferComponent,
+void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<BufferComponent,
     scm::gl::sampler_state_desc>> const& layers) {
 
   // reuse gbuffer from shading-pass
   gbuffer_ = inputs_[Pipeline::PipelineStage::shading];
-
 
   if (volume_raygeneration_buffer_) {
     volume_raygeneration_buffer_->remove_buffers(ctx);
@@ -112,8 +110,8 @@ void CompositePass::create(RenderContext const& ctx,
 
 
   volume_raygeneration_buffer_ = new GBuffer(layer_4f_desc,
-                                      config.get_left_resolution()[0],
-                                      config.get_left_resolution()[1]);
+                                      pipeline_->config.get_left_resolution()[0],
+                                      pipeline_->config.get_left_resolution()[1]);
 
   volume_raygeneration_buffer_->create(ctx);
 }
@@ -154,11 +152,11 @@ void CompositePass::create(RenderContext const& ctx,
 			for (auto const& node : scene.volumenodes_) {
 								
 				auto volume =
-					std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
+					std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node->data.get_volume()));
 
 				if (volume) {
 					ray_generation_shader_->set_uniform(
-						ctx, node.transform, "gua_model_matrix");
+                                            ctx, node->get_world_transform(), "gua_model_matrix");
 
 					ray_generation_shader_->set_uniform(
 						ctx, 1, "volume_frag_id");
@@ -174,12 +172,12 @@ void CompositePass::create(RenderContext const& ctx,
 			for (auto const& node : scene.vvolumenodes_) {
 										
 				auto vlargevolume =
-					std::static_pointer_cast<gua::LargeVolume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
+					std::static_pointer_cast<gua::LargeVolume>(GeometryDatabase::instance()->lookup(node->data.get_volume()));
 
 				if (vlargevolume) {
 
 					ray_generation_shader_->set_uniform(
-						ctx, node.transform, "gua_model_matrix");
+						ctx, node->get_world_transform(), "gua_model_matrix");
 
 					ray_generation_shader_->set_uniform(
 						ctx, 2, "volume_frag_id");
@@ -197,11 +195,9 @@ void CompositePass::create(RenderContext const& ctx,
 	volume_raygeneration_buffer_->unbind(ctx);
 	
 	scm::gl::context_all_guard      cug(ctx.render_context);
-	scm::gl::context_vtexture_guard vtg(ctx.render_context);
 		
 	// 2. render fullscreen quad for compositing and volume ray castinG
 	Pass::set_camera_matrices(*composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
-	//Pass::set_camera_matrices(*v_composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
 
 	auto input_tex(inputs_[Pipeline::shading]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
 	auto normal_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
@@ -237,10 +233,10 @@ void CompositePass::create(RenderContext const& ctx,
 		for (auto const& node : scene.volumenodes_) {
 
 			auto volume =
-				std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
+				std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node->data.get_volume()));
 
 			if (volume) {
-				composite_shader_->set_uniform(ctx, node.transform, "gua_model_matrix");
+				composite_shader_->set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
                 composite_shader_->set_uniform(ctx, scene.frustum.get_clip_near_plane(), "near_plane");                
                 composite_shader_->set_uniform(ctx, scene.frustum.get_clip_near(), "near_plane_d");
                 composite_shader_->set_uniform(ctx, scene.frustum.get_clip_far(), "far_plane_d");                
@@ -259,10 +255,10 @@ void CompositePass::create(RenderContext const& ctx,
         for (auto const& node : scene.vvolumenodes_) {
 
             auto vlargevolume =
-                std::static_pointer_cast<gua::LargeVolume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
+                std::static_pointer_cast<gua::LargeVolume>(GeometryDatabase::instance()->lookup(node->data.get_volume()));
 
             if (vlargevolume) {
-                composite_shader_->set_uniform(ctx, node.transform, "gua_model_matrix");
+                composite_shader_->set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
                 composite_shader_->set_uniform(ctx, scene.frustum.get_clip_near_plane(), "near_plane");
                 composite_shader_->set_uniform(ctx, scene.frustum.get_clip_near(), "near_plane_d");
                 composite_shader_->set_uniform(ctx, scene.frustum.get_clip_far(), "far_plane_d");

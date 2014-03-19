@@ -29,30 +29,66 @@
 // external headers
 #include <string>
 
+namespace gua {
+
 /**
  * This class is used to represent a volume in the SceneGraph.
  *
+ * \ingroup gua_scenegraph
  */
-
-namespace gua {
-
 class GUA_DLL VolumeNode : public Node {
   public:
 
     struct Configuration {
+      /**
+       * A string referring to an entry in guacamole's GeometryDatabase.
+       */
       GUA_ADD_PROPERTY(std::string, volume, "gua_volume_default");
     };
 
+    /**
+     * The VolumeNode's configuration.
+     */
     Configuration data;
 
+    /**
+     * Constructor.
+     *
+     * This constructs an empty VolumeNode.
+     *
+     */
     VolumeNode() {};
 
+    /**
+     * Constructor.
+     *
+     * This constructs a VolumeNode with the given parameters.
+     *
+     * \param name           The name of the new VolumeNode.
+     * \param configuration  A configuration struct to define the VolumeNode's
+     *                       properties.
+     * \param transform      A matrix to describe the VolumeNode's
+     *                       transformation.
+     */
     VolumeNode(std::string const& name,
                Configuration const& configuration = Configuration(),
                math::mat4 const& transform = math::mat4::identity());
 
-    /*virtual*/ void accept(NodeVisitor&);
+    /**
+     * Accepts a visitor and calls concrete visit method.
+     *
+     * This method implements the visitor pattern for Nodes.
+     *
+     * \param visitor  A visitor to process the VolumeNode's data.
+     */
+    /*virtual*/ void accept(NodeVisitor& visitor);
 
+    /**
+     * Updates a VolumeNode's BoundingBox.
+     *
+     * The bounding box is updated according to the transformation matrices of
+     * all children.
+     */
     /*virtual*/ void update_bounding_box() const;
 
     /*virtual*/ void ray_test_impl(RayNode const& ray, 

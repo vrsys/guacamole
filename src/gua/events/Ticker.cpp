@@ -38,6 +38,14 @@ namespace gua {
       delete timer_;
     }
 
+    void Ticker::set_tick_time(double tick_time) {
+      tick_time_ = tick_time;
+    }
+
+    double Ticker::get_tick_time() const {
+      return tick_time_;
+    }
+
     void Ticker::self_callback(int revents)
     {
       async_wait();

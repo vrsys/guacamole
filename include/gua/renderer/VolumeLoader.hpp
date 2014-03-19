@@ -26,7 +26,6 @@
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
 #include <gua/renderer/LoaderBase.hpp>
-#include <gua/math.hpp>
 
 // external headers
 #include <string>
@@ -50,11 +49,9 @@ namespace gua {
 
 		enum Flags {
 			DEFAULTS = 0,
-			LOAD_MATERIALS = 1 << 0,
-			OPTIMIZE_GEOMETRY = 1 << 1,
-			MAKE_PICKABLE = 1 << 2,
-			NORMALIZE_POSITION = 1 << 3,
-			NORMALIZE_SCALE = 1 << 4
+			MAKE_PICKABLE = 1 << 0,
+			NORMALIZE_POSITION = 1 << 1,
+			NORMALIZE_SCALE = 1 << 2
 		};
 
 		/**
@@ -103,14 +100,13 @@ namespace gua {
 		//	unsigned buffer_size);
 
 		/* virtual */ bool is_supported(std::string const& file_name) const;
-		/* virtual */ bool is_supported(boost::unordered_set<std::string> supported_file_extensions, std::string const& file_name) const;
 
 	private:
 		
 		static std::unordered_map<std::string, std::shared_ptr<Node>> loaded_files_;
 		
 		boost::unordered_set<std::string> _supported_file_extensions;
-		boost::unordered_set<std::string> _supported_vfile_extensions;
+		//boost::unordered_set<std::string> _supported_vfile_extensions;
 
 	};
 

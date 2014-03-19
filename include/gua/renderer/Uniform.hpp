@@ -28,7 +28,7 @@
 #include <gua/renderer/Texture3D.hpp>
 #include <gua/databases/TextureDatabase.hpp>
 #include <gua/utils/Color3f.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <string>
@@ -252,7 +252,9 @@ template <> class UniformValue<std::string> : public UniformValueBase {
              unsigned position = 0) const {
 
     auto texture(TextureDatabase::instance()->lookup(value_));
+    if (texture) {
     program->uniform(name, position, texture->get_handle(context));
+  }
   }
 
   std::string const& value() const { return value_; }

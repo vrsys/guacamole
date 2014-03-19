@@ -25,7 +25,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
@@ -147,6 +147,13 @@ math::mat4 Node::get_world_transform() const {
         return parent_->get_world_transform() * get_transform();
 
     return get_transform();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::mat4 Node::get_cached_world_transform() const {
+
+    return world_transform_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -305,6 +312,7 @@ std::shared_ptr<Node> Node::deep_copy() const {
 
     copied_node->bounding_box_ = bounding_box_;
     copied_node->user_data_    = user_data_;
+    copied_node->world_transform_   = world_transform_;
 
     return copied_node;
 }

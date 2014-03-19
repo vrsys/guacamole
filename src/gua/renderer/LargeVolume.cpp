@@ -152,8 +152,8 @@ namespace gua {
 		if (_vtexture_info.octree_header._data_channel_count == 2 && _vtexture_info.octree_header._data_channel_byte_per_channel == 1)
 			_vtexture_info.vol_data_format = scm::gl::FORMAT_RG_8;
 		else
-			WARNING("unsupportet octree data format ( %c ) ", vfile_name.c_str());
-
+			Logger::LOG_WARNING << "unsupportet octree data format " << vfile_name << ": Virtual Volume Type is not supported!" << std::endl;
+			
 		//std::cout << _vtexture_info.vfile_name << std::endl
 		//	<< "VVolume Dimensions: "<< _vtexture_info.octree_header._volume_dimensions << std::endl;
 
@@ -295,7 +295,7 @@ namespace gua {
 
 		if (!_volume_vtexture_ptr){
 			std::cout << _volume_file_path << std::endl;
-			WARNING("%s error!", _volume_file_path.c_str());
+			Logger::LOG_WARNING << "Error " << _volume_file_path << ": !_volume_vtexture_ptr" << std::endl;
 		}
 		//else{
 			//MESSAGE("%s loaded!", _volume_file_path.c_str());
@@ -410,8 +410,8 @@ namespace gua {
 		alpha_lut.reset(new float[in_size]);
 
 		if (!scm::data::build_lookup_table(color_lut, in_color, in_size)
-			|| !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {
-			MESSAGE("volume_data::update_color_alpha_map(): error during lookuptable generation");
+			|| !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {			
+			Logger::LOG_WARNING << "volume_data::update_color_alpha_map(): error during lookuptable generation" << std::endl;
 			return false;
 		}
 		scm::scoped_array<float> combined_lut;
@@ -435,7 +435,7 @@ namespace gua {
 		//MESSAGE("uploading texture data done.");
 
 		if (!res) {
-			MESSAGE("LargeVolume::update_color_alpha_map(): error during color map texture generation.");
+			Logger::LOG_WARNING << "volume_data::update_color_alpha_map(): error during alpha lookuptable generation" << std::endl;
 			return false;
 		}
 
