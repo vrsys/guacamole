@@ -56,6 +56,8 @@ class GUA_DLL Renderer {
    *                         pipeline a RenderClient is created.
    */
   Renderer(std::vector<Pipeline*> const& pipelines);
+  Renderer(Renderer const&) = delete;
+  Renderer& operator=(Renderer const&) = delete;
 
   /**
   *
@@ -77,7 +79,6 @@ class GUA_DLL Renderer {
   typedef std::shared_ptr<gua::concurrent::Doublebuffer<Item> > Mailbox;
   typedef std::pair<Mailbox, std::thread> Renderclient;
 
-  Renderclient make_renderclient(Pipeline* pipe);
   void renderclient(Mailbox& in, Pipeline* pipe);
 
   std::vector<Renderclient> render_clients_;
