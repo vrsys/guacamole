@@ -19,76 +19,80 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RENDERCLIENT_HPP
-#define GUA_RENDERCLIENT_HPP
+#ifndef GUA_DOUBLEBUFFER_HPP
+#define GUA_DOUBLEBUFFER_HPP
 
-// external headers
+#include <atomic>
+#include <mutex>
 #include <thread>
-#include <functional>
-
-// guacamole headers
-#include <gua/utils/Doublebuffer.hpp>
-#include <gua/utils/FpsCounter.hpp>
+#include <iostream>
+#include <condition_variable>
+#include <boost/optional.hpp>
 
 namespace gua {
+namespace concurrent {
 
-/**
- * This class represents one render thread.
- *
- * The queue_draw method is directly called by the Renderer. Internally it
- * uses a threaded rendering loop which always waits for queue_draw calls. When
- * it fails to finish rendering before the next queue_draw is called, it will
- * ignore this call.
- */
-template <typename T> class RenderClient {
+template <typename T> class Doublebuffer {
  public:
-  /**
-   * Constructor.
-   *
-   * This constructs a new RenderClient.
-   *
-   */
-  //RenderClient(std::function<void(T const&, float)> const& fun)
-  template <typename F> RenderClient(F&& fun) : forever_(), doublebuffer_() {
+  Doublebuffer()
+      : front_()
+      , back_()
+      , updated_(false)
+      , copy_mutex_()
+      , copy_cond_var_()
+      , shutdown_(false)
+    {}
 
-    forever_ = std::thread([this, fun]() {
-      FpsCounter fpsc(20);
-      fpsc.start();
+  bool push_back(T const& scene_graphs) {
+    if (shutdown_)
+      return false;
+    {
+      // blocks until ownership can be obtained for the current thread.
+      std::lock_guard<std::mutex> lock(copy_mutex_);
+      back_ = scene_graphs;
+      updated_ = true;
+    }
+    copy_cond_var_.notify_one();
+    return true;
+  }
 
-      while (true) {
-        auto sg = this->doublebuffer_.read();
-        fun(sg, fpsc.fps);
-        fpsc.step();
+  boost::optional<T> read() {
+    if (shutdown_) {
+      return boost::optional<T>();
+    }
+    {
+      std::unique_lock<std::mutex> lock(copy_mutex_);
+      while (!updated_ && !shutdown_) {
+        copy_cond_var_.wait(lock);
       }
-    });
+      if (shutdown_) {
+        return boost::optional<T>();
+      }
+      updated_ = false;
+      std::swap(front_, back_);
+    }
+
+    return boost::make_optional(front_);
+  }
+  inline void close() {
+    shutdown_ = true;
+    copy_cond_var_.notify_all();
   }
 
-  /**
-   * Destructor.
-   *
-   * This destroys a RenderClient.
-   */
-  ~RenderClient() { forever_.detach(); }
-
-  /**
-   * Draw the scene.
-   *
-   * This requests a drawing operation of the given graph. If the client
-   * is still processing the last call of this function it will be
-   * ignored.
-   *
-   * \param graph            A pointer to the graph which
-   *                         should be drawn.
-   */
-  inline void queue_draw(T const& scene_graphs) {
-    doublebuffer_.write_blocked(scene_graphs);
-  }
+  bool closed() { return shutdown_; }
 
  private:
-  std::thread forever_;
-  utils::Doublebuffer<T> doublebuffer_;
+  T front_;
+  T back_;
+  bool updated_;
+
+  std::mutex copy_mutex_;
+  std::condition_variable copy_cond_var_;
+  std::atomic<bool> shutdown_;
 };
 
 }
 
-#endif  // GUA_RENDERCLIENT_HPP
+}
+
+#endif  // GUA_DOUBLEBUFFER_HPP
