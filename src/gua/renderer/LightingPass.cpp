@@ -38,6 +38,7 @@ namespace gua {
 LightingPass::LightingPass(Pipeline* pipeline)
     : GeometryPass(pipeline),
       shadow_map_(pipeline),
+      initialized_(false),
       shader_(new LightingUberShader),
       light_sphere_(nullptr),
       light_cone_(nullptr)
@@ -97,28 +98,31 @@ void LightingPass::rendering(SerializedScene const& scene,
                              CameraMode eye,
                              Camera const& camera,
                              FrameBufferObject* target) {
-    if (!depth_stencil_state_)
-        depth_stencil_state_ =
-            ctx.render_device->create_depth_stencil_state(false, false);
+    if (!initialized_) {
+      if (!depth_stencil_state_)
+          depth_stencil_state_ =
+              ctx.render_device->create_depth_stencil_state(false, false);
 
-    if (!rasterizer_state_front_)
-        rasterizer_state_front_ = ctx.render_device
-            ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT);
+      if (!rasterizer_state_front_)
+          rasterizer_state_front_ = ctx.render_device
+              ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT);
 
-    if (!rasterizer_state_back_)
-        rasterizer_state_back_ = ctx.render_device
-            ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
+      if (!rasterizer_state_back_)
+          rasterizer_state_back_ = ctx.render_device
+              ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
 
-    if (!blend_state_)
-        blend_state_ = ctx.render_device->create_blend_state(true,
-                                                             scm::gl::FUNC_ONE,
-                                                             scm::gl::FUNC_ONE,
-                                                             scm::gl::FUNC_ONE,
-                                                             scm::gl::FUNC_ONE);
+      if (!blend_state_)
+          blend_state_ = ctx.render_device->create_blend_state(true,
+                                                               scm::gl::FUNC_ONE,
+                                                               scm::gl::FUNC_ONE,
+                                                               scm::gl::FUNC_ONE,
+                                                               scm::gl::FUNC_ONE);
 
-    if (!fullscreen_quad_)
-      fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-        ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+      if (!fullscreen_quad_)
+        fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+          ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+      initialized_ = true;
+    }
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
     ctx.render_context->set_rasterizer_state(rasterizer_state_back_);
