@@ -53,7 +53,7 @@ CompositePass::CompositePass(Pipeline* pipeline) :
 
     ray_generation_shader_->create_from_sources(ray_generation_vertex_shader, ray_generation_fragment_shader);
 
-#if 1
+#if 0
     composite_shader_->create_from_files("compos_n.vert",
                                          "compos_n.frag");
 #else
@@ -195,6 +195,7 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
 	volume_raygeneration_buffer_->unbind(ctx);
 	
 	scm::gl::context_all_guard      cug(ctx.render_context);
+	scm::gl::context_vtexture_guard vtg(ctx.render_context);
 		
 	// 2. render fullscreen quad for compositing and volume ray castinG
 	Pass::set_camera_matrices(*composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
