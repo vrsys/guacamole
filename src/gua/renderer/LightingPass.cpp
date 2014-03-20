@@ -37,10 +37,11 @@ namespace gua {
 
 LightingPass::LightingPass(Pipeline* pipeline)
     : GeometryPass(pipeline),
+      shadow_map_(pipeline),
       shader_(new LightingUberShader),
       light_sphere_(nullptr),
-      light_cone_(nullptr),
-      shadow_map_(pipeline) {
+      light_cone_(nullptr)
+  {
     light_sphere_ = GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
     light_cone_ = GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
 }
