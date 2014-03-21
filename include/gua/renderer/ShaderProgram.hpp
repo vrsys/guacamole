@@ -180,13 +180,10 @@ class GUA_DLL ShaderProgram {
 
   mutable std::vector<scm::gl::program_ptr> programs_;
 
-
  private:  // attributes
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-  mutable boost::mutex upload_mutex_;
-#else
+
   mutable std::mutex upload_mutex_;
-#endif
+
   std::vector<ShaderProgramStage> stages_;
   std::list<std::string> interleaved_stream_capture_;
   bool in_rasterization_discard_;

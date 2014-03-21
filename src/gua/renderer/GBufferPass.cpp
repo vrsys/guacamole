@@ -147,6 +147,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
+    ////////////////////////////////////////////////////////////////////
+    // set frame-consistent uniforms for mesh ubershader
+    ////////////////////////////////////////////////////////////////////
     mesh_shader_->set_material_uniforms(
         scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
     mesh_shader_->set_material_uniforms(
@@ -155,17 +158,20 @@ void GBufferPass::rendering(SerializedScene const& scene,
     mesh_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
     mesh_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
 
-    video3D_shader_->set_material_uniforms( //TODO
-        scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
-    video3D_shader_->set_material_uniforms(
-        scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
-
     Pass::bind_inputs(*mesh_shader_, eye, ctx);
     Pass::set_camera_matrices(*mesh_shader_,
                               camera,
                               pipeline_->get_current_scene(eye),
                               eye,
                               ctx);
+
+    ////////////////////////////////////////////////////////////////////
+    // set frame-consistent uniforms for video3d ubershader
+    ////////////////////////////////////////////////////////////////////
+    video3D_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+    video3D_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
 
     Pass::bind_inputs(*video3D_shader_, eye, ctx);
     Pass::set_camera_matrices(*video3D_shader_,
@@ -174,6 +180,45 @@ void GBufferPass::rendering(SerializedScene const& scene,
                               eye,
                               ctx);
 
+    for (auto const& pass : video3D_shader_->get_pre_passes())
+    {
+      Pass::bind_inputs(*pass, eye, ctx);
+      Pass::set_camera_matrices(*pass,
+        camera,
+        pipeline_->get_current_scene(eye),
+        eye,
+        ctx);
+    }
+
+    ////////////////////////////////////////////////////////////////////
+    // set frame-consistent uniforms for nurbs ubershader
+    ////////////////////////////////////////////////////////////////////
+    nurbs_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+    nurbs_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+
+    Pass::bind_inputs(nurbs_shader_->get_pre_shader(), eye, ctx);
+    Pass::bind_inputs(*nurbs_shader_, eye, ctx);
+
+    Pass::set_camera_matrices(nurbs_shader_->get_pre_shader(),
+      camera,
+      pipeline_->get_current_scene(eye),
+      eye,
+      ctx);
+    Pass::set_camera_matrices(*nurbs_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+
+    // TODO: add this functionality to NURBS!
+    // nurbs_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
+    // nurbs_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+
+    nurbs_shader_->set_uniform(ctx,
+      pipeline_->config.get_max_tesselation(),
+      "gua_max_tesselation");
+
+    ////////////////////////////////////////////////////////////////////
+    // draw
+    ////////////////////////////////////////////////////////////////////
     if (!scene.meshnodes_.empty()) {
 
         // draw meshes
@@ -269,29 +314,6 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     if (!scene.nurbsnodes_.empty()) {
         // draw nurbs
-        Pass::bind_inputs(nurbs_shader_->get_pre_shader(), eye, ctx);
-        Pass::bind_inputs(*nurbs_shader_, eye, ctx);
-
-        Pass::set_camera_matrices(nurbs_shader_->get_pre_shader(),
-                                  camera,
-                                  pipeline_->get_current_scene(eye),
-                                  eye,
-                                  ctx);
-        Pass::set_camera_matrices(
-            *nurbs_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
-
-        nurbs_shader_->set_material_uniforms(
-            scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
-        nurbs_shader_->set_material_uniforms(
-            scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
-
-        // TODO: add this functionality to NURBS!
-        // nurbs_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
-        // nurbs_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
-
-        nurbs_shader_->set_uniform(ctx,
-                                   pipeline_->config.get_max_tesselation(),
-                                   "gua_max_tesselation");
 
         for (auto const& node : scene.nurbsnodes_)
             {
@@ -350,36 +372,17 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     if (!scene.video3Dnodes_.empty()) {
 
-        // draw video3Ds
-        video3D_shader_->use(ctx);
-        {
+      for (auto const& node : scene.video3Dnodes_)
+      {
+        auto normal_matrix = scm::math::transpose(scm::math::inverse(node->get_cached_world_transform()));
+        auto model_matrix = node->get_cached_world_transform();
 
-            for (auto const& node : scene.video3Dnodes_) {
-
-                auto video3d =
-                  Video3DDatabase::instance()->lookup(node->get_ksfile());
-                auto material =
-                  MaterialDatabase::instance()->lookup(node->get_material());
-
-                if (material && video3d) 
-                {
-                    video3D_shader_->set_uniform(
-                      ctx, material->get_id(), "gua_material_id");
-                    video3D_shader_->set_uniform(
-                      ctx, node->get_cached_world_transform(), "gua_model_matrix");
-                    video3D_shader_->set_uniform(
-                      ctx,
-                      scm::math::transpose(
-                      scm::math::inverse(node->get_cached_world_transform())),
-                      "gua_normal_matrix");
-
-                    video3d->set_uniforms(ctx, video3D_shader_);
-
-                    video3d->draw(ctx);
-                }
-            }
-        }
-        video3D_shader_->unuse(ctx);
+        video3D_shader_->draw(ctx,
+                              node->get_ksfile(),
+                              node->get_material(),
+                              model_matrix,
+                              normal_matrix);
+      }
     }
 
     ctx.render_context->set_rasterizer_state(bbox_rasterizer_state_);

@@ -100,13 +100,10 @@ namespace sys{
       }
     }
 
-    std::cout << numbytes << std::endl;
-
     std::size_t strpos_before_read = m_file.tellg();
     m_file.read((char*)buffer, numbytes);
     std::size_t strpos_after_read = m_file.tellg();
     std::size_t  bytes = strpos_after_read - strpos_before_read;
-    std::cout << bytes << std::endl;
 
     m_bytes_r += bytes;
 

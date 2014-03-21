@@ -30,54 +30,55 @@
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
 
-ShaderProgram::ShaderProgram()
+  ShaderProgram::ShaderProgram()
     : programs_(), upload_mutex_(), stages_(), interleaved_stream_capture_() {}
 
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
 
-ShaderProgram::~ShaderProgram() {}
+  ShaderProgram::~ShaderProgram() {}
 
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
 
-void ShaderProgram::save_to_file(std::string const& directory,
-                                 std::string const& name) const {
+  void ShaderProgram::save_to_file(std::string const& directory,
+    std::string const& name) const {
 
     auto save = [](std::string const & content, std::string const & file) {
-        gua::TextFile text(file);
-        //text.set_content(string_utils::format_code(content));
-        text.set_content(content);
-        text.save(true);
+      gua::TextFile text(file);
+      //text.set_content(string_utils::format_code(content));
+      text.set_content(content);
+      text.save(true);
     }
     ;
 
     for (auto const& s : stages_) {
       std::string file_extension;
       switch (s.type) {
-          case scm::gl::STAGE_VERTEX_SHADER:
-            file_extension = ".vert";
-            break;
-          case scm::gl::STAGE_GEOMETRY_SHADER:
-            file_extension = ".geom";
-            break;
-          case scm::gl::STAGE_FRAGMENT_SHADER:
-            file_extension = ".frag";
-            break;
-          case scm::gl::STAGE_TESS_EVALUATION_SHADER:
-            file_extension = ".teval";
-            break;
-          case scm::gl::STAGE_TESS_CONTROL_SHADER:
-            file_extension = ".tctrl";
-            break;
-          default:
-            WARNING("Shader stage undefined or unsupported");
+      case scm::gl::STAGE_VERTEX_SHADER:
+        file_extension = ".vert";
+        break;
+      case scm::gl::STAGE_GEOMETRY_SHADER:
+        file_extension = ".geom";
+        break;
+      case scm::gl::STAGE_FRAGMENT_SHADER:
+        file_extension = ".frag";
+        break;
+      case scm::gl::STAGE_TESS_EVALUATION_SHADER:
+        file_extension = ".teval";
+        break;
+      case scm::gl::STAGE_TESS_CONTROL_SHADER:
+        file_extension = ".tctrl";
+        break;
+      default:
+        WARNING("Shader stage undefined or unsupported");
       }
       ;
 
       save(string_utils::format_code(s.source), directory + "/" + name + file_extension);
     }
-}
+  }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
