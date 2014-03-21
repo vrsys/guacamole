@@ -48,8 +48,7 @@ find_package(Bullet REQUIRED)
 find_package(Json REQUIRED)
 
 set(LIBS
-    ${SCHISM_LIBRARIES}
-    scm_large_data
+    ${SCHISM_LIBRARIES}    
     ${BOOST_LIBRARIES}
     ${ASSIMP_LIBRARIES}
     ${JSON_LIBRARIES}
@@ -71,15 +70,13 @@ set(LIB_PATHS
 set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/build
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-	${SCHISM_LARGE_DATA_SHADER_DIR}
-    ${SCHISM_INCLUDE_DIRS}
+	  ${SCHISM_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIRS}
     ${JSON_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
-    ${BULLET_INCLUDE_DIRS}
-    /opt/schism/current/projects/schism_large_data/scm_large_data/src
+    ${BULLET_INCLUDE_DIRS}    
 )
 
 if (NOT CMAKE_BUILD_TYPE)
