@@ -495,9 +495,7 @@ std::string const GBufferVideo3DUberShader::_blend_pass_fragment_shader(UberShad
 
   if (path_to_shading_model.empty())
   {
-    WARNING("Could not find shading model \"%s\": "
-      "File does not exist!",
-      video3d_shading_model_name.c_str());
+    Logger::LOG_WARNING << "Could not find shading model " << video3d_shading_model_name.c_str() << " : File does not exist!" << std::endl;
   }
 
 std::string fragment_shader = R"(

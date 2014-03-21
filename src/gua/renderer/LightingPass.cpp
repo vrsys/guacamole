@@ -37,10 +37,12 @@ namespace gua {
 
 LightingPass::LightingPass(Pipeline* pipeline)
     : GeometryPass(pipeline),
+      shadow_map_(pipeline),
+      initialized_(false),
       shader_(new LightingUberShader),
       light_sphere_(nullptr),
-      light_cone_(nullptr),
-      shadow_map_(pipeline) {
+      light_cone_(nullptr)
+  {
     light_sphere_ = GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
     light_cone_ = GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
 }
@@ -91,11 +93,9 @@ bool LightingPass::pre_compile_shaders(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightingPass::rendering(SerializedScene const& scene,
-                             RenderContext const& ctx,
-                             CameraMode eye,
-                             Camera const& camera,
-                             FrameBufferObject* target) {
+void LightingPass::initialize(RenderContext const& ctx)
+{
+  if (!initialized_) {
     if (!depth_stencil_state_)
         depth_stencil_state_ =
             ctx.render_device->create_depth_stencil_state(false, false);
@@ -118,6 +118,16 @@ void LightingPass::rendering(SerializedScene const& scene,
     if (!fullscreen_quad_)
       fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
         ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    initialized_ = true;
+  }
+}
+
+void LightingPass::rendering(SerializedScene const& scene,
+                             RenderContext const& ctx,
+                             CameraMode eye,
+                             Camera const& camera,
+                             FrameBufferObject* target) {
+    initialize(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
     ctx.render_context->set_rasterizer_state(rasterizer_state_back_);
@@ -162,7 +172,7 @@ void LightingPass::rendering(SerializedScene const& scene,
                 split_4 = light->data.get_shadow_cascaded_splits()[4];
 
             } else {
-                WARNING("Exactly 5 splits have to be defined for cascaded shadow maps!");
+                Logger::LOG_WARNING << "Exactly 5 splits have to be defined for cascaded shadow maps!" << std::endl;
             }
 
             shadow_map_.render_cascaded(ctx, scene.center_of_interest, scene.frustum, camera,

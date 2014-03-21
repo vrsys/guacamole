@@ -24,7 +24,7 @@
 
 // guacamole header
 #include <gua/scenegraph/NodeVisitor.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {

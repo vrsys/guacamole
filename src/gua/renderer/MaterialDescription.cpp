@@ -66,9 +66,8 @@ void MaterialDescription::reload() {
         if (file.is_valid()) {
             construct_from_file(file);
         } else {
-            WARNING("Failed to load material \"%s\": "
-                    "File does not exist!",
-                    file_name_.c_str());
+            Logger::LOG_WARNING << "Failed to load material \"" << file_name_ << "\": "
+                    "File does not exist!" << std::endl;
         }
 
         PathParser p;
@@ -103,16 +102,14 @@ void MaterialDescription::construct_from_file(TextFile const & file) {
     Json::Value value;
     Json::Reader reader;
     if (!reader.parse(file.get_content(), value)) {
-        WARNING("Failed to parse material description \"%s\": "
-                "File does not exist!",
-                file.get_file_name().c_str());
+        Logger::LOG_WARNING << "Failed to parse material description \"" << file.get_file_name() << "\": "
+                "File does not exist!" << std::endl;
         return;
     }
 
     if (value["shading_model"] == Json::Value::null) {
-        WARNING("Failed to parse material description \"%s\": "
-                "No shading model associated",
-                file.get_file_name().c_str());
+        Logger::LOG_WARNING << "Failed to parse material description \"" << file.get_file_name() << "\": "
+                "No shading model associated" << std::endl;
         return;
     }
 
@@ -135,14 +132,14 @@ void MaterialDescription::construct_from_buffer(const char* buffer, unsigned buf
     Json::Value value;
     Json::Reader reader;
     if (!reader.parse(buffer, buffer + buffer_size, value)) {
-        WARNING("Failed to parse material description from buffer: "
-                "Buffer invalid!");
+        Logger::LOG_WARNING << "Failed to parse material description from buffer: "
+                "Buffer invalid!" << std::endl;
         return;
       }
 
     if (value["shading_model"] == Json::Value::null) {
-        WARNING("Failed to parse material description from buffer: "
-                "No shading model associated!");
+        Logger::LOG_WARNING << "Failed to parse material description from buffer: "
+                "No shading model associated!" << std::endl;
         return;
     }
 

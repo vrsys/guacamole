@@ -305,7 +305,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                         geometry->draw(ctx);
                     }
                 } else {
-                    WARNING("Failed to render TexturedQuad: Texture2D \"%s\" not found!", texture_name.c_str());
+                    Logger::LOG_WARNING << "Failed to render TexturedQuad: Texture2D \"" << texture_name << "\" not found!" << std::endl;
                 }
             }
         }

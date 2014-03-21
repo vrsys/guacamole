@@ -29,12 +29,12 @@
 #include <gua/renderer/NURBSLoader.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/renderer/Volume.hpp>
 
 
 #include <gua/utils/TextFile.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 
 
@@ -70,8 +70,8 @@ namespace gua {
 
 		}
 		else {
-						
-			if (is_supported(file_name)) {				
+
+			if (is_supported(file_name)) {
 				cached_node = load(file_name, flags);
 				cached_node->update_cache();
 				loaded_files_.insert(std::make_pair(key, cached_node));
@@ -93,13 +93,13 @@ namespace gua {
 
 				}
 			}
-			
+
 			if (!cached_node) {
 
-				WARNING("Unable to load %s: Volume Type is not supported!", file_name.c_str());
+				Logger::LOG_WARNING << "Unable to load " << file_name << ": Volume Type is not supported!" << std::endl;
 			}
 		}
-				
+
 		if (cached_node) {
 			auto copy(cached_node->deep_copy());
 
@@ -111,21 +111,20 @@ namespace gua {
 	}
 
 	std::shared_ptr<Node> VolumeLoader::load(std::string const& file_name,
-											 unsigned flags) 
+											 unsigned flags)
 	{
 		try {
 			GeometryDatabase::instance()->add(
 				file_name, std::make_shared<Volume>(file_name));
 
 			auto result = std::make_shared<VolumeNode>("unnamed_volume");
-			result->data.set_volume(file_name);			
+			result->data.set_volume(file_name);
 
 			return result;
 
 		}
 		catch (std::exception &e) {
-			WARNING("Warning: \"%s\" \n", e.what());
-			WARNING("Failed to load Volume object \"%s\": ", file_name.c_str());
+			Logger::LOG_WARNING << "Failed to load Volume object \"" << file_name << "\": " << e.what() << std::endl;
 			return nullptr;
 		}
 	}
@@ -137,5 +136,5 @@ namespace gua {
 			? false
 			: _supported_file_extensions.count(filename_decomposition.back()) >	0;
 	}
-	
+
 }

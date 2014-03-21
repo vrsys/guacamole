@@ -35,7 +35,7 @@
 #include <gua/renderer/PostFXPass.hpp>
 #include <gua/renderer/Serializer.hpp>
 #include <gua/scenegraph.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/databases.hpp>
 
 // external headers
@@ -150,15 +150,14 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   }
 
   if (!current_graph_) {
-    WARNING("Failed to display scenegraph \"%s\": Graph not found!",
-            config.camera().scene_graph.c_str());
+    Logger::LOG_WARNING << "Failed to display scenegraph \"" << config.camera().scene_graph << "\": Graph not found!" << std::endl;
   }
 
   rendering_fps_ = rendering_fps;
   application_fps_ = application_fps;
 
   if (!context_) {
-    WARNING("Pipeline has no context: Please define a window!");
+    Logger::LOG_WARNING << "Pipeline has no context: Please define a window!" << std::endl;
     return;
   }
 
@@ -225,14 +224,14 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
       auto eye((*current_graph_)[config.camera().eye_l]);
       if (!eye) {
-        WARNING("Cannot render scene: No valid eye specified");
+        Logger::LOG_WARNING << "Cannot render scene: No valid eye specified" << std::endl;
         return;
       }
 
       auto screen_it((*current_graph_)[config.camera().screen_l]);
       auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
       if (!screen) {
-        WARNING("Cannot render scene: No valid screen specified");
+        Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
         return;
       }
 
@@ -263,27 +262,27 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
       auto eye_l((*current_graph_)[config.camera().eye_l]);
       if (!eye_l) {
-        WARNING("Cannot render scene: No valid left eye specified");
+        Logger::LOG_WARNING << "Cannot render scene: No valid left eye specified" << std::endl;
         return;
       }
 
       auto eye_r((*current_graph_)[config.camera().eye_r]);
       if (!eye_r) {
-        WARNING("Cannot render scene: No valid right eye specified");
+        Logger::LOG_WARNING << "Cannot render scene: No valid right eye specified" << std::endl;
         return;
       }
 
       auto screen_it_l((*current_graph_)[config.camera().screen_l]);
       auto screen_l(std::dynamic_pointer_cast<ScreenNode>(screen_it_l));
       if (!screen_l) {
-        WARNING("Cannot render scene: No valid left screen specified");
+        Logger::LOG_WARNING << "Cannot render scene: No valid left screen specified" << std::endl;
         return;
       }
 
       auto screen_it_r((*current_graph_)[config.camera().screen_r]);
       auto screen_r(std::dynamic_pointer_cast<ScreenNode>(screen_it_r));
       if (!screen_r) {
-        WARNING("Cannot render scene: No valid right screen specified");
+        Logger::LOG_WARNING << "Cannot render scene: No valid right screen specified" << std::endl;
         return;
       }
 
@@ -424,7 +423,7 @@ void Pipeline::create_passes() {
 
     } else {
 
-      WARNING("Failed to recompile shaders!");
+      Logger::LOG_WARNING << "Failed to recompile shaders!" << std::endl;
 
       for (auto pass : new_passes) {
         delete pass;

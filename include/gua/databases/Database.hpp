@@ -105,7 +105,7 @@ template <typename T> class Database {
     }
 
     if (result == data_.end()) {
-      WARNING("There is no entry \"%s\" in the database!", k.c_str());
+      Logger::LOG_WARNING << "There is no entry \" << k << \" in the database!" << std::endl;
       return std::shared_ptr<T>();
     }
 

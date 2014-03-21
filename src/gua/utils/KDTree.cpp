@@ -476,7 +476,7 @@ void KDTree::KDNode::print(unsigned depth) const {
              string_utils::to_string(bounds_.min) + " " +
              string_utils::to_string(bounds_.max);
 
-    DEBUG("%s", msg.c_str());
+    Logger::LOG_MESSAGE << msg << std::endl;
 
     if (left_child_)
       left_child_->print(depth + 1);

@@ -32,7 +32,7 @@
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/scenegraph/Video3DNode.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <iostream>
@@ -109,7 +109,7 @@ std::shared_ptr<Node> GeometryLoader::load_geometry(std::string const& file_name
 
     if (!fileload_succeed) {
 
-      WARNING("Unable to load %s: Type is not supported!", file_name.c_str());
+      Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
     }
   }
 
@@ -183,8 +183,7 @@ std::shared_ptr<Node> GeometryLoader::create_volume_from_file(std::string const&
         }
 
         if (!cached_node) {
-            WARNING("Unable to load %s: Volume Type is not supported!",
-                    file_name.c_str());
+            Logger::LOG_WARNING << "Unable to load " << file_name << ": Volume Type is not supported!" << std::endl;
         }
     }
 

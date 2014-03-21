@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/math/math.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <string>
@@ -131,7 +131,7 @@ class GUA_DLL Texture {
 #else
   mutable std::mutex upload_mutex_;
 #endif
-  
+
   std::vector<void*> data_;
   std::string file_name_;
 

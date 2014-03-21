@@ -48,8 +48,7 @@ std::shared_ptr<Node> Video3DLoader::load(std::string const& file_name,
 
     }
     catch (std::exception &e) {
-      WARNING("Warning: \"%s\" \n", e.what());
-      WARNING("Failed to load Video3D object \"%s\": ", file_name.c_str());
+      Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load Video3D object " << file_name.c_str() << std::endl;
       return nullptr;
     }
 }
