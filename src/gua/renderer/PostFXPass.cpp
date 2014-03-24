@@ -248,7 +248,8 @@ void PostFXPass::create(RenderContext const& ctx, std::vector<std::pair<BufferCo
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::render_scene(Camera const& camera, RenderContext const& ctx) {
+void PostFXPass::init_ressources(RenderContext const& ctx) {
+  if (!initialized_) {
     if (!depth_stencil_state_)
         depth_stencil_state_ = ctx.render_device->
             create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
@@ -262,6 +263,12 @@ void PostFXPass::render_scene(Camera const& camera, RenderContext const& ctx) {
         blend_add_ = ctx.render_device->
                          create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE,
                                                   scm::gl::FUNC_ONE, scm::gl::FUNC_ONE);
+    initialized_ = true;
+  }
+}
+
+void PostFXPass::render_scene(Camera const& camera, RenderContext const& ctx) {
+    init_ressources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 

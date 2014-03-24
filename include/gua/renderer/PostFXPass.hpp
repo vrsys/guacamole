@@ -64,6 +64,8 @@ class PostFXPass : public Pass {
   bool pre_compile_shaders(RenderContext const& ctx);
 
  private:
+
+  void init_ressources(RenderContext const& ctx);
   void pre_rendering(Camera const& camera,
                      SerializedScene const& scene,
                      CameraMode eye,
