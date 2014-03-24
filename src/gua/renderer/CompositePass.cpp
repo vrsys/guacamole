@@ -210,13 +210,15 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
 ////////////////////////////////////////////////////////////////////////////////
 
 void CompositePass::init_ressources(RenderContext const& ctx) {
+  if (!initialized_) {
+    if (!depth_stencil_state_) {
+      depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
+    }
 
-  if (!depth_stencil_state_) {
-    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
-  }
-
-  if (!fullscreen_quad_) {
-    fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    if (!fullscreen_quad_) {
+      fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    }
+    initialized_ = true;
   }
 }
 
