@@ -75,7 +75,6 @@ public:
 
   void initialize(RenderContext const& ctx);
 
-  bool initialized_;
   LightingUberShader* shader_;
   std::shared_ptr<Geometry> light_sphere_;
   std::shared_ptr<Geometry> light_cone_;

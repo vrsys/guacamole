@@ -38,7 +38,6 @@ namespace gua {
 LightingPass::LightingPass(Pipeline* pipeline)
     : GeometryPass(pipeline),
       shadow_map_(pipeline),
-      initialized_(false),
       shader_(new LightingUberShader),
       light_sphere_(nullptr),
       light_cone_(nullptr)

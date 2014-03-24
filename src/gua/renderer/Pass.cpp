@@ -36,6 +36,7 @@ Pass::Pass(Pipeline* pipeline)
   : pipeline_(pipeline)
   , gbuffer_(nullptr)
   , inputs_()
+  , initialized_(false)
   {}
 
 ////////////////////////////////////////////////////////////////////////////////
