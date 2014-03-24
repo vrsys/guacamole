@@ -99,6 +99,7 @@ class Pass {
   std::shared_ptr<StereoBuffer> gbuffer_;
 
   std::vector<std::shared_ptr<StereoBuffer>> inputs_;
+  bool initialized_;
 };
 
 }

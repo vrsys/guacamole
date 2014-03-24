@@ -32,7 +32,12 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Pass::Pass(Pipeline* pipeline) : gbuffer_(nullptr), pipeline_(pipeline) {}
+Pass::Pass(Pipeline* pipeline)
+  : pipeline_(pipeline)
+  , gbuffer_(nullptr)
+  , inputs_()
+  , initialized_(false)
+  {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
