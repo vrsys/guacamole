@@ -110,6 +110,55 @@ SerializedScene const& Pipeline::get_current_scene(CameraMode mode) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Pipeline::loading_screen() {
+  display_loading_screen_ = false;
+
+  if (window_) {
+    auto loading_texture(std::dynamic_pointer_cast<Texture2D>(TextureDatabase::instance()->lookup("gua_loading_texture")));
+    math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
+
+    if (config.get_enable_stereo()) {
+
+      auto tmp_left_resolution(window_->config.left_resolution());
+      auto tmp_right_resolution(window_->config.right_resolution());
+
+      auto tmp_left_position(window_->config.left_position());
+      auto tmp_right_position(window_->config.right_position());
+
+      window_->config.set_left_resolution(loading_texture_size);
+      window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
+
+      window_->config.set_right_resolution(loading_texture_size);
+      window_->config.set_right_position(tmp_right_position + 0.5*(tmp_right_resolution - loading_texture_size));
+
+      window_->display(loading_texture, loading_texture);
+
+      window_->config.set_left_position(tmp_left_position);
+      window_->config.set_left_resolution(tmp_left_resolution);
+
+      window_->config.set_right_position(tmp_right_position);
+      window_->config.set_right_resolution(tmp_right_resolution);
+
+    } else {
+
+      auto tmp_left_resolution(window_->config.left_resolution());
+      auto tmp_left_position(window_->config.left_position());
+
+
+      window_->config.set_left_resolution(loading_texture_size);
+      window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
+
+      window_->display(loading_texture);
+
+      window_->config.set_left_position(tmp_left_position);
+      window_->config.set_left_resolution(tmp_left_resolution);
+
+    }
+
+    window_->finish_frame();
+  }
+}
+
 void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                        float application_fps,
                        float rendering_fps) {
@@ -162,53 +211,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   }
 
   if (display_loading_screen_) {
-    display_loading_screen_ = false;
-
-    if (window_) {
-      auto loading_texture(std::dynamic_pointer_cast<Texture2D>(TextureDatabase::instance()->lookup("gua_loading_texture")));
-      math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
-
-      if (config.get_enable_stereo()) {
-
-        auto tmp_left_resolution(window_->config.left_resolution());
-        auto tmp_right_resolution(window_->config.right_resolution());
-
-        auto tmp_left_position(window_->config.left_position());
-        auto tmp_right_position(window_->config.right_position());
-
-        window_->config.set_left_resolution(loading_texture_size);
-        window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
-
-        window_->config.set_right_resolution(loading_texture_size);
-        window_->config.set_right_position(tmp_right_position + 0.5*(tmp_right_resolution - loading_texture_size));
-
-        window_->display(loading_texture, loading_texture);
-
-        window_->config.set_left_position(tmp_left_position);
-        window_->config.set_left_resolution(tmp_left_resolution);
-
-        window_->config.set_right_position(tmp_right_position);
-        window_->config.set_right_resolution(tmp_right_resolution);
-
-      } else {
-
-        auto tmp_left_resolution(window_->config.left_resolution());
-        auto tmp_left_position(window_->config.left_position());
-
-
-        window_->config.set_left_resolution(loading_texture_size);
-        window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
-
-        window_->display(loading_texture);
-
-        window_->config.set_left_position(tmp_left_position);
-        window_->config.set_left_resolution(tmp_left_resolution);
-
-      }
-
-      window_->finish_frame();
-    }
-
+    loading_screen();
   } else {
 
     if (passes_need_reload_) {
@@ -219,8 +222,8 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       create_buffers();
     }
 
-
-    if (!config.get_enable_stereo()) {
+    // now serialize
+    if (!config.get_enable_stereo()) { // Mono
 
       auto eye((*current_graph_)[config.camera().eye_l]);
       if (!eye) {
@@ -257,7 +260,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                          config.enable_bbox_display(),
                          config.enable_ray_display(),
                          config.enable_frustum_culling());
-    } else {
+    } else { // Stereo
 
 
       auto eye_l((*current_graph_)[config.camera().eye_l]);
