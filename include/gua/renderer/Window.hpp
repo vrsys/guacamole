@@ -69,7 +69,7 @@ class GUA_DLL Window {
     GUA_ADD_PROPERTY(math::vec2ui, size, math::vec2ui(800, 600));
     GUA_ADD_PROPERTY(std::string, title, "guacamole");
 #if WIN32
-    GUA_ADD_PROPERTY(std::string, display_name, "\\\\.\\DISPLAY6");
+    GUA_ADD_PROPERTY(std::string, display_name, "\\\\.\\DISPLAY1");
 #else
     GUA_ADD_PROPERTY(std::string, display_name, ":0.0");
 #endif

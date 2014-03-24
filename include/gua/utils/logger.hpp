@@ -22,6 +22,8 @@
 #ifndef GUA_LOGGER_HPP
 #define GUA_LOGGER_HPP
 
+#include <gua/platform.hpp>
+
 #include <iostream>
 
 namespace gua {
@@ -40,10 +42,10 @@ class Logger {
   #define LOG_WARNING warning_impl(__FILE__, __LINE__)
   #define LOG_ERROR   error_impl  (__FILE__, __LINE__)
 
-  static std::ostream& debug_impl(const char* file, int line);
-  static std::ostream& message_impl(const char* file, int line);
-  static std::ostream& warning_impl(const char* file, int line);
-  static std::ostream& error_impl(const char* file, int line);
+  static GUA_DLL std::ostream& debug_impl(const char* file, int line);
+  static GUA_DLL std::ostream& message_impl(const char* file, int line);
+  static GUA_DLL std::ostream& warning_impl(const char* file, int line);
+  static GUA_DLL std::ostream& error_impl(const char* file, int line);
 };
 
 }
