@@ -73,7 +73,7 @@ public:
                  Camera const& camera,
                  FrameBufferObject* target);
 
-  void initialize(RenderContext const& ctx);
+  void init_ressources(RenderContext const& ctx);
 
   LightingUberShader* shader_;
   std::shared_ptr<Geometry> light_sphere_;
