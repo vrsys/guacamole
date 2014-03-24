@@ -190,6 +190,7 @@ class GUA_DLL Pipeline {
 
  private:
   void loading_screen();
+  void call_serializer();
   void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 
