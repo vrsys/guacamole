@@ -248,7 +248,7 @@ void PostFXPass::create(RenderContext const& ctx, std::vector<std::pair<BufferCo
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::init_ressources(RenderContext const& ctx) {
+void PostFXPass::init_resources(RenderContext const& ctx) {
   if (!initialized_) {
     if (!depth_stencil_state_)
         depth_stencil_state_ = ctx.render_device->
@@ -268,7 +268,7 @@ void PostFXPass::init_ressources(RenderContext const& ctx) {
 }
 
 void PostFXPass::render_scene(Camera const& camera, RenderContext const& ctx) {
-    init_ressources(ctx);
+    init_resources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 

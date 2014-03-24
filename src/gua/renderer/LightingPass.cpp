@@ -92,8 +92,7 @@ bool LightingPass::pre_compile_shaders(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightingPass::init_ressources(RenderContext const& ctx)
-{
+void LightingPass::init_resources(RenderContext const& ctx) {
   if (!initialized_) {
     if (!depth_stencil_state_)
         depth_stencil_state_ =
@@ -126,7 +125,7 @@ void LightingPass::rendering(SerializedScene const& scene,
                              CameraMode eye,
                              Camera const& camera,
                              FrameBufferObject* target) {
-    init_ressources(ctx);
+    init_resources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
     ctx.render_context->set_rasterizer_state(rasterizer_state_back_);

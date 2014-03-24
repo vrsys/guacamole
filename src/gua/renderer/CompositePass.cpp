@@ -105,7 +105,7 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
   Camera const& camera,
   FrameBufferObject* target)
 {
-    init_ressources(ctx);
+    init_resources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
@@ -209,7 +209,7 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CompositePass::init_ressources(RenderContext const& ctx) {
+void CompositePass::init_resources(RenderContext const& ctx) {
   if (!initialized_) {
     if (!depth_stencil_state_) {
       depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
