@@ -73,12 +73,16 @@ CompositePass::~CompositePass() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CompositePass::create(RenderContext const& ctx,
-    PipelineConfiguration const& config, std::vector<std::pair<BufferComponent,
+void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<BufferComponent,
     scm::gl::sampler_state_desc>> const& layers) {
 
   // reuse gbuffer from shading-pass
   gbuffer_ = inputs_[Pipeline::PipelineStage::shading];
+  /*scm::gl::sampler_state_desc tmp(scm::gl::FILTER_MIN_MAG_LINEAR,
+    scm::gl::WRAP_CLAMP_TO_EDGE,
+    scm::gl::WRAP_CLAMP_TO_EDGE);
+  Pass::create(ctx, config, { { BufferComponent::F3, tmp } });*/
+
 
   if (volume_raygeneration_buffer_) {
     volume_raygeneration_buffer_->remove_buffers(ctx);
@@ -93,8 +97,8 @@ void CompositePass::create(RenderContext const& ctx,
   layer_3f_desc.push_back(std::make_pair(BufferComponent::F3, state));
 
   volume_raygeneration_buffer_ = new GBuffer(layer_3f_desc,
-                                      config.get_left_resolution()[0],
-                                      config.get_left_resolution()[1]);
+                                      pipeline_->config.get_left_resolution()[0],
+                                      pipeline_->config.get_left_resolution()[1]);
   volume_raygeneration_buffer_->create(ctx);
 }
 
@@ -135,11 +139,11 @@ void CompositePass::create(RenderContext const& ctx,
             for (auto const& node : scene.volumenodes_) {
 
                 auto volume =
-                    std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
+                    std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node->data.get_volume()));
 
                 if (volume) {
                     ray_generation_shader_->set_uniform(
-                        ctx, node.transform, "gua_model_matrix");
+                        ctx, node->get_world_transform(), "gua_model_matrix");
 
                     ray_generation_shader_->set_uniform(
                         ctx, 0, "volume_frag_id");
@@ -185,11 +189,11 @@ void CompositePass::create(RenderContext const& ctx,
         for (auto const& node : scene.volumenodes_) {
 
             auto volume =
-                std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node.data.get_volume()));
+                std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(node->data.get_volume()));
 
             if (volume) {
                 composite_shader_->set_uniform(
-                    ctx, node.transform, "gua_model_matrix");
+                    ctx, node->get_world_transform(), "gua_model_matrix");
 
                 volume->set_uniforms(ctx, composite_shader_);
 
@@ -211,13 +215,15 @@ void CompositePass::create(RenderContext const& ctx,
 ////////////////////////////////////////////////////////////////////////////////
 
 void CompositePass::init_ressources(RenderContext const& ctx) {
+  if (!initialized_) {
+    if (!depth_stencil_state_) {
+      depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
+    }
 
-  if (!depth_stencil_state_) {
-    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
-  }
-
-  if (!fullscreen_quad_) {
-    fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    if (!fullscreen_quad_) {
+      fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    }
+    initialized_ = true;
   }
 }
 
@@ -248,7 +254,7 @@ bool CompositePass::pre_compile_shaders(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void CompositePass::render_scene(Camera const& camera, RenderContext const& ctx) {
-
+#if 0
   for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
 
     FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
@@ -268,6 +274,7 @@ void CompositePass::render_scene(Camera const& camera, RenderContext const& ctx)
 
     fbo->unbind(ctx);
   }
+#endif
 }
 
 }

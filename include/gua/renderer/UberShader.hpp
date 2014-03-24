@@ -64,16 +64,30 @@ class UberShader : public ShaderProgram {
    */
   virtual UniformMapping const* get_uniform_mapping() const;
 
+  /**
+  *
+  */
+  virtual void add_pre_pass(std::shared_ptr<ShaderProgram> const&);
+
+  /**
+  *
+  */
+  std::vector<std::shared_ptr<ShaderProgram>> const& get_pre_passes() const;
+
  protected:
+
   void set_uniform_mapping(UniformMapping const& mapping);
   void set_output_mapping(LayerMapping const& mapping);
 
   std::string const print_material_switch(UberShaderFactory const& factory) const;
   std::string const print_material_methods(UberShaderFactory const& factory) const;
 
- private:
+  private:
+
   UniformMapping uniform_mapping_;
   LayerMapping output_mapping_;
+  std::vector<std::shared_ptr<ShaderProgram>> pre_pass_programs_;
+
 };
 
 }

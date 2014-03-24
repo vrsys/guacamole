@@ -27,7 +27,7 @@
 #include <gua/renderer/NURBSShader.hpp>
 #include <gua/renderer/GuaMethodsFactory.hpp>
 #include <gua/databases.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <sstream>

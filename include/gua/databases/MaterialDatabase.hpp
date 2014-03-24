@@ -35,6 +35,8 @@ namespace gua {
  *
  * This Database stores material data. It can be accessed via string
  * identifiers.
+ *
+ * \ingroup gua_databases
  */
 class GUA_DLL MaterialDatabase : public Database<Material>,
                                  public Singleton<MaterialDatabase> {
@@ -45,10 +47,12 @@ class GUA_DLL MaterialDatabase : public Database<Material>,
    *
    * This method loads gmd materials to the data base.
    *
-   * \param path_to_materials    An absolute or relative path to the
-   *                             directory containing gmd files.
+   * \param directory    An absolute or relative path to the
+   *                     directory containing gmd files.
    */
-  static void load_materials_from(std::string const& path_to_materials);
+  static void load_materials_from(std::string const& directory);
+
+  static void load_material(std::string const& filename);
 
   void reload_all();
 

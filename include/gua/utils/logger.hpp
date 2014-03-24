@@ -22,67 +22,32 @@
 #ifndef GUA_LOGGER_HPP
 #define GUA_LOGGER_HPP
 
-#include <cstring>
-#include <cstdio>
+#include <gua/platform.hpp>
 
-#define PRINT_RED "\x001b[0;31m"
-#define PRINT_GREEN "\x001b[0;32m"
-#define PRINT_YELLOW "\x001b[0;33m"
-#define PRINT_BLUE "\x001b[0;34m"
-#define PRINT_PURPLE "\x001b[0;35m"
-#define PRINT_TURQUOISE "\x001b[0;36m"
+#include <iostream>
 
-#define PRINT_RED_BOLD "\x001b[1;31m"
-#define PRINT_GREEN_BOLD "\x001b[1;32m"
-#define PRINT_YELLOW_BOLD "\x001b[1;33m"
-#define PRINT_BLUE_BOLD "\x001b[1;34m"
-#define PRINT_PURPLE_BOLD "\x001b[1;35m"
-#define PRINT_TURQUOISE_BOLD "\x001b[1;36m"
+namespace gua {
 
-#define PRINT_RESET "\x001b[0m"
+class Logger {
 
-#define GETFILENAME(_path) \
-  std::string(_path).substr(std::string(_path).find_last_of('/') + 1).c_str()
+ public:
 
-#define WHERE_STR "[%s:%d] "
-#define WHERE_ARG GETFILENAME(__FILE__), __LINE__
+  static bool enable_debug;
+  static bool enable_message;
+  static bool enable_warning;
+  static bool enable_error;
 
-#define MESSAGE(_fmt, ...)                                        \
-  printf(PRINT_GREEN "[GUA][M]" WHERE_STR PRINT_RESET _fmt "\n", \
-         WHERE_ARG,                                               \
-         ##__VA_ARGS__)
-#ifndef MESSAGE
-#define MESSAGE(...)
-#endif
+  #define LOG_DEBUG   debug_impl  (__FILE__, __LINE__)
+  #define LOG_MESSAGE message_impl(__FILE__, __LINE__)
+  #define LOG_WARNING warning_impl(__FILE__, __LINE__)
+  #define LOG_ERROR   error_impl  (__FILE__, __LINE__)
 
-#define WARNING(_fmt, ...)                                         \
-  printf(PRINT_YELLOW "[GUA][W]" WHERE_STR PRINT_RESET _fmt "\n", \
-         WHERE_ARG,                                                \
-         ##__VA_ARGS__)
-#ifndef WARNING
-#define WARNING(...)
-#endif
+  static GUA_DLL std::ostream& debug_impl(const char* file, int line);
+  static GUA_DLL std::ostream& message_impl(const char* file, int line);
+  static GUA_DLL std::ostream& warning_impl(const char* file, int line);
+  static GUA_DLL std::ostream& error_impl(const char* file, int line);
+};
 
-#define ERROR(_fmt, ...)                                        \
-  printf(PRINT_RED "[GUA][E]" WHERE_STR PRINT_RESET _fmt "\n", \
-         WHERE_ARG,                                             \
-         ##__VA_ARGS__)
-#ifndef ERROR
-#define ERROR(...)
-#endif
-
-#define DEBUG(_fmt, ...)                                         \
-  printf(PRINT_BLUE "[GUA][D]" WHERE_STR PRINT_RESET _fmt "\n", \
-         WHERE_ARG,                                              \
-         ##__VA_ARGS__)
-#ifndef DEBUG
-#define DEBUG(...)
-#endif
-
-#define PROFILING(_fmt, ...) \
-  printf(PRINT_PURPLE "[GUA][P]" PRINT_RESET _fmt "\n", ##__VA_ARGS__)
-#ifndef PROFILING
-#define PROFILING(...)
-#endif
+}
 
 #endif  // GUA_LOGGER_HPP

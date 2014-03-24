@@ -33,9 +33,10 @@
 namespace gua {
 //TODO BOUNDING BOX!!
 Video3DNode::Video3DNode(std::string const& name,
-                           Configuration const& configuration,
-                           math::mat4 const& transform)
-    : Node(name, transform), data(configuration) 
+                         std::string const& ksfile,
+                         std::string const& material,
+                         math::mat4 const& transform)
+: Node(name, transform), ksfile_(ksfile), material_(material)
 {
     bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-100.0,-100.0,-100.0),
                           math::vec3(100.0,100.0,100.0)); 
@@ -56,7 +57,7 @@ void Video3DNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
 }
 
 std::shared_ptr<Node> Video3DNode::copy() const {
-  return std::make_shared<Video3DNode>(get_name(), data, get_transform());
+  return std::make_shared<Video3DNode>(get_name(), ksfile_, material_, get_transform());
 }
 
 }

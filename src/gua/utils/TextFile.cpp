@@ -24,7 +24,7 @@
 #include <gua/utils/PathParser.hpp>
 
 // guacamole headers
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <sstream>
@@ -67,7 +67,7 @@ std::string const& TextFile::get_content() const {
 
   std::ifstream ifs(file_name_.c_str());
   if (!ifs) {
-    WARNING("Cannot open file \"%s\"", file_name_.c_str());
+    Logger::LOG_WARNING << "Cannot open file \"" << file_name_ << "\"!" << std::endl;
     return content_;
   }
 
@@ -75,7 +75,7 @@ std::string const& TextFile::get_content() const {
   oss << ifs.rdbuf();
 
   if (!ifs && !ifs.eof()) {
-    WARNING("Error reading file \"%s\"", file_name_.c_str());
+    Logger::LOG_WARNING << "Error reading file \"" << file_name_ << "\"!" << std::endl;
     return content_;
   }
 
@@ -95,8 +95,7 @@ void TextFile::set_content(std::string const& content) {
 bool TextFile::save(bool create_subdirs) const {
 
   if (!is_loaded_) {
-    WARNING("Unable to save file \"%s\"! No content has been set",
-            file_name_.c_str());
+    Logger::LOG_WARNING << "Unable to save file \"" << file_name_ << "\"! No content has been set." << std::endl;
     return false;
   }
 
@@ -121,7 +120,7 @@ bool TextFile::save(bool create_subdirs) const {
 
   std::ofstream ofs(file_name_);
   if (!ofs) {
-    WARNING("Cannot open file \"%s\"", file_name_.c_str());
+    Logger::LOG_WARNING << "Cannot open file \""<< file_name_ << "\"!" << std::endl;
     return false;
   }
 

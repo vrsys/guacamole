@@ -97,7 +97,7 @@ class MeshLoader : public LoaderBase {
                 aiScene const* ai_scene,
                 aiNode* ai_root,
                 std::string const& file_name,
-                unsigned flags);
+                unsigned flags, unsigned& mesh_count);
 
   unsigned node_counter_;
 

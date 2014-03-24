@@ -47,7 +47,7 @@ class StereoBuffer;
  *
  * It's a window which can display OpenGL stuff.
  */
-class GUA_DLL Window : std::enable_shared_from_this<Window> {
+class GUA_DLL Window {
  public:
 
   enum TextureDisplayMode {

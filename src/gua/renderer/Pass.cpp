@@ -32,13 +32,17 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Pass::Pass(Pipeline* pipeline) : gbuffer_(nullptr), pipeline_(pipeline) {}
+Pass::Pass(Pipeline* pipeline)
+  : pipeline_(pipeline)
+  , gbuffer_(nullptr)
+  , inputs_()
+  , initialized_(false)
+  {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pass::create(
     RenderContext const& ctx,
-    PipelineConfiguration const& config,
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> > const&
         layers) {
 
@@ -46,7 +50,7 @@ void Pass::create(
     gbuffer_->remove_buffers(ctx);
   }
 
-  gbuffer_ = std::make_shared<StereoBuffer>(ctx, config, layers);
+  gbuffer_ = std::make_shared<StereoBuffer>(ctx, pipeline_->config, layers);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

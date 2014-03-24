@@ -26,51 +26,83 @@
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/utils/KDTree.hpp>
 
-/**
- * This class is used to represent a camera in the SceneGraph.
- *
- */
-
 namespace gua {
 
+/**
+ * This class is used to represent a ray in the SceneGraph.
+ *
+ * A RayNode is used to intersect scene geometry and utilized by
+ * SceneGraph::ray_test().
+ *
+ * \ingroup gua_scenegraph
+ */
 class GUA_DLL RayNode : public Node {
  public:
 
+  /**
+   * Constructor.
+   *
+   * This constructs an empty RayNode.
+   *
+   */
   RayNode() {}
 
   /**
    * Constructor.
    *
-   * This constructs a RayNode with the given parameters and calls
-   * the constructor of base class Core with the type CAMERA.
+   * This constructs a RayNode with the given parameters.
    *
-   * \param stereo_width  The gap between the eyes.
+   * \param name           The name of the new RayNode.
+   * \param transform      A matrix to describe the RayNode's transformation.
    */
   RayNode(std::string const& name,
           math::mat4 const& transform = math::mat4::identity());
 
-  /**
-   * Accepts a visitor and calls concrete visit method
+ /**
+   * Accepts a visitor and calls concrete visit method.
    *
-   * This method implements the visitor pattern for Nodes
+   * This method implements the visitor pattern for Nodes.
    *
+   * \param visitor  A visitor to process the RayNode's data.
    */
-  /* virtual */ void accept(NodeVisitor&);
+  /* virtual */ void accept(NodeVisitor& visitor);
 
+  /**
+   * Updates a RayNode's BoundingBox.
+   *
+   * The bounding box is updated according to the transformation matrices of
+   * all children.
+   */
+  void update_bounding_box() const;
+
+  /**
+   * Used internally to check whether a RayNode hits a given BoundingBox.
+   *
+   * \param box  The box to be checked against.
+   *
+   * \return std::pair<float, float>  A pair of parameters which describe the
+   *                                  to potential intersecition points with a
+   *                                  BoundingBox in ray space.
+   */
   std::pair<float, float> intersect(
       math::BoundingBox<math::vec3> const& box) const;
 
+  /**
+   * Used internally to get a world-transformed mathematical representation of a
+   * ray.
+   *
+   * \return Ray  A mathematical representation (origin, direction, length) of
+   *              the RayNode.
+   */
   Ray const get_world_ray() const;
 
-  void update_bounding_box() const;
-
+  /**
+   * Used internally to check whether or not intersections occured.
+   */
   static const float END;
 
  private:
 
-  /**
-   *
-   */
   std::shared_ptr<Node> copy() const;
 };
 

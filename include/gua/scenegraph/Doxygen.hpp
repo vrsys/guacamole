@@ -19,49 +19,12 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SERIALIZED_NODE_HPP
-#define GUA_SERIALIZED_NODE_HPP
-
-// guacamole headers
-#include <gua/math/math.hpp>
-
-namespace gua {
+#ifndef GUA_SCENEGRAPH_DOXYGEN_HPP
+#define GUA_SCENEGRAPH_DOXYGEN_HPP
 
 /**
- * Stores information on a light for rendering.
- *
- * This is a struct used for serializing the graph.
- *
- * essentially the same as a std::pair<math::mat4, configuration_type>
+ * \defgroup gua_scenegraph guacamole scenegraph
  */
-template <typename configuration_type> struct SerializedNode {
 
-  SerializedNode() : transform(math::mat4::identity()), data() {}
+#endif // GUA_SCENEGRAPH_DOXYGEN_HPP
 
-  /**
-   * Constructor.
-   *
-   * This creates a new serialized node.
-   *
-   * \param transform        The global transformation of this node.
-   * \param color            The color of the light.
-   */
-  SerializedNode(math::mat4 const& t, configuration_type const& d)
-      : transform(t), data(d) {}
-
-  /**
-   * The global transformation of this node.
-   */
-  math::mat4 transform;
-  configuration_type data;
-};
-
-template <typename T>
-inline SerializedNode<T> make_serialized_node(math::mat4 const& t, T const& d)
-{
-  return SerializedNode<T>(t, d);
-}
-
-}
-
-#endif  // GUA_SERIALIZED_NODE_HPP

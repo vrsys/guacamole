@@ -38,7 +38,6 @@
 namespace gua {
 
 class Pipeline;
-struct PipelineConfiguration;
 struct SerializedScene;
 struct Camera;
 class LayerMapping;
@@ -76,7 +75,6 @@ class Pass {
 
   virtual void create(
       RenderContext const& ctx,
-      PipelineConfiguration const& config,
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 
@@ -101,6 +99,7 @@ class Pass {
   std::shared_ptr<StereoBuffer> gbuffer_;
 
   std::vector<std::shared_ptr<StereoBuffer>> inputs_;
+  bool initialized_;
 };
 
 }

@@ -35,6 +35,8 @@
 
 namespace gua {
 
+class ShaderProgram;
+
 struct Ray;
 
 /**
@@ -51,7 +53,7 @@ class GUA_DLL Geometry {
    * \param context           The RenderContext to which this object
    *                          should be drawn.
    */
-  virtual void draw(RenderContext const& context) const = 0;
+   virtual void draw(RenderContext const& context) const = 0;
 
   /**
    * Interface to implement pre-draw tasks (occlusion queries, LOD etc.)

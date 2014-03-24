@@ -2,40 +2,34 @@
 #define SYS_FILEBUFFER_H
 
 #include <string>
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <fstream>
 
 namespace sys{
 
   class FileBuffer{
 
   public:
-    FileBuffer(const char* path);
+    FileBuffer(std::string const& path);
     ~FileBuffer();
 
-    bool isOpen();
+    bool is_open();
+    bool open();
 
-    bool open(const char* mode = "a+", unsigned buffersize = 0);
     void close();
 
     void setLooping(bool onoff);
     bool getLooping();
 
     unsigned read (void* buffer, unsigned numbytes);
-    unsigned write(void* buffer, unsigned numbytes);
-
-    unsigned numBytesR() const;
-    unsigned numBytesW() const;
+    unsigned bytes_read() const;
 
   private:
+
     std::string m_path;
-    FILE*     m_file;
-    char* m_buffer;
+    std::ifstream m_file;
+
     unsigned  m_bytes_r;
-    unsigned  m_bytes_w;
-    struct stat m_fstat;
+    unsigned long long m_filesize;
     bool m_looping;
   };
 

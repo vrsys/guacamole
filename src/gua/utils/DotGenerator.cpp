@@ -101,10 +101,10 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   std::string fillcolor("[fillcolor =");
   fillcolor += " \"#CCCCCC\"";
-  if (geometry->data.get_geometry() != "")
-    parse_data_ += "| geometry: " + geometry->data.get_geometry();
-  if (geometry->data.get_material() != "")
-    parse_data_ += "| material: " + geometry->data.get_material();
+  if (geometry->get_geometry() != "")
+    parse_data_ += "| geometry: " + geometry->get_geometry();
+  if (geometry->get_material() != "")
+    parse_data_ += "| material: " + geometry->get_material();
 
   fillcolor += "]";
 
@@ -281,8 +281,7 @@ void DotGenerator::save(std::string const& path_to_file) const {
     file.write(parse_data_.c_str(), parse_data_.size());
     file.close();
   } else {
-    WARNING("Failed to save dot graph: Failed to open file \"%s\"",
-            path_to_file.c_str());
+    Logger::LOG_WARNING << "Failed to save dot graph: Failed to open file \"" << path_to_file << "\"." << std::endl;
   }
 }
 

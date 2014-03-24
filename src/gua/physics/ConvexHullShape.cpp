@@ -152,13 +152,13 @@ void ConvexHullShape::build_from_geometry(
         for (auto const& n : node->get_children()) {
             auto gnode = std::dynamic_pointer_cast<GeometryNode>(n);
             if (gnode) {
-                geom_list.push_back(gnode->data.get_geometry());
+                geom_list.push_back(gnode->get_geometry());
             }
         }
       } else {
         auto gnode = std::dynamic_pointer_cast<GeometryNode>(node);
         if (gnode) {
-            geom_list.push_back(gnode->data.get_geometry());
+            geom_list.push_back(gnode->get_geometry());
         }
       }
 

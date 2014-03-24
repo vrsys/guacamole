@@ -31,6 +31,7 @@
 #include <gua/renderer/MeshLoader.hpp>
 #include <gua/renderer/Video3D.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/Video3DDatabase.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
@@ -71,7 +72,6 @@ GBufferPass::~GBufferPass() {
 
 void GBufferPass::create(
     RenderContext const& ctx,
-    PipelineConfiguration const& config,
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> > const&
         layers) {
 
@@ -82,7 +82,7 @@ void GBufferPass::create(
     auto tmp(layers);
     tmp.insert(tmp.begin(), std::make_pair(BufferComponent::DEPTH_24, state));
 
-    Pass::create(ctx, config, tmp);
+    Pass::create(ctx, tmp);
 }
 
 
@@ -147,6 +147,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
+    ////////////////////////////////////////////////////////////////////
+    // set frame-consistent uniforms for mesh ubershader
+    ////////////////////////////////////////////////////////////////////
     mesh_shader_->set_material_uniforms(
         scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
     mesh_shader_->set_material_uniforms(
@@ -155,17 +158,20 @@ void GBufferPass::rendering(SerializedScene const& scene,
     mesh_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
     mesh_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
 
-    video3D_shader_->set_material_uniforms( //TODO
-        scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
-    video3D_shader_->set_material_uniforms(
-        scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
-
     Pass::bind_inputs(*mesh_shader_, eye, ctx);
     Pass::set_camera_matrices(*mesh_shader_,
                               camera,
                               pipeline_->get_current_scene(eye),
                               eye,
                               ctx);
+
+    ////////////////////////////////////////////////////////////////////
+    // set frame-consistent uniforms for video3d ubershader
+    ////////////////////////////////////////////////////////////////////
+    video3D_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+    video3D_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
 
     Pass::bind_inputs(*video3D_shader_, eye, ctx);
     Pass::set_camera_matrices(*video3D_shader_,
@@ -174,6 +180,45 @@ void GBufferPass::rendering(SerializedScene const& scene,
                               eye,
                               ctx);
 
+    for (auto const& pass : video3D_shader_->get_pre_passes())
+    {
+      Pass::bind_inputs(*pass, eye, ctx);
+      Pass::set_camera_matrices(*pass,
+        camera,
+        pipeline_->get_current_scene(eye),
+        eye,
+        ctx);
+    }
+
+    ////////////////////////////////////////////////////////////////////
+    // set frame-consistent uniforms for nurbs ubershader
+    ////////////////////////////////////////////////////////////////////
+    nurbs_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+    nurbs_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+
+    Pass::bind_inputs(nurbs_shader_->get_pre_shader(), eye, ctx);
+    Pass::bind_inputs(*nurbs_shader_, eye, ctx);
+
+    Pass::set_camera_matrices(nurbs_shader_->get_pre_shader(),
+      camera,
+      pipeline_->get_current_scene(eye),
+      eye,
+      ctx);
+    Pass::set_camera_matrices(*nurbs_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+
+    // TODO: add this functionality to NURBS!
+    // nurbs_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
+    // nurbs_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+
+    nurbs_shader_->set_uniform(ctx,
+      pipeline_->config.get_max_tesselation(),
+      "gua_max_tesselation");
+
+    ////////////////////////////////////////////////////////////////////
+    // draw
+    ////////////////////////////////////////////////////////////////////
     if (!scene.meshnodes_.empty()) {
 
         // draw meshes
@@ -182,19 +227,19 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
             for (auto const& node : scene.meshnodes_) {
                 auto geometry =
-                    GeometryDatabase::instance()->lookup(node.data.get_geometry());
+                    GeometryDatabase::instance()->lookup(node->get_geometry());
                 auto material =
-                    MaterialDatabase::instance()->lookup(node.data.get_material());
+                    MaterialDatabase::instance()->lookup(node->get_material());
 
                 if (material && geometry) {
                     mesh_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");
                     mesh_shader_->set_uniform(
-                        ctx, node.transform, "gua_model_matrix");
+                        ctx, node->get_cached_world_transform(), "gua_model_matrix");
                     mesh_shader_->set_uniform(
                         ctx,
                         scm::math::transpose(
-                            scm::math::inverse(node.transform)),
+                            scm::math::inverse(node->get_cached_world_transform())),
                         "gua_normal_matrix");
 
                     geometry->draw(ctx);
@@ -218,8 +263,8 @@ void GBufferPass::rendering(SerializedScene const& scene,
                 auto material =
                     MaterialDatabase::instance()->lookup("gua_textured_quad");
 
-                std::string texture_name(node.data.get_texture());
-                if (node.data.get_is_stereo_texture()) {
+                std::string texture_name(node->data.get_texture());
+                if (node->data.get_is_stereo_texture()) {
 
                   if (eye == CameraMode::LEFT) {
                     texture_name += "_left";
@@ -239,28 +284,28 @@ void GBufferPass::rendering(SerializedScene const& scene,
                     auto mapped_flip_x(
                         mesh_shader_->get_uniform_mapping()->get_mapping("gua_textured_quad", "flip_x"));
 
-                    mesh_shader_->set_uniform(ctx, node.data.get_flip_x(), mapped_flip_x.first, mapped_flip_x.second);
+                    mesh_shader_->set_uniform(ctx, node->data.get_flip_x(), mapped_flip_x.first, mapped_flip_x.second);
 
                     auto mapped_flip_y(
                         mesh_shader_->get_uniform_mapping()->get_mapping("gua_textured_quad", "flip_y"));
 
-                    mesh_shader_->set_uniform(ctx, node.data.get_flip_y(), mapped_flip_y.first, mapped_flip_y.second);
+                    mesh_shader_->set_uniform(ctx, node->data.get_flip_y(), mapped_flip_y.first, mapped_flip_y.second);
 
                     if (material && geometry) {
                         mesh_shader_->set_uniform(
                             ctx, material->get_id(), "gua_material_id");
                         mesh_shader_->set_uniform(
-                            ctx, node.transform, "gua_model_matrix");
+                            ctx, node->get_scaled_world_transform(), "gua_model_matrix");
                         mesh_shader_->set_uniform(
                             ctx,
                             scm::math::transpose(
-                                scm::math::inverse(node.transform)),
+                                scm::math::inverse(node->get_scaled_world_transform())),
                             "gua_normal_matrix");
 
                         geometry->draw(ctx);
                     }
                 } else {
-                    WARNING("Failed to render TexturedQuad: Texture2D \"%s\" not found!", texture_name.c_str());
+                    Logger::LOG_WARNING << "Failed to render TexturedQuad: Texture2D \"" << texture_name << "\" not found!" << std::endl;
                 }
             }
         }
@@ -269,36 +314,13 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     if (!scene.nurbsnodes_.empty()) {
         // draw nurbs
-        Pass::bind_inputs(nurbs_shader_->get_pre_shader(), eye, ctx);
-        Pass::bind_inputs(*nurbs_shader_, eye, ctx);
-
-        Pass::set_camera_matrices(nurbs_shader_->get_pre_shader(),
-                                  camera,
-                                  pipeline_->get_current_scene(eye),
-                                  eye,
-                                  ctx);
-        Pass::set_camera_matrices(
-            *nurbs_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
-
-        nurbs_shader_->set_material_uniforms(
-            scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
-        nurbs_shader_->set_material_uniforms(
-            scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
-
-        // TODO: add this functionality to NURBS!
-        // nurbs_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
-        // nurbs_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
-
-        nurbs_shader_->set_uniform(ctx,
-                                   pipeline_->config.get_max_tesselation(),
-                                   "gua_max_tesselation");
 
         for (auto const& node : scene.nurbsnodes_)
             {
             auto geometry =
-                GeometryDatabase::instance()->lookup(node.data.get_geometry());
+                GeometryDatabase::instance()->lookup(node->get_geometry());
             auto material =
-                MaterialDatabase::instance()->lookup(node.data.get_material());
+                MaterialDatabase::instance()->lookup(node->get_material());
 
 #ifdef DEBUG_XFB_OUTPUT
             scm::gl::transform_feedback_statistics_query_ptr q = ctx
@@ -309,10 +331,10 @@ void GBufferPass::rendering(SerializedScene const& scene,
             nurbs_shader_->get_pre_shader().use(ctx);
             {
                 nurbs_shader_->get_pre_shader()
-                    .set_uniform(ctx, node.transform, "gua_model_matrix");
+                    .set_uniform(ctx, node->get_cached_world_transform(), "gua_model_matrix");
                 nurbs_shader_->get_pre_shader().set_uniform(
                     ctx,
-                    scm::math::transpose(scm::math::inverse(node.transform)),
+                    scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
                     "gua_normal_matrix");
 
                 ctx.render_context->apply();
@@ -334,11 +356,11 @@ void GBufferPass::rendering(SerializedScene const& scene,
                     nurbs_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");
                     nurbs_shader_->set_uniform(
-                        ctx, node.transform, "gua_model_matrix");
+                        ctx, node->get_cached_world_transform(), "gua_model_matrix");
                     nurbs_shader_->set_uniform(
                         ctx,
                         scm::math::transpose(
-                            scm::math::inverse(node.transform)),
+                            scm::math::inverse(node->get_cached_world_transform())),
                         "gua_normal_matrix");
 
                     geometry->draw(ctx);
@@ -350,36 +372,17 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     if (!scene.video3Dnodes_.empty()) {
 
-        // draw video3Ds
-        video3D_shader_->use(ctx);
-        {
+      for (auto const& node : scene.video3Dnodes_)
+      {
+        auto normal_matrix = scm::math::transpose(scm::math::inverse(node->get_cached_world_transform()));
+        auto model_matrix = node->get_cached_world_transform();
 
-            for (auto const& node : scene.video3Dnodes_) {
-                auto video3d =
-                    std::static_pointer_cast<gua::Video3D>(GeometryDatabase::instance()->lookup(node.data.get_video3d()));
-                //auto video3d =
-                    //GeometryDatabase::instance()->lookup(node.data.get_video3d());
-                auto material =
-                    MaterialDatabase::instance()->lookup(node.data.get_material());
-
-                if (material && video3d) {
-                    video3D_shader_->set_uniform(
-                        ctx, material->get_id(), "gua_material_id");
-                    video3D_shader_->set_uniform(
-                        ctx, node.transform, "gua_model_matrix");
-                    video3D_shader_->set_uniform(
-                        ctx,
-                        scm::math::transpose(
-                            scm::math::inverse(node.transform)),
-                        "gua_normal_matrix");
-
-                    video3d->set_uniforms(ctx, video3D_shader_);
-
-                    video3d->draw(ctx);
-                }
-            }
-        }
-        video3D_shader_->unuse(ctx);
+        video3D_shader_->draw(ctx,
+                              node->get_ksfile(),
+                              node->get_material(),
+                              model_matrix,
+                              normal_matrix);
+      }
     }
 
     ctx.render_context->set_rasterizer_state(bbox_rasterizer_state_);
@@ -422,15 +425,14 @@ void GBufferPass::rendering(SerializedScene const& scene,
         mesh_shader_->use(ctx);  // re-use mesh_shader
 
         for (auto const& ray : scene.rays_) {
-            auto geometry =
-                GeometryDatabase::instance()->lookup(ray.data.get_geometry());
+            auto geometry = GeometryDatabase::instance()->lookup("gua_ray_geometry");
 
             mesh_shader_->set_uniform(
                 ctx, bbox_material->get_id(), "gua_material_id");
-            mesh_shader_->set_uniform(ctx, ray.transform, "gua_model_matrix");
+            mesh_shader_->set_uniform(ctx, ray->get_cached_world_transform(), "gua_model_matrix");
             mesh_shader_->set_uniform(
                 ctx,
-                scm::math::transpose(scm::math::inverse(ray.transform)),
+                scm::math::transpose(scm::math::inverse(ray->get_cached_world_transform())),
                 "gua_normal_matrix");
 
             geometry->draw(ctx);

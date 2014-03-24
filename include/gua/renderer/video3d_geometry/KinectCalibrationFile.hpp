@@ -28,31 +28,30 @@ class KinectCalibrationFile{
         std::string get_stream_filename() const;
 
         /////////////////GETTER/SETTER//////////////////
-        scm::math::mat4f& getImageDToEyeD();
-        scm::math::mat4f& getEyeDToImageD();
-        scm::math::mat4f& getEyeDToWorld();
-        scm::math::mat4f& getEyeDToEyeRGB();
-        scm::math::mat4f& getEyeRGBToImageRGB();
-        scm::math::mat4f& getEyeRGBToWorld();
-
-        scm::math::vec2f& getColorFocalLength();
-        scm::math::vec2f& getColorPrincipalPoint();
-        scm::math::vec3f& getColorRadialDistortion();
-        scm::math::vec2f& getColorTangentialDistortion();
-
-
-        scm::math::vec2f& getDepthFocalLength();
-        scm::math::vec2f& getDepthPrincipalPoint();
-        scm::math::vec3f& getDepthRadialDistortion();
-        scm::math::vec2f& getDepthTangentialDistortion();
-
-
-        scm::math::mat4f& getRelativeRotation();
-        scm::math::vec3f& getRelativeTranslation();
-
-        scm::math::mat4f&  getWorldRotation();
+        scm::math::mat4f const& getImageDToEyeD() const;
+        scm::math::mat4f const& getEyeDToImageD() const;
+        scm::math::mat4f const& getEyeDToWorld() const;
+        scm::math::mat4f const& getEyeDToEyeRGB() const;
+        scm::math::mat4f const& getEyeRGBToImageRGB() const;
+        scm::math::mat4f const& getEyeRGBToWorld() const;
+                         
+        scm::math::vec2f const& getColorFocalLength() const;
+        scm::math::vec2f const& getColorPrincipalPoint() const;
+        scm::math::vec3f const& getColorRadialDistortion() const;
+        scm::math::vec2f const& getColorTangentialDistortion() const;
+                         
+        scm::math::vec2f const& getDepthFocalLength() const;
+        scm::math::vec2f const& getDepthPrincipalPoint() const;
+        scm::math::vec3f const& getDepthRadialDistortion() const;
+        scm::math::vec2f const& getDepthTangentialDistortion() const;
+                         
+        scm::math::mat4f const& getRelativeRotation() const;
+        scm::math::vec3f const& getRelativeTranslation() const;
+                         
+        scm::math::mat4f const& getWorldRotation() const;
         void setWorldRotation(scm::math::mat4f& r);
-        scm::math::vec3f& getWorldTranslation();
+
+        scm::math::vec3f const& getWorldTranslation() const;
         void setWorldTranslation(scm::math::vec3f& t);
 
         float* getIntrinsicRGB9();

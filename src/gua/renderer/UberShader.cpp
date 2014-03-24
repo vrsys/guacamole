@@ -26,13 +26,17 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/UberShaderFactory.hpp>
 #include <gua/databases.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UberShader::UberShader() : uniform_mapping_(), output_mapping_() {}
+UberShader::UberShader() 
+: uniform_mapping_(), 
+  output_mapping_(),
+  pre_pass_programs_()
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,10 +70,25 @@ LayerMapping const* UberShader::get_gbuffer_mapping() const {
   return &output_mapping_;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 UniformMapping const* UberShader::get_uniform_mapping() const {
   return &uniform_mapping_;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/*virtual*/ void UberShader::add_pre_pass(std::shared_ptr<ShaderProgram> const& pre_pass)
+{
+  pre_pass_programs_.push_back(pre_pass);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+std::vector<std::shared_ptr<ShaderProgram>> const& UberShader::get_pre_passes() const
+{
+  return pre_pass_programs_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

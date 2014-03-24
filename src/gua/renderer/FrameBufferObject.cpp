@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/math/math.hpp>
 
 // external headers
@@ -158,7 +158,7 @@ void FrameBufferObject::copy_color_buffer(RenderContext const& ctx,
 void FrameBufferObject::set_viewport(RenderContext const& ctx) const {
 
   ctx.render_context->set_viewport(
-      scm::gl::viewport(math::vec2(0, 0), math::vec2(width(), height())));
+    scm::gl::viewport(math::vec2(0, 0), math::vec2(width(), height())));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,8 +170,7 @@ bool FrameBufferObject::set_size(std::shared_ptr<Texture2D> const& buffer) {
     height_ = buffer->height();
     return true;
   } else if (buffer->width() != width_ || buffer->height() != height_) {
-    WARNING("Buffers attached to the same FrameBufferObject must have the "
-            "same size!");
+    Logger::LOG_WARNING << "Buffers attached to the same FrameBufferObject must have the same size!" << std::endl;
 
     return false;
   }

@@ -43,6 +43,8 @@
 
 namespace gua {
 
+
+class GBufferVideo3DUberShader;
 struct RenderContext;
 
 /**
@@ -73,13 +75,6 @@ class Video3D : public Geometry {
    */
   void init();
 
-  /**
-   * Draws the Video3D
-   *
-   * Draws the Mesh to the given context.
-   *
-   * \param context          The RenderContext to draw onto.
-   */
   void draw(RenderContext const& context) const;
   
   /**
@@ -92,11 +87,22 @@ class Video3D : public Geometry {
                 Node* owner, std::set<PickResult>& hits) 
   {}
 
-  void set_uniforms(RenderContext const& ctx, ShaderProgram* cs);
+  unsigned                        number_of_cameras() const;
+
+  scm::gl::texture_2d_ptr const&  color_array (RenderContext const& context) const;
+  scm::gl::texture_2d_ptr const&  depth_array (RenderContext const& context) const;
+
+  void                            update_buffers (RenderContext const& context) const;
+
+  KinectCalibrationFile const&    calibration_file (unsigned i) const;
 
  private:
+
   void upload_to(RenderContext const& context) const;
-  void update_buffers(RenderContext const& context) const;
+
+  void upload_proxy_mesh(RenderContext const& context) const;
+  void upload_video_textures(RenderContext const& context) const;
+
   
   std::string                         ks_filename_;
   std::vector<std::shared_ptr<KinectCalibrationFile>> calib_files_;
@@ -107,7 +113,6 @@ class Video3D : public Geometry {
   mutable std::vector<scm::gl::buffer_ptr>       proxy_indices_;
   mutable std::vector<scm::gl::vertex_array_ptr> proxy_vertex_array_;
 
-  mutable std::vector<scm::gl::sampler_state_ptr>    sstate_;
   mutable std::vector<scm::gl::rasterizer_state_ptr> rstate_solid_;
 
   mutable std::vector<scm::gl::texture_2d_ptr> color_texArrays_;

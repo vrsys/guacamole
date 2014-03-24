@@ -33,8 +33,8 @@ class GBuffer;
 class Frustum;
 class Camera;
 class Pipeline;
-class ShadowMapMeshShader;
-class ShadowMapNURBSShader;
+class GBufferMeshUberShader;
+class GBufferNURBSUberShader;
 
 /**
  *
@@ -73,6 +73,8 @@ class ShadowMap {
 
   bool pre_compile_shaders(RenderContext const& ctx);
 
+  void apply_material_mapping(std::set<std::string> const& materials) const;
+
   GBuffer*                       get_buffer() const {return buffer_;}
   std::vector<math::mat4> const& get_projection_view_matrices() const {return projection_view_matrices_;}
 
@@ -91,8 +93,8 @@ class ShadowMap {
 
   Pipeline* pipeline_;
 
-  ShadowMapMeshShader* mesh_shader_;
-  ShadowMapNURBSShader* nurbs_shader_;
+  GBufferMeshUberShader* mesh_shader_;
+  // GBufferNURBSUberShader* nurbs_shader_;
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::rasterizer_state_ptr rasterizer_state_;

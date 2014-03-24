@@ -625,90 +625,90 @@ KinectCalibrationFile::get_stream_filename() const
 }
 
 //////////////////////GET/SET//////////////////////////
-scm::math::mat4f&
-KinectCalibrationFile::getImageDToEyeD(){
+scm::math::mat4f const&
+KinectCalibrationFile::getImageDToEyeD() const{
     return _image_d_to_eye_d;
 }
 
-scm::math::mat4f&
-KinectCalibrationFile::getEyeDToImageD(){
+scm::math::mat4f const&
+KinectCalibrationFile::getEyeDToImageD() const{
     return _eye_d_to_image_d;
 }
 
-scm::math::mat4f&
-KinectCalibrationFile::getEyeDToWorld(){
+scm::math::mat4f const&
+KinectCalibrationFile::getEyeDToWorld() const{
     return _eye_d_to_world;
 }
 
-scm::math::mat4f&
-KinectCalibrationFile::getEyeDToEyeRGB(){
+scm::math::mat4f const&
+KinectCalibrationFile::getEyeDToEyeRGB() const{
     return _eye_d_to_eye_rgb;
 }
 
-scm::math::mat4f&
-KinectCalibrationFile::getEyeRGBToImageRGB(){
+scm::math::mat4f const&
+KinectCalibrationFile::getEyeRGBToImageRGB() const{
     return _eye_rgb_to_image_rgb;
 }
 
-scm::math::mat4f&
-KinectCalibrationFile::getEyeRGBToWorld(){
+scm::math::mat4f const&
+KinectCalibrationFile::getEyeRGBToWorld() const{
     return _eye_rgb_to_world;
 }
 
-scm::math::vec2f&
-KinectCalibrationFile::getColorFocalLength(){
+scm::math::vec2f const&
+KinectCalibrationFile::getColorFocalLength() const{
   return _colorFocalLength;
 }
 
-scm::math::vec2f&
-KinectCalibrationFile::getColorPrincipalPoint(){
+scm::math::vec2f const&
+KinectCalibrationFile::getColorPrincipalPoint() const{
   return _colorPrincipalPoint;
 }
 
-scm::math::vec3f&
-KinectCalibrationFile::getColorRadialDistortion(){
+scm::math::vec3f const&
+KinectCalibrationFile::getColorRadialDistortion() const{
   return _colorRadialDistortion;
 }
 
-scm::math::vec2f&
-KinectCalibrationFile::getColorTangentialDistortion(){
+scm::math::vec2f const&
+KinectCalibrationFile::getColorTangentialDistortion() const{
   return _colorTangentialDistortion;
 }
 
 
-scm::math::vec2f&
-KinectCalibrationFile::getDepthFocalLength(){
+scm::math::vec2f const&
+KinectCalibrationFile::getDepthFocalLength() const{
   return _depthFocalLength;
 }
 
-scm::math::vec2f&
-KinectCalibrationFile::getDepthPrincipalPoint(){
+scm::math::vec2f const&
+KinectCalibrationFile::getDepthPrincipalPoint() const{
   return _depthPrincipalPoint;
 }
 
-scm::math::vec3f&
-KinectCalibrationFile::getDepthRadialDistortion(){
+scm::math::vec3f const&
+KinectCalibrationFile::getDepthRadialDistortion() const{
   return _depthRadialDistortion;
 }
 
-scm::math::vec2f&
-KinectCalibrationFile::getDepthTangentialDistortion(){
+scm::math::vec2f const&
+KinectCalibrationFile::getDepthTangentialDistortion() const{
   return _depthTangentialDistortion;
 }
 
 
-scm::math::mat4f&
-KinectCalibrationFile::getRelativeRotation(){
+scm::math::mat4f const&
+KinectCalibrationFile::getRelativeRotation() const{
   return _relativeRotation;
 }
 
-scm::math::vec3f&
-KinectCalibrationFile::getRelativeTranslation(){
+scm::math::vec3f const&
+KinectCalibrationFile::getRelativeTranslation() const{
   return _relativeTranslation;
 }
 
-scm::math::mat4f&
-KinectCalibrationFile::getWorldRotation(){
+scm::math::mat4f const&
+KinectCalibrationFile::getWorldRotation() const{
   return _worldRotation;
 }
 
@@ -717,8 +717,8 @@ KinectCalibrationFile::setWorldRotation(scm::math::mat4f& r){
   _worldRotation = r;
 }
 
-scm::math::vec3f&
-KinectCalibrationFile::getWorldTranslation(){
+scm::math::vec3f const&
+KinectCalibrationFile::getWorldTranslation() const{
   return _worldTranslation;
 }
 

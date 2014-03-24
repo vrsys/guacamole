@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
 
@@ -74,7 +74,7 @@ void Profiler::print() {
 
     if (profile_host_->enabled() && ++frame_count_ > interval_) {
 
-        PROFILING("#### start of profiling information ####");
+        Logger::LOG_MESSAGE << "#### start of profiling information ####" << std::endl;
 
         for (auto& name : timer_names_) {
             std::cout << name << ": "
@@ -95,7 +95,7 @@ void Profiler::print(std::vector<std::string> const & names) {
 
     if (profile_host_->enabled() && ++frame_count_ > interval_) {
 
-        PROFILING("#### start of profiling information ####");
+        Logger::LOG_MESSAGE << "#### start of profiling information ####" << std::endl;
 
         for (auto& name : names) {
             std::cout << name << ": "

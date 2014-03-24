@@ -26,13 +26,13 @@
 
 // guacamole headers
 #include <gua/utils/Directory.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <sstream>
 #include <iostream>
 #include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp> 
+#include <boost/algorithm/string.hpp>
 
 namespace gua {
 

@@ -37,10 +37,11 @@ namespace gua {
 
 LightingPass::LightingPass(Pipeline* pipeline)
     : GeometryPass(pipeline),
+      shadow_map_(pipeline),
       shader_(new LightingUberShader),
       light_sphere_(nullptr),
-      light_cone_(nullptr),
-      shadow_map_(pipeline) {
+      light_cone_(nullptr)
+  {
     light_sphere_ = GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
     light_cone_ = GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
 }
@@ -60,6 +61,7 @@ void LightingPass::apply_material_mapping(
     std::set<std::string> const& material_names,
     std::vector<LayerMapping const*> const& inputs) const {
   shader_->create(material_names, inputs);
+  shadow_map_.apply_material_mapping(material_names);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,11 +92,9 @@ bool LightingPass::pre_compile_shaders(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightingPass::rendering(SerializedScene const& scene,
-                             RenderContext const& ctx,
-                             CameraMode eye,
-                             Camera const& camera,
-                             FrameBufferObject* target) {
+void LightingPass::init_ressources(RenderContext const& ctx)
+{
+  if (!initialized_) {
     if (!depth_stencil_state_)
         depth_stencil_state_ =
             ctx.render_device->create_depth_stencil_state(false, false);
@@ -117,6 +117,16 @@ void LightingPass::rendering(SerializedScene const& scene,
     if (!fullscreen_quad_)
       fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
         ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    initialized_ = true;
+  }
+}
+
+void LightingPass::rendering(SerializedScene const& scene,
+                             RenderContext const& ctx,
+                             CameraMode eye,
+                             Camera const& camera,
+                             FrameBufferObject* target) {
+    init_ressources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
     ctx.render_context->set_rasterizer_state(rasterizer_state_back_);
@@ -145,30 +155,30 @@ void LightingPass::rendering(SerializedScene const& scene,
 
     for (auto const& light : scene.sun_lights_) {
 
-        if (light.data.get_enable_shadows()) {
+        if (light->data.get_enable_shadows()) {
             shader_->unuse(ctx);
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
             float split_0(0.f), split_1(0.f), split_2(0.f), split_3(0.f), split_4(0.f);
 
-            if (light.data.get_shadow_cascaded_splits().size() == 5) {
+            if (light->data.get_shadow_cascaded_splits().size() == 5) {
 
-                split_0 = light.data.get_shadow_cascaded_splits()[0];
-                split_1 = light.data.get_shadow_cascaded_splits()[1];
-                split_2 = light.data.get_shadow_cascaded_splits()[2];
-                split_3 = light.data.get_shadow_cascaded_splits()[3];
-                split_4 = light.data.get_shadow_cascaded_splits()[4];
+                split_0 = light->data.get_shadow_cascaded_splits()[0];
+                split_1 = light->data.get_shadow_cascaded_splits()[1];
+                split_2 = light->data.get_shadow_cascaded_splits()[2];
+                split_3 = light->data.get_shadow_cascaded_splits()[3];
+                split_4 = light->data.get_shadow_cascaded_splits()[4];
 
             } else {
-                WARNING("Exactly 5 splits have to be defined for cascaded shadow maps!");
+                Logger::LOG_WARNING << "Exactly 5 splits have to be defined for cascaded shadow maps!" << std::endl;
             }
 
             shadow_map_.render_cascaded(ctx, scene.center_of_interest, scene.frustum, camera,
-                                        light.transform,
-                                        light.data.get_shadow_map_size(),
+                                        light->get_cached_world_transform(),
+                                        light->data.get_shadow_map_size(),
                                         split_0, split_1, split_2, split_3, split_4,
-                                        light.data.get_shadow_near_clipping_in_sun_direction());
+                                        light->data.get_shadow_near_clipping_in_sun_direction());
 
             shader_->use(ctx);
             target->bind(ctx);
@@ -183,7 +193,7 @@ void LightingPass::rendering(SerializedScene const& scene,
 
             shader_->set_uniform(ctx, shadow_map_.get_buffer()->get_depth_buffer(), "gua_light_shadow_map");
 
-            float shadow_map_portion(1.f * light.data.get_shadow_map_size() / shadow_map_.get_buffer()->width());
+            float shadow_map_portion(1.f * light->data.get_shadow_map_size() / shadow_map_.get_buffer()->width());
             shader_->set_uniform(ctx, shadow_map_portion, "gua_light_shadow_map_portion");
 
             for (int i(0); i<4; ++i) {
@@ -192,15 +202,15 @@ void LightingPass::rendering(SerializedScene const& scene,
         }
 
         shader_->set_uniform(
-            ctx, light.data.get_enable_diffuse_shading(), "gua_light_diffuse_enable");
+            ctx, light->data.get_enable_diffuse_shading(), "gua_light_diffuse_enable");
         shader_->set_uniform(ctx,
-                             light.data.get_enable_specular_shading(),
+                             light->data.get_enable_specular_shading(),
                              "gua_light_specular_enable");
-        shader_->set_uniform(ctx, light.transform, "gua_model_matrix");
-        shader_->set_uniform(ctx, light.data.get_color().vec3(), "gua_light_color");
-        shader_->set_uniform(ctx, light.data.get_enable_shadows(), "gua_light_casts_shadow");
+        shader_->set_uniform(ctx, light->get_cached_world_transform(), "gua_model_matrix");
+        shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
+        shader_->set_uniform(ctx, light->data.get_enable_shadows(), "gua_light_casts_shadow");
         shader_->set_uniform(
-            ctx, light.data.get_shadow_offset(), "gua_shadow_offset");
+            ctx, light->data.get_shadow_offset(), "gua_shadow_offset");
         fullscreen_quad_->draw(ctx.render_context);
     }
 
@@ -221,13 +231,13 @@ void LightingPass::rendering(SerializedScene const& scene,
 
     for (auto const& light : scene.point_lights_) {
         shader_->set_uniform(
-            ctx, light.data.get_enable_diffuse_shading(), "gua_light_diffuse_enable");
+            ctx, light->data.get_enable_diffuse_shading(), "gua_light_diffuse_enable");
         shader_->set_uniform(ctx,
-                             light.data.get_enable_specular_shading(),
+                             light->data.get_enable_specular_shading(),
                              "gua_light_specular_enable");
-        shader_->set_uniform(ctx, light.transform, "gua_model_matrix");
-        shader_->set_uniform(ctx, light.data.get_color().vec3(), "gua_light_color");
-        shader_->set_uniform(ctx, light.data.get_falloff(), "gua_light_falloff");
+        shader_->set_uniform(ctx, light->get_cached_world_transform(), "gua_model_matrix");
+        shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
+        shader_->set_uniform(ctx, light->data.get_falloff(), "gua_light_falloff");
         shader_->set_uniform(ctx, false, "gua_light_casts_shadow");
         light_sphere_->draw(ctx);
     }
@@ -245,12 +255,12 @@ void LightingPass::rendering(SerializedScene const& scene,
                             "gua_calculate_spot_light");
 
     for (auto const& light : scene.spot_lights_) {
-        if (light.data.get_enable_shadows()) {
+        if (light->data.get_enable_shadows()) {
             shader_->unuse(ctx);
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
-            shadow_map_.render(ctx, scene.center_of_interest, camera, light.transform, light.data.get_shadow_map_size());
+            shadow_map_.render(ctx, scene.center_of_interest, camera, light->get_cached_world_transform(), light->data.get_shadow_map_size());
 
             shader_->use(ctx);
             target->bind(ctx);
@@ -265,24 +275,24 @@ void LightingPass::rendering(SerializedScene const& scene,
 
             shader_->set_uniform(ctx, shadow_map_.get_buffer()->get_depth_buffer(), "gua_light_shadow_map");
 
-            float shadow_map_portion(1.f * light.data.get_shadow_map_size() / shadow_map_.get_buffer()->width());
+            float shadow_map_portion(1.f * light->data.get_shadow_map_size() / shadow_map_.get_buffer()->width());
             shader_->set_uniform(ctx, shadow_map_portion, "gua_light_shadow_map_portion");
             shader_->set_uniform(ctx, shadow_map_.get_projection_view_matrices()[0], "gua_light_shadow_map_projection_view_matrix_0");
         }
 
         shader_->set_uniform(
-            ctx, light.data.get_enable_shadows(), "gua_light_casts_shadow");
+            ctx, light->data.get_enable_shadows(), "gua_light_casts_shadow");
         shader_->set_uniform(
-            ctx, light.data.get_enable_diffuse_shading(), "gua_light_diffuse_enable");
+            ctx, light->data.get_enable_diffuse_shading(), "gua_light_diffuse_enable");
         shader_->set_uniform(ctx,
-                             light.data.get_enable_specular_shading(),
+                             light->data.get_enable_specular_shading(),
                              "gua_light_specular_enable");
-        shader_->set_uniform(ctx, light.transform, "gua_model_matrix");
-        shader_->set_uniform(ctx, light.data.get_color().vec3(), "gua_light_color");
-        shader_->set_uniform(ctx, light.data.get_falloff(), "gua_light_falloff");
-        shader_->set_uniform(ctx, light.data.get_softness(), "gua_light_softness");
+        shader_->set_uniform(ctx, light->get_cached_world_transform(), "gua_model_matrix");
+        shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
+        shader_->set_uniform(ctx, light->data.get_falloff(), "gua_light_falloff");
+        shader_->set_uniform(ctx, light->data.get_softness(), "gua_light_softness");
         shader_->set_uniform(
-            ctx, light.data.get_shadow_offset(), "gua_shadow_offset");
+            ctx, light->data.get_shadow_offset(), "gua_shadow_offset");
         light_cone_->draw(ctx);
     }
 

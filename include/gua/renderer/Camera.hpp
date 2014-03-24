@@ -35,7 +35,7 @@ namespace gua {
  *  It is defined by a screen, a view point a a render mask.
  */
 
-struct GUA_DLL Camera {
+struct Camera {
 
   enum ProjectionMode {
     PERSPECTIVE,

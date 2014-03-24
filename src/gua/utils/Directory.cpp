@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/utils/PathParser.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <iostream>
@@ -68,7 +68,7 @@ std::string const& Directory::get_content() const {
   boost::filesystem::directory_iterator end_iter;
 
   if (!is_valid()) {
-    WARNING("Cannot access directory \"%s\"", path_name_.c_str());
+    Logger::LOG_WARNING << "Cannot access directory \"" << path_name_ << "\"!" << std::endl;
     return content_;
   } else {
     for (boost::filesystem::directory_iterator i(directory); i != end_iter;
@@ -86,7 +86,7 @@ std::string const& Directory::get_content() const {
     directory = opendir(path_name_.c_str());
 
     if(!directory) {
-        WARNING("Cannot access directory \"%s\"", path_name_.c_str());
+        Logger::LOG_WARNING << "Cannot access directory \"" << path_name_ << "\"!" << std::endl;
         return content_;
     }
 

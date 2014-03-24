@@ -91,7 +91,7 @@ namespace gua {
 		*
 		* \param context          The RenderContext to draw onto.
 		*/
-		void draw(RenderContext const& context) const;
+    void draw(RenderContext const& context) const;
 
 		/**
 		* Draws the Volume.
