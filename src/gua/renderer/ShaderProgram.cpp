@@ -26,7 +26,6 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/Uniform.hpp>
-#include <gua/utils/logger.hpp>
 #include <gua/utils/Logger.hpp>
 
 namespace gua {

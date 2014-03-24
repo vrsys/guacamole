@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/databases.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/memory.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ShaderProgram.hpp>

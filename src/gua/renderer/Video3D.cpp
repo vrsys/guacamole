@@ -28,7 +28,7 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/GBufferVideo3DUberShader.hpp>
 #include <gua/renderer/video3d_geometry/DXTCompressor.h>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 #include <scm/gl_core/render_device/opengl/gl_core.h>
 
