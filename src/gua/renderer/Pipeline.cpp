@@ -159,119 +159,8 @@ void Pipeline::loading_screen() {
   }
 }
 
-void Pipeline::call_serializer() {
-  if (!config.get_enable_stereo()) { // Mono
-
-    auto eye((*current_graph_)[config.camera().eye_l]);
-    if (!eye) {
-      Logger::LOG_WARNING << "Cannot render scene: No valid eye specified" << std::endl;
-      return;
-    }
-
-    auto screen_it((*current_graph_)[config.camera().screen_l]);
-    auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
-    if (!screen) {
-      Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
-      return;
-    }
-
-    if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
-      current_scenes_[0].frustum = Frustum::perspective(eye->get_world_transform(),
-                                           screen->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-    } else {
-      current_scenes_[0].frustum = Frustum::orthographic(eye->get_world_transform(),
-                                           screen->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-    }
-
-    current_scenes_[0].center_of_interest = eye->get_world_position();
-    current_scenes_[0].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
-    current_scenes_[0].global_clipping_plane = config.get_global_clipping_plane();
-
-    serializer_->check(&current_scenes_[0],
-                       current_graph_,
-                       config.camera().render_mask,
-                       config.enable_bbox_display(),
-                       config.enable_ray_display(),
-                       config.enable_frustum_culling());
-  } else { // Stereo
-
-    auto eye_l((*current_graph_)[config.camera().eye_l]);
-    if (!eye_l) {
-      Logger::LOG_WARNING << "Cannot render scene: No valid left eye specified" << std::endl;
-      return;
-    }
-
-    auto eye_r((*current_graph_)[config.camera().eye_r]);
-    if (!eye_r) {
-      Logger::LOG_WARNING << "Cannot render scene: No valid right eye specified" << std::endl;
-      return;
-    }
-
-    auto screen_it_l((*current_graph_)[config.camera().screen_l]);
-    auto screen_l(std::dynamic_pointer_cast<ScreenNode>(screen_it_l));
-    if (!screen_l) {
-      Logger::LOG_WARNING << "Cannot render scene: No valid left screen specified" << std::endl;
-      return;
-    }
-
-    auto screen_it_r((*current_graph_)[config.camera().screen_r]);
-    auto screen_r(std::dynamic_pointer_cast<ScreenNode>(screen_it_r));
-    if (!screen_r) {
-      Logger::LOG_WARNING << "Cannot render scene: No valid right screen specified" << std::endl;
-      return;
-    }
-
-    if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
-      current_scenes_[0].frustum = Frustum::perspective(eye_l->get_world_transform(),
-                                           screen_l->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-      current_scenes_[1].frustum = Frustum::perspective(eye_r->get_world_transform(),
-                                           screen_r->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-    } else {
-      current_scenes_[0].frustum = Frustum::orthographic(eye_l->get_world_transform(),
-                                           screen_l->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-      current_scenes_[1].frustum = Frustum::orthographic(eye_r->get_world_transform(),
-                                           screen_r->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-    }
-
-    current_scenes_[0].center_of_interest = eye_l->get_world_position();
-    current_scenes_[0].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
-    current_scenes_[0].global_clipping_plane = config.get_global_clipping_plane();
-    current_scenes_[1].center_of_interest = eye_r->get_world_position();
-    current_scenes_[1].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
-    current_scenes_[1].global_clipping_plane = config.get_global_clipping_plane();
-
-    serializer_->check(&current_scenes_[0],
-                       current_graph_,
-                       config.camera().render_mask,
-                       config.enable_bbox_display(),
-                       config.enable_ray_display(),
-                       config.enable_frustum_culling());
-
-    serializer_->check(&current_scenes_[1],
-                       current_graph_,
-                       config.camera().render_mask,
-                       config.enable_bbox_display(),
-                       config.enable_ray_display(),
-                       config.enable_frustum_culling());
-  }
-}
-
 void Pipeline::serialize(std::string const& eye_name,
                          std::string const& screen_name,
-                         Camera::ProjectionMode mode,
-                         std::string const& render_mask,
                          SerializedScene& out) {
   auto eye((*current_graph_)[eye_name]);
   if (!eye) {
@@ -286,7 +175,7 @@ void Pipeline::serialize(std::string const& eye_name,
     return;
   }
 
-  if (mode == Camera::ProjectionMode::PERSPECTIVE) {
+  if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
     out.frustum = Frustum::perspective(eye->get_world_transform(),
                                        screen->get_scaled_world_transform(),
                                        config.near_clip(),
@@ -304,7 +193,7 @@ void Pipeline::serialize(std::string const& eye_name,
 
   serializer_->check(&out,
                      current_graph_,
-                     render_mask,
+                     config.camera().render_mask,
                      config.enable_bbox_display(),
                      config.enable_ray_display(),
                      config.enable_frustum_culling());
@@ -374,7 +263,11 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       create_buffers();
     }
 
-    call_serializer();
+    serialize(config.camera().eye_l, config.camera().screen_l, current_scenes_[0]);
+    if (config.get_enable_stereo()) {
+      serialize(config.camera().eye_r, config.camera().screen_r, current_scenes_[1]);
+    }
+
     for (auto pass : passes_) {
       pass->render_scene(config.camera(), *context_);
     }
