@@ -99,6 +99,7 @@ bool GBufferPass::pre_compile_shaders(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GBufferPass::rendering(SerializedScene const& scene,
+                            SceneGraph const*,
                             RenderContext const& ctx,
                             CameraMode eye,
                             Camera const& camera,

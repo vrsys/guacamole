@@ -121,6 +121,7 @@ void LightingPass::init_resources(RenderContext const& ctx) {
 }
 
 void LightingPass::rendering(SerializedScene const& scene,
+                             SceneGraph const* scene_graph,
                              RenderContext const& ctx,
                              CameraMode eye,
                              Camera const& camera,
@@ -173,7 +174,7 @@ void LightingPass::rendering(SerializedScene const& scene,
                 Logger::LOG_WARNING << "Exactly 5 splits have to be defined for cascaded shadow maps!" << std::endl;
             }
 
-            shadow_map_.render_cascaded(ctx, scene.center_of_interest, scene.frustum, camera,
+            shadow_map_.render_cascaded(ctx, scene_graph, scene.center_of_interest, scene.frustum, camera,
                                         light->get_cached_world_transform(),
                                         light->data.get_shadow_map_size(),
                                         split_0, split_1, split_2, split_3, split_4,
@@ -259,7 +260,7 @@ void LightingPass::rendering(SerializedScene const& scene,
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
-            shadow_map_.render(ctx, scene.center_of_interest, camera, light->get_cached_world_transform(), light->data.get_shadow_map_size());
+            shadow_map_.render(ctx, scene_graph, scene.center_of_interest, camera, light->get_cached_world_transform(), light->data.get_shadow_map_size());
 
             shader_->use(ctx);
             target->bind(ctx);

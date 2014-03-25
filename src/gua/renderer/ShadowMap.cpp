@@ -117,6 +117,7 @@ void ShadowMap::apply_material_mapping(std::set<std::string> const &
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render_geometry(RenderContext const & ctx,
+                                SceneGraph const* scene_graph,
                                 math::vec3 const& center_of_interest,
                                 Frustum const& shadow_frustum,
                                 Camera const& scene_camera,
@@ -174,6 +175,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render(RenderContext const& ctx,
+                       SceneGraph const* scene_graph,
                        math::vec3 const& center_of_interest,
                        Camera const& scene_camera,
                        math::mat4 const& transform,
@@ -208,7 +210,7 @@ void ShadowMap::render(RenderContext const& ctx,
 
     // render geometries
     mesh_shader_->use(ctx);
-    render_geometry(ctx, center_of_interest, shadow_frustum, scene_camera, 0);
+    render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, 0);
     mesh_shader_->unuse(ctx);
 
     ctx.render_context->reset_state_objects();
@@ -219,6 +221,7 @@ void ShadowMap::render(RenderContext const& ctx,
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render_cascaded(RenderContext const& ctx,
+              SceneGraph const* scene_graph,
               math::vec3 const& center_of_interest,
               Frustum const& scene_frustum,
               Camera const& scene_camera,
@@ -303,7 +306,7 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
 
       // // render geometries
       mesh_shader_->use(ctx);
-      render_geometry(ctx, center_of_interest, shadow_frustum, scene_camera, cascade);
+      render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, cascade);
       mesh_shader_->unuse(ctx);
     }
   }

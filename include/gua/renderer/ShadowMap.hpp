@@ -35,6 +35,7 @@ class Camera;
 class Pipeline;
 class GBufferMeshUberShader;
 class GBufferNURBSUberShader;
+class SceneGraph;
 
 /**
  *
@@ -50,12 +51,14 @@ class ShadowMap {
   virtual ~ShadowMap();
 
   void render(RenderContext const& ctx,
+              SceneGraph const* scene_graph,
               math::vec3 const& center_of_interest,
               Camera const& scene_camera,
               math::mat4 const& transform,
               unsigned map_size);
 
   void render_cascaded(RenderContext const& ctx,
+              SceneGraph const* scene_graph,
               math::vec3 const& center_of_interest,
               Frustum const& scene_frustum,
               Camera const& scene_camera,
@@ -82,6 +85,7 @@ class ShadowMap {
 
   void update_members(RenderContext const& ctx, unsigned map_size);
   void render_geometry(RenderContext const & ctx,
+                       SceneGraph const* scene_graph,
                        math::vec3 const& center_of_interest,
                        Frustum const& shadow_frustum,
                        Camera const& scene_camera,

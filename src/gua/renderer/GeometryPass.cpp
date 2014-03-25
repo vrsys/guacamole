@@ -56,7 +56,7 @@ void GeometryPass::render_scene(Camera const& camera, RenderContext const& ctx) 
     ctx.render_context->set_viewport(scm::gl::viewport(
         math::vec2(0, 0), ::scm::math::vec2f(fbo->width(), fbo->height())));
 
-    rendering(pipeline_->get_current_scene(eye), ctx, eye, camera, fbo);
+    rendering(pipeline_->get_current_scene(eye), pipeline_->get_current_graph(), ctx, eye, camera, fbo);
 
     fbo->unbind(ctx);
   }

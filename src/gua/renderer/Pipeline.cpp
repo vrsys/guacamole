@@ -163,13 +163,13 @@ void Pipeline::serialize(const SceneGraph& scene_graph,
                          std::string const& eye_name,
                          std::string const& screen_name,
                          SerializedScene& out) {
-  auto eye((*scene_graph)[eye_name]);
+  auto eye((scene_graph)[eye_name]);
   if (!eye) {
     Logger::LOG_WARNING << "Cannot render scene: No valid eye specified" << std::endl;
     return;
   }
 
-  auto screen_it((*scene_graph)[screen_name]);
+  auto screen_it((scene_graph)[screen_name]);
   auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
   if (!screen) {
     Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
@@ -193,7 +193,7 @@ void Pipeline::serialize(const SceneGraph& scene_graph,
   out.global_clipping_plane = config.get_global_clipping_plane();
 
   serializer_->check(&out,
-                     scene_graph,
+                     &scene_graph,
                      config.camera().render_mask,
                      config.enable_bbox_display(),
                      config.enable_ray_display(),
