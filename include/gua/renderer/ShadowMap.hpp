@@ -51,7 +51,7 @@ class ShadowMap {
   virtual ~ShadowMap();
 
   void render(RenderContext const& ctx,
-              SceneGraph const* scene_graph,
+              SceneGraph const* current_graph,
               math::vec3 const& center_of_interest,
               Camera const& scene_camera,
               math::mat4 const& transform,

@@ -117,7 +117,7 @@ void ShadowMap::apply_material_mapping(std::set<std::string> const &
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render_geometry(RenderContext const & ctx,
-                                SceneGraph const* scene_graph,
+                                SceneGraph const* current_graph,
                                 math::vec3 const& center_of_interest,
                                 Frustum const& shadow_frustum,
                                 Camera const& scene_camera,
@@ -128,7 +128,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   scene.enable_global_clipping_plane = pipeline_->config.get_enable_global_clipping_plane();
   scene.global_clipping_plane = pipeline_->config.get_global_clipping_plane();
   serializer_->check(&scene,
-                     pipeline_->get_current_graph(),
+                     current_graph,
                      scene_camera.render_mask,
                      false,
                      false,

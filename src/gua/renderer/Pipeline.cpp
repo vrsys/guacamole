@@ -49,7 +49,6 @@ Pipeline::Pipeline()
     : config(),
       window_(nullptr),
       context_(nullptr),
-      current_graph_(nullptr),
       application_fps_(0),
       rendering_fps_(0),
       serializer_(new Serializer()),
@@ -231,17 +230,19 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     pipe->process(scene_graphs, application_fps, rendering_fps);
   }
 
-  current_graph_ = nullptr;
+  SceneGraph const* current_graph = nullptr;
 
   for (auto& graph: scene_graphs) {
     if (graph->get_name() == config.camera().scene_graph) {
-      current_graph_ = graph.get();
+      current_graph = graph.get();
       break;
     }
   }
 
-  if (!current_graph_) {
-    Logger::LOG_WARNING << "Failed to display scenegraph \"" << config.camera().scene_graph << "\": Graph not found!" << std::endl;
+  if (!current_graph) {
+    Logger::LOG_WARNING << "Failed to display scenegraph \""
+                        << config.camera().scene_graph << "\": Graph not found!"
+                        << std::endl;
   }
 
   rendering_fps_ = rendering_fps;
@@ -264,13 +265,13 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       create_buffers();
     }
 
-    serialize(*current_graph_, config.camera().eye_l, config.camera().screen_l, current_scenes_[0]);
+    serialize(*current_graph, config.camera().eye_l, config.camera().screen_l, current_scenes_[0]);
     if (config.get_enable_stereo()) {
-      serialize(*current_graph_, config.camera().eye_r, config.camera().screen_r, current_scenes_[1]);
+      serialize(*current_graph, config.camera().eye_r, config.camera().screen_r, current_scenes_[1]);
     }
 
     for (auto pass : passes_) {
-      pass->render_scene(config.camera(), *context_);
+      pass->render_scene(config.camera(), current_graph, *context_);
     }
 
     if (window_) {

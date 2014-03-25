@@ -267,7 +267,9 @@ void PostFXPass::init_resources(RenderContext const& ctx) {
   }
 }
 
-void PostFXPass::render_scene(Camera const& camera, RenderContext const& ctx) {
+void PostFXPass::render_scene(Camera const& camera,
+                              SceneGraph const*,
+                              RenderContext const& ctx) {
     init_resources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);

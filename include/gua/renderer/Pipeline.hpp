@@ -184,7 +184,6 @@ class GUA_DLL Pipeline {
   inline float get_rendering_fps() const { return rendering_fps_; }
 
   SerializedScene const& get_current_scene(CameraMode mode) const;
-  inline SceneGraph const* get_current_graph() const { return current_graph_; }
 
   friend class Renderer;
 
@@ -209,8 +208,6 @@ class GUA_DLL Pipeline {
 
   std::vector<Pipeline*> prerender_pipelines_;
   std::vector<Pass*> passes_;
-
-  const SceneGraph* current_graph_;
 
   Serializer* serializer_;
   std::vector<SerializedScene> current_scenes_;

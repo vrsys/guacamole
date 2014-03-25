@@ -58,7 +58,9 @@ class GeometryPass : public Pass {
    */
   virtual ~GeometryPass() {}
 
-  virtual void render_scene(Camera const& camera, RenderContext const& ctx);
+  virtual void render_scene(Camera const& camera,
+                            SceneGraph const* current_graph,
+                            RenderContext const& ctx);
 
  protected:
   virtual void rendering(SerializedScene const& scene,
