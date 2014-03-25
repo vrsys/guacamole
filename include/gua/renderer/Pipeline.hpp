@@ -190,7 +190,9 @@ class GUA_DLL Pipeline {
 
  private:
   void loading_screen();
-  void serialize(std::string const& eye_name, std::string const& screen_name,
+  void serialize(const SceneGraph& scene_graph,
+                 std::string const& eye_name,
+                 std::string const& screen_name,
                  SerializedScene& out);
 
   void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
