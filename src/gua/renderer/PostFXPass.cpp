@@ -268,7 +268,7 @@ void PostFXPass::init_resources(RenderContext const& ctx) {
 }
 
 void PostFXPass::render_scene(Camera const& camera,
-                              SceneGraph const*,
+                              SceneGraph const&,
                               RenderContext const& ctx) {
     init_resources(ctx);
 

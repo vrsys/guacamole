@@ -121,7 +121,7 @@ void LightingPass::init_resources(RenderContext const& ctx) {
 }
 
 void LightingPass::rendering(SerializedScene const& scene,
-                             SceneGraph const* scene_graph,
+                             SceneGraph const& scene_graph,
                              RenderContext const& ctx,
                              CameraMode eye,
                              Camera const& camera,

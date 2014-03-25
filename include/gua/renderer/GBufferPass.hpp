@@ -68,7 +68,7 @@ class GBufferPass : public GeometryPass {
  private:
 
   void rendering(SerializedScene const& scene,
-                 SceneGraph const*,
+                 SceneGraph const&,
                  RenderContext const& ctx,
                  CameraMode eye,
                  Camera const& camera,

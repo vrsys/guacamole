@@ -54,7 +54,7 @@ class PostFXPass : public Pass {
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 
-  void render_scene(Camera const& camera, SceneGraph const*, RenderContext const& ctx);
+  void render_scene(Camera const& camera, SceneGraph const&, RenderContext const& ctx);
 
   /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
 

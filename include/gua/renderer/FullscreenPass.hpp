@@ -64,7 +64,7 @@ class FullscreenPass : public Pass {
   /**
    *
    */
-  void render_scene(Camera const& camera, SceneGraph const*, RenderContext const& ctx);
+  void render_scene(Camera const& camera, SceneGraph const&, RenderContext const& ctx);
 
  protected:
 

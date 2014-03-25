@@ -43,7 +43,7 @@ FullscreenPass::~FullscreenPass() {}
 ////////////////////////////////////////////////////////////////////////////////
 
 void FullscreenPass::render_scene(Camera const& camera,
-                                  SceneGraph const*,
+                                  SceneGraph const&,
                                   RenderContext const& ctx) {
 
   if (!depth_stencil_state_)

@@ -117,7 +117,7 @@ void ShadowMap::apply_material_mapping(std::set<std::string> const &
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render_geometry(RenderContext const & ctx,
-                                SceneGraph const* current_graph,
+                                SceneGraph const& current_graph,
                                 math::vec3 const& center_of_interest,
                                 Frustum const& shadow_frustum,
                                 Camera const& scene_camera,
@@ -128,7 +128,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   scene.enable_global_clipping_plane = pipeline_->config.get_enable_global_clipping_plane();
   scene.global_clipping_plane = pipeline_->config.get_global_clipping_plane();
   serializer_->check(&scene,
-                     current_graph,
+                     &current_graph,
                      scene_camera.render_mask,
                      false,
                      false,
@@ -175,7 +175,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render(RenderContext const& ctx,
-                       SceneGraph const* scene_graph,
+                       SceneGraph const& scene_graph,
                        math::vec3 const& center_of_interest,
                        Camera const& scene_camera,
                        math::mat4 const& transform,
@@ -221,7 +221,7 @@ void ShadowMap::render(RenderContext const& ctx,
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render_cascaded(RenderContext const& ctx,
-              SceneGraph const* scene_graph,
+              SceneGraph const& scene_graph,
               math::vec3 const& center_of_interest,
               Frustum const& scene_frustum,
               Camera const& scene_camera,

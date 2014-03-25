@@ -65,7 +65,7 @@ class Pass {
   Pass(Pipeline* pipeline);
 
   virtual void render_scene(Camera const& camera,
-                            SceneGraph const* current_graph,
+                            SceneGraph const& current_graph,
                             RenderContext const& ctx) = 0;
 
   virtual void print_shaders(std::string const& directory,
