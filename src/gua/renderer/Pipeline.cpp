@@ -268,6 +268,49 @@ void Pipeline::call_serializer() {
   }
 }
 
+void Pipeline::serialize(std::string const& eye_name,
+                         std::string const& screen_name,
+                         Camera::ProjectionMode mode,
+                         std::string const& render_mask,
+                         SerializedScene& out) {
+  auto eye((*current_graph_)[eye_name]);
+  if (!eye) {
+    Logger::LOG_WARNING << "Cannot render scene: No valid eye specified" << std::endl;
+    return;
+  }
+
+  auto screen_it((*current_graph_)[screen_name]);
+  auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
+  if (!screen) {
+    Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
+    return;
+  }
+
+  if (mode == Camera::ProjectionMode::PERSPECTIVE) {
+    out.frustum = Frustum::perspective(eye->get_world_transform(),
+                                       screen->get_scaled_world_transform(),
+                                       config.near_clip(),
+                                       config.far_clip());
+  } else {
+    out.frustum = Frustum::orthographic(eye->get_world_transform(),
+                                       screen->get_scaled_world_transform(),
+                                       config.near_clip(),
+                                       config.far_clip());
+  }
+
+  out.center_of_interest = eye->get_world_position();
+  out.enable_global_clipping_plane = config.get_enable_global_clipping_plane();
+  out.global_clipping_plane = config.get_global_clipping_plane();
+
+  serializer_->check(&out,
+                     current_graph_,
+                     render_mask,
+                     config.enable_bbox_display(),
+                     config.enable_ray_display(),
+                     config.enable_frustum_culling());
+}
+
+
 void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                        float application_fps,
                        float rendering_fps) {

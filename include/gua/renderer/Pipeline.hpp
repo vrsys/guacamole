@@ -191,6 +191,10 @@ class GUA_DLL Pipeline {
  private:
   void loading_screen();
   void call_serializer();
+  void serialize(std::string const& eye_name, std::string const& screen_name,
+                 Camera::ProjectionMode mode,
+                 std::string const& render_mask, SerializedScene& out);
+
   void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 
