@@ -249,14 +249,14 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   application_fps_ = application_fps;
 
   if (!context_) {
-    Logger::LOG_WARNING << "Pipeline has no context: Please define a window!" << std::endl;
+    Logger::LOG_WARNING << "Pipeline has no context: Please define a window!"
+                        << std::endl;
     return;
   }
 
   if (display_loading_screen_) {
     loading_screen();
   } else {
-
     if (passes_need_reload_) {
       create_passes();
     }
@@ -265,9 +265,11 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       create_buffers();
     }
 
-    serialize(*current_graph, config.camera().eye_l, config.camera().screen_l, current_scenes_[0]);
+    serialize(*current_graph, config.camera().eye_l, config.camera().screen_l,
+              current_scenes_[0]);
     if (config.get_enable_stereo()) {
-      serialize(*current_graph, config.camera().eye_r, config.camera().screen_r, current_scenes_[1]);
+      serialize(*current_graph, config.camera().eye_r, config.camera().screen_r,
+              current_scenes_[1]);
     }
 
     for (auto pass : passes_) {
