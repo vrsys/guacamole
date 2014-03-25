@@ -452,7 +452,7 @@ class GUA_DLL Node {
   std::set<std::string> group_list_;
   std::vector<void*> user_data_;
   std::string name_;
-  math::mat4 transform_;
+  math::mat4 transform_; // invertible affine transformation
 
  protected:
   void set_dirty() const;
