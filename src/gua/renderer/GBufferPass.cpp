@@ -31,7 +31,6 @@
 #include <gua/renderer/MeshLoader.hpp>
 #include <gua/renderer/Video3D.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/Video3DDatabase.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 

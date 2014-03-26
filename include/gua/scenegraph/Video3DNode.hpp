@@ -64,7 +64,7 @@ class GUA_DLL Video3DNode : public Node {
      */
     Video3DNode(std::string const& name,
                 std::string const& ksfile = "gua_default_ksfile",
-                std::string const& material = "video3D",
+                std::string const& material = "gua_video3d",
                 math::mat4 const& transform = math::mat4::identity());
 
     /**

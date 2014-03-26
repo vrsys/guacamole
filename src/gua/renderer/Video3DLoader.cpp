@@ -23,7 +23,7 @@
 #include <gua/renderer/Video3DLoader.hpp>
 
 // guacamole headers
-#include <gua/databases/Video3DDatabase.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
 #include <gua/scenegraph/Video3DNode.hpp>
 #include <gua/renderer/Video3D.hpp>
 
@@ -37,7 +37,7 @@ Video3DLoader::Video3DLoader() : LoaderBase(), _supported_file_extensions() {
 std::shared_ptr<Node> Video3DLoader::load(std::string const& file_name,
                                        unsigned flags) {
   try {
-      Video3DDatabase::instance()->add(
+      GeometryDatabase::instance()->add(
         file_name, std::make_shared<Video3D>(file_name));
 
       auto result = std::make_shared<Video3DNode>("unnamed_video3D");
@@ -53,8 +53,8 @@ std::shared_ptr<Node> Video3DLoader::load(std::string const& file_name,
     }
 }
 
-  bool Video3DLoader::is_supported(std::string const& file_name) const {
-    //return true; // TODO check for file ending!!!!!!!!!!!!!!!!
+  bool Video3DLoader::is_supported(std::string const& file_name) const 
+  {
     std::vector<std::string> filename_decomposition =
       gua::string_utils::split(file_name, '.');
     return filename_decomposition.empty()

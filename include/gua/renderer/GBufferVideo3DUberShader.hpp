@@ -49,6 +49,8 @@ class GBufferVideo3DUberShader : public UberShader {
 
  private:
 
+  void              _create_default_material () const;
+
   std::string const _warp_pass_vertex_shader   () const;
   std::string const _warp_pass_geometry_shader () const;
   std::string const _warp_pass_fragment_shader () const;
