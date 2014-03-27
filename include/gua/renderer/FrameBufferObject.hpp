@@ -148,12 +148,8 @@ class GUA_DLL FrameBufferObject {
 
   unsigned width_, height_;
   mutable std::vector<scm::gl::frame_buffer_ptr> fbos_;
-
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-  mutable boost::mutex upload_mutex_;
-#else
   mutable std::mutex upload_mutex_;
-#endif
+
 };
 
 }

@@ -60,7 +60,7 @@ ShadowMap::~ShadowMap() {
 
 void ShadowMap::print_shaders(std::string const& directory,
                               std::string const& name) const {
-  mesh_shader_->save_to_file(directory, name + "/shadow/mesh");
+  mesh_shader_->get_pass(0)->save_to_file(directory, name + "/shadow/mesh");
   // nurbs_shader_->save_to_file(directory, name + "/shadow/nurbs");
 }
 
@@ -209,9 +209,9 @@ void ShadowMap::render(RenderContext const& ctx,
     mesh_shader_->set_uniform(ctx, 1.0f / map_size, "gua_texel_height");
 
     // render geometries
-    mesh_shader_->use(ctx);
+    mesh_shader_->get_pass(0)->use(ctx);
     render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, 0);
-    mesh_shader_->unuse(ctx);
+    mesh_shader_->get_pass(0)->unuse(ctx);
 
     ctx.render_context->reset_state_objects();
 
@@ -305,9 +305,9 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
       );
 
       // // render geometries
-      mesh_shader_->use(ctx);
+      mesh_shader_->get_pass(0)->use(ctx);
       render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, cascade);
-      mesh_shader_->unuse(ctx);
+      mesh_shader_->get_pass(0)->unuse(ctx);
     }
   }
 

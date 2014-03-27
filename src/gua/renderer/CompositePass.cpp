@@ -78,6 +78,11 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
 
   // reuse gbuffer from shading-pass
   gbuffer_ = inputs_[Pipeline::PipelineStage::shading];
+  /*scm::gl::sampler_state_desc tmp(scm::gl::FILTER_MIN_MAG_LINEAR,
+    scm::gl::WRAP_CLAMP_TO_EDGE,
+    scm::gl::WRAP_CLAMP_TO_EDGE);
+  Pass::create(ctx, config, { { BufferComponent::F3, tmp } });*/
+
 
   if (volume_raygeneration_buffer_) {
     volume_raygeneration_buffer_->remove_buffers(ctx);

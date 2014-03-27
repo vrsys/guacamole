@@ -265,7 +265,7 @@ namespace gua {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	void Volume::draw(RenderContext const& ctx) const {
+  void Volume::draw(RenderContext const& ctx) const {
 
 		// upload to GPU if neccessary
 		if (_volume_boxes_ptr.size() <= ctx.id || _volume_boxes_ptr[ctx.id] == nullptr) {

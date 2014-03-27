@@ -31,6 +31,8 @@ namespace gua {
 class Pipeline;
 class GBufferMeshUberShader;
 class GBufferNURBSUberShader;
+
+class GBufferVideo3DUberShader;
 class SceneGraph;
 
 /**
@@ -76,6 +78,7 @@ class GBufferPass : public GeometryPass {
 
   GBufferMeshUberShader* mesh_shader_;
   GBufferNURBSUberShader* nurbs_shader_;
+  GBufferVideo3DUberShader* video3D_shader_;
 
   /**
    * Ugly hack! "bfc" means backface culling.

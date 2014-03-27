@@ -27,10 +27,6 @@
 
 namespace gua {
 
-void create_resource_material(std::string const& material_name,
-                              std::vector<unsigned char> const& shading_model_resource,
-                              std::vector<unsigned char> const& material_resource);
-
 void init(int argc, char** argv) {
   static scm::shared_ptr<scm::core> scm_core(new scm::core(argc, argv));
 
