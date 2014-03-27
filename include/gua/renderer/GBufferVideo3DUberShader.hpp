@@ -37,6 +37,11 @@ class FrameBufferObject;
 class GBufferVideo3DUberShader : public UberShader {
  public:
 
+   enum pass {
+     warp_pass  = 0,
+     blend_pass = 1
+   };
+
   void create(std::set<std::string> const& material_names);
 
   /* virtual */ bool upload_to(RenderContext const& context) const;

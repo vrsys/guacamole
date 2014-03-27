@@ -56,7 +56,7 @@ class GBufferPass : public GeometryPass {
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 
-  void print_shaders(std::string const& directory,
+  /*virtual*/ void print_shaders(std::string const& directory,
                      std::string const& name) const;
 
   bool pre_compile_shaders(RenderContext const& ctx);

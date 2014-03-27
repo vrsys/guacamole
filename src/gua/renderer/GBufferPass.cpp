@@ -89,9 +89,7 @@ void GBufferPass::create(
 
 void GBufferPass::print_shaders(std::string const& directory,
                                 std::string const& name) const {
-    mesh_shader_->save_to_file(directory, name + "/mesh");
-    nurbs_shader_->save_to_file(directory, name + "/nurbs");
-    video3D_shader_->save_to_file(directory, name + "/video3d");
+  throw std::runtime_error("to implement");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,12 +155,14 @@ void GBufferPass::rendering(SerializedScene const& scene,
     mesh_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
     mesh_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
 
-    Pass::bind_inputs(*mesh_shader_, eye, ctx);
-    Pass::set_camera_matrices(*mesh_shader_,
-                              camera,
-                              pipeline_->get_current_scene(eye),
-                              eye,
-                              ctx);
+    for (auto const& pass : mesh_shader_->passes()) {
+      Pass::bind_inputs(*pass, eye, ctx);
+      Pass::set_camera_matrices(*pass,
+        camera,
+        pipeline_->get_current_scene(eye),
+        eye,
+        ctx);
+    }
 
     ////////////////////////////////////////////////////////////////////
     // set frame-consistent uniforms for video3d ubershader
@@ -172,14 +172,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     video3D_shader_->set_material_uniforms(
       scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
 
-    Pass::bind_inputs(*video3D_shader_, eye, ctx);
-    Pass::set_camera_matrices(*video3D_shader_,
-                              camera,
-                              pipeline_->get_current_scene(eye),
-                              eye,
-                              ctx);
-
-    for (auto const& pass : video3D_shader_->get_pre_passes())
+    for (auto const& pass : video3D_shader_->passes())
     {
       Pass::bind_inputs(*pass, eye, ctx);
       Pass::set_camera_matrices(*pass,
@@ -197,15 +190,15 @@ void GBufferPass::rendering(SerializedScene const& scene,
     nurbs_shader_->set_material_uniforms(
       scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
 
-    Pass::bind_inputs(nurbs_shader_->get_pre_shader(), eye, ctx);
-    Pass::bind_inputs(*nurbs_shader_, eye, ctx);
-
-    Pass::set_camera_matrices(nurbs_shader_->get_pre_shader(),
-      camera,
-      pipeline_->get_current_scene(eye),
-      eye,
-      ctx);
-    Pass::set_camera_matrices(*nurbs_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+    for (auto const& pass : nurbs_shader_->passes())
+    {
+      Pass::bind_inputs(*pass, eye, ctx);
+      Pass::set_camera_matrices(*pass, 
+                                camera, 
+                                pipeline_->get_current_scene(eye), 
+                                eye, 
+                                ctx);
+    }
 
     // TODO: add this functionality to NURBS!
     // nurbs_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
@@ -221,7 +214,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     if (!scene.meshnodes_.empty()) {
 
         // draw meshes
-        mesh_shader_->use(ctx);
+        mesh_shader_->get_pass(0)->use(ctx);
         {
 
             for (auto const& node : scene.meshnodes_) {
@@ -245,7 +238,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                 }
             }
         }
-        mesh_shader_->unuse(ctx);
+        mesh_shader_->get_pass(0)->unuse(ctx);
     }
 
 
@@ -253,7 +246,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     if (!scene.textured_quads_.empty()) {
 
         // draw meshes
-        mesh_shader_->use(ctx);
+        mesh_shader_->get_pass(0)->use(ctx);
         {
 
             for (auto const& node : scene.textured_quads_) {
@@ -308,7 +301,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                 }
             }
         }
-        mesh_shader_->unuse(ctx);
+        mesh_shader_->get_pass(0)->unuse(ctx);
     }
 
     if (!scene.nurbsnodes_.empty()) {
@@ -327,19 +320,19 @@ void GBufferPass::rendering(SerializedScene const& scene,
             ctx.render_context->begin_query(q);
 #endif
             // pre-tesselate if necessary
-            nurbs_shader_->get_pre_shader().use(ctx);
+            nurbs_shader_->get_pass(0)->use(ctx);
             {
-                nurbs_shader_->get_pre_shader()
-                    .set_uniform(ctx, node->get_cached_world_transform(), "gua_model_matrix");
-                nurbs_shader_->get_pre_shader().set_uniform(
-                    ctx,
-                    scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
-                    "gua_normal_matrix");
+              nurbs_shader_->set_uniform(ctx, 
+                                         node->get_cached_world_transform(), 
+                                         "gua_model_matrix");
+              nurbs_shader_->set_uniform(ctx, 
+                                         scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())), 
+                                         "gua_normal_matrix");
 
                 ctx.render_context->apply();
                 geometry->predraw(ctx);
             }
-            nurbs_shader_->get_pre_shader().unuse(ctx);
+            nurbs_shader_->get_pass(0)->unuse(ctx);
 
 #ifdef DEBUG_XFB_OUTPUT
             ctx.render_context->end_query(q);
@@ -349,7 +342,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
 #endif
 
             // invoke tesselation/trim shader for adaptive nurbs rendering
-            nurbs_shader_->use(ctx);
+            nurbs_shader_->get_pass(1)->use(ctx);
             {
                 if (material && geometry) {
                     nurbs_shader_->set_uniform(
@@ -365,7 +358,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                     geometry->draw(ctx);
                 }
             }
-            nurbs_shader_->unuse(ctx);
+            nurbs_shader_->get_pass(1)->unuse(ctx);
         }
     }
 
@@ -396,7 +389,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     // draw bounding boxes, if desired
     if (pipeline_->config.enable_bbox_display() && !scene.bounding_boxes_.empty()) {
 
-        mesh_shader_->use(ctx);  // re-use mesh_shader
+        mesh_shader_->get_pass(0)->use(ctx);  // re-use mesh_shader
 
         for (auto const& bbox : scene.bounding_boxes_) {
             math::mat4 bbox_transform(math::mat4::identity());
@@ -416,12 +409,12 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
             bounding_box_->draw(ctx);
         }
-        mesh_shader_->unuse(ctx);
+        mesh_shader_->get_pass(0)->unuse(ctx);
     }
 
     // draw pick rays, if desired
     if (pipeline_->config.enable_ray_display()) {
-        mesh_shader_->use(ctx);  // re-use mesh_shader
+      mesh_shader_->get_pass(0)->use(ctx);  // re-use mesh_shader
 
         for (auto const& ray : scene.rays_) {
             auto geometry = GeometryDatabase::instance()->lookup("gua_ray_geometry");
@@ -436,7 +429,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
             geometry->draw(ctx);
         }
-        mesh_shader_->unuse(ctx);
+        mesh_shader_->get_pass(0)->unuse(ctx);
     }
 
     ctx.render_context->reset_state_objects();
