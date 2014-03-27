@@ -29,6 +29,5 @@
 #include <gua/databases/ShadingModelDatabase.hpp>
 #include <gua/databases/TextureDatabase.hpp>
 #include <gua/databases/Resources.hpp>
-#include <gua/databases/Video3DDatabase.hpp>
 
 #endif  // GUA_INCLUDE_DATABASES_HPP

@@ -31,7 +31,9 @@ namespace gua {
 class Pipeline;
 class GBufferMeshUberShader;
 class GBufferNURBSUberShader;
+
 class GBufferVideo3DUberShader;
+class SceneGraph;
 
 /**
  *
@@ -68,6 +70,7 @@ class GBufferPass : public GeometryPass {
  private:
 
   void rendering(SerializedScene const& scene,
+                 SceneGraph const*,
                  RenderContext const& ctx,
                  CameraMode eye,
                  Camera const& camera,

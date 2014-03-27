@@ -35,7 +35,7 @@ namespace gua {
 UberShader::UberShader() 
 : uniform_mapping_(), 
   output_mapping_(),
-  pre_pass_programs_()
+  programs_()
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,22 +43,22 @@ UberShader::UberShader()
 void UberShader::set_material_uniforms(std::set<std::string> const& materials,
                                        ShadingModel::StageID stage,
                                        RenderContext const& context) {
-
-  for (auto const& mat_name : materials) {
-    auto const& material(MaterialDatabase::instance()->lookup(mat_name));
-    auto const& shading_model(ShadingModelDatabase::instance()->lookup(
+  for (auto const& program : programs_) {
+    for (auto const& mat_name : materials) {
+      auto const& material(MaterialDatabase::instance()->lookup(mat_name));
+      auto const& shading_model(ShadingModelDatabase::instance()->lookup(
         material->get_description().get_shading_model()));
 
-    for (auto const& uniform_name :
-         shading_model->get_stages()[stage].get_uniforms()) {
-      auto const& mapped(
+      for (auto const& uniform_name :
+        shading_model->get_stages()[stage].get_uniforms()) {
+        auto const& mapped(
           uniform_mapping_.get_mapping(mat_name, uniform_name.first));
-      auto const& uniform(
+        auto const& uniform(
           material->get_uniform_values().find(uniform_name.first));
 
-      if (uniform != material->get_uniform_values().end()) {
-        apply_uniform(
-            context, uniform->second.get(), mapped.first, mapped.second);
+        if (uniform != material->get_uniform_values().end()) {
+          program->apply_uniform(context, uniform->second.get(), mapped.first, mapped.second);
+        }
       }
     }
   }
@@ -79,16 +79,22 @@ UniformMapping const* UberShader::get_uniform_mapping() const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/*virtual*/ void UberShader::add_pre_pass(std::shared_ptr<ShaderProgram> const& pre_pass)
+/*virtual*/ void UberShader::add_pass(std::shared_ptr<ShaderProgram> const& pre_pass)
 {
-  pre_pass_programs_.push_back(pre_pass);
+  programs_.push_back(pre_pass);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*virtual*/ std::shared_ptr<ShaderProgram> const& UberShader::get_pass(unsigned pass) const
+{
+  assert(programs_.size() > pass);
+  return programs_[pass];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<std::shared_ptr<ShaderProgram>> const& UberShader::get_pre_passes() const
+std::vector<std::shared_ptr<ShaderProgram>> const& UberShader::passes() const
 {
-  return pre_pass_programs_;
+  return programs_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,6 +162,18 @@ std::string const UberShader::print_material_methods(
   }
 
   return s.str();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*virtual*/ bool UberShader::upload_to(RenderContext const& context) const
+{
+  bool upload_succeeded = true;
+
+  for (auto const& program : programs_) {
+    upload_succeeded &= program->upload_to(context);
+  }
+
+  return upload_succeeded;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

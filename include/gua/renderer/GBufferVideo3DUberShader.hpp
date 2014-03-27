@@ -37,6 +37,11 @@ class FrameBufferObject;
 class GBufferVideo3DUberShader : public UberShader {
  public:
 
+   enum pass {
+     warp_pass  = 0,
+     blend_pass = 1
+   };
+
   void create(std::set<std::string> const& material_names);
 
   /* virtual */ bool upload_to(RenderContext const& context) const;
@@ -48,6 +53,8 @@ class GBufferVideo3DUberShader : public UberShader {
                                     scm::math::mat4 const& normal_matrix ) const;
 
  private:
+
+  void              _create_default_material () const;
 
   std::string const _warp_pass_vertex_shader   () const;
   std::string const _warp_pass_geometry_shader () const;

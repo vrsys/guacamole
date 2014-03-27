@@ -189,6 +189,12 @@ class GUA_DLL Pipeline {
   friend class Renderer;
 
  private:
+  void loading_screen();
+  void serialize(const SceneGraph& scene_graph,
+                 std::string const& eye_name,
+                 std::string const& screen_name,
+                 SerializedScene& out);
+
   void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 

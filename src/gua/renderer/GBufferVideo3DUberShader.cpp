@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
+#include <gua/guacamole.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/memory.hpp>
@@ -31,6 +32,9 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/Window.hpp>
+#include <gua/renderer/Video3D.hpp>
+
+#include <gua/databases/MaterialDatabase.hpp>
 
 #include <scm/gl_core/render_device/context_guards.h>
 
@@ -40,12 +44,25 @@ namespace gua {
 
 void GBufferVideo3DUberShader::create(std::set<std::string> const& material_names) {
 
+  // this is actually a bit too late for instantiation, but necessary 
+  std::string const default_video_material_name = "gua_video3d";
+
+  if (!MaterialDatabase::instance()->is_supported(default_video_material_name))
+  {
+    create_resource_material(default_video_material_name,
+      Resources::materials_gua_video3d_gsd,
+      Resources::materials_gua_video3d_gmd);
+  }
+
+  auto material_names_incl_video(material_names);
+  material_names_incl_video.insert(default_video_material_name);
+
   UberShaderFactory vshader_factory(
-    ShadingModel::GBUFFER_VERTEX_STAGE, material_names
+    ShadingModel::GBUFFER_VERTEX_STAGE, material_names_incl_video
   );
 
   UberShaderFactory fshader_factory(
-    ShadingModel::GBUFFER_FRAGMENT_STAGE, material_names,
+    ShadingModel::GBUFFER_FRAGMENT_STAGE, material_names_incl_video,
     vshader_factory.get_uniform_mapping()
   );
 
@@ -66,17 +83,20 @@ void GBufferVideo3DUberShader::create(std::set<std::string> const& material_name
 
   auto warp_pass_program = std::make_shared<ShaderProgram>();
   warp_pass_program->set_shaders(warp_pass_stages);
+  add_pass(warp_pass_program);
+
   warp_pass_program->save_to_file(".", "depth_pass");
-  add_pre_pass(warp_pass_program);
 
   // create final shader
   std::vector<ShaderProgramStage> blend_pass_stages;
   blend_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          _blend_pass_vertex_shader(vshader_factory, vshader_output_mapping)));
   blend_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        _blend_pass_fragment_shader(fshader_factory, vshader_output_mapping)));
 
-  // generate shader source
-  set_shaders ( blend_pass_stages );
-  save_to_file(".", "final_pass");
+  auto blend_pass_program = std::make_shared<ShaderProgram>();
+  blend_pass_program->set_shaders(blend_pass_stages);
+  add_pass(blend_pass_program);
+
+  blend_pass_program->save_to_file(".", "final_pass");
 }
 
 std::string const GBufferVideo3DUberShader::_warp_pass_vertex_shader() const
@@ -88,7 +108,7 @@ std::string const GBufferVideo3DUberShader::_warp_pass_vertex_shader() const
     #extension GL_NV_gpu_shader5      : enable
     #extension GL_ARB_explicit_uniform_location : enable
     #extension GL_ARB_shading_language_420pack : enable
-    #extension GL_EXT_TEXTURE_ARRAY : enable
+    #extension GL_EXT_texture_array : enable
 
     // input -----------------------------------------------------------------------
     layout(location=0) in vec3 gua_in_position;
@@ -162,7 +182,7 @@ std::string const GBufferVideo3DUberShader::_warp_pass_geometry_shader() const
 #extension GL_NV_gpu_shader5      : enable
 #extension GL_ARB_explicit_uniform_location : enable
 #extension GL_ARB_shading_language_420pack : enable
-#extension GL_EXT_TEXTURE_ARRAY : enable
+#extension GL_EXT_texture_array : enable
 
 layout (triangles) in;
 layout (triangle_strip, max_vertices=3) out;
@@ -197,6 +217,7 @@ out vec3  pos_es;
 out vec3  pos_d;
 out vec3  pos_ws;
 out float depth;
+out vec3  normal_es;
 
 // methods 
 bool validSurface(vec3 a, vec3 b, vec3 c,
@@ -225,6 +246,11 @@ void main()
   vec3 b = VertexIn[2].pos_es - VertexIn[0].pos_es;
   vec3 c = VertexIn[2].pos_es - VertexIn[1].pos_es;
 
+  vec3 tri_normal = normalize(cross (a, b));
+  if ( dot ( tri_normal, -normalize(VertexIn[0].pos_es) ) < 0.0f ) {
+    tri_normal = -tri_normal;
+  }
+
   float depth_a = VertexIn[0].depth;
   float depth_b = VertexIn[1].depth;
   float depth_c = VertexIn[2].depth;
@@ -240,6 +266,7 @@ void main()
         pos_d         = VertexIn[i].pos_d;
         pos_ws        = VertexIn[i].pos_ws;
         depth         = VertexIn[i].depth;
+        normal_es     = tri_normal;
 
         gl_Position   = gl_in[i].gl_Position;
 
@@ -272,7 +299,7 @@ std::string const GBufferVideo3DUberShader::_warp_pass_fragment_shader() const
 #extension GL_NV_gpu_shader5      : enable
 #extension GL_ARB_explicit_uniform_location : enable
 #extension GL_ARB_shading_language_420pack : enable
-#extension GL_EXT_TEXTURE_ARRAY : enable
+#extension GL_EXT_texture_array : enable
 
 // gua uniforms
 uniform mat4  gua_projection_matrix;
@@ -287,11 +314,12 @@ uniform int layer;
 uniform int bbxclip;
 
 // input
-in vec2 texture_coord;
-in vec3 pos_es;
-in vec3 pos_d;
-in vec3 pos_ws;
+in vec2  texture_coord;
+in vec3  pos_es;
+in vec3  pos_d;
+in vec3  pos_ws;
 in float depth;
+in vec3  normal_es;
 
 // output
 layout (location=0) out vec4 out_color;
@@ -310,6 +338,42 @@ bool clip(vec3 p){
     return true;
   }
   return false;
+}
+
+//Helper method to go from a float to packed char
+unsigned char ConvertChar(float value)
+{
+  //Scale and bias
+  value = (value + 1.0f) * 0.5f;
+  return (unsigned char)(value*255.0f);
+}
+ 
+//Pack 3 values into 1 float
+float PackToFloat(unsigned char x, unsigned char y, unsigned char z)
+{
+  unsigned int packedColor = (x << 16) | (y << 8) | z;
+  float packedFloat = (float) ( ((double)packedColor) / ((double) (1 << 24)) );  
+ 
+  return packedFloat;
+}
+ 
+vec3 UnPackFloat(float src)
+{
+  float r = fract(src);
+  float g = fract(src * 256.0f);
+  float b = fract(src * 65536.0f);
+ 
+  //Unpack to the -1..1 range
+  r = (r * 2.0f) - 1.0f;
+  g = (g * 2.0f) - 1.0f;
+  b = (b * 2.0f) - 1.0f;
+
+  return vec3(r, g, b);
+}
+
+float PackNormalizedVec3(vec3 input)
+{
+  return PackToFloat(ConvertChar(input.r), ConvertChar(input.g), ConvertChar(input.b));
 }
 
 void main() 
@@ -358,7 +422,13 @@ void main()
 
   float dist_es = length(pos_es);
 
+  float packed_normal = PackNormalizedVec3(normalize(normal_es));
+
+#if 0
   out_color = vec4(texture_coord, dist_es, quality);
+#else
+  out_color = vec4(texture_coord, packed_normal, quality);
+#endif
 }
 )";
 
@@ -382,7 +452,7 @@ std::string vertex_shader = R"(
 #extension GL_NV_gpu_shader5      : enable
 #extension GL_ARB_explicit_uniform_location : enable
 #extension GL_ARB_shading_language_420pack : enable
-#extension GL_EXT_TEXTURE_ARRAY : enable
+#extension GL_EXT_texture_array : enable
 
 // input
 layout(location=0) in vec3 gua_in_position;
@@ -481,13 +551,12 @@ std::string const GBufferVideo3DUberShader::_blend_pass_fragment_shader(UberShad
     );
 
 #else
-
-  // todo : make Video3D material a ressource!
+  /*
   std::string path_to_shading_model;
   std::string const video3d_shading_model_name;
   for (auto shading_model_name : ShadingModelDatabase::instance()->list_all())
   {
-    auto video_shading_model_found = std::string::npos != shading_model_name.find("Video3D.gsd");
+    auto video_shading_model_found = std::string::npos != shading_model_name.find("gua_video3d");
     if (video_shading_model_found) {
       path_to_shading_model = shading_model_name;
     }
@@ -497,7 +566,7 @@ std::string const GBufferVideo3DUberShader::_blend_pass_fragment_shader(UberShad
   {
     Logger::LOG_WARNING << "Could not find shading model " << video3d_shading_model_name.c_str() << " : File does not exist!" << std::endl;
   }
-
+  */
 std::string fragment_shader = R"(
 
 // header
@@ -506,7 +575,7 @@ std::string fragment_shader = R"(
 #extension GL_NV_gpu_shader5      : enable
 #extension GL_ARB_explicit_uniform_location : enable
 #extension GL_ARB_shading_language_420pack : enable
-#extension GL_EXT_TEXTURE_ARRAY : enable
+#extension GL_EXT_texture_array : enable
 
 in vec3 gua_position_varying;
 in vec2 gua_quad_coords;
@@ -520,7 +589,7 @@ uniform sampler2DArray depth_texture;
 uniform sampler2DArray quality_texture;
 uniform sampler2DArray video_color_texture;
 
-uniform mat4 gua_inverse_projection_view_matrix;
+uniform mat4 gua_inverse_projection_matrix;
 
 isampler2D gua_get_int_sampler(uvec2 handle) {
     return isampler2D(uint64_t(handle.x) | (uint64_t(handle.y) << 32UL));
@@ -577,10 +646,49 @@ vec3 gua_get_position() {
 
 
 
+//Helper method to go from a float to packed char
+unsigned char ConvertChar(float value)
+{
+  //Scale and bias
+  value = (value + 1.0f) * 0.5f;
+  return (unsigned char)(value*255.0f);
+}
+ 
+//Pack 3 values into 1 float
+float PackToFloat(unsigned char x, unsigned char y, unsigned char z)
+{
+  unsigned int packedColor = (x << 16) | (y << 8) | z;
+  float packedFloat = (float) ( ((double)packedColor) / ((double) (1 << 24)) );  
+ 
+  return packedFloat;
+}
+ 
+vec3 UnPackFloat(float src)
+{
+  float r = fract(src);
+  float g = fract(src * 256.0f);
+  float b = fract(src * 65536.0f);
+ 
+  //Unpack to the -1..1 range
+  r = (r * 2.0f) - 1.0f;
+  g = (g * 2.0f) - 1.0f;
+  b = (b * 2.0f) - 1.0f;
+
+  return vec3(r, g, b);
+}
+
+float PackNormalizedVec3(vec3 input)
+{
+  return PackToFloat(ConvertChar(input.r), ConvertChar(input.g), ConvertChar(input.b));
+}
+
+
+
 void main() {
 
-  vec3  output_color = vec3(0.0);
-  float output_depth = 1.0f;
+  vec3  output_color  = vec3(0.0);
+  float output_depth  = 1.0f;
+  vec3  output_normal = vec3(0.0);
 
   vec3 coords = vec3(gua_quad_coords, 0.0);
 
@@ -589,29 +697,30 @@ void main() {
   float maxdist = 1000.0;
   float mindist = maxdist;
   float ogldepth = 1.0;
-
+  
   // find minimum distances;
   for(int l = 0; l  < numlayers && l < MAX_VIEWS;++l)
   {
     coords.z = float(l);
     vec4 color_contribution = texture2DArray( quality_texture, coords);
     float depth             = texture2DArray( depth_texture, coords).r;
-
-    vec4 p_os = gua_inverse_projection_view_matrix * vec4(gua_quad_coords.xy * 2.0f - vec2(1.0), depth*2.0f - 1.0f, 1.0);
+    vec3 normal             = UnPackFloat(color_contribution.b);
+#if 0
+#else
+    vec4 p_os = gua_inverse_projection_matrix * vec4(gua_quad_coords.xy * 2.0f - vec2(1.0), depth*2.0f - 1.0f, 1.0);
     p_os = p_os / p_os.w;
     color_contribution.b = length(p_os.xyz);
+#endif
 
     float dist = color_contribution.b;
     
-
     if(dist < maxdist && depth < 1.0)
-    {
-      
-
+    {  
       color_contributions[l] = color_contribution;
       if(dist < mindist){
       	mindist = dist;
       	ogldepth = depth;
+        output_normal = normal;
       }
     } else {
       color_contributions[l] = vec4(1.0,1.0,maxdist,1.0);
@@ -637,8 +746,8 @@ void main() {
     if(finalcol.a > 0.0) 
     {
       finalcol.rgba = finalcol.rgba/finalcol.a;
-      output_depth = ogldepth;
-      output_color = finalcol.rgb;
+      output_depth  = ogldepth;
+      output_color  = finalcol.rgb;
     } else {
       discard;
     }
@@ -650,10 +759,16 @@ void main() {
   @material_switch
 
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
+  gua_float_gbuffer_out_0  = output_normal;
 
 )";
-fragment_shader += fshader_factory.get_output_mapping().get_output_string(path_to_shading_model, "video_color");
+fragment_shader += fshader_factory.get_output_mapping().get_output_string("gua_video3d", "gua_video_output_color");
 fragment_shader += R"( = output_color;
+
+)";
+fragment_shader += fshader_factory.get_output_mapping().get_output_string("gua_video3d", "gua_normal");
+fragment_shader += R"( = output_normal;
+               
   gl_FragDepth = output_depth;
 }
 )";
@@ -686,6 +801,8 @@ fragment_shader += R"( = output_color;
 ////////////////////////////////////////////////////////////////////////////////
 bool GBufferVideo3DUberShader::upload_to (RenderContext const& context) const
 {
+  bool upload_succeeded = UberShader::upload_to(context);
+
   assert(context.render_window->config.get_stereo_mode() == StereoMode::MONO ||
     ((context.render_window->config.get_left_resolution()[0] == context.render_window->config.get_right_resolution()[0]) &&
     (context.render_window->config.get_left_resolution()[1] == context.render_window->config.get_right_resolution()[1])));
@@ -744,11 +861,7 @@ bool GBufferVideo3DUberShader::upload_to (RenderContext const& context) const
     depth_stencil_state_blend_pass_[context.id] = context.render_device->create_depth_stencil_state(false, true, scm::gl::COMPARISON_NEVER);
   }
   
-  // upload base class programs & upload depth program
-  bool warp_program_uploaded = get_pre_passes()[0]->upload_to(context);
-  bool blend_program_uploaded = UberShader::upload_to(context);
-
-  return warp_program_uploaded && blend_program_uploaded;
+  return upload_succeeded;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -758,17 +871,31 @@ void GBufferVideo3DUberShader::draw(RenderContext const& ctx,
                                     scm::math::mat4 const& model_matrix,
                                     scm::math::mat4 const& normal_matrix) const
 {
-  // get render ressources
-  auto video3d_ressource = Video3DDatabase::instance()->lookup(ksfile_name);
-  auto material = MaterialDatabase::instance()->lookup(material_name);
+  if (!GeometryDatabase::instance()->is_supported(ksfile_name) || 
+      !MaterialDatabase::instance()->is_supported(material_name)) {
+    gua::Logger::LOG_WARNING << "GBufferVideo3DUberShader::draw(): No such video or material." << ksfile_name << ", " << material_name << std::endl;
+    return;
+  } 
 
+  auto video3d_ressource = std::dynamic_pointer_cast<Video3D>(GeometryDatabase::instance()->lookup(ksfile_name));
+  auto material          = MaterialDatabase::instance()->lookup(material_name);
+
+  if (!video3d_ressource || !material) {
+    gua::Logger::LOG_WARNING << "GBufferVideo3DUberShader::draw(): Invalid video or material." << std::endl;
+    return;
+  }
+
+  // update stream data
   video3d_ressource->update_buffers(ctx);
+
+  // make sure ressources are on the GPU
+  upload_to(ctx);
   {
     // single texture only
     scm::gl::context_all_guard guard(ctx.render_context);
 
     ctx.render_context->bind_texture(video3d_ressource->depth_array(ctx), nearest_sampler_state_[ctx.id], 0);
-    get_pre_passes()[0]->get_program(ctx)->uniform_sampler("depth_video3d_texture", 0);
+    get_pass(warp_pass)->get_program(ctx)->uniform_sampler("depth_video3d_texture", 0);
 
     auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
     ctx.render_context->set_depth_stencil_state(ds_state);
@@ -787,22 +914,22 @@ void GBufferVideo3DUberShader::draw(RenderContext const& ctx,
       ctx.render_context->clear_color_buffer(warp_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
        
       // set uniforms
-      get_pre_passes()[0]->set_uniform(ctx, int(layer), "layer");
-      get_pre_passes()[0]->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-      get_pre_passes()[0]->set_uniform(ctx, model_matrix, "gua_model_matrix");
+      get_pass(warp_pass)->set_uniform(ctx, int(layer), "layer");
+      get_pass(warp_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+      get_pass(warp_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
       if (material && video3d_ressource)
       {
-        get_pre_passes()[0]->set_uniform(ctx, video3d_ressource->calibration_file(layer).getImageDToEyeD(), "image_d_to_eye_d");
-        get_pre_passes()[0]->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeDToWorld(), "eye_d_to_world");
-        get_pre_passes()[0]->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeDToEyeRGB(), "eye_d_to_eye_rgb");
-        get_pre_passes()[0]->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeRGBToImageRGB(), "eye_rgb_to_image_rgb");
+        get_pass(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getImageDToEyeD(), "image_d_to_eye_d");
+        get_pass(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeDToWorld(), "eye_d_to_world");
+        get_pass(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeDToEyeRGB(), "eye_d_to_eye_rgb");
+        get_pass(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeRGBToImageRGB(), "eye_rgb_to_image_rgb");
 
-        get_pre_passes()[0]->use(ctx);
+        get_pass(warp_pass)->use(ctx);
         {
           video3d_ressource->draw(ctx);
         }
-        get_pre_passes()[0]->unuse(ctx);
+        get_pass(warp_pass)->unuse(ctx);
       }
 
       ctx.render_context->reset_framebuffer();
@@ -811,10 +938,10 @@ void GBufferVideo3DUberShader::draw(RenderContext const& ctx,
 
   {
     // single texture only
-    scm::gl::context_all_guard guard(ctx.render_context);
+scm::gl::context_all_guard guard(ctx.render_context);
 
     // second pass
-    use(ctx);
+    get_pass(blend_pass)->use(ctx);
     {
       if (material && video3d_ressource)
       {
@@ -827,23 +954,20 @@ void GBufferVideo3DUberShader::draw(RenderContext const& ctx,
         set_uniform(ctx, int(video3d_ressource->number_of_cameras()), "numlayers");
 
         ctx.render_context->bind_texture(warp_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
-        programs_[ctx.id]->uniform_sampler("quality_texture", 0);
+        get_pass(blend_pass)->get_program(ctx)->uniform_sampler("quality_texture", 0);
 
         ctx.render_context->bind_texture(warp_depth_result_[ctx.id], nearest_sampler_state_[ctx.id], 1);
-        programs_[ctx.id]->uniform_sampler("depth_texture", 1);
+        get_pass(blend_pass)->get_program(ctx)->uniform_sampler("depth_texture", 1);
 
         ctx.render_context->bind_texture(video3d_ressource->color_array(ctx), linear_sampler_state_[ctx.id], 2);
-        programs_[ctx.id]->uniform_sampler("video_color_texture", 2);
+        get_pass(blend_pass)->get_program(ctx)->uniform_sampler("video_color_texture", 2);
 
         ctx.render_context->apply();
         fullscreen_quad_[ctx.id]->draw(ctx.render_context);
       }
     }
-    unuse(ctx);
+    get_pass(blend_pass)->unuse(ctx);
   }
-
-  // restore depth stencil state
-  //ctx.render_context->set_depth_stencil_state(old_depth_stencil_state);
 }
 
 }

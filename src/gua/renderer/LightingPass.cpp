@@ -74,7 +74,7 @@ LayerMapping const* LightingPass::get_gbuffer_mapping() const {
 
 /* virtual */ void LightingPass::print_shaders(std::string const& directory,
                                                std::string const& name) const {
-  shader_->save_to_file(directory, name + "/lighting");
+  shader_->get_pass(0)->save_to_file(directory, name + "/lighting");
   shadow_map_.print_shaders(directory, name);
 }
 
@@ -92,8 +92,7 @@ bool LightingPass::pre_compile_shaders(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightingPass::init_ressources(RenderContext const& ctx)
-{
+void LightingPass::init_resources(RenderContext const& ctx) {
   if (!initialized_) {
     if (!depth_stencil_state_)
         depth_stencil_state_ =
@@ -122,11 +121,12 @@ void LightingPass::init_ressources(RenderContext const& ctx)
 }
 
 void LightingPass::rendering(SerializedScene const& scene,
+                             SceneGraph const* scene_graph,
                              RenderContext const& ctx,
                              CameraMode eye,
                              Camera const& camera,
                              FrameBufferObject* target) {
-    init_ressources(ctx);
+    init_resources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
     ctx.render_context->set_rasterizer_state(rasterizer_state_back_);
@@ -134,20 +134,20 @@ void LightingPass::rendering(SerializedScene const& scene,
 
     shader_->set_material_uniforms(
         scene.materials_, ShadingModel::LIGHTING_STAGE, ctx);
-    shader_->use(ctx);
+    shader_->get_pass(0)->use(ctx);
 
-    Pass::bind_inputs(*shader_, eye, ctx);
+    Pass::bind_inputs(*shader_->get_pass(0), eye, ctx);
     Pass::set_camera_matrices(
-        *shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+      *shader_->get_pass(0), camera, pipeline_->get_current_scene(eye), eye, ctx);
 
 
     // -------------------------- sun lights -----------------------------------
-    shader_->set_subroutine(ctx,
+    shader_->get_pass(0)->set_subroutine(ctx,
                             scm::gl::STAGE_VERTEX_SHADER,
                             "compute_light",
                             "gua_calculate_sun_light");
 
-    shader_->set_subroutine(ctx,
+    shader_->get_pass(0)->set_subroutine(ctx,
                             scm::gl::STAGE_FRAGMENT_SHADER,
                             "compute_light",
                             "gua_calculate_sun_light");
@@ -156,7 +156,7 @@ void LightingPass::rendering(SerializedScene const& scene,
     for (auto const& light : scene.sun_lights_) {
 
         if (light->data.get_enable_shadows()) {
-            shader_->unuse(ctx);
+            shader_->get_pass(0)->unuse(ctx);
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
@@ -174,13 +174,13 @@ void LightingPass::rendering(SerializedScene const& scene,
                 Logger::LOG_WARNING << "Exactly 5 splits have to be defined for cascaded shadow maps!" << std::endl;
             }
 
-            shadow_map_.render_cascaded(ctx, scene.center_of_interest, scene.frustum, camera,
+            shadow_map_.render_cascaded(ctx, scene_graph, scene.center_of_interest, scene.frustum, camera,
                                         light->get_cached_world_transform(),
                                         light->data.get_shadow_map_size(),
                                         split_0, split_1, split_2, split_3, split_4,
                                         light->data.get_shadow_near_clipping_in_sun_direction());
 
-            shader_->use(ctx);
+            shader_->get_pass(0)->use(ctx);
             target->bind(ctx);
 
             ctx.render_context->set_viewport(scm::gl::viewport(
@@ -218,12 +218,12 @@ void LightingPass::rendering(SerializedScene const& scene,
 
     ctx.render_context->set_rasterizer_state(rasterizer_state_front_);
 
-    shader_->set_subroutine(ctx,
+    shader_->get_pass(0)->set_subroutine(ctx,
                             scm::gl::STAGE_VERTEX_SHADER,
                             "compute_light",
                             "gua_calculate_point_light");
 
-    shader_->set_subroutine(ctx,
+    shader_->get_pass(0)->set_subroutine(ctx,
                             scm::gl::STAGE_FRAGMENT_SHADER,
                             "compute_light",
                             "gua_calculate_point_light");
@@ -244,25 +244,25 @@ void LightingPass::rendering(SerializedScene const& scene,
 
 
     // -------------------------- spot lights ----------------------------------
-    shader_->set_subroutine(ctx,
+    shader_->get_pass(0)->set_subroutine(ctx,
                             scm::gl::STAGE_VERTEX_SHADER,
                             "compute_light",
                             "gua_calculate_spot_light");
 
-    shader_->set_subroutine(ctx,
+    shader_->get_pass(0)->set_subroutine(ctx,
                             scm::gl::STAGE_FRAGMENT_SHADER,
                             "compute_light",
                             "gua_calculate_spot_light");
 
     for (auto const& light : scene.spot_lights_) {
         if (light->data.get_enable_shadows()) {
-            shader_->unuse(ctx);
+            shader_->get_pass(0)->unuse(ctx);
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
-            shadow_map_.render(ctx, scene.center_of_interest, camera, light->get_cached_world_transform(), light->data.get_shadow_map_size());
+            shadow_map_.render(ctx, scene_graph, scene.center_of_interest, camera, light->get_cached_world_transform(), light->data.get_shadow_map_size());
 
-            shader_->use(ctx);
+            shader_->get_pass(0)->use(ctx);
             target->bind(ctx);
 
             ctx.render_context->set_viewport(scm::gl::viewport(
@@ -296,7 +296,7 @@ void LightingPass::rendering(SerializedScene const& scene,
         light_cone_->draw(ctx);
     }
 
-    shader_->unuse(ctx);
+    shader_->get_pass(0)->unuse(ctx);
 
     ctx.render_context->reset_state_objects();
 }

@@ -78,7 +78,9 @@ create(std::set<std::string> const& material_names,
   string_utils::replace(fragment_shader, "@material_switch",
     UberShader::print_material_switch(factory));
 
-  create_from_sources(vertex_shader, fragment_shader);
+  auto lighting_program = std::make_shared<ShaderProgram>();
+  lighting_program->create_from_sources(vertex_shader, fragment_shader);
+  add_pass(lighting_program);
 }
 
 }

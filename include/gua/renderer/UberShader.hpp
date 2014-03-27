@@ -38,7 +38,7 @@ class UberShaderFactory;
 /**
  *
  */
-class UberShader : public ShaderProgram {
+class UberShader {
  public:
   /**
    * Default constructor.
@@ -67,12 +67,37 @@ class UberShader : public ShaderProgram {
   /**
   *
   */
-  virtual void add_pre_pass(std::shared_ptr<ShaderProgram> const&);
+  virtual void add_pass(std::shared_ptr<ShaderProgram> const&);
 
   /**
   *
   */
-  std::vector<std::shared_ptr<ShaderProgram>> const& get_pre_passes() const;
+  virtual std::shared_ptr<ShaderProgram> const& get_pass(unsigned pass) const;
+
+  /**
+  *
+  */
+  template <typename T>
+  void set_uniform(RenderContext const& context,
+    T const& value,
+    std::string const& name,
+    unsigned position = 0) const 
+  {
+    UniformValue<T> tmp(value);
+    for (auto const& program : programs_) {  
+      program->apply_uniform(context, &tmp, name, position);
+    }
+  }
+
+  /**
+  *
+  */
+  virtual bool upload_to(RenderContext const& context) const;
+
+  /**
+  *
+  */
+  std::vector<std::shared_ptr<ShaderProgram>> const& passes() const;
 
  protected:
 
@@ -86,7 +111,8 @@ class UberShader : public ShaderProgram {
 
   UniformMapping uniform_mapping_;
   LayerMapping output_mapping_;
-  std::vector<std::shared_ptr<ShaderProgram>> pre_pass_programs_;
+
+  std::vector<std::shared_ptr<ShaderProgram>> programs_;
 
 };
 
