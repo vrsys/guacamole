@@ -92,8 +92,7 @@ bool LightingPass::pre_compile_shaders(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightingPass::init_ressources(RenderContext const& ctx)
-{
+void LightingPass::init_resources(RenderContext const& ctx) {
   if (!initialized_) {
     if (!depth_stencil_state_)
         depth_stencil_state_ =
@@ -122,11 +121,12 @@ void LightingPass::init_ressources(RenderContext const& ctx)
 }
 
 void LightingPass::rendering(SerializedScene const& scene,
+                             SceneGraph const* scene_graph,
                              RenderContext const& ctx,
                              CameraMode eye,
                              Camera const& camera,
                              FrameBufferObject* target) {
-    init_ressources(ctx);
+    init_resources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
     ctx.render_context->set_rasterizer_state(rasterizer_state_back_);
@@ -174,7 +174,7 @@ void LightingPass::rendering(SerializedScene const& scene,
                 Logger::LOG_WARNING << "Exactly 5 splits have to be defined for cascaded shadow maps!" << std::endl;
             }
 
-            shadow_map_.render_cascaded(ctx, scene.center_of_interest, scene.frustum, camera,
+            shadow_map_.render_cascaded(ctx, scene_graph, scene.center_of_interest, scene.frustum, camera,
                                         light->get_cached_world_transform(),
                                         light->data.get_shadow_map_size(),
                                         split_0, split_1, split_2, split_3, split_4,
@@ -260,7 +260,7 @@ void LightingPass::rendering(SerializedScene const& scene,
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
-            shadow_map_.render(ctx, scene.center_of_interest, camera, light->get_cached_world_transform(), light->data.get_shadow_map_size());
+            shadow_map_.render(ctx, scene_graph, scene.center_of_interest, camera, light->get_cached_world_transform(), light->data.get_shadow_map_size());
 
             shader_->get_pass(0)->use(ctx);
             target->bind(ctx);

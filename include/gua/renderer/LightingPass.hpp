@@ -68,12 +68,13 @@ public:
 
  private:
   void rendering(SerializedScene const& scene,
+                 SceneGraph const* scene_graph,
                  RenderContext const& ctx,
                  CameraMode eye,
                  Camera const& camera,
                  FrameBufferObject* target);
 
-  void init_ressources(RenderContext const& ctx);
+  void init_resources(RenderContext const& ctx);
 
   LightingUberShader* shader_;
   std::shared_ptr<Geometry> light_sphere_;

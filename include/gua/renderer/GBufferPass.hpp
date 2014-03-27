@@ -31,7 +31,9 @@ namespace gua {
 class Pipeline;
 class GBufferMeshUberShader;
 class GBufferNURBSUberShader;
+
 class GBufferVideo3DUberShader;
+class SceneGraph;
 
 /**
  *
@@ -56,7 +58,7 @@ class GBufferPass : public GeometryPass {
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 
-  /*virtual*/ void print_shaders(std::string const& directory,
+  void print_shaders(std::string const& directory,
                      std::string const& name) const;
 
   bool pre_compile_shaders(RenderContext const& ctx);
@@ -68,6 +70,7 @@ class GBufferPass : public GeometryPass {
  private:
 
   void rendering(SerializedScene const& scene,
+                 SceneGraph const*,
                  RenderContext const& ctx,
                  CameraMode eye,
                  Camera const& camera,
