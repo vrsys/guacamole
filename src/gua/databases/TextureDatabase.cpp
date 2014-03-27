@@ -26,7 +26,6 @@
 
 // guacamole headers
 #include <gua/utils/Directory.hpp>
-#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <sstream>
