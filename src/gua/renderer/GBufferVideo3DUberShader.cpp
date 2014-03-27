@@ -351,7 +351,7 @@ unsigned char ConvertChar(float value)
 //Pack 3 values into 1 float
 float PackToFloat(unsigned char x, unsigned char y, unsigned char z)
 {
-  unsigned int packedColor = (x << 16) | (y << 8) | z;
+  unsigned int packedColor = unsigned int( (unsigned int(x) << 16) | (unsigned int(y) << 8) | unsigned int(z) );
   float packedFloat = (float) ( ((double)packedColor) / ((double) (1 << 24)) );  
  
   return packedFloat;
@@ -657,7 +657,8 @@ unsigned char ConvertChar(float value)
 //Pack 3 values into 1 float
 float PackToFloat(unsigned char x, unsigned char y, unsigned char z)
 {
-  unsigned int packedColor = (x << 16) | (y << 8) | z;
+  //unsigned int packedColor = (x << 16) | (y << 8) | z;
+  unsigned int packedColor = unsigned int( (unsigned int(x) << 16) | (unsigned int(y) << 8) | unsigned int(z) );
   float packedFloat = (float) ( ((double)packedColor) / ((double) (1 << 24)) );  
  
   return packedFloat;
