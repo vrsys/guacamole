@@ -29,7 +29,6 @@
 #include <gua/renderer/video3d_geometry/FileBuffer.h>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/DrawableRessource.hpp>
 
 // external headers
 #include <scm/gl_core.h>
