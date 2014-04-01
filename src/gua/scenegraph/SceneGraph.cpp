@@ -28,7 +28,7 @@
 #include <gua/utils/PathParser.hpp>
 #include <gua/utils/DotGenerator.hpp>
 #include <gua/utils/Mask.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <iostream>
@@ -79,8 +79,7 @@ std::shared_ptr<Node> SceneGraph::operator[](std::string const& path_to_node) co
     auto result(find_node(path_to_node, "/"));
 
     if (result == nullptr)
-        WARNING("Unable to get node: A node at location %s doesn't exist!",
-                path_to_node.c_str());
+        Logger::LOG_WARNING << "Unable to get node: A node at location " << path_to_node << " doesn't exist!" << std::endl;
     return result;
 }
 

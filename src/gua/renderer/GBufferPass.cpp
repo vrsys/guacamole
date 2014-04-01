@@ -27,7 +27,9 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBufferMeshUberShader.hpp>
 #include <gua/renderer/GBufferNURBSUberShader.hpp>
+#include <gua/renderer/GBufferVideo3DUberShader.hpp>
 #include <gua/renderer/MeshLoader.hpp>
+#include <gua/renderer/Video3D.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
@@ -42,6 +44,7 @@ GBufferPass::GBufferPass(Pipeline* pipeline)
     : GeometryPass(pipeline),
       mesh_shader_(new GBufferMeshUberShader),
       nurbs_shader_(new GBufferNURBSUberShader),
+      video3D_shader_(new GBufferVideo3DUberShader),
       bfc_rasterizer_state_(),
       no_bfc_rasterizer_state_(),
       bbox_rasterizer_state_(),
@@ -60,6 +63,8 @@ GBufferPass::~GBufferPass() {
       delete mesh_shader_;
     if (nurbs_shader_)
       delete nurbs_shader_;
+    if (video3D_shader_)
+      delete video3D_shader_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,8 +89,7 @@ void GBufferPass::create(
 
 void GBufferPass::print_shaders(std::string const& directory,
                                 std::string const& name) const {
-    mesh_shader_->save_to_file(directory, name + "/mesh");
-    nurbs_shader_->save_to_file(directory, name + "/nurbs");
+  throw std::runtime_error("to implement");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,16 +97,26 @@ void GBufferPass::print_shaders(std::string const& directory,
 bool GBufferPass::pre_compile_shaders(RenderContext const& ctx) {
     if (mesh_shader_)  return mesh_shader_->upload_to(ctx);
     if (nurbs_shader_) return nurbs_shader_->upload_to(ctx);
+    if (video3D_shader_) return video3D_shader_->upload_to(ctx);
+
+    std::cout << "Print Shaders: " << std::endl;
+    getchar();
+    print_shaders("/tmp","");
+
     return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GBufferPass::rendering(SerializedScene const& scene,
+                            SceneGraph const&,
                             RenderContext const& ctx,
                             CameraMode eye,
                             Camera const& camera,
                             FrameBufferObject* target) {
+
+
+
     if (!depth_stencil_state_)
         depth_stencil_state_ =
             ctx.render_device->create_depth_stencil_state(true, true);
@@ -131,6 +145,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
+    ////////////////////////////////////////////////////////////////////
+    // set frame-consistent uniforms for mesh ubershader
+    ////////////////////////////////////////////////////////////////////
     mesh_shader_->set_material_uniforms(
         scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
     mesh_shader_->set_material_uniforms(
@@ -139,17 +156,66 @@ void GBufferPass::rendering(SerializedScene const& scene,
     mesh_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
     mesh_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
 
-    Pass::bind_inputs(*mesh_shader_, eye, ctx);
-    Pass::set_camera_matrices(*mesh_shader_,
-                              camera,
-                              pipeline_->get_current_scene(eye),
-                              eye,
-                              ctx);
+    for (auto const& pass : mesh_shader_->passes()) {
+      Pass::bind_inputs(*pass, eye, ctx);
+      Pass::set_camera_matrices(*pass,
+        camera,
+        pipeline_->get_current_scene(eye),
+        eye,
+        ctx);
+    }
 
+    ////////////////////////////////////////////////////////////////////
+    // set frame-consistent uniforms for video3d ubershader
+    ////////////////////////////////////////////////////////////////////
+    video3D_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+    video3D_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+
+    for (auto const& pass : video3D_shader_->passes())
+    {
+      Pass::bind_inputs(*pass, eye, ctx);
+      Pass::set_camera_matrices(*pass,
+        camera,
+        pipeline_->get_current_scene(eye),
+        eye,
+        ctx);
+    }
+
+    ////////////////////////////////////////////////////////////////////
+    // set frame-consistent uniforms for nurbs ubershader
+    ////////////////////////////////////////////////////////////////////
+    nurbs_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+    nurbs_shader_->set_material_uniforms(
+      scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+
+    for (auto const& pass : nurbs_shader_->passes())
+    {
+      Pass::bind_inputs(*pass, eye, ctx);
+      Pass::set_camera_matrices(*pass, 
+                                camera, 
+                                pipeline_->get_current_scene(eye), 
+                                eye, 
+                                ctx);
+    }
+
+    // TODO: add this functionality to NURBS!
+    // nurbs_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
+    // nurbs_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+
+    nurbs_shader_->set_uniform(ctx,
+      pipeline_->config.get_max_tesselation(),
+      "gua_max_tesselation");
+
+    ////////////////////////////////////////////////////////////////////
+    // draw
+    ////////////////////////////////////////////////////////////////////
     if (!scene.meshnodes_.empty()) {
 
         // draw meshes
-        mesh_shader_->use(ctx);
+        mesh_shader_->get_pass(0)->use(ctx);
         {
 
             for (auto const& node : scene.meshnodes_) {
@@ -162,24 +228,26 @@ void GBufferPass::rendering(SerializedScene const& scene,
                     mesh_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");
                     mesh_shader_->set_uniform(
-                        ctx, node->get_world_transform(), "gua_model_matrix");
+                        ctx, node->get_cached_world_transform(), "gua_model_matrix");
                     mesh_shader_->set_uniform(
                         ctx,
                         scm::math::transpose(
-                            scm::math::inverse(node->get_world_transform())),
+                            scm::math::inverse(node->get_cached_world_transform())),
                         "gua_normal_matrix");
 
                     geometry->draw(ctx);
                 }
             }
         }
-        mesh_shader_->unuse(ctx);
+        mesh_shader_->get_pass(0)->unuse(ctx);
     }
+
+
 
     if (!scene.textured_quads_.empty()) {
 
         // draw meshes
-        mesh_shader_->use(ctx);
+        mesh_shader_->get_pass(0)->use(ctx);
         {
 
             for (auto const& node : scene.textured_quads_) {
@@ -230,38 +298,15 @@ void GBufferPass::rendering(SerializedScene const& scene,
                         geometry->draw(ctx);
                     }
                 } else {
-                    WARNING("Failed to render TexturedQuad: Texture2D \"%s\" not found!", texture_name.c_str());
+                    Logger::LOG_WARNING << "Failed to render TexturedQuad: Texture2D \"" << texture_name << "\" not found!" << std::endl;
                 }
             }
         }
-        mesh_shader_->unuse(ctx);
+        mesh_shader_->get_pass(0)->unuse(ctx);
     }
 
     if (!scene.nurbsnodes_.empty()) {
         // draw nurbs
-        Pass::bind_inputs(nurbs_shader_->get_pre_shader(), eye, ctx);
-        Pass::bind_inputs(*nurbs_shader_, eye, ctx);
-
-        Pass::set_camera_matrices(nurbs_shader_->get_pre_shader(),
-                                  camera,
-                                  pipeline_->get_current_scene(eye),
-                                  eye,
-                                  ctx);
-        Pass::set_camera_matrices(
-            *nurbs_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
-
-        nurbs_shader_->set_material_uniforms(
-            scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
-        nurbs_shader_->set_material_uniforms(
-            scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
-
-        // TODO: add this functionality to NURBS!
-        // nurbs_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
-        // nurbs_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
-
-        nurbs_shader_->set_uniform(ctx,
-                                   pipeline_->config.get_max_tesselation(),
-                                   "gua_max_tesselation");
 
         for (auto const& node : scene.nurbsnodes_)
             {
@@ -276,19 +321,19 @@ void GBufferPass::rendering(SerializedScene const& scene,
             ctx.render_context->begin_query(q);
 #endif
             // pre-tesselate if necessary
-            nurbs_shader_->get_pre_shader().use(ctx);
+            nurbs_shader_->get_pass(0)->use(ctx);
             {
-                nurbs_shader_->get_pre_shader()
-                    .set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
-                nurbs_shader_->get_pre_shader().set_uniform(
-                    ctx,
-                    scm::math::transpose(scm::math::inverse(node->get_world_transform())),
-                    "gua_normal_matrix");
+              nurbs_shader_->set_uniform(ctx, 
+                                         node->get_cached_world_transform(), 
+                                         "gua_model_matrix");
+              nurbs_shader_->set_uniform(ctx, 
+                                         scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())), 
+                                         "gua_normal_matrix");
 
                 ctx.render_context->apply();
                 geometry->predraw(ctx);
             }
-            nurbs_shader_->get_pre_shader().unuse(ctx);
+            nurbs_shader_->get_pass(0)->unuse(ctx);
 
 #ifdef DEBUG_XFB_OUTPUT
             ctx.render_context->end_query(q);
@@ -298,24 +343,39 @@ void GBufferPass::rendering(SerializedScene const& scene,
 #endif
 
             // invoke tesselation/trim shader for adaptive nurbs rendering
-            nurbs_shader_->use(ctx);
+            nurbs_shader_->get_pass(1)->use(ctx);
             {
                 if (material && geometry) {
                     nurbs_shader_->set_uniform(
                         ctx, material->get_id(), "gua_material_id");
                     nurbs_shader_->set_uniform(
-                        ctx, node->get_world_transform(), "gua_model_matrix");
+                        ctx, node->get_cached_world_transform(), "gua_model_matrix");
                     nurbs_shader_->set_uniform(
                         ctx,
                         scm::math::transpose(
-                            scm::math::inverse(node->get_world_transform())),
+                            scm::math::inverse(node->get_cached_world_transform())),
                         "gua_normal_matrix");
 
                     geometry->draw(ctx);
                 }
             }
-            nurbs_shader_->unuse(ctx);
+            nurbs_shader_->get_pass(1)->unuse(ctx);
         }
+    }
+
+    if (!scene.video3Dnodes_.empty()) {
+
+      for (auto const& node : scene.video3Dnodes_)
+      {
+        auto normal_matrix = scm::math::transpose(scm::math::inverse(node->get_cached_world_transform()));
+        auto model_matrix = node->get_cached_world_transform();
+
+        video3D_shader_->draw(ctx,
+                              node->get_ksfile(),
+                              node->get_material(),
+                              model_matrix,
+                              normal_matrix);
+      }
     }
 
     ctx.render_context->set_rasterizer_state(bbox_rasterizer_state_);
@@ -330,7 +390,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     // draw bounding boxes, if desired
     if (pipeline_->config.enable_bbox_display() && !scene.bounding_boxes_.empty()) {
 
-        mesh_shader_->use(ctx);  // re-use mesh_shader
+        mesh_shader_->get_pass(0)->use(ctx);  // re-use mesh_shader
 
         for (auto const& bbox : scene.bounding_boxes_) {
             math::mat4 bbox_transform(math::mat4::identity());
@@ -350,27 +410,27 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
             bounding_box_->draw(ctx);
         }
-        mesh_shader_->unuse(ctx);
+        mesh_shader_->get_pass(0)->unuse(ctx);
     }
 
     // draw pick rays, if desired
     if (pipeline_->config.enable_ray_display()) {
-        mesh_shader_->use(ctx);  // re-use mesh_shader
+      mesh_shader_->get_pass(0)->use(ctx);  // re-use mesh_shader
 
         for (auto const& ray : scene.rays_) {
             auto geometry = GeometryDatabase::instance()->lookup("gua_ray_geometry");
 
             mesh_shader_->set_uniform(
                 ctx, bbox_material->get_id(), "gua_material_id");
-            mesh_shader_->set_uniform(ctx, ray->get_world_transform(), "gua_model_matrix");
+            mesh_shader_->set_uniform(ctx, ray->get_cached_world_transform(), "gua_model_matrix");
             mesh_shader_->set_uniform(
                 ctx,
-                scm::math::transpose(scm::math::inverse(ray->get_world_transform())),
+                scm::math::transpose(scm::math::inverse(ray->get_cached_world_transform())),
                 "gua_normal_matrix");
 
             geometry->draw(ctx);
         }
-        mesh_shader_->unuse(ctx);
+        mesh_shader_->get_pass(0)->unuse(ctx);
     }
 
     ctx.render_context->reset_state_objects();
@@ -383,6 +443,7 @@ void GBufferPass::apply_material_mapping(std::set<std::string> const &
                                          materials) const {
   mesh_shader_->create(materials);
   nurbs_shader_->create(materials);
+  video3D_shader_->create(materials);
 }
 
 

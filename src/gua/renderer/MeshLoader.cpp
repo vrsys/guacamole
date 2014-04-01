@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/utils/TextFile.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/scenegraph/TransformNode.hpp>
@@ -96,15 +96,14 @@ std::shared_ptr<Node> MeshLoader::load(std::string const& file_name,
       new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
 
     } else {
-      WARNING("Failed to load object \"%s\": No valid root node contained!",
-              file_name.c_str());
+      Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": No valid root node contained!" << std::endl;
     }
 
     return new_node;
 
   }
 
-  WARNING("Failed to load object \"%s\": File does not exist!", file_name.c_str());
+  Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": File does not exist!" << std::endl;
 
   return nullptr;
 }

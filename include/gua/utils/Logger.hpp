@@ -19,66 +19,35 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_DOUBLEBUFFER_HPP
-#define GUA_DOUBLEBUFFER_HPP
+#ifndef GUA_LOGGER_HPP
+#define GUA_LOGGER_HPP
 
-#include <thread>
-#include <condition_variable>
+#include <gua/platform.hpp>
+
+#include <iostream>
 
 namespace gua {
-namespace utils {
 
-template <typename T> class Doublebuffer {
+class Logger {
+
  public:
-  Doublebuffer()
-      : front_(), back_(), updated_(false), copy_mutex_(), copy_cond_var_() {}
 
-  void write_blocked(T const& scene_graphs) {
-    {
-      // blocks until ownership can be obtained for the current thread.
-      std::lock_guard<std::mutex> lock(copy_mutex_);
-      back_ = scene_graphs;
-      updated_ = true;
-    }
-    copy_cond_var_.notify_one();
-  }
+  static bool enable_debug;
+  static bool enable_message;
+  static bool enable_warning;
+  static bool enable_error;
 
-  template <typename F> void with(F&& f) {
-    // f(front_);
-    {
-      std::unique_lock<std::mutex> lock(copy_mutex_);
-      while (!updated_) {
-        copy_cond_var_.wait(lock);
-      }
-      updated_ = false;
-      std::swap(front_, back_);
-    }
-    f(front_);
-  }
+  #define LOG_DEBUG   debug_impl  (__FILE__, __LINE__)
+  #define LOG_MESSAGE message_impl(__FILE__, __LINE__)
+  #define LOG_WARNING warning_impl(__FILE__, __LINE__)
+  #define LOG_ERROR   error_impl  (__FILE__, __LINE__)
 
-  T read() {
-    {
-      std::unique_lock<std::mutex> lock(copy_mutex_);
-      while (!updated_) {
-        copy_cond_var_.wait(lock);
-      }
-      updated_ = false;
-      std::swap(front_, back_);
-    }
-    return front_;
-  }
-
- private:
-  T front_;
-  T back_;
-  bool updated_;
-
-  std::mutex copy_mutex_;
-  std::condition_variable copy_cond_var_;
+  static GUA_DLL std::ostream& debug_impl(const char* file, int line);
+  static GUA_DLL std::ostream& message_impl(const char* file, int line);
+  static GUA_DLL std::ostream& warning_impl(const char* file, int line);
+  static GUA_DLL std::ostream& error_impl(const char* file, int line);
 };
 
 }
 
-}
-
-#endif  // GUA_DOUBLEBUFFER_HPP
+#endif  // GUA_LOGGER_HPP

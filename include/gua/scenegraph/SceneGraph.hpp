@@ -25,7 +25,7 @@
 #include <gua/platform.hpp>
 #include <gua/scenegraph/Node.hpp>
 #include <gua/math/math.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 #include <memory>
 #include <string>
@@ -90,7 +90,7 @@ class GUA_DLL SceneGraph {
     std::shared_ptr<Node> const& parent(find_node(path_to_parent));
 
     if (!parent) {
-      WARNING("A node with the name %s does not exist!", path_to_parent.c_str());
+      Logger::LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
       return new_node;
     }
 
@@ -139,7 +139,7 @@ class GUA_DLL SceneGraph {
     std::shared_ptr<Node> const& parent(find_node(path_to_parent));
 
     if (!parent) {
-      WARNING("A node with the name %s does not exist!", path_to_parent.c_str());
+      Logger::LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
       return new_node;
     }
 

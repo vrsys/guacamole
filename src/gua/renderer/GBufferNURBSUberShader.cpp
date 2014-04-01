@@ -27,7 +27,7 @@
 #include <gua/renderer/NURBSShader.hpp>
 #include <gua/renderer/GuaMethodsFactory.hpp>
 #include <gua/databases.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <sstream>
@@ -41,7 +41,6 @@ namespace gua {
 
 GBufferNURBSUberShader::GBufferNURBSUberShader()
   : UberShader                  (),
-    transform_feedback_program_ ( new ShaderProgram ),
     vertex_shader_factory_      ( nullptr ),
     fragment_shader_factory_    ( nullptr )
 {
@@ -58,17 +57,15 @@ GBufferNURBSUberShader::GBufferNURBSUberShader()
     interleaved_stream_capture.push_back("xfb_index");
     interleaved_stream_capture.push_back("xfb_tesscoord");
 
-    transform_feedback_program_->set_shaders ( shader_stages, interleaved_stream_capture, true );
-
-    //transform_feedback_program_->save_to_file(".", "feedback");
+    auto xfb_program = std::make_shared<ShaderProgram>();
+    xfb_program->set_shaders(shader_stages, interleaved_stream_capture, true);
+    add_pass(xfb_program);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 GBufferNURBSUberShader::~GBufferNURBSUberShader()
 {
-  delete transform_feedback_program_;
-
   if ( vertex_shader_factory_ )       delete vertex_shader_factory_;
   if ( fragment_shader_factory_ )     delete fragment_shader_factory_;
 }
@@ -78,7 +75,6 @@ GBufferNURBSUberShader::~GBufferNURBSUberShader()
 
 void GBufferNURBSUberShader::create(std::set<std::string> const& material_names)
 {
-
     // clear deprecated factory
     if ( vertex_shader_factory_ )   delete vertex_shader_factory_;
     if ( fragment_shader_factory_ ) delete fragment_shader_factory_;
@@ -98,18 +94,11 @@ void GBufferNURBSUberShader::create(std::set<std::string> const& material_names)
     shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        _final_fragment_shader()));
 
     // generate shader source
-    set_shaders ( shader_stages );
-
-     // save shader sources for debugging
-     //save_to_file(".", "final_pass");
+    auto final_program = std::make_shared<ShaderProgram>();
+    final_program->set_shaders(shader_stages);
+    add_pass(final_program);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-ShaderProgram const& GBufferNURBSUberShader::get_pre_shader () const
-{
-  return *transform_feedback_program_;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string const GBufferNURBSUberShader::_transform_feedback_vertex_shader () const
@@ -688,7 +677,7 @@ std::string const GBufferNURBSUberShader::_final_tess_evaluation_shader () const
           teTessCoord = uv;                                                     \n\
           teNormal    = vec4(normalize(cross(du.xyz, dv.xyz)), 0.0);            \n\
                                                                                 \n\
-          vec4 nview  = gua_view_matrix * gua_model_matrix * teNormal;          \n\
+          vec4 nview  = gua_normal_matrix * teNormal;                           \n\
           vec4 pview  = gua_view_matrix * gua_model_matrix * tePosition;        \n\
                                                                                 \n\
           if ( dot(nview, pview) > 0.0f ) {                                     \n\
@@ -975,14 +964,6 @@ std::string const GBufferNURBSUberShader::_final_fragment_shader () const
     fragment_shader << "}" << std::endl;
 
     return fragment_shader.str();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-bool GBufferNURBSUberShader::upload_to (RenderContext const& context) const
-{
-    // upload base class programs & upload xfb programs
-    return UberShader::upload_to(context)
-           && transform_feedback_program_->upload_to(context);
 }
 
 

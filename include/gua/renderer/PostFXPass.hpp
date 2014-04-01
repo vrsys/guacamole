@@ -54,7 +54,7 @@ class PostFXPass : public Pass {
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 
-  void render_scene(Camera const& camera, RenderContext const& ctx);
+  void render_scene(Camera const& camera, SceneGraph const&, RenderContext const& ctx);
 
   /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
 
@@ -64,6 +64,8 @@ class PostFXPass : public Pass {
   bool pre_compile_shaders(RenderContext const& ctx);
 
  private:
+
+  void init_resources(RenderContext const& ctx);
   void pre_rendering(Camera const& camera,
                      SerializedScene const& scene,
                      CameraMode eye,

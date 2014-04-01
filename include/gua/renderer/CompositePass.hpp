@@ -58,7 +58,9 @@ class CompositePass : public Pass {
 
   bool pre_compile_shaders(RenderContext const& ctx);
 
-  /* virtual */ void render_scene(Camera const& camera, RenderContext const& ctx);
+  /* virtual */ void render_scene(Camera const& camera,
+                                  SceneGraph const&,
+                                  RenderContext const& ctx);
 
 protected :
 
@@ -68,7 +70,7 @@ protected :
                                 Camera const& camera,
                                 FrameBufferObject* target);
 
-  void init_ressources (RenderContext const& ctx);
+  void init_resources (RenderContext const& ctx);
 
  private:
 

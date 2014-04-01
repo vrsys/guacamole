@@ -206,6 +206,7 @@ class GUA_DLL Node {
    * \return math::mat4  The Node's world transformation.
    */
   math::mat4 get_world_transform() const;
+  math::mat4 get_cached_world_transform() const;
 
   /**
    * Returns the Node's world postion.
@@ -451,7 +452,7 @@ class GUA_DLL Node {
   std::set<std::string> group_list_;
   std::vector<void*> user_data_;
   std::string name_;
-  math::mat4 transform_;
+  math::mat4 transform_; // invertible affine transformation
 
  protected:
   void set_dirty() const;

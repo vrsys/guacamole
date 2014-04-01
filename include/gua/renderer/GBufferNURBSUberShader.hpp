@@ -33,6 +33,11 @@ namespace gua {
 class GBufferNURBSUberShader : public UberShader {
  public:
 
+   enum pass {
+     transform_feedback_pass = 0,
+     final_pass = 1
+   };
+
   /**
    * Default constructor.
    *
@@ -52,13 +57,6 @@ class GBufferNURBSUberShader : public UberShader {
    */
   void create(std::set<std::string> const& material_names);
 
-  /**
-   *
-   */
-  ShaderProgram const& get_pre_shader() const;
-
-  /* virtual */ bool upload_to(RenderContext const& context) const;
-
  private:  // auxiliary methods
 
   std::string const _transform_feedback_vertex_shader() const;
@@ -74,8 +72,6 @@ class GBufferNURBSUberShader : public UberShader {
 
 
  private:  // attributes
-
-  mutable ShaderProgram* transform_feedback_program_;
 
   UberShaderFactory* vertex_shader_factory_;
   UberShaderFactory* fragment_shader_factory_;

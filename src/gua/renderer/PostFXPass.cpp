@@ -248,7 +248,8 @@ void PostFXPass::create(RenderContext const& ctx, std::vector<std::pair<BufferCo
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PostFXPass::render_scene(Camera const& camera, RenderContext const& ctx) {
+void PostFXPass::init_resources(RenderContext const& ctx) {
+  if (!initialized_) {
     if (!depth_stencil_state_)
         depth_stencil_state_ = ctx.render_device->
             create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
@@ -262,6 +263,14 @@ void PostFXPass::render_scene(Camera const& camera, RenderContext const& ctx) {
         blend_add_ = ctx.render_device->
                          create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE,
                                                   scm::gl::FUNC_ONE, scm::gl::FUNC_ONE);
+    initialized_ = true;
+  }
+}
+
+void PostFXPass::render_scene(Camera const& camera,
+                              SceneGraph const&,
+                              RenderContext const& ctx) {
+    init_resources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
@@ -509,9 +518,9 @@ bool PostFXPass::render_godrays(Camera const& camera,
         for (auto const& light: scene.point_lights_) {
             if (light->data.get_enable_godrays()) {
                 god_ray_shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
-                god_ray_shader_->set_uniform(ctx, math::vec3(light->get_world_transform().column(3)[0],
-                                                             light->get_world_transform().column(3)[1],
-                                                             light->get_world_transform().column(3)[2]), "gua_light_position_direction");
+                god_ray_shader_->set_uniform(ctx, math::vec3(light->get_cached_world_transform().column(3)[0],
+                                                             light->get_cached_world_transform().column(3)[1],
+                                                             light->get_cached_world_transform().column(3)[2]), "gua_light_position_direction");
                 render();
             }
         }
@@ -519,9 +528,9 @@ bool PostFXPass::render_godrays(Camera const& camera,
         for (auto const& light: scene.spot_lights_) {
             if (light->data.get_enable_godrays()) {
                 god_ray_shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
-                god_ray_shader_->set_uniform(ctx, math::vec3(light->get_world_transform().column(3)[0],
-                                                             light->get_world_transform().column(3)[1],
-                                                             light->get_world_transform().column(3)[2]), "gua_light_position_direction");
+                god_ray_shader_->set_uniform(ctx, math::vec3(light->get_cached_world_transform().column(3)[0],
+                                                             light->get_cached_world_transform().column(3)[1],
+                                                             light->get_cached_world_transform().column(3)[2]), "gua_light_position_direction");
                 render();
             }
         }
@@ -535,7 +544,7 @@ bool PostFXPass::render_godrays(Camera const& camera,
             if (light->data.get_enable_godrays()) {
                 god_ray_shader_->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
                 math::vec3 direction(0, 0, 1);
-                direction = light->get_world_transform() * direction;
+                direction = light->get_cached_world_transform() * direction;
                 god_ray_shader_->set_uniform(ctx, direction, "gua_light_position_direction");
                 render();
             }

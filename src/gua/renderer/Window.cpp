@@ -123,14 +123,11 @@ void Window::open() {
 
   set_active(true);
 
-  ctx_.width = config.get_size().x;
-  ctx_.height = config.get_size().y;
   ctx_.render_device = scm::gl::render_device_ptr(new scm::gl::render_device());
   ctx_.render_context = ctx_.render_device->main_context();
   ctx_.id = last_context_id_++;
 
-
-
+  ctx_.render_window = this;
 
   fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
       ctx_.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));

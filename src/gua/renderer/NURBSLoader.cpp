@@ -70,8 +70,7 @@ std::shared_ptr<Node> NURBSLoader::load(std::string const& file_name,
     return result;
 
   } catch (std::exception & e) {
-    WARNING("Warning: \"%s\" \n", e.what());
-    WARNING("Failed to load NURBS object \"%s\": ", file_name.c_str());
+    Logger::LOG_WARNING << "Failed to load NURBS object \"" << file_name << "\": " << e.what() << std::endl;
     return nullptr;
   }
 }

@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/UberShaderFactory.hpp>
 #include <gua/databases.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <sstream>
@@ -37,7 +37,7 @@ namespace gua {
 
 void FinalUberShader::
 create(std::set<std::string> const& material_names,
-    std::vector<LayerMapping const*> const& inputs) {
+       std::vector<LayerMapping const*> const& inputs) {
 
   UberShaderFactory factory(ShadingModel::FINAL_STAGE, material_names);
   factory.add_inputs_to_main_functions(inputs, ShadingModel::GBUFFER_FRAGMENT_STAGE);
@@ -78,7 +78,9 @@ create(std::set<std::string> const& material_names,
   string_utils::replace(fragment_shader, "@material_switch",
     UberShader::print_material_switch(factory));
 
-  create_from_sources(vertex_shader, fragment_shader);
+  auto program = std::make_shared<ShaderProgram>();
+  program->create_from_sources(vertex_shader, fragment_shader);
+  add_pass(program);
 }
 
 }

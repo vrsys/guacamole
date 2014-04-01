@@ -32,6 +32,9 @@ class Pipeline;
 class GBufferMeshUberShader;
 class GBufferNURBSUberShader;
 
+class GBufferVideo3DUberShader;
+class SceneGraph;
+
 /**
  *
  */
@@ -67,6 +70,7 @@ class GBufferPass : public GeometryPass {
  private:
 
   void rendering(SerializedScene const& scene,
+                 SceneGraph const&,
                  RenderContext const& ctx,
                  CameraMode eye,
                  Camera const& camera,
@@ -74,6 +78,7 @@ class GBufferPass : public GeometryPass {
 
   GBufferMeshUberShader* mesh_shader_;
   GBufferNURBSUberShader* nurbs_shader_;
+  GBufferVideo3DUberShader* video3D_shader_;
 
   /**
    * Ugly hack! "bfc" means backface culling.
