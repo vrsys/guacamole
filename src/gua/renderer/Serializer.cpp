@@ -326,7 +326,7 @@ void Serializer::add_bbox(Node* node) const {
 ////////////////////////////////////////////////////////////////////////
 
 void Serializer::visit_children(Node* node) {
-  std::for_each(node->children_.begin(), node->children_.end(), std::bind(std::mem_fn(&Node::accept), std::placeholders::_1, std::ref(*this)));
+  for (auto & c : node->children_) { c->accept(*this); }
 }
 
 }  // namespace gua
