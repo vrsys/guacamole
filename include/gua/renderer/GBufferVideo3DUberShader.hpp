@@ -52,6 +52,8 @@ class GBufferVideo3DUberShader : public UberShader {
                                     scm::math::mat4 const& model_matrix,
                                     scm::math::mat4 const& normal_matrix ) const;
 
+  std::string const default_video_material_name() const;
+
  private:
 
   void              _create_default_material () const;

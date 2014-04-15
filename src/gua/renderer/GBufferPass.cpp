@@ -97,9 +97,7 @@ void GBufferPass::print_shaders(std::string const& directory,
 bool GBufferPass::pre_compile_shaders(RenderContext const& ctx) {
     if (mesh_shader_)  return mesh_shader_->upload_to(ctx);
     if (nurbs_shader_) return nurbs_shader_->upload_to(ctx);
-#if  VIDEO3D_FIXED
     if (video3D_shader_) return video3D_shader_->upload_to(ctx);
-#endif
 
     std::cout << "Print Shaders: " << std::endl;
     getchar();
@@ -170,7 +168,6 @@ void GBufferPass::rendering(SerializedScene const& scene,
     ////////////////////////////////////////////////////////////////////
     // set frame-consistent uniforms for video3d ubershader
     ////////////////////////////////////////////////////////////////////
-#if VIDEO3D_FIXED
     video3D_shader_->set_material_uniforms(
       scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
     video3D_shader_->set_material_uniforms(
@@ -185,7 +182,6 @@ void GBufferPass::rendering(SerializedScene const& scene,
         eye,
         ctx);
     }
-#endif
 
     ////////////////////////////////////////////////////////////////////
     // set frame-consistent uniforms for nurbs ubershader
@@ -447,9 +443,7 @@ void GBufferPass::apply_material_mapping(std::set<std::string> const &
                                          materials) const {
   mesh_shader_->create(materials);
   nurbs_shader_->create(materials);
-#if VIDEO3D_FIXED
   video3D_shader_->create(materials);
-#endif
 }
 
 
