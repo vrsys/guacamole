@@ -26,14 +26,18 @@
 
 namespace gua {
 
-//template<class UnaryPredicate>
-//void dfs_traverse_if(UnaryPredicate pred)
-//{
-//}
+template <class UnaryOperation, class UnaryPredicate>
+void dfs_traverse_if(Node* node, UnaryOperation unary_op, UnaryPredicate pred) {
+  if (pred(node)) {
+    unary_op(node);
+    for (auto & c : node->get_children()) {
+      dfs_traverse_if(c.get(), unary_op, pred);
+    }
+  }
+}
 
 template <class UnaryOperation>
-void dfs_traverse(Node* node, UnaryOperation unary_op)
-{
+void dfs_traverse(Node* node, UnaryOperation unary_op) {
   unary_op(node);
   for (auto & c : node->get_children()) {
     dfs_traverse(c.get(), unary_op);
