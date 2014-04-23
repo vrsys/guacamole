@@ -19,12 +19,12 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_VIDEO3D_HPP
-#define GUA_VIDEO3D_HPP
+#ifndef GUA_VIDEO3D_RESSOURCE_HPP
+#define GUA_VIDEO3D_RESSOURCE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/Geometry.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 #include <gua/renderer/video3d_geometry/KinectCalibrationFile.hpp>
 #include <gua/renderer/video3d_geometry/FileBuffer.h>
 #include <gua/renderer/Texture2D.hpp>
@@ -54,7 +54,7 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class Video3D : public Geometry {
+class Video3DRessource : public GeometryRessource {
  public:
 
   /**
@@ -63,12 +63,12 @@ class Video3D : public Geometry {
    * Creates a new Video3D from a given video3d string.
    * \param video3d      Holds information about kinect streams.
   */
-  Video3D(std::string const& video3d);
+   Video3DRessource(std::string const& video3d);
 
   /**
    * destructor.
    */
-  ~Video3D();
+   ~Video3DRessource();
   /**
    *
    */
@@ -137,4 +137,4 @@ class Video3D : public Geometry {
 
 }
 
-#endif  // GUA_VIDEO3D_HPP
+#endif  // GUA_VIDEO3D_RESSOURCE_HPP

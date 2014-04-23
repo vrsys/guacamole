@@ -19,20 +19,20 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_NURBS_HPP_INCLUDED
-#define GUA_NURBS_HPP_INCLUDED
+#ifndef GUA_NURBS_RESSOURCE_HPP
+#define GUA_NURBS_RESSOURCE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/Geometry.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 #include <gua/renderer/nurbs_geometry/NURBSData.hpp>
 
 // external headers
 #include <string>
 #include <vector>
+#include <mutex>
 
-#include <boost/thread.hpp>
 #include <scm/core/math.h>
 
 #include <scm/gl_core/gl_core_fwd.h>
@@ -47,17 +47,19 @@
 
 namespace gua {
 
-class GUA_DLL NURBS : public Geometry {
+class GUA_DLL NURBSRessource : public GeometryRessource {
 
  public:
-  NURBS(std::shared_ptr<TrimmedBezierSurfaceObject> const& object,
-        scm::gl::fill_mode in_fill_mode = scm::gl::FILL_SOLID,
-        std::size_t max_transform_feedback_buffer_size =
-            200000000);  // 200MB TF
-  virtual ~NURBS();
+   NURBSRessource(std::shared_ptr<TrimmedBezierSurfaceObject> const& object,
+                  scm::gl::fill_mode in_fill_mode = scm::gl::FILL_SOLID,
+                  std::size_t max_transform_feedback_buffer_size = 200000000);  // 200MB TXFB
+
+   ~NURBSRessource();
 
   /* virtual */ void draw(RenderContext const& context) const;
+
   /* virtual */ void predraw(RenderContext const& context) const;
+
   /* virtual */ void update_bounding_box() const;
 
   void ray_test(Ray const& ray, PickResult::Options options,
@@ -123,9 +125,9 @@ class GUA_DLL NURBS : public Geometry {
  private:  // attributes
 
   std::size_t _max_transform_feedback_buffer_size;
-  mutable boost::mutex upload_mutex_;
+  mutable std::mutex upload_mutex_;
 };
 
 }  //namespace gua
 
-#endif
+#endif // GUA_NURBS_RESSOURCE_HPP

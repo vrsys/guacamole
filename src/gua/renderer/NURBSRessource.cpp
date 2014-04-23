@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#include <gua/renderer/NURBS.hpp>
+#include <gua/renderer/NURBSRessource.hpp>
 
 #include <scm/gl_core/render_device.h>
 #include <scm/gl_core/buffer_objects.h>
@@ -29,12 +29,11 @@
 #include <scm/gl_core/constants.h>
 
 #include <boost/assign/list_of.hpp>
-#include <boost/foreach.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-NURBS::NURBS(std::shared_ptr<TrimmedBezierSurfaceObject> const& object,
+NURBSRessource::NURBSRessource(std::shared_ptr<TrimmedBezierSurfaceObject> const& object,
              scm::gl::fill_mode in_fill_mode,
              std::size_t max_tf_size)
     : _data(new NURBSData(object)),
@@ -50,35 +49,29 @@ NURBS::NURBS(std::shared_ptr<TrimmedBezierSurfaceObject> const& object,
 
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */
-NURBS::~NURBS() {
-  BOOST_FOREACH(auto it, _parametric_texture_buffer)
-  it.reset();
-  BOOST_FOREACH(auto it, _attribute_texture_buffer)
-  it.reset();
-  BOOST_FOREACH(auto it, _vertex_buffer)
-  it.reset();
-  BOOST_FOREACH(auto it, _vertex_array)
-  it.reset();
-  BOOST_FOREACH(auto it, _domain_texture_buffer)
-  it.reset();
-  BOOST_FOREACH(auto it, _trim_partition_texture_buffer)
-  it.reset();
-  BOOST_FOREACH(auto it, _trim_contourlist_texture_buffer)
-  it.reset();
-  BOOST_FOREACH(auto it, _trim_curvelist_texture_buffer)
-  it.reset();
-  BOOST_FOREACH(auto it, _trim_curvedata_texture_buffer)
-  it.reset();
-  BOOST_FOREACH(auto it, _trim_pointdata_texture_buffer)
-  it.reset();
-  if (_data)
+NURBSRessource::~NURBSRessource() 
+{
+  for (auto it  : _parametric_texture_buffer)    it.reset();
+  for (auto it :  _attribute_texture_buffer) it.reset();  
+  for (auto it :  _vertex_buffer) it.reset();  
+  for (auto it :  _vertex_array) it.reset();  
+  for (auto it :  _domain_texture_buffer) it.reset();  
+  for (auto it :  _trim_partition_texture_buffer) it.reset();  
+  for (auto it :  _trim_contourlist_texture_buffer) it.reset();  
+  for (auto it :  _trim_curvelist_texture_buffer) it.reset();  
+  for (auto it :  _trim_curvedata_texture_buffer) it.reset();  
+  for (auto it :  _trim_pointdata_texture_buffer) it.reset();
+
+  if (_data) {
     delete _data;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void NURBS::upload_to(RenderContext const& context) const {
-  boost::unique_lock<boost::mutex> lock(upload_mutex_);
+void NURBSRessource::upload_to(RenderContext const& context) const {
+
+  std::unique_lock<std::mutex> lock(upload_mutex_);
 
   if (_vertex_array.size() <= context.id) {
     _vertex_array.resize(context.id + 1);
@@ -131,7 +124,7 @@ void NURBS::upload_to(RenderContext const& context) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void NURBS::predraw(RenderContext const& context) const {
+void NURBSRessource::predraw(RenderContext const& context) const {
   // upload to GPU if neccessary
   if (_vertex_array.size() <= context.id || _vertex_array[context.id] == nullptr) {
     upload_to(context);
@@ -210,7 +203,7 @@ void NURBS::predraw(RenderContext const& context) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void NURBS::draw(RenderContext const& context) const {
+void NURBSRessource::draw(RenderContext const& context) const {
   // upload to GPU if neccessary
   if (_vertex_array.size() <= context.id || _vertex_array[context.id] == nullptr) {
     upload_to(context);
@@ -257,7 +250,7 @@ void NURBS::draw(RenderContext const& context) const {
       _transform_feedback[context.id]);
 }
 
-void NURBS::initialize_texture_buffers(RenderContext const& context) const {
+void NURBSRessource::initialize_texture_buffers(RenderContext const& context) const {
   auto in_device = context.render_device;
 
   //Parametric Data
@@ -307,7 +300,7 @@ void NURBS::initialize_texture_buffers(RenderContext const& context) const {
   ;
 }
 
-void NURBS::initialize_vertex_data(RenderContext const& context) const {
+void NURBSRessource::initialize_vertex_data(RenderContext const& context) const {
   auto in_device = context.render_device;
 
   int stride =
@@ -336,7 +329,7 @@ void NURBS::initialize_vertex_data(RenderContext const& context) const {
                                _data->index_data.get());
 }
 
-void NURBS::initialize_transform_feedback(RenderContext const& context) const {
+void NURBSRessource::initialize_transform_feedback(RenderContext const& context) const {
   auto in_device = context.render_device;
 
   int stride =

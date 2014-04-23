@@ -64,7 +64,7 @@ class GUA_DLL GeometryRessource {
    * \param context           The RenderContext to which this object
    *                          should be predrawn.
    */
-  virtual void predraw(RenderContext const& context) const {}
+   virtual void predraw(RenderContext const& context) const {}
 
   /**
   * Interface which provides the appropriate UberShader for the ressource

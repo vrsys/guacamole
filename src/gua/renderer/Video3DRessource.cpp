@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/Video3D.hpp>
+#include <gua/renderer/Video3DRessource.hpp>
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -56,11 +56,9 @@ namespace {
 
 namespace gua {
 
+  ////////////////////////////////////////////////////////////////////////////////
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-Video3D::Video3D(std::string const& video3d) :
+  Video3DRessource::Video3DRessource(std::string const& video3d) :
   ks_filename_(video3d),
   calib_files_(),
   server_endpoint_(),
@@ -81,31 +79,31 @@ Video3D::Video3D(std::string const& video3d) :
   width_colorimage_(),
   height_colorimage_(),
   upload_mutex_()
-{
-  init(); 
-}
+  {
+    init(); 
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  Video3DRessource::~Video3DRessource()
+  {
+    for (auto db : depth_buffers_ )
+    {
+      delete [] db;
+    }
+
+    for (auto cb : color_buffers_ )
+    {
+      delete [] cb;
+    }
+
+    for (auto fb : file_buffers_ )
+    {
+      delete fb;
+    }
+  }
 
 ////////////////////////////////////////////////////////////////////////////////
-Video3D::~Video3D()
-{
-  for (auto db : depth_buffers_ )
-  {
-    delete [] db;
-  }
-
-  for (auto cb : color_buffers_ )
-  {
-    delete [] cb;
-  }
-
-  for (auto fb : file_buffers_ )
-  {
-    delete fb;
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void Video3D::init()
+void Video3DRessource::init()
 {
   std::fstream istr;
   istr.open(ks_filename_.c_str(), std::ios::in);
@@ -189,7 +187,7 @@ void Video3D::init()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void Video3D::upload_to(RenderContext const& ctx) const 
+void Video3DRessource::upload_to(RenderContext const& ctx) const
 {
   upload_proxy_mesh(ctx);
 
@@ -197,7 +195,7 @@ void Video3D::upload_to(RenderContext const& ctx) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void Video3D::upload_proxy_mesh(RenderContext const& ctx) const
+void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
 {
   if (proxy_vertices_.size() > ctx.id ) {
     return;
@@ -290,7 +288,7 @@ void Video3D::upload_proxy_mesh(RenderContext const& ctx) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void Video3D::upload_video_textures(RenderContext const& ctx) const
+void Video3DRessource::upload_video_textures(RenderContext const& ctx) const
 {
   if ( color_texArrays_.size() > ctx.id ) {
     return;
@@ -323,7 +321,7 @@ void Video3D::upload_video_textures(RenderContext const& ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Video3D::draw(RenderContext const& ctx) const 
+void Video3DRessource::draw(RenderContext const& ctx) const
 {
   scm::gl::context_vertex_input_guard vig(ctx.render_context);
   ctx.render_context->bind_vertex_array(proxy_vertex_array_[ctx.id]);
@@ -335,27 +333,27 @@ void Video3D::draw(RenderContext const& ctx) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-unsigned Video3D::number_of_cameras() const {
+unsigned Video3DRessource::number_of_cameras() const {
   return unsigned(calib_files_.size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 scm::gl::texture_2d_ptr const&
-Video3D::color_array(RenderContext const& context) const
+Video3DRessource::color_array(RenderContext const& context) const
 {
   return color_texArrays_[context.id];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 scm::gl::texture_2d_ptr const&
-Video3D::depth_array(RenderContext const& context) const
+Video3DRessource::depth_array(RenderContext const& context) const
 {
   return depth_texArrays_[context.id];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Video3D::update_buffers(RenderContext const& ctx) const
+void Video3DRessource::update_buffers(RenderContext const& ctx) const
 {
   // todo: if new frame -> use framecount instead
   if (ctx.id == 0)
@@ -396,7 +394,7 @@ void Video3D::update_buffers(RenderContext const& ctx) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-KinectCalibrationFile const& Video3D::calibration_file(unsigned i) const
+KinectCalibrationFile const& Video3DRessource::calibration_file(unsigned i) const
 {
   assert(i < calib_files_.size());
   return *calib_files_[i];

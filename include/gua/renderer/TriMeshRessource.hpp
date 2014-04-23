@@ -19,12 +19,12 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MESH_RESSOURCE_HPP
-#define GUA_MESH_RESSOURCE_HPP
+#ifndef GUA_TRIMESH_RESSOURCE_HPP
+#define GUA_TRIMESH_RESSOURCE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/Geometry.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 #include <gua/utils/KDTree.hpp>
 
 // external headers
@@ -51,7 +51,7 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class MeshRessource : public GeometryR {
+class TriMeshRessource : public GeometryRessource {
  public:
 
   /**
@@ -59,7 +59,7 @@ class MeshRessource : public GeometryR {
    *
    * Creates a new and empty Mesh.
    */
-  Mesh();
+   TriMeshRessource();
 
   /**
    * Constructor from an Assimp mesh.
@@ -68,8 +68,7 @@ class MeshRessource : public GeometryR {
    *
    * \param mesh             The Assimp mesh to load the data from.
    */
-  Mesh(aiMesh* mesh, std::shared_ptr<Assimp::Importer> const& importer,
-       bool build_kd_tree);
+   TriMeshRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importer> const& importer, bool build_kd_tree);
 
   /**
    * Draws the Mesh.
@@ -109,4 +108,4 @@ class MeshRessource : public GeometryR {
 
 }
 
-#endif  // GUA_MESH_RESSOURCE_HPP
+#endif  // GUA_TRIMESH_RESSOURCE_HPP
