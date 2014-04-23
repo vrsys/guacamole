@@ -24,7 +24,6 @@
 
 #include <scm/core/math.h>
 #include <scm/gl_core/math.h>
-#include <iostream>
 #include <tuple>
 
 struct aiMatrix4x4;
