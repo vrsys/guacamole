@@ -19,76 +19,66 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RENDERCLIENT_HPP
-#define GUA_RENDERCLIENT_HPP
-
-// external headers
-#include <thread>
-#include <functional>
+#ifndef GUA_VIDEO3D_LOADER_HPP
+#define GUA_VIDEO3D_LOADER_HPP
 
 // guacamole headers
-#include <gua/utils/Doublebuffer.hpp>
-#include <gua/utils/FpsCounter.hpp>
+#include <gua/renderer/LoaderBase.hpp>
+#include <gua/databases/Database.hpp>
+
+// external headers
+#include <string>
+#include <list>
+#include <memory>
+
 
 namespace gua {
 
+class Node;
+class InnerNode;
+class Video3DNode;
+
 /**
- * This class represents one render thread.
+ * Loads and draws Video3D.
  *
- * The queue_draw method is directly called by the Renderer. Internally it
- * uses a threaded rendering loop which always waits for queue_draw calls. When
- * it fails to finish rendering before the next queue_draw is called, it will
- * ignore this call.
+ * This class can load Video3D data from files and display them in multiple
+ * contexts. A MeshLoader object is made of several Video3D objects.
  */
-template <typename T> class RenderClient {
+class Video3DLoader : public LoaderBase { //GUA_DLL??? siehe VolumeLoader
  public:
-  /**
-   * Constructor.
-   *
-   * This constructs a new RenderClient.
-   *
-   */
-  //RenderClient(std::function<void(T const&, float)> const& fun)
-  template <typename F> RenderClient(F&& fun) : forever_(), doublebuffer_() {
 
-    forever_ = std::thread([this, fun]() {
-      FpsCounter fpsc(20);
-      fpsc.start();
-
-      while (true) {
-        auto sg = this->doublebuffer_.read();
-        fun(sg, fpsc.fps);
-        fpsc.step();
-      }
-    });
-  }
+  enum Flags {
+    DEFAULTS = 0,
+    MAKE_PICKABLE = 1 << 0, //Danger: critical due to no update of bounding box and no triangle intersection with avatar
+    NORMALIZE_POSITION = 1 << 1,
+    NORMALIZE_SCALE = 1 << 2
+  };
 
   /**
-   * Destructor.
+   * Default constructor.
    *
-   * This destroys a RenderClient.
+   * Constructs a new and empty Video3D.
    */
-  ~RenderClient() { forever_.detach(); }
+  Video3DLoader();
 
   /**
-   * Draw the scene.
+   * Constructor from a file.
    *
-   * This requests a drawing operation of the given graph. If the client
-   * is still processing the last call of this function it will be
-   * ignored.
+   * Creates a new Video3D from a given file.
    *
-   * \param graph            A pointer to the graph which
-   *                         should be drawn.
+   * \param file_name        The file to load the Video3Ds data from.
+   * \param material_name    The material name that was set to the parent node
    */
-  inline void queue_draw(T const& scene_graphs) {
-    doublebuffer_.write_blocked(scene_graphs);
-  }
+  std::shared_ptr<Node> load(std::string const& file_name,
+                             unsigned flags);
+
+  bool is_supported(std::string const& file_name) const;
 
  private:
-  std::thread forever_;
-  utils::Doublebuffer<T> doublebuffer_;
+    boost::unordered_set<std::string> _supported_file_extensions;
+
 };
 
 }
 
-#endif  // GUA_RENDERCLIENT_HPP
+#endif  // GUA_VIDEO3D_LOADER_HPP

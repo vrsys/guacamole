@@ -60,7 +60,7 @@ ShadowMap::~ShadowMap() {
 
 void ShadowMap::print_shaders(std::string const& directory,
                               std::string const& name) const {
-  mesh_shader_->save_to_file(directory, name + "/shadow/mesh");
+  mesh_shader_->get_pass(0)->save_to_file(directory, name + "/shadow/mesh");
   // nurbs_shader_->save_to_file(directory, name + "/shadow/nurbs");
 }
 
@@ -117,6 +117,7 @@ void ShadowMap::apply_material_mapping(std::set<std::string> const &
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render_geometry(RenderContext const & ctx,
+                                SceneGraph const& current_graph,
                                 math::vec3 const& center_of_interest,
                                 Frustum const& shadow_frustum,
                                 Camera const& scene_camera,
@@ -127,7 +128,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   scene.enable_global_clipping_plane = pipeline_->config.get_enable_global_clipping_plane();
   scene.global_clipping_plane = pipeline_->config.get_global_clipping_plane();
   serializer_->check(&scene,
-                     pipeline_->get_current_graph(),
+                     &current_graph,
                      scene_camera.render_mask,
                      false,
                      false,
@@ -174,6 +175,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render(RenderContext const& ctx,
+                       SceneGraph const& scene_graph,
                        math::vec3 const& center_of_interest,
                        Camera const& scene_camera,
                        math::mat4 const& transform,
@@ -207,9 +209,9 @@ void ShadowMap::render(RenderContext const& ctx,
     mesh_shader_->set_uniform(ctx, 1.0f / map_size, "gua_texel_height");
 
     // render geometries
-    mesh_shader_->use(ctx);
-    render_geometry(ctx, center_of_interest, shadow_frustum, scene_camera, 0);
-    mesh_shader_->unuse(ctx);
+    mesh_shader_->get_pass(0)->use(ctx);
+    render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, 0);
+    mesh_shader_->get_pass(0)->unuse(ctx);
 
     ctx.render_context->reset_state_objects();
 
@@ -219,6 +221,7 @@ void ShadowMap::render(RenderContext const& ctx,
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMap::render_cascaded(RenderContext const& ctx,
+              SceneGraph const& scene_graph,
               math::vec3 const& center_of_interest,
               Frustum const& scene_frustum,
               Camera const& scene_camera,
@@ -302,9 +305,9 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
       );
 
       // // render geometries
-      mesh_shader_->use(ctx);
-      render_geometry(ctx, center_of_interest, shadow_frustum, scene_camera, cascade);
-      mesh_shader_->unuse(ctx);
+      mesh_shader_->get_pass(0)->use(ctx);
+      render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, cascade);
+      mesh_shader_->get_pass(0)->unuse(ctx);
     }
   }
 

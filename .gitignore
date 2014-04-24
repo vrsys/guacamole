@@ -1,3 +1,6 @@
+# Folders
+cmake_out/
+
 # Compiled Object files
 *.slo
 *.lo

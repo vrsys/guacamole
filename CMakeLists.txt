@@ -6,8 +6,8 @@ PROJECT(GUACAMOLE CXX)
 
 # version number
 set(GUACAMOLE_MAJOR 0)
-set(GUACAMOLE_MINOR 5)
-set(GUACAMOLE_PATCH 0)
+set(GUACAMOLE_MINOR 6)
+set(GUACAMOLE_PATCH 1)
 set(GUACAMOLE_VERSION ${GUACAMOLE_MAJOR}.${GUACAMOLE_MINOR}.${GUACAMOLE_PATCH})
 set(GUACAMOLE_DESCRIPTION "GUACAMOLE - an astonishing virtual reality engine")
 set(GUACAMOLE_HOMEPAGE "http://www.GUACAMOLE.org")
@@ -43,28 +43,23 @@ include(find_compiler)
 include(FindSchism)
 include(FindBoost)
 
-set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
+if (UNIX)
+	set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
+elseif (WIN32)
+	set (BULLET_ROOT "externals/" CACHE PATH "Set to your bullet install path.")
+endif (UNIX)
+
 find_package(Bullet REQUIRED)
 find_package(Json REQUIRED)
-
-set(LIBS
-    ${SCHISM_LIBRARIES}
-    ${BOOST_LIBRARIES}
-    ${ASSIMP_LIBRARIES}
-    ${JSON_LIBRARIES}
-    ${GL_LIBRARIES}
-    ${GLEW_LIBRARIES}
-    ${BULLET_LIBRARIES}
-)
 
 set(LIB_PATHS
     ${ASSIMP_LIBRARY_DIRS}
     ${JSON_LIBRARY_DIRS}
     ${GL_LIBRARY_DIRS}
     ${GLEW_LIBRARY_DIRS}
-	${BOOST_LIBRARY_DIRS}
-	${BULLET_LIBRARY_DIRS}
-	${SCHISM_LIBRARY_DIRS}
+    ${BOOST_LIBRARY_DIRS}
+    ${BULLET_LIBRARY_DIRS}
+    ${SCHISM_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS

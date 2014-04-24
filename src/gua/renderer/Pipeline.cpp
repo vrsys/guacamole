@@ -41,6 +41,22 @@
 // external headers
 #include <iostream>
 
+
+namespace {
+
+gua::Frustum camera_frustum(gua::Camera::ProjectionMode const& mode,
+    gua::math::mat4 const& transf, gua::math::mat4 const& screen,
+    float near, float far) {
+  if (mode == gua::Camera::ProjectionMode::PERSPECTIVE) {
+    return gua::Frustum::perspective(transf, screen, near, far);
+  } else {
+    return gua::Frustum::orthographic(transf, screen, near, far);
+  }
+}
+
+}
+
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +65,6 @@ Pipeline::Pipeline()
     : config(),
       window_(nullptr),
       context_(nullptr),
-      current_graph_(nullptr),
       application_fps_(0),
       rendering_fps_(0),
       serializer_(new Serializer()),
@@ -110,6 +125,89 @@ SerializedScene const& Pipeline::get_current_scene(CameraMode mode) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Pipeline::loading_screen() {
+  display_loading_screen_ = false;
+
+  if (window_) {
+    auto loading_texture(std::dynamic_pointer_cast<Texture2D>(TextureDatabase::instance()->lookup("gua_loading_texture")));
+    math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
+
+    if (config.get_enable_stereo()) {
+
+      auto tmp_left_resolution(window_->config.left_resolution());
+      auto tmp_right_resolution(window_->config.right_resolution());
+
+      auto tmp_left_position(window_->config.left_position());
+      auto tmp_right_position(window_->config.right_position());
+
+      window_->config.set_left_resolution(loading_texture_size);
+      window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
+
+      window_->config.set_right_resolution(loading_texture_size);
+      window_->config.set_right_position(tmp_right_position + 0.5*(tmp_right_resolution - loading_texture_size));
+
+      window_->display(loading_texture, loading_texture);
+
+      window_->config.set_left_position(tmp_left_position);
+      window_->config.set_left_resolution(tmp_left_resolution);
+
+      window_->config.set_right_position(tmp_right_position);
+      window_->config.set_right_resolution(tmp_right_resolution);
+
+    } else {
+
+      auto tmp_left_resolution(window_->config.left_resolution());
+      auto tmp_left_position(window_->config.left_position());
+
+
+      window_->config.set_left_resolution(loading_texture_size);
+      window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
+
+      window_->display(loading_texture);
+
+      window_->config.set_left_position(tmp_left_position);
+      window_->config.set_left_resolution(tmp_left_resolution);
+
+    }
+
+    window_->finish_frame();
+  }
+}
+
+void Pipeline::serialize(const SceneGraph& scene_graph,
+                         std::string const& eye_name,
+                         std::string const& screen_name,
+                         SerializedScene& out) {
+  auto eye((scene_graph)[eye_name]);
+  if (!eye) {
+    Logger::LOG_WARNING << "Cannot render scene: No valid eye specified" << std::endl;
+    return;
+  }
+
+  auto screen_it((scene_graph)[screen_name]);
+  auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
+  if (!screen) {
+    Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
+    return;
+  }
+
+  out.frustum = camera_frustum(config.camera().mode, eye->get_world_transform(),
+                                screen->get_scaled_world_transform(),
+                                config.near_clip(),
+                                config.far_clip());
+  out.center_of_interest = eye->get_world_position();
+  out.enable_global_clipping_plane = config.get_enable_global_clipping_plane();
+  out.global_clipping_plane = config.get_global_clipping_plane();
+
+  serializer_->check(&out,
+                     &scene_graph,
+                     config.camera().render_mask,
+                     config.enable_bbox_display(),
+                     config.enable_ray_display(),
+                     config.enable_frustum_culling());
+}
+
+
 void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                        float application_fps,
                        float rendering_fps) {
@@ -140,77 +238,33 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     pipe->process(scene_graphs, application_fps, rendering_fps);
   }
 
-  current_graph_ = nullptr;
+  SceneGraph const* current_graph = nullptr;
 
   for (auto& graph: scene_graphs) {
     if (graph->get_name() == config.camera().scene_graph) {
-      current_graph_ = graph.get();
+      current_graph = graph.get();
       break;
     }
   }
 
-  if (!current_graph_) {
-    Logger::LOG_WARNING << "Failed to display scenegraph \"" << config.camera().scene_graph << "\": Graph not found!" << std::endl;
+  if (!current_graph) {
+    Logger::LOG_WARNING << "Failed to display scenegraph \""
+                        << config.camera().scene_graph << "\": Graph not found!"
+                        << std::endl;
   }
 
   rendering_fps_ = rendering_fps;
   application_fps_ = application_fps;
 
   if (!context_) {
-    Logger::LOG_WARNING << "Pipeline has no context: Please define a window!" << std::endl;
+    Logger::LOG_WARNING << "Pipeline has no context: Please define a window!"
+                        << std::endl;
     return;
   }
 
   if (display_loading_screen_) {
-    display_loading_screen_ = false;
-
-    if (window_) {
-      auto loading_texture(std::dynamic_pointer_cast<Texture2D>(TextureDatabase::instance()->lookup("gua_loading_texture")));
-      math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
-
-      if (config.get_enable_stereo()) {
-
-        auto tmp_left_resolution(window_->config.left_resolution());
-        auto tmp_right_resolution(window_->config.right_resolution());
-
-        auto tmp_left_position(window_->config.left_position());
-        auto tmp_right_position(window_->config.right_position());
-
-        window_->config.set_left_resolution(loading_texture_size);
-        window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
-
-        window_->config.set_right_resolution(loading_texture_size);
-        window_->config.set_right_position(tmp_right_position + 0.5*(tmp_right_resolution - loading_texture_size));
-
-        window_->display(loading_texture, loading_texture);
-
-        window_->config.set_left_position(tmp_left_position);
-        window_->config.set_left_resolution(tmp_left_resolution);
-
-        window_->config.set_right_position(tmp_right_position);
-        window_->config.set_right_resolution(tmp_right_resolution);
-
-      } else {
-
-        auto tmp_left_resolution(window_->config.left_resolution());
-        auto tmp_left_position(window_->config.left_position());
-
-
-        window_->config.set_left_resolution(loading_texture_size);
-        window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
-
-        window_->display(loading_texture);
-
-        window_->config.set_left_position(tmp_left_position);
-        window_->config.set_left_resolution(tmp_left_resolution);
-
-      }
-
-      window_->finish_frame();
-    }
-
+    loading_screen();
   } else {
-
     if (passes_need_reload_) {
       create_passes();
     }
@@ -219,117 +273,15 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       create_buffers();
     }
 
-
-    if (!config.get_enable_stereo()) {
-
-      auto eye((*current_graph_)[config.camera().eye_l]);
-      if (!eye) {
-        Logger::LOG_WARNING << "Cannot render scene: No valid eye specified" << std::endl;
-        return;
-      }
-
-      auto screen_it((*current_graph_)[config.camera().screen_l]);
-      auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
-      if (!screen) {
-        Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
-        return;
-      }
-
-      if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
-        current_scenes_[0].frustum = Frustum::perspective(eye->get_world_transform(),
-                                             screen->get_scaled_world_transform(),
-                                             config.near_clip(),
-                                             config.far_clip());
-      } else {
-        current_scenes_[0].frustum = Frustum::orthographic(eye->get_world_transform(),
-                                             screen->get_scaled_world_transform(),
-                                             config.near_clip(),
-                                             config.far_clip());
-      }
-
-      current_scenes_[0].center_of_interest = eye->get_world_position();
-      current_scenes_[0].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
-      current_scenes_[0].global_clipping_plane = config.get_global_clipping_plane();
-
-      serializer_->check(&current_scenes_[0],
-                         current_graph_,
-                         config.camera().render_mask,
-                         config.enable_bbox_display(),
-                         config.enable_ray_display(),
-                         config.enable_frustum_culling());
-    } else {
-
-
-      auto eye_l((*current_graph_)[config.camera().eye_l]);
-      if (!eye_l) {
-        Logger::LOG_WARNING << "Cannot render scene: No valid left eye specified" << std::endl;
-        return;
-      }
-
-      auto eye_r((*current_graph_)[config.camera().eye_r]);
-      if (!eye_r) {
-        Logger::LOG_WARNING << "Cannot render scene: No valid right eye specified" << std::endl;
-        return;
-      }
-
-      auto screen_it_l((*current_graph_)[config.camera().screen_l]);
-      auto screen_l(std::dynamic_pointer_cast<ScreenNode>(screen_it_l));
-      if (!screen_l) {
-        Logger::LOG_WARNING << "Cannot render scene: No valid left screen specified" << std::endl;
-        return;
-      }
-
-      auto screen_it_r((*current_graph_)[config.camera().screen_r]);
-      auto screen_r(std::dynamic_pointer_cast<ScreenNode>(screen_it_r));
-      if (!screen_r) {
-        Logger::LOG_WARNING << "Cannot render scene: No valid right screen specified" << std::endl;
-        return;
-      }
-
-      if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
-        current_scenes_[0].frustum = Frustum::perspective(eye_l->get_world_transform(),
-                                             screen_l->get_scaled_world_transform(),
-                                             config.near_clip(),
-                                             config.far_clip());
-        current_scenes_[1].frustum = Frustum::perspective(eye_r->get_world_transform(),
-                                             screen_r->get_scaled_world_transform(),
-                                             config.near_clip(),
-                                             config.far_clip());
-      } else {
-        current_scenes_[0].frustum = Frustum::orthographic(eye_l->get_world_transform(),
-                                             screen_l->get_scaled_world_transform(),
-                                             config.near_clip(),
-                                             config.far_clip());
-        current_scenes_[1].frustum = Frustum::orthographic(eye_r->get_world_transform(),
-                                             screen_r->get_scaled_world_transform(),
-                                             config.near_clip(),
-                                             config.far_clip());
-      }
-
-      current_scenes_[0].center_of_interest = eye_l->get_world_position();
-      current_scenes_[0].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
-      current_scenes_[0].global_clipping_plane = config.get_global_clipping_plane();
-      current_scenes_[1].center_of_interest = eye_r->get_world_position();
-      current_scenes_[1].enable_global_clipping_plane = config.get_enable_global_clipping_plane();
-      current_scenes_[1].global_clipping_plane = config.get_global_clipping_plane();
-
-      serializer_->check(&current_scenes_[0],
-                         current_graph_,
-                         config.camera().render_mask,
-                         config.enable_bbox_display(),
-                         config.enable_ray_display(),
-                         config.enable_frustum_culling());
-
-      serializer_->check(&current_scenes_[1],
-                         current_graph_,
-                         config.camera().render_mask,
-                         config.enable_bbox_display(),
-                         config.enable_ray_display(),
-                         config.enable_frustum_culling());
+    serialize(*current_graph, config.camera().eye_l, config.camera().screen_l,
+              current_scenes_[0]);
+    if (config.get_enable_stereo()) {
+      serialize(*current_graph, config.camera().eye_r, config.camera().screen_r,
+              current_scenes_[1]);
     }
 
     for (auto pass : passes_) {
-      pass->render_scene(config.camera(), *context_);
+      pass->render_scene(config.camera(), *current_graph, *context_);
     }
 
     if (window_) {

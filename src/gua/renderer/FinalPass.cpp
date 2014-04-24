@@ -40,7 +40,7 @@ FinalPass::FinalPass(Pipeline* pipeline)
 
 void FinalPass::print_shaders(std::string const& directory,
                               std::string const& name) const {
-  shader_->save_to_file(directory, name + "/final");
+  shader_->get_pass(0)->save_to_file(directory, name + "/final");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,13 +95,13 @@ LayerMapping const* FinalPass::get_gbuffer_mapping() const {
                                         CameraMode eye,
                                         RenderContext const& ctx) {
 
-  Pass::bind_inputs(*shader_, eye, ctx);
+  Pass::bind_inputs(*shader_->get_pass(0), eye, ctx);
   Pass::set_camera_matrices(
-      *shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+    *shader_->get_pass(0), camera, pipeline_->get_current_scene(eye), eye, ctx);
 
-  shader_->use(ctx);
+  shader_->get_pass(0)->use(ctx);
   fullscreen_quad_->draw(ctx.render_context);
-  shader_->unuse(ctx);
+  shader_->get_pass(0)->unuse(ctx);
 }
 
 }

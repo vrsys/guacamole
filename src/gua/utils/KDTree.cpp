@@ -24,6 +24,8 @@
 
 #include <gua/platform.hpp>
 
+#include <iostream>
+
 // external headers
 #if ASSIMP_VERSION == 3
 #include <assimp/postprocess.h>

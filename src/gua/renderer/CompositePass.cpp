@@ -78,6 +78,11 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
 
   // reuse gbuffer from shading-pass
   gbuffer_ = inputs_[Pipeline::PipelineStage::shading];
+  /*scm::gl::sampler_state_desc tmp(scm::gl::FILTER_MIN_MAG_LINEAR,
+    scm::gl::WRAP_CLAMP_TO_EDGE,
+    scm::gl::WRAP_CLAMP_TO_EDGE);
+  Pass::create(ctx, config, { { BufferComponent::F3, tmp } });*/
+
 
   if (volume_raygeneration_buffer_) {
     volume_raygeneration_buffer_->remove_buffers(ctx);
@@ -105,7 +110,7 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
   Camera const& camera,
   FrameBufferObject* target)
 {
-    init_ressources(ctx);
+    init_resources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
@@ -209,14 +214,16 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CompositePass::init_ressources(RenderContext const& ctx) {
+void CompositePass::init_resources(RenderContext const& ctx) {
+  if (!initialized_) {
+    if (!depth_stencil_state_) {
+      depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
+    }
 
-  if (!depth_stencil_state_) {
-    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
-  }
-
-  if (!fullscreen_quad_) {
-    fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    if (!fullscreen_quad_) {
+      fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    }
+    initialized_ = true;
   }
 }
 
@@ -246,7 +253,9 @@ bool CompositePass::pre_compile_shaders(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CompositePass::render_scene(Camera const& camera, RenderContext const& ctx) {
+void CompositePass::render_scene(Camera const& camera,
+                                 SceneGraph const&,
+                                 RenderContext const& ctx) {
 
   for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
 

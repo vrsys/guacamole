@@ -134,8 +134,7 @@ namespace gua {
 			gua::string_utils::split(file_name, '.');
 		return filename_decomposition.empty()
 			? false
-			: _supported_file_extensions.count(filename_decomposition.back()) >
-			0;
+			: _supported_file_extensions.count(filename_decomposition.back()) >	0;
 	}
 
 }

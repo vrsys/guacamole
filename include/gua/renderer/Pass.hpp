@@ -41,6 +41,7 @@ class Pipeline;
 struct SerializedScene;
 struct Camera;
 class LayerMapping;
+class SceneGraph;
 
 /**
  * A database for accessing data.
@@ -63,7 +64,9 @@ class Pass {
    */
   Pass(Pipeline* pipeline);
 
-  virtual void render_scene(Camera const& camera, RenderContext const& ctx) = 0;
+  virtual void render_scene(Camera const& camera,
+                            SceneGraph const& current_graph,
+                            RenderContext const& ctx) = 0;
 
   virtual void print_shaders(std::string const& directory,
                              std::string const& name) const = 0;
@@ -99,6 +102,7 @@ class Pass {
   std::shared_ptr<StereoBuffer> gbuffer_;
 
   std::vector<std::shared_ptr<StereoBuffer>> inputs_;
+  bool initialized_;
 };
 
 }

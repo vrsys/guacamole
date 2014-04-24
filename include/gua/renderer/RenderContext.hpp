@@ -34,6 +34,8 @@
 
 namespace gua {
 
+  class Window;
+
 /**
  * Information on a specific context.
  *
@@ -67,14 +69,9 @@ struct RenderContext {
   scm::gl::render_device_ptr render_device;
 
   /**
-   * The width of the window.
+   * The window which is rendered into.
    */
-  int width;
-
-  /**
-   * The height of the window.
-   */
-  int height;
+  Window* render_window;
 
   /**
    * A unique ID for this context.

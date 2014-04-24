@@ -32,6 +32,7 @@ class Node;
 class TransformNode;
 class LODNode;
 class GeometryNode;
+class Video3DNode;
 class VolumeNode;
 class PointLightNode;
 class ScreenNode;
@@ -60,14 +61,14 @@ class NodeVisitor {
    *
    * This constructs a NodeVisitor.
    */
-  NodeVisitor();
+  NodeVisitor() {}
 
   /**
    * Destructor.
    *
    * This destructs the NodeVisitor with all its contents.
    */
-  virtual ~NodeVisitor();
+  virtual ~NodeVisitor() {}
 
   /**
    * Visits a Node.
@@ -110,6 +111,16 @@ class NodeVisitor {
   virtual void visit(GeometryNode* node) { visit(reinterpret_cast<Node*>(node)); }
 
   /**
+  * Visits a Video3DNode
+  *
+  * This function provides the interface to visit a Video3DNode
+  *
+  * \param video3d   Pointer to Video3DNode
+  */
+  virtual  void visit(Video3DNode* node) { visit(reinterpret_cast<Node*>(node)); }
+
+  /**
+  * Visits a GeometryNode
   * Visits a GeometryNode.
   *
   * This function provides the interface to visit a GeometryNode.
@@ -118,6 +129,7 @@ class NodeVisitor {
   * \param cam   Pointer to a GeometryNode.
   */
   virtual void visit(VolumeNode* node) { visit(reinterpret_cast<Node*>(node)); }
+
 
   /**
    * Visits a PointLightNode.

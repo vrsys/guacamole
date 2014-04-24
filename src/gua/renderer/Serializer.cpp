@@ -33,6 +33,7 @@
 #include <gua/scenegraph/TransformNode.hpp>
 #include <gua/scenegraph/LODNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/Video3DNode.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
@@ -40,6 +41,7 @@
 #include <gua/scenegraph/ScreenNode.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
+#include <gua/renderer/Video3D.hpp>
 
 // external headers
 #include <stack>
@@ -70,6 +72,7 @@ void Serializer::check(SerializedScene* output,
 
   std::size_t mesh_count = data_->meshnodes_.size();
   std::size_t nurbs_count = data_->nurbsnodes_.size();
+  std::size_t video3d_count = data_->video3Dnodes_.size();
   std::size_t volume_count = data_->volumenodes_.size();
   std::size_t point_light_count = data_->point_lights_.size();
   std::size_t spot_light_count = data_->spot_lights_.size();
@@ -79,6 +82,7 @@ void Serializer::check(SerializedScene* output,
 
   data_->meshnodes_.clear();
   data_->nurbsnodes_.clear();
+  data_->video3Dnodes_.clear();
   data_->volumenodes_.clear();
   data_->point_lights_.clear();
   data_->spot_lights_.clear();
@@ -94,7 +98,7 @@ void Serializer::check(SerializedScene* output,
     data_->materials_.insert("gua_bounding_box");
     data_->bounding_boxes_
         .reserve(mesh_count + nurbs_count + point_light_count +
-                 spot_light_count + ray_count);
+                 spot_light_count + ray_count + video3d_count);
   }
 
   if (draw_rays_) {
@@ -108,6 +112,7 @@ void Serializer::check(SerializedScene* output,
   // reserving the old size might save some time
   data_->meshnodes_.reserve(mesh_count);
   data_->nurbsnodes_.reserve(nurbs_count);
+  data_->video3Dnodes_.reserve(video3d_count);
   data_->volumenodes_.reserve(nurbs_count);
   data_->point_lights_.reserve(point_light_count);
   data_->spot_lights_.reserve(spot_light_count);
@@ -186,6 +191,24 @@ void Serializer::check(SerializedScene* output,
     }
 
     data_->materials_.insert(node->get_material());
+
+    visit_children(node);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+/* virtual */ void Serializer::visit(Video3DNode* node) {
+
+  if ( is_visible(node) ) {
+
+    if (!node->get_ksfile().empty() && !node->get_material().empty()) {
+
+      add_bbox(node);
+      data_->video3Dnodes_.push_back(node);
+      data_->materials_.insert(node->get_material());
+
+    }
 
     visit_children(node);
   }
@@ -303,7 +326,7 @@ void Serializer::add_bbox(Node* node) const {
 ////////////////////////////////////////////////////////////////////////
 
 void Serializer::visit_children(Node* node) {
-  std::for_each(node->children_.begin(), node->children_.end(), std::bind(std::mem_fn(&Node::accept), std::placeholders::_1, std::ref(*this)));
+  for (auto & c : node->children_) { c->accept(*this); }
 }
 
 }  // namespace gua

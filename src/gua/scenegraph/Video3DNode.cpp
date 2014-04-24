@@ -19,66 +19,45 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_DOUBLEBUFFER_HPP
-#define GUA_DOUBLEBUFFER_HPP
+// class header
+#include <gua/scenegraph/Video3DNode.hpp>
 
-#include <thread>
-#include <condition_variable>
+// guacamole headers
+#include <gua/platform.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/renderer/GeometryLoader.hpp> //***Video3DLoader???
+#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/scenegraph/RayNode.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
-namespace utils {
+//TODO BOUNDING BOX!!
+Video3DNode::Video3DNode(std::string const& name,
+                         std::string const& ksfile,
+                         std::string const& material,
+                         math::mat4 const& transform)
+: Node(name, transform), ksfile_(ksfile), material_(material)
+{
+    bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-100.0,-100.0,-100.0),
+                          math::vec3(100.0,100.0,100.0)); 
+}
 
-template <typename T> class Doublebuffer {
- public:
-  Doublebuffer()
-      : front_(), back_(), updated_(false), copy_mutex_(), copy_cond_var_() {}
+/* virtual */ void Video3DNode::accept(NodeVisitor& visitor) {
 
-  void write_blocked(T const& scene_graphs) {
-    {
-      // blocks until ownership can be obtained for the current thread.
-      std::lock_guard<std::mutex> lock(copy_mutex_);
-      back_ = scene_graphs;
-      updated_ = true;
-    }
-    copy_cond_var_.notify_one();
-  }
+  visitor.visit(this);
+}
 
-  template <typename F> void with(F&& f) {
-    // f(front_);
-    {
-      std::unique_lock<std::mutex> lock(copy_mutex_);
-      while (!updated_) {
-        copy_cond_var_.wait(lock);
-      }
-      updated_ = false;
-      std::swap(front_, back_);
-    }
-    f(front_);
-  }
+void Video3DNode::update_bounding_box() const {
+  //TODO
+}
 
-  T read() {
-    {
-      std::unique_lock<std::mutex> lock(copy_mutex_);
-      while (!updated_) {
-        copy_cond_var_.wait(lock);
-      }
-      updated_ = false;
-      std::swap(front_, back_);
-    }
-    return front_;
-  }
+void Video3DNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
+                           Mask const& mask, std::set<PickResult>& hits) {
+  //TODO
+}
 
- private:
-  T front_;
-  T back_;
-  bool updated_;
-
-  std::mutex copy_mutex_;
-  std::condition_variable copy_cond_var_;
-};
-
+std::shared_ptr<Node> Video3DNode::copy() const {
+  return std::make_shared<Video3DNode>(get_name(), ksfile_, material_, get_transform());
 }
 
 }
-
-#endif  // GUA_DOUBLEBUFFER_HPP
