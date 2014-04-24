@@ -43,6 +43,8 @@ class GBuffer : public FrameBufferObject {
           unsigned height,
           unsigned mipmap_layers = 1);
 
+  virtual ~GBuffer() {}
+
   void remove_buffers(RenderContext const& ctx);
 
   /**

@@ -360,6 +360,9 @@ void Pipeline::create_passes() {
     if (compilation_succeeded) {
 
       for (auto pass : passes_) {
+        if (pass->get_gbuffer()) {
+          pass->get_gbuffer()->remove_buffers(*context_);
+        }
         delete pass;
       }
 
@@ -423,7 +426,6 @@ void Pipeline::create_buffers() {
       TextureDatabase::instance()->add(config.output_texture_name() + "_depth_left", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[0]->get_depth_buffer());
       TextureDatabase::instance()->add(config.output_texture_name() + "_depth_right", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[1]->get_depth_buffer());
     }
-
 
     buffers_need_reload_ = false;
   }

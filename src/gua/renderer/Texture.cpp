@@ -75,18 +75,25 @@ Texture::~Texture() {
 
 void Texture::generate_mipmaps(RenderContext const& context) {
 
-  if (textures_.size() <= context.id || textures_[context.id] == 0)
+  if (textures_.size() <= context.id || textures_[context.id] == 0) {
     upload_to(context);
+  }
 
-  context.render_context->generate_mipmaps(textures_[context.id]);
+  if (textures_[context.id])
+    context.render_context->generate_mipmaps(textures_[context.id]);
 }
 
 math::vec2ui const Texture::get_handle(RenderContext const& context) const {
 
-  if (textures_.size() <= context.id || textures_[context.id] == 0)
-    upload_to(context);
 
-  uint64_t handle(textures_[context.id]->native_handle());
+  if (textures_.size() <= context.id || !textures_[context.id]) {
+    upload_to(context);
+  }
+
+  uint64_t handle(0);
+
+  if (textures_[context.id])
+    handle = textures_[context.id]->native_handle();
 
   return math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
 }
@@ -94,69 +101,32 @@ math::vec2ui const Texture::get_handle(RenderContext const& context) const {
 scm::gl::texture_image_ptr const& Texture::get_buffer(
     RenderContext const& context) const {
 
-  if (textures_.size() <= context.id || textures_[context.id] == 0)
+
+  if (textures_.size() <= context.id || textures_[context.id] == 0) {
     upload_to(context);
+  }
 
   return textures_[context.id];
 }
 
 void Texture::make_resident(RenderContext const& context) const {
-  context.render_context
-      ->make_resident(textures_[context.id], sampler_states_[context.id]);
+  if (textures_[context.id])
+    context.render_context
+        ->make_resident(textures_[context.id], sampler_states_[context.id]);
 
 }
 
 void Texture::make_non_resident(RenderContext const& context) const {
-  context.render_context->make_non_resident(textures_[context.id]);
+  if (textures_[context.id])
+    context.render_context->make_non_resident(textures_[context.id]);
 }
 
 void Texture::make_non_resident() const {
   for (int i(0); i<textures_.size(); ++i ) {
-    render_contexts_[i]->make_non_resident(textures_[i]);
-  }
-}
-
-#if 0
-void Texture::upload_to(RenderContext const& context) const {
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  if (textures_.size() <= context.id) {
-    textures_.resize(context.id + 1);
-    sampler_states_.resize(context.id + 1);
-    render_contexts_.resize(context.id + 1);
-  }
-
-  if (file_name_ == "") {
-
-
-    if (data_.size() == 0)
-      textures_[context.id] = context.render_device->create_texture_2d(
-          math::vec2ui(width_, height_), color_format_, mipmap_layers_);
-    else
-      textures_[context.id] = context.render_device->create_texture_2d(
-          scm::gl::texture_2d_desc(
-              math::vec2ui(width_, height_), color_format_, mipmap_layers_),
-          color_format_,
-          data_);
-  } else {
-    MESSAGE("Uploading texture file %s", file_name_.c_str());
-    scm::gl::texture_loader loader;
-    textures_[context.id] = loader.load_texture_2d(
-        *context.render_device, file_name_, mipmap_layers_ > 0);
-
-    if (textures_[context.id]) {
-      width_ = textures_[context.id]->dimensions()[0];
-      height_ = textures_[context.id]->dimensions()[1];
+    if (render_contexts_[i] && textures_[i]) {
+      render_contexts_[i]->make_non_resident(textures_[i]);
     }
   }
-
-  sampler_states_[context.id] =
-      context.render_device->create_sampler_state(state_descripton_);
-
-  render_contexts_[context.id] = context.render_context;
-
-  make_resident(context);
 }
-#endif
 
 }
