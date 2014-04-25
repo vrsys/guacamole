@@ -27,6 +27,8 @@
 #include <gua/renderer/ShadingModel.hpp>
 #include <gua/renderer/UniformMapping.hpp>
 #include <gua/renderer/LayerMapping.hpp>
+#include <gua/renderer/UberShaderFactory.hpp>
+#include <gua/renderer/Frustum.hpp>
 #include <gua/renderer/enums.hpp>
 
 #define CASES_PER_UBERSHADER_SWITCH 30
@@ -36,46 +38,55 @@ namespace gua {
 class UberShaderFactory;
 
 /**
- *
+ * This class represents a (multipass-) stage for rendering geometry into a layered fbo
  */
 class UberShader {
- public:
-  /**
-   * Default constructor.
+
+ public: // typedefs, enums etc
+
+   /**
+   * logical combination of used render_stages provides valid rendermask, e.g:
    *
-   * Creates a new (invalid) shader program.
+   * The rendermask ( PRE_FRAME_STAGE | PRE_DRAW_STAGE | DRAW_STAGE ) defines that
+   * the ubershader provides an implementation of the defined stages
    */
+   enum render_stage {
+     NO_STAGE         = 0x00,
+     PRE_FRAME_STAGE  = 0x01,
+     PRE_DRAW_STAGE   = 0x02,
+     DRAW_STAGE       = 0x04,
+     POST_DRAW_STAGE  = 0x08,
+     POST_FRAME_STAGE = 0x10
+   };
+
+   typedef unsigned stage_mask;
+
+ public:
+
+  /**
+  * c'tor
+  */
   UberShader();
 
   /**
-   *
+  * d'tor
+  */
+  virtual ~UberShader();
+
+  /**
+  * initialize material dependent layer mappings for ubershaders
+  */
+  virtual void create(std::set<std::string> const& material_names);
+
+  /**
+   * set material dependent uniforms for all programs of ubershader
    */
   void set_material_uniforms(std::set<std::string> const& materials,
                              ShadingModel::StageID stage,
                              RenderContext const& context);
 
   /**
-   *
-   */
-  virtual LayerMapping const* get_gbuffer_mapping() const;
-
-  /**
-   *
-   */
-  virtual UniformMapping const* get_uniform_mapping() const;
-
-  /**
-  *
-  */
-  virtual void add_pass(std::shared_ptr<ShaderProgram> const&);
-
-  /**
-  *
-  */
-  virtual std::shared_ptr<ShaderProgram> const& get_pass(unsigned pass) const;
-
-  /**
-  *
+  * set a uniform for all programs of this uebershader
   */
   template <typename T>
   void set_uniform(RenderContext const& context,
@@ -90,16 +101,91 @@ class UberShader {
   }
 
   /**
-  *
+   * get gbuffer layers of ubershader
+   */
+  virtual LayerMapping const* get_gbuffer_mapping() const;
+
+  /**
+   * get uniform mapping of ubershader
+   */
+  virtual UniformMapping const* get_uniform_mapping() const;
+
+  /**
+  * add a program to ubershader
+  */
+  virtual void add_program(std::shared_ptr<ShaderProgram> const&);
+
+  /**
+  * returns a container with all involved programs of this ubershader
+  */ 
+  std::vector<std::shared_ptr<ShaderProgram>> const& programs() const;
+
+  /**
+  * returns a program in enumerated order 
+  */
+  virtual std::shared_ptr<ShaderProgram> const& get_program(unsigned index = 0) const;
+
+  /**
+  * uploads ressources to the GPU
   */
   virtual bool upload_to(RenderContext const& context) const;
 
   /**
   *
   */
-  std::vector<std::shared_ptr<ShaderProgram>> const& passes() const;
+  virtual stage_mask const get_stage_mask() const { return NO_STAGE; }
 
- protected:
+  /**
+  * This callback is called ONCE per frame BEFORE rendering all drawables of this type 
+  *
+  * default: no operations performed
+  */
+  virtual void pre_frame ( RenderContext const& context ) const {};
+
+  /**
+  * This method is called for ONCE per drawable to perform predraw operations
+  *
+  * default: no operations performed
+  */
+  virtual void predraw (  RenderContext const& context,
+                          std::string const& name,
+                          std::string const& material,
+                          scm::math::mat4 const& model_matrix,
+                          scm::math::mat4 const& normal_matrix,
+                          Frustum const& frustum) const {};
+   
+  /**
+  * This method is called for ONCE per drawable to perform draw operations
+  *
+  * default: no implementation provided
+  */
+  virtual void draw(RenderContext const& context,
+                    std::string const& name,
+                    std::string const& material,
+                    scm::math::mat4 const& model_matrix,
+                    scm::math::mat4 const& normal_matrix,
+                    Frustum const& frustum) const {};
+
+  /**
+  * This method is called for ONCE per drawable to perform postdraw operations
+  *
+  * default: no operations performed
+  */
+  virtual void postdraw ( RenderContext const& context,
+                          std::string const& name,
+                          std::string const& material,
+                          scm::math::mat4 const& model_matrix,
+                          scm::math::mat4 const& normal_matrix,
+                          Frustum const& frustum) const {};
+
+  /**
+  * This callback is called ONCE per frame AFTER rendering all drawables of this type
+  *
+  * default: no operations performed
+  */
+  virtual void post_frame ( RenderContext const& context) const {};
+
+ protected: // methods
 
   void set_uniform_mapping(UniformMapping const& mapping);
   void set_output_mapping(LayerMapping const& mapping);
@@ -107,10 +193,15 @@ class UberShader {
   std::string const print_material_switch(UberShaderFactory const& factory) const;
   std::string const print_material_methods(UberShaderFactory const& factory) const;
 
-  private:
+  protected: // attributes
 
   UniformMapping uniform_mapping_;
   LayerMapping output_mapping_;
+
+  std::unique_ptr<UberShaderFactory> vshader_factory_;
+  std::unique_ptr<UberShaderFactory> fshader_factory_;
+
+  private: // attributes
 
   std::vector<std::shared_ptr<ShaderProgram>> programs_;
 

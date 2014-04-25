@@ -24,16 +24,15 @@
 
 // guacamole headers
 #include <gua/renderer/GeometryPass.hpp>
-#include <gua/renderer/Mesh.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
+
+#include <unordered_map>
 
 namespace gua {
 
 class Pipeline;
-class GBufferMeshUberShader;
-class GBufferNURBSUberShader;
-
-class GBufferVideo3DUberShader;
 class SceneGraph;
+class UberShader;
 
 /**
  *
@@ -58,12 +57,7 @@ class GBufferPass : public GeometryPass {
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 
-  void print_shaders(std::string const& directory,
-                     std::string const& name) const;
-
-  bool pre_compile_shaders(RenderContext const& ctx);
-
-  void apply_material_mapping(std::set<std::string> const& materials) const;
+  void apply_material_mapping(std::set<std::string> const& materials);
 
   LayerMapping const* get_gbuffer_mapping() const;
 
@@ -76,9 +70,15 @@ class GBufferPass : public GeometryPass {
                  Camera const& camera,
                  FrameBufferObject* target);
 
-  GBufferMeshUberShader* mesh_shader_;
-  GBufferNURBSUberShader* nurbs_shader_;
-  GBufferVideo3DUberShader* video3D_shader_;
+  /**
+  * all ubershaders used in scene
+  */
+  std::unordered_map<std::type_index, UberShader*> ubershaders_;
+
+  /**
+  * copy of all material names in scene - used to generate gbuffermappings of ubershaders
+  */
+  std::set<std::string> materials_;
 
   /**
    * Ugly hack! "bfc" means backface culling.
@@ -90,7 +90,7 @@ class GBufferPass : public GeometryPass {
   scm::gl::rasterizer_state_ptr bbox_rasterizer_state_;
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
 
-  std::shared_ptr<Geometry> bounding_box_;
+  std::shared_ptr<GeometryRessource> bounding_box_;
 };
 
 }

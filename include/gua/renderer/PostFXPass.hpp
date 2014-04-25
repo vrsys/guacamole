@@ -28,7 +28,7 @@
 
 namespace gua {
 
-class PostGBufferMeshUberShader;
+class PostTriMeshUberShader;
 class GBuffer;
 
 /**

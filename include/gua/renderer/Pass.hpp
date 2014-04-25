@@ -37,10 +37,10 @@
 
 namespace gua {
 
-class Pipeline;
-struct SerializedScene;
 struct Camera;
+struct SerializedScene;
 class LayerMapping;
+class Pipeline;
 class SceneGraph;
 
 /**
@@ -68,13 +68,12 @@ class Pass {
                             SceneGraph const& current_graph,
                             RenderContext const& ctx) = 0;
 
-  virtual void print_shaders(std::string const& directory,
-                             std::string const& name) const = 0;
+  virtual void print_shaders(std::string const& directory, std::string const& name) const {}
 
   // not strictly necessary to call, but recommend
   // to avoid crashes on shader compilation
   // derived classes should call upload_to() on all contained shaders
-  virtual bool pre_compile_shaders(RenderContext const& ctx) = 0;
+  virtual bool pre_compile_shaders(RenderContext const& ctx) { return true; }
 
   virtual void create(
       RenderContext const& ctx,

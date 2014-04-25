@@ -39,7 +39,7 @@ class Pass;
 class SceneGraph;
 class LayerMapping;
 class StereoBuffer;
-class GBufferMeshUberShader;
+class TriMeshUberShader;
 class LightingUberShader;
 class FinalUberShader;
 class PostFXShader;

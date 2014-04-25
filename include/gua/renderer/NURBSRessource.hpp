@@ -56,11 +56,13 @@ class GUA_DLL NURBSRessource : public GeometryRessource {
 
    ~NURBSRessource();
 
-  /* virtual */ void draw(RenderContext const& context) const;
+  /*virtual*/ void draw(RenderContext const& context) const;
 
-  /* virtual */ void predraw(RenderContext const& context) const;
+  /*virtual*/ void predraw(RenderContext const& context) const;
 
-  /* virtual */ void update_bounding_box() const;
+  /*virtual*/ void update_bounding_box() const;
+
+  /*virtual*/ UberShader* get_ubershader() const;
 
   void ray_test(Ray const& ray, PickResult::Options options,
                 Node* owner, std::set<PickResult>& hits) {}
@@ -68,6 +70,8 @@ class GUA_DLL NURBSRessource : public GeometryRessource {
   scm::gl::buffer_ptr const& vertex_buffer() const;
   scm::gl::buffer_ptr const& index_buffer() const;
   scm::gl::vertex_array_ptr const& vertex_array() const;
+
+  
 
  private:
 

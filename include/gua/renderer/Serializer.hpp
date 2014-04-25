@@ -94,15 +94,6 @@ class Serializer : public NodeVisitor {
   /* virtual */ void visit(GeometryNode* geometry);
 
   /**
-   * Visits a Video3DNode
-   *
-   * This function provides the interface to visit a Video3DNode
-   *
-   * \param video3d   Pointer to Video3DNode
-   */
-  /* virtual */ void visit(Video3DNode* video3d);
-
-  /**
   * Visits a VolumeNode
   *
   * This function provides the interface to visit a VolumeNode

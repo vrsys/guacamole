@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/renderer/Video3D.hpp>
+#include <gua/renderer/Video3DRessource.hpp>
 
 namespace gua {
   
@@ -38,10 +38,10 @@ std::shared_ptr<Node> Video3DLoader::load(std::string const& file_name,
                                        unsigned flags) {
   try {
       GeometryDatabase::instance()->add(
-        file_name, std::make_shared<Video3D>(file_name));
+        file_name, std::make_shared<Video3DRessource>(file_name));
 
       auto result = std::make_shared<Video3DNode>("unnamed_video3D");
-      result->set_ksfile(file_name);
+      result->set_filename(file_name);
       result->set_material("");     
 
       return result;

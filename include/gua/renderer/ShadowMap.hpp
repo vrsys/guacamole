@@ -26,15 +26,17 @@
 #include <gua/math.hpp>
 #include <gua/renderer/RenderContext.hpp>
 
+#include <unordered_map>
+#include <typeindex>
+
 namespace gua {
 
+struct Camera;
 class Serializer;
 class GBuffer;
 class Frustum;
-class Camera;
 class Pipeline;
-class GBufferMeshUberShader;
-class GBufferNURBSUberShader;
+class UberShader;
 class SceneGraph;
 
 /**
@@ -71,12 +73,7 @@ class ShadowMap {
               float split_4,
               float near_clipping_in_sun_direction);
 
-  void print_shaders(std::string const& directory,
-                     std::string const& name) const;
-
   bool pre_compile_shaders(RenderContext const& ctx);
-
-  void apply_material_mapping(std::set<std::string> const& materials) const;
 
   GBuffer*                       get_buffer() const {return buffer_;}
   std::vector<math::mat4> const& get_projection_view_matrices() const {return projection_view_matrices_;}
@@ -89,17 +86,15 @@ class ShadowMap {
                        math::vec3 const& center_of_interest,
                        Frustum const& shadow_frustum,
                        Camera const& scene_camera,
-                       unsigned cascade);
+                       unsigned cascade,
+                       unsigned map_size);
 
+  std::unique_ptr<Serializer> serializer_;
   GBuffer* buffer_;
-
-  Serializer* serializer_;
-
   Pipeline* pipeline_;
-
-  GBufferMeshUberShader* mesh_shader_;
-  // GBufferNURBSUberShader* nurbs_shader_;
-
+  
+  std::unordered_map<std::type_index, UberShader*> ubershader_;
+  
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::rasterizer_state_ptr rasterizer_state_;
   std::vector<math::mat4> projection_view_matrices_;

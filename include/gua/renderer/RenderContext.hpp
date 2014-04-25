@@ -77,6 +77,11 @@ struct RenderContext {
    * A unique ID for this context.
    */
   unsigned id;
+
+  /**
+  * framecounter for this context
+  */
+  unsigned framecount;
 };
 
 }

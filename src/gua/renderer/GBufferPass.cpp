@@ -25,15 +25,14 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/GBufferMeshUberShader.hpp>
-#include <gua/renderer/GBufferNURBSUberShader.hpp>
-#include <gua/renderer/GBufferVideo3DUberShader.hpp>
-#include <gua/renderer/MeshLoader.hpp>
-#include <gua/renderer/Video3D.hpp>
+#include <gua/renderer/UberShader.hpp>
+#include <gua/renderer/TriMeshUberShader.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
+#include <algorithm>
 // #define DEBUG_XFB_OUTPUT
 
 namespace gua {
@@ -42,30 +41,19 @@ namespace gua {
 
 GBufferPass::GBufferPass(Pipeline* pipeline)
     : GeometryPass(pipeline),
-      mesh_shader_(new GBufferMeshUberShader),
-      nurbs_shader_(new GBufferNURBSUberShader),
-      video3D_shader_(new GBufferVideo3DUberShader),
       bfc_rasterizer_state_(),
       no_bfc_rasterizer_state_(),
       bbox_rasterizer_state_(),
       depth_stencil_state_(),
-      bounding_box_() {
-        MeshLoader mesh_loader;
-
-        bounding_box_ = GeometryDatabase::instance()
-                            ->lookup("gua_bounding_box_geometry");
-    }
+      bounding_box_() 
+{
+  bounding_box_ = GeometryDatabase::instance()->lookup("gua_bounding_box_geometry");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GBufferPass::~GBufferPass() {
-    if (mesh_shader_)
-      delete mesh_shader_;
-    if (nurbs_shader_)
-      delete nurbs_shader_;
-    if (video3D_shader_)
-      delete video3D_shader_;
-}
+GBufferPass::~GBufferPass()
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -84,28 +72,6 @@ void GBufferPass::create(
     Pass::create(ctx, tmp);
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-void GBufferPass::print_shaders(std::string const& directory,
-                                std::string const& name) const {
-  throw std::runtime_error("to implement");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool GBufferPass::pre_compile_shaders(RenderContext const& ctx) {
-    if (mesh_shader_)  return mesh_shader_->upload_to(ctx);
-    if (nurbs_shader_) return nurbs_shader_->upload_to(ctx);
-    if (video3D_shader_) return video3D_shader_->upload_to(ctx);
-
-    std::cout << "Print Shaders: " << std::endl;
-    getchar();
-    print_shaders("/tmp","");
-
-    return false;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void GBufferPass::rendering(SerializedScene const& scene,
@@ -114,8 +80,6 @@ void GBufferPass::rendering(SerializedScene const& scene,
                             CameraMode eye,
                             Camera const& camera,
                             FrameBufferObject* target) {
-
-
 
     if (!depth_stencil_state_)
         depth_stencil_state_ =
@@ -146,6 +110,89 @@ void GBufferPass::rendering(SerializedScene const& scene,
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
     ////////////////////////////////////////////////////////////////////
+    // draw all drawable geometries
+    ////////////////////////////////////////////////////////////////////
+    for (auto const& type_ressource_pair : scene.geometrynodes_)
+    {
+      auto const& type                = type_ressource_pair.first;
+      auto const& ressource_container = type_ressource_pair.second;
+
+      if (!ubershaders_.count(type))
+      {
+        if (!ressource_container.empty()) 
+        {
+          // get static ubershader from 
+          auto const& ressource = GeometryDatabase::instance()->lookup(ressource_container.front()->get_filename());
+          auto ubershader = ressource->get_ubershader();
+
+          // apply materials to generate meta-shader code in uebershaders
+          ubershader->create(materials_);
+          ubershaders_.insert(std::make_pair(type, ubershader));
+
+          // debug: write out all used ubershaders
+#if 1
+          unsigned i = 0;
+          for (auto p : ubershader->programs())
+          {
+            std::string t (type.name());
+            std::replace(t.begin(), t.end(), ':', '_');
+            p->save_to_file(t, std::to_string(i));
+            i++;
+          }
+#endif
+        }
+        else {
+          Logger::LOG_WARNING << "GBufferPass::rendering(): Cannot retrieve ubershader from geometry node." << std::endl;
+        }
+      }
+
+      if (ubershaders_.count(type))
+      {
+        auto ubershader = ubershaders_[type];
+
+        ubershader->set_material_uniforms(
+          scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
+        ubershader->set_material_uniforms(
+          scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+        
+        ubershader->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
+        ubershader->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+
+        // iterate all programs of ubershader and set frame-consistent uniforms
+        for (auto const& program : ubershader->programs())
+        {
+          Pass::bind_inputs(*program, eye, ctx);
+          Pass::set_camera_matrices(*program,
+            camera,
+            pipeline_->get_current_scene(eye),
+            eye,
+            ctx);
+        }
+        
+        // iterate all drawables and draw with according ubershader
+        for (auto const& node : ressource_container)
+        {
+          auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
+          auto const& material = MaterialDatabase::instance()->lookup(node->get_material());
+
+          if (ressource && material)
+          {
+            // draw node
+            ubershader->draw(ctx,
+              node->get_filename(),
+              node->get_material(),
+              node->get_cached_world_transform(),
+              scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
+              scene.frustum);
+          }
+        }
+      } else {
+        Logger::LOG_WARNING << "GBufferPass::rendering(): No UberShader available for type :" << type.name() << std::endl;
+      }
+    }
+
+#if 0
+    ////////////////////////////////////////////////////////////////////
     // set frame-consistent uniforms for mesh ubershader
     ////////////////////////////////////////////////////////////////////
     mesh_shader_->set_material_uniforms(
@@ -156,7 +203,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     mesh_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
     mesh_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
 
-    for (auto const& pass : mesh_shader_->passes()) {
+    for (auto const& pass : mesh_shader_->programs()) {
       Pass::bind_inputs(*pass, eye, ctx);
       Pass::set_camera_matrices(*pass,
         camera,
@@ -173,7 +220,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     video3D_shader_->set_material_uniforms(
       scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
 
-    for (auto const& pass : video3D_shader_->passes())
+    for (auto const& pass : video3D_shader_->programs())
     {
       Pass::bind_inputs(*pass, eye, ctx);
       Pass::set_camera_matrices(*pass,
@@ -191,7 +238,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     nurbs_shader_->set_material_uniforms(
       scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
 
-    for (auto const& pass : nurbs_shader_->passes())
+    for (auto const& pass : nurbs_shader_->programs())
     {
       Pass::bind_inputs(*pass, eye, ctx);
       Pass::set_camera_matrices(*pass, 
@@ -215,7 +262,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     if (!scene.meshnodes_.empty()) {
 
         // draw meshes
-        mesh_shader_->get_pass(0)->use(ctx);
+        mesh_shader_->get_program()->use(ctx);
         {
 
             for (auto const& node : scene.meshnodes_) {
@@ -239,7 +286,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                 }
             }
         }
-        mesh_shader_->get_pass(0)->unuse(ctx);
+        mesh_shader_->get_program()->unuse(ctx);
     }
 
 
@@ -247,7 +294,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     if (!scene.textured_quads_.empty()) {
 
         // draw meshes
-        mesh_shader_->get_pass(0)->use(ctx);
+        mesh_shader_->get_program()->use(ctx);
         {
 
             for (auto const& node : scene.textured_quads_) {
@@ -302,7 +349,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                 }
             }
         }
-        mesh_shader_->get_pass(0)->unuse(ctx);
+        mesh_shader_->get_program()->unuse(ctx);
     }
 
     if (!scene.nurbsnodes_.empty()) {
@@ -321,7 +368,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
             ctx.render_context->begin_query(q);
 #endif
             // pre-tesselate if necessary
-            nurbs_shader_->get_pass(0)->use(ctx);
+            nurbs_shader_->get_program()->use(ctx);
             {
               nurbs_shader_->set_uniform(ctx, 
                                          node->get_cached_world_transform(), 
@@ -333,7 +380,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                 ctx.render_context->apply();
                 geometry->predraw(ctx);
             }
-            nurbs_shader_->get_pass(0)->unuse(ctx);
+            nurbs_shader_->get_program()->unuse(ctx);
 
 #ifdef DEBUG_XFB_OUTPUT
             ctx.render_context->end_query(q);
@@ -343,7 +390,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
 #endif
 
             // invoke tesselation/trim shader for adaptive nurbs rendering
-            nurbs_shader_->get_pass(1)->use(ctx);
+            nurbs_shader_->get_program(1)->use(ctx);
             {
                 if (material && geometry) {
                     nurbs_shader_->set_uniform(
@@ -359,7 +406,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                     geometry->draw(ctx);
                 }
             }
-            nurbs_shader_->get_pass(1)->unuse(ctx);
+            nurbs_shader_->get_program(1)->unuse(ctx);
         }
     }
 
@@ -378,6 +425,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
       }
     }
 
+
     ctx.render_context->set_rasterizer_state(bbox_rasterizer_state_);
     std::shared_ptr<Material> bbox_material;
 
@@ -390,7 +438,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     // draw bounding boxes, if desired
     if (pipeline_->config.enable_bbox_display() && !scene.bounding_boxes_.empty()) {
 
-        mesh_shader_->get_pass(0)->use(ctx);  // re-use mesh_shader
+        mesh_shader_->get_program()->use(ctx);  // re-use mesh_shader
 
         for (auto const& bbox : scene.bounding_boxes_) {
             math::mat4 bbox_transform(math::mat4::identity());
@@ -410,12 +458,12 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
             bounding_box_->draw(ctx);
         }
-        mesh_shader_->get_pass(0)->unuse(ctx);
+        mesh_shader_->get_program()->unuse(ctx);
     }
 
     // draw pick rays, if desired
     if (pipeline_->config.enable_ray_display()) {
-      mesh_shader_->get_pass(0)->use(ctx);  // re-use mesh_shader
+      mesh_shader_->get_program()->use(ctx);  // re-use mesh_shader
 
         for (auto const& ray : scene.rays_) {
             auto geometry = GeometryDatabase::instance()->lookup("gua_ray_geometry");
@@ -430,29 +478,25 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
             geometry->draw(ctx);
         }
-        mesh_shader_->get_pass(0)->unuse(ctx);
+        mesh_shader_->get_program()->unuse(ctx);
     }
-
+#endif
     ctx.render_context->reset_state_objects();
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBufferPass::apply_material_mapping(std::set<std::string> const &
-                                         materials) const {
-  mesh_shader_->create(materials);
-  nurbs_shader_->create(materials);
-  video3D_shader_->create(materials);
+void GBufferPass::apply_material_mapping(std::set<std::string> const& materials) {
+  Singleton<TriMeshUberShader>::instance()->create(materials);
+  materials_ = materials;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 LayerMapping const* GBufferPass::get_gbuffer_mapping() const {
-  // todo: dirty to use single Ubershader mapping here -> possible solution:
-  // extract gbuffermapping from Ubershader?
-  return mesh_shader_->get_gbuffer_mapping();
+  return Singleton<TriMeshUberShader>::instance()->get_gbuffer_mapping();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

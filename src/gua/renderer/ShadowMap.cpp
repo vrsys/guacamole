@@ -25,21 +25,20 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/Serializer.hpp>
-#include <gua/renderer/GBufferMeshUberShader.hpp>
-#include <gua/renderer/GBufferNURBSUberShader.hpp>
+#include <gua/renderer/TriMeshUberShader.hpp>
+#include <gua/renderer/NURBSUberShader.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases.hpp>
+#include <gua/memory.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
 ShadowMap::ShadowMap(Pipeline* pipeline)
-    : serializer_(new Serializer),
+    : serializer_(gua::make_unique<Serializer>()),
       pipeline_(pipeline),
-      mesh_shader_(new GBufferMeshUberShader),
-      // nurbs_shader_(new GBufferNURBSUberShader),
       buffer_(nullptr),
       projection_view_matrices_() {
 }
@@ -47,31 +46,19 @@ ShadowMap::ShadowMap(Pipeline* pipeline)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ShadowMap::~ShadowMap() {
-    if (mesh_shader_)
-      delete mesh_shader_;
-    // if (nurbs_shader_)
-    //   delete nurbs_shader_;
-    if (serializer_)
-      delete serializer_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShadowMap::print_shaders(std::string const& directory,
-                              std::string const& name) const {
-  mesh_shader_->get_pass(0)->save_to_file(directory, name + "/shadow/mesh");
-  // nurbs_shader_->save_to_file(directory, name + "/shadow/nurbs");
-}
+ShadowMap::~ShadowMap() 
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool ShadowMap::pre_compile_shaders(RenderContext const& ctx) {
 
-    bool success(false);
+    bool success(true);
 
-    if (mesh_shader_)             success = mesh_shader_->upload_to(ctx);
-    // if (success && nurbs_shader_) success = nurbs_shader_->upload_to(ctx);
+    for (auto const& shader : ubershader_)
+    {
+      success &= shader.second->upload_to(ctx);
+    }
 
     return success;
 }
@@ -107,21 +94,13 @@ void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::apply_material_mapping(std::set<std::string> const &
-                                         materials) const {
-  mesh_shader_->create(materials);
-  // nurbs_shader_->create(materials);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 void ShadowMap::render_geometry(RenderContext const & ctx,
                                 SceneGraph const& current_graph,
                                 math::vec3 const& center_of_interest,
                                 Frustum const& shadow_frustum,
                                 Camera const& scene_camera,
-                                unsigned cascade) {
+                                unsigned cascade,
+                                unsigned map_size) {
   SerializedScene scene;
   scene.frustum = shadow_frustum;
   scene.center_of_interest = center_of_interest;
@@ -137,38 +116,52 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   projection_view_matrices_[cascade] =
       shadow_frustum.get_projection() * shadow_frustum.get_view();
 
-  mesh_shader_->set_material_uniforms(
-      scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
-  mesh_shader_->set_material_uniforms(
-      scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
+  for (auto const& type : scene.geometrynodes_)
+  {
+    // pointer to appropriate ubershader
+    UberShader* ubershader = nullptr;
 
-  mesh_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
-  mesh_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
-
-  auto camera_position(scene.frustum.get_camera_position());
-  auto projection(scene.frustum.get_projection());
-  auto view_matrix(scene.frustum.get_view());
-
-  mesh_shader_->set_uniform(ctx, camera_position, "gua_camera_position");
-  mesh_shader_->set_uniform(ctx, projection, "gua_projection_matrix");
-  mesh_shader_->set_uniform(ctx, view_matrix, "gua_view_matrix");
-  mesh_shader_->set_uniform(ctx, scm::math::inverse(projection * view_matrix), "gua_inverse_projection_view_matrix");
-
-  for (auto const& node : scene.meshnodes_) {
-      auto geometry = GeometryDatabase::instance()->lookup(node->get_geometry());
-      auto material = MaterialDatabase::instance()->lookup(node->get_material());
+    // get appropriate ubershader
+    if (!type.second.empty()) {
+      auto const& filename = type.second.front()->get_filename();
+      auto geometry = GeometryDatabase::instance()->lookup(filename);
       if (geometry) {
-          mesh_shader_->set_uniform(
-                        ctx, material->get_id(), "gua_material_id");
-          mesh_shader_->set_uniform(
-              ctx, node->get_cached_world_transform(), "gua_model_matrix");
-          mesh_shader_->set_uniform(
-                        ctx,
-                        scm::math::transpose(
-                            scm::math::inverse(node->get_cached_world_transform())),
-                        "gua_normal_matrix");
-          geometry->draw(ctx);
+        ubershader = geometry->get_ubershader();
+      } else {
+        Logger::LOG_WARNING << "ShadowMap::render_geometry(): No such file/geometry " << filename << std::endl;
       }
+    }
+
+    if (ubershader)
+    {
+      ubershader->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
+      ubershader->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+
+      auto camera_position(scene.frustum.get_camera_position());
+      auto projection(scene.frustum.get_projection());
+      auto view_matrix(scene.frustum.get_view());
+
+      ubershader->set_uniform(ctx, camera_position, "gua_camera_position");
+      ubershader->set_uniform(ctx, projection, "gua_projection_matrix");
+      ubershader->set_uniform(ctx, view_matrix, "gua_view_matrix");
+      ubershader->set_uniform(ctx, scm::math::inverse(projection * view_matrix), "gua_inverse_projection_view_matrix");
+
+      ubershader->set_uniform(ctx, 1.0f / map_size, "gua_texel_width");
+      ubershader->set_uniform(ctx, 1.0f / map_size, "gua_texel_height");
+
+      for (auto const& node : type.second)
+      {
+        // draw node
+        ubershader->draw(ctx,
+          node->get_filename(),
+          node->get_material(),
+          node->get_cached_world_transform(),
+          scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
+          scene.frustum);
+      }
+    } else {
+      Logger::LOG_WARNING << "ShadowMap::render_geometry(): UberShader missing." << std::endl;
+    }
   }
 }
 
@@ -205,13 +198,8 @@ void ShadowMap::render(RenderContext const& ctx,
                            pipeline_->config.near_clip(),
                            pipeline_->config.far_clip());
 
-    mesh_shader_->set_uniform(ctx, 1.0f / map_size, "gua_texel_width");
-    mesh_shader_->set_uniform(ctx, 1.0f / map_size, "gua_texel_height");
-
     // render geometries
-    mesh_shader_->get_pass(0)->use(ctx);
-    render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, 0);
-    mesh_shader_->get_pass(0)->unuse(ctx);
+    render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, 0, map_size);
 
     ctx.render_context->reset_state_objects();
 
@@ -255,9 +243,6 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
       pipeline_->config.far_clip()
     };
   }
-
-  mesh_shader_->set_uniform(ctx, 1.0f / map_size, "gua_texel_width");
-  mesh_shader_->set_uniform(ctx, 1.0f / map_size, "gua_texel_height");
 
   for (int y(0); y<2; ++y) {
     for (int x(0); x<2; ++x) {
@@ -304,10 +289,8 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
         )
       );
 
-      // // render geometries
-      mesh_shader_->get_pass(0)->use(ctx);
-      render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, cascade);
-      mesh_shader_->get_pass(0)->unuse(ctx);
+      // render geometries
+      render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, cascade, map_size);
     }
   }
 

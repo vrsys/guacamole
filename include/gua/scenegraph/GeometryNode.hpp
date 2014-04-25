@@ -32,7 +32,7 @@
 namespace gua {
 
 /**
- * This class is used to represent geometry in the SceneGraph.
+ * This class is used to represent any kind of geometry in the SceneGraph.
  *
  * A GeometryNode only stores references to existing rendering assets stored in
  * guacamole's databases. GeometryNodes typically aren't instantiated directly
@@ -41,19 +41,8 @@ namespace gua {
  * \ingroup gua_scenegraph
  */
 class GUA_DLL GeometryNode : public Node {
+
   public:
-
-    /**
-    * A string referring to an entry in guacamole's GeometryDatabase.
-    */
-    std::string const& get_geometry() const { return geometry_; }
-    void set_geometry(std::string const& v) { geometry_ = v; geometry_changed_ = self_dirty_ = true; }
-
-    /**
-    * A string referring to an entry in guacamole's MaterialDatabase.
-    */
-    std::string const& get_material() const { return material_; }
-    void set_material(std::string const& v) { material_ = v; material_changed_ = self_dirty_ = true; }
 
     /**
      * Constructor.
@@ -77,7 +66,33 @@ class GUA_DLL GeometryNode : public Node {
     GeometryNode(std::string const& name,
                  std::string const& geometry = "gua_default_geometry",
                  std::string const& material = "gua_default_material",
-                 math::mat4 const& transform = math::mat4::identity());
+                 math::mat4  const& transform = math::mat4::identity());
+
+    /**
+    * Get the string referring to an entry in guacamole's GeometryDatabase.
+    */
+    std::string const& get_filename() const;
+
+    /**
+    * Set the string referring to an entry in guacamole's GeometryDatabase.
+    */
+    void set_filename(std::string const& filename);
+
+    /**
+    * A string referring to an entry in guacamole's MaterialDatabase.
+    */
+    std::string const& get_material() const;
+    void set_material(std::string const& v);
+
+    /**
+    * Updates bounding box by accessing the ressource in the databse
+    */
+    void update_bounding_box() const;
+
+    /**
+    * Updates the cached object in the database
+    */
+    virtual void update_cache();
 
     /**
      * Accepts a visitor and calls concrete visit method.
@@ -88,27 +103,14 @@ class GUA_DLL GeometryNode : public Node {
      */
     /* virtual */ void accept(NodeVisitor& visitor);
 
-    /**
-     * Updates a GeometryNode's BoundingBox.
-     *
-     * The bounding box is updated according to the transformation matrices of
-     * all children.
-     */
-    /*virtual*/ void update_bounding_box() const;
+  protected:
 
-    /*virtual*/ void update_cache();
+    virtual std::shared_ptr<Node> copy() const = 0;
 
-    /*virtual*/ void ray_test_impl(RayNode const& ray, PickResult::Options options,
-                            Mask const& mask, std::set<PickResult>& hits);
-
-  private:
-
-    std::shared_ptr<Node> copy() const;
-
-    std::string geometry_;
+    std::string filename_;
     std::string material_;
 
-    bool geometry_changed_;
+    bool filename_changed_;
     bool material_changed_;
 };
 

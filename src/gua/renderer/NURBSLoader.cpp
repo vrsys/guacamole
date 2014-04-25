@@ -25,10 +25,10 @@
 // guacamole headers
 #include <gua/utils.hpp>
 
-#include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/NURBSNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
-#include <gua/renderer/NURBS.hpp>
+#include <gua/renderer/NURBSRessource.hpp>
 #include <gua/renderer/nurbs_geometry/import/igs/igs_loader.hpp>
 #include <gua/renderer/nurbs_geometry/TrimmedSurfaceConverter.hpp>
 #include <gua/renderer/nurbs_geometry/TrimmedNurbsSurfaceObject.hpp>
@@ -61,10 +61,10 @@ std::shared_ptr<Node> NURBSLoader::load(std::string const& file_name,
     surface_converter.convert(nurbs_object, bezier_object);
 
     GeometryDatabase::instance()->add(
-        file_name, std::make_shared<NURBS>(bezier_object));
+        file_name, std::make_shared<NURBSRessource>(bezier_object));
 
-    auto result = std::make_shared<GeometryNode>("unnamed_nurbs");
-    result->set_geometry(file_name);
+    auto result = std::make_shared<NURBSNode>("");
+    result->set_filename(file_name);
     result->set_material("");
 
     return result;

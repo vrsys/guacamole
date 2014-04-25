@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/Mesh.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 
 // external headers
 #include <string>

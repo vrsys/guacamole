@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
-#include <gua/renderer/Geometry.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 #include <gua/renderer/LoaderBase.hpp>
 
 namespace gua {

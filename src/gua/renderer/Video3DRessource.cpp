@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/GBufferVideo3DUberShader.hpp>
+#include <gua/renderer/Video3DUberShader.hpp>
 #include <gua/renderer/video3d_geometry/DXTCompressor.h>
 #include <gua/utils/Logger.hpp>
 
@@ -398,6 +398,11 @@ KinectCalibrationFile const& Video3DRessource::calibration_file(unsigned i) cons
 {
   assert(i < calib_files_.size());
   return *calib_files_[i];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*virtual*/ UberShader* Video3DRessource::get_ubershader() const {
+  return Singleton<Video3DUberShader>::instance();
 }
 
 }

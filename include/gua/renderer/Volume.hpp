@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/Geometry.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/Texture3D.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
@@ -65,7 +65,7 @@ namespace gua {
 	* Do not use this class directly, it is just used by the Geometry class to
 	* store the individual meshes of a file.
 	*/
-	class Volume : public Geometry {
+	class Volume : public GeometryRessource {
 	public:
 
 		/**
@@ -120,6 +120,8 @@ namespace gua {
 
 		void set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color);
 
+    /*virtual*/ UberShader* get_ubershader() const { throw std::runtime_error("not implemented yet"); };
+
 	private:
 		void upload_to(RenderContext const& context) const;
 
@@ -154,11 +156,8 @@ namespace gua {
 
 		mutable std::vector<scm::gl::sampler_state_ptr> _sstate;
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC && SCM_COMPILER_VER <= 1700
-		mutable boost::mutex upload_mutex_;
-#else
 		mutable std::mutex upload_mutex_;
-#endif
+
 
 		scm::data::piecewise_function_1d<float, float>                 _alpha_transfer;
 		scm::data::piecewise_function_1d<float, scm::math::vec3f>      _color_transfer;

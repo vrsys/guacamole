@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GBufferMeshUberShader.hpp>
+#include <gua/renderer/TriMeshUberShader.hpp>
 #include <gua/renderer/LightingUberShader.hpp>
 #include <gua/renderer/FinalUberShader.hpp>
 #include <gua/renderer/StereoBuffer.hpp>

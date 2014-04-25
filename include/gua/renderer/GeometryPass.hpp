@@ -30,8 +30,6 @@
 
 namespace gua {
 
-class ShaderProgram;
-
 /**
  * A render pass which draws a part of the SceneGraph.
  *

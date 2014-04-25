@@ -45,36 +45,36 @@ void init(int argc, char** argv) {
 
   GeometryDatabase::instance()->add(
       "gua_light_sphere_proxy",
-      std::shared_ptr<Geometry>(
-          static_cast<Geometry*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryRessource>(
+      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_light_sphere_obj).c_str(),
               Resources::geometry_gua_light_sphere_obj.size(), false)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_light_cone_proxy",
-      std::shared_ptr<Geometry>(
-          static_cast<Geometry*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryRessource>(
+      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_light_cone_obj).c_str(),
               Resources::geometry_gua_light_cone_obj.size(), false)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_ray_geometry",
-      std::shared_ptr<Geometry>(
-          static_cast<Geometry*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryRessource>(
+      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_ray_obj).c_str(),
               Resources::geometry_gua_ray_obj.size(), false)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_plane_geometry",
-      std::shared_ptr<Geometry>(
-         static_cast<Geometry*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryRessource>(
+      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_plane_obj).c_str(),
               Resources::geometry_gua_plane_obj.size(), true)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_bounding_box_geometry",
-      std::shared_ptr<Geometry>(
-          static_cast<Geometry*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryRessource>(
+      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_bounding_box_obj).c_str(),
               Resources::geometry_gua_bounding_box_obj.size(), false)[0])));
 }

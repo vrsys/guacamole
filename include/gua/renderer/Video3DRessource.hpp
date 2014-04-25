@@ -43,7 +43,7 @@
 
 namespace gua {
 
-class GBufferVideo3DUberShader;
+class Video3DUberShader;
 struct RenderContext;
 
 /**
@@ -68,12 +68,16 @@ class Video3DRessource : public GeometryRessource {
   /**
    * destructor.
    */
+
    ~Video3DRessource();
   /**
    *
    */
   void init();
 
+  /**
+  *
+  */
   void draw(RenderContext const& context) const;
   
   /**
@@ -94,6 +98,8 @@ class Video3DRessource : public GeometryRessource {
   void                            update_buffers (RenderContext const& context) const;
 
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
+
+  /*virtual*/ UberShader*         get_ubershader() const;
 
  private:
 

@@ -27,6 +27,7 @@
 #include <gua/renderer/UberShaderFactory.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/memory.hpp>
 
 namespace gua {
 
@@ -37,6 +38,35 @@ UberShader::UberShader()
   output_mapping_(),
   programs_()
 {}
+
+////////////////////////////////////////////////////////////////////////////////
+
+UberShader::~UberShader()
+{}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void UberShader::create(std::set<std::string> const& material_names) 
+{
+  vshader_factory_ = gua::make_unique<UberShaderFactory>(
+    ShadingModel::GBUFFER_VERTEX_STAGE, material_names
+    );
+
+  fshader_factory_ = gua::make_unique<UberShaderFactory>(
+    ShadingModel::GBUFFER_FRAGMENT_STAGE, material_names,
+    vshader_factory_->get_uniform_mapping()
+    );
+
+  LayerMapping vshader_output_mapping = vshader_factory_->get_output_mapping();
+
+  fshader_factory_->add_inputs_to_main_functions(
+    { &vshader_output_mapping }, 
+    ShadingModel::GBUFFER_VERTEX_STAGE
+  );
+
+  UberShader::set_uniform_mapping(fshader_factory_->get_uniform_mapping());
+  UberShader::set_output_mapping(fshader_factory_->get_output_mapping());
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,32 +97,32 @@ void UberShader::set_material_uniforms(std::set<std::string> const& materials,
 ////////////////////////////////////////////////////////////////////////////////
 
 LayerMapping const* UberShader::get_gbuffer_mapping() const {
-  return &output_mapping_;
+  return &fshader_factory_->get_output_mapping();
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 UniformMapping const* UberShader::get_uniform_mapping() const {
-  return &uniform_mapping_;
+  return &fshader_factory_->get_uniform_mapping();
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/*virtual*/ void UberShader::add_pass(std::shared_ptr<ShaderProgram> const& pre_pass)
+/*virtual*/ void UberShader::add_program(std::shared_ptr<ShaderProgram> const& pre_pass)
 {
   programs_.push_back(pre_pass);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*virtual*/ std::shared_ptr<ShaderProgram> const& UberShader::get_pass(unsigned pass) const
+/*virtual*/ std::shared_ptr<ShaderProgram> const& UberShader::get_program(unsigned pass) const
 {
   assert(programs_.size() > pass);
   return programs_[pass];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<std::shared_ptr<ShaderProgram>> const& UberShader::passes() const
+std::vector<std::shared_ptr<ShaderProgram>> const& UberShader::programs() const
 {
   return programs_;
 }
@@ -176,6 +206,5 @@ std::string const UberShader::print_material_methods(
   return upload_succeeded;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 }
+

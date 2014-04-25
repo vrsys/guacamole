@@ -26,7 +26,7 @@
 #include <gua/renderer/GeometryPass.hpp>
 #include <gua/renderer/ShadowMap.hpp>
 #include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/Geometry.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 
 namespace gua {
 
@@ -77,8 +77,8 @@ public:
   void init_resources(RenderContext const& ctx);
 
   LightingUberShader* shader_;
-  std::shared_ptr<Geometry> light_sphere_;
-  std::shared_ptr<Geometry> light_cone_;
+  std::shared_ptr<GeometryRessource> light_sphere_;
+  std::shared_ptr<GeometryRessource> light_cone_;
   scm::gl::quad_geometry_ptr fullscreen_quad_;
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;

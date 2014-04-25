@@ -20,6 +20,9 @@
  ******************************************************************************/
 #include <gua/renderer/NURBSRessource.hpp>
 
+#include <gua/utils/Singleton.hpp>
+#include <gua/renderer/NURBSUberShader.hpp>
+
 #include <scm/gl_core/render_device.h>
 #include <scm/gl_core/buffer_objects.h>
 #include <scm/gl_core/shader_objects.h>
@@ -352,6 +355,11 @@ void NURBSRessource::initialize_transform_feedback(RenderContext const& context)
       scm::gl::stream_output_setup(_transform_feedback_vbo[context.id]));
   _transform_feedback_vao[context.id] = in_device->create_vertex_array(
       v_fmt, boost::assign::list_of(_transform_feedback_vbo[context.id]));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*virtual*/ UberShader* NURBSRessource::get_ubershader() const {
+  return Singleton<NURBSUberShader>::instance();
 }
 
 }  //namespace scm
