@@ -26,15 +26,14 @@
 
 // guacamole headers
 #include <gua/utils.hpp>
-#include <gua/renderer/UberShader.hpp>
-#include <gua/renderer/UberShaderFactory.hpp>
+#include <gua/renderer/GeometryUberShader.hpp>
 
 namespace gua {
 
 class ShaderProgram;
 class FrameBufferObject;
 
-class Video3DUberShader : public UberShader {
+class Video3DUberShader : public GeometryUberShader {
  public:
 
    enum pass {
@@ -49,13 +48,33 @@ class Video3DUberShader : public UberShader {
   void create(std::set<std::string> const& material_names);
 
   /*virtual*/ bool upload_to(RenderContext const& context) const;
+  
+  /*virtual*/ stage_mask const get_stage_mask() const;
 
-  /*virtual*/ void draw(RenderContext const& context, 
-                        std::string const& ksfile_name,
-                        std::string const& material_name,
-                        scm::math::mat4 const& model_matrix,
-                        scm::math::mat4 const& normal_matrix,
-                        Frustum const& frustum) const;
+  /*virtual*/ void preframe(RenderContext const& context) const;
+
+  /*virtual*/ void predraw(RenderContext const& context,
+                           std::string const& ksfile_name,
+                           std::string const& material_name,
+                           scm::math::mat4 const& model_matrix,
+                           scm::math::mat4 const& normal_matrix,
+                           Frustum const& frustum) const;
+
+  /*virtual*/ void draw   (RenderContext const& context,
+                           std::string const& ksfile_name,
+                           std::string const& material_name,
+                           scm::math::mat4 const& model_matrix,
+                           scm::math::mat4 const& normal_matrix,
+                           Frustum const& frustum) const;
+
+  /*virtual*/ void postdraw(RenderContext const& context,
+                            std::string const& ksfile_name,
+                            std::string const& material_name,
+                            scm::math::mat4 const& model_matrix,
+                            scm::math::mat4 const& normal_matrix,
+                            Frustum const& frustum) const;
+
+  /*virtual*/ void postframe(RenderContext const& context) const;
 
   std::string const default_video_material_name() const;
 

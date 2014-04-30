@@ -653,7 +653,7 @@ std::string const NURBSUberShader::_final_tess_evaluation_shader () const
           vec4 nview  = gua_normal_matrix * teNormal;                           \n\
           vec4 pview  = gua_view_matrix * gua_model_matrix * tePosition;        \n\
                                                                                 \n\
-          if ( dot(nview, pview) > 0.0f ) {                                     \n\
+          if ( dot(normalize(nview.xyz), -normalize(pview.xyz)) < 0.0f ) {      \n\
             teNormal = -teNormal;                                               \n\
           }                                                                     \n\
         }                                                                       \n\
@@ -926,6 +926,33 @@ std::string const NURBSUberShader::_final_fragment_shader () const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/*virtual*/ GeometryUberShader::stage_mask const NURBSUberShader::get_stage_mask() const
+{
+  return GeometryUberShader::DRAW_STAGE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void NURBSUberShader::preframe(RenderContext const& ctx) const
+{
+  throw std::runtime_error("NURBSUberShader::preframe(): not implemented");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void NURBSUberShader::predraw(RenderContext const& ctx,
+                                          std::string const& ksfile_name,
+                                          std::string const& material_name,
+                                          scm::math::mat4 const& model_matrix,
+                                          scm::math::mat4 const& normal_matrix,
+                                          Frustum const& /*frustum*/) const
+{
+  throw std::runtime_error("NURBSUberShader::predraw(): not implemented");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 void NURBSUberShader::draw(RenderContext const& ctx,
                            std::string const& filename,
                            std::string const& material_name,
@@ -938,8 +965,6 @@ void NURBSUberShader::draw(RenderContext const& ctx,
 
   if ( geometry && material )
   {
-    std::cout << "NURBSUberShader " << material->get_id() << std::endl;
-
     set_uniform(ctx, 128, "gua_max_tesselation");
     set_uniform(ctx, material->get_id(), "gua_material_id");
     set_uniform(ctx, model_matrix, "gua_model_matrix");
@@ -975,5 +1000,25 @@ void NURBSUberShader::draw(RenderContext const& ctx,
     get_program(final_pass)->unuse(ctx);
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void NURBSUberShader::postdraw(RenderContext const& ctx,
+  std::string const& ksfile_name,
+  std::string const& material_name,
+  scm::math::mat4 const& model_matrix,
+  scm::math::mat4 const& normal_matrix,
+  Frustum const& /*frustum*/) const
+{
+  throw std::runtime_error("NURBSUberShader::postdraw(): not implemented");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void NURBSUberShader::postframe(RenderContext const& ctx) const
+{
+  throw std::runtime_error("NURBSUberShader::postframe(): not implemented");
+}
+
 
 }

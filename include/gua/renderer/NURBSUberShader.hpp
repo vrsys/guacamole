@@ -23,32 +23,52 @@
 #define GUA_NURBS_UBER_SHADER_HPP
 
 // guacamole headers
-#include <gua/renderer/UberShader.hpp>
+#include <gua/renderer/GeometryUberShader.hpp>
 
 namespace gua {
 
 /**
  *
  */
-class NURBSUberShader : public UberShader {
- public:
+class NURBSUberShader : public GeometryUberShader {
+
+  public : // typedefs, enums 
 
    enum pass {
      transform_feedback_pass = 0,
      final_pass = 1
    };
 
-  /**
-   *
-   */
-  /*virtual*/ void create(std::set<std::string> const& material_names);
+  public : 
 
-  /*virtual*/ void draw(RenderContext const& ctx,
-                        std::string const& ksfile_name,
-                        std::string const& material_name,
-                        scm::math::mat4 const& model_matrix,
-                        scm::math::mat4 const& normal_matrix,
-                        Frustum const& /*frustum*/) const;
+  /*virtual*/ void create   (std::set<std::string> const& material_names);
+
+  /*virtual*/ stage_mask const get_stage_mask() const;
+
+  /*virtual*/ void preframe (RenderContext const& ctx) const;
+
+  /*virtual*/ void predraw  (RenderContext const& ctx,
+                             std::string const& ksfile_name,
+                             std::string const& material_name,
+                             scm::math::mat4 const& model_matrix,
+                             scm::math::mat4 const& normal_matrix,
+                             Frustum const& /*frustum*/) const;
+
+  /*virtual*/ void draw     (RenderContext const& ctx,
+                             std::string const& ksfile_name,
+                             std::string const& material_name,
+                             scm::math::mat4 const& model_matrix,
+                             scm::math::mat4 const& normal_matrix,
+                             Frustum const& /*frustum*/) const;
+
+  /*virtual*/ void postdraw (RenderContext const& ctx,
+                             std::string const& ksfile_name,
+                             std::string const& material_name,
+                             scm::math::mat4 const& model_matrix,
+                             scm::math::mat4 const& normal_matrix,
+                             Frustum const& /*frustum*/) const;
+
+  /*virtual*/ void postframe(RenderContext const& ctx) const;
 
  private:  // auxiliary methods
 

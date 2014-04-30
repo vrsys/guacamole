@@ -90,6 +90,33 @@ namespace gua {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+
+  /*virtual*/ GeometryUberShader::stage_mask const TriMeshUberShader::get_stage_mask() const
+  {
+    return GeometryUberShader::DRAW_STAGE;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  /*virtual*/ void  TriMeshUberShader::preframe(RenderContext const& context) const
+  {
+    throw std::runtime_error("TriMeshUberShader::preframe(): not implemented");
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  /*virtual*/ void  TriMeshUberShader::predraw(RenderContext const& ctx,
+                                               std::string const& filename,
+                                               std::string const& material_name,
+                                               scm::math::mat4 const& model_matrix,
+                                               scm::math::mat4 const& normal_matrix,
+                                               Frustum const& /*frustum*/) const
+  {
+    throw std::runtime_error("TriMeshUberShader::predraw(): not implemented");
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
   /*virtual*/ void TriMeshUberShader::draw(RenderContext const& ctx,
                                            std::string const& filename,
                                            std::string const& material_name,
@@ -104,7 +131,6 @@ namespace gua {
     {
       if (material && geometry)
       {
-        std::cout << "TriMeshUberShader " << material->get_id() << std::endl;
         set_uniform(ctx, material->get_id(), "gua_material_id");
         set_uniform(ctx, model_matrix, "gua_model_matrix");
         set_uniform(ctx, normal_matrix, "gua_normal_matrix");
@@ -113,6 +139,25 @@ namespace gua {
       }
     }
     get_program()->unuse(ctx);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  /*virtual*/ void TriMeshUberShader::postdraw(RenderContext const& ctx,
+    std::string const& filename,
+    std::string const& material_name,
+    scm::math::mat4 const& model_matrix,
+    scm::math::mat4 const& normal_matrix,
+    Frustum const& /*frustum*/) const
+  {
+    throw std::runtime_error("TriMeshUberShader::postdraw(): not implemented");
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  /*virtual*/ void TriMeshUberShader::postframe(RenderContext const& context) const
+  {
+    throw std::runtime_error("TriMeshUberShader::postframe(): not implemented");
   }
 
 }

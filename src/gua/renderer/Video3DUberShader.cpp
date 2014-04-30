@@ -43,7 +43,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 Video3DUberShader::Video3DUberShader()
-  : UberShader()
+  : GeometryUberShader()
 {
   if (!MaterialDatabase::instance()->is_supported(default_video_material_name()))
   {
@@ -248,6 +248,33 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/*virtual*/ GeometryUberShader::stage_mask const Video3DUberShader::get_stage_mask() const
+{
+  return GeometryUberShader::DRAW_STAGE | GeometryUberShader::POST_FRAME_STAGE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void  Video3DUberShader::preframe(RenderContext const& context) const
+{
+  throw std::runtime_error("not implemented");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void  Video3DUberShader::predraw(RenderContext const& ctx,
+  std::string const& filename,
+  std::string const& material_name,
+  scm::math::mat4 const& model_matrix,
+  scm::math::mat4 const& normal_matrix,
+  Frustum const& /*frustum*/) const
+{
+  throw std::runtime_error("not implemented");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 void Video3DUberShader::draw(RenderContext const& ctx,
                              std::string const& ksfile_name,
                              std::string const& material_name,
@@ -352,6 +379,26 @@ void Video3DUberShader::draw(RenderContext const& ctx,
     }
     get_program(blend_pass)->unuse(ctx);
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void Video3DUberShader::postdraw(RenderContext const& ctx,
+  std::string const& filename,
+  std::string const& material_name,
+  scm::math::mat4 const& model_matrix,
+  scm::math::mat4 const& normal_matrix,
+  Frustum const& /*frustum*/) const
+{
+  throw std::runtime_error("not implemented");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void Video3DUberShader::postframe(RenderContext const& context) const
+{
+  // update could/should be triggered from here -> use context to keep frame-coherence
 }
 
 ////////////////////////////////////////////////////////////////////////////////
