@@ -38,28 +38,9 @@ namespace gua {
 class UberShaderFactory;
 
 /**
- * This class represents a (multipass-) stage for rendering geometry into a layered fbo
+ * This class represents a (multipass-) stage with material-dependent meta-shader components
  */
 class UberShader {
-
- public: // typedefs, enums etc
-
-   /**
-   * logical combination of used render_stages provides valid rendermask, e.g:
-   *
-   * The rendermask ( PRE_FRAME_STAGE | PRE_DRAW_STAGE | DRAW_STAGE ) defines that
-   * the ubershader provides an implementation of the defined stages
-   */
-   enum render_stage {
-     NO_STAGE         = 0x00,
-     PRE_FRAME_STAGE  = 0x01,
-     PRE_DRAW_STAGE   = 0x02,
-     DRAW_STAGE       = 0x04,
-     POST_DRAW_STAGE  = 0x08,
-     POST_FRAME_STAGE = 0x10
-   };
-
-   typedef unsigned stage_mask;
 
  public:
 
@@ -116,74 +97,19 @@ class UberShader {
   virtual void add_program(std::shared_ptr<ShaderProgram> const&);
 
   /**
-  * returns a container with all involved programs of this ubershader
-  */ 
-  std::vector<std::shared_ptr<ShaderProgram>> const& programs() const;
-
-  /**
   * returns a program in enumerated order 
   */
   virtual std::shared_ptr<ShaderProgram> const& get_program(unsigned index = 0) const;
 
   /**
+  * returns a container with all involved programs of this ubershader
+  */ 
+  std::vector<std::shared_ptr<ShaderProgram>> const& programs() const;
+
+  /**
   * uploads ressources to the GPU
   */
   virtual bool upload_to(RenderContext const& context) const;
-
-  /**
-  *
-  */
-  virtual stage_mask const get_stage_mask() const { return NO_STAGE; }
-
-  /**
-  * This callback is called ONCE per frame BEFORE rendering all drawables of this type 
-  *
-  * default: no operations performed
-  */
-  virtual void pre_frame ( RenderContext const& context ) const {};
-
-  /**
-  * This method is called for ONCE per drawable to perform predraw operations
-  *
-  * default: no operations performed
-  */
-  virtual void predraw (  RenderContext const& context,
-                          std::string const& name,
-                          std::string const& material,
-                          scm::math::mat4 const& model_matrix,
-                          scm::math::mat4 const& normal_matrix,
-                          Frustum const& frustum) const {};
-   
-  /**
-  * This method is called for ONCE per drawable to perform draw operations
-  *
-  * default: no implementation provided
-  */
-  virtual void draw(RenderContext const& context,
-                    std::string const& name,
-                    std::string const& material,
-                    scm::math::mat4 const& model_matrix,
-                    scm::math::mat4 const& normal_matrix,
-                    Frustum const& frustum) const {};
-
-  /**
-  * This method is called for ONCE per drawable to perform postdraw operations
-  *
-  * default: no operations performed
-  */
-  virtual void postdraw ( RenderContext const& context,
-                          std::string const& name,
-                          std::string const& material,
-                          scm::math::mat4 const& model_matrix,
-                          scm::math::mat4 const& normal_matrix,
-                          Frustum const& frustum) const {};
-
-  /**
-  * This callback is called ONCE per frame AFTER rendering all drawables of this type
-  *
-  * default: no operations performed
-  */
-  virtual void post_frame ( RenderContext const& context) const {};
 
  protected: // methods
 
