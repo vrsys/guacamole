@@ -909,10 +909,11 @@ std::string const GBufferNURBSUberShader::_final_fragment_shader () const
     std::vector<LayerMapping const*> mapping;
     mapping.push_back(&vertex_shader_factory_->get_output_mapping());
     fragment_shader_factory_->add_inputs_to_main_functions(mapping, ShadingModel::GBUFFER_VERTEX_STAGE);
+    fragment_shader << UberShader::print_material_methods(*fragment_shader_factory_) << std::endl;
 
-    BOOST_FOREACH (auto method, fragment_shader_factory_->get_main_functions()) {
-        fragment_shader << method.second << std::endl;
-    }
+    // BOOST_FOREACH (auto method, fragment_shader_factory_->get_main_functions()) {
+    //     fragment_shader << method.second << std::endl;
+    // }
 
     // print main switch(es) ----------------------------------------------------
     fragment_shader << std::string("                                                                     \n\
