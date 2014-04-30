@@ -401,7 +401,7 @@ KinectCalibrationFile const& Video3DRessource::calibration_file(unsigned i) cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*virtual*/ UberShader* Video3DRessource::get_ubershader() const {
+/*virtual*/ GeometryUberShader* Video3DRessource::get_ubershader() const {
   return Singleton<Video3DUberShader>::instance();
 }
 

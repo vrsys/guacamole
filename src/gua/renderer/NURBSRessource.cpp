@@ -358,7 +358,7 @@ void NURBSRessource::initialize_transform_feedback(RenderContext const& context)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*virtual*/ UberShader* NURBSRessource::get_ubershader() const {
+/*virtual*/ GeometryUberShader* NURBSRessource::get_ubershader() const {
   return Singleton<NURBSUberShader>::instance();
 }
 

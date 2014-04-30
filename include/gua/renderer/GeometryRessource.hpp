@@ -35,7 +35,7 @@
 
 namespace gua {
 
-class UberShader;
+class GeometryUberShader;
 
 struct Ray;
 
@@ -69,7 +69,7 @@ class GUA_DLL GeometryRessource {
   /**
   * Interface which provides the appropriate UberShader for the ressource
   */
-  virtual UberShader* get_ubershader() const = 0;
+   virtual GeometryUberShader* get_ubershader() const = 0;
 
   /**
    * Interface to intersect the geometry with a ray.

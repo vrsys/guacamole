@@ -91,7 +91,7 @@ class TriMeshRessource : public GeometryRessource {
 
   std::vector<unsigned int> get_face(unsigned int i) const;
 
-  /*virtual*/ UberShader* get_ubershader() const;
+  /*virtual*/ GeometryUberShader* get_ubershader() const;
 
  private:
 

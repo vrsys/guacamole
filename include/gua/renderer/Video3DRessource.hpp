@@ -99,7 +99,7 @@ class Video3DRessource : public GeometryRessource {
 
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
 
-  /*virtual*/ UberShader*         get_ubershader() const;
+  /*virtual*/ GeometryUberShader* get_ubershader() const;
 
  private:
 
