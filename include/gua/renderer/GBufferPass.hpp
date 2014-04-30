@@ -32,7 +32,7 @@ namespace gua {
 
 class Pipeline;
 class SceneGraph;
-class UberShader;
+class GeometryUberShader;
 
 /**
  *
@@ -61,7 +61,7 @@ class GBufferPass : public GeometryPass {
 
   LayerMapping const* get_gbuffer_mapping() const;
 
- private:
+ private: // methods
 
   void rendering(SerializedScene const& scene,
                  SceneGraph const&,
@@ -70,13 +70,29 @@ class GBufferPass : public GeometryPass {
                  Camera const& camera,
                  FrameBufferObject* target);
 
+  void display_bboxes(RenderContext const& ctx,
+                      SerializedScene const& scene);
+  void display_rays  (RenderContext const& ctx,
+                      SerializedScene const& scene);
+  void display_quads (RenderContext const& ctx,
+                      SerializedScene const& scene,
+                      CameraMode eye);
+
+  void gather_ubershader_from_scene(SerializedScene const& scene);
+
+  void initialize_state_objects(RenderContext const& ctx);
+
+  private: // attributes
+
   /**
   * all ubershaders used in scene
   */
-  std::unordered_map<std::type_index, UberShader*> ubershaders_;
+  std::unordered_map<std::type_index, GeometryUberShader*> ubershaders_;
 
   /**
-  * copy of all material names in scene - used to generate gbuffermappings of ubershaders
+  * copy of all material names in scene 
+  *
+  *  - necessary to generate gbuffermappings of ubershaders
   */
   std::set<std::string> materials_;
 
@@ -89,8 +105,6 @@ class GBufferPass : public GeometryPass {
 
   scm::gl::rasterizer_state_ptr bbox_rasterizer_state_;
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-
-  std::shared_ptr<GeometryRessource> bounding_box_;
 };
 
 }

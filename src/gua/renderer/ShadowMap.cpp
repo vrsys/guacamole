@@ -119,12 +119,14 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   for (auto const& type : scene.geometrynodes_)
   {
     // pointer to appropriate ubershader
-    UberShader* ubershader = nullptr;
+    GeometryUberShader* ubershader = nullptr;
 
     // get appropriate ubershader
-    if (!type.second.empty()) {
+    if (!type.second.empty()) 
+    {
       auto const& filename = type.second.front()->get_filename();
       auto geometry = GeometryDatabase::instance()->lookup(filename);
+
       if (geometry) {
         ubershader = geometry->get_ubershader();
       } else {
