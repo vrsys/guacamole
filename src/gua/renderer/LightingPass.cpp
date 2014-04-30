@@ -92,6 +92,15 @@ bool LightingPass::pre_compile_shaders(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void LightingPass::cleanup(RenderContext const& ctx) {
+    if (shader_) shader_->cleanup(ctx);
+    shadow_map_.cleanup(ctx);
+    GeometryPass::cleanup(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 void LightingPass::init_resources(RenderContext const& ctx) {
   if (!initialized_) {
     if (!depth_stencil_state_)

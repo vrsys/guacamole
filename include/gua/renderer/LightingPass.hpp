@@ -63,6 +63,8 @@ class LightingPass : public GeometryPass {
 
   bool pre_compile_shaders(RenderContext const& ctx);
 
+  virtual void cleanup(RenderContext const& context);
+
 public:
   ShadowMap shadow_map_;
 

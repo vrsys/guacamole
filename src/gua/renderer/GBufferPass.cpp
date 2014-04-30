@@ -84,6 +84,16 @@ void GBufferPass::create(
     Pass::create(ctx, tmp);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void GBufferPass::cleanup(RenderContext const& ctx) {
+
+    if (mesh_shader_)  mesh_shader_->cleanup(ctx);
+    if (nurbs_shader_) nurbs_shader_->cleanup(ctx);
+    if (video3D_shader_) video3D_shader_->cleanup(ctx);
+
+    Pass::cleanup(ctx);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -194,10 +204,10 @@ void GBufferPass::rendering(SerializedScene const& scene,
     for (auto const& pass : nurbs_shader_->passes())
     {
       Pass::bind_inputs(*pass, eye, ctx);
-      Pass::set_camera_matrices(*pass, 
-                                camera, 
-                                pipeline_->get_current_scene(eye), 
-                                eye, 
+      Pass::set_camera_matrices(*pass,
+                                camera,
+                                pipeline_->get_current_scene(eye),
+                                eye,
                                 ctx);
     }
 
@@ -323,11 +333,11 @@ void GBufferPass::rendering(SerializedScene const& scene,
             // pre-tesselate if necessary
             nurbs_shader_->get_pass(0)->use(ctx);
             {
-              nurbs_shader_->set_uniform(ctx, 
-                                         node->get_cached_world_transform(), 
+              nurbs_shader_->set_uniform(ctx,
+                                         node->get_cached_world_transform(),
                                          "gua_model_matrix");
-              nurbs_shader_->set_uniform(ctx, 
-                                         scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())), 
+              nurbs_shader_->set_uniform(ctx,
+                                         scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
                                          "gua_normal_matrix");
 
                 ctx.render_context->apply();

@@ -32,8 +32,8 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UberShader::UberShader() 
-: uniform_mapping_(), 
+UberShader::UberShader()
+: uniform_mapping_(),
   output_mapping_(),
   programs_()
 {}
@@ -89,6 +89,14 @@ UniformMapping const* UberShader::get_uniform_mapping() const {
 {
   assert(programs_.size() > pass);
   return programs_[pass];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void UberShader::cleanup(RenderContext const& context) {
+  for (auto program : programs_) {
+    if (program) program->unuse(context);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -48,6 +48,7 @@ ShadowMap::ShadowMap(Pipeline* pipeline)
 ////////////////////////////////////////////////////////////////////////////////
 
 ShadowMap::~ShadowMap() {
+    if (buffer_) delete buffer_;
     if (mesh_shader_)
       delete mesh_shader_;
     // if (nurbs_shader_)
@@ -113,6 +114,12 @@ void ShadowMap::apply_material_mapping(std::set<std::string> const &
   // nurbs_shader_->create(materials);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadowMap::cleanup(RenderContext const& context) {
+  if (buffer_) buffer_->remove_buffers(context);
+  if (mesh_shader_) mesh_shader_->cleanup(context);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

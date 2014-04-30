@@ -81,13 +81,15 @@ class UberShader {
   void set_uniform(RenderContext const& context,
     T const& value,
     std::string const& name,
-    unsigned position = 0) const 
+    unsigned position = 0) const
   {
     UniformValue<T> tmp(value);
-    for (auto const& program : programs_) {  
+    for (auto const& program : programs_) {
       program->apply_uniform(context, &tmp, name, position);
     }
   }
+
+  virtual void cleanup (RenderContext const& context);
 
   /**
   *

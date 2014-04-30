@@ -114,7 +114,6 @@ class GUA_DLL Texture {
 
   void make_resident(RenderContext const& context) const;
   void make_non_resident(RenderContext const& context) const;
-  void make_non_resident() const;
 
   virtual void upload_to(RenderContext const& context) const = 0;
 

@@ -70,7 +70,11 @@ Texture::Texture(std::string const& file,
       upload_mutex_() {}
 
 Texture::~Texture() {
-  make_non_resident();
+  for (auto texture : textures_) {
+    if (texture && texture->native_handle_resident())
+      exit(-1);
+  }
+
 }
 
 void Texture::generate_mipmaps(RenderContext const& context) {
@@ -119,14 +123,6 @@ void Texture::make_resident(RenderContext const& context) const {
 void Texture::make_non_resident(RenderContext const& context) const {
   if (textures_[context.id])
     context.render_context->make_non_resident(textures_[context.id]);
-}
-
-void Texture::make_non_resident() const {
-  for (int i(0); i<textures_.size(); ++i ) {
-    if (render_contexts_[i] && textures_[i]) {
-      render_contexts_[i]->make_non_resident(textures_[i]);
-    }
-  }
 }
 
 }

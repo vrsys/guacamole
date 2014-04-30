@@ -315,7 +315,6 @@ void Pipeline::set_context(RenderContext* ctx) {
 void Pipeline::create_passes() {
 
   if (passes_need_reload_) {
-
     auto materials(MaterialDatabase::instance()->list_all());
 
     auto pre_pass = new GBufferPass(this);
@@ -360,9 +359,7 @@ void Pipeline::create_passes() {
     if (compilation_succeeded) {
 
       for (auto pass : passes_) {
-        if (pass->get_gbuffer()) {
-          pass->get_gbuffer()->remove_buffers(*context_);
-        }
+        if (context_) pass->cleanup(*context_);
         delete pass;
       }
 
@@ -381,6 +378,7 @@ void Pipeline::create_passes() {
       Logger::LOG_WARNING << "Failed to recompile shaders!" << std::endl;
 
       for (auto pass : new_passes) {
+        if (context_) pass->cleanup(*context_);
         delete pass;
       }
     }

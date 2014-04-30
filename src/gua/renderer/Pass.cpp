@@ -46,11 +46,17 @@ void Pass::create(
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> > const&
         layers) {
 
+  cleanup(ctx);
+
+  gbuffer_ = std::make_shared<StereoBuffer>(ctx, pipeline_->config, layers);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pass::cleanup(RenderContext const& ctx) {
   if (gbuffer_) {
     gbuffer_->remove_buffers(ctx);
   }
-
-  gbuffer_ = std::make_shared<StereoBuffer>(ctx, pipeline_->config, layers);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

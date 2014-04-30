@@ -81,6 +81,8 @@ class Pass {
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 
+  virtual void cleanup(RenderContext const& ctx);
+
   void set_inputs(std::vector<std::shared_ptr<StereoBuffer>> inputs);
 
   inline std::shared_ptr<StereoBuffer> get_gbuffer() const { return gbuffer_; }
