@@ -122,11 +122,13 @@ class GUA_DLL TexturedQuadNode : public Node {
 
   /*virtual*/ void update_bounding_box() const;
 
- private:
+ private: // methods
   /**
    *
    */
   std::shared_ptr<Node> copy() const;
+
+ private: // attributes
 
 };
 
