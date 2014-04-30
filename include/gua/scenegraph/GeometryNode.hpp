@@ -87,7 +87,7 @@ class GUA_DLL GeometryNode : public Node {
     /**
     * Updates bounding box by accessing the ressource in the databse
     */
-    void update_bounding_box() const;
+    virtual void update_bounding_box() const;
 
     /**
     * Updates the cached object in the database

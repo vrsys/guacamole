@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MESH_LOADER_HPP
-#define GUA_MESH_LOADER_HPP
+#ifndef GUA_TRI_MESH_LOADER_HPP
+#define GUA_TRI_MESH_LOADER_HPP
 
 // guacamole headers
 #include <gua/renderer/TriMeshRessource.hpp>
@@ -55,7 +55,7 @@ class GeometryNode;
  * This class can load mesh data from files and display them in multiple
  * contexts. A MeshLoader object is made of several Mesh objects.
  */
-class MeshLoader : public LoaderBase {
+class TriMeshLoader : public LoaderBase {
  public:
 
   /**
@@ -63,7 +63,7 @@ class MeshLoader : public LoaderBase {
    *
    * Constructs a new and empty MeshLoader.
    */
-  MeshLoader();
+   TriMeshLoader();
 
   /**
    * Constructor from a file.
@@ -105,4 +105,4 @@ class MeshLoader : public LoaderBase {
 
 }
 
-#endif  // GUA_MESH_LOADER_HPP
+#endif  // GUA_TRI_MESH_LOADER_HPP

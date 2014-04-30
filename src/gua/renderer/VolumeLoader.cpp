@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/scenegraph/TransformNode.hpp>
-#include <gua/renderer/MeshLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>

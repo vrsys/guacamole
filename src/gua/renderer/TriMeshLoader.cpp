@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/MeshLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 
 // guacamole headers
 #include <gua/utils/TextFile.hpp>
@@ -38,12 +38,16 @@
 
 namespace gua {
 
-unsigned MeshLoader::mesh_counter_ = 0;
+  unsigned TriMeshLoader::mesh_counter_ = 0;
 
-MeshLoader::MeshLoader()
+  /////////////////////////////////////////////////////////////////////////////
+
+  TriMeshLoader::TriMeshLoader()
     : node_counter_(0) {}
 
-std::shared_ptr<Node> MeshLoader::load(std::string const& file_name,
+  /////////////////////////////////////////////////////////////////////////////
+
+  std::shared_ptr<Node> TriMeshLoader::load(std::string const& file_name,
                                        unsigned flags) {
 
   node_counter_ = 0;
@@ -108,9 +112,11 @@ std::shared_ptr<Node> MeshLoader::load(std::string const& file_name,
   return nullptr;
 }
 
-std::vector<TriMeshRessource*> const MeshLoader::load_from_buffer(char const* buffer_name,
-                                                                  unsigned buffer_size,
-                                                                  bool build_kd_tree) {
+  /////////////////////////////////////////////////////////////////////////////
+
+std::vector<TriMeshRessource*> const TriMeshLoader::load_from_buffer(char const* buffer_name,
+                                                                     unsigned buffer_size,
+                                                                     bool build_kd_tree) {
 
   auto importer = std::make_shared<Assimp::Importer>();
 
@@ -129,7 +135,7 @@ std::vector<TriMeshRessource*> const MeshLoader::load_from_buffer(char const* bu
 
 }
 
-bool MeshLoader::is_supported(std::string const& file_name) const {
+bool TriMeshLoader::is_supported(std::string const& file_name) const {
   auto point_pos(file_name.find_last_of("."));
   Assimp::Importer importer;
 
@@ -140,11 +146,11 @@ bool MeshLoader::is_supported(std::string const& file_name) const {
   return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
 }
 
-std::shared_ptr<Node> MeshLoader::get_tree(std::shared_ptr<Assimp::Importer> const& importer,
-                                           aiScene const* ai_scene,
-                                           aiNode* ai_root,
-                                           std::string const& file_name,
-                                           unsigned flags, unsigned& mesh_count) {
+std::shared_ptr<Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> const& importer,
+                                              aiScene const* ai_scene,
+                                              aiNode* ai_root,
+                                              std::string const& file_name,
+                                              unsigned flags, unsigned& mesh_count) {
 
   // creates a geometry node and returns it
   auto load_geometry = [&](int i) {

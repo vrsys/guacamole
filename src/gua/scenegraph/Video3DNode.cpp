@@ -42,7 +42,7 @@ namespace gua {
   {
     Singleton<Video3DUberShader>::instance();
     bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-100.0,-100.0,-100.0),
-                            math::vec3(100.0,100.0,100.0)); 
+                                                  math::vec3(100.0,100.0,100.0)); 
   }
 
   void Video3DNode::update_bounding_box() const {

@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/scenegraph/TransformNode.hpp>
-#include <gua/renderer/MeshLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
 #include <gua/renderer/Video3DLoader.hpp>
 #include <gua/renderer/VolumeLoader.hpp>
@@ -47,7 +47,7 @@ std::unordered_map<std::string, std::shared_ptr<Node>>
 
 ////////////////////////////////////////////////////////////////////////////////
 GeometryLoader::GeometryLoader() : fileloaders_() {  
-  fileloaders_.push_back(new MeshLoader);
+  fileloaders_.push_back(new TriMeshLoader);
   fileloaders_.push_back(new NURBSLoader);
   fileloaders_.push_back(new Video3DLoader);
   fileloaders_.push_back(new VolumeLoader);

@@ -258,7 +258,12 @@ void LightingPass::rendering(SerializedScene const& scene,
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
-            shadow_map_.render(ctx, scene_graph, scene.center_of_interest, camera, light->get_cached_world_transform(), light->data.get_shadow_map_size());
+            shadow_map_.render(ctx, 
+                               scene_graph, 
+                               scene.center_of_interest, 
+                               camera, 
+                               light->get_cached_world_transform(), 
+                               light->data.get_shadow_map_size());
 
             shader_->get_program()->use(ctx);
             target->bind(ctx);

@@ -23,17 +23,22 @@
 #include <gua/renderer/GBufferPass.hpp>
 
 // guacamole headers
+#include <algorithm>
+
 #include <gua/platform.hpp>
+#include <gua/utils.hpp>
+#include <gua/traverse.hpp>
+
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/TriMeshUberShader.hpp>
 #include <gua/renderer/GeometryRessource.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
 #include <gua/renderer/GeometryUbershader.hpp>
-#include <gua/databases.hpp>
-#include <gua/utils.hpp>
 
-#include <algorithm>
-// #define DEBUG_XFB_OUTPUT
+#include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/SceneGraph.hpp>
+
+#include <gua/databases.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
 
 namespace gua {
 
@@ -72,7 +77,7 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
 
   void GBufferPass::rendering(SerializedScene const& scene,
-    SceneGraph const&,
+    SceneGraph const& graph,
     RenderContext const& ctx,
     CameraMode eye,
     Camera const& camera,
@@ -93,7 +98,7 @@ namespace gua {
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
     // make sure all ubershaders are available
-    gather_ubershader_from_scene(scene);
+    update_ubershader_from_scene(scene, graph);
 
     // draw all drawable geometries
     for (auto const& type_ressource_pair : scene.geometrynodes_)
@@ -307,26 +312,31 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void GBufferPass::gather_ubershader_from_scene(SerializedScene const& scene)
+  void GBufferPass::update_ubershader_from_scene(SerializedScene const& scene, SceneGraph const& graph)
   {
-    for (auto const& type_ressource_pair : scene.geometrynodes_)
+    bool ubershader_available = true;
+    for (auto const& geometry_pair : scene.geometrynodes_)
     {
-      auto const& ressource_type      = type_ressource_pair.first;
-      auto const& ressource_container = type_ressource_pair.second;
+      ubershader_available = ubershader_available && ubershaders_.count(geometry_pair.first);
+    }
 
-      if (!ubershaders_.count(ressource_type) && !ressource_container.empty())
-      {
-        auto const& ressource = GeometryDatabase::instance()->lookup(ressource_container.front()->get_filename());
-        if (ressource)
-        {
-          auto ubershader = ressource->get_ubershader();
-          ubershader->create(materials_);
-          ubershaders_.insert(std::make_pair(ressource_type, ubershader));
+    if (!ubershader_available)
+    {
+      auto get_ubershader = [&] (Node* n) { 
+        GeometryNode* geode = dynamic_cast<GeometryNode*>(n);
+        if (geode) {
+          std::type_index type(typeid(*geode));
+          if (!ubershaders_.count(type)) {
+            auto const& ressource = GeometryDatabase::instance()->lookup(geode->get_filename());
+            if (ressource) {
+              auto ubershader = ressource->get_ubershader();
+              ubershader->create(materials_);
+              ubershaders_[type] = ubershader;
+            }
+          }
         }
-        else {
-          Logger::LOG_WARNING << "GBufferPass::rendering(): Cannot retrieve ubershader from geometry node." << std::endl;
-        }
-      }
+      };
+      gua::dfs_traverse(graph.get_root().get(), get_ubershader);
     }
   }
 

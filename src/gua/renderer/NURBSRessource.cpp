@@ -256,6 +256,15 @@ void NURBSRessource::draw(RenderContext const& context) const {
 void NURBSRessource::initialize_texture_buffers(RenderContext const& context) const {
   auto in_device = context.render_device;
 
+  if (_data->parametric_data.empty()) _data->parametric_data.resize(1);
+  if (_data->attribute_data.empty()) _data->attribute_data.resize(1);
+  if (_data->trim_partition.empty()) _data->trim_partition.resize(1);
+  if (_data->trim_contourlist.empty()) _data->trim_contourlist.resize(1);
+  if (_data->trim_curvelist.empty()) _data->trim_curvelist.resize(1);
+  if (_data->trim_curvedata.empty()) _data->trim_curvedata.resize(1);
+  if (_data->trim_pointdata.empty()) _data->trim_pointdata.resize(1);
+
+
   //Parametric Data
   _parametric_texture_buffer[context.id] =
       in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,

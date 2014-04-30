@@ -78,7 +78,8 @@ class GBufferPass : public GeometryPass {
                       SerializedScene const& scene,
                       CameraMode eye);
 
-  void gather_ubershader_from_scene(SerializedScene const& scene);
+  void update_ubershader_from_scene(SerializedScene const& scene,
+                                    SceneGraph const& graph);
 
   void initialize_state_objects(RenderContext const& ctx);
 

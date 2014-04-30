@@ -21,7 +21,7 @@
 
 // header
 #include <gua/guacamole.hpp>
-#include <gua/renderer/MeshLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/BuiltInTextures.hpp>
 #include <gua/databases/Resources.hpp>
 
@@ -41,7 +41,7 @@ void init(int argc, char** argv) {
   gua::TextureDatabase::instance()->add("gua_default_texture", std::shared_ptr<Texture2D>(new DefaultTexture()));
   gua::TextureDatabase::instance()->add("gua_loading_texture", std::shared_ptr<Texture2D>(new LoadingTexture()));
 
-  MeshLoader mesh_loader;
+  TriMeshLoader mesh_loader;
 
   GeometryDatabase::instance()->add(
       "gua_light_sphere_proxy",
