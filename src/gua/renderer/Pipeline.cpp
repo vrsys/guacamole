@@ -41,6 +41,22 @@
 // external headers
 #include <iostream>
 
+
+namespace {
+
+gua::Frustum camera_frustum(gua::Camera::ProjectionMode const& mode,
+    gua::math::mat4 const& transf, gua::math::mat4 const& screen,
+    float near, float far) {
+  if (mode == gua::Camera::ProjectionMode::PERSPECTIVE) {
+    return gua::Frustum::perspective(transf, screen, near, far);
+  } else {
+    return gua::Frustum::orthographic(transf, screen, near, far);
+  }
+}
+
+}
+
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,18 +191,10 @@ void Pipeline::serialize(const SceneGraph& scene_graph,
     return;
   }
 
-  if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
-    out.frustum = Frustum::perspective(eye->get_world_transform(),
-                                       screen->get_scaled_world_transform(),
-                                       config.near_clip(),
-                                       config.far_clip());
-  } else {
-    out.frustum = Frustum::orthographic(eye->get_world_transform(),
-                                       screen->get_scaled_world_transform(),
-                                       config.near_clip(),
-                                       config.far_clip());
-  }
-
+  out.frustum = camera_frustum(config.camera().mode, eye->get_world_transform(),
+                                screen->get_scaled_world_transform(),
+                                config.near_clip(),
+                                config.far_clip());
   out.center_of_interest = eye->get_world_position();
   out.enable_global_clipping_plane = config.get_enable_global_clipping_plane();
   out.global_clipping_plane = config.get_global_clipping_plane();

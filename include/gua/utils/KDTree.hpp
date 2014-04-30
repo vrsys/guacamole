@@ -30,7 +30,7 @@
 
 #include <set>
 #include <vector>
-#include <iostream>
+#include <iosfwd>
 #include <algorithm>
 
 namespace gua {

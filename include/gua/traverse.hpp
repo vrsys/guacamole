@@ -19,15 +19,31 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/scenegraph/NodeVisitor.hpp>
+#ifndef GUA_NODE_TRAVERSER_HPP
+#define GUA_NODE_TRAVERSER_HPP
 
-// guacamole headers
+#include <gua/scenegraph/Node.hpp>
 
 namespace gua {
 
-NodeVisitor::NodeVisitor() {}
+template <class UnaryOperation, class UnaryPredicate>
+void dfs_traverse_if(Node* node, UnaryOperation unary_op, UnaryPredicate pred) {
+  if (pred(node)) {
+    unary_op(node);
+    for (auto & c : node->get_children()) {
+      dfs_traverse_if(c.get(), unary_op, pred);
+    }
+  }
+}
 
-/* virtual */ NodeVisitor::~NodeVisitor() {}
+template <class UnaryOperation>
+void dfs_traverse(Node* node, UnaryOperation unary_op) {
+  unary_op(node);
+  for (auto & c : node->get_children()) {
+    dfs_traverse(c.get(), unary_op);
+  }
+}
 
-}  // namespace gua
+}
+
+#endif  // GUA_NODE_TRAVERSER_HPP

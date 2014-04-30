@@ -68,6 +68,7 @@ void Serializer::check(SerializedScene* output,
 
   data_ = output;
 
+
   std::size_t geometry_count = data_->geometrynodes_.size();
   std::size_t volume_count = data_->volumenodes_.size();
   std::size_t point_light_count = data_->point_lights_.size();
@@ -102,6 +103,7 @@ void Serializer::check(SerializedScene* output,
 
   // assuming the number of nodes stays quite constant through time,
   // reserving the old size might save some time
+
   data_->volumenodes_.reserve(volume_count);
   data_->point_lights_.reserve(point_light_count);
   data_->spot_lights_.reserve(spot_light_count);
@@ -156,11 +158,13 @@ void Serializer::check(SerializedScene* output,
 
 /* virtual */ void Serializer::visit(GeometryNode* node) {
 
+
   if (is_visible(node)) 
   {
     if (!node->get_filename().empty() && !node->get_material().empty()) 
     {
       add_bbox(node);
+
 
       // add geometry to the serialized scene, if it exists in database
       if (gua::GeometryDatabase::instance()->is_supported(node->get_filename()))
@@ -176,6 +180,7 @@ void Serializer::check(SerializedScene* output,
 }
 
 ////////////////////////////////////////////////////////////////////////
+
 
 /* virtual */ void Serializer::visit(VolumeNode* node) {
 
@@ -287,7 +292,7 @@ void Serializer::add_bbox(Node* node) const {
 ////////////////////////////////////////////////////////////////////////
 
 void Serializer::visit_children(Node* node) {
-  std::for_each(node->children_.begin(), node->children_.end(), std::bind(std::mem_fn(&Node::accept), std::placeholders::_1, std::ref(*this)));
+  for (auto & c : node->children_) { c->accept(*this); }
 }
 
 }  // namespace gua
