@@ -185,5 +185,15 @@ std::string const UberShader::print_material_methods(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*virtual*/ void UberShader::save_shaders_to_file(std::string const& directory,
+                                                  std::string const& name) const {
+
+  for (int i(0); i < programs_.size(); ++i) {
+    programs_[i]->save_to_file(directory, name + string_utils::to_string(i));
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

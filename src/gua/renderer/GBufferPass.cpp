@@ -99,7 +99,10 @@ void GBufferPass::cleanup(RenderContext const& ctx) {
 
 void GBufferPass::print_shaders(std::string const& directory,
                                 std::string const& name) const {
-  throw std::runtime_error("to implement");
+    // throw std::runtime_error("to implement");
+    mesh_shader_->save_shaders_to_file(directory, name + "/mesh");
+    nurbs_shader_->save_shaders_to_file(directory, name + "/nurbs");
+    video3D_shader_->save_shaders_to_file(directory, name + "/video3d");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

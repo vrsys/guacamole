@@ -96,6 +96,9 @@ class UberShader {
   */
   virtual bool upload_to(RenderContext const& context) const;
 
+  virtual void save_shaders_to_file(std::string const& directory,
+                                    std::string const& name) const;
+
   /**
   *
   */
