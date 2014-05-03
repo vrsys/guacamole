@@ -66,7 +66,7 @@ std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
 	     
 
 	     auto node(std::make_shared<PBRNode>(model_name));
-	    
+	     node->set_filename(model_name);
 	    return node;
 
     }
@@ -90,7 +90,7 @@ std::vector<PBRRessource*> const PBRLoader::load_from_buffer(char const* buffer_
 bool PBRLoader::is_supported(std::string const& file_name) const {
   auto point_pos(file_name.find_last_of("."));
 
-  return file_name.substr(point_pos + 1) == "kdn";
+  return file_name.substr(point_pos + 1) == "xyz_all";
 }
 
 }
