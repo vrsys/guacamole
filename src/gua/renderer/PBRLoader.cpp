@@ -38,17 +38,17 @@
 
 namespace gua {
 
-  unsigned PBRLoader::mesh_counter_ = 0;
+unsigned PBRLoader::mesh_counter_ = 0;
 
   /////////////////////////////////////////////////////////////////////////////
 
-  PBRLoader::PBRLoader()
+PBRLoader::PBRLoader()
     : node_counter_(0) {}
 
   /////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
-                                       unsigned flags) {
+std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
+                                      unsigned flags) {
 
   node_counter_ = 0;
   TextFile file(file_name);
@@ -56,54 +56,9 @@ namespace gua {
   // MESSAGE("Loading mesh file %s", file_name.c_str());
 
   if (file.is_valid()) {
-    auto importer = std::make_shared<Assimp::Importer>();
-
-    importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
-                                  aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-
-    if ((flags & GeometryLoader::OPTIMIZE_GEOMETRY) &&
-        (flags & GeometryLoader::LOAD_MATERIALS)) {
-
-      importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS);
-      importer->ReadFile(
-          file_name,
-          aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
-              aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-              aiProcess_PreTransformVertices);
-
-    } else if (flags & GeometryLoader::OPTIMIZE_GEOMETRY) {
-
-      importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS,
-                                    aiComponent_COLORS | aiComponent_MATERIALS);
-      importer->ReadFile(
-          file_name,
-          aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
-              aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-              aiProcess_PreTransformVertices);
-    } else {
-
-      importer->ReadFile(
-          file_name,
-          aiProcessPreset_TargetRealtime_Quality | aiProcess_GenNormals);
-
-    }
-
-    aiScene const* scene(importer->GetScene());
-
-    std::shared_ptr<Node> new_node;
-
-    if (scene->mRootNode) {
-      // new_node = std::make_shared(new GeometryNode("unnamed",
-      //                             GeometryNode::Configuration("", ""),
-      //                             math::mat4::identity()));
-      unsigned count(0);
-      new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
-
-    } else {
-      Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": No valid root node contained!" << std::endl;
-    }
-
-    return new_node;
+  
+    //return new_node;
+    return nullptr;
 
   }
 
@@ -115,96 +70,16 @@ namespace gua {
   /////////////////////////////////////////////////////////////////////////////
 
 std::vector<PBRRessource*> const PBRLoader::load_from_buffer(char const* buffer_name,
-                                                                     unsigned buffer_size,
-                                                                     bool build_kd_tree) {
+                                                             unsigned buffer_size,
+                                                             bool build_kd_tree) {
 
-  auto importer = std::make_shared<Assimp::Importer>();
-
-  aiScene const* scene(importer->ReadFileFromMemory(
-      buffer_name,
-      buffer_size,
-      aiProcessPreset_TargetRealtime_Quality | aiProcess_CalcTangentSpace));
-
-  std::vector<PBRRessource*> meshes;
-
-  for (unsigned int n = 0; n < scene->mNumMeshes; ++n) {
-    meshes.push_back(new PBRRessource(scene->mMeshes[n], importer, build_kd_tree));
-  }
-
-  return meshes;
-
+  return std::vector<PBRRessource*>();
 }
 
 bool PBRLoader::is_supported(std::string const& file_name) const {
   auto point_pos(file_name.find_last_of("."));
-  Assimp::Importer importer;
 
-  if (file_name.substr(point_pos + 1) == "raw"){
-	  return false;
-  }
-
-  return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
-}
-
-std::shared_ptr<Node> PBRLoader::get_tree(std::shared_ptr<Assimp::Importer> const& importer,
-                                              aiScene const* ai_scene,
-                                              aiNode* ai_root,
-                                              std::string const& file_name,
-                                              unsigned flags, unsigned& mesh_count) {
-
-  // creates a geometry node and returns it
-  auto load_geometry = [&](int i) {
-    // load geometry
-    std::string mesh_name("type=file&file=" + file_name + "&id=" + string_utils::to_string(mesh_count++) + "&flags=" + string_utils::to_string(flags));
-    GeometryDatabase::instance()->add(mesh_name, std::make_shared<PBRRessource>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & GeometryLoader::MAKE_PICKABLE));
-
-    // load material
-    std::string material_name("");
-    unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]->mMaterialIndex);
-
-    if (material_index != 0 && flags & GeometryLoader::LOAD_MATERIALS) {
-      MaterialLoader material_loader;
-      aiMaterial const* material(ai_scene->mMaterials[material_index]);
-      material_name = material_loader.load_material(material, file_name);
-    }
-
-    auto result(std::make_shared<PBRNode>(mesh_name));
-    result->set_filename(mesh_name);
-    result->set_material(material_name);
-
-    return result;
-  };
-
-  // there is only one child -- skip it!
-  if (ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0) {
-    return get_tree(
-      importer, ai_scene, ai_root->mChildren[0],
-      file_name, flags, mesh_count
-    );
-  }
-
-  // there is only one geometry --- return it!
-  if (ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1) {
-    return load_geometry(0);
-  }
-
-  // else: there are multiple children and meshes
-  auto group(std::make_shared<TransformNode>());
-
-  for (unsigned i(0); i < ai_root->mNumMeshes; ++i) {
-    group->add_child(load_geometry(i));
-  }
-
-  for (unsigned i(0); i < ai_root->mNumChildren; ++i) {
-    group->add_child(
-      get_tree(
-        importer, ai_scene, ai_root->mChildren[i],
-        file_name, flags, mesh_count
-      )
-    );
-  }
-
-  return group;
+  return file_name.substr(point_pos + 1) == "kdn";
 }
 
 }

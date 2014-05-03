@@ -32,7 +32,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/TriMeshUberShader.hpp>
 #include <gua/renderer/GeometryRessource.hpp>
-#include <gua/renderer/GeometryUbershader.hpp>
+#include <gua/renderer/GeometryUberShader.hpp>
 
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>

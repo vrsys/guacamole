@@ -68,12 +68,6 @@ class PBRLoader : public LoaderBase{
 
  private:
 
-  std::shared_ptr<Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
-                aiScene const* ai_scene,
-                aiNode* ai_root,
-                std::string const& file_name,
-                unsigned flags, unsigned& mesh_count);
-
   unsigned node_counter_;
 
   static unsigned mesh_counter_;
