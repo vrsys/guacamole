@@ -25,17 +25,6 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-macro(_FIND_PBR_LIBRARY _var)
-  find_library(${_var}
-     NAMES
-        ${ARGN}
-     HINTS
-        ${PBR_ROOT}
-     PATH_SUFFIXES build
-  )
-  mark_as_advanced(${_var})
-endmacro()
-
 macro(_PBR_APPEND_LIBRARIES _list _release)
    set(_debug ${_release}_DEBUG)
    if(${_debug})
@@ -63,9 +52,21 @@ find_path(PBR_RENDERING_INCLUDE_DIR
 
 # Find the libraries
 
-_FIND_PBR_LIBRARY(PBR_COMMON_LIBRARY pbr_common)
-_FIND_PBR_LIBRARY(PBR_RENDERING_LIBRARY pbr_rendering)
+find_library(PBR_COMMON_LIBRARY
+  NAMES pbr_common
+  HINTS
+    ${PBR_ROOT}/build/common
+    ${PBR_ROOT}/build_codeblocks_rel/common
+    ${PBR_ROOT}/build_codeblocks/common
+)
 
+find_library(PBR_RENDERING_LIBRARY
+  NAMES pbr_rendering
+  HINTS
+    ${PBR_ROOT}/build/rendering
+    ${PBR_ROOT}/build_codeblocks_rel/rendering
+    ${PBR_ROOT}/build_codeblocks/rendering
+)
 
 # handle the QUIETLY and REQUIRED arguments and set PBR_FOUND to TRUE if
 # all listed variables are TRUE
