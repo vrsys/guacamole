@@ -33,6 +33,8 @@ class PBRUberShader : public GeometryUberShader {
 
   void              create  (std::set<std::string> const& material_names);
 
+  bool              upload_to (RenderContext const& context) const;
+
   /*virtual*/ stage_mask const get_stage_mask() const;
 
   /*virtual*/ void  preframe  (RenderContext const& context) const;
@@ -59,6 +61,14 @@ class PBRUberShader : public GeometryUberShader {
                               Frustum const& /*frustum*/) const;
 
   /*virtual*/ void  postframe (RenderContext const& context) const;
+
+ private: //auxialiary methods
+  std::string const forward_point_rendering_vertex_shader() const;
+  std::string const forward_point_rendering_fragment_shader() const;
+
+ private:  //member variables
+
+  mutable std::vector<scm::gl::rasterizer_state_ptr> change_point_size_in_shader_state_;
 };
 
 }
