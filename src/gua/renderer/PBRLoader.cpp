@@ -54,7 +54,7 @@ std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
     
     std::shared_ptr<Node> new_node;
 
-     std::shared_ptr<pbr::ren::RawPointCloud> point_cloud = std::make_shared<pbr::ren::RawPointCloud>(/*model_counter_*/);
+     std::shared_ptr<pbr::ren::RawPointCloud> point_cloud = std::make_shared<pbr::ren::RawPointCloud>(model_counter_);
      if (point_cloud->Load(file_name))
      {
 
