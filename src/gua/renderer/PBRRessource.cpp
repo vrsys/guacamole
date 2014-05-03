@@ -102,6 +102,7 @@ void PBRRessource::upload_to(RenderContext const& ctx) const {
 
 void PBRRessource::draw(RenderContext const& ctx) const {
 
+/*
   // upload to GPU if neccessary
   if (buffers_.size() <= ctx.id || buffers_[ctx.id] == nullptr) {
     upload_to(ctx);
@@ -115,6 +116,7 @@ void PBRRessource::draw(RenderContext const& ctx) const {
 
 
   //ctx.render_context->draw_elements(point_cloud_->num_surfels());
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
