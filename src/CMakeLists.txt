@@ -103,6 +103,7 @@ ENDIF(MSVC)
 # link static libraries
 TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES})
 TARGET_LINK_LIBRARIES( guacamole general ${ASSIMP_LIBRARIES})
+TARGET_LINK_LIBRARIES( guacamole general ${PBR_LIBRARIES})
 
 IF (UNIX)
     TARGET_LINK_LIBRARIES( guacamole general ${BOOST_LIBRARIES})

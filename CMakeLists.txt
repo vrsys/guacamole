@@ -52,6 +52,9 @@ endif (UNIX)
 find_package(Bullet REQUIRED)
 find_package(Json REQUIRED)
 
+set(PBR_ROOT "../gualod/trunk/pbr" CACHE PATH "Set to your PBR install path.")
+find_package(PBR REQUIRED)
+
 set(LIB_PATHS
     ${ASSIMP_LIBRARY_DIRS}
     ${JSON_LIBRARY_DIRS}
@@ -60,6 +63,7 @@ set(LIB_PATHS
     ${BOOST_LIBRARY_DIRS}
     ${BULLET_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
+    ${PBR_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS
@@ -72,6 +76,7 @@ set(INCLUDE_PATHS
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
+    ${PBR_INCLUDE_DIRS}
 )
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -211,4 +216,8 @@ message(STATUS " bullet:" )
 message(STATUS "   library: ${BULLET_LIBRARIES}" )
 message(STATUS "   library path: ${BULLET_LIBRARY_DIRS}" )
 message(STATUS "   include: ${BULLET_INCLUDE_DIRS}" )
+message(STATUS " PBR:" )
+message(STATUS "   library: ${PBR_LIBRARIES}" )
+message(STATUS "   library path: ${PBR_LIBRARY_DIRS}" )
+message(STATUS "   include: ${PBR_INCLUDE_DIRS}" )
 message(STATUS "" )
