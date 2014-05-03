@@ -29,143 +29,71 @@
 #include <gua/utils/Logger.hpp>
 
 // external headers
-#if ASSIMP_VERSION == 3
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#else
-#include <assimp/assimp.hpp>
-#include <assimp/aiPostProcess.h>
-#include <assimp/aiScene.h>
-#endif
 
-namespace {
-struct Vertex {
-  scm::math::vec3f pos;
-  scm::math::vec2f tex;
-  scm::math::vec3f normal;
-  scm::math::vec3f tangent;
-  scm::math::vec3f bitangent;
-};
-}
+
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PBRRessource::PBRRessource()
-    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_(nullptr) {}
+    : buffers_(), upload_mutex_(), point_cloud_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PBRRessource::PBRRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importer> const& importer,
-           bool build_kd_tree)
-    : vertices_(),
-      indices_(),
-      vertex_array_(),
+PBRRessource::PBRRessource(std::shared_ptr<pbr::ren::RawPointCloud> point_cloud)
+    : buffers_(),
       upload_mutex_(),
-      mesh_(mesh),
-      importer_(importer) {
+      point_cloud_(point_cloud){
 
-  if (mesh_->HasPositions()) {
-    bounding_box_ = math::BoundingBox<math::vec3>();
+    //set already created BB
 
-    for (unsigned v(0); v < mesh_->mNumVertices; ++v) {
-      bounding_box_.expandBy(scm::math::vec3(
-          mesh_->mVertices[v].x, mesh_->mVertices[v].y, mesh_->mVertices[v].z));
+    if (!point_cloud_->is_loaded())
+    {
+       Logger::LOG_WARNING << "Point Cloud was not loaded!" << std::endl;
     }
-
-    if (build_kd_tree) {
-      kd_tree_.generate(mesh_);
+    else
+    {
+    	scm::gl::boxf loaded_bb = point_cloud->aabb();
+    	bounding_box_.min = loaded_bb.min_vertex();
+   	bounding_box_.max = loaded_bb.max_vertex();
     }
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void PBRRessource::upload_to(RenderContext const& ctx) const {
 
-  if (!mesh_->HasPositions()) {
-    Logger::LOG_WARNING << "Unable to load Mesh! Has no vertex data." << std::endl;
+  if (!point_cloud_->is_loaded()) {
+    Logger::LOG_WARNING << "Point Cloud was not loaded!" << std::endl;
     return;
   }
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
-  if (vertices_.size() <= ctx.id) {
-    vertices_.resize(ctx.id + 1);
-    indices_.resize(ctx.id + 1);
-    vertex_array_.resize(ctx.id + 1);
+  if (buffers_.size() <= ctx.id) {
+    buffers_.resize(ctx.id + 1);
   }
 
-  vertices_[ctx.id] =
+  buffers_[ctx.id] =
       ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       mesh_->mNumVertices * sizeof(Vertex),
-                                       0);
+                                       scm::gl::USAGE_DYNAMIC_COPY,
+                                       point_cloud_->num_surfels() * sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
+                                       &(point_cloud_->data()[0]));
 
 
-
-  Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
-      vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
-
-  for (unsigned v(0); v < mesh_->mNumVertices; ++v) {
-    data[v].pos = scm::math::vec3(
-        mesh_->mVertices[v].x, mesh_->mVertices[v].y, mesh_->mVertices[v].z);
-
-    if (mesh_->HasTextureCoords(0)) {
-      data[v].tex = scm::math::vec2(mesh_->mTextureCoords[0][v].x,
-                                    mesh_->mTextureCoords[0][v].y);
-    } else {
-      data[v].tex = scm::math::vec2(0.f, 0.f);
-    }
-
-    if (mesh_->HasNormals()) {
-      data[v].normal = scm::math::vec3(
-          mesh_->mNormals[v].x, mesh_->mNormals[v].y, mesh_->mNormals[v].z);
-    } else {
-      data[v].normal = scm::math::vec3(0.f, 0.f, 0.f);
-    }
-
-    if (mesh_->HasTangentsAndBitangents()) {
-      data[v].tangent = scm::math::vec3(
-          mesh_->mTangents[v].x, mesh_->mTangents[v].y, mesh_->mTangents[v].z);
-
-      data[v].bitangent = scm::math::vec3(mesh_->mBitangents[v].x,
-                                          mesh_->mBitangents[v].y,
-                                          mesh_->mBitangents[v].z);
-    } else {
-      data[v].tangent = scm::math::vec3(0.f, 0.f, 0.f);
-      data[v].bitangent = scm::math::vec3(0.f, 0.f, 0.f);
-    }
-  }
-
-  ctx.render_context->unmap_buffer(vertices_[ctx.id]);
-
-  std::vector<unsigned> index_array(mesh_->mNumFaces * 3);
-
-  for (unsigned t = 0; t < mesh_->mNumFaces; ++t) {
-    const struct aiFace* face = &mesh_->mFaces[t];
-
-    index_array[t * 3] = face->mIndices[0];
-    index_array[t * 3 + 1] = face->mIndices[1];
-    index_array[t * 3 + 2] = face->mIndices[2];
-  }
-
-  indices_[ctx.id] =
-      ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       mesh_->mNumFaces * 3 * sizeof(unsigned),
-                                       &index_array[0]);
 
   std::vector<scm::gl::buffer_ptr> buffer_arrays;
-  buffer_arrays.push_back(vertices_[ctx.id]);
+  buffer_arrays.push_back(buffers_[ctx.id]);
 
   vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
-      scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-          0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
-          0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-          0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-          0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex)),
+      scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
+          0, 1, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
+          0, 2, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
+          0, 3, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
+          0, 4, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
+          0, 5, scm::gl::TYPE_FLOAT, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
+          0, 6, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel)),
       buffer_arrays);
 
 }
@@ -175,7 +103,7 @@ void PBRRessource::upload_to(RenderContext const& ctx) const {
 void PBRRessource::draw(RenderContext const& ctx) const {
 
   // upload to GPU if neccessary
-  if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
+  if (buffers_.size() <= ctx.id || buffers_[ctx.id] == nullptr) {
     upload_to(ctx);
   }
 
@@ -183,11 +111,10 @@ void PBRRessource::draw(RenderContext const& ctx) const {
 
   ctx.render_context->bind_vertex_array(vertex_array_[ctx.id]);
 
-  ctx.render_context->bind_index_buffer(
-      indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
-
   ctx.render_context->apply();
-  ctx.render_context->draw_elements(mesh_->mNumFaces * 3);
+
+
+  //ctx.render_context->draw_elements(point_cloud_->num_surfels());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,34 +122,9 @@ void PBRRessource::draw(RenderContext const& ctx) const {
 void PBRRessource::ray_test(Ray const& ray, PickResult::Options options,
                     Node* owner, std::set<PickResult>& hits) {
 
-  kd_tree_.ray_test(ray, mesh_, options, owner, hits);
+	return;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-unsigned int PBRRessource::num_vertices() const { return mesh_->mNumVertices; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-unsigned int PBRRessource::num_faces() const { return mesh_->mNumFaces; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-scm::math::vec3 PBRRessource::get_vertex(unsigned int i) const {
-
-  return scm::math::vec3(
-      mesh_->mVertices[i].x, mesh_->mVertices[i].y, mesh_->mVertices[i].z);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::vector<unsigned int> PBRRessource::get_face(unsigned int i) const {
-
-  std::vector<unsigned int> face(mesh_->mFaces[i].mNumIndices);
-  for (unsigned int j = 0; j < mesh_->mFaces[i].mNumIndices; ++j)
-    face[j] = mesh_->mFaces[i].mIndices[j];
-  return face;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

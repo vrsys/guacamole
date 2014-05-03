@@ -70,7 +70,7 @@ class PBRLoader : public LoaderBase{
 
   unsigned node_counter_;
 
-  static unsigned mesh_counter_;
+  static unsigned model_counter_;
 };
 
 

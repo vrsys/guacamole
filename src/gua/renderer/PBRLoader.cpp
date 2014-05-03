@@ -38,7 +38,7 @@
 
 namespace gua {
 
-unsigned PBRLoader::mesh_counter_ = 0;
+unsigned PBRLoader::model_counter_ = 0;
 
   /////////////////////////////////////////////////////////////////////////////
 
@@ -51,20 +51,31 @@ std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
                                       unsigned flags) {
 
   node_counter_ = 0;
-  TextFile file(file_name);
+    
+    std::shared_ptr<Node> new_node;
 
-  // MESSAGE("Loading mesh file %s", file_name.c_str());
+     std::shared_ptr<pbr::ren::RawPointCloud> point_cloud = std::make_shared<pbr::ren::RawPointCloud>(/*model_counter_*/);
+     if (point_cloud->Load(file_name))
+     {
 
-  if (file.is_valid()) {
-  
-    //return new_node;
-    return nullptr;
+	     // load point cloud
+	     std::string model_name("type=file&file=" + file_name);
+	     GeometryDatabase::instance()->add(model_name, std::make_shared<PBRRessource>(point_cloud));
+	     
+	     ++model_counter_;
+	     
 
-  }
+	     auto node(std::make_shared<PBRNode>(model_name));
+	    
+	    return node;
 
-  Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": File does not exist!" << std::endl;
+    }
+    else
+    {
+	    Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": File does not exist!" << std::endl;
 
-  return nullptr;
+    	return nullptr;
+    }
 }
 
   /////////////////////////////////////////////////////////////////////////////

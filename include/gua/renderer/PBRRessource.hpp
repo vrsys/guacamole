@@ -22,6 +22,8 @@
 #ifndef GUA_PBR_RESSOURCE_HPP
 #define GUA_PBR_RESSOURCE_HPP
 
+
+
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/GeometryRessource.hpp>
@@ -29,6 +31,7 @@
 #include <gua/utils/KDTree.hpp>
 
 // external headers
+#include <pbr/ren/raw_point_cloud.h>
 #include <scm/gl_core.h>
 
 #include <mutex>
@@ -36,9 +39,8 @@
 
 #include <vector>
 
-struct aiMesh;
 
-namespace Assimp { class Importer; }
+
 
 namespace gua {
 
@@ -69,7 +71,7 @@ class PBRRessource : public GeometryRessource {
    *
    * \param mesh             The Assimp mesh to load the data from.
    */
-   PBRRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importer> const& importer, bool build_kd_tree);
+   PBRRessource(std::shared_ptr<pbr::ren::RawPointCloud> point_cloud);
 
   /**
    * Draws the Mesh.
@@ -83,13 +85,6 @@ class PBRRessource : public GeometryRessource {
   void ray_test(Ray const& ray, PickResult::Options options,
                 Node* owner, std::set<PickResult>& hits);
 
-  unsigned int num_vertices() const;
-
-  unsigned int num_faces() const;
-
-  scm::math::vec3 get_vertex(unsigned int i) const;
-
-  std::vector<unsigned int> get_face(unsigned int i) const;
 
   /*virtual*/ GeometryUberShader* get_ubershader() const;
 
@@ -97,17 +92,16 @@ class PBRRessource : public GeometryRessource {
 
   void upload_to(RenderContext const& context) const;
 
-  mutable std::vector<scm::gl::buffer_ptr> vertices_;
-  mutable std::vector<scm::gl::buffer_ptr> indices_;
+  mutable std::vector<scm::gl::buffer_ptr> buffers_;
   mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
   mutable std::mutex upload_mutex_;
 
  public:
 
-  KDTree kd_tree_;
+  //KDTree kd_tree_;
 
-  aiMesh* mesh_;
-  std::shared_ptr<Assimp::Importer> importer_;
+  std::shared_ptr<pbr::ren::RawPointCloud> point_cloud_;
+
 };
 
 }
