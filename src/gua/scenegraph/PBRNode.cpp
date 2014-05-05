@@ -34,8 +34,9 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
   PBRNode::PBRNode(std::string const& name,
                            std::string const& filename,
+                           std::string const& material,
                            math::mat4 const& transform)
-    : GeometryNode(name, filename, "gua_default_material", transform)
+    : GeometryNode(name, filename, material, transform)
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -70,6 +71,6 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
   std::shared_ptr<Node> PBRNode::copy() const {
-    return std::make_shared<PBRNode>(get_name(), filename_, get_transform());
+    return std::make_shared<PBRNode>(get_name(), filename_, material_, get_transform());
   }
 }

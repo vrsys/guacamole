@@ -38,6 +38,7 @@ public : // member
 
   PBRNode(std::string const& name,
               std::string const& filename = "gua_default_point_cloud",
+              std::string const& material = "gua_default_material",
               math::mat4  const& transform = math::mat4::identity());
 
   /**

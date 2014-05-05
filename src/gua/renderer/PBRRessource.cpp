@@ -30,6 +30,7 @@
 
 // external headers
 
+#include <iostream>
 
 
 namespace gua {
@@ -46,6 +47,7 @@ PBRRessource::PBRRessource(std::shared_ptr<pbr::ren::RawPointCloud> point_cloud)
       upload_mutex_(),
       point_cloud_(point_cloud){
 
+
     //set already created BB
 
     if (!point_cloud_->is_loaded())
@@ -58,11 +60,13 @@ PBRRessource::PBRRessource(std::shared_ptr<pbr::ren::RawPointCloud> point_cloud)
     	bounding_box_.min = loaded_bb.min_vertex();
    	bounding_box_.max = loaded_bb.max_vertex();
     }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void PBRRessource::upload_to(RenderContext const& ctx) const {
+
 
   if (!point_cloud_->is_loaded()) {
     Logger::LOG_WARNING << "Point Cloud was not loaded!" << std::endl;
@@ -73,11 +77,13 @@ void PBRRessource::upload_to(RenderContext const& ctx) const {
 
   if (buffers_.size() <= ctx.id) {
     buffers_.resize(ctx.id + 1);
+    vertex_array_.resize(ctx.id + 1);
   }
+
 
   buffers_[ctx.id] =
       ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                       scm::gl::USAGE_DYNAMIC_COPY,
+                                       scm::gl::USAGE_STATIC_DRAW,
                                        point_cloud_->num_surfels() * sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
                                        &(point_cloud_->data()[0]));
 
@@ -86,15 +92,17 @@ void PBRRessource::upload_to(RenderContext const& ctx) const {
   std::vector<scm::gl::buffer_ptr> buffer_arrays;
   buffer_arrays.push_back(buffers_[ctx.id]);
 
+
   vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
-      scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
+      scm::gl::vertex_format(
+          0, 0, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
           0, 1, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
           0, 2, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
           0, 3, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
           0, 4, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
           0, 5, scm::gl::TYPE_FLOAT, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
           0, 6, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel)),
-      buffer_arrays);
+       buffer_arrays);
 
 }
 
@@ -113,6 +121,8 @@ void PBRRessource::draw(RenderContext const& ctx) const {
 
   ctx.render_context->apply();
 
+
+  std::cout << point_cloud_->num_surfels()<<"\n";
   ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, point_cloud_->num_surfels());
 
 }

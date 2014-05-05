@@ -50,6 +50,8 @@ PBRLoader::PBRLoader()
 std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
                                       unsigned flags) {
 
+
+
   node_counter_ = 0;
     
     std::shared_ptr<Node> new_node;
@@ -67,7 +69,9 @@ std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
 
 	     auto node(std::make_shared<PBRNode>(model_name));
 	     node->set_filename(model_name);
-	    return node;
+             node->set_material("data/materials/Red.gmd");
+
+            return node;
 
     }
     else

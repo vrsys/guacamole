@@ -32,6 +32,7 @@
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/scenegraph/Video3DNode.hpp>
 #include <gua/scenegraph/VolumeNode.hpp>
+#include <gua/renderer/PBRLoader.hpp>
 #include <gua/utils/Logger.hpp>
 
 // external headers
@@ -51,6 +52,7 @@ GeometryLoader::GeometryLoader() : fileloaders_() {
   fileloaders_.push_back(new NURBSLoader);
   fileloaders_.push_back(new Video3DLoader);
   fileloaders_.push_back(new VolumeLoader);
+  fileloaders_.push_back(new PBRLoader);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

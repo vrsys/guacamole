@@ -40,6 +40,7 @@
 #include <gua/databases.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
+
 namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +92,7 @@ namespace gua {
       initialize_state_objects(ctx);
     }
 
+
     ctx.render_context->set_rasterizer_state(
       pipeline_->config.enable_backface_culling() ? bfc_rasterizer_state_
       : no_bfc_rasterizer_state_);
@@ -124,11 +126,13 @@ namespace gua {
           ctx);
       }
 
+
       // 1. call preframe callback if available for type
       if (ubershader->get_stage_mask() & GeometryUberShader::PRE_FRAME_STAGE) 
       {
         ubershader->preframe(ctx);
       }
+
 
       // 2. iterate all drawables of current type and call predraw of current ubershader
       if (ubershader->get_stage_mask() & GeometryUberShader::PRE_DRAW_STAGE) 
@@ -150,6 +154,7 @@ namespace gua {
         }
       }
 
+
       // 3. iterate all drawables of current type and call draw of current ubershader
       if (ubershader->get_stage_mask() & GeometryUberShader::DRAW_STAGE)
       {
@@ -157,6 +162,7 @@ namespace gua {
         {
           auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
           auto const& material = MaterialDatabase::instance()->lookup(node->get_material());
+
 
           if (ressource && material)
           {
@@ -207,6 +213,7 @@ namespace gua {
     display_rays(ctx, scene);
 
     ctx.render_context->reset_state_objects();
+
   }
 
   ////////////////////////////////////////////////////////////////////////////////

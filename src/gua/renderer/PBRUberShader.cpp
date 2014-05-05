@@ -78,11 +78,11 @@ namespace gua {
           gl_Position = gua_projection_matrix *      \n\
                         gua_view_matrix *            \n\
                         gua_model_matrix *           \n\
-                        vec4(position,1.0);          \n\
+                        vec4(in_position,1.0);          \n\
                                                      \n\
-          point_color = vec3(vec3((in_r)/255.0f,     \n\
-                                  (in_g)/255.0f,     \n\
-                                  (in_b)/255.0f);    \n\
+          point_color = vec3((in_r)/255.0f,     \n\
+                             (in_g)/255.0f,     \n\
+                             (in_b)/255.0f);    \n\
         }                                            \n\
     ");
 
@@ -98,16 +98,21 @@ namespace gua {
     fpr_fragment << std::string("                         \n\
         #version 420 core                                 \n\
                                                           \n\
-        layout(location = 0) out vec4 out_color;          \n\
-                                                          \n\
-                                                          \n\
+    //    layout(location = 0) out vec4 out_color;        \n\
+        layout(location = 0) out float out_depth;         \n\
+        layout(location = 1) out vec3 out_nor;            \n\
+        layout(location = 2) out int out_mat_id;          \n\
                                                           \n\
         in vec3 point_color;                              \n\
                                                           \n\
                                                           \n\
         void main()                                       \n\
         {                                                 \n\
- 	  out_color = vec4(point_color, 1.0);             \n\
+ 	  //out_color = vec4(point_color, 1.0);           \n\
+          //out_color = vec4(1.0,0.0,0.0,1.0);              \n\
+          out_depth = gl_FragDepth;                       \n\
+          out_nor  = vec3(-1.0,0.0,0.0);                  \n\
+          out_mat_id = 0;                                 \n\
         }                                                 \n\
     ");
 
@@ -119,6 +124,7 @@ namespace gua {
 
   bool PBRUberShader::upload_to (RenderContext const& context) const
   {
+
 	bool upload_succeeded = UberShader::upload_to(context);
 
         if(context.id >= change_point_size_in_shader_state_.size() )
@@ -166,17 +172,30 @@ namespace gua {
                                            Frustum const& /*frustum*/) const
   {
 
+
+
     auto geometry = std::static_pointer_cast<PBRRessource>(GeometryDatabase::instance()->lookup(filename));
     auto material = MaterialDatabase::instance()->lookup(material_name);
 
     get_program()->use(ctx);
+
     {
       if (material && geometry)
       {
         set_uniform(ctx, model_matrix, "gua_model_matrix");
         set_uniform(ctx, normal_matrix, "gua_normal_matrix");
 
+
+
+        if(ctx.id >= change_point_size_in_shader_state_.size() )
+        {
+          change_point_size_in_shader_state_.resize(ctx.id + 1);
+
+          change_point_size_in_shader_state_[ctx.id] = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false, false, 0.0, false, false, scm::gl::point_raster_state(true));
+        }
+
 	ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
+        ctx.render_context->apply();
         
         geometry->draw(ctx);
 
@@ -184,6 +203,7 @@ namespace gua {
       }
     }
     get_program()->unuse(ctx);
+
 
 
   }
