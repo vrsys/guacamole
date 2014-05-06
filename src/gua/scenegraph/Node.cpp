@@ -62,18 +62,16 @@ Node::~Node() {
 void Node::update_cache() {
 
     if (self_dirty_) {
-        math::mat4 new_world_trans;
+        math::mat4 old_world_trans(world_transform_);
         if (is_root()) {
-            new_world_trans = get_transform();
+            world_transform_ = get_transform();
         } else {
-            new_world_trans = parent_->world_transform_ * get_transform();
+            world_transform_ = parent_->world_transform_ * get_transform();
         }
 
-        if (world_transform_ != new_world_trans) {
-            on_world_transform_changed.emit(new_world_trans);
+        if (world_transform_ != old_world_trans) {
+            on_world_transform_changed.emit(world_transform_);
         }
-
-        world_transform_ = new_world_trans;
 
         self_dirty_ = false;
     }
