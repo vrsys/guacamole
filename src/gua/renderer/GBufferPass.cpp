@@ -168,6 +168,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     mesh_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
     mesh_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+    mesh_shader_->set_uniform(ctx, false, "gua_render_shadow_map");
 
     for (auto const& pass : mesh_shader_->passes()) {
       Pass::bind_inputs(*pass, eye, ctx);

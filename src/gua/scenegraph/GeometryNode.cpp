@@ -36,8 +36,10 @@ namespace gua {
 GeometryNode::GeometryNode(std::string const& name,
                            std::string const& geometry,
                            std::string const& material,
-                           math::mat4 const& transform)
+                           math::mat4 const& transform,
+                           ShadowMode shadow_mode)
     : Node(name, transform), geometry_(geometry), material_(material),
+      shadow_mode_(shadow_mode),
       geometry_changed_(false), material_changed_(false) {}
 
 /* virtual */ void GeometryNode::accept(NodeVisitor& visitor) {
@@ -251,7 +253,8 @@ void GeometryNode::ray_test_impl(RayNode const& ray, PickResult::Options options
 }
 
 std::shared_ptr<Node> GeometryNode::copy() const {
-  return std::make_shared<GeometryNode>(get_name(), geometry_, material_, get_transform());
+  return std::make_shared<GeometryNode>(get_name(), geometry_, material_,
+                                        get_transform(), shadow_mode_);
 }
 
 }
