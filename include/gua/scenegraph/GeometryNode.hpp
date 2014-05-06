@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/scenegraph/Node.hpp>
 #include <gua/utils/configuration_macro.hpp>
+#include <gua/renderer/enums.hpp>
 
 // external headers
 #include <string>
@@ -43,6 +44,8 @@ namespace gua {
 class GUA_DLL GeometryNode : public Node {
   public:
 
+
+
     /**
     * A string referring to an entry in guacamole's GeometryDatabase.
     */
@@ -54,6 +57,12 @@ class GUA_DLL GeometryNode : public Node {
     */
     std::string const& get_material() const { return material_; }
     void set_material(std::string const& v) { material_ = v; material_changed_ = self_dirty_ = true; }
+
+    /**
+    * A value describing the shadow's quality.
+    */
+    ShadowMode get_shadow_mode() const { return shadow_mode_; }
+    void set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
 
     /**
      * Constructor.
@@ -77,7 +86,8 @@ class GUA_DLL GeometryNode : public Node {
     GeometryNode(std::string const& name,
                  std::string const& geometry = "gua_default_geometry",
                  std::string const& material = "gua_default_material",
-                 math::mat4 const& transform = math::mat4::identity());
+                 math::mat4 const& transform = math::mat4::identity(),
+                 ShadowMode shadow_mode = ShadowMode::LOW_QUALITY);
 
     /**
      * Accepts a visitor and calls concrete visit method.
@@ -107,6 +117,8 @@ class GUA_DLL GeometryNode : public Node {
 
     std::string geometry_;
     std::string material_;
+
+    ShadowMode shadow_mode_;
 
     bool geometry_changed_;
     bool material_changed_;

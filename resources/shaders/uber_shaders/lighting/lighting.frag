@@ -223,11 +223,11 @@ void gua_calculate_sun_light() {
   if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_0, position)) {
     shadow = gua_get_shadow(gua_lightinfo4, vec2(0, 0), gua_shadow_offset);
   } else if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_1, position)) {
-    shadow = gua_get_shadow(gua_lightinfo5, vec2(1, 0), gua_shadow_offset*2);
+    shadow = gua_get_shadow(gua_lightinfo5, vec2(1, 0), gua_shadow_offset*1.33);
   } else if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_2, position)) {
-    shadow = gua_get_shadow(gua_lightinfo6, vec2(0, 1), gua_shadow_offset*3);
+    shadow = gua_get_shadow(gua_lightinfo6, vec2(0, 1), gua_shadow_offset*1.66);
   } else if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_3, position)) {
-    shadow = gua_get_shadow(gua_lightinfo7, vec2(1, 1), gua_shadow_offset*4);
+    shadow = gua_get_shadow(gua_lightinfo7, vec2(1, 1), gua_shadow_offset*2);
   }
 
 
