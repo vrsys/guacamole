@@ -151,6 +151,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
 
   mesh_shader_->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
   mesh_shader_->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+  mesh_shader_->set_uniform(ctx, true, "gua_render_shadow_map");
 
   auto camera_position(scene.frustum.get_camera_position());
   auto projection(scene.frustum.get_projection());
@@ -165,16 +166,20 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
       auto geometry = GeometryDatabase::instance()->lookup(node->get_geometry());
       auto material = MaterialDatabase::instance()->lookup(node->get_material());
       if (geometry) {
-          mesh_shader_->set_uniform(
-                        ctx, material->get_id(), "gua_material_id");
-          mesh_shader_->set_uniform(
-              ctx, node->get_cached_world_transform(), "gua_model_matrix");
-          mesh_shader_->set_uniform(
-                        ctx,
-                        scm::math::transpose(
-                            scm::math::inverse(node->get_cached_world_transform())),
-                        "gua_normal_matrix");
-          geometry->draw(ctx);
+          if (node->get_shadow_mode() != ShadowMode::OFF) {
+            mesh_shader_->set_uniform(
+                          ctx, static_cast<int>(node->get_shadow_mode()), "gua_shadow_quality");
+            mesh_shader_->set_uniform(
+                          ctx, material->get_id(), "gua_material_id");
+            mesh_shader_->set_uniform(
+                ctx, node->get_cached_world_transform(), "gua_model_matrix");
+            mesh_shader_->set_uniform(
+                          ctx,
+                          scm::math::transpose(
+                              scm::math::inverse(node->get_cached_world_transform())),
+                          "gua_normal_matrix");
+            geometry->draw(ctx);
+          }
       }
   }
 }
