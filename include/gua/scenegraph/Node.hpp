@@ -28,6 +28,7 @@
 #include <gua/math/BoundingBox.hpp>
 #include <gua/scenegraph/PickResult.hpp>
 #include <gua/utils/Mask.hpp>
+#include <gua/events/Signal.hpp>
 
 // external headers
 #include <map>
@@ -196,6 +197,12 @@ class GUA_DLL Node {
    */
   inline virtual math::mat4 get_transform() const { return transform_; }
 
+  /**
+   * Sets the Node's transformation.
+   *
+   * \param transform The Node's new transformation.
+   */
+  virtual void set_transform(math::mat4 const& transform);
 
   /**
    * Returns the Node's world transformation.
@@ -206,7 +213,16 @@ class GUA_DLL Node {
    * \return math::mat4  The Node's world transformation.
    */
   math::mat4 get_world_transform() const;
-  math::mat4 get_cached_world_transform() const;
+  math::mat4 const& get_cached_world_transform() const;
+
+  events::Signal<math::mat4 const&> on_world_transform_changed;
+
+    /**
+   * Sets the Node's world transformation.
+   *
+   * \param transform The Node's new world transformation.
+   */
+  virtual void set_world_transform(math::mat4 const& transform);
 
   /**
    * Returns the Node's world postion.
@@ -218,12 +234,6 @@ class GUA_DLL Node {
    */
   math::vec3 get_world_position() const;
 
-  /**
-   * Sets the Node's transformation.
-   *
-   * \param transform The Node's new transformation.
-   */
-  virtual void set_transform(math::mat4 const& transform);
 
   /**
    * Applies a scaling on the Node's transformation.

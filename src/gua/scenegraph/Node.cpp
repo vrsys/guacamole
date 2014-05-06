@@ -62,11 +62,18 @@ Node::~Node() {
 void Node::update_cache() {
 
     if (self_dirty_) {
+        math::mat4 new_world_trans;
         if (is_root()) {
-            world_transform_ = get_transform();
+            new_world_trans = get_transform();
         } else {
-            world_transform_ = parent_->world_transform_ * get_transform();
+            new_world_trans = parent_->world_transform_ * get_transform();
         }
+
+        if (world_transform_ != new_world_trans) {
+            on_world_transform_changed.emit(new_world_trans);
+        }
+
+        world_transform_ = new_world_trans;
 
         self_dirty_ = false;
     }
@@ -151,10 +158,23 @@ math::mat4 Node::get_world_transform() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::mat4 Node::get_cached_world_transform() const {
+math::mat4 const& Node::get_cached_world_transform() const {
 
     return world_transform_;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Node::set_world_transform(math::mat4 const& transform) {
+    if (is_root()) {
+            transform_ = transform;
+        } else {
+            transform_ = scm::math::inverse(parent_->get_world_transform()) * transform;
+        }
+
+    set_dirty();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
