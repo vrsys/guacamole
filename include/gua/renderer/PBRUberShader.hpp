@@ -31,6 +31,13 @@ class PBRUberShader : public GeometryUberShader {
 
  public:
 
+   enum pass {
+     point_forward_pass  = 0,
+     quad_pass = 1
+   };
+
+ public:
+
   void              create  (std::set<std::string> const& material_names);
 
   bool              upload_to (RenderContext const& context) const;
@@ -63,12 +70,32 @@ class PBRUberShader : public GeometryUberShader {
   /*virtual*/ void  postframe (RenderContext const& context) const;
 
  private: //auxialiary methods
-  std::string const forward_point_rendering_vertex_shader() const;
-  std::string const forward_point_rendering_fragment_shader() const;
+  std::string const accumulation_pass_vertex_shader() const;
+  std::string const accumulation_pass_fragment_shader() const;
+
+  std::string const normalization_pass_vertex_shader   () const;
+  std::string const normalization_pass_fragment_shader () const;
+
+  std::string const default_pbr_material_name() const;
 
  private:  //member variables
 
+  mutable std::vector<scm::gl::texture_2d_ptr>	        point_forward_depth_result_;
+  mutable std::vector<scm::gl::texture_2d_ptr>	        point_forward_color_result_;
+  mutable std::vector<scm::gl::frame_buffer_ptr>        point_forward_result_fbo_;
+
+
+
+
+
+  mutable std::vector<scm::gl::quad_geometry_ptr>       fullscreen_quad_;
+
+
   mutable std::vector<scm::gl::rasterizer_state_ptr> change_point_size_in_shader_state_;
+
+  mutable std::vector<scm::gl::sampler_state_ptr>       linear_sampler_state_;
+  mutable std::vector<scm::gl::sampler_state_ptr>     nearest_sampler_state_;
+  mutable std::vector<scm::gl::depth_stencil_state_ptr> depth_stencil_state_;
 };
 
 }
