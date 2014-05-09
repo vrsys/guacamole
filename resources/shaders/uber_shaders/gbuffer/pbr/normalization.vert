@@ -22,22 +22,6 @@ uniform uint gua_material_id;
 out vec3 gua_position_varying;
 out vec2 gua_quad_coords;
 
-///////////////////////////////////////////////////////////////////////////////
-// varying output
-///////////////////////////////////////////////////////////////////////////////
-vec2 gua_texcoords;
-
-vec3 gua_world_normal;
-vec3 gua_world_position;
-vec3 gua_world_tangent;
-vec3 gua_world_bitangent;
-
-vec3 gua_object_normal;
-vec3 gua_object_position;
-vec2 gua_object_texcoords;
-vec3 gua_object_tangent;
-vec3 gua_object_bitangent;
-
 @output_definition
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,7 +32,7 @@ uint gua_get_material_id() {
   return gua_uint_gbuffer_varying_0.x;
 }  
 
-@material_methods
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // main
@@ -56,17 +40,7 @@ uint gua_get_material_id() {
 void main() {
   gua_position_varying = vec3(0);
   gua_quad_coords = gua_in_texcoord;
-  gua_texcoords = gua_in_texcoord;
 
-  gua_object_normal =     vec3(0);
-  gua_object_tangent =    vec3(0);
-  gua_object_bitangent =  vec3(0);
-  gua_object_position =   vec3(0);
-
-  gua_world_normal =      vec3(0);
-  gua_world_tangent =     vec3(0);
-  gua_world_bitangent =   vec3(0);
-  gua_world_position =    vec3(0);
 
   gua_uint_gbuffer_varying_0.x = gua_material_id;
   gl_Position = vec4(gua_in_position, 1.0);

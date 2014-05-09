@@ -37,12 +37,12 @@ class GUA_DLL PBRNode : public GeometryNode
 public : // member
 
   PBRNode(std::string const& name,
-              std::string const& filename = "gua_default_point_cloud",
+              std::string const& filename = "gua_default_geometry",
               std::string const& material = "gua_default_material",
               math::mat4  const& transform = math::mat4::identity());
 
   /**
-  * Implements ray picking for a triangular mesh
+  * Implements ray picking for a point cloud
   */
   /* virtual */ void ray_test_impl(RayNode const& ray, 
                                    PickResult::Options options,

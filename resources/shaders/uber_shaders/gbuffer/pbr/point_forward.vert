@@ -27,13 +27,18 @@
                                                      
         void main()                                  
         {                   
-                         
+                      
           gl_Position = gua_projection_matrix *      
                         gua_view_matrix *            
                         gua_model_matrix *           
                         vec4(in_position,1.0);       
-                                                     
-          out_point_color = vec3((in_r)/255.0f,     
+                     
+          
+
+          //gl_PointSize = 10000.0f;
+          //gl_Position = vec4(0.5,0.5,0.0,1.0);
+                                
+          gua_point_color = vec3((in_r)/255.0f,     
                              (in_g)/255.0f,     
                              (in_b)/255.0f);    
         }                                          

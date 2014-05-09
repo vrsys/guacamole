@@ -147,10 +147,10 @@ std::string const Video3DUberShader::_blend_pass_fragment_shader() const
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_blend_pass_frag)
     );
 
-  std::string apply_video_color = fshader_factory_->get_output_mapping().get_output_string("gua_video3d", "gua_video_output_color");
+  std::string apply_video_color = fshader_factory_->get_output_mapping().get_output_string(default_video_material_name(), "gua_video_output_color");
   apply_video_color += " = output_color;\n";
 
-  std::string apply_video_normal = fshader_factory_->get_output_mapping().get_output_string("gua_video3d", "gua_normal");
+  std::string apply_video_normal = fshader_factory_->get_output_mapping().get_output_string(default_video_material_name(), "gua_normal");
   apply_video_normal += " = output_normal;\n";
 
   string_utils::replace(fragment_shader, "@apply_video3d_color", apply_video_color);

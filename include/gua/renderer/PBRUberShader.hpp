@@ -38,6 +38,8 @@ class PBRUberShader : public GeometryUberShader {
 
  public:
 
+                    PBRUberShader();
+
   void              create  (std::set<std::string> const& material_names);
 
   bool              upload_to (RenderContext const& context) const;
@@ -96,6 +98,7 @@ class PBRUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::sampler_state_ptr>       linear_sampler_state_;
   mutable std::vector<scm::gl::sampler_state_ptr>     nearest_sampler_state_;
   mutable std::vector<scm::gl::depth_stencil_state_ptr> depth_stencil_state_;
+
 };
 
 }

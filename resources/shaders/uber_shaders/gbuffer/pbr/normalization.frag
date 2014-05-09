@@ -20,7 +20,8 @@ in vec2 gua_quad_coords;
 ///////////////////////////////////////////////////////////////////////////////
 uniform int   using_default_pbr_material;
 
-uniform sampler2DArray color_texture;
+uniform sampler2D color_texture;
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,7 +35,7 @@ uniform sampler2DArray color_texture;
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
 
-  vec3  output_color  = vec3(0.0);
+  vec3  output_color  = vec3(1.0);
   float output_depth  = 1.0f;
   vec3  output_normal = vec3(0.0);
 
@@ -48,20 +49,20 @@ void main() {
 
 
 
-      vec4 finalcol = texture2DArray( color_texture, coords);
+      vec4 finalcol = texture2D( color_texture, coords.xy);
 
       output_depth  = ogldepth;
-      output_color  = finalcol.rgb;
-
+      //output_color  = vec3(finalcol.rg, 1.0);//vec3(0.0,1.0,0.0);//finalcol.rgb;
+      output_color = finalcol.rgb;
 
 
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
 
-  if ( using_default_video_material != 0 )
+ // if ( using_default_pbr_material != 0 )
   {
     @apply_pbr_color
     @apply_pbr_normal
   }
 
-  gl_FragDepth = output_depth;
+  gl_FragDepth = 0.5;//output_depth;
 }

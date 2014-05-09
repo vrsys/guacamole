@@ -24,13 +24,33 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
+#include <gua/guacamole.hpp>
 #include <gua/renderer/UberShaderFactory.hpp>
 #include <gua/renderer/Window.hpp>
 #include <gua/renderer/PBRRessource.hpp>
 #include <gua/databases.hpp>
+
+#include <gua/databases/MaterialDatabase.hpp>
+
 #include <gua/utils/Logger.hpp>
 
+
 namespace gua {
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+PBRUberShader::PBRUberShader()
+  : GeometryUberShader()
+{
+  if (!MaterialDatabase::instance()->is_supported(default_pbr_material_name()))
+  {
+    create_resource_material(default_pbr_material_name(),
+      Resources::materials_gua_pbr_gsd,
+      Resources::materials_gua_pbr_gmd);
+  }
+}
+
 
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,76 +80,6 @@ namespace gua {
 
 
 
-
-
-  ////////////////////////////////////////////////////////////////////////////////
-  
-
-/*
-  std::string const PBRUberShader::forward_point_rendering_vertex_shader() const
-  {
-    std::stringstream fpr_vertex;
-
-    fpr_vertex << std::string("                      \n\
-        #version 420 core                            \n\
-                                                     \n\
-        // input attributes                          \n\
-        layout (location = 0) in vec3  in_position;  \n\
-        layout (location = 1) in uint  in_r;         \n\
-        layout (location = 2) in uint  in_g;         \n\
-        layout (location = 3) in uint  in_b;         \n\
-        layout (location = 4) in uint empty;         \n\
-        layout (location = 5) in float in_radius;    \n\
-        layout (location = 6) in vec3 in_normal;     \n\
-                                                     \n\
-        uniform mat4 gua_projection_matrix;          \n\
-        uniform mat4 gua_view_matrix;                \n\
-        uniform mat4 gua_model_matrix;               \n\
-                                                     \n\
-        out vec3 point_color;                        \n\
-                                                     \n\
-                                                     \n\
-        void main()                                  \n\
-        {                                            \n\
-          gl_Position = gua_projection_matrix *      \n\
-                        gua_view_matrix *            \n\
-                        gua_model_matrix *           \n\
-                        vec4(in_position,1.0);          \n\
-                                                     \n\
-          point_color = vec3((in_r)/255.0f,     \n\
-                             (in_g)/255.0f,     \n\
-                             (in_b)/255.0f);    \n\
-        }                                            \n\
-    ");
-
-    return fpr_vertex.str();
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  
-  std::string const PBRUberShader::forward_point_rendering_fragment_shader() const
-  {
-    std::stringstream fpr_fragment;
-
-    fpr_fragment << std::string("                         \n\
-        #version 420 core                                 \n\
-                                                          \n\
-       layout(location = 0) out vec4 out_color;        \n\
-                                                          \n\
-        in vec3 point_color;                              \n\
-                                                          \n\
-                                                          \n\
-        void main()                                       \n\
-        {                                                 \n\
-          out_color = vec4(1.0,0.0,0.0,1.0);              \n\
-        }                                                 \n\
-    ");
-
-    return fpr_fragment.str();
-  }
-
-
-*/
 
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -197,28 +147,19 @@ std::string const PBRUberShader::accumulation_pass_fragment_shader() const
 std::string const PBRUberShader::normalization_pass_vertex_shader() const
 {
   std::string vertex_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_blend_pass_vert)
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_normalization_vert)
   );
 
-/*
+
   // material specific uniforms
   string_utils::replace(vertex_shader, "@uniform_definition",
     get_uniform_mapping()->get_uniform_definition());
 
-*/
+
   // output
   string_utils::replace(vertex_shader, "@output_definition",
     vshader_factory_->get_output_mapping().get_gbuffer_output_definition(false, true));
 
-/*
-  // print material specific methods
-  string_utils::replace(vertex_shader, "@material_methods",
-    UberShader::print_material_methods(*vshader_factory_));
-
-  // print main switch(es)
-  string_utils::replace(vertex_shader, "@material_switch",
-    UberShader::print_material_switch(*vshader_factory_));
-*/
   return vertex_shader;
 }
 
@@ -227,7 +168,7 @@ std::string const PBRUberShader::normalization_pass_vertex_shader() const
 std::string const PBRUberShader::normalization_pass_fragment_shader() const
 {
   std::string fragment_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_blend_pass_frag)
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_normalization_frag)
     );
 
   std::string apply_pbr_color = fshader_factory_->get_output_mapping().get_output_string("gua_pbr", "gua_pbr_output_color");
@@ -252,13 +193,6 @@ std::string const PBRUberShader::normalization_pass_fragment_shader() const
   string_utils::replace(fragment_shader, "@output_definition",
     get_gbuffer_mapping()->get_gbuffer_output_definition(false, false));
 
-  // print material specific methods
-  string_utils::replace(fragment_shader, "@material_methods",
-    UberShader::print_material_methods(*fshader_factory_));
-
-  // print main switch(es)
-  string_utils::replace(fragment_shader, "@material_switch",
-    UberShader::print_material_switch(*fshader_factory_));
 
   return fragment_shader;
 }
@@ -347,7 +281,7 @@ void PBRUberShader::draw(RenderContext const& ctx,
 {
   if (!GeometryDatabase::instance()->is_supported(file_name) || 
       !MaterialDatabase::instance()->is_supported(material_name)) {
-    gua::Logger::LOG_WARNING << "PBRUberShader::draw(): No such video or material." << file_name << ", " << material_name << std::endl;
+    gua::Logger::LOG_WARNING << "PBRUberShader::draw(): No such pbr ressource or material." << file_name << ", " << material_name << std::endl;
     return;
   } 
 
@@ -355,18 +289,23 @@ void PBRUberShader::draw(RenderContext const& ctx,
   auto material          = MaterialDatabase::instance()->lookup(material_name);
 
   if (!material || !pbr_ressource) {
-    gua::Logger::LOG_WARNING << "PBRUberShader::draw(): Invalid video or material." << std::endl;
+    gua::Logger::LOG_WARNING << "PBRUberShader::draw(): Invalid pbr ressource or material." << std::endl;
     return;
   }
 
   // make sure ressources are on the GPU
   upload_to(ctx);
+
+
+
+
   {
     // single texture only
     scm::gl::context_all_guard guard(ctx.render_context);
 
-    //ctx.render_context->bind_texture(video3d_ressource->depth_array(ctx), nearest_sampler_state_[ctx.id], 0);
-    //get_program(warp_pass)->get_program(ctx)->uniform_sampler("depth_video3d_texture", 0);
+    ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
+
+
 
     auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
     ctx.render_context->set_depth_stencil_state(ds_state);
@@ -376,16 +315,18 @@ void PBRUberShader::draw(RenderContext const& ctx,
     // pre passes
     // forward rendering, will later be changed to be actually pass 2 (accumulation)
 
+
       // configure fbo
       point_forward_result_fbo_[ctx.id]->clear_attachments();
       point_forward_result_fbo_[ctx.id]->attach_depth_stencil_buffer(point_forward_depth_result_[ctx.id]);
       point_forward_result_fbo_[ctx.id]->attach_color_buffer(0, point_forward_color_result_[ctx.id]);
       
+     
       // bind and clear fbo
       ctx.render_context->set_frame_buffer(point_forward_result_fbo_[ctx.id]);
       ctx.render_context->clear_depth_stencil_buffer(point_forward_result_fbo_[ctx.id]);
-      ctx.render_context->clear_color_buffer(point_forward_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-       
+      ctx.render_context->clear_color_buffer(point_forward_result_fbo_[ctx.id], 0, scm::math::vec4f(1.0f, 0.0f, 0.0f, 0.0f));  
+
 
       get_program(point_forward_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
       get_program(point_forward_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
@@ -400,7 +341,7 @@ void PBRUberShader::draw(RenderContext const& ctx,
         get_program(point_forward_pass)->unuse(ctx);
       }
 
-      ctx.render_context->reset_framebuffer();
+      //ctx.render_context->reset_framebuffer();
     }
   
 
@@ -411,6 +352,9 @@ void PBRUberShader::draw(RenderContext const& ctx,
   {
     // single texture only
     scm::gl::context_all_guard guard(ctx.render_context);
+
+    auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
+    ctx.render_context->set_depth_stencil_state(ds_state);
 
     // second pass
     get_program(quad_pass)->use(ctx);
@@ -424,8 +368,12 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
         get_program(quad_pass)->set_uniform(ctx, int(material_name == default_pbr_material_name()) , "using_default_pbr_material");
 
+
+ 
+
         ctx.render_context->bind_texture(point_forward_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
         get_program(quad_pass)->get_program(ctx)->uniform_sampler("color_texture", 0);
+
 
         fullscreen_quad_[ctx.id]->draw(ctx.render_context);
       }

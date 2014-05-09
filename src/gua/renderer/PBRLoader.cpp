@@ -36,6 +36,8 @@
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/ShadingModelDatabase.hpp>
 
+#include <iostream>
+
 namespace gua {
 
 unsigned PBRLoader::model_counter_ = 0;
@@ -69,9 +71,9 @@ std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
 
 	     auto node(std::make_shared<PBRNode>(model_name));
 	     node->set_filename(model_name);
-             node->set_material("data/materials/Red.gmd");
+             node->set_material("");
 
-            return node;
+           return node;
 
     }
     else

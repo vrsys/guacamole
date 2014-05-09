@@ -88,7 +88,6 @@ void PBRRessource::upload_to(RenderContext const& ctx) const {
                                        &(point_cloud_->data()[0]));
 
 
-
   std::vector<scm::gl::buffer_ptr> buffer_arrays;
   buffer_arrays.push_back(buffers_[ctx.id]);
 
@@ -122,7 +121,6 @@ void PBRRessource::draw(RenderContext const& ctx) const {
   ctx.render_context->apply();
 
 
-  std::cout << point_cloud_->num_surfels()<<"\n";
   ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, point_cloud_->num_surfels());
 
 }
