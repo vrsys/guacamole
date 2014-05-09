@@ -277,7 +277,7 @@ void PBRUberShader::draw(RenderContext const& ctx,
                              std::string const& material_name,
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
-                             Frustum const& /*frustum*/) const
+                             Frustum const& frustum) const
 {
   if (!GeometryDatabase::instance()->is_supported(file_name) || 
       !MaterialDatabase::instance()->is_supported(material_name)) {
@@ -328,8 +328,20 @@ void PBRUberShader::draw(RenderContext const& ctx,
       ctx.render_context->clear_color_buffer(point_forward_result_fbo_[ctx.id], 0, scm::math::vec4f(1.0f, 0.0f, 0.0f, 0.0f));  
 
 
+      gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
+
+      float   near_plane_value = frustum.get_clip_near();
+      float    top_plane_value = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
+      float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
+      float height_divided_by_top_minus_bottom = 800.0 / (top_plane_value - bottom_plane_value);
+
+      //std::cout << "hdbtmb: "<< height_divided_by_top_minus_bottom;
+
       get_program(point_forward_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
       get_program(point_forward_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
+
+      get_program(point_forward_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
+      get_program(point_forward_pass)->set_uniform(ctx, near_plane_value, "near_plane");
 
       if (material && pbr_ressource)
       {

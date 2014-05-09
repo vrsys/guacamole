@@ -17,28 +17,30 @@
 
 
         uniform uint gua_material_id;                                                     
-      //  uniform mat4 gua_projection_matrix;          
-      //  uniform mat4 gua_view_matrix;                
-      //  uniform mat4 gua_model_matrix;
-      //  uniform mat4 gua_normal_matrix;               
-                                                     
-        out vec3 gua_point_color;                        
+
+        uniform float height_divided_by_top_minus_bottom;
+        uniform float near_plane;         
+        
+        //output to fragment shader                                             
+        out vec3 gua_point_color;
+        out vec3 gua_normal;                        
                                                      
                                                      
         void main()                                  
         {                   
                       
-          gl_Position = gua_projection_matrix *      
-                        gua_view_matrix *            
-                        gua_model_matrix *           
-                        vec4(in_position,1.0);       
-                     
+          vec4 pos_es = gua_view_matrix * gua_model_matrix * vec4(in_position, 1.0);
+
+          gl_Position = gua_projection_matrix * pos_es;  
           
 
-          //gl_PointSize = 10000.0f;
-          //gl_Position = vec4(0.5,0.5,0.0,1.0);
+          gl_PointSize = 2.0f * in_radius * (near_plane/-pos_es.z)* height_divided_by_top_minus_bottom;
+
+          
                                 
           gua_point_color = vec3((in_r)/255.0f,     
                              (in_g)/255.0f,     
-                             (in_b)/255.0f);    
+                             (in_b)/255.0f);
+
+          gua_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;    
         }                                          
