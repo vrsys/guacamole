@@ -32,8 +32,9 @@ class PBRUberShader : public GeometryUberShader {
  public:
 
    enum pass {
-     point_forward_pass  = 0,
-     quad_pass = 1
+     depth_pass          = 0,
+     accumulation_pass   = 1,
+     normalization_pass  = 2
    };
 
  public:
@@ -72,6 +73,9 @@ class PBRUberShader : public GeometryUberShader {
   /*virtual*/ void  postframe (RenderContext const& context) const;
 
  private: //auxialiary methods
+  std::string const depth_pass_vertex_shader() const;
+  std::string const depth_pass_fragment_shader() const;
+
   std::string const accumulation_pass_vertex_shader() const;
   std::string const accumulation_pass_fragment_shader() const;
 
@@ -82,9 +86,10 @@ class PBRUberShader : public GeometryUberShader {
 
  private:  //member variables
 
-  mutable std::vector<scm::gl::texture_2d_ptr>	        point_forward_depth_result_;
-  mutable std::vector<scm::gl::texture_2d_ptr>	        point_forward_color_result_;
-  mutable std::vector<scm::gl::frame_buffer_ptr>        point_forward_result_fbo_;
+
+  mutable std::vector<scm::gl::texture_2d_ptr>	        accumulation_pass_depth_result_;
+  mutable std::vector<scm::gl::texture_2d_ptr>	        accumulation_pass_color_result_;
+  mutable std::vector<scm::gl::frame_buffer_ptr>        accumulation_pass_result_fbo_;
 
 
 

@@ -58,14 +58,23 @@ PBRUberShader::PBRUberShader()
   {
      UberShader::create(material_names);
 
-    // create depth shader
-    std::vector<ShaderProgramStage> point_forward_pass_stages;
-    point_forward_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          accumulation_pass_vertex_shader()));
-    point_forward_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        accumulation_pass_fragment_shader()));
+    // create depth pass shader
+    std::vector<ShaderProgramStage> depth_pass_stages;
+    depth_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          depth_pass_vertex_shader()));
+    depth_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        depth_pass_fragment_shader()));
 
-    auto point_forward_pass_program = std::make_shared<ShaderProgram>();
-    point_forward_pass_program->set_shaders(point_forward_pass_stages);
-    add_program(point_forward_pass_program);
+    auto depth_pass_program = std::make_shared<ShaderProgram>();
+    depth_pass_program->set_shaders(depth_pass_stages);
+    add_program(depth_pass_program);
+
+    // create depth shader
+    std::vector<ShaderProgramStage> accumulation_pass_stages;
+    accumulation_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          accumulation_pass_vertex_shader()));
+    accumulation_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        accumulation_pass_fragment_shader()));
+
+    auto accumulation_pass_program = std::make_shared<ShaderProgram>();
+    accumulation_pass_program->set_shaders(accumulation_pass_stages);
+    add_program(accumulation_pass_program);
 
     // create final shader
     std::vector<ShaderProgramStage> normalization_pass_stages;
@@ -110,6 +119,38 @@ PBRUberShader::PBRUberShader()
 
 
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+std::string const PBRUberShader::depth_pass_vertex_shader() const
+{
+
+  std::string vertex_shader(
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p01_depth_vert)
+    );
+
+  return vertex_shader;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string const PBRUberShader::depth_pass_fragment_shader() const
+{
+
+  std::string fragment_shader(
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p01_depth_frag)
+    );
+
+  return fragment_shader;
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -117,14 +158,10 @@ PBRUberShader::PBRUberShader()
 std::string const PBRUberShader::accumulation_pass_vertex_shader() const
 {
   std::string vertex_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_point_forward_vert)
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p02_accumulation_vert)
     );
   return vertex_shader;
 }
-
-
-
-
 
 
 
@@ -133,7 +170,7 @@ std::string const PBRUberShader::accumulation_pass_vertex_shader() const
 std::string const PBRUberShader::accumulation_pass_fragment_shader() const
 {
   std::string fragment_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_point_forward_frag)
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p02_accumulation_frag)
     );
 
   return fragment_shader;
@@ -147,7 +184,7 @@ std::string const PBRUberShader::accumulation_pass_fragment_shader() const
 std::string const PBRUberShader::normalization_pass_vertex_shader() const
 {
   std::string vertex_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_normalization_vert)
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_vert)
   );
 
 
@@ -168,7 +205,7 @@ std::string const PBRUberShader::normalization_pass_vertex_shader() const
 std::string const PBRUberShader::normalization_pass_fragment_shader() const
 {
   std::string fragment_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_normalization_frag)
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_frag)
     );
 
   std::string apply_pbr_color = fshader_factory_->get_output_mapping().get_output_string("gua_pbr", "gua_pbr_output_color");
@@ -211,14 +248,14 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
     (context.render_window->config.get_left_resolution()[1] == context.render_window->config.get_right_resolution()[1])));
 
   // initialize Texture Arrays (kinect depths & colors)
-  if ( context.id >= point_forward_color_result_.size() ||
-       context.id >= point_forward_depth_result_.size()) 
+  if ( context.id >= accumulation_pass_color_result_.size() ||
+       context.id >= accumulation_pass_depth_result_.size()) 
   {
-    point_forward_color_result_.resize(context.id + 1);
-    point_forward_depth_result_.resize(context.id + 1);
+    accumulation_pass_color_result_.resize(context.id + 1);
+    accumulation_pass_depth_result_.resize(context.id + 1);
 
 
-    point_forward_color_result_[context.id] = context.render_device->create_texture_2d(
+    accumulation_pass_color_result_[context.id] = context.render_device->create_texture_2d(
       context.render_window->config.get_left_resolution(),
       scm::gl::FORMAT_RGBA_32F,
       1,
@@ -226,7 +263,7 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
       1
       );
 
-    point_forward_depth_result_[context.id] = context.render_device->create_texture_2d(
+    accumulation_pass_depth_result_[context.id] = context.render_device->create_texture_2d(
       context.render_window->config.get_left_resolution(),
       scm::gl::FORMAT_D32F,
       1,
@@ -240,9 +277,9 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
     fullscreen_quad_[context.id].reset(new scm::gl::quad_geometry(context.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
   }
 
-  if (context.id >= point_forward_result_fbo_.size()) {
-    point_forward_result_fbo_.resize(context.id + 1);
-    point_forward_result_fbo_[context.id] = context.render_device->create_frame_buffer();
+  if (context.id >= accumulation_pass_result_fbo_.size()) {
+    accumulation_pass_result_fbo_.resize(context.id + 1);
+    accumulation_pass_result_fbo_[context.id] = context.render_device->create_frame_buffer();
   }
 
   if (context.id >= linear_sampler_state_.size()) {
@@ -317,15 +354,15 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
 
       // configure fbo
-      point_forward_result_fbo_[ctx.id]->clear_attachments();
-      point_forward_result_fbo_[ctx.id]->attach_depth_stencil_buffer(point_forward_depth_result_[ctx.id]);
-      point_forward_result_fbo_[ctx.id]->attach_color_buffer(0, point_forward_color_result_[ctx.id]);
+      accumulation_pass_result_fbo_[ctx.id]->clear_attachments();
+      accumulation_pass_result_fbo_[ctx.id]->attach_depth_stencil_buffer(accumulation_pass_depth_result_[ctx.id]);
+      accumulation_pass_result_fbo_[ctx.id]->attach_color_buffer(0, accumulation_pass_color_result_[ctx.id]);
       
      
       // bind and clear fbo
-      ctx.render_context->set_frame_buffer(point_forward_result_fbo_[ctx.id]);
-      ctx.render_context->clear_depth_stencil_buffer(point_forward_result_fbo_[ctx.id]);
-      ctx.render_context->clear_color_buffer(point_forward_result_fbo_[ctx.id], 0, scm::math::vec4f(1.0f, 0.0f, 0.0f, 0.0f));  
+      ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_[ctx.id]);
+      ctx.render_context->clear_depth_stencil_buffer(accumulation_pass_result_fbo_[ctx.id]);
+      ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));  
 
 
       gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
@@ -337,23 +374,23 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
       //std::cout << "hdbtmb: "<< height_divided_by_top_minus_bottom;
 
-      get_program(point_forward_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-      get_program(point_forward_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
+      get_program(accumulation_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+      get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
-      get_program(point_forward_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
-      get_program(point_forward_pass)->set_uniform(ctx, near_plane_value, "near_plane");
+      get_program(accumulation_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
+      get_program(accumulation_pass)->set_uniform(ctx, near_plane_value, "near_plane");
 
       if (material && pbr_ressource)
       {
 
-        get_program(point_forward_pass)->use(ctx);
+        get_program(accumulation_pass)->use(ctx);
         {
           pbr_ressource->draw(ctx);
         }
-        get_program(point_forward_pass)->unuse(ctx);
+        get_program(accumulation_pass)->unuse(ctx);
       }
 
-      //ctx.render_context->reset_framebuffer();
+      ctx.render_context->reset_framebuffer();
     }
   
 
@@ -369,28 +406,28 @@ void PBRUberShader::draw(RenderContext const& ctx,
     ctx.render_context->set_depth_stencil_state(ds_state);
 
     // second pass
-    get_program(quad_pass)->use(ctx);
+    get_program(normalization_pass)->use(ctx);
     {
       if (material /*&& video3d_ressource*/)
       {
-        get_program(quad_pass)->set_uniform(ctx, material->get_id(), "gua_material_id");
-        get_program(quad_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-        get_program(quad_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
+        get_program(normalization_pass)->set_uniform(ctx, material->get_id(), "gua_material_id");
+        get_program(normalization_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+        get_program(normalization_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
 
-        get_program(quad_pass)->set_uniform(ctx, int(material_name == default_pbr_material_name()) , "using_default_pbr_material");
+        get_program(normalization_pass)->set_uniform(ctx, int(material_name == default_pbr_material_name()) , "using_default_pbr_material");
 
 
  
 
-        ctx.render_context->bind_texture(point_forward_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
-        get_program(quad_pass)->get_program(ctx)->uniform_sampler("color_texture", 0);
+        ctx.render_context->bind_texture(accumulation_pass_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
+        get_program(normalization_pass)->get_program(ctx)->uniform_sampler("color_texture", 0);
 
 
         fullscreen_quad_[ctx.id]->draw(ctx.render_context);
       }
     }
-    get_program(quad_pass)->unuse(ctx);
+    get_program(normalization_pass)->unuse(ctx);
   }
 }
 

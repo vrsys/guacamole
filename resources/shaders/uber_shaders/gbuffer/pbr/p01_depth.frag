@@ -37,7 +37,7 @@ float calc_depth_offset(vec2 mappedPointCoord)
 
 //if(clamped_normal_mode)
 {
-	float zBound = 0.5f;//max_deform_ratio;
+	float zBound = 0.35f;//max_deform_ratio;
 	float normalZ = normal.z;
 
 	if(normalZ > 0.0)
@@ -77,11 +77,8 @@ float get_gaussianValue(float depth_offset, vec2 mappedPointCoord, vec3 newNorma
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
-void main() {
-
- 
- // out_color = vec4(gua_point_color,1.0);
-    //out_color = vec4(1.0,0.0,0.0,1.0);
+void main() 
+{
 
    vec2 mappedPointCoord = gl_PointCoord*2 + vec2(-1.0f, -1.0f);
 
