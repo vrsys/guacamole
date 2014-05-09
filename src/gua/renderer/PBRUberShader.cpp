@@ -41,7 +41,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 PBRUberShader::PBRUberShader()
-  : GeometryUberShader()
+  : GeometryUberShader(), near_plane_value_(0.0f), height_divided_by_top_minus_bottom_(0.0f)
 {
   if (!MaterialDatabase::instance()->is_supported(default_pbr_material_name()))
   {
@@ -247,7 +247,34 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
     ((context.render_window->config.get_left_resolution()[0] == context.render_window->config.get_right_resolution()[0]) &&
     (context.render_window->config.get_left_resolution()[1] == context.render_window->config.get_right_resolution()[1])));
 
-  // initialize Texture Arrays (kinect depths & colors)
+
+
+  // initialize attachments for depth pass
+  if ( context.id >= depth_pass_color_result_.size() ||
+       context.id >= depth_pass_depth_result_.size()) 
+  {
+    depth_pass_color_result_.resize(context.id + 1);
+    depth_pass_depth_result_.resize(context.id + 1);
+
+
+    depth_pass_color_result_[context.id] = context.render_device->create_texture_2d(
+      context.render_window->config.get_left_resolution(),
+      scm::gl::FORMAT_RGBA_32F,
+      1,
+      1,
+      1
+      );
+
+    depth_pass_depth_result_[context.id] = context.render_device->create_texture_2d(
+      context.render_window->config.get_left_resolution(),
+      scm::gl::FORMAT_D32F,
+      1,
+      1,
+      1
+      );
+  }
+
+  // initialize attachments for accumulation pass
   if ( context.id >= accumulation_pass_color_result_.size() ||
        context.id >= accumulation_pass_depth_result_.size()) 
   {
@@ -275,6 +302,11 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
   if (context.id >= fullscreen_quad_.size()) {
     fullscreen_quad_.resize(context.id + 1);
     fullscreen_quad_[context.id].reset(new scm::gl::quad_geometry(context.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+  }
+
+  if (context.id >= depth_pass_result_fbo_.size()) {
+    depth_pass_result_fbo_.resize(context.id + 1);
+    depth_pass_result_fbo_[context.id] = context.render_device->create_frame_buffer();
   }
 
   if (context.id >= accumulation_pass_result_fbo_.size()) {
@@ -334,7 +366,65 @@ void PBRUberShader::draw(RenderContext const& ctx,
   upload_to(ctx);
 
 
+/*
+   // pre passes:
+   /////////////////////
+   // begin of depth pass (first)
+  {
+    // single texture only
+    scm::gl::context_all_guard guard(ctx.render_context);
 
+    ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
+
+    auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
+    ctx.render_context->set_depth_stencil_state(ds_state);
+
+
+
+
+
+
+      // configure fbo
+      depth_pass_result_fbo_[ctx.id]->clear_attachments();
+      depth_pass_result_fbo_[ctx.id]->attach_depth_stencil_buffer(depth_pass_depth_result_[ctx.id]);
+      depth_pass_result_fbo_[ctx.id]->attach_color_buffer(0, depth_pass_color_result_[ctx.id]);
+      
+     
+      // bind and clear fbo
+      ctx.render_context->set_frame_buffer(depth_pass_result_fbo_[ctx.id]);
+      ctx.render_context->clear_depth_stencil_buffer(depth_pass_result_fbo_[ctx.id]);
+      ctx.render_context->clear_color_buffer(depth_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));  
+
+
+      gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
+
+      float   near_plane_value = frustum.get_clip_near();
+      float   top_plane_value = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
+      float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
+      float height_divided_by_top_minus_bottom = 800.0 / (top_plane_value - bottom_plane_value);
+
+
+
+      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
+
+      get_program(depth_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
+      get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
+
+      if (material && pbr_ressource)
+      {
+
+        get_program(depth_pass)->use(ctx);
+        {
+          pbr_ressource->draw(ctx);
+        }
+        get_program(depth_pass)->unuse(ctx);
+      }
+
+      ctx.render_context->reset_framebuffer();
+    }
+*/
+   // begin of accumulation pass (first)
 
   {
     // single texture only
@@ -342,15 +432,9 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
     ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
 
-
-
+    //!!!!!!!!!!!!EXCHANGE THIS WITH DEPH TEST NONE AND PUT COLOR ACCUMULATION ALSO SOMEWHERE
     auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
     ctx.render_context->set_depth_stencil_state(ds_state);
-
-
-
-    // pre passes
-    // forward rendering, will later be changed to be actually pass 2 (accumulation)
 
 
       // configure fbo
@@ -367,6 +451,7 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
       gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
 
+      //put near_plane_value and height_divided_by_top_minus_bottom as member variables and get these two only 1 per render frame
       float   near_plane_value = frustum.get_clip_near();
       float    top_plane_value = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
       float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
