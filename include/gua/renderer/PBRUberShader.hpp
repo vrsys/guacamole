@@ -111,10 +111,12 @@ class PBRUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::sampler_state_ptr>     nearest_sampler_state_;
   mutable std::vector<scm::gl::depth_stencil_state_ptr> depth_stencil_state_;
 
-
+  
   //frustum dependent variables
-  float near_plane_value_;
-  float height_divided_by_top_minus_bottom_;
+  
+  mutable std::vector<unsigned int> material_id_;
+  mutable std::vector<float> near_plane_value_;
+  mutable std::vector<float> height_divided_by_top_minus_bottom_;
 
 };
 

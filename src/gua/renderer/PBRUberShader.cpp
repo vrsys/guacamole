@@ -88,39 +88,6 @@ PBRUberShader::PBRUberShader()
 
 
 
-
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  /*virtual*/ GeometryUberShader::stage_mask const PBRUberShader::get_stage_mask() const
-  {
-
-    return GeometryUberShader::DRAW_STAGE;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  /*virtual*/ void  PBRUberShader::preframe(RenderContext const& context) const
-  {
-    throw std::runtime_error("PBRUberShader::preframe(): not implemented");
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  /*virtual*/ void  PBRUberShader::predraw(RenderContext const& ctx,
-                                               std::string const& filename,
-                                               std::string const& material_name,
-                                               scm::math::mat4 const& model_matrix,
-                                               scm::math::mat4 const& normal_matrix,
-                                               Frustum const& /*frustum*/) const
-  {
-    throw std::runtime_error("PBRUberShader::predraw(): not implemented");
-  }
-
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -334,10 +301,72 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
     change_point_size_in_shader_state_[context.id] = context.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false, false, 0.0, false, false, scm::gl::point_raster_state(true));
   }
 
+  if (context.id >= material_id_.size()){
+    material_id_.resize(context.id + 1);
+    material_id_[context.id] = 0;
+  }
+
+  if (context.id >= near_plane_value_.size()){
+    near_plane_value_.resize(context.id + 1);
+    near_plane_value_[context.id] = 0;
+  }
+
+  if (context.id >= height_divided_by_top_minus_bottom_.size()){
+    height_divided_by_top_minus_bottom_.resize(context.id + 1);
+    height_divided_by_top_minus_bottom_[context.id] = 0;
+  }
+
 
   
   return upload_succeeded;
 }
+
+
+
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  /*virtual*/ GeometryUberShader::stage_mask const PBRUberShader::get_stage_mask() const
+  {
+
+    return GeometryUberShader::PRE_FRAME_STAGE | GeometryUberShader::PRE_DRAW_STAGE | GeometryUberShader::POST_DRAW_STAGE | GeometryUberShader::POST_FRAME_STAGE;//0;//GeometryUberShader::DRAW_STAGE;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  /*virtual*/ void  PBRUberShader::preframe(RenderContext const& ctx) const
+  {
+      upload_to(ctx);
+
+
+      // configure fbo
+      accumulation_pass_result_fbo_[ctx.id]->clear_attachments();
+      accumulation_pass_result_fbo_[ctx.id]->attach_depth_stencil_buffer(accumulation_pass_depth_result_[ctx.id]);
+      accumulation_pass_result_fbo_[ctx.id]->attach_color_buffer(0, accumulation_pass_color_result_[ctx.id]);
+ 
+      ctx.render_context->clear_depth_stencil_buffer(accumulation_pass_result_fbo_[ctx.id]);
+      ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));  
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  /*virtual*/ void  PBRUberShader::predraw(RenderContext const& ctx,
+                                               std::string const& filename,
+                                               std::string const& material_name,
+                                               scm::math::mat4 const& model_matrix,
+                                               scm::math::mat4 const& normal_matrix,
+                                               Frustum const& /*frustum*/) const
+  {
+
+
+
+    std::cout<<"PREDRAW\n";
+
+  }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -365,6 +394,8 @@ void PBRUberShader::draw(RenderContext const& ctx,
   // make sure ressources are on the GPU
   upload_to(ctx);
 
+
+  std::cout<<"draw\n";
 
 /*
    // pre passes:
@@ -424,30 +455,56 @@ void PBRUberShader::draw(RenderContext const& ctx,
       ctx.render_context->reset_framebuffer();
     }
 */
-   // begin of accumulation pass (first)
+
+
+
+}
+
+
+
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  /*virtual*/ void PBRUberShader::postdraw(RenderContext const& ctx,
+    std::string const& file_name,
+    std::string const& material_name,
+    scm::math::mat4 const& model_matrix,
+    scm::math::mat4 const& normal_matrix,
+    Frustum const& frustum) const
+  {
+    std::cout<<"POSTDRAW\n";
+  auto pbr_ressource     = std::static_pointer_cast<PBRRessource>(GeometryDatabase::instance()->lookup(file_name));
+  auto material          = MaterialDatabase::instance()->lookup(material_name);
 
   {
     // single texture only
     scm::gl::context_all_guard guard(ctx.render_context);
-
     ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
 
     //!!!!!!!!!!!!EXCHANGE THIS WITH DEPH TEST NONE AND PUT COLOR ACCUMULATION ALSO SOMEWHERE
+
+/*
     auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
+
     ctx.render_context->set_depth_stencil_state(ds_state);
+*/
 
-
+/*
       // configure fbo
       accumulation_pass_result_fbo_[ctx.id]->clear_attachments();
-      accumulation_pass_result_fbo_[ctx.id]->attach_depth_stencil_buffer(accumulation_pass_depth_result_[ctx.id]);
+    //  accumulation_pass_result_fbo_[ctx.id]->attach_depth_stencil_buffer(accumulation_pass_depth_result_[ctx.id]);
       accumulation_pass_result_fbo_[ctx.id]->attach_color_buffer(0, accumulation_pass_color_result_[ctx.id]);
-      
-     
+ */
+      std::cout<<"I did clear the color texture \n"; 
+
+
       // bind and clear fbo
       ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_[ctx.id]);
-      ctx.render_context->clear_depth_stencil_buffer(accumulation_pass_result_fbo_[ctx.id]);
-      ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));  
-
+     // ctx.render_context->clear_depth_stencil_buffer(accumulation_pass_result_fbo_[ctx.id]);
+      //ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));  
+   
 
       gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
 
@@ -462,12 +519,15 @@ void PBRUberShader::draw(RenderContext const& ctx,
       get_program(accumulation_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
       get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
+      std::cout<< "M: "<<model_matrix<<"\n";
+
       get_program(accumulation_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
       get_program(accumulation_pass)->set_uniform(ctx, near_plane_value, "near_plane");
 
       if (material && pbr_ressource)
       {
-
+         
+        material_id_[ctx.id] = material->get_id();
         get_program(accumulation_pass)->use(ctx);
         {
           pbr_ressource->draw(ctx);
@@ -475,69 +535,47 @@ void PBRUberShader::draw(RenderContext const& ctx,
         get_program(accumulation_pass)->unuse(ctx);
       }
 
-      ctx.render_context->reset_framebuffer();
+     // ctx.render_context->reset_framebuffer();
     }
-  
-
-
-
-
-
-  {
-    // single texture only
-    scm::gl::context_all_guard guard(ctx.render_context);
-
-    auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
-    ctx.render_context->set_depth_stencil_state(ds_state);
-
-    // second pass
-    get_program(normalization_pass)->use(ctx);
-    {
-      if (material /*&& video3d_ressource*/)
-      {
-        get_program(normalization_pass)->set_uniform(ctx, material->get_id(), "gua_material_id");
-        get_program(normalization_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-        get_program(normalization_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
-
-
-        get_program(normalization_pass)->set_uniform(ctx, int(material_name == default_pbr_material_name()) , "using_default_pbr_material");
-
-
- 
-
-        ctx.render_context->bind_texture(accumulation_pass_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
-        get_program(normalization_pass)->get_program(ctx)->uniform_sampler("color_texture", 0);
-
-
-        fullscreen_quad_[ctx.id]->draw(ctx.render_context);
-      }
-    }
-    get_program(normalization_pass)->unuse(ctx);
-  }
-}
-
-
-
-
-
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  /*virtual*/ void PBRUberShader::postdraw(RenderContext const& ctx,
-    std::string const& filename,
-    std::string const& material_name,
-    scm::math::mat4 const& model_matrix,
-    scm::math::mat4 const& normal_matrix,
-    Frustum const& /*frustum*/) const
-  {
-    throw std::runtime_error("PBRUberShader::postdraw(): not implemented");
+   // throw std::runtime_error("PBRUberShader::postdraw(): not implemented");
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  /*virtual*/ void PBRUberShader::postframe(RenderContext const& context) const
+  /*virtual*/ void PBRUberShader::postframe(RenderContext const& ctx) const
   {
-    throw std::runtime_error("PBRUberShader::postframe(): not implemented");
+
+    std::cout<<"POSTFRAME\n";
+	  {
+	    // single texture only
+	    scm::gl::context_all_guard guard(ctx.render_context);
+
+	    auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
+	    ctx.render_context->set_depth_stencil_state(ds_state);
+
+	    // second pass
+	    get_program(normalization_pass)->use(ctx);
+	    {
+	    //  if (/*material /*&& video3d_ressource*/)
+	      {
+		get_program(normalization_pass)->set_uniform(ctx, material_id_[ctx.id], "gua_material_id");
+
+
+
+		get_program(normalization_pass)->set_uniform(ctx, 0 , "using_default_pbr_material");
+
+
+	 
+
+		ctx.render_context->bind_texture(accumulation_pass_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
+		get_program(normalization_pass)->get_program(ctx)->uniform_sampler("color_texture", 0);
+
+
+		fullscreen_quad_[ctx.id]->draw(ctx.render_context);
+	      }
+	    }
+	    get_program(normalization_pass)->unuse(ctx);
+	  }
   }
 
 
