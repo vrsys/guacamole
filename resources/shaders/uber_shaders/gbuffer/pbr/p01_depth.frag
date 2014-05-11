@@ -3,19 +3,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-in vec3 gua_point_color;  
-in vec3 gua_normal;
-
+in vec3 pass_normal;
+in float pass_mv_vert_depth;
+in float pass_radius;
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
 ///////////////////////////////////////////////////////////////////////////////
 
-layout (location=0) out vec4 out_color;
+// No output other than depth texture
 
 
-
-
+///////////////////////////////////////////////////////////////////////////////
+//Uniforms
+///////////////////////////////////////////////////////////////////////////////
+uniform float near_plane;
+uniform float far_minus_near_plane;
 
 ///////////////////////////////////////////////////////////////////////////////
 // splatting methods
@@ -24,19 +27,17 @@ layout (location=0) out vec4 out_color;
 float calc_depth_offset(vec2 mappedPointCoord)
 {
 
-   vec3 normal = gua_normal;
+   vec3 normal = pass_normal;
    if(normal.z < 0)
    {
-
-	//discard;
 	normal *= -1;
    }
 
     float xzRatio = (normal.x/normal.z);
     float yzRatio = (normal.y/normal.z);
 
-//if(clamped_normal_mode)
-{
+        //if (clampedNormalMode)
+        {
 	float zBound = 0.35f;//max_deform_ratio;
 	float normalZ = normal.z;
 
@@ -48,7 +49,7 @@ float calc_depth_offset(vec2 mappedPointCoord)
 	xzRatio = (normal.x/normalZ);
 	yzRatio = (normal.y/normalZ);
 
-}
+        }
 
 	return -(xzRatio)*mappedPointCoord.x   - (yzRatio * mappedPointCoord.y);
 
@@ -86,11 +87,13 @@ void main()
    float depth_offset = calc_depth_offset(mappedPointCoord) ;
 
 
-   //get_gaussianValue(depth_offset, mappedPointCoord, VertexIn.nor.xyz);
-   get_gaussianValue(depth_offset, mappedPointCoord, gua_normal);
+   get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
 
-   out_color = vec4(gua_point_color,1.0);
+ //  if(ellipsify) //map a greater far plane range in case the depth correction overshoots
+        gl_FragDepth =  - ( ( (pass_mv_vert_depth + depth_offset * pass_radius ) - near_plane) / (far_minus_near_plane * 1.0f) ) ;
+ //  else
+ //       gl_FragDepth = - (  ( (pass_mv_vert_depth)  - near_plane) / (far_minus_near_plane * 1.0f));
 
 
 }

@@ -87,24 +87,18 @@ class PBRUberShader : public GeometryUberShader {
  private:  //member variables
 
   //FBOs:
-
+  //////////////////////////////////////////////////////////////////////////////////////
   //depth pass FBO & attachments
   mutable std::vector<scm::gl::texture_2d_ptr>	        depth_pass_depth_result_;
-  mutable std::vector<scm::gl::texture_2d_ptr>	        depth_pass_color_result_;
   mutable std::vector<scm::gl::frame_buffer_ptr>        depth_pass_result_fbo_;
 
   //accumulation pass FBO & attachments
-  mutable std::vector<scm::gl::texture_2d_ptr>	        accumulation_pass_depth_result_;
   mutable std::vector<scm::gl::texture_2d_ptr>	        accumulation_pass_color_result_;
   mutable std::vector<scm::gl::frame_buffer_ptr>        accumulation_pass_result_fbo_;
 
 
-
-
-
-  mutable std::vector<scm::gl::quad_geometry_ptr>       fullscreen_quad_;
-
-
+  //schism-GL states:
+  //////////////////////////////////////////////////////////////////////////////////////
   mutable std::vector<scm::gl::rasterizer_state_ptr> change_point_size_in_shader_state_;
 
   mutable std::vector<scm::gl::sampler_state_ptr>       linear_sampler_state_;
@@ -112,11 +106,16 @@ class PBRUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::depth_stencil_state_ptr> depth_stencil_state_;
 
   
-  //frustum dependent variables
-  
-  mutable std::vector<unsigned int> material_id_;
+  //frustum dependent variables:
+  /////////////////////////////////////////////////////////////////////////////////////
   mutable std::vector<float> near_plane_value_;
   mutable std::vector<float> height_divided_by_top_minus_bottom_;
+
+  //misc:
+  ////////////////////////////////////////////////////////////////////////////////////
+  mutable std::vector<unsigned int> material_id_;
+  mutable std::vector<scm::gl::quad_geometry_ptr>       fullscreen_quad_;
+  mutable std::vector<math::vec2ui> render_window_dims_;
 
 };
 

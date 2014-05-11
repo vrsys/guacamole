@@ -22,25 +22,23 @@
         uniform float near_plane;         
         
         //output to fragment shader                                             
-        out vec3 gua_point_color;
-        out vec3 gua_normal;                        
+        out vec3 pass_normal;
+        out float pass_mv_vert_depth;
+        out float pass_radius;            
                                                      
                                                      
         void main()                                  
         {                   
-                      
+            
           vec4 pos_es = gua_view_matrix * gua_model_matrix * vec4(in_position, 1.0);
 
           gl_Position = gua_projection_matrix * pos_es;  
           
-
           gl_PointSize = 2.0f * in_radius * (near_plane/-pos_es.z)* height_divided_by_top_minus_bottom;
 
-          
-                                
-          gua_point_color = vec3((in_r)/255.0f,     
-                             (in_g)/255.0f,     
-                             (in_b)/255.0f);
 
-          gua_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;    
+          pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
+          pass_mv_vert_depth = pos_es.z;
+          pass_radius = in_radius;
+
         }                                          

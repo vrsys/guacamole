@@ -20,7 +20,9 @@ in vec2 gua_quad_coords;
 ///////////////////////////////////////////////////////////////////////////////
 uniform int   using_default_pbr_material;
 
-uniform sampler2D color_texture;
+uniform sampler2D p01_depth_texture;
+uniform sampler2D p02_color_texture;
+
 
 
 
@@ -48,12 +50,12 @@ void main() {
   
 
 
-
-      vec4 finalcol = texture2D( color_texture, coords.xy);
+      
+      vec4 finalcol = texture2D( p02_color_texture, coords.xy);
 
       output_depth  = ogldepth;
       //output_color  = vec3(finalcol.rg, 1.0);//vec3(0.0,1.0,0.0);//finalcol.rgb;
-      output_color = finalcol.rgb;
+      output_color = finalcol.rgb / finalcol.a;
 
 
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
@@ -64,5 +66,6 @@ void main() {
     @apply_pbr_normal
   }
 
-  gl_FragDepth = 0.5;//output_depth;
+  gl_FragDepth = output_depth;
+  gl_FragDepth = texture2D( p01_depth_texture, coords.xy).r;
 }

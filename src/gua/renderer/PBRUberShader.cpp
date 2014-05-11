@@ -217,20 +217,11 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
 
 
   // initialize attachments for depth pass
-  if ( context.id >= depth_pass_color_result_.size() ||
-       context.id >= depth_pass_depth_result_.size()) 
+  if (context.id >= depth_pass_depth_result_.size()) 
   {
-    depth_pass_color_result_.resize(context.id + 1);
+
     depth_pass_depth_result_.resize(context.id + 1);
 
-
-    depth_pass_color_result_[context.id] = context.render_device->create_texture_2d(
-      context.render_window->config.get_left_resolution(),
-      scm::gl::FORMAT_RGBA_32F,
-      1,
-      1,
-      1
-      );
 
     depth_pass_depth_result_[context.id] = context.render_device->create_texture_2d(
       context.render_window->config.get_left_resolution(),
@@ -242,11 +233,9 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
   }
 
   // initialize attachments for accumulation pass
-  if ( context.id >= accumulation_pass_color_result_.size() ||
-       context.id >= accumulation_pass_depth_result_.size()) 
+  if (context.id >= accumulation_pass_color_result_.size())
   {
     accumulation_pass_color_result_.resize(context.id + 1);
-    accumulation_pass_depth_result_.resize(context.id + 1);
 
 
     accumulation_pass_color_result_[context.id] = context.render_device->create_texture_2d(
@@ -257,14 +246,8 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
       1
       );
 
-    accumulation_pass_depth_result_[context.id] = context.render_device->create_texture_2d(
-      context.render_window->config.get_left_resolution(),
-      scm::gl::FORMAT_D32F,
-      1,
-      1,
-      1
-      );
   }
+
 
   if (context.id >= fullscreen_quad_.size()) {
     fullscreen_quad_.resize(context.id + 1);
@@ -316,6 +299,10 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
     height_divided_by_top_minus_bottom_[context.id] = 0;
   }
 
+  if (context.id >= render_window_dims_.size()){
+    render_window_dims_.resize(context.id + 1);
+    render_window_dims_[context.id] = context.render_window->config.get_left_resolution();
+  }
 
   
   return upload_succeeded;
@@ -331,7 +318,7 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
   /*virtual*/ GeometryUberShader::stage_mask const PBRUberShader::get_stage_mask() const
   {
 
-    return GeometryUberShader::PRE_FRAME_STAGE | GeometryUberShader::PRE_DRAW_STAGE | GeometryUberShader::POST_DRAW_STAGE | GeometryUberShader::POST_FRAME_STAGE;//0;//GeometryUberShader::DRAW_STAGE;
+    return GeometryUberShader::PRE_FRAME_STAGE | GeometryUberShader::PRE_DRAW_STAGE | GeometryUberShader::POST_DRAW_STAGE | GeometryUberShader::POST_FRAME_STAGE;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -340,27 +327,81 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
   {
       upload_to(ctx);
 
+      // configure depth FBO
+      depth_pass_result_fbo_[ctx.id]->clear_attachments();
+      depth_pass_result_fbo_[ctx.id]->attach_depth_stencil_buffer(depth_pass_depth_result_[ctx.id]);
 
-      // configure fbo
+      // clear depth FBOs depth attachment
+      ctx.render_context->clear_depth_stencil_buffer(depth_pass_result_fbo_[ctx.id]);
+
+      // configure accumulation FBO
       accumulation_pass_result_fbo_[ctx.id]->clear_attachments();
-      accumulation_pass_result_fbo_[ctx.id]->attach_depth_stencil_buffer(accumulation_pass_depth_result_[ctx.id]);
       accumulation_pass_result_fbo_[ctx.id]->attach_color_buffer(0, accumulation_pass_color_result_[ctx.id]);
  
-      ctx.render_context->clear_depth_stencil_buffer(accumulation_pass_result_fbo_[ctx.id]);
+      // clear accumulation FBOs color attachment
       ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));  
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
   /*virtual*/ void  PBRUberShader::predraw(RenderContext const& ctx,
-                                               std::string const& filename,
+                                               std::string const& file_name,
                                                std::string const& material_name,
                                                scm::math::mat4 const& model_matrix,
                                                scm::math::mat4 const& normal_matrix,
-                                               Frustum const& /*frustum*/) const
+                                               Frustum const& frustum) const
   {
 
+      auto pbr_ressource     = std::static_pointer_cast<PBRRessource>(GeometryDatabase::instance()->lookup(file_name));
+      auto material          = MaterialDatabase::instance()->lookup(material_name);
 
+	   // begin of depth pass (first)
+	  {
+	    // single texture only
+	    scm::gl::context_all_guard guard(ctx.render_context);
+
+
+	    ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
+
+
+
+	      
+	     
+	      // bind fbo
+	      ctx.render_context->set_frame_buffer(depth_pass_result_fbo_[ctx.id]);
+
+
+
+	      gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
+
+	      float   near_plane_value = frustum.get_clip_near();
+              float   far_plane_value  = frustum.get_clip_far();
+	      float   top_plane_value  = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
+	      float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
+	      
+              float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1] / (top_plane_value - bottom_plane_value);
+
+
+
+	      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
+
+	      get_program(depth_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
+	      get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
+	      get_program(depth_pass)->set_uniform(ctx, (far_plane_value - near_plane_value), "far_minus_near_plane");
+
+	      if (material && pbr_ressource)
+	      {
+
+		get_program(depth_pass)->use(ctx);
+		{
+		  pbr_ressource->draw(ctx);
+		}
+		get_program(depth_pass)->unuse(ctx);
+	      }
+
+	      ctx.render_context->reset_framebuffer();
+	    }
 
     std::cout<<"PREDRAW\n";
 
@@ -395,68 +436,6 @@ void PBRUberShader::draw(RenderContext const& ctx,
   upload_to(ctx);
 
 
-  std::cout<<"draw\n";
-
-/*
-   // pre passes:
-   /////////////////////
-   // begin of depth pass (first)
-  {
-    // single texture only
-    scm::gl::context_all_guard guard(ctx.render_context);
-
-    ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
-
-    auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
-    ctx.render_context->set_depth_stencil_state(ds_state);
-
-
-
-
-
-
-      // configure fbo
-      depth_pass_result_fbo_[ctx.id]->clear_attachments();
-      depth_pass_result_fbo_[ctx.id]->attach_depth_stencil_buffer(depth_pass_depth_result_[ctx.id]);
-      depth_pass_result_fbo_[ctx.id]->attach_color_buffer(0, depth_pass_color_result_[ctx.id]);
-      
-     
-      // bind and clear fbo
-      ctx.render_context->set_frame_buffer(depth_pass_result_fbo_[ctx.id]);
-      ctx.render_context->clear_depth_stencil_buffer(depth_pass_result_fbo_[ctx.id]);
-      ctx.render_context->clear_color_buffer(depth_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));  
-
-
-      gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
-
-      float   near_plane_value = frustum.get_clip_near();
-      float   top_plane_value = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
-      float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
-      float height_divided_by_top_minus_bottom = 800.0 / (top_plane_value - bottom_plane_value);
-
-
-
-      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
-
-      get_program(depth_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
-      get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
-
-      if (material && pbr_ressource)
-      {
-
-        get_program(depth_pass)->use(ctx);
-        {
-          pbr_ressource->draw(ctx);
-        }
-        get_program(depth_pass)->unuse(ctx);
-      }
-
-      ctx.render_context->reset_framebuffer();
-    }
-*/
-
-
 
 }
 
@@ -485,44 +464,46 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
     //!!!!!!!!!!!!EXCHANGE THIS WITH DEPH TEST NONE AND PUT COLOR ACCUMULATION ALSO SOMEWHERE
 
-/*
-    auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
+      //this is the "NO_DEPTH_TEST"-state. to-do: put it into member variables. 
+      auto ds_state = ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_LESS);
 
-    ctx.render_context->set_depth_stencil_state(ds_state);
-*/
+      ctx.render_context->set_depth_stencil_state(ds_state);
+  
+      //also add color accumulation state
 
-/*
-      // configure fbo
-      accumulation_pass_result_fbo_[ctx.id]->clear_attachments();
-    //  accumulation_pass_result_fbo_[ctx.id]->attach_depth_stencil_buffer(accumulation_pass_depth_result_[ctx.id]);
-      accumulation_pass_result_fbo_[ctx.id]->attach_color_buffer(0, accumulation_pass_color_result_[ctx.id]);
- */
-      std::cout<<"I did clear the color texture \n"; 
+      auto acc_col_blend_state = ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD);
+      ctx.render_context->set_blend_state(acc_col_blend_state);
 
 
-      // bind and clear fbo
+      // bind
       ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_[ctx.id]);
-     // ctx.render_context->clear_depth_stencil_buffer(accumulation_pass_result_fbo_[ctx.id]);
-      //ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));  
    
-
       gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
 
       //put near_plane_value and height_divided_by_top_minus_bottom as member variables and get these two only 1 per render frame
       float   near_plane_value = frustum.get_clip_near();
+      float   far_plane_value  = frustum.get_clip_far();
       float    top_plane_value = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
       float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
-      float height_divided_by_top_minus_bottom = 800.0 / (top_plane_value - bottom_plane_value);
+      float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1]  / (top_plane_value - bottom_plane_value);
 
       //std::cout << "hdbtmb: "<< height_divided_by_top_minus_bottom;
 
       get_program(accumulation_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
       get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
-      std::cout<< "M: "<<model_matrix<<"\n";
+
 
       get_program(accumulation_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
       get_program(accumulation_pass)->set_uniform(ctx, near_plane_value, "near_plane");
+      get_program(accumulation_pass)->set_uniform(ctx, (far_plane_value - near_plane_value), "far_minus_near_plane");
+
+
+      get_program(accumulation_pass)->set_uniform(ctx, math::vec2(render_window_dims_[ctx.id]),"win_dims");
+
+      ctx.render_context->bind_texture(depth_pass_depth_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
+      get_program(accumulation_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
+
 
       if (material && pbr_ressource)
       {
@@ -566,9 +547,12 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
 
 	 
+		ctx.render_context->bind_texture(depth_pass_depth_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
+		get_program(normalization_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
 
-		ctx.render_context->bind_texture(accumulation_pass_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
-		get_program(normalization_pass)->get_program(ctx)->uniform_sampler("color_texture", 0);
+		ctx.render_context->bind_texture(accumulation_pass_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 1);
+		get_program(normalization_pass)->get_program(ctx)->uniform_sampler("p02_color_texture", 1);
+
 
 
 		fullscreen_quad_[ctx.id]->draw(ctx.render_context);

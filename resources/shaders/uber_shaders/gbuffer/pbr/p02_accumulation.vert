@@ -22,8 +22,10 @@
         uniform float near_plane;         
         
         //output to fragment shader                                             
-        out vec3 gua_point_color;
-        out vec3 gua_normal;                        
+        out vec3 pass_point_color;
+        out vec3 pass_normal;
+        out float pass_mv_vert_depth;
+        out float pass_radius;         
                                                      
                                                      
         void main()                                  
@@ -38,9 +40,11 @@
 
           
                                 
-          gua_point_color = vec3((in_r)/255.0f,     
+          pass_point_color = vec3((in_r)/255.0f,     
                              (in_g)/255.0f,     
                              (in_b)/255.0f);
 
-          gua_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;    
+          pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;    
+          pass_mv_vert_depth = pos_es.z;
+          pass_radius = in_radius;
         }                                          
