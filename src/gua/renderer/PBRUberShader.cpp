@@ -394,6 +394,8 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
      ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f,0.0f)); 
 
       } 
+
+
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -414,7 +416,7 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
 
             if( last_geometry_state_[ctx.id] != pre_draw_state)
             {
-
+	      
               //enable dynamic point size in shaders
 	      ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
 
@@ -436,14 +438,14 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
 	      get_program(depth_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
 	      get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
 	      get_program(depth_pass)->set_uniform(ctx, (far_plane_value - near_plane_value), "far_minus_near_plane");
-
-	      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
               
               last_geometry_state_[ctx.id] = pre_draw_state;
 
 
            }
+
+	      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
 
 	      if (material && pbr_ressource)
@@ -522,8 +524,6 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
         //std::cout << "hdbtmb: "<< height_divided_by_top_minus_bottom;
 
-        get_program(accumulation_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-        get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
 
         get_program(accumulation_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
@@ -532,12 +532,18 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
         get_program(accumulation_pass)->set_uniform(ctx, math::vec2(render_window_dims_[ctx.id]),"win_dims");
 
+
+
+ 
+        last_geometry_state_[ctx.id] = post_draw_state;
+      }
+
+
         ctx.render_context->bind_texture(depth_pass_linear_depth_result_[ctx.id], linear_sampler_state_[ctx.id], 0);
         get_program(accumulation_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
 
-        ctx.render_context->apply();
-        last_geometry_state_[ctx.id] = post_draw_state;
-      }
+        get_program(accumulation_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+        get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
       if (material && pbr_ressource)
       {
@@ -588,7 +594,6 @@ void PBRUberShader::draw(RenderContext const& ctx,
 		ctx.render_context->bind_texture(accumulation_pass_color_result_[ctx.id], linear_sampler_state_[ctx.id], 1);
 		get_program(normalization_pass)->get_program(ctx)->uniform_sampler("p02_color_texture", 1);
  
-                ctx.render_context->apply();
 		fullscreen_quad_[ctx.id]->draw(ctx.render_context);
 	      }
 	    }

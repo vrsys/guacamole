@@ -49,6 +49,8 @@ void main() {
 
       output_color = accumulated_color.rgb / accumulated_color.a;
 
+      output_color = pow(output_color,vec3(1.4f));
+
 
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
 
@@ -58,6 +60,6 @@ void main() {
     @apply_pbr_normal
   }
 
-     gl_FragDepth = pow(texture2D( p01_depth_texture, coords.xy).r,50);
+     gl_FragDepth = texture2D( p01_depth_texture, coords.xy).r;
 
 }
