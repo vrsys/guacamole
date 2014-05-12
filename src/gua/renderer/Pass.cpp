@@ -122,6 +122,7 @@ void Pass::set_camera_matrices(ShaderProgram const& shader,
   auto view_matrix(scene.frustum.get_view());
   auto inv_projection(scm::math::inverse(projection));
 
+  shader.set_uniform(ctx, static_cast<int>(eye), "gua_eye");
   shader.set_uniform(ctx, camera_position, "gua_camera_position");
   shader.set_uniform(ctx, projection, "gua_projection_matrix");
   shader.set_uniform(ctx, inv_projection, "gua_inverse_projection_matrix");

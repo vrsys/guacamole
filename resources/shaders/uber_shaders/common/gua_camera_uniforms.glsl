@@ -1,3 +1,4 @@
+uniform int   gua_eye;
 uniform mat4  gua_projection_matrix;
 uniform mat4  gua_view_matrix;
 uniform mat4  gua_model_matrix;
