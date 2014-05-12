@@ -21,6 +21,8 @@
         uniform float height_divided_by_top_minus_bottom;
         uniform float near_plane;         
         
+
+
         //output to fragment shader                                             
         out vec3 pass_point_color;
         out vec3 pass_normal;
@@ -35,11 +37,9 @@
 
           gl_Position = gua_projection_matrix * pos_es;  
           
-
           gl_PointSize = 2.0f * in_radius * (near_plane/-pos_es.z)* height_divided_by_top_minus_bottom;
 
-          
-                                
+                    
           pass_point_color = vec3((in_r)/255.0f,     
                              (in_g)/255.0f,     
                              (in_b)/255.0f);

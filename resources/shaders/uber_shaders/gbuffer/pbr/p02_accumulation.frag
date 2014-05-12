@@ -88,10 +88,10 @@ float get_gaussianValue(float depth_offset, vec2 mappedPointCoord, vec3 newNorma
 
 
     if(radius > 1.0)
-	discard;
+         discard;
     else
         return gaussian[(int)(round(radius * 32.0))];
-	//return 1.0f;
+
 }
 
 
@@ -100,7 +100,7 @@ float get_gaussianValue(float depth_offset, vec2 mappedPointCoord, vec3 newNorma
 ///////////////////////////////////////////////////////////////////////////////
 void main() 
 {
-
+ 
    vec2 mappedPointCoord = gl_PointCoord*2 + vec2(-1.0f, -1.0f);
 
 
@@ -121,9 +121,10 @@ float depth_to_compare = 0;
    //else
    // depth_to_compare = pass_mv_vert_depth;
 
+
    float weight = get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
-   if( depthValue  - (depth_to_compare)    < 0.00031  + 3.0*(pass_radius /** (1/rad_scale_fac)*/ ) )
+   if( depthValue  - (depth_to_compare)    < 0.00031  + 3.0*(pass_radius ) )
    {
          out_accumulated_color = vec4(pass_point_color * weight, weight);
    }

@@ -91,11 +91,6 @@ void main()
    get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
 
- //  if(ellipsify) //map a greater far plane range in case the depth correction overshoots
-       //gl_FragDepth =  - ( ( (pass_mv_vert_depth + depth_offset * pass_radius ) - near_plane) / (far_minus_near_plane * 1.0f) ) ;
- //  else
- //       gl_FragDepth = - (  ( (pass_mv_vert_depth)  - near_plane) / (far_minus_near_plane * 1.0f));
-
     out_linear_depth = - ( ( (pass_mv_vert_depth + depth_offset * pass_radius ) - near_plane) / (far_minus_near_plane * 1.0f) ) ;
 
 }

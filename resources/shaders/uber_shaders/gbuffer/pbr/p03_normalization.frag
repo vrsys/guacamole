@@ -20,8 +20,8 @@ in vec2 gua_quad_coords;
 ///////////////////////////////////////////////////////////////////////////////
 uniform int   using_default_pbr_material;
 
-uniform sampler2D p01_depth_texture;
-uniform sampler2D p02_color_texture;
+layout(binding=0) uniform sampler2D p01_depth_texture;
+layout(binding=1) uniform sampler2D p02_color_texture;
 
 
 
@@ -52,12 +52,12 @@ void main() {
 
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
 
-  if ( using_default_pbr_material != 0 )
+  //if ( using_default_pbr_material != 0 )
   {
     @apply_pbr_color
     @apply_pbr_normal
   }
 
+     gl_FragDepth = pow(texture2D( p01_depth_texture, coords.xy).r,50);
 
-  gl_FragDepth = texture2D( p01_depth_texture, coords.xy).r;
 }

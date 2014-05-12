@@ -37,6 +37,15 @@ class PBRUberShader : public GeometryUberShader {
      normalization_pass  = 2
    };
 
+   enum drawing_state{
+     pre_frame_state  = 0,
+      pre_draw_state  = 1,
+          draw_state  = 2,
+     post_draw_state  = 3,
+    post_frame_state  = 4,
+       invalid_state  = 99999
+   };
+
  public:
 
                     PBRUberShader();
@@ -121,6 +130,13 @@ class PBRUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::quad_geometry_ptr>       fullscreen_quad_;
   mutable std::vector<math::vec2ui> render_window_dims_;
 
+  mutable std::vector<unsigned int> last_geometry_state_;
+
+
+  ////////////////////////////////////////////////////////////////////////////////////
+  mutable std::vector<std::shared_ptr<scm::gl::context_all_guard>> context_guard_;
+
+  mutable std::vector<unsigned int> framecount_ ;
 };
 
 }
