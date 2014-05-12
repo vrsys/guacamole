@@ -12,6 +12,7 @@ in float pass_radius;
 ///////////////////////////////////////////////////////////////////////////////
 
 // No output other than depth texture
+layout (location=0) out float out_linear_depth;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -91,9 +92,10 @@ void main()
 
 
  //  if(ellipsify) //map a greater far plane range in case the depth correction overshoots
-        gl_FragDepth =  - ( ( (pass_mv_vert_depth + depth_offset * pass_radius ) - near_plane) / (far_minus_near_plane * 1.0f) ) ;
+       //gl_FragDepth =  - ( ( (pass_mv_vert_depth + depth_offset * pass_radius ) - near_plane) / (far_minus_near_plane * 1.0f) ) ;
  //  else
  //       gl_FragDepth = - (  ( (pass_mv_vert_depth)  - near_plane) / (far_minus_near_plane * 1.0f));
 
+    out_linear_depth = - ( ( (pass_mv_vert_depth + depth_offset * pass_radius ) - near_plane) / (far_minus_near_plane * 1.0f) ) ;
 
 }

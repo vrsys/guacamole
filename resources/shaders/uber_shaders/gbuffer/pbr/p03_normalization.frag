@@ -44,28 +44,20 @@ void main() {
   vec3 coords = vec3(gua_quad_coords, 0.0);
 
 
-  float maxdist = 1000.0;
-  float mindist = maxdist;
-  float ogldepth = 1.0;
-  
-
-
       
-      vec4 finalcol = texture2D( p02_color_texture, coords.xy);
+      vec4 accumulated_color = texture2D( p02_color_texture, coords.xy);
 
-      output_depth  = ogldepth;
-      //output_color  = vec3(finalcol.rg, 1.0);//vec3(0.0,1.0,0.0);//finalcol.rgb;
-      output_color = finalcol.rgb / finalcol.a;
+      output_color = accumulated_color.rgb / accumulated_color.a;
 
 
   gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
 
- // if ( using_default_pbr_material != 0 )
+  if ( using_default_pbr_material != 0 )
   {
     @apply_pbr_color
     @apply_pbr_normal
   }
 
-  gl_FragDepth = output_depth;
+
   gl_FragDepth = texture2D( p01_depth_texture, coords.xy).r;
 }

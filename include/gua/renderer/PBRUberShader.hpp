@@ -89,7 +89,9 @@ class PBRUberShader : public GeometryUberShader {
   //FBOs:
   //////////////////////////////////////////////////////////////////////////////////////
   //depth pass FBO & attachments
-  mutable std::vector<scm::gl::texture_2d_ptr>	        depth_pass_depth_result_;
+  mutable std::vector<scm::gl::texture_2d_ptr>	        depth_pass_log_depth_result_;
+  mutable std::vector<scm::gl::texture_2d_ptr>	        depth_pass_linear_depth_result_;
+
   mutable std::vector<scm::gl::frame_buffer_ptr>        depth_pass_result_fbo_;
 
   //accumulation pass FBO & attachments
@@ -102,8 +104,10 @@ class PBRUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::rasterizer_state_ptr> change_point_size_in_shader_state_;
 
   mutable std::vector<scm::gl::sampler_state_ptr>       linear_sampler_state_;
-  mutable std::vector<scm::gl::sampler_state_ptr>     nearest_sampler_state_;
-  mutable std::vector<scm::gl::depth_stencil_state_ptr> depth_stencil_state_;
+  mutable std::vector<scm::gl::depth_stencil_state_ptr> no_depth_test_depth_stencil_state_;
+
+  mutable std::vector<scm::gl::blend_state_ptr> color_accumulation_state_;
+  
 
   
   //frustum dependent variables:

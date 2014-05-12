@@ -1,5 +1,13 @@
 @include "shaders/common/header.glsl"
 
+const float gaussian[32] = float[](
+1.000000, 1.000000, 0.988235, 0.968627, 0.956862, 0.917647, 0.894117, 0.870588, 0.915686, 0.788235,
+0.749020, 0.690196, 0.654902, 0.619608, 0.552941, 0.513725, 0.490196, 0.458824, 0.392157, 0.356863,
+0.341176, 0.278431, 0.254902, 0.227451, 0.188235, 0.164706, 0.152941, 0.125490, 0.109804, 0.098039,
+0.074510, 0.062745
+);
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
@@ -12,7 +20,7 @@ in float pass_radius;
 // output
 ///////////////////////////////////////////////////////////////////////////////
 
-layout (location=0) out vec4 out_color;
+layout (location=0) out vec4 out_accumulated_color;
 
 ///////////////////////////////////////////////////////////////////////////////
 //sampler
@@ -82,7 +90,8 @@ float get_gaussianValue(float depth_offset, vec2 mappedPointCoord, vec3 newNorma
     if(radius > 1.0)
 	discard;
     else
-	return 1.0f;
+        return gaussian[(int)(round(radius * 32.0))];
+	//return 1.0f;
 }
 
 
@@ -103,48 +112,25 @@ void main()
    depthValue = (-depthValue * 1.0 * far_minus_near_plane) + near_plane;
 
    //get_gaussianValue(depth_offset, mappedPointCoord, VertexIn.nor.xyz);
-   get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
+   //get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
 float depth_to_compare = 0;
 
-//if(ellipsify)
-   depth_to_compare = pass_mv_vert_depth + depth_offset * pass_radius;
-//else
-// depth_to_compare = pass_mv_vert_depth;
+   //if(ellipsify)
+      depth_to_compare = pass_mv_vert_depth + depth_offset * pass_radius;
+   //else
+   // depth_to_compare = pass_mv_vert_depth;
 
-   float weight = 1.0;
+   float weight = get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
    if( depthValue  - (depth_to_compare)    < 0.00031  + 3.0*(pass_radius /** (1/rad_scale_fac)*/ ) )
    {
-
-/*
-        float colorCoding = 1.0f;
-
-
-        if(depthValue != 0.0)
-        {
-            colorCoding = -depthValue /50.0f;
-            colorCoding = 1.0 - colorCoding;
-        }
-
-        colorCoding *= 0.3;
-        accumulated_colors = vec4(colorCoding * weight, colorCoding * weight, colorCoding * weight, weight);
-*/
-        //accumulated_colors = vec4(VertexIn.color * weight, weight);
-         out_color = vec4(pass_point_color,1.0);
+         out_accumulated_color = vec4(pass_point_color * weight, weight);
    }
    else
    {
-         //out_color = vec4(1.0,0.0,0.0,1.0);
          discard;
    }
-//       discard;
-   
-   //if(win_dim_x == 800.0 && win_dim_y == 600.0)
-   /*if(win_dims.x == 800.0 && win_dims.y == 600.0)
-     out_color = vec4(0.0,1.0,0.0,1.0);
-   else */
-    // out_color = vec4(pass_point_color,1.0);
 
 
 }
