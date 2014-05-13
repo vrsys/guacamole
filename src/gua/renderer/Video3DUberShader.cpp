@@ -147,10 +147,10 @@ std::string const Video3DUberShader::_blend_pass_fragment_shader() const
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_blend_pass_frag)
     );
 
-  std::string apply_video_color = fshader_factory_->get_output_mapping().get_output_string("gua_video3d", "gua_video_output_color");
+  std::string apply_video_color = fshader_factory_->get_output_mapping().get_output_string(default_video_material_name(), "gua_video_output_color");
   apply_video_color += " = output_color;\n";
 
-  std::string apply_video_normal = fshader_factory_->get_output_mapping().get_output_string("gua_video3d", "gua_normal");
+  std::string apply_video_normal = fshader_factory_->get_output_mapping().get_output_string(default_video_material_name(), "gua_normal");
   apply_video_normal += " = output_normal;\n";
 
   string_utils::replace(fragment_shader, "@apply_video3d_color", apply_video_color);
@@ -323,7 +323,8 @@ void Video3DUberShader::draw(RenderContext const& ctx,
       ctx.render_context->set_frame_buffer(warp_result_fbo_[ctx.id]);
       ctx.render_context->clear_depth_stencil_buffer(warp_result_fbo_[ctx.id]);
       ctx.render_context->clear_color_buffer(warp_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-       
+      ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2ui(0,0), warp_color_result_[ctx.id]->dimensions()));
+        
       // set uniforms
       get_program(warp_pass)->set_uniform(ctx, int(layer), "layer");
       get_program(warp_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");

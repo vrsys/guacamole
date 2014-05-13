@@ -29,6 +29,8 @@
 #include <gua/scenegraph/PickResult.hpp>
 #include <gua/utils/Mask.hpp>
 
+#include <boost/uuid/uuid.hpp>
+
 // external headers
 #include <map>
 #include <set>
@@ -398,6 +400,11 @@ class GUA_DLL Node {
    *                handle is invalid.
    */
   void*     get_user_data(unsigned handle) const;
+
+  /**
+  * \return size_t unique address of node
+  */
+  std::size_t const uuid() const;
 
   friend class SceneGraph;
   friend class GeometryLoader;
