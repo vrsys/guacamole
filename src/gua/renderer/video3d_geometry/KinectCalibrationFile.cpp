@@ -54,7 +54,15 @@ KinectCalibrationFile::KinectCalibrationFile(const std::string& filePath):
     _local_t(),
     _local_r(),
 */
-    _filePath(filePath)
+    _filePath(filePath),
+    _texSizeInvD(),
+    cv_xyz(0),
+    cv_uv(0),
+    cv_width(0),
+    cv_height(0),
+    cv_depth(0),
+    cv_min_d(0),
+    cv_max_d(0)
 {
     if(s_compress_rgb == -1){ // i am the first to look if file exists rgbd_calib/compress.rgb
         std::string filename("rgbd_calib/compress.rgb");
@@ -239,6 +247,9 @@ bool KinectCalibrationFile::parse()
 
             _width = getNextTokenAsFloat(infile);
             _height = getNextFloat(infile);
+
+	    _texSizeInvD[0] = 1.0f/_width;
+	    _texSizeInvD[1] = 1.0f/_height;
         }
 
         /*else if (token == "baumer_serial:")
@@ -448,6 +459,45 @@ bool KinectCalibrationFile::parse()
             _worldTranslation3[1] = 0.0;
             _worldTranslation3[2] = 0.0;
         }
+    }
+
+
+    { // load cv_xyz
+      if(cv_xyz){
+	delete [] cv_xyz;
+      }
+      std::string fpath(_filePath.c_str());
+      fpath.replace( fpath.end() - 3, fpath.end(), "cv_xyz");
+      //std::cerr << "loading " << fpath << std::endl;
+      FILE* f_xyz = fopen( fpath.c_str(), "rb");
+      unsigned nbr = 0;
+      nbr = fread(&cv_width, sizeof(unsigned), 1, f_xyz);
+      nbr = fread(&cv_height, sizeof(unsigned), 1, f_xyz);
+      nbr = fread(&cv_depth, sizeof(unsigned), 1, f_xyz);
+      nbr = fread(&cv_min_d, sizeof(float), 1, f_xyz);
+      nbr = fread(&cv_max_d, sizeof(float), 1, f_xyz);
+      cv_xyz = new video3d::xyz[cv_width * cv_height * cv_depth];
+      nbr = fread(cv_xyz, sizeof(video3d::xyz), cv_width * cv_height * cv_depth, f_xyz);
+      fclose(f_xyz);
+    }
+
+    { // load cv_uv;
+      if(cv_uv){
+	delete [] cv_uv;
+      }
+      std::string fpath(_filePath.c_str());
+      fpath.replace( fpath.end() - 3, fpath.end(), "cv_uv");
+      //std::cerr << "loading " << fpath << std::endl;
+      FILE* f_uv = fopen( fpath.c_str(), "rb");
+      unsigned nbr = 0;
+      nbr = fread(&cv_width, sizeof(unsigned), 1, f_uv);
+      nbr = fread(&cv_height, sizeof(unsigned), 1, f_uv);
+      nbr = fread(&cv_depth, sizeof(unsigned), 1, f_uv);
+      nbr = fread(&cv_min_d, sizeof(float), 1, f_uv);
+      nbr = fread(&cv_max_d, sizeof(float), 1, f_uv);
+      cv_uv = new video3d::uv[cv_width * cv_height * cv_depth];
+      nbr = fread(cv_uv, sizeof(video3d::uv), cv_width * cv_height * cv_depth, f_uv);
+      fclose(f_uv);
     }
 
     return true;
@@ -777,6 +827,12 @@ KinectCalibrationFile::getHeightC(){
 
 unsigned KinectCalibrationFile::getHeight(){
     return _height;
+}
+
+
+scm::math::vec2f const&
+KinectCalibrationFile::getTexSizeInvD() const{
+  return _texSizeInvD;
 }
 
 /////////////////////PRIVATE///////////////////////////
