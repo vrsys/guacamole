@@ -47,6 +47,7 @@
 namespace {
 
 #if 0
+  // not needed for proxy mesh
   struct Vertex {
     scm::math::vec3f pos;
     scm::math::vec2f tex;
