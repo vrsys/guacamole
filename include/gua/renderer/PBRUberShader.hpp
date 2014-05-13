@@ -34,7 +34,8 @@ class PBRUberShader : public GeometryUberShader {
    enum pass {
      depth_pass          = 0,
      accumulation_pass   = 1,
-     normalization_pass  = 2
+     normalization_pass  = 2,
+     reconstruction_pass = 3
    };
 
    enum drawing_state{
@@ -91,6 +92,9 @@ class PBRUberShader : public GeometryUberShader {
   std::string const normalization_pass_vertex_shader   () const;
   std::string const normalization_pass_fragment_shader () const;
 
+  std::string const reconstruction_pass_vertex_shader () const;
+  std::string const reconstruction_pass_fragment_shader () const;
+
   std::string const default_pbr_material_name() const;
 
  private:  //member variables
@@ -107,6 +111,10 @@ class PBRUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::texture_2d_ptr>	        accumulation_pass_color_result_;
   mutable std::vector<scm::gl::frame_buffer_ptr>        accumulation_pass_result_fbo_;
 
+  //normalization pass FBO & attachments
+  mutable std::vector<scm::gl::texture_2d_ptr>          normalization_pass_color_result_;
+  mutable std::vector<scm::gl::frame_buffer_ptr>        normalization_pass_result_fbo_;
+
 
   //schism-GL states:
   //////////////////////////////////////////////////////////////////////////////////////
@@ -116,8 +124,6 @@ class PBRUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::depth_stencil_state_ptr> no_depth_test_depth_stencil_state_;
 
   mutable std::vector<scm::gl::blend_state_ptr> color_accumulation_state_;
-  
-
   
   //frustum dependent variables:
   /////////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +142,6 @@ class PBRUberShader : public GeometryUberShader {
   ////////////////////////////////////////////////////////////////////////////////////
   mutable std::vector<std::shared_ptr<scm::gl::context_all_guard>> context_guard_;
 
-  mutable std::vector<unsigned int> framecount_ ;
 };
 
 }

@@ -67,7 +67,7 @@ PBRUberShader::PBRUberShader()
     depth_pass_program->set_shaders(depth_pass_stages);
     add_program(depth_pass_program);
 
-    // create depth shader
+    // create accumulation pass shader
     std::vector<ShaderProgramStage> accumulation_pass_stages;
     accumulation_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          accumulation_pass_vertex_shader()));
     accumulation_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        accumulation_pass_fragment_shader()));
@@ -76,7 +76,7 @@ PBRUberShader::PBRUberShader()
     accumulation_pass_program->set_shaders(accumulation_pass_stages);
     add_program(accumulation_pass_program);
 
-    // create final shader
+    // create normalization pass shader
     std::vector<ShaderProgramStage> normalization_pass_stages;
     normalization_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, normalization_pass_vertex_shader()));
     normalization_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, normalization_pass_fragment_shader()));
@@ -84,6 +84,15 @@ PBRUberShader::PBRUberShader()
     auto normalization_pass_program = std::make_shared<ShaderProgram>();
     normalization_pass_program->set_shaders(normalization_pass_stages);
     add_program(normalization_pass_program);
+
+    // create reconstruction pass shader
+    std::vector<ShaderProgramStage> reconstruction_pass_stages;
+    reconstruction_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, reconstruction_pass_vertex_shader()));
+    reconstruction_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, reconstruction_pass_fragment_shader()));
+
+    auto reconstruction_pass_program = std::make_shared<ShaderProgram>();
+    reconstruction_pass_program->set_shaders(reconstruction_pass_stages);
+    add_program(reconstruction_pass_program);
   }
 
 
@@ -144,7 +153,7 @@ std::string const PBRUberShader::accumulation_pass_fragment_shader() const
 }
 
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -152,6 +161,30 @@ std::string const PBRUberShader::normalization_pass_vertex_shader() const
 {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_vert)
+  );
+
+  return vertex_shader;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string const PBRUberShader::normalization_pass_fragment_shader() const
+{
+  std::string fragment_shader(
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_frag)
+    );
+
+  return fragment_shader;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+std::string const PBRUberShader::reconstruction_pass_vertex_shader() const
+{
+  std::string vertex_shader(
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p04_reconstruction_vert)
   );
 
 
@@ -169,10 +202,10 @@ std::string const PBRUberShader::normalization_pass_vertex_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PBRUberShader::normalization_pass_fragment_shader() const
+std::string const PBRUberShader::reconstruction_pass_fragment_shader() const
 {
   std::string fragment_shader(
-    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_frag)
+    Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p04_reconstruction_frag)
     );
 
   std::string apply_pbr_color = fshader_factory_->get_output_mapping().get_output_string("gua_pbr", "gua_pbr_output_color");
@@ -200,8 +233,6 @@ std::string const PBRUberShader::normalization_pass_fragment_shader() const
 
   return fragment_shader;
 }
-
-
 
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -247,7 +278,6 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
       );
   }
 
-
   // initialize attachments for accumulation pass
   if (context.id >= accumulation_pass_color_result_.size())
   {
@@ -263,6 +293,23 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
       );
 
   }
+
+  // initialize attachment for normalization pass
+  if (context.id >= normalization_pass_color_result_.size()) 
+  {
+
+    normalization_pass_color_result_.resize(context.id + 1);
+
+
+    normalization_pass_color_result_[context.id] = context.render_device->create_texture_2d(
+      context.render_window->config.get_left_resolution(),
+      scm::gl::FORMAT_RGB_8,
+      1,
+      1,
+      1
+      );
+  }
+
 
 
   if (context.id >= fullscreen_quad_.size()) {
@@ -287,6 +334,15 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
     // configure accumulation FBO
     accumulation_pass_result_fbo_[context.id]->clear_attachments();
     accumulation_pass_result_fbo_[context.id]->attach_color_buffer(0, accumulation_pass_color_result_[context.id]);
+  }
+
+  if (context.id >= normalization_pass_result_fbo_.size()) {
+    normalization_pass_result_fbo_.resize(context.id + 1);
+    normalization_pass_result_fbo_[context.id] = context.render_device->create_frame_buffer();
+
+    // configure normalization FBO
+    normalization_pass_result_fbo_[context.id]->clear_attachments();
+    normalization_pass_result_fbo_[context.id]->attach_color_buffer(0, normalization_pass_color_result_[context.id]);
   }
 
   if (context.id >= linear_sampler_state_.size()) {
@@ -340,11 +396,6 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
     last_geometry_state_[context.id] = invalid_state;
   }
 
-  if(context.id >= framecount_.size())
-  {
-    framecount_.resize(context.id + 1);
-    framecount_[context.id] = 0;
-  }
 
   return upload_succeeded;
 }
@@ -387,13 +438,17 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
 
 
 
-
-
      // clear accumulation FBOs color attachment
 
      ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f,0.0f)); 
 
+
+     // clear normalization FBOs color attachment
+     ctx.render_context->clear_color_buffer(normalization_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f,0.0f));
+
       } 
+
+
 
 
   }
@@ -443,6 +498,15 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
 
 
            }
+
+
+              scm::math::vec4f x_unit_vec(1.0f,0.f,0.f,0.f);
+
+              float radius_scaling = scm::math::length(model_matrix * x_unit_vec);
+
+
+              get_program(depth_pass)->set_uniform(ctx, radius_scaling, "radius_scaling");
+
 
 	      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
 	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
@@ -522,10 +586,6 @@ void PBRUberShader::draw(RenderContext const& ctx,
         float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
         float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1]  / (top_plane_value - bottom_plane_value);
 
-        //std::cout << "hdbtmb: "<< height_divided_by_top_minus_bottom;
-
-
-
         get_program(accumulation_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
         get_program(accumulation_pass)->set_uniform(ctx, near_plane_value, "near_plane");
         get_program(accumulation_pass)->set_uniform(ctx, (far_plane_value - near_plane_value), "far_minus_near_plane");
@@ -533,15 +593,25 @@ void PBRUberShader::draw(RenderContext const& ctx,
         get_program(accumulation_pass)->set_uniform(ctx, math::vec2(render_window_dims_[ctx.id]),"win_dims");
 
 
-
- 
         last_geometry_state_[ctx.id] = post_draw_state;
+
+
       }
 
+
+
+
+
+
+        scm::math::vec4f x_unit_vec(1.0f,0.f,0.f,0.f);
+
+        float radius_scaling = scm::math::length(model_matrix * x_unit_vec);
 
         ctx.render_context->bind_texture(depth_pass_linear_depth_result_[ctx.id], linear_sampler_state_[ctx.id], 0);
         get_program(accumulation_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
 
+        get_program(accumulation_pass)->set_uniform(ctx, radius_scaling, "radius_scaling");
+      
         get_program(accumulation_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
         get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
@@ -571,38 +641,73 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
 	  {
 
+
+            {
 	    scm::gl::context_all_guard guard(ctx.render_context);
 
 
+            // bind normalization FBO
+            ctx.render_context->set_frame_buffer(normalization_pass_result_fbo_[ctx.id]);
 
 	    get_program(normalization_pass)->use(ctx);
 	    {
 
 	      {
 
-		get_program(normalization_pass)->set_uniform(ctx, material_id_[ctx.id], "gua_material_id");
-
-
 		get_program(normalization_pass)->set_uniform(ctx, 1 , "using_default_pbr_material");
-
-                //bind logarithmic depth texture for gbuffer
-		ctx.render_context->bind_texture(depth_pass_log_depth_result_[ctx.id], linear_sampler_state_[ctx.id], 0);
-		get_program(normalization_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
 
 
                 //bind color output for gbuffer
-		ctx.render_context->bind_texture(accumulation_pass_color_result_[ctx.id], linear_sampler_state_[ctx.id], 1);
-		get_program(normalization_pass)->get_program(ctx)->uniform_sampler("p02_color_texture", 1);
+		ctx.render_context->bind_texture(accumulation_pass_color_result_[ctx.id], linear_sampler_state_[ctx.id], 0);
+		get_program(normalization_pass)->get_program(ctx)->uniform_sampler("p02_color_texture", 0);
  
 		fullscreen_quad_[ctx.id]->draw(ctx.render_context);
 	      }
 	    }
 	    get_program(normalization_pass)->unuse(ctx);
 
+          }
+	   // ctx.render_context->reset_framebuffer();
 
+
+         /////////////////////////////////////////////////////////////////////////////////////////////
+         //insert screen space reconstruction pass here
+
+         {
+
+	    scm::gl::context_all_guard guard(ctx.render_context);
+
+	    get_program(reconstruction_pass)->use(ctx);
+	    {
+
+	      {
+
+		get_program(reconstruction_pass)->set_uniform(ctx, material_id_[ctx.id], "gua_material_id");
+
+
+		get_program(reconstruction_pass)->set_uniform(ctx, 1 , "using_default_pbr_material");
+
+                get_program(reconstruction_pass)->set_uniform(ctx, math::vec2(render_window_dims_[ctx.id]),"win_dims");
+
+                //bind logarithmic depth texture for gbuffer
+		ctx.render_context->bind_texture(depth_pass_log_depth_result_[ctx.id], linear_sampler_state_[ctx.id], 0);
+		get_program(reconstruction_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
+
+
+                //bind color output for gbuffer
+		ctx.render_context->bind_texture(normalization_pass_color_result_[ctx.id], linear_sampler_state_[ctx.id], 1);
+		get_program(reconstruction_pass)->get_program(ctx)->uniform_sampler("p02_color_texture", 1);
+ 
+		fullscreen_quad_[ctx.id]->draw(ctx.render_context);
+	      }
+	    }
+	    get_program(reconstruction_pass)->unuse(ctx);
 
 	    ctx.render_context->reset_framebuffer();
-	 }
+
+
+        }
+     }
 
 
 

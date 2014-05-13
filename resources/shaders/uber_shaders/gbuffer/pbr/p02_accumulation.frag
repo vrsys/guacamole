@@ -34,6 +34,8 @@ uniform float near_plane;
 uniform float far_minus_near_plane;
 uniform vec2 win_dims;
 
+uniform float radius_scaling;
+
 //uniform float win_dim_x;
 //uniform float win_dim_y;
 
@@ -124,7 +126,7 @@ float depth_to_compare = 0;
 
    float weight = get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
-   if( depthValue  - (depth_to_compare)    < 0.00031  + 3.0*(pass_radius ) )
+   if( depthValue  - (depth_to_compare)    < 0.00031  + 3.0*(pass_radius * radius_scaling ) )
    {
          out_accumulated_color = vec4(pass_point_color * weight, weight);
    }

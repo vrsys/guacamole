@@ -3,47 +3,45 @@
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-in vec3 gua_position_varying;
-in vec2 gua_quad_coords;
+layout(location=0) in vec3 gua_in_position;
+layout(location=2) in vec2 gua_in_texcoord;
 
 ///////////////////////////////////////////////////////////////////////////////
 // general uniforms
 ///////////////////////////////////////////////////////////////////////////////
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
+uniform uint gua_material_id;
 
-///////////////////////////////////////////////////////////////////////////////
-uniform int   using_default_pbr_material;
-
-uniform sampler2D p02_color_texture;
-
+// material specific uniforms
+@uniform_definition
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
 ///////////////////////////////////////////////////////////////////////////////
-layout (location=0) out vec3 out_normalized_color;
+out vec3 gua_position_varying;
+out vec2 gua_quad_coords;
+
+@output_definition
+
+///////////////////////////////////////////////////////////////////////////////
+// methods
+///////////////////////////////////////////////////////////////////////////////
+
+uint gua_get_material_id() {            
+  return gua_uint_gbuffer_varying_0.x;
+}  
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
-
-  vec3  normalized_color  = vec3(1.0);
-  float output_depth  = 1.0f;
-  vec3  output_normal = vec3(0.0);
-
-  vec3 coords = vec3(gua_quad_coords, 0.0);
+  gua_position_varying = vec3(0);
+  gua_quad_coords = gua_in_texcoord;
 
 
-      
-      vec4 accumulated_color = texture2D( p02_color_texture, coords.xy);
-
-      normalized_color = accumulated_color.rgb / accumulated_color.a;
-
-      normalized_color = pow(normalized_color,vec3(1.4f));
-
-      out_normalized_color = normalized_color;
-
-
+  gua_uint_gbuffer_varying_0.x = gua_material_id;
+  gl_Position = vec4(gua_in_position, 1.0);
 }

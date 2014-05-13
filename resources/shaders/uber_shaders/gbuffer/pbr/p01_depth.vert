@@ -21,6 +21,8 @@
         uniform float height_divided_by_top_minus_bottom;
         uniform float near_plane;         
         
+        uniform float radius_scaling;
+
         //output to fragment shader                                             
         out vec3 pass_normal;
         out float pass_mv_vert_depth;
@@ -34,7 +36,8 @@
 
           gl_Position = gua_projection_matrix * pos_es;  
           
-          gl_PointSize = 2.0f * in_radius * (near_plane/-pos_es.z)* height_divided_by_top_minus_bottom;
+          gl_PointSize = 2.0f * radius_scaling * in_radius * (near_plane/-pos_es.z)* height_divided_by_top_minus_bottom;
+          //gl_PointSize = in_radius * 2.0f * -pos_es.z * height_divided_by_top_minus_bottom;
 
 
           pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
