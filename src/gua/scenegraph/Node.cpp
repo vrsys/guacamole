@@ -62,6 +62,12 @@ namespace gua {
   void Node::update_cache() {
 
     if (self_dirty_) {
+        math::mat4 old_world_trans(world_transform_);
+        if (is_root()) {
+            world_transform_ = get_transform();
+        } else {
+            world_transform_ = parent_->world_transform_ * get_transform();
+        }
       if (is_root()) {
         world_transform_ = get_transform();
       }
@@ -69,6 +75,11 @@ namespace gua {
         world_transform_ = parent_->world_transform_ * get_transform();
       }
 
+        if (world_transform_ != old_world_trans) {
+            on_world_transform_changed.emit(world_transform_);
+        }
+
+        self_dirty_ = false;
       self_dirty_ = false;
     }
 
@@ -152,6 +163,7 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
+math::mat4 const& Node::get_cached_world_transform() const {
   math::mat4 Node::get_cached_world_transform() const {
 
     return world_transform_;
@@ -159,6 +171,20 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
+void Node::set_world_transform(math::mat4 const& transform) {
+    if (is_root()) {
+            transform_ = transform;
+        } else {
+            transform_ = scm::math::inverse(parent_->get_world_transform()) * transform;
+        }
+
+    set_dirty();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::vec3 Node::get_world_position() const {
   math::vec3 Node::get_world_position() const {
     return gua::math::get_translation(get_world_transform());
   }

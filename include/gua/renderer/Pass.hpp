@@ -68,17 +68,19 @@ class Pass {
                             SceneGraph const& current_graph,
                             RenderContext const& ctx) = 0;
 
-  virtual void print_shaders(std::string const& directory, std::string const& name) const {}
+                             std::string const& name) const = 0;
 
   // not strictly necessary to call, but recommend
   // to avoid crashes on shader compilation
   // derived classes should call upload_to() on all contained shaders
-  virtual bool pre_compile_shaders(RenderContext const& ctx) { return true; }
+  virtual bool pre_compile_shaders(RenderContext const& ctx) = 0;
 
   virtual void create(
       RenderContext const& ctx,
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
+
+  virtual void cleanup(RenderContext const& ctx);
 
   void set_inputs(std::vector<std::shared_ptr<StereoBuffer>> inputs);
 

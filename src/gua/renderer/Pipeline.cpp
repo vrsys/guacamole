@@ -315,7 +315,6 @@ void Pipeline::set_context(RenderContext* ctx) {
 void Pipeline::create_passes() {
 
   if (passes_need_reload_) {
-
     auto materials(MaterialDatabase::instance()->list_all());
 
     auto pre_pass = new GBufferPass(this);
@@ -360,6 +359,7 @@ void Pipeline::create_passes() {
     if (compilation_succeeded) {
 
       for (auto pass : passes_) {
+        if (context_) pass->cleanup(*context_);
         delete pass;
       }
 
@@ -378,6 +378,7 @@ void Pipeline::create_passes() {
       Logger::LOG_WARNING << "Failed to recompile shaders!" << std::endl;
 
       for (auto pass : new_passes) {
+        if (context_) pass->cleanup(*context_);
         delete pass;
       }
     }
@@ -423,7 +424,6 @@ void Pipeline::create_buffers() {
       TextureDatabase::instance()->add(config.output_texture_name() + "_depth_left", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[0]->get_depth_buffer());
       TextureDatabase::instance()->add(config.output_texture_name() + "_depth_right", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[1]->get_depth_buffer());
     }
-
 
     buffers_need_reload_ = false;
   }

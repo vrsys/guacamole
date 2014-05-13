@@ -248,6 +248,23 @@ void PostFXPass::create(RenderContext const& ctx, std::vector<std::pair<BufferCo
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void PostFXPass::cleanup(RenderContext const& ctx) {
+  if (ping_buffer_) ping_buffer_->remove_buffers(ctx);
+  if (pong_buffer_) pong_buffer_->remove_buffers(ctx);
+
+  for (auto buffer : godray_buffers_)
+    if (buffer) buffer->remove_buffers(ctx);
+
+  for (auto buffer : glow_buffers_)
+    if (buffer) buffer->remove_buffers(ctx);
+
+  if (luminance_buffer_) luminance_buffer_->remove_buffers(ctx);
+
+  Pass::cleanup(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void PostFXPass::init_resources(RenderContext const& ctx) {
   if (!initialized_) {
     if (!depth_stencil_state_)

@@ -43,7 +43,7 @@ namespace gua {
  */
 struct RenderContext {
 
-  /**
+   /**
    * The schism context of this RenderContext.
    */
   scm::gl::wm::context_ptr context;
