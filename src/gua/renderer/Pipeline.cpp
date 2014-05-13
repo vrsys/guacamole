@@ -290,6 +290,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       }
 
       window_->finish_frame();
+      ++(window_->get_context()->framecount);
     }
   }
 }
