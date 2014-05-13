@@ -73,7 +73,7 @@ class GUA_DLL GeometryNode : public Node {
      *                       transformation.
      */
     GeometryNode(std::string const& name,
-                 std::string const& geometry = "gua_default_geometry",
+                 std::string const& filename = "gua_default_geometry",
                  std::string const& material = "gua_default_material",
                  math::mat4 const& transform = math::mat4::identity(),
                  ShadowMode shadow_mode = ShadowMode::LOW_QUALITY);

@@ -32,7 +32,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/TriMeshUberShader.hpp>
 #include <gua/renderer/GeometryRessource.hpp>
-#include <gua/renderer/GeometryUbershader.hpp>
+#include <gua/renderer/GeometryUberShader.hpp>
 
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
@@ -74,7 +74,7 @@ namespace gua {
     Pass::create(ctx, tmp);
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
+  
 ////////////////////////////////////////////////////////////////////////////////
 
 void GBufferPass::cleanup(RenderContext const& ctx) {
@@ -90,11 +90,6 @@ void GBufferPass::cleanup(RenderContext const& ctx) {
     Camera const& camera,
     FrameBufferObject* target) {
 
-void GBufferPass::print_shaders(std::string const& directory,
-                                std::string const& name) const {
-    throw std::runtime_error("to implement");
-
-}
     if (!depth_stencil_state_ ||
         !bfc_rasterizer_state_ ||
         !no_bfc_rasterizer_state_ ||
@@ -125,6 +120,7 @@ void GBufferPass::print_shaders(std::string const& directory,
 
       ubershader->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
       ubershader->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+      ubershader->set_uniform(ctx, false, "gua_render_shadow_map");
 
       for (auto const& program : ubershader->programs())
       {
@@ -213,7 +209,6 @@ void GBufferPass::print_shaders(std::string const& directory,
     // draw debug and helper information
     ///////////////////////////////////////////////////////////////
     display_quads(ctx, scene, eye);
-    mesh_shader_->set_uniform(ctx, false, "gua_render_shadow_map");
 
     ctx.render_context->set_rasterizer_state(bbox_rasterizer_state_);
     display_bboxes(ctx, scene);
@@ -231,19 +226,14 @@ void GBufferPass::print_shaders(std::string const& directory,
     if (pipeline_->config.enable_bbox_display())
     {
       meshubershader->get_program()->use(ctx);
-      for (auto const& bbox : scene.bounding_boxes_)
-      Pass::bind_inputs(*pass, eye, ctx);
-      Pass::set_camera_matrices(*pass,
-      {
-                                camera,
-        math::mat4 bbox_transform(math::mat4::identity());
-                                pipeline_->get_current_scene(eye),
-                                eye,
-                                ctx);
-    }
 
+      for (auto const& bbox : scene.bounding_boxes_)
+      {
         auto scale(scm::math::make_scale((bbox.max - bbox.min) * 1.001f));
         auto translation(scm::math::make_translation((bbox.max + bbox.min) / 2.f));
+
+        scm::math::mat4 bbox_transform;
+        scm::math::set_identity(bbox_transform);
 
         bbox_transform *= translation;
         bbox_transform *= scale;
@@ -304,7 +294,8 @@ void GBufferPass::print_shaders(std::string const& directory,
             }
           }
 
-          if (TextureDatabase::instance()->is_supported(texture_name)) {
+          if (TextureDatabase::instance()->is_supported(texture_name)) 
+          {
             auto texture = TextureDatabase::instance()->lookup(texture_name);
             auto mapped_texture(meshubershader->get_uniform_mapping()->get_mapping("gua_textured_quad", "texture"));
 
@@ -312,20 +303,6 @@ void GBufferPass::print_shaders(std::string const& directory,
 
             auto mapped_flip_x(meshubershader->get_uniform_mapping()->get_mapping("gua_textured_quad", "flip_x"));
             meshubershader->set_uniform(ctx, node->data.get_flip_x(), mapped_flip_x.first, mapped_flip_x.second);
-#ifdef DEBUG_XFB_OUTPUT
-            scm::gl::transform_feedback_statistics_query_ptr q = ctx
-                .render_device->create_transform_feedback_statistics_query(0);
-            ctx.render_context->begin_query(q);
-#endif
-            // pre-tesselate if necessary
-            nurbs_shader_->get_pass(0)->use(ctx);
-            {
-              nurbs_shader_->set_uniform(ctx,
-                                         node->get_cached_world_transform(),
-                                         "gua_model_matrix");
-              nurbs_shader_->set_uniform(ctx,
-                                         scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
-                                         "gua_normal_matrix");
 
             auto mapped_flip_y(meshubershader->get_uniform_mapping()->get_mapping("gua_textured_quad", "flip_y"));
             meshubershader->set_uniform(ctx, node->data.get_flip_y(), mapped_flip_y.first, mapped_flip_y.second);

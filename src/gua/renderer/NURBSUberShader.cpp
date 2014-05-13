@@ -904,7 +904,6 @@ std::string const NURBSUberShader::_final_fragment_shader () const
     // input from vertex shader
     string_utils::replace(fragment_shader, "@input_definition",
       vshader_factory_->get_output_mapping().get_gbuffer_output_definition(true, true));
-    fragment_shader << UberShader::print_material_methods(*fragment_shader_factory_) << std::endl;
 
     // material specific uniforms
     string_utils::replace(fragment_shader, "@uniform_definition",

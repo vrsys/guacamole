@@ -36,6 +36,7 @@ class Serializer;
 class GBuffer;
 class Frustum;
 class Pipeline;
+class GeometryUberShader;
 
 
 class SceneGraph;
@@ -93,10 +94,10 @@ class ShadowMap {
                        unsigned map_size);
 
   std::unique_ptr<Serializer> serializer_;
+
   GBuffer* buffer_;
   Pipeline* pipeline_;
 
-  
   std::unordered_map<std::type_index, GeometryUberShader*> ubershader_;
   
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;

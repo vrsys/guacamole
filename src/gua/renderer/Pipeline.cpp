@@ -92,12 +92,6 @@ Pipeline::~Pipeline() {
 void Pipeline::print_shaders(std::string const& directory) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  passes_[PipelineStage::geometry]->print_shaders(directory, "/0_gbuffer");
-  passes_[PipelineStage::lighting]->print_shaders(directory, "/1_lighting");
-  passes_[PipelineStage::shading]->print_shaders(directory, "/2_final");
-  passes_[PipelineStage::compositing]->print_shaders(directory, "/3_composite");
-  passes_[PipelineStage::postfx]->print_shaders(directory, "/4_postFX");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

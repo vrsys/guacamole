@@ -68,8 +68,6 @@ class Pass {
                             SceneGraph const& current_graph,
                             RenderContext const& ctx) = 0;
 
-                             std::string const& name) const = 0;
-
   // not strictly necessary to call, but recommend
   // to avoid crashes on shader compilation
   // derived classes should call upload_to() on all contained shaders

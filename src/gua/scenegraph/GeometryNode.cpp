@@ -37,25 +37,20 @@ namespace gua {
   GeometryNode::GeometryNode(std::string const& name,
                              std::string const& filename,
                              std::string const& material,
-                             math::mat4 const& transform)
+                             math::mat4 const& transform,
+                             ShadowMode shadow_mode)
       : Node(name, transform), 
         filename_(filename),
         material_(material),
-        filename_changed_(false), material_changed_(false) 
+        shadow_mode_(shadow_mode),
+        filename_changed_(false), 
+        material_changed_(false) 
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
   std::string const& GeometryNode::get_filename() const {
     return filename_;
   }
-GeometryNode::GeometryNode(std::string const& name,
-                           std::string const& geometry,
-                           std::string const& material,
-                           math::mat4 const& transform,
-                           ShadowMode shadow_mode)
-    : Node(name, transform), geometry_(geometry), material_(material),
-      shadow_mode_(shadow_mode),
-      geometry_changed_(false), material_changed_(false) {}
 
   ////////////////////////////////////////////////////////////////////////////////
   void GeometryNode::set_filename(std::string const& v) {
@@ -157,12 +152,5 @@ GeometryNode::GeometryNode(std::string const& name,
 
     Node::update_cache();
   }
-
-}
-
-std::shared_ptr<Node> GeometryNode::copy() const {
-  return std::make_shared<GeometryNode>(get_name(), geometry_, material_,
-                                        get_transform(), shadow_mode_);
-}
 
 }
