@@ -28,6 +28,7 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/Video3DUberShader.hpp>
 #include <gua/renderer/video3d_geometry/DXTCompressor.h>
+#include <gua/renderer/video3d_geometry/NetKinectArray.hpp>
 #include <gua/utils/Logger.hpp>
 
 #include <scm/gl_core/render_device/opengl/gl_core.h>
@@ -45,6 +46,7 @@
 
 namespace {
 
+#if 0
   struct Vertex {
     scm::math::vec3f pos;
     scm::math::vec2f tex;
@@ -52,6 +54,12 @@ namespace {
     scm::math::vec3f tangent;
     scm::math::vec3f bitangent;
   };
+#endif
+
+  struct VertexOnly {
+    scm::math::vec3f pos;
+  };
+
 }
 
 namespace gua {
@@ -74,6 +82,10 @@ namespace gua {
   depth_size_byte_(),
   color_size_(),
   file_buffers_(),
+  nka_per_context_(),
+  cv_xyz_per_context_(),
+  cv_uv_per_context_(),
+  framecounter_per_context_(),
   width_depthimage_(),
   height_depthimage_(),
   width_colorimage_(),
@@ -146,10 +158,12 @@ void Video3DRessource::init()
     {
       for ( auto calib_file : calib_files_ )
       {
+#if 0
         sys::FileBuffer* tmp = new sys::FileBuffer(calib_file->get_stream_filename());
         tmp->open();
         tmp->setLooping(true);
         file_buffers_.push_back(tmp);
+#endif
 
         const unsigned pixelcountc = calib_file->getWidthC() * calib_file->getHeightC();
 
@@ -175,8 +189,8 @@ void Video3DRessource::init()
       width_colorimage_  = calib_files_[0]->getWidthC();
       height_colorimage_ = calib_files_[0]->getHeightC();
 
-    } else { // host is hostname list
-      throw std::runtime_error("to implement");
+    } else { // host is not in hostname list
+      throw std::runtime_error("to implement: host is not in hostname list");
     }
 
     istr.close();
@@ -218,11 +232,11 @@ void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
   proxy_vertices_[ctx.id] =
     ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
     scm::gl::USAGE_STATIC_DRAW,
-    num_vertices * sizeof(Vertex),
+    num_vertices * sizeof(VertexOnly),
     0);
 
-  Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
-    proxy_vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+  VertexOnly* data(static_cast<VertexOnly*>(ctx.render_context->map_buffer(
+									   proxy_vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
   //compute vertex data (proxy mesh)ddd
   //const scm::math::vec3f& p(0.0f); //point of origin
@@ -234,10 +248,12 @@ void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
     for (float w = 0.5*step; w < width_depthimage_*step; w += step)
     {
       data[v].pos = scm::math::vec3f(w, h, 0.0f);
-      data[v].tex = scm::math::vec2f(w, h);
-      data[v].normal = scm::math::vec3f(0.0f, 0.0f, 1.0f);
-      data[v].tangent = scm::math::vec3(0.f, 0.f, 0.f);
-      data[v].bitangent = scm::math::vec3(0.f, 0.f, 0.f);
+#if 0
+      //data[v].tex = scm::math::vec2f(w, h);
+      //data[v].normal = scm::math::vec3f(0.0f, 0.0f, 1.0f);
+      //data[v].tangent = scm::math::vec3(0.f, 0.f, 0.f);
+      //data[v].bitangent = scm::math::vec3(0.f, 0.f, 0.f);
+#endif
       ++v;
       ++pCount;
     }
@@ -278,12 +294,14 @@ void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
   buffer_arrays.push_back(proxy_vertices_[ctx.id]);
 
   proxy_vertex_array_[ctx.id] = ctx.render_device->create_vertex_array
-    (scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))
+    (scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(VertexOnly))
+#if 0
     (0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))
     (0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))
     (0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))
-    (0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex)),
-    buffer_arrays);
+    (0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex))
+#endif
+     ,buffer_arrays);
 
 }
 
@@ -296,27 +314,64 @@ void Video3DRessource::upload_video_textures(RenderContext const& ctx) const
     rstate_solid_.resize(ctx.id + 1);
     color_texArrays_.resize(ctx.id + 1);
     depth_texArrays_.resize(ctx.id + 1);
+    nka_per_context_.resize(ctx.id + 1);
+    cv_xyz_per_context_.resize(ctx.id + 1);
+    cv_uv_per_context_.resize(ctx.id + 1);
+    framecounter_per_context_.resize(ctx.id + 1);
   }
 
   // initialize Texture Arrays (kinect depths & colors)
   depth_texArrays_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(width_depthimage_, height_depthimage_),
-    scm::gl::FORMAT_R_32F,
-    0,
-    calib_files_.size(),
-    1
-    );
-
+								  scm::gl::FORMAT_R_32F,
+								  0,
+								  calib_files_.size(),
+								  1
+								  );
+  
   color_texArrays_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(width_colorimage_, height_colorimage_),
-    calib_files_[0]->isCompressedRGB() ? scm::gl::FORMAT_BC1_RGBA : scm::gl::FORMAT_RGB_8,
-    0,
-    calib_files_.size(),
-    1
-    );
+								  calib_files_[0]->isCompressedRGB() ? scm::gl::FORMAT_BC1_RGBA : scm::gl::FORMAT_RGB_8,
+								  0,
+								  calib_files_.size(),
+								  1
+								  );
 
   rstate_solid_[ctx.id] = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID,
-    scm::gl::CULL_NONE,
-    scm::gl::ORIENT_CCW,
-    true);
+								     scm::gl::CULL_NONE,
+								     scm::gl::ORIENT_CCW,
+								     true);
+
+  nka_per_context_[ctx.id] = new video3d::NetKinectArray(calib_files_, server_endpoint_, color_size_, depth_size_byte_);
+
+  // generate and download calibvolumes for this context
+  for(unsigned i = 0; i < number_of_cameras(); ++i){
+    std::vector< void* > raw_cv_xyz;
+    raw_cv_xyz.push_back(calib_files_[i]->cv_xyz);
+    // should be: glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F, cv_width, cv_height, cv_depth, 0, GL_RGB, GL_FLOAT, (unsigned char*) cv_xyz);
+    cv_xyz_per_context_[ctx.id].push_back( ctx.render_device->create_texture_3d(scm::math::vec3ui(calib_files_[i]->cv_width,
+												  calib_files_[i]->cv_height,
+												  calib_files_[i]->cv_depth),
+										scm::gl::FORMAT_RGB_32F,
+										0,
+										scm::gl::FORMAT_RGB_32F,
+										raw_cv_xyz)
+					   );
+
+    std::vector< void* > raw_cv_uv;
+    raw_cv_uv.push_back(calib_files_[i]->cv_uv);
+    // should be: glTexImage3D(GL_TEXTURE_3D, 0, GL_RG32F, cv_width, cv_height, cv_depth, 0, GL_RG, GL_FLOAT, (unsigned char*) cv_uv);
+    cv_uv_per_context_[ctx.id].push_back( ctx.render_device->create_texture_3d(scm::math::vec3ui(calib_files_[i]->cv_width,
+												 calib_files_[i]->cv_height,
+												 calib_files_[i]->cv_depth),
+										scm::gl::FORMAT_RG_32F,
+										0,
+										scm::gl::FORMAT_RG_32F,
+										raw_cv_uv)
+					   );
+
+  }
+
+  framecounter_per_context_[ctx.id] = 0;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -352,9 +407,26 @@ Video3DRessource::depth_array(RenderContext const& context) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+scm::gl::texture_3d_ptr const&
+Video3DRessource::cv_xyz (RenderContext const& context, unsigned camera_id) const
+{
+  return cv_xyz_per_context_[context.id][camera_id];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+scm::gl::texture_3d_ptr const&
+Video3DRessource::cv_uv (RenderContext const& context, unsigned camera_id) const
+{
+  return cv_uv_per_context_[context.id][camera_id];
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 
 void Video3DRessource::update_buffers(RenderContext const& ctx) const
 {
+
+#if 0 // OLD VERSION Kinects from filebuffer, not used any more
   // todo: if new frame -> use framecount instead
   if (ctx.id == 0)
   {
@@ -369,12 +441,22 @@ void Video3DRessource::update_buffers(RenderContext const& ctx) const
       }
     }
   }
+#endif
 
   upload_to(ctx);
 
-  // todo: if new frame 
+#if 0 // OLD VERSION Kinects from filebuffer, not used any more
   for(int i = 0; i < number_of_cameras(); ++i) 
   {
+
+    ctx.render_context->update_sub_texture(color_texArrays_[ctx.id],
+					   scm::gl::texture_region(scm::math::vec3ui(0, 0 , i),
+								   scm::math::vec3ui(width_colorimage_, height_colorimage_, 1)),
+					   0, //mip-mapping level
+					   scm::gl::FORMAT_BC1_RGBA,
+					   (void*) color_buffers_[i]
+					   );
+
     ctx.render_context->update_sub_texture(depth_texArrays_[ctx.id],
                                   scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
                                                           scm::math::vec3ui(width_depthimage_, height_depthimage_, 1)),
@@ -383,14 +465,42 @@ void Video3DRessource::update_buffers(RenderContext const& ctx) const
                                   (void*) depth_buffers_[i]
                                 );
   
-    ctx.render_context->update_sub_texture(color_texArrays_[ctx.id],
-                                  scm::gl::texture_region(scm::math::vec3ui(0, 0 , i),
-                                                          scm::math::vec3ui(width_colorimage_, height_colorimage_, 1)),
-                                  0, //mip-mapping level
-                                  scm::gl::FORMAT_BC1_RGBA,
-                                  (void*) color_buffers_[i]
-                                );
+   
   }
+#endif
+
+
+  if(framecounter_per_context_[ctx.id] != ctx.framecount){
+    framecounter_per_context_[ctx.id] = ctx.framecount;
+  }
+  else{
+    return;
+  }
+  if(nka_per_context_[ctx.id]->update()){
+
+    unsigned char* buff = nka_per_context_[ctx.id]->getBuffer();
+    for(int i = 0; i < number_of_cameras(); ++i) {
+
+      ctx.render_context->update_sub_texture(color_texArrays_[ctx.id],
+					     scm::gl::texture_region(scm::math::vec3ui(0, 0 , i),
+								     scm::math::vec3ui(width_colorimage_, height_colorimage_, 1)),
+					     0, //mip-mapping level
+					     scm::gl::FORMAT_BC1_RGBA,
+					     (void*) buff
+					     );
+      buff += color_size_;
+      ctx.render_context->update_sub_texture(depth_texArrays_[ctx.id],
+					     scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
+								     scm::math::vec3ui(width_depthimage_, height_depthimage_, 1)),
+					     0, //mip-mapping level
+					     scm::gl::FORMAT_R_32F,
+					     (void*) buff
+					     );
+      buff += depth_size_byte_;
+      
+    }
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -39,7 +39,9 @@
 #include <vector>
 #include <string>
 
-
+namespace video3d{
+  class NetKinectArray;
+}
 
 namespace gua {
 
@@ -95,6 +97,9 @@ class Video3DRessource : public GeometryRessource {
   scm::gl::texture_2d_ptr const&  color_array (RenderContext const& context) const;
   scm::gl::texture_2d_ptr const&  depth_array (RenderContext const& context) const;
 
+  scm::gl::texture_3d_ptr const&  cv_xyz (RenderContext const& context, unsigned camera_id) const;
+  scm::gl::texture_3d_ptr const&  cv_uv (RenderContext const& context, unsigned camera_id) const;
+
   void                            update_buffers (RenderContext const& context) const;
 
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
@@ -128,6 +133,10 @@ class Video3DRessource : public GeometryRessource {
   mutable std::vector<float*>           depth_buffers_; 
   mutable std::vector<sys::FileBuffer*> file_buffers_;  
 
+  mutable std::vector<video3d::NetKinectArray* > nka_per_context_;
+  mutable std::vector< std::vector<scm::gl::texture_3d_ptr> > cv_xyz_per_context_;
+  mutable std::vector< std::vector<scm::gl::texture_3d_ptr> > cv_uv_per_context_;
+  mutable std::vector<unsigned>         framecounter_per_context_;
   mutable unsigned depth_size_;
   mutable unsigned depth_size_byte_;
   mutable unsigned color_size_;
