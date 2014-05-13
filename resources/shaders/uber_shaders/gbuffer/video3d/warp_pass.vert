@@ -126,8 +126,11 @@ float bilateral_filter(){
 ///////////////////////////////////////////////////////////////////////////////
 void main() 
 {
-  //float depth             = texture2DArray(depth_video3d_texture, vec3(gua_in_position.xy, layer)).r;
+#if 0
+  float depth             = texture2DArray(depth_video3d_texture, vec3(gua_in_position.xy, layer)).r;
+#else
   float depth             = bilateral_filter();
+#endif
 
   vec4 POS_d              = depth * image_d_to_eye_d * vec4(gua_in_position.xy, depth, 1.0);
   POS_d.z                 = depth;
@@ -143,9 +146,11 @@ void main()
   VertexOut.pos_d         = POS_d.xyz;
   VertexOut.pos_ws        = POS_ws.xyz;
   VertexOut.pos_es        = (gua_view_matrix * gua_model_matrix * POS_ws).xyz;
-  //VertexOut.texture_coord = (eye_rgb_to_image_rgb * vec4( (POS_rgb.xy/POS_rgb.z) ,0.0, 1.0)).xy;
-  // lookup from calibvolume
+
   VertexOut.texture_coord = texture(cv_uv,  vec3(gua_in_position.xy, d_idx)).rg;
+  //VertexOut.texture_coord = (eye_rgb_to_image_rgb * vec4( (POS_rgb.xy/POS_rgb.z) ,0.0, 1.0)).xy;
+
+
   VertexOut.depth         = depth;
   
   gl_Position             = gua_projection_matrix * gua_view_matrix * gua_model_matrix * POS_ws;

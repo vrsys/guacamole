@@ -409,66 +409,68 @@ bool KinectCalibrationFile::parse()
     }
 
     { // .ext3
-        std::string e_filepath(_filePath.c_str());
-        e_filepath.replace( e_filepath.end() - 3, e_filepath.end(), "ext3");
-        infile.open( e_filepath.c_str());
-        if(infile){
+      std::string e_filepath(_filePath.c_str());
+      e_filepath.replace(e_filepath.end() - 3, e_filepath.end(), "ext3");
+      infile.open(e_filepath.c_str());
+      if (infile){
 
-            float token;
-            infile >> token;
-            _worldTranslation3[0] = token;
-            infile >> token;
-            _worldTranslation3[1] = token;
-            infile >> token;
-            _worldTranslation3[2] = token;
+        float token;
+        infile >> token;
+        _worldTranslation3[0] = token;
+        infile >> token;
+        _worldTranslation3[1] = token;
+        infile >> token;
+        _worldTranslation3[2] = token;
 
-            scm::math::set_identity(_worldRotation3);
-
-
-            infile >> token;
-            _worldRotation3[0]  = token;
-            infile >> token;
-            _worldRotation3[1]  = token;
-            infile >> token;
-            _worldRotation3[2]  = token;
-
-            infile >> token;
-            _worldRotation3[4]  = token;
-            infile >> token;
-            _worldRotation3[5]  = token;
-            infile >> token;
-            _worldRotation3[6]  = token;
-
-            infile >> token;
-            _worldRotation3[8]  = token;
-            infile >> token;
-            _worldRotation3[9]  = token;
-            infile >> token;
-            _worldRotation3[10] = token;
-
-            _worldRotation3[12] =  0.0;
-            _worldRotation3[13] =  0.0;
-            _worldRotation3[14] =  0.0;
+        scm::math::set_identity(_worldRotation3);
 
 
-            infile.close();
-        }
-        else{
-            scm::math::set_identity(_worldRotation3);
-            _worldTranslation3[0] = 0.0;
-            _worldTranslation3[1] = 0.0;
-            _worldTranslation3[2] = 0.0;
-        }
+        infile >> token;
+        _worldRotation3[0] = token;
+        infile >> token;
+        _worldRotation3[1] = token;
+        infile >> token;
+        _worldRotation3[2] = token;
+
+        infile >> token;
+        _worldRotation3[4] = token;
+        infile >> token;
+        _worldRotation3[5] = token;
+        infile >> token;
+        _worldRotation3[6] = token;
+
+        infile >> token;
+        _worldRotation3[8] = token;
+        infile >> token;
+        _worldRotation3[9] = token;
+        infile >> token;
+        _worldRotation3[10] = token;
+
+        _worldRotation3[12] = 0.0;
+        _worldRotation3[13] = 0.0;
+        _worldRotation3[14] = 0.0;
+
+
+        infile.close();
+      }
+      else{
+        scm::math::set_identity(_worldRotation3);
+        _worldTranslation3[0] = 0.0;
+        _worldTranslation3[1] = 0.0;
+        _worldTranslation3[2] = 0.0;
+      }
     }
 
 
     { // load cv_xyz
-      if(cv_xyz){
-	delete [] cv_xyz;
+      if (cv_xyz){
+        delete[] cv_xyz;
       }
       std::string fpath(_filePath.c_str());
-      fpath.replace( fpath.end() - 3, fpath.end(), "cv_xyz");
+      fpath.replace(fpath.end() - 3, fpath.end(), "cv_xyz");
       //std::cerr << "loading " << fpath << std::endl;
+
+#if !WIN32
       FILE* f_xyz = fopen( fpath.c_str(), "rb");
       unsigned nbr = 0;
       nbr = fread(&cv_width, sizeof(unsigned), 1, f_xyz);
@@ -479,16 +481,36 @@ bool KinectCalibrationFile::parse()
       cv_xyz = new video3d::xyz[cv_width * cv_height * cv_depth];
       nbr = fread(cv_xyz, sizeof(video3d::xyz), cv_width * cv_height * cv_depth, f_xyz);
       fclose(f_xyz);
+#else
+      std::fstream fstr(fpath.c_str(), std::ios::in | std::ios::binary);
+      unsigned nbr = 0;
+      if (fstr.good())
+      {
+        fstr.read((char*)&cv_width, sizeof(unsigned));
+        fstr.read((char*)&cv_height, sizeof(unsigned));
+        fstr.read((char*)&cv_depth, sizeof(unsigned));
+        fstr.read((char*)&cv_min_d, sizeof(float));
+        fstr.read((char*)&cv_max_d, sizeof(float));
+        cv_xyz = new video3d::xyz[cv_width * cv_height * cv_depth];
+        fstr.read((char*)cv_xyz, sizeof(video3d::xyz) * cv_width * cv_height * cv_depth);
+        fstr.close();
+      }
+      else {
+        std::cerr << "KinectCalibrationFile::parse(): Could not open " << fpath << std::endl;
+      }
+#endif
+
     }
 
     { // load cv_uv;
       if(cv_uv){
-	delete [] cv_uv;
+        delete [] cv_uv;
       }
       std::string fpath(_filePath.c_str());
-      fpath.replace( fpath.end() - 3, fpath.end(), "cv_uv");
+      fpath.replace(fpath.end() - 3, fpath.end(), "cv_uv");
       //std::cerr << "loading " << fpath << std::endl;
-      FILE* f_uv = fopen( fpath.c_str(), "rb");
+#if !WIN32
+      FILE* f_uv = fopen(fpath.c_str(), "rb");
       unsigned nbr = 0;
       nbr = fread(&cv_width, sizeof(unsigned), 1, f_uv);
       nbr = fread(&cv_height, sizeof(unsigned), 1, f_uv);
@@ -498,6 +520,24 @@ bool KinectCalibrationFile::parse()
       cv_uv = new video3d::uv[cv_width * cv_height * cv_depth];
       nbr = fread(cv_uv, sizeof(video3d::uv), cv_width * cv_height * cv_depth, f_uv);
       fclose(f_uv);
+#else
+      std::fstream fstr(fpath.c_str(), std::ios::in | std::ios::binary);
+      unsigned nbr = 0;
+      if (fstr.good())
+      {
+        fstr.read((char*)&cv_width, sizeof(unsigned));
+        fstr.read((char*)&cv_height, sizeof(unsigned));
+        fstr.read((char*)&cv_depth, sizeof(unsigned));
+        fstr.read((char*)&cv_min_d, sizeof(float));
+        fstr.read((char*)&cv_max_d, sizeof(float));
+        cv_uv = new video3d::uv[cv_width * cv_height * cv_depth];
+        fstr.read((char*)cv_uv, sizeof(video3d::uv) * cv_width * cv_height * cv_depth);
+        fstr.close();
+      }
+      else {
+        std::cerr << "KinectCalibrationFile::parse(): Could not open " << fpath << std::endl;
+      }
+#endif
     }
 
     return true;

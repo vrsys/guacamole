@@ -339,14 +339,14 @@ void Video3DUberShader::draw(RenderContext const& ctx,
         get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeDToEyeRGB(), "eye_d_to_eye_rgb");
         get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeRGBToImageRGB(), "eye_rgb_to_image_rgb");
 
-	ctx.render_context->bind_texture(video3d_ressource->cv_xyz(ctx,layer), linear_sampler_state_[ctx.id], 1);
-	get_program(warp_pass)->get_program(ctx)->uniform_sampler("cv_xyz", 1);
+	      ctx.render_context->bind_texture(video3d_ressource->cv_xyz(ctx,layer), linear_sampler_state_[ctx.id], 11);
+	      get_program(warp_pass)->get_program(ctx)->uniform_sampler("cv_xyz", 11);
 
-	ctx.render_context->bind_texture(video3d_ressource->cv_uv(ctx,layer), linear_sampler_state_[ctx.id], 2);
-	get_program(warp_pass)->get_program(ctx)->uniform_sampler("cv_uv", 2);
-	get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_min_d, "cv_min_d");
-	get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_max_d, "cv_max_d");
+	      ctx.render_context->bind_texture(video3d_ressource->cv_uv(ctx,layer), linear_sampler_state_[ctx.id], 12);
+	      get_program(warp_pass)->get_program(ctx)->uniform_sampler("cv_uv", 12);
 
+	      get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_min_d, "cv_min_d");
+	      get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_max_d, "cv_max_d");
 
         get_program(warp_pass)->use(ctx);
         {

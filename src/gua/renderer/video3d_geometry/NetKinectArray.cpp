@@ -70,8 +70,8 @@ namespace video3d{
     zmq::socket_t  socket(ctx, ZMQ_SUB); // means a subscriber
 
     socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-    uint64_t hwm = 1;
-    socket.setsockopt(ZMQ_HWM,&hwm, sizeof(hwm));
+    int hwm = 1;
+    socket.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
     
     std::string endpoint("tcp://" + m_server_endpoint);
     socket.connect(endpoint.c_str());
