@@ -126,7 +126,7 @@ float bilateral_filter(){
 ///////////////////////////////////////////////////////////////////////////////
 void main() 
 {
-  //float depth             = texture2DArray(depth_video3d_texture, vec3(gua_in_texcoords.xy, layer)).r;
+  //float depth             = texture2DArray(depth_video3d_texture, vec3(gua_in_position.xy, layer)).r;
   float depth             = bilateral_filter();
 
   vec4 POS_d              = depth * image_d_to_eye_d * vec4(gua_in_position.xy, depth, 1.0);
