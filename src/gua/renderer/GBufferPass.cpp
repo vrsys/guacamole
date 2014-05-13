@@ -74,8 +74,15 @@ namespace gua {
     Pass::create(ctx, tmp);
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
+  
+////////////////////////////////////////////////////////////////////////////////
 
+void GBufferPass::cleanup(RenderContext const& ctx) {
+
+    Pass::cleanup(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
   void GBufferPass::rendering(SerializedScene const& scene,
     SceneGraph const& graph,
     RenderContext const& ctx,
@@ -113,6 +120,7 @@ namespace gua {
 
       ubershader->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
       ubershader->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+      ubershader->set_uniform(ctx, false, "gua_render_shadow_map");
 
       for (auto const& program : ubershader->programs())
       {
@@ -218,12 +226,14 @@ namespace gua {
     if (pipeline_->config.enable_bbox_display())
     {
       meshubershader->get_program()->use(ctx);
+
       for (auto const& bbox : scene.bounding_boxes_)
       {
-        math::mat4 bbox_transform(math::mat4::identity());
-
         auto scale(scm::math::make_scale((bbox.max - bbox.min) * 1.001f));
         auto translation(scm::math::make_translation((bbox.max + bbox.min) / 2.f));
+
+        scm::math::mat4 bbox_transform;
+        scm::math::set_identity(bbox_transform);
 
         bbox_transform *= translation;
         bbox_transform *= scale;
@@ -284,7 +294,8 @@ namespace gua {
             }
           }
 
-          if (TextureDatabase::instance()->is_supported(texture_name)) {
+          if (TextureDatabase::instance()->is_supported(texture_name)) 
+          {
             auto texture = TextureDatabase::instance()->lookup(texture_name);
             auto mapped_texture(meshubershader->get_uniform_mapping()->get_mapping("gua_textured_quad", "texture"));
 
@@ -385,3 +396,4 @@ namespace gua {
 
 
 }
+

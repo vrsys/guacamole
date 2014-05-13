@@ -32,7 +32,7 @@ namespace gua {
 
 class Pipeline;
 class SceneGraph;
-class GeometryUberShader;
+class TriMeshUberShader;
 
 /**
  *
@@ -57,6 +57,14 @@ class GBufferPass : public GeometryPass {
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
 
+  /*virtual*/ void cleanup(RenderContext const& ctx);
+
+  /*virtual*/ bool pre_compile_shaders(const gua::RenderContext &) { 
+    return false; // not possible 
+  };
+
+  void print_shaders(std::string const& directory,
+                     std::string const& name) const;
   void apply_material_mapping(std::set<std::string> const& materials);
 
   LayerMapping const* get_gbuffer_mapping() const;

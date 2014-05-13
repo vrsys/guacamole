@@ -56,6 +56,17 @@ enum class StereoMode {
 };
 
 /**
+ * Shadow type for a shadow-casting node.
+ *
+ * Determines the quality of shadows.
+ */
+enum class ShadowMode {
+  OFF = 0,
+  LOW_QUALITY,
+  HIGH_QUALITY
+};
+
+/**
  * All uniform types which are supported by guacamole.
  */
 enum class UniformType {

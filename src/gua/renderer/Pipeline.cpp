@@ -92,12 +92,6 @@ Pipeline::~Pipeline() {
 void Pipeline::print_shaders(std::string const& directory) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  passes_[PipelineStage::geometry]->print_shaders(directory, "/0_gbuffer");
-  passes_[PipelineStage::lighting]->print_shaders(directory, "/1_lighting");
-  passes_[PipelineStage::shading]->print_shaders(directory, "/2_final");
-  passes_[PipelineStage::compositing]->print_shaders(directory, "/3_composite");
-  passes_[PipelineStage::postfx]->print_shaders(directory, "/4_postFX");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -296,6 +290,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       }
 
       window_->finish_frame();
+      ++(window_->get_context()->framecount);
     }
   }
 }
@@ -315,7 +310,6 @@ void Pipeline::set_context(RenderContext* ctx) {
 void Pipeline::create_passes() {
 
   if (passes_need_reload_) {
-
     auto materials(MaterialDatabase::instance()->list_all());
 
     auto pre_pass = new GBufferPass(this);
@@ -360,6 +354,7 @@ void Pipeline::create_passes() {
     if (compilation_succeeded) {
 
       for (auto pass : passes_) {
+        if (context_) pass->cleanup(*context_);
         delete pass;
       }
 
@@ -378,6 +373,7 @@ void Pipeline::create_passes() {
       Logger::LOG_WARNING << "Failed to recompile shaders!" << std::endl;
 
       for (auto pass : new_passes) {
+        if (context_) pass->cleanup(*context_);
         delete pass;
       }
     }
@@ -423,7 +419,6 @@ void Pipeline::create_buffers() {
       TextureDatabase::instance()->add(config.output_texture_name() + "_depth_left", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[0]->get_depth_buffer());
       TextureDatabase::instance()->add(config.output_texture_name() + "_depth_right", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[1]->get_depth_buffer());
     }
-
 
     buffers_need_reload_ = false;
   }

@@ -46,8 +46,10 @@ ShadowMap::ShadowMap(Pipeline* pipeline)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ShadowMap::~ShadowMap() 
-{}
+ShadowMap::~ShadowMap() {
+    if (buffer_) 
+      delete buffer_;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,6 +96,17 @@ void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void ShadowMap::cleanup(RenderContext const& context) 
+{
+  if (buffer_) buffer_->remove_buffers(context);
+
+  for (auto ubershader : ubershader_) {
+    ubershader.second->cleanup(context);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void ShadowMap::render_geometry(RenderContext const & ctx,
                                 SceneGraph const& current_graph,
                                 math::vec3 const& center_of_interest,
@@ -136,9 +149,6 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
 
     if (ubershader)
     {
-      ubershader->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
-      ubershader->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
-
       auto camera_position(scene.frustum.get_camera_position());
       auto projection(scene.frustum.get_projection());
       auto view_matrix(scene.frustum.get_view());
@@ -148,11 +158,19 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
       ubershader->set_uniform(ctx, view_matrix, "gua_view_matrix");
       ubershader->set_uniform(ctx, scm::math::inverse(projection * view_matrix), "gua_inverse_projection_view_matrix");
 
+      ubershader->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
+      ubershader->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+
       ubershader->set_uniform(ctx, 1.0f / map_size, "gua_texel_width");
       ubershader->set_uniform(ctx, 1.0f / map_size, "gua_texel_height");
+      ubershader->set_uniform(ctx, true, "gua_render_shadow_map");
 
       for (auto const& node : type.second)
       {
+        if (node->get_shadow_mode() != ShadowMode::OFF) {
+          ubershader->set_uniform(ctx, static_cast<int>(node->get_shadow_mode()), "gua_shadow_quality");
+        }
+
         // draw node
         ubershader->draw(ctx,
           node->get_filename(),
@@ -251,43 +269,75 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
 
       int cascade(y*2 + x);
 
+      // render each cascade to a quarter of the shadow map
       ctx.render_context->set_viewport(scm::gl::viewport(
           math::vec2(x * map_size, y * map_size),
           math::vec2(map_size, map_size)));
 
+      // set clipping of camera frustum according to current cascade
       Frustum cropped_frustum(Frustum::perspective(
         scene_frustum.get_camera_transform(),
         scene_frustum.get_screen_transform(),
         splits[cascade], splits[cascade+1]
       ));
 
+      // transform cropped frustum tu sun space and calculate radius and bbox
+      // of transformed frustum
       auto cropped_frustum_corners(cropped_frustum.get_corners());
       math::BoundingBox<math::vec3> extends_in_sun_space;
+      float radius_in_sun_space = 0;
+      std::vector<math::vec3> corners_in_sun_space;
+      math::vec3 center_in_sun_space(0, 0, 0);
 
       auto inverse_sun_transform(scm::math::inverse(transform));
       for (auto const& corner: cropped_frustum_corners) {
-        auto corner_in_sun_space(inverse_sun_transform * corner);
-        extends_in_sun_space.expandBy(corner_in_sun_space);
+        math::vec3 new_corner(inverse_sun_transform * corner);
+        center_in_sun_space += new_corner/8;
+        corners_in_sun_space.push_back(new_corner);
+        extends_in_sun_space.expandBy(new_corner);
       }
 
-      auto size(extends_in_sun_space.max - extends_in_sun_space.min);
+      for (auto const& corner: corners_in_sun_space) {
+        float radius = scm::math::length(corner-center_in_sun_space);
+        if (radius > radius_in_sun_space)
+          radius_in_sun_space = radius;
+      }
 
+      // center of front plane of frustum
       auto center(math::vec3((extends_in_sun_space.min[0] + extends_in_sun_space.max[0])/2,
                              (extends_in_sun_space.min[1] + extends_in_sun_space.max[1])/2,
                               extends_in_sun_space.max[2] + near_clipping_in_sun_direction));
 
-      auto screen_in_sun_space(scm::math::make_translation(center) * scm::math::make_scale(size[0], size[1], 1.0f));
+      // eliminate sub-pixel movement
+      float tex_coord_x = center.x * map_size / radius_in_sun_space / 2;
+      float tex_coord_y = center.y * map_size / radius_in_sun_space / 2;
 
+      float tex_coord_rounded_x = round(tex_coord_x);
+      float tex_coord_rounded_y = round(tex_coord_y);
+
+      float dx = tex_coord_rounded_x - tex_coord_x;
+      float dy = tex_coord_rounded_y - tex_coord_y;
+
+      dx /= map_size / radius_in_sun_space / 2;
+      dy /= map_size / radius_in_sun_space / 2;
+
+      center.x += dx;
+      center.y += dy;
+
+      // calculate transformation of shadow screen
+      auto screen_in_sun_space(scm::math::make_translation(center) * scm::math::make_scale(radius_in_sun_space*2, radius_in_sun_space*2, 1.0f));
       auto sun_screen_transform(transform * screen_in_sun_space);
-      auto sun_camera_transform(scm::math::make_translation(sun_screen_transform.column(3)[0], sun_screen_transform.column(3)[1], sun_screen_transform.column(3)[2]));
-      auto sun_camera_depth(transform * math::vec4(0, 0, size[2] + near_clipping_in_sun_direction, 0.0f));
+
+      // calculate transformation of shadow eye
+      auto sun_eye_transform(scm::math::make_translation(sun_screen_transform.column(3)[0], sun_screen_transform.column(3)[1], sun_screen_transform.column(3)[2]));
+      auto sun_eye_depth(transform * math::vec4(0, 0, extends_in_sun_space.max[2] - extends_in_sun_space.min[2] + near_clipping_in_sun_direction, 0.0f));
 
       auto shadow_frustum(
         Frustum::orthographic(
-          sun_camera_transform,
+          sun_eye_transform,
           sun_screen_transform,
           0,
-          scm::math::length(sun_camera_depth)
+          scm::math::length(sun_eye_depth)
         )
       );
 

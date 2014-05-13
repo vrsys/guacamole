@@ -46,8 +46,10 @@ FrameBufferObject::~FrameBufferObject() {
 void FrameBufferObject::remove_attachments() {
 
   for (auto fbo: fbos_) {
-    fbo->clear_attachments();
-    fbo.reset();
+    if (fbo){
+      fbo->clear_attachments();
+      fbo.reset();
+    }
   }
 }
 

@@ -32,6 +32,11 @@ layout(location=4) in vec3 gua_in_bitangent;
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
 uniform uint gua_material_id;
+uniform bool gua_render_shadow_map;
+
+// 1: LOW_QUALITY
+// 2: HIGH_QUALITY
+uniform int  gua_shadow_quality;
 
 // material specific uniforms
 @uniform_definition
@@ -69,23 +74,33 @@ uint gua_get_material_id() {
 
 // main ------------------------------------------------------------------------
 void main() {
-  gua_position_varying = vec3(0);
 
-  gua_texcoords = gua_in_texcoords;
+  if (gua_render_shadow_map && gua_shadow_quality == 1) {
 
-  gua_object_normal =     gua_in_normal;
-  gua_object_tangent =    gua_in_tangent;
-  gua_object_bitangent =  gua_in_bitangent;
-  gua_object_position =   gua_in_position;
+    // perform only material independent projection
+    gl_Position = gua_projection_matrix * gua_view_matrix
+                 * gua_model_matrix
+                 * vec4(gua_in_position, 1.0);
 
-  gua_world_normal =      normalize((gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz);
-  gua_world_tangent =     normalize((gua_normal_matrix * vec4(gua_in_tangent, 0.0)).xyz);
-  gua_world_bitangent =   normalize((gua_normal_matrix * vec4(gua_in_bitangent, 0.0)).xyz);
-  gua_world_position =    (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
+  } else {
+    gua_position_varying = vec3(0);
 
-  // big switch, one case for each material
-  @material_switch
+    gua_texcoords = gua_in_texcoords;
 
-  gua_uint_gbuffer_varying_0.x = gua_material_id;
-  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_position_varying.xyz, 1.0);
+    gua_object_normal =     gua_in_normal;
+    gua_object_tangent =    gua_in_tangent;
+    gua_object_bitangent =  gua_in_bitangent;
+    gua_object_position =   gua_in_position;
+
+    gua_world_normal =      normalize((gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz);
+    gua_world_tangent =     normalize((gua_normal_matrix * vec4(gua_in_tangent, 0.0)).xyz);
+    gua_world_bitangent =   normalize((gua_normal_matrix * vec4(gua_in_bitangent, 0.0)).xyz);
+    gua_world_position =    (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
+
+    // big switch, one case for each material
+    @material_switch
+
+    gua_uint_gbuffer_varying_0.x = gua_material_id;
+    gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_position_varying.xyz, 1.0);
+  }
 }

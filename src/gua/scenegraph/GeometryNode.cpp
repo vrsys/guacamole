@@ -37,11 +37,14 @@ namespace gua {
   GeometryNode::GeometryNode(std::string const& name,
                              std::string const& filename,
                              std::string const& material,
-                             math::mat4 const& transform)
+                             math::mat4 const& transform,
+                             ShadowMode shadow_mode)
       : Node(name, transform), 
         filename_(filename),
         material_(material),
-        filename_changed_(false), material_changed_(false) 
+        shadow_mode_(shadow_mode),
+        filename_changed_(false), 
+        material_changed_(false) 
   {}
 
   ////////////////////////////////////////////////////////////////////////////////

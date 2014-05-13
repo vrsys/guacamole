@@ -41,11 +41,15 @@ uniform sampler2DArray video_color_texture;
 ///////////////////////////////////////////////////////////////////////////////
 @include "shaders/common/pack_vec3.glsl"
 
+vec2 gua_get_quad_coords() {
+  return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
+}
+
 @include "shaders/uber_shaders/common/get_sampler_casts.glsl"
 
-uint gua_get_material_id() {            
+uint gua_get_material_id() {
   return gua_uint_gbuffer_varying_0.x;
-}  
+}
 
 vec3 gua_get_position() {
   return gua_position_varying;
@@ -71,7 +75,7 @@ void main() {
   float maxdist = 1000.0;
   float mindist = maxdist;
   float ogldepth = 1.0;
-  
+
   // find minimum distances;
   for(int l = 0; l  < numlayers && l < MAX_VIEWS;++l)
   {
@@ -87,9 +91,9 @@ void main() {
 #endif
 
     float dist = color_contribution.b;
-    
+
     if(dist < maxdist && depth < 1.0)
-    {  
+    {
       color_contributions[l] = color_contribution;
       if(dist < mindist){
       	mindist = dist;
@@ -103,7 +107,7 @@ void main() {
 
   int accum = 0;
   if(mindist < maxdist)  // we found at least one surface
-  { 
+  {
     vec4 finalcol = vec4(0.0);
 
     for(int l = 0; l  < numlayers && l < MAX_VIEWS;++l)
@@ -117,7 +121,7 @@ void main() {
 	      finalcol.a   += color_contribution.a;
       }
     }
-    if(finalcol.a > 0.0) 
+    if(finalcol.a > 0.0)
     {
       finalcol.rgba = finalcol.rgba/finalcol.a;
       output_depth  = ogldepth;

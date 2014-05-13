@@ -23,6 +23,8 @@
 #define SIGNAL_HPP_
 
 #include <map>
+#include <algorithm>
+#include <functional>
 #include <gua/platform.hpp>
 
 namespace gua {
