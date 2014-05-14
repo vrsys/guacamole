@@ -22,6 +22,8 @@
 // class header
 #include "gua/renderer/RenderContext.hpp"
 
+#include <gua/renderer/Window.hpp>
+
 namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
