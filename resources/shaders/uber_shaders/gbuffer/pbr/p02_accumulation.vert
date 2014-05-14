@@ -21,25 +21,29 @@
         uniform float height_divided_by_top_minus_bottom;
         uniform float near_plane;         
         
-        uniform float radius_scaling;        
-
+        uniform float radius_model_scaling;        
+        uniform float mVPScalingRatio;
 
         //output to fragment shader                                             
         out vec3 pass_point_color;
         out vec3 pass_normal;
         out float pass_mv_vert_depth;
-        out float pass_radius;         
+        out float pass_scaled_radius;         
                                                      
                                                      
         void main()                                  
         {                   
                       
+
+          float scaled_radius = radius_model_scaling * in_radius;
+
           vec4 pos_es = gua_view_matrix * gua_model_matrix * vec4(in_position, 1.0);
+
 
           gl_Position = gua_projection_matrix * pos_es;  
           
-          gl_PointSize = 2.0f * radius_scaling * in_radius * (near_plane/-pos_es.z)* height_divided_by_top_minus_bottom;
-          //gl_PointSize = in_radius * 2.0f * -pos_es.z * height_divided_by_top_minus_bottom;
+          gl_PointSize = 2.0f * mVPScalingRatio * in_radius * (near_plane/-pos_es.z)* height_divided_by_top_minus_bottom;
+
                     
           pass_point_color = vec3((in_r)/255.0f,     
                              (in_g)/255.0f,     
@@ -47,5 +51,5 @@
 
           pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;    
           pass_mv_vert_depth = pos_es.z;
-          pass_radius = in_radius;
+          pass_scaled_radius = scaled_radius;
         }                                          

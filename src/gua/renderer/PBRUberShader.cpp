@@ -502,11 +502,14 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
 
               scm::math::vec4f x_unit_vec(1.0f,0.f,0.f,0.f);
 
-              float radius_scaling = scm::math::length(model_matrix * x_unit_vec);
+              float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
+
+              float modelViewProjectionScalingRatio = scm::math::length(frustum.get_projection()*frustum.get_view()*model_matrix*x_unit_vec)
+                                                      / 0.8759124279022216797;
 
 
-              get_program(depth_pass)->set_uniform(ctx, radius_scaling, "radius_scaling");
-
+              get_program(depth_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
+              get_program(depth_pass)->set_uniform(ctx, modelViewProjectionScalingRatio, "mVPScalingRatio");
 
 	      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
 	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
@@ -598,19 +601,20 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
       }
 
-
-
-
-
-
         scm::math::vec4f x_unit_vec(1.0f,0.f,0.f,0.f);
 
-        float radius_scaling = scm::math::length(model_matrix * x_unit_vec);
+        float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
+
+        float modelViewProjectionScalingRatio = scm::math::length(frustum.get_projection()*frustum.get_view()*model_matrix*x_unit_vec)
+                                                      / 0.8759124279022216797;
+
+
+        get_program(accumulation_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
+        get_program(accumulation_pass)->set_uniform(ctx, modelViewProjectionScalingRatio, "mVPScalingRatio");
 
         ctx.render_context->bind_texture(depth_pass_linear_depth_result_[ctx.id], linear_sampler_state_[ctx.id], 0);
         get_program(accumulation_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
 
-        get_program(accumulation_pass)->set_uniform(ctx, radius_scaling, "radius_scaling");
       
         get_program(accumulation_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
         get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");

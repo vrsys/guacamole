@@ -14,7 +14,7 @@ const float gaussian[32] = float[](
 in vec3 pass_point_color;  
 in vec3 pass_normal;
 in float pass_mv_vert_depth;
-in float pass_radius;
+in float pass_scaled_radius;
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -34,7 +34,6 @@ uniform float near_plane;
 uniform float far_minus_near_plane;
 uniform vec2 win_dims;
 
-uniform float radius_scaling;
 
 //uniform float win_dim_x;
 //uniform float win_dim_y;
@@ -119,14 +118,14 @@ void main()
 float depth_to_compare = 0;
 
    //if(ellipsify)
-      depth_to_compare = pass_mv_vert_depth + depth_offset * pass_radius;
+      depth_to_compare = pass_mv_vert_depth + depth_offset * pass_scaled_radius;
    //else
    // depth_to_compare = pass_mv_vert_depth;
 
 
    float weight = get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
-   if( depthValue  - (depth_to_compare)    < 0.00031  + 3.0*(pass_radius * radius_scaling ) )
+   if( depthValue  - (depth_to_compare)    < 0.00031  + 3.0*(pass_scaled_radius) )
    {
          out_accumulated_color = vec4(pass_point_color * weight, weight);
    }
