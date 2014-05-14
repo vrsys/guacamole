@@ -470,18 +470,6 @@ bool KinectCalibrationFile::parse()
       fpath.replace(fpath.end() - 3, fpath.end(), "cv_xyz");
       //std::cerr << "loading " << fpath << std::endl;
 
-#if !WIN32
-      FILE* f_xyz = fopen( fpath.c_str(), "rb");
-      unsigned nbr = 0;
-      nbr = fread(&cv_width, sizeof(unsigned), 1, f_xyz);
-      nbr = fread(&cv_height, sizeof(unsigned), 1, f_xyz);
-      nbr = fread(&cv_depth, sizeof(unsigned), 1, f_xyz);
-      nbr = fread(&cv_min_d, sizeof(float), 1, f_xyz);
-      nbr = fread(&cv_max_d, sizeof(float), 1, f_xyz);
-      cv_xyz = new video3d::xyz[cv_width * cv_height * cv_depth];
-      nbr = fread(cv_xyz, sizeof(video3d::xyz), cv_width * cv_height * cv_depth, f_xyz);
-      fclose(f_xyz);
-#else
       std::fstream fstr(fpath.c_str(), std::ios::in | std::ios::binary);
       unsigned nbr = 0;
       if (fstr.good())
@@ -494,12 +482,9 @@ bool KinectCalibrationFile::parse()
         cv_xyz = new video3d::xyz[cv_width * cv_height * cv_depth];
         fstr.read((char*)cv_xyz, sizeof(video3d::xyz) * cv_width * cv_height * cv_depth);
         fstr.close();
-      }
-      else {
+      } else {
         std::cerr << "KinectCalibrationFile::parse(): Could not open " << fpath << std::endl;
       }
-#endif
-
     }
 
     { // load cv_uv;
@@ -509,18 +494,7 @@ bool KinectCalibrationFile::parse()
       std::string fpath(_filePath.c_str());
       fpath.replace(fpath.end() - 3, fpath.end(), "cv_uv");
       //std::cerr << "loading " << fpath << std::endl;
-#if !WIN32
-      FILE* f_uv = fopen(fpath.c_str(), "rb");
-      unsigned nbr = 0;
-      nbr = fread(&cv_width, sizeof(unsigned), 1, f_uv);
-      nbr = fread(&cv_height, sizeof(unsigned), 1, f_uv);
-      nbr = fread(&cv_depth, sizeof(unsigned), 1, f_uv);
-      nbr = fread(&cv_min_d, sizeof(float), 1, f_uv);
-      nbr = fread(&cv_max_d, sizeof(float), 1, f_uv);
-      cv_uv = new video3d::uv[cv_width * cv_height * cv_depth];
-      nbr = fread(cv_uv, sizeof(video3d::uv), cv_width * cv_height * cv_depth, f_uv);
-      fclose(f_uv);
-#else
+
       std::fstream fstr(fpath.c_str(), std::ios::in | std::ios::binary);
       unsigned nbr = 0;
       if (fstr.good())
@@ -533,11 +507,9 @@ bool KinectCalibrationFile::parse()
         cv_uv = new video3d::uv[cv_width * cv_height * cv_depth];
         fstr.read((char*)cv_uv, sizeof(video3d::uv) * cv_width * cv_height * cv_depth);
         fstr.close();
-      }
-      else {
+      } else {
         std::cerr << "KinectCalibrationFile::parse(): Could not open " << fpath << std::endl;
       }
-#endif
     }
 
     return true;
