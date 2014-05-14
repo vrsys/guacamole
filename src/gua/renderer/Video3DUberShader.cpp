@@ -311,6 +311,16 @@ void Video3DUberShader::draw(RenderContext const& ctx,
     auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
     ctx.render_context->set_depth_stencil_state(ds_state);
 
+    scm::math::vec4f norm_vec (0.0f, 1.0f, 0.0f, 0.0f);
+    auto trans_vec = model_matrix * norm_vec;
+
+    get_program(warp_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+    get_program(warp_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
+
+    float model_scale = scm::math::length(trans_vec);
+    float const min_length = 0.0125f;
+    get_program(warp_pass)->set_uniform(ctx, min_length * model_scale, "min_length");
+
     // pre passes
     for (unsigned layer = 0; layer != video3d_ressource->number_of_cameras(); ++layer)
     {
@@ -329,8 +339,6 @@ void Video3DUberShader::draw(RenderContext const& ctx,
       get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getTexSizeInvD(), "tex_size_inv");
       get_program(warp_pass)->set_uniform(ctx, int(layer), "layer");
       get_program(warp_pass)->set_uniform(ctx, int(1), "bbxclip");
-      get_program(warp_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-      get_program(warp_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
       if (material && video3d_ressource)
       {
@@ -339,11 +347,11 @@ void Video3DUberShader::draw(RenderContext const& ctx,
         get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeDToEyeRGB(), "eye_d_to_eye_rgb");
         get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeRGBToImageRGB(), "eye_rgb_to_image_rgb");
 
-	      ctx.render_context->bind_texture(video3d_ressource->cv_xyz(ctx,layer), linear_sampler_state_[ctx.id], 11);
-	      get_program(warp_pass)->get_program(ctx)->uniform_sampler("cv_xyz", 11);
+	      ctx.render_context->bind_texture(video3d_ressource->cv_xyz(ctx,layer), linear_sampler_state_[ctx.id], 1);
+	      get_program(warp_pass)->get_program(ctx)->uniform_sampler("cv_xyz", 1);
 
-	      ctx.render_context->bind_texture(video3d_ressource->cv_uv(ctx,layer), linear_sampler_state_[ctx.id], 12);
-	      get_program(warp_pass)->get_program(ctx)->uniform_sampler("cv_uv", 12);
+	      ctx.render_context->bind_texture(video3d_ressource->cv_uv(ctx,layer), linear_sampler_state_[ctx.id], 2);
+	      get_program(warp_pass)->get_program(ctx)->uniform_sampler("cv_uv", 2);
 
 	      get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_min_d, "cv_min_d");
 	      get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_max_d, "cv_max_d");

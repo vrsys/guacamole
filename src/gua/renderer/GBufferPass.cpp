@@ -83,6 +83,21 @@ void GBufferPass::cleanup(RenderContext const& ctx) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
+{
+  bool success {true};
+
+  for (auto const& shader : ubershaders_)
+  {
+    success &= shader.second->upload_to(ctx);
+  }
+
+  return success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
   void GBufferPass::rendering(SerializedScene const& scene,
     SceneGraph const& graph,
     RenderContext const& ctx,

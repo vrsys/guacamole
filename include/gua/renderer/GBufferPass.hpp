@@ -59,9 +59,7 @@ class GBufferPass : public GeometryPass {
 
   /*virtual*/ void cleanup(RenderContext const& ctx);
 
-  /*virtual*/ bool pre_compile_shaders(const gua::RenderContext &) { 
-    return false; // not possible 
-  };
+  /*virtual*/ bool pre_compile_shaders(const gua::RenderContext &);
 
   void print_shaders(std::string const& directory,
                      std::string const& name) const;
