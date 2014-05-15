@@ -91,7 +91,7 @@ float get_gaussianValue(float depth_offset, vec2 mappedPointCoord, vec3 newNorma
     if(radius > 1.0)
          discard;
     else
-        return gaussian[(int)(round(radius * 32.0))];
+        return gaussian[(int)(round(radius * 31.0))];
 
 }
 
@@ -127,7 +127,7 @@ float depth_to_compare = 0;
 
    if( depthValue  - (depth_to_compare)    < 0.00031  + 3.0*(pass_scaled_radius) )
    {
-         out_accumulated_color = vec4(pass_point_color * weight, weight);
+           out_accumulated_color = vec4(pass_point_color * weight, weight);
    }
    else
    {
