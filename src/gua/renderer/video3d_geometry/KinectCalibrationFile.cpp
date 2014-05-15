@@ -54,7 +54,15 @@ KinectCalibrationFile::KinectCalibrationFile(const std::string& filePath):
     _local_t(),
     _local_r(),
 */
-    _filePath(filePath)
+    _filePath(filePath),
+    _texSizeInvD(),
+    cv_xyz(0),
+    cv_uv(0),
+    cv_width(0),
+    cv_height(0),
+    cv_depth(0),
+    cv_min_d(0),
+    cv_max_d(0)
 {
     if(s_compress_rgb == -1){ // i am the first to look if file exists rgbd_calib/compress.rgb
         std::string filename("rgbd_calib/compress.rgb");
@@ -239,6 +247,9 @@ bool KinectCalibrationFile::parse()
 
             _width = getNextTokenAsFloat(infile);
             _height = getNextFloat(infile);
+
+	    _texSizeInvD[0] = 1.0f/_width;
+	    _texSizeInvD[1] = 1.0f/_height;
         }
 
         /*else if (token == "baumer_serial:")
@@ -398,56 +409,107 @@ bool KinectCalibrationFile::parse()
     }
 
     { // .ext3
-        std::string e_filepath(_filePath.c_str());
-        e_filepath.replace( e_filepath.end() - 3, e_filepath.end(), "ext3");
-        infile.open( e_filepath.c_str());
-        if(infile){
+      std::string e_filepath(_filePath.c_str());
+      e_filepath.replace(e_filepath.end() - 3, e_filepath.end(), "ext3");
+      infile.open(e_filepath.c_str());
+      if (infile){
 
-            float token;
-            infile >> token;
-            _worldTranslation3[0] = token;
-            infile >> token;
-            _worldTranslation3[1] = token;
-            infile >> token;
-            _worldTranslation3[2] = token;
+        float token;
+        infile >> token;
+        _worldTranslation3[0] = token;
+        infile >> token;
+        _worldTranslation3[1] = token;
+        infile >> token;
+        _worldTranslation3[2] = token;
 
-            scm::math::set_identity(_worldRotation3);
-
-
-            infile >> token;
-            _worldRotation3[0]  = token;
-            infile >> token;
-            _worldRotation3[1]  = token;
-            infile >> token;
-            _worldRotation3[2]  = token;
-
-            infile >> token;
-            _worldRotation3[4]  = token;
-            infile >> token;
-            _worldRotation3[5]  = token;
-            infile >> token;
-            _worldRotation3[6]  = token;
-
-            infile >> token;
-            _worldRotation3[8]  = token;
-            infile >> token;
-            _worldRotation3[9]  = token;
-            infile >> token;
-            _worldRotation3[10] = token;
-
-            _worldRotation3[12] =  0.0;
-            _worldRotation3[13] =  0.0;
-            _worldRotation3[14] =  0.0;
+        scm::math::set_identity(_worldRotation3);
 
 
-            infile.close();
-        }
-        else{
-            scm::math::set_identity(_worldRotation3);
-            _worldTranslation3[0] = 0.0;
-            _worldTranslation3[1] = 0.0;
-            _worldTranslation3[2] = 0.0;
-        }
+        infile >> token;
+        _worldRotation3[0] = token;
+        infile >> token;
+        _worldRotation3[1] = token;
+        infile >> token;
+        _worldRotation3[2] = token;
+
+        infile >> token;
+        _worldRotation3[4] = token;
+        infile >> token;
+        _worldRotation3[5] = token;
+        infile >> token;
+        _worldRotation3[6] = token;
+
+        infile >> token;
+        _worldRotation3[8] = token;
+        infile >> token;
+        _worldRotation3[9] = token;
+        infile >> token;
+        _worldRotation3[10] = token;
+
+        _worldRotation3[12] = 0.0;
+        _worldRotation3[13] = 0.0;
+        _worldRotation3[14] = 0.0;
+
+
+        infile.close();
+      }
+      else{
+        scm::math::set_identity(_worldRotation3);
+        _worldTranslation3[0] = 0.0;
+        _worldTranslation3[1] = 0.0;
+        _worldTranslation3[2] = 0.0;
+      }
+    }
+
+
+    { // load cv_xyz
+      if (cv_xyz){
+        delete[] cv_xyz;
+      }
+      std::string fpath(_filePath.c_str());
+      fpath.replace(fpath.end() - 3, fpath.end(), "cv_xyz");
+      //std::cerr << "loading " << fpath << std::endl;
+
+      std::fstream fstr(fpath.c_str(), std::ios::in | std::ios::binary);
+      unsigned nbr = 0;
+      if (fstr.good())
+      {
+        fstr.read((char*)&cv_width, sizeof(unsigned));
+        fstr.read((char*)&cv_height, sizeof(unsigned));
+        fstr.read((char*)&cv_depth, sizeof(unsigned));
+        fstr.read((char*)&cv_min_d, sizeof(float));
+        fstr.read((char*)&cv_max_d, sizeof(float));
+        cv_xyz = new video3d::xyz[cv_width * cv_height * cv_depth];
+        fstr.read((char*)cv_xyz, sizeof(video3d::xyz) * cv_width * cv_height * cv_depth);
+        fstr.close();
+      } else {
+        std::cerr << "KinectCalibrationFile::parse(): Could not open " << fpath << std::endl;
+      }
+    }
+
+    { // load cv_uv;
+      if(cv_uv){
+        delete [] cv_uv;
+      }
+      std::string fpath(_filePath.c_str());
+      fpath.replace(fpath.end() - 3, fpath.end(), "cv_uv");
+      //std::cerr << "loading " << fpath << std::endl;
+
+      std::fstream fstr(fpath.c_str(), std::ios::in | std::ios::binary);
+      unsigned nbr = 0;
+      if (fstr.good())
+      {
+        fstr.read((char*)&cv_width, sizeof(unsigned));
+        fstr.read((char*)&cv_height, sizeof(unsigned));
+        fstr.read((char*)&cv_depth, sizeof(unsigned));
+        fstr.read((char*)&cv_min_d, sizeof(float));
+        fstr.read((char*)&cv_max_d, sizeof(float));
+        cv_uv = new video3d::uv[cv_width * cv_height * cv_depth];
+        fstr.read((char*)cv_uv, sizeof(video3d::uv) * cv_width * cv_height * cv_depth);
+        fstr.close();
+      } else {
+        std::cerr << "KinectCalibrationFile::parse(): Could not open " << fpath << std::endl;
+      }
     }
 
     return true;
@@ -777,6 +839,12 @@ KinectCalibrationFile::getHeightC(){
 
 unsigned KinectCalibrationFile::getHeight(){
     return _height;
+}
+
+
+scm::math::vec2f const&
+KinectCalibrationFile::getTexSizeInvD() const{
+  return _texSizeInvD;
 }
 
 /////////////////////PRIVATE///////////////////////////

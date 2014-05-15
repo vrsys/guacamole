@@ -113,6 +113,9 @@ ELSEIF (MSVC)
     # not necessary to link GL on msvc
 ENDIF (UNIX)
 
+# link general libraries
+TARGET_LINK_LIBRARIES( guacamole general ${ZMQ_LIBRARIES})
+
 # link release libraries
 TARGET_LINK_LIBRARIES( guacamole optimized ${JSON_LIBRARY})
 TARGET_LINK_LIBRARIES( guacamole optimized ${BULLET_DYNAMICS_LIBRARY})

@@ -28,6 +28,12 @@ in vec3 gua_position_varying;
 // uniforms
 uniform bool gua_enable_global_clipping_plane;
 uniform vec4 gua_global_clipping_plane;
+uniform bool gua_render_shadow_map;
+
+// 1: LOW_QUALITY
+// 2: HIGH_QUALITY
+uniform int  gua_shadow_quality;
+
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
 // material specific uniforms
@@ -77,9 +83,14 @@ void main() {
 
   gl_FragDepth = gl_FragCoord.z;
 
-  // big switch, one case for each material
-  @material_switch
+  // perform only material dependent shading if not rendering to a shadow map or
+  // for high quality shadows
+  if (!gua_render_shadow_map || gua_shadow_quality != 1) {
 
-  gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
+    // big switch, one case for each material
+    @material_switch
+
+    gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
+  }
 }
 

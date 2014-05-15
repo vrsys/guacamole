@@ -37,6 +37,8 @@ class GBuffer;
 class Frustum;
 class Pipeline;
 class GeometryUberShader;
+
+
 class SceneGraph;
 
 /**
@@ -78,6 +80,8 @@ class ShadowMap {
   GBuffer*                       get_buffer() const {return buffer_;}
   std::vector<math::mat4> const& get_projection_view_matrices() const {return projection_view_matrices_;}
 
+  virtual void cleanup(RenderContext const& context);
+
  private:
 
   void update_members(RenderContext const& ctx, unsigned map_size);
@@ -90,9 +94,10 @@ class ShadowMap {
                        unsigned map_size);
 
   std::unique_ptr<Serializer> serializer_;
+
   GBuffer* buffer_;
   Pipeline* pipeline_;
-  
+
   std::unordered_map<std::type_index, GeometryUberShader*> ubershader_;
   
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;

@@ -71,18 +71,16 @@ void Texture2D::upload_to(RenderContext const& context) const {
 
   if (file_name_ == "") {
 
-
     if (data_.size() == 0)
       textures_[context.id] = context.render_device->create_texture_2d(
           math::vec2ui(width_, height_), color_format_, mipmap_layers_);
     else
       textures_[context.id] = context.render_device->create_texture_2d(
-	  scm::gl::texture_2d_desc(
+    scm::gl::texture_2d_desc(
               math::vec2ui(width_, height_), color_format_, mipmap_layers_),
           color_format_,
           data_);
   } else {
-    // MESSAGE("Uploading texture file %s", file_name_.c_str());
     scm::gl::texture_loader loader;
     textures_[context.id] = loader.load_texture_2d(
         *context.render_device, file_name_, mipmap_layers_ > 0);
@@ -93,12 +91,14 @@ void Texture2D::upload_to(RenderContext const& context) const {
     }
   }
 
-  sampler_states_[context.id] =
-      context.render_device->create_sampler_state(state_descripton_);
+  if (textures_[context.id]) {
+    sampler_states_[context.id] =
+        context.render_device->create_sampler_state(state_descripton_);
 
-  render_contexts_[context.id] = context.render_context;
+    render_contexts_[context.id] = context.render_context;
 
-  make_resident(context);
+    make_resident(context);
+  }
 }
 
 }

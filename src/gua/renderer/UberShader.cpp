@@ -33,8 +33,8 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UberShader::UberShader() 
-: uniform_mapping_(), 
+UberShader::UberShader()
+: uniform_mapping_(),
   output_mapping_(),
   programs_()
 {}
@@ -109,12 +109,14 @@ UniformMapping const* UberShader::get_uniform_mapping() const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
 /*virtual*/ void UberShader::add_program(std::shared_ptr<ShaderProgram> const& pre_pass)
 {
   programs_.push_back(pre_pass);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 /*virtual*/ std::shared_ptr<ShaderProgram> const& UberShader::get_program(unsigned pass) const
 {
   assert(programs_.size() > pass);
@@ -122,10 +124,20 @@ UniformMapping const* UberShader::get_uniform_mapping() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 std::vector<std::shared_ptr<ShaderProgram>> const& UberShader::programs() const
 {
   return programs_;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void UberShader::cleanup(RenderContext const& context) {
+  for (auto program : programs_) {
+    if (program) program->unuse(context);
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -195,6 +207,7 @@ std::string const UberShader::print_material_methods(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 /*virtual*/ bool UberShader::upload_to(RenderContext const& context) const
 {
   bool upload_succeeded = true;
@@ -206,5 +219,16 @@ std::string const UberShader::print_material_methods(
   return upload_succeeded;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void UberShader::save_shaders_to_file(std::string const& directory,
+                                                  std::string const& name) const {
+
+  for (int i(0); i < programs_.size(); ++i) {
+    programs_[i]->save_to_file(directory, name + string_utils::to_string(i));
+  }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+}

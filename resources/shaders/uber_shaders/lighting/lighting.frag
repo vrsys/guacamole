@@ -79,17 +79,17 @@ vec2 gua_get_quad_coords() {
 
 // shadow calculations ---------------------------------------------------------
 
-float gua_get_shadow(vec4 smap_coords, ivec2 offset) {
-  const mat4 acne_offset = mat4(
+float gua_get_shadow(vec4 smap_coords, ivec2 offset, float acne_offset) {
+  const mat4 acne = mat4(
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
-    0, 0, -gua_shadow_offset, 1
+    0, 0, -acne_offset, 1
   );
 
   return textureProjOffset(
     gua_get_shadow_sampler(gua_light_shadow_map),
-    acne_offset * smap_coords * vec4(
+    acne * smap_coords * vec4(
       gua_light_shadow_map_portion, gua_light_shadow_map_portion, 1.0, 1.0
     ), offset
   );
@@ -111,7 +111,7 @@ float gua_get_shadow(vec4 smap_coords) {
   );
 }
 
-float gua_get_shadow(mat4 shadow_map_coords_matrix, vec2 lookup_offset) {
+float gua_get_shadow(mat4 shadow_map_coords_matrix, vec2 lookup_offset, float acne_offset) {
   if(!gua_light_casts_shadow)
     return 1.0;
 
@@ -123,7 +123,7 @@ float gua_get_shadow(mat4 shadow_map_coords_matrix, vec2 lookup_offset) {
 
   for (y = -1; y <= 1; ++y)
     for (x = -1; x <= 1; ++x)
-      sum += gua_get_shadow(smap_coords, ivec2(x, y));
+      sum += gua_get_shadow(smap_coords, ivec2(x, y), acne_offset);
 
   float shadow = sum / 9.0;
 
@@ -185,7 +185,7 @@ void gua_calculate_spot_light() {
   if (dot(gbuffer_normal, gua_light_direction) < 0)
     discard;
 
-  float shadow = gua_get_shadow(gua_lightinfo4, vec2(0));
+  float shadow = gua_get_shadow(gua_lightinfo4, vec2(0), gua_shadow_offset);
 
   if(shadow <= 0.0)
     discard;
@@ -221,13 +221,13 @@ void gua_calculate_sun_light() {
   float shadow = 1.0;
 
   if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_0, position)) {
-    shadow = gua_get_shadow(gua_lightinfo4, vec2(0, 0));
+    shadow = gua_get_shadow(gua_lightinfo4, vec2(0, 0), gua_shadow_offset);
   } else if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_1, position)) {
-    shadow = gua_get_shadow(gua_lightinfo5, vec2(1, 0));
+    shadow = gua_get_shadow(gua_lightinfo5, vec2(1, 0), gua_shadow_offset*1.33);
   } else if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_2, position)) {
-    shadow = gua_get_shadow(gua_lightinfo6, vec2(0, 1));
+    shadow = gua_get_shadow(gua_lightinfo6, vec2(0, 1), gua_shadow_offset*1.66);
   } else if (gua_is_inside_frustum(gua_light_shadow_map_projection_view_matrix_3, position)) {
-    shadow = gua_get_shadow(gua_lightinfo7, vec2(1, 1));
+    shadow = gua_get_shadow(gua_lightinfo7, vec2(1, 1), gua_shadow_offset*2);
   }
 
 

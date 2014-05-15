@@ -12,8 +12,22 @@ kinectPlayer
 /opt/demo/kinecting/simple
 */
 
+namespace video3d{
+  struct xyz{
+    float x;
+    float y;
+    float z;
+  };
+  
+  struct uv{
+    float u;
+    float v;
+  };
+}
 
 class KinectCalibrationFile{
+
+
 
     public:
         KinectCalibrationFile(const std::string& filePath);
@@ -68,6 +82,8 @@ class KinectCalibrationFile{
         unsigned getHeightC();
         unsigned getHeight();
 
+  scm::math::vec2f const& getTexSizeInvD() const;
+
         /////////////////////////////////////////////////
 
     private: //Helper functions
@@ -86,6 +102,9 @@ class KinectCalibrationFile{
         scm::math::mat4f _local_t;
         scm::math::mat4f _local_r;
         */
+
+
+
     public:
         static bool s_compress;
     private:
@@ -139,6 +158,17 @@ class KinectCalibrationFile{
         bool _iscompresseddepth;
 
         std::string _filePath;
+  scm::math::vec2f _texSizeInvD;
+public:
+  video3d::xyz* cv_xyz;
+  video3d::uv* cv_uv;
+  unsigned cv_width;
+  unsigned cv_height;
+  unsigned cv_depth;
+  float    cv_min_d;
+  float    cv_max_d;
+
+
 };
 
 

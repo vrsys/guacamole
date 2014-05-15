@@ -908,6 +908,9 @@ std::string const NURBSUberShader::_final_fragment_shader () const
     // material specific uniforms
     string_utils::replace(fragment_shader, "@uniform_definition",
       get_uniform_mapping()->get_uniform_definition());
+    // BOOST_FOREACH (auto method, fragment_shader_factory_->get_main_functions()) {
+    //     fragment_shader << method.second << std::endl;
+    // }
 
     // outputs
     string_utils::replace(fragment_shader, "@output_definition",

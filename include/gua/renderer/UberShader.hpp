@@ -73,13 +73,17 @@ class UberShader {
   void set_uniform(RenderContext const& context,
     T const& value,
     std::string const& name,
-    unsigned position = 0) const 
+    unsigned position = 0) const
   {
     UniformValue<T> tmp(value);
+
     for (auto const& program : programs_) {  
+
       program->apply_uniform(context, &tmp, name, position);
     }
   }
+
+  virtual void cleanup (RenderContext const& context);
 
   /**
    * get gbuffer layers of ubershader
@@ -95,6 +99,9 @@ class UberShader {
   * add a program to ubershader
   */
   virtual void add_program(std::shared_ptr<ShaderProgram> const&);
+
+  virtual void save_shaders_to_file(std::string const& directory,
+                                    std::string const& name) const;
 
   /**
   * returns a program in enumerated order 
@@ -118,6 +125,7 @@ class UberShader {
 
   std::string const print_material_switch(UberShaderFactory const& factory) const;
   std::string const print_material_methods(UberShaderFactory const& factory) const;
+
 
   protected: // attributes
 

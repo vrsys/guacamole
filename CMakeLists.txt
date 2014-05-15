@@ -42,6 +42,7 @@ include(define_macros)
 include(find_compiler)
 include(FindSchism)
 include(FindBoost)
+include(FindZMQ)
 
 if (UNIX)
 	set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
@@ -64,6 +65,7 @@ set(LIB_PATHS
     ${BULLET_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
     ${PBR_LIBRARY_DIRS}
+    ${ZMQ_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS
@@ -77,6 +79,7 @@ set(INCLUDE_PATHS
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
     ${PBR_INCLUDE_DIRS}
+    ${ZMQ_INCLUDE_DIRS}    
 )
 
 if (NOT CMAKE_BUILD_TYPE)

@@ -128,6 +128,7 @@ class GUA_DLL Texture {
   mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
   mutable std::mutex upload_mutex_;
 
+
   std::vector<void*> data_;
   std::string file_name_;
 
