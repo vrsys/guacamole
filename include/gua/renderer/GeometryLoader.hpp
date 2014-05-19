@@ -52,7 +52,7 @@ class GUA_DLL GeometryLoader {
    *
    * Deletes the LoaderBase
    */
-   virtual ~GeometryLoader() = default;
+   virtual ~GeometryLoader() {};
 
    /**
    * Interface for file support
