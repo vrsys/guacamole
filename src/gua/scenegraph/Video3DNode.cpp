@@ -41,8 +41,10 @@ namespace gua {
   : GeometryNode(name, file, material, transform)
   {
     Singleton<Video3DUberShader>::instance();
-    bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-100.0,-100.0,-100.0),
-                                                  math::vec3(100.0,100.0,100.0)); 
+
+    // approximately local space
+    bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-3.0, -0.1,-3.0),
+                                                  math::vec3( 3.0, 2.5, 3.0)); 
   }
 
   void Video3DNode::update_bounding_box() const {
