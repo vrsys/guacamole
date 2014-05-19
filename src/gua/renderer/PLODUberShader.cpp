@@ -550,55 +550,54 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 
   /*virtual*/ void  PLODUberShader::preframe(RenderContext const& ctx) const
   {
-      //std::cout<<"Before upload to\n";
     upload_to(ctx);
+
+    if (previous_framecount_[ctx.id] != ctx.framecount)
+    {
+
+      previous_framecount_[ctx.id] = ctx.framecount;
     
-    //std::cout<<"Starting preframe\n";
-        if (previous_framecount_[ctx.id] != ctx.framecount)
-        {
+      pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
+      pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
+      pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+    
+      pbr::context_t context_id = controller->DeduceContextId(ctx.id);
 
-          previous_framecount_[ctx.id] = ctx.framecount;
-        
-          pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-          pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
-          pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-        
-          pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+      
+      cuts->AcceptFront(context_id);
+      
 
-          cuts->AcceptFront(context_id);
-          
+      if (ctx.framecount > 0)
+      {
+          controller->DispatchCutUpdate(context_id);
+      }
+      else
+      {
+          controller->StoreTemporaryBuffers(
+              context_id,
+              GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A),
+              GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B));
+              
+         database->set_window_width(render_window_dims_[ctx.id][0]);
+         database->set_window_height(render_window_dims_[ctx.id][1]);
+      }
+      
+      if (cuts->IsFrontModified(context_id))
+      {
+          UnmapTempBufferPtr(ctx, cuts->GetBuffer(context_id));
 
-          if (ctx.framecount > 0)
-          {
-              controller->DispatchCutUpdate(context_id);
-          }
-          else
-          {
-              controller->StoreTemporaryBuffers(
-                  context_id,
-                  GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A),
-                  GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B));
-                  
-             database->set_window_width(render_window_dims_[ctx.id][0]);
-             database->set_window_height(render_window_dims_[ctx.id][1]);
-          }
-          
-          if (cuts->IsFrontModified(context_id))
-          {
-              UnmapTempBufferPtr(ctx, cuts->GetBuffer(context_id));
+          CopyTempToMainMemory(ctx, cuts->GetBuffer(context_id));
 
-              CopyTempToMainMemory(ctx, cuts->GetBuffer(context_id));
+          cuts->SignalModificationComplete(context_id);
 
-              cuts->SignalModificationComplete(context_id);
+          controller->StoreTemporaryBuffers(
+              context_id,
+              GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A),
+              GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B));
 
-              controller->StoreTemporaryBuffers(
-                  context_id,
-                  GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A),
-                  GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B));
-
-          }
-          
-        }
+      }
+      
+    }
 
 
 
@@ -652,17 +651,16 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       pbr::view_t view_id = controller->DeduceViewId(context_id, 0);
       cuts->SendCamera(context_id, view_id, pbr::ren::Camera(view_id, frustum.get_view(), frustum.get_projection() ));
 
-
       auto plod_ressource     = std::static_pointer_cast<PLODRessource>(GeometryDatabase::instance()->lookup(file_name));
       auto material          = MaterialDatabase::instance()->lookup(material_name);
-
+     
 	   // begin of depth pass (first)
 	  {
 
             if( last_geometry_state_[ctx.id] != pre_draw_state)
             {
 	      
-              //enable dynamic point size in shaders
+        //enable dynamic point size in shaders
 	      ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
 
 	     
@@ -690,16 +688,15 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
            }
 
 
-              scm::math::vec4f x_unit_vec(1.0f,0.f,0.f,0.f);
+        scm::math::vec4f x_unit_vec(1.0f,0.f,0.f,0.f);
 
-              float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
+        float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
 
-              float modelViewProjectionScalingRatio = scm::math::length(frustum.get_projection()*frustum.get_view()*model_matrix*x_unit_vec)
-                                                      / 0.8759124279022216797;
+        float modelViewProjectionScalingRatio = scm::math::length(frustum.get_projection()*frustum.get_view()*model_matrix*x_unit_vec)
+                                                / 0.8759124279022216797;
 
-
-              get_program(depth_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
-              get_program(depth_pass)->set_uniform(ctx, modelViewProjectionScalingRatio, "mVPScalingRatio");
+        get_program(depth_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
+        get_program(depth_pass)->set_uniform(ctx, modelViewProjectionScalingRatio, "mVPScalingRatio");
 
 	      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
 	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
@@ -709,6 +706,8 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
         pbr::context_t context_id = controller->DeduceContextId(ctx.id);
         pbr::model_t model_id = controller->DeduceModelId(file_name);
         pbr::view_t view_id = controller->DeduceViewId(context_id, 0); //only one view
+        
+        database->GetModel(model_id)->kdn_tree()->Transform(model_matrix);
 
 	      if (material && plod_ressource)
 	      {
@@ -716,7 +715,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 		        {
 		          plod_ressource->draw(ctx, context_id, view_id, model_id, vertex_array_[ctx.id]);
 		        }
-		       get_program(depth_pass)->unuse(ctx);
+		        get_program(depth_pass)->unuse(ctx);
 	      }
 
 
@@ -980,7 +979,7 @@ void PLODUberShader::UnmapTempBufferPtr(RenderContext const& ctx, pbr::ren::CutD
 
 void PLODUberShader::CopyTempToMainMemory(RenderContext const& ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer const&  buffer) const
 {
-    std::cout<<"uploading something.\n";
+
     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
 
     size_t size_of_node_in_bytes = database->surfels_per_node() * database->size_of_surfel();
@@ -992,7 +991,7 @@ void PLODUberShader::CopyTempToMainMemory(RenderContext const& ctx, pbr::ren::Cu
 
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
 
-    pbr::context_t context_id = controller->DeduceContextId(ctx.id); //placeholder
+    pbr::context_t context_id = controller->DeduceContextId(ctx.id);
 
     switch (buffer)
     {
@@ -1003,13 +1002,10 @@ void PLODUberShader::CopyTempToMainMemory(RenderContext const& ctx, pbr::ren::Cu
                 std::cout << "Failed to transfer nodes into main memory.\nTemp Storage A was still mapped.";
                 assert(false);
             }
-            std::vector<pbr::ren::CutDatabaseRecord::SlotUpdateDescr>& transfer_descr_list = cuts->GetUpdatedSet(context_id/*, model_id*/);
+            std::vector<pbr::ren::CutDatabaseRecord::SlotUpdateDescr>& transfer_descr_list = cuts->GetUpdatedSet(context_id);
             
             if (!transfer_descr_list.empty())
             {
-                std::cout<<"Update list was not empty\n";
-                //uploaded_nodes_ += transfer_descr_list.size();
-
                 for (const auto& transfer_desc : transfer_descr_list)
                 {
                     size_t offset_in_temp_VBO = transfer_desc.src_ * size_of_node_in_bytes;
@@ -1027,11 +1023,9 @@ void PLODUberShader::CopyTempToMainMemory(RenderContext const& ctx, pbr::ren::Cu
                 std::cout << "Failed to transfer nodes into main memory.\nTemp Storage B was still mapped.";
                 assert(false);
             }
-            std::vector<pbr::ren::CutDatabaseRecord::SlotUpdateDescr>& transfer_descr_list = cuts->GetUpdatedSet(context_id/*, model_id*/);
+            std::vector<pbr::ren::CutDatabaseRecord::SlotUpdateDescr>& transfer_descr_list = cuts->GetUpdatedSet(context_id);
             if (!transfer_descr_list.empty())
             {
-                //uploaded_nodes_ += transfer_descr_list.size();
-
                 for (const auto& transfer_desc : transfer_descr_list)
                 {
                     size_t offset_in_temp_VBO = transfer_desc.src_ * size_of_node_in_bytes;
