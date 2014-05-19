@@ -48,6 +48,9 @@ public : // member
                                    PickResult::Options options,
                                    Mask const& mask, 
                                    std::set<PickResult>& hits);
+
+  /* virtual */ void update_cache();
+
 protected:
 
   /*virtual*/ std::shared_ptr<Node> copy() const;

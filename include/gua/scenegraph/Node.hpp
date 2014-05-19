@@ -30,8 +30,6 @@
 #include <gua/utils/Mask.hpp>
 #include <gua/events/Signal.hpp>
 
-#include <boost/uuid/uuid.hpp>
-
 // external headers
 #include <map>
 #include <set>
@@ -418,9 +416,6 @@ class GUA_DLL Node {
   std::size_t const uuid() const;
 
   friend class SceneGraph;
-  friend class GeometryLoader;
-  friend class VolumeLoader;
-  friend class MeshLoader;
   friend class Serializer;
   friend class DotGenerator;
   friend class physics::CollisionShapeNodeVisitor;
@@ -428,11 +423,22 @@ class GUA_DLL Node {
   virtual void ray_test_impl(RayNode const& ray, PickResult::Options options,
                              Mask const& mask, std::set<PickResult>& hits);
 
- protected:
   /**
-   *
-   */
+  *
+  */
   virtual std::shared_ptr<Node> copy() const = 0;
+
+  /**
+  * Deep copies a Node with all its children.
+  *
+  * This function recursively generates new Nodes for the Node itself
+  * and all of its children.
+  *
+  * \return node     A pointer of the recently generated Node.
+  */
+  std::shared_ptr<Node> deep_copy() const;
+
+ protected:
 
   /**
    * Returns if the Node is Root
@@ -450,16 +456,6 @@ class GUA_DLL Node {
    * \param parent    The new parent of the Node.
    */
   inline void set_parent(Node* parent) { parent_ = parent; }
-
-  /**
-   * Deep copies a Node with all its children.
-   *
-   * This function recursively generates new Nodes for the Node itself
-   * and all of its children.
-   *
-   * \return node     A pointer of the recently generated Node.
-   */
-  std::shared_ptr<Node> deep_copy() const;
 
  private:
   // structure

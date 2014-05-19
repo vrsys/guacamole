@@ -135,10 +135,10 @@ void Pipeline::loading_screen() {
       auto tmp_right_position(window_->config.right_position());
 
       window_->config.set_left_resolution(loading_texture_size);
-      window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
+      window_->config.set_left_position(tmp_left_position + (tmp_left_resolution - loading_texture_size)/2);
 
       window_->config.set_right_resolution(loading_texture_size);
-      window_->config.set_right_position(tmp_right_position + 0.5*(tmp_right_resolution - loading_texture_size));
+      window_->config.set_right_position(tmp_right_position + (tmp_right_resolution - loading_texture_size)/2);
 
       window_->display(loading_texture, loading_texture);
 

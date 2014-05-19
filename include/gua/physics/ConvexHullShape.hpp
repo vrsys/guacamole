@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/physics/CollisionShape.hpp>
 #include <gua/physics/PhysicsUtils.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 
 class btConvexHullShape;
 
@@ -105,7 +105,7 @@ class GUA_DLL ConvexHullShape : public CollisionShape {
                                            bool compensate_collision_margin =
                                                true,
                                            unsigned flags =
-                                               GeometryLoader::DEFAULTS);
+                                               TriMeshLoader::DEFAULTS);
 
  private:
 

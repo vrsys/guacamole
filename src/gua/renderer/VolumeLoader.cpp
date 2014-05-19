@@ -47,14 +47,12 @@ namespace gua {
 		std::unordered_map<std::string, std::shared_ptr<Node>>();
 
 	////////////////////////////////////////////////////////////////////////////////
-	VolumeLoader::VolumeLoader() : LoaderBase(), _supported_file_extensions() {
+	VolumeLoader::VolumeLoader() : GeometryLoader(), _supported_file_extensions() {
 		_supported_file_extensions.insert("raw");
 		_supported_file_extensions.insert("vol");
 	}
 
-	//VolumeLoader::VolumeLoader()
-	//	{}
-
+  ////////////////////////////////////////////////////////////////////////////////
 	std::shared_ptr<Node> VolumeLoader::create_volume_from_file(std::string const& node_name,
 																std::string const& file_name,
 																unsigned flags)

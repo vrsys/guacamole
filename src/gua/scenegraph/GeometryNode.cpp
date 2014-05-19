@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialDatabase.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
@@ -45,7 +45,9 @@ namespace gua {
         shadow_mode_(shadow_mode),
         filename_changed_(false), 
         material_changed_(false) 
-  {}
+  {
+    cache_material();
+  }
 
   ////////////////////////////////////////////////////////////////////////////////
   std::string const& GeometryNode::get_filename() const {
@@ -72,6 +74,7 @@ namespace gua {
   void GeometryNode::set_material(std::string const& v) {
     material_ = v; 
     material_changed_ = self_dirty_ = true; 
+    cache_material();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -91,66 +94,14 @@ namespace gua {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void GeometryNode::update_cache() {
-
-    // The code below auto-loads a geometry if it's not already supported by
-    // the GeometryDatabase. It expects a geometry name like
-    //
-    // "type='file'&file='data/objects/monkey.obj'&id=0&flags=0"
-
-    if (filename_changed_) {
-      if (filename_ != "") {
-        if (!GeometryDatabase::instance()->is_supported(filename_)) {
-          auto params(string_utils::split(filename_, '&'));
-          if (params.size() == 4) {
-            if (params[0] == "type=file") {
-              auto tmp_filename(string_utils::split(params[1], '='));
-              auto tmp_flags(string_utils::split(params[3], '='));
-              if (tmp_filename.size() == 2 && tmp_flags.size() == 2) {
-                std::string filename(tmp_filename[1]);
-                std::string flags_string(tmp_flags[1]);
-                unsigned flags(0);
-                std::stringstream sstr(flags_string);
-                sstr >> flags;
-
-                GeometryLoader loader;
-                loader.load_geometry(filename, flags);
-
-              }
-              else {
-                Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": Failed to extract filename and/or loading flags!" << std::endl;
-              }
-            }
-            else {
-              Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": Type is not supported!" << std::endl;
-            }
-          }
-          else {
-            Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": The name does not contain a type, file, id and flag parameter!" << std::endl;
-          }
-        }
+  void GeometryNode::cache_material() const
+  {
+    if (!material_.empty())
+    {
+      if (!MaterialDatabase::instance()->is_supported(material_))
+      {
+        MaterialDatabase::instance()->load_material(material_);
       }
-
-      filename_changed_ = false;
     }
-
-    // The code below auto-loads a material if it's not already supported by
-    // the MaterialDatabase. It expects a material name like
-    //
-    // data/materials/Stones.gmd
-
-    if (material_changed_) {
-      if (material_ != "") {
-        if (!MaterialDatabase::instance()->is_supported(material_)) {
-          auto mat = std::make_shared<Material>(material_, MaterialDescription(material_));
-          MaterialDatabase::instance()->add(material_, mat);
-        }
-      }
-
-      material_changed_ = false;
-    }
-
-    Node::update_cache();
   }
-
 }

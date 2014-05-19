@@ -100,11 +100,6 @@ class GUA_DLL GeometryNode : public Node {
     virtual void update_bounding_box() const;
 
     /**
-    * Updates the cached object in the database
-    */
-    virtual void update_cache();
-
-    /**
      * Accepts a visitor and calls concrete visit method.
      *
      * This method implements the visitor pattern for Nodes.
@@ -116,6 +111,8 @@ class GUA_DLL GeometryNode : public Node {
   protected:
 
     virtual std::shared_ptr<Node> copy() const = 0;
+
+    virtual void cache_material() const;
 
     std::string filename_;
     std::string material_;

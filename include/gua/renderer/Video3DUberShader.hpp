@@ -33,7 +33,7 @@ namespace gua {
 class ShaderProgram;
 class FrameBufferObject;
 
-class Video3DUberShader : public GeometryUberShader {
+class GUA_DLL Video3DUberShader : public GeometryUberShader {
  public:
 
    enum pass {

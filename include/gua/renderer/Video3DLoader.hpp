@@ -23,7 +23,8 @@
 #define GUA_VIDEO3D_LOADER_HPP
 
 // guacamole headers
-#include <gua/renderer/LoaderBase.hpp>
+#include <gua/platform.hpp>
+#include <gua/renderer/GeometryLoader.hpp>
 #include <gua/databases/Database.hpp>
 
 // external headers
@@ -44,33 +45,14 @@ class Video3DNode;
  * This class can load Video3D data from files and display them in multiple
  * contexts. A MeshLoader object is made of several Video3D objects.
  */
-class Video3DLoader : public LoaderBase { //GUA_DLL??? siehe VolumeLoader
+class GUA_DLL Video3DLoader : public GeometryLoader {
  public:
 
-  enum Flags {
-    DEFAULTS = 0,
-    MAKE_PICKABLE = 1 << 0, //Danger: critical due to no update of bounding box and no triangle intersection with avatar
-    NORMALIZE_POSITION = 1 << 1,
-    NORMALIZE_SCALE = 1 << 2
-  };
-
-  /**
-   * Default constructor.
-   *
-   * Constructs a new and empty Video3D.
-   */
   Video3DLoader();
+  ~Video3DLoader() = default;
 
-  /**
-   * Constructor from a file.
-   *
-   * Creates a new Video3D from a given file.
-   *
-   * \param file_name        The file to load the Video3Ds data from.
-   * \param material_name    The material name that was set to the parent node
-   */
-  std::shared_ptr<Node> load(std::string const& file_name,
-                             unsigned flags);
+  std::shared_ptr<Node> create_geometry_from_file(std::string const& nodename,
+                                                  std::string const& ksfile);
 
   bool is_supported(std::string const& file_name) const;
 

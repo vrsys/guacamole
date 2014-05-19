@@ -125,7 +125,7 @@ void UberShaderFactory::add_inputs_to_main_functions(
     if (first_input_stage != ShadingModel::GBUFFER_VERTEX_STAGE) {
         for (auto& entry : main_functions_) {
             auto model(ShadingModelDatabase::instance()->lookup(entry.first));
-            unsigned bracket_pos = entry.second.find("{");
+            auto bracket_pos = entry.second.find("{");
             std::stringstream stream;
             stream << std::endl;
             stream << "    vec3 gua_position = gua_get_position();"
@@ -143,7 +143,7 @@ void UberShaderFactory::add_inputs_to_main_functions(
 
             auto model(ShadingModelDatabase::instance()->lookup(entry.first));
 
-            unsigned bracket_pos = entry.second.find("{");
+            auto bracket_pos = entry.second.find("{");
             std::stringstream stream;
             stream << std::endl;
 
