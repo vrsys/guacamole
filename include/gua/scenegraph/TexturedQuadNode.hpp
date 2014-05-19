@@ -22,6 +22,8 @@
 #ifndef GUA_TEXTURED_QUAD_NODE_HPP
 #define GUA_TEXTURED_QUAD_NODE_HPP
 
+#include <string>
+
 #include <gua/scenegraph/Node.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
@@ -36,48 +38,15 @@ namespace gua {
  * \ingroup gua_scenegraph
  */
 class GUA_DLL TexturedQuadNode : public Node {
- public:
 
-  struct Configuration {
-    /**
-     * A string referring to an entry in guacamole's TextureDatabase.
-     */
-    GUA_ADD_PROPERTY(std::string,   texture,            "");
-
-    /**
-     * A vector containing width and height of the TexturedQuadNode.
-     */
-    GUA_ADD_PROPERTY(math::vec2,    size,               math::vec2(1.f, 1.f));
-
-    /**
-     * Sets wheter the given texture is a stereo texture. Set this to true, if
-     * you want to display a texture rendered by a Pipeline with stereo enabled.
-     */
-    GUA_ADD_PROPERTY(bool,          is_stereo_texture,  false);
-
-    /**
-     * Triggers whether the given texture's x coordinates are flipped.
-     */
-    GUA_ADD_PROPERTY(bool,          flip_x,  false);
-
-    /**
-     * Triggers whether the given texture's y coordinates are flipped.
-     */
-    GUA_ADD_PROPERTY(bool,          flip_y,  false);
-  };
-
-  /**
-   * The TexturedQuadNode's configuration.
-   */
-  Configuration data;
-
+public :
   /**
    * Constructor.
    *
    * This constructs an empty TexturedQuadNode.
    *
    */
-  TexturedQuadNode() {}
+  TexturedQuadNode();
 
   /**
    * Constructor.
@@ -92,8 +61,12 @@ class GUA_DLL TexturedQuadNode : public Node {
    *                       aligned with the xy-plane and facing in +z direction.
    */
   TexturedQuadNode(std::string const& name,
-                   Configuration const& configuration = Configuration(),
-                   math::mat4 const& transform = math::mat4::identity());
+                   std::string const& texture = "",
+                   math::mat4 const& transform = math::mat4::identity(),
+                   math::vec2 const& size = math::vec2(1.0f, 1.0f),
+                   bool is_stereo = false,
+                   bool flip_x = false,
+                   bool flip_y = false);
 
   /**
    * Returns the TexturedQuadNode's transformation, considering the scaling
@@ -122,13 +95,37 @@ class GUA_DLL TexturedQuadNode : public Node {
 
   /*virtual*/ void update_bounding_box() const;
 
+  /*virtual*/ void update_cache();
+
+public: // get and set methods
+
+  std::string const& get_texture() const;
+  void set_texture(std::string const& name);
+
+  math::vec2 const& get_size() const;
+  void get_size(math::vec2 const& size);
+
+  bool is_stereo_texture() const;
+  void is_stereo_texture(bool enable);
+
+  bool flip_x() const;
+  void flip_x(bool enable);
+
+  bool flip_y() const;
+  void flip_y(bool enable);
+
  private: // methods
-  /**
-   *
-   */
+
   std::shared_ptr<Node> copy() const;
 
  private: // attributes
+
+  std::string texture_;
+  math::vec2 size_;
+  
+  bool is_stereo_texture_;
+  bool flip_x_;
+  bool flip_y_;
 
 };
 

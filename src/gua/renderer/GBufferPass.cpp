@@ -298,8 +298,8 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
       {
         for (auto const& node : scene.textured_quads_)
         {
-          std::string texture_name(node->data.get_texture());
-          if (node->data.get_is_stereo_texture()) {
+          std::string texture_name(node->get_texture());
+          if (node->is_stereo_texture()) {
 
             if (eye == CameraMode::LEFT) {
               texture_name += "_left";
@@ -317,10 +317,10 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
             meshubershader->set_uniform(ctx, texture, mapped_texture.first, mapped_texture.second);
 
             auto mapped_flip_x(meshubershader->get_uniform_mapping()->get_mapping("gua_textured_quad", "flip_x"));
-            meshubershader->set_uniform(ctx, node->data.get_flip_x(), mapped_flip_x.first, mapped_flip_x.second);
+            meshubershader->set_uniform(ctx, node->flip_x(), mapped_flip_x.first, mapped_flip_x.second);
 
             auto mapped_flip_y(meshubershader->get_uniform_mapping()->get_mapping("gua_textured_quad", "flip_y"));
-            meshubershader->set_uniform(ctx, node->data.get_flip_y(), mapped_flip_y.first, mapped_flip_y.second);
+            meshubershader->set_uniform(ctx, node->flip_y(), mapped_flip_y.first, mapped_flip_y.second);
           }
 
           meshubershader->draw(ctx,
