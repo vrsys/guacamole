@@ -25,33 +25,42 @@
 // guacamole headers
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/renderer/Video3D.hpp>
+#include <gua/renderer/Video3DRessource.hpp>
+#include <gua/renderer/Video3DUberShader.hpp>
 
 namespace gua {
   
-Video3DLoader::Video3DLoader() : LoaderBase(), _supported_file_extensions() {
-  _supported_file_extensions.insert("ks");    
-}
+  ////////////////////////////////////////////////////////////////////////////////
+
+  Video3DLoader::Video3DLoader() 
+    : GeometryLoader(), 
+      _supported_file_extensions() 
+  {
+    _supported_file_extensions.insert("ks");    
+  }
 
 
-std::shared_ptr<Node> Video3DLoader::load(std::string const& file_name,
-                                       unsigned flags) {
-  try {
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::shared_ptr<Node> Video3DLoader::create_geometry_from_file (std::string const& node_name,
+                                                                  std::string const& file_name)
+  {
+    try {
       GeometryDatabase::instance()->add(
-        file_name, std::make_shared<Video3D>(file_name));
+        file_name, std::make_shared<Video3DRessource>(file_name));
 
-      auto result = std::make_shared<Video3DNode>("unnamed_video3D");
-      result->set_ksfile(file_name);
-      result->set_material("");     
+      auto result = std::make_shared<Video3DNode>(node_name, file_name, Singleton<Video3DUberShader>::instance()->default_video_material_name() );
+      result->update_cache();
 
       return result;
-
     }
     catch (std::exception &e) {
       Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load Video3D object " << file_name.c_str() << std::endl;
       return nullptr;
     }
-}
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
 
   bool Video3DLoader::is_supported(std::string const& file_name) const 
   {

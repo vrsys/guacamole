@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GBufferMeshUberShader.hpp>
+#include <gua/renderer/TriMeshUberShader.hpp>
 #include <gua/renderer/LightingUberShader.hpp>
 #include <gua/renderer/FinalUberShader.hpp>
 #include <gua/renderer/StereoBuffer.hpp>
@@ -40,6 +40,22 @@
 
 // external headers
 #include <iostream>
+
+
+namespace {
+
+gua::Frustum camera_frustum(gua::Camera::ProjectionMode const& mode,
+    gua::math::mat4 const& transf, gua::math::mat4 const& screen,
+    float near, float far) {
+  if (mode == gua::Camera::ProjectionMode::PERSPECTIVE) {
+    return gua::Frustum::perspective(transf, screen, near, far);
+  } else {
+    return gua::Frustum::orthographic(transf, screen, near, far);
+  }
+}
+
+}
+
 
 namespace gua {
 
@@ -76,12 +92,6 @@ Pipeline::~Pipeline() {
 void Pipeline::print_shaders(std::string const& directory) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  passes_[PipelineStage::geometry]->print_shaders(directory, "/0_gbuffer");
-  passes_[PipelineStage::lighting]->print_shaders(directory, "/1_lighting");
-  passes_[PipelineStage::shading]->print_shaders(directory, "/2_final");
-  passes_[PipelineStage::compositing]->print_shaders(directory, "/3_composite");
-  passes_[PipelineStage::postfx]->print_shaders(directory, "/4_postFX");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,10 +135,10 @@ void Pipeline::loading_screen() {
       auto tmp_right_position(window_->config.right_position());
 
       window_->config.set_left_resolution(loading_texture_size);
-      window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
+      window_->config.set_left_position(tmp_left_position + (tmp_left_resolution - loading_texture_size)/2);
 
       window_->config.set_right_resolution(loading_texture_size);
-      window_->config.set_right_position(tmp_right_position + 0.5*(tmp_right_resolution - loading_texture_size));
+      window_->config.set_right_position(tmp_right_position + (tmp_right_resolution - loading_texture_size)/2);
 
       window_->display(loading_texture, loading_texture);
 
@@ -175,18 +185,10 @@ void Pipeline::serialize(const SceneGraph& scene_graph,
     return;
   }
 
-  if (config.camera().mode == Camera::ProjectionMode::PERSPECTIVE) {
-    out.frustum = Frustum::perspective(eye->get_world_transform(),
-                                       screen->get_scaled_world_transform(),
-                                       config.near_clip(),
-                                       config.far_clip());
-  } else {
-    out.frustum = Frustum::orthographic(eye->get_world_transform(),
-                                       screen->get_scaled_world_transform(),
-                                       config.near_clip(),
-                                       config.far_clip());
-  }
-
+  out.frustum = camera_frustum(config.camera().mode, eye->get_world_transform(),
+                                screen->get_scaled_world_transform(),
+                                config.near_clip(),
+                                config.far_clip());
   out.center_of_interest = eye->get_world_position();
   out.enable_global_clipping_plane = config.get_enable_global_clipping_plane();
   out.global_clipping_plane = config.get_global_clipping_plane();
@@ -288,6 +290,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       }
 
       window_->finish_frame();
+      ++(window_->get_context()->framecount);
     }
   }
 }
@@ -307,7 +310,6 @@ void Pipeline::set_context(RenderContext* ctx) {
 void Pipeline::create_passes() {
 
   if (passes_need_reload_) {
-
     auto materials(MaterialDatabase::instance()->list_all());
 
     auto pre_pass = new GBufferPass(this);
@@ -352,6 +354,7 @@ void Pipeline::create_passes() {
     if (compilation_succeeded) {
 
       for (auto pass : passes_) {
+        if (context_) pass->cleanup(*context_);
         delete pass;
       }
 
@@ -370,6 +373,7 @@ void Pipeline::create_passes() {
       Logger::LOG_WARNING << "Failed to recompile shaders!" << std::endl;
 
       for (auto pass : new_passes) {
+        if (context_) pass->cleanup(*context_);
         delete pass;
       }
     }
@@ -415,7 +419,6 @@ void Pipeline::create_buffers() {
       TextureDatabase::instance()->add(config.output_texture_name() + "_depth_left", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[0]->get_depth_buffer());
       TextureDatabase::instance()->add(config.output_texture_name() + "_depth_right", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[1]->get_depth_buffer());
     }
-
 
     buffers_need_reload_ = false;
   }

@@ -61,14 +61,14 @@ class NodeVisitor {
    *
    * This constructs a NodeVisitor.
    */
-  NodeVisitor();
+  NodeVisitor() {}
 
   /**
    * Destructor.
    *
    * This destructs the NodeVisitor with all its contents.
    */
-  virtual ~NodeVisitor();
+  virtual ~NodeVisitor() {}
 
   /**
    * Visits a Node.

@@ -6,8 +6,8 @@ PROJECT(GUACAMOLE CXX)
 
 # version number
 set(GUACAMOLE_MAJOR 0)
-set(GUACAMOLE_MINOR 6)
-set(GUACAMOLE_PATCH 1)
+set(GUACAMOLE_MINOR 7)
+set(GUACAMOLE_PATCH 0)
 set(GUACAMOLE_VERSION ${GUACAMOLE_MAJOR}.${GUACAMOLE_MINOR}.${GUACAMOLE_PATCH})
 set(GUACAMOLE_DESCRIPTION "GUACAMOLE - an astonishing virtual reality engine")
 set(GUACAMOLE_HOMEPAGE "http://www.GUACAMOLE.org")
@@ -42,6 +42,7 @@ include(define_macros)
 include(find_compiler)
 include(FindSchism)
 include(FindBoost)
+include(FindZMQ)
 
 if (UNIX)
 	set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
@@ -60,6 +61,7 @@ set(LIB_PATHS
     ${BOOST_LIBRARY_DIRS}
     ${BULLET_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
+    ${ZMQ_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS
@@ -72,6 +74,7 @@ set(INCLUDE_PATHS
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
+    ${ZMQ_INCLUDE_DIRS}    
 )
 
 if (NOT CMAKE_BUILD_TYPE)

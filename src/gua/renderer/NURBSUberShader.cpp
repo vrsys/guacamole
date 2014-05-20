@@ -20,12 +20,13 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/GBufferNURBSUberShader.hpp>
+#include <gua/renderer/NURBSUberShader.hpp>
 
 // guacamole headers
 #include <gua/renderer/UberShaderFactory.hpp>
 #include <gua/renderer/NURBSShader.hpp>
 #include <gua/renderer/GuaMethodsFactory.hpp>
+#include <gua/renderer/NURBSRessource.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
 
@@ -33,75 +34,47 @@
 #include <sstream>
 #include <list>
 
-#include <boost/foreach.hpp>
-
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GBufferNURBSUberShader::GBufferNURBSUberShader()
-  : UberShader                  (),
-    vertex_shader_factory_      ( nullptr ),
-    fragment_shader_factory_    ( nullptr )
+void NURBSUberShader::create(std::set<std::string> const& material_names)
 {
-    // create shader for predraw pass to pre-tesselate if necessary
-    std::vector<ShaderProgramStage>   shader_stages;
-    std::list<std::string>            interleaved_stream_capture;
+  UberShader::create(material_names);
 
-    shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,           _transform_feedback_vertex_shader()));
-    shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER,     _transform_feedback_tess_control_shader()));
-    shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER,  _transform_feedback_tess_evaluation_shader()));
-    shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER,         _transform_feedback_geometry_shader()));
+  // create shader for predraw pass to pre-tesselate if necessary
+  std::vector<ShaderProgramStage>   pre_shader_stages;
+  std::list<std::string>            interleaved_stream_capture;
 
-    interleaved_stream_capture.push_back("xfb_position");
-    interleaved_stream_capture.push_back("xfb_index");
-    interleaved_stream_capture.push_back("xfb_tesscoord");
+  pre_shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, _transform_feedback_vertex_shader()));
+  pre_shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, _transform_feedback_tess_control_shader()));
+  pre_shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, _transform_feedback_tess_evaluation_shader()));
+  pre_shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, _transform_feedback_geometry_shader()));
 
-    auto xfb_program = std::make_shared<ShaderProgram>();
-    xfb_program->set_shaders(shader_stages, interleaved_stream_capture, true);
-    add_pass(xfb_program);
-}
+  interleaved_stream_capture.push_back("xfb_position");
+  interleaved_stream_capture.push_back("xfb_index");
+  interleaved_stream_capture.push_back("xfb_tesscoord");
 
-////////////////////////////////////////////////////////////////////////////////
+  auto xfb_program = std::make_shared<ShaderProgram>();
+  xfb_program->set_shaders(pre_shader_stages, interleaved_stream_capture, true);
+  add_program(xfb_program);
 
-GBufferNURBSUberShader::~GBufferNURBSUberShader()
-{
-  if ( vertex_shader_factory_ )       delete vertex_shader_factory_;
-  if ( fragment_shader_factory_ )     delete fragment_shader_factory_;
-}
+  // create final ubershader that writes to gbuffer
+  std::vector<ShaderProgramStage> shader_stages;
+  shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          _final_vertex_shader()));
+  shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_TESS_CONTROL_SHADER,    _final_tess_control_shader()));
+  shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_TESS_EVALUATION_SHADER, _final_tess_evaluation_shader()));
+  shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_GEOMETRY_SHADER,        _final_geometry_shader()));
+  shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        _final_fragment_shader()));
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-void GBufferNURBSUberShader::create(std::set<std::string> const& material_names)
-{
-    // clear deprecated factory
-    if ( vertex_shader_factory_ )   delete vertex_shader_factory_;
-    if ( fragment_shader_factory_ ) delete fragment_shader_factory_;
-
-    // create factory with new bindings
-    vertex_shader_factory_   = new UberShaderFactory(ShadingModel::GBUFFER_VERTEX_STAGE, material_names);
-    fragment_shader_factory_ = new UberShaderFactory(ShadingModel::GBUFFER_FRAGMENT_STAGE, material_names, vertex_shader_factory_->get_uniform_mapping());
-
-    UberShader::set_uniform_mapping(fragment_shader_factory_->get_uniform_mapping());
-    UberShader::set_output_mapping(fragment_shader_factory_->get_output_mapping());
-
-    std::vector<ShaderProgramStage> shader_stages;
-    shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          _final_vertex_shader()));
-    shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_TESS_CONTROL_SHADER,    _final_tess_control_shader()));
-    shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_TESS_EVALUATION_SHADER, _final_tess_evaluation_shader()));
-    shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_GEOMETRY_SHADER,        _final_geometry_shader()));
-    shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        _final_fragment_shader()));
-
-    // generate shader source
-    auto final_program = std::make_shared<ShaderProgram>();
-    final_program->set_shaders(shader_stages);
-    add_pass(final_program);
+  auto final_program = std::make_shared<ShaderProgram>();
+  final_program->set_shaders(shader_stages);
+  add_program(final_program);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const GBufferNURBSUberShader::_transform_feedback_vertex_shader () const
+std::string const NURBSUberShader::_transform_feedback_vertex_shader () const
 {
     std::stringstream tf_vertex;
 
@@ -131,7 +104,7 @@ std::string const GBufferNURBSUberShader::_transform_feedback_vertex_shader () c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const GBufferNURBSUberShader::_transform_feedback_tess_control_shader () const
+std::string const NURBSUberShader::_transform_feedback_tess_control_shader () const
 {
     std::stringstream tess_control;
     tess_control << std::string("                            \n\
@@ -251,7 +224,7 @@ std::string const GBufferNURBSUberShader::_transform_feedback_tess_control_shade
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const GBufferNURBSUberShader::_transform_feedback_tess_evaluation_shader () const
+std::string const NURBSUberShader::_transform_feedback_tess_evaluation_shader () const
 {
     std::stringstream tess_eval;
 
@@ -314,7 +287,7 @@ std::string const GBufferNURBSUberShader::_transform_feedback_tess_evaluation_sh
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const GBufferNURBSUberShader::_transform_feedback_geometry_shader () const
+std::string const NURBSUberShader::_transform_feedback_geometry_shader () const
 {
    std::stringstream tf_geom;
 
@@ -409,7 +382,7 @@ std::string const GBufferNURBSUberShader::_transform_feedback_geometry_shader ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const GBufferNURBSUberShader::_final_vertex_shader () const
+std::string const NURBSUberShader::_final_vertex_shader () const
 {
     std::stringstream vertex_shader;
 
@@ -441,7 +414,7 @@ std::string const GBufferNURBSUberShader::_final_vertex_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const GBufferNURBSUberShader::_final_tess_control_shader () const
+std::string const NURBSUberShader::_final_tess_control_shader () const
 {
     std::stringstream tess_ctrl;
 
@@ -612,7 +585,7 @@ std::string const GBufferNURBSUberShader::_final_tess_control_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const GBufferNURBSUberShader::_final_tess_evaluation_shader () const
+std::string const NURBSUberShader::_final_tess_evaluation_shader () const
 {
     std::stringstream tess_eval;
 
@@ -680,7 +653,7 @@ std::string const GBufferNURBSUberShader::_final_tess_evaluation_shader () const
           vec4 nview  = gua_normal_matrix * teNormal;                           \n\
           vec4 pview  = gua_view_matrix * gua_model_matrix * tePosition;        \n\
                                                                                 \n\
-          if ( dot(nview, pview) > 0.0f ) {                                     \n\
+          if ( dot(normalize(nview.xyz), -normalize(pview.xyz)) < 0.0f ) {      \n\
             teNormal = -teNormal;                                               \n\
           }                                                                     \n\
         }                                                                       \n\
@@ -691,7 +664,7 @@ std::string const GBufferNURBSUberShader::_final_tess_evaluation_shader () const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const GBufferNURBSUberShader::_final_geometry_shader () const
+std::string const NURBSUberShader::_final_geometry_shader () const
 {
     std::stringstream geom_shader;
 
@@ -726,12 +699,12 @@ std::string const GBufferNURBSUberShader::_final_geometry_shader () const
     ");
 
     // generated material-dependent uniform definitions
-    geom_shader << fragment_shader_factory_->get_uniform_mapping().get_uniform_definition();
+    geom_shader << fshader_factory_->get_uniform_mapping().get_uniform_definition();
     geom_shader << std::endl;
 
     // generated varying variables
     geom_shader << "out vec3 gua_position_varying;" << std::endl;
-    geom_shader << vertex_shader_factory_->get_output_mapping().get_gbuffer_output_definition(false, true);
+    geom_shader << vshader_factory_->get_output_mapping().get_gbuffer_output_definition(false, true);
     geom_shader << std::endl;
 
     // hard-coded buit-in output variables -> should be written!
@@ -754,7 +727,7 @@ std::string const GBufferNURBSUberShader::_final_geometry_shader () const
     geom_shader << method_factory.get_sampler_casts() << std::endl;
 
     // material specific methods -----------------------------------------------
-    BOOST_FOREACH (auto method, vertex_shader_factory_->get_main_functions()) {
+    for (auto const& method : vshader_factory_->get_main_functions()) {
         geom_shader << method.second << std::endl;
     }
 
@@ -770,6 +743,7 @@ std::string const GBufferNURBSUberShader::_final_geometry_shader () const
                 ///////////////////////////////////////////////////////                                        \n\
                 gua_texcoords  = gTessCoord;                                                                   \n\
                                                                                                                \n\
+                gua_position_varying = (gua_model_matrix * tePosition[i]).xyz;                                 \n\
                 gua_object_normal    = teNormal[i].xyz;                                                        \n\
                 gua_object_tangent   = teTangent[i].xyz;                                                       \n\
                 gua_object_bitangent = teBitangent[i].xyz;                                                     \n\
@@ -783,7 +757,7 @@ std::string const GBufferNURBSUberShader::_final_geometry_shader () const
     ");
 
     // generated code
-    auto main_calls(vertex_shader_factory_->get_main_calls());
+    auto main_calls(vshader_factory_->get_main_calls());
     unsigned current_case(0);
     unsigned cases_per_block(CASES_PER_UBERSHADER_SWITCH);
 
@@ -817,153 +791,236 @@ std::string const GBufferNURBSUberShader::_final_geometry_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const GBufferNURBSUberShader::_final_fragment_shader () const
+std::string const NURBSUberShader::_final_fragment_shader () const
 {
-    std::stringstream fragment_shader;
+    std::string fragment_shader;
 
-    fragment_shader << std::string("                 \n\
-        #version 420 core                            \n\
-        #extension GL_NV_bindless_texture : require  \n\
-        #extension GL_NV_gpu_shader5 : enable        \n\
-                                                     \n\
-        #define TRIM_ERROR_TOLERANCE 0.00001         \n\
-                                                     \n\
-        precision highp float;                       \n\
-                                                     \n\
-    ");
+    fragment_shader += R"(                          
+        #version 420 core                           
+        #extension GL_NV_bindless_texture : require 
+        #extension GL_NV_gpu_shader5 : enable       
+                                                    
+        #define TRIM_ERROR_TOLERANCE 0.00001        
+                                                    
+        precision highp float;                      
+              
+        flat in uint gIndex;                         
+        in vec2      gTessCoord;                     
+                                                     
+        uniform samplerBuffer attribute_texture;
+                                                
+        uniform samplerBuffer trim_partition;   
+        uniform samplerBuffer trim_contourlist; 
+        uniform samplerBuffer trim_curvelist;   
+        uniform samplerBuffer trim_curvedata;   
+        uniform samplerBuffer trim_pointdata;   
+    )";
 
-    fragment_shader << "// hard-coded per-fragment varying input";
-    fragment_shader << std::string("                 \n\
-        flat in uint gIndex;                         \n\
-        in vec2      gTessCoord;                     \n\
-                                                     \n\
-    ");
-
-    fragment_shader << "// hard-coded uniform input";
-    fragment_shader << std::string("                 \n\
-                                                     \n\
-        uniform samplerBuffer attribute_texture;     \n\
-                                                     \n\
-        uniform samplerBuffer trim_partition;        \n\
-        uniform samplerBuffer trim_contourlist;      \n\
-        uniform samplerBuffer trim_curvelist;        \n\
-        uniform samplerBuffer trim_curvedata;        \n\
-        uniform samplerBuffer trim_pointdata;        \n\
-                                                     \n\
-    ");
-
-    fragment_shader << "// hard-coded trimming shadercode " << std::endl;
-    fragment_shader << NURBSShader::curve_horner_evaluation();
-    fragment_shader << NURBSShader::binary_search();
-    fragment_shader << NURBSShader::bisect_curve();
-    fragment_shader << NURBSShader::trimming_helper_methods();
-    fragment_shader << NURBSShader::bisect_contour();
-    fragment_shader << NURBSShader::contour_binary_search();
-    fragment_shader << NURBSShader::contour_based_trimming();
-
+    fragment_shader += NURBSShader::curve_horner_evaluation();
+    fragment_shader += NURBSShader::binary_search();
+    fragment_shader += NURBSShader::bisect_curve();
+    fragment_shader += NURBSShader::trimming_helper_methods();
+    fragment_shader += NURBSShader::bisect_contour();
+    fragment_shader += NURBSShader::contour_binary_search();
+    fragment_shader += NURBSShader::contour_based_trimming();
 
     // input from vertex shader ------------------------------------------
-    fragment_shader << "in vec3 gua_position_varying;" << std::endl;
-    fragment_shader << vertex_shader_factory_->get_output_mapping().get_gbuffer_output_definition(true, true);
-    fragment_shader << std::endl;
+    fragment_shader += R"(
 
-    fragment_shader << std::string("                      \n\
-        // uniforms                                       \n\
-        uniform mat4 gua_projection_matrix;               \n\
-        uniform mat4 gua_view_matrix;                     \n\
-        uniform mat4 gua_model_matrix;                    \n\
-        uniform mat4 gua_normal_matrix;                   \n\
-        uniform mat4 gua_inverse_projection_view_matrix;  \n\
-        uniform vec3 gua_camera_position;                 \n\
-                                                          \n\
-        uniform float gua_texel_width;                    \n\
-        uniform float gua_texel_height;                   \n\
-                                                          \n\
-        ");
-
-    fragment_shader << fragment_shader_factory_->get_uniform_mapping().get_uniform_definition();
-    fragment_shader << fragment_shader_factory_->get_output_mapping().get_gbuffer_output_definition(false, false);
-    fragment_shader << std::string("                                                           \n\
-                                                                                               \n\
-        // global gua_* methods                                                                \n\
-        vec2 gua_get_quad_coords() {                                                           \n\
-            return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);  \n\
-        }                                                                                      \n\
-    ");
+        in vec3 gua_position_varying;
+  
+        //***** generated input defintion
+        @input_definition            
+                                  
+        // uniforms                                      
+        uniform mat4 gua_projection_matrix;              
+        uniform mat4 gua_view_matrix;                    
+        uniform mat4 gua_model_matrix;                   
+        uniform mat4 gua_normal_matrix;                  
+        uniform mat4 gua_inverse_projection_view_matrix; 
+        uniform vec3 gua_camera_position;                
+                                                         
+        uniform float gua_texel_width;                   
+        uniform float gua_texel_height;                  
+           
+        
+        //***** generated uniform definition
+        @uniform_definition 
+        
+        //***** generated output definition
+        @output_definition                         
+        
+        // global gua_* methods                                                               
+        vec2 gua_get_quad_coords() {                                                          
+            return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height); 
+        }                                                                                     
+    )";
 
     GuaMethodsFactory method_factory;
-    fragment_shader << method_factory.get_sampler_casts() << std::endl;
+    fragment_shader += method_factory.get_sampler_casts();
 
-    fragment_shader << std::string("             \n\
-        uint gua_get_material_id() {             \n\
-            return gua_uint_gbuffer_varying_0.x; \n\
-        }                                        \n\
-                                                 \n\
-        vec3 gua_get_position() {                \n\
-            return gua_position_varying;         \n\
-        }                                        \n\
-                                                 \n\
-    ");
+    fragment_shader += R"(
+        uint gua_get_material_id() {            
+            return gua_uint_gbuffer_varying_0.x;
+        }                                       
+                                                
+        vec3 gua_get_position() {               
+            return gua_position_varying;        
+        }  
 
-    // print material specific methods -----------------------------------------
-    std::vector<LayerMapping const*> mapping;
-    mapping.push_back(&vertex_shader_factory_->get_output_mapping());
-    fragment_shader_factory_->add_inputs_to_main_functions(mapping, ShadingModel::GBUFFER_VERTEX_STAGE);
+        //***** generated material methods
+        @material_methods                                                            
 
-    BOOST_FOREACH (auto method, fragment_shader_factory_->get_main_functions()) {
-        fragment_shader << method.second << std::endl;
+        // main switch                                                                                  
+        void main()                                                                                     
+        {                                                                                               
+            vec4 data = texelFetch(attribute_texture, int(gIndex) * 5);                                 
+            uint trim_index = floatBitsToUint(data.w);                                                  
+                                                                                                        
+            vec4 nurbs_domain = texelFetch(attribute_texture, int(gIndex) * 5 + 1);                     
+                                                                                                        
+            vec2 domain_size  = vec2(nurbs_domain.z - nurbs_domain.x, nurbs_domain.w - nurbs_domain.y); 
+                                                                                                        
+            vec2 uv_nurbs     = gTessCoord.xy * domain_size + nurbs_domain.xy;                          
+                                                                                                        
+            int tmp = 0;                                                                                
+            bool trimmed      = trim (trim_partition,                                                   
+                                      trim_contourlist,                                                 
+                                      trim_curvelist,                                                   
+                                      trim_curvedata,                                                   
+                                      trim_pointdata,                                                   
+                                      uv_nurbs,                                                         
+                                      int(trim_index), 1, tmp, 0.0001f, 16);                            
+            if ( trimmed ) {                                                                            
+                discard;                                                                                
+            }  
+
+          @material_switch
+
+          gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
+        }                                                                                         
+    )";
+
+    // input from vertex shader
+    string_utils::replace(fragment_shader, "@input_definition",
+      vshader_factory_->get_output_mapping().get_gbuffer_output_definition(true, true));
+
+    // material specific uniforms
+    string_utils::replace(fragment_shader, "@uniform_definition",
+      get_uniform_mapping()->get_uniform_definition());
+    // BOOST_FOREACH (auto method, fragment_shader_factory_->get_main_functions()) {
+    //     fragment_shader << method.second << std::endl;
+    // }
+
+    // outputs
+    string_utils::replace(fragment_shader, "@output_definition",
+      get_gbuffer_mapping()->get_gbuffer_output_definition(false, false));
+
+    // print material specific methods
+    string_utils::replace(fragment_shader, "@material_methods",
+      UberShader::print_material_methods(*fshader_factory_));
+
+    // print main switch(es)
+    string_utils::replace(fragment_shader, "@material_switch",
+      UberShader::print_material_switch(*fshader_factory_));
+
+    return fragment_shader;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ GeometryUberShader::stage_mask const NURBSUberShader::get_stage_mask() const
+{
+  return GeometryUberShader::DRAW_STAGE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void NURBSUberShader::preframe(RenderContext const& ctx) const
+{
+  throw std::runtime_error("NURBSUberShader::preframe(): not implemented");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void NURBSUberShader::predraw(RenderContext const& ctx,
+                                          std::string const& ksfile_name,
+                                          std::string const& material_name,
+                                          scm::math::mat4 const& model_matrix,
+                                          scm::math::mat4 const& normal_matrix,
+                                          Frustum const& /*frustum*/) const
+{
+  throw std::runtime_error("NURBSUberShader::predraw(): not implemented");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+void NURBSUberShader::draw(RenderContext const& ctx,
+                           std::string const& filename,
+                           std::string const& material_name,
+                           scm::math::mat4 const& model_matrix,
+                           scm::math::mat4 const& normal_matrix,
+                           Frustum const& /*frustum*/) const
+{
+  auto geometry = std::static_pointer_cast<NURBSRessource>(GeometryDatabase::instance()->lookup(filename));
+  auto material = MaterialDatabase::instance()->lookup(material_name);
+
+  if ( geometry && material )
+  {
+    set_uniform(ctx, 128, "gua_max_tesselation");
+    set_uniform(ctx, material->get_id(), "gua_material_id");
+    set_uniform(ctx, model_matrix, "gua_model_matrix");
+    set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+
+  #ifdef DEBUG_XFB_OUTPUT
+    scm::gl::transform_feedback_statistics_query_ptr q = ctx
+      .render_device->create_transform_feedback_statistics_query(0);
+    ctx.render_context->begin_query(q);
+  #endif
+
+    // pre-tesselate if necessary
+    get_program(transform_feedback_pass)->use(ctx);
+    {
+      ctx.render_context->apply();
+      geometry->predraw(ctx);
     }
+    get_program(transform_feedback_pass)->unuse(ctx);
 
-    // print main switch(es) ----------------------------------------------------
-    fragment_shader << std::string("                                                                     \n\
-        // main switch                                                                                   \n\
-        void main()                                                                                      \n\
-        {                                                                                                \n\
-            vec4 data = texelFetch(attribute_texture, int(gIndex) * 5);                                  \n\
-            uint trim_index = floatBitsToUint(data.w);                                                   \n\
-                                                                                                         \n\
-            vec4 nurbs_domain = texelFetch(attribute_texture, int(gIndex) * 5 + 1);                      \n\
-                                                                                                         \n\
-            vec2 domain_size  = vec2(nurbs_domain.z - nurbs_domain.x, nurbs_domain.w - nurbs_domain.y);  \n\
-                                                                                                         \n\
-            vec2 uv_nurbs     = gTessCoord.xy * domain_size + nurbs_domain.xy;                           \n\
-                                                                                                         \n\
-            int tmp = 0;                                                                                 \n\
-            bool trimmed      = trim (trim_partition,                                                    \n\
-                                      trim_contourlist,                                                  \n\
-                                      trim_curvelist,                                                    \n\
-                                      trim_curvedata,                                                    \n\
-                                      trim_pointdata,                                                    \n\
-                                      uv_nurbs,                                                          \n\
-                                      int(trim_index), 1, tmp, 0.0001f, 16);                             \n\
-            if ( trimmed ) {                                                                             \n\
-                discard;                                                                                 \n\
-            }                                                                                            \n\
-    ");
+#ifdef DEBUG_XFB_OUTPUT
+    ctx.render_context->end_query(q);
+    ctx.render_context->collect_query_results(q);
+    std::cout << q->result()._primitives_generated << " , "
+      << q->result()._primitives_written << std::endl;
+#endif
 
-    auto main_calls = fragment_shader_factory_->get_main_calls();
-    unsigned current_case = 0;
-    unsigned cases_per_block(CASES_PER_UBERSHADER_SWITCH);
-    auto call(main_calls.begin());
-
-    while (current_case < main_calls.size()) {
-
-        fragment_shader << "switch(gua_get_material_id()) {" << std::endl;
-
-        for (unsigned i(current_case); i < main_calls.size() && i < current_case+cases_per_block; ++i) {
-            fragment_shader << " case " << call->first << ": " << call->second << " break;" << std::endl;
-            ++call;
-        }
-
-        fragment_shader << "}" << std::endl;
-
-        current_case += cases_per_block;
+    // invoke tesselation/trim shader for adaptive nurbs rendering
+    get_program(final_pass)->use(ctx);
+    {
+      ctx.render_context->apply();
+      geometry->draw(ctx);
     }
+    get_program(final_pass)->unuse(ctx);
+  }
+}
 
-    fragment_shader << "    gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;" << std::endl;
-    fragment_shader << "}" << std::endl;
+////////////////////////////////////////////////////////////////////////////////
 
-    return fragment_shader.str();
+/*virtual*/ void NURBSUberShader::postdraw(RenderContext const& ctx,
+  std::string const& ksfile_name,
+  std::string const& material_name,
+  scm::math::mat4 const& model_matrix,
+  scm::math::mat4 const& normal_matrix,
+  Frustum const& /*frustum*/) const
+{
+  throw std::runtime_error("NURBSUberShader::postdraw(): not implemented");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void NURBSUberShader::postframe(RenderContext const& ctx) const
+{
+  throw std::runtime_error("NURBSUberShader::postframe(): not implemented");
 }
 
 

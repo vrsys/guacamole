@@ -334,15 +334,9 @@ class GUA_DLL RigidBodyNode : public Node {
   btRigidBody* get_bullet_rigid_body() { return body_; }
   ///@}
 
-// No copying construction. No assignment.
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& GUA_COMPILER_VER <= 1700
- private:
-  RigidBodyNode(const RigidBodyNode& other);
-  RigidBodyNode& operator=(const RigidBodyNode&);
-#else
+  // No copying construction. No assignment.
   RigidBodyNode(const RigidBodyNode& other) = delete;
   RigidBodyNode& operator=(const RigidBodyNode&) = delete;
-#endif
 
  private:
 

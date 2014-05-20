@@ -25,8 +25,11 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/renderer/Mesh.hpp>
+
+#include <gua/scenegraph/TriMeshNode.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
+
 
 // external headers
 #include <btBulletDynamicsCommon.h>
@@ -60,7 +63,7 @@ void ConvexHullShape::build_from_geometry(
     btAlignedObjectArray<btVector3> vertices;
 
     for (auto const& geom_name : geometry_list) {
-        std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(
+      std::shared_ptr<TriMeshRessource> mesh = std::dynamic_pointer_cast<TriMeshRessource>(
             gua::GeometryDatabase::instance()->lookup(geom_name));
         if (mesh)
             for (unsigned i(0); i < mesh->num_vertices(); ++i) {
@@ -143,22 +146,22 @@ void ConvexHullShape::build_from_geometry(
     unsigned flags) {
     ConvexHullShape* shape = new ConvexHullShape();
 
-    GeometryLoader factory;
+    TriMeshLoader factory;
     auto node(factory.create_geometry_from_file("", file_name, "", flags));
     if (node) {
       std::vector<std::string> geom_list;
 
       if (node->has_children()) {
         for (auto const& n : node->get_children()) {
-            auto gnode = std::dynamic_pointer_cast<GeometryNode>(n);
+            auto gnode = std::dynamic_pointer_cast<TriMeshNode>(n);
             if (gnode) {
-                geom_list.push_back(gnode->get_geometry());
+                geom_list.push_back(gnode->get_filename());
             }
         }
       } else {
-        auto gnode = std::dynamic_pointer_cast<GeometryNode>(node);
+        auto gnode = std::dynamic_pointer_cast<TriMeshNode>(node);
         if (gnode) {
-            geom_list.push_back(gnode->get_geometry());
+          geom_list.push_back(gnode->get_filename());
         }
       }
 

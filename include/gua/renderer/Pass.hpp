@@ -37,10 +37,10 @@
 
 namespace gua {
 
-class Pipeline;
-struct SerializedScene;
 struct Camera;
+struct SerializedScene;
 class LayerMapping;
+class Pipeline;
 class SceneGraph;
 
 /**
@@ -68,9 +68,6 @@ class Pass {
                             SceneGraph const& current_graph,
                             RenderContext const& ctx) = 0;
 
-  virtual void print_shaders(std::string const& directory,
-                             std::string const& name) const = 0;
-
   // not strictly necessary to call, but recommend
   // to avoid crashes on shader compilation
   // derived classes should call upload_to() on all contained shaders
@@ -80,6 +77,8 @@ class Pass {
       RenderContext const& ctx,
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
+
+  virtual void cleanup(RenderContext const& ctx);
 
   void set_inputs(std::vector<std::shared_ptr<StereoBuffer>> inputs);
 

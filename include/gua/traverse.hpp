@@ -19,64 +19,31 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_G_BUFFER_NURBS_UBER_SHADER_HPP
-#define GUA_G_BUFFER_NURBS_UBER_SHADER_HPP
+#ifndef GUA_NODE_TRAVERSER_HPP
+#define GUA_NODE_TRAVERSER_HPP
 
-// guacamole headers
-#include <gua/renderer/UberShader.hpp>
+#include <gua/scenegraph/Node.hpp>
 
 namespace gua {
 
-/**
- *
- */
-class GBufferNURBSUberShader : public UberShader {
- public:
+template <class UnaryOperation, class UnaryPredicate>
+void dfs_traverse_if(Node* node, UnaryOperation unary_op, UnaryPredicate pred) {
+  if (pred(node)) {
+    unary_op(node);
+    for (auto & c : node->get_children()) {
+      dfs_traverse_if(c.get(), unary_op, pred);
+    }
+  }
+}
 
-   enum pass {
-     transform_feedback_pass = 0,
-     final_pass = 1
-   };
-
-  /**
-   * Default constructor.
-   *
-   * Creates a new GBufferNURBSUberShader multi-pass routine.
-   */
-  GBufferNURBSUberShader();
-
-  /**
-   * Destructor
-   *
-   * Cleans all associated memory.
-   */
-  virtual ~GBufferNURBSUberShader();
-
-  /**
-   *
-   */
-  void create(std::set<std::string> const& material_names);
-
- private:  // auxiliary methods
-
-  std::string const _transform_feedback_vertex_shader() const;
-  std::string const _transform_feedback_geometry_shader() const;
-  std::string const _transform_feedback_tess_control_shader() const;
-  std::string const _transform_feedback_tess_evaluation_shader() const;
-
-  std::string const _final_vertex_shader() const;
-  std::string const _final_tess_control_shader() const;
-  std::string const _final_tess_evaluation_shader() const;
-  std::string const _final_geometry_shader() const;
-  std::string const _final_fragment_shader() const;
-
-
- private:  // attributes
-
-  UberShaderFactory* vertex_shader_factory_;
-  UberShaderFactory* fragment_shader_factory_;
-};
+template <class UnaryOperation>
+void dfs_traverse(Node* node, UnaryOperation unary_op) {
+  unary_op(node);
+  for (auto & c : node->get_children()) {
+    dfs_traverse(c.get(), unary_op);
+  }
+}
 
 }
 
-#endif  // GUA_G_BUFFER_NURBS_UBER_SHADER_HPP
+#endif  // GUA_NODE_TRAVERSER_HPP

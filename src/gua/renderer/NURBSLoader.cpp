@@ -25,10 +25,10 @@
 // guacamole headers
 #include <gua/utils.hpp>
 
-#include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/NURBSNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
-#include <gua/renderer/NURBS.hpp>
+#include <gua/renderer/NURBSRessource.hpp>
 #include <gua/renderer/nurbs_geometry/import/igs/igs_loader.hpp>
 #include <gua/renderer/nurbs_geometry/TrimmedSurfaceConverter.hpp>
 #include <gua/renderer/nurbs_geometry/TrimmedNurbsSurfaceObject.hpp>
@@ -37,7 +37,7 @@
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-NURBSLoader::NURBSLoader() : LoaderBase(), _supported_file_extensions() {
+NURBSLoader::NURBSLoader() : GeometryLoader(), _supported_file_extensions() {
   _supported_file_extensions.insert("igs");
   _supported_file_extensions.insert("iges");
   _supported_file_extensions.insert("IGS");
@@ -45,41 +45,49 @@ NURBSLoader::NURBSLoader() : LoaderBase(), _supported_file_extensions() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */
-std::shared_ptr<Node> NURBSLoader::load(std::string const& file_name,
-                                        unsigned flags) {
-  try {
-    igs_loader igsloader;
-    TrimmedSurfaceConverter surface_converter;
 
-    std::shared_ptr<TrimmedNurbsSurfaceObject> nurbs_object(
+std::shared_ptr<Node> NURBSLoader::create_geometry_from_file(std::string const& nodename, 
+                                                             std::string const& filename,
+                                                             std::string const& material,
+                                                             unsigned flags)
+{
+  try {
+    if (!is_supported(filename))
+    {
+      throw std::runtime_error(std::string("Unsupported filetype: ") + filename);
+    }
+    else {
+      igs_loader igsloader;
+      TrimmedSurfaceConverter surface_converter;
+
+      std::shared_ptr<TrimmedNurbsSurfaceObject> nurbs_object(
         new TrimmedNurbsSurfaceObject);
-    std::shared_ptr<TrimmedBezierSurfaceObject> bezier_object(
+      std::shared_ptr<TrimmedBezierSurfaceObject> bezier_object(
         new TrimmedBezierSurfaceObject);
 
-    igsloader.load(file_name, nurbs_object);
-    surface_converter.convert(nurbs_object, bezier_object);
+      igsloader.load(filename, nurbs_object);
+      surface_converter.convert(nurbs_object, bezier_object);
 
-    GeometryDatabase::instance()->add(
-        file_name, std::make_shared<NURBS>(bezier_object));
+      auto ressource = std::make_shared<NURBSRessource>(bezier_object);
+      GeometryDatabase::instance()->add(filename, ressource);
 
-    auto result = std::make_shared<GeometryNode>("unnamed_nurbs");
-    result->set_geometry(file_name);
-    result->set_material("");
+      auto node = std::make_shared<NURBSNode>(nodename, filename, material);
+      node->update_cache();
 
-    return result;
-
+      return node;
+    }
   } catch (std::exception & e) {
-    Logger::LOG_WARNING << "Failed to load NURBS object \"" << file_name << "\": " << e.what() << std::endl;
+    Logger::LOG_WARNING << "Failed to load NURBS object \"" << filename << "\": " << e.what() << std::endl;
     return nullptr;
   }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */
-bool NURBSLoader::is_supported(std::string const& file_name) const {
-  std::vector<std::string> filename_decomposition =
-      gua::string_utils::split(file_name, '.');
+bool NURBSLoader::is_supported(std::string const& file_name) const 
+{
+  std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
   return filename_decomposition.empty()
              ? false
              : _supported_file_extensions.count(filename_decomposition.back()) >

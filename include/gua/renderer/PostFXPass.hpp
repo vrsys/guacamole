@@ -28,7 +28,7 @@
 
 namespace gua {
 
-class PostGBufferMeshUberShader;
+class PostTriMeshUberShader;
 class GBuffer;
 
 /**
@@ -53,6 +53,8 @@ class PostFXPass : public Pass {
       RenderContext const& ctx,
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
+
+  virtual void cleanup(RenderContext const& ctx);
 
   void render_scene(Camera const& camera, SceneGraph const&, RenderContext const& ctx);
 

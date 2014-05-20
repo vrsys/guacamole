@@ -189,17 +189,9 @@ std::string const LayerMapping::get_output_string(
                     else
                         result << "gua_" << type << "_gbuffer_out_" << i << ".";
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-                    std::vector<char> swizzle;
-                    swizzle.push_back('x');
-                    swizzle.push_back('y');
-                    swizzle.push_back('z');
-                    swizzle.push_back('w');
-#else
                     std::vector<char> swizzle({
-                    'x', 'y', 'z', 'w'
-                  });
-#endif
+                      'x', 'y', 'z', 'w'
+                    });
 
                     for (unsigned s(offset); s < offset + length; ++s) {
                         result << swizzle[s];
@@ -289,17 +281,10 @@ std::string const LayerMapping::get_input_string(
                                << from_stage << "[" << i
                                << "]), gua_get_quad_coords()).";
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-                    std::vector<char> swizzle;
-                    swizzle.push_back('x');
-                    swizzle.push_back('y');
-                    swizzle.push_back('z');
-                    swizzle.push_back('w');
-#else
+
                     std::vector<char> swizzle({
                       'x', 'y', 'z', 'w'
                     });
-#endif
 
                     for (unsigned s(offset); s < offset + length; ++s) {
                         result << swizzle[s];

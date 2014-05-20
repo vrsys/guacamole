@@ -61,7 +61,6 @@ void LightingPass::apply_material_mapping(
     std::set<std::string> const& material_names,
     std::vector<LayerMapping const*> const& inputs) const {
   shader_->create(material_names, inputs);
-  shadow_map_.apply_material_mapping(material_names);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,8 +73,7 @@ LayerMapping const* LightingPass::get_gbuffer_mapping() const {
 
 /* virtual */ void LightingPass::print_shaders(std::string const& directory,
                                                std::string const& name) const {
-  shader_->get_pass(0)->save_to_file(directory, name + "/lighting");
-  shadow_map_.print_shaders(directory, name);
+  shader_->get_program()->save_to_file(directory, name + "/lighting");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +89,15 @@ bool LightingPass::pre_compile_shaders(RenderContext const& ctx) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void LightingPass::cleanup(RenderContext const& ctx) {
+    if (shader_) shader_->cleanup(ctx);
+    shadow_map_.cleanup(ctx);
+    GeometryPass::cleanup(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 void LightingPass::init_resources(RenderContext const& ctx) {
   if (!initialized_) {
@@ -134,20 +141,20 @@ void LightingPass::rendering(SerializedScene const& scene,
 
     shader_->set_material_uniforms(
         scene.materials_, ShadingModel::LIGHTING_STAGE, ctx);
-    shader_->get_pass(0)->use(ctx);
+    shader_->get_program()->use(ctx);
 
-    Pass::bind_inputs(*shader_->get_pass(0), eye, ctx);
+    Pass::bind_inputs(*shader_->get_program(), eye, ctx);
     Pass::set_camera_matrices(
-      *shader_->get_pass(0), camera, pipeline_->get_current_scene(eye), eye, ctx);
+      *shader_->get_program(), camera, pipeline_->get_current_scene(eye), eye, ctx);
 
 
     // -------------------------- sun lights -----------------------------------
-    shader_->get_pass(0)->set_subroutine(ctx,
+    shader_->get_program()->set_subroutine(ctx,
                             scm::gl::STAGE_VERTEX_SHADER,
                             "compute_light",
                             "gua_calculate_sun_light");
 
-    shader_->get_pass(0)->set_subroutine(ctx,
+    shader_->get_program()->set_subroutine(ctx,
                             scm::gl::STAGE_FRAGMENT_SHADER,
                             "compute_light",
                             "gua_calculate_sun_light");
@@ -156,7 +163,7 @@ void LightingPass::rendering(SerializedScene const& scene,
     for (auto const& light : scene.sun_lights_) {
 
         if (light->data.get_enable_shadows()) {
-            shader_->get_pass(0)->unuse(ctx);
+            shader_->get_program()->unuse(ctx);
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
@@ -180,7 +187,7 @@ void LightingPass::rendering(SerializedScene const& scene,
                                         split_0, split_1, split_2, split_3, split_4,
                                         light->data.get_shadow_near_clipping_in_sun_direction());
 
-            shader_->get_pass(0)->use(ctx);
+            shader_->get_program()->use(ctx);
             target->bind(ctx);
 
             ctx.render_context->set_viewport(scm::gl::viewport(
@@ -218,12 +225,12 @@ void LightingPass::rendering(SerializedScene const& scene,
 
     ctx.render_context->set_rasterizer_state(rasterizer_state_front_);
 
-    shader_->get_pass(0)->set_subroutine(ctx,
+    shader_->get_program()->set_subroutine(ctx,
                             scm::gl::STAGE_VERTEX_SHADER,
                             "compute_light",
                             "gua_calculate_point_light");
 
-    shader_->get_pass(0)->set_subroutine(ctx,
+    shader_->get_program()->set_subroutine(ctx,
                             scm::gl::STAGE_FRAGMENT_SHADER,
                             "compute_light",
                             "gua_calculate_point_light");
@@ -244,25 +251,30 @@ void LightingPass::rendering(SerializedScene const& scene,
 
 
     // -------------------------- spot lights ----------------------------------
-    shader_->get_pass(0)->set_subroutine(ctx,
+    shader_->get_program()->set_subroutine(ctx,
                             scm::gl::STAGE_VERTEX_SHADER,
                             "compute_light",
                             "gua_calculate_spot_light");
 
-    shader_->get_pass(0)->set_subroutine(ctx,
+    shader_->get_program()->set_subroutine(ctx,
                             scm::gl::STAGE_FRAGMENT_SHADER,
                             "compute_light",
                             "gua_calculate_spot_light");
 
     for (auto const& light : scene.spot_lights_) {
         if (light->data.get_enable_shadows()) {
-            shader_->get_pass(0)->unuse(ctx);
+            shader_->get_program()->unuse(ctx);
             target->unbind(ctx);
             ctx.render_context->reset_state_objects();
 
-            shadow_map_.render(ctx, scene_graph, scene.center_of_interest, camera, light->get_cached_world_transform(), light->data.get_shadow_map_size());
+            shadow_map_.render(ctx, 
+                               scene_graph, 
+                               scene.center_of_interest, 
+                               camera, 
+                               light->get_cached_world_transform(), 
+                               light->data.get_shadow_map_size());
 
-            shader_->get_pass(0)->use(ctx);
+            shader_->get_program()->use(ctx);
             target->bind(ctx);
 
             ctx.render_context->set_viewport(scm::gl::viewport(
@@ -296,7 +308,7 @@ void LightingPass::rendering(SerializedScene const& scene,
         light_cone_->draw(ctx);
     }
 
-    shader_->get_pass(0)->unuse(ctx);
+    shader_->get_program()->unuse(ctx);
 
     ctx.render_context->reset_state_objects();
 }

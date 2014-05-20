@@ -24,8 +24,6 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/Mesh.hpp>
-#include <gua/renderer/NURBS.hpp>
 
 #include <gua/databases/GeometryDatabase.hpp>
 
@@ -41,10 +39,10 @@
 #include <gua/scenegraph/ScreenNode.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/renderer/Video3D.hpp>
 
 // external headers
 #include <stack>
+#include <utility>
 
 namespace gua {
 
@@ -70,9 +68,8 @@ void Serializer::check(SerializedScene* output,
 
   data_ = output;
 
-  std::size_t mesh_count = data_->meshnodes_.size();
-  std::size_t nurbs_count = data_->nurbsnodes_.size();
-  std::size_t video3d_count = data_->video3Dnodes_.size();
+
+  std::size_t geometry_count = data_->geometrynodes_.size();
   std::size_t volume_count = data_->volumenodes_.size();
   std::size_t point_light_count = data_->point_lights_.size();
   std::size_t spot_light_count = data_->spot_lights_.size();
@@ -80,9 +77,7 @@ void Serializer::check(SerializedScene* output,
   std::size_t ray_count = data_->rays_.size();
   std::size_t textured_quad_count = data_->textured_quads_.size();
 
-  data_->meshnodes_.clear();
-  data_->nurbsnodes_.clear();
-  data_->video3Dnodes_.clear();
+  data_->geometrynodes_.clear();
   data_->volumenodes_.clear();
   data_->point_lights_.clear();
   data_->spot_lights_.clear();
@@ -96,9 +91,7 @@ void Serializer::check(SerializedScene* output,
 
   if (draw_bounding_boxes_) {
     data_->materials_.insert("gua_bounding_box");
-    data_->bounding_boxes_
-        .reserve(mesh_count + nurbs_count + point_light_count +
-                 spot_light_count + ray_count + video3d_count);
+    data_->bounding_boxes_.reserve(geometry_count + point_light_count + spot_light_count + ray_count);
   }
 
   if (draw_rays_) {
@@ -110,10 +103,8 @@ void Serializer::check(SerializedScene* output,
 
   // assuming the number of nodes stays quite constant through time,
   // reserving the old size might save some time
-  data_->meshnodes_.reserve(mesh_count);
-  data_->nurbsnodes_.reserve(nurbs_count);
-  data_->video3Dnodes_.reserve(video3d_count);
-  data_->volumenodes_.reserve(nurbs_count);
+
+  data_->volumenodes_.reserve(volume_count);
   data_->point_lights_.reserve(point_light_count);
   data_->spot_lights_.reserve(spot_light_count);
   data_->sun_lights_.reserve(sun_light_count);
@@ -167,26 +158,18 @@ void Serializer::check(SerializedScene* output,
 
 /* virtual */ void Serializer::visit(GeometryNode* node) {
 
-  if (is_visible(node)) {
-    if (!node->get_geometry().empty() && !node->get_material().empty()) {
 
+  if (is_visible(node)) 
+  {
+    if (!node->get_filename().empty() && !node->get_material().empty()) 
+    {
       add_bbox(node);
 
-      std::shared_ptr<Mesh> mesh_ptr = std::dynamic_pointer_cast<Mesh>(
-          gua::GeometryDatabase::instance()->lookup(node->get_geometry()));
 
-      if (mesh_ptr) {
-
-        data_->meshnodes_.push_back(node);
-
-      } else {
-
-        std::shared_ptr<NURBS> nurbs_ptr = std::dynamic_pointer_cast<NURBS>(
-            gua::GeometryDatabase::instance()->lookup(node->get_geometry()));
-
-        if (nurbs_ptr) {
-          data_->nurbsnodes_.push_back(node);
-        }
+      // add geometry to the serialized scene, if it exists in database
+      if (gua::GeometryDatabase::instance()->is_supported(node->get_filename()))
+      {
+        data_->geometrynodes_[std::type_index(typeid(*node))].push_back(node);
       }
     }
 
@@ -198,23 +181,6 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(Video3DNode* node) {
-
-  if ( is_visible(node) ) {
-
-    if (!node->get_ksfile().empty() && !node->get_material().empty()) {
-
-      add_bbox(node);
-      data_->video3Dnodes_.push_back(node);
-      data_->materials_.insert(node->get_material());
-
-    }
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void Serializer::visit(VolumeNode* node) {
 
@@ -326,7 +292,7 @@ void Serializer::add_bbox(Node* node) const {
 ////////////////////////////////////////////////////////////////////////
 
 void Serializer::visit_children(Node* node) {
-  std::for_each(node->children_.begin(), node->children_.end(), std::bind(std::mem_fn(&Node::accept), std::placeholders::_1, std::ref(*this)));
+  for (auto & c : node->children_) { c->accept(*this); }
 }
 
 }  // namespace gua

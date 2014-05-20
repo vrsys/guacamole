@@ -28,7 +28,7 @@
 #include <gua/utils/string_utils.hpp>
 #include <gua/scenegraph/Node.hpp>
 #include <gua/renderer/Material.hpp>
-#include <gua/renderer/Mesh.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/databases/MaterialDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/ShadingModelDatabase.hpp>

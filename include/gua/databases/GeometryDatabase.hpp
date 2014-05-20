@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
-#include <gua/renderer/Geometry.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 
 namespace gua {
 
@@ -37,7 +37,7 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-class GUA_DLL GeometryDatabase : public Database<Geometry>,
+class GUA_DLL GeometryDatabase : public Database<GeometryRessource>,
                                  public Singleton<GeometryDatabase> {
  public:
 

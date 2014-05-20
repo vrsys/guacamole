@@ -60,7 +60,7 @@ struct ShaderProgramStage {
 class GUA_DLL ShaderProgram {
  public:
 
-  friend class GBufferNURBSUberShader;
+  friend class NURBSUberShader;
 
  public:
   /**

@@ -36,7 +36,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::mat4 const math::compute_perspective_frustum(math::vec4 const& eye_position,
+math::mat4 math::compute_perspective_frustum(math::vec4 const& eye_position,
                                        math::mat4 const& screen_transform,
                                        float near_plane,
                                        float far_plane) {
@@ -64,7 +64,7 @@ math::mat4 const math::compute_perspective_frustum(math::vec4 const& eye_positio
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::mat4 const math::compute_orthographic_frustum(math::vec4 const& eye_position,
+math::mat4 math::compute_orthographic_frustum(math::vec4 const& eye_position,
                                        math::mat4 const& screen_transform,
                                  float near_plane,
                                  float far_plane) {
@@ -92,7 +92,7 @@ math::mat4 const math::compute_orthographic_frustum(math::vec4 const& eye_positi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::mat4 const math::mat_ai_to_scm(aiMatrix4x4 const& ai_mat) {
+math::mat4 math::mat_ai_to_scm(aiMatrix4x4 const& ai_mat) {
 
   math::mat4 scm_mat;
 

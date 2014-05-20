@@ -28,6 +28,7 @@
 #include <gua/math/BoundingBox.hpp>
 #include <gua/scenegraph/PickResult.hpp>
 #include <gua/utils/Mask.hpp>
+#include <gua/events/Signal.hpp>
 
 // external headers
 #include <map>
@@ -196,6 +197,12 @@ class GUA_DLL Node {
    */
   inline virtual math::mat4 get_transform() const { return transform_; }
 
+  /**
+   * Sets the Node's transformation.
+   *
+   * \param transform The Node's new transformation.
+   */
+  virtual void set_transform(math::mat4 const& transform);
 
   /**
    * Returns the Node's world transformation.
@@ -206,7 +213,17 @@ class GUA_DLL Node {
    * \return math::mat4  The Node's world transformation.
    */
   math::mat4 get_world_transform() const;
-  math::mat4 get_cached_world_transform() const;
+
+  math::mat4 const& get_cached_world_transform() const;
+
+  events::Signal<math::mat4 const&> on_world_transform_changed;
+
+    /**
+   * Sets the Node's world transformation.
+   *
+   * \param transform The Node's new world transformation.
+   */
+  virtual void set_world_transform(math::mat4 const& transform);
 
   /**
    * Returns the Node's world postion.
@@ -218,12 +235,6 @@ class GUA_DLL Node {
    */
   math::vec3 get_world_position() const;
 
-  /**
-   * Sets the Node's transformation.
-   *
-   * \param transform The Node's new transformation.
-   */
-  virtual void set_transform(math::mat4 const& transform);
 
   /**
    * Applies a scaling on the Node's transformation.
@@ -399,10 +410,12 @@ class GUA_DLL Node {
    */
   void*     get_user_data(unsigned handle) const;
 
+  /**
+  * \return size_t unique address of node
+  */
+  std::size_t const uuid() const;
+
   friend class SceneGraph;
-  friend class GeometryLoader;
-  friend class VolumeLoader;
-  friend class MeshLoader;
   friend class Serializer;
   friend class DotGenerator;
   friend class physics::CollisionShapeNodeVisitor;
@@ -410,11 +423,22 @@ class GUA_DLL Node {
   virtual void ray_test_impl(RayNode const& ray, PickResult::Options options,
                              Mask const& mask, std::set<PickResult>& hits);
 
- protected:
   /**
-   *
-   */
+  *
+  */
   virtual std::shared_ptr<Node> copy() const = 0;
+
+  /**
+  * Deep copies a Node with all its children.
+  *
+  * This function recursively generates new Nodes for the Node itself
+  * and all of its children.
+  *
+  * \return node     A pointer of the recently generated Node.
+  */
+  std::shared_ptr<Node> deep_copy() const;
+
+ protected:
 
   /**
    * Returns if the Node is Root
@@ -432,16 +456,6 @@ class GUA_DLL Node {
    * \param parent    The new parent of the Node.
    */
   inline void set_parent(Node* parent) { parent_ = parent; }
-
-  /**
-   * Deep copies a Node with all its children.
-   *
-   * This function recursively generates new Nodes for the Node itself
-   * and all of its children.
-   *
-   * \return node     A pointer of the recently generated Node.
-   */
-  std::shared_ptr<Node> deep_copy() const;
 
  private:
   // structure

@@ -40,8 +40,12 @@
 #include <string>
 #include <map>
 #include <set>
+#include <unordered_map>
+#include <typeindex>
 
 namespace gua {
+
+class UberShader;
 
 /**
  * Stores a serialized scene graph.
@@ -52,24 +56,14 @@ namespace gua {
 struct SerializedScene {
 
   /**
-   * All geometry nodes.
-   */
-  std::vector<GeometryNode*> meshnodes_;
-
-  /**
-   * All NURBS nodes.
-   */
-  std::vector<GeometryNode*> nurbsnodes_;
+  * All geometry nodes.
+  */
+  std::unordered_map<std::type_index, std::vector<GeometryNode*>> geometrynodes_;
 
   /**
   * All Volume nodes.
   */
   std::vector<VolumeNode*> volumenodes_;
-
-  /**
-  * All Video3D nodes.
-  */
-  std::vector<Video3DNode*> video3Dnodes_;
 
   /**
    * All point light nodes.

@@ -23,72 +23,40 @@
 #define GUA_VIDEO3D_NODE_HPP
 
 // guacamole headers
-#include <gua/scenegraph/Node.hpp>
-#include <gua/utils/configuration_macro.hpp>
+#include <gua/scenegraph/GeometryNode.hpp>
 
 // external headers
 #include <string>
 
 /**
- * This class is used to represent geometry in the SceneGraph.
+ * This class is used to represent kinect video in the SceneGraph.
  *
  */
 
 namespace gua {
 
-class GUA_DLL Video3DNode : public Node {
+class GUA_DLL Video3DNode : public GeometryNode {
+
   public:
 
-    /**
-    * A string referring to an entry in guacamole's GeometryDatabase.
-    */
-    std::string const& get_ksfile () const { return ksfile_; }
-    void set_ksfile(std::string const& v) { ksfile_ = v; video_changed_ = self_dirty_ = true; }
-
-    /**
-    * A string referring to an entry in guacamole's MaterialDatabase.
-    */
-    std::string const& get_material() const { return material_; }
-    void set_material(std::string const& v) { material_ = v; material_changed_ = self_dirty_ = true; }
-
-    Video3DNode() {};
-
-    /**
-     * Constructor.
-     *
-     * This constructs a GeometryNode with the given parameters and calls
-     * the constructor of base class Core with the type GEOMETRY.
-     *
-     * \param geometry  The name of the GeometryNode's geometry.
-     * \param material  The name of the GeometryNodeCore's material.
-     */
     Video3DNode(std::string const& name,
-                std::string const& ksfile = "gua_default_ksfile",
-                std::string const& material = "gua_video3d",
-                math::mat4 const& transform = math::mat4::identity());
-
-    /**
-     * Accepts a visitor and calls concrete visit method
-     *
-     * This method implements the visitor pattern for Nodes
-     *
-     */
-    /*virtual*/ void accept(NodeVisitor&);
+                std::string const& filename = "gua_default_geometry",
+                std::string const& material = "gua_default_material",
+                math::mat4  const& transform = math::mat4::identity());
 
     /*virtual*/ void update_bounding_box() const;
 
-    /*virtual*/ void ray_test_impl(RayNode const& ray, PickResult::Options options,
-                            Mask const& mask, std::set<PickResult>& hits);
+    /*virtual*/ void ray_test_impl(RayNode const& ray, 
+                                   PickResult::Options options,
+                                   Mask const& mask, 
+                                   std::set<PickResult>& hits);
 
-  private:
+  protected:
 
-    std::shared_ptr<Node> copy() const;
+    /*virtual*/ std::shared_ptr<Node> copy() const;
 
-    std::string ksfile_;
-    std::string material_;
+  private: // attributes
 
-    bool video_changed_;
-    bool material_changed_;
 };
 
 }

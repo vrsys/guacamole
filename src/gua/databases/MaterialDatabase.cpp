@@ -54,6 +54,10 @@ void MaterialDatabase::load_material(std::string const& filename) {
   if (!instance()->is_supported(filename)) {
     auto mat = std::make_shared<Material>(filename, filename);
     instance()->add(filename, mat);
+    std::cout << "MaterialDatabase::load_material() : loading " << filename << std::endl;
+  }
+  else {
+    std::cout << "MaterialDatabase::load_material() : material not supported " << filename << std::endl;
   }
 }
 

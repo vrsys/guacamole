@@ -46,11 +46,17 @@ void Pass::create(
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> > const&
         layers) {
 
+  cleanup(ctx);
+
+  gbuffer_ = std::make_shared<StereoBuffer>(ctx, pipeline_->config, layers);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pass::cleanup(RenderContext const& ctx) {
   if (gbuffer_) {
     gbuffer_->remove_buffers(ctx);
   }
-
-  gbuffer_ = std::make_shared<StereoBuffer>(ctx, pipeline_->config, layers);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,6 +122,7 @@ void Pass::set_camera_matrices(ShaderProgram const& shader,
   auto view_matrix(scene.frustum.get_view());
   auto inv_projection(scm::math::inverse(projection));
 
+  shader.set_uniform(ctx, static_cast<int>(eye), "gua_eye");
   shader.set_uniform(ctx, camera_position, "gua_camera_position");
   shader.set_uniform(ctx, projection, "gua_projection_matrix");
   shader.set_uniform(ctx, inv_projection, "gua_inverse_projection_matrix");

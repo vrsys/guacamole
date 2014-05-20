@@ -44,6 +44,16 @@ namespace gua {
 struct RenderContext {
 
   /**
+  * c'tor
+  */
+  RenderContext();
+
+  /**
+  * d'tor
+  */
+  ~RenderContext();
+
+   /**
    * The schism context of this RenderContext.
    */
   scm::gl::wm::context_ptr context;
@@ -77,6 +87,11 @@ struct RenderContext {
    * A unique ID for this context.
    */
   unsigned id;
+
+  /**
+  * framecounter for this context
+  */
+  unsigned framecount;
 };
 
 }

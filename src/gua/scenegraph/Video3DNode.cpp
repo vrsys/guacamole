@@ -25,39 +25,39 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/renderer/GeometryLoader.hpp> //***Video3DLoader???
+#include <gua/renderer/GeometryLoader.hpp> 
+#include <gua/renderer/Video3DUberShader.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
-//TODO BOUNDING BOX!!
-Video3DNode::Video3DNode(std::string const& name,
-                         std::string const& ksfile,
-                         std::string const& material,
-                         math::mat4 const& transform)
-: Node(name, transform), ksfile_(ksfile), material_(material)
-{
-    bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-100.0,-100.0,-100.0),
-                          math::vec3(100.0,100.0,100.0)); 
-}
 
-/* virtual */ void Video3DNode::accept(NodeVisitor& visitor) {
+  /////////////////////////////////////////////////////////////////////////////
+  Video3DNode::Video3DNode(std::string const& name,
+                           std::string const& file,
+                           std::string const& material,
+                           math::mat4 const& transform)
+  : GeometryNode(name, file, material, transform)
+  {
+    Singleton<Video3DUberShader>::instance();
 
-  visitor.visit(this);
-}
+    // approximately local space
+    bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-3.0, -0.1,-3.0),
+                                                  math::vec3( 3.0, 2.5, 3.0)); 
+  }
 
-void Video3DNode::update_bounding_box() const {
-  //TODO
-}
+  void Video3DNode::update_bounding_box() const {
+    //Logger::LOG_WARNING << "not implemented: Video3DNode::update_bounding_box()" << std::endl;
+  }
 
-void Video3DNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
-                           Mask const& mask, std::set<PickResult>& hits) {
-  //TODO
-}
+  void Video3DNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
+                             Mask const& mask, std::set<PickResult>& hits) {
+    Logger::LOG_WARNING << "not implemented: Video3DNode::ray_test_impl()" << std::endl;
+  }
 
-std::shared_ptr<Node> Video3DNode::copy() const {
-  return std::make_shared<Video3DNode>(get_name(), ksfile_, material_, get_transform());
-}
+  std::shared_ptr<Node> Video3DNode::copy() const {
+    return std::make_shared<Video3DNode>(get_name(), filename_, material_, get_transform());
+  }
 
 }

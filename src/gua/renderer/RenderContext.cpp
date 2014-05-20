@@ -19,21 +19,32 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_G_BUFFER_MESH_UBER_SHADER_HPP
-#define GUA_G_BUFFER_MESH_UBER_SHADER_HPP
+// class header
+#include "gua/renderer/RenderContext.hpp"
 
-// guacamole headers
-#include <gua/renderer/UberShader.hpp>
+#include <gua/renderer/Window.hpp>
 
 namespace gua {
 
-class GBufferMeshUberShader : public UberShader {
- public:
+  ////////////////////////////////////////////////////////////////////////////////
 
-  void create(std::set<std::string> const& material_names);
+  RenderContext::RenderContext()
+    : context(),
+    display(),
+    window(),
+    render_context(),
+    render_device(),
+    render_window(nullptr),
+    id(0),
+    framecount(0)
+  {}
 
-};
+  ////////////////////////////////////////////////////////////////////////////////
+
+  RenderContext::~RenderContext() {
+    if (render_window) {
+      delete render_window;
+    }
+  }
 
 }
-
-#endif  // GUA_G_BUFFER_MESH_UBER_SHADER_HPP
