@@ -57,21 +57,22 @@ std::shared_ptr<Node> NURBSLoader::create_geometry_from_file(std::string const& 
       throw std::runtime_error(std::string("Unsupported filetype: ") + filename);
     }
     else {
+
       igs_loader igsloader;
       TrimmedSurfaceConverter surface_converter;
 
-      std::shared_ptr<TrimmedNurbsSurfaceObject> nurbs_object(
-        new TrimmedNurbsSurfaceObject);
-      std::shared_ptr<TrimmedBezierSurfaceObject> bezier_object(
-        new TrimmedBezierSurfaceObject);
+      auto nurbs_object = std::make_shared<TrimmedNurbsSurfaceObject>();
+      auto bezier_object = std::make_shared<TrimmedBezierSurfaceObject>();
 
       igsloader.load(filename, nurbs_object);
       surface_converter.convert(nurbs_object, bezier_object);
 
       auto ressource = std::make_shared<NURBSRessource>(bezier_object);
-      GeometryDatabase::instance()->add(filename, ressource);
 
-      auto node = std::make_shared<NURBSNode>(nodename, filename, material);
+      std::string mesh_name("type=file&file=" + filename + "&flags=" + string_utils::to_string(flags));
+      GeometryDatabase::instance()->add(mesh_name, ressource);
+
+      auto node = std::make_shared<NURBSNode>(nodename, mesh_name, material);
       node->update_cache();
 
       return node;

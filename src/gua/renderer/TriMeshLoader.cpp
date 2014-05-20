@@ -307,12 +307,14 @@ void TriMeshLoader::apply_fallback_material(std::shared_ptr<Node> const& root,
   if (g_node) {
     if (g_node->get_material().empty()) {
       g_node->set_material(fallback_material);
+      g_node->update_cache();
     }
   }
 
   for (auto& child : root->get_children()) {
     apply_fallback_material(child, fallback_material);
   }
+
 
 }
 

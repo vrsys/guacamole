@@ -103,6 +103,7 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::texture_2d_ptr>	        warp_color_result_;
   mutable std::vector<scm::gl::frame_buffer_ptr>        warp_result_fbo_;
 
+  mutable std::vector<scm::gl::rasterizer_state_ptr>    no_bfc_rasterizer_state_;
   mutable std::vector<scm::gl::sampler_state_ptr>       nearest_sampler_state_;
   mutable std::vector<scm::gl::sampler_state_ptr>       linear_sampler_state_;
   

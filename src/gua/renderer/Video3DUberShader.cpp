@@ -235,14 +235,19 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
 
   if (context.id >= depth_stencil_state_warp_pass_.size()) {
     depth_stencil_state_warp_pass_.resize(context.id + 1);
-    depth_stencil_state_warp_pass_[context.id] = context.render_device->create_depth_stencil_state(false, true, scm::gl::COMPARISON_NEVER);
+    depth_stencil_state_warp_pass_[context.id] = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
   }
 
   if (context.id >= depth_stencil_state_blend_pass_.size()) {
     depth_stencil_state_blend_pass_.resize(context.id + 1);
-    depth_stencil_state_blend_pass_[context.id] = context.render_device->create_depth_stencil_state(false, true, scm::gl::COMPARISON_NEVER);
+    depth_stencil_state_blend_pass_[context.id] = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
   }
-  
+  if (context.id >= no_bfc_rasterizer_state_.size())
+  {
+    no_bfc_rasterizer_state_.resize(context.id + 1);
+    no_bfc_rasterizer_state_[context.id] = context.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
+  }
+
   return upload_succeeded;
 }
 
@@ -307,11 +312,12 @@ void Video3DUberShader::draw(RenderContext const& ctx,
     // single texture only
     scm::gl::context_all_guard guard(ctx.render_context);
 
+    ctx.render_context->set_rasterizer_state(no_bfc_rasterizer_state_[ctx.id]);
+    ctx.render_context->set_depth_stencil_state(depth_stencil_state_warp_pass_[ctx.id]);
+
+    // set uniforms
     ctx.render_context->bind_texture(video3d_ressource->depth_array(ctx), nearest_sampler_state_[ctx.id], 0);
     get_program(warp_pass)->get_program(ctx)->uniform_sampler("depth_video3d_texture", 0);
-
-    auto ds_state = ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
-    ctx.render_context->set_depth_stencil_state(ds_state);
 
     scm::math::vec4f norm_vec (0.0f, 1.0f, 0.0f, 0.0f);
     auto trans_vec = model_matrix * norm_vec;
@@ -372,6 +378,8 @@ void Video3DUberShader::draw(RenderContext const& ctx,
   {
     // single texture only
     scm::gl::context_all_guard guard(ctx.render_context);
+
+    ctx.render_context->set_depth_stencil_state(depth_stencil_state_warp_pass_[ctx.id]);
 
     // second pass
     get_program(blend_pass)->use(ctx);

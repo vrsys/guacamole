@@ -131,14 +131,11 @@ namespace gua {
 
     get_program()->use(ctx);
     {
-      if (material && geometry)
-      {
-        set_uniform(ctx, material->get_id(), "gua_material_id");
-        set_uniform(ctx, model_matrix, "gua_model_matrix");
-        set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+      set_uniform(ctx, material->get_id(), "gua_material_id");
+      set_uniform(ctx, model_matrix, "gua_model_matrix");
+      set_uniform(ctx, normal_matrix, "gua_normal_matrix");
 
-        geometry->draw(ctx);
-      }
+      geometry->draw(ctx);
     }
     get_program()->unuse(ctx);
   }

@@ -230,15 +230,14 @@ namespace gua {
       {
         if (!MaterialDatabase::instance()->is_supported(material_)) 
         {
-          auto mat = std::make_shared<Material>(material_, MaterialDescription(material_));
-          MaterialDatabase::instance()->add(material_, mat);
+          MaterialDatabase::instance()->load_material(material_);
         }
       }
 
       material_changed_ = false;
     }
 
-    Node::update_cache();
+    GeometryNode::update_cache();
   }
 
   ////////////////////////////////////////////////////////////////////////////////

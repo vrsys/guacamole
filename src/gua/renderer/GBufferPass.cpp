@@ -106,8 +106,7 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx) {
 
   if (!depth_stencil_state_ ||
       !bfc_rasterizer_state_ ||
-      !no_bfc_rasterizer_state_ ||
-      !no_bfc_rasterizer_state_) {
+      !no_bfc_rasterizer_state_ ) {
     initialize_state_objects(ctx);
   }
 
@@ -150,7 +149,8 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx) {
 
     // 2. iterate all drawables of current type and call predraw of current ubershader
     if (ubershader->get_stage_mask() & GeometryUberShader::PRE_DRAW_STAGE) {
-      for (auto const& node : ressource_container) {
+      for (auto const& node : ressource_container) 
+      {
         auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
         auto const& material = MaterialDatabase::instance()->lookup(node->get_material());
 
@@ -163,6 +163,13 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx) {
             scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
             scene.frustum,
             viewid);
+        } else {
+          if (!material) {
+            Logger::LOG_WARNING << "GBufferPass::rendering() Cannot find material. " << material << std::endl;
+          }
+          if (!ressource) {
+            Logger::LOG_WARNING << "GBufferPass::rendering() Cannot find geometry ressource." << ressource << std::endl;
+          }
         }
       }
     }
@@ -182,6 +189,13 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx) {
             scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
             scene.frustum,
             viewid);
+        } else {
+          if (!material) {
+            Logger::LOG_WARNING << "GBufferPass::rendering() Cannot find material. " << material << std::endl;
+          }
+          if (!ressource) {
+            Logger::LOG_WARNING << "GBufferPass::rendering() Cannot find geometry ressource." << ressource << std::endl;
+          }
         }
       }
     }
@@ -201,6 +215,13 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx) {
             scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
             scene.frustum,
             viewid);
+        } else {
+          if (!material) {
+            Logger::LOG_WARNING << "GBufferPass::rendering() Cannot find material. " << material << std::endl;
+          }
+          if (!ressource) {
+            Logger::LOG_WARNING << "GBufferPass::rendering() Cannot find geometry ressource." << ressource << std::endl;
+          }
         }
       }
     }

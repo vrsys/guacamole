@@ -731,30 +731,31 @@ std::string const NURBSUberShader::_final_geometry_shader () const
         geom_shader << method.second << std::endl;
     }
 
-    geom_shader << std::string("                                                                               \n\
-        void main()                                                                                            \n\
-        {                                                                                                      \n\
-            for ( int i = 0; i != 3; ++i )                                                                     \n\
-            {                                                                                                  \n\
-                gIndex      = teIndex[i];                                                                      \n\
-                gTessCoord  = teTessCoord[i];                                                                  \n\
-                                                                                                               \n\
-                // write built-in input for material                                                           \n\
-                ///////////////////////////////////////////////////////                                        \n\
-                gua_texcoords  = gTessCoord;                                                                   \n\
-                                                                                                               \n\
-                gua_position_varying = (gua_model_matrix * tePosition[i]).xyz;                                 \n\
-                gua_object_normal    = teNormal[i].xyz;                                                        \n\
-                gua_object_tangent   = teTangent[i].xyz;                                                       \n\
-                gua_object_bitangent = teBitangent[i].xyz;                                                     \n\
-                gua_object_position  = tePosition[i].xyz;                                                      \n\
-                                                                                                               \n\
-                gua_world_normal     = normalize ( gua_normal_matrix * vec4 (teNormal[i].xyz, 0.0) ).xyz;      \n\
-                gua_world_tangent    = normalize ( gua_normal_matrix * vec4 (teTangent[i].xyz, 0.0) ).xyz;     \n\
-                gua_world_bitangent  = normalize ( gua_normal_matrix * vec4 (teBitangent[i].xyz, 0.0) ).xyz;   \n\
-                gua_world_position   = (gua_model_matrix * tePosition[i]).xyz;                                 \n\
-                ///////////////////////////////////////////////////////                                        \n\
-    ");
+    geom_shader << R"(                                                                      
+      void main()                                                                                 
+      {                                                                                           
+        for ( int i = 0; i != 3; ++i )                                                              
+        {                                                                                           
+          gIndex      = teIndex[i];                                                                   
+          gTessCoord  = teTessCoord[i];                                                               
+
+          // write built-in input for material                                                        
+          ///////////////////////////////////////////////////////                                     
+          gua_texcoords  = gTessCoord;                                                                
+
+          gua_position_varying = (gua_model_matrix * tePosition[i]).xyz;                              
+          gua_object_normal    = teNormal[i].xyz;                                                     
+          gua_object_tangent   = teTangent[i].xyz;                                                    
+          gua_object_bitangent = teBitangent[i].xyz;                                                  
+          gua_object_position  = tePosition[i].xyz;                                                   
+                                                               
+          vec4 world_normal    = gua_normal_matrix * vec4 (teNormal[i].xyz, 0.0);
+          gua_world_normal     = normalize ( world_normal.xyz );     
+          gua_world_tangent    = normalize ( gua_normal_matrix * vec4 (teTangent[i].xyz, 0.0) ).xyz;    
+          gua_world_bitangent  = normalize ( gua_normal_matrix * vec4 (teBitangent[i].xyz, 0.0) ).xyz;  
+          gua_world_position   = (gua_model_matrix * tePosition[i]).xyz;                                
+          ///////////////////////////////////////////////////////                                       
+    )";
 
     // generated code
     auto main_calls(vshader_factory_->get_main_calls());
@@ -968,26 +969,24 @@ void NURBSUberShader::draw(RenderContext const& ctx,
   auto geometry = std::static_pointer_cast<NURBSRessource>(GeometryDatabase::instance()->lookup(filename));
   auto material = MaterialDatabase::instance()->lookup(material_name);
 
-  if ( geometry && material )
-  {
-    set_uniform(ctx, 128, "gua_max_tesselation");
-    set_uniform(ctx, material->get_id(), "gua_material_id");
-    set_uniform(ctx, model_matrix, "gua_model_matrix");
-    set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+  set_uniform(ctx, 128, "gua_max_tesselation");
+  set_uniform(ctx, material->get_id(), "gua_material_id");
+  set_uniform(ctx, model_matrix, "gua_model_matrix");
+  set_uniform(ctx, normal_matrix, "gua_normal_matrix");
 
   #ifdef DEBUG_XFB_OUTPUT
     scm::gl::transform_feedback_statistics_query_ptr q = ctx
       .render_device->create_transform_feedback_statistics_query(0);
     ctx.render_context->begin_query(q);
-  #endif
+#endif
 
-    // pre-tesselate if necessary
-    get_program(transform_feedback_pass)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->predraw(ctx);
-    }
-    get_program(transform_feedback_pass)->unuse(ctx);
+  // pre-tesselate if necessary
+  get_program(transform_feedback_pass)->use(ctx);
+  {
+    ctx.render_context->apply();
+    geometry->predraw(ctx);
+  }
+  get_program(transform_feedback_pass)->unuse(ctx);
 
 #ifdef DEBUG_XFB_OUTPUT
     ctx.render_context->end_query(q);
@@ -996,14 +995,14 @@ void NURBSUberShader::draw(RenderContext const& ctx,
       << q->result()._primitives_written << std::endl;
 #endif
 
-    // invoke tesselation/trim shader for adaptive nurbs rendering
-    get_program(final_pass)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->draw(ctx);
-    }
-    get_program(final_pass)->unuse(ctx);
+  // invoke tesselation/trim shader for adaptive nurbs rendering
+  get_program(final_pass)->use(ctx);
+  {
+    ctx.render_context->apply();
+    geometry->draw(ctx);
   }
+  get_program(final_pass)->unuse(ctx);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -99,6 +99,8 @@ class GUA_DLL GeometryNode : public Node {
     */
     virtual void update_bounding_box() const;
 
+    inline virtual void update_cache() { Node::update_cache(); }
+
     /**
      * Accepts a visitor and calls concrete visit method.
      *
@@ -112,13 +114,12 @@ class GUA_DLL GeometryNode : public Node {
 
     virtual std::shared_ptr<Node> copy() const = 0;
 
-    virtual void cache_material() const;
-
     std::string filename_;
     std::string material_;
 
     ShadowMode shadow_mode_;
-    bool filename_changed_;    bool material_changed_;
+    bool filename_changed_;    
+    bool material_changed_;
 };
 
 }

@@ -61,13 +61,15 @@ namespace gua {
 
   void Node::update_cache() {
 
-    if (self_dirty_) {
-        math::mat4 old_world_trans(world_transform_);
-        if (is_root()) {
-            world_transform_ = get_transform();
-        } else {
-            world_transform_ = parent_->world_transform_ * get_transform();
-        }
+    if (self_dirty_) 
+    {
+      math::mat4 old_world_trans(world_transform_);
+      if (is_root()) {
+          world_transform_ = get_transform();
+      } else {
+          world_transform_ = parent_->world_transform_ * get_transform();
+      }
+
       if (is_root()) {
         world_transform_ = get_transform();
       }
@@ -75,11 +77,10 @@ namespace gua {
         world_transform_ = parent_->world_transform_ * get_transform();
       }
 
-        if (world_transform_ != old_world_trans) {
-            on_world_transform_changed.emit(world_transform_);
-        }
+      if (world_transform_ != old_world_trans) {
+          on_world_transform_changed.emit(world_transform_);
+      }
 
-        self_dirty_ = false;
       self_dirty_ = false;
     }
 
@@ -358,6 +359,7 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
 
   void Node::set_dirty() const {
+    self_dirty_ = true;
     set_children_dirty();
     set_parent_dirty();
   }
@@ -377,11 +379,11 @@ namespace gua {
     if (!self_dirty_) {
       self_dirty_ = true;
       child_dirty_ = true;
-
-      for (auto child : children_) {
-        child->set_children_dirty();
-      }
     }
+    for (auto child : children_) {
+      child->set_children_dirty();
+    }
+
   }
 
   ////////////////////////////////////////////////////////////////////////////////
