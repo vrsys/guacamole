@@ -39,7 +39,7 @@ namespace gua {
  */
 class GUA_DLL TexturedQuadNode : public Node {
 
-public :
+ public:
   /**
    * Constructor.
    *
@@ -97,7 +97,7 @@ public :
 
   /*virtual*/ void update_cache();
 
-public: // get and set methods
+ public:  // get and set methods
 
   std::string const& get_texture() const;
   void set_texture(std::string const& name);
@@ -114,15 +114,15 @@ public: // get and set methods
   bool flip_y() const;
   void flip_y(bool enable);
 
- private: // methods
+ private:  // methods
 
   std::shared_ptr<Node> copy() const;
 
- private: // attributes
+ private:  // attributes
 
   std::string texture_;
   math::vec2 size_;
-  
+
   bool is_stereo_texture_;
   bool flip_x_;
   bool flip_y_;
