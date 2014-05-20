@@ -103,7 +103,8 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
     RenderContext const& ctx,
     CameraMode eye,
     Camera const& camera,
-    FrameBufferObject* target) {
+    FrameBufferObject* target,
+    std::size_t viewid) {
 
     if (!depth_stencil_state_ ||
         !bfc_rasterizer_state_ ||
@@ -168,7 +169,8 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
               node->get_material(),
               node->get_cached_world_transform(),
               scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
-              scene.frustum);
+              scene.frustum,
+              viewid);
           }
         }
       }
@@ -188,7 +190,8 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
               node->get_material(),
               node->get_cached_world_transform(),
               scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
-              scene.frustum);
+              scene.frustum,
+              viewid);
           }
         }
       }
@@ -208,7 +211,8 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
               node->get_material(),
               node->get_cached_world_transform(),
               scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
-              scene.frustum);
+              scene.frustum,
+              viewid);
           }
         }
       }
@@ -223,18 +227,18 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
     ///////////////////////////////////////////////////////////////
     // draw debug and helper information
     ///////////////////////////////////////////////////////////////
-    display_quads(ctx, scene, eye);
+    display_quads(ctx, scene, eye, viewid);
 
     ctx.render_context->set_rasterizer_state(bbox_rasterizer_state_);
-    display_bboxes(ctx, scene);
-    display_rays(ctx, scene);
+    display_bboxes(ctx, scene, viewid);
+    display_rays(ctx, scene, viewid);
 
     ctx.render_context->reset_state_objects();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void GBufferPass::display_bboxes(RenderContext const& ctx, SerializedScene const& scene)
+  void GBufferPass::display_bboxes(RenderContext const& ctx, SerializedScene const& scene, std::size_t viewid)
   {
     auto meshubershader = Singleton<TriMeshUberShader>::instance();
 
@@ -258,7 +262,8 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
           "gua_bounding_box",
           bbox_transform,
           scm::math::transpose(scm::math::inverse(bbox_transform)),
-          scene.frustum);
+          scene.frustum,
+          viewid);
       }
       meshubershader->get_program()->unuse(ctx);
     }
@@ -267,7 +272,7 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void GBufferPass::display_rays(RenderContext const& ctx, SerializedScene const& scene)
+  void GBufferPass::display_rays(RenderContext const& ctx, SerializedScene const& scene, std::size_t viewid)
   {
     auto meshubershader = Singleton<TriMeshUberShader>::instance();  
 
@@ -281,7 +286,8 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
           "gua_bounding_box",
           ray->get_cached_world_transform(),
           scm::math::inverse(ray->get_cached_world_transform()),
-          scene.frustum);
+          scene.frustum,
+          viewid);
       }
       meshubershader->get_program()->unuse(ctx);
     }
@@ -289,7 +295,7 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void GBufferPass::display_quads(RenderContext const& ctx, SerializedScene const& scene, CameraMode eye)
+  void GBufferPass::display_quads(RenderContext const& ctx, SerializedScene const& scene, CameraMode eye, std::size_t viewid)
   {
     auto meshubershader = Singleton<TriMeshUberShader>::instance();
 
@@ -328,7 +334,8 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext & ctx)
             "gua_textured_quad",
             node->get_scaled_world_transform(),
             scm::math::inverse(node->get_scaled_world_transform()),
-            scene.frustum);
+            scene.frustum,
+            viewid);
         }
       }
       meshubershader->get_program()->unuse(ctx);

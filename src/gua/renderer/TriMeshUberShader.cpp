@@ -110,7 +110,8 @@ namespace gua {
                                                std::string const& material_name,
                                                scm::math::mat4 const& model_matrix,
                                                scm::math::mat4 const& normal_matrix,
-                                               Frustum const& /*frustum*/) const
+                                               Frustum const& /*frustum*/,
+                                               std::size_t /*viewid*/) const
   {
     throw std::runtime_error("TriMeshUberShader::predraw(): not implemented");
   }
@@ -122,7 +123,8 @@ namespace gua {
                                            std::string const& material_name,
                                            scm::math::mat4 const& model_matrix,
                                            scm::math::mat4 const& normal_matrix,
-                                           Frustum const& /*frustum*/) const
+                                           Frustum const& /*frustum*/,
+                                           std::size_t /*viewid*/) const
   {
     auto geometry = std::static_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup(filename));
     auto material = MaterialDatabase::instance()->lookup(material_name);
@@ -148,7 +150,8 @@ namespace gua {
     std::string const& material_name,
     scm::math::mat4 const& model_matrix,
     scm::math::mat4 const& normal_matrix,
-    Frustum const& /*frustum*/) const
+    Frustum const& /*frustum*/,
+    std::size_t /*viewid*/) const
   {
     throw std::runtime_error("TriMeshUberShader::postdraw(): not implemented");
   }

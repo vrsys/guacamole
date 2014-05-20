@@ -267,7 +267,8 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
   std::string const& material_name,
   scm::math::mat4 const& model_matrix,
   scm::math::mat4 const& normal_matrix,
-  Frustum const& /*frustum*/) const
+  Frustum const& /*frustum*/,
+  std::size_t viewid) const
 {
   throw std::runtime_error("not implemented");
 }
@@ -280,7 +281,8 @@ void Video3DUberShader::draw(RenderContext const& ctx,
                              std::string const& material_name,
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
-                             Frustum const& /*frustum*/) const
+                             Frustum const& /*frustum*/,
+                             std::size_t viewid) const
 {
   if (!GeometryDatabase::instance()->is_supported(ksfile_name) || 
       !MaterialDatabase::instance()->is_supported(material_name)) {
@@ -409,7 +411,8 @@ void Video3DUberShader::draw(RenderContext const& ctx,
   std::string const& material_name,
   scm::math::mat4 const& model_matrix,
   scm::math::mat4 const& normal_matrix,
-  Frustum const& /*frustum*/) const
+  Frustum const& /*frustum*/,
+  std::size_t viewid) const
 {
   throw std::runtime_error("not implemented");
 }
