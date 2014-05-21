@@ -66,7 +66,8 @@ class Pass {
 
   virtual void render_scene(Camera const& camera,
                             SceneGraph const& current_graph,
-                            RenderContext const& ctx) = 0;
+                            RenderContext const& ctx,
+                            std::size_t unique_view_id) = 0;
 
   // not strictly necessary to call, but recommend
   // to avoid crashes on shader compilation

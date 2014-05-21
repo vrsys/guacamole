@@ -56,7 +56,7 @@ class PostFXPass : public Pass {
 
   virtual void cleanup(RenderContext const& ctx);
 
-  void render_scene(Camera const& camera, SceneGraph const&, RenderContext const& ctx);
+  void render_scene(Camera const& camera, SceneGraph const&, RenderContext const& ctx, std::size_t viewid);
 
   /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
 

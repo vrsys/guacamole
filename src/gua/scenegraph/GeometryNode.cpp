@@ -43,11 +43,9 @@ namespace gua {
         filename_(filename),
         material_(material),
         shadow_mode_(shadow_mode),
-        filename_changed_(false), 
-        material_changed_(false) 
-  {
-    cache_material();
-  }
+        filename_changed_(true), 
+        material_changed_(true)
+  {}
 
   ////////////////////////////////////////////////////////////////////////////////
   std::string const& GeometryNode::get_filename() const {
@@ -74,7 +72,6 @@ namespace gua {
   void GeometryNode::set_material(std::string const& v) {
     material_ = v; 
     material_changed_ = self_dirty_ = true; 
-    cache_material();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -90,18 +87,6 @@ namespace gua {
     }
     else {
       Node::update_bounding_box();
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void GeometryNode::cache_material() const
-  {
-    if (!material_.empty())
-    {
-      if (!MaterialDatabase::instance()->is_supported(material_))
-      {
-        MaterialDatabase::instance()->load_material(material_);
-      }
     }
   }
 }

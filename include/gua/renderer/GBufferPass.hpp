@@ -74,15 +74,19 @@ class GBufferPass : public GeometryPass {
                  RenderContext const& ctx,
                  CameraMode eye,
                  Camera const& camera,
-                 FrameBufferObject* target);
+                 FrameBufferObject* target,
+                 std::size_t viewid);
 
   void display_bboxes(RenderContext const& ctx,
-                      SerializedScene const& scene);
+                      SerializedScene const& scene,
+                      std::size_t viewid);
   void display_rays  (RenderContext const& ctx,
-                      SerializedScene const& scene);
+                      SerializedScene const& scene,
+                      std::size_t viewid);
   void display_quads (RenderContext const& ctx,
                       SerializedScene const& scene,
-                      CameraMode eye);
+                      CameraMode eye,
+                      std::size_t viewid);
 
   void update_ubershader_from_scene(SerializedScene const& scene,
                                     SceneGraph const& graph);

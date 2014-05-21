@@ -177,7 +177,8 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
           node->get_material(),
           node->get_cached_world_transform(),
           scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
-          scene.frustum);
+          scene.frustum,
+          uuid());
       }
     } else {
       Logger::LOG_WARNING << "ShadowMap::render_geometry(): UberShader missing." << std::endl;

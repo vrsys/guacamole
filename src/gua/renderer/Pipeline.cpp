@@ -275,7 +275,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     }
 
     for (auto pass : passes_) {
-      pass->render_scene(config.camera(), *current_graph, *context_);
+      pass->render_scene(config.camera(), *current_graph, *context_, uuid());
     }
 
     if (window_) {

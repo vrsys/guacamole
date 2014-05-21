@@ -110,7 +110,8 @@ namespace gua {
                                                std::string const& material_name,
                                                scm::math::mat4 const& model_matrix,
                                                scm::math::mat4 const& normal_matrix,
-                                               Frustum const& /*frustum*/) const
+                                               Frustum const& /*frustum*/,
+                                               std::size_t /*viewid*/) const
   {
     throw std::runtime_error("TriMeshUberShader::predraw(): not implemented");
   }
@@ -122,21 +123,19 @@ namespace gua {
                                            std::string const& material_name,
                                            scm::math::mat4 const& model_matrix,
                                            scm::math::mat4 const& normal_matrix,
-                                           Frustum const& /*frustum*/) const
+                                           Frustum const& /*frustum*/,
+                                           std::size_t /*viewid*/) const
   {
     auto geometry = std::static_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup(filename));
     auto material = MaterialDatabase::instance()->lookup(material_name);
 
     get_program()->use(ctx);
     {
-      if (material && geometry)
-      {
-        set_uniform(ctx, material->get_id(), "gua_material_id");
-        set_uniform(ctx, model_matrix, "gua_model_matrix");
-        set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+      set_uniform(ctx, material->get_id(), "gua_material_id");
+      set_uniform(ctx, model_matrix, "gua_model_matrix");
+      set_uniform(ctx, normal_matrix, "gua_normal_matrix");
 
-        geometry->draw(ctx);
-      }
+      geometry->draw(ctx);
     }
     get_program()->unuse(ctx);
   }
@@ -148,7 +147,8 @@ namespace gua {
     std::string const& material_name,
     scm::math::mat4 const& model_matrix,
     scm::math::mat4 const& normal_matrix,
-    Frustum const& /*frustum*/) const
+    Frustum const& /*frustum*/,
+    std::size_t /*viewid*/) const
   {
     throw std::runtime_error("TriMeshUberShader::postdraw(): not implemented");
   }

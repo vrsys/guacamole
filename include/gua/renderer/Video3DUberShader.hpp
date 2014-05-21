@@ -58,21 +58,24 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
                            std::string const& material_name,
                            scm::math::mat4 const& model_matrix,
                            scm::math::mat4 const& normal_matrix,
-                           Frustum const& frustum) const;
+                           Frustum const& frustum,
+                           std::size_t viewid) const;
 
   /*virtual*/ void draw   (RenderContext const& context,
                            std::string const& ksfile_name,
                            std::string const& material_name,
                            scm::math::mat4 const& model_matrix,
                            scm::math::mat4 const& normal_matrix,
-                           Frustum const& frustum) const;
+                           Frustum const& frustum,
+                           std::size_t viewid) const;
 
   /*virtual*/ void postdraw(RenderContext const& context,
                             std::string const& ksfile_name,
                             std::string const& material_name,
                             scm::math::mat4 const& model_matrix,
                             scm::math::mat4 const& normal_matrix,
-                            Frustum const& frustum) const;
+                            Frustum const& frustum,
+                            std::size_t viewid) const;
 
   /*virtual*/ void postframe(RenderContext const& context) const;
 
@@ -100,6 +103,7 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::texture_2d_ptr>	        warp_color_result_;
   mutable std::vector<scm::gl::frame_buffer_ptr>        warp_result_fbo_;
 
+  mutable std::vector<scm::gl::rasterizer_state_ptr>    no_bfc_rasterizer_state_;
   mutable std::vector<scm::gl::sampler_state_ptr>       nearest_sampler_state_;
   mutable std::vector<scm::gl::sampler_state_ptr>       linear_sampler_state_;
   

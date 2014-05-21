@@ -255,7 +255,8 @@ bool CompositePass::pre_compile_shaders(RenderContext const& ctx) {
 
 void CompositePass::render_scene(Camera const& camera,
                                  SceneGraph const&,
-                                 RenderContext const& ctx) {
+                                 RenderContext const& ctx,
+                                 std::size_t viewid) {
 
   for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
 

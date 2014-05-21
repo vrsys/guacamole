@@ -47,7 +47,6 @@ NURBSRessource::NURBSRessource(std::shared_ptr<TrimmedBezierSurfaceObject> const
           object->bbox().min[0], object->bbox().min[1], object->bbox().min[2]),
       math::vec3(
           object->bbox().max[0], object->bbox().max[1], object->bbox().max[2]));
-  std::cout << object->bbox() << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

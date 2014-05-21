@@ -82,6 +82,8 @@ class ShadowMap {
 
   virtual void cleanup(RenderContext const& context);
 
+  inline std::size_t const uuid() const { return reinterpret_cast<std::size_t>(buffer_); }
+
  private:
 
   void update_members(RenderContext const& ctx, unsigned map_size);
