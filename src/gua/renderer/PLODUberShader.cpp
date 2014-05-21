@@ -563,16 +563,19 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
     
       pbr::context_t context_id = controller->DeduceContextId(ctx.id);
 
-      
+      //swap cut database
       cuts->AcceptFront(context_id);
       
 
-      if (ctx.framecount > 0)
+      if (temp_buffer_A_is_mapped_[ctx.id])
       {
+          //run cut update
           controller->DispatchCutUpdate(context_id);
       }
       else
       {
+          //startup
+          
           controller->StoreTemporaryBuffers(
               context_id,
               GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A),
@@ -584,6 +587,8 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       
       if (cuts->IsFrontModified(context_id))
       {
+          //upload data to gpu
+          
           UnmapTempBufferPtr(ctx, cuts->GetBuffer(context_id));
 
           CopyTempToMainMemory(ctx, cuts->GetBuffer(context_id));
@@ -646,12 +651,19 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
                                                Frustum const& frustum,
                                                std::size_t viewid) const
   {
+  
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
       pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
+      
       pbr::context_t context_id = controller->DeduceContextId(ctx.id);
       pbr::view_t view_id = controller->DeduceViewId(context_id, 0);
+      pbr::model_t model_id = controller->DeduceModelId(file_name);
+      
+      //send camera and model_matrix to cut update
       cuts->SendCamera(context_id, view_id, pbr::ren::Camera(view_id, frustum.get_view(), frustum.get_projection() ));
-
+      cuts->SendTransform(context_id, model_id, model_matrix);
+      
+      
       auto plod_ressource     = std::static_pointer_cast<PLODRessource>(GeometryDatabase::instance()->lookup(file_name));
       auto material          = MaterialDatabase::instance()->lookup(material_name);
      
@@ -701,14 +713,6 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 
 	      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
 	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
-
-        pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-        pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-        pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-        pbr::model_t model_id = controller->DeduceModelId(file_name);
-        pbr::view_t view_id = controller->DeduceViewId(context_id, 0); //only one view
-        
-        database->GetModel(model_id)->kdn_tree()->Transform(model_matrix);
 
 	      if (material && plod_ressource)
 	      {
