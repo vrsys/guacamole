@@ -359,7 +359,6 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
 
   void Node::set_dirty() const {
-    self_dirty_ = true;
     set_children_dirty();
     set_parent_dirty();
   }
@@ -380,6 +379,7 @@ namespace gua {
       self_dirty_ = true;
       child_dirty_ = true;
     }
+    
     for (auto child : children_) {
       child->set_children_dirty();
     }
