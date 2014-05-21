@@ -25,8 +25,11 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+
 #include <gua/scenegraph/TriMeshNode.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
+
 
 // external headers
 #include <btBulletDynamicsCommon.h>
@@ -143,7 +146,7 @@ void ConvexHullShape::build_from_geometry(
     unsigned flags) {
     ConvexHullShape* shape = new ConvexHullShape();
 
-    GeometryLoader factory;
+    TriMeshLoader factory;
     auto node(factory.create_geometry_from_file("", file_name, "", flags));
     if (node) {
       std::vector<std::string> geom_list;

@@ -185,6 +185,10 @@ class GUA_DLL Pipeline {
 
   SerializedScene const& get_current_scene(CameraMode mode) const;
 
+  inline std::size_t uuid() const {
+    return reinterpret_cast<std::size_t>(this);
+  }
+
   friend class Renderer;
 
  private:

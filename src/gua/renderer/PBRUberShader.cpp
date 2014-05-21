@@ -460,7 +460,8 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
                                                std::string const& material_name,
                                                scm::math::mat4 const& model_matrix,
                                                scm::math::mat4 const& normal_matrix,
-                                               Frustum const& frustum) const
+                                               Frustum const& frustum,
+                                               std::size_t viewid) const
   {
 
       auto pbr_ressource     = std::static_pointer_cast<PBRRessource>(GeometryDatabase::instance()->lookup(file_name));
@@ -538,7 +539,8 @@ void PBRUberShader::draw(RenderContext const& ctx,
                              std::string const& material_name,
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
-                             Frustum const& frustum) const
+                             Frustum const& frustum,
+                             std::size_t viewid) const
 {
     throw std::runtime_error("PBRUberShader::draw(): not implemented");
 }
@@ -555,7 +557,8 @@ void PBRUberShader::draw(RenderContext const& ctx,
     std::string const& material_name,
     scm::math::mat4 const& model_matrix,
     scm::math::mat4 const& normal_matrix,
-    Frustum const& frustum) const
+    Frustum const& frustum,
+    std::size_t viewid) const
   {
 
   auto pbr_ressource     = std::static_pointer_cast<PBRRessource>(GeometryDatabase::instance()->lookup(file_name));

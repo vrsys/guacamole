@@ -30,7 +30,7 @@
 #include <gua/scenegraph/TransformNode.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/databases/MaterialDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
@@ -38,12 +38,100 @@
 
 namespace gua {
 
+  /////////////////////////////////////////////////////////////////////////////
+  // static variables
+  /////////////////////////////////////////////////////////////////////////////
   unsigned TriMeshLoader::mesh_counter_ = 0;
+
+  std::unordered_map<std::string, std::shared_ptr<Node>>
+    TriMeshLoader::loaded_files_ =
+    std::unordered_map<std::string, std::shared_ptr<Node>>();
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
 
   /////////////////////////////////////////////////////////////////////////////
 
   TriMeshLoader::TriMeshLoader()
-    : node_counter_(0) {}
+    : GeometryLoader(),
+      node_counter_(0) 
+  {}
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::shared_ptr<Node> TriMeshLoader::load_geometry(std::string const& file_name, unsigned flags) 
+  {
+    std::shared_ptr<Node> cached_node;
+    std::string key(file_name + "_" + string_utils::to_string(flags));
+    auto searched(loaded_files_.find(key));
+
+    if (searched != loaded_files_.end()) {
+
+      cached_node = searched->second;
+
+    }
+    else {
+
+      bool fileload_succeed = false;
+
+      if (is_supported(file_name)) 
+      {
+        cached_node = load(file_name, flags);
+        cached_node->update_cache();
+
+        loaded_files_.insert(std::make_pair(key, cached_node));
+
+        // normalize mesh position and rotation
+        if (flags & TriMeshLoader::NORMALIZE_POSITION || flags & TriMeshLoader::NORMALIZE_SCALE) {
+          auto bbox = cached_node->get_bounding_box();
+
+          if (flags & TriMeshLoader::NORMALIZE_POSITION) {
+            auto center((bbox.min + bbox.max)*0.5f);
+            cached_node->translate(-center);
+          }
+
+          if (flags & TriMeshLoader::NORMALIZE_SCALE) {
+            auto size(bbox.max - bbox.min);
+            auto max_size(std::max(std::max(size.x, size.y), size.z));
+            cached_node->scale(1.f / max_size);
+          }
+
+        }
+
+        fileload_succeed = true;
+      }
+
+      if (!fileload_succeed) {
+
+        Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
+      }
+    }
+
+    return cached_node;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::shared_ptr<Node> TriMeshLoader::create_geometry_from_file
+    (std::string const& node_name,
+    std::string const& file_name,
+    std::string const& fallback_material,
+    unsigned flags) 
+  {
+    auto cached_node(load_geometry(file_name, flags));
+
+    if (cached_node) {
+      auto copy(cached_node->deep_copy());
+
+      apply_fallback_material(copy, fallback_material);
+
+      copy->set_name(node_name);
+      return copy;
+    }
+
+    return std::make_shared<TransformNode>(node_name);
+  }
 
   /////////////////////////////////////////////////////////////////////////////
 
@@ -61,8 +149,8 @@ namespace gua {
     importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
                                   aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 
-    if ((flags & GeometryLoader::OPTIMIZE_GEOMETRY) &&
-        (flags & GeometryLoader::LOAD_MATERIALS)) {
+    if ((flags & TriMeshLoader::OPTIMIZE_GEOMETRY) &&
+        (flags & TriMeshLoader::LOAD_MATERIALS)) {
 
       importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS);
       importer->ReadFile(
@@ -71,7 +159,8 @@ namespace gua {
               aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
               aiProcess_PreTransformVertices);
 
-    } else if (flags & GeometryLoader::OPTIMIZE_GEOMETRY) {
+    }
+    else if (flags & TriMeshLoader::OPTIMIZE_GEOMETRY) {
 
       importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS,
                                     aiComponent_COLORS | aiComponent_MATERIALS);
@@ -135,6 +224,8 @@ std::vector<TriMeshRessource*> const TriMeshLoader::load_from_buffer(char const*
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 bool TriMeshLoader::is_supported(std::string const& file_name) const {
   auto point_pos(file_name.find_last_of("."));
   Assimp::Importer importer;
@@ -146,6 +237,8 @@ bool TriMeshLoader::is_supported(std::string const& file_name) const {
   return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> const& importer,
                                               aiScene const* ai_scene,
                                               aiNode* ai_root,
@@ -156,23 +249,19 @@ std::shared_ptr<Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> 
   auto load_geometry = [&](int i) {
     // load geometry
     std::string mesh_name("type=file&file=" + file_name + "&id=" + string_utils::to_string(mesh_count++) + "&flags=" + string_utils::to_string(flags));
-    GeometryDatabase::instance()->add(mesh_name, std::make_shared<TriMeshRessource>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & GeometryLoader::MAKE_PICKABLE));
+    GeometryDatabase::instance()->add(mesh_name, std::make_shared<TriMeshRessource>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & TriMeshLoader::MAKE_PICKABLE));
 
     // load material
     std::string material_name("");
     unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]->mMaterialIndex);
 
-    if (material_index != 0 && flags & GeometryLoader::LOAD_MATERIALS) {
+    if (material_index != 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
       aiMaterial const* material(ai_scene->mMaterials[material_index]);
       material_name = material_loader.load_material(material, file_name);
     }
 
-    auto result(std::make_shared<TriMeshNode>(mesh_name));
-    result->set_filename(mesh_name);
-    result->set_material(material_name);
-
-    return result;
+    return std::make_shared<TriMeshNode>(mesh_name, mesh_name, material_name);
   };
 
   // there is only one child -- skip it!
@@ -205,6 +294,28 @@ std::shared_ptr<Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> 
   }
 
   return group;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TriMeshLoader::apply_fallback_material(std::shared_ptr<Node> const& root,
+                                             std::string const& fallback_material) const 
+{
+  auto g_node(std::dynamic_pointer_cast<GeometryNode>(root));
+
+  if (g_node) {
+    if (g_node->get_material().empty()) {
+      g_node->set_material(fallback_material);
+      g_node->update_cache();
+    }
+  }
+
+  for (auto& child : root->get_children()) {
+    apply_fallback_material(child, fallback_material);
+  }
+
+
 }
 
 }

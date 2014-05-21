@@ -22,8 +22,15 @@
 #ifndef GUA_PBR_LOADER_HPP
 #define GUA_PBR_LOADER_HPP
 
-#include <gua/renderer/PBRRessource.hpp>
-#include <gua/renderer/LoaderBase.hpp>
+// guacamole headers
+#include <gua/platform.hpp>
+#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/databases/Database.hpp>
+
+// external headers
+#include <string>
+#include <list>
+#include <memory>
 
 namespace gua{
 
@@ -31,7 +38,7 @@ class Node;
 class InnerNode;
 class GeometryNode;
 
-class PBRLoader : public LoaderBase{
+class PBRLoader : public GeometryLoader {
  public:
 
   /**
@@ -49,28 +56,18 @@ class PBRLoader : public LoaderBase{
    * \param file_name        The file to load the pointclouds data from.
    * \param material_name    The material name that was set to the parent node
    */
-  std::shared_ptr<Node> load(std::string const& file_name,
-                             unsigned flags);
+  std::shared_ptr<Node> create_geometry_from_file(std::string const& nodename,
+                                                  std::string const& xyzfile);
 
-  /**
-   * Constructor from memory buffer.
-   *
-   * Creates a new MeshLoader from a existing memory buffer.
-   *
-   * \param buffer_name      The buffer to load the meh's data from.
-   * \param buffer_size      The buffer's size.
-   */
-  std::vector<PBRRessource*> const load_from_buffer(char const* buffer_name,
-                                                    unsigned buffer_size,
-                                                    bool build_kd_tree);
+
 
   bool is_supported(std::string const& file_name) const;
 
  private:
-
   unsigned node_counter_;
-
   static unsigned model_counter_;
+  boost::unordered_set<std::string> _supported_file_extensions;
+
 };
 
 

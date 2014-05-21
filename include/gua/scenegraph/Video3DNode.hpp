@@ -51,6 +51,8 @@ class GUA_DLL Video3DNode : public GeometryNode {
                                    Mask const& mask, 
                                    std::set<PickResult>& hits);
 
+    /* virtual */ void update_cache();
+
   protected:
 
     /*virtual*/ std::shared_ptr<Node> copy() const;

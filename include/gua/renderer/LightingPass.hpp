@@ -74,7 +74,8 @@ public:
                  RenderContext const& ctx,
                  CameraMode eye,
                  Camera const& camera,
-                 FrameBufferObject* target);
+                 FrameBufferObject* target,
+                 std::size_t viewid);
 
   void init_resources(RenderContext const& ctx);
 

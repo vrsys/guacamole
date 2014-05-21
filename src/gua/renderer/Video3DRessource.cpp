@@ -143,7 +143,7 @@ void Video3DRessource::init()
 
         calib_file_ptr->parse();
         calib_file_ptr->updateMatrices();
-        calib_file_ptr->printInfo();
+        //calib_file_ptr->printInfo();
 
         calib_files_.push_back(calib_file_ptr);
       } else if ( token == "hostname" )

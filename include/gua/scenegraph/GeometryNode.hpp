@@ -99,10 +99,7 @@ class GUA_DLL GeometryNode : public Node {
     */
     virtual void update_bounding_box() const;
 
-    /**
-    * Updates the cached object in the database
-    */
-    virtual void update_cache();
+    inline virtual void update_cache() { Node::update_cache(); }
 
     /**
      * Accepts a visitor and calls concrete visit method.
@@ -121,7 +118,8 @@ class GUA_DLL GeometryNode : public Node {
     std::string material_;
 
     ShadowMode shadow_mode_;
-    bool filename_changed_;    bool material_changed_;
+    bool filename_changed_;    
+    bool material_changed_;
 };
 
 }

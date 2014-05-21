@@ -643,7 +643,8 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
                                                std::string const& material_name,
                                                scm::math::mat4 const& model_matrix,
                                                scm::math::mat4 const& normal_matrix,
-                                               Frustum const& frustum) const
+                                               Frustum const& frustum,
+                                               std::size_t viewid) const
   {
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
       pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
@@ -732,7 +733,8 @@ void PLODUberShader::draw(RenderContext const& ctx,
                              std::string const& material_name,
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
-                             Frustum const& frustum) const
+                             Frustum const& frustum,
+                             std::size_t viewid) const
 {
     throw std::runtime_error("PLODUberShader::draw(): not implemented");
 }
@@ -749,7 +751,8 @@ void PLODUberShader::draw(RenderContext const& ctx,
     std::string const& material_name,
     scm::math::mat4 const& model_matrix,
     scm::math::mat4 const& normal_matrix,
-    Frustum const& frustum) const
+    Frustum const& frustum,
+    std::size_t viewid) const
   {
 
   auto plod_ressource     = std::static_pointer_cast<PLODRessource>(GeometryDatabase::instance()->lookup(file_name));

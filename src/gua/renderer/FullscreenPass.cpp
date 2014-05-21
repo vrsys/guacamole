@@ -44,7 +44,8 @@ FullscreenPass::~FullscreenPass() {}
 
 void FullscreenPass::render_scene(Camera const& camera,
                                   SceneGraph const&,
-                                  RenderContext const& ctx) {
+                                  RenderContext const& ctx,
+                                  std::size_t viewid) {
 
   if (!depth_stencil_state_)
     depth_stencil_state_ = ctx.render_device

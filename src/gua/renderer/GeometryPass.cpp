@@ -39,7 +39,8 @@ GeometryPass::GeometryPass(Pipeline* pipeline) : Pass(pipeline) {}
 
 void GeometryPass::render_scene(Camera const& camera,
                                 SceneGraph const& current_graph,
-                                RenderContext const& ctx) {
+                                RenderContext const& ctx,
+                                std::size_t viewid) {
 
   gbuffer_->clear(ctx);
 
@@ -58,7 +59,7 @@ void GeometryPass::render_scene(Camera const& camera,
     ctx.render_context->set_viewport(scm::gl::viewport(
         math::vec2(0, 0), ::scm::math::vec2f(fbo->width(), fbo->height())));
 
-    rendering(pipeline_->get_current_scene(eye), current_graph, ctx, eye, camera, fbo);
+    rendering(pipeline_->get_current_scene(eye), current_graph, ctx, eye, camera, fbo, viewid);
 
     fbo->unbind(ctx);
   }

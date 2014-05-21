@@ -135,10 +135,10 @@ void Pipeline::loading_screen() {
       auto tmp_right_position(window_->config.right_position());
 
       window_->config.set_left_resolution(loading_texture_size);
-      window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
+      window_->config.set_left_position(tmp_left_position + (tmp_left_resolution - loading_texture_size)/2);
 
       window_->config.set_right_resolution(loading_texture_size);
-      window_->config.set_right_position(tmp_right_position + 0.5*(tmp_right_resolution - loading_texture_size));
+      window_->config.set_right_position(tmp_right_position + (tmp_right_resolution - loading_texture_size)/2);
 
       window_->display(loading_texture, loading_texture);
 
@@ -275,7 +275,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     }
 
     for (auto pass : passes_) {
-      pass->render_scene(config.camera(), *current_graph, *context_);
+      pass->render_scene(config.camera(), *current_graph, *context_, uuid());
     }
 
     if (window_) {

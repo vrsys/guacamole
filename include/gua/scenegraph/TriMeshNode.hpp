@@ -32,27 +32,29 @@ namespace gua {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL TriMeshNode : public GeometryNode 
-{
-public : // member
+class GUA_DLL TriMeshNode : public GeometryNode {
+ public:  // member
 
   TriMeshNode(std::string const& name,
               std::string const& geometry = "gua_default_geometry",
               std::string const& material = "gua_default_material",
-              math::mat4  const& transform = math::mat4::identity());
+              math::mat4 const& transform = math::mat4::identity());
 
   /**
   * Implements ray picking for a triangular mesh
   */
-  /* virtual */ void ray_test_impl(RayNode const& ray, 
+  /* virtual */ void ray_test_impl(RayNode const& ray,
                                    PickResult::Options options,
-                                   Mask const& mask, 
+                                   Mask const& mask,
                                    std::set<PickResult>& hits);
-protected:
+
+  /* virtual */ void update_cache();
+
+ protected:
 
   /*virtual*/ std::shared_ptr<Node> copy() const;
 
-private : // attributes e.g. special attributes for drawing
+ private:  // attributes e.g. special attributes for drawing
 
 };
 

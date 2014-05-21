@@ -42,17 +42,20 @@ namespace gua {
 
 unsigned PBRLoader::model_counter_ = 0;
 
+  ////////////////////////////////////////////////////////////////////////////////
+
+  PBRLoader::PBRLoader() 
+    : GeometryLoader(), 
+      _supported_file_extensions(),
+      node_counter_(0)
+  {
+    _supported_file_extensions.insert("xyz_all");    
+  }
+
   /////////////////////////////////////////////////////////////////////////////
 
-PBRLoader::PBRLoader()
-    : node_counter_(0) {}
-
-  /////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
-                                      unsigned flags) {
-
-
+std::shared_ptr<Node> PBRLoader::create_geometry_from_file(std::string const& node_name,
+                                                           std::string const& file_name) {
 
   node_counter_ = 0;
     
@@ -71,7 +74,7 @@ std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
 
 	     auto node(std::make_shared<PBRNode>(model_name));
 	     node->set_filename(model_name);
-             node->set_material("");
+             node->set_material("gua_pbr");
 
            return node;
 
@@ -86,17 +89,14 @@ std::shared_ptr<Node> PBRLoader::load(std::string const& file_name,
 
   /////////////////////////////////////////////////////////////////////////////
 
-std::vector<PBRRessource*> const PBRLoader::load_from_buffer(char const* buffer_name,
-                                                             unsigned buffer_size,
-                                                             bool build_kd_tree) {
+  bool PBRLoader::is_supported(std::string const& file_name) const 
+  {
+    std::vector<std::string> filename_decomposition =
+      gua::string_utils::split(file_name, '.');
+    return filename_decomposition.empty()
+      ? false
+      : _supported_file_extensions.count(filename_decomposition.back()) > 0;
+  }
 
-  return std::vector<PBRRessource*>();
-}
-
-bool PBRLoader::is_supported(std::string const& file_name) const {
-  auto point_pos(file_name.find_last_of("."));
-
-  return file_name.substr(point_pos + 1) == "xyz_all";
-}
 
 }

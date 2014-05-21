@@ -85,7 +85,8 @@ class GeometryUberShader : public UberShader {
                           std::string const& material,
                           scm::math::mat4 const& model_matrix,
                           scm::math::mat4 const& normal_matrix,
-                          Frustum const& frustum) const = 0;
+                          Frustum const& frustum, 
+                          std::size_t viewid ) const = 0;
    
   /**
   * This method is called for ONCE per drawable to perform draw operations
@@ -97,7 +98,8 @@ class GeometryUberShader : public UberShader {
                           std::string const& material,
                           scm::math::mat4 const& model_matrix,
                           scm::math::mat4 const& normal_matrix,
-                          Frustum const& frustum) const = 0;
+                          Frustum const& frustum,
+                          std::size_t viewid) const = 0;
 
   /**
   * This method is called for ONCE per drawable to perform postdraw operations
@@ -109,7 +111,8 @@ class GeometryUberShader : public UberShader {
                           std::string const& material,
                           scm::math::mat4 const& model_matrix,
                           scm::math::mat4 const& normal_matrix,
-                          Frustum const& frustum) const = 0;
+                          Frustum const& frustum,
+                          std::size_t viewid) const = 0;
 
   /**
   * This callback is called ONCE per frame AFTER rendering all drawables of this type

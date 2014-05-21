@@ -47,47 +47,57 @@ unsigned PLODLoader::model_counter_ = 0;
 
   /////////////////////////////////////////////////////////////////////////////
 
- PLODLoader::PLODLoader()
-     : node_counter_(0) {}
+  PLODLoader::PLODLoader() 
+    : GeometryLoader(), 
+      _supported_file_extensions(),
+      node_counter_(0) 
+  {
+    _supported_file_extensions.insert("kdn");    
+  }
+
 
   /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Node> PLODLoader::load(std::string const& file_name,
-                                      unsigned flags) {
+  std::shared_ptr<Node> PLODLoader::create_geometry_from_file(std::string const& node_name,
+                                                              std::string const& file_name) {
    
-   std::string model_name("type=file&file=" + file_name);
+     std::string model_name("type=file&file=" + file_name);
    
-   auto node(std::make_shared<PLODNode>(model_name));
-   node->set_filename(model_name);
-   node->set_material("");
+     try{
+       auto node(std::make_shared<PLODNode>(model_name));
+       node->set_filename(model_name);
+       node->set_material("gua_pbr");
 
-   pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
+       pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
   
-   // load point cloud
-   pbr::model_t model_id = database->AddModel(file_name, model_name);
-   const pbr::ren::LodPointCloud* point_cloud = database->GetModel(model_id);
+       // load point cloud
+       pbr::model_t model_id = database->AddModel(file_name, model_name);
+       const pbr::ren::LodPointCloud* point_cloud = database->GetModel(model_id);
 
-   GeometryDatabase::instance()->add(model_name, std::make_shared<PLODRessource>(point_cloud));
+       GeometryDatabase::instance()->add(model_name, std::make_shared<PLODRessource>(point_cloud));
    
-   ++model_counter_;
+       ++model_counter_;
    
-   return node;
+       return node;
+     }
+     catch (std::exception &e){
+       Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load LOD Pointcloud object " << file_name.c_str() << std::endl;
+        return nullptr;
+     }
 
-}
+  }
 
-  /////////////////////////////////////////////////////////////////////////////
 
-std::vector<PLODRessource*> const PLODLoader::load_from_buffer(char const* buffer_name,
-                                                             unsigned buffer_size,
-                                                             bool build_kd_tree) {
+  ////////////////////////////////////////////////////////////////////////////////
 
-  return std::vector<PLODRessource*>();
-}
+  bool PLODLoader::is_supported(std::string const& file_name) const 
+  {
+    std::vector<std::string> filename_decomposition =
+      gua::string_utils::split(file_name, '.');
+    return filename_decomposition.empty()
+      ? false
+      : _supported_file_extensions.count(filename_decomposition.back()) > 0;
+  }
 
-bool PLODLoader::is_supported(std::string const& file_name) const {
-  auto point_pos(file_name.find_last_of("."));
-
-  return file_name.substr(point_pos + 1) == "kdn";
-}
 
 }
