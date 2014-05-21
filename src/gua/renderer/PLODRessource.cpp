@@ -99,38 +99,36 @@ void PLODRessource::draw(RenderContext const& ctx) const
 {/*dummy*/}
 ////////////////////////////////////////////////////////////////////////////////
 
-void PLODRessource::draw(RenderContext const& ctx, pbr::context_t context_id, pbr::view_t view_id, pbr::model_t model_id, scm::gl::vertex_array_ptr const& vertex_array) const 
+void PLODRessource::draw(RenderContext const& ctx, pbr::context_t context_id, pbr::view_t view_id, pbr::model_t model_id, scm::gl::vertex_array_ptr const& vertex_array, std::vector<unsigned int> const& culling_results) const 
 {
 
     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
     pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
     
     pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
-    std::vector<pbr::ren::Cut::NodeSlotAggregate> node_list = cut.complete_set();
-    const pbr::ren::KdnTree* kdn_tree = database->GetModel(model_id)->kdn_tree();
+    std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
+    pbr::ren::KdnTree const *  kdn_tree = database->GetModel(model_id)->kdn_tree();
 
     uint32_t surfels_per_node = database->surfels_per_node();
     uint32_t surfels_per_node_of_model = kdn_tree->surfels_per_node();
 
+    scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
-  //if (buffers_.size() <= ctx.id || buffers_[ctx.id] == nullptr) {
-  //  upload_to(ctx);
-  //}
+    ctx.render_context->bind_vertex_array(vertex_array);
 
-  scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-  ctx.render_context->bind_vertex_array(vertex_array);
-
-  ctx.render_context->apply();
+    ctx.render_context->apply();
   
-  pbr::node_t node_counter = 0;
+    pbr::node_t node_counter = 0;
   
-  for(std::vector<pbr::ren::Cut::NodeSlotAggregate>::const_iterator k = node_list.begin(); k != node_list.end(); ++k, ++node_counter)
-  {
-      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, (k->slot_id_) * surfels_per_node, surfels_per_node_of_model);
+    for(std::vector<pbr::ren::Cut::NodeSlotAggregate>::const_iterator k = node_list.begin(); k != node_list.end(); ++k, ++node_counter)
+    {
+        //0 = completely inside of frustum, 1 = completely outside of frustum, 2 = intersects frustum
+        if(culling_results[node_counter] != 1)
+        {
+          ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, (k->slot_id_) * surfels_per_node, surfels_per_node_of_model);
+        }
+    }
   
-  }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

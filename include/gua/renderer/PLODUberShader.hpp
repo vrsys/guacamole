@@ -159,6 +159,8 @@ class PLODUberShader : public GeometryUberShader {
   mutable std::vector<float> near_plane_value_;
   mutable std::vector<float> height_divided_by_top_minus_bottom_;
 
+  mutable std::vector<std::vector<unsigned int> > frustum_culling_results_;
+
   //misc:
   ////////////////////////////////////////////////////////////////////////////////////
   mutable std::vector<unsigned int> material_id_;

@@ -529,6 +529,11 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
     previous_framecount_[context.id] = -1;
   }
   
+  if(context.id >= frustum_culling_results_.size())
+  {
+    frustum_culling_results_.resize(context.id + 1);
+    frustum_culling_results_[context.id].clear();
+  }
 
   return upload_succeeded;
 }
@@ -660,10 +665,37 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       pbr::model_t model_id = controller->DeduceModelId(file_name);
       
       //send camera and model_matrix to cut update
-      cuts->SendCamera(context_id, view_id, pbr::ren::Camera(view_id, frustum.get_view(), frustum.get_projection() ));
+      pbr::ren::Camera cut_update_cam(view_id, frustum.get_view(), frustum.get_projection() );
+
+      cuts->SendCamera(context_id, view_id, cut_update_cam);
       cuts->SendTransform(context_id, model_id, model_matrix);
       
-      
+    
+      //calculate frustum culling results
+
+      pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
+
+      pbr::ren::KdnTree const*  kdn_tree = database->GetModel(model_id)->kdn_tree();
+
+      scm::gl::frustum culling_frustum = cut_update_cam.GetFrustumByModel(model_matrix);
+
+      std::vector<scm::gl::boxf> const& model_bounding_boxes = kdn_tree->bounding_boxes();
+    
+      pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
+      std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
+
+      unsigned int node_counter = 0;
+
+      frustum_culling_results_[ctx.id].clear();
+      frustum_culling_results_[ctx.id].resize(model_bounding_boxes.size());
+
+      for(std::vector<pbr::ren::Cut::NodeSlotAggregate>::const_iterator k = node_list.begin(); k != node_list.end(); ++k, ++node_counter)
+      {
+          (frustum_culling_results_[ctx.id])[node_counter] = culling_frustum.classify(model_bounding_boxes[k->node_id_]);
+      }
+            
+
+
       auto plod_ressource     = std::static_pointer_cast<PLODRessource>(GeometryDatabase::instance()->lookup(file_name));
       auto material          = MaterialDatabase::instance()->lookup(material_name);
      
@@ -700,7 +732,6 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 
            }
 
-
         scm::math::vec4f x_unit_vec(1.0f,0.f,0.f,0.f);
 
         float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
@@ -718,7 +749,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 	      {
 		        get_program(depth_pass)->use(ctx);
 		        {
-		          plod_ressource->draw(ctx, context_id, view_id, model_id, vertex_array_[ctx.id]);
+		          plod_ressource->draw(ctx, context_id, view_id, model_id, vertex_array_[ctx.id], frustum_culling_results_[ctx.id] );
 		        }
 		        get_program(depth_pass)->unuse(ctx);
 	      }
@@ -833,7 +864,7 @@ void PLODUberShader::draw(RenderContext const& ctx,
         get_program(accumulation_pass)->use(ctx);
         {
           
-          plod_ressource->draw(ctx, context_id, view_id, model_id, vertex_array_[ctx.id]);
+          plod_ressource->draw(ctx, context_id, view_id, model_id, vertex_array_[ctx.id], frustum_culling_results_[ctx.id]);
         }
         get_program(accumulation_pass)->unuse(ctx);
       }
