@@ -656,7 +656,6 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
                                                Frustum const& frustum,
                                                std::size_t viewid) const
   {
-
       std::vector<math::vec3> corner_values = frustum.get_corners();
       float top_minus_bottom = scm::math::length((corner_values[2]) - (corner_values[0]));
       float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1] / top_minus_bottom;
@@ -861,6 +860,32 @@ void PLODUberShader::draw(RenderContext const& ctx,
         pbr::view_t view_id = controller->DeduceViewId(context_id, viewid);
          
         material_id_[ctx.id] = material->get_id();
+
+
+      pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
+      pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
+      std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
+
+      //calculate frustum culling results
+      pbr::ren::Camera cut_update_cam(view_id, frustum.get_view(), frustum.get_projection() );
+
+      pbr::ren::KdnTree const*  kdn_tree = database->GetModel(model_id)->kdn_tree();
+
+      scm::gl::frustum culling_frustum = cut_update_cam.GetFrustumByModel(model_matrix);
+
+      std::vector<scm::gl::boxf> const& model_bounding_boxes = kdn_tree->bounding_boxes();
+
+      unsigned int node_counter = 0;
+
+      frustum_culling_results_[ctx.id].clear();
+      frustum_culling_results_[ctx.id].resize(model_bounding_boxes.size());
+
+      for(std::vector<pbr::ren::Cut::NodeSlotAggregate>::const_iterator k = node_list.begin(); k != node_list.end(); ++k, ++node_counter)
+      {
+          (frustum_culling_results_[ctx.id])[node_counter] = culling_frustum.classify(model_bounding_boxes[k->node_id_]);
+      }
+
+
         get_program(accumulation_pass)->use(ctx);
         {
           

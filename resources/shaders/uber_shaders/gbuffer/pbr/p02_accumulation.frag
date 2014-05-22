@@ -125,7 +125,7 @@ float depth_to_compare = 0;
 
    float weight = get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
-   if( depthValue  - (depth_to_compare)    < 0.00031  + 0.001*(pass_screen_space_splat_size) )
+   if( depthValue  - (depth_to_compare)    < 0.00031  + 3*(pass_scaled_radius) )
    {
            out_accumulated_color = vec4(pass_point_color * weight, weight);
    }
