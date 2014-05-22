@@ -15,6 +15,8 @@ in vec3 pass_point_color;
 in vec3 pass_normal;
 in float pass_mv_vert_depth;
 in float pass_scaled_radius;
+in float pass_screen_space_splat_size;
+in float pass_view_scaling;
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -112,20 +114,18 @@ void main()
    //////////depth value of depth pass texture
    depthValue = (-depthValue * 1.0 * far_minus_near_plane) + near_plane;
 
-   //get_gaussianValue(depth_offset, mappedPointCoord, VertexIn.nor.xyz);
-   //get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
 float depth_to_compare = 0;
 
    //if(ellipsify)
-      depth_to_compare = pass_mv_vert_depth + depth_offset * pass_scaled_radius;
+      depth_to_compare = pass_mv_vert_depth + depth_offset * pass_view_scaling;
    //else
    // depth_to_compare = pass_mv_vert_depth;
 
 
    float weight = get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
-   if( depthValue  - (depth_to_compare)    < 0.00031  + 3.0*(pass_scaled_radius) )
+   if( depthValue  - (depth_to_compare)    < 0.00031  + 0.001*(pass_screen_space_splat_size) )
    {
            out_accumulated_color = vec4(pass_point_color * weight, weight);
    }

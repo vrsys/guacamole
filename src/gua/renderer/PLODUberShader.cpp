@@ -656,7 +656,36 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
                                                Frustum const& frustum,
                                                std::size_t viewid) const
   {
-  
+
+      std::vector<math::vec3> corner_values = frustum.get_corners();
+      float top_minus_bottom = scm::math::length((corner_values[2]) - (corner_values[0]));
+      float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1] / top_minus_bottom;
+
+      if( last_geometry_state_[ctx.id] != pre_draw_state)
+      {
+	      
+        //enable dynamic point size in shaders
+	ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
+
+	     
+	// bind fbo
+	ctx.render_context->set_frame_buffer(depth_pass_result_fbo_[ctx.id]);
+
+
+	gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
+
+	float   near_plane_value = frustum.get_clip_near();
+        float   far_plane_value  = frustum.get_clip_far();
+	    
+
+	get_program(depth_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
+	get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
+	get_program(depth_pass)->set_uniform(ctx, (far_plane_value - near_plane_value), "far_minus_near_plane");
+              
+        last_geometry_state_[ctx.id] = pre_draw_state;
+
+      }
+
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
       pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
       
@@ -668,9 +697,13 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       pbr::ren::Camera cut_update_cam(view_id, frustum.get_view(), frustum.get_projection() );
 
       cuts->SendCamera(context_id, view_id, cut_update_cam);
+      cuts->SendHeightDividedByTopMinusBottom(context_id, view_id, height_divided_by_top_minus_bottom);
       cuts->SendTransform(context_id, model_id, model_matrix);
       
-    
+   
+      pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
+      std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
+
       //calculate frustum culling results
 
       pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
@@ -680,9 +713,6 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       scm::gl::frustum culling_frustum = cut_update_cam.GetFrustumByModel(model_matrix);
 
       std::vector<scm::gl::boxf> const& model_bounding_boxes = kdn_tree->bounding_boxes();
-    
-      pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
-      std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
 
       unsigned int node_counter = 0;
 
@@ -702,45 +732,16 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 	   // begin of depth pass (first)
 	  {
 
-            if( last_geometry_state_[ctx.id] != pre_draw_state)
-            {
-	      
-        //enable dynamic point size in shaders
-	      ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
-
-	     
-	      // bind fbo
-	      ctx.render_context->set_frame_buffer(depth_pass_result_fbo_[ctx.id]);
 
 
 
-	      gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
 
-	      float   near_plane_value = frustum.get_clip_near();
-              float   far_plane_value  = frustum.get_clip_far();
-	      float   top_plane_value  = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
-	      float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
-	      
-              float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1] / (top_plane_value - bottom_plane_value);
-
-	      get_program(depth_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
-	      get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
-	      get_program(depth_pass)->set_uniform(ctx, (far_plane_value - near_plane_value), "far_minus_near_plane");
-              
-              last_geometry_state_[ctx.id] = pre_draw_state;
-
-
-           }
-
-        scm::math::vec4f x_unit_vec(1.0f,0.f,0.f,0.f);
+        scm::math::vec4f x_unit_vec(1.0,0.0f,0.f,0.f);
 
         float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
 
-        float modelViewProjectionScalingRatio = scm::math::length(frustum.get_projection()*frustum.get_view()*model_matrix*x_unit_vec)
-                                                / 0.8759124279022216797;
 
         get_program(depth_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
-        get_program(depth_pass)->set_uniform(ctx, modelViewProjectionScalingRatio, "mVPScalingRatio");
 
 	      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
 	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
@@ -808,18 +809,21 @@ void PLODUberShader::draw(RenderContext const& ctx,
         //set blend state to accumulate
         ctx.render_context->set_blend_state(color_accumulation_state_[ctx.id]);
 
-       // ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 1.0f, 0.0f, 0.0f)); 
         // bind accumulation FBO
         ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_[ctx.id]);
    
         gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
 
-        //put near_plane_value and height_divided_by_top_minus_bottom as member variables and get these two only 1 per render frame
         float   near_plane_value = frustum.get_clip_near();
         float   far_plane_value  = frustum.get_clip_far();
         float    top_plane_value = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
         float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
-        float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1]  / (top_plane_value - bottom_plane_value);
+
+        std::vector<math::vec3> corner_values = frustum.get_corners();
+
+        float top_minus_bottom = scm::math::length((corner_values[2]) - (corner_values[0]));
+
+        float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1] / top_minus_bottom;
 
         get_program(accumulation_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
         get_program(accumulation_pass)->set_uniform(ctx, near_plane_value, "near_plane");
@@ -837,12 +841,8 @@ void PLODUberShader::draw(RenderContext const& ctx,
 
         float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
 
-        float modelViewProjectionScalingRatio = scm::math::length(frustum.get_projection()*frustum.get_view()*model_matrix*x_unit_vec)
-                                                      / 0.8759124279022216797;
-
 
         get_program(accumulation_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
-        get_program(accumulation_pass)->set_uniform(ctx, modelViewProjectionScalingRatio, "mVPScalingRatio");
 
         ctx.render_context->bind_texture(depth_pass_linear_depth_result_[ctx.id], linear_sampler_state_[ctx.id], 0);
         get_program(accumulation_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);

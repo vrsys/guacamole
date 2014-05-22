@@ -6,6 +6,7 @@
 in vec3 pass_normal;
 in float pass_mv_vert_depth;
 in float pass_scaled_radius;
+in float pass_view_scaling;
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -91,6 +92,6 @@ void main()
    get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
 
 
-    out_linear_depth = - ( ( (pass_mv_vert_depth + depth_offset * pass_scaled_radius ) - near_plane) / (far_minus_near_plane * 1.0f) ) ;
+    out_linear_depth = - ( ( (pass_mv_vert_depth + depth_offset * pass_view_scaling ) - near_plane) / (far_minus_near_plane * 1.0f) ) ;
 
 }
