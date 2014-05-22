@@ -690,7 +690,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
       
       pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-      pbr::view_t view_id = controller->DeduceViewId(context_id, 0);
+      pbr::view_t view_id = controller->DeduceViewId(context_id, viewid);
       pbr::model_t model_id = controller->DeduceModelId(file_name);
       
       //send camera and model_matrix to cut update
@@ -858,7 +858,7 @@ void PLODUberShader::draw(RenderContext const& ctx,
         pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
         pbr::context_t context_id = controller->DeduceContextId(ctx.id);
         pbr::model_t model_id = controller->DeduceModelId(file_name);
-        pbr::view_t view_id = controller->DeduceViewId(context_id, 0); //only one view
+        pbr::view_t view_id = controller->DeduceViewId(context_id, viewid);
          
         material_id_[ctx.id] = material->get_id();
         get_program(accumulation_pass)->use(ctx);
