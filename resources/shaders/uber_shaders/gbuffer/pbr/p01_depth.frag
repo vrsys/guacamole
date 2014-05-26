@@ -36,14 +36,19 @@ float calc_depth_offset(vec2 mappedPointCoord, vec3 adjustedNormal)
 
         if (true)
         {
-	float zBound = 0.2f;//max_deform_ratio;
+	float zBound = 0.01f;//max_deform_ratio;
 	float normalZ = adjustedNormal.z;
+
 
 	if(normalZ > 0.0)
 		normalZ = max(zBound, normalZ);
 	else
 		normalZ = -max(zBound, -normalZ);
 
+	xzRatio = (adjustedNormal.x/normalZ);
+	yzRatio = (adjustedNormal.y/normalZ);
+
+/*
         if(normalZ != 0.0)
         { 
 	  xzRatio = (adjustedNormal.x/normalZ);
@@ -53,7 +58,7 @@ float calc_depth_offset(vec2 mappedPointCoord, vec3 adjustedNormal)
         {
           discard;
         }
-
+*/
         }
 
 	return -(xzRatio)*mappedPointCoord.x   - (yzRatio * mappedPointCoord.y);
@@ -87,16 +92,17 @@ void main()
 {
 
    vec3 adjustedNormal = pass_normal;
+       // adjustedNormal = vec3(0.0, 1.0, 0.0);
     
 
    if(pass_normal.z < 0)
    {
 	//discard;
-	adjustedNormal = pass_normal * -1;
+	adjustedNormal = adjustedNormal * -1;
    }
    else
    {
-        adjustedNormal = pass_normal;
+        adjustedNormal = adjustedNormal;
    }
 
    vec2 mappedPointCoord = gl_PointCoord*2 + vec2(-1.0f, -1.0f);

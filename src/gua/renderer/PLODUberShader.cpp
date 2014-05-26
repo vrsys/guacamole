@@ -851,12 +851,6 @@ void PLODUberShader::draw(RenderContext const& ctx,
         get_program(accumulation_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
 
       
-
-        scm::math::vec4f testNormal = transpose(inverse(frustum.get_view()*model_matrix))*scm::math::vec4f(0.0,0.0,1.0,0.0);
-        scm::math::vec3f tN2 = scm::math::normalize(scm::math::vec3f(testNormal[0], testNormal[1], testNormal[2]) );
-
-        std::cout<<"Normal: "<< tN2 <<"  : "<<std::sqrt(tN2[0]*tN2[0] + tN2[1]*tN2[1] + tN2[2] * tN2[2]) << "\n";
-
         get_program(accumulation_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "gua_normal_matrix");
         get_program(accumulation_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "newNormalMatrix");
         get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");

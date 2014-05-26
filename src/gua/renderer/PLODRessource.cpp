@@ -120,6 +120,7 @@ void PLODRessource::draw(RenderContext const& ctx, pbr::context_t context_id, pb
   
     pbr::node_t node_counter = 0;
   
+
     for(std::vector<pbr::ren::Cut::NodeSlotAggregate>::const_iterator k = node_list.begin(); k != node_list.end(); ++k, ++node_counter)
     {
         //0 = completely inside of frustum, 1 = completely outside of frustum, 2 = intersects frustum
