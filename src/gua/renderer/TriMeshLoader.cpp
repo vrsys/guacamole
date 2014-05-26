@@ -55,12 +55,12 @@ namespace gua {
 
   TriMeshLoader::TriMeshLoader()
     : GeometryLoader(),
-      node_counter_(0) 
+      node_counter_(0)
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Node> TriMeshLoader::load_geometry(std::string const& file_name, unsigned flags) 
+  std::shared_ptr<Node> TriMeshLoader::load_geometry(std::string const& file_name, unsigned flags)
   {
     std::shared_ptr<Node> cached_node;
     std::string key(file_name + "_" + string_utils::to_string(flags));
@@ -73,9 +73,11 @@ namespace gua {
     }
     else {
 
+      std::cout << file_name << " " << flags << std::endl;
+
       bool fileload_succeed = false;
 
-      if (is_supported(file_name)) 
+      if (is_supported(file_name))
       {
         cached_node = load(file_name, flags);
         cached_node->update_cache();
@@ -117,7 +119,7 @@ namespace gua {
     (std::string const& node_name,
     std::string const& file_name,
     std::string const& fallback_material,
-    unsigned flags) 
+    unsigned flags)
   {
     auto cached_node(load_geometry(file_name, flags));
 
@@ -300,7 +302,7 @@ std::shared_ptr<Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> 
 ////////////////////////////////////////////////////////////////////////////////
 
 void TriMeshLoader::apply_fallback_material(std::shared_ptr<Node> const& root,
-                                             std::string const& fallback_material) const 
+                                             std::string const& fallback_material) const
 {
   auto g_node(std::dynamic_pointer_cast<GeometryNode>(root));
 

@@ -32,14 +32,14 @@ namespace gua {
  */
 class NURBSUberShader : public GeometryUberShader {
 
-  public : // typedefs, enums 
+  public : // typedefs, enums
 
    enum pass {
      transform_feedback_pass = 0,
      final_pass = 1
    };
 
-  public : 
+  public :
 
   /*virtual*/ void create   (std::set<std::string> const& material_names);
 

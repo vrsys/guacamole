@@ -110,7 +110,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
   // make sure all ubershaders are available
-  update_ubershader_from_scene(scene, graph);
+  update_ubershader_from_scene(ctx, scene, graph);
 
   // draw all drawable geometries
   for (auto const& type_ressource_pair : scene.geometrynodes_) {
@@ -310,7 +310,7 @@ void GBufferPass::display_rays(RenderContext const& ctx,
       for (auto const& ray : scene.rays_) {
         meshubershader->draw(
             ctx,
-            "gua_plane_geometry",
+            "gua_ray_geometry",
             "gua_bounding_box",
             ray->get_cached_world_transform(),
             scm::math::inverse(ray->get_cached_world_transform()),
@@ -380,7 +380,8 @@ void GBufferPass::display_quads(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBufferPass::update_ubershader_from_scene(SerializedScene const& scene,
+void GBufferPass::update_ubershader_from_scene(RenderContext const& ctx,
+                                               SerializedScene const& scene,
                                                SceneGraph const& graph) {
   bool ubershader_available = true;
   for (auto const& geometry_pair : scene.geometrynodes_) {
@@ -398,6 +399,7 @@ void GBufferPass::update_ubershader_from_scene(SerializedScene const& scene,
               GeometryDatabase::instance()->lookup(geode->get_filename());
           if (ressource) {
             auto ubershader = ressource->get_ubershader();
+            ubershader->cleanup(ctx);
             ubershader->create(materials_);
             ubershaders_[type] = ubershader;
           }
@@ -441,6 +443,7 @@ void GBufferPass::apply_material_mapping(
     std::set<std::string> const& materials) {
   materials_ = materials;
   Singleton<TriMeshUberShader>::instance()->create(materials_);
+  // Singleton<TriMeshUberShader>::instance();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
