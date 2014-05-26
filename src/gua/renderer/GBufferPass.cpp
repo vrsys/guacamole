@@ -304,7 +304,7 @@ void GBufferPass::display_rays(RenderContext const& ctx, SerializedScene const& 
       for (auto const& ray : scene.rays_)
       {
         meshubershader->draw(ctx,
-          "gua_plane_geometry",
+          "gua_ray_geometry",
           "gua_bounding_box",
           ray->get_cached_world_transform(),
           scm::math::inverse(ray->get_cached_world_transform()),
