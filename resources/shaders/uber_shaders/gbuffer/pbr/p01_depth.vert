@@ -23,6 +23,8 @@
         
         uniform float radius_model_scaling;
 
+        uniform mat4 newNormalMatrix;
+
         //output to fragment shader                                             
         out vec3 pass_normal;
         out float pass_mv_vert_depth;
@@ -39,17 +41,20 @@
 
           vec4 pos_es = model_view_matrix * vec4(in_position, 1.0);
 
-          vec4 pos_es_ub = model_view_matrix * vec4(in_position + ( 0.5  * in_radius), 1.0);
-          vec4 pos_es_lb = model_view_matrix * vec4(in_position + (-0.5  * in_radius), 1.0);
+          vec4 pos_es_ub = model_view_matrix * vec4(in_position + vec3(0.0,  0.5  * in_radius, 0.0), 1.0);
+          vec4 pos_es_lb = model_view_matrix * vec4(in_position + vec3(0.0, -0.5  * in_radius, 0.0), 1.0);
 
-          pass_view_scaling = length(vec3(pos_es_ub) - vec3(pos_es_lb));
+          float view_scaling = length(vec3(pos_es_ub) - vec3(pos_es_lb));
+          pass_view_scaling = view_scaling;
 
           gl_Position = gua_projection_matrix * pos_es;  
           
           gl_PointSize = 2.0f * scaled_radius * (near_plane/-pos_es.z)* height_divided_by_top_minus_bottom;
 
 
-          pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
+          //pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
+          pass_normal = normalize(( /*gua_normal_matrix*/ newNormalMatrix * vec4(in_normal, 0.0)).xyz);   
+
           pass_mv_vert_depth = pos_es.z;
           pass_scaled_radius = scaled_radius;
 

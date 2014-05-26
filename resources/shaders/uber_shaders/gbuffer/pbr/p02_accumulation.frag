@@ -36,6 +36,7 @@ uniform float near_plane;
 uniform float far_minus_near_plane;
 uniform vec2 win_dims;
 
+uniform float radius_model_scaling;
 
 //uniform float win_dim_x;
 //uniform float win_dim_y;
@@ -44,32 +45,24 @@ uniform vec2 win_dims;
 // splatting methods
 ///////////////////////////////////////////////////////////////////////////////
 
-float calc_depth_offset(vec2 mappedPointCoord)
+float calc_depth_offset(vec2 mappedPointCoord, vec3 adjustedNormal)
 {
 
-   vec3 normal = pass_normal;
-   if(normal.z < 0)
-   {
+    float xzRatio = (adjustedNormal.x/adjustedNormal.z);
+    float yzRatio = (adjustedNormal.y/adjustedNormal.z);
 
-	//discard;
-	normal *= -1;
-   }
-
-    float xzRatio = (normal.x/normal.z);
-    float yzRatio = (normal.y/normal.z);
-
-//if(clamped_normal_mode)
+if(true)
 {
-	float zBound = 0.35f;//max_deform_ratio;
-	float normalZ = normal.z;
+	float zBound = 0.2f;//max_deform_ratio;
+	float normalZ = adjustedNormal.z;
 
 	if(normalZ > 0.0)
 		normalZ = max(zBound, normalZ);
 	else
 		normalZ = -max(zBound, -normalZ);
 
-	xzRatio = (normal.x/normalZ);
-	yzRatio = (normal.y/normalZ);
+	xzRatio = (adjustedNormal.x/normalZ);
+	yzRatio = (adjustedNormal.y/normalZ);
 
 }
 
@@ -84,14 +77,13 @@ float get_gaussianValue(float depth_offset, vec2 mappedPointCoord, vec3 newNorma
 {
 
     float radius;
-    //if(ellipsify)
-    	radius =  mappedPointCoord.x*mappedPointCoord.x + mappedPointCoord.y*mappedPointCoord.y + depth_offset*depth_offset;
-    //else
-    //	radius =  mappedPointCoord.x*mappedPointCoord.x + mappedPointCoord.y*mappedPointCoord.y ;
+
+    	radius = sqrt(mappedPointCoord.x*mappedPointCoord.x + mappedPointCoord.y*mappedPointCoord.y + depth_offset*depth_offset);
+
 
 
     if(radius > 1.0)
-         discard;
+        discard;
     else
         return gaussian[(int)(round(radius * 31.0))];
 
@@ -104,10 +96,22 @@ float get_gaussianValue(float depth_offset, vec2 mappedPointCoord, vec3 newNorma
 void main() 
 {
  
+   vec3 adjustedNormal = pass_normal;
+
+   if(pass_normal.z < 0)
+   {
+	//discard;
+	adjustedNormal = pass_normal * -1;
+   }
+   else
+   {
+        adjustedNormal = pass_normal;
+   }
+
    vec2 mappedPointCoord = gl_PointCoord*2 + vec2(-1.0f, -1.0f);
 
 
-   float depth_offset = calc_depth_offset(mappedPointCoord) ;
+   float depth_offset = calc_depth_offset(mappedPointCoord, adjustedNormal) ;
                                                                        
    float depthValue = texture2D( p01_depth_texture, gl_FragCoord.xy/win_dims.xy ).r;
 
@@ -117,22 +121,24 @@ void main()
 
 float depth_to_compare = 0;
 
-   //if(ellipsify)
-      depth_to_compare = pass_mv_vert_depth + depth_offset * pass_view_scaling;
-   //else
-   // depth_to_compare = pass_mv_vert_depth;
+   depth_to_compare = pass_mv_vert_depth + depth_offset * pass_scaled_radius * pass_view_scaling;
 
 
-   float weight = get_gaussianValue(depth_offset, mappedPointCoord, pass_normal);
+   float weight = 0;
 
-   if( depthValue  - (depth_to_compare)    < 0.00031  + 3*(pass_scaled_radius) )
+   weight = get_gaussianValue(depth_offset, mappedPointCoord, adjustedNormal) ;
+
+ 
+   if( depthValue  - (depth_to_compare)    <=  3 * pass_scaled_radius )
    {
-           out_accumulated_color = vec4(pass_point_color * weight, weight);
+
+      out_accumulated_color = vec4(pass_point_color * weight, weight);
    }
    else
    {
          discard;
    }
+
 
 
 }

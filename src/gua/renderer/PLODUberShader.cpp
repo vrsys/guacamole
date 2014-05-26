@@ -32,7 +32,7 @@
 
 #include <pbr/ren/camera.h>
 
-#include <pbr/ren/memory_query.h>
+#include <pbr/ren/policy.h>
 #include <pbr/ren/model_database.h>
 #include <pbr/ren/cut_database.h>
 #include <pbr/ren/controller.h>
@@ -116,7 +116,7 @@ PLODUberShader::~PLODUberShader()
     std::cout << "deleted controller" << std::endl;
     delete pbr::ren::ModelDatabase::GetInstance();
     std::cout << "deleted model database" << std::endl;
-    delete pbr::ren::MemoryQuery::GetInstance();
+    delete pbr::ren::Policy::GetInstance();
     std::cout << "deleted memory query" << std::endl;
     delete pbr::ren::CutDatabase::GetInstance();
     std::cout << "deleted cut database" << std::endl;
@@ -425,12 +425,12 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
   {
   
     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-    pbr::ren::MemoryQuery* memory_query = pbr::ren::MemoryQuery::GetInstance();
+    pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
 
     size_t size_of_node_in_bytes = database->size_of_surfel()*database->surfels_per_node();
   
     int32_t upload_budget_in_nodes =
-        (memory_query->upload_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
+        (policy->upload_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
 
 
     unsigned long long sizeOfNode = database->surfels_per_node() *database->size_of_surfel();
@@ -444,12 +444,12 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
   if (context.id >= temp_buffer_B_.size())
   {
     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-    pbr::ren::MemoryQuery* memory_query = pbr::ren::MemoryQuery::GetInstance();
+    pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
 
     size_t size_of_node_in_bytes = database->size_of_surfel()*database->surfels_per_node();
   
     int32_t upload_budget_in_nodes =
-        (memory_query->upload_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
+        (policy->upload_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
 
 
     unsigned long long sizeOfNode = database->surfels_per_node() *database->size_of_surfel();
@@ -462,12 +462,12 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
   if (context.id >= render_buffer_.size())
   {
     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-    pbr::ren::MemoryQuery* memory_query = pbr::ren::MemoryQuery::GetInstance();
+    pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
 
     size_t size_of_node_in_bytes = database->size_of_surfel()*database->surfels_per_node();
 
     int32_t render_budget_in_nodes =
-        (memory_query->render_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
+        (policy->render_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
         
     unsigned long long sizeOfNode = database->surfels_per_node() *database->size_of_surfel();  
     unsigned long long sizeOfRenderBuffer = render_budget_in_nodes * sizeOfNode;
@@ -659,6 +659,8 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       std::vector<math::vec3> corner_values = frustum.get_corners();
       float top_minus_bottom = scm::math::length((corner_values[2]) - (corner_values[0]));
       float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1] / top_minus_bottom;
+      float   near_plane_value = frustum.get_clip_near();
+      float   far_plane_value  = frustum.get_clip_far();
 
       if( last_geometry_state_[ctx.id] != pre_draw_state)
       {
@@ -672,10 +674,6 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 
 
 	gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
-
-	float   near_plane_value = frustum.get_clip_near();
-        float   far_plane_value  = frustum.get_clip_far();
-	    
 
 	get_program(depth_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
 	get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
@@ -693,7 +691,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       pbr::model_t model_id = controller->DeduceModelId(file_name);
       
       //send camera and model_matrix to cut update
-      pbr::ren::Camera cut_update_cam(view_id, frustum.get_view(), frustum.get_projection() );
+      pbr::ren::Camera cut_update_cam(view_id, near_plane_value, frustum.get_view(), frustum.get_projection() );
 
       cuts->SendCamera(context_id, view_id, cut_update_cam);
       cuts->SendHeightDividedByTopMinusBottom(context_id, view_id, height_divided_by_top_minus_bottom);
@@ -742,8 +740,11 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 
         get_program(depth_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
 
-	      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+               
+
+	      get_program(depth_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "gua_normal_matrix");
 	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
+              get_program(depth_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "newNormalMatrix");
 
 	      if (material && plod_ressource)
 	      {
@@ -795,6 +796,10 @@ void PLODUberShader::draw(RenderContext const& ctx,
 
   {
 
+
+      float   near_plane_value = frustum.get_clip_near();
+      float   far_plane_value  = frustum.get_clip_far();
+
       if( last_geometry_state_[ctx.id] != post_draw_state)
       {
 
@@ -813,8 +818,7 @@ void PLODUberShader::draw(RenderContext const& ctx,
    
         gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
 
-        float   near_plane_value = frustum.get_clip_near();
-        float   far_plane_value  = frustum.get_clip_far();
+
         float    top_plane_value = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
         float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
 
@@ -847,7 +851,14 @@ void PLODUberShader::draw(RenderContext const& ctx,
         get_program(accumulation_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
 
       
-        get_program(accumulation_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+
+        scm::math::vec4f testNormal = transpose(inverse(frustum.get_view()*model_matrix))*scm::math::vec4f(0.0,0.0,1.0,0.0);
+        scm::math::vec3f tN2 = scm::math::normalize(scm::math::vec3f(testNormal[0], testNormal[1], testNormal[2]) );
+
+        std::cout<<"Normal: "<< tN2 <<"  : "<<std::sqrt(tN2[0]*tN2[0] + tN2[1]*tN2[1] + tN2[2] * tN2[2]) << "\n";
+
+        get_program(accumulation_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "gua_normal_matrix");
+        get_program(accumulation_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "newNormalMatrix");
         get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
       if (material && plod_ressource)
@@ -867,7 +878,7 @@ void PLODUberShader::draw(RenderContext const& ctx,
       std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
 
       //calculate frustum culling results
-      pbr::ren::Camera cut_update_cam(view_id, frustum.get_view(), frustum.get_projection() );
+      pbr::ren::Camera cut_update_cam(view_id, near_plane_value, frustum.get_view(), frustum.get_projection() );
 
       pbr::ren::KdnTree const*  kdn_tree = database->GetModel(model_id)->kdn_tree();
 
