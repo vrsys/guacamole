@@ -77,7 +77,7 @@ class UberShader {
   {
     UniformValue<T> tmp(value);
 
-    for (auto const& program : programs_) {  
+    for (auto const& program : programs_) {
 
       program->apply_uniform(context, &tmp, name, position);
     }
@@ -104,13 +104,13 @@ class UberShader {
                                     std::string const& name) const;
 
   /**
-  * returns a program in enumerated order 
+  * returns a program in enumerated order
   */
   virtual std::shared_ptr<ShaderProgram> const& get_program(unsigned index = 0) const;
 
   /**
   * returns a container with all involved programs of this ubershader
-  */ 
+  */
   std::vector<std::shared_ptr<ShaderProgram>> const& programs() const;
 
   /**

@@ -283,8 +283,8 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
 
   std::set<PickResult> const Node::ray_test(RayNode const& ray,
-    PickResult::Options options,
-    std::string const& mask) {
+                                            PickResult::Options options,
+                                            std::string const& mask) {
     Mask pick_mask(mask);
     std::set<PickResult> hits;
     ray_test_impl(ray, options, pick_mask, hits);
@@ -371,10 +371,9 @@ namespace gua {
     if (!self_dirty_) {
       self_dirty_ = true;
       child_dirty_ = true;
-    }
-    
-    for (auto child : children_) {
-      child->set_children_dirty();
+      for (auto child : children_) {
+        child->set_children_dirty();
+      }
     }
 
   }

@@ -731,30 +731,30 @@ std::string const NURBSUberShader::_final_geometry_shader () const
         geom_shader << method.second << std::endl;
     }
 
-    geom_shader << R"(                                                                      
-      void main()                                                                                 
-      {                                                                                           
-        for ( int i = 0; i != 3; ++i )                                                              
-        {                                                                                           
-          gIndex      = teIndex[i];                                                                   
-          gTessCoord  = teTessCoord[i];                                                               
+    geom_shader << R"(
+      void main()
+      {
+        for ( int i = 0; i != 3; ++i )
+        {
+          gIndex      = teIndex[i];
+          gTessCoord  = teTessCoord[i];
 
-          // write built-in input for material                                                        
-          ///////////////////////////////////////////////////////                                     
-          gua_texcoords  = gTessCoord;                                                                
+          // write built-in input for material
+          ///////////////////////////////////////////////////////
+          gua_texcoords  = gTessCoord;
 
-          gua_position_varying = (gua_model_matrix * tePosition[i]).xyz;                              
-          gua_object_normal    = teNormal[i].xyz;                                                     
-          gua_object_tangent   = teTangent[i].xyz;                                                    
-          gua_object_bitangent = teBitangent[i].xyz;                                                  
-          gua_object_position  = tePosition[i].xyz;                                                   
-                                                               
+          gua_position_varying = (gua_model_matrix * tePosition[i]).xyz;
+          gua_object_normal    = teNormal[i].xyz;
+          gua_object_tangent   = teTangent[i].xyz;
+          gua_object_bitangent = teBitangent[i].xyz;
+          gua_object_position  = tePosition[i].xyz;
+
           vec4 world_normal    = gua_normal_matrix * vec4 (teNormal[i].xyz, 0.0);
-          gua_world_normal     = normalize ( world_normal.xyz );     
-          gua_world_tangent    = normalize ( gua_normal_matrix * vec4 (teTangent[i].xyz, 0.0) ).xyz;    
-          gua_world_bitangent  = normalize ( gua_normal_matrix * vec4 (teBitangent[i].xyz, 0.0) ).xyz;  
-          gua_world_position   = (gua_model_matrix * tePosition[i]).xyz;                                
-          ///////////////////////////////////////////////////////                                       
+          gua_world_normal     = normalize ( world_normal.xyz );
+          gua_world_tangent    = normalize ( gua_normal_matrix * vec4 (teTangent[i].xyz, 0.0) ).xyz;
+          gua_world_bitangent  = normalize ( gua_normal_matrix * vec4 (teBitangent[i].xyz, 0.0) ).xyz;
+          gua_world_position   = (gua_model_matrix * tePosition[i]).xyz;
+          ///////////////////////////////////////////////////////
     )";
 
     // generated code
@@ -796,25 +796,25 @@ std::string const NURBSUberShader::_final_fragment_shader () const
 {
     std::string fragment_shader;
 
-    fragment_shader += R"(                          
-        #version 420 core                           
-        #extension GL_NV_bindless_texture : require 
-        #extension GL_NV_gpu_shader5 : enable       
-                                                    
-        #define TRIM_ERROR_TOLERANCE 0.00001        
-                                                    
-        precision highp float;                      
-              
-        flat in uint gIndex;                         
-        in vec2      gTessCoord;                     
-                                                     
+    fragment_shader += R"(
+        #version 420 core
+        #extension GL_NV_bindless_texture : require
+        #extension GL_NV_gpu_shader5 : enable
+
+        #define TRIM_ERROR_TOLERANCE 0.00001
+
+        precision highp float;
+
+        flat in uint gIndex;
+        in vec2      gTessCoord;
+
         uniform samplerBuffer attribute_texture;
-                                                
-        uniform samplerBuffer trim_partition;   
-        uniform samplerBuffer trim_contourlist; 
-        uniform samplerBuffer trim_curvelist;   
-        uniform samplerBuffer trim_curvedata;   
-        uniform samplerBuffer trim_pointdata;   
+
+        uniform samplerBuffer trim_partition;
+        uniform samplerBuffer trim_contourlist;
+        uniform samplerBuffer trim_curvelist;
+        uniform samplerBuffer trim_curvedata;
+        uniform samplerBuffer trim_pointdata;
     )";
 
     fragment_shader += NURBSShader::curve_horner_evaluation();
@@ -829,77 +829,77 @@ std::string const NURBSUberShader::_final_fragment_shader () const
     fragment_shader += R"(
 
         in vec3 gua_position_varying;
-  
+
         //***** generated input defintion
-        @input_definition            
-                                  
-        // uniforms                                      
-        uniform mat4 gua_projection_matrix;              
-        uniform mat4 gua_view_matrix;                    
-        uniform mat4 gua_model_matrix;                   
-        uniform mat4 gua_normal_matrix;                  
-        uniform mat4 gua_inverse_projection_view_matrix; 
-        uniform vec3 gua_camera_position;                
-                                                         
-        uniform float gua_texel_width;                   
-        uniform float gua_texel_height;                  
-           
-        
+        @input_definition
+
+        // uniforms
+        uniform mat4 gua_projection_matrix;
+        uniform mat4 gua_view_matrix;
+        uniform mat4 gua_model_matrix;
+        uniform mat4 gua_normal_matrix;
+        uniform mat4 gua_inverse_projection_view_matrix;
+        uniform vec3 gua_camera_position;
+
+        uniform float gua_texel_width;
+        uniform float gua_texel_height;
+
+
         //***** generated uniform definition
-        @uniform_definition 
-        
+        @uniform_definition
+
         //***** generated output definition
-        @output_definition                         
-        
-        // global gua_* methods                                                               
-        vec2 gua_get_quad_coords() {                                                          
-            return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height); 
-        }                                                                                     
+        @output_definition
+
+        // global gua_* methods
+        vec2 gua_get_quad_coords() {
+            return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
+        }
     )";
 
     GuaMethodsFactory method_factory;
     fragment_shader += method_factory.get_sampler_casts();
 
     fragment_shader += R"(
-        uint gua_get_material_id() {            
+        uint gua_get_material_id() {
             return gua_uint_gbuffer_varying_0.x;
-        }                                       
-                                                
-        vec3 gua_get_position() {               
-            return gua_position_varying;        
-        }  
+        }
+
+        vec3 gua_get_position() {
+            return gua_position_varying;
+        }
 
         //***** generated material methods
-        @material_methods                                                            
+        @material_methods
 
-        // main switch                                                                                  
-        void main()                                                                                     
-        {                                                                                               
-            vec4 data = texelFetch(attribute_texture, int(gIndex) * 5);                                 
-            uint trim_index = floatBitsToUint(data.w);                                                  
-                                                                                                        
-            vec4 nurbs_domain = texelFetch(attribute_texture, int(gIndex) * 5 + 1);                     
-                                                                                                        
-            vec2 domain_size  = vec2(nurbs_domain.z - nurbs_domain.x, nurbs_domain.w - nurbs_domain.y); 
-                                                                                                        
-            vec2 uv_nurbs     = gTessCoord.xy * domain_size + nurbs_domain.xy;                          
-                                                                                                        
-            int tmp = 0;                                                                                
-            bool trimmed      = trim (trim_partition,                                                   
-                                      trim_contourlist,                                                 
-                                      trim_curvelist,                                                   
-                                      trim_curvedata,                                                   
-                                      trim_pointdata,                                                   
-                                      uv_nurbs,                                                         
-                                      int(trim_index), 1, tmp, 0.0001f, 16);                            
-            if ( trimmed ) {                                                                            
-                discard;                                                                                
-            }  
+        // main switch
+        void main()
+        {
+            vec4 data = texelFetch(attribute_texture, int(gIndex) * 5);
+            uint trim_index = floatBitsToUint(data.w);
+
+            vec4 nurbs_domain = texelFetch(attribute_texture, int(gIndex) * 5 + 1);
+
+            vec2 domain_size  = vec2(nurbs_domain.z - nurbs_domain.x, nurbs_domain.w - nurbs_domain.y);
+
+            vec2 uv_nurbs     = gTessCoord.xy * domain_size + nurbs_domain.xy;
+
+            int tmp = 0;
+            bool trimmed      = trim (trim_partition,
+                                      trim_contourlist,
+                                      trim_curvelist,
+                                      trim_curvedata,
+                                      trim_pointdata,
+                                      uv_nurbs,
+                                      int(trim_index), 1, tmp, 0.0001f, 16);
+            if ( trimmed ) {
+                discard;
+            }
 
           @material_switch
 
           gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
-        }                                                                                         
+        }
     )";
 
     // input from vertex shader

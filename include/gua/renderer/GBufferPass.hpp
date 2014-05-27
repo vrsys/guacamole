@@ -88,7 +88,8 @@ class GBufferPass : public GeometryPass {
                       CameraMode eye,
                       std::size_t viewid);
 
-  void update_ubershader_from_scene(SerializedScene const& scene,
+  void update_ubershader_from_scene(RenderContext const& ctx,
+                                    SerializedScene const& scene,
                                     SceneGraph const& graph);
 
   void initialize_state_objects(RenderContext const& ctx);
@@ -101,7 +102,7 @@ class GBufferPass : public GeometryPass {
   std::unordered_map<std::type_index, GeometryUberShader*> ubershaders_;
 
   /**
-  * copy of all material names in scene 
+  * copy of all material names in scene
   *
   *  - necessary to generate gbuffermappings of ubershaders
   */
