@@ -70,13 +70,6 @@ namespace gua {
           world_transform_ = parent_->world_transform_ * get_transform();
       }
 
-      if (is_root()) {
-        world_transform_ = get_transform();
-      }
-      else {
-        world_transform_ = parent_->world_transform_ * get_transform();
-      }
-
       if (world_transform_ != old_world_trans) {
           on_world_transform_changed.emit(world_transform_);
       }
@@ -290,8 +283,8 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
 
   std::set<PickResult> const Node::ray_test(RayNode const& ray,
-    PickResult::Options options,
-    std::string const& mask) {
+                                            PickResult::Options options,
+                                            std::string const& mask) {
     Mask pick_mask(mask);
     std::set<PickResult> hits;
     ray_test_impl(ray, options, pick_mask, hits);

@@ -74,7 +74,9 @@ void GBufferPass::create(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBufferPass::cleanup(RenderContext const& ctx) { Pass::cleanup(ctx); }
+void GBufferPass::cleanup(RenderContext const& ctx) {
+  Pass::cleanup(ctx); 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -280,9 +282,6 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
       bbox_transform *= translation;
       bbox_transform *= scale;
 
-      bbox_transform *= translation;
-      bbox_transform *= scale;
-
       meshubershader->draw(
           ctx,
           "gua_bounding_box_geometry",
@@ -306,17 +305,14 @@ void GBufferPass::display_rays(RenderContext const& ctx,
   if (pipeline_->config.enable_ray_display()) {
     meshubershader->get_program()->use(ctx);
     for (auto const& ray : scene.rays_) {
-      meshubershader->get_program()->use(ctx);
-      for (auto const& ray : scene.rays_) {
-        meshubershader->draw(
-            ctx,
-            "gua_ray_geometry",
-            "gua_bounding_box",
-            ray->get_cached_world_transform(),
-            scm::math::inverse(ray->get_cached_world_transform()),
-            scene.frustum,
-            viewid);
-      }
+      meshubershader->draw(
+          ctx,
+          "gua_ray_geometry",
+          "gua_bounding_box",
+          ray->get_cached_world_transform(),
+          scm::math::inverse(ray->get_cached_world_transform()),
+          scene.frustum,
+          viewid);
     }
     meshubershader->get_program()->unuse(ctx);
   }
