@@ -70,13 +70,6 @@ namespace gua {
           world_transform_ = parent_->world_transform_ * get_transform();
       }
 
-      if (is_root()) {
-        world_transform_ = get_transform();
-      }
-      else {
-        world_transform_ = parent_->world_transform_ * get_transform();
-      }
-
       if (world_transform_ != old_world_trans) {
           on_world_transform_changed.emit(world_transform_);
       }
