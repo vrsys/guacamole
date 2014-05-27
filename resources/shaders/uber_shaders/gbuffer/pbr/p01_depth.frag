@@ -36,7 +36,7 @@ float calc_depth_offset(vec2 mappedPointCoord, vec3 adjustedNormal)
 
         if (true)
         {
-	float zBound = 0.01f;//max_deform_ratio;
+	float zBound = 0.3f;//max_deform_ratio;
 	float normalZ = adjustedNormal.z;
 
 

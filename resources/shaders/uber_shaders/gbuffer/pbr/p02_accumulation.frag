@@ -53,7 +53,7 @@ float calc_depth_offset(vec2 mappedPointCoord, vec3 adjustedNormal)
 
 if(true)
 {
-	float zBound = 0.0f;//max_deform_ratio;
+	float zBound = 0.3f;//max_deform_ratio;
 	float normalZ = adjustedNormal.z;
 
 	if(normalZ > 0.0)
@@ -130,7 +130,7 @@ float depth_to_compare = 0;
    weight = get_gaussianValue(depth_offset, mappedPointCoord, adjustedNormal) ;
 
  
-   if( depthValue  - (depth_to_compare)    <=  2 * pass_scaled_radius )
+   if( depthValue  - (depth_to_compare)    <=  3 * pass_scaled_radius )
    {
 
       out_accumulated_color = vec4(pass_point_color * weight, weight);
