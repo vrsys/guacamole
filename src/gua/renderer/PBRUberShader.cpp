@@ -42,14 +42,7 @@ namespace gua {
 
 PBRUberShader::PBRUberShader()
   : GeometryUberShader(), near_plane_value_(0.0f), height_divided_by_top_minus_bottom_(0.0f)
-{
-  if (!MaterialDatabase::instance()->is_supported(default_pbr_material_name()))
-  {
-    create_resource_material(default_pbr_material_name(),
-      Resources::materials_gua_pbr_gsd,
-      Resources::materials_gua_pbr_gmd);
-  }
-}
+{}
 
 
   ////////////////////////////////////////////////////////////////////////////////

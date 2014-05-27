@@ -20,12 +20,13 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/PLODLoader.hpp>
 #include <pbr/ren/lod_point_cloud.h>
 #include <pbr/ren/model_database.h>
-#include <gua/renderer/PLODRessource.hpp>
 
 // guacamole headers
+#include <gua/guacamole.hpp>
+#include <gua/renderer/PLODLoader.hpp>
+#include <gua/renderer/PLODRessource.hpp>
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
@@ -38,13 +39,12 @@
 #include <gua/databases/MaterialDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/ShadingModelDatabase.hpp>
-
+#include <gua/generated/R.inl>
 #include <iostream>
 
 namespace gua {
 
 unsigned PLODLoader::model_counter_ = 0;
-
   /////////////////////////////////////////////////////////////////////////////
 
   PLODLoader::PLODLoader() 
@@ -53,6 +53,14 @@ unsigned PLODLoader::model_counter_ = 0;
       node_counter_(0) 
   {
     _supported_file_extensions.insert("kdn");    
+
+   if (!MaterialDatabase::instance()->is_supported("gua_pbr"))
+   {
+       create_resource_material("gua_pbr",
+       Resources::materials_gua_pbr_gsd,
+       Resources::materials_gua_pbr_gmd);
+   }
+
   }
 
 

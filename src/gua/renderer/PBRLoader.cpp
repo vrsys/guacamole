@@ -20,9 +20,11 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/PBRLoader.hpp>
+
 
 // guacamole headers
+#include <gua/guacamole.hpp>
+#include <gua/renderer/PBRLoader.hpp>
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
@@ -49,7 +51,13 @@ unsigned PBRLoader::model_counter_ = 0;
       _supported_file_extensions(),
       node_counter_(0)
   {
-    _supported_file_extensions.insert("xyz_all");    
+    _supported_file_extensions.insert("xyz_all");
+   if (!MaterialDatabase::instance()->is_supported("gua_pbr"))
+   {
+       create_resource_material("gua_pbr",
+       Resources::materials_gua_pbr_gsd,
+       Resources::materials_gua_pbr_gmd);
+   }
   }
 
   /////////////////////////////////////////////////////////////////////////////
