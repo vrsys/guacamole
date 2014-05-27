@@ -115,6 +115,7 @@ ENDIF (UNIX)
 
 # link general libraries
 TARGET_LINK_LIBRARIES( guacamole general ${ZMQ_LIBRARIES})
+TARGET_LINK_LIBRARIES( guacamole general ${PROTOBUF_LIBRARIES})
 
 # link release libraries
 TARGET_LINK_LIBRARIES( guacamole optimized ${JSON_LIBRARY})
