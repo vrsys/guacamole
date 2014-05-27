@@ -55,7 +55,7 @@ Video3DUberShader::Video3DUberShader()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Video3DUberShader::create(std::set<std::string> const& material_names) 
+void Video3DUberShader::create(std::set<std::string> const& material_names)
 {
   UberShader::create(material_names);
 
@@ -93,7 +93,7 @@ std::string const Video3DUberShader::_warp_pass_vertex_shader() const
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string const Video3DUberShader::_warp_pass_geometry_shader() const
-{ 
+{
   std::string geometry_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_warp_pass_geom)
   );
@@ -191,7 +191,7 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
 
   // initialize Texture Arrays (kinect depths & colors)
   if ( context.id >= warp_color_result_.size() ||
-       context.id >= warp_depth_result_.size()) 
+       context.id >= warp_depth_result_.size())
   {
     warp_depth_result_.resize(context.id + 1);
     warp_color_result_.resize(context.id + 1);
@@ -289,11 +289,11 @@ void Video3DUberShader::draw(RenderContext const& ctx,
                              Frustum const& /*frustum*/,
                              std::size_t viewid) const
 {
-  if (!GeometryDatabase::instance()->is_supported(ksfile_name) || 
+  if (!GeometryDatabase::instance()->is_supported(ksfile_name) ||
       !MaterialDatabase::instance()->is_supported(material_name)) {
     gua::Logger::LOG_WARNING << "Video3DUberShader::draw(): No such video or material." << ksfile_name << ", " << material_name << std::endl;
     return;
-  } 
+  }
 
   auto video3d_ressource = std::static_pointer_cast<Video3DRessource>(GeometryDatabase::instance()->lookup(ksfile_name));
   auto material          = MaterialDatabase::instance()->lookup(material_name);
@@ -336,13 +336,13 @@ void Video3DUberShader::draw(RenderContext const& ctx,
       warp_result_fbo_[ctx.id]->clear_attachments();
       warp_result_fbo_[ctx.id]->attach_depth_stencil_buffer(warp_depth_result_[ctx.id], 0, layer);
       warp_result_fbo_[ctx.id]->attach_color_buffer(0, warp_color_result_[ctx.id], 0, layer);
-      
+
       // bind and clear fbo
       ctx.render_context->set_frame_buffer(warp_result_fbo_[ctx.id]);
       ctx.render_context->clear_depth_stencil_buffer(warp_result_fbo_[ctx.id]);
       ctx.render_context->clear_color_buffer(warp_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
       ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2ui(0,0), warp_color_result_[ctx.id]->dimensions()));
-        
+
       // set uniforms
       get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getTexSizeInvD(), "tex_size_inv");
       get_program(warp_pass)->set_uniform(ctx, int(layer), "layer");

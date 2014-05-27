@@ -175,22 +175,22 @@ namespace gua {
     //
     // "type='file'&file='data/objects/monkey.obj'&id=0&flags=0"
 
-    if (filename_changed_) 
+    if (filename_changed_)
     {
-      if (filename_ != "") 
+      if (filename_ != "")
       {
-        if (!GeometryDatabase::instance()->is_supported(filename_)) 
+        if (!GeometryDatabase::instance()->is_supported(filename_))
         {
           auto params(string_utils::split(filename_, '&'));
 
-          if (params.size() == 4) 
+          if (params.size() == 4)
           {
-            if (params[0] == "type=file") 
+            if (params[0] == "type=file")
             {
               auto tmp_filename(string_utils::split(params[1], '='));
               auto tmp_flags(string_utils::split(params[3], '='));
 
-              if (tmp_filename.size() == 2 && tmp_flags.size() == 2) 
+              if (tmp_filename.size() == 2 && tmp_flags.size() == 2)
               {
                 std::string filename(tmp_filename[1]);
                 std::string flags_string(tmp_flags[1]);
@@ -224,11 +224,11 @@ namespace gua {
     //
     // data/materials/Stones.gmd
 
-    if (material_changed_) 
+    if (material_changed_)
     {
-      if (material_ != "") 
+      if (material_ != "")
       {
-        if (!MaterialDatabase::instance()->is_supported(material_)) 
+        if (!MaterialDatabase::instance()->is_supported(material_))
         {
           MaterialDatabase::instance()->load_material(material_);
         }

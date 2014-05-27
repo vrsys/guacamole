@@ -659,8 +659,8 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       std::vector<math::vec3> corner_values = frustum.get_corners();
       float top_minus_bottom = scm::math::length((corner_values[2]) - (corner_values[0]));
       float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1] / top_minus_bottom;
-      float   near_plane_value = frustum.get_clip_near();
-      float   far_plane_value  = frustum.get_clip_far();
+      float near_plane_value = frustum.get_clip_near();
+      float far_plane_value  = frustum.get_clip_far();
 
       if( last_geometry_state_[ctx.id] != pre_draw_state)
       {
@@ -668,12 +668,8 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
         //enable dynamic point size in shaders
 	ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
 
-	     
 	// bind fbo
 	ctx.render_context->set_frame_buffer(depth_pass_result_fbo_[ctx.id]);
-
-
-	gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
 
 	get_program(depth_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
 	get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
@@ -721,42 +717,24 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
           (frustum_culling_results_[ctx.id])[node_counter] = culling_frustum.classify(model_bounding_boxes[k->node_id_]);
       }
             
-
-
       auto plod_ressource     = std::static_pointer_cast<PLODRessource>(GeometryDatabase::instance()->lookup(file_name));
       auto material          = MaterialDatabase::instance()->lookup(material_name);
-     
-	   // begin of depth pass (first)
+   
+      // begin of depth pass (first)
+      {
+          scm::math::vec4f x_unit_vec(1.0,0.0f,0.f,0.f);
+          float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
+          get_program(depth_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
+	  get_program(depth_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "gua_normal_matrix");
+	  get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
+
+	  if (material && plod_ressource)
 	  {
-
-
-
-
-
-        scm::math::vec4f x_unit_vec(1.0,0.0f,0.f,0.f);
-
-        float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
-
-
-        get_program(depth_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
-
-               
-
-	      get_program(depth_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "gua_normal_matrix");
-	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
-              get_program(depth_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "newNormalMatrix");
-
-	      if (material && plod_ressource)
-	      {
-		        get_program(depth_pass)->use(ctx);
-		        {
-		          plod_ressource->draw(ctx, context_id, view_id, model_id, vertex_array_[ctx.id], frustum_culling_results_[ctx.id] );
-		        }
-		        get_program(depth_pass)->unuse(ctx);
-	      }
-
-
-	    }
+              get_program(depth_pass)->use(ctx);
+              plod_ressource->draw(ctx, context_id, view_id, model_id, vertex_array_[ctx.id], frustum_culling_results_[ctx.id] );
+              get_program(depth_pass)->unuse(ctx);
+	  }
+      }
 
   }
 
@@ -815,12 +793,6 @@ void PLODUberShader::draw(RenderContext const& ctx,
 
         // bind accumulation FBO
         ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_[ctx.id]);
-   
-        gua::math::mat4 const& projection_matrix = frustum.get_projection(); 
-
-
-        float    top_plane_value = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
-        float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
 
         std::vector<math::vec3> corner_values = frustum.get_corners();
 
@@ -852,7 +824,6 @@ void PLODUberShader::draw(RenderContext const& ctx,
 
       
         get_program(accumulation_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "gua_normal_matrix");
-        get_program(accumulation_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "newNormalMatrix");
         get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
       if (material && plod_ressource)

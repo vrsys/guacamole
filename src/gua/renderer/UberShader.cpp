@@ -46,8 +46,11 @@ UberShader::~UberShader()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void UberShader::create(std::set<std::string> const& material_names) 
+void UberShader::create(std::set<std::string> const& material_names)
 {
+
+  programs_.clear();
+
   vshader_factory_ = gua::make_unique<UberShaderFactory>(
     ShadingModel::GBUFFER_VERTEX_STAGE, material_names
     );
@@ -60,7 +63,7 @@ void UberShader::create(std::set<std::string> const& material_names)
   LayerMapping vshader_output_mapping = vshader_factory_->get_output_mapping();
 
   fshader_factory_->add_inputs_to_main_functions(
-    { &vshader_output_mapping }, 
+    { &vshader_output_mapping },
     ShadingModel::GBUFFER_VERTEX_STAGE
   );
 

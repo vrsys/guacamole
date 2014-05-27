@@ -378,10 +378,10 @@ namespace gua {
     if (!self_dirty_) {
       self_dirty_ = true;
       child_dirty_ = true;
-    }
-    
-    for (auto child : children_) {
-      child->set_children_dirty();
+
+      for (auto child : children_) {
+        child->set_children_dirty();
+      }
     }
 
   }

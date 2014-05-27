@@ -48,7 +48,7 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
   void create(std::set<std::string> const& material_names);
 
   /*virtual*/ bool upload_to(RenderContext const& context) const;
-  
+
   /*virtual*/ stage_mask const get_stage_mask() const;
 
   /*virtual*/ void preframe(RenderContext const& context) const;
@@ -94,7 +94,7 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
 
   std::string const _blend_pass_vertex_shader   () const;
   std::string const _blend_pass_fragment_shader () const;
- 
+
   private: // attributes
 
   static const unsigned                           MAX_NUM_KINECTS = 6;
@@ -106,14 +106,14 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::rasterizer_state_ptr>    no_bfc_rasterizer_state_;
   mutable std::vector<scm::gl::sampler_state_ptr>       nearest_sampler_state_;
   mutable std::vector<scm::gl::sampler_state_ptr>       linear_sampler_state_;
-  
+
   mutable std::vector<scm::gl::depth_stencil_state_ptr> depth_stencil_state_warp_pass_;
   mutable std::vector<scm::gl::depth_stencil_state_ptr> depth_stencil_state_blend_pass_;
 
   mutable std::vector<scm::gl::quad_geometry_ptr>       fullscreen_quad_;
   mutable std::vector<scm::gl::quad_geometry_ptr>       fullscreen_quad2_;
 
-  
+
 };
 
 }

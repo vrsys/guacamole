@@ -486,10 +486,10 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
 
 	      float   near_plane_value = frustum.get_clip_near();
               float   far_plane_value  = frustum.get_clip_far();
-	      float   top_plane_value  = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
-	      float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
-	      
-              float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1] / (top_plane_value - bottom_plane_value);
+
+              std::vector<math::vec3> corner_values = frustum.get_corners();
+              float top_minus_bottom = scm::math::length((corner_values[2]) - (corner_values[0]));
+              float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1] / top_minus_bottom;
 
 	      get_program(depth_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
 	      get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
@@ -505,14 +505,10 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
 
               float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
 
-              float modelViewProjectionScalingRatio = scm::math::length(frustum.get_projection()*frustum.get_view()*model_matrix*x_unit_vec)
-                                                      / 0.8759124279022216797;
-
 
               get_program(depth_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
-              get_program(depth_pass)->set_uniform(ctx, modelViewProjectionScalingRatio, "mVPScalingRatio");
 
-	      get_program(depth_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+              get_program(depth_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "gua_normal_matrix");
 	      get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
 
@@ -588,9 +584,10 @@ void PBRUberShader::draw(RenderContext const& ctx,
         //put near_plane_value and height_divided_by_top_minus_bottom as member variables and get these two only 1 per render frame
         float   near_plane_value = frustum.get_clip_near();
         float   far_plane_value  = frustum.get_clip_far();
-        float    top_plane_value = near_plane_value * (1.0 + projection_matrix[9]) / projection_matrix[5];
-        float bottom_plane_value = near_plane_value * (projection_matrix[9] - 1.0) / projection_matrix[5];
-        float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1]  / (top_plane_value - bottom_plane_value);
+
+        std::vector<math::vec3> corner_values = frustum.get_corners();
+        float top_minus_bottom = scm::math::length((corner_values[2]) - (corner_values[0]));
+        float height_divided_by_top_minus_bottom = (render_window_dims_[ctx.id])[1] / top_minus_bottom;
 
         get_program(accumulation_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
         get_program(accumulation_pass)->set_uniform(ctx, near_plane_value, "near_plane");
@@ -608,18 +605,14 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
         float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
 
-        float modelViewProjectionScalingRatio = scm::math::length(frustum.get_projection()*frustum.get_view()*model_matrix*x_unit_vec)
-                                                      / 0.8759124279022216797;
-
 
         get_program(accumulation_pass)->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
-        get_program(accumulation_pass)->set_uniform(ctx, modelViewProjectionScalingRatio, "mVPScalingRatio");
 
         ctx.render_context->bind_texture(depth_pass_linear_depth_result_[ctx.id], linear_sampler_state_[ctx.id], 0);
         get_program(accumulation_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
 
       
-        get_program(accumulation_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+        get_program(accumulation_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "gua_normal_matrix");
         get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
       if (material && pbr_ressource)

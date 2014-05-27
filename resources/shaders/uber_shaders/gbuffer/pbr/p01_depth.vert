@@ -23,8 +23,6 @@
         
         uniform float radius_model_scaling;
 
-        uniform mat4 newNormalMatrix;
-
         //output to fragment shader                                             
         out vec3 pass_normal;
         out float pass_mv_vert_depth;
@@ -53,7 +51,7 @@
 
 
           //pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
-          pass_normal = normalize(( /*gua_normal_matrix*/ newNormalMatrix * vec4(in_normal, 0.0)).xyz);   
+          pass_normal = normalize(( gua_normal_matrix * vec4(in_normal, 0.0)).xyz);   
 
           pass_mv_vert_depth = pos_es.z;
           pass_scaled_radius = scaled_radius;
