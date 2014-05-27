@@ -22,6 +22,7 @@
 // class header
 #include <pbr/ren/lod_point_cloud.h>
 #include <pbr/ren/model_database.h>
+#include <pbr/ren/policy.h>
 
 // guacamole headers
 #include <gua/guacamole.hpp>
@@ -107,5 +108,22 @@ unsigned PLODLoader::model_counter_ = 0;
       : _supported_file_extensions.count(filename_decomposition.back()) > 0;
   }
 
+  void PLODLoader::set_upload_budget_in_mb(const size_t upload_budget)
+  {
+    pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+    policy->set_upload_budget_in_mb(upload_budget);
+  }
+
+  void PLODLoader::set_render_budget_in_mb(const size_t render_budget)
+  {
+    pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+    policy->set_render_budget_in_mb(render_budget);
+  }
+
+  void PLODLoader::set_out_of_core_budget_in_mb(const size_t out_of_core_budget)
+  {
+    pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+    policy->set_out_of_core_budget_in_mb(out_of_core_budget);
+  }
 
 }

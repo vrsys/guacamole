@@ -39,6 +39,7 @@ class InnerNode;
 class GeometryNode;
 class PLODRessource;
 
+
 class PLODLoader : public GeometryLoader {
  public:
 
@@ -60,9 +61,11 @@ class PLODLoader : public GeometryLoader {
   std::shared_ptr<Node> create_geometry_from_file(std::string const& nodename,
                                                   std::string const& kdnfile);
 
-
-
   bool is_supported(std::string const& file_name) const;
+
+  void                set_upload_budget_in_mb(const size_t upload_budget);
+  void                set_render_budget_in_mb(const size_t render_budget);
+  void                set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
 
  private:
   unsigned node_counter_;
