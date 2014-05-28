@@ -45,14 +45,14 @@ class PLODLoader : public GeometryLoader {
   /**
    * Default constructor.
    *
-   * Constructs a new and empty PBRLoader.
+   * Constructs a new and empty PLODLoader.
    */
    PLODLoader();
 
   /**
    * Constructor from a file.
    *
-   * Creates a new PBRLoader from a given file.
+   * Creates a new PLODLoader from a given file.
    *
    * \param file_name        The file to load the pointclouds data from.
    * \param material_name    The material name that was set to the parent node
