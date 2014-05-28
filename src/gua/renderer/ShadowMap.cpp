@@ -57,7 +57,7 @@ bool ShadowMap::pre_compile_shaders(RenderContext const& ctx) {
 
     bool success(true);
 
-    for (auto const& shader : ubershader_)
+    for (auto const& shader : pipeline_->get_geometry_ubershaders() )
     {
       success &= shader.second->upload_to(ctx);
     }
@@ -99,10 +99,6 @@ void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
 void ShadowMap::cleanup(RenderContext const& context) 
 {
   if (buffer_) buffer_->remove_buffers(context);
-
-  for (auto ubershader : ubershader_) {
-    ubershader.second->cleanup(context);
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,7 +128,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   for (auto const& type : scene.geometrynodes_)
   {
     // pointer to appropriate ubershader
-    std::shared_ptr<GeometryUberShader> ubershader;
+    GeometryUberShader* ubershader = nullptr;
 
     // get appropriate ubershader
     if (!type.second.empty()) 
@@ -141,13 +137,14 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
       auto geometry = GeometryDatabase::instance()->lookup(filename);
 
       if (geometry) {
-        ubershader = pipeline_->get_geometry_ubershaders().at(type.first);
+        ubershader = pipeline_->get_geometry_ubershaders().at(type.first).get();
       } else {
         Logger::LOG_WARNING << "ShadowMap::render_geometry(): No such file/geometry " << filename << std::endl;
       }
     }
 
     if (ubershader)
+
     {
       auto camera_position(scene.frustum.get_camera_position());
       auto projection(scene.frustum.get_projection());

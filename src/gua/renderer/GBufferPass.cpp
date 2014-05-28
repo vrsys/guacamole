@@ -443,6 +443,7 @@ void GBufferPass::apply_material_mapping(
     std::set<std::string> const& materials) 
 {
   materials_ = materials;
+
   for ( auto const& shader : ubershaders_ )
   {
     shader.second->create(materials_);

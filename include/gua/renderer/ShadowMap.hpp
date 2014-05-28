@@ -100,8 +100,6 @@ class ShadowMap {
   GBuffer* buffer_;
   Pipeline* pipeline_;
 
-  std::unordered_map<std::type_index, GeometryUberShader*> ubershader_;
-  
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::rasterizer_state_ptr rasterizer_state_;
   std::vector<math::mat4> projection_view_matrices_;
