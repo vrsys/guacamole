@@ -3,10 +3,28 @@
 ###############################################################################
 FILE(GLOB         GUACAMOLE_CORE_SRC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/*.cpp)
 FILE(GLOB         GUACAMOLE_RENDERER_SRC       RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/renderer/*.cpp)
+IF (NOT GUACAMOLE_PBR_SUPPORT)
+list (REMOVE_ITEM GUACAMOLE_RENDERER_SRC
+  gua/renderer/PBRLoader.cpp
+  gua/renderer/PBRRessource.cpp
+  gua/renderer/PBRUberShader.cpp
+  gua/renderer/PLODLoader.cpp
+  gua/renderer/PLODRessource.cpp
+  gua/renderer/PLODUberShader.cpp
+)
+ENDIF (NOT GUACAMOLE_PBR_SUPPORT)
+
 FILE(GLOB_RECURSE GUACAMOLE_RENDERER_NURBS_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/renderer/nurbs_geometry/*.cpp)
 FILE(GLOB_RECURSE GUACAMOLE_RENDERER_VIDEO_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/renderer/video3d_geometry/*.cpp)
 
 FILE(GLOB_RECURSE GUACAMOLE_SCENEGRAPH_SRC     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/scenegraph/*.cpp)
+IF (NOT GUACAMOLE_PBR_SUPPORT)
+list (REMOVE_ITEM GUACAMOLE_SCENEGRAPH_SRC
+  gua/scenegraph/PBRNode.cpp
+  gua/scenegraph/PLODNode.cpp
+)
+ENDIF (NOT GUACAMOLE_PBR_SUPPORT)
+
 FILE(GLOB_RECURSE GUACAMOLE_UTILS_SRC          RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/utils/*.cpp)
 FILE(GLOB_RECURSE GUACAMOLE_PHYSICS_SRC        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/physics/*.cpp)
 FILE(GLOB_RECURSE GUACAMOLE_MATH_SRC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} gua/math/*.cpp)
@@ -19,10 +37,26 @@ FILE(GLOB_RECURSE GUACAMOLE_DATABASES_SRC      RELATIVE ${CMAKE_CURRENT_SOURCE_D
 ###############################################################################
 FILE(GLOB         GUACAMOLE_CORE_INC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/*.hpp)
 FILE(GLOB         GUACAMOLE_RENDERER_INC       RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/renderer/*.hpp)
+IF (NOT GUACAMOLE_PBR_SUPPORT)
+list (REMOVE_ITEM GUACAMOLE_RENDERER_INC
+  ../include/gua/renderer/PLODLoader.hpp
+  ../include/gua/renderer/PLODRessource.hpp
+  ../include/gua/renderer/PLODUberShader.hpp
+  ../include/gua/renderer/PBRLoader.hpp
+  ../include/gua/renderer/PBRRessource.hpp
+  ../include/gua/renderer/PBRUberShader.hpp
+)
+ENDIF (NOT GUACAMOLE_PBR_SUPPORT)
 FILE(GLOB_RECURSE GUACAMOLE_RENDERER_NURBS_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/renderer/nurbs_geometry/*.hpp)
 FILE(GLOB_RECURSE GUACAMOLE_RENDERER_VIDEO_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/renderer/video3d_geometry/*.hpp)
                                                                                    
 FILE(GLOB_RECURSE GUACAMOLE_SCENEGRAPH_INC     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/scenegraph/*.hpp)
+IF (NOT GUACAMOLE_PBR_SUPPORT)
+list (REMOVE_ITEM GUACAMOLE_SCENEGRAPH_INC
+  ../include/gua/scenegraph/PBRNode.hpp
+  ../include/gua/scenegraph/PLODNode.hpp
+)
+ENDIF (NOT GUACAMOLE_PBR_SUPPORT)
 FILE(GLOB_RECURSE GUACAMOLE_UTILS_INC          RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/utils/*.hpp)
 FILE(GLOB_RECURSE GUACAMOLE_PHYSICS_INC        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/physics/*.hpp)
 FILE(GLOB_RECURSE GUACAMOLE_MATH_INC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/math/*.hpp)
@@ -103,7 +137,9 @@ ENDIF(MSVC)
 # link static libraries
 TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES})
 TARGET_LINK_LIBRARIES( guacamole general ${ASSIMP_LIBRARIES})
-TARGET_LINK_LIBRARIES( guacamole general ${PBR_LIBRARIES})
+IF (GUACAMOLE_PBR_SUPPORT)
+  TARGET_LINK_LIBRARIES( guacamole general ${PBR_LIBRARIES})
+ENDIF (GUACAMOLE_PBR_SUPPORT)
 
 IF (UNIX)
     TARGET_LINK_LIBRARIES( guacamole general ${BOOST_LIBRARIES})
