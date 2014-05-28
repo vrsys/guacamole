@@ -1,7 +1,7 @@
 /******************************************************************************
  * guacamole - delicious VR                                                   *
  *                                                                            *
- * Copyright: (c) 2011-2013 Bauhaus-Universit‰t Weimar                        *
+ * Copyright: (c) 2011-2013 Bauhaus-Universit√§t Weimar                        *
  * Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
  *                                                                            *
  * This program is free software: you can redistribute it and/or modify it    *
@@ -19,15 +19,43 @@
  *                                                                            *
  ******************************************************************************/
 
-// header
-#include <gua/renderer/GeometryLoader.hpp>
+#ifndef GUA_PLOD_NODE_HPP
+#define GUA_PLOD_NODE_HPP
 
 // guacamole headers
-#include <gua/databases/MaterialDatabase.hpp>
-
-
-// external headers
+#include <gua/scenegraph/GeometryNode.hpp>
 
 namespace gua {
 
-}  // namespace gua
+/**
+ * This class is used to represent pointcloud in the SceneGraph.
+ *
+ * \ingroup gua_scenegraph
+ */
+class GUA_DLL PLODNode : public GeometryNode 
+{
+public : // member
+
+  PLODNode(std::string const& name,
+              std::string const& filename = "gua_default_geometry",
+              std::string const& material = "gua_default_material",
+              math::mat4  const& transform = math::mat4::identity());
+
+  /**
+  * Implements ray picking for a point cloud
+  */
+  /* virtual */ void ray_test_impl(RayNode const& ray, 
+                                   PickResult::Options options,
+                                   Mask const& mask, 
+                                   std::set<PickResult>& hits);
+protected:
+
+  /*virtual*/ std::shared_ptr<Node> copy() const;
+
+private : // attributes e.g. special attributes for drawing
+
+};
+
+}
+
+#endif  // GUA_PLOD_NODE_HPP

@@ -6,13 +6,15 @@ PROJECT(GUACAMOLE CXX)
 
 # version number
 set(GUACAMOLE_MAJOR 0)
-set(GUACAMOLE_MINOR 7)
-set(GUACAMOLE_PATCH 2)
+set(GUACAMOLE_MINOR 8)
+set(GUACAMOLE_PATCH 0)
 set(GUACAMOLE_VERSION ${GUACAMOLE_MAJOR}.${GUACAMOLE_MINOR}.${GUACAMOLE_PATCH})
 set(GUACAMOLE_DESCRIPTION "GUACAMOLE - an astonishing virtual reality engine")
 set(GUACAMOLE_HOMEPAGE "http://www.GUACAMOLE.org")
 set(GUACAMOLE_EXENAME "GUACAMOLE")
 set(GUACAMOLE_PACKAGENAME "GUACAMOLE")
+
+option (GUACAMOLE_PBR_SUPPORT "Set to enable PBR (point based rendering) support.")
 
 # We require at least version 2.8.0
 cmake_minimum_required(VERSION 2.8.0)
@@ -23,6 +25,13 @@ endif(UNIX)
 
 # Location where cmake first looks for modules.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
+
+###############################################################################
+# write Config.h
+###############################################################################
+
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/config.hpp.in
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/config.hpp )
 
 ################################################################
 # Configure and find libraries
@@ -43,6 +52,7 @@ include(find_compiler)
 include(FindSchism)
 include(FindBoost)
 include(FindZMQ)
+include(find_protobuf)
 
 if (UNIX)
 	set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
@@ -53,6 +63,11 @@ endif (UNIX)
 find_package(Bullet REQUIRED)
 find_package(Json REQUIRED)
 
+IF (GUACAMOLE_PBR_SUPPORT)
+  set(PBR_ROOT "/opt/pbr/gualod/trunk/pbr" CACHE PATH "Set to your PBR install path.")
+  find_package(PBR REQUIRED)
+endif (GUACAMOLE_PBR_SUPPORT)
+
 set(LIB_PATHS
     ${ASSIMP_LIBRARY_DIRS}
     ${JSON_LIBRARY_DIRS}
@@ -62,6 +77,7 @@ set(LIB_PATHS
     ${BULLET_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
     ${ZMQ_LIBRARY_DIRS}
+    ${PROTOBUF_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS
@@ -74,8 +90,14 @@ set(INCLUDE_PATHS
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
-    ${ZMQ_INCLUDE_DIRS}    
+    ${ZMQ_INCLUDE_DIRS}
+    ${PROTOBUF_INCLUDE_DIRS}
 )
+
+IF (GUACAMOLE_PBR_SUPPORT)
+  LIST(APPEND LIB_PATHS ${PBR_LIBRARY_DIRS})
+  LIST(APPEND INCLUDE_PATHS ${PBR_INCLUDE_DIRS})
+ENDIF (GUACAMOLE_PBR_SUPPORT)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
@@ -214,4 +236,10 @@ message(STATUS " bullet:" )
 message(STATUS "   library: ${BULLET_LIBRARIES}" )
 message(STATUS "   library path: ${BULLET_LIBRARY_DIRS}" )
 message(STATUS "   include: ${BULLET_INCLUDE_DIRS}" )
+IF (GUACAMOLE_PBR_SUPPORT)
+  message(STATUS " PBR:" )
+  message(STATUS "   library: ${PBR_LIBRARIES}" )
+  message(STATUS "   library path: ${PBR_LIBRARY_DIRS}" )
+  message(STATUS "   include: ${PBR_INCLUDE_DIRS}" )
+ENDIF (GUACAMOLE_PBR_SUPPORT)
 message(STATUS "" )

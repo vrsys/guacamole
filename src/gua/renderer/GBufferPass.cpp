@@ -40,6 +40,8 @@
 #include <gua/databases.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
+
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,23 +74,25 @@ void GBufferPass::create(
   Pass::create(ctx, tmp);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void GBufferPass::cleanup(RenderContext const& ctx) { Pass::cleanup(ctx); }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void GBufferPass::cleanup(RenderContext const& ctx) {
+  Pass::cleanup(ctx); 
+}
+
 
 bool GBufferPass::pre_compile_shaders(const gua::RenderContext& ctx) {
   bool success{true};
 
-  for (auto const& shader : ubershaders_) {
-    success &= shader.second->upload_to(ctx);
+    for (auto const& shader : ubershaders_) {
+      success &= shader.second->upload_to(ctx);
+    }
+
+    return success;
   }
 
-  return success;
-}
-
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
 
 void GBufferPass::rendering(SerializedScene const& scene,
                             SceneGraph const& graph,
@@ -102,6 +106,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
       !no_bfc_rasterizer_state_) {
     initialize_state_objects(ctx);
   }
+
 
   ctx.render_context->set_rasterizer_state(
       pipeline_->config.enable_backface_culling() ? bfc_rasterizer_state_
@@ -136,6 +141,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
       Pass::set_camera_matrices(
           *program, camera, pipeline_->get_current_scene(eye), eye, ctx);
     }
+
 
     // 1. call preframe callback if available for type
     if (ubershader->get_stage_mask() & GeometryUberShader::PRE_FRAME_STAGE) {
@@ -175,8 +181,10 @@ void GBufferPass::rendering(SerializedScene const& scene,
       }
     }
 
+
     // 3. iterate all drawables of current type and call draw of current
     // ubershader
+
     if (ubershader->get_stage_mask() & GeometryUberShader::DRAW_STAGE) {
       for (auto const& node : ressource_container) {
         auto const& ressource =
@@ -203,6 +211,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
             Logger::LOG_WARNING
                 << "GBufferPass::rendering() Cannot find geometry ressource."
                 << ressource << std::endl;
+
           }
         }
       }
@@ -236,6 +245,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
             Logger::LOG_WARNING
                 << "GBufferPass::rendering() Cannot find geometry ressource."
                 << ressource << std::endl;
+
           }
         }
       }
@@ -256,8 +266,10 @@ void GBufferPass::rendering(SerializedScene const& scene,
   display_bboxes(ctx, scene, viewid);
   display_rays(ctx, scene, viewid);
 
+
   ctx.render_context->reset_state_objects();
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -270,15 +282,13 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
     meshubershader->get_program()->use(ctx);
 
     for (auto const& bbox : scene.bounding_boxes_) {
+
       auto scale(scm::math::make_scale((bbox.max - bbox.min) * 1.001f));
       auto translation(
           scm::math::make_translation((bbox.max + bbox.min) / 2.f));
 
       scm::math::mat4 bbox_transform;
       scm::math::set_identity(bbox_transform);
-
-      bbox_transform *= translation;
-      bbox_transform *= scale;
 
       bbox_transform *= translation;
       bbox_transform *= scale;
