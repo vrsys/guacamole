@@ -32,13 +32,12 @@
 #include <list>
 #include <memory>
 
-namespace gua{
+namespace gua {
 
 class Node;
 class InnerNode;
 class GeometryNode;
 class PLODRessource;
-
 
 class PLODLoader : public GeometryLoader {
  public:
@@ -63,16 +62,19 @@ class PLODLoader : public GeometryLoader {
 
   bool is_supported(std::string const& file_name) const;
 
-  void                set_upload_budget_in_mb(const size_t upload_budget);
-  void                set_render_budget_in_mb(const size_t render_budget);
-  void                set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
+  void set_upload_budget_in_mb(const size_t upload_budget);
+  void set_render_budget_in_mb(const size_t render_budget);
+  void set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
+
+  const size_t get_upload_budget_in_mb() const;
+  const size_t get_render_budget_in_mb() const;
+  const size_t get_out_of_core_budget_in_mb() const;
 
  private:
   unsigned node_counter_;
   static unsigned model_counter_;
   boost::unordered_set<std::string> _supported_file_extensions;
 };
-
 
 }
 
