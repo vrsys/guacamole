@@ -120,7 +120,7 @@ namespace gua {
 
 		void set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color);
 
-    /*virtual*/ GeometryUberShader* get_ubershader() const { throw std::runtime_error("not implemented yet"); };
+    /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const { throw std::runtime_error("not implemented yet"); };
 
 	private:
 		void upload_to(RenderContext const& context) const;

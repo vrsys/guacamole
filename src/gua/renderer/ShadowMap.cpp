@@ -132,7 +132,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   for (auto const& type : scene.geometrynodes_)
   {
     // pointer to appropriate ubershader
-    GeometryUberShader* ubershader = nullptr;
+    std::shared_ptr<GeometryUberShader> ubershader;
 
     // get appropriate ubershader
     if (!type.second.empty()) 
@@ -141,7 +141,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
       auto geometry = GeometryDatabase::instance()->lookup(filename);
 
       if (geometry) {
-        ubershader = geometry->get_ubershader();
+        ubershader = pipeline_->get_geometry_ubershaders().at(type.first);
       } else {
         Logger::LOG_WARNING << "ShadowMap::render_geometry(): No such file/geometry " << filename << std::endl;
       }

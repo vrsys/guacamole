@@ -366,8 +366,8 @@ void NURBSRessource::initialize_transform_feedback(RenderContext const& context)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*virtual*/ GeometryUberShader* NURBSRessource::get_ubershader() const {
-  return Singleton<NURBSUberShader>::instance();
+/*virtual*/ std::shared_ptr<GeometryUberShader> NURBSRessource::create_ubershader() const {
+  return std::make_shared<NURBSUberShader>();
 }
 
 }  //namespace scm

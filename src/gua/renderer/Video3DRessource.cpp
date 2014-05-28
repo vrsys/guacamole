@@ -93,6 +93,8 @@ namespace gua {
   height_colorimage_(),
   upload_mutex_()
   {
+    Video3DUberShader::initialize_video_material();
+
     init(); 
   }
 
@@ -513,8 +515,8 @@ KinectCalibrationFile const& Video3DRessource::calibration_file(unsigned i) cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*virtual*/ GeometryUberShader* Video3DRessource::get_ubershader() const {
-  return Singleton<Video3DUberShader>::instance();
+/*virtual*/ std::shared_ptr<GeometryUberShader> Video3DRessource::create_ubershader() const {
+  return std::make_shared<Video3DUberShader>();
 }
 
 }

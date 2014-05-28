@@ -62,7 +62,7 @@ class GUA_DLL NURBSRessource : public GeometryRessource {
 
   /*virtual*/ void update_bounding_box() const;
 
-  /*virtual*/ GeometryUberShader* get_ubershader() const;
+  /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
   void ray_test(Ray const& ray, PickResult::Options options,
                 Node* owner, std::set<PickResult>& hits) {}

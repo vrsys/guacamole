@@ -27,6 +27,7 @@
 #include <gua/renderer/Camera.hpp>
 #include <gua/renderer/Window.hpp>
 #include <gua/renderer/SerializedScene.hpp>
+#include <gua/renderer/GBufferPass.hpp>
 #include <gua/utils/Color3f.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
@@ -188,6 +189,7 @@ class GUA_DLL Pipeline {
   inline std::size_t uuid() const {
     return reinterpret_cast<std::size_t>(this);
   }
+  GBufferPass::GeometryUberShaderMap const& get_geometry_ubershaders() const;
 
   friend class Renderer;
 

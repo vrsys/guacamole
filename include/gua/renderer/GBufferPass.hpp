@@ -33,11 +33,16 @@ namespace gua {
 class Pipeline;
 class SceneGraph;
 class TriMeshUberShader;
+class GeometryUberShader;
 
 /**
  *
  */
 class GBufferPass : public GeometryPass {
+ public:
+
+   typedef std::unordered_map<std::type_index, std::shared_ptr<GeometryUberShader>> GeometryUberShaderMap;
+
  public:
 
   /**
@@ -63,9 +68,12 @@ class GBufferPass : public GeometryPass {
 
   void print_shaders(std::string const& directory,
                      std::string const& name) const;
+
   void apply_material_mapping(std::set<std::string> const& materials);
 
   LayerMapping const* get_gbuffer_mapping() const;
+
+  inline GeometryUberShaderMap const& get_geometry_ubershaders() const { return ubershaders_; }
 
  private: // methods
 
@@ -94,12 +102,14 @@ class GBufferPass : public GeometryPass {
 
   void initialize_state_objects(RenderContext const& ctx);
 
+  void initialize_trimesh_ubershader() const;
+
   private: // attributes
 
   /**
   * all ubershaders used in scene
   */
-  std::unordered_map<std::type_index, GeometryUberShader*> ubershaders_;
+  mutable GeometryUberShaderMap ubershaders_;
 
   /**
   * copy of all material names in scene

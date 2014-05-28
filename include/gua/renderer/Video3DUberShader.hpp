@@ -79,7 +79,9 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
 
   /*virtual*/ void postframe(RenderContext const& context) const;
 
-  std::string const default_video_material_name() const;
+  static std::string const default_video_material_name();
+  static void initialize_video_material();
+
 
  private: // methods
 

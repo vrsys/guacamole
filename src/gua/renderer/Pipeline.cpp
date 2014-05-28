@@ -426,4 +426,15 @@ void Pipeline::create_buffers() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+GBufferPass::GeometryUberShaderMap const& Pipeline::get_geometry_ubershaders() const
+{
+  GBufferPass* gbuffpass = dynamic_cast<GBufferPass*>(passes_[geometry]);
+  if (gbuffpass) {
+    return gbuffpass->get_geometry_ubershaders();
+  }
+  else {
+    throw std::runtime_error("Pipeline::get_geometry_ubershaders() : GBufferPass not created yet.");
+  }
+}
+
 }
