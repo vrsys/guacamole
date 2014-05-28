@@ -77,7 +77,9 @@ void GBufferPass::create(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBufferPass::cleanup(RenderContext const& ctx) { Pass::cleanup(ctx); }
+void GBufferPass::cleanup(RenderContext const& ctx) {
+  Pass::cleanup(ctx); 
+}
 
 
 bool GBufferPass::pre_compile_shaders(const gua::RenderContext& ctx) {
@@ -287,9 +289,6 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
 
       scm::math::mat4 bbox_transform;
       scm::math::set_identity(bbox_transform);
-
-      bbox_transform *= translation;
-      bbox_transform *= scale;
 
       bbox_transform *= translation;
       bbox_transform *= scale;
