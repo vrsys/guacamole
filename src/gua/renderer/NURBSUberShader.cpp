@@ -474,13 +474,13 @@ std::string const NURBSUberShader::_final_tess_control_shader () const
                       
 	  if (true)
 	  {
-            gl_TessLevelInner[0] = 12.0f;                                        
-            gl_TessLevelOuter[1] = 12.0f;                                                                                         
-            gl_TessLevelOuter[3] = 12.0f;                                                                                         
-                             
-            gl_TessLevelInner[1] = 12.0f;                                            
-            gl_TessLevelOuter[0] = 12.0f;                                                                                         
-            gl_TessLevelOuter[2] = 12.0f;      
+            gl_TessLevelInner[0] = 8.0f;                                        
+            gl_TessLevelOuter[1] = 8.0f;                                                                                         
+            gl_TessLevelOuter[3] = 8.0f;                                                                                         
+                                   
+            gl_TessLevelInner[1] = 8.0f;                                            
+            gl_TessLevelOuter[0] = 8.0f;                                                                                         
+            gl_TessLevelOuter[2] = 8.0f;      
             return;  
           }
                                                                                                             
@@ -985,7 +985,7 @@ void NURBSUberShader::draw(RenderContext const& ctx,
   auto geometry = std::static_pointer_cast<NURBSRessource>(GeometryDatabase::instance()->lookup(filename));
   auto material = MaterialDatabase::instance()->lookup(material_name);
 
-  set_uniform(ctx, 8, "gua_max_tesselation");
+  //set_uniform(ctx, 8, "gua_max_tesselation");
   set_uniform(ctx, material->get_id(), "gua_material_id");
   set_uniform(ctx, model_matrix, "gua_model_matrix");
   set_uniform(ctx, normal_matrix, "gua_normal_matrix");
