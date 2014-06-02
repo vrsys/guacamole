@@ -116,7 +116,7 @@ class GBufferPass : public GeometryPass {
   *
   *  - necessary to generate gbuffermappings of ubershaders
   */
-  std::set<std::string> materials_;
+  std::set<std::string> cached_materials_;
 
   /**
    * Ugly hack! "bfc" means backface culling.
