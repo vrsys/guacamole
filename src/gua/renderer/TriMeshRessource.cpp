@@ -226,8 +226,8 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*virtual*/ GeometryUberShader* TriMeshRessource::get_ubershader() const {
-  return Singleton<TriMeshUberShader>::instance();
+/*virtual*/ std::shared_ptr<GeometryUberShader> TriMeshRessource::create_ubershader() const {
+  return std::make_shared<TriMeshUberShader>();
 }
 
 }

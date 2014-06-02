@@ -30,6 +30,7 @@
 #include <gua/traverse.hpp>
 
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/TriMeshUberShader.hpp>
 #include <gua/renderer/GeometryRessource.hpp>
 #include <gua/renderer/GeometryUberShader.hpp>
@@ -51,7 +52,10 @@ GBufferPass::GBufferPass(Pipeline* pipeline)
       bfc_rasterizer_state_(),
       no_bfc_rasterizer_state_(),
       bbox_rasterizer_state_(),
-      depth_stencil_state_() {}
+      depth_stencil_state_() 
+{
+  initialize_trimesh_ubershader();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -276,7 +280,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
 void GBufferPass::display_bboxes(RenderContext const& ctx,
                                  SerializedScene const& scene,
                                  std::size_t viewid) {
-  auto meshubershader = Singleton<TriMeshUberShader>::instance();
+  auto meshubershader = ubershaders_[typeid(TriMeshRessource)];
 
   if (pipeline_->config.enable_bbox_display()) {
     meshubershader->get_program()->use(ctx);
@@ -311,7 +315,7 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
 void GBufferPass::display_rays(RenderContext const& ctx,
                                SerializedScene const& scene,
                                std::size_t viewid) {
-  auto meshubershader = Singleton<TriMeshUberShader>::instance();
+  auto meshubershader = ubershaders_[typeid(TriMeshRessource)];
 
   if (pipeline_->config.enable_ray_display()) {
     meshubershader->get_program()->use(ctx);
@@ -338,7 +342,7 @@ void GBufferPass::display_quads(RenderContext const& ctx,
                                 SerializedScene const& scene,
                                 CameraMode eye,
                                 std::size_t viewid) {
-  auto meshubershader = Singleton<TriMeshUberShader>::instance();
+  auto meshubershader = ubershaders_[typeid(TriMeshRessource)];
 
   if (!scene.textured_quads_.empty()) {
     meshubershader->get_program()->use(ctx);
@@ -408,7 +412,7 @@ void GBufferPass::update_ubershader_from_scene(RenderContext const& ctx,
           auto const& ressource =
               GeometryDatabase::instance()->lookup(geode->get_filename());
           if (ressource) {
-            auto ubershader = ressource->get_ubershader();
+            auto ubershader = ressource->create_ubershader();
             ubershader->cleanup(ctx);
             ubershader->create(materials_);
             ubershaders_[type] = ubershader;
@@ -450,16 +454,31 @@ void GBufferPass::initialize_state_objects(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GBufferPass::apply_material_mapping(
-    std::set<std::string> const& materials) {
+    std::set<std::string> const& materials) 
+{
   materials_ = materials;
-  Singleton<TriMeshUberShader>::instance()->create(materials_);
-  // Singleton<TriMeshUberShader>::instance();
+
+  for ( auto const& shader : ubershaders_ )
+  {
+    shader.second->create(materials_);
+  }
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 LayerMapping const* GBufferPass::get_gbuffer_mapping() const {
-  return Singleton<TriMeshUberShader>::instance()->get_gbuffer_mapping();
+  return ubershaders_[typeid(TriMeshRessource)]->get_gbuffer_mapping();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GBufferPass::initialize_trimesh_ubershader() const
+{
+  if (!ubershaders_.count(typeid(TriMeshRessource)))
+  {
+    ubershaders_[typeid(TriMeshRessource)] = TriMeshRessource().create_ubershader();
+  }
 }
 
 }
