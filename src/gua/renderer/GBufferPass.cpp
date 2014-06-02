@@ -280,6 +280,13 @@ void GBufferPass::rendering(SerializedScene const& scene,
 void GBufferPass::display_bboxes(RenderContext const& ctx,
                                  SerializedScene const& scene,
                                  std::size_t viewid) {
+  if (!ubershaders_.count(typeid(TriMeshRessource))) {
+    auto ubershader = TriMeshRessource().create_ubershader();
+    ubershader->cleanup(ctx);
+    ubershader->create(cached_materials_);
+    ubershaders_[typeid(TriMeshRessource)] = ubershader;
+  }
+
   auto meshubershader = ubershaders_[typeid(TriMeshRessource)];
 
   if (pipeline_->config.enable_bbox_display()) {
@@ -314,7 +321,15 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
 
 void GBufferPass::display_rays(RenderContext const& ctx,
                                SerializedScene const& scene,
-                               std::size_t viewid) {
+                               std::size_t viewid) 
+{
+  if (!ubershaders_.count(typeid(TriMeshRessource))) {
+    auto ubershader = TriMeshRessource().create_ubershader();
+    ubershader->cleanup(ctx);
+    ubershader->create(cached_materials_);
+    ubershaders_[typeid(TriMeshRessource)] = ubershader;
+  }
+
   auto meshubershader = ubershaders_[typeid(TriMeshRessource)];
 
   if (pipeline_->config.enable_ray_display()) {
@@ -341,7 +356,16 @@ void GBufferPass::display_rays(RenderContext const& ctx,
 void GBufferPass::display_quads(RenderContext const& ctx,
                                 SerializedScene const& scene,
                                 CameraMode eye,
-                                std::size_t viewid) {
+                                std::size_t viewid) 
+{
+
+  if (!ubershaders_.count(typeid(TriMeshRessource))) {
+    auto ubershader = TriMeshRessource().create_ubershader();
+    ubershader->cleanup(ctx);
+    ubershader->create(cached_materials_);
+    ubershaders_[typeid(TriMeshRessource)] = ubershader;
+  }
+
   auto meshubershader = ubershaders_[typeid(TriMeshRessource)];
 
   if (!scene.textured_quads_.empty()) {
@@ -414,7 +438,7 @@ void GBufferPass::update_ubershader_from_scene(RenderContext const& ctx,
           if (ressource) {
             auto ubershader = ressource->create_ubershader();
             ubershader->cleanup(ctx);
-            ubershader->create(materials_);
+            ubershader->create(cached_materials_);
             ubershaders_[type] = ubershader;
           }
         }
@@ -456,11 +480,11 @@ void GBufferPass::initialize_state_objects(RenderContext const& ctx) {
 void GBufferPass::apply_material_mapping(
     std::set<std::string> const& materials) 
 {
-  materials_ = materials;
+  cached_materials_ = materials;
 
   for ( auto const& shader : ubershaders_ )
   {
-    shader.second->create(materials_);
+    shader.second->create(cached_materials_);
   }
   
 }

@@ -99,6 +99,7 @@ namespace gua {
       if (material_ != "")
       {
         if (!MaterialDatabase::instance()->is_supported(material_) &&
+
             material_ != Video3DUberShader::default_video_material_name() )
         {
           auto mat = std::make_shared<Material>(material_, MaterialDescription(material_));
