@@ -51,8 +51,6 @@ macro(_BULLET_APPEND_LIBRARIES _list _release)
    endif()
 endmacro()
 
-MESSAGE(${BULLET_ROOT}/include/bullet)
-
 find_path(BULLET_INCLUDE_DIR NAMES btBulletCollisionCommon.h
   HINTS
     ${BULLET_ROOT}/inc

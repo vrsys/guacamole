@@ -515,6 +515,7 @@ KinectCalibrationFile const& Video3DRessource::calibration_file(unsigned i) cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 /*virtual*/ std::shared_ptr<GeometryUberShader> Video3DRessource::create_ubershader() const {
   return std::make_shared<Video3DUberShader>();
 }

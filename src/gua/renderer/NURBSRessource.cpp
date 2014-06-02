@@ -366,6 +366,7 @@ void NURBSRessource::initialize_transform_feedback(RenderContext const& context)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 /*virtual*/ std::shared_ptr<GeometryUberShader> NURBSRessource::create_ubershader() const {
   return std::make_shared<NURBSUberShader>();
 }

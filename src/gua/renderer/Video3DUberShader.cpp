@@ -44,6 +44,7 @@ namespace gua {
 
 Video3DUberShader::Video3DUberShader()
   : GeometryUberShader()
+
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -426,6 +427,7 @@ void Video3DUberShader::draw(RenderContext const& ctx,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 
 /*static*/ std::string const Video3DUberShader::default_video_material_name() {
   return "gua_video3d";

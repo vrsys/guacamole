@@ -41,6 +41,7 @@ namespace gua {
                            math::mat4 const& transform)
   : GeometryNode(name, file, material, transform)
   {
+
     // approximately local space
     bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-3.0, -0.1,-3.0),
                                                   math::vec3( 3.0, 2.5, 3.0)); 
@@ -99,6 +100,7 @@ namespace gua {
       if (material_ != "")
       {
         if (!MaterialDatabase::instance()->is_supported(material_) &&
+
             material_ != Video3DUberShader::default_video_material_name() )
         {
           auto mat = std::make_shared<Material>(material_, MaterialDescription(material_));

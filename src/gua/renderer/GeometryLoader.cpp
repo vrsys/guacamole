@@ -25,9 +25,9 @@
 // guacamole headers
 #include <gua/databases/MaterialDatabase.hpp>
 
+
 // external headers
 
 namespace gua {
-
 
 }  // namespace gua
