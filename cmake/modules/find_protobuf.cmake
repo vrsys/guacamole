@@ -1,9 +1,11 @@
 SET(PROTOBUF_INCLUDE_SEARCH_DIRS
     /opt/protobuf/current/src
+	${GLOBAL_EXT_DIR}/inc/protobuf
 )
 
 SET(PROTOBUF_LIBRARY_SEARCH_DIRS
     /opt/protobuf/current/src/.libs
+	${GLOBAL_EXT_DIR}/lib
 )
 
 message("-- checking for protobuf")
@@ -13,6 +15,7 @@ IF (NOT PROTOBUF_INCLUDE_DIRS)
     SET(_PROTOBUF_FOUND_INC_DIRS "")
 
     FOREACH(_SEARCH_DIR ${PROTOBUF_INCLUDE_SEARCH_DIRS})
+	MESSAGE(${_SEARCH_DIR})
         FIND_PATH(_CUR_SEARCH
                 NAMES google/protobuf/stubs/common.h
                 PATHS ${_SEARCH_DIR}
@@ -39,10 +42,18 @@ IF (        PROTOBUF_INCLUDE_DIRS
     SET(_PROTOBUF_FOUND_LIB_DIR "")
     SET(_PROTOBUF_POSTFIX "")
 
+	IF (UNIX)
+		SET(_PROTOBUF_LIB_FILENAME libprotobuf.so)
+	elseif (WIN32)
+		SET(_PROTOBUF_LIB_FILENAME libprotobuf.lib)
+	endif(UNIX)
+	
+	
     FOREACH(_SEARCH_DIR ${PROTOBUF_LIBRARY_SEARCH_DIRS})
         FIND_PATH(_CUR_SEARCH
-                NAMES libprotobuf.so
+                NAMES ${_PROTOBUF_LIB_FILENAME}
                 PATHS ${_SEARCH_DIR}
+				PATH_SUFFIXES debug release 
                 NO_DEFAULT_PATH)
         IF (_CUR_SEARCH)
             LIST(APPEND _PROTOBUF_FOUND_LIB_DIR ${_SEARCH_DIR})
@@ -57,7 +68,7 @@ IF (        PROTOBUF_INCLUDE_DIRS
     ENDIF (NOT _PROTOBUF_FOUND_LIB_DIR)
     
     FOREACH(_LIB_DIR ${_PROTOBUF_FOUND_LIB_DIR})
-        LIST(APPEND PROTOBUF_LIBRARIES ${_LIB_DIR}/libprotobuf.so)
+        LIST(APPEND PROTOBUF_LIBRARIES ${_PROTOBUF_LIB_FILENAME})
     ENDFOREACH(_LIB_DIR ${_PROTOBUF_FOUND_INC_DIRS})
     
 
