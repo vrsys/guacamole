@@ -183,7 +183,7 @@ add_subdirectory(plugins)
 # Testing
 ################################################################
 
-set (GUACAMOLE_TESTS "false" CACHE BOOL "Set to enable testing.")
+option (GUACAMOLE_TESTS "Enable testing." OFF)
 
 if (GUACAMOLE_TESTS)
   add_subdirectory(tests)
