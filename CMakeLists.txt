@@ -20,7 +20,7 @@ option (GUACAMOLE_PBR_SUPPORT "Set to enable PBR (point based rendering) support
 cmake_minimum_required(VERSION 2.8.0)
 
 if (UNIX)
-	find_package(PkgConfig)
+  find_package(PkgConfig)
 endif(UNIX)
 
 # Location where cmake first looks for modules.
@@ -30,8 +30,14 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 # write Config.h
 ###############################################################################
 
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/config.hpp.in
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/config.hpp )
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/config.hpp.in
+  ${PROJECT_BINARY_DIR}/include/gua/config.hpp
+  )
+
+# add the binary tree to the search path for include files
+# so that we will find the generated config.hpp
+include_directories("${PROJECT_BINARY_DIR}/include")
 
 ################################################################
 # Configure and find libraries
