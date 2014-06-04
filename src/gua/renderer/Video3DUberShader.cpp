@@ -44,14 +44,7 @@ namespace gua {
 
 Video3DUberShader::Video3DUberShader()
   : GeometryUberShader()
-{
-  if (!MaterialDatabase::instance()->is_supported(default_video_material_name()))
-  {
-    create_resource_material(default_video_material_name(),
-      Resources::materials_gua_video3d_gsd,
-      Resources::materials_gua_video3d_gmd);
-  }
-}
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -434,9 +427,19 @@ void Video3DUberShader::draw(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::default_video_material_name() const
-{
+/*static*/ std::string const Video3DUberShader::default_video_material_name() {
   return "gua_video3d";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*static*/ void Video3DUberShader::initialize_video_material() {
+  if (!MaterialDatabase::instance()->is_supported(default_video_material_name()))
+  {
+    create_resource_material(default_video_material_name(),
+      Resources::materials_gua_video3d_gsd,
+      Resources::materials_gua_video3d_gmd);
+  }
 }
 
 }

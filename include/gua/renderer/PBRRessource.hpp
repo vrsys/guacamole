@@ -86,7 +86,7 @@ class PBRRessource : public GeometryRessource {
                 Node* owner, std::set<PickResult>& hits);
 
 
-  /*virtual*/ GeometryUberShader* get_ubershader() const;
+  /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
  private:
 
