@@ -1,0 +1,37 @@
+
+{
+	"final_shading_stage" : 
+	{
+		"body" : "gua_color = out_color;\n",
+		"functions" : "",
+		"outputs" : null,
+		"uniforms" : null
+	},
+	"gbuffer_fragment_stage" : 
+	{
+		"body" : "",
+		"functions" : "",
+		"outputs" : 
+		{
+			"color_varying" : "vec3"
+		},
+		"uniforms" : null
+	},
+	"gbuffer_vertex_stage" : 
+	{
+		"body" : "gua_position = gua_world_position;\n",
+		"functions" : "",
+		"outputs" : null,
+		"uniforms" : null
+	},
+	"lbuffer_stage" : 
+	{
+		"body" : "out_color = color_varying;\n//out_color += vec3(0.0, 1.0, 0.0);",
+		"functions" : "",
+		"outputs" : 
+		{
+			"out_color" : "vec3"
+		},
+		"uniforms" : null
+	}
+}
