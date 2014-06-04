@@ -103,8 +103,7 @@ class Video3DRessource : public GeometryRessource {
   void                            update_buffers (RenderContext const& context) const;
 
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
-
-  /*virtual*/ GeometryUberShader* get_ubershader() const;
+  /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
  private:
 

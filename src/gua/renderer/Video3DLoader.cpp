@@ -49,7 +49,7 @@ namespace gua {
       GeometryDatabase::instance()->add(
         file_name, std::make_shared<Video3DRessource>(file_name));
 
-      auto result = std::make_shared<Video3DNode>(node_name, file_name, Singleton<Video3DUberShader>::instance()->default_video_material_name() );
+      auto result = std::make_shared<Video3DNode>(node_name, file_name, Video3DUberShader::default_video_material_name() );
       result->update_cache();
 
       return result;
