@@ -198,6 +198,16 @@ if (GUACAMOLE_TESTS)
 endif (GUACAMOLE_TESTS)
 
 ################################################################
+# Examples
+################################################################
+
+option (GUACAMOLE_EXAMPLES "Build examples." OFF)
+
+if (GUACAMOLE_EXAMPLES)
+  add_subdirectory(examples)
+endif (GUACAMOLE_EXAMPLES)
+
+################################################################
 # Summary
 ################################################################
 
