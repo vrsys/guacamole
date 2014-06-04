@@ -52,7 +52,6 @@ include(find_compiler)
 include(FindSchism)
 include(FindBoost)
 include(FindZMQ)
-include(find_protobuf)
 
 if (UNIX)
 	set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
@@ -64,6 +63,7 @@ find_package(Bullet REQUIRED)
 find_package(Json REQUIRED)
 
 IF (GUACAMOLE_PBR_SUPPORT)
+  include(find_protobuf)
   set(PBR_ROOT "/opt/pbr/gualod/trunk/pbr" CACHE PATH "Set to your PBR install path.")
   find_package(PBR REQUIRED)
 endif (GUACAMOLE_PBR_SUPPORT)
@@ -77,7 +77,6 @@ set(LIB_PATHS
     ${BULLET_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
     ${ZMQ_LIBRARY_DIRS}
-    ${PROTOBUF_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS
@@ -91,12 +90,14 @@ set(INCLUDE_PATHS
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
     ${ZMQ_INCLUDE_DIRS}
-    ${PROTOBUF_INCLUDE_DIRS}
 )
 
 IF (GUACAMOLE_PBR_SUPPORT)
   LIST(APPEND LIB_PATHS ${PBR_LIBRARY_DIRS})
   LIST(APPEND INCLUDE_PATHS ${PBR_INCLUDE_DIRS})
+
+  LIST(APPEND LIB_PATHS ${PROTOBUF_LIBRARY_DIRS})
+  LIST(APPEND INCLUDE_PATHS ${PROTOBUF_INCLUDE_DIRS})
 ENDIF (GUACAMOLE_PBR_SUPPORT)
 
 if (NOT CMAKE_BUILD_TYPE)
