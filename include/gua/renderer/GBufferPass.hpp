@@ -102,7 +102,7 @@ class GBufferPass : public GeometryPass {
 
   void initialize_state_objects(RenderContext const& ctx);
 
-  void initialize_trimesh_ubershader() const;
+  void initialize_trimesh_ubershader(RenderContext const& ctx) const;
 
   private: // attributes
 
