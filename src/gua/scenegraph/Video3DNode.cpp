@@ -41,7 +41,6 @@ namespace gua {
                            math::mat4 const& transform)
   : GeometryNode(name, file, material, transform)
   {
-
     // approximately local space
     bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-3.0, -0.1,-3.0),
                                                   math::vec3( 3.0, 2.5, 3.0)); 

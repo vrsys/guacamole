@@ -7,7 +7,7 @@ PROJECT(GUACAMOLE CXX)
 # version number
 set(GUACAMOLE_MAJOR 0)
 set(GUACAMOLE_MINOR 8)
-set(GUACAMOLE_PATCH 0)
+set(GUACAMOLE_PATCH 3)
 set(GUACAMOLE_VERSION ${GUACAMOLE_MAJOR}.${GUACAMOLE_MINOR}.${GUACAMOLE_PATCH})
 set(GUACAMOLE_DESCRIPTION "GUACAMOLE - an astonishing virtual reality engine")
 set(GUACAMOLE_HOMEPAGE "http://www.GUACAMOLE.org")
@@ -20,7 +20,7 @@ option (GUACAMOLE_PBR_SUPPORT "Set to enable PBR (point based rendering) support
 cmake_minimum_required(VERSION 2.8.0)
 
 if (UNIX)
-	find_package(PkgConfig)
+  find_package(PkgConfig)
 endif(UNIX)
 
 # Location where cmake first looks for modules.
@@ -30,8 +30,14 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 # write Config.h
 ###############################################################################
 
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/config.hpp.in
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/config.hpp )
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/config.hpp.in
+  ${PROJECT_BINARY_DIR}/include/gua/config.hpp
+  )
+
+# add the binary tree to the search path for include files
+# so that we will find the generated config.hpp
+include_directories("${PROJECT_BINARY_DIR}/include")
 
 ################################################################
 # Configure and find libraries
@@ -52,7 +58,6 @@ include(find_compiler)
 include(FindSchism)
 include(FindBoost)
 include(FindZMQ)
-include(find_protobuf)
 
 if (UNIX)
 	set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
@@ -64,6 +69,7 @@ find_package(Bullet REQUIRED)
 find_package(Json REQUIRED)
 
 IF (GUACAMOLE_PBR_SUPPORT)
+  include(find_protobuf)
   set(PBR_ROOT "/opt/pbr/gualod/trunk/pbr" CACHE PATH "Set to your PBR install path.")
   find_package(PBR REQUIRED)
 endif (GUACAMOLE_PBR_SUPPORT)
@@ -77,7 +83,6 @@ set(LIB_PATHS
     ${BULLET_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
     ${ZMQ_LIBRARY_DIRS}
-    ${PROTOBUF_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS
@@ -91,12 +96,14 @@ set(INCLUDE_PATHS
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
     ${ZMQ_INCLUDE_DIRS}
-    ${PROTOBUF_INCLUDE_DIRS}
 )
 
 IF (GUACAMOLE_PBR_SUPPORT)
   LIST(APPEND LIB_PATHS ${PBR_LIBRARY_DIRS})
   LIST(APPEND INCLUDE_PATHS ${PBR_INCLUDE_DIRS})
+
+  LIST(APPEND LIB_PATHS ${PROTOBUF_LIBRARY_DIRS})
+  LIST(APPEND INCLUDE_PATHS ${PROTOBUF_INCLUDE_DIRS})
 ENDIF (GUACAMOLE_PBR_SUPPORT)
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -183,13 +190,23 @@ add_subdirectory(plugins)
 # Testing
 ################################################################
 
-set (GUACAMOLE_TESTS "false" CACHE BOOL "Set to enable testing.")
+option (GUACAMOLE_TESTS "Enable testing." OFF)
 
 if (GUACAMOLE_TESTS)
   add_subdirectory(tests)
   enable_testing()
   add_test( NAME testGUA COMMAND runTests )
 endif (GUACAMOLE_TESTS)
+
+################################################################
+# Examples
+################################################################
+
+option (GUACAMOLE_EXAMPLES "Build examples." OFF)
+
+if (GUACAMOLE_EXAMPLES)
+  add_subdirectory(examples)
+endif (GUACAMOLE_EXAMPLES)
 
 ################################################################
 # Summary

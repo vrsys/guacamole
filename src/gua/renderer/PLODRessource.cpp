@@ -143,8 +143,8 @@ void PLODRessource::ray_test(Ray const& ray, PickResult::Options options,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*virtual*/ GeometryUberShader* PLODRessource::get_ubershader() const {
-  return Singleton<PLODUberShader>::instance();
+/*virtual*/ std::shared_ptr<GeometryUberShader> PLODRessource::create_ubershader() const {
+  return std::make_shared<PLODUberShader>();
 }
 
 }

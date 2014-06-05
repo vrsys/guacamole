@@ -136,8 +136,8 @@ void PBRRessource::ray_test(Ray const& ray, PickResult::Options options,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*virtual*/ GeometryUberShader* PBRRessource::get_ubershader() const {
-  return Singleton<PBRUberShader>::instance();
+/*virtual*/ std::shared_ptr<GeometryUberShader> PBRRessource::create_ubershader() const {
+  return std::make_shared<PBRUberShader>();
 }
 
 }
