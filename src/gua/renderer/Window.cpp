@@ -97,13 +97,8 @@ void Window::open() {
   scm::gl::wm::surface::format_desc window_format(
       scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_D24_S8, true, false);
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC
   scm::gl::wm::context::attribute_desc context_attribs(
       4, 3, false, false, false);
-#else
-  scm::gl::wm::context::attribute_desc context_attribs(
-      4, 2, false, false, false);
-#endif
 
   ctx_.display =
       scm::gl::wm::display_ptr(new scm::gl::wm::display(config.get_display_name()));
