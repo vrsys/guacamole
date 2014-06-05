@@ -180,9 +180,9 @@ class GUA_DLL Pipeline {
     return prerender_pipelines_;
   }
 
-
   inline float get_application_fps() const { return application_fps_; }
   inline float get_rendering_fps() const { return rendering_fps_; }
+  inline RenderContext const& get_context() const { return *context_; };
 
   SerializedScene const& get_current_scene(CameraMode mode) const;
 

@@ -30,13 +30,14 @@
 #include <gua/traverse.hpp>
 
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/TriMeshUberShader.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/GeometryRessource.hpp>
 #include <gua/renderer/GeometryUberShader.hpp>
 
 #include <gua/scenegraph/GeometryNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
+#include <gua/scenegraph/TriMeshNode.hpp>
 
 #include <gua/databases.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
@@ -54,7 +55,7 @@ GBufferPass::GBufferPass(Pipeline* pipeline)
       bbox_rasterizer_state_(),
       depth_stencil_state_() 
 {
-  initialize_trimesh_ubershader();
+  initialize_trimesh_ubershader(pipeline->get_context());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -280,14 +281,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
 void GBufferPass::display_bboxes(RenderContext const& ctx,
                                  SerializedScene const& scene,
                                  std::size_t viewid) {
-  if (!ubershaders_.count(typeid(TriMeshRessource))) {
-    auto ubershader = TriMeshRessource().create_ubershader();
-    ubershader->cleanup(ctx);
-    ubershader->create(cached_materials_);
-    ubershaders_[typeid(TriMeshRessource)] = ubershader;
-  }
 
-  auto meshubershader = ubershaders_[typeid(TriMeshRessource)];
+  
+  auto meshubershader = ubershaders_[typeid(TriMeshNode)];
 
   if (pipeline_->config.enable_bbox_display()) {
     meshubershader->get_program()->use(ctx);
@@ -323,14 +319,7 @@ void GBufferPass::display_rays(RenderContext const& ctx,
                                SerializedScene const& scene,
                                std::size_t viewid) 
 {
-  if (!ubershaders_.count(typeid(TriMeshRessource))) {
-    auto ubershader = TriMeshRessource().create_ubershader();
-    ubershader->cleanup(ctx);
-    ubershader->create(cached_materials_);
-    ubershaders_[typeid(TriMeshRessource)] = ubershader;
-  }
-
-  auto meshubershader = ubershaders_[typeid(TriMeshRessource)];
+  auto meshubershader = ubershaders_[typeid(TriMeshNode)];
 
   if (pipeline_->config.enable_ray_display()) {
     meshubershader->get_program()->use(ctx);
@@ -358,15 +347,7 @@ void GBufferPass::display_quads(RenderContext const& ctx,
                                 CameraMode eye,
                                 std::size_t viewid) 
 {
-
-  if (!ubershaders_.count(typeid(TriMeshRessource))) {
-    auto ubershader = TriMeshRessource().create_ubershader();
-    ubershader->cleanup(ctx);
-    ubershader->create(cached_materials_);
-    ubershaders_[typeid(TriMeshRessource)] = ubershader;
-  }
-
-  auto meshubershader = ubershaders_[typeid(TriMeshRessource)];
+  auto meshubershader = ubershaders_[typeid(TriMeshNode)];
 
   if (!scene.textured_quads_.empty()) {
     meshubershader->get_program()->use(ctx);
@@ -492,16 +473,27 @@ void GBufferPass::apply_material_mapping(
 ////////////////////////////////////////////////////////////////////////////////
 
 LayerMapping const* GBufferPass::get_gbuffer_mapping() const {
-  return ubershaders_[typeid(TriMeshRessource)]->get_gbuffer_mapping();
+  std::type_index trimesh_type = typeid(TriMeshNode);
+
+  if (!ubershaders_.count(trimesh_type)) {
+    // trimesh shader has not been created yet -> return dummy mapping
+    return TriMeshRessource().create_ubershader()->get_gbuffer_mapping();
+  } else {
+    return ubershaders_[trimesh_type]->get_gbuffer_mapping();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBufferPass::initialize_trimesh_ubershader() const
+void GBufferPass::initialize_trimesh_ubershader(RenderContext const& ctx) const
 {
-  if (!ubershaders_.count(typeid(TriMeshRessource)))
-  {
-    ubershaders_[typeid(TriMeshRessource)] = TriMeshRessource().create_ubershader();
+  std::type_index trimesh_type = typeid(TriMeshNode);
+
+  if (!ubershaders_.count(trimesh_type)) {
+    auto ubershader = TriMeshRessource().create_ubershader();
+    ubershader->cleanup(ctx);
+    ubershader->create(cached_materials_);
+    ubershaders_[trimesh_type] = ubershader;
   }
 }
 
