@@ -53,21 +53,6 @@ ShadowMap::~ShadowMap() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// bool ShadowMap::pre_compile_shaders(RenderContext const& ctx) {
-
-//     bool success(true);
-
-//     for (auto const& shader : pipeline_->get_geometry_ubershaders() )
-//     {
-//       success &= shader.second->upload_to(ctx);
-//     }
-
-//     return success;
-// }
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
     //check whether shadow map size is sufficient
     if (buffer_ && buffer_->width() < map_size) {

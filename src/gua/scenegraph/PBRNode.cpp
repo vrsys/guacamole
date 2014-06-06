@@ -71,6 +71,8 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
   std::shared_ptr<Node> PBRNode::copy() const {
-    return std::make_shared<PBRNode>(get_name(), filename_, material_, get_transform());
+    auto result(std::make_shared<PBRNode>(get_name(), filename_, material_, get_transform()));
+    result->shadow_mode_ = shadow_mode_;
+    return result;
   }
 }

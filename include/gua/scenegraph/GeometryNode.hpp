@@ -45,14 +45,6 @@ class GUA_DLL GeometryNode : public Node {
 
   public:
 
-
-
-    /**
-    * A value describing the shadow's quality.
-    */
-    ShadowMode get_shadow_mode() const { return shadow_mode_; }
-    void set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
-
     /**
      * Constructor.
      *
@@ -95,6 +87,12 @@ class GUA_DLL GeometryNode : public Node {
     void set_material(std::string const& v);
 
     /**
+    * A value describing the shadow's quality.
+    */
+    ShadowMode get_shadow_mode() const { return shadow_mode_; }
+    void set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
+
+    /**
     * Updates bounding box by accessing the ressource in the databse
     */
     virtual void update_bounding_box() const;
@@ -118,7 +116,7 @@ class GUA_DLL GeometryNode : public Node {
     std::string material_;
 
     ShadowMode shadow_mode_;
-    bool filename_changed_;    
+    bool filename_changed_;
     bool material_changed_;
 };
 

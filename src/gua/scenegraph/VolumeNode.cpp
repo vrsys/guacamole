@@ -69,9 +69,6 @@ namespace gua {
 
     // first of all, check bbox
     auto box_hits(ray.intersect(bounding_box_));
-
-	return;
-
   }
 
   /////////////////////////////////////////////////////////////////////////////

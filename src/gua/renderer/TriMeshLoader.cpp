@@ -73,8 +73,6 @@ namespace gua {
     }
     else {
 
-      std::cout << file_name << " " << flags << std::endl;
-
       bool fileload_succeed = false;
 
       if (is_supported(file_name))

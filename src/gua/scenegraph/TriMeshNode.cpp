@@ -243,6 +243,8 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
 
   std::shared_ptr<Node> TriMeshNode::copy() const {
-    return std::make_shared<TriMeshNode>(get_name(), filename_, material_, get_transform());
+    auto result(std::make_shared<TriMeshNode>(get_name(), filename_, material_, get_transform()));
+    result->shadow_mode_ = shadow_mode_;
+    return result;
   }
 }

@@ -126,7 +126,9 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
   std::shared_ptr<Node> NURBSNode::copy() const {
-    return std::make_shared<NURBSNode>(get_name(), filename_, material_, get_transform());
+    auto result(std::make_shared<NURBSNode>(get_name(), filename_, material_, get_transform()));
+    result->shadow_mode_ = shadow_mode_;
+    return result;
   }
 
 }

@@ -83,7 +83,6 @@ bool LightingPass::pre_compile_shaders(RenderContext const& ctx) {
     bool success(true);
 
     if (shader_) success &= shader_->upload_to(ctx);
-    // if (success) success = shadow_map_.pre_compile_shaders(ctx);
 
     return success;
 }
