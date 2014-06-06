@@ -112,7 +112,7 @@ class GUA_DLL GeometryNode : public Node {
 
   protected:
 
-    virtual std::shared_ptr<Node> copy() const = 0;
+    // virtual std::shared_ptr<Node> copy() const = 0;
 
     std::string filename_;
     std::string material_;

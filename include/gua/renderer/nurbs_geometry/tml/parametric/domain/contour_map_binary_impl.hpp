@@ -48,10 +48,10 @@ template <typename value_t> void contour_map_binary<value_t>::initialize() {
       boost::bind(&base_type::contour_segment_type::clip_horizontal, _1));
 
   std::set<typename base_type::value_type> vsplits;
-  _determine_splits(vsplits, point_type::v, this->_contour_segments);
+  this->_determine_splits(vsplits, point_type::v, this->_contour_segments);
 
   std::set<interval_type> vpartition;
-  _intervals_from_splits(vsplits, vpartition);
+  this->_intervals_from_splits(vsplits, vpartition);
 
   BOOST_FOREACH(interval_type const & v_interval, vpartition) {
     contour_segment_container segments_in_v_interval;
@@ -63,10 +63,10 @@ template <typename value_t> void contour_map_binary<value_t>::initialize() {
     }
 
     std::set<value_type> usplits;
-    _determine_splits(usplits, point_type::u, segments_in_v_interval);
+    this->_determine_splits(usplits, point_type::u, segments_in_v_interval);
 
     std::set<interval_type> upartition;
-    _intervals_from_splits(usplits, upartition);
+    this->_intervals_from_splits(usplits, upartition);
 
     contour_interval cells_in_v_interval;
     value_type umin = usplits.empty() ? 0 : *usplits.begin();
@@ -77,12 +77,12 @@ template <typename value_t> void contour_map_binary<value_t>::initialize() {
     BOOST_FOREACH(interval_type const & u_interval, upartition) {
       contour_cell cell;
 
-      _contours_in_interval(u_interval,
+      this->_contours_in_interval(u_interval,
                             point_type::u,
                             segments_in_v_interval,
                             cell.overlapping_segments);
 
-      std::size_t intersections = _contours_greater(
+      std::size_t intersections = this->_contours_greater(
           u_interval.center(), point_type::u, segments_in_v_interval);
       cell.inside = (intersections % 2 == 1);
       cell.interval_u = u_interval;

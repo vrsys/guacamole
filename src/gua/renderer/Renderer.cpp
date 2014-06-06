@@ -54,7 +54,7 @@ Renderer::~Renderer() {
   for (auto& rc : render_clients_) { rc.second.join(); }
 }
 
-void Renderer::renderclient(Mailbox& in, Pipeline* pipe) {
+void Renderer::renderclient(Mailbox in, Pipeline* pipe) {
   FpsCounter fpsc(20);
   fpsc.start();
 
@@ -73,7 +73,7 @@ Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
     auto p = spawnDoublebufferred<Item>();
     render_clients_.emplace_back(
         std::make_pair(p.first,
-          std::thread(&Renderer::renderclient, this, p.second, pipe)));
+          std::thread(Renderer::renderclient, p.second, pipe)));
   }
 }
 
