@@ -75,7 +75,7 @@ class ShadowMap {
               float split_4,
               float near_clipping_in_sun_direction);
 
-  bool pre_compile_shaders(RenderContext const& ctx);
+  // bool pre_compile_shaders(RenderContext const& ctx);
 
   GBuffer*                       get_buffer() const {return buffer_;}
   std::vector<math::mat4> const& get_projection_view_matrices() const {return projection_view_matrices_;}

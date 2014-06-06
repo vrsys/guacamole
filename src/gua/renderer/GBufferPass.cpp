@@ -53,7 +53,7 @@ GBufferPass::GBufferPass(Pipeline* pipeline)
       bfc_rasterizer_state_(),
       no_bfc_rasterizer_state_(),
       bbox_rasterizer_state_(),
-      depth_stencil_state_() 
+      depth_stencil_state_()
 {
   initialize_trimesh_ubershader(pipeline->get_context());
 }
@@ -83,21 +83,22 @@ void GBufferPass::create(
 ////////////////////////////////////////////////////////////////////////////////
 
 void GBufferPass::cleanup(RenderContext const& ctx) {
-  Pass::cleanup(ctx); 
+  Pass::cleanup(ctx);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 bool GBufferPass::pre_compile_shaders(const gua::RenderContext& ctx) {
-  bool success{true};
+  bool success(true);
 
-    for (auto const& shader : ubershaders_) {
-      success &= shader.second->upload_to(ctx);
-    }
-
-    return success;
+  for (auto const& shader : ubershaders_) {
+    success &= shader.second->upload_to(ctx);
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
+  return success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void GBufferPass::rendering(SerializedScene const& scene,
                             SceneGraph const& graph,
@@ -282,7 +283,7 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
                                  SerializedScene const& scene,
                                  std::size_t viewid) {
 
-  
+
   auto meshubershader = ubershaders_[typeid(TriMeshNode)];
 
   if (pipeline_->config.enable_bbox_display()) {
@@ -317,7 +318,7 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
 
 void GBufferPass::display_rays(RenderContext const& ctx,
                                SerializedScene const& scene,
-                               std::size_t viewid) 
+                               std::size_t viewid)
 {
   auto meshubershader = ubershaders_[typeid(TriMeshNode)];
 
@@ -345,7 +346,7 @@ void GBufferPass::display_rays(RenderContext const& ctx,
 void GBufferPass::display_quads(RenderContext const& ctx,
                                 SerializedScene const& scene,
                                 CameraMode eye,
-                                std::size_t viewid) 
+                                std::size_t viewid)
 {
   auto meshubershader = ubershaders_[typeid(TriMeshNode)];
 
@@ -459,7 +460,7 @@ void GBufferPass::initialize_state_objects(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GBufferPass::apply_material_mapping(
-    std::set<std::string> const& materials) 
+    std::set<std::string> const& materials)
 {
   cached_materials_ = materials;
 
@@ -467,7 +468,7 @@ void GBufferPass::apply_material_mapping(
   {
     shader.second->create(cached_materials_);
   }
-  
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -288,7 +288,7 @@ void PostFXPass::init_resources(RenderContext const& ctx) {
 
 void PostFXPass::render_scene(Camera const& camera,
                               SceneGraph const&,
-                              RenderContext const& ctx, 
+                              RenderContext const& ctx,
                               std::size_t viewid) {
     init_resources(ctx);
 
@@ -806,16 +806,18 @@ void PostFXPass::print_shaders(std::string const& directory,
 
 bool PostFXPass::pre_compile_shaders(RenderContext const& ctx) {
 
-    for (auto shader: postfx_shaders_) {
-      if (shader) shader->upload_to(ctx);
-    }
+  bool success(true);
 
-    if (god_ray_shader_)            return god_ray_shader_->upload_to(ctx);
-    if (fullscreen_texture_shader_) return fullscreen_texture_shader_->upload_to(ctx);
-    if (glow_shader_)               return glow_shader_->upload_to(ctx);
-    if (luminance_shader_)          return luminance_shader_->upload_to(ctx);
+  for (auto shader: postfx_shaders_) {
+    if (shader) success &= shader->upload_to(ctx);
+  }
 
-    return false;
+  if (god_ray_shader_)            success &= god_ray_shader_->upload_to(ctx);
+  if (fullscreen_texture_shader_) success &= fullscreen_texture_shader_->upload_to(ctx);
+  if (glow_shader_)               success &= glow_shader_->upload_to(ctx);
+  if (luminance_shader_)          success &= luminance_shader_->upload_to(ctx);
+
+  return success;
 }
 
 }
