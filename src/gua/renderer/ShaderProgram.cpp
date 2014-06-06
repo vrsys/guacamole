@@ -233,10 +233,9 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
         // if (programs_[context.id]->info_log() != "")
         //   std::cout << programs_[context.id]->info_log().c_str() << std::endl;
 
-        return true;
     }
 
-    return false;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

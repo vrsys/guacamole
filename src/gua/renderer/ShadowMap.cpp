@@ -47,24 +47,9 @@ ShadowMap::ShadowMap(Pipeline* pipeline)
 ////////////////////////////////////////////////////////////////////////////////
 
 ShadowMap::~ShadowMap() {
-    if (buffer_) 
+    if (buffer_)
       delete buffer_;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool ShadowMap::pre_compile_shaders(RenderContext const& ctx) {
-
-    bool success(true);
-
-    for (auto const& shader : pipeline_->get_geometry_ubershaders() )
-    {
-      success &= shader.second->upload_to(ctx);
-    }
-
-    return success;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -96,7 +81,7 @@ void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::cleanup(RenderContext const& context) 
+void ShadowMap::cleanup(RenderContext const& context)
 {
   if (buffer_) buffer_->remove_buffers(context);
 }
@@ -131,7 +116,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
     GeometryUberShader* ubershader = nullptr;
 
     // get appropriate ubershader
-    if (!type.second.empty()) 
+    if (!type.second.empty())
     {
       auto const& filename = type.second.front()->get_filename();
       auto geometry = GeometryDatabase::instance()->lookup(filename);
