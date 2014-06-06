@@ -79,7 +79,7 @@ class GUA_DLL Renderer {
   typedef std::shared_ptr<gua::concurrent::Doublebuffer<Item> > Mailbox;
   typedef std::pair<Mailbox, std::thread> Renderclient;
 
-  void renderclient(Mailbox& in, Pipeline* pipe);
+  static void renderclient(Mailbox in, Pipeline* pipe);
 
   std::vector<Renderclient> render_clients_;
   FpsCounter application_fps_;
