@@ -98,7 +98,7 @@ void Window::open() {
       scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_D24_S8, true, false);
 
   scm::gl::wm::context::attribute_desc context_attribs(
-      4, 3, false, false, false);
+      4, 3, false, config.get_debug(), false);
 
   ctx_.display =
       scm::gl::wm::display_ptr(new scm::gl::wm::display(config.get_display_name()));
@@ -135,6 +135,9 @@ void Window::open() {
                                                         scm::gl::FUNC_ONE,
                                                         scm::gl::FUNC_ONE,
                                                         scm::gl::FUNC_ONE);
+  if (config.get_debug()) {
+    ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,5 +302,17 @@ void Window::display(std::shared_ptr<Texture2D> const& texture,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Window::DebugOutput::operator()(scm::gl::debug_source source, 
+                                     scm::gl::debug_type type, 
+                                     scm::gl::debug_severity severity, 
+                                     const std::string& message) const {
+
+  Logger::LOG_MESSAGE << "[Source: " << scm::gl::debug_source_string(source)
+                      << ", type: " << scm::gl::debug_type_string(type)
+                      << ", severity: " << scm::gl::debug_severity_string(severity)
+                      << "]: " << message << std::endl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 }
