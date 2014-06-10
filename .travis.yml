@@ -6,6 +6,13 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq g++-4.8 cmake libboost1.48-dev libunittest++-dev
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - cd externals/
+  # build schism
+  - git clone https://github.com/bernstein/schism.git schism
+  - cd schism/build && mkdir build && cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release ../cmake
+  - make
+  - cd ../../../..
 
 install: true
 
@@ -14,3 +21,4 @@ script: ./tests/runTravis.sh
 branches:
   only:
     - master
+    - feature/travis
