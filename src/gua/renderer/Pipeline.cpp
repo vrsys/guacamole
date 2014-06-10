@@ -89,9 +89,14 @@ Pipeline::~Pipeline() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::print_shaders(std::string const& directory) const {
-
+void Pipeline::print_shaders(std::string const& directory) const 
+{
   std::unique_lock<std::mutex> lock(upload_mutex_);
+
+  for (auto pass : passes_) {
+    pass->print_shaders();
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -74,6 +74,8 @@ class Pass {
   // derived classes should call upload_to() on all contained shaders
   virtual bool pre_compile_shaders(RenderContext const& ctx) = 0;
 
+  virtual void print_shaders() = 0;
+
   virtual void create(
       RenderContext const& ctx,
       std::vector<std::pair<BufferComponent,
