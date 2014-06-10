@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialDatabase.hpp>
-#include <gua/renderer/Video3DLoader.hpp> 
+#include <gua/renderer/Video3DLoader.hpp>
 #include <gua/renderer/Video3DUberShader.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/scenegraph/RayNode.hpp>
@@ -43,7 +43,7 @@ namespace gua {
   {
     // approximately local space
     bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-3.0, -0.1,-3.0),
-                                                  math::vec3( 3.0, 2.5, 3.0)); 
+                                                  math::vec3( 3.0, 2.5, 3.0));
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -62,12 +62,14 @@ namespace gua {
   /////////////////////////////////////////////////////////////////////////////
 
   std::shared_ptr<Node> Video3DNode::copy() const {
-    return std::make_shared<Video3DNode>(get_name(), filename_, material_, get_transform());
+    auto result(std::make_shared<Video3DNode>(get_name(), filename_, material_, get_transform()));
+    result->shadow_mode_ = shadow_mode_;
+    return result;
   }
 
   /////////////////////////////////////////////////////////////////////////////
 
-  /* virtual */ void Video3DNode::update_cache() 
+  /* virtual */ void Video3DNode::update_cache()
   {
     if (filename_changed_)
     {

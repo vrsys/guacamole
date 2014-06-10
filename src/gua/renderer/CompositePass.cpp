@@ -245,10 +245,12 @@ void CompositePass::print_shaders(std::string const& directory,
 
 bool CompositePass::pre_compile_shaders(RenderContext const& ctx) {
 
-    if (composite_shader_)            return composite_shader_->upload_to(ctx);
-    if (ray_generation_shader_)       return ray_generation_shader_->upload_to(ctx);
+  bool success(true);
 
-    return false;
+  if (composite_shader_)      success &= composite_shader_->upload_to(ctx);
+  if (ray_generation_shader_) success &= ray_generation_shader_->upload_to(ctx);
+
+  return success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
