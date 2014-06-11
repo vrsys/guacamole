@@ -8,6 +8,7 @@
 
 #include <iostream>
 
+
 namespace video3d{
 
   NetKinectArray::NetKinectArray(const std::vector<std::shared_ptr<KinectCalibrationFile>>& calib_files,
@@ -21,8 +22,7 @@ namespace video3d{
       m_depthsize_byte(depthsize_byte),
       m_buffer(0),
       m_buffer_back(0),
-      m_need_swap(false),
-      m_need_swap2(false)
+      m_need_swap(false)
       
   {
     init();
@@ -36,10 +36,9 @@ namespace video3d{
 
     {
       boost::mutex::scoped_lock lock(*m_mutex);
-      if(m_need_swap && m_need_swap2){
+      if(m_need_swap){
 	std::swap(m_buffer, m_buffer_back);
 	m_need_swap = false;
-	m_need_swap2 = false;
 	return true;
       }
     }
@@ -85,8 +84,8 @@ namespace video3d{
 
       zmq::message_t zmqm(message_size);
       socket.recv(&zmqm); // blocking
-
-      while(m_need_swap && m_need_swap2){
+      
+      while(m_need_swap){
 	;
       }
 
@@ -94,7 +93,6 @@ namespace video3d{
       { // swap
         boost::mutex::scoped_lock lock(*m_mutex);
         m_need_swap = true;
-        m_need_swap2 = true;
       }
 
     }

@@ -3,6 +3,8 @@
 
 #include <gua/renderer/video3d_geometry/KinectCalibrationFile.hpp>
 
+#include <atomic>
+
 namespace boost{
   class thread;
   class mutex;
@@ -35,8 +37,7 @@ namespace video3d{
     unsigned m_depthsize_byte;
     unsigned char* m_buffer;
     unsigned char* m_buffer_back;
-    bool m_need_swap;
-    bool m_need_swap2;
+    std::atomic<bool> m_need_swap;
 
   };
 
