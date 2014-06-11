@@ -80,9 +80,6 @@ namespace gua {
           Video3DLoader loader;
           loader.create_geometry_from_file("dummy", filename_);
         }
-        else {
-          Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": Type is not supported!" << std::endl;
-        }
       }
       else {
         Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": The name does not contain a type, file, id and flag parameter!" << std::endl;
