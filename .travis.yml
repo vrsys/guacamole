@@ -11,7 +11,7 @@ before_install:
   # build schism
   - git clone https://github.com/bernstein/schism.git schism
   - cd schism/build && mkdir build && cd build
-  - cmake -DCMAKE_BUILD_TYPE=Release ../cmake
+  - cmake -DCMAKE_BUILD_TYPE=Release -DSCM_BOOST_INC_DIR=/usr/include -DSCM_BOOST_LIB_DIR=/usr/lib ../cmake
   - make
   - cd ../../../..
 
