@@ -81,7 +81,7 @@ namespace gua {
           loader.create_geometry_from_file("dummy", filename_);
         }
         else {
-          Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": Type is not supported!" << std::endl;
+          // video already in database
         }
       }
       else {

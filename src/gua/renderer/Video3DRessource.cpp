@@ -320,8 +320,7 @@ void Video3DRessource::upload_video_textures(RenderContext const& ctx) const
   if ( color_texArrays_.size() > ctx.id ) {
     if (color_texArrays_[ctx.id]) {
       return;
-    }
-    else {
+    } else {
       // continue initialization
     }
   } else {
