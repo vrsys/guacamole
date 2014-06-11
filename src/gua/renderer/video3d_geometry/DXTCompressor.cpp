@@ -52,9 +52,9 @@ namespace mvt{
     _rgba_buff =       (byte*) memalign(16, rgba_size);
     _compressed_buff = (byte*) memalign(16, compressed_size);
     _storage = CompressDXT(_rgba_buff, _compressed_buff, _width, _height, _type, /*numthreads*/1);
-
+#if 0
     std::cerr << "DXTCompressor::init _storage size: "  <<  _storage << std::endl;
-
+#endif
 
 
 

@@ -80,9 +80,7 @@ namespace gua {
           Video3DLoader loader;
           loader.create_geometry_from_file("dummy", filename_);
         }
-        else {
           // video already in database
-        }
       }
       else {
         Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": The name does not contain a type, file, id and flag parameter!" << std::endl;
