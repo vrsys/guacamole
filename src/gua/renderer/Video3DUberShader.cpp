@@ -282,6 +282,8 @@ void Video3DUberShader::draw(RenderContext const& ctx,
                              Frustum const& /*frustum*/,
                              std::size_t viewid) const
 {
+  std::cout << ctx.id << std::endl;
+
   if (!GeometryDatabase::instance()->is_supported(ksfile_name) ||
       !MaterialDatabase::instance()->is_supported(material_name)) {
     gua::Logger::LOG_WARNING << "Video3DUberShader::draw(): No such video or material." << ksfile_name << ", " << material_name << std::endl;

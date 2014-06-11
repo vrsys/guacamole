@@ -203,6 +203,7 @@ class GUA_DLL Pipeline {
   void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 
+  bool validate_resolution() const;
   void set_context(RenderContext* ctx);
   void create_passes();
   void create_buffers();

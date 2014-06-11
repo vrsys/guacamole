@@ -215,8 +215,13 @@ void Video3DRessource::upload_to(RenderContext const& ctx) const
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
 {
-  if (proxy_vertices_.size() > ctx.id ) {
-    return;
+  if (proxy_vertices_.size() > ctx.id) {
+    if (proxy_vertices_[ctx.id]) {
+      return;
+    }
+    else {
+      // continue instantiation below
+    }
   } else {
     proxy_vertices_.resize(ctx.id + 1);
     proxy_indices_.resize(ctx.id + 1);
@@ -313,7 +318,12 @@ void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
 void Video3DRessource::upload_video_textures(RenderContext const& ctx) const
 {
   if ( color_texArrays_.size() > ctx.id ) {
-    return;
+    if (color_texArrays_[ctx.id]) {
+      return;
+    }
+    else {
+      // continue initialization
+    }
   } else {
     rstate_solid_.resize(ctx.id + 1);
     color_texArrays_.resize(ctx.id + 1);

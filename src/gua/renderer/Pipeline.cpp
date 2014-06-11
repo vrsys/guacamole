@@ -89,9 +89,14 @@ Pipeline::~Pipeline() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::print_shaders(std::string const& directory) const {
-
+void Pipeline::print_shaders(std::string const& directory) const 
+{
   std::unique_lock<std::mutex> lock(upload_mutex_);
+
+  for (auto pass : passes_) {
+    //pass->print_shaders();
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,6 +272,11 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       create_buffers();
     }
 
+    if (passes_need_reload_ || buffers_need_reload_) {
+      Logger::LOG_WARNING << "Pipeline::process() : Passes or buffers not created yet. Skipping frame." << std::endl;
+      return;
+    }
+
     serialize(*current_graph, config.camera().eye_l, config.camera().screen_l,
               current_scenes_[0]);
     if (config.get_enable_stereo()) {
@@ -297,6 +307,31 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool Pipeline::validate_resolution() const
+{
+  // first, validate configuration
+  if (!config.get_enable_stereo()) // mono
+  {
+    if (!(config.get_left_resolution()[0] > 0 && config.get_left_resolution()[1] > 0))
+    {
+      gua::Logger::LOG_WARNING << "Pipeline::validate_resolution() : Invalid resolution for pipeline : " << config.get_left_resolution() << std::endl;
+      return false;
+    }
+  }
+  else { // stereo
+    if (!(config.get_left_resolution()[0] > 0 && config.get_left_resolution()[1] > 0 &&
+      config.get_right_resolution()[0] > 0 && config.get_right_resolution()[1] > 0))
+    {
+      gua::Logger::LOG_WARNING << "Pipeline::validate_resolution() : Invalid resolution for pipeline" << config.get_left_resolution() << " and " << config.get_right_resolution() << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 void Pipeline::set_context(RenderContext* ctx) {
   context_ = ctx;
 
@@ -310,6 +345,11 @@ void Pipeline::set_context(RenderContext* ctx) {
 void Pipeline::create_passes() {
 
   if (passes_need_reload_) {
+
+    if (!validate_resolution()) {
+      return;
+    }
+
     auto materials(MaterialDatabase::instance()->list_all());
 
     auto pre_pass = new GBufferPass(this);
@@ -385,6 +425,10 @@ void Pipeline::create_passes() {
 void Pipeline::create_buffers() {
 
   if (buffers_need_reload_) {
+
+    if (passes_need_reload_ || !validate_resolution()) {
+      return;
+    }
 
     std::vector<std::shared_ptr<StereoBuffer>> stereobuffers;
 
