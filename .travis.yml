@@ -23,7 +23,7 @@ before_install:
   # build guacamole
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_guacamole-oculus=FALSE ..
+  - cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_guacamole-oculus=FALSE -DSCHISM_INCLUDE_SEARCH_DIR=../externals/schism -DSCHISM_LIBRARY_SEARCH_DIR=../externals/schism/lib/linux_x86 ..
 
 install: true
 
