@@ -323,7 +323,10 @@ void Video3DUberShader::draw(RenderContext const& ctx,
     float const min_length = 0.0125f;
     get_program(warp_pass)->set_uniform(ctx, min_length * model_scale, "min_length");
     get_program(warp_pass)->set_uniform(ctx, int(1), "bbxclip");
-    // TODO: here one would like to pass the boundingbox to the fragment shader
+
+    auto bbox(video3d_ressource->get_bounding_box());
+    get_program(warp_pass)->set_uniform(ctx, bbox.min, "bbx_min");
+    get_program(warp_pass)->set_uniform(ctx, bbox.max, "bbx_max");
 
     // pre passes
     for (unsigned layer = 0; layer != video3d_ressource->number_of_cameras(); ++layer)
