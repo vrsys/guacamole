@@ -7,7 +7,7 @@ before_install:
   - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
   - sudo add-apt-repository --yes ppa:kalakris/cmake
   - sudo apt-get update -qq
-  - sudo apt-get install -qq g++-4.8 cmake libboost1.48-dev libunittest++-dev cmake opencl-headers libfreeimage-dev
+  - sudo apt-get install -qq g++-4.8 cmake libboost1.48-dev libunittest++-dev cmake opencl-headers libfreeimage-dev libjsoncpp-dev libglew1.6-dev
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
   # install cuda
   - sudo apt-get install cuda
@@ -17,13 +17,13 @@ before_install:
   - cd externals/
   - git clone https://github.com/bernstein/schism.git schism
   - cd schism/build && mkdir build && cd build
-  - cmake -DCMAKE_BUILD_TYPE=Release -DSCM_BOOST_INC_DIR=/usr/include -DSCM_BOOST_LIB_DIR=/usr/lib ../cmake
+  - cmake -DCMAKE_BUILD_TYPE=Release -DSCHISM_BUILD_STATIC=OFF -DSCM_BOOST_INC_DIR=/usr/include -DSCM_BOOST_LIB_DIR=/usr/lib ../cmake
   - make
   - cd ../../../..
   # build guacamole
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_guacamole-oculus=FALSE -DSCHISM_INCLUDE_SEARCH_DIR=../externals/schism -DSCHISM_LIBRARY_SEARCH_DIR=../externals/schism/lib/linux_x86 ..
+  - cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_guacamole-oculus=FALSE -DSCHISM_INCLUDE_DIRS="../externals/schism/scm_cl_core/src;../externals/schism/scm_core/src;../externals/schism/scm_gl_core/src;../externals/schism/scm_gl_util/src;../externals/schism/scm_input/src"  -DSCHISM_LIBRARY_DIRS=../externals/schism/lib/linux_x86 -DSCHISM_LIBRARIES="${PWD}/../externals/schism/lib/linux_x86/libscm_gl_util.so;${PWD}/../externals/schism/lib/linux_x86/libscm_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_cl_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_gl_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_input.so" ..
 
 install: true
 
