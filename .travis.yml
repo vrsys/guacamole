@@ -26,7 +26,7 @@ before_install:
   # build guacamole
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_guacamole-oculus=FALSE -DSCHISM_INCLUDE_DIRS="../externals/schism/scm_cl_core/src;../externals/schism/scm_core/src;../externals/schism/scm_gl_core/src;../externals/schism/scm_gl_util/src;../externals/schism/scm_input/src"  -DSCHISM_LIBRARY_DIRS=../externals/schism/lib/linux_x86 -DSCHISM_LIBRARIES="${PWD}/../externals/schism/lib/linux_x86/libscm_gl_util.so;${PWD}/../externals/schism/lib/linux_x86/libscm_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_cl_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_gl_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_input.so" -DBOOST_INCLUDE_DIRS=/usr/include -DBOOST_LIBRARY_DIRS=/usr/lib -DZMQ_INCLUDE_DIRS=/usr/include -DZMQ_LIBRARY_DIRS=/usr/lib ..
+  - cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_guacamole-oculus=FALSE -DSCHISM_INCLUDE_DIRS="${PWD}/../externals/schism/scm_cl_core/src;${PWD}/../externals/schism/scm_core/src;${PWD}/../externals/schism/scm_gl_core/src;${PWD}/../externals/schism/scm_gl_util/src;${PWD}/../externals/schism/scm_input/src"  -DSCHISM_LIBRARY_DIRS=${PWD}/../externals/schism/lib/linux_x86 -DSCHISM_LIBRARIES="${PWD}/../externals/schism/lib/linux_x86/libscm_gl_util.so;${PWD}/../externals/schism/lib/linux_x86/libscm_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_cl_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_gl_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_input.so" -DBOOST_INCLUDE_DIRS=/usr/include -DBOOST_LIBRARY_DIRS=/usr/lib -DZMQ_INCLUDE_DIRS=/usr/include -DZMQ_LIBRARY_DIRS=/usr/lib ..
 
 install: true
 
