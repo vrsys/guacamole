@@ -282,7 +282,6 @@ void Video3DUberShader::draw(RenderContext const& ctx,
                              Frustum const& /*frustum*/,
                              std::size_t viewid) const
 {
-  std::cout << ctx.id << std::endl;
 
   if (!GeometryDatabase::instance()->is_supported(ksfile_name) ||
       !MaterialDatabase::instance()->is_supported(material_name)) {
@@ -323,6 +322,8 @@ void Video3DUberShader::draw(RenderContext const& ctx,
     float model_scale = scm::math::length(trans_vec);
     float const min_length = 0.0125f;
     get_program(warp_pass)->set_uniform(ctx, min_length * model_scale, "min_length");
+    get_program(warp_pass)->set_uniform(ctx, int(1), "bbxclip");
+    // TODO: here one would like to pass the boundingbox to the fragment shader
 
     // pre passes
     for (unsigned layer = 0; layer != video3d_ressource->number_of_cameras(); ++layer)
@@ -341,7 +342,7 @@ void Video3DUberShader::draw(RenderContext const& ctx,
       // set uniforms
       get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getTexSizeInvD(), "tex_size_inv");
       get_program(warp_pass)->set_uniform(ctx, int(layer), "layer");
-      get_program(warp_pass)->set_uniform(ctx, int(1), "bbxclip");
+      
 
       if (material && video3d_ressource)
       {
