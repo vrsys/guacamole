@@ -6,8 +6,9 @@ before_install:
   - sudo dpkg -i cuda-repo-ubuntu1204_6.0-37_amd64.deb
   - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
   - sudo add-apt-repository --yes ppa:kalakris/cmake
+  - sudo add-apt-repository --yes ppa:openmw/deps
   - sudo apt-get update -qq
-  - sudo apt-get install -qq g++-4.8 cmake libboost1.48-all-dev libunittest++-dev cmake opencl-headers libfreeimage-dev libjsoncpp-dev libglew1.6-dev
+  - sudo apt-get install -qq g++-4.8 cmake libboost1.48-all-dev libunittest++-dev cmake opencl-headers libfreeimage-dev libjsoncpp-dev libglew1.6-dev libassimp-dev libbullet-dev libbullet-extras-dev
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
   # install cuda
   - sudo apt-get install cuda
