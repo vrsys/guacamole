@@ -17,7 +17,6 @@ layout (triangle_strip, max_vertices=3) out;
 // video3d uniforms
 ///////////////////////////////////////////////////////////////////////////////
 uniform int layer;
-uniform float min_length; // 0.0125f * model_scale
 
 ///////////////////////////////////////////////////////////////////////////////
 // input
@@ -50,7 +49,7 @@ bool validSurface(vec3 a, vec3 b, vec3 c,
 {
   float avg_depth = (depth_a + depth_b + depth_c)/3.0;
   float baselength = 0.005;
-  float l = min_length * avg_depth + baselength;
+  float l = 0.0125 * avg_depth + baselength;	
 
   if((length(a) > l) || (length(b) > l) || (length(c) > l)){
     return false;
@@ -63,6 +62,8 @@ bool validSurface(vec3 a, vec3 b, vec3 c,
 
   return true;
 }
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -83,7 +84,11 @@ void main()
   float depth_b = VertexIn[1].depth;
   float depth_c = VertexIn[2].depth;
 
-  bool valid = validSurface(a, b, c, depth_a, depth_b, depth_c);
+  vec3 a_ws = VertexIn[1].pos_ws - VertexIn[0].pos_ws;
+  vec3 b_ws = VertexIn[2].pos_ws - VertexIn[0].pos_ws;
+  vec3 c_ws = VertexIn[2].pos_ws - VertexIn[1].pos_ws;
+
+  bool valid = validSurface(a_ws, b_ws, c_ws, depth_a, depth_b, depth_c);
 
   if (valid)
   {      
