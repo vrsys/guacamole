@@ -149,7 +149,11 @@ void Video3DRessource::init()
         calib_files_.push_back(calib_file_ptr);
       } 
     }
-
+    
+    // approximately local space Note: this boundingbox will be used during reconstruction in resources/shaders/uber_shaders/gbuffer/video3d/warp_pass.frag
+    bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-1.5,-0.1,-1.0),
+                                                  math::vec3( 1.5, 2.2, 1.5));
+    
 
 
     for ( auto calib_file : calib_files_ ){
