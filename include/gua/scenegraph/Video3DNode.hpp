@@ -44,8 +44,6 @@ class GUA_DLL Video3DNode : public GeometryNode {
                 std::string const& material = "gua_default_material",
                 math::mat4  const& transform = math::mat4::identity());
 
-    /*virtual*/ void update_bounding_box() const;
-
     /*virtual*/ void ray_test_impl(RayNode const& ray, 
                                    PickResult::Options options,
                                    Mask const& mask, 
