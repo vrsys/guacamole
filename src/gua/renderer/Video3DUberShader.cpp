@@ -313,15 +313,9 @@ void Video3DUberShader::draw(RenderContext const& ctx,
     ctx.render_context->bind_texture(video3d_ressource->depth_array(ctx), nearest_sampler_state_[ctx.id], 0);
     get_program(warp_pass)->get_program(ctx)->uniform_sampler("depth_video3d_texture", 0);
 
-    scm::math::vec4f norm_vec (0.0f, 1.0f, 0.0f, 0.0f);
-    auto trans_vec = model_matrix * norm_vec;
 
     get_program(warp_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
     get_program(warp_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
-
-    float model_scale = scm::math::length(trans_vec);
-    float const min_length = 0.0125f;
-    get_program(warp_pass)->set_uniform(ctx, min_length * model_scale, "min_length");
     get_program(warp_pass)->set_uniform(ctx, int(1), "bbxclip");
 
     auto bbox(video3d_ressource->get_bounding_box());
