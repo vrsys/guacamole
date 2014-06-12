@@ -15,6 +15,7 @@ set(GUACAMOLE_EXENAME "GUACAMOLE")
 set(GUACAMOLE_PACKAGENAME "GUACAMOLE")
 
 option (GUACAMOLE_PBR_SUPPORT "Set to enable PBR (point based rendering) support.")
+option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support.")
 
 # We require at least version 2.8.0
 cmake_minimum_required(VERSION 2.8.0)
