@@ -67,7 +67,7 @@ class GBufferPass : public GeometryPass {
   /*virtual*/ bool pre_compile_shaders(const gua::RenderContext &);
 
   void print_shaders(std::string const& directory,
-                     std::string const& name) const;
+                     std::string const& name) const override;
 
   void apply_material_mapping(std::set<std::string> const& materials);
 

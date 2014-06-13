@@ -69,6 +69,9 @@ class Pass {
                             RenderContext const& ctx,
                             std::size_t unique_view_id) = 0;
 
+  virtual void print_shaders(std::string const& directory,
+                             std::string const& name) const = 0;
+
   // not strictly necessary to call, but recommend
   // to avoid crashes on shader compilation
   // derived classes should call upload_to() on all contained shaders
