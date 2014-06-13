@@ -91,7 +91,9 @@ namespace gua {
   height_depthimage_(),
   width_colorimage_(),
   height_colorimage_(),
-  upload_mutex_()
+  upload_mutex_(),
+  overwrite_normal_(false),
+  o_normal_()
   {
     Video3DUberShader::initialize_video_material();
 
@@ -163,6 +165,14 @@ void Video3DRessource::init()
 	     >> z_max;
 	bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(x_min,y_min,z_min),
 						      math::vec3(x_max,y_max,z_max));
+      }
+      else if ( token == "normal" ){
+	float x,y,z;
+	istr >> x
+	     >> y
+	     >> z;
+	overwrite_normal_ = true;
+	o_normal_ = scm::math::vec3f(x,y,z);
       }
  
     }
@@ -532,5 +542,19 @@ KinectCalibrationFile const& Video3DRessource::calibration_file(unsigned i) cons
 /*virtual*/ std::shared_ptr<GeometryUberShader> Video3DRessource::create_ubershader() const {
   return std::make_shared<Video3DUberShader>();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+  bool                           
+  Video3DRessource::do_overwrite_normal() const{
+    return overwrite_normal_;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+  scm::math::vec3f const&
+  Video3DRessource::get_overwrite_normal() const{
+    return o_normal_;
+  }
+
 
 }
