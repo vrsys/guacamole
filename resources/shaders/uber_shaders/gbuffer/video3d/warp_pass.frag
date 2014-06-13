@@ -10,6 +10,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 uniform int layer;
 uniform int bbxclip;
+uniform vec3 bbx_min;// = vec3(-1.5,-0.1, -1.0);
+uniform vec3 bbx_max;// = vec3( 1.5,2.2,   1.5);
 
 ///////////////////////////////////////////////////////////////////////////////
 // input
@@ -32,8 +34,6 @@ layout (location=0) out vec4 out_color;
 @include "shaders/common/pack_vec3.glsl"
 
 // methods 
-vec3 bbx_min = vec3(-1.5,-0.1, -1.0);
-vec3 bbx_max = vec3( 1.5,2.2,   1.5);
 
 bool clip(vec3 p){
   if(p.x < bbx_min.x ||
