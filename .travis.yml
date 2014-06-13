@@ -48,4 +48,4 @@ script: ./tests/runTravis.sh
 branches:
   only:
     - master
-    - feature/travis
+    - develop
