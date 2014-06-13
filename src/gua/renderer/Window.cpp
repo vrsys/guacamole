@@ -99,13 +99,13 @@ void Window::open() {
   auto monitors(glfwGetMonitors(&monitor_count));
 
   if (monitor_count == 0) {
-    WARNING("Failed to open window: No monitor found!");
+    Logger::LOG_WARNING << "Failed to open window: No monitor found!" << std::endl;
     glfwTerminate();
     return;
   }
 
   if (config.monitor() >=monitor_count) {
-    WARNING("Failed to open window: There is no monitor with the number %d!", config.monitor());
+    Logger::LOG_WARNING << "Failed to open window: There is no monitor with the number " << config.monitor() << "!" << std::endl;
     glfwTerminate();
     return;
   }
@@ -120,21 +120,18 @@ void Window::open() {
   glfwSetWindowSizeCallback(glfw_window_, &on_window_resize);
 
   if (!glfw_window_) {
-    WARNING("Failed to open window: Could not create glfw window!");
+    Logger::LOG_WARNING << "Failed to open window: Could not create glfw window!" << std::endl;
     glfwTerminate();
     return;
   }
 
   set_active(true);
 
-  ctx_.width = config.get_size().x;
-  ctx_.height = config.get_size().y;
   ctx_.render_device = scm::gl::render_device_ptr(new scm::gl::render_device());
   ctx_.render_context = ctx_.render_device->main_context();
   ctx_.id = last_context_id_++;
 
-
-
+  ctx_.render_window = this;
 
 //   scm::gl::wm::surface::format_desc window_format(
 //       scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_D24_S8, true, false);
@@ -185,6 +182,9 @@ void Window::open() {
                                                         scm::gl::FUNC_ONE,
                                                         scm::gl::FUNC_ONE,
                                                         scm::gl::FUNC_ONE);
+  if (config.get_debug()) {
+    ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -363,5 +363,17 @@ void Window::display(std::shared_ptr<Texture2D> const& texture,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Window::DebugOutput::operator()(scm::gl::debug_source source,
+                                     scm::gl::debug_type type,
+                                     scm::gl::debug_severity severity,
+                                     const std::string& message) const {
+
+  Logger::LOG_MESSAGE << "[Source: " << scm::gl::debug_source_string(source)
+                      << ", type: " << scm::gl::debug_type_string(type)
+                      << ", severity: " << scm::gl::debug_severity_string(severity)
+                      << "]: " << message << std::endl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

@@ -127,6 +127,13 @@ std::string const LayerMapping::get_output_string(
     }
 
     auto model_ptr(ShadingModelDatabase::instance()->lookup(shading_model_name));
+
+    if (!model_ptr) {
+      Logger::LOG_WARNING << "Failed to retrieve shadel model from database " << output_name.c_str() <<
+        "defined in shading model " << shading_model_name.c_str() << std::endl;
+      return "";
+    }
+
     auto output_type(BufferComponent::NONE);
 
     auto output(model_ptr->get_stages()[stage_]
@@ -135,10 +142,8 @@ std::string const LayerMapping::get_output_string(
         output_type = output->second;
 
     if (output_type == BufferComponent::NONE) {
-        WARNING("Failed to generate gbuffer output string: There is no output "
-                "\"%s\" defined in shading model \"%s\"!",
-                output_name.c_str(),
-                shading_model_name.c_str());
+        Logger::LOG_WARNING << "Failed to generate gbuffer output string: There is no output "
+                "\"" << output_name << "\" defined in shading model \"" << shading_model_name << "\"!" << std::endl;
         return "";
     }
 
@@ -184,17 +189,9 @@ std::string const LayerMapping::get_output_string(
                     else
                         result << "gua_" << type << "_gbuffer_out_" << i << ".";
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-                    std::vector<char> swizzle;
-                    swizzle.push_back('x');
-                    swizzle.push_back('y');
-                    swizzle.push_back('z');
-                    swizzle.push_back('w');
-#else
                     std::vector<char> swizzle({
-                    'x', 'y', 'z', 'w'
-                  });
-#endif
+                      'x', 'y', 'z', 'w'
+                    });
 
                     for (unsigned s(offset); s < offset + length; ++s) {
                         result << swizzle[s];
@@ -209,10 +206,8 @@ std::string const LayerMapping::get_output_string(
         }
     }
 
-    WARNING("Failed to generate gbuffer output string: The output \"%s\" for "
-            "shading model \"%s\" is not mapped!",
-            output_name.c_str(),
-            shading_model_name.c_str());
+    Logger::LOG_WARNING << "Failed to generate gbuffer output string: The output \"" << output_name << "\" for "
+            "shading model \"" << shading_model_name << "\" is not mapped!" << std::endl;
 
     return "";
 }
@@ -236,11 +231,8 @@ std::string const LayerMapping::get_input_string(
         input_type = input->second;
 
     if (input_type == BufferComponent::NONE) {
-        WARNING("Failed to generate gbuffer input string: There is no input "
-                "\"%s\" defined in shading model \"%s\" in stage %d!",
-                input_name.c_str(),
-                shading_model_name.c_str(),
-                stage_);
+        Logger::LOG_WARNING << "Failed to generate gbuffer input string: There is no input "
+                "\"" << input_name << "\" defined in shading model \"" << shading_model_name << "\" in stage " << stage_ << "!" << std::endl;
         return "";
     }
 
@@ -289,17 +281,10 @@ std::string const LayerMapping::get_input_string(
                                << from_stage << "[" << i
                                << "]), gua_get_quad_coords()).";
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-                    std::vector<char> swizzle;
-                    swizzle.push_back('x');
-                    swizzle.push_back('y');
-                    swizzle.push_back('z');
-                    swizzle.push_back('w');
-#else
+
                     std::vector<char> swizzle({
                       'x', 'y', 'z', 'w'
                     });
-#endif
 
                     for (unsigned s(offset); s < offset + length; ++s) {
                         result << swizzle[s];
@@ -314,11 +299,8 @@ std::string const LayerMapping::get_input_string(
         }
     }
 
-    WARNING("Failed to generate gbuffer input string: The input \"%s\" for "
-            "shading model \"%s\" is not mapped!",
-            input_name.c_str(),
-            shading_model_name.c_str());
-
+    Logger::LOG_WARNING << "Failed to generate gbuffer input string: The input \"" << input_name << "\" for "
+            "shading model \"" << shading_model_name << "\" is not mapped!" << std::endl;
 
     return "";
 }
@@ -434,8 +416,8 @@ std::vector<
         }
 
         scm::gl::sampler_state_desc state(scm::gl::FILTER_ANISOTROPIC,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE);
+                                          scm::gl::WRAP_MIRRORED_REPEAT,
+                                          scm::gl::WRAP_MIRRORED_REPEAT);
 
         result.push_back(std::make_pair(get_largest(output_sums), state));
     }

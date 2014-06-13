@@ -34,12 +34,39 @@
 
 namespace gua {
 
+  class Window;
+
 /**
  * Information on a specific context.
  *
  * Stores all relevant information on a OpenGL context.
  */
 struct RenderContext {
+
+  /**
+  * c'tor
+  */
+  RenderContext();
+
+  /**
+  * d'tor
+  */
+  ~RenderContext();
+
+   /**
+   * The schism context of this RenderContext.
+   */
+  scm::gl::wm::context_ptr context;
+
+  /**
+   * The display where this context was opened.
+   */
+  scm::gl::wm::display_ptr display;
+
+  /**
+   * The window associated with this context.
+   */
+  scm::gl::wm::window_ptr window;
 
   /**
    * The schism render constext associated with this context.
@@ -52,19 +79,19 @@ struct RenderContext {
   scm::gl::render_device_ptr render_device;
 
   /**
-   * The width of the window.
+   * The window which is rendered into.
    */
-  int width;
-
-  /**
-   * The height of the window.
-   */
-  int height;
+  Window* render_window;
 
   /**
    * A unique ID for this context.
    */
   unsigned id;
+
+  /**
+  * framecounter for this context
+  */
+  unsigned framecount;
 };
 
 }

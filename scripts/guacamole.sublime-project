@@ -15,6 +15,13 @@
 	    "file_regex": "^(..[^:]*):(.*)$",
 	    "working_dir": "${project_path}/..",
 	    "cmd":  ["./scripts/make.sh"]
+	  },
+	  {
+	    "name": "guacamole-doc",
+	    "file_regex": "^(..[^:]*):(.*)$",
+	    "working_dir": "${project_path}/../doc/",
+	    "shell" : "true",
+	    "cmd":  ["doxygen"]
 	  }
 	]
 }

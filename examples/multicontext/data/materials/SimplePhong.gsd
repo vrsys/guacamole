@@ -1,0 +1,49 @@
+
+{
+	"final_shading_stage" : 
+	{
+		"body" : "gua_color = ((emit + (1.0 - emit) * diffuse) * diffuse_color + specular);",
+		"functions" : "",
+		"outputs" : null,
+		"uniforms" : 
+		{
+			"diffuse_color" : "vec3",
+			"emit" : "float"
+		}
+	},
+	"gbuffer_fragment_stage" : 
+	{
+		"body" : "gua_normal = my_normal;\ngua_texcoords = my_texcoords;",
+		"functions" : "",
+		"outputs" : 
+		{
+			"gua_texcoords" : "vec2"
+		},
+		"uniforms" : null
+	},
+	"gbuffer_vertex_stage" : 
+	{
+		"body" : "gua_position = gua_world_position;\nmy_normal = gua_world_normal;\nmy_texcoords = gua_texcoords;",
+		"functions" : "",
+		"outputs" : 
+		{
+			"my_normal" : "vec3",
+			"my_texcoords" : "vec2"
+		},
+		"uniforms" : null
+	},
+	"lbuffer_stage" : 
+	{
+		"body" : "diffuse = dot(gua_normal, gua_light_direction) * gua_light_intensity * gua_light_color;\nspecular = pow(max(0, dot(reflect(gua_light_direction, gua_normal), normalize(gua_position - gua_camera_position))), shinyness) * gua_light_intensity;\n",
+		"functions" : "",
+		"outputs" : 
+		{
+			"diffuse" : "vec3",
+			"specular" : "float"
+		},
+		"uniforms" : 
+		{
+			"shinyness" : "float"
+		}
+	}
+}

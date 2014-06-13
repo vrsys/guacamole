@@ -61,7 +61,7 @@ class Serializer : public NodeVisitor {
    */
   void check(SerializedScene* output,
              SceneGraph const* scene_graph,
-             Camera const& camera,
+             std::string const& render_mask,
              bool draw_bounding_boxes,
              bool draw_rays,
              bool enable_frustum_culling);
@@ -73,7 +73,16 @@ class Serializer : public NodeVisitor {
    *
    * \param cam   Pointer to TransformNode
    */
-  /* virtual */ void visit(TransformNode* cam);
+  /* virtual */ void visit(Node* node);
+
+  /**
+   * Visits an LODNode
+   *
+   * This function provides the interface to visit an LODNode
+   *
+   * \param cam   Pointer to LODNode
+   */
+  /* virtual */ void visit(LODNode* lod);
 
   /**
    * Visits a GeometryNode
@@ -110,6 +119,15 @@ class Serializer : public NodeVisitor {
    * \param spot   Pointer to SpotLightNode
    */
   /* virtual */ void visit(SpotLightNode* spot);
+
+   /**
+   * Visits a SunLightNode
+   *
+   * This function provides the interface to visit a SunLightNode
+   *
+   * \param spot   Pointer to SunLightNode
+   */
+  /* virtual */ void visit(SunLightNode* sun);
 
   /**
    * Visits a RayNode
@@ -154,8 +172,8 @@ class Serializer : public NodeVisitor {
   void visit_children(Node* node);
 
   Frustum current_frustum_;
-  Camera current_camera_;
   Mask current_render_mask_;
+  math::vec3 current_center_of_interest_;
 
   SerializedScene* data_;
   bool draw_bounding_boxes_;

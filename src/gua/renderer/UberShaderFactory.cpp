@@ -65,7 +65,16 @@ UberShaderFactory::UberShaderFactory(
         // store material specific main method calls
         std::stringstream call;
         call << "/* " << mat->get_name() << " */ ";
-        call << shading_model->get_name() << "_main(";
+
+        auto name(shading_model->get_name());
+        std::replace(name.begin(), name.end(), '/',  '_');
+        std::replace(name.begin(), name.end(), '\\', '_');
+        std::replace(name.begin(), name.end(), '.',  '_');
+        std::replace(name.begin(), name.end(), '(',  '_');
+        std::replace(name.begin(), name.end(), ')',  '_');
+        std::replace(name.begin(), name.end(), ' ',  '_');
+
+        call << name << "_main(";
 
         auto uniform(shading_model->get_stages()[stage].get_uniforms().begin());
 
@@ -116,7 +125,7 @@ void UberShaderFactory::add_inputs_to_main_functions(
     if (first_input_stage != ShadingModel::GBUFFER_VERTEX_STAGE) {
         for (auto& entry : main_functions_) {
             auto model(ShadingModelDatabase::instance()->lookup(entry.first));
-            unsigned bracket_pos = entry.second.find("{");
+            auto bracket_pos = entry.second.find("{");
             std::stringstream stream;
             stream << std::endl;
             stream << "    vec3 gua_position = gua_get_position();"
@@ -134,7 +143,7 @@ void UberShaderFactory::add_inputs_to_main_functions(
 
             auto model(ShadingModelDatabase::instance()->lookup(entry.first));
 
-            unsigned bracket_pos = entry.second.find("{");
+            auto bracket_pos = entry.second.find("{");
             std::stringstream stream;
             stream << std::endl;
 
@@ -198,7 +207,16 @@ void UberShaderFactory::load_main_functions(std::shared_ptr<ShadingModel> const&
 
     // write main() method <model>_main(<uniforms>) ----------------------------
     std::stringstream stream;
-    stream << "void " << model->get_name() << "_main(";
+
+    auto name(model->get_name());
+    std::replace(name.begin(), name.end(), '/',  '_');
+    std::replace(name.begin(), name.end(), '\\', '_');
+    std::replace(name.begin(), name.end(), '.',  '_');
+    std::replace(name.begin(), name.end(), '(',  '_');
+    std::replace(name.begin(), name.end(), ')',  '_');
+    std::replace(name.begin(), name.end(), ' ',  '_');
+
+    stream << "void " << name << "_main(";
 
     auto uniform(model->get_stages()[stage_].get_uniforms().begin());
 

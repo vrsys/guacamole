@@ -34,17 +34,10 @@
 // external headers
 #include <vector>
 #include <queue>
-
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-  #include <boost/thread.hpp>
-  #include <boost/atomic.hpp>
-  #include <boost/chrono/include.hpp>
-#else
-  #include <atomic>
-  #include <thread>
-  #include <mutex>
-  #include <chrono>
-#endif
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <chrono>
 
 
 // forward declarations of Bullet's classes
@@ -268,11 +261,7 @@ public:
      *
      * \return The reference to the mutex.
      */
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-    inline boost::mutex& lock() const {
-#else
     inline std::mutex& lock() const {
-#endif
         return simulation_mutex_;
     }
 
@@ -289,14 +278,8 @@ public:
     ///@}
 
 // No copying construction. No assignment.
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-private:
-    Physics(const Physics & other);
-    Physics& operator=(const Physics&);
-#else
     Physics(const Physics& other) = delete;
     Physics& operator=(const Physics&) = delete;
-#endif
 
 private:
 
@@ -307,52 +290,30 @@ private:
     bool pop_call_once(std::function<void()> & value);
 
     // ensures exclusive access to the physics structures.
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-    mutable boost::mutex simulation_mutex_;
-#else
     mutable std::mutex simulation_mutex_;
-#endif
 
     // prevents calling thread initialization/deinitialization functions at
     // the same time.
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-    mutable boost::mutex start_stop_mutex_;
-#else
     mutable std::mutex start_stop_mutex_;
-#endif
 
     // ensures exclusive access to buffers in motion state updates.
     mutable SpinLock motion_state_update_mutex_;
 
     SpinLock pause_mutex_;
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-    boost::thread* thread_;
-    boost::atomic<bool> is_stopped_;
-#else
     std::thread* thread_;
     std::atomic<bool> is_stopped_;
-#endif
 
     float fixed_timestep_;
     bool reduce_sim_rate_;
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-    boost::chrono::microseconds max_sim_time_;
-#else
     std::chrono::microseconds max_sim_time_;
-#endif
 
     CollisionShapeNodeVisitor shape_visitor_;
 
     // queue for call-once functions
     std::queue<std::function<void()> > call_once_queue_;
-
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1700
-    boost::mutex call_once_queue_mutex_;
-#else
     std::mutex call_once_queue_mutex_;
-#endif
 
     // Bullet's objects
     btDynamicsWorld* dw_;

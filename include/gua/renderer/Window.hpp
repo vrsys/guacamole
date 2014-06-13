@@ -78,6 +78,7 @@ class GUA_DLL Window {
     GUA_ADD_PROPERTY(math::vec2ui, right_resolution, math::vec2ui(800, 600));
     GUA_ADD_PROPERTY(math::vec2ui, right_position, math::vec2ui(0, 0));
     GUA_ADD_PROPERTY(bool, enable_vsync, true);
+    GUA_ADD_PROPERTY(bool, debug, false);
     GUA_ADD_PROPERTY(std::string, warp_matrix_red_right, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_green_right, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_blue_right, "");
@@ -133,6 +134,16 @@ class GUA_DLL Window {
    */
   void finish_frame() const;
 
+  /**
+   * Get the RenderContext of this window.
+   *
+   * Can be called in order to retrieve the RenderContext of this
+   * Window.
+   *
+   * \return The context owned by this window.
+   */
+  RenderContext* get_context();
+
   events::Signal<math::vec2ui> on_resize;
 
   friend class Pipeline;
@@ -146,21 +157,19 @@ private:
   virtual void display(std::shared_ptr<Texture2D> const& center_texture);
 
   virtual void display(std::shared_ptr<Texture2D> const& left_texture,
-               std::shared_ptr<Texture2D> const& right_texture);
+                       std::shared_ptr<Texture2D> const& right_texture);
 
 
-
-  /**
-   * Get the RenderContext of this window.
-   *
-   * Can be called in order to retrieve the RenderContext of this
-   * Window.
-   *
-   * \return The context owned by this window.
-   */
-  RenderContext* get_context();
 
 protected:
+
+  struct DebugOutput : public scm::gl::render_context::debug_output {
+    /*virtual*/ void operator()(scm::gl::debug_source source,
+                                scm::gl::debug_type type,
+                                scm::gl::debug_severity severity,
+                                const std::string& message) const;
+  };
+
   ShaderProgram fullscreen_shader_;
   scm::gl::quad_geometry_ptr fullscreen_quad_;
 

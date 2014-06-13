@@ -27,6 +27,7 @@
 
 // external headers
 #include <boost/thread.hpp>
+#include <boost/optional.hpp>
 #include <thread>
 #include <memory>
 #include <string>
@@ -40,6 +41,8 @@ namespace gua {
  *
  * It can store any type of Data. The data is mapped on strings,
  * which then can be used to access this data.
+ *
+ * \ingroup gua_databases
  */
 template <typename T> class Database {
  public:
@@ -103,7 +106,10 @@ template <typename T> class Database {
     }
 
     if (result == data_.end()) {
-      WARNING("There is no entry \"%s\" in the database!", k.c_str());
+      Logger::LOG_WARNING << "There is no entry \""
+                          << k
+                          << "\" in the database!"
+                          << std::endl;
       return std::shared_ptr<T>();
     }
 
@@ -134,6 +140,14 @@ template <typename T> class Database {
   mutable boost::shared_mutex mutex_;
 
 };
+
+template <typename T>
+auto lookup(Database<T>& db, typename Database<T>::key_type const& k) -> decltype(boost::make_optional(db.lookup(k))) {
+  if (db.is_supported(k))
+    return boost::make_optional(db.lookup(k));
+  else
+    return boost::optional<typename Database<T>::mapped_type>();
+}
 
 }
 

@@ -22,18 +22,23 @@
 #ifndef GUA_ADD_PROPERTY_HPP
 #define GUA_ADD_PROPERTY_HPP
 
-#define GUA_ADD_PROPERTY(TYPE, NAME, VALUE)           \
-  struct NAME##_struct {                              \
-   public:                                            \
-    NAME##_struct() : val_(VALUE) {}                  \
-    NAME##_struct(TYPE const& val) : val_(val) {}     \
-                                                      \
-    TYPE& operator()() { return val_; }               \
-    TYPE const& operator()() const { return val_; }   \
-   private:                                           \
-    TYPE val_;                                        \
-  } NAME;                                             \
-  void set_##NAME(TYPE const & val) { NAME() = val; } \
+#define GUA_ADD_PROPERTY(TYPE, NAME, VALUE)                                    \
+   /** \cond */                                                                \
+  struct NAME##_struct {                                                       \
+   public:                                                                     \
+    NAME##_struct() : val_(VALUE) {}                                           \
+    NAME##_struct(TYPE const& val) : val_(val) {}                              \
+                                                                               \
+    TYPE& operator()() { return val_; }                                        \
+    TYPE const& operator()() const { return val_; }                            \
+   private:                                                                    \
+    TYPE val_;                                                                 \
+  } NAME;                                                                      \
+  /** \endcond */                                                              \
+  Configuration& set_##NAME(TYPE const & val) { NAME() = val; return *this; }  \
+  /**
+  The default value is VALUE.
+   */                                                                          \
   TYPE const& get_##NAME() const { return NAME(); }
 
 #endif  // GUA_ADD_PROPERTY_HPP

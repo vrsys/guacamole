@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
-#include <gua/renderer/Geometry.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 
 namespace gua {
 
@@ -34,20 +34,12 @@ namespace gua {
  *
  * This Database stores geometry data. It can be accessed via string
  * identifiers.
+ *
+ * \ingroup gua_databases
  */
-class GUA_DLL GeometryDatabase : public Database<Geometry>,
+class GUA_DLL GeometryDatabase : public Database<GeometryRessource>,
                                  public Singleton<GeometryDatabase> {
  public:
-
-  /**
-   * Loads a geometry file to the database.
-   *
-   * This method loads a geometry to the data base.
-   *
-   * \param id  An absolute or relative path to the
-   *            geometry file.
-   */
-  void load(std::string const& id);
 
   friend class Singleton<GeometryDatabase>;
 

@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
 
@@ -34,7 +34,7 @@ namespace gua {
 
 StereoBuffer::StereoBuffer(
     RenderContext const& ctx,
-    PipelineConfiguration const& config,
+    Pipeline::Configuration const& config,
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> > const&
         layers) {
 

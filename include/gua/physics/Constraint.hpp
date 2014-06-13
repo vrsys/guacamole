@@ -23,19 +23,13 @@
 #define CONSTRAINT_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/utils/SpinLock.hpp>
 #include <gua/math/math.hpp>
 
 // external headers
 #include <utility>
-#include <gua/platform.hpp>
-
-#if GUA_COMPILER == GUA_COMPILER_MSVC
-#include <boost/smart_ptr/detail/spinlock.hpp>
-#include <boost/atomic.hpp>
-#else
 #include <atomic>
-#endif
 
 #include <BulletDynamics/ConstraintSolver/btTypedConstraint.h>
 
@@ -123,14 +117,8 @@ class GUA_DLL Constraint {
   }
 
 // No copying construction. No assignment.
-#if GUA_COMPILER == GUA_COMPILER_MSVC
- private:
-  Constraint(const Constraint&);
-  Constraint& operator=(const Constraint&);
-#else
   Constraint(const Constraint&) = delete;
   Constraint& operator=(const Constraint&) = delete;
-#endif
 
  protected:
 
@@ -156,11 +144,7 @@ class GUA_DLL Constraint {
 
   SpinLock lock_;
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC
-  boost::atomic<bool> invalid_;
-#else
   std::atomic_bool invalid_;
-#endif
 
   Physics* ph_;
   btTypedConstraint* ct_;

@@ -23,7 +23,8 @@
 #define GUA_NURBS_LOADER_HPP
 
 // guacamole headers
-#include <gua/renderer/LoaderBase.hpp>
+#include <gua/platform.hpp>
+#include <gua/renderer/GeometryLoader.hpp>
 
 // external headers
 #include <boost/unordered_set.hpp>
@@ -38,8 +39,17 @@ class Node;
  * This class can load NURBS data from files and display them in multiple
  * contexts.
  */
-class NURBSLoader : public LoaderBase {
+class GUA_DLL NURBSLoader : public GeometryLoader {
  public:
+
+   enum Flags {
+     DEFAULTS = 0,
+     LOAD_MATERIALS = 1 << 0,
+     OPTIMIZE_GEOMETRY = 1 << 1,
+     MAKE_PICKABLE = 1 << 2,
+     NORMALIZE_POSITION = 1 << 3,
+     NORMALIZE_SCALE = 1 << 4
+   };
 
   /**
    * Default constructor.
@@ -48,16 +58,12 @@ class NURBSLoader : public LoaderBase {
    */
   NURBSLoader();
 
-  /**
-   * Constructor from a file.
-   *
-   * Creates a new NURBS node from a given file.
-   *
-   * \param file_name        The file to load the NURBS data from.
-   * \param unsigned         Special flag
-   */
-  /* virtual */ std::shared_ptr<Node> load(std::string const& file_name,
-                                           unsigned flags);
+  std::shared_ptr<Node> create_geometry_from_file(std::string const& nodename,
+                                                  std::string const& filename,
+                                                  std::string const& material,
+                                                  unsigned flags);
+
+ private:
 
   /* virtual */ bool is_supported(std::string const& file_name) const;
 

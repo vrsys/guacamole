@@ -25,14 +25,14 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/renderer/Mesh.hpp>
+#include <gua/scenegraph/TriMeshNode.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/physics/PhysicsUtils.hpp>
 
 // external headers
 #include <stdexcept>
 
-#include <hacdHACD.h>
+#include <HACD/hacdHACD.h>
 
 namespace gua {
 namespace physics {
@@ -64,7 +64,7 @@ void TriangleMeshShape::build_from_geometry_static(
     concave_tri_mesh_ = new btTriangleMesh();
 
     for (auto const& geom_name : geometry_list) {
-        std::shared_ptr<Mesh> m = std::dynamic_pointer_cast<Mesh>(
+      std::shared_ptr<TriMeshRessource> m = std::dynamic_pointer_cast<TriMeshRessource>(
             gua::GeometryDatabase::instance()->lookup(geom_name));
         if (m)
             for (unsigned i(0); i < m->num_faces(); ++i) {
@@ -88,7 +88,7 @@ void TriangleMeshShape::build_from_geometry_static(
 void TriangleMeshShape::build_from_geometry_dynamic(
     const std::vector<std::string> & geometry_list) {
     for (auto const& geom_name : geometry_list) {
-        std::shared_ptr<Mesh> m = std::dynamic_pointer_cast<Mesh>(
+      std::shared_ptr<TriMeshRessource> m = std::dynamic_pointer_cast<TriMeshRessource>(
             gua::GeometryDatabase::instance()->lookup(geom_name));
 
         if (m)
@@ -158,7 +158,7 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
     unsigned flags) {
     TriangleMeshShape* shape = new TriangleMeshShape();
 
-    GeometryLoader factory;
+    TriMeshLoader factory;
     auto node(factory.create_geometry_from_file("", file_name, "", flags));
     if (node) {
       std::vector<std::string> geom_list;
@@ -167,9 +167,9 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
 
       add_all_geometries = [&](std::shared_ptr<Node> const& node) {
 
-        auto gnode = std::dynamic_pointer_cast<GeometryNode>(node);
+        auto gnode = std::dynamic_pointer_cast<TriMeshNode>(node);
         if (gnode) {
-            geom_list.push_back(gnode->data.get_geometry());
+            geom_list.push_back(gnode->get_filename());
         }
 
         for (auto const& n: node->get_children()) {
@@ -212,7 +212,7 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriangleMeshShape::decompose_to_convex(std::shared_ptr<Mesh> const& mesh,
+void TriangleMeshShape::decompose_to_convex(std::shared_ptr<TriMeshRessource> const& mesh,
                                             std::string const& file_name) {
     std::vector<HACD::Vec3<HACD::Real> > points;
     std::vector<HACD::Vec3<long> > triangles;

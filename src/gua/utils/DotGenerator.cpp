@@ -26,6 +26,7 @@
 #include <gua/scenegraph/SceneGraph.hpp>
 #include <gua/scenegraph/TransformNode.hpp>
 #include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/scenegraph/PointLightNode.hpp>
 #include <gua/scenegraph/SpotLightNode.hpp>
 #include <gua/scenegraph/ScreenNode.hpp>
@@ -100,10 +101,10 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   std::string fillcolor("[fillcolor =");
   fillcolor += " \"#CCCCCC\"";
-  if (geometry->data.get_geometry() != "")
-    parse_data_ += "| geometry: " + geometry->data.get_geometry();
-  if (geometry->data.get_material() != "")
-    parse_data_ += "| material: " + geometry->data.get_material();
+  if (geometry->get_filename() != "")
+    parse_data_ += "| geometry: " + geometry->get_filename();
+  if (geometry->get_material() != "")
+    parse_data_ += "| material: " + geometry->get_material();
 
   fillcolor += "]";
 
@@ -111,6 +112,24 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   for (auto child : geometry->children_)
     child->accept(*this);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/* virtual */ void DotGenerator::visit(VolumeNode* volume) {
+	pre_node_info(volume);
+
+	std::string fillcolor("[fillcolor =");
+	fillcolor += " \"#CCEECC\"";
+	if (volume->data.get_volume() != "")
+		parse_data_ += "| volume: " + volume->data.get_volume();
+
+	fillcolor += "]";
+
+	post_node_info(volume, fillcolor);
+
+	for (auto child : volume->children_)
+		child->accept(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -262,8 +281,7 @@ void DotGenerator::save(std::string const& path_to_file) const {
     file.write(parse_data_.c_str(), parse_data_.size());
     file.close();
   } else {
-    WARNING("Failed to save dot graph: Failed to open file \"%s\"",
-            path_to_file.c_str());
+    Logger::LOG_WARNING << "Failed to save dot graph: Failed to open file \"" << path_to_file << "\"." << std::endl;
   }
 }
 

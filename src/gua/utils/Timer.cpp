@@ -26,13 +26,7 @@
 #include <iostream>
 #include <gua/platform.hpp>
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& SCM_COMPILER_VER <= 1600
-#include <boost/chrono/include.hpp>
-namespace chrono = boost::chrono;
-#else
 #include <chrono>
-namespace chrono = std::chrono;
-#endif
 
 namespace gua {
 
@@ -52,9 +46,9 @@ double Timer::get_elapsed() const { return get_now() - start_; }
 
 double Timer::get_now() {
 
-  auto time = chrono::system_clock::now();
+  auto time = std::chrono::system_clock::now();
   auto since_epoch = time.time_since_epoch();
-  return chrono::duration_cast<chrono::microseconds>(since_epoch).count() *
+  return std::chrono::duration_cast<std::chrono::microseconds>(since_epoch).count() *
          0.000001;
 }
 

@@ -30,8 +30,6 @@
 
 namespace gua {
 
-class ShaderProgram;
-
 /**
  * A render pass which draws a part of the SceneGraph.
  *
@@ -58,14 +56,19 @@ class GeometryPass : public Pass {
    */
   virtual ~GeometryPass() {}
 
-  void render_scene(Camera const& camera, RenderContext const& ctx);
+  virtual void render_scene(Camera const& camera,
+                            SceneGraph const& current_graph,
+                            RenderContext const& ctx,
+                            std::size_t viewid);
 
  protected:
   virtual void rendering(SerializedScene const& scene,
+                         SceneGraph const& scene_graph,
                          RenderContext const& ctx,
                          CameraMode eye,
                          Camera const& camera,
-                         FrameBufferObject* target) = 0;
+                         FrameBufferObject* target,
+                         std::size_t viewid) = 0;
 
  private:
 };

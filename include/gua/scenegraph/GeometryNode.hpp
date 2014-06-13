@@ -25,58 +25,99 @@
 // guacamole headers
 #include <gua/scenegraph/Node.hpp>
 #include <gua/utils/configuration_macro.hpp>
+#include <gua/renderer/enums.hpp>
 
 // external headers
 #include <string>
 
-/**
- * This class is used to represent geometry in the SceneGraph.
- *
- */
-
 namespace gua {
 
+/**
+ * This class is used to represent any kind of geometry in the SceneGraph.
+ *
+ * A GeometryNode only stores references to existing rendering assets stored in
+ * guacamole's databases. GeometryNodes typically aren't instantiated directly
+ * but by utilizing guacamole's GeometryLoader.
+ *
+ * \ingroup gua_scenegraph
+ */
 class GUA_DLL GeometryNode : public Node {
+
   public:
 
-    struct Configuration {
-      GUA_ADD_PROPERTY(std::string,     geometry,   "gua_default_geometry");
-      GUA_ADD_PROPERTY(std::string,     material,   "gua_default_material");
-    };
-
-    Configuration data;
-
+    /**
+     * Constructor.
+     *
+     * This constructs an empty GeometryNode.
+     *
+     */
     GeometryNode() {};
 
     /**
      * Constructor.
      *
-     * This constructs a GeometryNode with the given parameters and calls
-     * the constructor of base class Core with the type GEOMETRY.
+     * This constructs a GeometryNode with the given parameters.
      *
-     * \param geometry  The name of the GeometryNode's geometry.
-     * \param material  The name of the GeometryNodeCore's material.
+     * \param name           The name of the new GeometryNode.
+     * \param configuration  A configuration struct to define the GeometryNode's
+     *                       properties.
+     * \param transform      A matrix to describe the GeometryNode's
+     *                       transformation.
      */
     GeometryNode(std::string const& name,
-                 Configuration const& configuration = Configuration(),
-                 math::mat4 const& transform = math::mat4::identity());
+                 std::string const& filename = "gua_default_geometry",
+                 std::string const& material = "gua_default_material",
+                 math::mat4 const& transform = math::mat4::identity(),
+                 ShadowMode shadow_mode = ShadowMode::LOW_QUALITY);
 
     /**
-     * Accepts a visitor and calls concrete visit method
+    * Get the string referring to an entry in guacamole's GeometryDatabase.
+    */
+    std::string const& get_filename() const;
+
+    /**
+    * Set the string referring to an entry in guacamole's GeometryDatabase.
+    */
+    void set_filename(std::string const& filename);
+
+    /**
+    * A string referring to an entry in guacamole's MaterialDatabase.
+    */
+    std::string const& get_material() const;
+    void set_material(std::string const& v);
+
+    /**
+    * A value describing the shadow's quality.
+    */
+    ShadowMode get_shadow_mode() const { return shadow_mode_; }
+    void set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
+
+    /**
+    * Updates bounding box by accessing the ressource in the databse
+    */
+    virtual void update_bounding_box() const;
+
+    inline virtual void update_cache() { Node::update_cache(); }
+
+    /**
+     * Accepts a visitor and calls concrete visit method.
      *
-     * This method implements the visitor pattern for Nodes
+     * This method implements the visitor pattern for Nodes.
      *
+     * \param visitor  A visitor to process the GeometryNode's data.
      */
-    /* virtual */ void accept(NodeVisitor&);
+    /* virtual */ void accept(NodeVisitor& visitor);
 
-    /*virtual*/ void update_bounding_box() const;
+  protected:
 
-    /*virtual*/ void ray_test_impl(RayNode const& ray, PickResult::Options options,
-                            Mask const& mask, std::set<PickResult>& hits);
+    // virtual std::shared_ptr<Node> copy() const = 0;
 
-  private:
+    std::string filename_;
+    std::string material_;
 
-    std::shared_ptr<Node> copy() const;
+    ShadowMode shadow_mode_;
+    bool filename_changed_;
+    bool material_changed_;
 };
 
 }

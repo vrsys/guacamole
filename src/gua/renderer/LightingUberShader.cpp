@@ -26,7 +26,8 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/UberShaderFactory.hpp>
 #include <gua/databases.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/memory.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <sstream>
@@ -39,11 +40,14 @@ void LightingUberShader::
 create(std::set<std::string> const& material_names,
        std::vector<LayerMapping const*> const& inputs) {
 
-  UberShaderFactory factory(ShadingModel::LIGHTING_STAGE, material_names);
-  factory.add_inputs_to_main_functions(inputs, ShadingModel::GBUFFER_FRAGMENT_STAGE);
+  fshader_factory_ = gua::make_unique<UberShaderFactory>(
+    ShadingModel::LIGHTING_STAGE, material_names
+    );
 
-  UberShader::set_uniform_mapping(factory.get_uniform_mapping());
-  UberShader::set_output_mapping(factory.get_output_mapping());
+  fshader_factory_->add_inputs_to_main_functions(inputs, ShadingModel::GBUFFER_FRAGMENT_STAGE);
+
+  UberShader::set_uniform_mapping(fshader_factory_->get_uniform_mapping());
+  UberShader::set_output_mapping(fshader_factory_->get_output_mapping());
 
   // VERTEX SHADER -------------------------------------------------------------
   std::string vertex_shader(
@@ -72,13 +76,15 @@ create(std::set<std::string> const& material_names,
 
   // print material specific methods
   string_utils::replace(fragment_shader, "@material_methods",
-    UberShader::print_material_methods(factory));
+    UberShader::print_material_methods(*fshader_factory_));
 
   // print main switch(es)
   string_utils::replace(fragment_shader, "@material_switch",
-    UberShader::print_material_switch(factory));
+    UberShader::print_material_switch(*fshader_factory_));
 
-  create_from_sources(vertex_shader, fragment_shader);
+  auto lighting_program = std::make_shared<ShaderProgram>();
+  lighting_program->create_from_sources(vertex_shader, fragment_shader);
+  add_program(lighting_program);
 }
 
 }

@@ -27,6 +27,8 @@
 #include <gua/renderer/ShadingModel.hpp>
 #include <gua/renderer/UniformMapping.hpp>
 #include <gua/renderer/LayerMapping.hpp>
+#include <gua/renderer/UberShaderFactory.hpp>
+#include <gua/renderer/Frustum.hpp>
 #include <gua/renderer/enums.hpp>
 
 #define CASES_PER_UBERSHADER_SWITCH 30
@@ -36,44 +38,107 @@ namespace gua {
 class UberShaderFactory;
 
 /**
- *
+ * This class represents a (multipass-) stage with material-dependent meta-shader components
  */
-class UberShader : public ShaderProgram {
+class UberShader {
+
  public:
+
   /**
-   * Default constructor.
-   *
-   * Creates a new (invalid) shader program.
-   */
+  * c'tor
+  */
   UberShader();
 
   /**
-   *
+  * d'tor
+  */
+  virtual ~UberShader();
+
+  /**
+  * initialize material dependent layer mappings for ubershaders
+  */
+  virtual void create(std::set<std::string> const& material_names);
+
+  /**
+   * set material dependent uniforms for all programs of ubershader
    */
   void set_material_uniforms(std::set<std::string> const& materials,
                              ShadingModel::StageID stage,
                              RenderContext const& context);
 
   /**
-   *
+  * set a uniform for all programs of this uebershader
+  */
+  template <typename T>
+  void set_uniform(RenderContext const& context,
+    T const& value,
+    std::string const& name,
+    unsigned position = 0) const
+  {
+    UniformValue<T> tmp(value);
+
+    for (auto const& program : programs_) {
+
+      program->apply_uniform(context, &tmp, name, position);
+    }
+  }
+
+  virtual void cleanup (RenderContext const& context);
+
+  /**
+   * get gbuffer layers of ubershader
    */
   virtual LayerMapping const* get_gbuffer_mapping() const;
 
   /**
-   *
+   * get uniform mapping of ubershader
    */
   virtual UniformMapping const* get_uniform_mapping() const;
 
- protected:
+  /**
+  * add a program to ubershader
+  */
+  virtual void add_program(std::shared_ptr<ShaderProgram> const&);
+
+  virtual void save_shaders_to_file(std::string const& directory,
+                                    std::string const& name) const;
+
+  /**
+  * returns a program in enumerated order
+  */
+  virtual std::shared_ptr<ShaderProgram> const& get_program(unsigned index = 0) const;
+
+  /**
+  * returns a container with all involved programs of this ubershader
+  */
+  std::vector<std::shared_ptr<ShaderProgram>> const& programs() const;
+
+  /**
+  * uploads ressources to the GPU
+  */
+  virtual bool upload_to(RenderContext const& context) const;
+
+ protected: // methods
+
   void set_uniform_mapping(UniformMapping const& mapping);
   void set_output_mapping(LayerMapping const& mapping);
 
   std::string const print_material_switch(UberShaderFactory const& factory) const;
   std::string const print_material_methods(UberShaderFactory const& factory) const;
 
- private:
+
+  protected: // attributes
+
   UniformMapping uniform_mapping_;
   LayerMapping output_mapping_;
+
+  std::unique_ptr<UberShaderFactory> vshader_factory_;
+  std::unique_ptr<UberShaderFactory> fshader_factory_;
+
+  private: // attributes
+
+  std::vector<std::shared_ptr<ShaderProgram>> programs_;
+
 };
 
 }
