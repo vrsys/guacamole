@@ -93,10 +93,12 @@ void Pipeline::print_shaders(std::string const& directory) const
 {
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
-  for (auto pass : passes_) {
-    //pass->print_shaders();
+  int ctr(0);
+  for (const auto& pass : passes_) {
+    pass->print_shaders(directory, "/" + std::to_string(ctr++) + "_" + 
+            string_utils::sanitize(
+                string_utils::demangle_type_name(typeid(*pass).name())));
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
