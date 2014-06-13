@@ -51,6 +51,11 @@ class FinalPass : public FullscreenPass {
 
   bool pre_compile_shaders(RenderContext const& ctx);
 
+  void pre_rendering(Camera const& camera,
+                     SerializedScene const& scene,
+                     CameraMode eye,
+                     RenderContext const& ctx);
+
   /**
    *
    */

@@ -72,20 +72,42 @@ void FinalPass::set_uniforms(SerializedScene const& scene,
                        static_cast<int>(pipeline_->config.background_mode()),
                        "gua_background_mode");
 
-  if (pipeline_->config.background_mode() == Pipeline::BackgroundMode::COLOR || pipeline_->config.background_texture() == "")
-    shader_->set_uniform(
-        ctx, pipeline_->config.background_color(), "gua_background_color");
-  else
-    shader_->set_uniform(ctx,
-                         TextureDatabase::instance()->lookup(
-                             pipeline_->config.background_texture()),
-                         "gua_background_texture");
+  if (pipeline_->config.background_mode() == Pipeline::BackgroundMode::COLOR || pipeline_->config.background_texture() == "") {
+    shader_->set_uniform(ctx, pipeline_->config.background_color(), "gua_background_color");
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 LayerMapping const* FinalPass::get_gbuffer_mapping() const {
   return shader_->get_gbuffer_mapping();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void FinalPass::pre_rendering(Camera const& camera,
+                                   SerializedScene const& scene,
+                                   CameraMode eye,
+                                   RenderContext const& ctx) {
+
+  if (pipeline_->config.background_mode() != Pipeline::BackgroundMode::COLOR && pipeline_->config.background_texture() != "") {
+    if (pipeline_->config.enable_stereo() && TextureDatabase::instance()->is_supported(pipeline_->config.background_texture() + "_right")) {
+      if (eye == CameraMode::RIGHT) {
+        shader_->set_uniform(ctx, TextureDatabase::instance()->lookup(
+                                      pipeline_->config.background_texture() + "_right"),
+                                      "gua_background_texture");
+      } else {
+        shader_->set_uniform(ctx, TextureDatabase::instance()->lookup(
+                                      pipeline_->config.background_texture() + "_left"),
+                                      "gua_background_texture");
+      }
+    } else {
+      shader_->set_uniform(ctx, TextureDatabase::instance()->lookup(
+                                    pipeline_->config.background_texture()),
+                                    "gua_background_texture");
+    }
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
