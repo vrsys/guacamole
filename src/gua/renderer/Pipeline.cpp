@@ -296,7 +296,9 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                                ->get_color_buffers(TYPE_FLOAT)[0]);
       } else {
         window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-                               ->get_color_buffers(TYPE_FLOAT)[0]);
+			 ->get_color_buffers(TYPE_FLOAT)[0],
+			 passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
+			 ->get_color_buffers(TYPE_FLOAT)[0]);
       }
 
       window_->finish_frame();

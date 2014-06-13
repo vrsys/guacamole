@@ -387,6 +387,8 @@ void Video3DUberShader::draw(RenderContext const& ctx,
         set_uniform(ctx, 0.075f, "epsilon");
         set_uniform(ctx, int(video3d_ressource->number_of_cameras()), "numlayers");
         get_program(blend_pass)->set_uniform(ctx, int(material_name == default_video_material_name()), "using_default_video_material");
+        get_program(blend_pass)->set_uniform(ctx, int(video3d_ressource->do_overwrite_normal()), "overwrite_normal");
+        get_program(blend_pass)->set_uniform(ctx, video3d_ressource->get_overwrite_normal(), "o_normal");
 
         ctx.render_context->bind_texture(warp_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
         get_program(blend_pass)->get_program(ctx)->uniform_sampler("quality_texture", 0);

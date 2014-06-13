@@ -105,6 +105,9 @@ class Video3DRessource : public GeometryRessource {
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
   /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
+  bool                            do_overwrite_normal() const;
+  scm::math::vec3f const&         get_overwrite_normal() const;
+
  private:
 
   void upload_to(RenderContext const& context) const;
@@ -147,6 +150,9 @@ class Video3DRessource : public GeometryRessource {
   mutable unsigned height_colorimage_;
   
   mutable std::mutex upload_mutex_;
+
+  mutable bool overwrite_normal_;
+  mutable scm::math::vec3f o_normal_;
 };
 
 }

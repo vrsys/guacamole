@@ -181,6 +181,7 @@ class NodeVisitor {
    */
   virtual void visit(RayNode* node) { visit(reinterpret_cast<Node*>(node)); }
 
+#if GUACAMOLE_ENABLE_PHYSICS
   /**
    * Visits a RigidBodyNode.
    *
@@ -200,6 +201,7 @@ class NodeVisitor {
    * \param cam   Pointer to a CollisionShapeNode.
    */
   virtual void visit(physics::CollisionShapeNode* node) { visit(reinterpret_cast<Node*>(node)); }
+#endif
 
   /**
    * Visits a TexturedQuadNode.
