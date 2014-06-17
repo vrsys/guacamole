@@ -268,6 +268,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   } else {
     if (passes_need_reload_) {
       create_passes();
+      camera_block_ = std::make_shared<CameraUniformBlock>(context_->render_device);
     }
 
     if (buffers_need_reload_) {
