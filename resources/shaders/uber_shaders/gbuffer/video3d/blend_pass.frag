@@ -24,6 +24,8 @@ in vec2 gua_quad_coords;
 uniform int   numlayers;
 uniform float epsilon;
 uniform int   using_default_video_material;
+uniform int   overwrite_normal;
+uniform vec3  o_normal;
 
 uniform sampler2DArray depth_texture;
 uniform sampler2DArray quality_texture;
@@ -131,6 +133,10 @@ void main() {
     }
   } else {
     discard;
+  }
+
+  if(overwrite_normal > 0){
+    output_normal = o_normal;
   }
 
   // big switch, one case for each material

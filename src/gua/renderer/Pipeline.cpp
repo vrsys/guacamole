@@ -93,10 +93,12 @@ void Pipeline::print_shaders(std::string const& directory) const
 {
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
-  for (auto pass : passes_) {
-    //pass->print_shaders();
+  int ctr(0);
+  for (const auto& pass : passes_) {
+    pass->print_shaders(directory, "/" + std::to_string(ctr++) + "_" + 
+            string_utils::sanitize(
+                string_utils::demangle_type_name(typeid(*pass).name())));
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -296,7 +298,9 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
                                ->get_color_buffers(TYPE_FLOAT)[0]);
       } else {
         window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-                               ->get_color_buffers(TYPE_FLOAT)[0]);
+			 ->get_color_buffers(TYPE_FLOAT)[0],
+			 passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
+			 ->get_color_buffers(TYPE_FLOAT)[0]);
       }
 
       window_->finish_frame();

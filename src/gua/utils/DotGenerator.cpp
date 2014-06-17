@@ -32,8 +32,10 @@
 #include <gua/scenegraph/ScreenNode.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/scenegraph/TexturedQuadNode.hpp>
+#if GUACAMOLE_ENABLE_PHYSICS
 #include <gua/physics/RigidBodyNode.hpp>
 #include <gua/physics/CollisionShapeNode.hpp>
+#endif
 #include <gua/utils/string_utils.hpp>
 
 // external headers
@@ -188,6 +190,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
     child->accept(*this);
 }
 
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */ void DotGenerator::visit(physics::RigidBodyNode* rb) {
   pre_node_info(rb);
@@ -222,6 +225,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
   for (auto child : shape->children_)
     child->accept(*this);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */ void DotGenerator::visit(TexturedQuadNode* node) {

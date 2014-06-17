@@ -91,7 +91,9 @@ namespace gua {
   height_depthimage_(),
   width_colorimage_(),
   height_colorimage_(),
-  upload_mutex_()
+  upload_mutex_(),
+  overwrite_normal_(false),
+  o_normal_()
   {
     Video3DUberShader::initialize_video_material();
 
@@ -120,6 +122,11 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRessource::init()
 {
+
+  // approximately local space - can be overwritten from .ks file
+  bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-1.5,-0.1,-1.0),
+						math::vec3( 1.5, 2.2, 1.5));
+
   std::fstream istr;
   istr.open(ks_filename_.c_str(), std::ios::in);
 
@@ -129,7 +136,6 @@ void Video3DRessource::init()
   if (istr.good())
   {
     std::string token;
-    std::vector<std::string> hostnames;
 
     while (istr >> token)
     {
@@ -148,55 +154,65 @@ void Video3DRessource::init()
         //calib_file_ptr->printInfo();
 
         calib_files_.push_back(calib_file_ptr);
-      } else if ( token == "hostname" )
-      {
-        istr >> token;
-        hostnames.push_back(token);
       }
+      else if ( token == "bbx" ) {
+	float x_min,y_min,z_min,x_max,y_max,z_max;
+	istr >> x_min
+	     >> y_min
+	     >> z_min
+	     >> x_max
+	     >> y_max
+	     >> z_max;
+	bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(x_min,y_min,z_min),
+						      math::vec3(x_max,y_max,z_max));
+      }
+      else if ( token == "normal" ){
+	float x,y,z;
+	istr >> x
+	     >> y
+	     >> z;
+	overwrite_normal_ = true;
+	o_normal_ = scm::math::vec3f(x,y,z);
+      }
+ 
     }
+    
 
-    std::string hostname = boost::asio::ip::host_name();
-    boost::algorithm::to_lower(hostname);
+    
 
-    if ( std::find(hostnames.begin(), hostnames.end(), hostname) != hostnames.end() )
-    {
-      for ( auto calib_file : calib_files_ )
-      {
+
+    for ( auto calib_file : calib_files_ ){
 #if 0
-        sys::FileBuffer* tmp = new sys::FileBuffer(calib_file->get_stream_filename());
-        tmp->open();
-        tmp->setLooping(true);
-        file_buffers_.push_back(tmp);
+      sys::FileBuffer* tmp = new sys::FileBuffer(calib_file->get_stream_filename());
+      tmp->open();
+      tmp->setLooping(true);
+      file_buffers_.push_back(tmp);
 #endif
 
-        const unsigned pixelcountc = calib_file->getWidthC() * calib_file->getHeightC();
-
-        depth_size_ = calib_file->getWidth() * calib_file->getHeight(); //== pixelcount
-        color_size_ = pixelcountc * 3 * sizeof(unsigned char);
-        depth_size_byte_ = depth_size_ * sizeof(float);
-
-        if(calib_file->isCompressedRGB()){
-            mvt::DXTCompressor dxt;
-            dxt.init(calib_file->getWidthC(), calib_file->getHeightC(), FORMAT_DXT1);
-            color_size_ = dxt.getStorageSize();
-        }
-
-        color_buffers_.push_back(new unsigned char[color_size_]);
-        depth_buffers_.push_back(new float[depth_size_]);
+      const unsigned pixelcountc = calib_file->getWidthC() * calib_file->getHeightC();
+      
+      depth_size_ = calib_file->getWidth() * calib_file->getHeight(); //== pixelcount
+      color_size_ = pixelcountc * 3 * sizeof(unsigned char);
+      depth_size_byte_ = depth_size_ * sizeof(float);
+      
+      if(calib_file->isCompressedRGB()){
+	mvt::DXTCompressor dxt;
+	dxt.init(calib_file->getWidthC(), calib_file->getHeightC(), FORMAT_DXT1);
+	color_size_ = dxt.getStorageSize();
       }
-
-      assert (calib_files_.size() > 0);
-
-      width_depthimage_  = calib_files_[0]->getWidth();
-      height_depthimage_ = calib_files_[0]->getHeight();
-
-      width_colorimage_  = calib_files_[0]->getWidthC();
-      height_colorimage_ = calib_files_[0]->getHeightC();
-
-    } else { // host is not in hostname list
-      throw std::runtime_error("to implement: host is not in hostname list");
+      
+      color_buffers_.push_back(new unsigned char[color_size_]);
+        depth_buffers_.push_back(new float[depth_size_]);
     }
-
+    
+    assert (calib_files_.size() > 0);
+    
+    width_depthimage_  = calib_files_[0]->getWidth();
+    height_depthimage_ = calib_files_[0]->getHeight();
+    
+    width_colorimage_  = calib_files_[0]->getWidthC();
+    height_colorimage_ = calib_files_[0]->getHeightC();
+    
     istr.close();
   } else {
     throw std::runtime_error("Couldn't open calib file");
@@ -488,7 +504,7 @@ void Video3DRessource::update_buffers(RenderContext const& ctx) const
   }
 #endif
 
-
+  
   if(framecounter_per_context_[ctx.id] != ctx.framecount){
     framecounter_per_context_[ctx.id] = ctx.framecount;
   }
@@ -496,7 +512,6 @@ void Video3DRessource::update_buffers(RenderContext const& ctx) const
     return;
   }
   if(nka_per_context_[ctx.id]->update()){
-
     unsigned char* buff = nka_per_context_[ctx.id]->getBuffer();
     for(int i = 0; i < number_of_cameras(); ++i) {
 
@@ -533,5 +548,19 @@ KinectCalibrationFile const& Video3DRessource::calibration_file(unsigned i) cons
 /*virtual*/ std::shared_ptr<GeometryUberShader> Video3DRessource::create_ubershader() const {
   return std::make_shared<Video3DUberShader>();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+  bool                           
+  Video3DRessource::do_overwrite_normal() const{
+    return overwrite_normal_;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+  scm::math::vec3f const&
+  Video3DRessource::get_overwrite_normal() const{
+    return o_normal_;
+  }
+
 
 }

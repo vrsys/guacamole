@@ -41,22 +41,32 @@ namespace gua {
                            math::mat4 const& transform)
   : GeometryNode(name, file, material, transform)
   {
-    // approximately local space
-    bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-3.0, -0.1,-3.0),
-                                                  math::vec3( 3.0, 2.5, 3.0));
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-
-  void Video3DNode::update_bounding_box() const {
-    //Logger::LOG_WARNING << "not implemented: Video3DNode::update_bounding_box()" << std::endl;
-  }
 
   /////////////////////////////////////////////////////////////////////////////
 
   void Video3DNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
                              Mask const& mask, std::set<PickResult>& hits) {
-    Logger::LOG_WARNING << "not implemented: Video3DNode::ray_test_impl()" << std::endl;
+
+    // first of all, check bbox
+    auto box_hits(ray.intersect(bounding_box_));
+
+    // ray did not intersect bbox -- therefore it wont intersect
+    if (box_hits.first == RayNode::END && box_hits.second == RayNode::END) {
+      return;
+    }
+
+    // return if only first object shall be returned and the current first hit
+    // is in front of the bbox entry point and the ray does not start inside
+    // the bbox
+    if (options & PickResult::PICK_ONLY_FIRST_OBJECT
+      && hits.size() > 0 && hits.begin()->distance < box_hits.first
+      && box_hits.first != Ray::END) {
+
+      return;
+    }
+
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -80,9 +90,7 @@ namespace gua {
           Video3DLoader loader;
           loader.create_geometry_from_file("dummy", filename_);
         }
-        else {
           // video already in database
-        }
       }
       else {
         Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": The name does not contain a type, file, id and flag parameter!" << std::endl;

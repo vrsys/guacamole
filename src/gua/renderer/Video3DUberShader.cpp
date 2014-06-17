@@ -281,8 +281,7 @@ void Video3DUberShader::draw(RenderContext const& ctx,
                              scm::math::mat4 const& normal_matrix,
                              Frustum const& /*frustum*/,
                              std::size_t viewid) const
-{
-  if (!GeometryDatabase::instance()->is_supported(ksfile_name) ||
+{  if (!GeometryDatabase::instance()->is_supported(ksfile_name) ||
       !MaterialDatabase::instance()->is_supported(material_name)) {
     gua::Logger::LOG_WARNING << "Video3DUberShader::draw(): No such video or material." << ksfile_name << ", " << material_name << std::endl;
     return;
@@ -312,15 +311,14 @@ void Video3DUberShader::draw(RenderContext const& ctx,
     ctx.render_context->bind_texture(video3d_ressource->depth_array(ctx), nearest_sampler_state_[ctx.id], 0);
     get_program(warp_pass)->get_program(ctx)->uniform_sampler("depth_video3d_texture", 0);
 
-    scm::math::vec4f norm_vec (0.0f, 1.0f, 0.0f, 0.0f);
-    auto trans_vec = model_matrix * norm_vec;
 
     get_program(warp_pass)->set_uniform(ctx, normal_matrix, "gua_normal_matrix");
     get_program(warp_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
+    get_program(warp_pass)->set_uniform(ctx, int(1), "bbxclip");
 
-    float model_scale = scm::math::length(trans_vec);
-    float const min_length = 0.0125f;
-    get_program(warp_pass)->set_uniform(ctx, min_length * model_scale, "min_length");
+    auto bbox(video3d_ressource->get_bounding_box());
+    get_program(warp_pass)->set_uniform(ctx, bbox.min, "bbx_min");
+    get_program(warp_pass)->set_uniform(ctx, bbox.max, "bbx_max");
 
     // pre passes
     for (unsigned layer = 0; layer != video3d_ressource->number_of_cameras(); ++layer)
@@ -339,7 +337,7 @@ void Video3DUberShader::draw(RenderContext const& ctx,
       // set uniforms
       get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getTexSizeInvD(), "tex_size_inv");
       get_program(warp_pass)->set_uniform(ctx, int(layer), "layer");
-      get_program(warp_pass)->set_uniform(ctx, int(1), "bbxclip");
+      
 
       if (material && video3d_ressource)
       {
@@ -387,6 +385,8 @@ void Video3DUberShader::draw(RenderContext const& ctx,
         set_uniform(ctx, 0.075f, "epsilon");
         set_uniform(ctx, int(video3d_ressource->number_of_cameras()), "numlayers");
         get_program(blend_pass)->set_uniform(ctx, int(material_name == default_video_material_name()), "using_default_video_material");
+        get_program(blend_pass)->set_uniform(ctx, int(video3d_ressource->do_overwrite_normal()), "overwrite_normal");
+        get_program(blend_pass)->set_uniform(ctx, video3d_ressource->get_overwrite_normal(), "o_normal");
 
         ctx.render_context->bind_texture(warp_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
         get_program(blend_pass)->get_program(ctx)->uniform_sampler("quality_texture", 0);

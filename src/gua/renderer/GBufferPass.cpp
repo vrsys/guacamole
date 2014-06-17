@@ -100,6 +100,18 @@ bool GBufferPass::pre_compile_shaders(const gua::RenderContext& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void GBufferPass::print_shaders(std::string const& directory,
+                             std::string const& name) const {
+
+  for (auto const& shader : ubershaders_) {
+    const std::string file_name = name + "/" + string_utils::sanitize(
+          string_utils::demangle_type_name(shader.first.name()));
+    shader.second->get_program()->save_to_file(directory, file_name);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void GBufferPass::rendering(SerializedScene const& scene,
                             SceneGraph const& graph,
                             RenderContext const& ctx,

@@ -48,6 +48,11 @@ std::string& replace(std::string& str,
                      std::string const& new_str);
 
 std::string const format_code(std::string const& code);
+
+std::string demangle_type_name(const char* name);
+
+std::string sanitize(std::string const& str);
+
 }
 }
 

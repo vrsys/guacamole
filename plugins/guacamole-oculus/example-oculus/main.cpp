@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 #include <gua/guacamole.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/OculusWindow.hpp>
 
 #include <OVR.h>
