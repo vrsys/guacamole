@@ -44,7 +44,18 @@ namespace gua {
 
 Video3DUberShader::Video3DUberShader()
   : GeometryUberShader()
-{}
+{
+  // pre resize for video shooting VRHyperspace
+  warp_depth_result_.resize(10);
+  warp_color_result_.resize(10);
+  fullscreen_quad_.resize(10);
+  warp_result_fbo_.resize(10);
+  linear_sampler_state_.resize(10);
+  nearest_sampler_state_.resize(10);
+  depth_stencil_state_warp_pass_.resize(10);
+  depth_stencil_state_blend_pass_.resize(10);
+  no_bfc_rasterizer_state_.resize(10);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
