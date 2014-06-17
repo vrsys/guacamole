@@ -28,6 +28,7 @@
 #include <gua/renderer/Window.hpp>
 #include <gua/renderer/SerializedScene.hpp>
 #include <gua/renderer/GBufferPass.hpp>
+#include <gua/renderer/CameraUniformBlock.hpp>
 #include <gua/utils/Color3f.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
@@ -227,6 +228,8 @@ class GUA_DLL Pipeline {
   bool display_loading_screen_;
 
   unsigned last_shading_model_revision_;
+
+  std::shared_ptr<gua::CameraUniformBlock> camera_block_;
 };
 
 }
