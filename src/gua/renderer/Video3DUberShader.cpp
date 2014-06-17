@@ -44,7 +44,18 @@ namespace gua {
 
 Video3DUberShader::Video3DUberShader()
   : GeometryUberShader()
-{}
+{
+  // pre resize for video shooting VRHyperspace
+  warp_depth_result_.resize(10);
+  warp_color_result_.resize(10);
+  fullscreen_quad_.resize(10);
+  warp_result_fbo_.resize(10);
+  linear_sampler_state_.resize(10);
+  nearest_sampler_state_.resize(10);
+  depth_stencil_state_warp_pass_.resize(10);
+  depth_stencil_state_blend_pass_.resize(10);
+  no_bfc_rasterizer_state_.resize(10);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -179,67 +190,66 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
   bool upload_succeeded = UberShader::upload_to(context);
 
   assert(context.render_window->config.get_stereo_mode() == StereoMode::MONO ||
-    ((context.render_window->config.get_left_resolution()[0] == context.render_window->config.get_right_resolution()[0]) &&
-    (context.render_window->config.get_left_resolution()[1] == context.render_window->config.get_right_resolution()[1])));
+	 ((context.render_window->config.get_left_resolution()[0] == context.render_window->config.get_right_resolution()[0]) &&
+	  (context.render_window->config.get_left_resolution()[1] == context.render_window->config.get_right_resolution()[1])));
+
 
   // initialize Texture Arrays (kinect depths & colors)
-  if ( context.id >= warp_color_result_.size() ||
-       context.id >= warp_depth_result_.size())
-  {
+  if (warp_color_result_.size() > context.id) {
+    if (warp_color_result_[context.id]) {
+      return upload_succeeded;
+    }
+    else {
+      // continue instantiation below
+    }
+  } else {
     warp_depth_result_.resize(context.id + 1);
     warp_color_result_.resize(context.id + 1);
-
-    warp_color_result_[context.id] = context.render_device->create_texture_2d(
-      context.render_window->config.get_left_resolution(),
-      scm::gl::FORMAT_RGBA_32F,
-      1,
-      MAX_NUM_KINECTS,
-      1
-      );
-
-    warp_depth_result_[context.id] = context.render_device->create_texture_2d(
-      context.render_window->config.get_left_resolution(),
-      scm::gl::FORMAT_D32F,
-      1,
-      MAX_NUM_KINECTS,
-      1
-      );
-  }
-
-  if (context.id >= fullscreen_quad_.size()) {
     fullscreen_quad_.resize(context.id + 1);
-    fullscreen_quad_[context.id].reset(new scm::gl::quad_geometry(context.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
-  }
-
-  if (context.id >= warp_result_fbo_.size()) {
     warp_result_fbo_.resize(context.id + 1);
-    warp_result_fbo_[context.id] = context.render_device->create_frame_buffer();
-  }
-
-  if (context.id >= linear_sampler_state_.size()) {
     linear_sampler_state_.resize(context.id + 1);
-    linear_sampler_state_[context.id] = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
-  }
-
-  if (context.id >= nearest_sampler_state_.size()) {
     nearest_sampler_state_.resize(context.id + 1);
-    nearest_sampler_state_[context.id] = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
-  }
-
-  if (context.id >= depth_stencil_state_warp_pass_.size()) {
     depth_stencil_state_warp_pass_.resize(context.id + 1);
-    depth_stencil_state_warp_pass_[context.id] = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
+    depth_stencil_state_blend_pass_.resize(context.id + 1);
+    no_bfc_rasterizer_state_.resize(context.id + 1);
   }
 
-  if (context.id >= depth_stencil_state_blend_pass_.size()) {
-    depth_stencil_state_blend_pass_.resize(context.id + 1);
-    depth_stencil_state_blend_pass_[context.id] = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
-  }
-  if (context.id >= no_bfc_rasterizer_state_.size())
-  {
-    no_bfc_rasterizer_state_.resize(context.id + 1);
-    no_bfc_rasterizer_state_[context.id] = context.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
-  }
+
+  warp_color_result_[context.id] = context.render_device->create_texture_2d(
+									    context.render_window->config.get_left_resolution(),
+									    scm::gl::FORMAT_RGBA_32F,
+									    1,
+									    MAX_NUM_KINECTS,
+									    1
+									    );
+  
+  warp_depth_result_[context.id] = context.render_device->create_texture_2d(
+									    context.render_window->config.get_left_resolution(),
+									    scm::gl::FORMAT_D32F,
+									    1,
+									    MAX_NUM_KINECTS,
+									    1
+									    );
+
+  fullscreen_quad_[context.id].reset(new scm::gl::quad_geometry(context.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+
+
+  warp_result_fbo_[context.id] = context.render_device->create_frame_buffer();
+  
+
+  linear_sampler_state_[context.id] = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+  
+
+  nearest_sampler_state_[context.id] = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+ 
+
+  depth_stencil_state_warp_pass_[context.id] = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
+
+
+  depth_stencil_state_blend_pass_[context.id] = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
+ 
+  no_bfc_rasterizer_state_[context.id] = context.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
+
 
   return upload_succeeded;
 }

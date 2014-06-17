@@ -98,6 +98,19 @@ namespace gua {
     Video3DUberShader::initialize_video_material();
 
     init();
+
+    // pre resize for video shooting VRHyperspace
+    proxy_vertices_.resize(10);
+    proxy_indices_.resize(10);
+    proxy_vertex_array_.resize(10);
+    rstate_solid_.resize(10);
+    color_texArrays_.resize(10);
+    depth_texArrays_.resize(10);
+    nka_per_context_.resize(10);
+    cv_xyz_per_context_.resize(10);
+    cv_uv_per_context_.resize(10);
+    framecounter_per_context_.resize(10);
+
   }
 
   ////////////////////////////////////////////////////////////////////////////////
