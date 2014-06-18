@@ -62,20 +62,21 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline()
-    : config(),
-      window_(nullptr),
-      context_(nullptr),
-      application_fps_(0),
-      rendering_fps_(0),
-      serializer_(new Serializer()),
-      current_scenes_(2),
-      passes_need_reload_(true),
-      buffers_need_reload_(true),
-      last_shading_model_revision_(0),
-      display_loading_screen_(true) {
+  : config(),
+    window_(nullptr),
+    context_(nullptr),
+    application_fps_(0),
+    rendering_fps_(0),
+    serializer_(new Serializer()),
+    current_scenes_(2),
+    passes_need_reload_(true),
+    buffers_need_reload_(true),
+    last_shading_model_revision_(0),
+    display_loading_screen_(true),
+    camera_block_(nullptr) {
 
-        create_passes();
-      }
+  create_passes();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,13 +90,12 @@ Pipeline::~Pipeline() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::print_shaders(std::string const& directory) const 
-{
+void Pipeline::print_shaders(std::string const& directory) const {
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
   int ctr(0);
   for (const auto& pass : passes_) {
-    pass->print_shaders(directory, "/" + std::to_string(ctr++) + "_" + 
+    pass->print_shaders(directory, "/" + std::to_string(ctr++) + "_" +
             string_utils::sanitize(
                 string_utils::demangle_type_name(typeid(*pass).name())));
   }
