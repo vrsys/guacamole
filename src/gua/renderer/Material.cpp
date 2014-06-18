@@ -127,8 +127,8 @@ void Material::load_description() {
   for (auto& stage : mod->get_stages()) {
     for (auto const& uniform : stage.get_uniforms()) {
       std::string value(description_.get_uniforms()[uniform.first]);
-      uniform_values_[uniform.first] =
-          create_from_string_and_type(value, uniform.second);
+      uniform_values_[uniform.first] = std::make_pair(uniform.second,
+          create_from_string_and_type(value, uniform.second));
     }
   }
 }

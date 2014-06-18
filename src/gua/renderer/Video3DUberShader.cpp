@@ -126,7 +126,7 @@ std::string const Video3DUberShader::_blend_pass_vertex_shader() const
 
   // material specific uniforms
   string_utils::replace(vertex_shader, "@uniform_definition",
-    get_uniform_mapping()->get_uniform_definition());
+    get_uniform_mapping()->get_uniform_definition(Pipeline::PipelineStage::geometry));
 
   // output
   string_utils::replace(vertex_shader, "@output_definition",
@@ -166,7 +166,7 @@ std::string const Video3DUberShader::_blend_pass_fragment_shader() const
 
   // material specific uniforms
   string_utils::replace(fragment_shader, "@uniform_definition",
-    get_uniform_mapping()->get_uniform_definition());
+    get_uniform_mapping()->get_uniform_definition(Pipeline::PipelineStage::geometry));
 
   // outputs
   string_utils::replace(fragment_shader, "@output_definition",
@@ -222,7 +222,7 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
 									    MAX_NUM_KINECTS,
 									    1
 									    );
-  
+
   warp_depth_result_[context.id] = context.render_device->create_texture_2d(
 									    context.render_window->config.get_left_resolution(),
 									    scm::gl::FORMAT_D32F,
@@ -235,19 +235,19 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
 
 
   warp_result_fbo_[context.id] = context.render_device->create_frame_buffer();
-  
+
 
   linear_sampler_state_[context.id] = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
-  
+
 
   nearest_sampler_state_[context.id] = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
- 
+
 
   depth_stencil_state_warp_pass_[context.id] = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
 
 
   depth_stencil_state_blend_pass_[context.id] = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
- 
+
   no_bfc_rasterizer_state_[context.id] = context.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
 
 
@@ -349,7 +349,7 @@ void Video3DUberShader::draw(RenderContext const& ctx,
       // set uniforms
       get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getTexSizeInvD(), "tex_size_inv");
       get_program(warp_pass)->set_uniform(ctx, int(layer), "layer");
-      
+
 
       if (material && video3d_ressource)
       {

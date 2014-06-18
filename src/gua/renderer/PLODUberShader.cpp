@@ -207,7 +207,7 @@ std::string const PLODUberShader::reconstruction_pass_vertex_shader() const
 
   // material specific uniforms
   string_utils::replace(vertex_shader, "@uniform_definition",
-    get_uniform_mapping()->get_uniform_definition());
+    get_uniform_mapping()->get_uniform_definition(Pipeline::PipelineStage::geometry));
 
 
   // output
@@ -241,7 +241,7 @@ std::string const PLODUberShader::reconstruction_pass_fragment_shader() const
 
   // material specific uniforms
   string_utils::replace(fragment_shader, "@uniform_definition",
-    get_uniform_mapping()->get_uniform_definition());
+    get_uniform_mapping()->get_uniform_definition(Pipeline::PipelineStage::geometry));
 
   // outputs
   string_utils::replace(fragment_shader, "@output_definition",
@@ -265,7 +265,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 
 
   // initialize attachments for depth pass
-  if (context.id >= depth_pass_log_depth_result_.size()) 
+  if (context.id >= depth_pass_log_depth_result_.size())
   {
 
     depth_pass_log_depth_result_.resize(context.id + 1);
@@ -280,7 +280,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       );
   }
 
-  if (context.id >= depth_pass_linear_depth_result_.size()) 
+  if (context.id >= depth_pass_linear_depth_result_.size())
   {
 
     depth_pass_linear_depth_result_.resize(context.id + 1);
@@ -312,7 +312,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
   }
 
   // initialize attachment for normalization pass
-  if (context.id >= normalization_pass_color_result_.size()) 
+  if (context.id >= normalization_pass_color_result_.size())
   {
 
     normalization_pass_color_result_.resize(context.id + 1);
@@ -337,9 +337,9 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
   if (context.id >= depth_pass_result_fbo_.size()) {
     depth_pass_result_fbo_.resize(context.id + 1);
     depth_pass_result_fbo_[context.id] = context.render_device->create_frame_buffer();
-    
+
     // configure depth FBO
-    depth_pass_result_fbo_[context.id]->clear_attachments();   
+    depth_pass_result_fbo_[context.id]->clear_attachments();
     depth_pass_result_fbo_[context.id]->attach_depth_stencil_buffer(depth_pass_log_depth_result_[context.id]);
     depth_pass_result_fbo_[context.id]->attach_color_buffer(0, depth_pass_linear_depth_result_[context.id]);
   }
@@ -412,27 +412,27 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
     last_geometry_state_.resize(context.id + 1);
     last_geometry_state_[context.id] = invalid_state;
   }
-  
- 
+
+
   if (context.id >= temp_buffer_A_.size())
   {
-  
+
     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
     pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
 
     size_t size_of_node_in_bytes = database->size_of_surfel()*database->surfels_per_node();
-  
+
     int32_t upload_budget_in_nodes =
         (policy->upload_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
 
 
     unsigned long long sizeOfNode = database->surfels_per_node() *database->size_of_surfel();
     unsigned long long sizeOfTempBuffers =  upload_budget_in_nodes * sizeOfNode;
-    
+
     temp_buffer_A_.resize(context.id + 1);
-    temp_buffer_A_[context.id] = context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, sizeOfTempBuffers, NULL); 
+    temp_buffer_A_[context.id] = context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, sizeOfTempBuffers, NULL);
   }
-  
+
 
   if (context.id >= temp_buffer_B_.size())
   {
@@ -440,16 +440,16 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
     pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
 
     size_t size_of_node_in_bytes = database->size_of_surfel()*database->surfels_per_node();
-  
+
     int32_t upload_budget_in_nodes =
         (policy->upload_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
 
 
     unsigned long long sizeOfNode = database->surfels_per_node() *database->size_of_surfel();
     unsigned long long sizeOfTempBuffers =  upload_budget_in_nodes * sizeOfNode;
-    
+
     temp_buffer_B_.resize(context.id + 1);
-    temp_buffer_B_[context.id] = context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, sizeOfTempBuffers, NULL);   
+    temp_buffer_B_[context.id] = context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, sizeOfTempBuffers, NULL);
   }
 
   if (context.id >= render_buffer_.size())
@@ -461,12 +461,12 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 
     int32_t render_budget_in_nodes =
         (policy->render_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
-        
-    unsigned long long sizeOfNode = database->surfels_per_node() *database->size_of_surfel();  
-    unsigned long long sizeOfRenderBuffer = render_budget_in_nodes * sizeOfNode;
-    
 
-    
+    unsigned long long sizeOfNode = database->surfels_per_node() *database->size_of_surfel();
+    unsigned long long sizeOfRenderBuffer = render_budget_in_nodes * sizeOfNode;
+
+
+
     render_buffer_.resize(context.id + 1);
     render_buffer_[context.id] = context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, sizeOfRenderBuffer);
   }
@@ -474,10 +474,10 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 
   if (context.id >= vertex_array_.size())
   {
-  
+
 
      vertex_array_.resize(context.id + 1);
-     
+
      vertex_array_[context.id] = context.render_device->create_vertex_array(
          scm::gl::vertex_format(
              0, 0, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
@@ -490,38 +490,38 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
           boost::assign::list_of(render_buffer_[context.id]));
 
   }
-  
+
   if (context.id >= temp_buffer_A_is_mapped_.size())
   {
     temp_buffer_A_is_mapped_.resize(context.id + 1);
     temp_buffer_A_is_mapped_[context.id] = false;
   }
-  
+
   if (context.id >= temp_buffer_B_is_mapped_.size())
   {
     temp_buffer_B_is_mapped_.resize(context.id + 1);
     temp_buffer_B_is_mapped_[context.id] = false;
   }
-  
+
 
   if (context.id >= mapped_temp_buffer_A_.size())
   {
     mapped_temp_buffer_A_.resize(context.id + 1);
     mapped_temp_buffer_A_[context.id] = nullptr;
   }
-  
+
   if (context.id >= mapped_temp_buffer_B_.size())
   {
     mapped_temp_buffer_B_.resize(context.id + 1);
     mapped_temp_buffer_B_[context.id] = nullptr;
   }
-  
+
   if (context.id >= previous_framecount_.size())
   {
     previous_framecount_.resize(context.id + 1);
     previous_framecount_[context.id] = -1;
   }
-  
+
   if(context.id >= frustum_culling_results_.size())
   {
     frustum_culling_results_.resize(context.id + 1);
@@ -554,16 +554,16 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
     {
 
       previous_framecount_[ctx.id] = ctx.framecount;
-    
+
       pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
       pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-    
+
       pbr::context_t context_id = controller->DeduceContextId(ctx.id);
 
       //swap cut database
       cuts->AcceptFront(context_id);
-      
+
 
       if (temp_buffer_A_is_mapped_[ctx.id])
       {
@@ -573,20 +573,20 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       else
       {
           //startup
-          
+
           controller->StoreTemporaryBuffers(
               context_id,
               GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A),
               GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B));
-              
+
          database->set_window_width(render_window_dims_[ctx.id][0]);
          database->set_window_height(render_window_dims_[ctx.id][1]);
       }
-      
+
       if (cuts->IsFrontModified(context_id))
       {
           //upload data to gpu
-          
+
           UnmapTempBufferPtr(ctx, cuts->GetBuffer(context_id));
 
           CopyTempToMainMemory(ctx, cuts->GetBuffer(context_id));
@@ -599,7 +599,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
               GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B));
 
       }
-      
+
     }
 
 
@@ -611,7 +611,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       last_geometry_state_[ctx.id] = pre_frame_state;
 
 
-      context_guard_[ctx.id] = std::make_shared<scm::gl::context_all_guard>(ctx.render_context); 
+      context_guard_[ctx.id] = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
 
 
 
@@ -620,19 +620,19 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       // clear depth FBOs depth attachments
 
        ctx.render_context->clear_depth_stencil_buffer(depth_pass_result_fbo_[ctx.id]);
-       ctx.render_context->clear_color_buffer(depth_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));  
+       ctx.render_context->clear_color_buffer(depth_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 
 
 
      // clear accumulation FBOs color attachment
 
-     ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f,0.0f)); 
+     ctx.render_context->clear_color_buffer(accumulation_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f,0.0f));
 
 
      // clear normalization FBOs color attachment
      ctx.render_context->clear_color_buffer(normalization_pass_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f,0.0f));
 
-      } 
+      }
 
 
 
@@ -657,7 +657,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 
       if( last_geometry_state_[ctx.id] != pre_draw_state)
       {
-	      
+
         //enable dynamic point size in shaders
 	ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_[ctx.id]);
 
@@ -667,26 +667,26 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
 	get_program(depth_pass)->set_uniform(ctx, height_divided_by_top_minus_bottom, "height_divided_by_top_minus_bottom");
 	get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
 	get_program(depth_pass)->set_uniform(ctx, (far_plane_value - near_plane_value), "far_minus_near_plane");
-              
+
         last_geometry_state_[ctx.id] = pre_draw_state;
 
       }
 
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
       pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
-      
+
       pbr::context_t context_id = controller->DeduceContextId(ctx.id);
       pbr::view_t view_id = controller->DeduceViewId(context_id, viewid);
       pbr::model_t model_id = controller->DeduceModelId(file_name);
-      
+
       //send camera and model_matrix to cut update
       pbr::ren::Camera cut_update_cam(view_id, near_plane_value, frustum.get_view(), frustum.get_projection() );
 
       cuts->SendCamera(context_id, view_id, cut_update_cam);
       cuts->SendHeightDividedByTopMinusBottom(context_id, view_id, height_divided_by_top_minus_bottom);
       cuts->SendTransform(context_id, model_id, model_matrix);
-      
-   
+
+
       pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
       std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
 
@@ -709,10 +709,10 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       {
           (frustum_culling_results_[ctx.id])[node_counter] = culling_frustum.classify(model_bounding_boxes[k->node_id_]);
       }
-            
+
       auto plod_ressource     = std::static_pointer_cast<PLODRessource>(GeometryDatabase::instance()->lookup(file_name));
       auto material          = MaterialDatabase::instance()->lookup(material_name);
-   
+
       // begin of depth pass (first)
       {
           scm::math::vec4f x_unit_vec(1.0,0.0f,0.f,0.f);
@@ -780,7 +780,7 @@ void PLODUberShader::draw(RenderContext const& ctx,
 
         //disable depth test
         ctx.render_context->set_depth_stencil_state(no_depth_test_depth_stencil_state_[ctx.id]);
- 
+
         //set blend state to accumulate
         ctx.render_context->set_blend_state(color_accumulation_state_[ctx.id]);
 
@@ -815,19 +815,19 @@ void PLODUberShader::draw(RenderContext const& ctx,
         ctx.render_context->bind_texture(depth_pass_linear_depth_result_[ctx.id], linear_sampler_state_[ctx.id], 0);
         get_program(accumulation_pass)->get_program(ctx)->uniform_sampler("p01_depth_texture", 0);
 
-      
+
         get_program(accumulation_pass)->set_uniform(ctx, transpose(inverse(frustum.get_view()*model_matrix)), "gua_normal_matrix");
         get_program(accumulation_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
       if (material && plod_ressource)
       {
-         
+
         pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
         pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
         pbr::context_t context_id = controller->DeduceContextId(ctx.id);
         pbr::model_t model_id = controller->DeduceModelId(file_name);
         pbr::view_t view_id = controller->DeduceViewId(context_id, viewid);
-         
+
         material_id_[ctx.id] = material->get_id();
 
 
@@ -857,7 +857,7 @@ void PLODUberShader::draw(RenderContext const& ctx,
 
         get_program(accumulation_pass)->use(ctx);
         {
-          
+
           plod_ressource->draw(ctx, context_id, view_id, model_id, vertex_array_[ctx.id], frustum_culling_results_[ctx.id]);
         }
         get_program(accumulation_pass)->unuse(ctx);
@@ -896,7 +896,7 @@ void PLODUberShader::draw(RenderContext const& ctx,
                 //bind color output for gbuffer
 		ctx.render_context->bind_texture(accumulation_pass_color_result_[ctx.id], linear_sampler_state_[ctx.id], 0);
 		get_program(normalization_pass)->get_program(ctx)->uniform_sampler("p02_color_texture", 0);
- 
+
 		fullscreen_quad_[ctx.id]->draw(ctx.render_context);
 	      }
 	    }
@@ -933,7 +933,7 @@ void PLODUberShader::draw(RenderContext const& ctx,
                 //bind color output for gbuffer
 		ctx.render_context->bind_texture(normalization_pass_color_result_[ctx.id], linear_sampler_state_[ctx.id], 1);
 		get_program(reconstruction_pass)->get_program(ctx)->uniform_sampler("p02_color_texture", 1);
- 
+
 		fullscreen_quad_[ctx.id]->draw(ctx.render_context);
 	      }
 	    }
@@ -1035,7 +1035,7 @@ void PLODUberShader::CopyTempToMainMemory(RenderContext const& ctx, pbr::ren::Cu
                 assert(false);
             }
             std::vector<pbr::ren::CutDatabaseRecord::SlotUpdateDescr>& transfer_descr_list = cuts->GetUpdatedSet(context_id);
-            
+
             if (!transfer_descr_list.empty())
             {
                 for (const auto& transfer_desc : transfer_descr_list)
@@ -1065,7 +1065,7 @@ void PLODUberShader::CopyTempToMainMemory(RenderContext const& ctx, pbr::ren::Cu
                     ctx.render_context->copy_buffer_data(render_buffer_[ctx.id],temp_buffer_B_[ctx.id], offset_in_render_VBO, offset_in_temp_VBO, size_of_node_in_bytes);
                 }
             }
-            
+
             break;
         }
 

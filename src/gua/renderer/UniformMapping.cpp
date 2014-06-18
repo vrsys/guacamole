@@ -79,9 +79,12 @@ std::pair<std::string, int> const& UniformMapping::get_mapping(
   return error_;
 }
 
-std::string const UniformMapping::get_uniform_definition() const {
+std::string const UniformMapping::get_uniform_definition(Pipeline::PipelineStage stage) const {
 
   std::stringstream result;
+
+  result << "layout(binding = " << static_cast<int>(stage)+1 << ") buffer GuaMaterialUniformStorage" << std::endl;
+  result << "{" << std::endl;
 
   for (unsigned t(0); t < static_cast<unsigned>(UniformType::NONE); ++t) {
     int count(get_uniform_count(UniformType(t)));
@@ -89,15 +92,15 @@ std::string const UniformMapping::get_uniform_definition() const {
     if (count > 0) {
       if (UniformType(t) == UniformType::SAMPLER2D) {
         std::string type(enums::uniform_type_to_string(UniformType(t)));
-        result << "uniform uvec2"
-               << " gua_" << type << "s[" << count << "];" << std::endl;
+        result << "uvec2 gua_" << type << "s[" << count << "];" << std::endl;
       } else {
         std::string type(enums::uniform_type_to_string(UniformType(t)));
-        result << "uniform " << type << " gua_" << type << "s[" << count << "];"
-               << std::endl;
+        result << type << " gua_" << type << "s[" << count << "];" << std::endl;
       }
     }
   }
+
+  result << "} gua_material_uniforms;" << std::endl;
 
   return result.str();
 }

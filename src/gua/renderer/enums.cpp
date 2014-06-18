@@ -32,35 +32,35 @@ namespace enums {
 std::string output_type_to_string(BufferComponent type) {
   switch (type) {
     case BufferComponent::I1:
-      return "int";         
+      return "int";
     case BufferComponent::I2:
-      return "ivec2";       
+      return "ivec2";
     case BufferComponent::I3:
-      return "ivec3";       
+      return "ivec3";
     case BufferComponent::I4:
-      return "ivec4";       
+      return "ivec4";
     case BufferComponent::U1:
-      return "uint";        
+      return "uint";
     case BufferComponent::U2:
-      return "uvec2";       
+      return "uvec2";
     case BufferComponent::U3:
-      return "uvec3";       
+      return "uvec3";
     case BufferComponent::U4:
-      return "uvec4";       
+      return "uvec4";
     case BufferComponent::H1:
-      return "half";        
+      return "half";
     case BufferComponent::H2:
-      return "half2";       
+      return "half2";
     case BufferComponent::H3:
-      return "half3";       
+      return "half3";
     case BufferComponent::H4:
-      return "half4";       
+      return "half4";
     case BufferComponent::F1:
-      return "float";       
+      return "float";
     case BufferComponent::F2:
-      return "vec2";        
+      return "vec2";
     case BufferComponent::F3:
-      return "vec3";        
+      return "vec3";
     case BufferComponent::F4:
       return "vec4";
 
@@ -298,16 +298,49 @@ bool is_valid_value(UniformType type, std::string& value) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+int get_size(UniformType type) {
+  switch (type) {
+    case UniformType::INT:
+      return sizeof(int);
+    case UniformType::FLOAT:
+      return sizeof(float);
+    case UniformType::BOOL:
+      return sizeof(bool);
+    case UniformType::VEC2:
+      return sizeof(math::vec2);
+    case UniformType::VEC3:
+      return sizeof(math::vec3);
+    case UniformType::VEC4:
+      return sizeof(math::vec4);
+    case UniformType::MAT3:
+      return sizeof(math::mat3);
+    case UniformType::MAT4:
+      return sizeof(math::mat4);
+    case UniformType::SAMPLER1D:
+      return sizeof(math::vec2ui);
+    case UniformType::SAMPLER2D:
+      return sizeof(math::vec2ui);
+    case UniformType::SAMPLER3D:
+      return sizeof(math::vec2ui);
+    case UniformType::SAMPLERCUBE:
+      return sizeof(math::vec2ui);
+    default:
+      return -1;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 BufferComponentType get_type(BufferComponent component) {
   switch (component) {
     case BufferComponent::I1:
-      return TYPE_INTEGER; 
+      return TYPE_INTEGER;
     case BufferComponent::I2:
-      return TYPE_INTEGER; 
+      return TYPE_INTEGER;
     case BufferComponent::I3:
-      return TYPE_INTEGER; 
+      return TYPE_INTEGER;
     case BufferComponent::I4:
-      return TYPE_INTEGER; 
+      return TYPE_INTEGER;
     case BufferComponent::U1:
       return TYPE_UNSIGNED;
     case BufferComponent::U2:
@@ -317,19 +350,19 @@ BufferComponentType get_type(BufferComponent component) {
     case BufferComponent::U4:
       return TYPE_UNSIGNED;
     case BufferComponent::H1:
-      return TYPE_HALF;     
+      return TYPE_HALF;
     case BufferComponent::H2:
-      return TYPE_HALF;     
+      return TYPE_HALF;
     case BufferComponent::H3:
-      return TYPE_HALF;     
+      return TYPE_HALF;
     case BufferComponent::H4:
-      return TYPE_HALF;     
+      return TYPE_HALF;
     case BufferComponent::F1:
-      return TYPE_FLOAT;    
+      return TYPE_FLOAT;
     case BufferComponent::F2:
-      return TYPE_FLOAT;    
+      return TYPE_FLOAT;
     case BufferComponent::F3:
-      return TYPE_FLOAT;    
+      return TYPE_FLOAT;
     case BufferComponent::F4:
       return TYPE_FLOAT;
     case BufferComponent::DEPTH_16:
@@ -357,35 +390,35 @@ BufferComponent get_component(BufferComponentType type, unsigned components) {
 unsigned get_number_of_components(BufferComponent component) {
   switch (component) {
     case BufferComponent::I1:
-      return 1;             
+      return 1;
     case BufferComponent::I2:
-      return 2;             
+      return 2;
     case BufferComponent::I3:
-      return 3;             
+      return 3;
     case BufferComponent::I4:
-      return 4;             
+      return 4;
     case BufferComponent::U1:
-      return 1;             
+      return 1;
     case BufferComponent::U2:
-      return 2;             
+      return 2;
     case BufferComponent::U3:
-      return 3;             
+      return 3;
     case BufferComponent::U4:
-      return 4;             
+      return 4;
     case BufferComponent::H1:
-      return 1;             
+      return 1;
     case BufferComponent::H2:
-      return 2;             
+      return 2;
     case BufferComponent::H3:
-      return 3;             
+      return 3;
     case BufferComponent::H4:
-      return 4;             
+      return 4;
     case BufferComponent::F1:
-      return 1;             
+      return 1;
     case BufferComponent::F2:
-      return 2;             
+      return 2;
     case BufferComponent::F3:
-      return 3;             
+      return 3;
     case BufferComponent::F4:
       return 4;
     case BufferComponent::DEPTH_16:
@@ -404,7 +437,7 @@ std::set<std::string> list_output_types() {
   std::set<std::string> result;
 
   for (int t(0); t < static_cast<int>(BufferComponent::NONE); ++t) {
-    if (t != static_cast<int>(BufferComponent::DEPTH_16) 
+    if (t != static_cast<int>(BufferComponent::DEPTH_16)
         && t != static_cast<int>(BufferComponent::DEPTH_24))
       result.insert(output_type_to_string(static_cast<BufferComponent>(t)));
   }

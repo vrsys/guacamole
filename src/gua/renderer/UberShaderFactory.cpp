@@ -85,10 +85,10 @@ UberShaderFactory::UberShaderFactory(
                 uniform_mapping_.get_mapping(mat->get_name(), uniform->first));
 
             if (uniform->second == UniformType::SAMPLER2D)
-                call << "gua_get_float_sampler(" << mapped.first << "["
+                call << "gua_get_float_sampler(gua_material_uniforms." << mapped.first << "["
                      << mapped.second << "])";
             else
-                call << mapped.first << "[" << mapped.second << "]";
+                call << "gua_material_uniforms." << mapped.first << "[" << mapped.second << "]";
 
 
             if (++uniform !=

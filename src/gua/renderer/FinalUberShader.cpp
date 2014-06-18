@@ -68,7 +68,7 @@ create(std::set<std::string> const& material_names,
 
   // material specific uniforms
   string_utils::replace(fragment_shader, "@uniform_definition",
-    get_uniform_mapping()->get_uniform_definition());
+    get_uniform_mapping()->get_uniform_definition(Pipeline::PipelineStage::shading));
 
   // outputs
   string_utils::replace(fragment_shader, "@output_definition",

@@ -170,6 +170,11 @@ std::string get_default_value(UniformType type);
 bool is_valid_value(UniformType type, std::string& value);
 
 /**
+ * Returns cpu-size of given type in bytes.
+ */
+int get_size(UniformType type);
+
+/**
  * Returns the BufferComponentType of a BufferComponent.
  */
 BufferComponentType get_type(BufferComponent component);
@@ -184,6 +189,7 @@ BufferComponent get_component(BufferComponentType type, unsigned components);
  * Returns the number of components of a BufferComponent.
  */
 unsigned get_number_of_components(BufferComponent component);
+
 
 std::set<std::string> list_output_types();
 std::set<std::string> list_uniform_types();

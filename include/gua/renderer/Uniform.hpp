@@ -62,6 +62,8 @@ class UniformValueBase {
                      std::string const& name,
                      unsigned position = 0) const = 0;
 
+  virtual std::vector<char> get_as_data(RenderContext const& context) = 0;
+
   template <typename T> void set_value(T const& value) {
 
     auto casted(dynamic_cast<UniformValue<T>*>(this));
@@ -99,6 +101,10 @@ template <typename T> class UniformValue : public UniformValueBase {
     program->uniform(name, position, value_);
   }
 
+  std::vector<char> get_as_data(RenderContext const& context) {
+    return std::vector<char>(reinterpret_cast<char*>(&value_), reinterpret_cast<char*>(&value_) + sizeof(T));
+  }
+
   T const& value() const { return value_; }
 
   void value(T const& value) { value_ = value; }
@@ -123,6 +129,11 @@ class UniformValue<std::shared_ptr<Texture> > : public UniformValueBase {
     program->uniform(name, position, value_->get_handle(context));
   }
 
+  std::vector<char> get_as_data(RenderContext const& context) {
+    auto handle(value_->get_handle(context));
+    return std::vector<char>(reinterpret_cast<char*>(&handle), reinterpret_cast<char*>(&handle) + sizeof(math::vec2ui));
+  }
+
   std::shared_ptr<Texture> const& value() const { return value_; }
 
   void value(std::shared_ptr<Texture> const& value) { value_ = value; }
@@ -143,6 +154,11 @@ class UniformValue<Texture*> : public UniformValueBase {
              unsigned position = 0) const {
 
     program->uniform(name, position, value_->get_handle(context));
+  }
+
+  std::vector<char> get_as_data(RenderContext const& context) {
+    auto handle(value_->get_handle(context));
+    return std::vector<char>(reinterpret_cast<char*>(&handle), reinterpret_cast<char*>(&handle) + sizeof(math::vec2ui));
   }
 
   Texture* value() const { return value_; }
@@ -168,6 +184,11 @@ class UniformValue<std::shared_ptr<Texture2D> > : public UniformValueBase {
     program->uniform(name, position, value_->get_handle(context));
   }
 
+  std::vector<char> get_as_data(RenderContext const& context) {
+    auto handle(value_->get_handle(context));
+    return std::vector<char>(reinterpret_cast<char*>(&handle), reinterpret_cast<char*>(&handle) + sizeof(math::vec2ui));
+  }
+
   std::shared_ptr<Texture2D> const& value() const { return value_; }
 
   void value(std::shared_ptr<Texture2D> const& value) { value_ = value; }
@@ -188,6 +209,11 @@ class UniformValue<Texture2D*> : public UniformValueBase {
              unsigned position = 0) const {
 
     program->uniform(name, position, value_->get_handle(context));
+  }
+
+  std::vector<char> get_as_data(RenderContext const& context) {
+    auto handle(value_->get_handle(context));
+    return std::vector<char>(reinterpret_cast<char*>(&handle), reinterpret_cast<char*>(&handle) + sizeof(math::vec2ui));
   }
 
   Texture2D* value() const { return value_; }
@@ -212,6 +238,11 @@ class UniformValue<std::shared_ptr<Texture3D> > : public UniformValueBase {
     program->uniform(name, position, value_->get_handle(context));
   }
 
+  std::vector<char> get_as_data(RenderContext const& context) {
+    auto handle(value_->get_handle(context));
+    return std::vector<char>(reinterpret_cast<char*>(&handle), reinterpret_cast<char*>(&handle) + sizeof(math::vec2ui));
+  }
+
   std::shared_ptr<Texture3D> const& value() const { return value_; }
 
   void value(std::shared_ptr<Texture3D> const& value) { value_ = value; }
@@ -232,6 +263,11 @@ class UniformValue<Texture3D*> : public UniformValueBase {
              unsigned position = 0) const {
 
     program->uniform(name, position, value_->get_handle(context));
+  }
+
+  std::vector<char> get_as_data(RenderContext const& context) {
+    auto handle(value_->get_handle(context));
+    return std::vector<char>(reinterpret_cast<char*>(&handle), reinterpret_cast<char*>(&handle) + sizeof(math::vec2ui));
   }
 
   Texture3D* value() const { return value_; }
@@ -257,6 +293,16 @@ template <> class UniformValue<std::string> : public UniformValueBase {
     }
   }
 
+  std::vector<char> get_as_data(RenderContext const& context) {
+    auto texture(TextureDatabase::instance()->lookup(value_));
+    if (texture) {
+      auto handle(texture->get_handle(context));
+      return std::vector<char>(reinterpret_cast<char*>(&handle), reinterpret_cast<char*>(&handle) + sizeof(math::vec2ui));
+    }
+
+    return std::vector<char>();
+  }
+
   std::string const& value() const { return value_; }
 
   void value(std::string const& value) { value_ = value; }
@@ -278,6 +324,11 @@ template <> class UniformValue<utils::Color3f> : public UniformValueBase {
              unsigned position = 0) const {
 
     program->uniform(name, position, value_.vec3());
+  }
+
+  std::vector<char> get_as_data(RenderContext const& context) {
+    math::vec3 tmp(value_.vec3());
+    return std::vector<char>(reinterpret_cast<char*>(&tmp), reinterpret_cast<char*>(&tmp) + sizeof(math::vec3));
   }
 
   utils::Color3f const& value() const { return value_; }

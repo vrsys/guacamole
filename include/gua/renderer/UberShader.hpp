@@ -139,6 +139,17 @@ class UberShader {
 
   std::vector<std::shared_ptr<ShaderProgram>> programs_;
 
+  struct GuaMaterialUniformStorage {
+    std::vector<float>        gua_floats;
+    std::vector<bool>         gua_bools;
+    std::vector<math::vec3>   gua_vec3s;
+    std::vector<math::vec2ui> gua_sampler2Ds;
+  } material_uniform_storage_;
+
+  int material_uniform_storage_size_;
+  mutable scm::gl::buffer_ptr material_uniform_storage_buffer_;
+  std::vector<int> material_uniform_storage_skips_;
+
 };
 
 }

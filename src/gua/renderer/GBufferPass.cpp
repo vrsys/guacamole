@@ -144,8 +144,6 @@ void GBufferPass::rendering(SerializedScene const& scene,
     // set frame-consistent per-ubershader uniforms
     ubershader->set_material_uniforms(
         scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
-    ubershader->set_material_uniforms(
-        scene.materials_, ShadingModel::GBUFFER_FRAGMENT_STAGE, ctx);
 
     ubershader->set_uniform(ctx,
                             scene.enable_global_clipping_plane,

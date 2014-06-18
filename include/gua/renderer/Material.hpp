@@ -78,7 +78,7 @@ class Material {
   inline unsigned get_id() const { return id_; }
 
   inline std::unordered_map<std::string,
-                            std::unique_ptr<UniformValueBase> > const&
+                            std::pair<UniformType, std::unique_ptr<UniformValueBase> > > const&
   get_uniform_values() const {
     return uniform_values_;
   }
@@ -95,7 +95,7 @@ class Material {
       return;
     }
 
-    uniform->second->set_value(value);
+    uniform->second.second->set_value(value);
   }
 
  private:
@@ -106,7 +106,7 @@ class Material {
   std::string name_;
   unsigned id_;
 
-  std::unordered_map<std::string, std::unique_ptr<UniformValueBase> >
+  std::unordered_map<std::string, std::pair<UniformType, std::unique_ptr<UniformValueBase > > >
       uniform_values_;
   MaterialDescription description_;
 

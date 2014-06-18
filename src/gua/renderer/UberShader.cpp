@@ -69,6 +69,7 @@ void UberShader::create(std::set<std::string> const& material_names)
 
   UberShader::set_uniform_mapping(fshader_factory_->get_uniform_mapping());
   UberShader::set_output_mapping(fshader_factory_->get_output_mapping());
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,25 +77,32 @@ void UberShader::create(std::set<std::string> const& material_names)
 void UberShader::set_material_uniforms(std::set<std::string> const& materials,
                                        ShadingModel::StageID stage,
                                        RenderContext const& context) {
-  for (auto const& program : programs_) {
-    for (auto const& mat_name : materials) {
-      auto const& material(MaterialDatabase::instance()->lookup(mat_name));
-      auto const& shading_model(ShadingModelDatabase::instance()->lookup(
-        material->get_description().get_shading_model()));
 
-      for (auto const& uniform_name :
-        shading_model->get_stages()[stage].get_uniforms()) {
-        auto const& mapped(
-          uniform_mapping_.get_mapping(mat_name, uniform_name.first));
-        auto const& uniform(
-          material->get_uniform_values().find(uniform_name.first));
 
-        if (uniform != material->get_uniform_values().end()) {
-          program->apply_uniform(context, uniform->second.get(), mapped.first, mapped.second);
-        }
+  char* buffer = reinterpret_cast<char*>(context.render_context->map_buffer(material_uniform_storage_buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
+
+  for (auto const& mapping : uniform_mapping_.get_mapping()) {
+
+    auto const& material(MaterialDatabase::instance()->lookup(mapping.first));
+
+    for (auto const& uniform : material->get_uniform_values()) {
+
+      auto mapped(mapping.second.find(uniform.first));
+
+      if (mapped != mapping.second.end()) {
+
+        auto data(uniform.second.second->get_as_data(context));
+
+        int pos(material_uniform_storage_skips_[static_cast<int>(uniform.second.first)] + mapped->second.second * data.size());
+
+        memcpy(buffer + pos, &data.front(), data.size());
+        // std::cout << mapped->second.first << " [" << mapped->second.second << "] : " << pos << std::endl;
+
       }
     }
   }
+
+  context.render_context->unmap_buffer(material_uniform_storage_buffer_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,6 +154,15 @@ void UberShader::cleanup(RenderContext const& context) {
 
 void UberShader::set_uniform_mapping(UniformMapping const& mapping) {
   uniform_mapping_ = mapping;
+
+  material_uniform_storage_size_ = 0;
+  material_uniform_storage_skips_ = std::vector<int>(static_cast<int>(UniformType::NONE));
+
+  for (int t(0); t < static_cast<int>(UniformType::NONE); ++t) {
+    material_uniform_storage_skips_[t] = material_uniform_storage_size_;
+    material_uniform_storage_size_ += uniform_mapping_.get_uniform_count(static_cast<UniformType>(t)) * enums::get_size(static_cast<UniformType>(t));
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,6 +235,19 @@ std::string const UberShader::print_material_methods(
   for (auto const& program : programs_) {
     upload_succeeded &= program->upload_to(context);
   }
+
+  material_uniform_storage_buffer_.reset();
+  material_uniform_storage_buffer_ = context.render_device->create_buffer(
+    scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_DRAW, material_uniform_storage_size_);
+
+  int bind_location(1);
+  if (output_mapping_.get_stage() == ShadingModel::LIGHTING_STAGE) {
+    bind_location = 2;
+  } else if (output_mapping_.get_stage() == ShadingModel::FINAL_STAGE) {
+    bind_location = 3;
+  }
+
+  context.render_context->bind_storage_buffer(material_uniform_storage_buffer_, bind_location);
 
   return upload_succeeded;
 }

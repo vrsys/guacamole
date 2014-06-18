@@ -45,7 +45,7 @@ namespace gua {
 
     // material specific uniforms
     string_utils::replace(vertex_shader, "@uniform_definition",
-      get_uniform_mapping()->get_uniform_definition());
+      get_uniform_mapping()->get_uniform_definition(Pipeline::PipelineStage::geometry));
 
     // output
     string_utils::replace(vertex_shader, "@output_definition",
@@ -70,7 +70,7 @@ namespace gua {
 
     // material specific uniforms
     string_utils::replace(fragment_shader, "@uniform_definition",
-      get_uniform_mapping()->get_uniform_definition());
+      get_uniform_mapping()->get_uniform_definition(Pipeline::PipelineStage::geometry));
 
     // outputs
     string_utils::replace(fragment_shader, "@output_definition",

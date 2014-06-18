@@ -23,6 +23,7 @@
 #define GUA_UNIFORM_MAPPING_HPP
 
 // guacamole headers
+#include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/ShadingModel.hpp>
 
 // external headers
@@ -54,7 +55,14 @@ class UniformMapping {
       std::string const& material,
       std::string const& uniform) const;
 
-  std::string const get_uniform_definition() const;
+  std::unordered_map<
+      std::string,
+      std::unordered_map<std::string, std::pair<std::string, int> > > const& get_mapping() const {
+
+    return mapping_;
+  }
+
+  std::string const get_uniform_definition(Pipeline::PipelineStage stage) const;
 
   /**
    *
