@@ -180,6 +180,8 @@ protected:
 
   static std::atomic_uint last_context_id_;
 
+  static std::mutex last_context_id_mutex_;
+
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
 };
 
