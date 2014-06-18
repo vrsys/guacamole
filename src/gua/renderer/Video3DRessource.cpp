@@ -244,8 +244,6 @@ void Video3DRessource::upload_to(RenderContext const& ctx) const
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
 {
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-
   if (proxy_vertices_.size() > ctx.id) {
     if (proxy_vertices_[ctx.id]) {
       return;
@@ -258,8 +256,6 @@ void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
     proxy_indices_.resize(ctx.id + 1);
     proxy_vertex_array_.resize(ctx.id + 1);
   }
-
-  lock.release();
 
   int num_vertices = height_depthimage_ * width_depthimage_;
   int num_indices = height_depthimage_ * width_depthimage_;
@@ -348,8 +344,6 @@ void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRessource::upload_video_textures(RenderContext const& ctx) const
 {
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-
   if ( color_texArrays_.size() > ctx.id ) {
     if (color_texArrays_[ctx.id]) {
       return;
@@ -365,8 +359,6 @@ void Video3DRessource::upload_video_textures(RenderContext const& ctx) const
     cv_uv_per_context_.resize(ctx.id + 1);
     framecounter_per_context_.resize(ctx.id + 1);
   }
-
-  lock.release();
 
   // initialize Texture Arrays (kinect depths & colors)
   depth_texArrays_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(width_depthimage_, height_depthimage_),

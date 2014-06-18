@@ -217,13 +217,6 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     return;
   }
 
-#if 0
-  // ONLY FOR DEBUG MULTITHREAD!
-  std::srand(uuid());
-  std::chrono::milliseconds dura(std::rand()%10);
-  std::this_thread::sleep_for(dura);
-#endif
-
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
   if (ShadingModel::current_revision != last_shading_model_revision_) {
