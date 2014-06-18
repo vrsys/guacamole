@@ -98,10 +98,10 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
 
   private: // attributes
 
-  static const unsigned                           MAX_NUM_KINECTS = 6;
+  static const unsigned                    MAX_NUM_KINECTS = 6;
 
-  mutable scm::gl::texture_2d_ptr	   warp_depth_result_;
-  mutable scm::gl::texture_2d_ptr	   warp_color_result_;
+  mutable scm::gl::texture_2d_ptr	         warp_depth_result_;
+  mutable scm::gl::texture_2d_ptr	         warp_color_result_;
   mutable scm::gl::frame_buffer_ptr        warp_result_fbo_;
 
   mutable scm::gl::rasterizer_state_ptr    no_bfc_rasterizer_state_;
