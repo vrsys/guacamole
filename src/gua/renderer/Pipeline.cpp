@@ -233,6 +233,8 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     set_context(window_->get_context());
     window_->set_active(true);
   }
+  if (!camera_block_)
+    camera_block_ = std::make_shared<CameraUniformBlock>(context_->render_device);
 
 
   for (auto pipe: prerender_pipelines_) {
