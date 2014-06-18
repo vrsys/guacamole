@@ -40,7 +40,8 @@ ShadowMap::ShadowMap(Pipeline* pipeline)
     : serializer_(gua::make_unique<Serializer>()),
       pipeline_(pipeline),
       buffer_(nullptr),
-      projection_view_matrices_() {
+      projection_view_matrices_(),
+      camera_block_(nullptr) {
 }
 
 
@@ -77,6 +78,9 @@ void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
     if (!rasterizer_state_)
         rasterizer_state_ = ctx.render_device
             ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
+    if (!camera_block_)
+      camera_block_ = std::make_shared<CameraUniformBlock>(ctx.render_device);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,14 +135,10 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
     if (ubershader)
 
     {
-      auto camera_position(scene.frustum.get_camera_position());
-      auto projection(scene.frustum.get_projection());
-      auto view_matrix(scene.frustum.get_view());
 
-      ubershader->set_uniform(ctx, camera_position, "gua_camera_position");
-      ubershader->set_uniform(ctx, projection, "gua_projection_matrix");
-      ubershader->set_uniform(ctx, view_matrix, "gua_view_matrix");
-      ubershader->set_uniform(ctx, scm::math::inverse(projection * view_matrix), "gua_inverse_projection_view_matrix");
+      scm::gl::context_uniform_buffer_guard ubg(ctx.render_context);
+      camera_block_->update(ctx.render_context, scene.frustum);
+      ctx.render_context->bind_uniform_buffer(camera_block_->block().block_buffer(), 0);
 
       ubershader->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
       ubershader->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
