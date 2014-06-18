@@ -29,6 +29,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/LayerMapping.hpp>
 #include <gua/renderer/Volume.hpp>
+#include <gua/renderer/View.hpp>
 #include <gua/databases.hpp>
 
 #include <memory>
@@ -259,16 +260,30 @@ void CompositePass::render_scene(Camera const& camera,
                                  SceneGraph const&,
                                  RenderContext const& ctx,
                                  std::size_t viewid) {
+  bool is_stereo = gbuffer_->get_eye_buffers().size() > 1;
+  View view(viewid, is_stereo);
 
-  for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
+  if (is_stereo) // stereo -> todo: combine frusta?
+  {
+    view.left = pipeline_->get_current_scene(CameraMode::LEFT).frustum;
+    view.right = pipeline_->get_current_scene(CameraMode::RIGHT).frustum;
+  }
+  else {       // mono -> just use left frustum
+    view.left = pipeline_->get_current_scene(CameraMode::LEFT).frustum;
+  }
+
+  for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) 
+  {
 
     FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
 
-    CameraMode eye(CameraMode::CENTER);
-    if (gbuffer_->get_eye_buffers().size() > 1 && i == 0)
-      eye = CameraMode::LEFT;
-    if (gbuffer_->get_eye_buffers().size() > 1 && i == 1)
-      eye = CameraMode::RIGHT;
+    CameraMode eye;
+    if (!is_stereo) {
+      eye = CameraMode::CENTER;
+    }
+    else {
+      eye = (i == 0) ? CameraMode::LEFT : CameraMode::RIGHT;
+    }
 
     fbo->bind(ctx);
 

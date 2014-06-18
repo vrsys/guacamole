@@ -59,7 +59,7 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
                            scm::math::mat4 const& model_matrix,
                            scm::math::mat4 const& normal_matrix,
                            Frustum const& frustum,
-                           std::size_t viewid) const;
+                           View const& view) const;
 
   /*virtual*/ void draw   (RenderContext const& context,
                            std::string const& ksfile_name,
@@ -67,7 +67,7 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
                            scm::math::mat4 const& model_matrix,
                            scm::math::mat4 const& normal_matrix,
                            Frustum const& frustum,
-                           std::size_t viewid) const;
+                           View const& view) const;
 
   /*virtual*/ void postdraw(RenderContext const& context,
                             std::string const& ksfile_name,
@@ -75,7 +75,7 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
                             scm::math::mat4 const& model_matrix,
                             scm::math::mat4 const& normal_matrix,
                             Frustum const& frustum,
-                            std::size_t viewid) const;
+                            View const& view) const;
 
   /*virtual*/ void postframe(RenderContext const& context) const;
 

@@ -53,7 +53,7 @@ class NURBSUberShader : public GeometryUberShader {
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
                              Frustum const& /*frustum*/,
-                             std::size_t /*viewid*/) const;
+                             View const& view) const;
 
   /*virtual*/ void draw     (RenderContext const& ctx,
                              std::string const& ksfile_name,
@@ -61,7 +61,7 @@ class NURBSUberShader : public GeometryUberShader {
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
                              Frustum const& /*frustum*/,
-                             std::size_t /*viewid*/) const;
+                             View const& view) const;
 
   /*virtual*/ void postdraw (RenderContext const& ctx,
                              std::string const& ksfile_name,
@@ -69,7 +69,7 @@ class NURBSUberShader : public GeometryUberShader {
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
                              Frustum const& /*frustum*/,
-                             std::size_t /*viewid*/) const;
+                             View const& view) const;
 
   /*virtual*/ void postframe(RenderContext const& ctx) const;
 

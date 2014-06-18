@@ -132,7 +132,7 @@ void LightingPass::rendering(SerializedScene const& scene,
                              CameraMode eye,
                              Camera const& camera,
                              FrameBufferObject* target,
-                             std::size_t viewid) {
+                             View const& view) {
     init_resources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
