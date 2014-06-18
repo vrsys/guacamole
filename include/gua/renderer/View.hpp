@@ -19,30 +19,28 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/ShadowMapMeshShader.hpp>
+#ifndef GUA_VIEW_HPP
+#define GUA_VIEW_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
-#include <gua/databases/Resources.hpp>
-
-// external headers
-#include <sstream>
+#include <gua/renderer/Frustum.hpp>
+#include <gua/math/math.hpp>
 
 namespace gua {
 
-ShadowMapMeshShader::ShadowMapMeshShader() {
-  create_shadow_map_shader();
+struct View 
+{
+  View(std::size_t viewid, bool is_stereo) 
+  : id(viewid), stereo(is_stereo)
+  {};
+
+  std::size_t   id;
+  bool          stereo;
+
+  Frustum       left;
+  Frustum       right;
+};
+
 }
 
-void
-ShadowMapMeshShader::create_shadow_map_shader() {
-  create_from_sources(
-    Resources::lookup_shader(
-      Resources::shaders_uber_shaders_lighting_mesh_shadow_vert),
-    Resources::lookup_shader(
-      Resources::shaders_uber_shaders_lighting_mesh_shadow_frag)
-  );
-}
-
-} // namespace gua
+#endif  // GUA_VIEW_HPP

@@ -253,7 +253,7 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
   scm::math::mat4 const& model_matrix,
   scm::math::mat4 const& normal_matrix,
   Frustum const& /*frustum*/,
-  std::size_t viewid) const
+  View const& view) const
 {
   throw std::runtime_error("not implemented");
 }
@@ -267,10 +267,8 @@ void Video3DUberShader::draw(RenderContext const& ctx,
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
                              Frustum const& /*frustum*/,
-                             std::size_t viewid) const
-{
-
-  if (!GeometryDatabase::instance()->is_supported(ksfile_name) ||
+                             View const& view) const
+{  if (!GeometryDatabase::instance()->is_supported(ksfile_name) ||
       !MaterialDatabase::instance()->is_supported(material_name)) {
     gua::Logger::LOG_WARNING << "Video3DUberShader::draw(): No such video or material." << ksfile_name << ", " << material_name << std::endl;
     return;
@@ -402,7 +400,7 @@ void Video3DUberShader::draw(RenderContext const& ctx,
   scm::math::mat4 const& model_matrix,
   scm::math::mat4 const& normal_matrix,
   Frustum const& /*frustum*/,
-  std::size_t viewid) const
+  View const& view) const
 {
   throw std::runtime_error("not implemented");
 }

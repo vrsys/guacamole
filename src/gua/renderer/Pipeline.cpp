@@ -420,6 +420,12 @@ void Pipeline::create_passes() {
       Logger::LOG_WARNING << "Failed to recompile shaders!" << std::endl;
 
       for (auto pass : new_passes) {
+        if (context_) {
+          pass->print_shaders("shader_compile_failed", "bla.txt");
+        }
+      }
+
+      for (auto pass : new_passes) {
         if (context_) pass->cleanup(*context_);
         delete pass;
       }

@@ -994,7 +994,7 @@ std::string const NURBSUberShader::_final_fragment_shader () const
                                           scm::math::mat4 const& model_matrix,
                                           scm::math::mat4 const& normal_matrix,
                                           Frustum const& /*frustum*/,
-                                          std::size_t viewid) const
+                                          View const& view) const
 {
   throw std::runtime_error("NURBSUberShader::predraw(): not implemented");
 }
@@ -1008,7 +1008,7 @@ void NURBSUberShader::draw(RenderContext const& ctx,
                            scm::math::mat4 const& model_matrix,
                            scm::math::mat4 const& normal_matrix,
                            Frustum const& /*frustum*/,
-                           std::size_t /*viewid*/) const
+                           View const& view) const
 {
 
   auto geometry = std::static_pointer_cast<NURBSRessource>(GeometryDatabase::instance()->lookup(filename));
@@ -1058,7 +1058,7 @@ void NURBSUberShader::draw(RenderContext const& ctx,
   scm::math::mat4 const& model_matrix,
   scm::math::mat4 const& normal_matrix,
   Frustum const& /*frustum*/,
-  std::size_t /*viewid*/) const
+  View const& view) const
 {
   throw std::runtime_error("NURBSUberShader::postdraw(): not implemented");
 }

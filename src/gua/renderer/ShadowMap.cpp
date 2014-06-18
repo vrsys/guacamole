@@ -29,6 +29,7 @@
 #include <gua/renderer/NURBSUberShader.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/View.hpp>
 #include <gua/databases.hpp>
 #include <gua/memory.hpp>
 
@@ -117,6 +118,11 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   projection_view_matrices_[cascade] =
       shadow_frustum.get_projection() * shadow_frustum.get_view();
 
+  // create shadow view
+  View view(uuid(), false);
+  view.left = scene.frustum;
+  view.right = scene.frustum;
+
   for (auto const& type : scene.geometrynodes_) {
     // pointer to appropriate ubershader
     GeometryUberShader* ubershader = nullptr;
@@ -164,7 +170,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
           scm::math::transpose(
             scm::math::inverse(node->get_cached_world_transform())),
           scene.frustum,
-          uuid());
+          view);
       }
     } else {
       Logger::LOG_WARNING << "ShadowMap::render_geometry(): UberShader missing."

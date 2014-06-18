@@ -61,7 +61,7 @@ class CompositePass : public Pass {
   /* virtual */ void render_scene(Camera const& camera,
                                   SceneGraph const&,
                                   RenderContext const& ctx,
-                                  std::size_t viewid);
+                                  std::size_t view);
 
 protected :
 

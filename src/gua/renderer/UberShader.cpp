@@ -224,6 +224,20 @@ std::string const UberShader::print_material_methods(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/*virtual*/ void UberShader::set_left_resolution(math::vec2ui const& resolution)
+{
+  left_resolution_ = resolution;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void UberShader::set_right_resolution(math::vec2ui const& resolution)
+{
+  right_resolution_ = resolution;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 /*virtual*/ void UberShader::save_shaders_to_file(std::string const& directory,
                                                   std::string const& name) const {
 

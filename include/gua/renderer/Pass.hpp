@@ -39,6 +39,7 @@ namespace gua {
 
 struct Camera;
 struct SerializedScene;
+struct View;
 class LayerMapping;
 class Pipeline;
 class SceneGraph;
@@ -67,7 +68,7 @@ class Pass {
   virtual void render_scene(Camera const& camera,
                             SceneGraph const& current_graph,
                             RenderContext const& ctx,
-                            std::size_t unique_view_id) = 0;
+                            std::size_t viewid) = 0;
 
   virtual void print_shaders(std::string const& directory,
                              std::string const& name) const = 0;

@@ -265,8 +265,6 @@ void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
 
   float step = 1.0f / width_depthimage_;
 
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-
   proxy_vertices_[ctx.id] =
     ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
     scm::gl::USAGE_STATIC_DRAW,

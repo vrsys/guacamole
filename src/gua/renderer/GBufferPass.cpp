@@ -118,13 +118,12 @@ void GBufferPass::rendering(SerializedScene const& scene,
                             CameraMode eye,
                             Camera const& camera,
                             FrameBufferObject* target,
-                            std::size_t viewid) {
+                            View const& view) {
 
   if (!depth_stencil_state_ || !bfc_rasterizer_state_ ||
       !no_bfc_rasterizer_state_) {
     initialize_state_objects(ctx);
   }
-
 
   ctx.render_context->set_rasterizer_state(
       pipeline_->config.enable_backface_culling() ? bfc_rasterizer_state_
@@ -142,6 +141,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
     auto ubershader = ubershaders_.at(type);
 
     // set frame-consistent per-ubershader uniforms
+    ubershader->set_left_resolution(pipeline_->config.get_left_resolution());
+    ubershader->set_right_resolution(pipeline_->config.get_right_resolution());
+
     ubershader->set_material_uniforms(
         scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
     ubershader->set_material_uniforms(
@@ -183,7 +185,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                               scm::math::transpose(scm::math::inverse(
                                   node->get_cached_world_transform())),
                               scene.frustum,
-                              viewid);
+                              view);
         } else {
           if (!material) {
             Logger::LOG_WARNING
@@ -218,7 +220,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                            scm::math::transpose(scm::math::inverse(
                                node->get_cached_world_transform())),
                            scene.frustum,
-                           viewid);
+                           view);
         } else {
           if (!material) {
             Logger::LOG_WARNING
@@ -252,7 +254,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
                                scm::math::transpose(scm::math::inverse(
                                    node->get_cached_world_transform())),
                                scene.frustum,
-                               viewid);
+                               view);
         } else {
           if (!material) {
             Logger::LOG_WARNING
@@ -278,11 +280,11 @@ void GBufferPass::rendering(SerializedScene const& scene,
   ///////////////////////////////////////////////////////////////
   // draw debug and helper information
   ///////////////////////////////////////////////////////////////
-  display_quads(ctx, scene, eye, viewid);
+  display_quads(ctx, scene, eye, view);
 
   ctx.render_context->set_rasterizer_state(bbox_rasterizer_state_);
-  display_bboxes(ctx, scene, viewid);
-  display_rays(ctx, scene, viewid);
+  display_bboxes(ctx, scene, view);
+  display_rays(ctx, scene, view);
 
 
   ctx.render_context->reset_state_objects();
@@ -293,7 +295,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
 void GBufferPass::display_bboxes(RenderContext const& ctx,
                                  SerializedScene const& scene,
-                                 std::size_t viewid) {
+                                 View const& view) {
 
 
   auto meshubershader = ubershaders_[typeid(TriMeshNode)];
@@ -320,7 +322,7 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
           bbox_transform,
           scm::math::transpose(scm::math::inverse(bbox_transform)),
           scene.frustum,
-          viewid);
+          view);
     }
     meshubershader->get_program()->unuse(ctx);
   }
@@ -330,7 +332,7 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
 
 void GBufferPass::display_rays(RenderContext const& ctx,
                                SerializedScene const& scene,
-                               std::size_t viewid)
+                               View const& view)
 {
   auto meshubershader = ubershaders_[typeid(TriMeshNode)];
 
@@ -346,7 +348,7 @@ void GBufferPass::display_rays(RenderContext const& ctx,
             ray->get_cached_world_transform(),
             scm::math::inverse(ray->get_cached_world_transform()),
             scene.frustum,
-            viewid);
+            view);
       }
     }
     meshubershader->get_program()->unuse(ctx);
@@ -358,7 +360,7 @@ void GBufferPass::display_rays(RenderContext const& ctx,
 void GBufferPass::display_quads(RenderContext const& ctx,
                                 SerializedScene const& scene,
                                 CameraMode eye,
-                                std::size_t viewid)
+                                View const& view)
 {
   auto meshubershader = ubershaders_[typeid(TriMeshNode)];
 
@@ -403,7 +405,7 @@ void GBufferPass::display_quads(RenderContext const& ctx,
             node->get_scaled_world_transform(),
             scm::math::inverse(node->get_scaled_world_transform()),
             scene.frustum,
-            viewid);
+            view);
       }
     }
     meshubershader->get_program()->unuse(ctx);
