@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/math.hpp>
 #include <gua/renderer/RenderContext.hpp>
+#include <gua/renderer/CameraUniformBlock.hpp>
 
 #include <unordered_map>
 #include <typeindex>
@@ -101,6 +102,7 @@ class ShadowMap {
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::rasterizer_state_ptr rasterizer_state_;
   std::vector<math::mat4> projection_view_matrices_;
+  std::shared_ptr<gua::CameraUniformBlock> camera_block_;
 };
 
 }

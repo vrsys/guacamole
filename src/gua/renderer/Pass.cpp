@@ -118,18 +118,13 @@ void Pass::set_camera_matrices(ShaderProgram const& shader,
                                RenderContext const& ctx) const {
 
   auto camera_position(scene.frustum.get_camera_position());
-  auto projection(scene.frustum.get_projection());
-  auto view_matrix(scene.frustum.get_view());
-  auto inv_projection(scm::math::inverse(projection));
 
   shader.set_uniform(ctx, static_cast<int>(eye), "gua_eye");
   shader.set_uniform(ctx, camera_position, "gua_camera_position");
-  shader.set_uniform(ctx, projection, "gua_projection_matrix");
-  shader.set_uniform(ctx, inv_projection, "gua_inverse_projection_matrix");
-  shader.set_uniform(ctx, view_matrix, "gua_view_matrix");
-  shader.set_uniform(ctx,
-                     scm::math::inverse(projection * view_matrix),
-                     "gua_inverse_projection_view_matrix");
+
+  pipeline_->camera_block_->update(ctx.render_context, scene.frustum);
+
+  ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_->block().block_buffer(), 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
