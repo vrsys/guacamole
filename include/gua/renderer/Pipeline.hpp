@@ -193,6 +193,7 @@ class GUA_DLL Pipeline {
   GBufferPass::GeometryUberShaderMap const& get_geometry_ubershaders() const;
 
   friend class Renderer;
+  friend class Pass;
 
  private:
   void loading_screen();
