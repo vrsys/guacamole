@@ -142,6 +142,9 @@ void GBufferPass::rendering(SerializedScene const& scene,
     auto ubershader = ubershaders_.at(type);
 
     // set frame-consistent per-ubershader uniforms
+    ubershader->set_left_resolution(pipeline_->config.get_left_resolution());
+    ubershader->set_right_resolution(pipeline_->config.get_right_resolution());
+
     ubershader->set_material_uniforms(
         scene.materials_, ShadingModel::GBUFFER_VERTEX_STAGE, ctx);
     ubershader->set_material_uniforms(

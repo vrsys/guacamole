@@ -118,6 +118,9 @@ class UberShader {
   */
   virtual bool upload_to(RenderContext const& context) const;
 
+  virtual void set_left_resolution(math::vec2ui const& resolution);
+  virtual void set_right_resolution(math::vec2ui const& resolution);
+
  protected: // methods
 
   void set_uniform_mapping(UniformMapping const& mapping);
@@ -125,7 +128,6 @@ class UberShader {
 
   std::string const print_material_switch(UberShaderFactory const& factory) const;
   std::string const print_material_methods(UberShaderFactory const& factory) const;
-
 
   protected: // attributes
 
@@ -138,6 +140,8 @@ class UberShader {
   private: // attributes
 
   std::vector<std::shared_ptr<ShaderProgram>> programs_;
+  math::vec2ui                                left_resolution_;
+  math::vec2ui                                right_resolution_;
 
 };
 
