@@ -25,8 +25,9 @@
 layout(location=0) in vec3 gua_in_position;
 layout(location=2) in vec2 gua_in_texcoord;
 
-uniform mat4 gua_projection_matrix;
-uniform mat4 gua_view_matrix;
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+//uniform mat4 gua_projection_matrix;
+//uniform mat4 gua_view_matrix;
 uniform vec3 gua_light_position_direction;
 
 // output
