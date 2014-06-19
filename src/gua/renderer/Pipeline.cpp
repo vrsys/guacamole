@@ -295,15 +295,23 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
     if (window_) {
       if (config.get_enable_stereo()) {
-          window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-                               ->get_color_buffers(TYPE_FLOAT)[0],
-                               passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[1]
-                               ->get_color_buffers(TYPE_FLOAT)[0]);
+          window_->display(passes_[PipelineStage::postfx]
+                                  ->get_gbuffer()
+                                  ->get_eye_buffers()[0]
+                                  ->get_color_buffers(TYPE_FLOAT)[0],
+                           passes_[PipelineStage::postfx]
+                                  ->get_gbuffer()
+                                  ->get_eye_buffers()[1]
+                                  ->get_color_buffers(TYPE_FLOAT)[0]);
       } else {
-        window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-			 ->get_color_buffers(TYPE_FLOAT)[0],
-			 passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-			 ->get_color_buffers(TYPE_FLOAT)[0]);
+        window_->display(passes_[PipelineStage::postfx]
+                                ->get_gbuffer()
+                                ->get_eye_buffers()[0]
+                                ->get_color_buffers(TYPE_FLOAT)[0],
+                         passes_[PipelineStage::postfx]
+                                ->get_gbuffer()
+                                ->get_eye_buffers()[0]
+                                ->get_color_buffers(TYPE_FLOAT)[0]);
       }
 
       window_->finish_frame();

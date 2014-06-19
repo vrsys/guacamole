@@ -160,6 +160,8 @@ void GBufferPass::rendering(SerializedScene const& scene,
       Pass::bind_inputs(*program, eye, ctx);
       Pass::set_camera_matrices(
           *program, camera, pipeline_->get_current_scene(eye), eye, ctx);
+      pipeline_->camera_block_->update(ctx.render_context, pipeline_->get_current_scene(eye).frustum);
+      ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_->block().block_buffer(), 0);
     }
 
 
