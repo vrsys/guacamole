@@ -137,11 +137,12 @@ class UberShader {
   std::unique_ptr<UberShaderFactory> vshader_factory_;
   std::unique_ptr<UberShaderFactory> fshader_factory_;
 
+  math::vec2ui                                left_resolution_;
+  math::vec2ui                                right_resolution_;
+
   private: // attributes
 
   std::vector<std::shared_ptr<ShaderProgram>> programs_;
-  math::vec2ui                                left_resolution_;
-  math::vec2ui                                right_resolution_;
 
 };
 
