@@ -186,14 +186,14 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
   }
 
   assert(context.render_window->config.get_stereo_mode() == StereoMode::MONO ||
-	 ((context.render_window->config.get_left_resolution()[0] == context.render_window->config.get_right_resolution()[0]) &&
-	  (context.render_window->config.get_left_resolution()[1] == context.render_window->config.get_right_resolution()[1])));
+	 ((left_resolution_[0] == right_resolution_[0]) &&
+	  (left_resolution_[1] == right_resolution_[1])));
 
 
   // initialize Texture Arrays (kinect depths & colors)
 
   warp_color_result_ = context.render_device->create_texture_2d(
-								context.render_window->config.get_left_resolution(),
+								left_resolution_,
 								scm::gl::FORMAT_RGBA_32F,
 								1,
 								MAX_NUM_KINECTS,
@@ -201,7 +201,7 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
 								);
   
   warp_depth_result_ = context.render_device->create_texture_2d(
-								context.render_window->config.get_left_resolution(),
+								left_resolution_,
 								scm::gl::FORMAT_D32F,
 								1,
 								MAX_NUM_KINECTS,
