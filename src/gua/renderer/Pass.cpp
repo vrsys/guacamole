@@ -121,9 +121,6 @@ void Pass::set_camera_matrices(ShaderProgram const& shader,
 
   shader.set_uniform(ctx, static_cast<int>(eye), "gua_eye");
   shader.set_uniform(ctx, camera_position, "gua_camera_position");
-
-  //pipeline_->camera_block_->update(ctx.render_context, scene.frustum);
-  //ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_->block().block_buffer(), 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -120,8 +120,11 @@ void FinalPass::pre_rendering(Camera const& camera,
   Pass::bind_inputs(*shader_->get_program(), eye, ctx);
   Pass::set_camera_matrices(
     *shader_->get_program(), camera, pipeline_->get_current_scene(eye), eye, ctx);
-  pipeline_->camera_block_->update(ctx.render_context, pipeline_->get_current_scene(eye).frustum);
-  ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_->block().block_buffer(), 0);
+  if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
+    ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
+  } else {
+    ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_right_->block().block_buffer(), 0);
+  }
 
   shader_->get_program()->use(ctx);
   fullscreen_quad_->draw(ctx.render_context);

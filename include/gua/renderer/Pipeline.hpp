@@ -236,7 +236,8 @@ class GUA_DLL Pipeline {
 
   unsigned last_shading_model_revision_;
 
-  std::shared_ptr<gua::CameraUniformBlock> camera_block_;
+  std::shared_ptr<gua::CameraUniformBlock> camera_block_left_;
+  std::shared_ptr<gua::CameraUniformBlock> camera_block_right_;
 };
 
 }

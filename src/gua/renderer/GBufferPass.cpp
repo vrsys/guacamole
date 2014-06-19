@@ -120,6 +120,10 @@ void GBufferPass::rendering(SerializedScene const& scene,
                             FrameBufferObject* target,
                             View const& view) {
 
+//    pipeline_->camera_block_left_->update(ctx.render_context, pipeline_->get_current_scene(CameraMode::LEFT).frustum);
+ //   pipeline_->camera_block_right_->update(ctx.render_context, pipeline_->get_current_scene(CameraMode::RIGHT).frustum);
+
+
   if (!depth_stencil_state_ || !bfc_rasterizer_state_ ||
       !no_bfc_rasterizer_state_) {
     initialize_state_objects(ctx);
@@ -160,8 +164,12 @@ void GBufferPass::rendering(SerializedScene const& scene,
       Pass::bind_inputs(*program, eye, ctx);
       Pass::set_camera_matrices(
           *program, camera, pipeline_->get_current_scene(eye), eye, ctx);
-      pipeline_->camera_block_->update(ctx.render_context, pipeline_->get_current_scene(eye).frustum);
-      ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_->block().block_buffer(), 0);
+
+      if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
+        ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
+      } else {
+        ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_right_->block().block_buffer(), 0);
+      }
     }
 
 

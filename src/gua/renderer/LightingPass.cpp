@@ -147,9 +147,11 @@ void LightingPass::rendering(SerializedScene const& scene,
     Pass::set_camera_matrices(
       *shader_->get_program(), camera, pipeline_->get_current_scene(eye), eye, ctx);
 
-    pipeline_->camera_block_->update(ctx.render_context, pipeline_->get_current_scene(eye).frustum);
-    ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_->block().block_buffer(), 0);
-
+    if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
+      ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
+    } else {
+      ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_right_->block().block_buffer(), 0);
+    }
 
     // -------------------------- sun lights -----------------------------------
     shader_->get_program()->set_subroutine(ctx,

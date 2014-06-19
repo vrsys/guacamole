@@ -129,8 +129,11 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
         {
             // gather input textures and set uniforms
             Pass::set_camera_matrices(*ray_generation_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
-            pipeline_->camera_block_->update(ctx.render_context, pipeline_->get_current_scene(eye).frustum);
-            ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_->block().block_buffer(), 0);
+            if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
+              ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
+            } else {
+              ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_right_->block().block_buffer(), 0);
+            }
 
             ray_generation_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->width(), "gua_texel_width");
             ray_generation_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->height(), "gua_texel_height");
@@ -166,8 +169,11 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
 
     // 2. render fullscreen quad for compositing and volume ray castinG
     Pass::set_camera_matrices(*composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
-    pipeline_->camera_block_->update(ctx.render_context, pipeline_->get_current_scene(eye).frustum);
-    ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_->block().block_buffer(), 0);
+    if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
+      ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
+    } else {
+      ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_right_->block().block_buffer(), 0);
+    }
 
     auto input_tex(inputs_[Pipeline::shading]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
     auto normal_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
