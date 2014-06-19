@@ -30,14 +30,11 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/configuration_macro.hpp>
-#include <gua/events/Signal.hpp>
 
 // external headers
 #include <memory>
 #include <string>
 #include <scm/gl_util/primitives/quad.h>
-
-class GLFWwindow;
 
 namespace gua {
 
@@ -71,6 +68,11 @@ class GUA_DLL Window {
 
     GUA_ADD_PROPERTY(math::vec2ui, size, math::vec2ui(800, 600));
     GUA_ADD_PROPERTY(std::string, title, "guacamole");
+#if WIN32
+    GUA_ADD_PROPERTY(std::string, display_name, "\\\\.\\DISPLAY1");
+#else
+    GUA_ADD_PROPERTY(std::string, display_name, ":0.0");
+#endif
     GUA_ADD_PROPERTY(int, monitor, 0);
     GUA_ADD_PROPERTY(StereoMode, stereo_mode, StereoMode::MONO);
     GUA_ADD_PROPERTY(math::vec2ui, left_resolution, math::vec2ui(800, 600));
@@ -104,13 +106,12 @@ class GUA_DLL Window {
    */
   virtual ~Window();
 
-  void open();
-  bool should_close() const;
-  bool get_is_open() const;
+  virtual void open();
+  virtual bool get_is_open() const = 0;
 
-  void close();
+  virtual void create_shader();
 
-  void process_events();
+  virtual void close() = 0;
 
   /**
    * Activate the context of this window.
@@ -125,14 +126,22 @@ class GUA_DLL Window {
    *
    * This should be called when a new frame is about to be drawn.
    */
-  void start_frame() const;
+  virtual void start_frame() const = 0;
 
   /**
    * Ends the drawing of a new frame.
    *
    * This should be called when drawing a frame has been done.
    */
-  void finish_frame() const;
+  virtual void finish_frame() const = 0;
+
+  /**
+   *
+   */
+  virtual void display(std::shared_ptr<Texture2D> const& center_texture);
+
+  virtual void display(std::shared_ptr<Texture2D> const& left_texture,
+                       std::shared_ptr<Texture2D> const& right_texture);
 
   /**
    * Get the RenderContext of this window.
@@ -143,23 +152,6 @@ class GUA_DLL Window {
    * \return The context owned by this window.
    */
   RenderContext* get_context();
-
-  events::Signal<math::vec2ui> on_resize;
-
-  friend class Pipeline;
-
-private:
-  /**
-   *
-   */
-  virtual void create_shader();
-
-  virtual void display(std::shared_ptr<Texture2D> const& center_texture);
-
-  virtual void display(std::shared_ptr<Texture2D> const& left_texture,
-                       std::shared_ptr<Texture2D> const& right_texture);
-
-
 
 protected:
 
@@ -189,8 +181,6 @@ protected:
   static unsigned last_context_id_;
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
-
-  GLFWwindow* glfw_window_;
 };
 
 }

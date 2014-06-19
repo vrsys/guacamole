@@ -19,81 +19,66 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RENDERCONTEXT_HPP
-#define GUA_RENDERCONTEXT_HPP
+#ifndef GUA_SCHISM_WINDOW_HPP
+#define GUA_SCHISM_WINDOW_HPP
 
-// external headers
-#include <scm/gl_core/config.h>
-#include <scm/gl_core/data_formats.h>
-#include <scm/core.h>
-#include <scm/gl_core.h>
-#include <scm/gl_core/window_management/context.h>
-#include <scm/gl_core/window_management/display.h>
-#include <scm/gl_core/window_management/surface.h>
-#include <scm/gl_core/window_management/window.h>
+// guacamole headers
+#include <gua/renderer/Window.hpp>
 
 namespace gua {
 
-class Window;
-
 /**
- * Information on a specific context.
+ * A window for displaying stuff.
  *
- * Stores all relevant information on a OpenGL context.
+ * It's a window which can display OpenGL stuff.
  */
-struct RenderContext {
+class GUA_DLL SchismWindow : public Window {
+ public:
 
   /**
-  * c'tor
-  */
-  RenderContext();
-
-  /**
-  * d'tor
-  */
-  ~RenderContext();
-
-   /**
-   * The schism context of this RenderContext.
+   * Constructor.
+   *
+   * Creates a new Window. It owns a RenderContext where Geomtries
+   * can be drawn to.
+   *
+   * \param description   The description of the window.
    */
-  scm::gl::wm::context_ptr context;
+  SchismWindow(Configuration const& configuration = Configuration());
 
   /**
-   * The display where this context was opened.
+   * Destructor.
+   *
+   * Cleans all associated memory.
    */
-  scm::gl::wm::display_ptr display;
+  virtual ~SchismWindow();
+
+  void open();
+  bool get_is_open() const;
+  void close();
 
   /**
-   * The window associated with this context.
+   * Activate the context of this window.
+   *
+   * Makes the RenderContext of this window current. All preceeding
+   * OpenGL calls will be invoked on this window.
    */
-  scm::gl::wm::window_ptr window;
+  void set_active(bool active) const;
 
   /**
-   * The schism render constext associated with this context.
+   * Starts the drawing of a new frame.
+   *
+   * This should be called when a new frame is about to be drawn.
    */
-  scm::gl::render_context_ptr render_context;
+  void start_frame() const;
 
   /**
-   * The schism render device associated with this context.
+   * Ends the drawing of a new frame.
+   *
+   * This should be called when drawing a frame has been done.
    */
-  scm::gl::render_device_ptr render_device;
-
-  /**
-   * The window which is rendered into.
-   */
-  Window* render_window;
-
-  /**
-   * A unique ID for this context.
-   */
-  unsigned id;
-
-  /**
-  * framecounter for this context
-  */
-  unsigned framecount;
+  void finish_frame() const;
 };
 
 }
 
-#endif  // GUA_RENDERCONTEXT_HPP
+#endif  // GUA_SCHISM_WINDOW_HPP
