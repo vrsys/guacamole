@@ -78,31 +78,32 @@ void UberShader::set_material_uniforms(std::set<std::string> const& materials,
                                        ShadingModel::StageID stage,
                                        RenderContext const& context) {
 
+  std::cout << std::endl;
+  std::cout << " stage " << stage << std::endl;
+  if (material_uniform_storage_size_ > 0) {
+    char* buffer = reinterpret_cast<char*>(context.render_context->map_buffer(material_uniform_storage_buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
-  char* buffer = reinterpret_cast<char*>(context.render_context->map_buffer(material_uniform_storage_buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
+    for (auto const& mapping : uniform_mapping_.get_mapping()) {
+      auto const& material(MaterialDatabase::instance()->lookup(mapping.first));
 
-  for (auto const& mapping : uniform_mapping_.get_mapping()) {
+      for (auto const& uniform : material->get_uniform_values()) {
+        auto mapped(mapping.second.find(uniform.first));
 
-    auto const& material(MaterialDatabase::instance()->lookup(mapping.first));
+        if (mapped != mapping.second.end()) {
+          auto data(uniform.second.second->get_as_data(context));
+          int type(static_cast<int>(uniform.second.first));
+          int pos(material_uniform_storage_skips_[type] + mapped->second.second * enums::get_stride(uniform.second.first));
 
-    for (auto const& uniform : material->get_uniform_values()) {
 
-      auto mapped(mapping.second.find(uniform.first));
+          memcpy(buffer + pos, &(*data.begin()), data.size());
 
-      if (mapped != mapping.second.end()) {
-
-        auto data(uniform.second.second->get_as_data(context));
-
-        int pos(material_uniform_storage_skips_[static_cast<int>(uniform.second.first)] + mapped->second.second * data.size());
-
-        memcpy(buffer + pos, &data.front(), data.size());
-        // std::cout << mapped->second.first << " [" << mapped->second.second << "] : " << pos << std::endl;
-
+          std::cout << uniform.first << " at: " << pos << " size: " << data.size() << std::endl;
+        }
       }
     }
-  }
 
-  context.render_context->unmap_buffer(material_uniform_storage_buffer_);
+    context.render_context->unmap_buffer(material_uniform_storage_buffer_);
+ }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,9 +161,15 @@ void UberShader::set_uniform_mapping(UniformMapping const& mapping) {
 
   for (int t(0); t < static_cast<int>(UniformType::NONE); ++t) {
     material_uniform_storage_skips_[t] = material_uniform_storage_size_;
-    material_uniform_storage_size_ += uniform_mapping_.get_uniform_count(static_cast<UniformType>(t)) * enums::get_size(static_cast<UniformType>(t));
-  }
+    int uniforms_of_this_type(uniform_mapping_.get_uniform_count(static_cast<UniformType>(t)));
+    int size_of_type(enums::get_stride(static_cast<UniformType>(t)));
+    int size_of_uniforms(size_of_type * uniforms_of_this_type);
 
+    // int padding((16 - size_of_uniforms%16)%16);
+    // size_of_uniforms += padding;
+
+    material_uniform_storage_size_ += size_of_uniforms;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,18 +243,20 @@ std::string const UberShader::print_material_methods(
     upload_succeeded &= program->upload_to(context);
   }
 
-  material_uniform_storage_buffer_.reset();
-  material_uniform_storage_buffer_ = context.render_device->create_buffer(
-    scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_DRAW, material_uniform_storage_size_);
+  if (material_uniform_storage_size_ > 0) {
+    material_uniform_storage_buffer_.reset();
+    material_uniform_storage_buffer_ = context.render_device->create_buffer(
+      scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_DRAW, material_uniform_storage_size_);
 
-  int bind_location(1);
-  if (output_mapping_.get_stage() == ShadingModel::LIGHTING_STAGE) {
-    bind_location = 2;
-  } else if (output_mapping_.get_stage() == ShadingModel::FINAL_STAGE) {
-    bind_location = 3;
+    int bind_location(1);
+    if (output_mapping_.get_stage() == ShadingModel::LIGHTING_STAGE) {
+      bind_location = 2;
+    } else if (output_mapping_.get_stage() == ShadingModel::FINAL_STAGE) {
+      bind_location = 3;
+    }
+
+    context.render_context->bind_storage_buffer(material_uniform_storage_buffer_, bind_location);
   }
-
-  context.render_context->bind_storage_buffer(material_uniform_storage_buffer_, bind_location);
 
   return upload_succeeded;
 }

@@ -170,9 +170,9 @@ std::string get_default_value(UniformType type);
 bool is_valid_value(UniformType type, std::string& value);
 
 /**
- * Returns cpu-size of given type in bytes.
+ * Returns gpu-size of given type in bytes.
  */
-int get_size(UniformType type);
+int get_stride(UniformType type);
 
 /**
  * Returns the BufferComponentType of a BufferComponent.

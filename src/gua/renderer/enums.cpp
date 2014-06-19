@@ -298,32 +298,32 @@ bool is_valid_value(UniformType type, std::string& value) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int get_size(UniformType type) {
+int get_stride(UniformType type) {
   switch (type) {
     case UniformType::INT:
-      return sizeof(int);
+      return 4;
     case UniformType::FLOAT:
-      return sizeof(float);
+      return 16;
     case UniformType::BOOL:
-      return sizeof(bool);
+      return 4;
     case UniformType::VEC2:
-      return sizeof(math::vec2);
+      return 8;
     case UniformType::VEC3:
-      return sizeof(math::vec3);
+      return 16;
     case UniformType::VEC4:
-      return sizeof(math::vec4);
+      return 16;
     case UniformType::MAT3:
-      return sizeof(math::mat3);
+      return 36;
     case UniformType::MAT4:
-      return sizeof(math::mat4);
+      return 64;
     case UniformType::SAMPLER1D:
-      return sizeof(math::vec2ui);
+      return 8;
     case UniformType::SAMPLER2D:
-      return sizeof(math::vec2ui);
+      return 8;
     case UniformType::SAMPLER3D:
-      return sizeof(math::vec2ui);
+      return 8;
     case UniformType::SAMPLERCUBE:
-      return sizeof(math::vec2ui);
+      return 8;
     default:
       return -1;
   }

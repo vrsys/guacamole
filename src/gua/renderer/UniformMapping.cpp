@@ -83,24 +83,26 @@ std::string const UniformMapping::get_uniform_definition(Pipeline::PipelineStage
 
   std::stringstream result;
 
-  result << "layout(binding = " << static_cast<int>(stage)+1 << ") buffer GuaMaterialUniformStorage" << std::endl;
-  result << "{" << std::endl;
+  if (get_uniform_counts().size() > 0) {
+    result << "layout(std430, binding = " << static_cast<int>(stage)+1 << ") buffer GuaMaterialUniformStorage" << std::endl;
+    result << "{" << std::endl;
 
-  for (unsigned t(0); t < static_cast<unsigned>(UniformType::NONE); ++t) {
-    int count(get_uniform_count(UniformType(t)));
+    for (unsigned t(0); t < static_cast<unsigned>(UniformType::NONE); ++t) {
+      int count(get_uniform_count(UniformType(t)));
 
-    if (count > 0) {
-      if (UniformType(t) == UniformType::SAMPLER2D) {
-        std::string type(enums::uniform_type_to_string(UniformType(t)));
-        result << "uvec2 gua_" << type << "s[" << count << "];" << std::endl;
-      } else {
-        std::string type(enums::uniform_type_to_string(UniformType(t)));
-        result << type << " gua_" << type << "s[" << count << "];" << std::endl;
+      if (count > 0) {
+        if (UniformType(t) == UniformType::SAMPLER2D) {
+          std::string type(enums::uniform_type_to_string(UniformType(t)));
+          result << "uvec2 gua_" << type << "s[" << count << "];" << std::endl;
+        } else {
+          std::string type(enums::uniform_type_to_string(UniformType(t)));
+          result << type << " gua_" << type << "s[" << count << "];" << std::endl;
+        }
       }
     }
-  }
 
-  result << "} gua_material_uniforms;" << std::endl;
+    result << "} gua_material_uniforms;" << std::endl;
+  }
 
   return result.str();
 }
