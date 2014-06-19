@@ -96,12 +96,6 @@ class Pass {
                    CameraMode eye,
                    RenderContext const& ctx) const;
 
-  void set_camera_matrices(ShaderProgram const& shader,
-                           Camera const& camera,
-                           SerializedScene const& scene,
-                           CameraMode eye,
-                           RenderContext const& ctx) const;
-
   Pipeline* pipeline_;
   std::shared_ptr<StereoBuffer> gbuffer_;
 

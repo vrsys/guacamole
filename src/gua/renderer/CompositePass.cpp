@@ -128,7 +128,7 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
         if (!scene.volumenodes_.empty())
         {
             // gather input textures and set uniforms
-            Pass::set_camera_matrices(*ray_generation_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+            ray_generation_shader_->set_uniform(ctx, static_cast<int>(eye), "gua_eye");
             if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
               ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
             } else {
@@ -168,7 +168,7 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
     scm::gl::context_all_guard      cug(ctx.render_context);
 
     // 2. render fullscreen quad for compositing and volume ray castinG
-    Pass::set_camera_matrices(*composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+    composite_shader_->set_uniform(ctx, static_cast<int>(eye), "gua_eye");
     if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
       ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
     } else {

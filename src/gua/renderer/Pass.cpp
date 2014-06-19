@@ -111,14 +111,4 @@ void Pass::bind_inputs(ShaderProgram const& shader,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pass::set_camera_matrices(ShaderProgram const& shader,
-                               Camera const& camera,
-                               SerializedScene const& scene,
-                               CameraMode eye,
-                               RenderContext const& ctx) const {
-  shader.set_uniform(ctx, static_cast<int>(eye), "gua_eye");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 }
