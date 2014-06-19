@@ -28,6 +28,7 @@
 #include <gua/renderer/UberShaderFactory.hpp>
 #include <gua/renderer/Window.hpp>
 #include <gua/renderer/PLODRessource.hpp>
+#include <gua/renderer/View.hpp>
 #include <gua/databases.hpp>
 
 #include <pbr/ren/camera.h>
@@ -647,7 +648,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
                                                scm::math::mat4 const& model_matrix,
                                                scm::math::mat4 const& normal_matrix,
                                                Frustum const& frustum,
-                                               std::size_t viewid) const
+                                               View const& view) const
   {
       std::vector<math::vec3> corner_values = frustum.get_corners();
       float top_minus_bottom = scm::math::length((corner_values[2]) - (corner_values[0]));
@@ -676,7 +677,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const
       pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
       
       pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-      pbr::view_t view_id = controller->DeduceViewId(context_id, viewid);
+      pbr::view_t view_id = controller->DeduceViewId(context_id, view.id);
       pbr::model_t model_id = controller->DeduceModelId(file_name);
       
       //send camera and model_matrix to cut update
@@ -741,26 +742,20 @@ void PLODUberShader::draw(RenderContext const& ctx,
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
                              Frustum const& frustum,
-                             std::size_t viewid) const
+                             View const& view) const
 {
     throw std::runtime_error("PLODUberShader::draw(): not implemented");
 }
 
-
-
-
-
-
   ////////////////////////////////////////////////////////////////////////////////
 
-  /*virtual*/ void PLODUberShader::postdraw(RenderContext const& ctx,
-    std::string const& file_name,
-    std::string const& material_name,
-    scm::math::mat4 const& model_matrix,
-    scm::math::mat4 const& normal_matrix,
-    Frustum const& frustum,
-    std::size_t viewid) const
-  {
+/*virtual*/ void PLODUberShader::postdraw(RenderContext const& ctx,
+  std::string const& file_name,
+  std::string const& material_name,
+  scm::math::mat4 const& model_matrix,
+  scm::math::mat4 const& normal_matrix,
+  Frustum const& frustum,
+  View const& view) const {
 
   auto plod_ressource     = std::static_pointer_cast<PLODRessource>(GeometryDatabase::instance()->lookup(file_name));
   auto material          = MaterialDatabase::instance()->lookup(material_name);
@@ -826,7 +821,7 @@ void PLODUberShader::draw(RenderContext const& ctx,
         pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
         pbr::context_t context_id = controller->DeduceContextId(ctx.id);
         pbr::model_t model_id = controller->DeduceModelId(file_name);
-        pbr::view_t view_id = controller->DeduceViewId(context_id, viewid);
+        pbr::view_t view_id = controller->DeduceViewId(context_id, view.id);
          
         material_id_[ctx.id] = material->get_id();
 
