@@ -375,6 +375,8 @@ void Pipeline::create_passes() {
       return;
     }
 
+    std::unique_lock<std::mutex> lock (MaterialDatabase::instance()->update_lock);
+
     auto materials(MaterialDatabase::instance()->list_all());
 
     auto pre_pass = new GBufferPass(this);
