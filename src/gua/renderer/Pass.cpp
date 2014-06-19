@@ -116,11 +116,7 @@ void Pass::set_camera_matrices(ShaderProgram const& shader,
                                SerializedScene const& scene,
                                CameraMode eye,
                                RenderContext const& ctx) const {
-
-  auto camera_position(scene.frustum.get_camera_position());
-
   shader.set_uniform(ctx, static_cast<int>(eye), "gua_eye");
-  shader.set_uniform(ctx, camera_position, "gua_camera_position");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

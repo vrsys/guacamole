@@ -25,6 +25,7 @@ void CameraUniformBlock::update(const scm::gl::render_context_ptr& context,
       uniform_block_->projection = projection;
       uniform_block_->projection_inverse = projection_inv;
       uniform_block_->projection_view_inverse = scm::math::inverse(projection * view);
+      uniform_block_->position = math::vec4(camera_position, 1.0);
   } uniform_block_.end_manipulation();
 }
 
