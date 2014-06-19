@@ -193,7 +193,13 @@ class GUA_DLL Pipeline {
   GBufferPass::GeometryUberShaderMap const& get_geometry_ubershaders() const;
 
   friend class Renderer;
+
   friend class Pass;
+  friend class PostFXPass;
+  friend class LightingPass;
+  friend class GBufferPass;
+  friend class FinalPass;
+  friend class CompositePass;
 
  private:
   void loading_screen();
@@ -230,7 +236,8 @@ class GUA_DLL Pipeline {
 
   unsigned last_shading_model_revision_;
 
-  std::shared_ptr<gua::CameraUniformBlock> camera_block_;
+  std::shared_ptr<gua::CameraUniformBlock> camera_block_left_;
+  std::shared_ptr<gua::CameraUniformBlock> camera_block_right_;
 };
 
 }

@@ -17,6 +17,7 @@ public:
     math::mat4  projection;
     math::mat4  projection_inverse;
     math::mat4  projection_view_inverse;
+    math::vec4  position;
   };
 
   typedef scm::gl::uniform_block<CameraBlock>     block_type;

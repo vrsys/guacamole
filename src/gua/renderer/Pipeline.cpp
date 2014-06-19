@@ -73,7 +73,8 @@ Pipeline::Pipeline()
     buffers_need_reload_(true),
     last_shading_model_revision_(0),
     display_loading_screen_(true),
-    camera_block_(nullptr) {
+    camera_block_left_(nullptr),
+    camera_block_right_(nullptr) {
 
   create_passes();
 }
@@ -233,9 +234,11 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     set_context(window_->get_context());
     window_->set_active(true);
   }
-  if (!camera_block_)
-    camera_block_ = std::make_shared<CameraUniformBlock>(context_->render_device);
 
+  if (!camera_block_left_) {
+    camera_block_left_ = std::make_shared<CameraUniformBlock>(context_->render_device);
+    camera_block_right_ = std::make_shared<CameraUniformBlock>(context_->render_device);
+  }
 
   for (auto pipe: prerender_pipelines_) {
     pipe->process(scene_graphs, application_fps, rendering_fps);
@@ -270,7 +273,8 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   } else {
     if (passes_need_reload_) {
       create_passes();
-      camera_block_ = std::make_shared<CameraUniformBlock>(context_->render_device);
+      camera_block_left_ = std::make_shared<CameraUniformBlock>(context_->render_device);
+      camera_block_right_ = std::make_shared<CameraUniformBlock>(context_->render_device);
     }
 
     if (buffers_need_reload_) {
@@ -284,9 +288,15 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
     serialize(*current_graph, config.camera().eye_l, config.camera().screen_l,
               current_scenes_[0]);
+
+    camera_block_left_->update(context_->render_context
+                              , current_scenes_[0].frustum);
+
     if (config.get_enable_stereo()) {
       serialize(*current_graph, config.camera().eye_r, config.camera().screen_r,
               current_scenes_[1]);
+      camera_block_right_->update(context_->render_context
+                                , current_scenes_[1].frustum);
     }
 
     for (auto pass : passes_) {
@@ -295,15 +305,23 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
     if (window_) {
       if (config.get_enable_stereo()) {
-          window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-                               ->get_color_buffers(TYPE_FLOAT)[0],
-                               passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[1]
-                               ->get_color_buffers(TYPE_FLOAT)[0]);
+          window_->display(passes_[PipelineStage::postfx]
+                                  ->get_gbuffer()
+                                  ->get_eye_buffers()[0]
+                                  ->get_color_buffers(TYPE_FLOAT)[0],
+                           passes_[PipelineStage::postfx]
+                                  ->get_gbuffer()
+                                  ->get_eye_buffers()[1]
+                                  ->get_color_buffers(TYPE_FLOAT)[0]);
       } else {
-        window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-			 ->get_color_buffers(TYPE_FLOAT)[0],
-			 passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-			 ->get_color_buffers(TYPE_FLOAT)[0]);
+        window_->display(passes_[PipelineStage::postfx]
+                                ->get_gbuffer()
+                                ->get_eye_buffers()[0]
+                                ->get_color_buffers(TYPE_FLOAT)[0],
+                         passes_[PipelineStage::postfx]
+                                ->get_gbuffer()
+                                ->get_eye_buffers()[0]
+                                ->get_color_buffers(TYPE_FLOAT)[0]);
       }
 
       window_->finish_frame();

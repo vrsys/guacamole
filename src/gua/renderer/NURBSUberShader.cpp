@@ -126,11 +126,11 @@ std::string const NURBSUberShader::_transform_feedback_tess_control_shader () co
           mat4 gua_projection_matrix;                        \n\
           mat4 gua_inverse_projection_matrix;                \n\
           mat4 gua_inverse_projection_view_matrix;           \n\
+          vec3 gua_camera_position;                          \n\
         };                                                   \n\
                                                              \n\
         uniform mat4 gua_model_matrix;                       \n\
         uniform mat4 gua_normal_matrix;                      \n\
-        uniform vec3 gua_camera_position;                    \n\
                                                              \n\
         uniform float gua_texel_width;                       \n\
         uniform float gua_texel_height;                      \n\
@@ -254,11 +254,11 @@ std::string const NURBSUberShader::_transform_feedback_tess_evaluation_shader ()
           mat4 gua_projection_matrix;                        \n\
           mat4 gua_inverse_projection_matrix;                \n\
           mat4 gua_inverse_projection_view_matrix;           \n\
+          vec3 gua_camera_position;                          \n\
         };                                                   \n\
                                                              \n\
         uniform mat4 gua_model_matrix;                       \n\
         uniform mat4 gua_normal_matrix;                      \n\
-        uniform vec3 gua_camera_position;                    \n\
                                                              \n\
         uniform samplerBuffer parameter_texture;             \n\
         uniform samplerBuffer attribute_texture;             \n\
@@ -438,18 +438,18 @@ std::string const NURBSUberShader::_final_tess_control_shader () const
                                                             \n\
         uniform samplerBuffer parameter_texture;            \n\
         uniform samplerBuffer attribute_texture;            \n\
-        // uniforms                                          \n\
-        layout (std140, binding=0) uniform cameraBlock       \n\
-        {                                                    \n\
-          mat4 gua_view_matrix;                              \n\
-          mat4 gua_projection_matrix;                        \n\
-          mat4 gua_inverse_projection_matrix;                \n\
-          mat4 gua_inverse_projection_view_matrix;           \n\
-        };                                                   \n\
-                                       \n\
+        // uniforms                                         \n\
+        layout (std140, binding=0) uniform cameraBlock      \n\
+        {                                                   \n\
+          mat4 gua_view_matrix;                             \n\
+          mat4 gua_projection_matrix;                       \n\
+          mat4 gua_inverse_projection_matrix;               \n\
+          mat4 gua_inverse_projection_view_matrix;          \n\
+          vec3 gua_camera_position;                         \n\
+        };                                                  \n\
+                                                            \n\
         uniform mat4 gua_model_matrix;                      \n\
         uniform mat4 gua_normal_matrix;                     \n\
-        uniform vec3 gua_camera_position;                   \n\
         uniform float gua_tesselation_max_error;            \n\
                                                             \n\
                                                             \n\
@@ -635,17 +635,17 @@ std::string const NURBSUberShader::_final_tess_evaluation_shader () const
         flat out vec4   teNormal;                               \n\
         flat out vec4   tePosition;                             \n\
                                                                 \n\
-        // uniforms                                          \n\
-        layout (std140, binding=0) uniform cameraBlock       \n\
-        {                                                    \n\
-          mat4 gua_view_matrix;                              \n\
-          mat4 gua_projection_matrix;                        \n\
-          mat4 gua_inverse_projection_matrix;                \n\
-          mat4 gua_inverse_projection_view_matrix;           \n\
-        };                                                   \n\
+        // uniforms                                             \n\
+        layout (std140, binding=0) uniform cameraBlock          \n\
+        {                                                       \n\
+          mat4 gua_view_matrix;                                 \n\
+          mat4 gua_projection_matrix;                           \n\
+          mat4 gua_inverse_projection_matrix;                   \n\
+          mat4 gua_inverse_projection_view_matrix;              \n\
+          vec3 gua_camera_position;                             \n\
+        };                                                      \n\
         uniform mat4 gua_model_matrix;                          \n\
         uniform mat4 gua_normal_matrix;                         \n\
-        uniform vec3 gua_camera_position;                       \n\
                                                                 \n\
         uniform samplerBuffer parameter_texture;                \n\
         uniform samplerBuffer attribute_texture;                \n\
@@ -717,10 +717,10 @@ std::string const NURBSUberShader::_final_geometry_shader () const
           mat4 gua_projection_matrix;                        \n\
           mat4 gua_inverse_projection_matrix;                \n\
           mat4 gua_inverse_projection_view_matrix;           \n\
+          vec3 gua_camera_position;                          \n\
         };                                                   \n\
         uniform mat4 gua_model_matrix;                       \n\
         uniform mat4 gua_normal_matrix;                      \n\
-        uniform vec3 gua_camera_position;                    \n\
         uniform uint gua_material_id;                        \n\
                                                              \n\
         flat in vec3 teBitangent[3];                         \n\
@@ -879,11 +879,11 @@ std::string const NURBSUberShader::_final_fragment_shader () const
           mat4 gua_projection_matrix;
           mat4 gua_inverse_projection_matrix;
           mat4 gua_inverse_projection_view_matrix;
+          vec3 gua_camera_position;
         };
 
         uniform mat4 gua_model_matrix;
         uniform mat4 gua_normal_matrix;
-        uniform vec3 gua_camera_position;
 
         uniform float gua_texel_width;
         uniform float gua_texel_height;

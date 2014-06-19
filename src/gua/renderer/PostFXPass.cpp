@@ -324,8 +324,12 @@ void PostFXPass::render_scene(Camera const& camera,
         auto normal_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
         auto depth_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_depth_buffer());
 
-
-        Pass::set_camera_matrices(*postfx_shaders_[0], camera, pipeline_->get_current_scene(eye), eye, ctx);
+        postfx_shaders_[0]->set_uniform(ctx, static_cast<int>(eye), "gua_eye");
+        if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
+          ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
+        } else {
+          ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_right_->block().block_buffer(), 0);
+        }
 
         // ---------------------------------------------------------------------
         auto current_target(ping_buffer_);
@@ -486,7 +490,12 @@ bool PostFXPass::render_godrays(Camera const& camera,
     postfx_shaders_[0]->set_uniform(ctx, any_godrays, "gua_enable_godrays");
 
     if (any_godrays) {
-        Pass::set_camera_matrices(*god_ray_shader_, camera, scene, eye, ctx);
+        god_ray_shader_->set_uniform(ctx, static_cast<int>(eye), "gua_eye");
+        if (eye == CameraMode::LEFT) {
+          ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
+        } else {
+          ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_right_->block().block_buffer(), 0);
+        }
 
         auto depth_buffer(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_depth_buffer());
         god_ray_shader_->set_uniform(ctx, 1.0f * godray_buffers_[0]->width() / godray_buffers_[0]->height(), "gua_aspect_ratio");
