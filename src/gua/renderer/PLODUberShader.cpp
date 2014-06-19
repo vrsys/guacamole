@@ -112,7 +112,7 @@ PLODUberShader::~PLODUberShader() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PLODUberShader::depth_pass_vertex_shader() const {
+std::string PLODUberShader::depth_pass_vertex_shader() const {
 
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p01_depth_vert)
@@ -123,7 +123,7 @@ std::string const PLODUberShader::depth_pass_vertex_shader() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PLODUberShader::depth_pass_fragment_shader() const {
+std::string PLODUberShader::depth_pass_fragment_shader() const {
 
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p01_depth_frag)
@@ -134,7 +134,7 @@ std::string const PLODUberShader::depth_pass_fragment_shader() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PLODUberShader::accumulation_pass_vertex_shader() const {
+std::string PLODUberShader::accumulation_pass_vertex_shader() const {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p02_accumulation_vert)
     );
@@ -143,7 +143,7 @@ std::string const PLODUberShader::accumulation_pass_vertex_shader() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PLODUberShader::accumulation_pass_fragment_shader() const {
+std::string PLODUberShader::accumulation_pass_fragment_shader() const {
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p02_accumulation_frag)
     );
@@ -153,7 +153,7 @@ std::string const PLODUberShader::accumulation_pass_fragment_shader() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PLODUberShader::normalization_pass_vertex_shader() const {
+std::string PLODUberShader::normalization_pass_vertex_shader() const {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_vert)
   );
@@ -163,7 +163,7 @@ std::string const PLODUberShader::normalization_pass_vertex_shader() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PLODUberShader::normalization_pass_fragment_shader() const
+std::string PLODUberShader::normalization_pass_fragment_shader() const
 {
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_frag)
@@ -174,7 +174,7 @@ std::string const PLODUberShader::normalization_pass_fragment_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PLODUberShader::reconstruction_pass_vertex_shader() const {
+std::string PLODUberShader::reconstruction_pass_vertex_shader() const {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p04_reconstruction_vert)
   );
@@ -193,7 +193,7 @@ std::string const PLODUberShader::reconstruction_pass_vertex_shader() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PLODUberShader::reconstruction_pass_fragment_shader() const {
+std::string PLODUberShader::reconstruction_pass_fragment_shader() const {
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p04_reconstruction_frag)
     );
@@ -918,7 +918,7 @@ void PLODUberShader::CopyTempToMainMemory(RenderContext const& ctx, pbr::ren::Cu
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PLODUberShader::default_plod_material_name() const {
+std::string PLODUberShader::default_plod_material_name() const {
   return "gua_pbr";
 }
 
