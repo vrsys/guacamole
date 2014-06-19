@@ -34,9 +34,7 @@
 
 #include <gua/utils/Logger.hpp>
 
-
 namespace gua {
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,57 +42,51 @@ PBRUberShader::PBRUberShader()
   : GeometryUberShader(), near_plane_value_(0.0f), height_divided_by_top_minus_bottom_(0.0f)
 {}
 
+////////////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////////////
+void PBRUberShader::create(std::set<std::string> const& material_names) {
+   UberShader::create(material_names);
 
-  void PBRUberShader::create(std::set<std::string> const& material_names)
-  {
-     UberShader::create(material_names);
+  // create depth pass shader
+  std::vector<ShaderProgramStage> depth_pass_stages;
+  depth_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          depth_pass_vertex_shader()));
+  depth_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        depth_pass_fragment_shader()));
 
-    // create depth pass shader
-    std::vector<ShaderProgramStage> depth_pass_stages;
-    depth_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          depth_pass_vertex_shader()));
-    depth_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        depth_pass_fragment_shader()));
+  auto depth_pass_program = std::make_shared<ShaderProgram>();
+  depth_pass_program->set_shaders(depth_pass_stages);
+  add_program(depth_pass_program);
 
-    auto depth_pass_program = std::make_shared<ShaderProgram>();
-    depth_pass_program->set_shaders(depth_pass_stages);
-    add_program(depth_pass_program);
+  // create accumulation pass shader
+  std::vector<ShaderProgramStage> accumulation_pass_stages;
+  accumulation_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          accumulation_pass_vertex_shader()));
+  accumulation_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        accumulation_pass_fragment_shader()));
 
-    // create accumulation pass shader
-    std::vector<ShaderProgramStage> accumulation_pass_stages;
-    accumulation_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          accumulation_pass_vertex_shader()));
-    accumulation_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER,        accumulation_pass_fragment_shader()));
+  auto accumulation_pass_program = std::make_shared<ShaderProgram>();
+  accumulation_pass_program->set_shaders(accumulation_pass_stages);
+  add_program(accumulation_pass_program);
 
-    auto accumulation_pass_program = std::make_shared<ShaderProgram>();
-    accumulation_pass_program->set_shaders(accumulation_pass_stages);
-    add_program(accumulation_pass_program);
+  // create normalization pass shader
+  std::vector<ShaderProgramStage> normalization_pass_stages;
+  normalization_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, normalization_pass_vertex_shader()));
+  normalization_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, normalization_pass_fragment_shader()));
 
-    // create normalization pass shader
-    std::vector<ShaderProgramStage> normalization_pass_stages;
-    normalization_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, normalization_pass_vertex_shader()));
-    normalization_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, normalization_pass_fragment_shader()));
+  auto normalization_pass_program = std::make_shared<ShaderProgram>();
+  normalization_pass_program->set_shaders(normalization_pass_stages);
+  add_program(normalization_pass_program);
 
-    auto normalization_pass_program = std::make_shared<ShaderProgram>();
-    normalization_pass_program->set_shaders(normalization_pass_stages);
-    add_program(normalization_pass_program);
+  // create reconstruction pass shader
+  std::vector<ShaderProgramStage> reconstruction_pass_stages;
+  reconstruction_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, reconstruction_pass_vertex_shader()));
+  reconstruction_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, reconstruction_pass_fragment_shader()));
 
-    // create reconstruction pass shader
-    std::vector<ShaderProgramStage> reconstruction_pass_stages;
-    reconstruction_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, reconstruction_pass_vertex_shader()));
-    reconstruction_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, reconstruction_pass_fragment_shader()));
-
-    auto reconstruction_pass_program = std::make_shared<ShaderProgram>();
-    reconstruction_pass_program->set_shaders(reconstruction_pass_stages);
-    add_program(reconstruction_pass_program);
-  }
-
-
+  auto reconstruction_pass_program = std::make_shared<ShaderProgram>();
+  reconstruction_pass_program->set_shaders(reconstruction_pass_stages);
+  add_program(reconstruction_pass_program);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
-std::string const PBRUberShader::depth_pass_vertex_shader() const
+std::string PBRUberShader::depth_pass_vertex_shader() const
 {
 
   std::string vertex_shader(
@@ -104,11 +96,9 @@ std::string const PBRUberShader::depth_pass_vertex_shader() const
   return vertex_shader;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PBRUberShader::depth_pass_fragment_shader() const
+std::string PBRUberShader::depth_pass_fragment_shader() const
 {
 
   std::string fragment_shader(
@@ -118,13 +108,9 @@ std::string const PBRUberShader::depth_pass_fragment_shader() const
   return fragment_shader;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
-std::string const PBRUberShader::accumulation_pass_vertex_shader() const
+std::string PBRUberShader::accumulation_pass_vertex_shader() const
 {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p02_accumulation_vert)
@@ -132,11 +118,9 @@ std::string const PBRUberShader::accumulation_pass_vertex_shader() const
   return vertex_shader;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PBRUberShader::accumulation_pass_fragment_shader() const
+std::string PBRUberShader::accumulation_pass_fragment_shader() const
 {
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p02_accumulation_frag)
@@ -145,12 +129,9 @@ std::string const PBRUberShader::accumulation_pass_fragment_shader() const
   return fragment_shader;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
-std::string const PBRUberShader::normalization_pass_vertex_shader() const
+std::string PBRUberShader::normalization_pass_vertex_shader() const
 {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_vert)
@@ -161,7 +142,7 @@ std::string const PBRUberShader::normalization_pass_vertex_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PBRUberShader::normalization_pass_fragment_shader() const
+std::string PBRUberShader::normalization_pass_fragment_shader() const
 {
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_frag)
@@ -172,9 +153,7 @@ std::string const PBRUberShader::normalization_pass_fragment_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
-std::string const PBRUberShader::reconstruction_pass_vertex_shader() const
+std::string PBRUberShader::reconstruction_pass_vertex_shader() const
 {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p04_reconstruction_vert)
@@ -195,7 +174,7 @@ std::string const PBRUberShader::reconstruction_pass_vertex_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PBRUberShader::reconstruction_pass_fragment_shader() const
+std::string PBRUberShader::reconstruction_pass_fragment_shader() const
 {
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_pbr_p04_reconstruction_frag)
@@ -709,10 +688,9 @@ void PBRUberShader::draw(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-  std::string const PBRUberShader::default_pbr_material_name() const
-  {
-    return "gua_pbr";
-  }
+std::string PBRUberShader::default_pbr_material_name() const {
+  return "gua_pbr";
+}
 
 }
 

@@ -86,19 +86,19 @@ class PBRUberShader : public GeometryUberShader {
   /*virtual*/ void  postframe (RenderContext const& context) const;
 
  private: //auxialiary methods
-  std::string const depth_pass_vertex_shader() const;
-  std::string const depth_pass_fragment_shader() const;
+  std::string depth_pass_vertex_shader() const;
+  std::string depth_pass_fragment_shader() const;
 
-  std::string const accumulation_pass_vertex_shader() const;
-  std::string const accumulation_pass_fragment_shader() const;
+  std::string accumulation_pass_vertex_shader() const;
+  std::string accumulation_pass_fragment_shader() const;
 
-  std::string const normalization_pass_vertex_shader   () const;
-  std::string const normalization_pass_fragment_shader () const;
+  std::string normalization_pass_vertex_shader   () const;
+  std::string normalization_pass_fragment_shader () const;
 
-  std::string const reconstruction_pass_vertex_shader () const;
-  std::string const reconstruction_pass_fragment_shader () const;
+  std::string reconstruction_pass_vertex_shader () const;
+  std::string reconstruction_pass_fragment_shader () const;
 
-  std::string const default_pbr_material_name() const;
+  std::string default_pbr_material_name() const;
 
  private:  //member variables
 
