@@ -26,6 +26,7 @@
 #include <gua/databases/MaterialDatabase.hpp>
 #include <gua/scenegraph/RayNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
 // guacamole headers
 
@@ -79,6 +80,9 @@ namespace gua {
         if (has_children()) {
           auto geometry_bbox(geometry->get_bounding_box());
 
+#if 0
+          auto inner_bbox = gua::math::transform(geometry_bbox, world_transform);
+#else
           math::BoundingBox<math::vec3> inner_bbox;
           inner_bbox.expandBy(world_transform * geometry_bbox.min);
           inner_bbox.expandBy(world_transform * geometry_bbox.max);
@@ -106,6 +110,7 @@ namespace gua {
             math::vec3(geometry_bbox.max.x,
             geometry_bbox.min.y,
             geometry_bbox.min.z));
+#endif
 
           auto inner_hits(ray.intersect(inner_bbox));
           if (inner_hits.first == RayNode::END &&
