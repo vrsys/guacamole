@@ -117,7 +117,7 @@ class GUA_DLL PointLightNode : public Node {
    *
    * \param visitor  A visitor to process the PointLightNode's data.
    */
-  /* virtual */ void accept(NodeVisitor& visitor);
+  void accept(NodeVisitor& visitor) override;
 
   /**
    * Updates a PointLightNode's BoundingBox.
@@ -125,13 +125,13 @@ class GUA_DLL PointLightNode : public Node {
    * The bounding box is updated according to the transformation matrices of
    * all children.
    */
-  void update_bounding_box() const;
+  void update_bounding_box() const override;
 
  private:
   /**
    *
    */
-  std::shared_ptr<Node> copy() const;
+  std::shared_ptr<Node> copy() const override;
 };
 
 }

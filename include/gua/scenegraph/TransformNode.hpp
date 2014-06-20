@@ -66,11 +66,11 @@ class GUA_DLL TransformNode : public Node {
    *
    * \param visitor  A visitor to process the TransformNode's data.
    */
-  /* virtual */ void accept(NodeVisitor& visitor);
+  void accept(NodeVisitor& visitor) override;
 
  private:
 
-  std::shared_ptr<Node> copy() const;
+  std::shared_ptr<Node> copy() const override;
 };
 
 }

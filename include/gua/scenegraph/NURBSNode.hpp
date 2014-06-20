@@ -32,7 +32,7 @@ namespace gua {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL NURBSNode : public GeometryNode 
+class GUA_DLL NURBSNode : public GeometryNode
 {
 public : // member
 
@@ -44,16 +44,16 @@ public : // member
   /**
   * Implements ray picking for a NURBS object
   */
-  /* virtual */ void ray_test_impl(RayNode const& ray, 
-                                   PickResult::Options options,
-                                   Mask const& mask, 
-                                   std::set<PickResult>& hits);
+  void ray_test_impl(RayNode const& ray,
+                     PickResult::Options options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
 
-  /* virtual */ void update_cache();
+  void update_cache() override;
 
 protected:
 
-  /* virtual */ std::shared_ptr<Node> copy() const;
+  std::shared_ptr<Node> copy() const override;
 
 private : // attributes e.g. special attributes for drawing
 

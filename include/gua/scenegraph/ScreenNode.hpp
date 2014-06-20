@@ -99,11 +99,11 @@ class GUA_DLL ScreenNode : public Node {
    *
    * \param visitor  A visitor to process the ScreenNode's data.
    */
-  /* virtual */ void accept(NodeVisitor& visitor);
+  void accept(NodeVisitor& visitor) override;
 
  private:
 
-  std::shared_ptr<Node> copy() const;
+  std::shared_ptr<Node> copy() const override;
 
 };
 

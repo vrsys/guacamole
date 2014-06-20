@@ -95,9 +95,9 @@ class GUA_DLL GeometryNode : public Node {
     /**
     * Updates bounding box by accessing the ressource in the databse
     */
-    virtual void update_bounding_box() const;
+    void update_bounding_box() const override;
 
-    inline virtual void update_cache() { Node::update_cache(); }
+    inline void update_cache() override { Node::update_cache(); }
 
     /**
      * Accepts a visitor and calls concrete visit method.
@@ -106,7 +106,7 @@ class GUA_DLL GeometryNode : public Node {
      *
      * \param visitor  A visitor to process the GeometryNode's data.
      */
-    /* virtual */ void accept(NodeVisitor& visitor);
+    void accept(NodeVisitor& visitor) override;
 
   protected:
 
