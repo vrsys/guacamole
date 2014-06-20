@@ -49,27 +49,27 @@ class NURBSShader {
 
  public:
 
-  static std::string const surface_horner_evaluation();
-  static std::string const horner_simple();
-  static std::string const horner_derivatives();
-  static std::string const curve_horner_evaluation();
-  static std::string const trim_classification();
+  static std::string surface_horner_evaluation();
+  static std::string horner_simple();
+  static std::string horner_derivatives();
+  static std::string curve_horner_evaluation();
+  static std::string trim_classification();
 
-  static std::string const control_polygon_length();
-  static std::string const edge_length();
-  static std::string const edge_tess_level();
-  static std::string const inner_tess_level();
-  static std::string const to_screen_space();
-  static std::string const frustum_cull();
-  static std::string const is_inside();
+  static std::string control_polygon_length();
+  static std::string edge_length();
+  static std::string edge_tess_level();
+  static std::string inner_tess_level();
+  static std::string to_screen_space();
+  static std::string frustum_cull();
+  static std::string is_inside();
 
   // fragment-based trimming based on binary clustered contour
-  static std::string const binary_search();
-  static std::string const trimming_helper_methods();
-  static std::string const bisect_contour();
-  static std::string const bisect_curve();
-  static std::string const contour_binary_search();
-  static std::string const contour_based_trimming();
+  static std::string binary_search();
+  static std::string trimming_helper_methods();
+  static std::string bisect_contour();
+  static std::string bisect_curve();
+  static std::string contour_binary_search();
+  static std::string contour_based_trimming();
 
  private:  // attributes
 };

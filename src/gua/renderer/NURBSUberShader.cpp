@@ -74,7 +74,7 @@ void NURBSUberShader::create(std::set<std::string> const& material_names)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const NURBSUberShader::_transform_feedback_vertex_shader () const
+std::string NURBSUberShader::_transform_feedback_vertex_shader () const
 {
     std::stringstream tf_vertex;
 
@@ -104,7 +104,7 @@ std::string const NURBSUberShader::_transform_feedback_vertex_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const NURBSUberShader::_transform_feedback_tess_control_shader () const
+std::string NURBSUberShader::_transform_feedback_tess_control_shader () const
 {
     std::stringstream tess_control;
     tess_control << std::string("                            \n\
@@ -229,7 +229,7 @@ std::string const NURBSUberShader::_transform_feedback_tess_control_shader () co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const NURBSUberShader::_transform_feedback_tess_evaluation_shader () const
+std::string NURBSUberShader::_transform_feedback_tess_evaluation_shader () const
 {
     std::stringstream tess_eval;
 
@@ -297,7 +297,7 @@ std::string const NURBSUberShader::_transform_feedback_tess_evaluation_shader ()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const NURBSUberShader::_transform_feedback_geometry_shader () const
+std::string NURBSUberShader::_transform_feedback_geometry_shader () const
 {
    std::stringstream tf_geom;
 
@@ -392,7 +392,7 @@ std::string const NURBSUberShader::_transform_feedback_geometry_shader () const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const NURBSUberShader::_final_vertex_shader () const
+std::string NURBSUberShader::_final_vertex_shader () const
 {
     std::stringstream vertex_shader;
 
@@ -424,7 +424,7 @@ std::string const NURBSUberShader::_final_vertex_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const NURBSUberShader::_final_tess_control_shader () const
+std::string NURBSUberShader::_final_tess_control_shader () const
 {
     std::stringstream tess_ctrl;
 
@@ -615,7 +615,7 @@ std::string const NURBSUberShader::_final_tess_control_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const NURBSUberShader::_final_tess_evaluation_shader () const
+std::string NURBSUberShader::_final_tess_evaluation_shader () const
 {
     std::stringstream tess_eval;
 
@@ -698,7 +698,7 @@ std::string const NURBSUberShader::_final_tess_evaluation_shader () const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const NURBSUberShader::_final_geometry_shader () const
+std::string NURBSUberShader::_final_geometry_shader () const
 {
     std::stringstream geom_shader;
 
@@ -831,7 +831,7 @@ std::string const NURBSUberShader::_final_geometry_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const NURBSUberShader::_final_fragment_shader () const
+std::string NURBSUberShader::_final_fragment_shader () const
 {
     std::string fragment_shader;
 
@@ -974,7 +974,7 @@ std::string const NURBSUberShader::_final_fragment_shader () const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*virtual*/ GeometryUberShader::stage_mask const NURBSUberShader::get_stage_mask() const
+/*virtual*/ GeometryUberShader::stage_mask NURBSUberShader::get_stage_mask() const
 {
   return GeometryUberShader::DRAW_STAGE;
 }

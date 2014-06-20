@@ -57,7 +57,7 @@ class PLODUberShader : public GeometryUberShader {
 
   bool              upload_to (RenderContext const& context) const;
 
-  /*virtual*/ stage_mask const get_stage_mask() const;
+  /*virtual*/ stage_mask get_stage_mask() const override;
 
   /*virtual*/ void  preframe  (RenderContext const& context) const;
 

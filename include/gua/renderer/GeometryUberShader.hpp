@@ -68,7 +68,7 @@ class GeometryUberShader : public UberShader {
   /**
   * provides information about which passes/stages area provided by this UberShader
   */
-  virtual stage_mask const get_stage_mask() const = 0;
+  virtual stage_mask get_stage_mask() const = 0;
 
   /**
   * This callback is called ONCE per frame BEFORE rendering all drawables of this type 

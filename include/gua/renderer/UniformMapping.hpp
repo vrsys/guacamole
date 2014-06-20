@@ -54,7 +54,7 @@ class UniformMapping {
       std::string const& material,
       std::string const& uniform) const;
 
-  std::string const get_uniform_definition() const;
+  std::string get_uniform_definition() const;
 
   /**
    *

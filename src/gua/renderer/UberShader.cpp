@@ -156,7 +156,7 @@ void UberShader::set_output_mapping(LayerMapping const& mapping) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const UberShader::print_material_switch(
+std::string UberShader::print_material_switch(
     UberShaderFactory const& factory) const {
 
   std::stringstream s;
@@ -189,7 +189,7 @@ std::string const UberShader::print_material_switch(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const UberShader::print_material_methods(
+std::string UberShader::print_material_methods(
     UberShaderFactory const& factory) const {
 
   std::stringstream s;

@@ -126,8 +126,8 @@ class UberShader {
   void set_uniform_mapping(UniformMapping const& mapping);
   void set_output_mapping(LayerMapping const& mapping);
 
-  std::string const print_material_switch(UberShaderFactory const& factory) const;
-  std::string const print_material_methods(UberShaderFactory const& factory) const;
+  std::string print_material_switch(UberShaderFactory const& factory) const;
+  std::string print_material_methods(UberShaderFactory const& factory) const;
 
   protected: // attributes
 

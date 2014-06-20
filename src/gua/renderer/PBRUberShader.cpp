@@ -379,7 +379,7 @@ bool PBRUberShader::upload_to (RenderContext const& context) const
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  /*virtual*/ GeometryUberShader::stage_mask const PBRUberShader::get_stage_mask() const
+  /*virtual*/ GeometryUberShader::stage_mask PBRUberShader::get_stage_mask() const
   {
 
     return GeometryUberShader::PRE_FRAME_STAGE | GeometryUberShader::PRE_DRAW_STAGE | GeometryUberShader::POST_DRAW_STAGE | GeometryUberShader::POST_FRAME_STAGE;

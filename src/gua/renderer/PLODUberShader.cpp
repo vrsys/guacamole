@@ -478,7 +478,7 @@ bool PLODUberShader::upload_to (RenderContext const& context) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GeometryUberShader::stage_mask const PLODUberShader::get_stage_mask() const {
+GeometryUberShader::stage_mask PLODUberShader::get_stage_mask() const {
   return  GeometryUberShader::PRE_FRAME_STAGE
         | GeometryUberShader::PRE_DRAW_STAGE
         | GeometryUberShader::POST_DRAW_STAGE
