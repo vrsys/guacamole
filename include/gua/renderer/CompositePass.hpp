@@ -40,36 +40,36 @@ class CompositePass : public Pass {
   /**
    *
    */
-	 CompositePass(Pipeline* pipeline);
+  CompositePass(Pipeline* pipeline);
 
   /**
    *
    */
-	virtual ~CompositePass();
+  virtual ~CompositePass();
 
-  virtual void create(RenderContext const& ctx,
-                      std::vector<std::pair<BufferComponent,
-                      scm::gl::sampler_state_desc> > const& layers);
+  void create(RenderContext const& ctx,
+              std::vector<std::pair<BufferComponent,
+              scm::gl::sampler_state_desc> > const& layers) override;
 
-  /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
+  LayerMapping const* get_gbuffer_mapping() const override;
 
   void print_shaders(std::string const& directory,
-                     std::string const& name) const;
+                     std::string const& name) const override;
 
   bool pre_compile_shaders(RenderContext const& ctx);
 
-  /* virtual */ void render_scene(Camera const& camera,
-                                  SceneGraph const&,
-                                  RenderContext const& ctx,
-                                  std::size_t view);
+  void render_scene(Camera const& camera,
+                    SceneGraph const&,
+                    RenderContext const& ctx,
+                    std::size_t view) override;
 
 protected :
 
-  /* virtual */ void rendering( SerializedScene const& scene,
-                                RenderContext const& ctx,
-                                CameraMode eye,
-                                Camera const& camera,
-                                FrameBufferObject* target);
+  void rendering( SerializedScene const& scene,
+                  RenderContext const& ctx,
+                  CameraMode eye,
+                  Camera const& camera,
+                  FrameBufferObject* target);
 
   void init_resources (RenderContext const& ctx);
 

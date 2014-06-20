@@ -65,7 +65,7 @@ class GUA_DLL NURBSLoader : public GeometryLoader {
 
  private:
 
-  /* virtual */ bool is_supported(std::string const& file_name) const;
+  bool is_supported(std::string const& file_name) const override;
 
  private:
 
