@@ -131,7 +131,7 @@ namespace gua {
 			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
 
 		bool update_color_map(RenderContext const& context,
-			std::shared_ptr<Texture2D> const&,
+			Texture2D const&,
 			const scm::data::piecewise_function_1d<float, float>& in_alpha,
 			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
 		

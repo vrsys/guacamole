@@ -215,7 +215,7 @@ namespace gua {
 	}
 
 	bool Volume::update_color_map(RenderContext const& ctx,
-		std::shared_ptr<Texture2D> const& transfer_texture_ptr,
+		Texture2D const& transfer_texture_ptr,
 		const scm::data::piecewise_function_1d<float, float>& in_alpha,
 		const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const
 	{
@@ -225,7 +225,7 @@ namespace gua {
 		scm::scoped_array<scm::math::vec3f>  color_lut;
 		scm::scoped_array<float>             alpha_lut;
 
-		unsigned in_size = transfer_texture_ptr->width();
+		unsigned in_size = transfer_texture_ptr.width();
 
 		color_lut.reset(new vec3f[in_size]);
 		alpha_lut.reset(new float[in_size]);
@@ -251,7 +251,7 @@ namespace gua {
 		//MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
 
 		texture_region ur(vec3ui(0u), vec3ui(in_size, 1, 1));
-		bool res = ctx.render_context->update_sub_texture(transfer_texture_ptr->get_buffer(ctx), ur, 0u, FORMAT_RGBA_32F, combined_lut.get());
+		bool res = ctx.render_context->update_sub_texture(transfer_texture_ptr.get_buffer(ctx), ur, 0u, FORMAT_RGBA_32F, combined_lut.get());
 
 		//MESSAGE("uploading texture data done.");
 
@@ -275,7 +275,7 @@ namespace gua {
 		if (_update_transfer_function){
 			for (auto color_map_texture : _transfer_texture_ptr)
 			{
-				update_color_map(ctx, color_map_texture, _alpha_transfer, _color_transfer);
+				update_color_map(ctx, *color_map_texture, _alpha_transfer, _color_transfer);
 			}
 			_update_transfer_function = false;
 		}
@@ -313,7 +313,7 @@ namespace gua {
 		if (_update_transfer_function){
 			for (auto color_map_texture : _transfer_texture_ptr)
 			{
-				update_color_map(ctx, color_map_texture, _alpha_transfer, _color_transfer);
+				update_color_map(ctx, *color_map_texture, _alpha_transfer, _color_transfer);
 			}
 			_update_transfer_function = false;
 		}
