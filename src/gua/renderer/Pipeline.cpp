@@ -201,8 +201,8 @@ void Pipeline::serialize(const SceneGraph& scene_graph,
   out.enable_global_clipping_plane = config.get_enable_global_clipping_plane();
   out.global_clipping_plane = config.get_global_clipping_plane();
 
-  serializer_->check(&out,
-                     &scene_graph,
+  serializer_->check(out,
+                     scene_graph,
                      config.camera().render_mask,
                      config.enable_bbox_display(),
                      config.enable_ray_display(),

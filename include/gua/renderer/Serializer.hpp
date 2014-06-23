@@ -59,8 +59,8 @@ class Serializer : public NodeVisitor {
    * \param render_mask          The mask to be applied to the nodes of
    *                             the graph.
    */
-  void check(SerializedScene* output,
-             SceneGraph const* scene_graph,
+  void check(SerializedScene& output,
+             SceneGraph const& scene_graph,
              std::string const& render_mask,
              bool draw_bounding_boxes,
              bool draw_rays,

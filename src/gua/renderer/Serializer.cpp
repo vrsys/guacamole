@@ -59,14 +59,14 @@ Serializer::Serializer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Serializer::check(SerializedScene* output,
-                       SceneGraph const* scene_graph,
+void Serializer::check(SerializedScene& output,
+                       SceneGraph const& scene_graph,
                        std::string const& render_mask,
                        bool draw_bounding_boxes,
                        bool draw_rays,
                        bool enable_frustum_culling) {
 
-  data_ = output;
+  data_ = &output;
 
 
   std::size_t geometry_count = data_->geometrynodes_.size();
@@ -113,10 +113,10 @@ void Serializer::check(SerializedScene* output,
   enable_frustum_culling_ = enable_frustum_culling;
 
   current_render_mask_ = Mask(render_mask);
-  current_frustum_ = output->frustum;
-  current_center_of_interest_ = output->center_of_interest;
+  current_frustum_ = output.frustum;
+  current_center_of_interest_ = output.center_of_interest;
 
-  scene_graph->accept(*this);
+  scene_graph.accept(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////

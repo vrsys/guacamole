@@ -108,8 +108,8 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   scene.enable_global_clipping_plane =
     pipeline_->config.get_enable_global_clipping_plane();
   scene.global_clipping_plane = pipeline_->config.get_global_clipping_plane();
-  serializer_->check(&scene,
-                     &current_graph,
+  serializer_->check(scene,
+                     current_graph,
                      scene_camera.render_mask,
                      false,
                      false,
