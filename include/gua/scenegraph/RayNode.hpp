@@ -65,7 +65,7 @@ class GUA_DLL RayNode : public Node {
    *
    * \param visitor  A visitor to process the RayNode's data.
    */
-  /* virtual */ void accept(NodeVisitor& visitor);
+  void accept(NodeVisitor& visitor) override;
 
   /**
    * Updates a RayNode's BoundingBox.
@@ -73,7 +73,7 @@ class GUA_DLL RayNode : public Node {
    * The bounding box is updated according to the transformation matrices of
    * all children.
    */
-  void update_bounding_box() const;
+  void update_bounding_box() const override;
 
   /**
    * Used internally to check whether a RayNode hits a given BoundingBox.
@@ -94,7 +94,7 @@ class GUA_DLL RayNode : public Node {
    * \return Ray  A mathematical representation (origin, direction, length) of
    *              the RayNode.
    */
-  Ray const get_world_ray() const;
+  Ray get_world_ray() const;
 
   /**
    * Used internally to check whether or not intersections occured.
@@ -103,7 +103,7 @@ class GUA_DLL RayNode : public Node {
 
  private:
 
-  std::shared_ptr<Node> copy() const;
+  std::shared_ptr<Node> copy() const override;
 };
 
 }

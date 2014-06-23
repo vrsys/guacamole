@@ -7,7 +7,7 @@ PROJECT(GUACAMOLE CXX)
 # version number
 set(GUACAMOLE_MAJOR 0)
 set(GUACAMOLE_MINOR 8)
-set(GUACAMOLE_PATCH 7)
+set(GUACAMOLE_PATCH 9)
 set(GUACAMOLE_VERSION ${GUACAMOLE_MAJOR}.${GUACAMOLE_MINOR}.${GUACAMOLE_PATCH})
 set(GUACAMOLE_DESCRIPTION "GUACAMOLE - an astonishing virtual reality engine")
 set(GUACAMOLE_HOMEPAGE "http://www.GUACAMOLE.org")
@@ -16,6 +16,7 @@ set(GUACAMOLE_PACKAGENAME "GUACAMOLE")
 
 option (GUACAMOLE_PBR_SUPPORT "Set to enable PBR (point based rendering) support.")
 option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support.")
+option (GUACAMOLE_RUNTIME_UBERSHADERS "Set to enable to runtime generation of ubershaders.")
 
 # We require at least version 2.8.0
 cmake_minimum_required(VERSION 2.8.0)
@@ -60,6 +61,7 @@ include(FindSchism)
 include(FindBoost)
 include(FindZMQ)
 
+
 if (GUACAMOLE_ENABLE_PHYSICS)
   if (UNIX)
     set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
@@ -68,6 +70,7 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   endif (UNIX)
   find_package(Bullet REQUIRED)
 endif (GUACAMOLE_ENABLE_PHYSICS)
+
 
 find_package(Json REQUIRED)
 
@@ -114,8 +117,9 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 IF (UNIX)
-	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++0x")
-	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++0x")
+
+	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
+	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
 ELSEIF(MSVC)
 	set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
 	set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG /MDd /Zi")
@@ -252,6 +256,7 @@ message(STATUS " glew:" )
 message(STATUS "   library: ${GLEW_LIBRARIES}" )
 message(STATUS "   include: ${GLEW_INCLUDE_DIRS}" )
 message(STATUS "" )
+
 if (GUACAMOLE_ENABLE_PHYSICS)
   message(STATUS " bullet:" )
   message(STATUS "   library: ${BULLET_LIBRARIES}" )
@@ -263,5 +268,6 @@ if (GUACAMOLE_PBR_SUPPORT)
   message(STATUS "   library: ${PBR_LIBRARIES}" )
   message(STATUS "   library path: ${PBR_LIBRARY_DIRS}" )
   message(STATUS "   include: ${PBR_INCLUDE_DIRS}" )
+
 endif (GUACAMOLE_PBR_SUPPORT)
 message(STATUS "" )

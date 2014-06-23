@@ -29,6 +29,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/LayerMapping.hpp>
 #include <gua/renderer/Volume.hpp>
+#include <gua/renderer/View.hpp>
 #include <gua/databases.hpp>
 
 #include <memory>
@@ -127,7 +128,12 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
         if (!scene.volumenodes_.empty())
         {
             // gather input textures and set uniforms
-            Pass::set_camera_matrices(*ray_generation_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+            ray_generation_shader_->set_uniform(ctx, static_cast<int>(eye), "gua_eye");
+            if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
+              ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
+            } else {
+              ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_right_->block().block_buffer(), 0);
+            }
 
             ray_generation_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->width(), "gua_texel_width");
             ray_generation_shader_->set_uniform(ctx, 1.f / gbuffer_->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->height(), "gua_texel_height");
@@ -162,7 +168,12 @@ void CompositePass::create(RenderContext const& ctx, std::vector<std::pair<Buffe
     scm::gl::context_all_guard      cug(ctx.render_context);
 
     // 2. render fullscreen quad for compositing and volume ray castinG
-    Pass::set_camera_matrices(*composite_shader_, camera, pipeline_->get_current_scene(eye), eye, ctx);
+    composite_shader_->set_uniform(ctx, static_cast<int>(eye), "gua_eye");
+    if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
+      ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
+    } else {
+      ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_right_->block().block_buffer(), 0);
+    }
 
     auto input_tex(inputs_[Pipeline::shading]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
     auto normal_tex(inputs_[Pipeline::geometry]->get_eye_buffers()[eye == CameraMode::RIGHT ? 1 : 0]->get_color_buffers(TYPE_FLOAT)[0]);
@@ -259,16 +270,30 @@ void CompositePass::render_scene(Camera const& camera,
                                  SceneGraph const&,
                                  RenderContext const& ctx,
                                  std::size_t viewid) {
+  bool is_stereo = gbuffer_->get_eye_buffers().size() > 1;
+  View view(viewid, is_stereo);
 
-  for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
+  if (is_stereo) // stereo -> todo: combine frusta?
+  {
+    view.left = pipeline_->get_current_scene(CameraMode::LEFT).frustum;
+    view.right = pipeline_->get_current_scene(CameraMode::RIGHT).frustum;
+  }
+  else {       // mono -> just use left frustum
+    view.left = pipeline_->get_current_scene(CameraMode::LEFT).frustum;
+  }
+
+  for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) 
+  {
 
     FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
 
-    CameraMode eye(CameraMode::CENTER);
-    if (gbuffer_->get_eye_buffers().size() > 1 && i == 0)
-      eye = CameraMode::LEFT;
-    if (gbuffer_->get_eye_buffers().size() > 1 && i == 1)
-      eye = CameraMode::RIGHT;
+    CameraMode eye;
+    if (!is_stereo) {
+      eye = CameraMode::CENTER;
+    }
+    else {
+      eye = (i == 0) ? CameraMode::LEFT : CameraMode::RIGHT;
+    }
 
     fbo->bind(ctx);
 

@@ -55,7 +55,7 @@ class GUA_DLL WarpMatrix : public Texture2D {
   WarpMatrix(std::string const& file_name);
 
  private:
-  /*virtual*/ void upload_to(RenderContext const& context) const;
+  void upload_to(RenderContext const& context) const override;
 
   mutable std::vector<float> data_;
 

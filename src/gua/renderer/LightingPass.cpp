@@ -132,7 +132,7 @@ void LightingPass::rendering(SerializedScene const& scene,
                              CameraMode eye,
                              Camera const& camera,
                              FrameBufferObject* target,
-                             std::size_t viewid) {
+                             View const& view) {
     init_resources(ctx);
 
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
@@ -144,9 +144,13 @@ void LightingPass::rendering(SerializedScene const& scene,
     shader_->get_program()->use(ctx);
 
     Pass::bind_inputs(*shader_->get_program(), eye, ctx);
-    Pass::set_camera_matrices(
-      *shader_->get_program(), camera, pipeline_->get_current_scene(eye), eye, ctx);
+    shader_->get_program()->set_uniform(ctx, static_cast<int>(eye), "gua_eye");
 
+    if (eye == CameraMode::LEFT || eye == CameraMode::CENTER) {
+      ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_left_->block().block_buffer(), 0);
+    } else {
+      ctx.render_context->bind_uniform_buffer(pipeline_->camera_block_right_->block().block_buffer(), 0);
+    }
 
     // -------------------------- sun lights -----------------------------------
     shader_->get_program()->set_subroutine(ctx,

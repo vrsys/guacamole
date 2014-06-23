@@ -124,6 +124,7 @@ class GUA_DLL Texture {
   scm::gl::data_format color_format_;
   scm::gl::sampler_state_desc state_descripton_;
   mutable std::vector<scm::gl::texture_image_ptr> textures_;
+  //mutable std::vector<scm::gl::texture_handle_ptr> texture_handles_;
   mutable std::vector<scm::gl::sampler_state_ptr> sampler_states_;
   mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
   mutable std::mutex upload_mutex_;

@@ -88,7 +88,7 @@ class GUA_DLL LODNode : public TransformNode {
    *
    * \param visitor  A visitor to process the LODNode's data.
    */
-  /* virtual */ void accept(NodeVisitor& visitor);
+  void accept(NodeVisitor& visitor) override;
 
  private:
 

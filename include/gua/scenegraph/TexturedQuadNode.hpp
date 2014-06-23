@@ -91,11 +91,11 @@ class GUA_DLL TexturedQuadNode : public Node {
    *
    * \param visitor  A visitor to process the TexturedQuadNode's data.
    */
-  /* virtual */ void accept(NodeVisitor& visitor);
+  void accept(NodeVisitor& visitor) override;
 
-  /*virtual*/ void update_bounding_box() const;
+  void update_bounding_box() const override;
 
-  /*virtual*/ void update_cache();
+  void update_cache() override;
 
  public:  // get and set methods
 
@@ -116,7 +116,7 @@ class GUA_DLL TexturedQuadNode : public Node {
 
  private:  // methods
 
-  std::shared_ptr<Node> copy() const;
+  std::shared_ptr<Node> copy() const override;
 
  private:  // attributes
 

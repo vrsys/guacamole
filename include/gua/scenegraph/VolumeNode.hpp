@@ -37,68 +37,68 @@ namespace gua {
  * \ingroup gua_scenegraph
  */
 class GUA_DLL VolumeNode : public Node {
-  public:
+public:
 
-    struct Configuration {
-      /**
-       * A string referring to an entry in guacamole's GeometryDatabase.
-       */
-      GUA_ADD_PROPERTY(std::string, volume, "gua_volume_default");
-    };
-
+  struct Configuration {
     /**
-     * The VolumeNode's configuration.
+     * A string referring to an entry in guacamole's GeometryDatabase.
      */
-    Configuration data;
+    GUA_ADD_PROPERTY(std::string, volume, "gua_volume_default");
+  };
 
-    /**
-     * Constructor.
-     *
-     * This constructs an empty VolumeNode.
-     *
-     */
-    VolumeNode() {};
+  /**
+   * The VolumeNode's configuration.
+   */
+  Configuration data;
 
-    /**
-     * Constructor.
-     *
-     * This constructs a VolumeNode with the given parameters.
-     *
-     * \param name           The name of the new VolumeNode.
-     * \param configuration  A configuration struct to define the VolumeNode's
-     *                       properties.
-     * \param transform      A matrix to describe the VolumeNode's
-     *                       transformation.
-     */
-    VolumeNode(std::string const& name,
-               Configuration const& configuration = Configuration(),
-               math::mat4 const& transform = math::mat4::identity());
+  /**
+   * Constructor.
+   *
+   * This constructs an empty VolumeNode.
+   *
+   */
+  VolumeNode() {};
 
-    /**
-     * Accepts a visitor and calls concrete visit method.
-     *
-     * This method implements the visitor pattern for Nodes.
-     *
-     * \param visitor  A visitor to process the VolumeNode's data.
-     */
-    /*virtual*/ void accept(NodeVisitor& visitor);
+  /**
+   * Constructor.
+   *
+   * This constructs a VolumeNode with the given parameters.
+   *
+   * \param name           The name of the new VolumeNode.
+   * \param configuration  A configuration struct to define the VolumeNode's
+   *                       properties.
+   * \param transform      A matrix to describe the VolumeNode's
+   *                       transformation.
+   */
+  VolumeNode(std::string const& name,
+             Configuration const& configuration = Configuration(),
+             math::mat4 const& transform = math::mat4::identity());
 
-    /**
-     * Updates a VolumeNode's BoundingBox.
-     *
-     * The bounding box is updated according to the transformation matrices of
-     * all children.
-     */
-    /*virtual*/ void update_bounding_box() const;
+  /**
+   * Accepts a visitor and calls concrete visit method.
+   *
+   * This method implements the visitor pattern for Nodes.
+   *
+   * \param visitor  A visitor to process the VolumeNode's data.
+   */
+  void accept(NodeVisitor& visitor) override;
 
-    /*virtual*/ void ray_test_impl(RayNode const& ray,
-                                   PickResult::Options options,
-                                   Mask const& mask,
-                                   std::set<PickResult>& hits);
+  /**
+   * Updates a VolumeNode's BoundingBox.
+   *
+   * The bounding box is updated according to the transformation matrices of
+   * all children.
+   */
+  void update_bounding_box() const override;
 
-  private:
+  void ray_test_impl(RayNode const& ray,
+                     PickResult::Options options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
 
-    std::shared_ptr<Node> copy() const;
+private:
+
+  std::shared_ptr<Node> copy() const override;
 };
 
 }

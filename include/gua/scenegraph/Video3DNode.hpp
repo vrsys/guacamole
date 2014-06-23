@@ -36,27 +36,22 @@
 namespace gua {
 
 class GUA_DLL Video3DNode : public GeometryNode {
-
-  public:
+public:
 
     Video3DNode(std::string const& name,
                 std::string const& filename = "gua_default_geometry",
                 std::string const& material = "gua_default_material",
                 math::mat4  const& transform = math::mat4::identity());
 
-    /*virtual*/ void ray_test_impl(RayNode const& ray, 
-                                   PickResult::Options options,
-                                   Mask const& mask, 
-                                   std::set<PickResult>& hits);
+    void ray_test_impl(RayNode const& ray,
+                       PickResult::Options options,
+                       Mask const& mask,
+                       std::set<PickResult>& hits) override;
 
-    /* virtual */ void update_cache();
+    void update_cache() override;
 
-  protected:
-
-    /*virtual*/ std::shared_ptr<Node> copy() const;
-
-  private: // attributes
-
+protected:
+    std::shared_ptr<Node> copy() const override;
 };
 
 }

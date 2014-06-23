@@ -36,8 +36,7 @@ const float RayNode::END(std::numeric_limits<float>::max());
 RayNode::RayNode(std::string const& name, math::mat4 const& transform)
     : Node(name, transform) {}
 
-/* virtual */ void RayNode::accept(NodeVisitor& visitor) {
-
+void RayNode::accept(NodeVisitor& visitor) {
     visitor.visit(this);
 }
 
@@ -46,8 +45,7 @@ std::pair<float, float> RayNode::intersect(
     return ::gua::intersect(get_world_ray(), box);
 }
 
-Ray const RayNode::get_world_ray() const {
-
+Ray RayNode::get_world_ray() const {
     math::mat4 world_transform(get_world_transform());
 
     math::vec4 origin(0, 0, 0, 1.0);
@@ -60,8 +58,6 @@ Ray const RayNode::get_world_ray() const {
 }
 
 void RayNode::update_bounding_box() const {
-
-
     auto geometry_bbox(GeometryDatabase::instance()->lookup("gua_ray_geometry")
                            ->get_bounding_box());
 

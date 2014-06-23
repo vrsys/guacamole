@@ -59,7 +59,8 @@ std::string subroutine_from_mode(Window::TextureDisplayMode mode) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-unsigned Window::last_context_id_ = 0;
+std::atomic_uint Window::last_context_id_{ 0 };
+std::mutex Window::last_context_id_mutex_{};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +121,11 @@ void Window::open() {
 
   ctx_.render_device = scm::gl::render_device_ptr(new scm::gl::render_device());
   ctx_.render_context = ctx_.render_device->main_context();
-  ctx_.id = last_context_id_++;
+
+  {
+    std::lock_guard<std::mutex> lock(last_context_id_mutex_);
+    ctx_.id = last_context_id_++;
+  }
 
   ctx_.render_window = this;
 

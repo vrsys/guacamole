@@ -21,6 +21,13 @@
 
 #include <gua/utils/string_utils.hpp>
 
+#include <algorithm>
+
+#ifdef __GNUG__
+#include <memory>
+#include <cxxabi.h>
+#endif
+
 namespace gua {
 namespace string_utils {
 
@@ -56,7 +63,7 @@ std::string& replace(std::string& str,
 
 ////////////////////////////////////////////////////////////////////////////
 
-std::string const format_code(std::string const& code) {
+std::string format_code(std::string const& code) {
 
   std::string result(code);
 
@@ -88,5 +95,37 @@ std::string const format_code(std::string const& code) {
 
 ////////////////////////////////////////////////////////////////////////////
 
+std::string demangle_type_name(const char* name) {
+#ifdef __GNUG__
+    // implementation taken from http://stackoverflow.com/a/4541470
+    int status = -4;
+    std::unique_ptr<char, void(*)(void*)> res {
+        abi::__cxa_demangle(name, NULL, NULL, &status),
+        std::free
+    };
+    return (status == 0) ? res.get() : name ;
+#else
+    return name;
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+std::string sanitize(std::string const& str) {
+
+    std::string s(str);
+    std::string illegal(" |\\?*+\":<>[](){}/'.,#&\r\n\t");
+
+    std::replace_if(s.begin(), s.end(),
+        [&illegal](char const c) { 
+            return illegal.find_first_of(c) != std::string::npos;
+        }, '_');
+
+    return s;
+}
+
+////////////////////////////////////////////////////////////////////////////
+
 }
 }
+

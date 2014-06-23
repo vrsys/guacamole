@@ -68,7 +68,7 @@ class GeometryPass : public Pass {
                          CameraMode eye,
                          Camera const& camera,
                          FrameBufferObject* target,
-                         std::size_t viewid) = 0;
+                         View const& view) = 0;
 
  private:
 };

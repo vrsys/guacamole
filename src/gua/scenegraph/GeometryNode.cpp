@@ -32,61 +32,61 @@
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
-  
-  ////////////////////////////////////////////////////////////////////////////////
-  GeometryNode::GeometryNode(std::string const& name,
-                             std::string const& filename,
-                             std::string const& material,
-                             math::mat4 const& transform,
-                             ShadowMode shadow_mode)
-      : Node(name, transform), 
-        filename_(filename),
-        material_(material),
-        shadow_mode_(shadow_mode),
-        filename_changed_(true), 
-        material_changed_(true)
-  {}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  std::string const& GeometryNode::get_filename() const {
-    return filename_;
-  }
+////////////////////////////////////////////////////////////////////////////////
+GeometryNode::GeometryNode(std::string const& name,
+                           std::string const& filename,
+                           std::string const& material,
+                           math::mat4 const& transform,
+                           ShadowMode shadow_mode)
+  : Node(name, transform),
+    filename_(filename),
+    material_(material),
+    shadow_mode_(shadow_mode),
+    filename_changed_(true),
+    material_changed_(true)
+{}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  void GeometryNode::set_filename(std::string const& v) {
-    filename_ = v;
-    filename_changed_ = self_dirty_ = true;
-  }
+////////////////////////////////////////////////////////////////////////////////
+std::string const& GeometryNode::get_filename() const {
+  return filename_;
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  /* virtual */ void GeometryNode::accept(NodeVisitor& visitor) {
-    visitor.visit(this);
-  }
+////////////////////////////////////////////////////////////////////////////////
+void GeometryNode::set_filename(std::string const& v) {
+  filename_ = v;
+  filename_changed_ = self_dirty_ = true;
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  std::string const& GeometryNode::get_material() const {
-    return material_; 
-  }
+////////////////////////////////////////////////////////////////////////////////
+/* virtual */ void GeometryNode::accept(NodeVisitor& visitor) {
+  visitor.visit(this);
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  void GeometryNode::set_material(std::string const& v) {
-    material_ = v; 
-    material_changed_ = self_dirty_ = true; 
-  }
+////////////////////////////////////////////////////////////////////////////////
+std::string const& GeometryNode::get_material() const {
+  return material_;
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  void GeometryNode::update_bounding_box() const {
+////////////////////////////////////////////////////////////////////////////////
+void GeometryNode::set_material(std::string const& v) {
+  material_ = v;
+  material_changed_ = self_dirty_ = true;
+}
 
-    if (get_filename() != "") {
-      auto geometry_bbox(GeometryDatabase::instance()->lookup(get_filename())->get_bounding_box());
-      bounding_box_ = transform(geometry_bbox, world_transform_);
+////////////////////////////////////////////////////////////////////////////////
+void GeometryNode::update_bounding_box() const {
 
-      for (auto child : get_children()) {
-        bounding_box_.expandBy(child->get_bounding_box());
-      }
+  if (get_filename() != "") {
+    auto geometry_bbox(GeometryDatabase::instance()->lookup(get_filename())->get_bounding_box());
+    bounding_box_ = transform(geometry_bbox, world_transform_);
+
+    for (auto child : get_children()) {
+      bounding_box_.expandBy(child->get_bounding_box());
     }
-    else {
-      Node::update_bounding_box();
-    }
+  } else {
+    Node::update_bounding_box();
   }
+}
+
 }

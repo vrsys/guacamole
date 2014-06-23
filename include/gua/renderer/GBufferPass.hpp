@@ -60,14 +60,14 @@ class GBufferPass : public GeometryPass {
   void create(
       RenderContext const& ctx,
       std::vector<std::pair<BufferComponent,
-                            scm::gl::sampler_state_desc> > const& layers);
+                        scm::gl::sampler_state_desc> > const& layers) override;
 
-  /*virtual*/ void cleanup(RenderContext const& ctx);
+  void cleanup(RenderContext const& ctx) override;
 
-  /*virtual*/ bool pre_compile_shaders(const gua::RenderContext &);
+  bool pre_compile_shaders(const gua::RenderContext &) override;
 
   void print_shaders(std::string const& directory,
-                     std::string const& name) const;
+                     std::string const& name) const override;
 
   void apply_material_mapping(std::set<std::string> const& materials);
 
@@ -83,18 +83,18 @@ class GBufferPass : public GeometryPass {
                  CameraMode eye,
                  Camera const& camera,
                  FrameBufferObject* target,
-                 std::size_t viewid);
+                 View const& view) override;
 
   void display_bboxes(RenderContext const& ctx,
                       SerializedScene const& scene,
-                      std::size_t viewid);
+                      View const& view);
   void display_rays  (RenderContext const& ctx,
                       SerializedScene const& scene,
-                      std::size_t viewid);
+                      View const& view);
   void display_quads (RenderContext const& ctx,
                       SerializedScene const& scene,
                       CameraMode eye,
-                      std::size_t viewid);
+                      View const& view);
 
   void update_ubershader_from_scene(RenderContext const& ctx,
                                     SerializedScene const& scene,

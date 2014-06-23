@@ -43,16 +43,16 @@ class GUA_DLL TriMeshNode : public GeometryNode {
   /**
   * Implements ray picking for a triangular mesh
   */
-  /* virtual */ void ray_test_impl(RayNode const& ray,
-                                   PickResult::Options options,
-                                   Mask const& mask,
-                                   std::set<PickResult>& hits);
+  void ray_test_impl(RayNode const& ray,
+                     PickResult::Options options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
 
-  /* virtual */ void update_cache();
+  void update_cache() override;
 
  protected:
 
-  /*virtual*/ std::shared_ptr<Node> copy() const;
+  std::shared_ptr<Node> copy() const override;
 
  private:  // attributes e.g. special attributes for drawing
 

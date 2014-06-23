@@ -115,7 +115,7 @@ public:
   /**
   *
   */
-  bool is_supported(std::string const& file_name) const;
+  bool is_supported(std::string const& file_name) const override;
 
  private: // methods
 

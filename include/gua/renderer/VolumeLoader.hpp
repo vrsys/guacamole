@@ -89,7 +89,7 @@ namespace gua {
 		//std::vector<Volume*> const load_from_buffer(char const* buffer_name,
 		//	unsigned buffer_size);
 
-		/* virtual */ bool is_supported(std::string const& file_name) const;
+		/* virtual */ bool is_supported(std::string const& file_name) const override;
 
 	private:
 		

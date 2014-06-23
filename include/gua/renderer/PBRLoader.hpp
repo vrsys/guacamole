@@ -61,7 +61,7 @@ class PBRLoader : public GeometryLoader {
 
 
 
-  bool is_supported(std::string const& file_name) const;
+  bool is_supported(std::string const& file_name) const override;
 
  private:
   unsigned node_counter_;
@@ -69,7 +69,6 @@ class PBRLoader : public GeometryLoader {
   boost::unordered_set<std::string> _supported_file_extensions;
 
 };
-
 
 }
 

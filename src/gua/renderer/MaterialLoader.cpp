@@ -37,7 +37,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const MaterialLoader::load_material(
+std::string MaterialLoader::load_material(
     aiMaterial const* ai_material,
     std::string const& file_name) const {
 
@@ -198,8 +198,7 @@ std::string const MaterialLoader::load_material(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const MaterialLoader::load_shading_model(
-    unsigned capabilities) const {
+std::string MaterialLoader::load_shading_model(unsigned capabilities) const {
 
   std::string shading_model_name("gua_generated");
 

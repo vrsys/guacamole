@@ -34,10 +34,10 @@ namespace gua {
 
 class GuaMethodsFactory {
  public:
-  std::string const get_sampler_casts() const;
-  std::string const get_material_id() const;
-  std::string const get_depth() const;
-  std::string const get_position() const;
+  std::string get_sampler_casts() const;
+  std::string get_material_id() const;
+  std::string get_depth() const;
+  std::string get_position() const;
 
  private:
   void resolve_includes(std::string& shader_source) const;

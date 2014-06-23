@@ -60,7 +60,7 @@ class PLODLoader : public GeometryLoader {
   std::shared_ptr<Node> create_geometry_from_file(std::string const& nodename,
                                                   std::string const& kdnfile);
 
-  bool is_supported(std::string const& file_name) const;
+  bool is_supported(std::string const& file_name) const override;
 
   void set_upload_budget_in_mb(const size_t upload_budget);
   void set_render_budget_in_mb(const size_t render_budget);

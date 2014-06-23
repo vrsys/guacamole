@@ -74,7 +74,7 @@ void Video3DUberShader::create(std::set<std::string> const& material_names)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::_warp_pass_vertex_shader() const
+std::string Video3DUberShader::_warp_pass_vertex_shader() const
 {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_warp_pass_vert)
@@ -85,7 +85,7 @@ std::string const Video3DUberShader::_warp_pass_vertex_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::_warp_pass_geometry_shader() const
+std::string Video3DUberShader::_warp_pass_geometry_shader() const
 {
   std::string geometry_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_warp_pass_geom)
@@ -96,7 +96,7 @@ std::string const Video3DUberShader::_warp_pass_geometry_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::_warp_pass_fragment_shader() const
+std::string Video3DUberShader::_warp_pass_fragment_shader() const
 {
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_warp_pass_frag)
@@ -107,7 +107,7 @@ std::string const Video3DUberShader::_warp_pass_fragment_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::_blend_pass_vertex_shader() const
+std::string Video3DUberShader::_blend_pass_vertex_shader() const
 {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_blend_pass_vert)
@@ -134,7 +134,7 @@ std::string const Video3DUberShader::_blend_pass_vertex_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::_blend_pass_fragment_shader() const
+std::string Video3DUberShader::_blend_pass_fragment_shader() const
 {
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_blend_pass_frag)
@@ -178,75 +178,62 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
 {
   bool upload_succeeded = UberShader::upload_to(context);
 
+  if (warp_color_result_) {
+    return upload_succeeded;
+  }
+  else {
+      // continue instantiation below
+  }
+
   assert(context.render_window->config.get_stereo_mode() == StereoMode::MONO ||
-    ((context.render_window->config.get_left_resolution()[0] == context.render_window->config.get_right_resolution()[0]) &&
-    (context.render_window->config.get_left_resolution()[1] == context.render_window->config.get_right_resolution()[1])));
+	 ((left_resolution_[0] == right_resolution_[0]) &&
+	  (left_resolution_[1] == right_resolution_[1])));
+
 
   // initialize Texture Arrays (kinect depths & colors)
-  if ( context.id >= warp_color_result_.size() ||
-       context.id >= warp_depth_result_.size())
-  {
-    warp_depth_result_.resize(context.id + 1);
-    warp_color_result_.resize(context.id + 1);
 
-    warp_color_result_[context.id] = context.render_device->create_texture_2d(
-      context.render_window->config.get_left_resolution(),
-      scm::gl::FORMAT_RGBA_32F,
-      1,
-      MAX_NUM_KINECTS,
-      1
-      );
+  warp_color_result_ = context.render_device->create_texture_2d(
+								left_resolution_,
+								scm::gl::FORMAT_RGBA_32F,
+								1,
+								MAX_NUM_KINECTS,
+								1
+								);
+  
+  warp_depth_result_ = context.render_device->create_texture_2d(
+								left_resolution_,
+								scm::gl::FORMAT_D32F,
+								1,
+								MAX_NUM_KINECTS,
+								1
+								);
 
-    warp_depth_result_[context.id] = context.render_device->create_texture_2d(
-      context.render_window->config.get_left_resolution(),
-      scm::gl::FORMAT_D32F,
-      1,
-      MAX_NUM_KINECTS,
-      1
-      );
-  }
+  fullscreen_quad_.reset(new scm::gl::quad_geometry(context.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
 
-  if (context.id >= fullscreen_quad_.size()) {
-    fullscreen_quad_.resize(context.id + 1);
-    fullscreen_quad_[context.id].reset(new scm::gl::quad_geometry(context.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
-  }
 
-  if (context.id >= warp_result_fbo_.size()) {
-    warp_result_fbo_.resize(context.id + 1);
-    warp_result_fbo_[context.id] = context.render_device->create_frame_buffer();
-  }
+  warp_result_fbo_ = context.render_device->create_frame_buffer();
+  
 
-  if (context.id >= linear_sampler_state_.size()) {
-    linear_sampler_state_.resize(context.id + 1);
-    linear_sampler_state_[context.id] = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
-  }
+  linear_sampler_state_ = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+  
 
-  if (context.id >= nearest_sampler_state_.size()) {
-    nearest_sampler_state_.resize(context.id + 1);
-    nearest_sampler_state_[context.id] = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
-  }
+  nearest_sampler_state_ = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+ 
 
-  if (context.id >= depth_stencil_state_warp_pass_.size()) {
-    depth_stencil_state_warp_pass_.resize(context.id + 1);
-    depth_stencil_state_warp_pass_[context.id] = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
-  }
+  depth_stencil_state_warp_pass_ = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
 
-  if (context.id >= depth_stencil_state_blend_pass_.size()) {
-    depth_stencil_state_blend_pass_.resize(context.id + 1);
-    depth_stencil_state_blend_pass_[context.id] = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
-  }
-  if (context.id >= no_bfc_rasterizer_state_.size())
-  {
-    no_bfc_rasterizer_state_.resize(context.id + 1);
-    no_bfc_rasterizer_state_[context.id] = context.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
-  }
+
+  depth_stencil_state_blend_pass_ = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
+ 
+  no_bfc_rasterizer_state_ = context.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
+
 
   return upload_succeeded;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*virtual*/ GeometryUberShader::stage_mask const Video3DUberShader::get_stage_mask() const
+/*virtual*/ GeometryUberShader::stage_mask Video3DUberShader::get_stage_mask() const
 {
   return GeometryUberShader::DRAW_STAGE | GeometryUberShader::POST_FRAME_STAGE;
 }
@@ -266,7 +253,7 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
   scm::math::mat4 const& model_matrix,
   scm::math::mat4 const& normal_matrix,
   Frustum const& /*frustum*/,
-  std::size_t viewid) const
+  View const& view) const
 {
   throw std::runtime_error("not implemented");
 }
@@ -280,10 +267,8 @@ void Video3DUberShader::draw(RenderContext const& ctx,
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
                              Frustum const& /*frustum*/,
-                             std::size_t viewid) const
-{
-
-  if (!GeometryDatabase::instance()->is_supported(ksfile_name) ||
+                             View const& view) const
+{  if (!GeometryDatabase::instance()->is_supported(ksfile_name) ||
       !MaterialDatabase::instance()->is_supported(material_name)) {
     gua::Logger::LOG_WARNING << "Video3DUberShader::draw(): No such video or material." << ksfile_name << ", " << material_name << std::endl;
     return;
@@ -306,11 +291,11 @@ void Video3DUberShader::draw(RenderContext const& ctx,
     // single texture only
     scm::gl::context_all_guard guard(ctx.render_context);
 
-    ctx.render_context->set_rasterizer_state(no_bfc_rasterizer_state_[ctx.id]);
-    ctx.render_context->set_depth_stencil_state(depth_stencil_state_warp_pass_[ctx.id]);
+    ctx.render_context->set_rasterizer_state(no_bfc_rasterizer_state_);
+    ctx.render_context->set_depth_stencil_state(depth_stencil_state_warp_pass_);
 
     // set uniforms
-    ctx.render_context->bind_texture(video3d_ressource->depth_array(ctx), nearest_sampler_state_[ctx.id], 0);
+    ctx.render_context->bind_texture(video3d_ressource->depth_array(ctx), nearest_sampler_state_, 0);
     get_program(warp_pass)->get_program(ctx)->uniform_sampler("depth_video3d_texture", 0);
 
 
@@ -326,15 +311,15 @@ void Video3DUberShader::draw(RenderContext const& ctx,
     for (unsigned layer = 0; layer != video3d_ressource->number_of_cameras(); ++layer)
     {
       // configure fbo
-      warp_result_fbo_[ctx.id]->clear_attachments();
-      warp_result_fbo_[ctx.id]->attach_depth_stencil_buffer(warp_depth_result_[ctx.id], 0, layer);
-      warp_result_fbo_[ctx.id]->attach_color_buffer(0, warp_color_result_[ctx.id], 0, layer);
+      warp_result_fbo_->clear_attachments();
+      warp_result_fbo_->attach_depth_stencil_buffer(warp_depth_result_, 0, layer);
+      warp_result_fbo_->attach_color_buffer(0, warp_color_result_, 0, layer);
 
       // bind and clear fbo
-      ctx.render_context->set_frame_buffer(warp_result_fbo_[ctx.id]);
-      ctx.render_context->clear_depth_stencil_buffer(warp_result_fbo_[ctx.id]);
-      ctx.render_context->clear_color_buffer(warp_result_fbo_[ctx.id], 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-      ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2ui(0,0), warp_color_result_[ctx.id]->dimensions()));
+      ctx.render_context->set_frame_buffer(warp_result_fbo_);
+      ctx.render_context->clear_depth_stencil_buffer(warp_result_fbo_);
+      ctx.render_context->clear_color_buffer(warp_result_fbo_, 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+      ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2ui(0,0), warp_color_result_->dimensions()));
 
       // set uniforms
       get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getTexSizeInvD(), "tex_size_inv");
@@ -348,10 +333,10 @@ void Video3DUberShader::draw(RenderContext const& ctx,
         get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeDToEyeRGB(), "eye_d_to_eye_rgb");
         get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeRGBToImageRGB(), "eye_rgb_to_image_rgb");
 
-	      ctx.render_context->bind_texture(video3d_ressource->cv_xyz(ctx,layer), linear_sampler_state_[ctx.id], 1);
+	      ctx.render_context->bind_texture(video3d_ressource->cv_xyz(ctx,layer), linear_sampler_state_, 1);
 	      get_program(warp_pass)->get_program(ctx)->uniform_sampler("cv_xyz", 1);
 
-	      ctx.render_context->bind_texture(video3d_ressource->cv_uv(ctx,layer), linear_sampler_state_[ctx.id], 2);
+	      ctx.render_context->bind_texture(video3d_ressource->cv_uv(ctx,layer), linear_sampler_state_, 2);
 	      get_program(warp_pass)->get_program(ctx)->uniform_sampler("cv_uv", 2);
 
 	      get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_min_d, "cv_min_d");
@@ -372,7 +357,7 @@ void Video3DUberShader::draw(RenderContext const& ctx,
     // single texture only
     scm::gl::context_all_guard guard(ctx.render_context);
 
-    ctx.render_context->set_depth_stencil_state(depth_stencil_state_warp_pass_[ctx.id]);
+    ctx.render_context->set_depth_stencil_state(depth_stencil_state_warp_pass_);
 
     // second pass
     get_program(blend_pass)->use(ctx);
@@ -390,16 +375,16 @@ void Video3DUberShader::draw(RenderContext const& ctx,
         get_program(blend_pass)->set_uniform(ctx, int(video3d_ressource->do_overwrite_normal()), "overwrite_normal");
         get_program(blend_pass)->set_uniform(ctx, video3d_ressource->get_overwrite_normal(), "o_normal");
 
-        ctx.render_context->bind_texture(warp_color_result_[ctx.id], nearest_sampler_state_[ctx.id], 0);
+        ctx.render_context->bind_texture(warp_color_result_, nearest_sampler_state_, 0);
         get_program(blend_pass)->get_program(ctx)->uniform_sampler("quality_texture", 0);
 
-        ctx.render_context->bind_texture(warp_depth_result_[ctx.id], nearest_sampler_state_[ctx.id], 1);
+        ctx.render_context->bind_texture(warp_depth_result_, nearest_sampler_state_, 1);
         get_program(blend_pass)->get_program(ctx)->uniform_sampler("depth_texture", 1);
 
-        ctx.render_context->bind_texture(video3d_ressource->color_array(ctx), linear_sampler_state_[ctx.id], 2);
+        ctx.render_context->bind_texture(video3d_ressource->color_array(ctx), linear_sampler_state_, 2);
         get_program(blend_pass)->get_program(ctx)->uniform_sampler("video_color_texture", 2);
 
-        fullscreen_quad_[ctx.id]->draw(ctx.render_context);
+        fullscreen_quad_->draw(ctx.render_context);
       }
     }
     get_program(blend_pass)->unuse(ctx);
@@ -415,7 +400,7 @@ void Video3DUberShader::draw(RenderContext const& ctx,
   scm::math::mat4 const& model_matrix,
   scm::math::mat4 const& normal_matrix,
   Frustum const& /*frustum*/,
-  std::size_t viewid) const
+  View const& view) const
 {
   throw std::runtime_error("not implemented");
 }
@@ -429,13 +414,16 @@ void Video3DUberShader::draw(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*static*/ std::string const Video3DUberShader::default_video_material_name() {
+/*static*/ std::string Video3DUberShader::default_video_material_name() {
   return "gua_video3d";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*static*/ void Video3DUberShader::initialize_video_material() {
+/*static*/ void Video3DUberShader::initialize_video_material() 
+{
+  std::unique_lock<std::mutex> lock (MaterialDatabase::instance()->update_lock);
+
   if (!MaterialDatabase::instance()->is_supported(default_video_material_name()))
   {
     create_resource_material(default_video_material_name(),

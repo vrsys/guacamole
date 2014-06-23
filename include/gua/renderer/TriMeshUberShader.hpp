@@ -33,7 +33,7 @@ class TriMeshUberShader : public GeometryUberShader {
 
   void              create  (std::set<std::string> const& material_names);
 
-  /*virtual*/ stage_mask const get_stage_mask() const;
+  /*virtual*/ stage_mask get_stage_mask() const override;
 
   /*virtual*/ void  preframe  (RenderContext const& context) const;
 
@@ -42,24 +42,24 @@ class TriMeshUberShader : public GeometryUberShader {
                                std::string const& material_name,
                                scm::math::mat4 const& model_matrix,
                                scm::math::mat4 const& normal_matrix,
-                               Frustum const& /*frustum*/,
-                               std::size_t /*viewid*/) const;
+                               Frustum const& frustum,
+                               View const& view) const;
 
   /*virtual*/ void  draw      (RenderContext const& ctx,
                               std::string const& filename,
                               std::string const& material_name,
                               scm::math::mat4 const& model_matrix,
                               scm::math::mat4 const& normal_matrix,
-                              Frustum const& /*frustum*/,
-                              std::size_t /*viewid*/) const;
+                              Frustum const& frustum,
+                              View const& view) const;
 
   /*virtual*/ void  postdraw (RenderContext const& ctx,
                               std::string const& filename,
                               std::string const& material_name,
                               scm::math::mat4 const& model_matrix,
                               scm::math::mat4 const& normal_matrix,
-                              Frustum const& /*frustum*/,
-                              std::size_t /*viewid*/) const;
+                              Frustum const& frustum,
+                              View const& view) const;
 
   /*virtual*/ void  postframe (RenderContext const& context) const;
 };

@@ -55,7 +55,7 @@ class PBRUberShader : public GeometryUberShader {
 
   bool              upload_to (RenderContext const& context) const;
 
-  /*virtual*/ stage_mask const get_stage_mask() const;
+  /*virtual*/ stage_mask get_stage_mask() const override;
 
   /*virtual*/ void  preframe  (RenderContext const& context) const;
 
@@ -65,7 +65,7 @@ class PBRUberShader : public GeometryUberShader {
                                scm::math::mat4 const& model_matrix,
                                scm::math::mat4 const& normal_matrix,
                                Frustum const& frustum,
-                               std::size_t viewid) const;
+                               View const& view) const;
 
   /*virtual*/ void  draw      (RenderContext const& ctx,
                               std::string const& filename,
@@ -73,7 +73,7 @@ class PBRUberShader : public GeometryUberShader {
                               scm::math::mat4 const& model_matrix,
                               scm::math::mat4 const& normal_matrix,
                               Frustum const& frustum,
-                              std::size_t viewid) const;
+                              View const& view) const;
 
   /*virtual*/ void  postdraw (RenderContext const& ctx,
                               std::string const& filename,
@@ -81,24 +81,24 @@ class PBRUberShader : public GeometryUberShader {
                               scm::math::mat4 const& model_matrix,
                               scm::math::mat4 const& normal_matrix,
                               Frustum const& frustum,
-                              std::size_t viewid) const;
+                              View const& view) const;
 
   /*virtual*/ void  postframe (RenderContext const& context) const;
 
  private: //auxialiary methods
-  std::string const depth_pass_vertex_shader() const;
-  std::string const depth_pass_fragment_shader() const;
+  std::string depth_pass_vertex_shader() const;
+  std::string depth_pass_fragment_shader() const;
 
-  std::string const accumulation_pass_vertex_shader() const;
-  std::string const accumulation_pass_fragment_shader() const;
+  std::string accumulation_pass_vertex_shader() const;
+  std::string accumulation_pass_fragment_shader() const;
 
-  std::string const normalization_pass_vertex_shader   () const;
-  std::string const normalization_pass_fragment_shader () const;
+  std::string normalization_pass_vertex_shader   () const;
+  std::string normalization_pass_fragment_shader () const;
 
-  std::string const reconstruction_pass_vertex_shader () const;
-  std::string const reconstruction_pass_fragment_shader () const;
+  std::string reconstruction_pass_vertex_shader () const;
+  std::string reconstruction_pass_fragment_shader () const;
 
-  std::string const default_pbr_material_name() const;
+  std::string default_pbr_material_name() const;
 
  private:  //member variables
 

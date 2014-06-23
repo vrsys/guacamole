@@ -120,15 +120,13 @@ class GUA_DLL Texture3D : public Texture {
   inline unsigned height() const { return height_; }
   inline unsigned depth() const { return depth_; }
 
-  virtual void upload_to(RenderContext const& context) const;
+  void upload_to(RenderContext const& context) const override;
   ///@}
 
  protected:
   mutable unsigned width_;
   mutable unsigned height_;
   mutable unsigned depth_;
-
-
 
  private:
 

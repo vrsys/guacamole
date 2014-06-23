@@ -27,6 +27,8 @@
 
 namespace gua {
 
+struct View;
+
 /**
  * This class represents a (multipass-) stage for rendering geometry into a layered fbo
  */
@@ -66,7 +68,7 @@ class GeometryUberShader : public UberShader {
   /**
   * provides information about which passes/stages area provided by this UberShader
   */
-  virtual stage_mask const get_stage_mask() const = 0;
+  virtual stage_mask get_stage_mask() const = 0;
 
   /**
   * This callback is called ONCE per frame BEFORE rendering all drawables of this type 
@@ -86,7 +88,7 @@ class GeometryUberShader : public UberShader {
                           scm::math::mat4 const& model_matrix,
                           scm::math::mat4 const& normal_matrix,
                           Frustum const& frustum, 
-                          std::size_t viewid ) const = 0;
+                          View const& view ) const = 0;
    
   /**
   * This method is called for ONCE per drawable to perform draw operations
@@ -99,7 +101,7 @@ class GeometryUberShader : public UberShader {
                           scm::math::mat4 const& model_matrix,
                           scm::math::mat4 const& normal_matrix,
                           Frustum const& frustum,
-                          std::size_t viewid) const = 0;
+                          View const& view) const = 0;
 
   /**
   * This method is called for ONCE per drawable to perform postdraw operations
@@ -112,7 +114,7 @@ class GeometryUberShader : public UberShader {
                           scm::math::mat4 const& model_matrix,
                           scm::math::mat4 const& normal_matrix,
                           Frustum const& frustum,
-                          std::size_t viewid) const = 0;
+                          View const& view) const = 0;
 
   /**
   * This callback is called ONCE per frame AFTER rendering all drawables of this type

@@ -29,7 +29,7 @@ namespace gua {
 
 namespace math {
 
-math::BoundingBox<math::vec3> const transform(
+math::BoundingBox<math::vec3> transform(
     math::BoundingBox<math::vec3> const& bbox,
     math::mat4 const& mat);
 

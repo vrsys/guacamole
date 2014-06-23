@@ -29,6 +29,7 @@
 #include <gua/renderer/NURBSUberShader.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/View.hpp>
 #include <gua/databases.hpp>
 #include <gua/memory.hpp>
 
@@ -40,7 +41,8 @@ ShadowMap::ShadowMap(Pipeline* pipeline)
     : serializer_(gua::make_unique<Serializer>()),
       pipeline_(pipeline),
       buffer_(nullptr),
-      projection_view_matrices_() {
+      projection_view_matrices_(),
+      camera_block_(nullptr) {
 }
 
 
@@ -65,7 +67,9 @@ void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
         scm::gl::sampler_state_desc state;
         state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
 
-        buffer_ = new GBuffer({{ BufferComponent::DEPTH_16, state }}, map_size, map_size);
+        buffer_ = new GBuffer({{ BufferComponent::DEPTH_16, state }},
+                              map_size,
+                              map_size);
         buffer_->create(ctx);
     }
 
@@ -77,6 +81,9 @@ void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
     if (!rasterizer_state_)
         rasterizer_state_ = ctx.render_device
             ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
+    if (!camera_block_)
+      camera_block_ = std::make_shared<CameraUniformBlock>(ctx.render_device);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,10 +105,11 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   SerializedScene scene;
   scene.frustum = shadow_frustum;
   scene.center_of_interest = center_of_interest;
-  scene.enable_global_clipping_plane = pipeline_->config.get_enable_global_clipping_plane();
+  scene.enable_global_clipping_plane =
+    pipeline_->config.get_enable_global_clipping_plane();
   scene.global_clipping_plane = pipeline_->config.get_global_clipping_plane();
-  serializer_->check(&scene,
-                     &current_graph,
+  serializer_->check(scene,
+                     current_graph,
                      scene_camera.render_mask,
                      false,
                      false,
@@ -110,47 +118,48 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   projection_view_matrices_[cascade] =
       shadow_frustum.get_projection() * shadow_frustum.get_view();
 
-  for (auto const& type : scene.geometrynodes_)
-  {
+  // create shadow view
+  View view(uuid(), false);
+  view.left = scene.frustum;
+  view.right = scene.frustum;
+
+  for (auto const& type : scene.geometrynodes_) {
     // pointer to appropriate ubershader
     GeometryUberShader* ubershader = nullptr;
 
     // get appropriate ubershader
-    if (!type.second.empty())
-    {
+    if (!type.second.empty()) {
       auto const& filename = type.second.front()->get_filename();
       auto geometry = GeometryDatabase::instance()->lookup(filename);
 
       if (geometry) {
         ubershader = pipeline_->get_geometry_ubershaders().at(type.first).get();
       } else {
-        Logger::LOG_WARNING << "ShadowMap::render_geometry(): No such file/geometry " << filename << std::endl;
+        Logger::LOG_WARNING
+          << "ShadowMap::render_geometry(): No such file/geometry "
+          << filename << std::endl;
       }
     }
 
-    if (ubershader)
+    if (ubershader) {
+      scm::gl::context_uniform_buffer_guard ubg(ctx.render_context);
+      camera_block_->update(ctx.render_context, scene.frustum);
+      ctx.render_context->bind_uniform_buffer(
+          camera_block_->block().block_buffer(), 0);
 
-    {
-      auto camera_position(scene.frustum.get_camera_position());
-      auto projection(scene.frustum.get_projection());
-      auto view_matrix(scene.frustum.get_view());
-
-      ubershader->set_uniform(ctx, camera_position, "gua_camera_position");
-      ubershader->set_uniform(ctx, projection, "gua_projection_matrix");
-      ubershader->set_uniform(ctx, view_matrix, "gua_view_matrix");
-      ubershader->set_uniform(ctx, scm::math::inverse(projection * view_matrix), "gua_inverse_projection_view_matrix");
-
-      ubershader->set_uniform(ctx, scene.enable_global_clipping_plane, "gua_enable_global_clipping_plane");
-      ubershader->set_uniform(ctx, scene.global_clipping_plane, "gua_global_clipping_plane");
+      ubershader->set_uniform(ctx, scene.enable_global_clipping_plane,
+          "gua_enable_global_clipping_plane");
+      ubershader->set_uniform(ctx, scene.global_clipping_plane,
+          "gua_global_clipping_plane");
 
       ubershader->set_uniform(ctx, 1.0f / map_size, "gua_texel_width");
       ubershader->set_uniform(ctx, 1.0f / map_size, "gua_texel_height");
       ubershader->set_uniform(ctx, true, "gua_render_shadow_map");
 
-      for (auto const& node : type.second)
-      {
+      for (auto const& node : type.second) {
         if (node->get_shadow_mode() != ShadowMode::OFF) {
-          ubershader->set_uniform(ctx, static_cast<int>(node->get_shadow_mode()), "gua_shadow_quality");
+          ubershader->set_uniform(ctx, static_cast<int>(node->get_shadow_mode())
+              , "gua_shadow_quality");
         }
 
         // draw node
@@ -158,12 +167,14 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
           node->get_filename(),
           node->get_material(),
           node->get_cached_world_transform(),
-          scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())),
+          scm::math::transpose(
+            scm::math::inverse(node->get_cached_world_transform())),
           scene.frustum,
-          uuid());
+          view);
       }
     } else {
-      Logger::LOG_WARNING << "ShadowMap::render_geometry(): UberShader missing." << std::endl;
+      Logger::LOG_WARNING << "ShadowMap::render_geometry(): UberShader missing."
+                          << std::endl;
     }
   }
 }
@@ -202,7 +213,8 @@ void ShadowMap::render(RenderContext const& ctx,
                            pipeline_->config.far_clip());
 
     // render geometries
-    render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, 0, map_size);
+    render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum,
+                    scene_camera, 0, map_size);
 
     ctx.render_context->reset_state_objects();
 
@@ -235,9 +247,12 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
     split_0, split_1, split_2, split_3, split_4
   });
 
-  if (pipeline_->config.near_clip() > split_0 || pipeline_->config.far_clip() < split_4) {
-    Logger::LOG_WARNING << "Splits of cascaded shadow maps are not inside clipping range! Fallback to equidistant splits used." << std::endl;
-    float clipping_range(pipeline_->config.far_clip() - pipeline_->config.near_clip());
+  if (pipeline_->config.near_clip() > split_0
+      || pipeline_->config.far_clip() < split_4) {
+    Logger::LOG_WARNING << "Splits of cascaded shadow maps are not inside "
+      << "clipping range! Fallback to equidistant splits used." << std::endl;
+    float clipping_range(pipeline_->config.far_clip()
+                      - pipeline_->config.near_clip());
     splits = {
       pipeline_->config.near_clip(),
       pipeline_->config.near_clip() + clipping_range * 0.25f,
@@ -287,9 +302,10 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
       }
 
       // center of front plane of frustum
-      auto center(math::vec3((extends_in_sun_space.min[0] + extends_in_sun_space.max[0])/2,
-                             (extends_in_sun_space.min[1] + extends_in_sun_space.max[1])/2,
-                              extends_in_sun_space.max[2] + near_clipping_in_sun_direction));
+      auto center(math::vec3(
+            (extends_in_sun_space.min[0] + extends_in_sun_space.max[0])/2,
+            (extends_in_sun_space.min[1] + extends_in_sun_space.max[1])/2,
+             extends_in_sun_space.max[2] + near_clipping_in_sun_direction));
 
       // eliminate sub-pixel movement
       float tex_coord_x = center.x * map_size / radius_in_sun_space / 2;
@@ -308,12 +324,21 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
       center.y += dy;
 
       // calculate transformation of shadow screen
-      auto screen_in_sun_space(scm::math::make_translation(center) * scm::math::make_scale(radius_in_sun_space*2, radius_in_sun_space*2, 1.0f));
+      auto screen_in_sun_space(scm::math::make_translation(center)
+                              * scm::math::make_scale(radius_in_sun_space*2,
+                                                      radius_in_sun_space*2,
+                                                      1.0f));
       auto sun_screen_transform(transform * screen_in_sun_space);
 
       // calculate transformation of shadow eye
-      auto sun_eye_transform(scm::math::make_translation(sun_screen_transform.column(3)[0], sun_screen_transform.column(3)[1], sun_screen_transform.column(3)[2]));
-      auto sun_eye_depth(transform * math::vec4(0, 0, extends_in_sun_space.max[2] - extends_in_sun_space.min[2] + near_clipping_in_sun_direction, 0.0f));
+      auto sun_eye_transform(scm::math::make_translation(
+            sun_screen_transform.column(3)[0],
+            sun_screen_transform.column(3)[1],
+            sun_screen_transform.column(3)[2]));
+      auto sun_eye_depth(transform * math::vec4(0, 0,
+                                        extends_in_sun_space.max[2]
+                                      - extends_in_sun_space.min[2]
+                                      + near_clipping_in_sun_direction, 0.0f));
 
       auto shadow_frustum(
         Frustum::orthographic(
@@ -325,7 +350,8 @@ void ShadowMap::render_cascaded(RenderContext const& ctx,
       );
 
       // render geometries
-      render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum, scene_camera, cascade, map_size);
+      render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum,
+                      scene_camera, cascade, map_size);
     }
   }
 
