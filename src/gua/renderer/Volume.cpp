@@ -143,7 +143,7 @@ namespace gua {
 		//	bool                 in_color_mips = false,
 		//	const data_format    in_force_internal_format = FORMAT_NULL);
 
-		_volume_texture_ptr[ctx.id] = std::shared_ptr<Texture3D>(new Texture3D(_volume_file_path));// scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
+		_volume_texture_ptr[ctx.id] = std::make_shared<Texture3D>(_volume_file_path);// scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
 		_volume_texture_ptr[ctx.id]->upload_to(ctx);
 
 		//MESSAGE("%s loaded!", _volume_file_path.c_str());
@@ -178,7 +178,7 @@ namespace gua {
 		if (!scm::data::build_lookup_table(color_lut, in_color, in_size)
 			|| !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {
 			std::cout << "Volume::create_color_map(): error during lookuptable generation" << std::endl;
-			return (std::shared_ptr<Texture2D>(new Texture2D(in_size, 1)));
+			return std::make_shared<Texture2D>(in_size, 1);
 		}
 		scm::scoped_array<float> combined_lut;
 
@@ -202,11 +202,11 @@ namespace gua {
 		in_data.push_back(combined_lut.get());
 
 		std::shared_ptr<Texture2D> new_tex =
-			std::shared_ptr<Texture2D>(new Texture2D(in_size, 1, FORMAT_RGBA_32F, in_data));// ctx.render_device->create_texture_2d(scm::math::vec2ui(in_size, 1), FORMAT_RGBA_8, 1, 1, 1, FORMAT_RGBA_32F, in_data);
+			std::make_shared<Texture2D>(in_size, 1, FORMAT_RGBA_32F, in_data);// ctx.render_device->create_texture_2d(scm::math::vec2ui(in_size, 1), FORMAT_RGBA_8, 1, 1, 1, FORMAT_RGBA_32F, in_data);
 
 		if (!new_tex) {
 			std::cerr << "Volume::create_color_map(): error during color map texture generation." << std::endl;
-			return (std::shared_ptr<Texture2D>(new Texture2D(in_size, 1)));
+			return std::make_shared<Texture2D>(in_size, 1);
 		}
 		else{
 			//std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
@@ -215,7 +215,7 @@ namespace gua {
 	}
 
 	bool Volume::update_color_map(RenderContext const& ctx,
-		std::shared_ptr<Texture2D> transfer_texture_ptr,
+		std::shared_ptr<Texture2D> const& transfer_texture_ptr,
 		const scm::data::piecewise_function_1d<float, float>& in_alpha,
 		const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const
 	{
