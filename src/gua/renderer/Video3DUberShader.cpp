@@ -420,7 +420,10 @@ void Video3DUberShader::draw(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*static*/ void Video3DUberShader::initialize_video_material() {
+/*static*/ void Video3DUberShader::initialize_video_material() 
+{
+  std::unique_lock<std::mutex> lock (MaterialDatabase::instance()->update_lock);
+
   if (!MaterialDatabase::instance()->is_supported(default_video_material_name()))
   {
     create_resource_material(default_video_material_name(),
