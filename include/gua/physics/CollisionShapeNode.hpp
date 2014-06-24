@@ -34,7 +34,7 @@
 namespace gua {
 namespace physics {
 
-class GUA_DLL CollisionShapeNode : public Node {
+class GUA_DLL CollisionShapeNode : public node::Node {
  public:
 
   struct Configuration {
@@ -70,7 +70,7 @@ class GUA_DLL CollisionShapeNode : public Node {
   /* virtual */ void accept(NodeVisitor&);
 
  private:
-  std::shared_ptr<Node> copy() const;
+  std::shared_ptr<node::Node> copy() const;
 };
 
 }

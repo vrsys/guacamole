@@ -135,9 +135,8 @@ void PLODRessource::draw(RenderContext const& ctx, pbr::context_t context_id, pb
 ////////////////////////////////////////////////////////////////////////////////
 
 void PLODRessource::ray_test(Ray const& ray, PickResult::Options options,
-                    Node* owner, std::set<PickResult>& hits) {
-
-	return;
+                    node::Node* owner, std::set<PickResult>& hits) {
+  return;
 }
 
 

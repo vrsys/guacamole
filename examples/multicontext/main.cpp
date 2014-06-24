@@ -82,10 +82,10 @@ int main(int argc, char** argv) {
   auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", "data/materials/White.gmd", gua::TriMeshLoader::DEFAULTS));
   auto nurbs_geode(nurbsloader.create_geometry_from_file("nurbs_geode", "data/objects/teapot.igs", "data/materials/Orange.gmd", gua::NURBSLoader::DEFAULTS));
 
-  auto video = graph.add_node<gua::TransformNode>("/", "video");
-  auto teapot = graph.add_node<gua::TransformNode>("/", "teapot");
-  auto nurbs = graph.add_node<gua::TransformNode>("/", "nurbs");
-  auto plate = graph.add_node<gua::TransformNode>("/", "plate");
+  auto video = graph.add_node<gua::node::TransformNode>("/", "video");
+  auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
+  auto nurbs = graph.add_node<gua::node::TransformNode>("/", "nurbs");
+  auto plate = graph.add_node<gua::node::TransformNode>("/", "plate");
 
   graph.add_node("/video", video_geode);
   graph.add_node("/teapot", teapot_geode);
@@ -94,45 +94,45 @@ int main(int argc, char** argv) {
 
 
   const float aspect = width * 1.0f/height; 
-  auto screen = graph.add_node<gua::ScreenNode>("/", "screen");
+  auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   //screen->data.set_size(gua::math::vec2(aspect*0.05, 0.05));
   screen->data.set_size(gua::math::vec2(aspect*2.0, 2.0));
   screen->translate(0, 0, 6.f);
 
-  auto screen2 = graph.add_node<gua::ScreenNode>("/", "screen2");
+  auto screen2 = graph.add_node<gua::node::ScreenNode>("/", "screen2");
   //screen2->data.set_size(gua::math::vec2(aspect*0.05, 0.05));
   screen2->data.set_size(gua::math::vec2(aspect*2.0, 2.0));
   screen2->translate(0, 0, 6.f);
 
-  auto eye = graph.add_node<gua::TransformNode>("/screen", "eye");
+  auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
   //eye->translate(0.0, 0.0, 0.025);
   eye->translate(0.0, 0.0, 1.0);
 
-  auto eye2 = graph.add_node<gua::TransformNode>("/screen2", "eye2");
+  auto eye2 = graph.add_node<gua::node::TransformNode>("/screen2", "eye2");
   //eye2->translate(0.0, 0.0, 0.025);
   eye2->translate(0.0, 0.0, 1.0);
 
-  auto eye3 = graph.add_node<gua::TransformNode>("/", "eye3");
+  auto eye3 = graph.add_node<gua::node::TransformNode>("/", "eye3");
   eye3->translate(-0.05, 0, 7.5);
 
-  auto eye4 = graph.add_node<gua::TransformNode>("/", "eye4");
+  auto eye4 = graph.add_node<gua::node::TransformNode>("/", "eye4");
   eye4->translate(0.05, 0, 7.5);
 
-  auto eye5 = graph.add_node<gua::TransformNode>("/", "eye5");
+  auto eye5 = graph.add_node<gua::node::TransformNode>("/", "eye5");
   eye5->translate(-0.05, 0, 6.5);
 
-  auto eye6 = graph.add_node<gua::TransformNode>("/", "eye6");
+  auto eye6 = graph.add_node<gua::node::TransformNode>("/", "eye6");
   eye6->translate(0.05, 0, 6.5);
 
-  auto eye7 = graph.add_node<gua::TransformNode>("/", "eye7");
+  auto eye7 = graph.add_node<gua::node::TransformNode>("/", "eye7");
   eye7->translate(-0.05, 0, 8.5);
 
-  auto eye8 = graph.add_node<gua::TransformNode>("/", "eye8");
+  auto eye8 = graph.add_node<gua::node::TransformNode>("/", "eye8");
   eye8->translate(0.05, 0, 8.5);
 
 #if 0
 
-  auto sunlight = graph.add_node<gua::SunLightNode>("/", "sunlight");
+  auto sunlight = graph.add_node<gua::node::SunLightNode>("/", "sunlight");
   sunlight->data.set_shadow_map_size(1024);
   sunlight->data.set_shadow_offset(0.005f);
   sunlight->data.set_enable_shadows(true);
@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
 #endif
 
 #if 1
-  auto spotlight = graph.add_node<gua::SpotLightNode>("/", "spotlight");
+  auto spotlight = graph.add_node<gua::node::SpotLightNode>("/", "spotlight");
   spotlight->scale(30.0f);
   spotlight->rotate(-90, 1, 0, 0);
   spotlight->translate(1.0, 18.0, 1.0);

@@ -34,6 +34,7 @@
  */
 
 namespace gua {
+namespace node {
 
 class GUA_DLL Video3DNode : public GeometryNode {
 public:
@@ -54,6 +55,7 @@ protected:
     std::shared_ptr<Node> copy() const override;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_VIDEO3D_NODE_HPP

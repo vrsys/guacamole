@@ -27,6 +27,7 @@
 #include <gua/utils/configuration_macro.hpp>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent a level of detail node in the SceneGraph.
@@ -95,6 +96,7 @@ class GUA_DLL LODNode : public TransformNode {
   std::shared_ptr<Node> copy() const;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_LOD_NODE_HPP

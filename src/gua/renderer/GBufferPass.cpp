@@ -305,7 +305,7 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
                                  View const& view) {
 
 
-  auto meshubershader = ubershaders_[typeid(TriMeshNode)];
+  auto meshubershader = ubershaders_[typeid(node::TriMeshNode)];
 
   if (pipeline_->config.enable_bbox_display()) {
     meshubershader->get_program()->use(ctx);
@@ -341,7 +341,7 @@ void GBufferPass::display_rays(RenderContext const& ctx,
                                SerializedScene const& scene,
                                View const& view)
 {
-  auto meshubershader = ubershaders_[typeid(TriMeshNode)];
+  auto meshubershader = ubershaders_[typeid(node::TriMeshNode)];
 
   if (pipeline_->config.enable_ray_display()) {
     meshubershader->get_program()->use(ctx);
@@ -369,7 +369,7 @@ void GBufferPass::display_quads(RenderContext const& ctx,
                                 CameraMode eye,
                                 View const& view)
 {
-  auto meshubershader = ubershaders_[typeid(TriMeshNode)];
+  auto meshubershader = ubershaders_[typeid(node::TriMeshNode)];
 
   if (!scene.textured_quads_.empty()) {
     meshubershader->get_program()->use(ctx);
@@ -431,8 +431,8 @@ void GBufferPass::update_ubershader_from_scene(RenderContext const& ctx,
   }
 
   if (!ubershader_available) {
-    auto get_ubershader = [&](Node * n) {
-      GeometryNode* geode = dynamic_cast<GeometryNode*>(n);
+    auto get_ubershader = [&](node::Node * n) {
+      node::GeometryNode* geode = dynamic_cast<node::GeometryNode*>(n);
       if (geode) {
         std::type_index type(typeid(*geode));
         if (!ubershaders_.count(type)) {
@@ -495,7 +495,7 @@ void GBufferPass::apply_material_mapping(
 ////////////////////////////////////////////////////////////////////////////////
 
 LayerMapping const* GBufferPass::get_gbuffer_mapping() const {
-  std::type_index trimesh_type = typeid(TriMeshNode);
+  std::type_index trimesh_type = typeid(node::TriMeshNode);
 
   if (!ubershaders_.count(trimesh_type)) {
     // trimesh shader has not been created yet -> return dummy mapping
@@ -509,7 +509,7 @@ LayerMapping const* GBufferPass::get_gbuffer_mapping() const {
 
 void GBufferPass::initialize_trimesh_ubershader(RenderContext const& ctx) const
 {
-  std::type_index trimesh_type = typeid(TriMeshNode);
+  std::type_index trimesh_type = typeid(node::TriMeshNode);
 
   if (!ubershaders_.count(trimesh_type)) {
     auto ubershader = TriMeshRessource().create_ubershader();

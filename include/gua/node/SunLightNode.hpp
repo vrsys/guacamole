@@ -31,6 +31,7 @@
 #include <string>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent directional and parallel light in the
@@ -147,6 +148,7 @@ class GUA_DLL SunLightNode : public Node {
   std::shared_ptr<Node> copy() const override;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_SUN_LIGHT_NODE_HPP

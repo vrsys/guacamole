@@ -26,6 +26,7 @@
 #include <gua/scenegraph/NodeVisitor.hpp>
 
 namespace gua {
+namespace node {
 
 LODNode::LODNode(std::string const& name, Configuration const& configuration, math::mat4 const& transform)
     : TransformNode(name, transform), data(configuration) {}
@@ -40,5 +41,5 @@ std::shared_ptr<Node> LODNode::copy() const {
   return std::make_shared<LODNode>(get_name(), data, get_transform());
 }
 
-
+}
 }

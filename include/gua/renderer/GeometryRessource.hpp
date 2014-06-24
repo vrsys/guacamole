@@ -80,7 +80,7 @@ class GUA_DLL GeometryRessource {
    * \return                  The intersection distance along the ray.
    */
   virtual void ray_test(Ray const& ray, PickResult::Options options,
-                        Node* owner, std::set<PickResult>& hits) = 0;
+                        node::Node* owner, std::set<PickResult>& hits) = 0;
 
   /**
    * Get the local bounding box of the geometry.

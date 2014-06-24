@@ -46,7 +46,7 @@ NURBSLoader::NURBSLoader() : GeometryLoader(), _supported_file_extensions() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Node> NURBSLoader::create_geometry_from_file(std::string const& nodename, 
+std::shared_ptr<node::Node> NURBSLoader::create_geometry_from_file(std::string const& nodename, 
                                                              std::string const& filename,
                                                              std::string const& material,
                                                              unsigned flags)
@@ -72,7 +72,7 @@ std::shared_ptr<Node> NURBSLoader::create_geometry_from_file(std::string const& 
       std::string mesh_name("type=file&file=" + filename + "&flags=" + string_utils::to_string(flags));
       GeometryDatabase::instance()->add(mesh_name, ressource);
 
-      auto node = std::make_shared<NURBSNode>(nodename, mesh_name, material);
+      auto node = std::make_shared<node::NURBSNode>(nodename, mesh_name, material);
       node->update_cache();
 
       return node;

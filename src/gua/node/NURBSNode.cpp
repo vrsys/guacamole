@@ -30,6 +30,7 @@
 // guacamole headers
 
 namespace gua {
+namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   NURBSNode::NURBSNode(std::string const& name,
@@ -131,4 +132,5 @@ namespace gua {
     return result;
   }
 
+}
 }

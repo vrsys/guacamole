@@ -32,6 +32,7 @@
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
+namespace node {
 
 ////////////////////////////////////////////////////////////////////////////////
 GeometryNode::GeometryNode(std::string const& name,
@@ -89,4 +90,5 @@ void GeometryNode::update_bounding_box() const {
   }
 }
 
+}
 }

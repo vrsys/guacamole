@@ -122,7 +122,7 @@ void CollisionShapeNodeVisitor::check(RigidBodyNode* rigid_body) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CollisionShapeNodeVisitor::generic_visit(Node* node) {
+void CollisionShapeNodeVisitor::generic_visit(node::Node* node) {
 
   pop_stack(node);
   math::mat4 curr_matrix(matrix_stack_.top() * node->get_transform());
@@ -145,7 +145,7 @@ void CollisionShapeNodeVisitor::push_stack(math::mat4 const& current_matrix) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CollisionShapeNodeVisitor::pop_stack(Node* new_node) {
+void CollisionShapeNodeVisitor::pop_stack(node::Node* new_node) {
 
   int new_depth = new_node->get_depth();
 

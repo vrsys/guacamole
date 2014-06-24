@@ -27,6 +27,7 @@
 #include <gua/utils/Logger.hpp>
 
 namespace gua {
+namespace node {
 
 ScreenNode::ScreenNode(std::string const& name,
                        Configuration const& configuration,
@@ -52,4 +53,5 @@ std::shared_ptr<Node> ScreenNode::copy() const {
     return std::make_shared<ScreenNode>(get_name(), data, get_transform());
 }
 
+}
 }

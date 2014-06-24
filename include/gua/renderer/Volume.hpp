@@ -112,7 +112,7 @@ namespace gua {
 		void set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const;
 
 		void ray_test(Ray const& ray, PickResult::Options options,
-			Node* owner, std::set<PickResult>& hits);
+			node::Node* owner, std::set<PickResult>& hits);
 
 
 		float step_size() const;

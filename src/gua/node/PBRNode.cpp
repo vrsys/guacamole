@@ -30,6 +30,7 @@
 // guacamole headers
 
 namespace gua {
+namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   PBRNode::PBRNode(std::string const& name,
@@ -75,4 +76,5 @@ namespace gua {
     result->shadow_mode_ = shadow_mode_;
     return result;
   }
+}
 }

@@ -26,6 +26,7 @@
 #include <gua/node/GeometryNode.hpp>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent polygonal geometry in the SceneGraph.
@@ -59,6 +60,7 @@ private : // attributes e.g. special attributes for drawing
 
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_NURBS_NODE_HPP

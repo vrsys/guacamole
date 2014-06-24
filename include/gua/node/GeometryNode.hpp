@@ -31,6 +31,7 @@
 #include <string>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent any kind of geometry in the SceneGraph.
@@ -120,6 +121,7 @@ class GUA_DLL GeometryNode : public Node {
     bool material_changed_;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_GEOMETRY_NODE_HPP

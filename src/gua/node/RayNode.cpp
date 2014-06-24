@@ -30,6 +30,7 @@
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
+namespace node {
 
 const float RayNode::END(std::numeric_limits<float>::max());
 
@@ -73,4 +74,5 @@ std::shared_ptr<Node> RayNode::copy() const {
     return std::make_shared<RayNode>(get_name(), get_transform());
 }
 
+}
 }

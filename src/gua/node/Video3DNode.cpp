@@ -33,6 +33,7 @@
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
+namespace node {
 
   /////////////////////////////////////////////////////////////////////////////
   Video3DNode::Video3DNode(std::string const& name,
@@ -123,4 +124,5 @@ namespace gua {
     Node::update_cache();
   }
 
+}
 }

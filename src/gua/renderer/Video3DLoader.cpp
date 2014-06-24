@@ -42,14 +42,14 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Node> Video3DLoader::create_geometry_from_file (std::string const& node_name,
+  std::shared_ptr<node::Node> Video3DLoader::create_geometry_from_file (std::string const& node_name,
                                                                   std::string const& file_name)
   {
     try {
       GeometryDatabase::instance()->add(
         file_name, std::make_shared<Video3DRessource>(file_name));
 
-      auto result = std::make_shared<Video3DNode>(node_name, file_name, Video3DUberShader::default_video_material_name() );
+      auto result = std::make_shared<node::Video3DNode>(node_name, file_name, Video3DUberShader::default_video_material_name() );
       result->update_cache();
 
       return result;

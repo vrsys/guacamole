@@ -28,6 +28,7 @@
 #include <gua/utils/configuration_macro.hpp>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent a textured quad in the SceneGraph.
@@ -129,6 +130,7 @@ class GUA_DLL TexturedQuadNode : public Node {
 
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_TEXTURED_QUAD_NODE_HPP

@@ -26,6 +26,7 @@
 #include <gua/node/GeometryNode.hpp>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent pointcloud in the SceneGraph.
@@ -56,6 +57,7 @@ private : // attributes e.g. special attributes for drawing
 
 };
 
+}
 }
 
 #endif  // GUA_PBR_NODE_HPP

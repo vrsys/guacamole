@@ -29,6 +29,7 @@
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
+namespace node {
 
 TexturedQuadNode::TexturedQuadNode()
     : texture_(""),
@@ -120,4 +121,5 @@ bool TexturedQuadNode::flip_y() const { return flip_y_; }
 
 void TexturedQuadNode::flip_y(bool enable) { flip_y_ = enable; }
 
+}
 }

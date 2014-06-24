@@ -43,9 +43,9 @@ namespace gua {
   /////////////////////////////////////////////////////////////////////////////
   unsigned TriMeshLoader::mesh_counter_ = 0;
 
-  std::unordered_map<std::string, std::shared_ptr<Node>>
+  std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>
     TriMeshLoader::loaded_files_ =
-    std::unordered_map<std::string, std::shared_ptr<Node>>();
+    std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>();
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -60,9 +60,9 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Node> TriMeshLoader::load_geometry(std::string const& file_name, unsigned flags)
+  std::shared_ptr<node::Node> TriMeshLoader::load_geometry(std::string const& file_name, unsigned flags)
   {
-    std::shared_ptr<Node> cached_node;
+    std::shared_ptr<node::Node> cached_node;
     std::string key(file_name + "_" + string_utils::to_string(flags));
     auto searched(loaded_files_.find(key));
 
@@ -113,7 +113,7 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Node> TriMeshLoader::create_geometry_from_file
+  std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file
     (std::string const& node_name,
     std::string const& file_name,
     std::string const& fallback_material,
@@ -130,12 +130,12 @@ namespace gua {
       return copy;
     }
 
-    return std::make_shared<TransformNode>(node_name);
+    return std::make_shared<node::TransformNode>(node_name);
   }
 
   /////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Node> TriMeshLoader::load(std::string const& file_name,
+  std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
                                        unsigned flags) {
 
   node_counter_ = 0;
@@ -179,7 +179,7 @@ namespace gua {
 
     aiScene const* scene(importer->GetScene());
 
-    std::shared_ptr<Node> new_node;
+    std::shared_ptr<node::Node> new_node;
 
     if (scene->mRootNode) {
       // new_node = std::make_shared(new GeometryNode("unnamed",
@@ -239,7 +239,7 @@ bool TriMeshLoader::is_supported(std::string const& file_name) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> const& importer,
+std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> const& importer,
                                               aiScene const* ai_scene,
                                               aiNode* ai_root,
                                               std::string const& file_name,
@@ -261,7 +261,7 @@ std::shared_ptr<Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> 
       material_name = material_loader.load_material(material, file_name);
     }
 
-    return std::make_shared<TriMeshNode>(mesh_name, mesh_name, material_name);
+    return std::make_shared<node::TriMeshNode>(mesh_name, mesh_name, material_name);
   };
 
   // there is only one child -- skip it!
@@ -278,7 +278,7 @@ std::shared_ptr<Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> 
   }
 
   // else: there are multiple children and meshes
-  auto group(std::make_shared<TransformNode>());
+  auto group(std::make_shared<node::TransformNode>());
 
   for (unsigned i(0); i < ai_root->mNumMeshes; ++i) {
     group->add_child(load_geometry(i));
@@ -299,10 +299,10 @@ std::shared_ptr<Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshLoader::apply_fallback_material(std::shared_ptr<Node> const& root,
+void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
                                              std::string const& fallback_material) const
 {
-  auto g_node(std::dynamic_pointer_cast<GeometryNode>(root));
+  auto g_node(std::dynamic_pointer_cast<node::GeometryNode>(root));
 
   if (g_node) {
     if (g_node->get_material().empty()) {

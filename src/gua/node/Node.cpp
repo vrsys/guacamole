@@ -34,6 +34,7 @@
 #include <iostream>
 
 namespace gua {
+namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -392,4 +393,5 @@ namespace gua {
     return reinterpret_cast<std::size_t>(this);
   }
 
+}
 }

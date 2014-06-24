@@ -31,6 +31,7 @@
 #include <string>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent spot light in the SceneGraph.
@@ -146,6 +147,7 @@ class GUA_DLL SpotLightNode : public Node {
   std::shared_ptr<Node> copy() const override;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_SPOT_LIGHT_NODE_HPP

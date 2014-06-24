@@ -27,6 +27,7 @@
 #include <gua/utils/KDTree.hpp>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent a ray in the SceneGraph.
@@ -106,6 +107,7 @@ class GUA_DLL RayNode : public Node {
   std::shared_ptr<Node> copy() const override;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_RAY_NODE_HPP

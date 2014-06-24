@@ -101,29 +101,29 @@ class CollisionShapeNodeVisitor : public NodeVisitor {
    * \param node    Pointer to Node
    */
 
-  /* virtual */ void visit(TransformNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::TransformNode* node) { generic_visit(node); }
 
-  /* virtual */ void visit(GeometryNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::GeometryNode* node) { generic_visit(node); }
   
-  /* virtual */ void visit(VolumeNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::VolumeNode* node) { generic_visit(node); }
 
-  /* virtual */ void visit(PointLightNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::PointLightNode* node) { generic_visit(node); }
 
-  /* virtual */ void visit(ScreenNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::ScreenNode* node) { generic_visit(node); }
 
-  /* virtual */ void visit(SpotLightNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::SpotLightNode* node) { generic_visit(node); }
 
-  /* virtual */ void visit(RayNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::RayNode* node) { generic_visit(node); }
 
-  /* virtual */ void visit(TexturedQuadNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::TexturedQuadNode* node) { generic_visit(node); }
 
   ///@}
 
  private:
 
-  void generic_visit(Node* node);
+  void generic_visit(node::Node* node);
   void push_stack(math::mat4 const& current_matrix);
-  void pop_stack(Node* new_node);
+  void pop_stack(node::Node* new_node);
 
   RigidBodyNode* rigid_body_;
   std::stack<math::mat4> matrix_stack_;

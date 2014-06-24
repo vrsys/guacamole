@@ -153,13 +153,13 @@ void ConvexHullShape::build_from_geometry(
 
       if (node->has_children()) {
         for (auto const& n : node->get_children()) {
-            auto gnode = std::dynamic_pointer_cast<TriMeshNode>(n);
+            auto gnode = std::dynamic_pointer_cast<node::TriMeshNode>(n);
             if (gnode) {
                 geom_list.push_back(gnode->get_filename());
             }
         }
       } else {
-        auto gnode = std::dynamic_pointer_cast<TriMeshNode>(node);
+        auto gnode = std::dynamic_pointer_cast<node::TriMeshNode>(node);
         if (gnode) {
           geom_list.push_back(gnode->get_filename());
         }

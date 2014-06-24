@@ -70,7 +70,7 @@ void KDTree::generate(aiMesh* mesh) {
 }
 
 void KDTree::ray_test(Ray const& ray, aiMesh* mesh, PickResult::Options const& options,
-                      Node* owner, std::set<PickResult>& hits) const {
+                      node::Node* owner, std::set<PickResult>& hits) const {
 
   if (root_) {
     current_options_ = options;

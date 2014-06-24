@@ -40,9 +40,9 @@ namespace gua {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	std::unordered_map<std::string, std::shared_ptr<Node>>
+	std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>
 		VolumeLoader::loaded_files_ =
-		std::unordered_map<std::string, std::shared_ptr<Node>>();
+		std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>();
 
 	////////////////////////////////////////////////////////////////////////////////
 	VolumeLoader::VolumeLoader() : GeometryLoader(), _supported_file_extensions() {
@@ -51,12 +51,12 @@ namespace gua {
 	}
 
   ////////////////////////////////////////////////////////////////////////////////
-	std::shared_ptr<Node> VolumeLoader::create_volume_from_file(std::string const& node_name,
+	std::shared_ptr<node::Node> VolumeLoader::create_volume_from_file(std::string const& node_name,
 																std::string const& file_name,
 																unsigned flags)
 	{
 
-		std::shared_ptr<Node> cached_node;
+		std::shared_ptr<node::Node> cached_node;
 		std::string key(file_name + "_" + string_utils::to_string(flags));
 
 		auto searched(loaded_files_.find(key));
@@ -103,17 +103,17 @@ namespace gua {
 			return copy;
 		}
 
-		return std::make_shared<TransformNode>(node_name);
+		return std::make_shared<node::TransformNode>(node_name);
 	}
 
-	std::shared_ptr<Node> VolumeLoader::load(std::string const& file_name,
+	std::shared_ptr<node::Node> VolumeLoader::load(std::string const& file_name,
 											 unsigned flags)
 	{
 		try {
 			GeometryDatabase::instance()->add(
 				file_name, std::make_shared<Volume>(file_name));
 
-			auto result = std::make_shared<VolumeNode>("unnamed_volume");
+			auto result = std::make_shared<node::VolumeNode>("unnamed_volume");
 			result->data.set_volume(file_name);
 
 			return result;

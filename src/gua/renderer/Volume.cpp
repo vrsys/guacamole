@@ -339,7 +339,7 @@ namespace gua {
 	////////////////////////////////////////////////////////////////////////////////
 
 	void Volume::ray_test(Ray const& ray, PickResult::Options options,
-		Node* owner, std::set<PickResult>& hits) {
+		node::Node* owner, std::set<PickResult>& hits) {
 
 		//kd_tree_.ray_test(ray, mesh_, options, owner, hits);
 	}

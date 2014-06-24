@@ -29,6 +29,7 @@
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
+namespace node {
 
 SpotLightNode::SpotLightNode(std::string const& name,
                              Configuration const& configuration,
@@ -54,4 +55,5 @@ std::shared_ptr<Node> SpotLightNode::copy() const {
     return std::make_shared<SpotLightNode>(get_name(), data, get_transform());
 }
 
+}
 }

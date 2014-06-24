@@ -30,6 +30,7 @@
 // guacamole headers
 
 namespace gua {
+namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   PLODNode::PLODNode(std::string const& name,
@@ -73,4 +74,6 @@ namespace gua {
   std::shared_ptr<Node> PLODNode::copy() const {
     return std::make_shared<PLODNode>(get_name(), filename_, material_, get_transform());
   }
+
+}
 }

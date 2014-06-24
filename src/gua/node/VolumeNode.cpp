@@ -31,6 +31,7 @@
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
+namespace node {
 
   /////////////////////////////////////////////////////////////////////////////
 
@@ -77,4 +78,5 @@ namespace gua {
     return std::make_shared<VolumeNode>(get_name(), data, get_transform());
   }
 
+} // namespace node
 } // namespace gua

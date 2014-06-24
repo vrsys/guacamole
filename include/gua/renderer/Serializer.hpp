@@ -73,7 +73,7 @@ class Serializer : public NodeVisitor {
    *
    * \param cam   Pointer to TransformNode
    */
-  void visit(Node* node) override;
+  void visit(node::Node* node) override;
 
   /**
    * Visits an LODNode
@@ -82,7 +82,7 @@ class Serializer : public NodeVisitor {
    *
    * \param cam   Pointer to LODNode
    */
-  void visit(LODNode* lod) override;
+  void visit(node::LODNode* lod) override;
 
   /**
    * Visits a GeometryNode
@@ -91,7 +91,7 @@ class Serializer : public NodeVisitor {
    *
    * \param geometry   Pointer to GeometryNode
    */
-  void visit(GeometryNode* geometry) override;
+  void visit(node::GeometryNode* geometry) override;
 
   /**
   * Visits a VolumeNode
@@ -100,7 +100,7 @@ class Serializer : public NodeVisitor {
   *
   * \param volume   Pointer to VolumeNode
   */
-  void visit(VolumeNode* volume) override;
+  void visit(node::VolumeNode* volume) override;
 
   /**
    * Visits a PointLightNode
@@ -109,7 +109,7 @@ class Serializer : public NodeVisitor {
    *
    * \param pointlight   Pointer to PointLightNode
    */
-  void visit(PointLightNode* pointlight) override;
+  void visit(node::PointLightNode* pointlight) override;
 
   /**
    * Visits a SpotLightNode
@@ -118,7 +118,7 @@ class Serializer : public NodeVisitor {
    *
    * \param spot   Pointer to SpotLightNode
    */
-  void visit(SpotLightNode* spot) override;
+  void visit(node::SpotLightNode* spot) override;
 
    /**
    * Visits a SunLightNode
@@ -127,7 +127,7 @@ class Serializer : public NodeVisitor {
    *
    * \param spot   Pointer to SunLightNode
    */
-  void visit(SunLightNode* sun) override;
+  void visit(node::SunLightNode* sun) override;
 
   /**
    * Visits a RayNode
@@ -136,7 +136,7 @@ class Serializer : public NodeVisitor {
    *
    * \param spot   Pointer to RayNode
    */
-  void visit(RayNode* ray) override;
+  void visit(node::RayNode* ray) override;
 
   /**
    * Visits a RigidBodyNode
@@ -163,13 +163,13 @@ class Serializer : public NodeVisitor {
    *
    * \param node  Pointer to TexturedQuadNode
    */
-  void visit(TexturedQuadNode* node) override;
+  void visit(node::TexturedQuadNode* node) override;
 
  private:
 
-  bool is_visible(Node* node) const;
-  void add_bbox(Node* node) const;
-  void visit_children(Node* node);
+  bool is_visible(node::Node* node) const;
+  void add_bbox(node::Node* node) const;
+  void visit_children(node::Node* node);
 
   Frustum current_frustum_;
   Mask current_render_mask_;

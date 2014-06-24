@@ -187,7 +187,7 @@ void Pipeline::serialize(const SceneGraph& scene_graph,
   }
 
   auto screen_it((scene_graph)[screen_name]);
-  auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
+  auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
   if (!screen) {
     Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
     return;

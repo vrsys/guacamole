@@ -55,7 +55,7 @@ RigidBodyNode::RigidBodyNode(const std::string& name,
                              float friction,
                              float restitution,
                              const math::mat4& transform)
-    : Node(name, transform),
+    : node::Node(name, transform),
       ph_(nullptr),
       mass_(mass),
       inertia_(btVector3(1, 1, 1)) {
@@ -388,13 +388,9 @@ void RigidBodyNode::sync_shapes(bool do_not_lock) {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> RigidBodyNode::copy() const {
-    return std::make_shared<TransformNode>(get_name(), get_transform());
+std::shared_ptr<node::Node> RigidBodyNode::copy() const {
+    return std::make_shared<node::TransformNode>(get_name(), get_transform());
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 }
 }

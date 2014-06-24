@@ -33,7 +33,7 @@ namespace physics {
 
 CollisionShapeNode::CollisionShapeNode(const std::string& name,
                                        const math::mat4& transform)
-    : Node(name, transform) {}
+    : node::Node(name, transform) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,8 +48,8 @@ CollisionShapeNode::~CollisionShapeNode() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
+std::shared_ptr<node::Node> CollisionShapeNode::copy() const {
+  return std::make_shared<node::TransformNode>(get_name(), get_transform());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

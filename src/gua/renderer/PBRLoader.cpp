@@ -62,12 +62,12 @@ unsigned PBRLoader::model_counter_ = 0;
 
   /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Node> PBRLoader::create_geometry_from_file(std::string const& node_name,
+std::shared_ptr<::gua::node::Node> PBRLoader::create_geometry_from_file(std::string const& node_name,
                                                            std::string const& file_name) {
 
   node_counter_ = 0;
     
-    std::shared_ptr<Node> new_node;
+    std::shared_ptr<::gua::node::Node> new_node;
 
      std::shared_ptr<pbr::ren::RawPointCloud> point_cloud = std::make_shared<pbr::ren::RawPointCloud>(model_counter_);
      if (point_cloud->Load(file_name))
@@ -80,7 +80,7 @@ std::shared_ptr<Node> PBRLoader::create_geometry_from_file(std::string const& no
 	     ++model_counter_;
 	     
 
-	     auto node(std::make_shared<PBRNode>(model_name));
+	     auto node(std::make_shared<::gua::node::PBRNode>(model_name));
 	     node->set_filename(model_name);
              node->set_material("gua_pbr");
 

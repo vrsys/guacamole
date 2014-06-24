@@ -30,6 +30,7 @@
 #include <string>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent a volume in the SceneGraph.
@@ -101,6 +102,7 @@ private:
   std::shared_ptr<Node> copy() const override;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_VOLUME_NODE_HPP

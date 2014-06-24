@@ -29,6 +29,7 @@
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
+namespace node {
 
 SunLightNode::SunLightNode(std::string const& name,
                              Configuration const& configuration,
@@ -50,4 +51,5 @@ std::shared_ptr<Node> SunLightNode::copy() const {
     return std::make_shared<SunLightNode>(get_name(), data, get_transform());
 }
 
+}
 }

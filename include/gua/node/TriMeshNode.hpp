@@ -26,6 +26,7 @@
 #include <gua/node/GeometryNode.hpp>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent polygonal geometry in the SceneGraph.
@@ -58,6 +59,7 @@ class GUA_DLL TriMeshNode : public GeometryNode {
 
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_TRIMESH_NODE_HPP

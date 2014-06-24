@@ -40,9 +40,16 @@
 namespace gua {
 
 class NodeVisitor;
-class RayNode;
+class SceneGraph;
+class Serializer;
+class DotGenerator;
 
 namespace physics { class CollisionShapeNodeVisitor; }
+
+namespace node {
+
+class RayNode;
+
 
 /**
  * This class is used as a base class to provide basic node behaviour.
@@ -415,10 +422,10 @@ class GUA_DLL Node {
   */
   std::size_t const uuid() const;
 
-  friend class SceneGraph;
-  friend class Serializer;
-  friend class DotGenerator;
-  friend class physics::CollisionShapeNodeVisitor;
+  friend class ::gua::SceneGraph;
+  friend class ::gua::Serializer;
+  friend class ::gua::DotGenerator;
+  friend class ::gua::physics::CollisionShapeNodeVisitor;
 
   virtual void ray_test_impl(RayNode const& ray, PickResult::Options options,
                              Mask const& mask, std::set<PickResult>& hits);
@@ -482,6 +489,7 @@ class GUA_DLL Node {
   mutable math::mat4 world_transform_;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_NODE_HPP

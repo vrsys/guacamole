@@ -26,6 +26,7 @@
 #include <gua/node/Node.hpp>
 
 namespace gua {
+namespace node {
 
 /**
  * This class is used to represent an transformation node in the SceneGraph.
@@ -73,6 +74,7 @@ class GUA_DLL TransformNode : public Node {
   std::shared_ptr<Node> copy() const override;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
 #endif  // GUA_GROUP_NODE_HPP

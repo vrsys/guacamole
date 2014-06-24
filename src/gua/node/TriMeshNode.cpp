@@ -31,6 +31,7 @@
 // guacamole headers
 
 namespace gua {
+namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   TriMeshNode::TriMeshNode(std::string const& name,
@@ -252,4 +253,5 @@ namespace gua {
     result->shadow_mode_ = shadow_mode_;
     return result;
   }
+}
 }
