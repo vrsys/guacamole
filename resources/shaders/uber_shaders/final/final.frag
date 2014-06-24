@@ -79,8 +79,15 @@ void gua_apply_skymap_texture() {
 
   vec2 texcoord = vec2(x, y);
 
-  gua_float_gbuffer_out_0.rgb = texture2D(
-    gua_get_float_sampler(gua_background_texture), texcoord).xyz;
+  float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_camera_position) - 
+                   normalize(gua_get_position(vec2(1, 0.5)) - gua_camera_position));
+
+  vec2 uv = l*(gua_get_quad_coords() - 1.0)/4.0 + 0.5;
+
+  gua_float_gbuffer_out_0.rgb = textureGrad(
+    gua_get_float_sampler(gua_background_texture), 
+                          texcoord, 
+                          dFdx(uv), dFdy(uv)).xyz;
 }
 
 void gua_apply_background_color() {
