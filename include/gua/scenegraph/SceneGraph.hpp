@@ -23,7 +23,7 @@
 #define GUA_SCENE_GRAPH_HPP
 
 #include <gua/platform.hpp>
-#include <gua/scenegraph/Node.hpp>
+#include <gua/node/Node.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/Logger.hpp>
 

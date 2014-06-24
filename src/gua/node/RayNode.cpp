@@ -20,39 +20,57 @@
  ******************************************************************************/
 
 // class header
-#include <gua/physics/CollisionShapeNode.hpp>
+#include <gua/node/RayNode.hpp>
 
 // guacamole headers
-#include <gua/node/TransformNode.hpp>
+#include <gua/platform.hpp>
+#include <gua/utils/KDTree.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
-namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
+const float RayNode::END(std::numeric_limits<float>::max());
 
-CollisionShapeNode::CollisionShapeNode(const std::string& name,
-                                       const math::mat4& transform)
+RayNode::RayNode(std::string const& name, math::mat4 const& transform)
     : Node(name, transform) {}
 
-////////////////////////////////////////////////////////////////////////////////
-
-CollisionShapeNode::~CollisionShapeNode() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) {
-
-  visitor.visit(this);
+void RayNode::accept(NodeVisitor& visitor) {
+    visitor.visit(this);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
+std::pair<float, float> RayNode::intersect(
+    math::BoundingBox<math::vec3> const& box) const {
+    return ::gua::intersect(get_world_ray(), box);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+Ray RayNode::get_world_ray() const {
+    math::mat4 world_transform(get_world_transform());
+
+    math::vec4 origin(0, 0, 0, 1.0);
+    math::vec4 direction(0, 0, -1, 0.0);
+
+    origin = world_transform * origin;
+    direction = world_transform * direction;
+
+    return Ray(origin, direction, 1.0);
+}
+
+void RayNode::update_bounding_box() const {
+    auto geometry_bbox(GeometryDatabase::instance()->lookup("gua_ray_geometry")
+                           ->get_bounding_box());
+
+    bounding_box_ = transform(geometry_bbox, world_transform_);
+
+    for (auto child : get_children()) {
+        bounding_box_.expandBy(child->get_bounding_box());
+    }
 
 }
+
+std::shared_ptr<Node> RayNode::copy() const {
+    return std::make_shared<RayNode>(get_name(), get_transform());
+}
+
 }

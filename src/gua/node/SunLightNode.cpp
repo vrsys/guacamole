@@ -20,39 +20,34 @@
  ******************************************************************************/
 
 // class header
-#include <gua/physics/CollisionShapeNode.hpp>
+#include <gua/node/SunLightNode.hpp>
 
-// guacamole headers
-#include <gua/node/TransformNode.hpp>
+// guacamole header
+#include <gua/platform.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
-namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
+SunLightNode::SunLightNode(std::string const& name,
+                             Configuration const& configuration,
+                             math::mat4 const& transform)
+    : Node(name, transform), data(configuration) {}
 
-CollisionShapeNode::CollisionShapeNode(const std::string& name,
-                                       const math::mat4& transform)
-    : Node(name, transform) {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-CollisionShapeNode::~CollisionShapeNode() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) {
-
-  visitor.visit(this);
+/* virtual */ void SunLightNode::accept(NodeVisitor& visitor) {
+    visitor.visit(this);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
+void SunLightNode::update_bounding_box() const {
+    bounding_box_ = math::BoundingBox<math::vec3>(
+        math::vec3(std::numeric_limits<math::vec3::value_type>::lowest()),
+        math::vec3(std::numeric_limits<math::vec3::value_type>::max())
+    );
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
+std::shared_ptr<Node> SunLightNode::copy() const {
+    return std::make_shared<SunLightNode>(get_name(), data, get_transform());
 }
+
 }

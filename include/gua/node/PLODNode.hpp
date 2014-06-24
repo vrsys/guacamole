@@ -19,40 +19,43 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/physics/CollisionShapeNode.hpp>
+#ifndef GUA_PLOD_NODE_HPP
+#define GUA_PLOD_NODE_HPP
 
 // guacamole headers
-#include <gua/node/TransformNode.hpp>
-#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/node/GeometryNode.hpp>
 
 namespace gua {
-namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * This class is used to represent pointcloud in the SceneGraph.
+ *
+ * \ingroup gua_scenegraph
+ */
+class GUA_DLL PLODNode : public GeometryNode
+{
+public : // member
 
-CollisionShapeNode::CollisionShapeNode(const std::string& name,
-                                       const math::mat4& transform)
-    : Node(name, transform) {}
+  PLODNode( std::string const& name,
+            std::string const& filename = "gua_default_geometry",
+            std::string const& material = "gua_default_material",
+            math::mat4  const& transform = math::mat4::identity());
 
-////////////////////////////////////////////////////////////////////////////////
+  /**
+  * Implements ray picking for a point cloud
+  */
+  void ray_test_impl(RayNode const& ray,
+                     PickResult::Options options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
+protected:
 
-CollisionShapeNode::~CollisionShapeNode() {}
+  std::shared_ptr<Node> copy() const override;
 
-////////////////////////////////////////////////////////////////////////////////
+private : // attributes e.g. special attributes for drawing
 
-/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) {
+};
 
-  visitor.visit(this);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
-}
+#endif  // GUA_PLOD_NODE_HPP

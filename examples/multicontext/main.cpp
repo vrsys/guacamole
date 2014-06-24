@@ -21,8 +21,8 @@
 #define _USE_MATH_DEFINES
 
 #include <gua/guacamole.hpp>
-#include <gua/scenegraph/TexturedQuadNode.hpp>
-#include <gua/scenegraph/TriMeshNode.hpp>
+#include <gua/node/TexturedQuadNode.hpp>
+#include <gua/node/TriMeshNode.hpp>
 
 #include <gua/platform.hpp>
 

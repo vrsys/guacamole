@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
-#include <gua/scenegraph/TriMeshNode.hpp>
+#include <gua/node/TriMeshNode.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 

@@ -19,40 +19,41 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/physics/CollisionShapeNode.hpp>
+#ifndef GUA_VIDEO3D_NODE_HPP
+#define GUA_VIDEO3D_NODE_HPP
 
 // guacamole headers
-#include <gua/node/TransformNode.hpp>
-#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/node/GeometryNode.hpp>
+
+// external headers
+#include <string>
+
+/**
+ * This class is used to represent kinect video in the SceneGraph.
+ *
+ */
 
 namespace gua {
-namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
+class GUA_DLL Video3DNode : public GeometryNode {
+public:
 
-CollisionShapeNode::CollisionShapeNode(const std::string& name,
-                                       const math::mat4& transform)
-    : Node(name, transform) {}
+    Video3DNode(std::string const& name,
+                std::string const& filename = "gua_default_geometry",
+                std::string const& material = "gua_default_material",
+                math::mat4  const& transform = math::mat4::identity());
 
-////////////////////////////////////////////////////////////////////////////////
+    void ray_test_impl(RayNode const& ray,
+                       PickResult::Options options,
+                       Mask const& mask,
+                       std::set<PickResult>& hits) override;
 
-CollisionShapeNode::~CollisionShapeNode() {}
+    void update_cache() override;
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) {
-
-  visitor.visit(this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
-}
-
-////////////////////////////////////////////////////////////////////////////////
+protected:
+    std::shared_ptr<Node> copy() const override;
+};
 
 }
-}
+
+#endif  // GUA_VIDEO3D_NODE_HPP

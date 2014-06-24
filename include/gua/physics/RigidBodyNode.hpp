@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/scenegraph/Node.hpp>
+#include <gua/node/Node.hpp>
 
 // external headers
 #include <vector>

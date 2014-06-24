@@ -24,19 +24,17 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
+#include <gua/node/TransformNode.hpp>
+#include <gua/node/VolumeNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
-#include <gua/scenegraph/VolumeNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/renderer/Volume.hpp>
 
-
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
-
 
 namespace gua {
 

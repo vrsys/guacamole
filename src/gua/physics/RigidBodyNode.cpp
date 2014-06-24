@@ -28,7 +28,7 @@
 #include <gua/physics/GuaMotionState.hpp>
 #include <gua/physics/CollisionShape.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
+#include <gua/node/TransformNode.hpp>
 #include <gua/physics/PhysicsUtils.hpp>
 
 // external headers

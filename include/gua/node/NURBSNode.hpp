@@ -19,40 +19,46 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/physics/CollisionShapeNode.hpp>
+#ifndef GUA_NURBS_NODE_HPP
+#define GUA_NURBS_NODE_HPP
 
 // guacamole headers
-#include <gua/node/TransformNode.hpp>
-#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/node/GeometryNode.hpp>
 
 namespace gua {
-namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * This class is used to represent polygonal geometry in the SceneGraph.
+ *
+ * \ingroup gua_scenegraph
+ */
+class GUA_DLL NURBSNode : public GeometryNode
+{
+public : // member
 
-CollisionShapeNode::CollisionShapeNode(const std::string& name,
-                                       const math::mat4& transform)
-    : Node(name, transform) {}
+  NURBSNode(std::string const& name,
+            std::string const& geometry = "gua_default_geometry",
+            std::string const& material = "gua_default_material",
+            math::mat4  const& transform = math::mat4::identity());
 
-////////////////////////////////////////////////////////////////////////////////
+  /**
+  * Implements ray picking for a NURBS object
+  */
+  void ray_test_impl(RayNode const& ray,
+                     PickResult::Options options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
 
-CollisionShapeNode::~CollisionShapeNode() {}
+  void update_cache() override;
 
-////////////////////////////////////////////////////////////////////////////////
+protected:
 
-/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) {
+  std::shared_ptr<Node> copy() const override;
 
-  visitor.visit(this);
+private : // attributes e.g. special attributes for drawing
+
+};
+
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
-}
+#endif  // GUA_NURBS_NODE_HPP

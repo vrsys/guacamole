@@ -22,7 +22,7 @@
 #ifndef GUA_NODE_TRAVERSER_HPP
 #define GUA_NODE_TRAVERSER_HPP
 
-#include <gua/scenegraph/Node.hpp>
+#include <gua/node/Node.hpp>
 
 namespace gua {
 

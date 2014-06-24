@@ -35,14 +35,12 @@
 #include <gua/renderer/GeometryRessource.hpp>
 #include <gua/renderer/GeometryUberShader.hpp>
 
-#include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/node/GeometryNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/scenegraph/TriMeshNode.hpp>
+#include <gua/node/TriMeshNode.hpp>
 
 #include <gua/databases.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-
-
 
 namespace gua {
 

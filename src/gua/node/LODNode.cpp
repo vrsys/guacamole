@@ -20,39 +20,25 @@
  ******************************************************************************/
 
 // class header
-#include <gua/physics/CollisionShapeNode.hpp>
+#include <gua/node/LODNode.hpp>
 
 // guacamole headers
-#include <gua/node/TransformNode.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 
 namespace gua {
-namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
+LODNode::LODNode(std::string const& name, Configuration const& configuration, math::mat4 const& transform)
+    : TransformNode(name, transform), data(configuration) {}
 
-CollisionShapeNode::CollisionShapeNode(const std::string& name,
-                                       const math::mat4& transform)
-    : Node(name, transform) {}
 
-////////////////////////////////////////////////////////////////////////////////
-
-CollisionShapeNode::~CollisionShapeNode() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) {
+/* virtual */ void LODNode::accept(NodeVisitor& visitor) {
 
   visitor.visit(this);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
+std::shared_ptr<Node> LODNode::copy() const {
+  return std::make_shared<LODNode>(get_name(), data, get_transform());
 }
 
-////////////////////////////////////////////////////////////////////////////////
 
-}
 }

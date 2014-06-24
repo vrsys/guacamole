@@ -20,39 +20,36 @@
  ******************************************************************************/
 
 // class header
-#include <gua/physics/CollisionShapeNode.hpp>
+#include <gua/node/ScreenNode.hpp>
 
-// guacamole headers
-#include <gua/node/TransformNode.hpp>
+// guacamole header
 #include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
-namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
+ScreenNode::ScreenNode(std::string const& name,
+                       Configuration const& configuration,
+                       math::mat4 const& transform)
+    : Node(name, transform), data(configuration) {}
 
-CollisionShapeNode::CollisionShapeNode(const std::string& name,
-                                       const math::mat4& transform)
-    : Node(name, transform) {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-CollisionShapeNode::~CollisionShapeNode() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) {
+/* virtual */ void ScreenNode::accept(NodeVisitor& visitor) {
 
   visitor.visit(this);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
+math::mat4 ScreenNode::get_scaled_transform() const {
+    math::mat4 scale(scm::math::make_scale(data.get_size().x, data.get_size().y, 1.f));
+    return get_transform() * scale;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
+math::mat4 ScreenNode::get_scaled_world_transform() const {
+    math::mat4 scale(scm::math::make_scale(data.get_size().x, data.get_size().y, 1.f));
+    return get_world_transform() * scale;
 }
+
+std::shared_ptr<Node> ScreenNode::copy() const {
+    return std::make_shared<ScreenNode>(get_name(), data, get_transform());
+}
+
 }

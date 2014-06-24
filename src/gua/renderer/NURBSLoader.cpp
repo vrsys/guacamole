@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/utils.hpp>
 
-#include <gua/scenegraph/NURBSNode.hpp>
+#include <gua/node/NURBSNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
 #include <gua/renderer/NURBSRessource.hpp>

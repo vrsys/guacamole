@@ -1,4 +1,4 @@
-/******************************************************************************
+#/******************************************************************************
  * guacamole - delicious VR                                                   *
  *                                                                            *
  * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
@@ -20,55 +20,59 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/Video3DLoader.hpp>
+#include <gua/node/PBRNode.hpp>
+
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/node/RayNode.hpp>
+#include <gua/renderer/GeometryLoader.hpp>
 
 // guacamole headers
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/node/Video3DNode.hpp>
-#include <gua/renderer/Video3DRessource.hpp>
-#include <gua/renderer/Video3DUberShader.hpp>
 
 namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
-
-  Video3DLoader::Video3DLoader() 
-    : GeometryLoader(), 
-      _supported_file_extensions() 
-  {
-    _supported_file_extensions.insert("ks");    
-  }
-
+  PBRNode::PBRNode(std::string const& name,
+                           std::string const& filename,
+                           std::string const& material,
+                           math::mat4 const& transform)
+    : GeometryNode(name, filename, material, transform)
+  {}
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Node> Video3DLoader::create_geometry_from_file (std::string const& node_name,
-                                                                  std::string const& file_name)
-  {
-    try {
-      GeometryDatabase::instance()->add(
-        file_name, std::make_shared<Video3DRessource>(file_name));
+  void PBRNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
+    Mask const& mask, std::set<PickResult>& hits) {
 
-      auto result = std::make_shared<Video3DNode>(node_name, file_name, Video3DUberShader::default_video_material_name() );
-      result->update_cache();
+    // first of all, check bbox
+    auto box_hits(ray.intersect(bounding_box_));
 
-      return result;
+    // ray did not intersect bbox -- therefore it wont intersect
+    if (box_hits.first == RayNode::END && box_hits.second == RayNode::END) {
+      return;
     }
-    catch (std::exception &e) {
-      Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load Video3D object " << file_name.c_str() << std::endl;
-      return nullptr;
+
+    // return if only first object shall be returned and the current first hit
+    // is in front of the bbox entry point and the ray does not start inside
+    // the bbox
+    if (options & PickResult::PICK_ONLY_FIRST_OBJECT
+      && hits.size() > 0 && hits.begin()->distance < box_hits.first
+      && box_hits.first != Ray::END) {
+
+      return;
     }
+
+    for (auto child : get_children()) {
+      // test for intersection with each child
+      child->ray_test_impl(ray, options, mask, hits);
+    }
+
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-
-  bool Video3DLoader::is_supported(std::string const& file_name) const 
-  {
-    std::vector<std::string> filename_decomposition =
-      gua::string_utils::split(file_name, '.');
-    return filename_decomposition.empty()
-      ? false
-      : _supported_file_extensions.count(filename_decomposition.back()) > 0;
+  std::shared_ptr<Node> PBRNode::copy() const {
+    auto result(std::make_shared<PBRNode>(get_name(), filename_, material_, get_transform()));
+    result->shadow_mode_ = shadow_mode_;
+    return result;
   }
-
 }

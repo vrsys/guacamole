@@ -19,40 +19,60 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/physics/CollisionShapeNode.hpp>
+#ifndef GUA_GROUP_NODE_HPP
+#define GUA_GROUP_NODE_HPP
 
-// guacamole headers
-#include <gua/node/TransformNode.hpp>
-#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/platform.hpp>
+#include <gua/node/Node.hpp>
 
 namespace gua {
-namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * This class is used to represent an transformation node in the SceneGraph.
+ *
+ * Because any of guacamole's Nodes stores children and transformation, the
+ * TransformationNode only exists for the convenience of explicitly limiting a
+ * Node's purpose to the transformation of several children.
+ *
+ * \ingroup gua_scenegraph
+ */
+class GUA_DLL TransformNode : public Node {
+ public:
 
-CollisionShapeNode::CollisionShapeNode(const std::string& name,
-                                       const math::mat4& transform)
-    : Node(name, transform) {}
+  /**
+   * Constructor.
+   *
+   * This constructs an empty TransformNode.
+   *
+   */
+  TransformNode() {};
 
-////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Constructor.
+   *
+   * This constructs a TransformNode with the given parameters.
+   *
+   * \param name           The name of the new TransformNode.
+   * \param transform      A matrix to describe the TransformNode's
+   *                       transformation.
+   */
+  TransformNode(std::string const& name,
+            math::mat4 const& transform = math::mat4::identity());
 
-CollisionShapeNode::~CollisionShapeNode() {}
+  /**
+   * Accepts a visitor and calls concrete visit method.
+   *
+   * This method implements the visitor pattern for Nodes.
+   *
+   * \param visitor  A visitor to process the TransformNode's data.
+   */
+  void accept(NodeVisitor& visitor) override;
 
-////////////////////////////////////////////////////////////////////////////////
+ private:
 
-/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) {
+  std::shared_ptr<Node> copy() const override;
+};
 
-  visitor.visit(this);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
-}
+#endif  // GUA_GROUP_NODE_HPP

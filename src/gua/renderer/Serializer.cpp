@@ -27,17 +27,17 @@
 
 #include <gua/databases/GeometryDatabase.hpp>
 
-#include <gua/scenegraph/Node.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
-#include <gua/scenegraph/LODNode.hpp>
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/scenegraph/VolumeNode.hpp>
-#include <gua/scenegraph/PointLightNode.hpp>
-#include <gua/scenegraph/SpotLightNode.hpp>
-#include <gua/scenegraph/SunLightNode.hpp>
-#include <gua/scenegraph/ScreenNode.hpp>
-#include <gua/scenegraph/RayNode.hpp>
+#include <gua/node/Node.hpp>
+#include <gua/node/TransformNode.hpp>
+#include <gua/node/LODNode.hpp>
+#include <gua/node/GeometryNode.hpp>
+#include <gua/node/Video3DNode.hpp>
+#include <gua/node/VolumeNode.hpp>
+#include <gua/node/PointLightNode.hpp>
+#include <gua/node/SpotLightNode.hpp>
+#include <gua/node/SunLightNode.hpp>
+#include <gua/node/ScreenNode.hpp>
+#include <gua/node/RayNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
 // external headers

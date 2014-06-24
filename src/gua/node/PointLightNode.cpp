@@ -20,39 +20,38 @@
  ******************************************************************************/
 
 // class header
-#include <gua/physics/CollisionShapeNode.hpp>
+#include <gua/node/PointLightNode.hpp>
 
-// guacamole headers
-#include <gua/node/TransformNode.hpp>
+// guacamole header
+#include <gua/platform.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
-namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
+PointLightNode::PointLightNode(std::string const& name,
+                               Configuration const& configuration,
+                               math::mat4 const& transform)
+    : Node(name, transform), data(configuration) {}
 
-CollisionShapeNode::CollisionShapeNode(const std::string& name,
-                                       const math::mat4& transform)
-    : Node(name, transform) {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-CollisionShapeNode::~CollisionShapeNode() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) {
-
-  visitor.visit(this);
+/* virtual */ void PointLightNode::accept(NodeVisitor& visitor) {
+    visitor.visit(this);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+void PointLightNode::update_bounding_box() const {
 
-std::shared_ptr<Node> CollisionShapeNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
+    auto geometry_bbox(GeometryDatabase::instance()->lookup(
+        "gua_light_sphere_proxy")->get_bounding_box());
+    bounding_box_ = transform(geometry_bbox, world_transform_);
+
+    for (auto child : get_children()) {
+        bounding_box_.expandBy(child->get_bounding_box());
+    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
+std::shared_ptr<Node> PointLightNode::copy() const {
+    return std::make_shared<PointLightNode>(get_name(), data, get_transform());
 }
+
 }
