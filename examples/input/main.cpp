@@ -68,6 +68,12 @@ int main(int argc, char** argv) {
     else             std::cout << "Mouse button " << button << " down" << std::endl;
   });
 
+#if WIN32
+  window->config.set_display_name("\\\\.\\DISPLAY1");
+#else
+  window->config.set_display_name(":0.0");
+#endif
+
   // application loop
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0/60.0);

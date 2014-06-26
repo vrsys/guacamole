@@ -31,6 +31,7 @@ FIND_PATH(GLFW_INCLUDE_DIRS GLFW/glfw3.h DOC "Path to GLFW include directory."
   # By default headers are under GLFW subfolder
   /usr/include/GLFW
   /usr/local/include/GLFW
+  ${GLOBAL_EXT_DIR}/inc/glfw
   ${GLFW_ROOT_DIR}/include/ # added by ptr
 )
 
@@ -41,10 +42,11 @@ FIND_LIBRARY(GLFW_LIBRARIES DOC "Absolute path to GLFW library."
   HINTS
   $ENV{GLFW_ROOT}
   /opt/glfw3/current/lib
-  PATH_SUFFIXES lib/win32 #For finding the library file under the root of the glfw expanded archive, typically on Windows.
+  PATH_SUFFIXES lib/win32 debug release #For finding the library file under the root of the glfw expanded archive, typically on Windows.
   PATHS
   /usr/local/lib
   /usr/lib
+  ${GLOBAL_EXT_DIR}/lib
   ${GLFW_ROOT_DIR}/lib-msvc100/release # added by ptr
 )
 IF( APPLE )
