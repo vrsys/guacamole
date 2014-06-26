@@ -52,16 +52,27 @@ class GUA_DLL SchismWindow : public Window {
    */
   virtual ~SchismWindow();
 
-  void open();
-  bool get_is_open() const;
-  void close();
+  virtual void open();
+  virtual bool get_is_open() const;
+  virtual void close();
+
+  /**
+   * Activate the context of this window.
+   *
+   * Makes the RenderContext of this window current. All preceeding
+   * OpenGL calls will be invoked on this window.
+   */
+  virtual void set_active(bool active) const;
 
   /**
    * Ends the drawing of a new frame.
    *
    * This should be called when drawing a frame has been done.
    */
-  void finish_frame() const;
+  virtual void finish_frame() const;
+
+ private:
+  scm::gl::wm::window_ptr window_;
 };
 
 }

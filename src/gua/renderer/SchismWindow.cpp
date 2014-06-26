@@ -51,13 +51,13 @@ SchismWindow::~SchismWindow() {
 
 void SchismWindow::open() {
 
-  if (ctx_.window) {
-    ctx_.window->hide();
+  if (window_) {
+    window_->hide();
   }
 
   ctx_.context.reset();
   ctx_.display.reset();
-  ctx_.window.reset();
+  window_.reset();
 
   scm::gl::wm::surface::format_desc window_format(
       scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_D24_S8, true, false);
@@ -68,7 +68,7 @@ void SchismWindow::open() {
   ctx_.display =
       scm::gl::wm::display_ptr(new scm::gl::wm::display(config.get_display_name()));
 
-  ctx_.window = scm::gl::wm::window_ptr(new scm::gl::wm::window(
+  window_ = scm::gl::wm::window_ptr(new scm::gl::wm::window(
       ctx_.display,
       0,
       config.get_title(),
@@ -77,9 +77,9 @@ void SchismWindow::open() {
       window_format));
 
   ctx_.context = scm::gl::wm::context_ptr(
-      new scm::gl::wm::context(ctx_.window, context_attribs));
+      new scm::gl::wm::context(window_, context_attribs));
 
-  ctx_.window->show();
+  window_->show();
 
   Window::open();
 }
@@ -87,22 +87,28 @@ void SchismWindow::open() {
 ////////////////////////////////////////////////////////////////////////////////
 
 bool SchismWindow::get_is_open() const {
-  return ctx_.window != nullptr;
+  return window_ != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void SchismWindow::close() {
   if (get_is_open()) {
-    ctx_.window->hide();
+    window_->hide();
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void SchismWindow::set_active(bool active) const {
+  ctx_.context->make_current(window_, active);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void SchismWindow::finish_frame() const {
   set_active(true);
-  ctx_.window->swap_buffers(config.get_enable_vsync());
+  window_->swap_buffers(config.get_enable_vsync());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

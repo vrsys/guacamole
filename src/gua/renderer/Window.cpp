@@ -147,12 +147,6 @@ void Window::create_shader() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::set_active(bool active) const {
-  ctx_.context->make_current(ctx_.window, active);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void Window::start_frame() const {
   ctx_.render_context->clear_default_color_buffer(
       scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));

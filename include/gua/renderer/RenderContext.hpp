@@ -65,11 +65,6 @@ struct RenderContext {
   scm::gl::wm::display_ptr display;
 
   /**
-   * The window associated with this context.
-   */
-  scm::gl::wm::window_ptr window;
-
-  /**
    * The schism render constext associated with this context.
    */
   scm::gl::render_context_ptr render_context;

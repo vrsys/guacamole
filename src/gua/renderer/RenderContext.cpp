@@ -31,7 +31,6 @@ namespace gua {
   RenderContext::RenderContext()
     : context(),
     display(),
-    window(),
     render_context(),
     render_device(),
     render_window(nullptr),
