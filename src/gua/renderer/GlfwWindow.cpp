@@ -46,6 +46,52 @@ void on_window_resize(GLFWwindow* glfw_window, int width, int height) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void on_window_key_pres(GLFWwindow* glfw_window, int key, int scancode, int action, int mods) {
+  auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
+  window->on_key_pres.emit(key, scancode, action, mods);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void on_window_char(GLFWwindow* glfw_window, unsigned c) {
+  auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
+  window->on_char.emit(c);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void on_window_button_press(GLFWwindow* glfw_window, int button, int action, int mods) {
+  auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
+  window->on_button_press.emit(button, action, mods);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void on_window_move_cursor(GLFWwindow* glfw_window, double x, double y) {
+  auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
+  window->on_move_cursor.emit(math::vec2(x, y));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void on_window_scroll(GLFWwindow* glfw_window, double x, double y) {
+  auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
+  window->on_scroll.emit(math::vec2(x, y));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void on_window_enter(GLFWwindow* glfw_window, int enter) {
+  auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
+  window->on_enter.emit(enter);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 GlfwWindow::GlfwWindow(Configuration const& configuration)
     : Window(configuration),
@@ -66,28 +112,34 @@ void GlfwWindow::open() {
   auto monitors(glfwGetMonitors(&monitor_count));
 
   if (monitor_count == 0) {
-    Logger::LOG_WARNING << "Failed to open Glfwwindow: No monitor found!" << std::endl;
+    Logger::LOG_WARNING << "Failed to open GlfwWindow: No monitor found!" << std::endl;
     glfwTerminate();
     return;
   }
 
-  if (config.monitor() >=monitor_count) {
-    Logger::LOG_WARNING << "Failed to open Glfwwindow: There is no monitor with the number " << config.monitor() << "!" << std::endl;
+  if (config.monitor() >= monitor_count) {
+    Logger::LOG_WARNING << "Failed to open GlfwWindow: There is no monitor with the number " << config.monitor() << "!" << std::endl;
     glfwTerminate();
     return;
   }
 
   glfw_window_ = glfwCreateWindow(
     config.get_size().x, config.get_size().y,
-    config.get_title().c_str(), NULL/*monitors[config.monitor()]*/, NULL
+    config.get_title().c_str(), nullptr, nullptr
   );
 
   glfwSetWindowUserPointer(glfw_window_, this);
-
   glfwSetWindowSizeCallback(glfw_window_, &on_window_resize);
 
+  glfwSetKeyCallback(         glfw_window_, &on_window_key_pres);
+  glfwSetCharCallback(        glfw_window_, &on_window_char);
+  glfwSetMouseButtonCallback( glfw_window_, &on_window_button_press);
+  glfwSetCursorPosCallback(   glfw_window_, &on_window_move_cursor);
+  glfwSetScrollCallback(      glfw_window_, &on_window_scroll);
+  glfwSetCursorEnterCallback( glfw_window_, &on_window_enter);
+
   if (!glfw_window_) {
-    Logger::LOG_WARNING << "Failed to open Glfwwindow: Could not create glfw window!" << std::endl;
+    Logger::LOG_WARNING << "Failed to open GlfwWindow: Could not create glfw3 window!" << std::endl;
     glfwTerminate();
     return;
   }

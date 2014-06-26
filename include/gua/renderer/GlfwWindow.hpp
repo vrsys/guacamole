@@ -59,7 +59,6 @@ class GUA_DLL GlfwWindow : public Window {
   bool should_close() const;
   bool get_is_open() const;
   void close();
-
   void process_events();
 
   /**
@@ -77,7 +76,13 @@ class GUA_DLL GlfwWindow : public Window {
    */
   void finish_frame() const;
 
-  events::Signal<math::vec2ui> on_resize;
+  events::Signal<math::vec2ui>        on_resize;
+  events::Signal<int, int, int, int>  on_key_pres;
+  events::Signal<unsigned>            on_char;
+  events::Signal<int, int, int>       on_button_press;
+  events::Signal<math::vec2>          on_move_cursor;
+  events::Signal<math::vec2>          on_scroll;
+  events::Signal<bool>                on_enter;
 
   friend class Pipeline;
 

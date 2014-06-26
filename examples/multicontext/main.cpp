@@ -182,10 +182,10 @@ int main(int argc, char** argv) {
   set_pipe_defaults(pipe3, width, height);
   set_pipe_defaults(pipe4, width, height);
 
-  auto window (new gua::GlfwWindow);
-  auto window2(new gua::GlfwWindow);
-  auto window3(new gua::GlfwWindow);
-  auto window4(new gua::GlfwWindow);
+  auto window (new gua::SchismWindow);
+  auto window2(new gua::SchismWindow);
+  auto window3(new gua::SchismWindow);
+  auto window4(new gua::SchismWindow);
 
 #if WIN32
   window->config.set_display_name("\\\\.\\DISPLAY1");
