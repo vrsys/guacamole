@@ -88,10 +88,6 @@ class PBRRessource : public GeometryRessource {
 
   /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
-  void stop() {
-    stop_requested_ = true;
-  }
-
  private:
 
   void upload_to(RenderContext const& context) const;

@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/Camera.hpp>
-#include <gua/renderer/Window.hpp>
+#include <gua/renderer/WindowBase.hpp>
 #include <gua/renderer/SerializedScene.hpp>
 #include <gua/renderer/GBufferPass.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
@@ -173,8 +173,8 @@ class GUA_DLL Pipeline {
 
   void print_shaders(std::string const& directory) const;
 
-  void set_window(Window* window);
-  inline Window const* get_window() const { return window_; }
+  void set_window(WindowBase* window);
+  inline WindowBase const* get_window() const { return window_; }
 
   void set_prerender_pipelines(std::vector<Pipeline*> const& pipes);
   std::vector<Pipeline*> const& get_prerender_pipelines() const {
@@ -218,7 +218,7 @@ class GUA_DLL Pipeline {
 
   mutable std::mutex upload_mutex_;
 
-  Window* window_;
+  WindowBase* window_;
   RenderContext* context_;
 
   std::vector<Pipeline*> prerender_pipelines_;

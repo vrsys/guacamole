@@ -23,7 +23,7 @@
 #define GUA_GLFW_WINDOW_HPP
 
 // guacamole headers
-#include <gua/renderer/Window.hpp>
+#include <gua/renderer/WindowBase.hpp>
 #include <gua/events.hpp>
 
 class GLFWwindow;
@@ -35,7 +35,7 @@ namespace gua {
  *
  * It's a window which can display OpenGL stuff.
  */
-class GUA_DLL GlfwWindow : public Window {
+class GUA_DLL GlfwWindow : public WindowBase {
  public:
 
   /**

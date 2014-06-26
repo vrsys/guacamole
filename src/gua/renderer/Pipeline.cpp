@@ -106,7 +106,7 @@ void Pipeline::print_shaders(std::string const& directory) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::set_window(Window* window) {
+void Pipeline::set_window(WindowBase* window) {
   std::unique_lock<std::mutex> lock(upload_mutex_);
   window_ = window;
 }

@@ -94,8 +94,8 @@ void on_window_enter(GLFWwindow* glfw_window, int enter) {
 ////////////////////////////////////////////////////////////////////////////////
 
 GlfwWindow::GlfwWindow(Configuration const& configuration)
-    : Window(configuration),
-      glfw_window_(nullptr) {}
+  : WindowBase(configuration),
+    glfw_window_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -144,7 +144,7 @@ void GlfwWindow::open() {
     return;
   }
 
-  Window::open();
+  WindowBase::open();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

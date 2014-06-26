@@ -30,12 +30,11 @@
 #include <scm/gl_core/window_management/context.h>
 #include <scm/gl_core/window_management/display.h>
 #include <scm/gl_core/window_management/surface.h>
-#include <scm/gl_core/window_management/window.h>
 #include <atomic>
 
 namespace gua {
 
-class Window;
+class WindowBase;
 
 /**
  * Information on a specific context.
@@ -77,7 +76,7 @@ struct RenderContext {
   /**
    * The window which is rendered into.
    */
-  Window* render_window;
+  WindowBase* render_window;
 
   /**
    * A unique ID for this context.

@@ -33,11 +33,11 @@
 #endif // #if defined(_MSC_VER)
 
 // guacamole headers
-#include <gua/renderer/SchismWindow.hpp>
+#include <gua/renderer/Window.hpp>
 
 namespace gua {
 
-class GUA_OCULUS_DLL OculusWindow : public SchismWindow {
+class GUA_OCULUS_DLL OculusWindow : public Window {
  public:
 
   OculusWindow(std::string const& display);

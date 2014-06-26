@@ -48,7 +48,7 @@ void set_pipe_defaults(gua::Pipeline* pipe, unsigned width, unsigned height)
   pipe->config.set_background_color(gua::utils::Color3f(0.0, 0.0f, 0.0f));
 }
 
-void set_window_default(gua::Window* window, unsigned width, unsigned height)
+void set_window_default(gua::WindowBase* window, unsigned width, unsigned height)
 {
   window->config.set_size(gua::math::vec2ui(width, height));
   window->config.set_left_resolution(gua::math::vec2ui(width, height));
@@ -182,10 +182,10 @@ int main(int argc, char** argv) {
   set_pipe_defaults(pipe3, width, height);
   set_pipe_defaults(pipe4, width, height);
 
-  auto window (new gua::SchismWindow);
-  auto window2(new gua::SchismWindow);
-  auto window3(new gua::SchismWindow);
-  auto window4(new gua::SchismWindow);
+  auto window (new gua::Window);
+  auto window2(new gua::Window);
+  auto window3(new gua::Window);
+  auto window4(new gua::Window);
 
 #if WIN32
   window->config.set_display_name("\\\\.\\DISPLAY1");

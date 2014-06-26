@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/guacamole.hpp>
 #include <gua/renderer/UberShaderFactory.hpp>
-#include <gua/renderer/Window.hpp>
+#include <gua/renderer/WindowBase.hpp>
 #include <gua/renderer/PLODRessource.hpp>
 #include <gua/renderer/View.hpp>
 #include <gua/databases.hpp>

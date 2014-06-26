@@ -22,7 +22,7 @@
 // class header
 #include "gua/renderer/RenderContext.hpp"
 
-#include <gua/renderer/Window.hpp>
+#include <gua/renderer/WindowBase.hpp>
 
 namespace gua {
 
