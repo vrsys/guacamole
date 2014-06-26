@@ -42,6 +42,8 @@ class GUA_DLL MaterialDatabase : public Database<Material>,
                                  public Singleton<MaterialDatabase> {
  public:
 
+  std::mutex update_lock;
+
   /**
    * Pre-loads some Materials.
    *

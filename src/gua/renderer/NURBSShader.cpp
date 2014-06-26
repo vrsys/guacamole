@@ -38,15 +38,13 @@ NURBSShader::NURBSShader() {}
 NURBSShader::~NURBSShader() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::surface_horner_evaluation ()
+std::string NURBSShader::surface_horner_evaluation ()
 {
   return horner_simple () + horner_derivatives ();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::horner_simple ()
+std::string NURBSShader::horner_simple ()
 {
     return std::string("                                                                                                        \n\
         /*******************************************************************************                                        \n\
@@ -158,8 +156,7 @@ NURBSShader::horner_simple ()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const
-NURBSShader::horner_derivatives ()
+std::string NURBSShader::horner_derivatives ()
 {
     return std::string("                                                                                                        \n\
                                                                                                                                 \n\
@@ -369,8 +366,7 @@ NURBSShader::horner_derivatives ()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::curve_horner_evaluation ()
+std::string NURBSShader::curve_horner_evaluation ()
 {
     return std::string("                                                                                                       \n\
          /*******************************************************************************                                      \n\
@@ -414,8 +410,7 @@ NURBSShader::curve_horner_evaluation ()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::control_polygon_length    ()
+std::string NURBSShader::control_polygon_length    ()
 {
     return std::string("                                                                                                                                     \n\
         vec4 control_polygon_length(in samplerBuffer	data,                                                                                                  \n\
@@ -463,8 +458,7 @@ NURBSShader::control_polygon_length    ()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::edge_length ()
+std::string NURBSShader::edge_length ()
 {
     return std::string("                                                                          \n\
         float edge_length(in vec3 v1,                                                             \n\
@@ -491,8 +485,7 @@ NURBSShader::edge_length ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::edge_tess_level ()
+std::string NURBSShader::edge_tess_level ()
 {
     return std::string("                                                                         \n\
         float edge_tesslevel(in float length,                                                    \n\
@@ -505,8 +498,7 @@ NURBSShader::edge_tess_level ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::inner_tess_level ()
+std::string NURBSShader::inner_tess_level ()
 {
     return std::string("                                                                                                      \n\
         float inner_tess_level(in samplerBuffer data,                                                                         \n\
@@ -553,8 +545,7 @@ NURBSShader::inner_tess_level ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::is_inside ()
+std::string NURBSShader::is_inside ()
 {
     return std::string("                                                                                                            \n\
         bool is_inside(vec4 point)                                                                                                  \n\
@@ -570,8 +561,7 @@ NURBSShader::is_inside ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::to_screen_space ()
+std::string NURBSShader::to_screen_space ()
 {
     return std::string("                                                                                \n\
         vec4 to_screen_space(in vec3 point,                                                             \n\
@@ -592,8 +582,7 @@ NURBSShader::to_screen_space ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::frustum_cull ()
+std::string NURBSShader::frustum_cull ()
 {
     return std::string("                                                                                \n\
         bool frustum_cull ( in mat4 mvp_matrix )                                                        \n\
@@ -621,8 +610,7 @@ NURBSShader::frustum_cull ()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::binary_search ()
+std::string NURBSShader::binary_search ()
 {
     return std::string("                                      \n\
                                                               \n\
@@ -674,8 +662,7 @@ NURBSShader::binary_search ()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::trimming_helper_methods ()
+std::string NURBSShader::trimming_helper_methods ()
 {
     return std::string("                                      \n\
                                                               \n\
@@ -700,8 +687,7 @@ NURBSShader::trimming_helper_methods ()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::bisect_contour()
+std::string NURBSShader::bisect_contour()
 {
     return std::string("                                                 \n\
                                                                          \n\
@@ -777,8 +763,7 @@ NURBSShader::bisect_contour()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::bisect_curve()
+std::string NURBSShader::bisect_curve()
 {
     return std::string("                                                           \n\
                                                                                    \n\
@@ -837,8 +822,7 @@ NURBSShader::bisect_curve()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::contour_binary_search()
+std::string NURBSShader::contour_binary_search()
 {
     return std::string("                                                           \n\
                                                                                    \n\
@@ -925,8 +909,7 @@ NURBSShader::contour_binary_search()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const
-NURBSShader::contour_based_trimming()
+std::string NURBSShader::contour_based_trimming()
 {
     return std::string("                                                                                   \n\
                                                                                                            \n\

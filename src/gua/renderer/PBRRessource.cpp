@@ -128,11 +128,9 @@ void PBRRessource::draw(RenderContext const& ctx) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void PBRRessource::ray_test(Ray const& ray, PickResult::Options options,
-                    Node* owner, std::set<PickResult>& hits) {
-
-	return;
+                    node::Node* owner, std::set<PickResult>& hits) {
+  return;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -28,5 +28,7 @@
 #include <gua/renderer/GeometryLoader.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/Renderer.hpp>
+#include <gua/renderer/SchismWindow.hpp>
+#include <gua/renderer/GlfwWindow.hpp>
 
 #endif  // GUA_INCLUDE_RENDERER_HPP

@@ -22,12 +22,12 @@
 #ifndef GUA_NODE_TRAVERSER_HPP
 #define GUA_NODE_TRAVERSER_HPP
 
-#include <gua/scenegraph/Node.hpp>
+#include <gua/node/Node.hpp>
 
 namespace gua {
 
 template <class UnaryOperation, class UnaryPredicate>
-void dfs_traverse_if(Node* node, UnaryOperation unary_op, UnaryPredicate pred) {
+void dfs_traverse_if(node::Node* node, UnaryOperation unary_op, UnaryPredicate pred) {
   if (pred(node)) {
     unary_op(node);
     for (auto & c : node->get_children()) {
@@ -37,7 +37,7 @@ void dfs_traverse_if(Node* node, UnaryOperation unary_op, UnaryPredicate pred) {
 }
 
 template <class UnaryOperation>
-void dfs_traverse(Node* node, UnaryOperation unary_op) {
+void dfs_traverse(node::Node* node, UnaryOperation unary_op) {
   unary_op(node);
   for (auto & c : node->get_children()) {
     dfs_traverse(c.get(), unary_op);

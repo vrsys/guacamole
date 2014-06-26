@@ -34,9 +34,11 @@
 
 namespace gua{
 
+namespace node {
 class Node;
 class InnerNode;
 class GeometryNode;
+}
 
 class PBRLoader : public GeometryLoader {
  public:
@@ -56,12 +58,12 @@ class PBRLoader : public GeometryLoader {
    * \param file_name        The file to load the pointclouds data from.
    * \param material_name    The material name that was set to the parent node
    */
-  std::shared_ptr<Node> create_geometry_from_file(std::string const& nodename,
+  std::shared_ptr<::gua::node::Node> create_geometry_from_file(std::string const& nodename,
                                                   std::string const& xyzfile);
 
 
 
-  bool is_supported(std::string const& file_name) const;
+  bool is_supported(std::string const& file_name) const override;
 
  private:
   unsigned node_counter_;
@@ -69,7 +71,6 @@ class PBRLoader : public GeometryLoader {
   boost::unordered_set<std::string> _supported_file_extensions;
 
 };
-
 
 }
 

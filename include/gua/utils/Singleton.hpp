@@ -45,25 +45,10 @@ template <typename T> class Singleton {
    * \return The instance of this singleton.
    */
   static T* instance() {
-    if (instance_ == nullptr)
-      instance_ = new T;
+    static T instance;
+    return &instance;
+  };
 
-    return instance_;
-  }
-  ;
-
-  /**
-   * Deletes the instance of this Singleton.
-   *
-   * The instance of this singleton will be deleted by this method.
-   */
-  static void destroy_instance() {
-    if (instance_ != nullptr) {
-      delete instance_;
-      instance_ = nullptr;
-    }
-  }
-  ;
 
  protected:
 
@@ -72,26 +57,21 @@ template <typename T> class Singleton {
    *
    * Has to be private in derived classe.
    */
-  Singleton() {}
-  ;
+  Singleton() {};
 
   /**
    * Destructor.
    *
    * Has to be private in derived classe.
    */
-  virtual ~Singleton() {}
-  ;
+  virtual ~Singleton() {};
 
  private:
-  Singleton(Singleton const& copy) {}
-  ;
 
-  static T* instance_;
+  Singleton(Singleton const& copy) = delete;
+  Singleton& operator= (Singleton const&) = delete;
 
 };
-
-template <typename T> T* Singleton<T>::instance_ = nullptr;
 
 }
 

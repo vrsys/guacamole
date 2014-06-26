@@ -59,7 +59,8 @@ std::string subroutine_from_mode(Window::TextureDisplayMode mode) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-unsigned Window::last_context_id_ = 0;
+std::atomic_uint Window::last_context_id_{ 0 };
+std::mutex Window::last_context_id_mutex_{};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,10 +78,7 @@ Window::Window(Configuration const& configuration)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Window::~Window() {
-
-  close();
-}
+Window::~Window() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,7 +87,11 @@ void Window::open() {
 
   ctx_.render_device = scm::gl::render_device_ptr(new scm::gl::render_device());
   ctx_.render_context = ctx_.render_device->main_context();
-  ctx_.id = last_context_id_++;
+
+  {
+    std::lock_guard<std::mutex> lock(last_context_id_mutex_);
+    ctx_.id = last_context_id_++;
+  }
 
   ctx_.render_window = this;
 
@@ -147,6 +149,15 @@ void Window::create_shader() {
 
 void Window::set_active(bool active) const {
   ctx_.context->make_current(ctx_.window, active);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Window::start_frame() const {
+  ctx_.render_context->clear_default_color_buffer(
+      scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
+
+  ctx_.render_context->clear_default_depth_stencil_buffer();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

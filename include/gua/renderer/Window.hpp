@@ -32,6 +32,7 @@
 #include <gua/utils/configuration_macro.hpp>
 
 // external headers
+#include <atomic>
 #include <memory>
 #include <string>
 #include <scm/gl_util/primitives/quad.h>
@@ -119,14 +120,14 @@ class GUA_DLL Window {
    * Makes the RenderContext of this window current. All preceeding
    * OpenGL calls will be invoked on this window.
    */
-  void set_active(bool active) const;
+  virtual void set_active(bool active) const;
 
   /**
    * Starts the drawing of a new frame.
    *
    * This should be called when a new frame is about to be drawn.
    */
-  virtual void start_frame() const = 0;
+  virtual void start_frame() const;
 
   /**
    * Ends the drawing of a new frame.
@@ -178,7 +179,9 @@ protected:
                bool clear = true);
 
 
-  static unsigned last_context_id_;
+  static std::atomic_uint last_context_id_;
+
+  static std::mutex last_context_id_mutex_;
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
 };

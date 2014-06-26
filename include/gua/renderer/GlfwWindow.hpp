@@ -24,6 +24,9 @@
 
 // guacamole headers
 #include <gua/renderer/Window.hpp>
+#include <gua/events.hpp>
+
+class GLFWwindow;
 
 namespace gua {
 
@@ -32,7 +35,7 @@ namespace gua {
  *
  * It's a window which can display OpenGL stuff.
  */
-class GUA_DLL GlfwWindow {
+class GUA_DLL GlfwWindow : public Window {
  public:
 
   /**
@@ -68,13 +71,6 @@ class GUA_DLL GlfwWindow {
   void set_active(bool active) const;
 
   /**
-   * Starts the drawing of a new frame.
-   *
-   * This should be called when a new frame is about to be drawn.
-   */
-  void start_frame() const;
-
-  /**
    * Ends the drawing of a new frame.
    *
    * This should be called when drawing a frame has been done.
@@ -86,7 +82,6 @@ class GUA_DLL GlfwWindow {
   friend class Pipeline;
 
  private:
-  class ::GLFWwindow;
   GLFWwindow* glfw_window_;
 };
 

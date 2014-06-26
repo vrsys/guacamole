@@ -71,11 +71,11 @@ namespace gua {
     /**
     *
     */
-		std::shared_ptr<Node> create_volume_from_file(std::string const& node_name,
+		std::shared_ptr<node::Node> create_volume_from_file(std::string const& node_name,
 													  std::string const& file_name,
 													  unsigned flags);
 
-		std::shared_ptr<Node> load(std::string const& file_name,
+		std::shared_ptr<node::Node> load(std::string const& file_name,
 								   unsigned flags);
 
 		/**
@@ -89,11 +89,11 @@ namespace gua {
 		//std::vector<Volume*> const load_from_buffer(char const* buffer_name,
 		//	unsigned buffer_size);
 
-		/* virtual */ bool is_supported(std::string const& file_name) const;
+		/* virtual */ bool is_supported(std::string const& file_name) const override;
 
 	private:
 		
-		static std::unordered_map<std::string, std::shared_ptr<Node>> loaded_files_;
+		static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
 		
 		boost::unordered_set<std::string> _supported_file_extensions;
 

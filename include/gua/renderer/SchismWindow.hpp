@@ -57,21 +57,6 @@ class GUA_DLL SchismWindow : public Window {
   void close();
 
   /**
-   * Activate the context of this window.
-   *
-   * Makes the RenderContext of this window current. All preceeding
-   * OpenGL calls will be invoked on this window.
-   */
-  void set_active(bool active) const;
-
-  /**
-   * Starts the drawing of a new frame.
-   *
-   * This should be called when a new frame is about to be drawn.
-   */
-  void start_frame() const;
-
-  /**
    * Ends the drawing of a new frame.
    *
    * This should be called when drawing a frame has been done.

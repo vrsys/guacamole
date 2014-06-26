@@ -43,7 +43,7 @@ class NURBSUberShader : public GeometryUberShader {
 
   /*virtual*/ void create   (std::set<std::string> const& material_names);
 
-  /*virtual*/ stage_mask const get_stage_mask() const;
+  /*virtual*/ stage_mask get_stage_mask() const override;
 
   /*virtual*/ void preframe (RenderContext const& ctx) const;
 
@@ -53,7 +53,7 @@ class NURBSUberShader : public GeometryUberShader {
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
                              Frustum const& /*frustum*/,
-                             std::size_t /*viewid*/) const;
+                             View const& view) const;
 
   /*virtual*/ void draw     (RenderContext const& ctx,
                              std::string const& ksfile_name,
@@ -61,7 +61,7 @@ class NURBSUberShader : public GeometryUberShader {
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
                              Frustum const& /*frustum*/,
-                             std::size_t /*viewid*/) const;
+                             View const& view) const;
 
   /*virtual*/ void postdraw (RenderContext const& ctx,
                              std::string const& ksfile_name,
@@ -69,22 +69,22 @@ class NURBSUberShader : public GeometryUberShader {
                              scm::math::mat4 const& model_matrix,
                              scm::math::mat4 const& normal_matrix,
                              Frustum const& /*frustum*/,
-                             std::size_t /*viewid*/) const;
+                             View const& view) const;
 
   /*virtual*/ void postframe(RenderContext const& ctx) const;
 
  private:  // auxiliary methods
 
-  std::string const _transform_feedback_vertex_shader() const;
-  std::string const _transform_feedback_geometry_shader() const;
-  std::string const _transform_feedback_tess_control_shader() const;
-  std::string const _transform_feedback_tess_evaluation_shader() const;
+  std::string _transform_feedback_vertex_shader() const;
+  std::string _transform_feedback_geometry_shader() const;
+  std::string _transform_feedback_tess_control_shader() const;
+  std::string _transform_feedback_tess_evaluation_shader() const;
 
-  std::string const _final_vertex_shader() const;
-  std::string const _final_tess_control_shader() const;
-  std::string const _final_tess_evaluation_shader() const;
-  std::string const _final_geometry_shader() const;
-  std::string const _final_fragment_shader() const;
+  std::string _final_vertex_shader() const;
+  std::string _final_tess_control_shader() const;
+  std::string _final_tess_evaluation_shader() const;
+  std::string _final_geometry_shader() const;
+  std::string _final_fragment_shader() const;
 
  private:  // attributes
 

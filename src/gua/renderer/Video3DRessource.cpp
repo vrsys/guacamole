@@ -91,11 +91,26 @@ namespace gua {
   height_depthimage_(),
   width_colorimage_(),
   height_colorimage_(),
-  upload_mutex_()
+  upload_mutex_(),
+  overwrite_normal_(false),
+  o_normal_()
   {
     Video3DUberShader::initialize_video_material();
 
     init();
+
+    // pre resize for video shooting VRHyperspace
+    proxy_vertices_.resize(10);
+    proxy_indices_.resize(10);
+    proxy_vertex_array_.resize(10);
+    rstate_solid_.resize(10);
+    color_texArrays_.resize(10);
+    depth_texArrays_.resize(10);
+    nka_per_context_.resize(10);
+    cv_xyz_per_context_.resize(10);
+    cv_uv_per_context_.resize(10);
+    framecounter_per_context_.resize(10);
+
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -163,6 +178,14 @@ void Video3DRessource::init()
 	     >> z_max;
 	bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(x_min,y_min,z_min),
 						      math::vec3(x_max,y_max,z_max));
+      }
+      else if ( token == "normal" ){
+	float x,y,z;
+	istr >> x
+	     >> y
+	     >> z;
+	overwrite_normal_ = true;
+	o_normal_ = scm::math::vec3f(x,y,z);
       }
  
     }
@@ -241,8 +264,6 @@ void Video3DRessource::upload_proxy_mesh(RenderContext const& ctx) const
   int num_line_indices = (height_depthimage_ - 1)*((width_depthimage_ - 1) * 3 + 1) + (width_depthimage_ - 1);
 
   float step = 1.0f / width_depthimage_;
-
-  std::unique_lock<std::mutex> lock(upload_mutex_);
 
   proxy_vertices_[ctx.id] =
     ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
@@ -532,5 +553,19 @@ KinectCalibrationFile const& Video3DRessource::calibration_file(unsigned i) cons
 /*virtual*/ std::shared_ptr<GeometryUberShader> Video3DRessource::create_ubershader() const {
   return std::make_shared<Video3DUberShader>();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+  bool                           
+  Video3DRessource::do_overwrite_normal() const{
+    return overwrite_normal_;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+  scm::math::vec3f const&
+  Video3DRessource::get_overwrite_normal() const{
+    return o_normal_;
+  }
+
 
 }

@@ -118,7 +118,7 @@ void LayerMapping::add(std::string const & shading_model_name,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const LayerMapping::get_output_string(
+std::string LayerMapping::get_output_string(
     std::string const & shading_model_name,
     std::string const & output_name) const {
 
@@ -214,7 +214,7 @@ std::string const LayerMapping::get_output_string(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const LayerMapping::get_input_string(
+std::string LayerMapping::get_input_string(
     std::string const & shading_model_name,
     std::string const & input_name,
     ShadingModel::StageID from_stage) const {
@@ -307,7 +307,7 @@ std::string const LayerMapping::get_input_string(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const LayerMapping::get_gbuffer_input_definition(
+std::string LayerMapping::get_gbuffer_input_definition(
     ShadingModel::StageID from_stage) const {
 
     std::stringstream result;
@@ -331,7 +331,7 @@ std::string const LayerMapping::get_gbuffer_input_definition(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const LayerMapping::get_gbuffer_output_definition(
+std::string LayerMapping::get_gbuffer_output_definition(
     bool as_input, bool as_varying) const {
 
     unsigned layout_location(0);
@@ -378,7 +378,7 @@ std::string const LayerMapping::get_gbuffer_output_definition(
 
 std::vector<
     std::pair<BufferComponent,
-              scm::gl::sampler_state_desc> > const LayerMapping::get_layers(
+              scm::gl::sampler_state_desc> > LayerMapping::get_layers(
     BufferComponentType type) const {
 
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> >
@@ -429,7 +429,7 @@ std::vector<
 
 std::vector<std::pair<
     BufferComponent,
-    scm::gl::sampler_state_desc> > const LayerMapping::get_layers() const {
+    scm::gl::sampler_state_desc> > LayerMapping::get_layers() const {
 
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> >
         result;

@@ -156,7 +156,7 @@ void UberShader::set_output_mapping(LayerMapping const& mapping) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const UberShader::print_material_switch(
+std::string UberShader::print_material_switch(
     UberShaderFactory const& factory) const {
 
   std::stringstream s;
@@ -189,7 +189,7 @@ std::string const UberShader::print_material_switch(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const UberShader::print_material_methods(
+std::string UberShader::print_material_methods(
     UberShaderFactory const& factory) const {
 
   std::stringstream s;
@@ -220,6 +220,20 @@ std::string const UberShader::print_material_methods(
   }
 
   return upload_succeeded;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void UberShader::set_left_resolution(math::vec2ui const& resolution)
+{
+  left_resolution_ = resolution;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*virtual*/ void UberShader::set_right_resolution(math::vec2ui const& resolution)
+{
+  right_resolution_ = resolution;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

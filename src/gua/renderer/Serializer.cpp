@@ -27,17 +27,17 @@
 
 #include <gua/databases/GeometryDatabase.hpp>
 
-#include <gua/scenegraph/Node.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
-#include <gua/scenegraph/LODNode.hpp>
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/scenegraph/VolumeNode.hpp>
-#include <gua/scenegraph/PointLightNode.hpp>
-#include <gua/scenegraph/SpotLightNode.hpp>
-#include <gua/scenegraph/SunLightNode.hpp>
-#include <gua/scenegraph/ScreenNode.hpp>
-#include <gua/scenegraph/RayNode.hpp>
+#include <gua/node/Node.hpp>
+#include <gua/node/TransformNode.hpp>
+#include <gua/node/LODNode.hpp>
+#include <gua/node/GeometryNode.hpp>
+#include <gua/node/Video3DNode.hpp>
+#include <gua/node/VolumeNode.hpp>
+#include <gua/node/PointLightNode.hpp>
+#include <gua/node/SpotLightNode.hpp>
+#include <gua/node/SunLightNode.hpp>
+#include <gua/node/ScreenNode.hpp>
+#include <gua/node/RayNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
 // external headers
@@ -59,14 +59,14 @@ Serializer::Serializer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Serializer::check(SerializedScene* output,
-                       SceneGraph const* scene_graph,
+void Serializer::check(SerializedScene& output,
+                       SceneGraph const& scene_graph,
                        std::string const& render_mask,
                        bool draw_bounding_boxes,
                        bool draw_rays,
                        bool enable_frustum_culling) {
 
-  data_ = output;
+  data_ = &output;
 
 
   std::size_t geometry_count = data_->geometrynodes_.size();
@@ -113,15 +113,15 @@ void Serializer::check(SerializedScene* output,
   enable_frustum_culling_ = enable_frustum_culling;
 
   current_render_mask_ = Mask(render_mask);
-  current_frustum_ = output->frustum;
-  current_center_of_interest_ = output->center_of_interest;
+  current_frustum_ = output.frustum;
+  current_center_of_interest_ = output.center_of_interest;
 
-  scene_graph->accept(*this);
+  scene_graph.accept(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(Node* node) {
+/* virtual */ void Serializer::visit(node::Node* node) {
   if (is_visible(node)) {
     visit_children(node);
   }
@@ -129,7 +129,7 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(LODNode* node) {
+/* virtual */ void Serializer::visit(node::LODNode* node) {
   if (is_visible(node)) {
 
     float distance_to_camera(scm::math::length(node->get_world_position() - current_center_of_interest_));
@@ -156,7 +156,7 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(GeometryNode* node) {
+/* virtual */ void Serializer::visit(node::GeometryNode* node) {
 
 
   if (is_visible(node)) 
@@ -182,7 +182,7 @@ void Serializer::check(SerializedScene* output,
 ////////////////////////////////////////////////////////////////////////
 
 
-/* virtual */ void Serializer::visit(VolumeNode* node) {
+/* virtual */ void Serializer::visit(node::VolumeNode* node) {
 
   if ( is_visible(node) ) {
     if ( !node->data.get_volume().empty() ) {
@@ -196,7 +196,7 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(PointLightNode* node) {
+/* virtual */ void Serializer::visit(node::PointLightNode* node) {
 
   if (is_visible(node)) {
 
@@ -210,7 +210,7 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(SpotLightNode* node) {
+/* virtual */ void Serializer::visit(node::SpotLightNode* node) {
 
   if (is_visible(node)) {
 
@@ -224,7 +224,7 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(SunLightNode* node) {
+/* virtual */ void Serializer::visit(node::SunLightNode* node) {
 
   if (is_visible(node)) {
     data_->sun_lights_.push_back(node);
@@ -235,7 +235,7 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(RayNode* node) {
+/* virtual */ void Serializer::visit(node::RayNode* node) {
 
   if (is_visible(node)) {
 
@@ -249,7 +249,7 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(TexturedQuadNode* node) {
+/* virtual */ void Serializer::visit(node::TexturedQuadNode* node) {
 
   if (is_visible(node)) {
 
@@ -263,7 +263,7 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-bool Serializer::is_visible(Node* node) const {
+bool Serializer::is_visible(node::Node* node) const {
   bool is_visible(true);
 
   if (enable_frustum_culling_) {
@@ -282,7 +282,7 @@ bool Serializer::is_visible(Node* node) const {
 
 ////////////////////////////////////////////////////////////////////////
 
-void Serializer::add_bbox(Node* node) const {
+void Serializer::add_bbox(node::Node* node) const {
   if (draw_bounding_boxes_) {
     auto bbox(node->get_bounding_box());
     data_->bounding_boxes_.push_back(bbox);
@@ -291,7 +291,7 @@ void Serializer::add_bbox(Node* node) const {
 
 ////////////////////////////////////////////////////////////////////////
 
-void Serializer::visit_children(Node* node) {
+void Serializer::visit_children(node::Node* node) {
   for (auto & c : node->children_) { c->accept(*this); }
 }
 

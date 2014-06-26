@@ -72,11 +72,11 @@ class GUA_DLL MaterialLoader {
     OPACITY_MAP = 4096
   };
 
-  std::string const load_material(aiMaterial const* material,
-                                  std::string const& file_name) const;
+  std::string load_material(aiMaterial const* material,
+                            std::string const& file_name) const;
 
  private:
-  std::string const load_shading_model(unsigned capabilities) const;
+  std::string load_shading_model(unsigned capabilities) const;
 
 };
 

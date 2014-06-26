@@ -129,15 +129,6 @@ void GlfwWindow::set_active(bool active) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GlfwWindow::start_frame() const {
-  ctx_.render_context->clear_default_color_buffer(
-      scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
-
-  ctx_.render_context->clear_default_depth_stencil_buffer();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void GlfwWindow::finish_frame() const {
 
   set_active(true);

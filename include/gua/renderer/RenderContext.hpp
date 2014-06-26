@@ -31,6 +31,7 @@
 #include <scm/gl_core/window_management/display.h>
 #include <scm/gl_core/window_management/surface.h>
 #include <scm/gl_core/window_management/window.h>
+#include <atomic>
 
 namespace gua {
 

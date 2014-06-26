@@ -57,7 +57,7 @@ class PLODUberShader : public GeometryUberShader {
 
   bool              upload_to (RenderContext const& context) const;
 
-  /*virtual*/ stage_mask const get_stage_mask() const;
+  /*virtual*/ stage_mask get_stage_mask() const override;
 
   /*virtual*/ void  preframe  (RenderContext const& context) const;
 
@@ -67,7 +67,7 @@ class PLODUberShader : public GeometryUberShader {
                                scm::math::mat4 const& model_matrix,
                                scm::math::mat4 const& normal_matrix,
                                Frustum const& frustum,
-                               std::size_t viewid) const;
+                               View const& view) const;
 
   /*virtual*/ void  draw      (RenderContext const& ctx,
                               std::string const& filename,
@@ -75,7 +75,7 @@ class PLODUberShader : public GeometryUberShader {
                               scm::math::mat4 const& model_matrix,
                               scm::math::mat4 const& normal_matrix,
                               Frustum const& frustum,
-                              std::size_t viewid) const;
+                              View const& view) const;
 
   /*virtual*/ void  postdraw (RenderContext const& ctx,
                               std::string const& filename,
@@ -83,7 +83,7 @@ class PLODUberShader : public GeometryUberShader {
                               scm::math::mat4 const& model_matrix,
                               scm::math::mat4 const& normal_matrix,
                               Frustum const& frustum,
-                              std::size_t viewid) const;
+                              View const& view) const;
 
   /*virtual*/ void  postframe (RenderContext const& context) const;
 
@@ -91,39 +91,37 @@ class PLODUberShader : public GeometryUberShader {
   
   //get shader strings
   ///////////////////
-  std::string const depth_pass_vertex_shader() const;
-  std::string const depth_pass_fragment_shader() const;
+  std::string depth_pass_vertex_shader() const;
+  std::string depth_pass_fragment_shader() const;
 
-  std::string const accumulation_pass_vertex_shader() const;
-  std::string const accumulation_pass_fragment_shader() const;
+  std::string accumulation_pass_vertex_shader() const;
+  std::string accumulation_pass_fragment_shader() const;
 
-  std::string const normalization_pass_vertex_shader   () const;
-  std::string const normalization_pass_fragment_shader () const;
+  std::string normalization_pass_vertex_shader   () const;
+  std::string normalization_pass_fragment_shader () const;
 
-  std::string const reconstruction_pass_vertex_shader () const;
-  std::string const reconstruction_pass_fragment_shader () const;
+  std::string reconstruction_pass_vertex_shader () const;
+  std::string reconstruction_pass_fragment_shader () const;
 
-  std::string const default_plod_material_name() const;
+  std::string default_plod_material_name() const;
 
   //buffer operations
   char* GetMappedTempBufferPtr(RenderContext const& ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const;
   void UnmapTempBufferPtr(RenderContext const& ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const;
   void CopyTempToMainMemory(RenderContext const& ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer const&  buffer) const;
 
-
-
  private:  //member variables
 
   //FBOs:
   //////////////////////////////////////////////////////////////////////////////////////
   //depth pass FBO & attachments
-  mutable std::vector<scm::gl::texture_2d_ptr>	        depth_pass_log_depth_result_;
-  mutable std::vector<scm::gl::texture_2d_ptr>	        depth_pass_linear_depth_result_;
+  mutable std::vector<scm::gl::texture_2d_ptr>          depth_pass_log_depth_result_;
+  mutable std::vector<scm::gl::texture_2d_ptr>          depth_pass_linear_depth_result_;
 
   mutable std::vector<scm::gl::frame_buffer_ptr>        depth_pass_result_fbo_;
 
   //accumulation pass FBO & attachments
-  mutable std::vector<scm::gl::texture_2d_ptr>	        accumulation_pass_color_result_;
+  mutable std::vector<scm::gl::texture_2d_ptr>          accumulation_pass_color_result_;
   mutable std::vector<scm::gl::frame_buffer_ptr>        accumulation_pass_result_fbo_;
 
   //normalization pass FBO & attachments
@@ -134,11 +132,11 @@ class PLODUberShader : public GeometryUberShader {
   //////////////////////////////////////////////////////////////////////////////////////
   mutable std::vector<scm::gl::buffer_ptr>              temp_buffer_A_;
   mutable std::vector<scm::gl::buffer_ptr>              temp_buffer_B_;
-  
+
   mutable std::vector<scm::gl::buffer_ptr>              render_buffer_;
-  
+
   mutable std::vector<scm::gl::vertex_array_ptr>        vertex_array_;
-  
+
   mutable std::vector<bool>                             temp_buffer_A_is_mapped_;
   mutable std::vector<bool>                             temp_buffer_B_is_mapped_;
   mutable std::vector<char*>                            mapped_temp_buffer_A_;
@@ -153,7 +151,7 @@ class PLODUberShader : public GeometryUberShader {
   mutable std::vector<scm::gl::depth_stencil_state_ptr> no_depth_test_depth_stencil_state_;
 
   mutable std::vector<scm::gl::blend_state_ptr> color_accumulation_state_;
-  
+
   //frustum dependent variables:
   /////////////////////////////////////////////////////////////////////////////////////
   mutable std::vector<float> near_plane_value_;
@@ -172,7 +170,6 @@ class PLODUberShader : public GeometryUberShader {
 
   ////////////////////////////////////////////////////////////////////////////////////
   mutable std::vector<std::shared_ptr<scm::gl::context_all_guard>> context_guard_;
-
 };
 
 }

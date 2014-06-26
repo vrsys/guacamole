@@ -26,7 +26,9 @@
 #include <gua/databases.hpp>
 #include <gua/events.hpp>
 #include <gua/math.hpp>
+#if GUACAMOLE_ENABLE_PHYSICS
 #include <gua/physics.hpp>
+#endif
 #include <gua/renderer.hpp>
 #include <gua/scenegraph.hpp>
 #include <gua/utils.hpp>

@@ -31,8 +31,8 @@
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
-#include <gua/scenegraph/PLODNode.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
+#include <gua/node/PLODNode.hpp>
+#include <gua/node/TransformNode.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/renderer/GeometryLoader.hpp>
@@ -67,13 +67,13 @@ unsigned PLODLoader::model_counter_ = 0;
 
   /////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Node> PLODLoader::create_geometry_from_file(std::string const& node_name,
+  std::shared_ptr<::gua::node::Node> PLODLoader::create_geometry_from_file(std::string const& node_name,
                                                               std::string const& file_name) {
    
      std::string model_name("type=file&file=" + file_name);
    
      try{
-       auto node(std::make_shared<PLODNode>(model_name));
+       auto node(std::make_shared<::gua::node::PLODNode>(model_name));
        node->set_filename(model_name);
        node->set_material("gua_pbr");
 

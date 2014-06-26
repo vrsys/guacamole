@@ -79,7 +79,7 @@ std::pair<std::string, int> const& UniformMapping::get_mapping(
   return error_;
 }
 
-std::string const UniformMapping::get_uniform_definition() const {
+std::string UniformMapping::get_uniform_definition() const {
 
   std::stringstream result;
 

@@ -81,7 +81,7 @@ class Video3DRessource : public GeometryRessource {
   *
   */
   void draw(RenderContext const& context) const;
-  
+
   /**
    * Raytest for Video3D
    *
@@ -89,7 +89,7 @@ class Video3DRessource : public GeometryRessource {
    *
    */
   void ray_test(Ray const& ray, PickResult::Options options,
-                Node* owner, std::set<PickResult>& hits) 
+                node::Node* owner, std::set<PickResult>& hits)
   {}
 
   unsigned                        number_of_cameras() const;
@@ -105,6 +105,9 @@ class Video3DRessource : public GeometryRessource {
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
   /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
+  bool                            do_overwrite_normal() const;
+  scm::math::vec3f const&         get_overwrite_normal() const;
+
  private:
 
   void upload_to(RenderContext const& context) const;
@@ -112,7 +115,7 @@ class Video3DRessource : public GeometryRessource {
   void upload_proxy_mesh(RenderContext const& context) const;
   void upload_video_textures(RenderContext const& context) const;
 
-  
+
   std::string                         ks_filename_;
   std::vector<std::shared_ptr<KinectCalibrationFile>> calib_files_;
   std::string                         server_endpoint_;
@@ -147,6 +150,9 @@ class Video3DRessource : public GeometryRessource {
   mutable unsigned height_colorimage_;
   
   mutable std::mutex upload_mutex_;
+
+  mutable bool overwrite_normal_;
+  mutable scm::math::vec3f o_normal_;
 };
 
 }

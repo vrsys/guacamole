@@ -26,12 +26,12 @@
 #include <gua/scenegraph/SceneGraph.hpp>
 
 // node headers
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
-#include <gua/scenegraph/PointLightNode.hpp>
-#include <gua/scenegraph/RayNode.hpp>
-#include <gua/scenegraph/ScreenNode.hpp>
-#include <gua/scenegraph/SpotLightNode.hpp>
+#include <gua/node/GeometryNode.hpp>
+#include <gua/node/Video3DNode.hpp>
+#include <gua/node/TransformNode.hpp>
+#include <gua/node/PointLightNode.hpp>
+#include <gua/node/RayNode.hpp>
+#include <gua/node/ScreenNode.hpp>
+#include <gua/node/SpotLightNode.hpp>
 
 #endif  // GUA_INCLUDE_SCENEGRAPH_HPP

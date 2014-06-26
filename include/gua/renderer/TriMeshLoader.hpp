@@ -45,9 +45,11 @@ namespace Assimp { class Importer; }
 
 namespace gua {
 
+namespace node {
 class Node;
 class InnerNode;
 class GeometryNode;
+}
 
 /**
  * Loads and draws meshes.
@@ -80,12 +82,12 @@ public:
    /**
    * 
    */
-   std::shared_ptr<Node> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS);
+   std::shared_ptr<node::Node> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS);
 
    /**
    *
    */
-   std::shared_ptr<Node> create_geometry_from_file(std::string const& node_name,
+   std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
                                                    std::string const& file_name,
                                                    std::string const& fallback_material,
                                                    unsigned flags = DEFAULTS);
@@ -98,7 +100,7 @@ public:
    * \param file_name        The file to load the meshs data from.
    * \param material_name    The material name that was set to the parent node
    */
-  std::shared_ptr<Node> load(std::string const& file_name,
+  std::shared_ptr<node::Node> load(std::string const& file_name,
                              unsigned flags);
 
   /**
@@ -115,17 +117,17 @@ public:
   /**
   *
   */
-  bool is_supported(std::string const& file_name) const;
+  bool is_supported(std::string const& file_name) const override;
 
  private: // methods
 
-  std::shared_ptr<Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
+  std::shared_ptr<node::Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
                 aiScene const* ai_scene,
                 aiNode* ai_root,
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);
 
-  void apply_fallback_material(std::shared_ptr<Node> const& root, std::string const& fallback_material) const;
+  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::string const& fallback_material) const;
 
 private: // attributes
 
@@ -133,7 +135,7 @@ private: // attributes
 
   unsigned node_counter_;
 
-  static std::unordered_map<std::string, std::shared_ptr<Node>> loaded_files_;
+  static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
   static unsigned mesh_counter_;
 };
 

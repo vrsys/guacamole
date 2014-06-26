@@ -28,7 +28,7 @@
 namespace gua {
 
 OculusWindow::OculusWindow(std::string const& display):
-  Window(),
+  SchismWindow(),
   distortion_(4) {
 
   config.set_size(math::vec2ui(1280, 800));
@@ -129,7 +129,7 @@ void OculusWindow::set_distortion(float distortion0, float distortion1, float di
 ////////////////////////////////////////////////////////////////////////////////
 
 void OculusWindow::display(std::shared_ptr<Texture2D> const& left_texture,
-                         std::shared_ptr<Texture2D> const& right_texture) {
+                           std::shared_ptr<Texture2D> const& right_texture) {
 
   display(left_texture, config.get_left_resolution(), config.get_left_position(), true);
   display(right_texture, config.get_right_resolution(), config.get_right_position(), false);

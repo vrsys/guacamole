@@ -38,7 +38,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 SchismWindow::SchismWindow(Configuration const& configuration)
-    : SchismWindow(configuration) {}
+    : Window(configuration) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -86,37 +86,21 @@ void SchismWindow::open() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool SchismWindow::get_is_open() const { return ctx_.window != nullptr; }
+bool SchismWindow::get_is_open() const {
+  return ctx_.window != nullptr;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void SchismWindow::close() {
   if (get_is_open()) {
-
     ctx_.window->hide();
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SchismWindow::set_active(bool active) const {
-
-  ctx_.context->make_current(ctx_.window, active);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void SchismWindow::start_frame() const {
-  ctx_.render_context->clear_default_color_buffer(
-      scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
-
-  ctx_.render_context->clear_default_depth_stencil_buffer();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void SchismWindow::finish_frame() const {
-
   set_active(true);
   ctx_.window->swap_buffers(config.get_enable_vsync());
 }
