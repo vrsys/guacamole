@@ -8,10 +8,10 @@
                                       
         // input attributes                          
         layout (location = 0) in vec3  in_position;  
-        layout (location = 1) in uint  in_r;         
-        layout (location = 2) in uint  in_g;         
-        layout (location = 3) in uint  in_b;         
-        layout (location = 4) in uint empty;         
+        layout (location = 1) in float  in_r;      
+        layout (location = 2) in float  in_g;  
+        layout (location = 3) in float  in_b;  
+        layout (location = 4) in float  empty;             
         layout (location = 5) in float in_radius;    
         layout (location = 6) in vec3 in_normal;     
 
@@ -49,6 +49,8 @@
           
           gl_PointSize = 2.0f * scaled_radius * (near_plane/-pos_es.z)* height_divided_by_top_minus_bottom;
 
+
+          //gl_PointSize = 1.0;
 
           //pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
           pass_normal = normalize(( gua_normal_matrix * vec4(in_normal, 0.0)).xyz);   

@@ -37,7 +37,7 @@ namespace gua {
 namespace node {
   class Node;
   class InnerNode;
-  class GeometryNode;
+  class PLODNode;
 }
 
 class PLODRessource;

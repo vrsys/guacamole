@@ -115,61 +115,63 @@ class PLODUberShader : public GeometryUberShader {
   //FBOs:
   //////////////////////////////////////////////////////////////////////////////////////
   //depth pass FBO & attachments
-  mutable std::vector<scm::gl::texture_2d_ptr>          depth_pass_log_depth_result_;
-  mutable std::vector<scm::gl::texture_2d_ptr>          depth_pass_linear_depth_result_;
+  mutable scm::gl::texture_2d_ptr          depth_pass_log_depth_result_;
+  mutable scm::gl::texture_2d_ptr          depth_pass_linear_depth_result_;
 
-  mutable std::vector<scm::gl::frame_buffer_ptr>        depth_pass_result_fbo_;
+  mutable scm::gl::frame_buffer_ptr        depth_pass_result_fbo_;
 
   //accumulation pass FBO & attachments
-  mutable std::vector<scm::gl::texture_2d_ptr>          accumulation_pass_color_result_;
-  mutable std::vector<scm::gl::frame_buffer_ptr>        accumulation_pass_result_fbo_;
+  mutable scm::gl::texture_2d_ptr          accumulation_pass_color_result_;
+  mutable scm::gl::frame_buffer_ptr        accumulation_pass_result_fbo_;
 
   //normalization pass FBO & attachments
-  mutable std::vector<scm::gl::texture_2d_ptr>          normalization_pass_color_result_;
-  mutable std::vector<scm::gl::frame_buffer_ptr>        normalization_pass_result_fbo_;
+  mutable scm::gl::texture_2d_ptr          normalization_pass_color_result_;
+  mutable scm::gl::frame_buffer_ptr        normalization_pass_result_fbo_;
 
   //temp buffer front & back
   //////////////////////////////////////////////////////////////////////////////////////
-  mutable std::vector<scm::gl::buffer_ptr>              temp_buffer_A_;
-  mutable std::vector<scm::gl::buffer_ptr>              temp_buffer_B_;
+  mutable scm::gl::buffer_ptr              temp_buffer_A_;
+  mutable scm::gl::buffer_ptr              temp_buffer_B_;
 
-  mutable std::vector<scm::gl::buffer_ptr>              render_buffer_;
+  mutable scm::gl::buffer_ptr              render_buffer_;
 
-  mutable std::vector<scm::gl::vertex_array_ptr>        vertex_array_;
+  mutable scm::gl::vertex_array_ptr        vertex_array_;
 
-  mutable std::vector<bool>                             temp_buffer_A_is_mapped_;
-  mutable std::vector<bool>                             temp_buffer_B_is_mapped_;
-  mutable std::vector<char*>                            mapped_temp_buffer_A_;
-  mutable std::vector<char*>                            mapped_temp_buffer_B_;
-  mutable std::vector<int>                              previous_framecount_;
+  mutable bool                             temp_buffer_A_is_mapped_;
+  mutable bool                             temp_buffer_B_is_mapped_;
+  mutable char*                            mapped_temp_buffer_A_;
+  mutable char*                            mapped_temp_buffer_B_;
+  mutable int                              previous_framecount_;
 
   //schism-GL states:
   //////////////////////////////////////////////////////////////////////////////////////
-  mutable std::vector<scm::gl::rasterizer_state_ptr> change_point_size_in_shader_state_;
+  mutable scm::gl::rasterizer_state_ptr change_point_size_in_shader_state_;
 
-  mutable std::vector<scm::gl::sampler_state_ptr>       linear_sampler_state_;
-  mutable std::vector<scm::gl::depth_stencil_state_ptr> no_depth_test_depth_stencil_state_;
+  mutable scm::gl::sampler_state_ptr       linear_sampler_state_;
+  mutable scm::gl::depth_stencil_state_ptr no_depth_test_depth_stencil_state_;
 
-  mutable std::vector<scm::gl::blend_state_ptr> color_accumulation_state_;
+  mutable scm::gl::blend_state_ptr color_accumulation_state_;
 
   //frustum dependent variables:
   /////////////////////////////////////////////////////////////////////////////////////
-  mutable std::vector<float> near_plane_value_;
-  mutable std::vector<float> height_divided_by_top_minus_bottom_;
+  mutable float near_plane_value_;
+  mutable float height_divided_by_top_minus_bottom_;
 
-  mutable std::vector<std::vector<unsigned int> > frustum_culling_results_;
+  mutable std::vector<unsigned int>  frustum_culling_results_;
 
   //misc:
   ////////////////////////////////////////////////////////////////////////////////////
-  mutable std::vector<unsigned int> material_id_;
-  mutable std::vector<scm::gl::quad_geometry_ptr>       fullscreen_quad_;
-  mutable std::vector<math::vec2ui> render_window_dims_;
+  mutable unsigned int material_id_;
+  mutable scm::gl::quad_geometry_ptr       fullscreen_quad_;
+  mutable math::vec2ui render_window_dims_;
 
-  mutable std::vector<unsigned int> last_geometry_state_;
+  mutable unsigned int last_geometry_state_;
+  
+  mutable bool already_uploaded;
 
 
   ////////////////////////////////////////////////////////////////////////////////////
-  mutable std::vector<std::shared_ptr<scm::gl::context_all_guard>> context_guard_;
+  mutable std::shared_ptr<scm::gl::context_all_guard> context_guard_;
 };
 
 }

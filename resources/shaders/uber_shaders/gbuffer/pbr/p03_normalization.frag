@@ -45,5 +45,6 @@ void main() {
 
       out_normalized_color = normalized_color;
 
+     // out_normalized_color = accumulated_color.rgb;
 
 }

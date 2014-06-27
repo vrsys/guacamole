@@ -134,6 +134,7 @@ float depth_to_compare = 0;
    {
 
       out_accumulated_color = vec4(pass_point_color * weight, weight);
+      
    }
    else
    {

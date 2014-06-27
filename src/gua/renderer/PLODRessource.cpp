@@ -55,43 +55,6 @@ PLODRessource::PLODRessource(const pbr::ren::LodPointCloud* point_cloud)
 ////////////////////////////////////////////////////////////////////////////////
 
 void PLODRessource::upload_to(RenderContext const& ctx) const {
-/*
-
-  if (!point_cloud_->is_loaded()) {
-    Logger::LOG_WARNING << "Point Cloud was not loaded!" << std::endl;
-    return;
-  }
-
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  if (buffers_.size() <= ctx.id) {
-    buffers_.resize(ctx.id + 1);
-    vertex_array_.resize(ctx.id + 1);
-  }
-
-
-  buffers_[ctx.id] =
-      ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       point_cloud_->num_surfels() * sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
-                                       &(point_cloud_->data()[0]));
-
-
-  std::vector<scm::gl::buffer_ptr> buffer_arrays;
-  buffer_arrays.push_back(buffers_[ctx.id]);
-
-
-  vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
-      scm::gl::vertex_format(
-          0, 0, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 1, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 2, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 3, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 4, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 5, scm::gl::TYPE_FLOAT, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 6, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel)),
-       buffer_arrays);
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +90,7 @@ void PLODRessource::draw(RenderContext const& ctx, pbr::context_t context_id, pb
         if(culling_results[node_counter] != 1)
         {
           ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, (k->slot_id_) * surfels_per_node, surfels_per_node_of_model);
+          
         }
     }
   
