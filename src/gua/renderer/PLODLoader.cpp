@@ -67,13 +67,14 @@ unsigned PLODLoader::model_counter_ = 0;
 
   /////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<node::Node> PLODLoader::create_geometry_from_file(std::string const& node_name,
-                                                              std::string const& file_name) {
+  std::shared_ptr<gua::node::Node> PLODLoader::create_geometry_from_file(std::string const& node_name,
+                                                              std::string const& file_name,
+                                                              unsigned flags) {
    
      std::string model_name("type=file&file=" + file_name);
    
      try{
-       auto node(std::make_shared<node::PLODNode>(model_name));
+       auto node(std::make_shared<gua::node::PLODNode>(model_name));
        node->set_filename(model_name);
        node->set_material("gua_pbr");
 
@@ -85,6 +86,25 @@ unsigned PLODLoader::model_counter_ = 0;
 
        GeometryDatabase::instance()->add(model_name, std::make_shared<PLODRessource>(point_cloud));
    
+        // normalize mesh position and rotation
+        if (flags & PLODLoader::NORMALIZE_POSITION || flags & PLODLoader::NORMALIZE_SCALE) {
+          auto schism_bb = point_cloud->kdn_tree()->bounding_boxes()[0];
+          auto bbox = gua::math::BoundingBox<math::vec3>(schism_bb.min_vertex(),
+                                                         schism_bb.max_vertex());
+
+          if (flags & PLODLoader::NORMALIZE_POSITION) {
+            auto center((bbox.min + bbox.max)*0.5f);
+            node->translate(-center);
+          }
+
+          if (flags & PLODLoader::NORMALIZE_SCALE) {
+            auto size(bbox.max - bbox.min);
+            auto max_size(std::max(std::max(size.x, size.y), size.z));
+            node->scale(1.f / max_size);
+          }
+
+        }
+
        ++model_counter_;
    
        return node;
@@ -93,6 +113,11 @@ unsigned PLODLoader::model_counter_ = 0;
        Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load LOD Pointcloud object " << file_name.c_str() << std::endl;
         return nullptr;
      }
+
+
+
+
+
 
   }
 
@@ -125,20 +150,5 @@ unsigned PLODLoader::model_counter_ = 0;
     pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
     policy->set_out_of_core_budget_in_mb(out_of_core_budget);
   }
-
-const size_t PLODLoader::get_upload_budget_in_mb() const {
-  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
-  return policy->upload_budget_in_mb();
-}
-
-const size_t PLODLoader::get_render_budget_in_mb() const {
-  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
-  return policy->render_budget_in_mb();
-}
-
-const size_t PLODLoader::get_out_of_core_budget_in_mb() const {
-  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
-  return policy->out_of_core_budget_in_mb();
-}
 
 }
