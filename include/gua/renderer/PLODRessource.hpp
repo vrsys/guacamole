@@ -105,6 +105,11 @@ class PLODRessource : public GeometryRessource {
 
 };
 
+std::pair<float, float> intersect(Ray const& ray,
+    scm::gl::boxf const& box);
+
+Ray const intersection(Ray const& ray, scm::gl::boxf const& box);
+
 }
 
 #endif  // GUA_PLOD_RESSOURCE_HPP

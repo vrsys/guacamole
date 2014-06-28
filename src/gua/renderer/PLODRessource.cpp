@@ -101,6 +101,28 @@ void PLODRessource::draw(RenderContext const& ctx, pbr::context_t context_id, pb
 
 void PLODRessource::ray_test(Ray const& ray, PickResult::Options options,
                     node::Node* owner, std::set<PickResult>& hits) {
+
+ // scm::gl::boxf bb = pbr::ren::ModelDatabase::GetInstance()->GetModel(0)->kdn_tree()->bounding_boxes()[0];
+
+//  auto k( intersection(ray, bb) );
+
+  auto root_hit(ray.intersection(bounding_box_) );
+
+  //std::cout << "origin of k: " << k.origin_ << "   & origin of lampidam: " << lampidam.origin_ << "\n";
+
+
+
+
+  if(root_hit.t_max_ <= 0.0f)
+  {
+   //  std::cout << "NO INTERSECTION!!!!!!!!!!!!!!\n";  
+  }
+  else
+  {
+     hits.insert(PickResult(30.123, owner, math::vec3(99,87,66), math::vec3(3,4,5), math::vec3(0.0,0.0,1.0), math::vec3(0.0,0.0,2.0), math::vec2(0.5, 0.3) )  );
+     //std::cout << "HIT!!!!\n";
+  }
+
   return;
 }
 
@@ -110,5 +132,66 @@ void PLODRessource::ray_test(Ray const& ray, PickResult::Options options,
 /*virtual*/ std::shared_ptr<GeometryUberShader> PLODRessource::create_ubershader() const {
   return std::make_shared<PLODUberShader>();
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+
+
+//free functions to also support scm::gl::boxf of the pbr::kdn::tree as intersection object
+std::pair<float, float> intersect(Ray const& ray,
+    scm::gl::boxf const& box) {
+
+  math::vec3 t1((box.min_vertex() - ray.origin_) / ray.direction_);
+  math::vec3 t2((box.max_vertex() - ray.origin_) / ray.direction_);
+
+  math::vec3 tmin1(
+      std::min(t1[0], t2[0]), std::min(t1[1], t2[1]), std::min(t1[2], t2[2]));
+  math::vec3 tmax1(
+      std::max(t1[0], t2[0]), std::max(t1[1], t2[1]), std::max(t1[2], t2[2]));
+
+  float tmin = std::max(std::max(tmin1[0], tmin1[1]), tmin1[2]);
+  float tmax = std::min(std::min(tmax1[0], tmax1[1]), tmax1[2]);
+
+  if (tmax >= tmin) {
+    // there are two intersections
+    if (tmin > 0.0 && tmax < ray.t_max_)
+      return std::make_pair(tmin, tmax);
+
+    // there is only one intersection, the ray ends inside the box
+    else if (tmin > 0.0)
+      return std::make_pair(tmin, Ray::END);
+
+    // there is only one intersection, the ray starts inside the box
+    else
+      return std::make_pair(Ray::END, tmax);
+  }
+
+  // there is no intersection
+
+  return std::make_pair(Ray::END, Ray::END);
+}
+///////////////////////////////////////////////////////////////////////////////
+
+Ray const intersection(Ray const& ray, scm::gl::boxf const& box /*std::pair<float, float> const& hits*/)
+{
+  std::pair<float, float> const& hits( intersect(ray, box ) );
+  // there are to hits -> clamp ray on both sides
+  if (hits.first != gua::Ray::END && hits.first != gua::Ray::END)
+    return Ray(ray.origin_ + ray.direction_ * hits.first,
+               ray.direction_,
+               hits.second - hits.first);
+
+  // the ray ends inside the box -> clamp the origin
+  if (hits.first != gua::Ray::END)
+    return Ray(
+        ray.origin_ + ray.direction_ * hits.first, ray.direction_, ray.t_max_ - hits.first);
+
+  // the ray starts inside the box -> clamp the end
+  if (hits.second != gua::Ray::END)
+    return Ray(ray.origin_, ray.direction_, hits.second);
+
+  // there is no intersection
+  return Ray();
+}
+
 
 }
