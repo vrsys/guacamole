@@ -110,6 +110,9 @@ class PLODUberShader : public GeometryUberShader {
   void UnmapTempBufferPtr(RenderContext const& ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const;
   void CopyTempToMainMemory(RenderContext const& ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer const&  buffer) const;
 
+  //auxiliary
+  void Reset(RenderContext const& context) const; 
+
  private:  //member variables
 
   //FBOs:

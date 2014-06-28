@@ -398,24 +398,25 @@ void PLODUberShader::preframe(RenderContext const& ctx) const{
     pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
     
+    if (controller->ResetSystem()) {
+      Reset(ctx);
+    }
+
     pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+
+    if (!controller->TemporaryBuffersAvailable(context_id)) {
+      controller->StoreTemporaryBuffers(
+        context_id,
+          GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A),
+          GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B));
+    }
     
     //swap cut database
     cuts->AcceptFront(context_id);
     
-    if(temp_buffer_A_is_mapped_) {
-      //run cut update
-      controller->DispatchCutUpdate(context_id);
-    } else {
-      //startup
-      controller->StoreTemporaryBuffers(
-        context_id,
-        GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A),
-        GetMappedTempBufferPtr(ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B));
-      
-      database->set_window_width(render_window_dims_[0]);
-      database->set_window_height(render_window_dims_[1]);
-    }
+    //run cut update
+    controller->DispatchCutUpdate(context_id);
+
     
     if(cuts->IsFrontModified(context_id)) {
       //upload data to gpu
@@ -462,7 +463,8 @@ void PLODUberShader::preframe(RenderContext const& ctx) const{
                                          scm::math::mat4 const& normal_matrix,
                                          Frustum const& frustum,
                                          View const& view) const {
-                                        
+                       
+                                                   
    //determine frustum parameters                                      
    std::vector<math::vec3> frustum_corner_values = frustum.get_corners();
    float top_minus_bottom = scm::math::length((frustum_corner_values[2]) - (frustum_corner_values[0]) );
@@ -471,9 +473,7 @@ void PLODUberShader::preframe(RenderContext const& ctx) const{
    float far_plane_value = frustum.get_clip_far();
    
    if( last_geometry_state_ != pre_draw_state) {
-      
      context_guard_ = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
-     //!!!!!!!!!!!!!! create new context guard that is deletet in the beginning of postdraw????
    
      //enable dynamic point size in shaders
      ctx.render_context->set_rasterizer_state(change_point_size_in_shader_state_);
@@ -493,6 +493,7 @@ void PLODUberShader::preframe(RenderContext const& ctx) const{
    pbr::context_t context_id = controller->DeduceContextId(ctx.id);
    pbr::view_t view_id = controller->DeduceViewId(context_id, view.id);
    pbr::model_t model_id = controller->DeduceModelId(file_name);
+   
    
    //send camera and model_matrix to cut update
    pbr::ren::Camera cut_update_cam(view_id, near_plane_value, frustum.get_view(), frustum.get_projection() );
@@ -538,7 +539,7 @@ void PLODUberShader::preframe(RenderContext const& ctx) const{
    
    if(material && plod_ressource) {
      get_program(depth_pass)->use(ctx);
-     plod_ressource->draw(ctx, context_id, model_id, view_id, vertex_array_, frustum_culling_results_);
+     plod_ressource->draw(ctx, context_id, view_id, model_id, vertex_array_, frustum_culling_results_);
      get_program(depth_pass)->unuse(ctx);
    }
    
@@ -565,6 +566,7 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
                               scm::math::mat4 const& normal_matrix,
                               Frustum const& frustum,
                               View const& view) const {
+                              
   auto plod_ressource     = std::static_pointer_cast<PLODRessource>(GeometryDatabase::instance()->lookup(file_name));
   auto material          = MaterialDatabase::instance()->lookup(material_name);
   
@@ -657,6 +659,7 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
 
 /*virtual*/ void PLODUberShader::postframe(RenderContext const& ctx) const {
   (context_guard_).reset();
+ 
  
   bool using_default_pbr_material = true;
   {
@@ -808,6 +811,60 @@ void PLODUberShader::CopyTempToMainMemory(RenderContext const& ctx, pbr::ren::Cu
     default: break;
   }
     
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLODUberShader::Reset(RenderContext const& context) const
+{
+    UnmapTempBufferPtr(context, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A);
+    UnmapTempBufferPtr(context, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B);
+
+
+    temp_buffer_A_.reset();
+    temp_buffer_B_.reset();
+    render_buffer_.reset();
+    vertex_array_.reset();
+
+    pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
+    pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+
+
+    size_t size_of_node_in_bytes = database->size_of_surfel()*database->surfels_per_node();
+
+    size_t upload_budget_in_nodes =
+        (policy->upload_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
+
+    size_t render_budget_in_nodes =
+        (policy->render_budget_in_mb()*1024*1024) / size_of_node_in_bytes;
+
+    unsigned long long sizeOfTempBuffers =  upload_budget_in_nodes * size_of_node_in_bytes;
+    temp_buffer_A_ = context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, sizeOfTempBuffers, NULL);
+    temp_buffer_B_ = context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, sizeOfTempBuffers, NULL);
+
+
+    size_t stride_size = sizeof(unsigned int)+ sizeof(float) +  6*sizeof(float) ;
+
+    unsigned long long sizeOfRenderBuffer = render_budget_in_nodes * size_of_node_in_bytes;
+    render_buffer_ = context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, sizeOfRenderBuffer);
+    
+    vertex_array_ = context.render_device->create_vertex_array(
+      scm::gl::vertex_format(
+        0, 0, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
+        0, 1, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel), scm::gl::INT_FLOAT_NORMALIZE)(
+        0, 2, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel), scm::gl::INT_FLOAT_NORMALIZE)(
+        0, 3, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel), scm::gl::INT_FLOAT_NORMALIZE)(
+        0, 4, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel), scm::gl::INT_FLOAT_NORMALIZE)(
+        0, 5, scm::gl::TYPE_FLOAT, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
+        0, 6, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel)),
+      boost::assign::list_of(render_buffer_));
+
+
+    temp_buffer_A_is_mapped_ = false;
+    temp_buffer_B_is_mapped_ = false;
+    mapped_temp_buffer_A_ = nullptr;
+    mapped_temp_buffer_B_ = nullptr;
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

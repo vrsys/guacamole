@@ -83,12 +83,13 @@ void PLODRessource::draw(RenderContext const& ctx, pbr::context_t context_id, pb
   
     pbr::node_t node_counter = 0;
   
-
     for(std::vector<pbr::ren::Cut::NodeSlotAggregate>::const_iterator k = node_list.begin(); k != node_list.end(); ++k, ++node_counter)
     {
         //0 = completely inside of frustum, 1 = completely outside of frustum, 2 = intersects frustum
         if(culling_results[node_counter] != 1)
         {
+        
+
           ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, (k->slot_id_) * surfels_per_node, surfels_per_node_of_model);
           
         }
