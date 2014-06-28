@@ -398,12 +398,14 @@ void PLODUberShader::preframe(RenderContext const& ctx) const{
     pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
     
-    if (controller->ResetSystem()) {
+    controller->ResetSystem();
+    
+    pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+    
+    if (controller->IsSystemResetSignaled(context_id)) {
       Reset(ctx);
     }
-
-    pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-
+    
     if (!controller->TemporaryBuffersAvailable(context_id)) {
       controller->StoreTemporaryBuffers(
         context_id,
