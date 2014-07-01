@@ -39,9 +39,8 @@ class InnerNode;
 class GeometryNode;
 class PLODRessource;
 
-
 class PLODLoader : public GeometryLoader {
- public:
+public:
 
    enum Flags {
      DEFAULTS = 0,
@@ -53,34 +52,34 @@ class PLODLoader : public GeometryLoader {
   /**
    * Default constructor.
    *
-   * Constructs a new and empty PBRLoader.
+   * Constructs a new and empty PLODLoader.
    */
    PLODLoader();
 
   /**
    * Constructor from a file.
    *
-   * Creates a new PBRLoader from a given file.
+   * Creates a new PLODLoader from a given file.
    *
-   * \param file_name        The file to load the pointclouds data from.
-   * \param material_name    The material name that was set to the parent node
+   * \param node_name  Name of the scenegraph node.
+   * \param file_name  The file to load the pointclouds data from.
+   * \param flags      Loading flags
    */
-  std::shared_ptr<gua::node::Node> create_geometry_from_file(std::string const& nodename,
-                                                  std::string const& kdnfile,
+  std::shared_ptr<gua::node::Node> create_geometry_from_file(std::string const& node_name,
+                                                  std::string const& file_name,
                                                   unsigned flags = DEFAULTS);
 
   bool is_supported(std::string const& file_name) const;
 
-  void                set_upload_budget_in_mb(const size_t upload_budget);
-  void                set_render_budget_in_mb(const size_t render_budget);
-  void                set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
+  void set_upload_budget_in_mb(const size_t upload_budget);
+  void set_render_budget_in_mb(const size_t render_budget);
+  void set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
 
- private:
-  unsigned node_counter_;
-  static unsigned model_counter_;
+private:
+
   boost::unordered_set<std::string> _supported_file_extensions;
-};
 
+};
 
 }
 
