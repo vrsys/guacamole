@@ -25,6 +25,8 @@
 #include <gua/math/math.hpp>
 #include <gua/math/BoundingBox.hpp>
 
+#include <scm/gl_core/primitives/box.h>
+
 #include <vector>
 
 struct aiMesh;
@@ -42,6 +44,9 @@ struct Ray {
   Ray(math::vec3 const& origin, math::vec3 const& direction, float t_max);
 
   Ray const intersection(math::BoundingBox<math::vec3> const& box) const;
+  Ray const intersection(scm::gl::boxf const& box) const {
+    return intersection(math::BoundingBox<math::vec3>(box.min_vertex(), box.max_vertex()));
+  }
 
   math::vec3 origin_;
   math::vec3 direction_;
