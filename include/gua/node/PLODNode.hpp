@@ -33,14 +33,13 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL PLODNode : public GeometryNode
-{
-public : // member
+class GUA_DLL PLODNode : public GeometryNode {
+ public:  // member
 
-  PLODNode( std::string const& name,
-            std::string const& filename = "gua_default_geometry",
-            std::string const& material = "gua_default_material",
-            math::mat4  const& transform = math::mat4::identity());
+  PLODNode(std::string const& name,
+           std::string const& filename = "gua_default_geometry",
+           std::string const& material = "gua_default_material",
+           math::mat4 const& transform = math::mat4::identity());
 
   /**
   * Implements ray picking for a point cloud
@@ -49,15 +48,16 @@ public : // member
                      PickResult::Options options,
                      Mask const& mask,
                      std::set<PickResult>& hits) override;
-protected:
+
+ protected:
 
   std::shared_ptr<Node> copy() const override;
 
-private : // attributes e.g. special attributes for drawing
+ private:  // attributes e.g. special attributes for drawing
 
 };
 
-} // namespace node {
-} // namespace gua {
+}  // namespace node {
+}  // namespace gua {
 
 #endif  // GUA_PLOD_NODE_HPP

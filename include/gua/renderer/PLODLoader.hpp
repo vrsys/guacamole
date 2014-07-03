@@ -32,7 +32,7 @@
 #include <list>
 #include <memory>
 
-namespace gua{
+namespace gua {
 
 class Node;
 class InnerNode;
@@ -40,21 +40,21 @@ class GeometryNode;
 class PLODRessource;
 
 class PLODLoader : public GeometryLoader {
-public:
+ public:
 
-   enum Flags {
-     DEFAULTS = 0,
-     MAKE_PICKABLE = 1 << 0,
-     NORMALIZE_POSITION = 1 << 1,
-     NORMALIZE_SCALE = 1 << 2
-   };
+  enum Flags {
+    DEFAULTS = 0,
+    MAKE_PICKABLE = 1 << 0,
+    NORMALIZE_POSITION = 1 << 1,
+    NORMALIZE_SCALE = 1 << 2
+  };
 
   /**
    * Default constructor.
    *
    * Constructs a new and empty PLODLoader.
    */
-   PLODLoader();
+  PLODLoader();
 
   /**
    * Constructor from a file.
@@ -65,17 +65,18 @@ public:
    * \param file_name  The file to load the pointclouds data from.
    * \param flags      Loading flags
    */
-  std::shared_ptr<gua::node::Node> create_geometry_from_file(std::string const& node_name,
-                                                  std::string const& file_name,
-                                                  unsigned flags = DEFAULTS);
+  std::shared_ptr<gua::node::Node> create_geometry_from_file(
+      std::string const& node_name,
+      std::string const& file_name,
+      unsigned flags = DEFAULTS);
 
-  bool is_supported(std::string const& file_name) const;
+  bool is_supported(std::string const& file_name) const override;
 
   void set_upload_budget_in_mb(const size_t upload_budget);
   void set_render_budget_in_mb(const size_t render_budget);
   void set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
 
-private:
+ private:
 
   boost::unordered_set<std::string> _supported_file_extensions;
 

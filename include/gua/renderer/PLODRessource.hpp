@@ -22,8 +22,6 @@
 #ifndef GUA_PLOD_RESSOURCE_HPP
 #define GUA_PLOD_RESSOURCE_HPP
 
-
-
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/GeometryRessource.hpp>
@@ -36,12 +34,6 @@
 #include <pbr/ren/cut_database.h>
 #include <pbr/ren/cut.h>
 #include <pbr/ren/lod_point_cloud.h>
-#include <scm/gl_core.h>
-
-#include <mutex>
-#include <thread>
-
-#include <vector>
 
 namespace gua {
 
@@ -53,12 +45,12 @@ struct RenderContext;
  * This class simply a wrapper for accessing models of PBR library
  */
 class PLODRessource : public GeometryRessource {
-public:
+ public:
 
   explicit PLODRessource(pbr::model_t model_id, bool is_pickable);
 
-  void draw(RenderContext const& ctx) const {};
-  
+  void draw(RenderContext const& ctx) const {}
+
   /**
    * Draws the point cloud.
    *
@@ -66,21 +58,23 @@ public:
    *
    * \param context  The RenderContext to draw onto.
    */
-  void draw(RenderContext const& ctx, 
-          pbr::context_t context_id, 
-          pbr::view_t view_id, 
-          pbr::model_t model_id, 
-          scm::gl::vertex_array_ptr const& vertex_array, 
-          std::vector<unsigned int> const& frustum_culling_results) const;
+  void draw(RenderContext const& ctx,
+            pbr::context_t context_id,
+            pbr::view_t view_id,
+            pbr::model_t model_id,
+            scm::gl::vertex_array_ptr const& vertex_array,
+            std::vector<unsigned int> const& frustum_culling_results) const;
 
-  void ray_test(Ray const& ray, PickResult::Options options,
-                node::Node* owner, std::set<PickResult>& hits);
+  void ray_test(Ray const& ray,
+                PickResult::Options options,
+                node::Node* owner,
+                std::set<PickResult>& hits);
 
   std::shared_ptr<GeometryUberShader> create_ubershader() const override {
     return std::make_shared<PLODUberShader>();
   }
 
-private:
+ private:
 
   bool is_pickable_;
 

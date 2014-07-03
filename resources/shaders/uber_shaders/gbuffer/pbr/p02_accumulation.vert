@@ -55,10 +55,7 @@
 
           gl_PointSize = splat_size;
       
-          pass_point_color = vec3((in_r),     
-                             (in_g),     
-                             (in_b));
-          
+          pass_point_color = vec3(in_r, in_g, in_b);
           pass_normal = normalize(( gua_normal_matrix * vec4(in_normal, 0.0)).xyz);   
           pass_mv_vert_depth = pos_es.z;
           pass_scaled_radius = scaled_radius;

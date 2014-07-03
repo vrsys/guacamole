@@ -29,22 +29,14 @@ layout (location=0) out vec3 out_normalized_color;
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
 
-  vec3  normalized_color  = vec3(1.0);
-  float output_depth  = 1.0f;
-  vec3  output_normal = vec3(0.0);
+    vec3  normalized_color  = vec3(1.0);
+    float output_depth  = 1.0f;
+    vec3  output_normal = vec3(0.0);
+    vec3 coords = vec3(gua_quad_coords, 0.0);
+    vec4 accumulated_color = texture(p02_color_texture, coords.xy);
 
-  vec3 coords = vec3(gua_quad_coords, 0.0);
-
-
-      
-      vec4 accumulated_color = texture2D( p02_color_texture, coords.xy);
-
-      normalized_color = accumulated_color.rgb / accumulated_color.a;
-
-      normalized_color = pow(normalized_color,vec3(1.4f));
-
-      out_normalized_color = normalized_color;
-
-     // out_normalized_color = accumulated_color.rgb;
-
+    normalized_color = accumulated_color.rgb / accumulated_color.a;
+    normalized_color = pow(normalized_color, vec3(1.4f));
+    out_normalized_color = normalized_color;
 }
+
