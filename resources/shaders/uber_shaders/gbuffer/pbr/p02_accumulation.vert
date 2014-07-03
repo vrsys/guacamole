@@ -41,7 +41,9 @@ void main() {
   float view_scaling = length(vec3(pos_es_ub) - vec3(pos_es_lb));
   pass_view_scaling = view_scaling;
 
-  gl_Position = gua_projection_matrix * pos_es;
+  //gl_Position = gua_projection_matrix * pos_es;
+  //TODO: temp fix
+  gl_Position = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(in_position, 1.0);
 
   float splat_size = 2.0 * scaled_radius * (near_plane/-pos_es.z) *
                      height_divided_by_top_minus_bottom;
