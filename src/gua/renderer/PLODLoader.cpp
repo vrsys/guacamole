@@ -123,9 +123,24 @@ void PLODLoader::set_render_budget_in_mb(const size_t render_budget) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void PLODLoader::set_out_of_core_budget_in_mb(const size_t out_of_core_budget) {
-
   pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
   policy->set_out_of_core_budget_in_mb(out_of_core_budget);
+}
+
+size_t PLODLoader::get_upload_budget_in_mb() const {
+  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+  return policy->upload_budget_in_mb();
+}
+
+size_t PLODLoader::get_render_budget_in_mb() const {
+  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+
+  return policy->render_budget_in_mb();
+}
+
+size_t PLODLoader::get_out_of_core_budget_in_mb() const {
+  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+  return policy->out_of_core_budget_in_mb();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
