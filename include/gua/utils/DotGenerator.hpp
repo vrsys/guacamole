@@ -34,11 +34,13 @@ namespace gua {
 
 class SceneGraph;
 
+namespace node {
 class Node;
 class GeometryNode;
 class PointLightNode;
 class ScreenNode;
 class SpotLightNode;
+}
 
 /**
  * This class may be used to parse a path.
@@ -64,19 +66,19 @@ class GUA_DLL DotGenerator : public NodeVisitor {
   /**
    * Visiters for each Node type
    */
-  /*virtual*/ void visit(Node* node);
-  /*virtual*/ void visit(TransformNode* cam);
-  /*virtual*/ void visit(GeometryNode* geometry);
-  /*virtual*/ void visit(VolumeNode* volume);
-  /*virtual*/ void visit(PointLightNode* pointlight);
-  /*virtual*/ void visit(ScreenNode* screen);
-  /*virtual*/ void visit(SpotLightNode* spotlight);
-  /*virtual*/ void visit(RayNode* ray);
+  /*virtual*/ void visit(node::Node* node);
+  /*virtual*/ void visit(node::TransformNode* cam);
+  /*virtual*/ void visit(node::GeometryNode* geometry);
+  /*virtual*/ void visit(node::VolumeNode* volume);
+  /*virtual*/ void visit(node::PointLightNode* pointlight);
+  /*virtual*/ void visit(node::ScreenNode* screen);
+  /*virtual*/ void visit(node::SpotLightNode* spotlight);
+  /*virtual*/ void visit(node::RayNode* ray);
 #if GUACAMOLE_ENABLE_PHYSICS
   /*virtual*/ void visit(physics::RigidBodyNode* rb);
   /*virtual*/ void visit(physics::CollisionShapeNode* shape);
 #endif
-  /*virtual*/ void visit(TexturedQuadNode* node);
+  /*virtual*/ void visit(node::TexturedQuadNode* node);
    ///@}
 
   /**
@@ -91,8 +93,8 @@ class GUA_DLL DotGenerator : public NodeVisitor {
 
  private:
 
-  void pre_node_info(Node*);
-  void post_node_info(Node*, std::string const& fillcolor);
+  void pre_node_info(node::Node*);
+  void post_node_info(node::Node*, std::string const& fillcolor);
 
   std::string parse_data_;
   std::string graph_name_;

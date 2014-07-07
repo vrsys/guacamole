@@ -22,8 +22,6 @@
 #ifndef GUA_PLOD_RESSOURCE_HPP
 #define GUA_PLOD_RESSOURCE_HPP
 
-
-
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/GeometryRessource.hpp>
@@ -36,72 +34,52 @@
 #include <pbr/ren/cut_database.h>
 #include <pbr/ren/cut.h>
 #include <pbr/ren/lod_point_cloud.h>
-#include <scm/gl_core.h>
-
-#include <mutex>
-#include <thread>
-
-#include <vector>
-
-
-
 
 namespace gua {
 
 struct RenderContext;
 
 /**
- * Stores geometry data.
+ * Stores a point cloud model with LOD.
  *
- * A mesh can be loaded from an Assimp mesh and the draw onto multiple
- * contexts.
- * Do not use this class directly, it is just used by the Geometry class to
- * store the individual meshes of a file.
+ * This class simply a wrapper for accessing models of PBR library
  */
 class PLODRessource : public GeometryRessource {
  public:
 
-  /**
-   * Default constructor.
-   *
-   * Creates a new and empty Mesh.
-   */
-   PLODRessource();
+  explicit PLODRessource(pbr::model_t model_id, bool is_pickable);
+
+  void draw(RenderContext const& ctx) const {}
 
   /**
-   * Constructor from an Assimp mesh.
+   * Draws the point cloud.
    *
-   * Initializes the mesh from a given Assimp mesh.
+   * Draws the point cloud to the given context.
    *
-   * \param mesh             The Assimp mesh to load the data from.
+   * \param context  The RenderContext to draw onto.
    */
-   PLODRessource(const pbr::ren::LodPointCloud* point_cloud);
+  void draw(RenderContext const& ctx,
+            pbr::context_t context_id,
+            pbr::view_t view_id,
+            pbr::model_t model_id,
+            scm::gl::vertex_array_ptr const& vertex_array,
+            std::vector<unsigned int> const& frustum_culling_results) const;
 
-  /**
-   * Draws the Mesh.
-   *
-   * Draws the Mesh to the given context.
-   *
-   * \param context          The RenderContext to draw onto.
-   */
-  void draw(RenderContext const& ctx) const;
-  
-  void draw(RenderContext const& ctx, pbr::context_t context_id, pbr::view_t view_id, pbr::model_t model_id, scm::gl::vertex_array_ptr const& vertex_array, std::vector<unsigned int> const& frustum_culling_results) const;
+  void ray_test(Ray const& ray,
+                PickResult::Options options,
+                node::Node* owner,
+                std::set<PickResult>& hits);
 
-  void ray_test(Ray const& ray, PickResult::Options options,
-                Node* owner, std::set<PickResult>& hits);
-
-
-  /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
+  std::shared_ptr<GeometryUberShader> create_ubershader() const override {
+    return std::make_shared<PLODUberShader>();
+  }
 
  private:
 
-  void upload_to(RenderContext const& context) const;
+  bool is_pickable_;
 
-  mutable std::mutex upload_mutex_;
-
- public:
-
+  // TODO: do we need it here?
+  pbr::model_t model_id_;
 
 };
 

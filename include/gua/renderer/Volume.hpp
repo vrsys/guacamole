@@ -112,7 +112,7 @@ namespace gua {
 		void set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const;
 
 		void ray_test(Ray const& ray, PickResult::Options options,
-			Node* owner, std::set<PickResult>& hits);
+			node::Node* owner, std::set<PickResult>& hits);
 
 
 		float step_size() const;
@@ -131,7 +131,7 @@ namespace gua {
 			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
 
 		bool update_color_map(RenderContext const& context,
-			std::shared_ptr<Texture2D>,
+			Texture2D const&,
 			const scm::data::piecewise_function_1d<float, float>& in_alpha,
 			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
 		

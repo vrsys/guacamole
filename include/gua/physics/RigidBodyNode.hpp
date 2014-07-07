@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/scenegraph/Node.hpp>
+#include <gua/node/Node.hpp>
 
 // external headers
 #include <vector>
@@ -43,7 +43,7 @@ class CollisionShape;
  *
  *
  */
-class GUA_DLL RigidBodyNode : public Node {
+class GUA_DLL RigidBodyNode : public node::Node {
   friend class Physics;
   friend class CollisionShapeNodeVisitor;
 
@@ -352,7 +352,7 @@ class GUA_DLL RigidBodyNode : public Node {
   // collision shape.
   void sync_shapes(bool do_not_lock = false);
 
-  std::shared_ptr<Node> copy() const;
+  std::shared_ptr<node::Node> copy() const;
 
   // Indicates if the body includes shapes that support static objects only.
   // Useful to check if we need to reconstruct Bullet's collision shape when

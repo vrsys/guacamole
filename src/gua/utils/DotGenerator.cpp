@@ -24,14 +24,14 @@
 
 // guacamole headers
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/VolumeNode.hpp>
-#include <gua/scenegraph/PointLightNode.hpp>
-#include <gua/scenegraph/SpotLightNode.hpp>
-#include <gua/scenegraph/ScreenNode.hpp>
-#include <gua/scenegraph/RayNode.hpp>
-#include <gua/scenegraph/TexturedQuadNode.hpp>
+#include <gua/node/TransformNode.hpp>
+#include <gua/node/GeometryNode.hpp>
+#include <gua/node/VolumeNode.hpp>
+#include <gua/node/PointLightNode.hpp>
+#include <gua/node/SpotLightNode.hpp>
+#include <gua/node/ScreenNode.hpp>
+#include <gua/node/RayNode.hpp>
+#include <gua/node/TexturedQuadNode.hpp>
 #if GUACAMOLE_ENABLE_PHYSICS
 #include <gua/physics/RigidBodyNode.hpp>
 #include <gua/physics/CollisionShapeNode.hpp>
@@ -70,7 +70,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(Node* node) {
+/* virtual */ void DotGenerator::visit(node::Node* node) {
   pre_node_info(node);
 
   std::string fillcolor("[fillcolor =");
@@ -84,7 +84,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(TransformNode* cam) {
+/* virtual */ void DotGenerator::visit(node::TransformNode* cam) {
   pre_node_info(cam);
 
   std::string fillcolor("[fillcolor =");
@@ -98,7 +98,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(GeometryNode* geometry) {
+/* virtual */ void DotGenerator::visit(node::GeometryNode* geometry) {
   pre_node_info(geometry);
 
   std::string fillcolor("[fillcolor =");
@@ -118,7 +118,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(VolumeNode* volume) {
+/* virtual */ void DotGenerator::visit(node::VolumeNode* volume) {
 	pre_node_info(volume);
 
 	std::string fillcolor("[fillcolor =");
@@ -135,7 +135,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(PointLightNode* pointlight) {
+/* virtual */ void DotGenerator::visit(node::PointLightNode* pointlight) {
   pre_node_info(pointlight);
 
   std::string fillcolor("[fillcolor =");
@@ -149,7 +149,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(ScreenNode* screen) {
+/* virtual */ void DotGenerator::visit(node::ScreenNode* screen) {
   pre_node_info(screen);
 
   std::string fillcolor("[fillcolor =");
@@ -163,7 +163,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(SpotLightNode* spot) {
+/* virtual */ void DotGenerator::visit(node::SpotLightNode* spot) {
   pre_node_info(spot);
 
   std::string fillcolor("[fillcolor =");
@@ -177,7 +177,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(RayNode* ray) {
+/* virtual */ void DotGenerator::visit(node::RayNode* ray) {
   pre_node_info(ray);
 
   std::string fillcolor("[fillcolor =");
@@ -228,7 +228,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(TexturedQuadNode* node) {
+/* virtual */ void DotGenerator::visit(node::TexturedQuadNode* node) {
   pre_node_info(node);
 
   std::string fillcolor("[fillcolor =");
@@ -243,7 +243,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DotGenerator::pre_node_info(Node* node) {
+void DotGenerator::pre_node_info(node::Node* node) {
   int current_depth(node->get_depth());
   std::stringstream node_name;
   node_name << node_count_;
@@ -263,7 +263,7 @@ void DotGenerator::pre_node_info(Node* node) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DotGenerator::post_node_info(Node* node, std::string const& fillcolor) {
+void DotGenerator::post_node_info(node::Node* node, std::string const& fillcolor) {
   parse_data_ += "}\"]" + std::string(" [shape = record]") + " [style=filled] ";
 
   parse_data_ += fillcolor + ";\n";

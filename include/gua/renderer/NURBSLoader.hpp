@@ -31,7 +31,9 @@
 
 namespace gua {
 
+namespace node {
 class Node;
+}
 
 /**
  * Loads NURBS files and creates NURBS nodes.
@@ -58,7 +60,7 @@ class GUA_DLL NURBSLoader : public GeometryLoader {
    */
   NURBSLoader();
 
-  std::shared_ptr<Node> create_geometry_from_file(std::string const& nodename,
+  std::shared_ptr<node::Node> create_geometry_from_file(std::string const& nodename,
                                                   std::string const& filename,
                                                   std::string const& material,
                                                   unsigned flags);

@@ -35,9 +35,11 @@
 
 namespace gua {
 
+namespace node {
 class Node;
 class InnerNode;
 class Video3DNode;
+}
 
 /**
  * Loads and draws Video3D.
@@ -51,7 +53,7 @@ class GUA_DLL Video3DLoader : public GeometryLoader {
   Video3DLoader();
   ~Video3DLoader() = default;
 
-  std::shared_ptr<Node> create_geometry_from_file(std::string const& nodename,
+  std::shared_ptr<node::Node> create_geometry_from_file(std::string const& nodename,
                                                   std::string const& ksfile);
 
   bool is_supported(std::string const& file_name) const override;

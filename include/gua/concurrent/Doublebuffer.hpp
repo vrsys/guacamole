@@ -79,7 +79,7 @@ template <typename T> class Doublebuffer {
     copy_cond_var_.notify_all();
   }
 
-  bool closed() { return shutdown_; }
+  bool closed() const { return shutdown_; }
 
  private:
   T front_;
