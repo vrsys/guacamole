@@ -72,9 +72,13 @@ class PLODLoader : public GeometryLoader {
 
   bool is_supported(std::string const& file_name) const override;
 
-  void set_upload_budget_in_mb(const size_t upload_budget);
-  void set_render_budget_in_mb(const size_t render_budget);
-  void set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
+  size_t get_upload_budget_in_mb() const;
+  size_t get_render_budget_in_mb() const;
+  size_t get_out_of_core_budget_in_mb() const;
+
+  void   set_upload_budget_in_mb(const size_t upload_budget);
+  void   set_render_budget_in_mb(const size_t render_budget);
+  void   set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
 
  private:
 
