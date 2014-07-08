@@ -52,7 +52,7 @@ list (REMOVE_ITEM GUACAMOLE_RENDERER_INC
 ENDIF (NOT GUACAMOLE_PBR_SUPPORT)
 FILE(GLOB_RECURSE GUACAMOLE_RENDERER_NURBS_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/renderer/nurbs_geometry/*.hpp)
 FILE(GLOB_RECURSE GUACAMOLE_RENDERER_VIDEO_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/renderer/video3d_geometry/*.hpp)
-                                                                                   
+
 FILE(GLOB_RECURSE GUACAMOLE_SCENEGRAPH_INC     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/scenegraph/*.hpp)
 FILE(GLOB_RECURSE GUACAMOLE_NODE_INC     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/node/*.hpp)
 IF (NOT GUACAMOLE_PBR_SUPPORT)
@@ -150,13 +150,16 @@ ENDIF(MSVC)
 # link static libraries
 TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES})
 TARGET_LINK_LIBRARIES( guacamole general ${ASSIMP_LIBRARIES})
+TARGET_LINK_LIBRARIES( guacamole general ${GLFW_LIBRARIES})
+TARGET_LINK_LIBRARIES( guacamole general ${GL_LIBRARIES})
+
 IF (GUACAMOLE_PBR_SUPPORT)
   TARGET_LINK_LIBRARIES( guacamole general ${PBR_LIBRARIES})
 ENDIF (GUACAMOLE_PBR_SUPPORT)
 
 IF (UNIX)
     TARGET_LINK_LIBRARIES( guacamole general ${BOOST_LIBRARIES})
-    TARGET_LINK_LIBRARIES( guacamole general ${GL_LIBRARIES})
+    TARGET_LINK_LIBRARIES( guacamole general ${X11_LIBRARIES})
 ELSEIF (MSVC)
     # use boost autolink feature
     # not necessary to link GL on msvc

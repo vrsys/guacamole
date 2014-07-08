@@ -44,6 +44,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 PLODUberShader::PLODUberShader()
+
     : GeometryUberShader(),
       near_plane_value_(0.0f),
       height_divided_by_top_minus_bottom_(0.0f),
@@ -52,10 +53,12 @@ PLODUberShader::PLODUberShader()
 ////////////////////////////////////////////////////////////////////////////////
 
 void PLODUberShader::create(std::set<std::string> const& material_names) {
+
   UberShader::create(material_names);
 
   // create depth pass shader
   std::vector<ShaderProgramStage> depth_pass_stages;
+
   depth_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,
                                                  depth_pass_vertex_shader()));
   depth_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
@@ -67,6 +70,7 @@ void PLODUberShader::create(std::set<std::string> const& material_names) {
 
   // create accumulation pass shader
   std::vector<ShaderProgramStage> accumulation_pass_stages;
+
   accumulation_pass_stages.push_back(ShaderProgramStage(
       scm::gl::STAGE_VERTEX_SHADER, accumulation_pass_vertex_shader()));
   accumulation_pass_stages.push_back(ShaderProgramStage(
@@ -78,6 +82,7 @@ void PLODUberShader::create(std::set<std::string> const& material_names) {
 
   // create normalization pass shader
   std::vector<ShaderProgramStage> normalization_pass_stages;
+
   normalization_pass_stages.push_back(ShaderProgramStage(
       scm::gl::STAGE_VERTEX_SHADER, normalization_pass_vertex_shader()));
   normalization_pass_stages.push_back(ShaderProgramStage(
@@ -89,6 +94,7 @@ void PLODUberShader::create(std::set<std::string> const& material_names) {
 
   // create reconstruction pass shader
   std::vector<ShaderProgramStage> reconstruction_pass_stages;
+
   reconstruction_pass_stages.push_back(ShaderProgramStage(
       scm::gl::STAGE_VERTEX_SHADER, reconstruction_pass_vertex_shader()));
   reconstruction_pass_stages.push_back(ShaderProgramStage(
@@ -103,20 +109,26 @@ void PLODUberShader::create(std::set<std::string> const& material_names) {
 
 PLODUberShader::~PLODUberShader() {
 
+
   Logger::LOG_DEBUG << "memory cleanup...(1)" << std::endl;
   delete pbr::ren::Controller::GetInstance();
+
   Logger::LOG_DEBUG << "deleted controller" << std::endl;
   delete pbr::ren::ModelDatabase::GetInstance();
+
   Logger::LOG_DEBUG << "deleted model database" << std::endl;
   delete pbr::ren::Policy::GetInstance();
+
   Logger::LOG_DEBUG << "deleted memory query" << std::endl;
   delete pbr::ren::CutDatabase::GetInstance();
+
   Logger::LOG_DEBUG << "deleted cut database" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string PLODUberShader::depth_pass_vertex_shader() const {
+
 
   std::string vertex_shader(Resources::lookup_shader(
       Resources::shaders_uber_shaders_gbuffer_pbr_p01_depth_vert));
@@ -128,6 +140,7 @@ std::string PLODUberShader::depth_pass_vertex_shader() const {
 
 std::string PLODUberShader::depth_pass_fragment_shader() const {
 
+
   std::string fragment_shader(Resources::lookup_shader(
       Resources::shaders_uber_shaders_gbuffer_pbr_p01_depth_frag));
 
@@ -137,6 +150,7 @@ std::string PLODUberShader::depth_pass_fragment_shader() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string PLODUberShader::accumulation_pass_vertex_shader() const {
+
   std::string vertex_shader(Resources::lookup_shader(
       Resources::shaders_uber_shaders_gbuffer_pbr_p02_accumulation_vert));
   return vertex_shader;
@@ -145,6 +159,7 @@ std::string PLODUberShader::accumulation_pass_vertex_shader() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string PLODUberShader::accumulation_pass_fragment_shader() const {
+
   std::string fragment_shader(Resources::lookup_shader(
       Resources::shaders_uber_shaders_gbuffer_pbr_p02_accumulation_frag));
 
@@ -154,6 +169,7 @@ std::string PLODUberShader::accumulation_pass_fragment_shader() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string PLODUberShader::normalization_pass_vertex_shader() const {
+
   std::string vertex_shader(Resources::lookup_shader(
       Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_vert));
 
@@ -161,6 +177,7 @@ std::string PLODUberShader::normalization_pass_vertex_shader() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 
 std::string PLODUberShader::normalization_pass_fragment_shader() const {
   std::string fragment_shader(Resources::lookup_shader(
@@ -172,15 +189,18 @@ std::string PLODUberShader::normalization_pass_fragment_shader() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string PLODUberShader::reconstruction_pass_vertex_shader() const {
+
   std::string vertex_shader(Resources::lookup_shader(
       Resources::shaders_uber_shaders_gbuffer_pbr_p04_reconstruction_vert));
 
   // material specific uniforms
+
   string_utils::replace(vertex_shader,
                         "@uniform_definition",
                         get_uniform_mapping()->get_uniform_definition());
 
   // output
+
   string_utils::replace(
       vertex_shader,
       "@output_definition",
@@ -193,12 +213,15 @@ std::string PLODUberShader::reconstruction_pass_vertex_shader() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string PLODUberShader::reconstruction_pass_fragment_shader() const {
+
   std::string fragment_shader(Resources::lookup_shader(
       Resources::shaders_uber_shaders_gbuffer_pbr_p04_reconstruction_frag));
+
 
   std::string apply_pbr_color = fshader_factory_->get_output_mapping()
       .get_output_string("gua_pbr", "gua_pbr_output_color");
   apply_pbr_color += " = output_color;\n";
+
 
   std::string apply_pbr_normal = fshader_factory_->get_output_mapping()
       .get_output_string("gua_pbr", "gua_normal");

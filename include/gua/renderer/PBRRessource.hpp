@@ -101,7 +101,6 @@ class PBRRessource : public GeometryRessource {
   //KDTree kd_tree_;
 
   std::shared_ptr<pbr::ren::RawPointCloud> point_cloud_;
-
 };
 
 }

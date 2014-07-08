@@ -88,4 +88,10 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
   application_fps_.step();
 }
 
+void Renderer::stop() {
+  for (auto& rclient : render_clients_) {
+    rclient.first->close();
+  }
+}
+
 }

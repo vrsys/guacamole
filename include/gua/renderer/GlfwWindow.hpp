@@ -19,75 +19,77 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RENDERER_HPP
-#define GUA_RENDERER_HPP
+#ifndef GUA_GLFW_WINDOW_HPP
+#define GUA_GLFW_WINDOW_HPP
 
-// external headers
-#include <vector>
-#include <string>
-#include <memory>
+// guacamole headers
+#include <gua/renderer/WindowBase.hpp>
+#include <gua/events.hpp>
 
-#include <gua/platform.hpp>
-#include <gua/utils/FpsCounter.hpp>
-#include <gua/concurrent/Doublebuffer.hpp>
+class GLFWwindow;
 
 namespace gua {
 
-class SceneGraph;
-class Pipeline;
-
 /**
- * Manages the rendering on multiple contexts.
+ * A window for displaying stuff.
  *
- * This class is used to provide a renderer frontend interface to the user.
+ * It's a window which can display OpenGL stuff.
  */
-class GUA_DLL Renderer {
+class GUA_DLL GlfwWindow : public WindowBase {
  public:
-  typedef std::vector<std::unique_ptr<const SceneGraph> > RenderVector;
-  typedef RenderVector const                              ConstRenderVector;
-  typedef std::shared_ptr<ConstRenderVector>              ConstRenderVectorPtr;
 
   /**
    * Constructor.
    *
-   * This constructs a new Renderer.
+   * Creates a new Window. It owns a RenderContext where Geomtries
+   * can be drawn to.
    *
-   * \param pipelines        A vector of Pipelines to process. For each
-   *                         pipeline a RenderClient is created.
+   * \param description   The description of the window.
    */
-  Renderer(std::vector<Pipeline*> const& pipelines);
-  Renderer(Renderer const&) = delete;
-  Renderer& operator=(Renderer const&) = delete;
+  GlfwWindow(Configuration const& configuration = Configuration());
 
   /**
-  *
-  */
-  ~Renderer();
+   * Destructor.
+   *
+   * Cleans all associated memory.
+   */
+  virtual ~GlfwWindow();
+
+  void open();
+  bool should_close() const;
+  bool get_is_open() const;
+  void close();
+  void process_events();
 
   /**
-   * Request a redraw of all RenderClients.
+   * Activate the context of this window.
    *
-   * Takes a Scenegraph and asks all clients to draw it.
-   *
-   * \param scene_graphs      The SceneGraphs to be processed.
+   * Makes the RenderContext of this window current. All preceeding
+   * OpenGL calls will be invoked on this window.
    */
-  void queue_draw(std::vector<SceneGraph const*> const& scene_graphs);
+  void set_active(bool active) const;
 
-  void stop();
+  /**
+   * Ends the drawing of a new frame.
+   *
+   * This should be called when drawing a frame has been done.
+   */
+  void finish_frame() const;
+
+  events::Signal<math::vec2ui>        on_resize;
+  events::Signal<int, int, int, int>  on_key_pres;
+  events::Signal<unsigned>            on_char;
+  events::Signal<int, int, int>       on_button_press;
+  events::Signal<math::vec2>          on_move_cursor;
+  events::Signal<math::vec2>          on_scroll;
+  events::Signal<bool>                on_enter;
+
+  friend class Pipeline;
 
  private:
-
-  typedef std::pair<ConstRenderVectorPtr, float> Item;
-  typedef std::shared_ptr<gua::concurrent::Doublebuffer<Item> > Mailbox;
-  typedef std::pair<Mailbox, std::thread> Renderclient;
-
-  static void renderclient(Mailbox in, Pipeline* pipe);
-
-  std::vector<Renderclient> render_clients_;
-  FpsCounter application_fps_;
-  bool stop_requested_;
+  GLFWwindow* glfw_window_;
 };
 
 }
 
-#endif  // GUA_RENDERER_HPP
+#endif  // GUA_GLFW_WINDOW_HPP

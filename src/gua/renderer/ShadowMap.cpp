@@ -126,6 +126,7 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
   for (auto const& type : scene.geometrynodes_) {
     // pointer to appropriate ubershader
     GeometryUberShader* ubershader = nullptr;
+    auto const& ressource_container = type.second;
 
     // get appropriate ubershader
     if (!type.second.empty()) {
@@ -156,22 +157,88 @@ void ShadowMap::render_geometry(RenderContext const & ctx,
       ubershader->set_uniform(ctx, 1.0f / map_size, "gua_texel_height");
       ubershader->set_uniform(ctx, true, "gua_render_shadow_map");
 
-      for (auto const& node : type.second) {
-        if (node->get_shadow_mode() != ShadowMode::OFF) {
-          ubershader->set_uniform(ctx, static_cast<int>(node->get_shadow_mode())
-              , "gua_shadow_quality");
-        }
-
-        // draw node
-        ubershader->draw(ctx,
-          node->get_filename(),
-          node->get_material(),
-          node->get_cached_world_transform(),
-          scm::math::transpose(
-            scm::math::inverse(node->get_cached_world_transform())),
-          scene.frustum,
-          view);
+      // 1. call preframe callback if available for type
+      if (ubershader->get_stage_mask() & GeometryUberShader::PRE_FRAME_STAGE) {
+        ubershader->preframe(ctx);
       }
+
+      // 2. iterate all drawables of current type and call predraw of current
+      // ubershader
+      if (ubershader->get_stage_mask() & GeometryUberShader::PRE_DRAW_STAGE) {
+        for (auto const& node : ressource_container) {
+          if (node->get_shadow_mode() != ShadowMode::OFF) {
+            ubershader->set_uniform(ctx, static_cast<int>(node->get_shadow_mode())
+              , "gua_shadow_quality");
+          }
+          auto const& ressource =
+            GeometryDatabase::instance()->lookup(node->get_filename());
+          auto const& material =
+            MaterialDatabase::instance()->lookup(node->get_material());
+
+          ubershader->predraw(ctx,
+            node->get_filename(),
+            node->get_material(),
+            node->get_cached_world_transform(),
+            scm::math::transpose(scm::math::inverse(
+            node->get_cached_world_transform())),
+            scene.frustum,
+            view);
+        }
+      }
+
+      // 3. iterate all drawables of current type and call draw of current
+      // ubershader
+      if (ubershader->get_stage_mask() & GeometryUberShader::DRAW_STAGE) {
+        for (auto const& node : ressource_container) {
+          if (node->get_shadow_mode() != ShadowMode::OFF) {
+            ubershader->set_uniform(ctx, static_cast<int>(node->get_shadow_mode())
+              , "gua_shadow_quality");
+          }
+          auto const& ressource =
+            GeometryDatabase::instance()->lookup(node->get_filename());
+          auto const& material =
+            MaterialDatabase::instance()->lookup(node->get_material());
+
+          ubershader->draw(ctx,
+            node->get_filename(),
+            node->get_material(),
+            node->get_cached_world_transform(),
+            scm::math::transpose(scm::math::inverse(
+            node->get_cached_world_transform())),
+            scene.frustum,
+            view);
+        }
+      }
+
+      // 4. iterate all drawables of current type and call postdraw of current
+      // ubershader
+      if (ubershader->get_stage_mask() & GeometryUberShader::POST_DRAW_STAGE) {
+        for (auto const& node : ressource_container) {
+          if (node->get_shadow_mode() != ShadowMode::OFF) {
+            ubershader->set_uniform(ctx, static_cast<int>(node->get_shadow_mode())
+              , "gua_shadow_quality");
+          }
+          auto const& ressource =
+            GeometryDatabase::instance()->lookup(node->get_filename());
+          auto const& material =
+            MaterialDatabase::instance()->lookup(node->get_material());
+
+          ubershader->postdraw(ctx,
+            node->get_filename(),
+            node->get_material(),
+            node->get_cached_world_transform(),
+            scm::math::transpose(scm::math::inverse(
+            node->get_cached_world_transform())),
+            scene.frustum,
+            view);
+        }
+      }
+
+      // 5. call postframe callback if available for type
+      if (ubershader->get_stage_mask() & GeometryUberShader::POST_FRAME_STAGE) {
+        ubershader->postframe(ctx);
+      }
+
     } else {
       Logger::LOG_WARNING << "ShadowMap::render_geometry(): UberShader missing."
                           << std::endl;

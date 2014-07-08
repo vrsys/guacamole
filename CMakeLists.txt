@@ -3,6 +3,7 @@
 ################################################################
 
 PROJECT(GUACAMOLE CXX)
+ENABLE_LANGUAGE(C)
 
 # version number
 set(GUACAMOLE_MAJOR 0)
@@ -46,21 +47,23 @@ include_directories("${PROJECT_BINARY_DIR}/include")
 ################################################################
 set(GLOBAL_EXT_DIR ${GUACAMOLE_SOURCE_DIR}/externals)
 
-if (UNIX)
-	pkg_check_modules(ASSIMP REQUIRED assimp)
-	pkg_check_modules(JSON REQUIRED jsoncpp)
-	pkg_check_modules(GL REQUIRED gl)
-	pkg_check_modules(GLEW REQUIRED glew)
-elseif (WIN32)
-	include(FindAssimp)
-endif (UNIX)
-
 include(define_macros)
 include(find_compiler)
+
+if (UNIX)
+  pkg_check_modules(ASSIMP REQUIRED assimp)
+  pkg_check_modules(JSON REQUIRED jsoncpp)
+  pkg_check_modules(GL REQUIRED gl)
+  pkg_check_modules(GLEW REQUIRED glew)
+  include(find_x11)
+elseif (WIN32)
+  include(FindAssimp)
+  set(GL_LIBRARIES OpenGL32.lib)
+endif (UNIX)
+
 include(FindSchism)
 include(FindBoost)
 include(FindZMQ)
-
 
 if (GUACAMOLE_ENABLE_PHYSICS)
   if (UNIX)
@@ -71,7 +74,7 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   find_package(Bullet REQUIRED)
 endif (GUACAMOLE_ENABLE_PHYSICS)
 
-
+find_package(GLFW3 REQUIRED)
 find_package(Json REQUIRED)
 
 IF (GUACAMOLE_PBR_SUPPORT)
@@ -89,6 +92,7 @@ set(LIB_PATHS
     ${BULLET_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
     ${ZMQ_LIBRARY_DIRS}
+    ${X11_LIBRARY_DIRS}
 )
 
 set(INCLUDE_PATHS
@@ -102,6 +106,8 @@ set(INCLUDE_PATHS
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
     ${ZMQ_INCLUDE_DIRS}
+    ${GLFW_INCLUDE_DIRS}
+    ${X11_INCLUDE_DIRS}
 )
 
 IF (GUACAMOLE_PBR_SUPPORT)
@@ -243,10 +249,15 @@ message(STATUS "   library: ${JSON_LIBRARIES}" )
 message(STATUS "   library path: ${JSON_LIBRARY_DIRS}" )
 message(STATUS "   include: ${JSON_INCLUDE_DIRS}" )
 message(STATUS "" )
-message(STATUS " cuda:" )
-message(STATUS "   library: ${CUDA_LIBRARIES}" )
-message(STATUS "   library path: ${CUDA_LIBRARY_DIRS}" )
-message(STATUS "   include: ${CUDA_INCLUDE_DIRS}" )
+message(STATUS " glfw:" )
+message(STATUS "   library: ${GLFW_LIBRARIES}" )
+message(STATUS "   library path: ${GLFW_LIBRARY_DIRS}" )
+message(STATUS "   include: ${GLFW_INCLUDE_DIRS}" )
+message(STATUS "" )
+message(STATUS " x11:" )
+message(STATUS "   library: ${X11_LIBRARIES}" )
+message(STATUS "   library path: ${X11_LIBRARY_DIRS}" )
+message(STATUS "   include: ${X11_INCLUDE_DIRS}" )
 message(STATUS "" )
 message(STATUS " gl:" )
 message(STATUS "   library: ${GL_LIBRARIES}" )
