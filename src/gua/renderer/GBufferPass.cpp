@@ -211,7 +211,6 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     // 3. iterate all drawables of current type and call draw of current
     // ubershader
-
     if (ubershader->get_stage_mask() & GeometryUberShader::DRAW_STAGE) {
       for (auto const& node : ressource_container) {
         auto const& ressource =
