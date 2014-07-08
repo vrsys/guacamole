@@ -25,10 +25,16 @@
 #include <gua/renderer/BuiltInTextures.hpp>
 #include <gua/databases/Resources.hpp>
 
+#include <GLFW/glfw3.h>
+
 namespace gua {
 
 void init(int argc, char** argv) {
   static scm::shared_ptr<scm::core> scm_core(new scm::core(argc, argv));
+
+  if (!glfwInit()) {
+    Logger::LOG_ERROR << "Failed to initialie GLFW!" << std::endl;
+  }
 
   create_resource_material("gua_bounding_box",
                             Resources::materials_gua_bounding_box_gsd,

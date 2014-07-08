@@ -48,7 +48,7 @@ void set_pipe_defaults(gua::Pipeline* pipe, unsigned width, unsigned height)
   pipe->config.set_background_color(gua::utils::Color3f(0.0, 0.0f, 0.0f));
 }
 
-void set_window_default(gua::Window* window, unsigned width, unsigned height)
+void set_window_default(gua::WindowBase* window, unsigned width, unsigned height)
 {
   window->config.set_size(gua::math::vec2ui(width, height));
   window->config.set_left_resolution(gua::math::vec2ui(width, height));
@@ -75,9 +75,9 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader trimeshloader;
   gua::NURBSLoader nurbsloader;
-  gua::Video3DLoader videoloader;
+  // gua::Video3DLoader videoloader;
 
-  auto video_geode(videoloader.create_geometry_from_file("video_geode", argv[1]));
+  // auto video_geode(videoloader.create_geometry_from_file("video_geode", argv[1]));
   auto teapot_geode(trimeshloader.create_geometry_from_file("teapot_geode", "data/objects/teapot.obj", "data/materials/Red.gmd", gua::TriMeshLoader::DEFAULTS));
   auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", "data/materials/White.gmd", gua::TriMeshLoader::DEFAULTS));
   auto nurbs_geode(nurbsloader.create_geometry_from_file("nurbs_geode", "data/objects/teapot.igs", "data/materials/Orange.gmd", gua::NURBSLoader::DEFAULTS));
@@ -87,13 +87,13 @@ int main(int argc, char** argv) {
   auto nurbs = graph.add_node<gua::node::TransformNode>("/", "nurbs");
   auto plate = graph.add_node<gua::node::TransformNode>("/", "plate");
 
-  graph.add_node("/video", video_geode);
+  // graph.add_node("/video", video_geode);
   graph.add_node("/teapot", teapot_geode);
   graph.add_node("/nurbs", nurbs_geode);
   graph.add_node("/plate", plate_geode);
 
 
-  const float aspect = width * 1.0f/height; 
+  const float aspect = width * 1.0f/height;
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   //screen->data.set_size(gua::math::vec2(aspect*0.05, 0.05));
   screen->data.set_size(gua::math::vec2(aspect*2.0, 2.0));
@@ -177,8 +177,8 @@ int main(int argc, char** argv) {
 
 
 
-  set_pipe_defaults(pipe , width, height); 
-  set_pipe_defaults(pipe2, width, height); 
+  set_pipe_defaults(pipe , width, height);
+  set_pipe_defaults(pipe2, width, height);
   set_pipe_defaults(pipe3, width, height);
   set_pipe_defaults(pipe4, width, height);
 
@@ -222,10 +222,10 @@ int main(int argc, char** argv) {
   pipe4->set_window(window4);
 
 #if 1
-  gua::Renderer renderer({ pipe, 
-			     pipe2, 
-			     pipe3, 
-			     pipe4
+  gua::Renderer renderer({ pipe,
+           pipe2,
+           pipe3,
+           pipe4
                          });
 #else
   gua::Renderer renderer({ pipe });
@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
 
   // transform plate
   plate->scale(0.07);
-  plate->translate(0.0f, -4.0f, -4.0f);  
+  plate->translate(0.0f, -4.0f, -4.0f);
 
   float time_value = 0;
 
@@ -263,23 +263,23 @@ int main(int argc, char** argv) {
    scm::math::mat4f ident;
    scm::math::set_identity(ident);
    video->set_transform(ident);
-   
+
    video->scale(2.0f + std::sin(time_value));
    //video->rotate(10.0f*time_value, 0, 1, 0);
    //video->translate(0, -2.0, -2.0);
-   
+
    time_value += 0.01f;
-   
+
    //video_geode->rotate(0.1, 0, 1, 0);
-   
+
    teapot_geode->rotate(0.3, 0, 1, 0);
-   
+
    nurbs_geode->rotate(0.3, 0, 0, 1);
 
    plate->translate(-plate->get_bounding_box().center());
    plate->rotate(0.04f, 0, 1, 0);
    plate->translate(plate->get_bounding_box().center());
-    
+
     renderer.queue_draw({ &graph });
   }
 

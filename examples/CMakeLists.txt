@@ -29,4 +29,5 @@ set(INCLUDE_PATHS
   ${JSON_INCLUDE_DIRS}
   )
 
+add_subdirectory(input)
 add_subdirectory(multicontext)
