@@ -27,123 +27,127 @@
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/node/Node.hpp>
 
 // external headers
-
-#include <iostream>
-
+#include <stack>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PLODRessource::PLODRessource()
-    : upload_mutex_() {}
+PLODRessource::PLODRessource(pbr::model_t model_id, bool is_pickable)
+    : model_id_(model_id), is_pickable_(is_pickable) {
 
-////////////////////////////////////////////////////////////////////////////////
+  scm::gl::boxf bb = pbr::ren::ModelDatabase::GetInstance()->GetModel(model_id)
+      ->kdn_tree()->bounding_boxes()[0];
 
-PLODRessource::PLODRessource(const pbr::ren::LodPointCloud* point_cloud)
-    : upload_mutex_() {
-
-
-     //set already created BB
-  	 scm::gl::boxf loaded_bb = point_cloud->kdn_tree()->bounding_boxes()[0];
-  	 bounding_box_.min = loaded_bb.min_vertex();
- 	   bounding_box_.max = loaded_bb.max_vertex();
+  bounding_box_.min = bb.min_vertex();
+  bounding_box_.max = bb.max_vertex();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PLODRessource::upload_to(RenderContext const& ctx) const {
-/*
+void PLODRessource::draw(
+    RenderContext const& ctx,
+    pbr::context_t context_id,
+    pbr::view_t view_id,
+    pbr::model_t model_id,
+    scm::gl::vertex_array_ptr const& vertex_array,
+    std::vector<unsigned int> const& culling_results) const {
 
-  if (!point_cloud_->is_loaded()) {
-    Logger::LOG_WARNING << "Point Cloud was not loaded!" << std::endl;
-    return;
-  }
+  pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
+  pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
 
-  std::unique_lock<std::mutex> lock(upload_mutex_);
+  pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
+  std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
+  pbr::ren::KdnTree const* kdn_tree = database->GetModel(model_id)->kdn_tree();
 
-  if (buffers_.size() <= ctx.id) {
-    buffers_.resize(ctx.id + 1);
-    vertex_array_.resize(ctx.id + 1);
-  }
+  uint32_t surfels_per_node = database->surfels_per_node();
+  uint32_t surfels_per_node_of_model = kdn_tree->surfels_per_node();
 
+  scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
-  buffers_[ctx.id] =
-      ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       point_cloud_->num_surfels() * sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
-                                       &(point_cloud_->data()[0]));
+  ctx.render_context->bind_vertex_array(vertex_array);
+  ctx.render_context->apply();
 
-
-  std::vector<scm::gl::buffer_ptr> buffer_arrays;
-  buffer_arrays.push_back(buffers_[ctx.id]);
-
-
-  vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
-      scm::gl::vertex_format(
-          0, 0, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 1, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 2, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 3, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 4, scm::gl::TYPE_UBYTE, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 5, scm::gl::TYPE_FLOAT, sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0, 6, scm::gl::TYPE_VEC3F, sizeof(pbr::ren::RawPointCloud::SerializedSurfel)),
-       buffer_arrays);
-*/
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void PLODRessource::draw(RenderContext const& ctx) const
-{/*dummy*/}
-////////////////////////////////////////////////////////////////////////////////
-
-void PLODRessource::draw(RenderContext const& ctx, pbr::context_t context_id, pbr::view_t view_id, pbr::model_t model_id, scm::gl::vertex_array_ptr const& vertex_array, std::vector<unsigned int> const& culling_results) const 
-{
-
-    pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-    pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
-    
-    pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
-    std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
-    pbr::ren::KdnTree const *  kdn_tree = database->GetModel(model_id)->kdn_tree();
-
-    uint32_t surfels_per_node = database->surfels_per_node();
-    uint32_t surfels_per_node_of_model = kdn_tree->surfels_per_node();
-
-    scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-    ctx.render_context->bind_vertex_array(vertex_array);
-
-    ctx.render_context->apply();
-  
-    pbr::node_t node_counter = 0;
-  
-
-    for(std::vector<pbr::ren::Cut::NodeSlotAggregate>::const_iterator k = node_list.begin(); k != node_list.end(); ++k, ++node_counter)
-    {
-        //0 = completely inside of frustum, 1 = completely outside of frustum, 2 = intersects frustum
-        if(culling_results[node_counter] != 1)
-        {
-          ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, (k->slot_id_) * surfels_per_node, surfels_per_node_of_model);
-        }
+  pbr::node_t node_counter = 0;
+  for (const auto& n : node_list) {
+    ++node_counter;
+    // 0 = completely inside of frustum,
+    // 1 = completely outside of frustum,
+    // 2 = intersects frustum
+    if (culling_results[node_counter] != 1) {
+      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
+                                      n.slot_id_ * surfels_per_node,
+                                      surfels_per_node_of_model);
     }
-  
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PLODRessource::ray_test(Ray const& ray, PickResult::Options options,
-                    node::Node* owner, std::set<PickResult>& hits) {
-  return;
+void PLODRessource::ray_test(Ray const& ray,
+                             PickResult::Options options,
+                             node::Node* owner,
+                             std::set<PickResult>& hits) {
+
+  if (!is_pickable_)
+    return;
+
+  const auto* tree =
+      pbr::ren::ModelDatabase::GetInstance()->GetModel(model_id_)->kdn_tree();
+  const uint32_t num_nodes = tree->num_nodes();
+  const uint32_t fan_factor = tree->fan_factor();
+  const uint32_t first_leaf = num_nodes - pow(fan_factor, tree->depth());
+
+  const auto owner_transform = owner->get_world_transform();
+  const auto world_origin = owner_transform * ray.origin_;
+
+  bool has_hit = false;
+  PickResult pick = PickResult(0.f,
+                               owner,
+                               ray.origin_,
+                               math::vec3(0.f, 0.f, 0.f),
+                               math::vec3(0.f, 1.f, 0.f),
+                               math::vec3(0.f, 1.f, 0.f),
+                               math::vec2(0.f, 0.f));
+
+  std::stack<pbr::node_t> candidates;
+
+  // there is always an intersection with root node
+  candidates.push(0);
+
+  while (!candidates.empty()) {
+    pbr::node_t current = candidates.top();
+    candidates.pop();
+
+    for (pbr::node_t k = 0; k < fan_factor; ++k) {
+      pbr::node_t n = tree->GetChildId(current, k);
+      if (n >= num_nodes)
+        break;
+      Ray hit_ray(ray.intersection(tree->bounding_boxes()[n]));
+      if (hit_ray.t_max_ >= 0.f) {
+        if (n >= first_leaf) {
+          // leaf with intersecion, check if frontmost
+          float dist = scm::math::length(owner_transform * hit_ray.origin_ -
+                                         world_origin);
+          if (!has_hit || dist < pick.distance) {
+            pick.distance = dist;
+            pick.position = hit_ray.origin_;
+            has_hit = true;
+          }
+        } else {
+          // add to stack if not leaf
+          candidates.push(n);
+        }
+      }
+    }
+  }
+  if (has_hit)
+    hits.insert(pick);
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*virtual*/ std::shared_ptr<GeometryUberShader> PLODRessource::create_ubershader() const {
-  return std::make_shared<PLODUberShader>();
-}
+/////////////////////////////////////////////////////////////////////////////////
 
 }
