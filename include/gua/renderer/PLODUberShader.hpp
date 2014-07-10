@@ -50,7 +50,10 @@ class PLODUberShader : public GeometryUberShader {
 
  public:
 
-  PLODUberShader();
+  PLODUberShader()
+      : GeometryUberShader(),
+        already_uploaded_(false) {}
+
   ~PLODUberShader();
 
   void create(std::set<std::string> const& material_names);
@@ -118,6 +121,7 @@ class PLODUberShader : public GeometryUberShader {
 
   //auxiliary
   void reset(RenderContext const& context) const;
+  void update_textures(RenderContext const& context) const;
 
  private:  //member variables
 
@@ -163,9 +167,6 @@ class PLODUberShader : public GeometryUberShader {
 
   //frustum dependent variables:
   /////////////////////////////////////////////////////////////////////////////////////
-  mutable float near_plane_value_;
-  mutable float height_divided_by_top_minus_bottom_;
-
   mutable std::vector<unsigned int> frustum_culling_results_;
 
   //misc:
@@ -176,7 +177,7 @@ class PLODUberShader : public GeometryUberShader {
 
   mutable unsigned int last_geometry_state_;
 
-  mutable bool already_uploaded;
+  mutable bool already_uploaded_;
 
   ////////////////////////////////////////////////////////////////////////////////////
   mutable std::shared_ptr<scm::gl::context_all_guard> context_guard_;

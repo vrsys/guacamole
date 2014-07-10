@@ -43,15 +43,6 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PLODUberShader::PLODUberShader()
-
-    : GeometryUberShader(),
-      near_plane_value_(0.0f),
-      height_divided_by_top_minus_bottom_(0.0f),
-      already_uploaded(false) {}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void PLODUberShader::create(std::set<std::string> const& material_names) {
 
   UberShader::create(material_names);
@@ -109,7 +100,6 @@ void PLODUberShader::create(std::set<std::string> const& material_names) {
 
 PLODUberShader::~PLODUberShader() {
 
-
   Logger::LOG_DEBUG << "memory cleanup...(1)" << std::endl;
   delete pbr::ren::Controller::GetInstance();
 
@@ -129,7 +119,6 @@ PLODUberShader::~PLODUberShader() {
 
 std::string PLODUberShader::depth_pass_vertex_shader() const {
 
-
   std::string vertex_shader(Resources::lookup_shader(
       Resources::shaders_uber_shaders_gbuffer_pbr_p01_depth_vert));
 
@@ -139,7 +128,6 @@ std::string PLODUberShader::depth_pass_vertex_shader() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string PLODUberShader::depth_pass_fragment_shader() const {
-
 
   std::string fragment_shader(Resources::lookup_shader(
       Resources::shaders_uber_shaders_gbuffer_pbr_p01_depth_frag));
@@ -254,61 +242,35 @@ std::string PLODUberShader::reconstruction_pass_fragment_shader() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool PLODUberShader::upload_to(RenderContext const& context) const {
+void PLODUberShader::update_textures(RenderContext const& context) const {
 
-  if (already_uploaded) {
-    return false;
-  } else {
-    already_uploaded = true;
-  }
+  assert(context.render_window->config.get_stereo_mode() == StereoMode::MONO 
+         || left_resolution_ == right_resolution_);
 
-  bool upload_succeeded = UberShader::upload_to(context);
-
-  assert(context.render_window->config.get_stereo_mode() == StereoMode::MONO ||
-         ((context.render_window->config.get_left_resolution()[0] ==
-           context.render_window->config.get_right_resolution()[0]) &&
-          (context.render_window->config.get_left_resolution()[1] ==
-           context.render_window->config.get_right_resolution()[1])));
+  render_window_dims_ = left_resolution_;
 
   //initialize attachments for depth pass
   depth_pass_log_depth_result_ = context.render_device
-      ->create_texture_2d(context.render_window->config.get_left_resolution(),
+      ->create_texture_2d(render_window_dims_,
                           scm::gl::FORMAT_D32,
-                          1,
-                          1,
-                          1);
+                          1, 1, 1);
 
   depth_pass_linear_depth_result_ = context.render_device
-      ->create_texture_2d(context.render_window->config.get_left_resolution(),
+      ->create_texture_2d(render_window_dims_,
                           scm::gl::FORMAT_R_32F,
-                          1,
-                          1,
-                          1);
+                          1, 1, 1);
 
   //initialize attachments for accumulation pass
   accumulation_pass_color_result_ = context.render_device
-      ->create_texture_2d(context.render_window->config.get_left_resolution(),
+      ->create_texture_2d(render_window_dims_,
                           scm::gl::FORMAT_RGBA_32F,
-                          1,
-                          1,
-                          1);
+                          1, 1, 1);
 
   //initialize attachment for normalization pass
   normalization_pass_color_result_ = context.render_device
-      ->create_texture_2d(context.render_window->config.get_left_resolution(),
+      ->create_texture_2d(render_window_dims_,
                           scm::gl::FORMAT_RGB_8,
-                          1,
-                          1,
-                          1);
-
-  fullscreen_quad_.reset(new scm::gl::quad_geometry(
-      context.render_device, math::vec2(-1.0f, -1.0f), math::vec2(1.0f, 1.0f)));
-
-  ///////////////////////////////////////////////////////////////////////FBOs
-  ///BEGIN
-
-  //create depth FBO
-  depth_pass_result_fbo_ = context.render_device->create_frame_buffer();
+                          1, 1, 1);
 
   //configure depth FBO
   depth_pass_result_fbo_->clear_attachments();
@@ -317,21 +279,43 @@ bool PLODUberShader::upload_to(RenderContext const& context) const {
   depth_pass_result_fbo_->attach_color_buffer(0,
                                               depth_pass_linear_depth_result_);
 
-  //create accumulation FBO
-  accumulation_pass_result_fbo_ = context.render_device->create_frame_buffer();
-
   //configure accumulation FBO
   accumulation_pass_result_fbo_->clear_attachments();
   accumulation_pass_result_fbo_->attach_color_buffer(
       0, accumulation_pass_color_result_);
 
-  //create normalization FBO
-  normalization_pass_result_fbo_ = context.render_device->create_frame_buffer();
-
   //configure normalization FBO
   normalization_pass_result_fbo_->clear_attachments();
   normalization_pass_result_fbo_->attach_color_buffer(
       0, normalization_pass_color_result_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool PLODUberShader::upload_to(RenderContext const& context) const {
+
+  if (already_uploaded_) {
+    if (render_window_dims_ != left_resolution_)
+      update_textures(context);
+    return false;
+  } else {
+    already_uploaded_ = true;
+  }
+
+  bool upload_succeeded = UberShader::upload_to(context);
+
+  fullscreen_quad_.reset(new scm::gl::quad_geometry(
+      context.render_device, math::vec2(-1.0f, -1.0f), math::vec2(1.0f, 1.0f)));
+
+  ///////////////////////////////////////////////////////////////////////FBOs
+  ///Create FBOs
+
+  depth_pass_result_fbo_ = context.render_device->create_frame_buffer();
+  accumulation_pass_result_fbo_ = context.render_device->create_frame_buffer();
+  normalization_pass_result_fbo_ = context.render_device->create_frame_buffer();
+
+  update_textures(context);
+
   ///////////////////////////////////////////////////////////////////////FBOs
   ///END
   //****
@@ -368,13 +352,6 @@ bool PLODUberShader::upload_to(RenderContext const& context) const {
   ///////////////////////////////////////////////////////////////////////MISC
   ///BEGIN
   material_id_ = 0;
-
-  near_plane_value_ = 0;
-
-  height_divided_by_top_minus_bottom_ = 0;
-
-  render_window_dims_ = context.render_window->config.get_left_resolution();
-
   last_geometry_state_ = invalid_state;
   ///////////////////////////////////////////////////////////////////////MISC_END
   //****
