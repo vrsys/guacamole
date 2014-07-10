@@ -210,7 +210,7 @@ add_subdirectory(plugins)
 # Testing
 ################################################################
 
-option (GUACAMOLE_TESTS "Enable testing." ON)
+option (GUACAMOLE_TESTS "Enable testing." OFF)
 
 if (GUACAMOLE_TESTS)
   add_subdirectory(tests)
