@@ -17,6 +17,7 @@ set(GUACAMOLE_PACKAGENAME "GUACAMOLE")
 
 option (GUACAMOLE_PBR_SUPPORT "Set to enable PBR (point based rendering) support.")
 option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support.")
+option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." OFF)
 option (GUACAMOLE_RUNTIME_UBERSHADERS "Set to enable to runtime generation of ubershaders.")
 
 # We require at least version 2.8.0
@@ -74,7 +75,10 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   find_package(Bullet REQUIRED)
 endif (GUACAMOLE_ENABLE_PHYSICS)
 
-find_package(GLFW3 REQUIRED)
+if (GUACAMOLE_GLFW3)
+  find_package(GLFW3 REQUIRED)
+endif (GUACAMOLE_GLFW3)
+
 find_package(Json REQUIRED)
 
 IF (GUACAMOLE_PBR_SUPPORT)
@@ -106,7 +110,6 @@ set(INCLUDE_PATHS
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
     ${ZMQ_INCLUDE_DIRS}
-    ${GLFW_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
 )
 
@@ -117,6 +120,10 @@ IF (GUACAMOLE_PBR_SUPPORT)
   LIST(APPEND LIB_PATHS ${PROTOBUF_LIBRARY_DIRS})
   LIST(APPEND INCLUDE_PATHS ${PROTOBUF_INCLUDE_DIRS})
 ENDIF (GUACAMOLE_PBR_SUPPORT)
+
+if (GUACAMOLE_GLFW3)
+  LIST(APPEND INCLUDE_PATHS ${GLFW_INCLUDE_DIRS})
+endif (GUACAMOLE_GLFW3)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
@@ -203,7 +210,7 @@ add_subdirectory(plugins)
 # Testing
 ################################################################
 
-option (GUACAMOLE_TESTS "Enable testing." OFF)
+option (GUACAMOLE_TESTS "Enable testing." ON)
 
 if (GUACAMOLE_TESTS)
   add_subdirectory(tests)
@@ -249,11 +256,6 @@ message(STATUS "   library: ${JSON_LIBRARIES}" )
 message(STATUS "   library path: ${JSON_LIBRARY_DIRS}" )
 message(STATUS "   include: ${JSON_INCLUDE_DIRS}" )
 message(STATUS "" )
-message(STATUS " glfw:" )
-message(STATUS "   library: ${GLFW_LIBRARIES}" )
-message(STATUS "   library path: ${GLFW_LIBRARY_DIRS}" )
-message(STATUS "   include: ${GLFW_INCLUDE_DIRS}" )
-message(STATUS "" )
 message(STATUS " x11:" )
 message(STATUS "   library: ${X11_LIBRARIES}" )
 message(STATUS "   library path: ${X11_LIBRARY_DIRS}" )
@@ -275,6 +277,7 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   message(STATUS "   include: ${BULLET_INCLUDE_DIRS}" )
   message(STATUS "" )
 endif (GUACAMOLE_ENABLE_PHYSICS)
+
 if (GUACAMOLE_PBR_SUPPORT)
   message(STATUS " protobuf:" )
   message(STATUS "   library: ${PROTOBUF_LIBRARIES}" )
@@ -285,6 +288,14 @@ if (GUACAMOLE_PBR_SUPPORT)
   message(STATUS "   library: ${PBR_LIBRARIES}" )
   message(STATUS "   library path: ${PBR_LIBRARY_DIRS}" )
   message(STATUS "   include: ${PBR_INCLUDE_DIRS}" )
-
 endif (GUACAMOLE_PBR_SUPPORT)
+
+if (GUACAMOLE_GLFW3)
+  message(STATUS " glfw:" )
+  message(STATUS "   library: ${GLFW_LIBRARIES}" )
+  message(STATUS "   library path: ${GLFW_LIBRARY_DIRS}" )
+  message(STATUS "   include: ${GLFW_INCLUDE_DIRS}" )
+  message(STATUS "" )
+endif (GUACAMOLE_GLFW3)
+
 message(STATUS "" )

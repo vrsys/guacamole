@@ -183,7 +183,7 @@ class NodeVisitor {
    */
   virtual void visit(node::RayNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
-#if GUACAMOLE_ENABLE_PHYSICS
+#ifdef GUACAMOLE_ENABLE_PHYSICS
   /**
    * Visits a RigidBodyNode.
    *
