@@ -44,7 +44,7 @@ public:
                 std::string const& material = "gua_default_material",
                 math::mat4  const& transform = math::mat4::identity());
 
-    void ray_test_impl(RayNode const& ray,
+    void ray_test_impl(Ray const& ray,
                        PickResult::Options options,
                        Mask const& mask,
                        std::set<PickResult>& hits) override;

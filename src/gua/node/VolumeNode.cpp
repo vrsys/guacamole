@@ -65,15 +65,6 @@ namespace node {
 
   /////////////////////////////////////////////////////////////////////////////
 
-  void VolumeNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
-                           Mask const& mask, std::set<PickResult>& hits) {
-
-    // first of all, check bbox
-    auto box_hits(ray.intersect(bounding_box_));
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-
   std::shared_ptr<Node> VolumeNode::copy() const {
     return std::make_shared<VolumeNode>(get_name(), data, get_transform());
   }

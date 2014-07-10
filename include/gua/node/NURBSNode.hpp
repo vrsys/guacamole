@@ -45,7 +45,7 @@ public : // member
   /**
   * Implements ray picking for a NURBS object
   */
-  void ray_test_impl(RayNode const& ray,
+  void ray_test_impl(Ray const& ray,
                      PickResult::Options options,
                      Mask const& mask,
                      std::set<PickResult>& hits) override;

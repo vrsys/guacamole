@@ -34,6 +34,7 @@
 namespace gua {
 
 class NodeVisitor;
+class Ray;
 
 namespace node {
 class RayNode;
@@ -273,6 +274,19 @@ class GUA_DLL SceneGraph {
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   std::set<PickResult> const ray_test(node::RayNode const& ray,
+                                      PickResult::Options options = PickResult::PICK_ALL,
+                                      std::string const& mask = "");
+
+  /**
+   * Intersects a SceneGraph with a given Ray.
+   *
+   * Calls Node::ray_test() on the root Node.
+   *
+   * \param ray       The Ray used to check for intersections.
+   * \param options   PickResult::Options to configure the intersection process.
+   * \param mask      A mask to restrict the intersection to certain Nodes.
+   */
+  std::set<PickResult> const ray_test(Ray const& ray,
                                       PickResult::Options options = PickResult::PICK_ALL,
                                       std::string const& mask = "");
 

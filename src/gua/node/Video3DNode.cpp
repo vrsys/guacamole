@@ -47,14 +47,14 @@ namespace node {
 
   /////////////////////////////////////////////////////////////////////////////
 
-  void Video3DNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
+  void Video3DNode::ray_test_impl(Ray const& ray, PickResult::Options options,
                              Mask const& mask, std::set<PickResult>& hits) {
 
     // first of all, check bbox
-    auto box_hits(ray.intersect(bounding_box_));
+    auto box_hits(::gua::intersect(ray, bounding_box_));
 
     // ray did not intersect bbox -- therefore it wont intersect
-    if (box_hits.first == RayNode::END && box_hits.second == RayNode::END) {
+    if (box_hits.first == Ray::END && box_hits.second == Ray::END) {
       return;
     }
 

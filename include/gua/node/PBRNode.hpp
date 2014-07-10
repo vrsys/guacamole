@@ -42,13 +42,6 @@ public : // member
           std::string const& material = "gua_default_material",
           math::mat4  const& transform = math::mat4::identity());
 
-  /**
-  * Implements ray picking for a point cloud
-  */
-  void ray_test_impl(RayNode const& ray,
-                     PickResult::Options options,
-                     Mask const& mask,
-                     std::set<PickResult>& hits) override;
 protected:
 
   std::shared_ptr<Node> copy() const override;
