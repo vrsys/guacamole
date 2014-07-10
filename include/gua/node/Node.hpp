@@ -43,6 +43,7 @@ class NodeVisitor;
 class SceneGraph;
 class Serializer;
 class DotGenerator;
+class Ray;
 
 namespace physics { class CollisionShapeNodeVisitor; }
 
@@ -377,6 +378,23 @@ class GUA_DLL Node {
                                             std::string const& mask = "");
 
   /**
+   * Intersects a Node with a given Ray.
+   *
+   * The function checks wheter a given Ray intersects the Node or not. If
+   * an intersection was found, a std::set<PickResult> is returned, containing
+   * information about individual hits. The user may specify PickResult::Options
+   * and a mask (referring to Nodes' group names) to configure the intersection
+   * process.
+   *
+   * \param ray       The Ray used to check for intersections.
+   * \param options   PickResult::Options to configure the intersection process.
+   * \param mask      A mask to restrict the intersection to certain Nodes.
+   */
+  virtual std::set<PickResult> const ray_test(Ray const& ray,
+                                              PickResult::Options options = PickResult::PICK_ALL,
+                                              std::string const& mask = "");
+
+  /**
    * Accepts a visitor and calls concrete visit method
    *
    * This method must be implemented by derived classes.
@@ -427,7 +445,7 @@ class GUA_DLL Node {
   friend class ::gua::DotGenerator;
   friend class ::gua::physics::CollisionShapeNodeVisitor;
 
-  virtual void ray_test_impl(RayNode const& ray, PickResult::Options options,
+  virtual void ray_test_impl(Ray const& ray, PickResult::Options options,
                              Mask const& mask, std::set<PickResult>& hits);
 
   /**

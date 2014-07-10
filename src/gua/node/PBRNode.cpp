@@ -41,36 +41,6 @@ namespace node {
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
-
-  void PBRNode::ray_test_impl(RayNode const& ray, PickResult::Options options,
-    Mask const& mask, std::set<PickResult>& hits) {
-
-    // first of all, check bbox
-    auto box_hits(ray.intersect(bounding_box_));
-
-    // ray did not intersect bbox -- therefore it wont intersect
-    if (box_hits.first == RayNode::END && box_hits.second == RayNode::END) {
-      return;
-    }
-
-    // return if only first object shall be returned and the current first hit
-    // is in front of the bbox entry point and the ray does not start inside
-    // the bbox
-    if (options & PickResult::PICK_ONLY_FIRST_OBJECT
-      && hits.size() > 0 && hits.begin()->distance < box_hits.first
-      && box_hits.first != Ray::END) {
-
-      return;
-    }
-
-    for (auto child : get_children()) {
-      // test for intersection with each child
-      child->ray_test_impl(ray, options, mask, hits);
-    }
-
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
   std::shared_ptr<Node> PBRNode::copy() const {
     auto result(std::make_shared<PBRNode>(get_name(), filename_, material_, get_transform()));
     result->shadow_mode_ = shadow_mode_;

@@ -293,21 +293,29 @@ namespace node {
   std::set<PickResult> const Node::ray_test(RayNode const& ray,
                                             PickResult::Options options,
                                             std::string const& mask) {
+
+    return ray_test(ray.get_world_ray(), options, mask);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::set<PickResult> const Node::ray_test(Ray const& ray,
+                                            PickResult::Options options,
+                                            std::string const& mask) {
     Mask pick_mask(mask);
     std::set<PickResult> hits;
     ray_test_impl(ray, options, pick_mask, hits);
     return hits;
   }
-
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::ray_test_impl(RayNode const& ray, PickResult::Options options,
-    Mask const& mask, std::set<PickResult>& hits) {
+  void Node::ray_test_impl(Ray const& ray, PickResult::Options options,
+                           Mask const& mask, std::set<PickResult>& hits) {
 
-    auto box_hits(ray.intersect(bounding_box_));
+    auto box_hits(::gua::intersect(ray, bounding_box_));
 
     // ray did not intersect bbox -- therefore it wont intersect any child
-    if (box_hits.first == RayNode::END && box_hits.second == RayNode::END) {
+    if (box_hits.first == Ray::END && box_hits.second == Ray::END) {
       return;
     }
 

@@ -92,11 +92,6 @@ public:
    */
   void update_bounding_box() const override;
 
-  void ray_test_impl(RayNode const& ray,
-                     PickResult::Options options,
-                     Mask const& mask,
-                     std::set<PickResult>& hits) override;
-
 private:
 
   std::shared_ptr<Node> copy() const override;

@@ -149,4 +149,10 @@ std::set<PickResult> const SceneGraph::ray_test(node::RayNode const& ray,
     return root_->ray_test(ray, options, mask);
 }
 
+std::set<PickResult> const SceneGraph::ray_test(Ray const& ray,
+                                                PickResult::Options options,
+                                                std::string const& mask) {
+    return root_->ray_test(ray, options, mask);
+}
+
 }

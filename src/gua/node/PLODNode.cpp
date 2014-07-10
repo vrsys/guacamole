@@ -41,16 +41,16 @@ PLODNode::PLODNode(std::string const& name,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PLODNode::ray_test_impl(RayNode const& ray,
+void PLODNode::ray_test_impl(Ray const& ray,
                              PickResult::Options options,
                              Mask const& mask,
                              std::set<PickResult>& hits) {
 
   // first of all, check bbox
-  auto box_hits(ray.intersect(bounding_box_));
+  auto box_hits(::gua::intersect(ray, bounding_box_));
 
   // ray did not intersect bbox -- therefore it wont intersect
-  if (box_hits.first == RayNode::END && box_hits.second == RayNode::END) {
+  if (box_hits.first == Ray::END && box_hits.second == Ray::END) {
     return;
   }
 
@@ -106,14 +106,14 @@ void PLODNode::ray_test_impl(RayNode const& ray,
                                                          geometry_bbox.min.z));
 #endif
 
-        auto inner_hits(ray.intersect(inner_bbox));
-        if (inner_hits.first == RayNode::END &&
-            inner_hits.second == RayNode::END)
+        auto inner_hits(::gua::intersect(ray, inner_bbox));
+        if (inner_hits.first == Ray::END &&
+            inner_hits.second == Ray::END)
           check_kd_tree = false;
       }
 
       if (check_kd_tree) {
-        Ray world_ray(ray.get_world_ray());
+        Ray world_ray(ray);
 
         math::mat4 ori_transform(scm::math::inverse(world_transform));
 
