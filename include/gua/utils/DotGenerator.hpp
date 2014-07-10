@@ -74,7 +74,7 @@ class GUA_DLL DotGenerator : public NodeVisitor {
   /*virtual*/ void visit(node::ScreenNode* screen);
   /*virtual*/ void visit(node::SpotLightNode* spotlight);
   /*virtual*/ void visit(node::RayNode* ray);
-#if GUACAMOLE_ENABLE_PHYSICS
+#ifdef GUACAMOLE_ENABLE_PHYSICS
   /*virtual*/ void visit(physics::RigidBodyNode* rb);
   /*virtual*/ void visit(physics::CollisionShapeNode* shape);
 #endif

@@ -23,10 +23,11 @@
 #define GUA_GUACAMOLE_HPP
 
 // guacamole headers
+#include <gua/config.hpp>
 #include <gua/databases.hpp>
 #include <gua/events.hpp>
 #include <gua/math.hpp>
-#if GUACAMOLE_ENABLE_PHYSICS
+#ifdef GUACAMOLE_ENABLE_PHYSICS
 #include <gua/physics.hpp>
 #endif
 #include <gua/renderer.hpp>

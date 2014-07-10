@@ -29,5 +29,7 @@ set(INCLUDE_PATHS
   ${JSON_INCLUDE_DIRS}
   )
 
+if (GUACAMOLE_GLFW3)
 add_subdirectory(input)
+endif (GUACAMOLE_GLFW3)
 add_subdirectory(multicontext)
