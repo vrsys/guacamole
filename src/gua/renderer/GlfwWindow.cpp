@@ -130,7 +130,8 @@ void GlfwWindow::open() {
 
   glfw_window_ = glfwCreateWindow(
     config.get_size().x, config.get_size().y,
-    config.get_title().c_str(), nullptr, nullptr
+    config.get_title().c_str(), 
+    config.get_fullscreen_mode()? glfwGetPrimaryMonitor(): nullptr, nullptr
   );
 
   glfwSetWindowUserPointer(glfw_window_, this);
