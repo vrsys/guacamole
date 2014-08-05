@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 #ifndef GUA_VIDEO3D_UBER_SHADER_HPP
 #define GUA_VIDEO3D_UBER_SHADER_HPP
 
@@ -117,3 +117,4 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
 }
 
 #endif  // GUA_VIDEO3D_UBER_SHADER_HPP
+#endif

@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 #ifndef GUA_NURBS_UBER_SHADER_HPP
 #define GUA_NURBS_UBER_SHADER_HPP
 
@@ -100,3 +100,4 @@ class NURBSUberShader : public GeometryUberShader {
 }
 
 #endif  // GUA_NURBS_UBER_SHADER_HPP
+#endif

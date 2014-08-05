@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 // class header
 #include <gua/renderer/Video3DLoader.hpp>
 
@@ -72,3 +72,4 @@ namespace gua {
   }
 
 }
+#endif
