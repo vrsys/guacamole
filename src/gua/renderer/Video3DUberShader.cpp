@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 // class header
 #include <gua/renderer/Video3DUberShader.hpp>
 
@@ -433,4 +433,4 @@ void Video3DUberShader::draw(RenderContext const& ctx,
 }
 
 }
-
+#endif

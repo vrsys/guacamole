@@ -18,6 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
+#if 0
 #include <gua/renderer/NURBSRessource.hpp>
 
 #include <gua/utils/Singleton.hpp>
@@ -371,3 +372,4 @@ void NURBSRessource::initialize_transform_feedback(RenderContext const& context)
 }
 
 }  //namespace scm
+#endif

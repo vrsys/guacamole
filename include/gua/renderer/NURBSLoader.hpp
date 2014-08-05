@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 #ifndef GUA_NURBS_LOADER_HPP
 #define GUA_NURBS_LOADER_HPP
 
@@ -78,3 +78,4 @@ class GUA_DLL NURBSLoader : public GeometryLoader {
 }
 
 #endif  // GUA_NURBS_LOADER_HPP
+#endif

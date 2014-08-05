@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 #ifndef GUA_VIDEO3D_RESSOURCE_HPP
 #define GUA_VIDEO3D_RESSOURCE_HPP
 
@@ -158,3 +158,4 @@ class Video3DRessource : public GeometryRessource {
 }
 
 #endif  // GUA_VIDEO3D_RESSOURCE_HPP
+#endif

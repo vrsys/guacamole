@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 // class header
 #include <gua/node/Video3DNode.hpp>
 
@@ -126,3 +126,4 @@ namespace node {
 
 }
 }
+#endif
