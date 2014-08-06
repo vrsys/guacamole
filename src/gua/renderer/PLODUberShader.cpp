@@ -966,7 +966,7 @@ void PLODUberShader::copy_to_main_memory(
 
 ////////////////////////////////////////////////////////////////////////////////
 void PLODUberShader::reset(RenderContext const& context) const {
-  unmap_temp_buffer_ptr(context,
+ /* unmap_temp_buffer_ptr(context,
                         pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A);
   unmap_temp_buffer_ptr(context,
                         pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B);
@@ -1049,7 +1049,7 @@ void PLODUberShader::reset(RenderContext const& context) const {
   temp_buffer_B_is_mapped_ = false;
   mapped_temp_buffer_A_ = nullptr;
   mapped_temp_buffer_B_ = nullptr;
-
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
