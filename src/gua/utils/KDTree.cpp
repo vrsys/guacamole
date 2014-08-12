@@ -27,14 +27,8 @@
 #include <iostream>
 
 // external headers
-#if ASSIMP_VERSION == 3
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#else
-#include <assimp/assimp.hpp>
-#include <assimp/aiPostProcess.h>
-#include <assimp/aiScene.h>
-#endif
 
 namespace gua {
 
