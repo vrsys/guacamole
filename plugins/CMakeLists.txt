@@ -1,13 +1,13 @@
 GET_SUBDIRECTORIES(_LIST_OF_PLUGINS ${CMAKE_CURRENT_SOURCE_DIR})
 
 FOREACH (_PLUGIN ${_LIST_OF_PLUGINS})
-    SET(PLUGIN_${_PLUGIN} false CACHE BOOL "Build module ${_PLUGIN}")
+    option (PLUGIN_${_PLUGIN} "Build module ${_PLUGIN}")
     MESSAGE(STATUS "Found plugin ${_PLUGIN}")
 ENDFOREACH (_PLUGIN)
 
 FOREACH (_PLUGIN ${_LIST_OF_PLUGINS})
     IF (NOT PLUGIN_${_PLUGIN})
-        SET(PLUGIN_${_PLUGIN} false CACHE BOOL "Build module ${_PLUGIN}")
+        option(PLUGIN_${_PLUGIN} "Build module ${_PLUGIN}")
     ELSEIF (${PLUGIN_${_PLUGIN}})
         add_subdirectory(${_PLUGIN})
     ENDIF (NOT PLUGIN_${_PLUGIN})
