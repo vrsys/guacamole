@@ -34,8 +34,8 @@ ELSEIF (MSVC)
     LIST(APPEND LIBS winmm.lib guacamole ${OVR_LIBRARIES})
 ENDIF(UNIX)
 
-
-TARGET_LINK_LIBRARIES( guacamole-oculus debug ${LIBS} optimized ${LIBS})
+find_package (Threads)
+target_link_libraries( guacamole-oculus debug ${LIBS} ${CMAKE_THREAD_LIBS_INIT} optimized ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 # compile examples
 
