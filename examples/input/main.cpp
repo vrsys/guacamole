@@ -68,6 +68,11 @@ int main(int argc, char** argv) {
     else             std::cout << "Mouse button " << button << " down" << std::endl;
   });
 
+  window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+    if (action == 0) std::cout << (char)key << " pressed" << std::endl;
+    else             std::cout << (char)key << " released" << std::endl;
+  });
+
 #if WIN32
   window->config.set_display_name("\\\\.\\DISPLAY1");
 #else

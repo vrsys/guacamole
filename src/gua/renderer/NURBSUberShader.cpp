@@ -452,7 +452,6 @@ std::string NURBSUberShader::_final_tess_control_shader () const
         uniform mat4 gua_normal_matrix;                     \n\
         uniform float gua_tesselation_max_error;            \n\
                                                             \n\
-                                                            \n\
         uniform float gua_texel_width;                      \n\
         uniform float gua_texel_height;                     \n\
                                                             \n\
@@ -589,22 +588,22 @@ std::string NURBSUberShader::_final_tess_control_shader () const
                                                                                                                                   
             float diagonal_length = min(length1, length2);                                                                        
                                                                                                                                   
-            float edge01 = edge_tesslevel(mix(edgelen[0], edgelen[2], abs(vTessCoord[0].y - vTessCoord[2].y)), max_screen_error); 
-            float edge32 = edge_tesslevel(mix(edgelen[0], edgelen[2], abs(vTessCoord[0].y - vTessCoord[2].y)), max_screen_error); 
-            float edge13 = edge_tesslevel(mix(edgelen[1], edgelen[3], abs(vTessCoord[0].x - vTessCoord[1].x)), max_screen_error); 
-            float edge20 = edge_tesslevel(mix(edgelen[1], edgelen[3], abs(vTessCoord[0].x - vTessCoord[1].x)), max_screen_error); 
+            float edge01 = edge_tesslevel(mix(edgelen[0], edgelen[2], abs(vTessCoord[0].y - vTessCoord[2].y)), gua_tesselation_max_error); 
+            float edge32 = edge_tesslevel(mix(edgelen[0], edgelen[2], abs(vTessCoord[0].y - vTessCoord[2].y)), gua_tesselation_max_error); 
+            float edge13 = edge_tesslevel(mix(edgelen[1], edgelen[3], abs(vTessCoord[0].x - vTessCoord[1].x)), gua_tesselation_max_error); 
+            float edge20 = edge_tesslevel(mix(edgelen[1], edgelen[3], abs(vTessCoord[0].x - vTessCoord[1].x)), gua_tesselation_max_error); 
                                                                                                                                   
             // Approach II ->                                                                                                     
             // For Outer Tessellation Levels : Approx. the curvature length of the edge according to the angle betw. its normals.
             // For Inner Tessellation Levels : Approx. the curvature of the surface according to the all edge normals.            
                                                                                                                                   
             //Following three must be same for Ist Pass                                                                           
-            gl_TessLevelInner[0] = edge_tesslevel(diagonal_length, max_screen_error);                                             
+            gl_TessLevelInner[0] = edge_tesslevel(diagonal_length, gua_tesselation_max_error);                                             
             gl_TessLevelOuter[1] = edge01;                                                                                        
             gl_TessLevelOuter[3] = edge32;                                                                                        
                                                                                                                                   
             //Following three must be same for Ist Pass                                                                           
-            gl_TessLevelInner[1] = edge_tesslevel(diagonal_length, max_screen_error);                                             
+            gl_TessLevelInner[1] = edge_tesslevel(diagonal_length, gua_tesselation_max_error);                                             
             gl_TessLevelOuter[0] = edge20;                                                                                        
             gl_TessLevelOuter[2] = edge13;                                                                                        
           }                                                                                                                       

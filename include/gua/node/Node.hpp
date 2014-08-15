@@ -43,7 +43,8 @@ class NodeVisitor;
 class SceneGraph;
 class Serializer;
 class DotGenerator;
-class Ray;
+
+struct Ray;
 
 namespace physics { class CollisionShapeNodeVisitor; }
 
