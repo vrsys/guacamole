@@ -26,7 +26,8 @@
 #include <scm/gl_core/math.h>
 #include <tuple>
 
-struct aiMatrix4x4;
+template<class TReal>
+class aiMatrix4x4t;
 
 #include <gua/platform.hpp>
 #include <gua/math/traits.hpp>
@@ -83,7 +84,7 @@ math::mat4 GUA_DLL compute_orthographic_frustum(math::vec4 const& eye_position,
  *
  * \return        A schism matrix.
  */
-math::mat4 GUA_DLL mat_ai_to_scm(aiMatrix4x4 const& ai_mat);
+math::mat4 GUA_DLL mat_ai_to_scm(aiMatrix4x4t<float> const& ai_mat);
 
 #if WIN32
   template <typename T>
