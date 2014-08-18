@@ -18,8 +18,6 @@
 * with this program. If not, see <http://www.gnu.org/licenses/>.             *
 *                                                                            *
 ******************************************************************************/
-#define _USE_MATH_DEFINES
-
 #include <gua/guacamole.hpp>
 #include <gua/node/TexturedQuadNode.hpp>
 #include <gua/node/TriMeshNode.hpp>

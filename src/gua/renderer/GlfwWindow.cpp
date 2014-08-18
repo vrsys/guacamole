@@ -192,8 +192,12 @@ void GlfwWindow::finish_frame() const {
   set_active(true);
 
   glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
-  glfwPollEvents();
   glfwSwapBuffers(glfw_window_);
+
+  // Workaround for Windows Window Handling
+  // Poll events from rendering thread and not application mainloop
+  // Otherwise application window is stalling 
+  glfwPollEvents();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
