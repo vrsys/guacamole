@@ -27,7 +27,7 @@
 #include <gua/renderer/GeometryLoader.hpp>
 
 // external headers
-#include <boost/unordered_set.hpp>
+#include <unordered_set>
 
 namespace gua {
 
@@ -46,11 +46,9 @@ class GUA_DLL NURBSLoader : public GeometryLoader {
 
    enum Flags {
      DEFAULTS = 0,
-     LOAD_MATERIALS = 1 << 0,
-     OPTIMIZE_GEOMETRY = 1 << 1,
-     MAKE_PICKABLE = 1 << 2,
-     NORMALIZE_POSITION = 1 << 3,
-     NORMALIZE_SCALE = 1 << 4
+     MAKE_PICKABLE = 1 << 0,
+     NORMALIZE_POSITION = 1 << 1,
+     NORMALIZE_SCALE = 1 << 2
    };
 
   /**
@@ -71,7 +69,7 @@ class GUA_DLL NURBSLoader : public GeometryLoader {
 
  private:
 
-  boost::unordered_set<std::string> _supported_file_extensions;
+  std::unordered_set<std::string> _supported_file_extensions;
 
 };
 
