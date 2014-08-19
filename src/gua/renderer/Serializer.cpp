@@ -159,9 +159,9 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::GeometryNode* node) {
 
 
-  if (is_visible(node)) 
+  if (is_visible(node))
   {
-    if (!node->get_filename().empty() && !node->get_material().empty()) 
+    if (!node->get_filename().empty() && !node->get_material().empty())
     {
       add_bbox(node);
 
@@ -274,7 +274,9 @@ bool Serializer::is_visible(node::Node* node) const {
   }
 
   if (is_visible) {
-    is_visible = current_render_mask_.check(node->get_groups());
+    if (!node->get_groups().empty()) {
+      is_visible = current_render_mask_.check(node->get_groups());
+    }
   }
 
   return is_visible;
