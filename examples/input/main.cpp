@@ -19,9 +19,32 @@
  *                                                                            *
  ******************************************************************************/
 
+#include <functional>
+
 #include <gua/guacamole.hpp>
-#include <gua/renderer/NURBSLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/utils/Trackball.hpp>
+
+// forward mouse interaction to trackball
+void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods) 
+{
+  gua::utils::Trackball::button_type button;
+  gua::utils::Trackball::state_type state;
+
+  switch (mousebutton) {
+    case 0: button = gua::utils::Trackball::left; break;
+    case 2: button = gua::utils::Trackball::middle; break;
+    case 1: button = gua::utils::Trackball::right; break;
+  };
+
+  switch (action) {
+    case 0: state = gua::utils::Trackball::released; break;
+    case 1: state = gua::utils::Trackball::pressed; break;
+  };
+
+  trackball.mouse(button, state, trackball.posx(), trackball.posy());
+}
+
 
 int main(int argc, char** argv) {
 
@@ -31,14 +54,15 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  gua::NURBSLoader loader;
-  auto teapot_geometry(loader.create_geometry_from_file("teapot_geometry", "data/objects/teapot.igs", "data/materials/Red.gmd", gua::NURBSLoader::DEFAULTS));
+  gua::TriMeshLoader loader;
+  auto teapot_geometry(loader.create_geometry_from_file("teapot_geometry", "data/objects/teapot.obj", "data/materials/Red.gmd", gua::TriMeshLoader::DEFAULTS));
   
   auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
   graph.add_node("/teapot", teapot_geometry);
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(20.f);
+  light->translate(0,0,12);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(16.0f, 12.0f));
@@ -47,6 +71,7 @@ int main(int argc, char** argv) {
   auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
   eye->translate(0, 0, 7);
 
+  // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1600, 1200);
 
   auto pipe = new gua::Pipeline();
@@ -59,6 +84,7 @@ int main(int argc, char** argv) {
   pipe->set_window(window);
   gua::Renderer renderer({pipe});
 
+  // add mouse interaction
   gua::utils::Trackball trackball;
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
@@ -71,31 +97,14 @@ int main(int argc, char** argv) {
     trackball.motion(pos.x, pos.y);
   });
 
-  window->on_button_press.connect([&](int mousebutton, int action, int mods) {
-
-    gua::utils::Trackball::button_type button;
-    gua::utils::Trackball::state_type state; 
-
-    switch (mousebutton)
-    {
-      case 0: button = gua::utils::Trackball::left; break;
-      case 2: button = gua::utils::Trackball::middle; break;
-      case 1: button = gua::utils::Trackball::right; break;
-    };
-
-    switch (action)
-    {
-      case 0: state = gua::utils::Trackball::released; break;
-      case 1: state = gua::utils::Trackball::pressed; break;
-    };
-
-    trackball.mouse(button, state, trackball.posx(), trackball.posy());
-
-  });
+  window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
-    if (action == 0) std::cout << (char)key << " pressed" << std::endl;
-    else             std::cout << (char)key << " released" << std::endl;
+    if (action) {
+      std::cout << char(key) << " pressed." << std::endl;
+    } else {
+      std::cout << char(key) << " released." << std::endl;
+    }
   });
 
 #if WIN32
@@ -113,13 +122,9 @@ int main(int argc, char** argv) {
 
   ticker.on_tick.connect([&]() {
 
-    auto translation = teapot_geometry->get_bounding_box().center();
-
+    // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
-                       //scm::math::make_translation(-translation[0], -translation[1], -translation[2]);
-
     teapot_geometry->set_transform(modelmatrix);
-    //std::cout << modelmatrix << std::endl;
 
     if (window->should_close()) {
       renderer.stop();
