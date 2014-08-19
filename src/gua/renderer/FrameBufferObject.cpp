@@ -160,7 +160,7 @@ void FrameBufferObject::copy_color_buffer(RenderContext const& ctx,
 void FrameBufferObject::set_viewport(RenderContext const& ctx) const {
 
   ctx.render_context->set_viewport(
-    scm::gl::viewport(math::vec2(0, 0), math::vec2(width(), height())));
+    scm::gl::viewport(math::vec2(0.0f, 0.0f), math::vec2(width(), height())));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

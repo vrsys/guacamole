@@ -10,7 +10,7 @@ link_directories(${LIB_PATHS})
 include_directories( ${INCLUDE_PATHS} 
                      ${PROJECT_SOURCE_DIR}/include
                      ${GUACAMOLE_NURBS_INCLUDE_DIR}
-                    )
+                     )
 
 add_executable( ${_EXE_NAME} main.cpp)
 

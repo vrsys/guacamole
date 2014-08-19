@@ -23,6 +23,7 @@
 #define GUA_UBER_SHADER_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/ShadingModel.hpp>
 #include <gua/renderer/UniformMapping.hpp>
@@ -40,7 +41,7 @@ class UberShaderFactory;
 /**
  * This class represents a (multipass-) stage with material-dependent meta-shader components
  */
-class UberShader {
+class GUA_DLL UberShader {
 
  public:
 

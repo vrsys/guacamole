@@ -29,7 +29,26 @@ set(INCLUDE_PATHS
   ${JSON_INCLUDE_DIRS}
   )
 
-if (GUACAMOLE_GLFW3)
-add_subdirectory(input)
-endif (GUACAMOLE_GLFW3)
-add_subdirectory(multicontext)
+IF (GUACAMOLE_EXAMPLES)
+
+  # input requires GLFW3
+  IF (${GUACAMOLE_GLFW3})
+    add_subdirectory(input)
+  ENDIF (${GUACAMOLE_GLFW3})
+
+  # nurbs example requires GLFW3 and nurbs-plugin
+  IF (${PLUGIN_guacamole-nurbs} AND ${GUACAMOLE_GLFW3})
+    add_subdirectory(nurbs)
+  ENDIF (${PLUGIN_guacamole-nurbs} AND ${GUACAMOLE_GLFW3})
+
+  # oculus example requires oculus-plugin
+  IF (${PLUGIN_guacamole-oculus})
+    add_subdirectory(oculus)
+  ENDIF (${PLUGIN_guacamole-oculus})
+
+  # multicontext example requires nurbs-plugin
+  IF (${PLUGIN_guacamole-nurbs})
+    add_subdirectory(multicontext)
+  ENDIF (${PLUGIN_guacamole-nurbs})
+
+ENDIF (GUACAMOLE_EXAMPLES)

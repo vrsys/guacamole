@@ -23,10 +23,8 @@
 #include <gua/renderer/ShadowMap.hpp>
 
 // guacamole headers
-#include <gua/platform.hpp>
 #include <gua/renderer/Serializer.hpp>
 #include <gua/renderer/TriMeshUberShader.hpp>
-#include <gua/renderer/NURBSUberShader.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/View.hpp>

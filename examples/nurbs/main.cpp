@@ -22,7 +22,7 @@
 #include <functional>
 
 #include <gua/guacamole.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/NURBSLoader.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -54,25 +54,26 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  gua::TriMeshLoader loader;
-  auto teapot_geometry(loader.create_geometry_from_file("teapot_geometry", "data/objects/teapot.obj", "data/materials/Red.gmd", gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION));
-  
+  gua::NURBSLoader loader;
+  auto teapot_geometry(loader.create_geometry_from_file("teapot_geometry", "data/objects/teapot.igs", "data/materials/Red.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION));
+  teapot_geometry->scale(10.0f);
+
   auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
   graph.add_node("/teapot", teapot_geometry);
 
-  auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
-  light->scale(20.f);
-  light->translate(0,0,12);
+  auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
+  light->scale(150.f);
+  light->translate(0.0f, 20.0f, 0.0f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(16.0f, 12.0f));
-  screen->translate(0, 0, 5);
+  screen->data.set_size(gua::math::vec2(60.0f, 34.0f));
+  screen->translate(0.0f, 0.0f, 50.0f);
 
   auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
-  eye->translate(0, 0, 7);
+  eye->translate(0.0f, 0.0f, 120.0f);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1600, 1200);
+  auto resolution = gua::math::vec2ui(1200, 680);
 
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(gua::Camera("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph"));
@@ -82,6 +83,9 @@ int main(int argc, char** argv) {
 
   auto window(new gua::GlfwWindow());
   pipe->set_window(window);
+  pipe->config.set_near_clip(1.0f);
+  pipe->config.set_near_clip(1.0f);
+
   gua::Renderer renderer({pipe});
 
   // add mouse interaction
