@@ -53,7 +53,6 @@ include(find_compiler)
 
 if (UNIX)
   pkg_check_modules(ASSIMP REQUIRED assimp)
-  pkg_check_modules(JSON REQUIRED jsoncpp)
   pkg_check_modules(GL REQUIRED gl)
   pkg_check_modules(GLEW REQUIRED glew)
   include(find_x11)
