@@ -107,7 +107,7 @@ math::vec2 const& TexturedQuadNode::get_size() const { return size_; }
 
 void TexturedQuadNode::get_size(math::vec2 const& size) {
   size_ = size;
-  update_bounding_box();
+  set_dirty();
 }
 
 bool TexturedQuadNode::is_stereo_texture() const { return is_stereo_texture_; }
