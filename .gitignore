@@ -30,6 +30,7 @@ editor/guacamole_editor
 guarc/guarc
 guacamole.sublime-workspace
 include/gua/generated/*
+include/gua/config.hpp
 src/gua/generated/*
 tags
 .nfs*
