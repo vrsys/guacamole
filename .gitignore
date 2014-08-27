@@ -31,7 +31,6 @@ guarc/guarc
 guacamole.sublime-workspace
 include/gua/generated/*
 src/gua/generated/*
-tags
 .nfs*
 .vim.custom
 tests/tests
