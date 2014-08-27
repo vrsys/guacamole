@@ -35,6 +35,24 @@ int main(int argc, char** argv) {
 
   auto teapot = graph.add_node("/", teapot_geometry);
 
+  teapot->add_tags({"brummer", "hugo", "norbert", "taube", "bam"});
+
+  auto tags = teapot->get_tags();
+  for (auto tag : tags) {
+    std::cout << tag << " ";
+  }
+  std::cout << std::endl;
+  std::cout << teapot->get_tag_set() << std::endl;
+
+  teapot->remove_tags({"hugo", "bam"});
+
+  tags = teapot->get_tags();
+  for (auto tag : tags) {
+    std::cout << tag << " ";
+  }
+  std::cout << std::endl;
+  std::cout << teapot->get_tag_set() << std::endl;
+
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(5.f);
   light->translate(0, 1.f, 1.f);
@@ -60,7 +78,7 @@ int main(int argc, char** argv) {
   });
 
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    std::cout << "Cursor: " << pos << std::endl;
+    // std::cout << "Cursor: " << pos << std::endl;
   });
 
   window->on_button_press.connect([&](int button, int action, int mods) {

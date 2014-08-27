@@ -29,6 +29,7 @@
 #include <gua/scenegraph/PickResult.hpp>
 #include <gua/utils/Mask.hpp>
 #include <gua/events/Signal.hpp>
+#include <gua/utils/TagRegister.hpp>
 
 // external headers
 #include <map>
@@ -156,6 +157,20 @@ class GUA_DLL Node {
    * each child is set to nullptr.
    */
   void clear_children();
+
+
+  void add_tag(std::string const& tag);
+
+  void add_tags(std::vector<std::string> const& tags);
+
+  void remove_tag(std::string const& tag);
+
+  void remove_tags(std::vector<std::string> const& tags);
+
+  std::vector<std::string> const get_tags() const;
+
+  std::bitset<GUA_MAX_TAG_COUNT> const& get_tag_set() const;
+
 
   /**
    * Adds the Node to a group.
@@ -488,6 +503,7 @@ class GUA_DLL Node {
   std::vector<std::shared_ptr<Node>> children_;
 
   // internal annotations
+  std::bitset<GUA_MAX_TAG_COUNT> tags_;
   std::set<std::string> group_list_;
   std::vector<void*> user_data_;
   std::string name_;
