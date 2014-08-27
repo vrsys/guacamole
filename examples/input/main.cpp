@@ -55,53 +55,10 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   gua::TriMeshLoader loader;
-  auto teapot_geometry(loader.create_geometry_from_file("teapot_geometry", "data/objects/teapot.obj", "data/materials/Red.gmd", gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION));
-  
-  auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
-  graph.add_node("/teapot", teapot_geometry);
 
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", "data/materials/Red.gmd", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
-
-
-
-
-
-  teapot->add_tags({"brummer", "hugo", "norbert", "taube", "bam"});
-
-
-  std::cout << "node tags:" << std::endl;
-  auto tags = teapot->get_tags();
-  for (auto tag : tags) {
-    std::cout << tag << " ";
-  }
-  std::cout << std::endl;
-  std::cout << teapot->get_tag_set() << std::endl;
-  std::cout << std::endl;
-
-
-  gua::Camera cam;
-  cam.add_tags_to_whitelist({"bla", "hugo", "bam"});
-  cam.add_tags_to_blacklist({"nur", "mist"});
-
-  std::cout << "whitelist tags:" << std::endl;
-  tags = cam.get_whitelist_tags();
-  for (auto tag : tags) {
-    std::cout << tag << " ";
-  }
-  std::cout << std::endl;
-  std::cout << cam.get_whitelist_tag_set() << std::endl;
-  std::cout << std::endl;
-
-  std::cout << "blacklist tags:" << std::endl;
-  tags = cam.get_blacklist_tags();
-  for (auto tag : tags) {
-    std::cout << tag << " ";
-  }
-  std::cout << std::endl;
-  std::cout << cam.get_blacklist_tag_set() << std::endl;
-  std::cout << std::endl;
-
-
+  graph.add_node("/", teapot);
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(20.f);
@@ -117,8 +74,9 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1600, 1200);
 
+  gua::Camera cam("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph");
   auto pipe = new gua::Pipeline();
-  pipe->config.set_camera(gua::Camera("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph"));
+  pipe->config.set_camera(cam);
   pipe->config.set_enable_fps_display(true);
   pipe->config.set_left_resolution(resolution);
   pipe->config.set_right_resolution(resolution);

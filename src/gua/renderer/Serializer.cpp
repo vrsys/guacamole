@@ -50,7 +50,6 @@ namespace gua {
 
 Serializer::Serializer()
     : data_(nullptr),
-      current_render_mask_(""),
       current_frustum_(),
       current_center_of_interest_(),
       draw_bounding_boxes_(false),
@@ -61,7 +60,7 @@ Serializer::Serializer()
 
 void Serializer::check(SerializedScene& output,
                        SceneGraph const& scene_graph,
-                       std::string const& render_mask,
+                       Mask const& mask,
                        bool draw_bounding_boxes,
                        bool draw_rays,
                        bool enable_frustum_culling) {
@@ -112,7 +111,8 @@ void Serializer::check(SerializedScene& output,
 
   enable_frustum_culling_ = enable_frustum_culling;
 
-  current_render_mask_ = Mask(render_mask);
+  current_render_mask_ = mask;
+
   current_frustum_ = output.frustum;
   current_center_of_interest_ = output.center_of_interest;
 
@@ -273,10 +273,9 @@ bool Serializer::is_visible(node::Node* node) const {
     }
   }
 
+
   if (is_visible) {
-    if (!node->get_groups().empty()) {
-      is_visible = current_render_mask_.check(node->get_groups());
-    }
+    is_visible = current_render_mask_.check(node->get_tags());
   }
 
   return is_visible;

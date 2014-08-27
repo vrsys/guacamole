@@ -64,7 +64,7 @@ void PLODNode::ray_test_impl(Ray const& ray,
   }
 
   // bbox is intersected, but check geometry only if mask tells us to check
-  if (get_filename() != "" && mask.check(get_groups())) {
+  if (get_filename() != "" && mask.check(get_tags())) {
 
     auto geometry(GeometryDatabase::instance()->lookup(get_filename()));
 

@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/utils/Singleton.hpp>
 
-// guacamole headers
+// external headers
 #include <unordered_map>
 #include <string>
 #include <bitset>

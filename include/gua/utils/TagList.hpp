@@ -19,55 +19,45 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_CAMERA_HPP
-#define GUA_CAMERA_HPP
+#ifndef GUA_TAG_LIST_HPP
+#define GUA_TAG_LIST_HPP
 
+// guacamole headers
 #include <gua/platform.hpp>
-#include <gua/utils/Mask.hpp>
+#include <gua/utils/TagRegister.hpp>
 
 // external headers
 #include <string>
+#include <bitset>
+#include <vector>
 
 namespace gua {
+namespace utils {
 
 /**
- *  This struct describes a user's view on the scene.
- *
- *  It is defined by a screen, a view point a a render mask.
+ * A class for smooth value interpolation.
  */
+class GUA_DLL TagList {
+  public:
 
-struct Camera {
+    TagList(std::vector<std::string> const& tags = std::vector<std::string>());
 
-  enum ProjectionMode {
-    PERSPECTIVE,
-    ORTHOGRAPHIC
-  };
+    void add_tag(std::string const& tag);
+    void add_tags(std::vector<std::string> const& tags);
 
-  Camera(std::string const& eye_l =     "unknown_left_eye",
-         std::string const& eye_r =     "unknown_right_eye",
-         std::string const& screen_l =  "unknown_left_screen",
-         std::string const& screen_r =  "unknown_right_screen",
-         std::string const& g =         "scene_graph",
-         ProjectionMode     p =         PERSPECTIVE,
-         Mask const& mask = Mask()
-         )
-      : eye_l(eye_l), eye_r(eye_r), screen_l(screen_l), screen_r(screen_r),
-        scene_graph(g),
-        render_mask(mask),
-        mode(p) {}
+    void remove_tag(std::string const& tag);
+    void remove_tags(std::vector<std::string> const& tags);
 
-  std::string eye_l;
-  std::string eye_r;
-  std::string screen_l;
-  std::string screen_r;
-  std::string scene_graph;
+    std::vector<std::string> const get_strings() const;
+    std::bitset<GUA_MAX_TAG_COUNT> const& get_bits() const;
 
-  Mask render_mask;
 
-  ProjectionMode mode;
+  private:
+    std::bitset<GUA_MAX_TAG_COUNT> tags_;
 
 };
 
 }
+}
 
-#endif  // GUA_CAMERA_HPP
+#endif  //GUA_TAG_LIST_HPP

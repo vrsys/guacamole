@@ -46,7 +46,6 @@ namespace node {
     bounding_box_(),
     child_dirty_(true),
     self_dirty_(true),
-    group_list_(),
     user_data_()
   {}
 
@@ -128,86 +127,14 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::add_tag(std::string const& tag) {
-    auto new_tag(gua::utils::TagRegister::instance()->get_tag(tag));
-    if (new_tag.any()) {
-      tags_ |= new_tag;
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  void Node::add_tags(std::vector<std::string> const& tags) {
-    for (auto const& tag : tags) {
-      add_tag(tag);
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  void Node::remove_tag(std::string const& tag) {
-    if (tags_.any()) {
-      auto tag_to_remove(gua::utils::TagRegister::instance()->get_tag(tag));
-      if (tag_to_remove.any()) {
-        tags_ &= tag_to_remove.flip();
-      }
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  void Node::remove_tags(std::vector<std::string> const& tags) {
-    if (tags_.any()) {
-      for (auto tag : tags) {
-        remove_tag(tag);
-      }
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  std::vector<std::string> const Node::get_tags() const {
-    if (tags_.any()) {
-      return gua::utils::TagRegister::instance()->get_tag_strings(tags_);
-    }
-
-    return std::vector<std::string>();
-  }
-
-
- ////////////////////////////////////////////////////////////////////////////////
-
-  std::bitset<GUA_MAX_TAG_COUNT> const& Node::get_tag_set() const {
+  gua::utils::TagList const& Node::get_tags() const {
     return tags_;
   }
 
-
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::add_to_group(std::string const & group) {
-
-    group_list_.insert(group);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  void Node::add_to_groups(std::set<std::string> const & groups) {
-
-    group_list_.insert(groups.begin(), groups.end());
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  void Node::remove_from_group(std::string const & group) {
-
-    group_list_.erase(group);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  bool Node::is_in_group(std::string const & group) const {
-
-    return group_list_.find(group) != group_list_.end();
+  gua::utils::TagList& Node::get_tags() {
+    return tags_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -350,7 +277,7 @@ namespace node {
 
   std::set<PickResult> const Node::ray_test(RayNode const& ray,
                                             PickResult::Options options,
-                                            std::string const& mask) {
+                                            Mask const& mask) {
 
     return ray_test(ray.get_world_ray(), options, mask);
   }
@@ -359,10 +286,9 @@ namespace node {
 
   std::set<PickResult> const Node::ray_test(Ray const& ray,
                                             PickResult::Options options,
-                                            std::string const& mask) {
-    Mask pick_mask(mask);
+                                            Mask const& mask) {
     std::set<PickResult> hits;
-    ray_test_impl(ray, options, pick_mask, hits);
+    ray_test_impl(ray, options, mask, hits);
     return hits;
   }
   ////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +323,7 @@ namespace node {
 
   std::shared_ptr<Node> Node::deep_copy() const {
     std::shared_ptr<Node> copied_node = copy();
-    copied_node->add_to_groups(group_list_);
+    copied_node->tags_ = tags_;
 
     for (auto child : children_)
       copied_node->add_child(child->deep_copy());
