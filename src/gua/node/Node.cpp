@@ -62,7 +62,7 @@ namespace node {
 
   void Node::update_cache() {
 
-    if (self_dirty_) 
+    if (self_dirty_)
     {
       math::mat4 old_world_trans(world_transform_);
       if (is_root()) {
@@ -125,6 +125,62 @@ namespace node {
       }
     }
   }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void Node::add_tag(std::string const& tag) {
+    auto new_tag(gua::utils::TagRegister::instance()->get_tag(tag));
+    if (new_tag.any()) {
+      tags_ |= new_tag;
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void Node::add_tags(std::vector<std::string> const& tags) {
+    for (auto tag : tags) {
+      add_tag(tag);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void Node::remove_tag(std::string const& tag) {
+    if (tags_.any()) {
+      auto tag_to_remove(gua::utils::TagRegister::instance()->get_tag(tag));
+      if (tag_to_remove.any()) {
+        tags_ &= tag_to_remove.flip();
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void Node::remove_tags(std::vector<std::string> const& tags) {
+    if (tags_.any()) {
+      for (auto tag : tags) {
+        remove_tag(tag);
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::vector<std::string> const Node::get_tags() const {
+    if (tags_.any()) {
+      return gua::utils::TagRegister::instance()->get_tag_strings(tags_);
+    }
+
+    return std::vector<std::string>();
+  }
+
+
+ ////////////////////////////////////////////////////////////////////////////////
+
+  std::bitset<GUA_MAX_TAG_COUNT> const& Node::get_tag_set() const {
+    return tags_;
+  }
+
 
   ////////////////////////////////////////////////////////////////////////////////
 

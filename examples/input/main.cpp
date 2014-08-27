@@ -60,6 +60,24 @@ int main(int argc, char** argv) {
   auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
   graph.add_node("/teapot", teapot_geometry);
 
+  teapot->add_tags({"brummer", "hugo", "norbert", "taube", "bam"});
+
+  auto tags = teapot->get_tags();
+  for (auto tag : tags) {
+    std::cout << tag << " ";
+  }
+  std::cout << std::endl;
+  std::cout << teapot->get_tag_set() << std::endl;
+
+  teapot->remove_tags({"hugo", "bam"});
+
+  tags = teapot->get_tags();
+  for (auto tag : tags) {
+    std::cout << tag << " ";
+  }
+  std::cout << std::endl;
+  std::cout << teapot->get_tag_set() << std::endl;
+
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(20.f);
   light->translate(0,0,12);
