@@ -138,7 +138,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
 
   void Node::add_tags(std::vector<std::string> const& tags) {
-    for (auto tag : tags) {
+    for (auto const& tag : tags) {
       add_tag(tag);
     }
   }
