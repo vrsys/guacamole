@@ -25,6 +25,9 @@
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/Camera.hpp>
+#include <gua/renderer/SerializedScene.hpp>
+#include <gua/renderer/Texture2D.hpp>
+#include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/math.hpp>
 
@@ -41,8 +44,10 @@ class Pipeline {
  public:
 
   struct Configuration {
+    
     // camera for this pipeline
     GUA_ADD_PROPERTY(Camera, camera, Camera());
+    
     // if set to false, this pipeline won't render anything
     GUA_ADD_PROPERTY(bool, enabled, true);
 
@@ -52,56 +57,20 @@ class Pipeline {
     // with this name. if enable_stereo is set to true, two images with postfixes
     // _left and _right will be stored
     GUA_ADD_PROPERTY(std::string, output_texture_name, "gua_pipeline");
+    
     // stereo configuration
     GUA_ADD_PROPERTY(math::vec2ui, resolution, math::vec2ui(800, 600));
 
-    // // various display options
-    // GUA_ADD_PROPERTY(bool, enable_preview_display, false);
-    // GUA_ADD_PROPERTY(bool, enable_fps_display, false);
-    // GUA_ADD_PROPERTY(bool, enable_ray_display, false);
-    // GUA_ADD_PROPERTY(bool, enable_bbox_display, false);
-    // GUA_ADD_PROPERTY(bool, enable_wireframe, false);
-    // // FXAA
-    // GUA_ADD_PROPERTY(bool, enable_fxaa, false);
-    // // clipping
-    // GUA_ADD_PROPERTY(float, near_clip, 0.1f);
-    // GUA_ADD_PROPERTY(float, far_clip, 1000.0f);
-    // // culling
-    // GUA_ADD_PROPERTY(bool, enable_frustum_culling, true);
-    // GUA_ADD_PROPERTY(bool, enable_backface_culling, true);
-    // // screen space ambient occlusion
-    // GUA_ADD_PROPERTY(bool, enable_ssao, false);
-    // GUA_ADD_PROPERTY(float, ssao_radius, 2.0f);
-    // GUA_ADD_PROPERTY(float, ssao_intensity, 1.0f);
-    // GUA_ADD_PROPERTY(float, ssao_falloff, 1.0f);
-    // // bloom
-    // GUA_ADD_PROPERTY(bool, enable_bloom, false);
-    // GUA_ADD_PROPERTY(float, bloom_radius, 10.0f);
-    // GUA_ADD_PROPERTY(float, bloom_threshold, 0.8f);
-    // GUA_ADD_PROPERTY(float, bloom_intensity, 0.4f);
-    // // fog
-    // GUA_ADD_PROPERTY(bool, enable_fog, false);
-    // GUA_ADD_PROPERTY(float, fog_start, 100.0f);
-    // GUA_ADD_PROPERTY(float, fog_end, 1000.0f);
-    // GUA_ADD_PROPERTY(std::string, fog_texture, "");
-    // GUA_ADD_PROPERTY(utils::Color3f, fog_color, utils::Color3f());
-    // // background image / color
-    // GUA_ADD_PROPERTY(BackgroundMode, background_mode, BackgroundMode::COLOR);
-    // GUA_ADD_PROPERTY(std::string, background_texture, "");
-    // GUA_ADD_PROPERTY(utils::Color3f, background_color, utils::Color3f());
-    // // ambient color
-    // GUA_ADD_PROPERTY(utils::Color3f, ambient_color, utils::Color3f(0.1f, 0.1f, 0.1f));
-    // // vignette
-    // GUA_ADD_PROPERTY(bool, enable_vignette, false);
-    // GUA_ADD_PROPERTY(utils::Color3f, vignette_color, utils::Color3f());
-    // GUA_ADD_PROPERTY(float, vignette_coverage, 0.3f);
-    // GUA_ADD_PROPERTY(float, vignette_softness, 0.5f);
-    // // HDR
-    // GUA_ADD_PROPERTY(bool, enable_hdr, false);
-    // GUA_ADD_PROPERTY(float, hdr_key, 1.f);
-    // // NURBS tesselation
-    // GUA_ADD_PROPERTY(int, max_tesselation, 4);
-    // GUA_ADD_PROPERTY(float, tesselation_max_error, 8.0f);
+    // various display options
+    GUA_ADD_PROPERTY(bool, enable_ray_display, false);
+    GUA_ADD_PROPERTY(bool, enable_bbox_display, false);
+    
+    // clipping
+    GUA_ADD_PROPERTY(float, near_clip, 0.1f);
+    GUA_ADD_PROPERTY(float, far_clip, 1000.0f);
+    
+    // culling
+    GUA_ADD_PROPERTY(bool, enable_frustum_culling, true);
   };
 
   Pipeline();
@@ -117,21 +86,27 @@ class Pipeline {
     return *t;
   }
 
-  std::list<PipelinePass*> const& get_passes() const;
+  void set_output_window(WindowBase* window);
 
   void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 
-  void bind_gbuffer() const;
-
-  void set_output_window(WindowBase* window);
-
-  RenderContext const& get_context() const;
+  void                              bind_postfx_buffer()  const;
+  std::shared_ptr<Texture2D> const& get_postfx_buffer()   const;
+  std::list<PipelinePass*>   const& get_passes()          const;
+  GBuffer                    const& get_gbuffer()         const;
+  RenderContext              const& get_context()         const;
+  SerializedScene            const& get_scene()           const;
 
  private:
-  std::list<PipelinePass*> passes_;
-  GBuffer*                 gbuffer_;
-  WindowBase*              window_;
+  std::list<PipelinePass*>  passes_;
+  GBuffer*                  gbuffer_;
+  WindowBase*               window_;
+  SerializedScene           current_scene_;
+
+  std::array<FrameBufferObject*, 2>         postfx_fbo_;
+  std::array<std::shared_ptr<Texture2D>, 2> postfx_buffer_;
+  bool                                      ping_pong_;
 
   bool dirty_;
 };
