@@ -77,12 +77,10 @@ int main(int argc, char** argv) {
   gua::Camera cam("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph");
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
-  pipe->config.set_enable_fps_display(true);
-  pipe->config.set_left_resolution(resolution);
-  pipe->config.set_right_resolution(resolution);
+  // pipe->config.set_enable_fps_display(true);
 
   auto window(new gua::GlfwWindow());
-  pipe->set_window(window);
+  // pipe->set_window(window);
   gua::Renderer renderer({pipe});
 
   // add mouse interaction

@@ -36,14 +36,14 @@ void set_pipe_defaults(gua::Pipeline* pipe, unsigned width, unsigned height)
 {
   pipe->config.set_left_resolution(gua::math::vec2ui(width, height));
   pipe->config.set_right_resolution(gua::math::vec2ui(width, height));
-  pipe->config.set_enable_fps_display(true);
-  pipe->config.set_enable_frustum_culling(true);
-  pipe->config.set_enable_backface_culling(true);
-  pipe->config.set_enable_preview_display(true);
-  pipe->config.set_enable_bbox_display(true);
-  pipe->config.set_near_clip(0.2f);
-  pipe->config.set_far_clip(1000.0f);
-  pipe->config.set_background_color(gua::utils::Color3f(0.0, 0.0f, 0.0f));
+  // pipe->config.set_enable_fps_display(true);
+  // pipe->config.set_enable_frustum_culling(true);
+  // pipe->config.set_enable_backface_culling(true);
+  // pipe->config.set_enable_preview_display(true);
+  // pipe->config.set_enable_bbox_display(true);
+  // pipe->config.set_near_clip(0.2f);
+  // pipe->config.set_far_clip(1000.0f);
+  // pipe->config.set_background_color(gua::utils::Color3f(0.0, 0.0f, 0.0f));
 }
 
 void set_window_default(gua::WindowBase* window, unsigned width, unsigned height)
@@ -214,10 +214,10 @@ int main(int argc, char** argv) {
 #endif
 
 
-  pipe->set_window(window);
-  pipe2->set_window(window2);
-  pipe3->set_window(window3);
-  pipe4->set_window(window4);
+  // pipe->set_window(window);
+  // pipe2->set_window(window2);
+  // pipe3->set_window(window3);
+  // pipe4->set_window(window4);
 
 #if 1
   gua::Renderer renderer({ pipe,

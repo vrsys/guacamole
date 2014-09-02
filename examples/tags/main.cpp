@@ -73,10 +73,10 @@ int main(int argc, char** argv) {
 
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
-  pipe->config.set_enable_fps_display(true);
+  // pipe->config.set_enable_fps_display(true);
 
   auto window(new gua::GlfwWindow());
-  pipe->set_window(window);
+  // pipe->set_window(window);
   gua::Renderer renderer({pipe});
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {

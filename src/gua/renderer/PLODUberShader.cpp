@@ -19,6 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
+#if 0
+
 // class header
 #include <gua/renderer/PLODUberShader.hpp>
 
@@ -1102,3 +1104,4 @@ std::string PLODUberShader::default_plod_material_name() const {
 }
 
 }
+#endif
