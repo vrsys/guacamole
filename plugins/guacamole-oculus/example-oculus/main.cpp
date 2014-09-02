@@ -176,26 +176,26 @@ int main(int argc, char** argv) {
   pipe->config.set_camera(gua::Camera("/pos/nav/eye_l", "/pos/nav/eye_r", "/pos/nav/screen_l", "/pos/nav/screen_r", "main_scenegraph"));
   pipe->config.set_left_resolution(gua::math::vec2ui(width, height));
   pipe->config.set_right_resolution(gua::math::vec2ui(width, height));
-  pipe->config.set_enable_fps_display(true);
-  pipe->config.set_enable_frustum_culling(true);
   pipe->config.set_enable_stereo(true);
+  // pipe->config.set_enable_fps_display(true);
+  // pipe->config.set_enable_frustum_culling(true);
 
-  pipe->config.set_enable_ssao(true);
-  pipe->config.set_ssao_intensity(2.f);
-  pipe->config.set_enable_fxaa(true);
-  pipe->config.set_enable_hdr(true);
-  pipe->config.set_hdr_key(5.f);
-  pipe->config.set_enable_bloom(true);
-  pipe->config.set_bloom_radius(10.f);
-  pipe->config.set_bloom_threshold(0.8f);
-  pipe->config.set_bloom_intensity(0.8f);
+  // pipe->config.set_enable_ssao(true);
+  // pipe->config.set_ssao_intensity(2.f);
+  // pipe->config.set_enable_fxaa(true);
+  // pipe->config.set_enable_hdr(true);
+  // pipe->config.set_hdr_key(5.f);
+  // pipe->config.set_enable_bloom(true);
+  // pipe->config.set_bloom_radius(10.f);
+  // pipe->config.set_bloom_threshold(0.8f);
+  // pipe->config.set_bloom_intensity(0.8f);
 
 #if WIN32
   auto oculus_window(new gua::OculusWindow("\\\\.\\DISPLAY1"));
 #else
   auto oculus_window(new gua::OculusWindow(":0.0"));
 #endif
-  pipe->set_window(oculus_window);
+  // pipe->set_window(oculus_window);
 
   gua::Renderer renderer({
     pipe

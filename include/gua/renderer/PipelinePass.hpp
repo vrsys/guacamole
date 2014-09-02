@@ -19,28 +19,90 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/GeometryUberShader.hpp>
+#ifndef GUA_PIPELINE_PASS_HPP
+#define GUA_PIPELINE_PASS_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/UberShaderFactory.hpp>
-#include <gua/databases.hpp>
-#include <gua/utils/Logger.hpp>
-#include <gua/memory.hpp>
+#include <string>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
+class PipelinePass {
+ public:
 
-GeometryUberShader::GeometryUberShader()
-: UberShader()
-{}
+  PipelinePass& set_source(std::string const& source) {
 
-////////////////////////////////////////////////////////////////////////////////
+    std::string header(R"(
+      #version 420
 
-GeometryUberShader::~GeometryUberShader()
-{}
+      uniform ...
+
+    )");
+
+    source_ = header + source;
+
+    return *this;
+  }
+
+  void process() {}
+
+  friend class Pipeline;
+
+ protected:
+  PipelinePass() {}
+  ~PipelinePass() {}
+
+ private:
+  std::string source_;
+};
+
+
+
+
+
+
+class LightingPass : public PipelinePass {
+ public:
+
+  friend class Pipeline;
+
+ protected:
+  LightingPass() {
+    set_source(R"(
+      ...
+    )");
+  }
+  ~LightingPass() {}
+};
+
+
+
+
+
+class SSAOPass : public PipelinePass {
+ public:
+
+  SSAOPass& set_radius(float val) {
+    return *this;
+  }
+
+  SSAOPass& set_intensity(float val) {
+    return *this;
+  }
+
+  friend class Pipeline;
+
+ protected:
+  SSAOPass() {
+    set_source(R"(
+      ...
+    )");
+  }
+  ~SSAOPass() {}
+};
+
+
+
 
 }
 
+#endif  // GUA_PIPELINE_PASS_HPP
