@@ -33,6 +33,10 @@
 
 namespace gua {
 
+class GBuffer;
+class WindowBase;
+class RenderContext;
+
 class Pipeline {
  public:
 
@@ -49,8 +53,7 @@ class Pipeline {
     // _left and _right will be stored
     GUA_ADD_PROPERTY(std::string, output_texture_name, "gua_pipeline");
     // stereo configuration
-    GUA_ADD_PROPERTY(math::vec2ui, left_resolution, math::vec2ui(800, 600));
-    GUA_ADD_PROPERTY(math::vec2ui, right_resolution, math::vec2ui(800, 600));
+    GUA_ADD_PROPERTY(math::vec2ui, resolution, math::vec2ui(800, 600));
 
     // // various display options
     // GUA_ADD_PROPERTY(bool, enable_preview_display, false);
@@ -101,39 +104,36 @@ class Pipeline {
     // GUA_ADD_PROPERTY(float, tesselation_max_error, 8.0f);
   };
 
-  ~Pipeline() {
-    for (auto pass: passes_) {
-      delete pass;
-    }
-  }
+  Pipeline();
+  ~Pipeline();
 
   Configuration config;
 
   template<class T>
   T& add_pass() {
+    dirty_ = true;
     T* t = new T();
     passes_.push_back(t);
     return *t;
   }
 
-  void set_output_texture_name(std::string const& name) {
-    output_texture_name_ = name;
-  }
-
-  std::list<PipelinePass*> const& get_passes() const {
-    return passes_;
-  }
+  std::list<PipelinePass*> const& get_passes() const;
 
   void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
-               float application_fps, float rendering_fps) {
-    for (auto pass: passes_) {
-      pass->process();
-    }
-  }
+               float application_fps, float rendering_fps);
+
+  void bind_gbuffer() const;
+
+  void set_output_window(WindowBase* window);
+
+  RenderContext const& get_context() const;
 
  private:
   std::list<PipelinePass*> passes_;
-  std::string output_texture_name_;
+  GBuffer*                 gbuffer_;
+  WindowBase*              window_;
+
+  bool dirty_;
 };
 
 }

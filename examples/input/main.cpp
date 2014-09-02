@@ -78,9 +78,16 @@ int main(int argc, char** argv) {
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
   // pipe->config.set_enable_fps_display(true);
+  pipe->add_pass<gua::PipelinePass>().set_source(R"(
+    void get_diffuse_color() {
+      gua_color = texture2D(color, gua_texcoords).rgb;
+    }
+  )");
+  pipe->add_pass<gua::LightingPass>();
+  pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
 
   auto window(new gua::GlfwWindow());
-  // pipe->set_window(window);
+  pipe->set_output_window(window);
   gua::Renderer renderer({pipe});
 
   // add mouse interaction
@@ -88,7 +95,7 @@ int main(int argc, char** argv) {
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_left_resolution(new_size);
-    pipe->config.set_left_resolution(new_size);
+    pipe->config.set_resolution(new_size);
     screen->data.set_size(gua::math::vec2(0.002 * new_size.x, 0.002 * new_size.y));
   });
 

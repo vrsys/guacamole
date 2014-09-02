@@ -41,7 +41,6 @@ namespace gua {
 
 class Geometry;
 class Texture2D;
-class StereoBuffer;
 
 /**
  * A base class for various windows.
