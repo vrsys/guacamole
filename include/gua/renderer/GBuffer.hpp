@@ -34,46 +34,18 @@ namespace gua {
 class GBuffer : public FrameBufferObject {
  public:
 
-  /**
-   *
-   */
-  GBuffer(std::vector<std::pair<BufferComponent,
-                                scm::gl::sampler_state_desc> > const& layers,
-          unsigned width,
-          unsigned height,
-          unsigned mipmap_layers = 1);
-
+  GBuffer(RenderContext const& ctx, unsigned width, unsigned height);
   virtual ~GBuffer() {}
 
   void remove_buffers(RenderContext const& ctx);
 
-  /**
-   *
-   */
-  void create(RenderContext const& ctx);
-
-  /**
-   *
-   */
-  void create_UGLY(RenderContext const& ctx);
-
-  /**
-   *
-   */
-  std::vector<std::shared_ptr<Texture2D> > const& get_color_buffers(
-      BufferComponentType type) const;
-
-  inline std::shared_ptr<Texture2D> const& get_depth_buffer() const {
-    return depth_buffer_;
-  }
+  std::shared_ptr<Texture2D> const& get_color_buffer() const;
+  std::shared_ptr<Texture2D> const& get_normal_buffer() const;
+  std::shared_ptr<Texture2D> const& get_depth_buffer() const;
 
  private:
-  std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> >
-      layer_types_;
-  unsigned width_, height_, mipmap_layers_;
-
-  std::map<BufferComponentType, std::vector<std::shared_ptr<Texture2D> > >
-      color_buffers_;
+  std::shared_ptr<Texture2D> color_buffer_;
+  std::shared_ptr<Texture2D> normal_buffer_;
   std::shared_ptr<Texture2D> depth_buffer_;
 };
 

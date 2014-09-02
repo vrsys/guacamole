@@ -174,8 +174,7 @@ int main(int argc, char** argv) {
 
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(gua::Camera("/pos/nav/eye_l", "/pos/nav/eye_r", "/pos/nav/screen_l", "/pos/nav/screen_r", "main_scenegraph"));
-  pipe->config.set_left_resolution(gua::math::vec2ui(width, height));
-  pipe->config.set_right_resolution(gua::math::vec2ui(width, height));
+  pipe->config.set_resolution(gua::math::vec2ui(width, height));
   pipe->config.set_enable_stereo(true);
   // pipe->config.set_enable_fps_display(true);
   // pipe->config.set_enable_frustum_culling(true);

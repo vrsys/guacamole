@@ -36,8 +36,7 @@
 
 void set_pipe_defaults(gua::Pipeline* pipe, unsigned width, unsigned height)
 {
-  pipe->config.set_left_resolution(gua::math::vec2ui(width, height));
-  pipe->config.set_right_resolution(gua::math::vec2ui(width, height));
+  pipe->config.set_resolution(gua::math::vec2ui(width, height));
   // pipe->config.set_enable_fps_display(true);
   // pipe->config.set_enable_frustum_culling(true);
   // pipe->config.set_enable_backface_culling(true);

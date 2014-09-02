@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_left_resolution(new_size);
-    pipe->config.set_left_resolution(new_size);
+    pipe->config.set_resolution(new_size);
     screen->data.set_size(gua::math::vec2(0.002 * new_size.x, 0.002 * new_size.y));
   });
 

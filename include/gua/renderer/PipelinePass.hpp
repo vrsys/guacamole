@@ -26,6 +26,8 @@
 
 namespace gua {
 
+class Pipeline;
+
 class PipelinePass {
  public:
 
@@ -43,7 +45,7 @@ class PipelinePass {
     return *this;
   }
 
-  void process() {}
+  void process(Pipeline* pipe) {}
 
   friend class Pipeline;
 
