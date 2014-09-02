@@ -25,33 +25,78 @@
 // guacamole headers
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/WindowBase.hpp>
+#include <gua/renderer/Frustum.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
+#include <gua/renderer/Serializer.hpp>
 
 // external headers
 #include <iostream>
 
+namespace gua {
+
 namespace {
 
-// gua::Frustum camera_frustum(gua::Camera::ProjectionMode const& mode,
-//     gua::math::mat4 const& transf, gua::math::mat4 const& screen,
-//     float near, float far) {
-//   if (mode == gua::Camera::ProjectionMode::PERSPECTIVE) {
-//     return gua::Frustum::perspective(transf, screen, near, far);
-//   } else {
-//     return gua::Frustum::orthographic(transf, screen, near, far);
-//   }
-// }
+////////////////////////////////////////////////////////////////////////////////
+
+Frustum camera_frustum(Camera::ProjectionMode const& mode,
+    math::mat4 const& transf, math::mat4 const& screen,
+    float near, float far) {
+  if (mode == Camera::ProjectionMode::PERSPECTIVE) {
+    return Frustum::perspective(transf, screen, near, far);
+  } else {
+    return Frustum::orthographic(transf, screen, near, far);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void serialize(SceneGraph const& scene_graph,
+               std::string const& eye_name,
+               std::string const& screen_name,
+               Pipeline::Configuration const& config,
+               SerializedScene& out) {
+
+  auto eye((scene_graph)[eye_name]);
+  if (!eye) {
+    Logger::LOG_WARNING << "Cannot render scene: No valid eye specified" << std::endl;
+    return;
+  }
+
+  auto screen_it((scene_graph)[screen_name]);
+  auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
+  if (!screen) {
+    Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
+    return;
+  }
+
+  out.frustum = camera_frustum(config.camera().mode, eye->get_world_transform(),
+                               screen->get_scaled_world_transform(),
+                               config.near_clip(),
+                               config.far_clip());
+
+  out.center_of_interest = eye->get_world_position();
+
+  Serializer serializer;
+  serializer.check(out, scene_graph,
+                   config.camera().render_mask,
+                   config.enable_bbox_display(),
+                   config.enable_ray_display(),
+                   config.enable_frustum_culling());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 }
 
 
-namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline() :
   gbuffer_(nullptr),
-  dirty_(false) {
+  dirty_(false),
+  ping_pong_(true) {
   
 }
 
@@ -110,18 +155,39 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   }
 
   // serialize this scenegraph
+  serialize(*current_graph, 
+            config.camera().eye_l, config.camera().screen_l,
+            config, current_scene_);
+
+
 
   // process all passes
+  ping_pong_ = false;
+
   for (auto pass: passes_) {
     pass->process(this);
+  
+    ping_pong_ = !ping_pong_;
   }
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::bind_gbuffer() const {
-  gbuffer_->bind(get_context());
+GBuffer const& Pipeline::get_gbuffer() const {
+  return *gbuffer_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Texture2D> const& Pipeline::get_postfx_buffer() const {
+  return postfx_buffer_[ping_pong_? 0 : 1];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::bind_postfx_buffer() const {
+  postfx_fbo_[ping_pong_? 1 : 0]->bind(get_context());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +200,12 @@ void Pipeline::set_output_window(WindowBase* window) {
 
 RenderContext const& Pipeline::get_context() const {
   return *window_->get_context();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+SerializedScene const& Pipeline::get_scene() const {
+  return current_scene_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
