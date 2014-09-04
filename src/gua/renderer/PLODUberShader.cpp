@@ -451,7 +451,6 @@ bool PLODUberShader::upload_to(RenderContext const& context) const {
 
   previous_framecount_ = -1;
 
-  frustum_culling_results_.clear();
   return upload_succeeded;
 }
 
@@ -548,6 +547,8 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
                              scm::math::vec3f(0.0f, 0.0f, 0.0f));
   }
 
+  //clear cached frustum culling results for all models
+  model_frustum_culling_results_.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -619,14 +620,16 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
   std::vector<scm::gl::boxf> const& model_bounding_boxes =
       kdn_tree->bounding_boxes();
 
-  frustum_culling_results_.clear();
-  frustum_culling_results_.resize(model_bounding_boxes.size());
+  model_frustum_culling_results_[model_id].clear();
+  model_frustum_culling_results_[model_id].resize(node_list.size());
 
   unsigned int node_counter = 0;
   for (const auto& n : node_list) {
     ++node_counter;
-    frustum_culling_results_[node_counter] =
-        culling_frustum.classify(model_bounding_boxes[n.node_id_]);
+
+    //0 = completely in frustum, 1 = completely outside frustum, 2 = intersecting frustum
+    bool is_in_frustum = culling_frustum.classify(model_bounding_boxes[n.node_id_]) != 1;
+    model_frustum_culling_results_[model_id][node_counter] = is_in_frustum;
   }
 
   auto plod_ressource = std::static_pointer_cast<PLODRessource>(
@@ -655,7 +658,7 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
                          view_id,
                          model_id,
                          vertex_array_,
-                         frustum_culling_results_);
+                         model_frustum_culling_results_[model_id]);
     get_program(depth_pass)->unuse(ctx);
   }
 
@@ -793,23 +796,13 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
     std::vector<scm::gl::boxf> const& model_bounding_boxes =
         kdn_tree->bounding_boxes();
 
-    frustum_culling_results_.clear();
-    frustum_culling_results_.resize(model_bounding_boxes.size());
-
-    unsigned int node_counter = 0;
-    for (const auto& n : node_list) {
-      ++node_counter;
-      frustum_culling_results_[node_counter] =
-          culling_frustum.classify(model_bounding_boxes[n.node_id_]);
-    }
-
     get_program(accumulation_pass)->use(ctx);
     plod_ressource->draw(ctx,
                          context_id,
                          view_id,
                          model_id,
                          vertex_array_,
-                         frustum_culling_results_);
+                         model_frustum_culling_results_[model_id]);
     get_program(accumulation_pass)->unuse(ctx);
   }
 }

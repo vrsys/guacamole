@@ -172,8 +172,7 @@ class PLODUberShader : public GeometryUberShader {
 
   //frustum dependent variables:
   /////////////////////////////////////////////////////////////////////////////////////
-  mutable std::vector<unsigned int> frustum_culling_results_;
-
+  mutable std::map<pbr::model_t, std::vector<bool> > model_frustum_culling_results_;
   //misc:
   ////////////////////////////////////////////////////////////////////////////////////
   mutable unsigned int material_id_;
