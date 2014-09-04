@@ -55,13 +55,12 @@ void main()
 
 	{
 
-		//if(depthValue != 1.0f)
+		if(depthValue != 1.0f)
                 {
 		  //out_color = texture2D(p02_color_texture, gl_FragCoord.xy/(win_size.xy));
                   //output_color = vec3(0.0,0.0,1.0);
                   gl_FragDepth = depthValue;
                 }
-                /*
 		else
 		{
 
@@ -282,6 +281,7 @@ void main()
 						else
 						{
 							output_color = tempC;
+                                                        output_normal = texture2D(p02_normal_texture, (gl_FragCoord.xy + vec2(+1,-1) )/(win_dims.xy)).rgb;
                                                        // output_color = vec3(1.0,0.0,0.0);
 
                                                         gl_FragDepth = tempD;
@@ -308,7 +308,7 @@ void main()
                  
 
 		}
-                */
+                
 
                 
 	}

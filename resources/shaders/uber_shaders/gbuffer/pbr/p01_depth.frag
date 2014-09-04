@@ -14,7 +14,7 @@ in float pass_log_depth;
 ///////////////////////////////////////////////////////////////////////////////
 
 // No output other than depth texture
-layout (location = 0) out float out_linear_depth;
+layout (location = 0) out float out_logarithmic_depth;
 
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
@@ -86,7 +86,8 @@ void main() {
                         pass_scaled_radius * pass_view_scaling) - near_plane) /
                       (far_minus_near_plane * 1.0);
 */
-  out_linear_depth = pass_log_depth;
+  out_logarithmic_depth = pass_log_depth;
+  //out_logarithmic_depth = 0.1;
 
   gl_FragDepth = -((pass_mv_vert_depth + depth_offset *
                         pass_scaled_radius * pass_view_scaling) - near_plane) /

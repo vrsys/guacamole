@@ -112,7 +112,6 @@ void main() {
 
   if ( abs(depthValue - depth_to_compare) <= 3.0 * pass_scaled_radius) {
     out_accumulated_color = vec4(pass_point_color * weight, weight);
-    //out_accumulated_color = vec4(0.01, 0.0, 0.0, 1.0);
     out_accumulated_normal = normalAdjustmentFactor * vec4(pass_transposed_inverse_normal * weight, weight);
   }
   else {

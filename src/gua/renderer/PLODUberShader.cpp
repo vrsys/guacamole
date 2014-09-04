@@ -524,7 +524,7 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
     //clear depth FBOS depth attachments
     ctx.render_context->clear_depth_stencil_buffer(depth_pass_result_fbo_);
     ctx.render_context->clear_color_buffer(
-        depth_pass_result_fbo_, 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+        depth_pass_result_fbo_, 0, scm::math::vec4f(1.0f, 1.0f, 1.0f, 1.0f));
 
     //clear_accumulation FBOS color attachment
     ctx.render_context
