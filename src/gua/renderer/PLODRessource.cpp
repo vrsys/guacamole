@@ -54,7 +54,7 @@ void PLODRessource::draw(
     pbr::view_t view_id,
     pbr::model_t model_id,
     scm::gl::vertex_array_ptr const& vertex_array,
-    std::vector<unsigned int> const& culling_results) const {
+    std::vector<bool> const& frustum_culling_results) const {
 
   pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
   pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
@@ -74,10 +74,9 @@ void PLODRessource::draw(
   pbr::node_t node_counter = 0;
   for (const auto& n : node_list) {
     ++node_counter;
-    // 0 = completely inside of frustum,
-    // 1 = completely outside of frustum,
-    // 2 = intersects frustum
-    if (culling_results[node_counter] != 1) {
+    // true == inside or intersecting frustum
+    // false == outside frustum
+    if (frustum_culling_results[node_counter] == true) {
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
                                       n.slot_id_ * surfels_per_node,
                                       surfels_per_node_of_model);

@@ -63,7 +63,7 @@ class PLODRessource : public GeometryRessource {
             pbr::view_t view_id,
             pbr::model_t model_id,
             scm::gl::vertex_array_ptr const& vertex_array,
-            std::vector<unsigned int> const& frustum_culling_results) const;
+            std::vector<bool> const& frustum_culling_results) const;
 
   void ray_test(Ray const& ray,
                 PickResult::Options options,
