@@ -19,20 +19,13 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
-
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/VolumeLoader.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
+// class header
 #include <gua/renderer/GBufferPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+namespace gua {
+
+void GBufferPass::process(Pipeline* pipe) {
+
+} 
+
+}

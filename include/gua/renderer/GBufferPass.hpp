@@ -19,20 +19,28 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_GBUFFER_PASS_HPP
+#define GUA_GBUFFER_PASS_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/VolumeLoader.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/GBufferPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+#include <gua/renderer/PipelinePass.hpp>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+namespace gua {
+
+class Pipeline;
+
+class GBufferPass : public PipelinePass {
+ public:
+
+  virtual bool is_fullscreen_pass() const { return true; }
+  virtual void process(Pipeline* pipe);
+
+  friend class Pipeline;
+
+ protected:
+  GBufferPass() {}
+  ~GBufferPass() {}
+};
+
+}
+
+#endif  // GUA_GBUFFER_PASS_HPP

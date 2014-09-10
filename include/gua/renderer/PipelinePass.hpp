@@ -22,8 +22,6 @@
 #ifndef GUA_PIPELINE_PASS_HPP
 #define GUA_PIPELINE_PASS_HPP
 
-#include <string>
-
 namespace gua {
 
 class Pipeline;
@@ -31,79 +29,15 @@ class Pipeline;
 class PipelinePass {
  public:
 
-  PipelinePass& set_source(std::string const& source) {
-
-    std::string header(R"(
-      #version 420
-
-      uniform ...
-
-    )");
-
-    source_ = header + source;
-
-    return *this;
-  }
-
-  void process(Pipeline* pipe) {}
+  virtual bool is_fullscreen_pass() const = 0;
+  virtual void process(Pipeline* pipe) = 0;
 
   friend class Pipeline;
 
  protected:
   PipelinePass() {}
   ~PipelinePass() {}
-
- private:
-  std::string source_;
 };
-
-
-
-
-
-
-class LightingPass : public PipelinePass {
- public:
-
-  friend class Pipeline;
-
- protected:
-  LightingPass() {
-    set_source(R"(
-      ...
-    )");
-  }
-  ~LightingPass() {}
-};
-
-
-
-
-
-class SSAOPass : public PipelinePass {
- public:
-
-  SSAOPass& set_radius(float val) {
-    return *this;
-  }
-
-  SSAOPass& set_intensity(float val) {
-    return *this;
-  }
-
-  friend class Pipeline;
-
- protected:
-  SSAOPass() {
-    set_source(R"(
-      ...
-    )");
-  }
-  ~SSAOPass() {}
-};
-
-
-
 
 }
 
