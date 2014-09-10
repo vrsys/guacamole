@@ -22,6 +22,8 @@
 // class header
 #include <gua/node/NURBSNode.hpp>
 
+#include <algorithm>
+
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialDatabase.hpp>
 #include <gua/node/RayNode.hpp>
@@ -37,7 +39,9 @@ namespace node {
                        std::string const& filename,
                        std::string const& material,
                        math::mat4 const& transform)
-    : GeometryNode(name, filename, material, transform)
+    : GeometryNode(name, filename, material, transform),
+      max_tess_level_pre_pass(1.0f),
+      max_tess_level_final_pass(4.0f)
   {}
 
 
@@ -129,7 +133,35 @@ namespace node {
   std::shared_ptr<Node> NURBSNode::copy() const {
     auto result(std::make_shared<NURBSNode>(get_name(), filename_, material_, get_transform()));
     result->shadow_mode_ = shadow_mode_;
+
+    result->max_final_tesselation(this->max_final_tesselation());
+    result->max_pre_tesselation(this->max_pre_tesselation());
+
     return result;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  float NURBSNode::max_pre_tesselation() const
+  {
+    return max_tess_level_pre_pass;
+  } 
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::max_pre_tesselation(float t)
+  {
+    max_tess_level_pre_pass = std::max(1.0f, std::min(t, 64.0f));
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  float NURBSNode::max_final_tesselation() const
+  {
+    return max_tess_level_final_pass;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::max_final_tesselation(float t)
+  {
+    max_tess_level_final_pass = std::max(1.0f, std::min(t, 64.0f));
   }
 
 }

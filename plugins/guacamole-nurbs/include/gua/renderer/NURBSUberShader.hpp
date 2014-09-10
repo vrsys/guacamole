@@ -86,6 +86,9 @@ class NURBSUberShader : public GeometryUberShader {
   std::string _final_geometry_shader() const;
   std::string _final_fragment_shader() const;
 
+  void        _insert_generic_per_vertex_code(std::string& code) const;
+  void        _insert_generic_per_fragment_code(std::string& rcode) const;
+
  private:  // attributes
 
 };

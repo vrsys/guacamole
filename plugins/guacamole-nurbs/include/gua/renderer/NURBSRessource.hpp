@@ -26,7 +26,7 @@
 #include <gua/renderer/NURBS.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/GeometryRessource.hpp>
-#include <gua/renderer/nurbs_geometry/NURBSData.hpp>
+#include <gua/renderer/detail/NURBSData.hpp>
 
 // external headers
 #include <string>
@@ -47,20 +47,39 @@
 
 namespace gua {
 
+  namespace node {
+    class NURBSNode;
+  };
+
+  template <typename T>
+  std::size_t size_in_bytes(T const& container)
+  {
+    typedef typename T::value_type value_type;
+    return container.size() * sizeof(value_type);
+  };
+
 class GUA_NURBS_DLL NURBSRessource : public GeometryRessource {
 
- public:
-   NURBSRessource(std::shared_ptr<TrimmedBezierSurfaceObject> const& object,
+ public: // constants
+
+   static std::size_t const MAX_XFB_BUFFER_SIZE_IN_BYTES = 300000000; // 300MB temporary XFB Buffer
+
+ public : // c'tor / d'tor
+
+   NURBSRessource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
                   scm::gl::fill_mode in_fill_mode = scm::gl::FILL_SOLID,
-                  std::size_t max_transform_feedback_buffer_size = 200000000);  // 200MB TXFB
+                  //scm::gl::fill_mode in_fill_mode = scm::gl::FILL_WIREFRAME,
+                  bool enable_raycasting = false);
 
    ~NURBSRessource();
 
-  /*virtual*/ void draw(RenderContext const& context) const;
+ public : // methods
 
   /*virtual*/ void predraw(RenderContext const& context) const;
 
-  /*virtual*/ void update_bounding_box() const;
+  /*virtual*/ void draw(RenderContext const& context) const;
+
+  /*virtual*/ void update(node::GeometryNode* node) override;
 
   /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
@@ -72,49 +91,63 @@ class GUA_NURBS_DLL NURBSRessource : public GeometryRessource {
   scm::gl::vertex_array_ptr const& vertex_array() const;
 
  private:
+   
+  /////////////////////////////////////////////////////////////////////////////////////////////
+  // CPU ressources
+  /////////////////////////////////////////////////////////////////////////////////////////////
+  std::shared_ptr<NURBSData> _data;
 
-  NURBSData* _data;
-  scm::gl::fill_mode _fill_mode;
+  scm::gl::fill_mode         _fill_mode;
+  bool                       _raycasting;
+  float                      _max_pre_tesselation;
+  float                      _max_final_tesselation;
+  
+  /////////////////////////////////////////////////////////////////////////////////////////////
+  // GPU ressources
+  /////////////////////////////////////////////////////////////////////////////////////////////
 
-  //Texture2D Buffer for Parametric Data
-  mutable std::vector<scm::gl::texture_buffer_ptr> _parametric_texture_buffer;
+  // array and texture buffers for adaptive tesselation
+  mutable std::vector<scm::gl::vertex_array_ptr>     _tess_vertex_array;
+  mutable std::vector<scm::gl::buffer_ptr>           _tess_vertex_buffer;
+  mutable std::vector<scm::gl::buffer_ptr>           _tess_index_buffer;
+                                                     
+  mutable std::vector<scm::gl::texture_buffer_ptr>   _tess_parametric_texture_buffer;
+  mutable std::vector<scm::gl::texture_buffer_ptr>   _tess_attribute_texture_buffer;
+  mutable std::vector<scm::gl::texture_buffer_ptr>   _tess_domain_texture_buffer;
+               
+  // array and texture buffers for raycasting
+  struct {
+    mutable std::vector<scm::gl::vertex_array_ptr>     vertex_array;
+    mutable std::vector<scm::gl::buffer_ptr>           vertex_attrib0;
+    mutable std::vector<scm::gl::buffer_ptr>           vertex_attrib1;
+    mutable std::vector<scm::gl::buffer_ptr>           vertex_attrib2;
+    mutable std::vector<scm::gl::buffer_ptr>           vertex_attrib3;
+    mutable std::vector<scm::gl::buffer_ptr>           index_array;
 
-  //Texture2D Buffer for Attributes
-  mutable std::vector<scm::gl::texture_buffer_ptr> _attribute_texture_buffer;
+    mutable std::vector<scm::gl::texture_buffer_ptr>   controlpoints;
+  } _gpu_ressources_raycasting;
 
-  //Texture2D Buffer for Domain
-  mutable std::vector<scm::gl::texture_buffer_ptr> _domain_texture_buffer;
+  // texture buffers for trimming                    
+  mutable std::vector<scm::gl::texture_buffer_ptr>   _trim_partition_texture_buffer;
+  mutable std::vector<scm::gl::texture_buffer_ptr>   _trim_contourlist_texture_buffer;
+  mutable std::vector<scm::gl::texture_buffer_ptr>   _trim_curvelist_texture_buffer;
+  mutable std::vector<scm::gl::texture_buffer_ptr>   _trim_curvedata_texture_buffer;
+  mutable std::vector<scm::gl::texture_buffer_ptr>   _trim_pointdata_texture_buffer;
 
-  //Texture2D Buffers for Trim Data
-  mutable std::vector<scm::gl::texture_buffer_ptr>
-      _trim_partition_texture_buffer;
-  mutable std::vector<scm::gl::texture_buffer_ptr>
-      _trim_contourlist_texture_buffer;
-  mutable std::vector<scm::gl::texture_buffer_ptr>
-      _trim_curvelist_texture_buffer;
-  mutable std::vector<scm::gl::texture_buffer_ptr>
-      _trim_curvedata_texture_buffer;
-  mutable std::vector<scm::gl::texture_buffer_ptr>
-      _trim_pointdata_texture_buffer;
-
-  //Vertex Array and Buffer
-  mutable std::vector<scm::gl::vertex_array_ptr> _vertex_array;
-  mutable std::vector<scm::gl::buffer_ptr> _vertex_buffer;
-  mutable std::vector<scm::gl::buffer_ptr> _index_buffer;
-
-  mutable std::vector<scm::gl::sampler_state_ptr> _sstate;
-  mutable std::vector<scm::gl::rasterizer_state_ptr> _rstate_ms_solid;
-  mutable std::vector<scm::gl::rasterizer_state_ptr> _rstate_ms_wireframe;
+  mutable std::vector<scm::gl::sampler_state_ptr>    _sstate;
+  mutable std::vector<scm::gl::rasterizer_state_ptr> _rstate_no_cull;
   mutable std::vector<scm::gl::rasterizer_state_ptr> _rstate_ms_point;
-  mutable std::vector<scm::gl::blend_state_ptr> _bstate_no_blend;
+  mutable std::vector<scm::gl::blend_state_ptr>      _bstate_no_blend;
 
   /////////////////////////////////////////////////////////////////////////////////////////////
-  // Transformation Feedback Specific Members
+  // Transformation Feedback Specific Members - only once per context
   /////////////////////////////////////////////////////////////////////////////////////////////
+  struct TransformFeedbackBuffer {
+    mutable std::vector<scm::gl::transform_feedback_ptr> _transform_feedback;
+    mutable std::vector<scm::gl::vertex_array_ptr>       _transform_feedback_vao;
+    mutable std::vector<scm::gl::buffer_ptr>             _transform_feedback_vbo;
+  };
 
-  mutable std::vector<scm::gl::transform_feedback_ptr> _transform_feedback;
-  mutable std::vector<scm::gl::vertex_array_ptr> _transform_feedback_vao;
-  mutable std::vector<scm::gl::buffer_ptr> _transform_feedback_vbo;
   /////////////////////////////////////////////////////////////////////////////////////////////
 
  private:  // helper methods

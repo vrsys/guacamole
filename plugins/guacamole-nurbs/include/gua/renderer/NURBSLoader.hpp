@@ -23,6 +23,7 @@
 #define GUA_NURBS_LOADER_HPP
 
 // guacamole headers
+#include <gua/node/NURBSNode.hpp>
 #include <gua/renderer/NURBS.hpp>
 #include <gua/renderer/GeometryLoader.hpp>
 
@@ -48,7 +49,9 @@ class GUA_NURBS_DLL NURBSLoader : public GeometryLoader {
      DEFAULTS = 0,
      MAKE_PICKABLE = 1 << 0,
      NORMALIZE_POSITION = 1 << 1,
-     NORMALIZE_SCALE = 1 << 2
+     NORMALIZE_SCALE = 1 << 2,
+     WIREFRAME = 1 << 3,
+     RAYCASTING = 1 << 4
    };
 
   /**
@@ -58,10 +61,10 @@ class GUA_NURBS_DLL NURBSLoader : public GeometryLoader {
    */
   NURBSLoader();
 
-  std::shared_ptr<node::Node> create_geometry_from_file(std::string const& nodename,
-                                                  std::string const& filename,
-                                                  std::string const& material,
-                                                  unsigned flags);
+  std::shared_ptr<node::NURBSNode> create_geometry_from_file(std::string const& nodename,
+                                                             std::string const& filename,
+                                                             std::string const& material,
+                                                             unsigned flags);
 
  private:
 

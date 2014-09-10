@@ -22,6 +22,7 @@
 
 #include <gua/utils/Singleton.hpp>
 #include <gua/renderer/NURBSUberShader.hpp>
+#include <gua/node/NURBSNode.hpp>
 
 #include <scm/gl_core/render_device.h>
 #include <scm/gl_core/buffer_objects.h>
@@ -35,13 +36,16 @@
 
 namespace gua {
 
+  
+
 ////////////////////////////////////////////////////////////////////////////////
-NURBSRessource::NURBSRessource(std::shared_ptr<TrimmedBezierSurfaceObject> const& object,
+NURBSRessource::NURBSRessource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
              scm::gl::fill_mode in_fill_mode,
-             std::size_t max_tf_size)
-    : _data(new NURBSData(object)),
+             bool raycasting_enabled)
+    : _data(std::make_shared<NURBSData>(object)),
       _fill_mode(in_fill_mode),
-      _max_transform_feedback_buffer_size(max_tf_size) {
+      _raycasting(raycasting_enabled)
+{
   bounding_box_ = math::BoundingBox<math::vec3>(
       math::vec3(
           object->bbox().min[0], object->bbox().min[1], object->bbox().min[2]),
@@ -53,20 +57,16 @@ NURBSRessource::NURBSRessource(std::shared_ptr<TrimmedBezierSurfaceObject> const
 /* virtual */
 NURBSRessource::~NURBSRessource() 
 {
-  for (auto it  : _parametric_texture_buffer)    it.reset();
-  for (auto it :  _attribute_texture_buffer) it.reset();  
-  for (auto it :  _vertex_buffer) it.reset();  
-  for (auto it :  _vertex_array) it.reset();  
-  for (auto it :  _domain_texture_buffer) it.reset();  
+  for (auto it  : _tess_parametric_texture_buffer)    it.reset();
+  for (auto it :  _tess_attribute_texture_buffer) it.reset();  
+  for (auto it :  _tess_vertex_buffer) it.reset();  
+  for (auto it :  _tess_vertex_array) it.reset();  
+  for (auto it :  _tess_domain_texture_buffer) it.reset();  
   for (auto it :  _trim_partition_texture_buffer) it.reset();  
   for (auto it :  _trim_contourlist_texture_buffer) it.reset();  
   for (auto it :  _trim_curvelist_texture_buffer) it.reset();  
   for (auto it :  _trim_curvedata_texture_buffer) it.reset();  
   for (auto it :  _trim_pointdata_texture_buffer) it.reset();
-
-  if (_data) {
-    delete _data;
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,24 +75,20 @@ void NURBSRessource::upload_to(RenderContext const& context) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
-  if (_vertex_array.size() <= context.id) {
-    _vertex_array.resize(context.id + 1);
-    _parametric_texture_buffer.resize(context.id + 1);
-    _attribute_texture_buffer.resize(context.id + 1);
-    _domain_texture_buffer.resize(context.id + 1);
+  if (_tess_vertex_array.size() <= context.id) {
+    _tess_vertex_array.resize(context.id + 1);
+    _tess_parametric_texture_buffer.resize(context.id + 1);
+    _tess_attribute_texture_buffer.resize(context.id + 1);
+    _tess_domain_texture_buffer.resize(context.id + 1);
     _trim_partition_texture_buffer.resize(context.id + 1);
     _trim_contourlist_texture_buffer.resize(context.id + 1);
     _trim_curvelist_texture_buffer.resize(context.id + 1);
     _trim_curvedata_texture_buffer.resize(context.id + 1);
     _trim_pointdata_texture_buffer.resize(context.id + 1);
-    _vertex_buffer.resize(context.id + 1);
-    _index_buffer.resize(context.id + 1);
-    _transform_feedback_vbo.resize(context.id + 1);
-    _transform_feedback.resize(context.id + 1);
-    _transform_feedback_vao.resize(context.id + 1);
+    _tess_vertex_buffer.resize(context.id + 1);
+    _tess_index_buffer.resize(context.id + 1);
     _sstate.resize(context.id + 1);
-    _rstate_ms_solid.resize(context.id + 1);
-    _rstate_ms_wireframe.resize(context.id + 1);
+    _rstate_no_cull.resize(context.id + 1);
     _rstate_ms_point.resize(context.id + 1);
     _bstate_no_blend.resize(context.id + 1);
   }
@@ -101,10 +97,9 @@ void NURBSRessource::upload_to(RenderContext const& context) const {
 
   _sstate[context.id] = in_device->create_sampler_state(
       scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
-  _rstate_ms_solid[context.id] = in_device->create_rasterizer_state(
-      scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false);
-  _rstate_ms_wireframe[context.id] = in_device->create_rasterizer_state(
-      scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false);
+
+  _rstate_no_cull[context.id] = in_device->create_rasterizer_state(_fill_mode, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false);
+  
   _rstate_ms_point[context.id] = in_device->create_rasterizer_state(
       scm::gl::FILL_POINT, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false);
   _bstate_no_blend[context.id] =
@@ -126,9 +121,10 @@ void NURBSRessource::upload_to(RenderContext const& context) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void NURBSRessource::predraw(RenderContext const& context) const {
+void NURBSRessource::predraw(RenderContext const& context) const 
+{
   // upload to GPU if neccessary
-  if (_vertex_array.size() <= context.id || _vertex_array[context.id] == nullptr) {
+  if (_tess_vertex_array.size() <= context.id || _tess_vertex_array[context.id] == nullptr) {
     upload_to(context);
   }
 
@@ -139,22 +135,24 @@ void NURBSRessource::predraw(RenderContext const& context) const {
   scm::gl::context_image_units_guard cig(in_context);
   scm::gl::context_texture_units_guard ctg(in_context);
 
-  context.render_context->set_rasterizer_state(_rstate_ms_solid[context.id], 1.0f);
+  context.render_context->set_rasterizer_state(_rstate_no_cull[context.id], 1.0f);
+
+  auto tfb = Singleton<TransformFeedbackBuffer>::instance();
 
   //Transform Feedback Stage Begins
-  in_context->begin_transform_feedback(_transform_feedback[context.id],
+  in_context->begin_transform_feedback(tfb->_transform_feedback[context.id],
                                        scm::gl::PRIMITIVE_POINTS);
   {
-    in_context->bind_vertex_array(_vertex_array[context.id]);
+    in_context->bind_vertex_array(_tess_vertex_array[context.id]);
     in_context->bind_index_buffer(
-        _index_buffer[context.id],
+      _tess_index_buffer[context.id],
         scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS,
         scm::gl::TYPE_UINT);
 
     in_context->bind_texture(
-        _parametric_texture_buffer[context.id], _sstate[context.id], 5);
+      _tess_parametric_texture_buffer[context.id], _sstate[context.id], 5);
     in_context->bind_texture(
-        _attribute_texture_buffer[context.id], _sstate[context.id], 6);
+      _tess_attribute_texture_buffer[context.id], _sstate[context.id], 6);
     in_context->bind_texture(
         _trim_partition_texture_buffer[context.id], _sstate[context.id], 7);
     in_context->bind_texture(
@@ -174,9 +172,12 @@ void NURBSRessource::predraw(RenderContext const& context) const {
     in_context->current_program()->uniform_sampler("trim_curvedata", 10);
     in_context->current_program()->uniform_sampler("trim_pointdata", 11);
 
+    in_context->current_program()->uniform("max_pre_tesselation", _max_pre_tesselation);
+
+
     in_context->apply();
 
-    in_context->draw_elements(_data->index_data.size());
+    in_context->draw_elements(_data->tess_index_data.size());
   }
 
   in_context->end_transform_feedback();
@@ -207,7 +208,7 @@ void NURBSRessource::predraw(RenderContext const& context) const {
 
 void NURBSRessource::draw(RenderContext const& context) const {
   // upload to GPU if neccessary
-  if (_vertex_array.size() <= context.id || _vertex_array[context.id] == nullptr) {
+  if (_tess_vertex_array.size() <= context.id || _tess_vertex_array[context.id] == nullptr) {
     upload_to(context);
   }
 
@@ -218,14 +219,15 @@ void NURBSRessource::draw(RenderContext const& context) const {
   scm::gl::context_image_units_guard cig1(in_context);
   scm::gl::context_texture_units_guard ctg1(in_context);
 
-  context.render_context->set_rasterizer_state(_rstate_ms_wireframe[context.id], 1.0f);
+  context.render_context->set_rasterizer_state(_rstate_no_cull[context.id], 1.0f);
 
-  in_context->bind_vertex_array(_transform_feedback_vao[context.id]);
+  auto tfb = Singleton<TransformFeedbackBuffer>::instance();
+  in_context->bind_vertex_array(tfb->_transform_feedback_vao[context.id]);
 
   in_context->bind_texture(
-      _parametric_texture_buffer[context.id], _sstate[context.id], 5);
+    _tess_parametric_texture_buffer[context.id], _sstate[context.id], 5);
   in_context->bind_texture(
-      _attribute_texture_buffer[context.id], _sstate[context.id], 6);
+    _tess_attribute_texture_buffer[context.id], _sstate[context.id], 6);
   in_context->bind_texture(
       _trim_partition_texture_buffer[context.id], _sstate[context.id], 7);
   in_context->bind_texture(
@@ -245,77 +247,94 @@ void NURBSRessource::draw(RenderContext const& context) const {
   in_context->current_program()->uniform_sampler("trim_curvedata", 10);
   in_context->current_program()->uniform_sampler("trim_pointdata", 11);
 
+  in_context->current_program()->uniform("max_final_tesselation", _max_final_tesselation);
+
   in_context->apply();
 
   in_context->draw_transform_feedback(
       scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS,
-      _transform_feedback[context.id]);
+      tfb->_transform_feedback[context.id]);
 }
 
-void NURBSRessource::initialize_texture_buffers(RenderContext const& context) const {
+
+////////////////////////////////////////////////////////////////////////////////
+void NURBSRessource::update(node::GeometryNode* geode)
+{
+  node::NURBSNode* node = dynamic_cast<node::NURBSNode*>(geode);
+
+  _max_pre_tesselation   = node->max_pre_tesselation();
+  _max_final_tesselation = node->max_final_tesselation();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+void NURBSRessource::initialize_texture_buffers(RenderContext const& context) const 
+{
   auto in_device = context.render_device;
 
-  if (_data->parametric_data.empty()) _data->parametric_data.resize(1);
-  if (_data->attribute_data.empty()) _data->attribute_data.resize(1);
-  if (_data->trim_partition.empty()) _data->trim_partition.resize(1);
-  if (_data->trim_contourlist.empty()) _data->trim_contourlist.resize(1);
-  if (_data->trim_curvelist.empty()) _data->trim_curvelist.resize(1);
-  if (_data->trim_curvedata.empty()) _data->trim_curvedata.resize(1);
-  if (_data->trim_pointdata.empty()) _data->trim_pointdata.resize(1);
+  // empty texture buffers are not allowed
+  if (_data->tess_parametric_data.empty()) _data->tess_parametric_data.resize(1);
+  if (_data->tess_attribute_data.empty())  _data->tess_attribute_data.resize(1);
+  if (_data->trim_partition.empty())       _data->trim_partition.resize(1);
+  if (_data->trim_contourlist.empty())     _data->trim_contourlist.resize(1);
+  if (_data->trim_curvelist.empty())       _data->trim_curvelist.resize(1);
+  if (_data->trim_curvedata.empty())       _data->trim_curvedata.resize(1);
+  if (_data->trim_pointdata.empty())       _data->trim_pointdata.resize(1);
 
 
   //Parametric Data
-  _parametric_texture_buffer[context.id] =
+  _tess_parametric_texture_buffer[context.id] =
       in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
                                        scm::gl::USAGE_STATIC_DRAW,
-                                       _data->parametric_data.data_size(),
-                                       _data->parametric_data.get());
+                                       size_in_bytes(_data->tess_parametric_data),
+                                       &_data->tess_parametric_data[0]);
 
   //Attributes Data
-  _attribute_texture_buffer[context.id] =
+  _tess_attribute_texture_buffer[context.id] =
       in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
                                        scm::gl::USAGE_STATIC_DRAW,
-                                       _data->attribute_data.data_size(),
-                                       _data->attribute_data.get());
+                                       size_in_bytes(_data->tess_attribute_data),
+                                       &_data->tess_attribute_data[0]);
 
   //Trim Data
   _trim_partition_texture_buffer[context.id] =
       in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
                                        scm::gl::USAGE_STATIC_DRAW,
-                                       _data->trim_partition.data_size(),
-                                       _data->trim_partition.get());
+                                       size_in_bytes(_data->trim_partition),
+                                       &_data->trim_partition[0]);
   ;
   _trim_contourlist_texture_buffer[context.id] =
       in_device->create_texture_buffer(scm::gl::FORMAT_RG_32F,
                                        scm::gl::USAGE_STATIC_DRAW,
-                                       _data->trim_contourlist.data_size(),
-                                       _data->trim_contourlist.get());
+                                       size_in_bytes(_data->trim_contourlist),
+                                       &_data->trim_contourlist[0]);
   ;
   _trim_curvelist_texture_buffer[context.id] =
       in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
                                        scm::gl::USAGE_STATIC_DRAW,
-                                       _data->trim_curvelist.data_size(),
-                                       _data->trim_curvelist.get());
+                                       size_in_bytes(_data->trim_curvelist),
+                                       &_data->trim_curvelist[0]);
   ;
   _trim_curvedata_texture_buffer[context.id] =
       in_device->create_texture_buffer(scm::gl::FORMAT_R_32F,
                                        scm::gl::USAGE_STATIC_DRAW,
-                                       _data->trim_curvedata.data_size(),
-                                       _data->trim_curvedata.get());
+                                       size_in_bytes(_data->trim_curvedata),
+                                       &_data->trim_curvedata[0]);
   ;
   _trim_pointdata_texture_buffer[context.id] =
       in_device->create_texture_buffer(scm::gl::FORMAT_RGB_32F,
                                        scm::gl::USAGE_STATIC_DRAW,
-                                       _data->trim_pointdata.data_size(),
-                                       _data->trim_pointdata.get());
+                                       size_in_bytes(_data->trim_pointdata),
+                                       &_data->trim_pointdata[0]);
   ;
 }
 
-void NURBSRessource::initialize_vertex_data(RenderContext const& context) const {
+void NURBSRessource::initialize_vertex_data(RenderContext const& context) const 
+{
   auto in_device = context.render_device;
 
-  int stride =
-      sizeof(scm::math::vec3f) + sizeof(unsigned) + sizeof(scm::math::vec4f);
+  // initialize vertex input for adaptive tesselation
+  int stride = sizeof(scm::math::vec3f) + sizeof(unsigned) + sizeof(scm::math::vec4f);
 
   scm::gl::vertex_format v_fmt = scm::gl::vertex_format(
       0,
@@ -326,21 +345,25 @@ void NURBSRessource::initialize_vertex_data(RenderContext const& context) const 
   v_fmt(0, 1, scm::gl::TYPE_UINT, stride);   // Surface Index (indexf)
   v_fmt(0, 2, scm::gl::TYPE_VEC4F, stride);  // uv, tmp, tmp
 
-  _vertex_buffer[context.id] =
+  _tess_vertex_buffer[context.id] =
       in_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
                                scm::gl::USAGE_STATIC_DRAW,
-                               _data->patch_data.data_size(),
-                               _data->patch_data.get());
-  _vertex_array[context.id] = in_device->create_vertex_array(
-      v_fmt, boost::assign::list_of(_vertex_buffer[context.id]));
-  _index_buffer[context.id] =
+                               size_in_bytes(_data->tess_patch_data),
+                               &_data->tess_patch_data[0]);
+  _tess_vertex_array[context.id] = in_device->create_vertex_array(
+    v_fmt, boost::assign::list_of(_tess_vertex_buffer[context.id]));
+  _tess_index_buffer[context.id] =
       in_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
                                scm::gl::USAGE_STATIC_DRAW,
-                               _data->index_data.data_size(),
-                               _data->index_data.get());
+                               size_in_bytes(_data->tess_index_data),
+                               &_data->tess_index_data[0]);
+
+  // initialize ray casting setup
+
 }
 
-void NURBSRessource::initialize_transform_feedback(RenderContext const& context) const {
+void NURBSRessource::initialize_transform_feedback(RenderContext const& context) const 
+{
   auto in_device = context.render_device;
 
   int stride =
@@ -355,14 +378,26 @@ void NURBSRessource::initialize_transform_feedback(RenderContext const& context)
   v_fmt(0, 1, scm::gl::TYPE_UINT, stride);   // Surface Index (indexf)
   v_fmt(0, 2, scm::gl::TYPE_VEC2F, stride);  // uv
 
-  _transform_feedback_vbo[context.id] =
-      in_device->create_buffer(scm::gl::BIND_TRANSFORM_FEEDBACK_BUFFER,
-                               scm::gl::USAGE_DYNAMIC_COPY,
-                               _max_transform_feedback_buffer_size);
-  _transform_feedback[context.id] = in_device->create_transform_feedback(
-      scm::gl::stream_output_setup(_transform_feedback_vbo[context.id]));
-  _transform_feedback_vao[context.id] = in_device->create_vertex_array(
-      v_fmt, boost::assign::list_of(_transform_feedback_vbo[context.id]));
+  auto tfbuffer = Singleton<TransformFeedbackBuffer>::instance();
+
+  if (tfbuffer->_transform_feedback.size() <= context.id)
+  {
+    tfbuffer->_transform_feedback.resize(context.id + 1);
+    tfbuffer->_transform_feedback_vbo.resize(context.id + 1);
+    tfbuffer->_transform_feedback_vao.resize(context.id + 1);
+
+    if ( tfbuffer->_transform_feedback[context.id] == 0)
+    {
+      tfbuffer->_transform_feedback_vbo[context.id] =
+        in_device->create_buffer(scm::gl::BIND_TRANSFORM_FEEDBACK_BUFFER,
+        scm::gl::USAGE_DYNAMIC_COPY,
+        MAX_XFB_BUFFER_SIZE_IN_BYTES);
+      tfbuffer->_transform_feedback[context.id] = in_device->create_transform_feedback(
+        scm::gl::stream_output_setup(tfbuffer->_transform_feedback_vbo[context.id]));
+      tfbuffer->_transform_feedback_vao[context.id] = in_device->create_vertex_array(
+        v_fmt, boost::assign::list_of(tfbuffer->_transform_feedback_vbo[context.id]));
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

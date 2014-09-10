@@ -54,11 +54,20 @@ public : // member
 
   void update_cache() override;
 
+  float max_pre_tesselation() const;
+  void  max_pre_tesselation(float t);
+
+  float max_final_tesselation() const;
+  void  max_final_tesselation(float t);
+
 protected:
 
   std::shared_ptr<Node> copy() const override;
 
 private : // attributes e.g. special attributes for drawing
+
+  float max_tess_level_pre_pass; 
+  float max_tess_level_final_pass;
 
 };
 

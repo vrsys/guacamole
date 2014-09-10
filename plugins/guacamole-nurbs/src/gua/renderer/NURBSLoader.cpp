@@ -27,12 +27,11 @@
 
 #include <gua/node/NURBSNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-
 #include <gua/renderer/NURBSRessource.hpp>
-#include <gua/renderer/nurbs_geometry/import/igs/igs_loader.hpp>
-#include <gua/renderer/nurbs_geometry/TrimmedSurfaceConverter.hpp>
-#include <gua/renderer/nurbs_geometry/TrimmedNurbsSurfaceObject.hpp>
-#include <gua/renderer/nurbs_geometry/TrimmedBezierSurfaceObject.hpp>
+
+#include <gpucast/core/import/igs.hpp>
+#include <gpucast/core/surface_converter.hpp>
+#include <gpucast/core/nurbssurfaceobject.hpp>
 
 namespace gua {
 
@@ -46,10 +45,10 @@ NURBSLoader::NURBSLoader() : GeometryLoader(), _supported_file_extensions() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> NURBSLoader::create_geometry_from_file(std::string const& nodename, 
-                                                             std::string const& filename,
-                                                             std::string const& material,
-                                                             unsigned flags)
+std::shared_ptr<node::NURBSNode> NURBSLoader::create_geometry_from_file(std::string const& nodename, 
+                                                                        std::string const& filename,
+                                                                        std::string const& material,
+                                                                        unsigned flags)
 {
   try {
     if (!is_supported(filename))
@@ -58,21 +57,23 @@ std::shared_ptr<node::Node> NURBSLoader::create_geometry_from_file(std::string c
     }
     else {
 
-      igs_loader igsloader;
-      TrimmedSurfaceConverter surface_converter;
+      gpucast::igs_loader igsloader;
+      gpucast::surface_converter surface_converter;
 
-      auto nurbs_object = std::make_shared<TrimmedNurbsSurfaceObject>();
-      auto bezier_object = std::make_shared<TrimmedBezierSurfaceObject>();
+      auto nurbs_object = std::make_shared<gpucast::nurbssurfaceobject>();
+      auto bezier_object = std::make_shared<gpucast::beziersurfaceobject>();
 
-      igsloader.load(filename, nurbs_object);
+      nurbs_object = igsloader.load(filename);
       surface_converter.convert(nurbs_object, bezier_object);
 
-      auto ressource = std::make_shared<NURBSRessource>(bezier_object);
+      auto fill_mode = flags & WIREFRAME ? scm::gl::FILL_WIREFRAME : scm::gl::FILL_SOLID;
+      auto raycasting_enabled = flags & RAYCASTING;
+      auto ressource = std::make_shared<NURBSRessource>(bezier_object, fill_mode, raycasting_enabled);
 
-      std::string mesh_name("type=file&file=" + filename + "&flags=" + string_utils::to_string(flags));
-      GeometryDatabase::instance()->add(mesh_name, ressource);
+      std::string ressource_name("type=file&file=" + filename + "&flags=" + string_utils::to_string(flags));
+      GeometryDatabase::instance()->add(ressource_name, ressource);
 
-      auto node = std::make_shared<node::NURBSNode>(nodename, mesh_name, material);
+      auto node = std::make_shared<node::NURBSNode>(nodename, ressource_name, material);
       node->update_cache();
 
       return node;
