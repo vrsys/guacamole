@@ -29,12 +29,20 @@
 
 namespace gua {
 
+class ShaderProgram;
+
 class GUA_DLL TriMeshRenderer : public RessourceRenderer {
  public:
-   void draw(std::shared_ptr<GeometryRessource> const& object, 
-             std::shared_ptr<Material> const& material,
-             math::mat4 const& transformation,
-             Pipeline* pipe) const;
+
+  TriMeshRenderer();
+
+  void draw(std::shared_ptr<GeometryRessource> const& object, 
+            std::shared_ptr<Material> const& material,
+            math::mat4 const& transformation,
+            Pipeline* pipe) const;
+
+ private:
+  ShaderProgram* shader_;
 
 };
 

@@ -233,8 +233,9 @@ void WindowBase::display(std::shared_ptr<Texture2D> const& texture,
   ctx_.render_context->set_viewport(scm::gl::viewport(position, size));
   ctx_.render_context->set_depth_stencil_state(depth_stencil_state_);
 
-  if (!clear)
+  if (!clear) {
     ctx_.render_context->set_blend_state(blend_state_);
+  }
 
   fullscreen_quad_->draw(ctx_.render_context);
 
