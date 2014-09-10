@@ -62,7 +62,7 @@ class GUA_NURBS_DLL NURBSRessource : public GeometryRessource {
 
  public: // constants
 
-   static std::size_t const MAX_XFB_BUFFER_SIZE_IN_BYTES = 300000000; // 300MB temporary XFB Buffer
+   static std::size_t const MAX_XFB_BUFFER_SIZE_IN_BYTES = 200000000; // 200MB temporary XFB Buffer
 
  public : // c'tor / d'tor
 

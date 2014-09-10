@@ -19,61 +19,63 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_NURBS_SHADER_HPP
-#define GUA_NURBS_SHADER_HPP
+#ifndef GUA_NURBSDATA_HPP_INCLUDED
+#define GUA_NURBSDATA_HPP_INCLUDED
 
-#include <string>
+#include <gpucast/core/import/igs.hpp>
+#include <gpucast/core/beziersurfaceobject.hpp>
 
-// guacamole headers
-#include <gua/renderer/ShaderProgram.hpp>
+#include <scm/gl_core.h>
+#include <gua/math/BoundingBox.hpp>
 
 namespace gua {
 
-/**
- * non-instantiable interface that provides GLSL functionality for NURBS
- * rendering
- */
-class NURBSShader {
+struct NURBSData 
+{
  private:
 
-  /**
-   *
-   */
-  NURBSShader();
+  struct page {
+   public:
+    page() {}
+    ~page() {}
+
+    unsigned surface_offset;
+    unsigned order_u;
+    unsigned order_v;
+    unsigned trim_id;
+
+    scm::math::vec4f nurbs_domain;
+    scm::math::vec4f bbox_min;
+    scm::math::vec4f bbox_max;
+
+    scm::math::vec4f dist;
+  };
 
  public:
-  /**
-   * Destructor
-   */
-  virtual ~NURBSShader();
 
- public:
+  //Constructor and Destructor
+  NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o);
 
-  static std::string surface_horner_evaluation();
-  static std::string horner_simple();
-  static std::string horner_derivatives();
-  static std::string curve_horner_evaluation();
-  static std::string trim_classification();
+  virtual ~NURBSData();
 
-  static std::string control_polygon_length();
-  static std::string edge_length();
-  static std::string edge_tess_level();
-  static std::string inner_tess_level();
-  static std::string to_screen_space();
-  static std::string frustum_cull();
-  static std::string is_inside();
+  std::shared_ptr<gpucast::beziersurfaceobject> object;
 
-  // fragment-based trimming based on binary clustered contour
-  static std::string binary_search();
-  static std::string trimming_helper_methods();
-  static std::string bisect_contour();
-  static std::string bisect_curve();
-  static std::string contour_binary_search();
-  static std::string contour_based_trimming();
+  // adaptive_tesselation data
+  std::vector<scm::math::vec4f> tess_patch_data;       // Domain Points
+  std::vector<unsigned>         tess_index_data;       // Index Data
+  std::vector<scm::math::vec4f> tess_parametric_data;  // Control Points of all the surfaces
+  std::vector<page>             tess_attribute_data;   
 
- private:  // attributes
+  //Data for Trimming
+  std::vector<scm::math::vec4f> trim_partition;
+  std::vector<scm::math::vec2f> trim_contourlist;
+  std::vector<scm::math::vec4f> trim_curvelist;
+  std::vector<float>            trim_curvedata;
+  std::vector<scm::math::vec3f> trim_pointdata;
+
+  //gua::math::BoundingBox<scm::math::vec3f> bbox;
 };
 
-}
+}  // namespace gua
 
-#endif  // GUA_NURBS_SHADER_HPP
+#endif  // GUA_NURBSDATA_HPP_INCLUDED

@@ -52,8 +52,6 @@ namespace gua {
           std::string full_path(root + std::string("/") + path);
           std::ifstream ifstr(full_path.c_str(), std::ios::in);
 
-          std::cout << "Trying to open " << full_path << std::endl;
-
           if (ifstr.good()) {
             return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
           }
