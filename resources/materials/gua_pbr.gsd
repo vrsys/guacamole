@@ -2,7 +2,7 @@
 {
 	"final_shading_stage" : 
 	{
-		"body" : "gua_color = gua_pbr_output_color;\n",
+		"body" : "gua_color = /*gua_pbr_output_color*/0.1*gua_pbr_output_color + diffuse * gua_pbr_output_color;\n",
 		"functions" : "",
 		"outputs" : null,
 		"uniforms" : null
@@ -29,9 +29,16 @@
 	},
 	"lbuffer_stage" : 
 	{
-		"body" : "",
+		"body" : "diffuse = dot(gua_normal, gua_light_direction) * gua_light_intensity * gua_light_color;\nspecular = pow(max(0, dot(reflect(gua_light_direction, gua_normal), normalize(gua_position - gua_camera_position))), shinyness) * gua_light_intensity;\n",
 		"functions" : "",
-		"outputs" : null,
-		"uniforms" : null
+		"outputs" :
+		{
+			"diffuse" : "vec3",
+			"specular" : "float"
+		},
+		"uniforms" :
+		{
+			"shinyness" : "float"
+		}
 	}
 }
