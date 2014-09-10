@@ -275,6 +275,8 @@ namespace node {
         return child;
       }
     }
+
+    throw std::runtime_error("Node::get_parent_shared(): No such node.");
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -362,7 +364,7 @@ namespace node {
 
   unsigned Node::add_user_data(void* data) {
     user_data_.push_back(data);
-    return user_data_.size() - 1;
+    return unsigned(user_data_.size() - 1);
   }
 
   ////////////////////////////////////////////////////////////////////////////////

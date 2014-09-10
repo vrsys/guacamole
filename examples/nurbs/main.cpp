@@ -54,26 +54,42 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  gua::NURBSLoader loader;
-  auto teapot_geometry(loader.create_geometry_from_file("teapot_geometry", "data/objects/teapot.igs", "data/materials/Red.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION));
-  teapot_geometry->scale(10.0f);
+  gua::NURBSLoader loader; 
+  auto teapot_geometry(loader.create_geometry_from_file("teapot_geometry", "data/objects/teapot.igs", "data/materials/Red.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION | gua::NURBSLoader::WIREFRAME));
+  //auto teapot2_geometry(loader.create_geometry_from_file("teapot2_geometry", "data/objects/teapot.igs", "data/materials/Yellow.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION | gua::NURBSLoader::WIREFRAME));
+  auto teapot2_geometry(loader.create_geometry_from_file("teapot2_geometry", "data/objects/part3.igs", "data/materials/White.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION ));
+  //std::cout << "[ " << teapot_geometry->get_bounding_box().min << " , " << teapot_geometry->get_bounding_box().max << " ]" << std::endl;
+  //teapot_geometry->scale(10.0f);
 
-  auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
-  graph.add_node("/teapot", teapot_geometry);
+  float const model_size = 20.0f;
+  teapot_geometry->scale(model_size / scm::math::length(teapot_geometry->get_bounding_box().max - teapot_geometry->get_bounding_box().min));
+  teapot_geometry->translate(-teapot_geometry->get_bounding_box().center());
+  teapot_geometry->translate(-8, 0, 0);
+  
+  float const model2_size = 20.0f;
+  teapot2_geometry->translate(-teapot2_geometry->get_bounding_box().center());
+  teapot2_geometry->translate(8,0,0);
+  teapot2_geometry->scale(model2_size / scm::math::length(teapot2_geometry->get_bounding_box().max - teapot2_geometry->get_bounding_box().min));
+  
+  auto input = graph.add_node<gua::node::TransformNode>("/", "input"); 
+   
+  auto teapot = graph.add_node<gua::node::TransformNode>("/input", "teapot");
+  graph.add_node("/input/teapot", teapot_geometry);
+  graph.add_node("/input/teapot", teapot2_geometry);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
-  light->scale(150.f);
-  light->translate(0.0f, 20.0f, 0.0f);
+  light->scale(500.f);
+  light->translate(0.0f, 10.0f, 160.0f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(60.0f, 34.0f));
-  screen->translate(0.0f, 0.0f, 50.0f);
+  screen->translate(0.0f, 0.0f, 30.0f);
 
   auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
-  eye->translate(0.0f, 0.0f, 120.0f);
+  eye->translate(0.0f, 0.0f, 60.0f);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1200, 680);
+  auto resolution = gua::math::vec2ui(1600, 1200);
 
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(gua::Camera("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph"));
@@ -84,7 +100,7 @@ int main(int argc, char** argv) {
   auto window(new gua::GlfwWindow());
   pipe->set_window(window);
   pipe->config.set_near_clip(1.0f);
-  pipe->config.set_near_clip(1.0f);
+  pipe->config.set_far_clip(1000.0f);
 
   gua::Renderer renderer({pipe});
 
@@ -104,11 +120,22 @@ int main(int argc, char** argv) {
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+    if (mods == 0) key = std::tolower(key);
+
     if (action) {
-      std::cout << char(key) << " pressed." << std::endl;
-    } else {
-      std::cout << char(key) << " released." << std::endl;
+      // don't do something on press event
     }
+    else {
+      // execute only on release 
+      switch (key)
+      {
+      case 'p': teapot_geometry->max_pre_tesselation(teapot_geometry->max_pre_tesselation() - 1.0f);  break;
+      case 'P': teapot_geometry->max_pre_tesselation(teapot_geometry->max_pre_tesselation() + 1.0f);  break;
+      case 'f': teapot_geometry->max_final_tesselation(teapot_geometry->max_final_tesselation() - 1.0f);  break;
+      case 'F': teapot_geometry->max_final_tesselation(teapot_geometry->max_final_tesselation() + 1.0f);  break;
+      }
+    }
+
   });
 
 #if WIN32
@@ -128,7 +155,7 @@ int main(int argc, char** argv) {
 
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
-    teapot->set_transform(modelmatrix);
+    input->set_transform(modelmatrix);
 
     if (window->should_close()) {
       renderer.stop();

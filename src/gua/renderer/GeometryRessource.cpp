@@ -22,6 +22,12 @@
 // class header
 #include <gua/renderer/GeometryRessource.hpp>
 
+#include <gua/node/GeometryNode.hpp>
+
 namespace gua {
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /*virtual*/ void GeometryRessource::update(node::GeometryNode* geometry)
+  {}
 
 }
