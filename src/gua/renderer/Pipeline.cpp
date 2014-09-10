@@ -163,6 +163,9 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   // process all passes
   ping_pong_ = false;
 
+  gbuffer_->clear_color_buffers(get_context());
+  gbuffer_->clear_depth_stencil_buffer(get_context());
+
   for (auto pass: passes_) {
     
     if (pass->is_fullscreen_pass()) {
@@ -171,6 +174,13 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     
     pass->process(this);
   }
+
+  if (window_) {
+    window_->display(gbuffer_->get_color_buffer());
+  }
+
+  window_->finish_frame();
+  // ++(get_context().framecount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

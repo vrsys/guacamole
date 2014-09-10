@@ -22,17 +22,42 @@
 // class header
 #include <gua/renderer/TriMeshRenderer.hpp>
 
+#include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/databases/Resources.hpp>
 
 namespace gua {
+
+////////////////////////////////////////////////////////////////////////////////
+
+TriMeshRenderer::TriMeshRenderer():
+  shader_(new ShaderProgram()) {
+
+  shader_->create_from_sources(
+    Resources::lookup_shader(Resources::shaders_test_vert), 
+    Resources::lookup_shader(Resources::shaders_test_frag)
+  );
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void TriMeshRenderer::draw(std::shared_ptr<GeometryRessource> const& object, 
                            std::shared_ptr<Material> const& material,
                            math::mat4 const& transformation,
                            Pipeline* pipe) const {
 
+  auto const& ctx(pipe->get_context());
+
+  shader_->use(ctx);
+  shader_->set_uniform(ctx, transformation, "gua_transform");
+  shader_->set_uniform(ctx, scm::math::transpose(scm::math::inverse(transformation)), "gua_normal_transform");
+  shader_->set_uniform(ctx, pipe->get_scene().frustum.get_projection(), "gua_projection_matrix");
+  shader_->set_uniform(ctx, pipe->get_scene().frustum.get_view(),       "gua_view_matrix");
+
   object->draw(pipe->get_context());
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 }
 
