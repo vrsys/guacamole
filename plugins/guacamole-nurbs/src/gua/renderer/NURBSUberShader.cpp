@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/renderer/UberShaderFactory.hpp>
-#include <gua/renderer/NURBSShader.hpp>
 #include <gua/renderer/GuaMethodsFactory.hpp>
 #include <gua/renderer/NURBSRessource.hpp>
 #include <gua/databases.hpp>
