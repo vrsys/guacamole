@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
-#include <gua/renderer/LoaderBase.hpp>
+#include <gua/renderer/GeometryLoader.hpp>
 
 // external headers
 #include <string>
@@ -44,7 +44,7 @@ namespace gua {
 	* This class can load mesh data from files and display them in multiple
 	* contexts. A VolumeLoader object is made of several Mesh objects.
 	*/
-	class GUA_DLL VolumeLoader : public LoaderBase {
+	class GUA_DLL VolumeLoader : public GeometryLoader {
 	public:
 
 		enum Flags {
@@ -68,13 +68,14 @@ namespace gua {
 		*
 		* \param file_name        The file to load the meh's data from.		
 		*/
-
-
-		std::shared_ptr<Node> create_volume_from_file(std::string const& node_name,
+    /**
+    *
+    */
+		std::shared_ptr<node::Node> create_volume_from_file(std::string const& node_name,
 													  std::string const& file_name,
 													  unsigned flags);
 
-		std::shared_ptr<Node> load(std::string const& file_name,
+		std::shared_ptr<node::Node> load(std::string const& file_name,
 								   unsigned flags);
 
 		/**
@@ -88,11 +89,11 @@ namespace gua {
 		//std::vector<Volume*> const load_from_buffer(char const* buffer_name,
 		//	unsigned buffer_size);
 
-		/* virtual */ bool is_supported(std::string const& file_name) const;
+		/* virtual */ bool is_supported(std::string const& file_name) const override;
 
 	private:
 		
-		static std::unordered_map<std::string, std::shared_ptr<Node>> loaded_files_;
+		static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
 		
 		boost::unordered_set<std::string> _supported_file_extensions;
 

@@ -24,15 +24,11 @@
 
 #include <gua/platform.hpp>
 
+#include <iostream>
+
 // external headers
-#if ASSIMP_VERSION == 3
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#else
-#include <assimp/assimp.hpp>
-#include <assimp/aiPostProcess.h>
-#include <assimp/aiScene.h>
-#endif
 
 namespace gua {
 
@@ -68,7 +64,7 @@ void KDTree::generate(aiMesh* mesh) {
 }
 
 void KDTree::ray_test(Ray const& ray, aiMesh* mesh, PickResult::Options const& options,
-                      Node* owner, std::set<PickResult>& hits) const {
+                      node::Node* owner, std::set<PickResult>& hits) const {
 
   if (root_) {
     current_options_ = options;
@@ -476,7 +472,7 @@ void KDTree::KDNode::print(unsigned depth) const {
              string_utils::to_string(bounds_.min) + " " +
              string_utils::to_string(bounds_.max);
 
-    DEBUG("%s", msg.c_str());
+    Logger::LOG_MESSAGE << msg << std::endl;
 
     if (left_child_)
       left_child_->print(depth + 1);

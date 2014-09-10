@@ -23,8 +23,8 @@
 #define GUA_RESOURCES_HPP
 
 // external headers
- #include <vector>
- #include <string>
+#include <vector>
+#include <string>
 
 namespace gua {
 

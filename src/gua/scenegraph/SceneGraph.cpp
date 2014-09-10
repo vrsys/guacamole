@@ -24,11 +24,11 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
+#include <gua/node/TransformNode.hpp>
 #include <gua/utils/PathParser.hpp>
 #include <gua/utils/DotGenerator.hpp>
 #include <gua/utils/Mask.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <iostream>
@@ -36,7 +36,7 @@
 namespace gua {
 
 SceneGraph::SceneGraph(std::string const& name)
-    : root_(new TransformNode("/", math::mat4::identity())),
+    : root_(new node::TransformNode("/", math::mat4::identity())),
       name_(name) {}
 
 SceneGraph::SceneGraph(SceneGraph const& graph)
@@ -45,14 +45,14 @@ SceneGraph::SceneGraph(SceneGraph const& graph)
 
 void SceneGraph::remove_node(std::string const& path_to_node) {
 
-    std::shared_ptr<Node> const& searched_node(find_node(path_to_node));
+    std::shared_ptr<node::Node> const& searched_node(find_node(path_to_node));
 
     if (searched_node && searched_node->get_parent()) {
         searched_node->get_parent()->remove_child(searched_node);
     }
 }
 
-void SceneGraph::remove_node(std::shared_ptr<Node> const& to_remove) {
+void SceneGraph::remove_node(std::shared_ptr<node::Node> const& to_remove) {
     if (to_remove->get_parent()) {
         to_remove->get_parent()->remove_child(to_remove);
     }
@@ -66,21 +66,20 @@ std::string const& SceneGraph::get_name() const {
   return name_;
 }
 
-void SceneGraph::set_root(std::shared_ptr<Node> const& root) {
+void SceneGraph::set_root(std::shared_ptr<node::Node> const& root) {
   root_ = root;
 }
 
-std::shared_ptr<Node> const& SceneGraph::get_root() const {
+std::shared_ptr<node::Node> const& SceneGraph::get_root() const {
   return root_;
 }
 
-std::shared_ptr<Node> SceneGraph::operator[](std::string const& path_to_node) const {
+std::shared_ptr<node::Node> SceneGraph::operator[](std::string const& path_to_node) const {
 
     auto result(find_node(path_to_node, "/"));
 
     if (result == nullptr)
-        WARNING("Unable to get node: A node at location %s doesn't exist!",
-                path_to_node.c_str());
+        Logger::LOG_WARNING << "Unable to get node: A node at location " << path_to_node << " doesn't exist!" << std::endl;
     return result;
 }
 
@@ -103,13 +102,13 @@ void SceneGraph::update_cache() const {
     }
 }
 
-std::shared_ptr<Node> SceneGraph::find_node(std::string const& path_to_node,
+std::shared_ptr<node::Node> SceneGraph::find_node(std::string const& path_to_node,
                             std::string const& path_to_start) const {
 
     PathParser parser;
     parser.parse(path_to_node);
 
-    std::shared_ptr<Node> to_be_found(path_to_start == "/"
+    std::shared_ptr<node::Node> to_be_found(path_to_start == "/"
                           ? root_
                           : find_node(path_to_start));
 
@@ -129,7 +128,7 @@ std::shared_ptr<Node> SceneGraph::find_node(std::string const& path_to_node,
     return to_be_found;
 }
 
-bool SceneGraph::has_child(std::shared_ptr<Node> const& parent,
+bool SceneGraph::has_child(std::shared_ptr<node::Node> const& parent,
                            std::string const & child_name) const {
 
     auto children(parent->get_children());
@@ -144,7 +143,13 @@ bool SceneGraph::has_child(std::shared_ptr<Node> const& parent,
 
 void SceneGraph::accept(NodeVisitor & visitor) const { root_->accept(visitor); }
 
-std::set<PickResult> const SceneGraph::ray_test(RayNode const& ray,
+std::set<PickResult> const SceneGraph::ray_test(node::RayNode const& ray,
+                                                PickResult::Options options,
+                                                std::string const& mask) {
+    return root_->ray_test(ray, options, mask);
+}
+
+std::set<PickResult> const SceneGraph::ray_test(Ray const& ray,
                                                 PickResult::Options options,
                                                 std::string const& mask) {
     return root_->ray_test(ray, options, mask);

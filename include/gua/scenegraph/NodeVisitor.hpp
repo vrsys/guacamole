@@ -28,15 +28,20 @@
 
 namespace gua {
 
+namespace node {
 class Node;
 class TransformNode;
+class LODNode;
 class GeometryNode;
+class Video3DNode;
 class VolumeNode;
 class PointLightNode;
 class ScreenNode;
 class SpotLightNode;
+class SunLightNode;
 class RayNode;
 class TexturedQuadNode;
+}
 
 namespace physics {
 
@@ -46,8 +51,9 @@ class CollisionShapeNode;
 }
 
 /**
- * This class is used to recursively visit nodes in a scenegraph
+ * This class is used to recursively visit nodes in a SceneGraph
  *
+ * \ingroup gua_scenegraph
  */
 class NodeVisitor {
  public:
@@ -57,113 +63,157 @@ class NodeVisitor {
    *
    * This constructs a NodeVisitor.
    */
-  NodeVisitor();
+  NodeVisitor() {}
 
   /**
    * Destructor.
    *
    * This destructs the NodeVisitor with all its contents.
    */
-  virtual ~NodeVisitor();
+  virtual ~NodeVisitor() {}
 
   /**
-   * Visits a TransformNode
+   * Visits a Node.
    *
-   * This function provides the interface to visit a TransformNode
+   * This function provides the interface to visit a Node.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to TransformNode
+   * \param cam   Pointer to a Node.
    */
-  virtual void visit(Node* node) {};
+  virtual void visit(node::Node* node) {};
 
   /**
-   * Visits a TransformNode
+   * Visits a TransformNode.
    *
-   * This function provides the interface to visit a TransformNode
+   * This function provides the interface to visit a TransformNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to TransformNode
+   * \param cam   Pointer to a TransformNode.
    */
-  virtual void visit(TransformNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(node::TransformNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
-   * Visits a GeometryNode
+   * Visits an LODNode.
    *
-   * This function provides the interface to visit a GeometryNode
+   * This function provides the interface to visit an LODNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to GeometryNode
+   * \param cam   Pointer to a LODNode.
    */
-  virtual void visit(GeometryNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(node::LODNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+
+  /**
+   * Visits a GeometryNode.
+   *
+   * This function provides the interface to visit a GeometryNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
+   *
+   * \param cam   Pointer to a GeometryNode.
+   */
+  virtual void visit(node::GeometryNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+
+  /**
+  * Visits a Video3DNode
+  *
+  * This function provides the interface to visit a Video3DNode
+  *
+  * \param video3d   Pointer to Video3DNode
+  */
+  virtual  void visit(node::Video3DNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
   * Visits a GeometryNode
+  * Visits a GeometryNode.
   *
-  * This function provides the interface to visit a GeometryNode
+  * This function provides the interface to visit a GeometryNode.
+  * Unless overwritten by derived classes, this defaults to visit(Node*).
   *
-  * \param cam   Pointer to GeometryNode
+  * \param cam   Pointer to a GeometryNode.
   */
-  virtual void visit(VolumeNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(node::VolumeNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+
 
   /**
-   * Visits a PointLightNode
+   * Visits a PointLightNode.
    *
-   * This function provides the interface to visit a PointLightNode
+   * This function provides the interface to visit a PointLightNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to PointLightNode
+   * \param cam   Pointer to a PointLightNode.
    */
-  virtual void visit(PointLightNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(node::PointLightNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
-   * Visits a SpotLightNode
+   * Visits a SpotLightNode.
    *
-   * This function provides the interface to visit a SpotLightNode
+   * This function provides the interface to visit a SpotLightNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to SpotLightNode
+   * \param cam   Pointer to a SpotLightNode.
    */
-  virtual void visit(SpotLightNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(node::SpotLightNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
-   * Visits a SpotLightNode
+   * Visits a SunLightNode.
    *
-   * This function provides the interface to visit a ScreenNode
+   * This function provides the interface to visit a SunLightNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to ScreenNode
+   * \param cam   Pointer to a SunLightNode.
    */
-  virtual void visit(ScreenNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(node::SunLightNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
-   * Visits a RayNode
+   * Visits a SpotLightNode.
    *
-   * This function provides the interface to visit a ScreenNode
+   * This function provides the interface to visit a ScreenNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to ScreenNode
+   * \param cam   Pointer to a ScreenNode.
    */
-  virtual void visit(RayNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(node::ScreenNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
-   * Visits a RigidBodyNode
+   * Visits a RayNode.
    *
-   * This function provides the interface to visit a RigidBodyNode
+   * This function provides the interface to visit a ScreenNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to RigidBodyNode
+   * \param cam   Pointer to a ScreenNode.
    */
-  virtual void visit(physics::RigidBodyNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(node::RayNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+
+#ifdef GUACAMOLE_ENABLE_PHYSICS
+  /**
+   * Visits a RigidBodyNode.
+   *
+   * This function provides the interface to visit a RigidBodyNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
+   *
+   * \param cam   Pointer to a RigidBodyNode.
+   */
+  virtual void visit(physics::RigidBodyNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
-   * Visits a CollisionShapeNode
+   * Visits a CollisionShapeNode.
    *
-   * This function provides the interface to visit a CollisionShapeNode
+   * This function provides the interface to visit a CollisionShapeNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to CollisionShapeNode
+   * \param cam   Pointer to a CollisionShapeNode.
    */
-  virtual void visit(physics::CollisionShapeNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(physics::CollisionShapeNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+#endif
 
   /**
-   * Visits a TexturedQuadNode
+   * Visits a TexturedQuadNode.
    *
-   * This function provides the interface to visit a TexturedQuadNode
+   * This function provides the interface to visit a TexturedQuadNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to TexturedQuadNode
+   * \param cam   Pointer to a TexturedQuadNode.
    */
-  virtual void visit(TexturedQuadNode* node) { visit(reinterpret_cast<Node*>(node)); }
+  virtual void visit(node::TexturedQuadNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
  private:
 

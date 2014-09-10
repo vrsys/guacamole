@@ -1,4 +1,4 @@
-# dependencies 
+# dependencies
 include(find_ovr)
 
 # determine source and header files
@@ -12,9 +12,9 @@ SET(GUACAMOLE_OCULUS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 LINK_DIRECTORIES(${LIB_PATHS} ${OVR_LIBRARY_DIRS})
 
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS} 
-                     ${GUACAMOLE_SOURCE_DIR} 
-                     ${OVR_INCLUDE_DIRS} 
+INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
+                     ${GUACAMOLE_SOURCE_DIR}
+                     ${OVR_INCLUDE_DIRS}
                      ${GUACAMOLE_OCULUS_SOURCE_DIR}
 )
 
@@ -29,13 +29,13 @@ IF (MSVC)
 ENDIF (MSVC)
 
 IF (UNIX)
-    LIST(APPEND LIBS udev Xinerama)
+    LIST(APPEND LIBS udev Xinerama guacamole ${OVR_LIBRARIES})
 ELSEIF (MSVC)
     LIST(APPEND LIBS winmm.lib guacamole ${OVR_LIBRARIES})
 ENDIF(UNIX)
 
-
-TARGET_LINK_LIBRARIES( guacamole-oculus debug ${LIBS} optimized ${LIBS})
+find_package (Threads)
+target_link_libraries( guacamole-oculus debug ${LIBS} ${CMAKE_THREAD_LIBS_INIT} optimized ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 # compile examples
 

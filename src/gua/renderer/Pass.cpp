@@ -32,21 +32,31 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Pass::Pass(Pipeline* pipeline) : gbuffer_(nullptr), pipeline_(pipeline) {}
+Pass::Pass(Pipeline* pipeline)
+  : pipeline_(pipeline)
+  , gbuffer_(nullptr)
+  , inputs_()
+  , initialized_(false)
+  {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pass::create(
     RenderContext const& ctx,
-    PipelineConfiguration const& config,
     std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> > const&
         layers) {
 
+  cleanup(ctx);
+
+  gbuffer_ = std::make_shared<StereoBuffer>(ctx, pipeline_->config, layers);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pass::cleanup(RenderContext const& ctx) {
   if (gbuffer_) {
     gbuffer_->remove_buffers(ctx);
   }
-
-  gbuffer_ = std::make_shared<StereoBuffer>(ctx, config, layers);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,26 +107,6 @@ void Pass::bind_inputs(ShaderProgram const& shader,
                           ->get_depth_buffer());
     shader.set_uniform(ctx, depth_buffer, "gua_depth_gbuffer_in");
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Pass::set_camera_matrices(ShaderProgram const& shader,
-                               Camera const& camera,
-                               SerializedScene const& scene,
-                               CameraMode eye,
-                               RenderContext const& ctx) const {
-
-  auto camera_position(scene.frustum.get_camera_position());
-  auto projection(scene.frustum.get_projection());
-  auto view_matrix(scene.frustum.get_view());
-
-  shader.set_uniform(ctx, camera_position, "gua_camera_position");
-  shader.set_uniform(ctx, projection, "gua_projection_matrix");
-  shader.set_uniform(ctx, view_matrix, "gua_view_matrix");
-  shader.set_uniform(ctx,
-                     scm::math::inverse(projection * view_matrix),
-                     "gua_inverse_projection_view_matrix");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

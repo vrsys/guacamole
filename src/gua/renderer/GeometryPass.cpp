@@ -26,6 +26,7 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/StereoBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/View.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
@@ -37,26 +38,41 @@ GeometryPass::GeometryPass(Pipeline* pipeline) : Pass(pipeline) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GeometryPass::render_scene(Camera const& camera, RenderContext const& ctx) {
+void GeometryPass::render_scene(Camera const& camera,
+                                SceneGraph const& current_graph,
+                                RenderContext const& ctx,
+                                std::size_t viewid) {
 
   gbuffer_->clear(ctx);
+
+  bool is_stereo = gbuffer_->get_eye_buffers().size() > 1;
+  View view(viewid, is_stereo);
+
+  if (is_stereo) // stereo -> todo: combine frusta?
+  {
+    view.left  = pipeline_->get_current_scene(CameraMode::LEFT).frustum;
+    view.right = pipeline_->get_current_scene(CameraMode::RIGHT).frustum;
+  } else {       // mono -> just use left frustum
+    view.left = pipeline_->get_current_scene(CameraMode::LEFT).frustum;
+  }
 
   for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
 
     FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
 
-    CameraMode eye(CameraMode::CENTER);
-    if (gbuffer_->get_eye_buffers().size() > 1 && i == 0)
-      eye = CameraMode::LEFT;
-    if (gbuffer_->get_eye_buffers().size() > 1 && i == 1)
-      eye = CameraMode::RIGHT;
+    CameraMode eye;
+    if (!is_stereo) {
+      eye = CameraMode::CENTER;
+    } else {
+      eye = (i == 0) ? CameraMode::LEFT : CameraMode::RIGHT;
+    }
 
     fbo->bind(ctx);
 
     ctx.render_context->set_viewport(scm::gl::viewport(
         math::vec2(0, 0), ::scm::math::vec2f(fbo->width(), fbo->height())));
 
-    rendering(pipeline_->get_current_scene(eye), ctx, eye, camera, fbo);
+    rendering(pipeline_->get_current_scene(eye), current_graph, ctx, eye, camera, fbo, view);
 
     fbo->unbind(ctx);
   }

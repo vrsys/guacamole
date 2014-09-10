@@ -1,11 +1,48 @@
+env:
+  - BOOST_LIB_DIR=/usr/lib/x86_64-linux-gnu BOOST_LIBRARIES="/usr/lib/x86_64-linux-gnu/libboost_regex.so;/usr/lib/x86_64-linux-gnu/libboost_wave.so;/usr/lib/x86_64-linux-gnu/libboost_random.so;/usr/lib/x86_64-linux-gnu/libboost_program_options.so;/usr/lib/x86_64-linux-gnu/libboost_thread.so;/usr/lib/x86_64-linux-gnu/libboost_signals.so;/usr/lib/x86_64-linux-gnu/libboost_locale.so;/usr/lib/x86_64-linux-gnu/libboost_filesystem.so;/usr/lib/x86_64-linux-gnu/libboost_date_time.so;/usr/lib/x86_64-linux-gnu/libboost_math_tr1.so;/usr/lib/x86_64-linux-gnu/libboost_math_tr1l.so;/usr/lib/x86_64-linux-gnu/libboost_math_c99f.so;/usr/lib/x86_64-linux-gnu/libboost_chrono.so;/usr/lib/x86_64-linux-gnu/libboost_wserialization.so;/usr/lib/x86_64-linux-gnu/libboost_iostreams.so;/usr/lib/x86_64-linux-gnu/libboost_math_tr1f.so;/usr/lib/x86_64-linux-gnu/libboost_math_c99l.so;/usr/lib/x86_64-linux-gnu/libboost_math_c99.so;/usr/lib/x86_64-linux-gnu/libboost_system.so;/usr/lib/x86_64-linux-gnu/libboost_timer.so;/usr/lib/x86_64-linux-gnu/libboost_prg_exec_monitor.so"
+
 language: cpp
 compiler: gcc
 
 before_install:
+  - wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1204/x86_64/cuda-repo-ubuntu1204_6.0-37_amd64.deb
+  - sudo dpkg -i cuda-repo-ubuntu1204_6.0-37_amd64.deb
   - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository --yes ppa:kalakris/cmake
+  - sudo add-apt-repository --yes ppa:boost-latest/ppa
+  # - sudo add-apt-repository --yes ppa:openmw/deps
+  - sudo rm /etc/apt/sources.list.d/travis_ci_zeromq3-source.list
   - sudo apt-get update -qq
-  - sudo apt-get install -qq g++-4.8 cmake libboost1.48-dev libunittest++-dev
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - sudo apt-get install -qq g++-4.8 cmake libboost1.55-all-dev libunittest++-dev cmake opencl-headers libfreeimage-dev libjsoncpp-dev libglew1.6-dev libassimp-dev libzmq-dev
+  - sudo apt-get install -qq xorg-dev libglu1-mesa-dev libxi-dev libxrandr-dev
+  - sudo apt-get install -qq x11proto-xf86vidmode-dev
+  - sudo apt-get install --force-yes
+
+  # use g++-4.8
+  - |
+    if [ "$CXX" = "g++" ]; then
+      export CXX="g++-4.8" CC="gcc-4.8";
+    fi
+  # install cuda
+  - sudo apt-get install cuda
+  - sudo mkdir -p /opt/cuda/current
+  - sudo ln -s /usr/local/cuda-6.0 /opt/cuda/current/cuda
+
+  # build schism
+  - mkdir externals
+  - cd externals/
+  - git clone https://github.com/bernstein/schism.git schism
+  - cd schism/build && mkdir build && cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DSCHISM_BUILD_STATIC=OFF -DSCM_BOOST_INC_DIR=/usr/include -DSCM_BOOST_LIB_DIR=${BOOST_LIB_DIR} ../cmake
+  - make -j2
+  - cd ../../../..
+
+  # build guacamole
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_guacamole-oculus=FALSE -DSCHISM_INCLUDE_DIRS="${PWD}/../externals/schism/scm_cl_core/src;${PWD}/../externals/schism/scm_core/src;${PWD}/../externals/schism/scm_gl_core/src;${PWD}/../externals/schism/scm_gl_util/src;${PWD}/../externals/schism/scm_input/src"  -DSCHISM_LIBRARY_DIRS=${PWD}/../externals/schism/lib/linux_x86 -DSCHISM_LIBRARIES="${PWD}/../externals/schism/lib/linux_x86/libscm_gl_util.so;${PWD}/../externals/schism/lib/linux_x86/libscm_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_cl_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_gl_core.so;${PWD}/../externals/schism/lib/linux_x86/libscm_input.so" -DBOOST_INCLUDE_DIRS=/usr/include -DBOOST_LIBRARY_DIRS=${BOOST_LIB_DIR} -DBOOST_LIBRARIES=${BOOST_LIBRARIES} -DZMQ_INCLUDE_DIRS=/usr/include -DZMQ_LIBRARY_DIRS=/usr/lib -DZMQ_LIBRARIES=libzmq.so ..
+  - make -j2
+  - cd ..
 
 install: true
 
@@ -13,4 +50,5 @@ script: ./tests/runTravis.sh
 
 branches:
   only:
+    - master
     - develop

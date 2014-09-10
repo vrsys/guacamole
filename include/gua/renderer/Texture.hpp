@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/math/math.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <string>
@@ -119,19 +119,17 @@ class GUA_DLL Texture {
   virtual void upload_to(RenderContext const& context) const = 0;
 
  protected:
+
   mutable unsigned mipmap_layers_;
   scm::gl::data_format color_format_;
   scm::gl::sampler_state_desc state_descripton_;
   mutable std::vector<scm::gl::texture_image_ptr> textures_;
+  //mutable std::vector<scm::gl::texture_handle_ptr> texture_handles_;
   mutable std::vector<scm::gl::sampler_state_ptr> sampler_states_;
   mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
-
-#if GUA_COMPILER == GUA_COMPILER_MSVC&& GUA_COMPILER_VER <= 1600
-  mutable boost::mutex upload_mutex_;
-#else
   mutable std::mutex upload_mutex_;
-#endif
-  
+
+
   std::vector<void*> data_;
   std::string file_name_;
 

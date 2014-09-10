@@ -23,7 +23,7 @@
 #include <gua/databases/Resources.hpp>
 
 // guacamole headers
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <unordered_map>
@@ -40,7 +40,7 @@ namespace Resources {
     const std::unordered_map<std::string, std::vector<unsigned char> const*> data_(R_fill_map());
 
     void resolve_includes(std::string& shader_source) {
-      int search_pos(0);
+      std::size_t search_pos(0);
 
       std::string search("@include");
 
@@ -51,8 +51,8 @@ namespace Resources {
         if (search_pos != std::string::npos) {
 
           // get file name
-          int start(shader_source.find('\"', search_pos)+1);
-          int end  (shader_source.find('\"', start));
+          std::size_t start(shader_source.find('\"', search_pos)+1);
+          std::size_t end  (shader_source.find('\"', start));
 
           std::string file(shader_source.substr(start, end-start));
 
@@ -76,7 +76,7 @@ namespace Resources {
     auto it(data_.find(file));
 
     if (it == data_.end())
-      ERROR("Failed to get string resource: Entry \"%s\" does not exist!", file.c_str());
+      Logger::LOG_ERROR << "Failed to get string resource: Entry \"" << file << "\" does not exist!" << std::endl;
 
     return lookup_string(*it->second);
   }
@@ -113,7 +113,7 @@ namespace Resources {
     auto it(data_.find(file));
 
     if (it == data_.end())
-      ERROR("Failed to get string resource: Entry \"%s\" does not exist!", file.c_str());
+      Logger::LOG_ERROR << "Failed to get string resource: Entry \"" << file << "\" does not exist!" << std::endl;
 
     return *it->second;
   }

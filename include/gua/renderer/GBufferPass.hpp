@@ -24,18 +24,25 @@
 
 // guacamole headers
 #include <gua/renderer/GeometryPass.hpp>
-#include <gua/renderer/Mesh.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
+
+#include <unordered_map>
 
 namespace gua {
 
 class Pipeline;
-class GBufferMeshUberShader;
-class GBufferNURBSUberShader;
+class SceneGraph;
+class TriMeshUberShader;
+class GeometryUberShader;
 
 /**
  *
  */
 class GBufferPass : public GeometryPass {
+ public:
+
+   typedef std::unordered_map<std::type_index, std::shared_ptr<GeometryUberShader>> GeometryUberShaderMap;
+
  public:
 
   /**
@@ -52,29 +59,64 @@ class GBufferPass : public GeometryPass {
 
   void create(
       RenderContext const& ctx,
-      PipelineConfiguration const& config,
       std::vector<std::pair<BufferComponent,
-                            scm::gl::sampler_state_desc> > const& layers);
+                        scm::gl::sampler_state_desc> > const& layers) override;
+
+  void cleanup(RenderContext const& ctx) override;
+
+  bool pre_compile_shaders(const gua::RenderContext &) override;
 
   void print_shaders(std::string const& directory,
-                     std::string const& name) const;
+                     std::string const& name) const override;
 
-  bool pre_compile_shaders(RenderContext const& ctx);
-
-  void apply_material_mapping(std::set<std::string> const& materials) const;
+  void apply_material_mapping(std::set<std::string> const& materials);
 
   LayerMapping const* get_gbuffer_mapping() const;
 
- private:
+  inline GeometryUberShaderMap const& get_geometry_ubershaders() const { return ubershaders_; }
+
+ private: // methods
 
   void rendering(SerializedScene const& scene,
+                 SceneGraph const&,
                  RenderContext const& ctx,
                  CameraMode eye,
                  Camera const& camera,
-                 FrameBufferObject* target);
+                 FrameBufferObject* target,
+                 View const& view) override;
 
-  GBufferMeshUberShader* mesh_shader_;
-  GBufferNURBSUberShader* nurbs_shader_;
+  void display_bboxes(RenderContext const& ctx,
+                      SerializedScene const& scene,
+                      View const& view);
+  void display_rays  (RenderContext const& ctx,
+                      SerializedScene const& scene,
+                      View const& view);
+  void display_quads (RenderContext const& ctx,
+                      SerializedScene const& scene,
+                      CameraMode eye,
+                      View const& view);
+
+  void update_ubershader_from_scene(RenderContext const& ctx,
+                                    SerializedScene const& scene,
+                                    SceneGraph const& graph);
+
+  void initialize_state_objects(RenderContext const& ctx);
+
+  void initialize_trimesh_ubershader(RenderContext const& ctx) const;
+
+  private: // attributes
+
+  /**
+  * all ubershaders used in scene
+  */
+  mutable GeometryUberShaderMap ubershaders_;
+
+  /**
+  * copy of all material names in scene
+  *
+  *  - necessary to generate gbuffermappings of ubershaders
+  */
+  std::set<std::string> cached_materials_;
 
   /**
    * Ugly hack! "bfc" means backface culling.
@@ -85,8 +127,6 @@ class GBufferPass : public GeometryPass {
 
   scm::gl::rasterizer_state_ptr bbox_rasterizer_state_;
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-
-  std::shared_ptr<Geometry> bounding_box_;
 };
 
 }

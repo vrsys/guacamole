@@ -74,14 +74,12 @@ std::pair<std::string, int> const& UniformMapping::get_mapping(
     }
   }
 
-  WARNING("The uniform %s for material %s is not mapped!",
-          uniform.c_str(),
-          material.c_str());
+  Logger::LOG_WARNING << "The uniform " << uniform << " for material " << material << " is not mapped!" << std::endl;
 
   return error_;
 }
 
-std::string const UniformMapping::get_uniform_definition() const {
+std::string UniformMapping::get_uniform_definition() const {
 
   std::stringstream result;
 

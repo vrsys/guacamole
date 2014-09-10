@@ -26,16 +26,23 @@
 #include <memory>
 #include <gua/platform.hpp>
 #include <gua/scenegraph.hpp>
-#include <gua/renderer/RenderClient.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils.hpp>
+#include <gua/concurrent/Doublebuffer.hpp>
+#include <gua/concurrent/pull_items_iterator.hpp>
 #include <gua/memory.hpp>
 
 namespace gua {
 
-std::shared_ptr<Renderer::const_render_vec_t> garbage_collected_copy(
+template <class T>
+std::pair<std::shared_ptr<gua::concurrent::Doublebuffer<T> >, std::shared_ptr<gua::concurrent::Doublebuffer<T> > > spawnDoublebufferred() {
+  auto db = std::make_shared<gua::concurrent::Doublebuffer<T> >();
+  return {db, db};
+}
+
+std::shared_ptr<Renderer::ConstRenderVector> garbage_collected_copy(
     std::vector<SceneGraph const*> const& scene_graphs) {
-  auto sgs = std::make_shared<Renderer::render_vec_t>();
+  auto sgs = std::make_shared<Renderer::RenderVector>();
   for (auto graph : scene_graphs) {
     sgs->push_back(gua::make_unique<SceneGraph>(*graph));
   }
@@ -43,27 +50,30 @@ std::shared_ptr<Renderer::const_render_vec_t> garbage_collected_copy(
 }
 
 Renderer::~Renderer() {
-#if USE_RAW_POINTER_RENDER_CLIENTS
-  for (auto rc : render_clients_) {
-    if (rc) delete rc;
+  for (auto& rc : render_clients_) { rc.first->close(); }
+  for (auto& rc : render_clients_) { rc.second.join(); }
+}
+
+void Renderer::renderclient(Mailbox in, Pipeline* pipe) {
+  FpsCounter fpsc(20);
+  fpsc.start();
+
+  for (auto& x : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
+    pipe->process(*(x.first), x.second, fpsc.fps);
+    fpsc.step();
   }
-#endif
+
 }
 
 Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
     : render_clients_(),
       application_fps_(20) {
   application_fps_.start();
-  for (auto& pipeline : pipelines) {
-    auto fun = [pipeline, this](
-        std::shared_ptr<const_render_vec_t> const & sg, float render_fps) {
-      pipeline->process(*sg, this->application_fps_.fps, render_fps);
-    };
-#if USE_RAW_POINTER_RENDER_CLIENTS
-    render_clients_.push_back(new renderclient_t(fun));
-#else
-    render_clients_.push_back(gua::make_unique<renderclient_t>(fun));
-#endif
+  for (auto& pipe : pipelines) {
+    auto p = spawnDoublebufferred<Item>();
+    render_clients_.emplace_back(
+        std::make_pair(p.first,
+          std::thread(Renderer::renderclient, p.second, pipe)));
   }
 }
 
@@ -73,9 +83,15 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
   }
   auto sgs = garbage_collected_copy(scene_graphs);
   for (auto& rclient : render_clients_) {
-    rclient->queue_draw(sgs);
+    rclient.first->push_back({sgs, application_fps_.fps});
   }
   application_fps_.step();
+}
+
+void Renderer::stop() {
+  for (auto& rclient : render_clients_) {
+    rclient.first->close();
+  }
 }
 
 }

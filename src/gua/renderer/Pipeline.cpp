@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GBufferMeshUberShader.hpp>
+#include <gua/renderer/TriMeshUberShader.hpp>
 #include <gua/renderer/LightingUberShader.hpp>
 #include <gua/renderer/FinalUberShader.hpp>
 #include <gua/renderer/StereoBuffer.hpp>
@@ -35,32 +35,51 @@
 #include <gua/renderer/PostFXPass.hpp>
 #include <gua/renderer/Serializer.hpp>
 #include <gua/scenegraph.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/databases.hpp>
 
 // external headers
 #include <iostream>
+
+
+namespace {
+
+gua::Frustum camera_frustum(gua::Camera::ProjectionMode const& mode,
+    gua::math::mat4 const& transf, gua::math::mat4 const& screen,
+    float near, float far) {
+  if (mode == gua::Camera::ProjectionMode::PERSPECTIVE) {
+    return gua::Frustum::perspective(transf, screen, near, far);
+  } else {
+    return gua::Frustum::orthographic(transf, screen, near, far);
+  }
+}
+
+}
+
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline()
-    : config(),
-      window_(nullptr),
-      context_(nullptr),
-      current_graph_(nullptr),
-      application_fps_(0),
-      rendering_fps_(0),
-      serializer_(new Serializer()),
-      current_scenes_(2),
-      passes_need_reload_(true),
-      buffers_need_reload_(true),
-      last_shading_model_revision_(0),
-      display_loading_screen_(true) {
+  : config(),
+    window_(nullptr),
+    context_(nullptr),
+    application_fps_(0),
+    rendering_fps_(0),
+    serializer_(new Serializer()),
+    current_scenes_(2),
+    passes_need_reload_(true),
+    buffers_need_reload_(true),
+    last_shading_model_revision_(0),
+    display_loading_screen_(true),
+    last_left_resolution_(0, 0),
+    last_right_resolution_(0, 0),
+    camera_block_left_(nullptr),
+    camera_block_right_(nullptr) {
 
-        create_passes();
-      }
+  create_passes();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -75,19 +94,19 @@ Pipeline::~Pipeline() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::print_shaders(std::string const& directory) const {
-
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
-  passes_[PipelineStage::geometry]->print_shaders(directory, "/0_gbuffer");
-  passes_[PipelineStage::lighting]->print_shaders(directory, "/1_lighting");
-  passes_[PipelineStage::shading]->print_shaders(directory, "/2_final");
-  passes_[PipelineStage::compositing]->print_shaders(directory, "/3_composite");
-  passes_[PipelineStage::postfx]->print_shaders(directory, "/4_postFX");
+  int ctr(0);
+  for (const auto& pass : passes_) {
+    pass->print_shaders(directory, "/" + std::to_string(ctr++) + "_" +
+            string_utils::sanitize(
+                string_utils::demangle_type_name(typeid(*pass).name())));
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::set_window(Window* window) {
+void Pipeline::set_window(WindowBase* window) {
   std::unique_lock<std::mutex> lock(upload_mutex_);
   window_ = window;
 }
@@ -110,15 +129,111 @@ SerializedScene const& Pipeline::get_current_scene(CameraMode mode) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Pipeline::loading_screen() {
+  display_loading_screen_ = false;
+
+  if (window_) {
+    auto loading_texture(std::dynamic_pointer_cast<Texture2D>(TextureDatabase::instance()->lookup("gua_loading_texture")));
+    math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
+
+    if (config.get_enable_stereo()) {
+
+      auto tmp_left_resolution(window_->config.left_resolution());
+      auto tmp_right_resolution(window_->config.right_resolution());
+
+      auto tmp_left_position(window_->config.left_position());
+      auto tmp_right_position(window_->config.right_position());
+
+      window_->config.set_left_resolution(loading_texture_size);
+      window_->config.set_left_position(tmp_left_position + (tmp_left_resolution - loading_texture_size)/2);
+
+      window_->config.set_right_resolution(loading_texture_size);
+      window_->config.set_right_position(tmp_right_position + (tmp_right_resolution - loading_texture_size)/2);
+
+      window_->display(loading_texture, loading_texture);
+
+      window_->config.set_left_position(tmp_left_position);
+      window_->config.set_left_resolution(tmp_left_resolution);
+
+      window_->config.set_right_position(tmp_right_position);
+      window_->config.set_right_resolution(tmp_right_resolution);
+
+    } else {
+
+      auto tmp_left_resolution(window_->config.left_resolution());
+      auto tmp_left_position(window_->config.left_position());
+
+
+      window_->config.set_left_resolution(loading_texture_size);
+      window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
+
+      window_->display(loading_texture);
+
+      window_->config.set_left_position(tmp_left_position);
+      window_->config.set_left_resolution(tmp_left_resolution);
+
+    }
+
+    window_->finish_frame();
+  }
+}
+
+void Pipeline::serialize(const SceneGraph& scene_graph,
+                         std::string const& eye_name,
+                         std::string const& screen_name,
+                         SerializedScene& out) {
+  auto eye((scene_graph)[eye_name]);
+  if (!eye) {
+    Logger::LOG_WARNING << "Cannot render scene: No valid eye specified" << std::endl;
+    return;
+  }
+
+  auto screen_it((scene_graph)[screen_name]);
+  auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
+  if (!screen) {
+    Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
+    return;
+  }
+
+  out.frustum = camera_frustum(config.camera().mode, eye->get_world_transform(),
+                                screen->get_scaled_world_transform(),
+                                config.near_clip(),
+                                config.far_clip());
+  out.center_of_interest = eye->get_world_position();
+  out.enable_global_clipping_plane = config.get_enable_global_clipping_plane();
+  out.global_clipping_plane = config.get_global_clipping_plane();
+
+  serializer_->check(out,
+                     scene_graph,
+                     config.camera().render_mask,
+                     config.enable_bbox_display(),
+                     config.enable_ray_display(),
+                     config.enable_frustum_culling());
+}
+
+
 void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                        float application_fps,
                        float rendering_fps) {
+
+  if (!config.get_enabled()) {
+    return;
+  }
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
   if (ShadingModel::current_revision != last_shading_model_revision_) {
     passes_need_reload_ = true;
     last_shading_model_revision_ = ShadingModel::current_revision;
+  }
+
+  if (config.left_resolution() != last_left_resolution_ ||
+      config.right_resolution() != last_right_resolution_) {
+
+    buffers_need_reload_ = true;
+
+    last_left_resolution_ = config.left_resolution();
+    last_right_resolution_ = config.right_resolution();
   }
 
   if (window_) {
@@ -131,191 +246,125 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     window_->set_active(true);
   }
 
+  if (!camera_block_left_) {
+    camera_block_left_ = std::make_shared<CameraUniformBlock>(context_->render_device);
+    camera_block_right_ = std::make_shared<CameraUniformBlock>(context_->render_device);
+  }
 
   for (auto pipe: prerender_pipelines_) {
     pipe->process(scene_graphs, application_fps, rendering_fps);
   }
 
-  current_graph_ = nullptr;
+  SceneGraph const* current_graph = nullptr;
 
   for (auto& graph: scene_graphs) {
     if (graph->get_name() == config.camera().scene_graph) {
-      current_graph_ = graph.get();
+      current_graph = graph.get();
       break;
     }
   }
 
-  if (!current_graph_) {
-    WARNING("Failed to display scenegraph \"%s\": Graph not found!",
-            config.camera().scene_graph.c_str());
+  if (!current_graph) {
+    Logger::LOG_WARNING << "Failed to display scenegraph \""
+                        << config.camera().scene_graph << "\": Graph not found!"
+                        << std::endl;
   }
 
   rendering_fps_ = rendering_fps;
   application_fps_ = application_fps;
 
   if (!context_) {
-    WARNING("Pipeline has no context: Please define a window!");
+    Logger::LOG_WARNING << "Pipeline has no context: Please define a window!"
+                        << std::endl;
     return;
   }
 
   if (display_loading_screen_) {
-    display_loading_screen_ = false;
-
-    if (window_) {
-      auto loading_texture(std::dynamic_pointer_cast<Texture2D>(TextureDatabase::instance()->lookup("gua_loading_texture")));
-      math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
-
-      if (config.get_enable_stereo()) {
-
-        auto tmp_left_resolution(window_->config.left_resolution());
-        auto tmp_right_resolution(window_->config.right_resolution());
-
-        auto tmp_left_position(window_->config.left_position());
-        auto tmp_right_position(window_->config.right_position());
-
-        window_->config.set_left_resolution(loading_texture_size);
-        window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
-
-        window_->config.set_right_resolution(loading_texture_size);
-        window_->config.set_right_position(tmp_right_position + 0.5*(tmp_right_resolution - loading_texture_size));
-
-        window_->display(loading_texture, loading_texture);
-
-        window_->config.set_left_position(tmp_left_position);
-        window_->config.set_left_resolution(tmp_left_resolution);
-
-        window_->config.set_right_position(tmp_right_position);
-        window_->config.set_right_resolution(tmp_right_resolution);
-
-      } else {
-
-        auto tmp_left_resolution(window_->config.left_resolution());
-        auto tmp_left_position(window_->config.left_position());
-
-
-        window_->config.set_left_resolution(loading_texture_size);
-        window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
-
-        window_->display(loading_texture);
-
-        window_->config.set_left_position(tmp_left_position);
-        window_->config.set_left_resolution(tmp_left_resolution);
-
-      }
-
-      window_->finish_frame();
-    }
-
+    loading_screen();
   } else {
-
     if (passes_need_reload_) {
       create_passes();
+      camera_block_left_ = std::make_shared<CameraUniformBlock>(context_->render_device);
+      camera_block_right_ = std::make_shared<CameraUniformBlock>(context_->render_device);
     }
 
     if (buffers_need_reload_) {
       create_buffers();
     }
 
+    if (passes_need_reload_ || buffers_need_reload_) {
+      Logger::LOG_WARNING << "Pipeline::process() : Passes or buffers not created yet. Skipping frame." << std::endl;
+      return;
+    }
 
-    if (!config.get_enable_stereo()) {
+    serialize(*current_graph, config.camera().eye_l, config.camera().screen_l,
+              current_scenes_[0]);
 
-      auto eye((*current_graph_)[config.camera().eye_l]);
-      if (!eye) {
-        WARNING("Cannot render scene: No valid eye specified");
-        return;
-      }
+    camera_block_left_->update(context_->render_context
+                              , current_scenes_[0].frustum);
 
-      auto screen_it((*current_graph_)[config.camera().screen_l]);
-      auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
-      if (!screen) {
-        WARNING("Cannot render scene: No valid screen specified");
-        return;
-      }
-
-      current_scenes_[0].frustum = Frustum(eye->get_world_transform(),
-                                           screen->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-
-      serializer_->check(&current_scenes_[0],
-                         current_graph_,
-                         config.camera(),
-                         config.enable_bbox_display(),
-                         config.enable_ray_display(),
-                         config.enable_frustum_culling());
-    } else {
-
-
-      auto eye_l((*current_graph_)[config.camera().eye_l]);
-      if (!eye_l) {
-        WARNING("Cannot render scene: No valid left eye specified");
-        return;
-      }
-
-      auto eye_r((*current_graph_)[config.camera().eye_r]);
-      if (!eye_r) {
-        WARNING("Cannot render scene: No valid right eye specified");
-        return;
-      }
-
-      auto screen_it_l((*current_graph_)[config.camera().screen_l]);
-      auto screen_l(std::dynamic_pointer_cast<ScreenNode>(screen_it_l));
-      if (!screen_l) {
-        WARNING("Cannot render scene: No valid left screen specified");
-        return;
-      }
-
-      auto screen_it_r((*current_graph_)[config.camera().screen_r]);
-      auto screen_r(std::dynamic_pointer_cast<ScreenNode>(screen_it_r));
-      if (!screen_r) {
-        WARNING("Cannot render scene: No valid right screen specified");
-        return;
-      }
-
-
-      current_scenes_[0].frustum = Frustum(eye_l->get_world_transform(),
-                                           screen_l->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-      current_scenes_[1].frustum = Frustum(eye_r->get_world_transform(),
-                                           screen_r->get_scaled_world_transform(),
-                                           config.near_clip(),
-                                           config.far_clip());
-
-      serializer_->check(&current_scenes_[0],
-                         current_graph_,
-                         config.camera(),
-                         config.enable_bbox_display(),
-                         config.enable_ray_display(),
-                         config.enable_frustum_culling());
-
-      serializer_->check(&current_scenes_[1],
-                         current_graph_,
-                         config.camera(),
-                         config.enable_bbox_display(),
-                         config.enable_ray_display(),
-                         config.enable_frustum_culling());
+    if (config.get_enable_stereo()) {
+      serialize(*current_graph, config.camera().eye_r, config.camera().screen_r,
+              current_scenes_[1]);
+      camera_block_right_->update(context_->render_context
+                                , current_scenes_[1].frustum);
     }
 
     for (auto pass : passes_) {
-      pass->render_scene(config.camera(), *context_);
+      pass->render_scene(config.camera(), *current_graph, *context_, uuid());
     }
 
     if (window_) {
       if (config.get_enable_stereo()) {
-          window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-                               ->get_color_buffers(TYPE_FLOAT)[0],
-                               passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[1]
-                               ->get_color_buffers(TYPE_FLOAT)[0]);
+          window_->display(passes_[PipelineStage::postfx]
+                                  ->get_gbuffer()
+                                  ->get_eye_buffers()[0]
+                                  ->get_color_buffers(TYPE_FLOAT)[0],
+                           passes_[PipelineStage::postfx]
+                                  ->get_gbuffer()
+                                  ->get_eye_buffers()[1]
+                                  ->get_color_buffers(TYPE_FLOAT)[0]);
       } else {
-        window_->display(passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]
-                             ->get_color_buffers(TYPE_FLOAT)[0]);
+        window_->display(passes_[PipelineStage::postfx]
+                                ->get_gbuffer()
+                                ->get_eye_buffers()[0]
+                                ->get_color_buffers(TYPE_FLOAT)[0],
+                         passes_[PipelineStage::postfx]
+                                ->get_gbuffer()
+                                ->get_eye_buffers()[0]
+                                ->get_color_buffers(TYPE_FLOAT)[0]);
       }
 
       window_->finish_frame();
+      ++(window_->get_context()->framecount);
     }
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool Pipeline::validate_resolution() const
+{
+  // first, validate configuration
+  if (!config.get_enable_stereo()) // mono
+  {
+    if (!(config.get_left_resolution()[0] > 0 && config.get_left_resolution()[1] > 0))
+    {
+      gua::Logger::LOG_WARNING << "Pipeline::validate_resolution() : Invalid resolution for pipeline : " << config.get_left_resolution() << std::endl;
+      return false;
+    }
+  }
+  else { // stereo
+    if (!(config.get_left_resolution()[0] > 0 && config.get_left_resolution()[1] > 0 &&
+      config.get_right_resolution()[0] > 0 && config.get_right_resolution()[1] > 0))
+    {
+      gua::Logger::LOG_WARNING << "Pipeline::validate_resolution() : Invalid resolution for pipeline" << config.get_left_resolution() << " and " << config.get_right_resolution() << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -332,6 +381,12 @@ void Pipeline::set_context(RenderContext* ctx) {
 void Pipeline::create_passes() {
 
   if (passes_need_reload_) {
+
+    if (!validate_resolution()) {
+      return;
+    }
+
+    std::unique_lock<std::mutex> lock (MaterialDatabase::instance()->update_lock);
 
     auto materials(MaterialDatabase::instance()->list_all());
 
@@ -377,6 +432,7 @@ void Pipeline::create_passes() {
     if (compilation_succeeded) {
 
       for (auto pass : passes_) {
+        if (context_) pass->cleanup(*context_);
         delete pass;
       }
 
@@ -392,9 +448,16 @@ void Pipeline::create_passes() {
 
     } else {
 
-      WARNING("Failed to recompile shaders!");
+      Logger::LOG_WARNING << "Failed to recompile shaders!" << std::endl;
 
       for (auto pass : new_passes) {
+        if (context_) {
+          pass->print_shaders("shader_compile_failed", "bla.txt");
+        }
+      }
+
+      for (auto pass : new_passes) {
+        if (context_) pass->cleanup(*context_);
         delete pass;
       }
     }
@@ -407,42 +470,59 @@ void Pipeline::create_buffers() {
 
   if (buffers_need_reload_) {
 
+    if (passes_need_reload_ || !validate_resolution()) {
+      return;
+    }
+
     std::vector<std::shared_ptr<StereoBuffer>> stereobuffers;
 
-    passes_[PipelineStage::geometry]->create(*context_, config, passes_[PipelineStage::geometry]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::geometry]->create(*context_, passes_[PipelineStage::geometry]->get_gbuffer_mapping()->get_layers());
     stereobuffers.push_back(passes_[PipelineStage::geometry]->get_gbuffer());
 
-    passes_[PipelineStage::lighting]->create(*context_, config, passes_[PipelineStage::lighting]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::lighting]->create(*context_, passes_[PipelineStage::lighting]->get_gbuffer_mapping()->get_layers());
     passes_[PipelineStage::lighting]->set_inputs(stereobuffers);
     stereobuffers.push_back(passes_[PipelineStage::lighting]->get_gbuffer());
 
-    passes_[PipelineStage::shading]->create(*context_, config, passes_[PipelineStage::shading]->get_gbuffer_mapping()->get_layers());
+    passes_[PipelineStage::shading]->create(*context_, passes_[PipelineStage::shading]->get_gbuffer_mapping()->get_layers());
     passes_[PipelineStage::shading]->set_inputs(stereobuffers);
     stereobuffers.push_back(passes_[PipelineStage::shading]->get_gbuffer());
 
-    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
-                                      scm::gl::WRAP_REPEAT,
-                                      scm::gl::WRAP_REPEAT);
-
-    passes_[PipelineStage::compositing]->create(*context_, config, { { BufferComponent::F3, state } });
     passes_[PipelineStage::compositing]->set_inputs(stereobuffers);
+    passes_[PipelineStage::compositing]->create(*context_, {} );
     stereobuffers.push_back(passes_[PipelineStage::compositing]->get_gbuffer());
 
-    passes_[PipelineStage::postfx]->create(*context_, config, { { BufferComponent::F3, state } });
+    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
+                                      scm::gl::WRAP_MIRRORED_REPEAT,
+                                      scm::gl::WRAP_MIRRORED_REPEAT);
+
+    passes_[PipelineStage::postfx]->create(*context_, { { BufferComponent::F3, state } });
     passes_[PipelineStage::postfx]->set_inputs(stereobuffers);
 
     if (!config.get_enable_stereo()) {
       TextureDatabase::instance()->add(config.output_texture_name(), passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]->get_color_buffers(TYPE_FLOAT)[0]);
+      TextureDatabase::instance()->add(config.output_texture_name() + "_depth", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[0]->get_depth_buffer());
     } else {
       TextureDatabase::instance()->add(config.output_texture_name() + "_left",  passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]->get_color_buffers(TYPE_FLOAT)[0]);
       TextureDatabase::instance()->add(config.output_texture_name() + "_right", passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[1]->get_color_buffers(TYPE_FLOAT)[0]);
+      TextureDatabase::instance()->add(config.output_texture_name() + "_depth_left", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[0]->get_depth_buffer());
+      TextureDatabase::instance()->add(config.output_texture_name() + "_depth_right", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[1]->get_depth_buffer());
     }
-
 
     buffers_need_reload_ = false;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+GBufferPass::GeometryUberShaderMap const& Pipeline::get_geometry_ubershaders() const
+{
+  GBufferPass* gbuffpass = dynamic_cast<GBufferPass*>(passes_[geometry]);
+  if (gbuffpass) {
+    return gbuffpass->get_geometry_ubershaders();
+  }
+  else {
+    throw std::runtime_error("Pipeline::get_geometry_ubershaders() : GBufferPass not created yet.");
+  }
+}
 
 }

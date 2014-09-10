@@ -25,8 +25,7 @@
 // guacamole headers
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
-#include <gua/renderer/Geometry.hpp>
-#include <gua/renderer/LoaderBase.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 
 namespace gua {
 
@@ -41,33 +40,31 @@ class Node;
 class GUA_DLL GeometryLoader {
  public:
 
-  enum Flags {
-    DEFAULTS            = 0,
-    LOAD_MATERIALS      = 1<<0,
-    OPTIMIZE_GEOMETRY   = 1<<1,
-    MAKE_PICKABLE       = 1<<2,
-    NORMALIZE_POSITION  = 1<<3,
-    NORMALIZE_SCALE     = 1<<4
-  };
+   /**
+   * Default constructor.
+   *
+   * Constructs a new and empty LoaderBase.
+   */
+   GeometryLoader() = default;
 
-  GeometryLoader();
+   /**
+   * Destructor.
+   *
+   * Deletes the LoaderBase
+   */
+   virtual ~GeometryLoader() {};
 
-  virtual ~GeometryLoader();
+   /**
+   * Interface for file support
+   *
+   * returns if the filename is supported by this loader
+   *
+   * \param file_name        The file to load the data from.
+   */
+   virtual bool is_supported(std::string const& file_name) const = 0;
 
-  std::shared_ptr<Node> create_geometry_from_file(std::string const& node_name,
-                                        std::string const& file_name,
-                                        std::string const& fallback_material,
-                                        unsigned flags = DEFAULTS);
+private:
 
-
- private:
-
-  void apply_fallback_material(std::shared_ptr<Node> const& root, std::string const& fallback_material) const;
-
-  static std::unordered_map<std::string, std::shared_ptr<Node>> loaded_files_;
-
-  std::string parent_material_name_;
-  std::list<LoaderBase*> fileloaders_;
 };
 
 }

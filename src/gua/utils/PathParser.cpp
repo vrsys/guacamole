@@ -23,7 +23,7 @@
 #include <gua/utils/PathParser.hpp>
 
 // guacamole headers
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <sstream>
@@ -66,7 +66,7 @@ void PathParser::parse(std::string const& path) {
     }
 
   } else {
-    ERROR("Path names must have at least one character!");
+    Logger::LOG_ERROR << "Path names must have at least one character!" << std::endl;
   }
 }
 

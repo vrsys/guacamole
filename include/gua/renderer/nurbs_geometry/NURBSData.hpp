@@ -59,6 +59,10 @@ class NURBSData {
   {
     std::vector<T> data;
 
+    bool empty() const {
+      return data.size() == 0;
+    }
+
     unsigned size() { 
       return data.size(); 
     }
@@ -75,7 +79,7 @@ class NURBSData {
       return &data[0]; 
     }
 
-    void push(T p) { 
+    void push(T const& p) { 
       data.push_back(p); 
     }
     std::vector<T>& original() { 

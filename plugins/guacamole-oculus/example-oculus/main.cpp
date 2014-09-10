@@ -20,15 +20,18 @@
  ******************************************************************************/
 
 #include <gua/guacamole.hpp>
-#include <gua/OculusRift.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/OculusWindow.hpp>
+
+#include <OVR.h>
 
 const std::string geometry("data/objects/monkey.obj");
 // const std::string geometry("data/objects/cube.obj");
 
-std::vector<std::shared_ptr<gua::TransformNode>> add_lights(gua::SceneGraph& graph,
+std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGraph& graph,
                                                   int count) {
 
-  std::vector<std::shared_ptr<gua::TransformNode>> lights(count);
+  std::vector<std::shared_ptr<gua::node::TransformNode>> lights(count);
 
   for (int i(0); i < count; ++i) {
     scm::math::vec3 randdir(gua::math::random::get(-1.f, 1.f),
@@ -36,21 +39,21 @@ std::vector<std::shared_ptr<gua::TransformNode>> add_lights(gua::SceneGraph& gra
                             gua::math::random::get(-1.f, 1.f));
     scm::math::normalize(randdir);
 
-    gua::GeometryLoader loader;
+    gua::TriMeshLoader loader;
     auto sphere_geometry(
       loader.create_geometry_from_file(
       "sphere" + gua::string_utils::to_string(i),
       "data/objects/light_sphere.obj",
-      "White"
+      "data/materials/White.gmd"
     ));
 
     sphere_geometry->scale(0.04, 0.04, 0.04);
 
-    lights[i] = graph.add_node("/", std::make_shared<gua::TransformNode>("light" + gua::string_utils::to_string(i)));
+    lights[i] = graph.add_node("/", std::make_shared<gua::node::TransformNode>("light" + gua::string_utils::to_string(i)));
     lights[i]->add_child(sphere_geometry);
     lights[i]->translate(randdir[0], randdir[1], randdir[2]);
 
-    auto light = lights[i]->add_child(std::make_shared<gua::PointLightNode>("light"));
+    auto light = lights[i]->add_child(std::make_shared<gua::node::PointLightNode>("light"));
     light->data.set_color(gua::utils::Color3f::random());
   }
 
@@ -58,11 +61,11 @@ std::vector<std::shared_ptr<gua::TransformNode>> add_lights(gua::SceneGraph& gra
 }
 
 void setup_scene(gua::SceneGraph& graph,
-                 std::shared_ptr<gua::Node> const& root_monkey,
+                 std::shared_ptr<gua::node::Node> const& root_monkey,
                  int depth_count) {
 
   if (depth_count > 0) {
-    gua::GeometryLoader loader;
+    gua::TriMeshLoader loader;
 
     float offset(2.f);
     std::vector<gua::math::vec3> directions = {
@@ -78,7 +81,7 @@ void setup_scene(gua::SceneGraph& graph,
       auto monkey_geometry(loader.create_geometry_from_file(
         "monkey",
         geometry,
-        "Stones"
+        "data/materials/Stones.gmd"
       ));
 
       auto monkey = root_monkey->add_child(monkey_geometry);
@@ -90,24 +93,48 @@ void setup_scene(gua::SceneGraph& graph,
   }
 }
 
+OVR::SensorFusion* init_oculus() {
+  OVR::System::Init(OVR::Log::ConfigureDefaultLog(OVR::LogMask_All));
+  OVR::DeviceManager* device_manager  = OVR::DeviceManager::Create();
+  OVR::SensorDevice*  sensor_device   = device_manager->EnumerateDevices<OVR::SensorDevice>().CreateDevice();
+  if (sensor_device) {
+    OVR::SensorFusion* sensor_fusion = new OVR::SensorFusion();
+    sensor_fusion->AttachToSensor(sensor_device);
+    return sensor_fusion;
+  }
+  return nullptr;
+}
+
+gua::math::mat4 const get_oculus_transform(OVR::SensorFusion* sensor) {
+  OVR::Quatf orient = sensor->GetPredictedOrientation();
+  OVR::Matrix4f mat(orient.Inverted());
+  return gua::math::mat4( mat.M[0][0], mat.M[0][1], mat.M[0][2], mat.M[0][3],
+                          mat.M[1][0], mat.M[1][1], mat.M[1][2], mat.M[1][3],
+                          mat.M[2][0], mat.M[2][1], mat.M[2][2], mat.M[2][3],
+                          mat.M[3][0], mat.M[3][1], mat.M[3][2], mat.M[3][3]);
+}
+
 int main(int argc, char** argv) {
 
   // initialize guacamole
   gua::init(argc, argv);
-  gua::OculusRift::init();
 
   gua::ShadingModelDatabase::load_shading_models_from("data/materials/");
   gua::MaterialDatabase::load_materials_from("data/materials/");
 
+  // initialize Oculus SDK
+  OVR::SensorFusion* oculus_sensor = init_oculus();
+  if (!oculus_sensor) return 1; // no oculus sensor found
+
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  gua::GeometryLoader loader;
+  gua::TriMeshLoader loader;
 
   auto monkey_geometry(loader.create_geometry_from_file(
     "root_ape",
     geometry,
-    "Stones"
+    "data/materials/Stones.gmd"
   ));
 
   auto root_monkey = graph.add_node("/", monkey_geometry);
@@ -124,22 +151,22 @@ int main(int argc, char** argv) {
 
   auto lights = add_lights(graph, 50);
 
-  auto pos = graph.add_node<gua::TransformNode>("/", "pos");
+  auto pos = graph.add_node<gua::node::TransformNode>("/", "pos");
   pos->translate(0, 0, 2);
-  auto nav = graph.add_node<gua::TransformNode>("/pos", "nav");
+  auto nav = graph.add_node<gua::node::TransformNode>("/pos", "nav");
 
-  auto screen = graph.add_node<gua::ScreenNode>("/pos/nav", "screen_l");
+  auto screen = graph.add_node<gua::node::ScreenNode>("/pos/nav", "screen_l");
   screen->data.set_size(gua::math::vec2(0.08, 0.1));
   screen->translate(-0.04, 0, -0.05f);
 
-  screen = graph.add_node<gua::ScreenNode>("/pos/nav", "screen_r");
+  screen = graph.add_node<gua::node::ScreenNode>("/pos/nav", "screen_r");
   screen->data.set_size(gua::math::vec2(0.08, 0.1));
   screen->translate(0.04, 0, -0.05f);
 
-  auto eye = graph.add_node<gua::TransformNode>("/pos/nav", "eye_l");
+  auto eye = graph.add_node<gua::node::TransformNode>("/pos/nav", "eye_l");
   eye->translate(-0.032, 0, 0);
 
-  eye = graph.add_node<gua::TransformNode>("/pos/nav", "eye_r");
+  eye = graph.add_node<gua::node::TransformNode>("/pos/nav", "eye_r");
   eye->translate(0.032, 0, 0);
 
   unsigned width = 1280/2;
@@ -163,9 +190,12 @@ int main(int argc, char** argv) {
   pipe->config.set_bloom_threshold(0.8f);
   pipe->config.set_bloom_intensity(0.8f);
 
-
-  auto oculus_rift(new gua::OculusRift(":0.0"));
-  pipe->set_window(oculus_rift);
+#if WIN32
+  auto oculus_window(new gua::OculusWindow("\\\\.\\DISPLAY1"));
+#else
+  auto oculus_window(new gua::OculusWindow(":0.0"));
+#endif
+  pipe->set_window(oculus_window);
 
   gua::Renderer renderer({
     pipe
@@ -186,8 +216,8 @@ int main(int argc, char** argv) {
     time += frame_time;
     timer.reset();
 
-    std::function<void (std::shared_ptr<gua::Node>, int)> rotate;
-    rotate = [&](std::shared_ptr<gua::Node> node, int depth) {
+    std::function<void (std::shared_ptr<gua::node::Node>, int)> rotate;
+    rotate = [&](std::shared_ptr<gua::node::Node> node, int depth) {
       node->rotate(frame_time * (1+depth) * 0.5, 1, 1, 0);
       for (auto child: node->get_children()) {
         rotate(child, ++depth);
@@ -204,7 +234,7 @@ int main(int argc, char** argv) {
     graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
     //graph["/screen"]->rotate(20*frame_time, 0, 1, 0);
 
-    nav->set_transform(oculus_rift->get_transform());
+    nav->set_transform(get_oculus_transform(oculus_sensor));
 
     renderer.queue_draw({&graph});
   });

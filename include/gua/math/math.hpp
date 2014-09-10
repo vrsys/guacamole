@@ -24,10 +24,10 @@
 
 #include <scm/core/math.h>
 #include <scm/gl_core/math.h>
-#include <iostream>
 #include <tuple>
 
-struct aiMatrix4x4;
+template<class TReal>
+class aiMatrix4x4t;
 
 #include <gua/platform.hpp>
 #include <gua/math/traits.hpp>
@@ -67,7 +67,12 @@ typedef scm::math::quat<float> quat;
  *
  * \return                  A frustum matrix.
  */
-math::mat4 const GUA_DLL compute_frustum(math::vec4 const& eye_position,
+math::mat4 GUA_DLL compute_perspective_frustum(math::vec4 const& eye_position,
+                                 math::mat4 const& screen_transform,
+                                 float near_plane,
+                                 float far_plane);
+
+math::mat4 GUA_DLL compute_orthographic_frustum(math::vec4 const& eye_position,
                                  math::mat4 const& screen_transform,
                                  float near_plane,
                                  float far_plane);
@@ -79,7 +84,7 @@ math::mat4 const GUA_DLL compute_frustum(math::vec4 const& eye_position,
  *
  * \return        A schism matrix.
  */
-math::mat4 const GUA_DLL mat_ai_to_scm(aiMatrix4x4 const& ai_mat);
+math::mat4 GUA_DLL mat_ai_to_scm(aiMatrix4x4t<float> const& ai_mat);
 
 #if WIN32
   template <typename T>
@@ -95,6 +100,11 @@ math::mat4 const GUA_DLL mat_ai_to_scm(aiMatrix4x4 const& ai_mat);
 
 inline math::vec3 get_translation(math::mat4 const& m) {
   return math::vec3(m[12], m[13], m[14]);
+}
+
+inline math::mat4 get_rotation(math::mat4 const& m) {
+  math::quat q = ::scm::math::quat<float>::from_matrix(m);
+  return q.to_matrix();
 }
 
 std::tuple<float, float, float> GUA_DLL barycentric(math::vec3 const& a,

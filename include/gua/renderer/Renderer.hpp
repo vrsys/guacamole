@@ -28,10 +28,8 @@
 #include <memory>
 
 #include <gua/platform.hpp>
-#include <gua/renderer/RenderClient.hpp>
 #include <gua/utils/FpsCounter.hpp>
-
-#define USE_RAW_POINTER_RENDER_CLIENTS 1
+#include <gua/concurrent/Doublebuffer.hpp>
 
 namespace gua {
 
@@ -45,8 +43,9 @@ class Pipeline;
  */
 class GUA_DLL Renderer {
  public:
-  typedef std::vector<std::unique_ptr<const SceneGraph> > render_vec_t;
-  typedef render_vec_t const const_render_vec_t;
+  typedef std::vector<std::unique_ptr<const SceneGraph> > RenderVector;
+  typedef RenderVector const                              ConstRenderVector;
+  typedef std::shared_ptr<ConstRenderVector>              ConstRenderVectorPtr;
 
   /**
    * Constructor.
@@ -57,9 +56,11 @@ class GUA_DLL Renderer {
    *                         pipeline a RenderClient is created.
    */
   Renderer(std::vector<Pipeline*> const& pipelines);
+  Renderer(Renderer const&) = delete;
+  Renderer& operator=(Renderer const&) = delete;
 
   /**
-  * 
+  *
   */
   ~Renderer();
 
@@ -72,14 +73,19 @@ class GUA_DLL Renderer {
    */
   void queue_draw(std::vector<SceneGraph const*> const& scene_graphs);
 
+  void stop();
+
  private:
-  typedef RenderClient<std::shared_ptr<const_render_vec_t> > renderclient_t;
-#if USE_RAW_POINTER_RENDER_CLIENTS
-  std::vector<renderclient_t*> render_clients_;
-#else
-  std::vector<std::unique_ptr<renderclient_t> > render_clients_;
-#endif
+
+  typedef std::pair<ConstRenderVectorPtr, float> Item;
+  typedef std::shared_ptr<gua::concurrent::Doublebuffer<Item> > Mailbox;
+  typedef std::pair<Mailbox, std::thread> Renderclient;
+
+  static void renderclient(Mailbox in, Pipeline* pipe);
+
+  std::vector<Renderclient> render_clients_;
   FpsCounter application_fps_;
+  bool stop_requested_;
 };
 
 }

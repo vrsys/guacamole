@@ -26,7 +26,9 @@
 #include <gua/platform.hpp>
 #include <gua/math/math.hpp>
 #include <gua/physics/CollisionShape.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
+
 
 // external headers
 #include <memory>
@@ -143,8 +145,7 @@ class GUA_DLL TriangleMeshShape : public CollisionShape {
   static TriangleMeshShape* FromGeometryFile(const std::string& file_name,
                                              bool build_static,
                                              bool build_dynamic,
-                                             unsigned flags =
-                                                 GeometryLoader::DEFAULTS);
+                                             unsigned flags = TriMeshLoader::DEFAULTS);
 
  private:
   virtual void construct_dynamic(btCompoundShape* bullet_shape,
@@ -173,7 +174,7 @@ class GUA_DLL TriangleMeshShape : public CollisionShape {
    * \param mesh      The mesh.
    * \param file_name File name of WRL-file to save a decomposed mesh.
    */
-  void decompose_to_convex(std::shared_ptr<Mesh> const& mesh,
+  void decompose_to_convex(std::shared_ptr<TriMeshRessource> const& mesh,
                            std::string const& file_name = "");
 
   btTriangleMesh* concave_tri_mesh_;

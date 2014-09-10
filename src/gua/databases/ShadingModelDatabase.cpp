@@ -33,9 +33,9 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadingModelDatabase::load_shading_models_from(
-    std::string const& path_to_shading_models) {
+    std::string const& directory) {
 
-  gua::Directory dir(path_to_shading_models);
+  gua::Directory dir(directory);
   std::stringstream content(dir.get_content());
   std::string parse_string;
 
@@ -43,11 +43,18 @@ void ShadingModelDatabase::load_shading_models_from(
     unsigned suffix_pos = unsigned(parse_string.find(".gsd"));
 
     if (parse_string.length() - suffix_pos == 4) {
-      auto name(parse_string.substr(0, suffix_pos));
-      auto mod = std::make_shared<ShadingModel>(name, dir.get_directory_name() + parse_string);
-
-      instance()->add(name, mod);
+      auto name(dir.get_directory_name() + parse_string);
+      load_shading_model(name);
     }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadingModelDatabase::load_shading_model(std::string const& filename) {
+  if (!instance()->is_supported(filename)) {
+    auto mod = std::make_shared<ShadingModel>(filename, filename);
+    instance()->add(filename, mod);
   }
 }
 

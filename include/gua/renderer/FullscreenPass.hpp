@@ -32,6 +32,7 @@
 namespace gua {
 
 class ShaderProgram;
+class SceneGraph;
 
 /**
  * A GeometryPass which automatically renders to a fullscreen quad.
@@ -63,7 +64,7 @@ class FullscreenPass : public Pass {
   /**
    *
    */
-  void render_scene(Camera const& camera, RenderContext const& ctx);
+  void render_scene(Camera const& camera, SceneGraph const&, RenderContext const& ctx, std::size_t view) override;
 
  protected:
 

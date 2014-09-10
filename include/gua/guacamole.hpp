@@ -23,10 +23,13 @@
 #define GUA_GUACAMOLE_HPP
 
 // guacamole headers
+#include <gua/config.hpp>
 #include <gua/databases.hpp>
 #include <gua/events.hpp>
 #include <gua/math.hpp>
+#ifdef GUACAMOLE_ENABLE_PHYSICS
 #include <gua/physics.hpp>
+#endif
 #include <gua/renderer.hpp>
 #include <gua/scenegraph.hpp>
 #include <gua/utils.hpp>
@@ -41,6 +44,10 @@ namespace gua {
  */
 
   void GUA_DLL init(int argc, char** argv);
+
+  void GUA_DLL create_resource_material ( std::string const& material_name, 
+                                          std::vector<unsigned char> const& shading_model_resource, 
+                                          std::vector<unsigned char> const& material_resource);
 
 }
 

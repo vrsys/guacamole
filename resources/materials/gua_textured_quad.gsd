@@ -1,37 +1,39 @@
 
 {
-	"final_shading_stage" :
+	"final_shading_stage" : 
 	{
 		"body" : "gua_color = color;\n",
 		"functions" : "",
 		"outputs" : null,
 		"uniforms" : null
 	},
-	"gbuffer_fragment_stage" :
+	"gbuffer_fragment_stage" : 
 	{
-		"body" : "gua_normal = varying_normal;\ncolor = texture2D(texture, varying_texcoord).rgb;",
+		"body" : "gua_normal = varying_normal;\nvec2 tex_coords = varying_texcoord;\n\nif (flip_x) tex_coords.x = 1.0 - varying_texcoord.x;\nif (flip_y) tex_coords.y = 1.0 - varying_texcoord.y;\n\ncolor = texture2D(texture, tex_coords).rgb;",
 		"functions" : "",
-		"outputs" :
+		"outputs" : 
 		{
 			"color" : "vec3"
 		},
-		"uniforms" :
+		"uniforms" : 
 		{
+			"flip_x" : "bool",
+			"flip_y" : "bool",
 			"texture" : "sampler2D"
 		}
 	},
-	"gbuffer_vertex_stage" :
+	"gbuffer_vertex_stage" : 
 	{
 		"body" : "gua_position = gua_world_position;\nvarying_normal = gua_world_normal;\nvarying_texcoord = gua_texcoords;",
 		"functions" : "",
-		"outputs" :
+		"outputs" : 
 		{
 			"varying_normal" : "vec3",
 			"varying_texcoord" : "vec2"
 		},
 		"uniforms" : null
 	},
-	"lbuffer_stage" :
+	"lbuffer_stage" : 
 	{
 		"body" : "",
 		"functions" : "",

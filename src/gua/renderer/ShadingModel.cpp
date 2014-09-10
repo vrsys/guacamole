@@ -23,7 +23,7 @@
 #include <gua/renderer/ShadingModel.hpp>
 
 // guacamole headers
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/TextFile.hpp>
 
 // external headers
@@ -70,9 +70,8 @@ void ShadingModel::reload() {
     if (file.is_valid()) {
       construct_from_file(file);
     } else {
-      WARNING("Failed to load shading model \"%s\": "
-              "File does not exist!",
-              file_name_.c_str());
+      Logger::LOG_WARNING << "Failed to load shading model \"" << file_name_ << "\": "
+              "File does not exist!" << std::endl;
     }
   }
 }
@@ -140,37 +139,32 @@ void ShadingModel::construct_from_file(TextFile const& file) {
   Json::Value value;
   Json::Reader reader;
   if (!reader.parse(file.get_content(), value)) {
-    WARNING("Failed to parse shading model \"%s\": "
-            "File does not exist!",
-            file.get_file_name().c_str());
+    Logger::LOG_WARNING << "Failed to parse shading model \"" << file.get_file_name() << "\": "
+            "File does not exist!" << std::endl;
     return;
   }
 
   if (value["gbuffer_vertex_stage"] == Json::Value::null) {
-    WARNING("Failed to parse shading model \"%s\": "
-            "Gbuffer-Vertex-Stage is missing!",
-            file.get_file_name().c_str());
+    Logger::LOG_WARNING << "Failed to parse shading model \"" << file.get_file_name() << "\": "
+            "Gbuffer-Vertex-Stage is missing!" << std::endl;
     return;
   }
 
   if (value["gbuffer_fragment_stage"] == Json::Value::null) {
-    WARNING("Failed to parse shading model \"%s\": "
-            "Gbuffer-Fragment-Stage is missing!",
-            file.get_file_name().c_str());
+    Logger::LOG_WARNING << "Failed to parse shading model \"" << file.get_file_name() << "\": "
+            "Gbuffer-Fragment-Stage is missing!" << std::endl;
     return;
   }
 
   if (value["lbuffer_stage"] == Json::Value::null) {
-    WARNING("Failed to parse shading model \"%s\": "
-            "Lbuffer-stage is missing!",
-            file.get_file_name().c_str());
+    Logger::LOG_WARNING << "Failed to parse shading model \"" << file.get_file_name() << "\": "
+            "Lbuffer-stage is missing!" << std::endl;
     return;
   }
 
   if (value["final_shading_stage"] == Json::Value::null) {
-    WARNING("Failed to parse shading model \"%s\": "
-            "Final-Shading-Stage is missing!",
-            file.get_file_name().c_str());
+    Logger::LOG_WARNING << "Failed to parse shading model \"" << file.get_file_name() << "\": "
+            "Final-Shading-Stage is missing!" << std::endl;
     return;
   }
 
@@ -189,32 +183,32 @@ void ShadingModel::construct_from_buffer(const char* buffer, unsigned buffer_siz
   Json::Value value;
   Json::Reader reader;
   if (!reader.parse(buffer, buffer + buffer_size, value)) {
-    WARNING("Failed to parse shading model from buffer: "
-            "Buffer invalid!");
+    Logger::LOG_WARNING << "Failed to parse shading model from buffer: "
+            "Buffer invalid!" << std::endl;
     return;
   }
 
   if (value["gbuffer_vertex_stage"] == Json::Value::null) {
-    WARNING("Failed to parse shading model from buffer: "
-            "Gbuffer-Vertex-Stage is missing!");
+    Logger::LOG_WARNING << "Failed to parse shading model from buffer: "
+            "Gbuffer-Vertex-Stage is missing!" << std::endl;
     return;
   }
 
   if (value["gbuffer_fragment_stage"] == Json::Value::null) {
-    WARNING("Failed to parse shading model from buffer: "
-            "Gbuffer-Fragment-Stage is missing!");
+    Logger::LOG_WARNING << "Failed to parse shading model from buffer: "
+            "Gbuffer-Fragment-Stage is missing!" << std::endl;
     return;
   }
 
   if (value["lbuffer_stage"] == Json::Value::null) {
-    WARNING("Failed to parse shading model from buffer: "
-            "Lbuffer-stage is missing!");
+    Logger::LOG_WARNING << "Failed to parse shading model from buffer: "
+            "Lbuffer-stage is missing!" << std::endl;
     return;
   }
 
   if (value["final_shading_stage"] == Json::Value::null) {
-    WARNING("Failed to parse shading model from buffer: "
-            "Final-Shading-Stage is missing!");
+    Logger::LOG_WARNING << "Failed to parse shading model from buffer: "
+            "Final-Shading-Stage is missing!" << std::endl;
     return;
   }
 

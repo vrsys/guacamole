@@ -30,49 +30,52 @@
 namespace gua {
 
 class GBuffer;
-struct PipelineConfiguration;
 
 /**
  *
  */
-class CompositePass : public GeometryPass {
+class CompositePass : public Pass {
  public:
 
   /**
    *
    */
-	 CompositePass(Pipeline* pipeline);
+  CompositePass(Pipeline* pipeline);
 
   /**
-   * 
+   *
    */
-	virtual ~CompositePass();
+  virtual ~CompositePass();
 
-  void create( RenderContext const& ctx,
-               PipelineConfiguration const& config,
-               std::vector<std::pair<BufferComponent,
-               scm::gl::sampler_state_desc> > const& layers);
+  void create(RenderContext const& ctx,
+              std::vector<std::pair<BufferComponent,
+              scm::gl::sampler_state_desc> > const& layers) override;
 
-  /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
+  LayerMapping const* get_gbuffer_mapping() const override;
 
   void print_shaders(std::string const& directory,
-                     std::string const& name) const;
+                     std::string const& name) const override;
 
   bool pre_compile_shaders(RenderContext const& ctx);
 
+  void render_scene(Camera const& camera,
+                    SceneGraph const&,
+                    RenderContext const& ctx,
+                    std::size_t view) override;
+
 protected :
 
-  /* virtual */ void rendering( SerializedScene const& scene,
-                                RenderContext const& ctx,
-                                CameraMode eye,
-                                Camera const& camera,
-                                FrameBufferObject* target);
+  void rendering( SerializedScene const& scene,
+                  RenderContext const& ctx,
+                  CameraMode eye,
+                  Camera const& camera,
+                  FrameBufferObject* target);
 
-  void init_ressources (RenderContext const& ctx);
+  void init_resources (RenderContext const& ctx);
 
  private:
 
-  GBuffer* volume_raygeneration_;
+  GBuffer* volume_raygeneration_buffer_;
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::quad_geometry_ptr fullscreen_quad_;

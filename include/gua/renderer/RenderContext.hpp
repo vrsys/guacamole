@@ -30,9 +30,11 @@
 #include <scm/gl_core/window_management/context.h>
 #include <scm/gl_core/window_management/display.h>
 #include <scm/gl_core/window_management/surface.h>
-#include <scm/gl_core/window_management/window.h>
+#include <atomic>
 
 namespace gua {
+
+class WindowBase;
 
 /**
  * Information on a specific context.
@@ -42,6 +44,16 @@ namespace gua {
 struct RenderContext {
 
   /**
+  * c'tor
+  */
+  RenderContext();
+
+  /**
+  * d'tor
+  */
+  ~RenderContext();
+
+   /**
    * The schism context of this RenderContext.
    */
   scm::gl::wm::context_ptr context;
@@ -50,11 +62,6 @@ struct RenderContext {
    * The display where this context was opened.
    */
   scm::gl::wm::display_ptr display;
-
-  /**
-   * The window associated with this context.
-   */
-  scm::gl::wm::window_ptr window;
 
   /**
    * The schism render constext associated with this context.
@@ -67,19 +74,19 @@ struct RenderContext {
   scm::gl::render_device_ptr render_device;
 
   /**
-   * The width of the window.
+   * The window which is rendered into.
    */
-  int width;
-
-  /**
-   * The height of the window.
-   */
-  int height;
+  WindowBase* render_window;
 
   /**
    * A unique ID for this context.
    */
   unsigned id;
+
+  /**
+  * framecounter for this context
+  */
+  unsigned framecount;
 };
 
 }

@@ -24,24 +24,25 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/SerializedNode.hpp>
-#include <gua/renderer/Mesh.hpp>
-#include <gua/renderer/NURBS.hpp>
 
 #include <gua/databases/GeometryDatabase.hpp>
 
-#include <gua/scenegraph/Node.hpp>
-#include <gua/scenegraph/TransformNode.hpp>
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/VolumeNode.hpp>
-#include <gua/scenegraph/PointLightNode.hpp>
-#include <gua/scenegraph/SpotLightNode.hpp>
-#include <gua/scenegraph/ScreenNode.hpp>
-#include <gua/scenegraph/RayNode.hpp>
+#include <gua/node/Node.hpp>
+#include <gua/node/TransformNode.hpp>
+#include <gua/node/LODNode.hpp>
+#include <gua/node/GeometryNode.hpp>
+#include <gua/node/Video3DNode.hpp>
+#include <gua/node/VolumeNode.hpp>
+#include <gua/node/PointLightNode.hpp>
+#include <gua/node/SpotLightNode.hpp>
+#include <gua/node/SunLightNode.hpp>
+#include <gua/node/ScreenNode.hpp>
+#include <gua/node/RayNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
 // external headers
 #include <stack>
+#include <utility>
 
 namespace gua {
 
@@ -49,51 +50,48 @@ namespace gua {
 
 Serializer::Serializer()
     : data_(nullptr),
-      current_camera_("", "", ""),
       current_render_mask_(""),
-      current_frustum_(math::mat4::identity(),
-                       math::mat4::identity(),
-                       0.f,
-                       0.f),
+      current_frustum_(),
+      current_center_of_interest_(),
       draw_bounding_boxes_(false),
       draw_rays_(false),
       enable_frustum_culling_(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Serializer::check(SerializedScene* output,
-                       SceneGraph const* scene_graph,
-                       Camera const& camera,
+void Serializer::check(SerializedScene& output,
+                       SceneGraph const& scene_graph,
+                       std::string const& render_mask,
                        bool draw_bounding_boxes,
                        bool draw_rays,
                        bool enable_frustum_culling) {
 
-  data_ = output;
+  data_ = &output;
 
-  std::size_t mesh_count = data_->meshnodes_.size();
-  std::size_t nurbs_count = data_->nurbsnodes_.size();
+
+  std::size_t geometry_count = data_->geometrynodes_.size();
   std::size_t volume_count = data_->volumenodes_.size();
   std::size_t point_light_count = data_->point_lights_.size();
   std::size_t spot_light_count = data_->spot_lights_.size();
+  std::size_t sun_light_count = data_->sun_lights_.size();
   std::size_t ray_count = data_->rays_.size();
   std::size_t textured_quad_count = data_->textured_quads_.size();
 
-  data_->meshnodes_.clear();
-  data_->nurbsnodes_.clear();
+  data_->geometrynodes_.clear();
   data_->volumenodes_.clear();
   data_->point_lights_.clear();
   data_->spot_lights_.clear();
+  data_->sun_lights_.clear();
   data_->textured_quads_.clear();
 
   data_->bounding_boxes_.clear();
   data_->rays_.clear();
   draw_bounding_boxes_ = draw_bounding_boxes;
   draw_rays_ = draw_rays;
+
   if (draw_bounding_boxes_) {
     data_->materials_.insert("gua_bounding_box");
-    data_->bounding_boxes_
-        .reserve(mesh_count + nurbs_count + point_light_count +
-                 spot_light_count + ray_count);
+    data_->bounding_boxes_.reserve(geometry_count + point_light_count + spot_light_count + ray_count);
   }
 
   if (draw_rays_) {
@@ -105,25 +103,25 @@ void Serializer::check(SerializedScene* output,
 
   // assuming the number of nodes stays quite constant through time,
   // reserving the old size might save some time
-  data_->meshnodes_.reserve(mesh_count);
-  data_->nurbsnodes_.reserve(nurbs_count);
-  data_->volumenodes_.reserve(nurbs_count);
+
+  data_->volumenodes_.reserve(volume_count);
   data_->point_lights_.reserve(point_light_count);
   data_->spot_lights_.reserve(spot_light_count);
+  data_->sun_lights_.reserve(sun_light_count);
   data_->textured_quads_.reserve(textured_quad_count);
 
   enable_frustum_culling_ = enable_frustum_culling;
 
-  current_camera_ = camera;
-  current_render_mask_ = Mask(current_camera_.render_mask);
-  current_frustum_ = output->frustum;
+  current_render_mask_ = Mask(render_mask);
+  current_frustum_ = output.frustum;
+  current_center_of_interest_ = output.center_of_interest;
 
-  scene_graph->accept(*this);
+  scene_graph.accept(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(Node* node) {
+/* virtual */ void Serializer::visit(node::Node* node) {
   if (is_visible(node)) {
     visit_children(node);
   }
@@ -131,32 +129,51 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(GeometryNode* node) {
-
+/* virtual */ void Serializer::visit(node::LODNode* node) {
   if (is_visible(node)) {
-    if (!node->data.get_geometry().empty() && !node->data.get_material().empty()) {
 
-      add_bbox(node);
+    float distance_to_camera(scm::math::length(node->get_world_position() - current_center_of_interest_));
 
-      std::shared_ptr<Mesh> mesh_ptr = std::dynamic_pointer_cast<Mesh>(
-          gua::GeometryDatabase::instance()->lookup(node->data.get_geometry()));
+    unsigned child_index(0);
 
-      if (mesh_ptr) {
+    if (!node->data.get_lod_distances().empty()) {
 
-        data_->meshnodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
+      child_index = node->get_children().size();
 
-      } else {
-
-        std::shared_ptr<NURBS> nurbs_ptr = std::dynamic_pointer_cast<NURBS>(
-            gua::GeometryDatabase::instance()->lookup(node->data.get_geometry()));
-
-        if (nurbs_ptr) {
-          data_->nurbsnodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));
+      for (unsigned i(0); i < node->data.get_lod_distances().size(); ++i) {
+        if (node->data.get_lod_distances()[i] > distance_to_camera) {
+          child_index = i;
+          break;
         }
       }
     }
 
-    data_->materials_.insert(node->data.get_material());
+    if (child_index < node->get_children().size()) {
+      node->get_children()[child_index]->accept(*this);
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+/* virtual */ void Serializer::visit(node::GeometryNode* node) {
+
+
+  if (is_visible(node))
+  {
+    if (!node->get_filename().empty() && !node->get_material().empty())
+    {
+      add_bbox(node);
+
+
+      // add geometry to the serialized scene, if it exists in database
+      if (gua::GeometryDatabase::instance()->is_supported(node->get_filename()))
+      {
+        data_->geometrynodes_[std::type_index(typeid(*node))].push_back(node);
+      }
+    }
+
+    data_->materials_.insert(node->get_material());
 
     visit_children(node);
   }
@@ -164,12 +181,13 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(VolumeNode* node) {
+
+/* virtual */ void Serializer::visit(node::VolumeNode* node) {
 
   if ( is_visible(node) ) {
     if ( !node->data.get_volume().empty() ) {
       add_bbox(node);
-      data_->volumenodes_.push_back(make_serialized_node(node->get_world_transform(), node->data));	  
+      data_->volumenodes_.push_back(node);
     }
 
     visit_children(node);
@@ -178,13 +196,13 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(PointLightNode* node) {
+/* virtual */ void Serializer::visit(node::PointLightNode* node) {
 
   if (is_visible(node)) {
 
     add_bbox(node);
 
-    data_->point_lights_.push_back(make_serialized_node(node->get_world_transform(), node->data));
+    data_->point_lights_.push_back(node);
 
     visit_children(node);
   }
@@ -192,14 +210,13 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(SpotLightNode* node) {
+/* virtual */ void Serializer::visit(node::SpotLightNode* node) {
 
   if (is_visible(node)) {
 
     add_bbox(node);
 
-    data_->spot_lights_
-        .push_back(make_serialized_node(node->get_world_transform(), node->data));
+    data_->spot_lights_.push_back(node);
 
     visit_children(node);
   }
@@ -207,15 +224,23 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(RayNode* node) {
+/* virtual */ void Serializer::visit(node::SunLightNode* node) {
+
+  if (is_visible(node)) {
+    data_->sun_lights_.push_back(node);
+
+    visit_children(node);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+/* virtual */ void Serializer::visit(node::RayNode* node) {
 
   if (is_visible(node)) {
 
     if (draw_rays_) {
-      GeometryNode::Configuration config;
-      config.set_geometry("gua_ray_geometry");
-      config.set_material("gua_bounding_box");
-      data_->rays_.push_back(make_serialized_node(node->get_world_transform(), config));
+      data_->rays_.push_back(node);
     }
 
     visit_children(node);
@@ -224,14 +249,13 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(TexturedQuadNode* node) {
+/* virtual */ void Serializer::visit(node::TexturedQuadNode* node) {
 
   if (is_visible(node)) {
 
     add_bbox(node);
 
-    data_->textured_quads_
-        .push_back(make_serialized_node(node->get_scaled_world_transform(), node->data));
+    data_->textured_quads_.push_back(node);
 
     visit_children(node);
   }
@@ -239,7 +263,7 @@ void Serializer::check(SerializedScene* output,
 
 ////////////////////////////////////////////////////////////////////////
 
-bool Serializer::is_visible(Node* node) const {
+bool Serializer::is_visible(node::Node* node) const {
   bool is_visible(true);
 
   if (enable_frustum_culling_) {
@@ -250,7 +274,9 @@ bool Serializer::is_visible(Node* node) const {
   }
 
   if (is_visible) {
-    is_visible = current_render_mask_.check(node->get_groups());
+    if (!node->get_groups().empty()) {
+      is_visible = current_render_mask_.check(node->get_groups());
+    }
   }
 
   return is_visible;
@@ -258,7 +284,7 @@ bool Serializer::is_visible(Node* node) const {
 
 ////////////////////////////////////////////////////////////////////////
 
-void Serializer::add_bbox(Node* node) const {
+void Serializer::add_bbox(node::Node* node) const {
   if (draw_bounding_boxes_) {
     auto bbox(node->get_bounding_box());
     data_->bounding_boxes_.push_back(bbox);
@@ -267,8 +293,8 @@ void Serializer::add_bbox(Node* node) const {
 
 ////////////////////////////////////////////////////////////////////////
 
-void Serializer::visit_children(Node* node) {
-  std::for_each(node->children_.begin(), node->children_.end(), std::bind(std::mem_fn(&Node::accept), std::placeholders::_1, std::ref(*this)));
+void Serializer::visit_children(node::Node* node) {
+  for (auto & c : node->children_) { c->accept(*this); }
 }
 
 }  // namespace gua

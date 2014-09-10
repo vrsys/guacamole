@@ -36,6 +36,8 @@ namespace physics {
  *
  * This Database stores collision shapes that can be shared among rigid bodies.
  * It can be accessed via string identifiers.
+ *
+ * \ingroup gua_databases
  */
 class GUA_DLL CollisionShapeDatabase : public Database<CollisionShape>,
                                public Singleton<CollisionShapeDatabase> {

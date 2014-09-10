@@ -22,7 +22,7 @@
 #ifndef GUA_KD_TREE_HPP
 #define GUA_KD_TREE_HPP
 
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/utils/KDTreeUtils.hpp>
@@ -30,7 +30,7 @@
 
 #include <set>
 #include <vector>
-#include <iostream>
+#include <iosfwd>
 #include <algorithm>
 
 namespace gua {
@@ -60,7 +60,7 @@ class KDTree {
    *                deleted depending on the supplied options.
    */
   void ray_test(Ray const& ray, aiMesh* mesh, PickResult::Options const& options,
-                Node* owner, std::set<PickResult>& hits) const;
+                node::Node* owner, std::set<PickResult>& hits) const;
 
  private:
 
@@ -127,7 +127,7 @@ class KDTree {
   KDNode* root_;
   std::vector<Triangle> triangles_;
 
-  mutable Node* current_owner_;
+  mutable node::Node* current_owner_;
   mutable PickResult::Options current_options_;
   mutable unsigned current_visit_flag_;
 };

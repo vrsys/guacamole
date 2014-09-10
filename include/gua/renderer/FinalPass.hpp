@@ -47,9 +47,14 @@ class FinalPass : public FullscreenPass {
    *
    */
   void print_shaders(std::string const& directory,
-                     std::string const& name) const;
+                     std::string const& name) const override;
 
-  bool pre_compile_shaders(RenderContext const& ctx);
+  bool pre_compile_shaders(RenderContext const& ctx) override;
+
+  void pre_rendering(Camera const& camera,
+                     SerializedScene const& scene,
+                     CameraMode eye,
+                     RenderContext const& ctx) override;
 
   /**
    *
@@ -61,24 +66,25 @@ class FinalPass : public FullscreenPass {
   /**
    *
    */
-  /* virtual */ LayerMapping const* get_gbuffer_mapping() const;
+  LayerMapping const* get_gbuffer_mapping() const override;
 
  protected:
 
   /**
    *
    */
-  /* virtual */ void rendering(Camera const& camera,
-                               SerializedScene const& scene,
-                               CameraMode eye,
-                               RenderContext const& ctx);
+  void rendering(Camera const& camera,
+                 SerializedScene const& scene,
+                 CameraMode eye,
+                 RenderContext const& ctx) override;
 
  private:
 
   /**
    *
    */
-  void set_uniforms(SerializedScene const& scene, RenderContext const& ctx);
+  void set_uniforms(SerializedScene const& scene,
+                    RenderContext const& ctx) override;
 
   std::unique_ptr<FinalUberShader> shader_;
 };

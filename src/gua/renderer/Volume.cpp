@@ -26,17 +26,11 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-#include <gua/utils/logger.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
-#if ASSIMP_VERSION == 3
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#else
-#include <assimp/assimp.hpp>
-#include <assimp/aiPostProcess.h>
-#include <assimp/aiScene.h>
-#endif
 
 #include <scm/gl_util/data/volume/volume_loader.h>
 #include <scm/gl_util/data/imaging/texture_loader.h>
@@ -62,7 +56,7 @@ namespace gua {
 	////////////////////////////////////////////////////////////////////////////////
 
 	Volume::Volume(std::string const& file_name)
-		: 
+		:
 		_volume_file_path(file_name),
 		_volume_boxes_ptr(),
 		upload_mutex_()
@@ -79,7 +73,7 @@ namespace gua {
 													(float)_volume_dimensions.y / (float)max_dimension_volume,
 													(float)_volume_dimensions.z / (float)max_dimension_volume);
 
-		MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
+		//MESSAGE("%f %f %f", _volume_dimensions_normalized.x, _volume_dimensions_normalized.y, _volume_dimensions_normalized.z);
 		//getchar();
 
 		bounding_box_ = math::BoundingBox<math::vec3>(math::vec3::zero(), _volume_dimensions_normalized);
@@ -114,7 +108,7 @@ namespace gua {
 		_color_transfer.add_stop(0.7f, scm::math::vec3f(1.0f, 1.0f, 1.0f));
 		_color_transfer.add_stop(1.0f, scm::math::vec3f(1.0f, 1.0f, 1.0f));
 #endif
-		
+
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -143,19 +137,19 @@ namespace gua {
 		//	bool                 in_color_mips = false,
 		//	const data_format    in_force_internal_format = FORMAT_NULL);
 
-		_volume_texture_ptr[ctx.id] = std::shared_ptr<Texture3D>(new Texture3D(_volume_file_path));// scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
+		_volume_texture_ptr[ctx.id] = std::make_shared<Texture3D>(_volume_file_path);// scm_volume_loader.load_texture_3d(*(ctx.render_device.get()), _volume_file_path, false);
 		_volume_texture_ptr[ctx.id]->upload_to(ctx);
 
-		MESSAGE("%s loaded!", _volume_file_path.c_str());
+		//MESSAGE("%s loaded!", _volume_file_path.c_str());
 
-		//scm::gl::texture_loader scm_image_loader; 
+		//scm::gl::texture_loader scm_image_loader;
 		_transfer_texture_ptr[ctx.id] = create_color_map(ctx, 255, _alpha_transfer, _color_transfer);
 		_transfer_texture_ptr[ctx.id]->upload_to(ctx);
 
 		//box_volume_geometry
 		_volume_boxes_ptr[ctx.id] =
 			scm::gl::box_volume_geometry_ptr(new scm::gl::box_volume_geometry(ctx.render_device, scm::math::vec3(0.0), _volume_dimensions_normalized));
-		
+
 		_sstate[ctx.id] = ctx.render_device->create_sampler_state(
 			scm::gl::FILTER_MIN_MAG_MIP_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
 	}
@@ -178,7 +172,7 @@ namespace gua {
 		if (!scm::data::build_lookup_table(color_lut, in_color, in_size)
 			|| !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {
 			std::cout << "Volume::create_color_map(): error during lookuptable generation" << std::endl;
-			return (std::shared_ptr<Texture2D>(new Texture2D(in_size, 1)));
+			return std::make_shared<Texture2D>(in_size, 1);
 		}
 		scm::scoped_array<float> combined_lut;
 
@@ -202,20 +196,20 @@ namespace gua {
 		in_data.push_back(combined_lut.get());
 
 		std::shared_ptr<Texture2D> new_tex =
-			std::shared_ptr<Texture2D>(new Texture2D(in_size, 1, FORMAT_RGBA_32F, in_data));// ctx.render_device->create_texture_2d(scm::math::vec2ui(in_size, 1), FORMAT_RGBA_8, 1, 1, 1, FORMAT_RGBA_32F, in_data);
+			std::make_shared<Texture2D>(in_size, 1, FORMAT_RGBA_32F, in_data);// ctx.render_device->create_texture_2d(scm::math::vec2ui(in_size, 1), FORMAT_RGBA_8, 1, 1, 1, FORMAT_RGBA_32F, in_data);
 
 		if (!new_tex) {
 			std::cerr << "Volume::create_color_map(): error during color map texture generation." << std::endl;
-			return (std::shared_ptr<Texture2D>(new Texture2D(in_size, 1)));
+			return std::make_shared<Texture2D>(in_size, 1);
 		}
 		else{
-			std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
+			//std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
 			return (new_tex);
 		}
 	}
 
 	bool Volume::update_color_map(RenderContext const& ctx,
-		std::shared_ptr<Texture2D> transfer_texture_ptr,
+		Texture2D const& transfer_texture_ptr,
 		const scm::data::piecewise_function_1d<float, float>& in_alpha,
 		const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const
 	{
@@ -225,14 +219,14 @@ namespace gua {
 		scm::scoped_array<scm::math::vec3f>  color_lut;
 		scm::scoped_array<float>             alpha_lut;
 
-		unsigned in_size = transfer_texture_ptr->width();
-		
+		unsigned in_size = transfer_texture_ptr.width();
+
 		color_lut.reset(new vec3f[in_size]);
 		alpha_lut.reset(new float[in_size]);
 
 		if (!scm::data::build_lookup_table(color_lut, in_color, in_size)
 			|| !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {
-			MESSAGE("volume_data::update_color_alpha_map(): error during lookuptable generation");
+			Logger::LOG_WARNING << "volume_data::update_color_alpha_map(): error during lookuptable generation" << std::endl;
 			return false;
 		}
 		scm::scoped_array<float> combined_lut;
@@ -246,17 +240,17 @@ namespace gua {
 			combined_lut[i * 4 + 3] = alpha_lut[i];
 		}
 
-		MESSAGE("generating color map texture data done.");
+		//MESSAGE("generating color map texture data done.");
 
-		MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
+		//MESSAGE("uploading texture data ( size: %d KiB)...", static_cast<double>(in_size * size_of_format(FORMAT_RGBA_32F)) / (1024.0));
 
 		texture_region ur(vec3ui(0u), vec3ui(in_size, 1, 1));
-		bool res = ctx.render_context->update_sub_texture(transfer_texture_ptr->get_buffer(ctx), ur, 0u, FORMAT_RGBA_32F, combined_lut.get());
+		bool res = ctx.render_context->update_sub_texture(transfer_texture_ptr.get_buffer(ctx), ur, 0u, FORMAT_RGBA_32F, combined_lut.get());
 
-		MESSAGE("uploading texture data done.");
+		//MESSAGE("uploading texture data done.");
 
 		if (!res) {
-			MESSAGE("Volume::update_color_alpha_map(): error during color map texture generation.");
+			Logger::LOG_WARNING << "Volume::update_color_alpha_map(): error during color map texture generation." << std::endl;
 			return false;
 		}
 
@@ -265,7 +259,7 @@ namespace gua {
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	void Volume::draw(RenderContext const& ctx) const {
+  void Volume::draw(RenderContext const& ctx) const {
 
 		// upload to GPU if neccessary
 		if (_volume_boxes_ptr.size() <= ctx.id || _volume_boxes_ptr[ctx.id] == nullptr) {
@@ -275,7 +269,7 @@ namespace gua {
 		if (_update_transfer_function){
 			for (auto color_map_texture : _transfer_texture_ptr)
 			{
-				update_color_map(ctx, color_map_texture, _alpha_transfer, _color_transfer);
+				update_color_map(ctx, *color_map_texture, _alpha_transfer, _color_transfer);
 			}
 			_update_transfer_function = false;
 		}
@@ -285,14 +279,14 @@ namespace gua {
 		ctx.render_context->bind_texture( _volume_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 5);
 		ctx.render_context->bind_texture(_transfer_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 6);
 		scm::gl::program_ptr p = ctx.render_context->current_program();
-		p->uniform_sampler("volume_texture", 5);			
+		p->uniform_sampler("volume_texture", 5);
 		p->uniform_sampler("transfer_texture", 6);
 		p->uniform("sampling_distance", _step_size);
 		//p->uniform("iso_value", 0.8f);
 		p->uniform("volume_bounds", _volume_dimensions_normalized);
-		
+
 		ctx.render_context->apply();
-		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);		
+		_volume_boxes_ptr[ctx.id]->draw(ctx.render_context);
 	}
 
 	void Volume::draw_proxy(RenderContext const& ctx) const {
@@ -313,7 +307,7 @@ namespace gua {
 		if (_update_transfer_function){
 			for (auto color_map_texture : _transfer_texture_ptr)
 			{
-				update_color_map(ctx, color_map_texture, _alpha_transfer, _color_transfer);
+				update_color_map(ctx, *color_map_texture, _alpha_transfer, _color_transfer);
 			}
 			_update_transfer_function = false;
 		}
@@ -325,7 +319,7 @@ namespace gua {
 			std::cerr << "No Transfer Texture2D ptr!" << std::endl;
 			return;
 		}
-		
+
 		cs->set_uniform(ctx, _volume_texture_ptr[ctx.id], "volume_texture");
 		cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id], "transfer_texture");
 		cs->set_uniform(ctx, _step_size, "sampling_distance");
@@ -339,13 +333,13 @@ namespace gua {
 	////////////////////////////////////////////////////////////////////////////////
 
 	void Volume::ray_test(Ray const& ray, PickResult::Options options,
-		Node* owner, std::set<PickResult>& hits) {
+		node::Node* owner, std::set<PickResult>& hits) {
 
 		//kd_tree_.ray_test(ray, mesh_, options, owner, hits);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
-	
+
 	float Volume::step_size() const
 	{
 		return _step_size;
@@ -355,7 +349,7 @@ namespace gua {
 	{
 		_step_size = in_step_size;
 	}
-		
+
 	void Volume::set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color)
 	{
 		_alpha_transfer.clear();

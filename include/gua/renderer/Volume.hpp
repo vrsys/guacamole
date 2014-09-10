@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/Geometry.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/Texture3D.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
@@ -65,7 +65,7 @@ namespace gua {
 	* Do not use this class directly, it is just used by the Geometry class to
 	* store the individual meshes of a file.
 	*/
-	class Volume : public Geometry {
+	class Volume : public GeometryRessource {
 	public:
 
 		/**
@@ -91,7 +91,7 @@ namespace gua {
 		*
 		* \param context          The RenderContext to draw onto.
 		*/
-		void draw(RenderContext const& context) const;
+    void draw(RenderContext const& context) const;
 
 		/**
 		* Draws the Volume.
@@ -112,13 +112,15 @@ namespace gua {
 		void set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const;
 
 		void ray_test(Ray const& ray, PickResult::Options options,
-			Node* owner, std::set<PickResult>& hits);
+			node::Node* owner, std::set<PickResult>& hits);
 
 
 		float step_size() const;
 		void step_size(const float size);
 
 		void set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color);
+
+    /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const { throw std::runtime_error("not implemented yet"); };
 
 	private:
 		void upload_to(RenderContext const& context) const;
@@ -129,7 +131,7 @@ namespace gua {
 			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
 
 		bool update_color_map(RenderContext const& context,
-			std::shared_ptr<Texture2D>,
+			Texture2D const&,
 			const scm::data::piecewise_function_1d<float, float>& in_alpha,
 			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
 		
@@ -154,11 +156,8 @@ namespace gua {
 
 		mutable std::vector<scm::gl::sampler_state_ptr> _sstate;
 
-#if GUA_COMPILER == GUA_COMPILER_MSVC && SCM_COMPILER_VER <= 1700
-		mutable boost::mutex upload_mutex_;
-#else
 		mutable std::mutex upload_mutex_;
-#endif
+
 
 		scm::data::piecewise_function_1d<float, float>                 _alpha_transfer;
 		scm::data::piecewise_function_1d<float, scm::math::vec3f>      _color_transfer;

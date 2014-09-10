@@ -37,11 +37,12 @@
 
 namespace gua {
 
-class Pipeline;
-struct PipelineConfiguration;
-struct SerializedScene;
 struct Camera;
+struct SerializedScene;
+struct View;
 class LayerMapping;
+class Pipeline;
+class SceneGraph;
 
 /**
  * A database for accessing data.
@@ -64,7 +65,10 @@ class Pass {
    */
   Pass(Pipeline* pipeline);
 
-  virtual void render_scene(Camera const& camera, RenderContext const& ctx) = 0;
+  virtual void render_scene(Camera const& camera,
+                            SceneGraph const& current_graph,
+                            RenderContext const& ctx,
+                            std::size_t viewid) = 0;
 
   virtual void print_shaders(std::string const& directory,
                              std::string const& name) const = 0;
@@ -76,9 +80,10 @@ class Pass {
 
   virtual void create(
       RenderContext const& ctx,
-      PipelineConfiguration const& config,
       std::vector<std::pair<BufferComponent,
                             scm::gl::sampler_state_desc> > const& layers);
+
+  virtual void cleanup(RenderContext const& ctx);
 
   void set_inputs(std::vector<std::shared_ptr<StereoBuffer>> inputs);
 
@@ -91,16 +96,11 @@ class Pass {
                    CameraMode eye,
                    RenderContext const& ctx) const;
 
-  void set_camera_matrices(ShaderProgram const& shader,
-                           Camera const& camera,
-                           SerializedScene const& scene,
-                           CameraMode eye,
-                           RenderContext const& ctx) const;
-
   Pipeline* pipeline_;
   std::shared_ptr<StereoBuffer> gbuffer_;
 
   std::vector<std::shared_ptr<StereoBuffer>> inputs_;
+  bool initialized_;
 };
 
 }

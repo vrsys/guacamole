@@ -21,18 +21,24 @@
 
 // header
 #include <gua/guacamole.hpp>
-#include <gua/renderer/MeshLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/BuiltInTextures.hpp>
 #include <gua/databases/Resources.hpp>
 
-namespace gua {
+#ifdef GUACAMOLE_GLFW3
+#include <GLFW/glfw3.h>
+#endif
 
-void create_resource_material(std::string const& material_name,
-                              std::vector<unsigned char> const& shading_model_resource,
-                              std::vector<unsigned char> const& material_resource);
+namespace gua {
 
 void init(int argc, char** argv) {
   static scm::shared_ptr<scm::core> scm_core(new scm::core(argc, argv));
+
+#ifdef GUACAMOLE_GLFW3
+  if (!glfwInit()) {
+    Logger::LOG_ERROR << "Failed to initialize GLFW!" << std::endl;
+  }
+#endif
 
   create_resource_material("gua_bounding_box",
                             Resources::materials_gua_bounding_box_gsd,
@@ -45,40 +51,40 @@ void init(int argc, char** argv) {
   gua::TextureDatabase::instance()->add("gua_default_texture", std::shared_ptr<Texture2D>(new DefaultTexture()));
   gua::TextureDatabase::instance()->add("gua_loading_texture", std::shared_ptr<Texture2D>(new LoadingTexture()));
 
-  MeshLoader mesh_loader;
+  TriMeshLoader mesh_loader;
 
   GeometryDatabase::instance()->add(
       "gua_light_sphere_proxy",
-      std::shared_ptr<Geometry>(
-          static_cast<Geometry*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryRessource>(
+      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_light_sphere_obj).c_str(),
               Resources::geometry_gua_light_sphere_obj.size(), false)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_light_cone_proxy",
-      std::shared_ptr<Geometry>(
-          static_cast<Geometry*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryRessource>(
+      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_light_cone_obj).c_str(),
               Resources::geometry_gua_light_cone_obj.size(), false)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_ray_geometry",
-      std::shared_ptr<Geometry>(
-          static_cast<Geometry*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryRessource>(
+      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_ray_obj).c_str(),
               Resources::geometry_gua_ray_obj.size(), false)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_plane_geometry",
-      std::shared_ptr<Geometry>(
-         static_cast<Geometry*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryRessource>(
+      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_plane_obj).c_str(),
               Resources::geometry_gua_plane_obj.size(), true)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_bounding_box_geometry",
-      std::shared_ptr<Geometry>(
-          static_cast<Geometry*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryRessource>(
+      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_bounding_box_obj).c_str(),
               Resources::geometry_gua_bounding_box_obj.size(), false)[0])));
 }
