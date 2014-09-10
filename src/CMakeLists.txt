@@ -102,8 +102,8 @@ SOURCE_GROUP("utils" FILES ${GUACAMOLE_UTILS_INC})
 SOURCE_GROUP("utils" FILES ${GUACAMOLE_UTILS_SRC})
 
 IF (GUACAMOLE_ENABLE_PHYSICS)
-SOURCE_GROUP("physics" FILES ${GUACAMOLE_PHYSICS_INC})
-SOURCE_GROUP("physics" FILES ${GUACAMOLE_PHYSICS_SRC})
+  SOURCE_GROUP("physics" FILES ${GUACAMOLE_PHYSICS_INC})
+  SOURCE_GROUP("physics" FILES ${GUACAMOLE_PHYSICS_SRC})
 ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 
 SOURCE_GROUP("math" FILES ${GUACAMOLE_MATH_INC})
@@ -199,3 +199,41 @@ ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 
 # set dependencies
 ADD_DEPENDENCIES(guacamole guarc CompileResources)
+
+###############################################################################
+# install 
+###############################################################################
+
+IF (MSVC)
+  install (TARGETS guacamole
+    CONFIGURATIONS Release
+    RUNTIME DESTINATION bin/Release
+    LIBRARY DESTINATION lib/Release
+    ARCHIVE DESTINATION lib/Release
+  )
+
+  install (TARGETS guacamole
+    CONFIGURATIONS Debug
+    RUNTIME DESTINATION bin/Debug
+    LIBRARY DESTINATION lib/Debug
+    ARCHIVE DESTINATION lib/Debug
+  )
+ELSEIF (UNIX)
+  install (TARGETS guacamole 
+    RUNTIME DESTINATION lib
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+  )
+ENDIF (MSVC)
+
+# header files 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../include/gua/ DESTINATION include/gua FILES_MATCHING PATTERN "*.hpp")
+
+# shader and material resources
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../resources/ DESTINATION resources 
+        FILES_MATCHING 
+        PATTERN "*.frag" 
+        PATTERN "*.vert" 
+        PATTERN "*.glsl" 
+        PATTERN "*.gmd" 
+        PATTERN "*.gsd")

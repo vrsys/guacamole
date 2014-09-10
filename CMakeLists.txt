@@ -39,6 +39,8 @@ configure_file(
   ${PROJECT_BINARY_DIR}/include/gua/config.hpp
   )
 
+install(FILES ${PROJECT_BINARY_DIR}/include/gua/config.hpp DESTINATION include/gua)
+
 # add the binary tree to the search path for include files
 # so that we will find the generated config.hpp
 include_directories("${PROJECT_BINARY_DIR}/include")
