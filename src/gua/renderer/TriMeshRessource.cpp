@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
+#include <gua/renderer/TriMeshRenderer.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/Logger.hpp>
@@ -220,8 +221,8 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// /*virtual*/ std::shared_ptr<GeometryUberShader> TriMeshRessource::create_ubershader() const {
-//   return std::make_shared<TriMeshUberShader>();
-// }
+std::shared_ptr<RessourceRenderer> TriMeshRessource::create_renderer() const {
+  return std::make_shared<TriMeshRenderer>();
+}
 
 }

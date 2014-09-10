@@ -28,6 +28,7 @@
 #include <gua/renderer/SerializedScene.hpp>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/FrameBufferObject.hpp>
+#include <gua/renderer/RessourceRenderer.hpp>
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/math.hpp>
 
@@ -94,21 +95,24 @@ class Pipeline {
   void                              bind_postfx_buffer()  const;
   std::shared_ptr<Texture2D> const& get_postfx_buffer()   const;
   std::list<PipelinePass*>   const& get_passes()          const;
-  GBuffer                    const& get_gbuffer()         const;
+  GBuffer                         & get_gbuffer()         const;
   RenderContext              const& get_context()         const;
   SerializedScene            const& get_scene()           const;
 
+  std::shared_ptr<RessourceRenderer> get_renderer(GeometryRessource const& type);
+
  private:
-  std::list<PipelinePass*>  passes_;
-  GBuffer*                  gbuffer_;
-  WindowBase*               window_;
-  SerializedScene           current_scene_;
+  std::list<PipelinePass*>                  passes_;
+  GBuffer*                                  gbuffer_;
+  WindowBase*                               window_;
+  SerializedScene                           current_scene_;
 
   std::array<FrameBufferObject*, 2>         postfx_fbo_;
   std::array<std::shared_ptr<Texture2D>, 2> postfx_buffer_;
   bool                                      ping_pong_;
 
-  bool dirty_;
+  bool                                      dirty_;
+  std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_; 
 };
 
 }

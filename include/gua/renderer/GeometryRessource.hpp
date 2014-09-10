@@ -35,7 +35,7 @@
 
 namespace gua {
 
-class GeometryUberShader;
+class RessourceRenderer;
 
 struct Ray;
 
@@ -91,6 +91,7 @@ class GUA_DLL GeometryRessource {
     return bounding_box_;
   }
 
+  virtual std::shared_ptr<RessourceRenderer> create_renderer() const = 0;
 
  protected:
 

@@ -90,6 +90,8 @@ class TriMeshRessource : public GeometryRessource {
 
   std::vector<unsigned int> get_face(unsigned int i) const;
 
+  /*virtual*/ std::shared_ptr<RessourceRenderer> create_renderer() const;
+
  private:
 
   void upload_to(RenderContext const& context) const;

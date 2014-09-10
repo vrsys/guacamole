@@ -36,101 +36,101 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 
-namespace gua {
+// namespace gua {
 
-	////////////////////////////////////////////////////////////////////////////////
+// 	////////////////////////////////////////////////////////////////////////////////
 
-	std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>
-		VolumeLoader::loaded_files_ =
-		std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>();
+// 	std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>
+// 		VolumeLoader::loaded_files_ =
+// 		std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>();
 
-	////////////////////////////////////////////////////////////////////////////////
-	VolumeLoader::VolumeLoader() : GeometryLoader(), _supported_file_extensions() {
-		_supported_file_extensions.insert("raw");
-		_supported_file_extensions.insert("vol");
-	}
+// 	////////////////////////////////////////////////////////////////////////////////
+// 	VolumeLoader::VolumeLoader() : GeometryLoader(), _supported_file_extensions() {
+// 		_supported_file_extensions.insert("raw");
+// 		_supported_file_extensions.insert("vol");
+// 	}
 
-  ////////////////////////////////////////////////////////////////////////////////
-	std::shared_ptr<node::Node> VolumeLoader::create_volume_from_file(std::string const& node_name,
-																std::string const& file_name,
-																unsigned flags)
-	{
+//   ////////////////////////////////////////////////////////////////////////////////
+// 	std::shared_ptr<node::Node> VolumeLoader::create_volume_from_file(std::string const& node_name,
+// 																std::string const& file_name,
+// 																unsigned flags)
+// 	{
 
-		std::shared_ptr<node::Node> cached_node;
-		std::string key(file_name + "_" + string_utils::to_string(flags));
+// 		std::shared_ptr<node::Node> cached_node;
+// 		std::string key(file_name + "_" + string_utils::to_string(flags));
 
-		auto searched(loaded_files_.find(key));
-		if (searched != loaded_files_.end()) {
+// 		auto searched(loaded_files_.find(key));
+// 		if (searched != loaded_files_.end()) {
 
-			cached_node = searched->second;
+// 			cached_node = searched->second;
 
-		}
-		else {
+// 		}
+// 		else {
 
-			if (is_supported(file_name)) {
-				cached_node = load(file_name, flags);
-				cached_node->update_cache();
-				loaded_files_.insert(std::make_pair(key, cached_node));
+// 			if (is_supported(file_name)) {
+// 				cached_node = load(file_name, flags);
+// 				cached_node->update_cache();
+// 				loaded_files_.insert(std::make_pair(key, cached_node));
 
-				// normalize volume position and rotation
-				if (flags & VolumeLoader::NORMALIZE_POSITION || flags & VolumeLoader::NORMALIZE_SCALE) {
-					auto bbox = cached_node->get_bounding_box();
+// 				// normalize volume position and rotation
+// 				if (flags & VolumeLoader::NORMALIZE_POSITION || flags & VolumeLoader::NORMALIZE_SCALE) {
+// 					auto bbox = cached_node->get_bounding_box();
 
-					if (flags & VolumeLoader::NORMALIZE_POSITION) {
-						auto center((bbox.min + bbox.max)*0.5);
-						cached_node->translate(-center);
-					}
+// 					if (flags & VolumeLoader::NORMALIZE_POSITION) {
+// 						auto center((bbox.min + bbox.max)*0.5);
+// 						cached_node->translate(-center);
+// 					}
 
-					if (flags & VolumeLoader::NORMALIZE_SCALE) {
-						auto size(bbox.max - bbox.min);
-						auto max_size(std::max(std::max(size.x, size.y), size.z));
-						cached_node->scale(1.f / max_size);
-					}
+// 					if (flags & VolumeLoader::NORMALIZE_SCALE) {
+// 						auto size(bbox.max - bbox.min);
+// 						auto max_size(std::max(std::max(size.x, size.y), size.z));
+// 						cached_node->scale(1.f / max_size);
+// 					}
 
-				}
-			}
+// 				}
+// 			}
 
-			if (!cached_node) {
+// 			if (!cached_node) {
 
-				Logger::LOG_WARNING << "Unable to load " << file_name << ": Volume Type is not supported!" << std::endl;
-			}
-		}
+// 				Logger::LOG_WARNING << "Unable to load " << file_name << ": Volume Type is not supported!" << std::endl;
+// 			}
+// 		}
 
-		if (cached_node) {
-			auto copy(cached_node->deep_copy());
+// 		if (cached_node) {
+// 			auto copy(cached_node->deep_copy());
 
-			copy->set_name(node_name);
-			return copy;
-		}
+// 			copy->set_name(node_name);
+// 			return copy;
+// 		}
 
-		return std::make_shared<node::TransformNode>(node_name);
-	}
+// 		return std::make_shared<node::TransformNode>(node_name);
+// 	}
 
-	std::shared_ptr<node::Node> VolumeLoader::load(std::string const& file_name,
-											 unsigned flags)
-	{
-		try {
-			GeometryDatabase::instance()->add(
-				file_name, std::make_shared<Volume>(file_name));
+// 	std::shared_ptr<node::Node> VolumeLoader::load(std::string const& file_name,
+// 											 unsigned flags)
+// 	{
+// 		try {
+// 			GeometryDatabase::instance()->add(
+// 				file_name, std::make_shared<Volume>(file_name));
 
-			auto result = std::make_shared<node::VolumeNode>("unnamed_volume");
-			result->data.set_volume(file_name);
+// 			auto result = std::make_shared<node::VolumeNode>("unnamed_volume");
+// 			result->data.set_volume(file_name);
 
-			return result;
+// 			return result;
 
-		}
-		catch (std::exception &e) {
-			Logger::LOG_WARNING << "Failed to load Volume object \"" << file_name << "\": " << e.what() << std::endl;
-			return nullptr;
-		}
-	}
+// 		}
+// 		catch (std::exception &e) {
+// 			Logger::LOG_WARNING << "Failed to load Volume object \"" << file_name << "\": " << e.what() << std::endl;
+// 			return nullptr;
+// 		}
+// 	}
 
-	bool VolumeLoader::is_supported(std::string const& file_name) const {
-		std::vector<std::string> filename_decomposition =
-			gua::string_utils::split(file_name, '.');
-		return filename_decomposition.empty()
-			? false
-			: _supported_file_extensions.count(filename_decomposition.back()) >	0;
-	}
+// 	bool VolumeLoader::is_supported(std::string const& file_name) const {
+// 		std::vector<std::string> filename_decomposition =
+// 			gua::string_utils::split(file_name, '.');
+// 		return filename_decomposition.empty()
+// 			? false
+// 			: _supported_file_extensions.count(filename_decomposition.back()) >	0;
+// 	}
 
-}
+// }
