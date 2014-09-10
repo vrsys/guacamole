@@ -31,3 +31,5 @@ tags
 .nfs*
 .vim.custom
 tests/tests
+examples/input/input
+examples/multicontext/multicontext
