@@ -19,48 +19,25 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/GBufferPass.hpp>
+#ifndef GUA_TRI_MESH_RENDERER_HPP
+#define GUA_TRI_MESH_RENDERER_HPP
 
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
-#include <gua/utils/Logger.hpp>
+// guacamole_headers
+#include <gua/renderer/RessourceRenderer.hpp>
+
+// external headers
 
 namespace gua {
 
-void GBufferPass::process(Pipeline* pipe) {
-  RenderContext const& ctx(pipe->get_context());
-  pipe->get_gbuffer().bind(ctx);
+class GUA_DLL TriMeshRenderer : public RessourceRenderer {
+ public:
+   void draw(std::shared_ptr<GeometryRessource> const& object, 
+             std::shared_ptr<Material> const& material,
+             math::mat4 const& transformation,
+             Pipeline* pipe) const;
 
-  for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
-    auto const& ressources = type_ressource_pair.second;
-    std::shared_ptr<RessourceRenderer> renderer;
-
-    for (auto const& object : ressources) {
-
-      auto const& ressource = GeometryDatabase::instance()->lookup(object->get_filename());
-      if (ressource) {
-        
-        auto const& material = MaterialDatabase::instance()->lookup(object->get_material());
-        if (material) {
-
-          if (!renderer) {
-            renderer = pipe->get_renderer(*ressource);
-          }
-
-          renderer->draw(ressource, material, object->get_cached_world_transform(), pipe);
-          
-        } else {
-          Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object->get_material() << std::endl;
-        }
-
-      } else {
-        Logger::LOG_WARNING << "GBufferPass::process(): Cannot find geometry ressource: " << object->get_filename() << std::endl;
-      }
-    }
-  }
-} 
+};
 
 }
+
+#endif  // GUA_TRI_MESH_RENDERER_HPP
