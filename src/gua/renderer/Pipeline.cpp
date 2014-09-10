@@ -159,17 +159,17 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
             config.camera().eye_l, config.camera().screen_l,
             config, current_scene_);
 
-
-
   // process all passes
   ping_pong_ = false;
 
   for (auto pass: passes_) {
+    
+    if (pass->is_fullscreen_pass()) {
+      ping_pong_ = !ping_pong_;
+    }
+    
     pass->process(this);
-  
-    ping_pong_ = !ping_pong_;
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

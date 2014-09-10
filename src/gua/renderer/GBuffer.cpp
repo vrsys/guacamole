@@ -69,7 +69,6 @@ void GBuffer::remove_buffers(RenderContext const& ctx) {
   if (depth_buffer_) {
     depth_buffer_->make_non_resident(ctx);
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
