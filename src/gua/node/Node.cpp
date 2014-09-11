@@ -46,7 +46,6 @@ namespace node {
     bounding_box_(),
     child_dirty_(true),
     self_dirty_(true),
-    group_list_(),
     user_data_()
   {}
 
@@ -62,7 +61,7 @@ namespace node {
 
   void Node::update_cache() {
 
-    if (self_dirty_) 
+    if (self_dirty_)
     {
       math::mat4 old_world_trans(world_transform_);
       if (is_root()) {
@@ -128,30 +127,14 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::add_to_group(std::string const & group) {
-
-    group_list_.insert(group);
+  gua::utils::TagList const& Node::get_tags() const {
+    return tags_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::add_to_groups(std::set<std::string> const & groups) {
-
-    group_list_.insert(groups.begin(), groups.end());
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  void Node::remove_from_group(std::string const & group) {
-
-    group_list_.erase(group);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  bool Node::is_in_group(std::string const & group) const {
-
-    return group_list_.find(group) != group_list_.end();
+  gua::utils::TagList& Node::get_tags() {
+    return tags_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +275,7 @@ namespace node {
 
   std::set<PickResult> const Node::ray_test(RayNode const& ray,
                                             PickResult::Options options,
-                                            std::string const& mask) {
+                                            Mask const& mask) {
 
     return ray_test(ray.get_world_ray(), options, mask);
   }
@@ -301,10 +284,9 @@ namespace node {
 
   std::set<PickResult> const Node::ray_test(Ray const& ray,
                                             PickResult::Options options,
-                                            std::string const& mask) {
-    Mask pick_mask(mask);
+                                            Mask const& mask) {
     std::set<PickResult> hits;
-    ray_test_impl(ray, options, pick_mask, hits);
+    ray_test_impl(ray, options, mask, hits);
     return hits;
   }
   ////////////////////////////////////////////////////////////////////////////////
@@ -339,7 +321,7 @@ namespace node {
 
   std::shared_ptr<Node> Node::deep_copy() const {
     std::shared_ptr<Node> copied_node = copy();
-    copied_node->add_to_groups(group_list_);
+    copied_node->tags_ = tags_;
 
     for (auto child : children_)
       copied_node->add_child(child->deep_copy());

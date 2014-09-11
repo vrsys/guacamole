@@ -19,25 +19,92 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_FINAL_UBER_SHADER_HPP
-#define GUA_FINAL_UBER_SHADER_HPP
+#ifndef GUA_PIPELINE_PASS_HPP
+#define GUA_PIPELINE_PASS_HPP
 
-// guacamole headers
-#include <gua/renderer/UberShader.hpp>
+#include <string>
 
 namespace gua {
 
-/**
- *
- */
-class FinalUberShader : public UberShader {
+class Pipeline;
 
+class PipelinePass {
  public:
 
-  void create(std::set<std::string> const& material_names,
-              std::vector<LayerMapping const*> const& inputs);
+  PipelinePass& set_source(std::string const& source) {
+
+    std::string header(R"(
+      #version 420
+
+      uniform ...
+
+    )");
+
+    source_ = header + source;
+
+    return *this;
+  }
+
+  void process(Pipeline* pipe) {}
+
+  friend class Pipeline;
+
+ protected:
+  PipelinePass() {}
+  ~PipelinePass() {}
+
+ private:
+  std::string source_;
 };
+
+
+
+
+
+
+class LightingPass : public PipelinePass {
+ public:
+
+  friend class Pipeline;
+
+ protected:
+  LightingPass() {
+    set_source(R"(
+      ...
+    )");
+  }
+  ~LightingPass() {}
+};
+
+
+
+
+
+class SSAOPass : public PipelinePass {
+ public:
+
+  SSAOPass& set_radius(float val) {
+    return *this;
+  }
+
+  SSAOPass& set_intensity(float val) {
+    return *this;
+  }
+
+  friend class Pipeline;
+
+ protected:
+  SSAOPass() {
+    set_source(R"(
+      ...
+    )");
+  }
+  ~SSAOPass() {}
+};
+
+
+
 
 }
 
-#endif  // GUA_FINAL_UBER_SHADER_HPP
+#endif  // GUA_PIPELINE_PASS_HPP

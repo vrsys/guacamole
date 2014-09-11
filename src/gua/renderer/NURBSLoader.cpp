@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 // class header
 #include <gua/renderer/NURBSLoader.hpp>
 
@@ -96,3 +96,4 @@ bool NURBSLoader::is_supported(std::string const& file_name) const
 }
 
 }  // namespace gua
+#endif

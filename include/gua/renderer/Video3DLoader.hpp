@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 #ifndef GUA_VIDEO3D_LOADER_HPP
 #define GUA_VIDEO3D_LOADER_HPP
 
@@ -66,3 +66,4 @@ class GUA_DLL Video3DLoader : public GeometryLoader {
 }
 
 #endif  // GUA_VIDEO3D_LOADER_HPP
+#endif

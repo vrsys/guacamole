@@ -36,16 +36,15 @@
 
 void set_pipe_defaults(gua::Pipeline* pipe, unsigned width, unsigned height)
 {
-  pipe->config.set_left_resolution(gua::math::vec2ui(width, height));
-  pipe->config.set_right_resolution(gua::math::vec2ui(width, height));
-  pipe->config.set_enable_fps_display(true);
-  pipe->config.set_enable_frustum_culling(true);
-  pipe->config.set_enable_backface_culling(true);
-  pipe->config.set_enable_preview_display(true);
-  pipe->config.set_enable_bbox_display(true);
-  pipe->config.set_near_clip(0.2f);
-  pipe->config.set_far_clip(1000.0f);
-  pipe->config.set_background_color(gua::utils::Color3f(0.0, 0.0f, 0.0f));
+  pipe->config.set_resolution(gua::math::vec2ui(width, height));
+  // pipe->config.set_enable_fps_display(true);
+  // pipe->config.set_enable_frustum_culling(true);
+  // pipe->config.set_enable_backface_culling(true);
+  // pipe->config.set_enable_preview_display(true);
+  // pipe->config.set_enable_bbox_display(true);
+  // pipe->config.set_near_clip(0.2f);
+  // pipe->config.set_far_clip(1000.0f);
+  // pipe->config.set_background_color(gua::utils::Color3f(0.0, 0.0f, 0.0f));
 }
 
 void set_window_default(gua::WindowBase* window, unsigned width, unsigned height)
@@ -74,13 +73,13 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   gua::TriMeshLoader trimeshloader;
-  gua::NURBSLoader nurbsloader;
+  // gua::NURBSLoader nurbsloader;
   // gua::Video3DLoader videoloader;
 
   // auto video_geode(videoloader.create_geometry_from_file("video_geode", argv[1]));
   auto teapot_geode(trimeshloader.create_geometry_from_file("teapot_geode", "data/objects/teapot.obj", "data/materials/Red.gmd", gua::TriMeshLoader::DEFAULTS));
   auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", "data/materials/White.gmd", gua::TriMeshLoader::DEFAULTS));
-  auto nurbs_geode(nurbsloader.create_geometry_from_file("nurbs_geode", "data/objects/teapot.igs", "data/materials/Orange.gmd", gua::NURBSLoader::DEFAULTS));
+  // auto nurbs_geode(nurbsloader.create_geometry_from_file("nurbs_geode", "data/objects/teapot.igs", "data/materials/Orange.gmd", gua::NURBSLoader::DEFAULTS));
 
   auto video = graph.add_node<gua::node::TransformNode>("/", "video");
   auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
@@ -89,7 +88,7 @@ int main(int argc, char** argv) {
 
   // graph.add_node("/video", video_geode);
   graph.add_node("/teapot", teapot_geode);
-  graph.add_node("/nurbs", nurbs_geode);
+  // graph.add_node("/nurbs", nurbs_geode);
   graph.add_node("/plate", plate_geode);
 
 
@@ -216,10 +215,10 @@ int main(int argc, char** argv) {
 #endif
 
 
-  pipe->set_window(window);
-  pipe2->set_window(window2);
-  pipe3->set_window(window3);
-  pipe4->set_window(window4);
+  // pipe->set_window(window);
+  // pipe2->set_window(window2);
+  // pipe3->set_window(window3);
+  // pipe4->set_window(window4);
 
 #if 1
   gua::Renderer renderer({ pipe,
@@ -240,13 +239,13 @@ int main(int argc, char** argv) {
   teapot->translate(gua::math::vec3{ -2.0f, -1.5f, -4.0f });
 
   // tranform nurbs
-  bbox = nurbs_geode->get_bounding_box();
-  nurbs->translate(-bbox.center());
-  nurbs->scale(5.0f / std::sqrt(bbox.size(0)*bbox.size(0) +
-    bbox.size(1)*bbox.size(1) +
-    bbox.size(2)*bbox.size(2)));
-  nurbs->rotate(-90, 1, 0, 0);
-  nurbs->translate(gua::math::vec3{ 3.0f, -1.5f, -4.0f });
+  // bbox = nurbs_geode->get_bounding_box();
+  // nurbs->translate(-bbox.center());
+  // nurbs->scale(5.0f / std::sqrt(bbox.size(0)*bbox.size(0) +
+  //   bbox.size(1)*bbox.size(1) +
+  //   bbox.size(2)*bbox.size(2)));
+  // nurbs->rotate(-90, 1, 0, 0);
+  // nurbs->translate(gua::math::vec3{ 3.0f, -1.5f, -4.0f });
 
   // transform plate
   plate->scale(0.07);
@@ -274,7 +273,7 @@ int main(int argc, char** argv) {
 
    teapot_geode->rotate(0.3, 0, 1, 0);
 
-   nurbs_geode->rotate(0.3, 0, 0, 1);
+   // nurbs_geode->rotate(0.3, 0, 0, 1);
 
    plate->translate(-plate->get_bounding_box().center());
    plate->rotate(0.04f, 0, 1, 0);

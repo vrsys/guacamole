@@ -19,28 +19,52 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/GeometryUberShader.hpp>
+#include <gua/utils/TagRegister.hpp>
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/UberShaderFactory.hpp>
-#include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/memory.hpp>
 
 namespace gua {
+namespace utils {
 
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
 
-GeometryUberShader::GeometryUberShader()
-: UberShader()
-{}
+  std::bitset<GUA_MAX_TAG_COUNT> const& TagRegister::get_tag(
+                                                      std::string const& tag) {
+    if (registered_tags_.find(tag) == registered_tags_.end()) {
 
-////////////////////////////////////////////////////////////////////////////////
+      auto tag_count(registered_tags_.size());
 
-GeometryUberShader::~GeometryUberShader()
-{}
+      if (tag_count < GUA_MAX_TAG_COUNT) {
+
+        std::bitset<GUA_MAX_TAG_COUNT> new_set;
+        new_set.set(tag_count);
+
+        registered_tags_[tag] = new_set;
+      } else {
+        Logger::LOG_WARNING << "Unable to add new tag: Maximum number of tags is " << GUA_MAX_TAG_COUNT << "!" << std::endl;
+        return default_tag_;
+      }
+    }
+
+    return registered_tags_[tag];
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::vector<std::string> const TagRegister::get_tag_strings(
+                                  std::bitset<GUA_MAX_TAG_COUNT> const& tags) {
+
+    std::vector<std::string> tag_strings;
+
+    for (auto const& tag : registered_tags_) {
+      if ((tag.second & tags).any()) {
+        tag_strings.push_back(tag.first);
+      }
+    }
+
+    return tag_strings;
+
+  }
 
 }
-
+}

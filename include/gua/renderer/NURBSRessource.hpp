@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 #ifndef GUA_NURBS_RESSOURCE_HPP
 #define GUA_NURBS_RESSOURCE_HPP
 
@@ -133,3 +133,4 @@ class GUA_DLL NURBSRessource : public GeometryRessource {
 }  //namespace gua
 
 #endif // GUA_NURBS_RESSOURCE_HPP
+#endif

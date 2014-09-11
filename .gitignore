@@ -31,10 +31,10 @@ guarc/guarc
 guacamole.sublime-workspace
 include/gua/generated/*
 src/gua/generated/*
-tags
 .nfs*
 .vim.custom
 tests/tests
 plugins/guacamole-oculus/example-oculus/example-oculus
 examples/multicontext/multicontext
 examples/input/input
+examples/tags/tags

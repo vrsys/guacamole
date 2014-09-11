@@ -18,58 +18,74 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#if 0
-// class header
-#include <gua/renderer/Video3DLoader.hpp>
 
-// guacamole headers
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/node/Video3DNode.hpp>
-#include <gua/renderer/Video3DRessource.hpp>
-#include <gua/renderer/Video3DUberShader.hpp>
+#include <gua/utils/TagList.hpp>
+
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
+namespace utils {
 
-  ////////////////////////////////////////////////////////////////////////////////
-
-  Video3DLoader::Video3DLoader() 
-    : GeometryLoader(), 
-      _supported_file_extensions() 
-  {
-    _supported_file_extensions.insert("ks");    
+  /////////////////////////////////////////////////////////////////////////////////
+  TagList::TagList(std::vector<std::string> const& tags) {
+    add_tags(tags);
   }
 
+  /////////////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////////////
-
-  std::shared_ptr<node::Node> Video3DLoader::create_geometry_from_file (std::string const& node_name,
-                                                                  std::string const& file_name)
-  {
-    try {
-      GeometryDatabase::instance()->add(
-        file_name, std::make_shared<Video3DRessource>(file_name));
-
-      auto result = std::make_shared<node::Video3DNode>(node_name, file_name, Video3DUberShader::default_video_material_name() );
-      result->update_cache();
-
-      return result;
-    }
-    catch (std::exception &e) {
-      Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load Video3D object " << file_name.c_str() << std::endl;
-      return nullptr;
+  void TagList::add_tag(std::string const& tag) {
+    auto new_tag(gua::utils::TagRegister::instance()->get_tag(tag));
+    if (new_tag.any()) {
+      tags_ |= new_tag;
     }
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  bool Video3DLoader::is_supported(std::string const& file_name) const 
-  {
-    std::vector<std::string> filename_decomposition =
-      gua::string_utils::split(file_name, '.');
-    return filename_decomposition.empty()
-      ? false
-      : _supported_file_extensions.count(filename_decomposition.back()) > 0;
+  void TagList::add_tags(std::vector<std::string> const& tags) {
+    for (auto const& tag : tags) {
+      add_tag(tag);
+    }
   }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void TagList::remove_tag(std::string const& tag) {
+    if (tags_.any()) {
+      auto tag_to_remove(gua::utils::TagRegister::instance()->get_tag(tag));
+      if (tag_to_remove.any()) {
+        tags_ &= tag_to_remove.flip();
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void TagList::remove_tags(std::vector<std::string> const& tags) {
+    if (tags_.any()) {
+      for (auto tag : tags) {
+        remove_tag(tag);
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::vector<std::string> const TagList::get_strings() const {
+    if (tags_.any()) {
+      return gua::utils::TagRegister::instance()->get_tag_strings(tags_);
+    }
+
+    return std::vector<std::string>();
+  }
+
+
+ ////////////////////////////////////////////////////////////////////////////////
+
+  std::bitset<GUA_MAX_TAG_COUNT> const& TagList::get_bits() const {
+    return tags_;
+  }
+
 
 }
-#endif
+}

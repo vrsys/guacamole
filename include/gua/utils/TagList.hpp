@@ -19,71 +19,45 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_COMPOSITE_PASS_HPP
-#define GUA_COMPOSITE_PASS_HPP
+#ifndef GUA_TAG_LIST_HPP
+#define GUA_TAG_LIST_HPP
 
 // guacamole headers
-#include <gua/renderer/BuiltInTextures.hpp>
-#include <gua/renderer/GeometryPass.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
+#include <gua/platform.hpp>
+#include <gua/utils/TagRegister.hpp>
+
+// external headers
+#include <string>
+#include <bitset>
+#include <vector>
 
 namespace gua {
-
-class GBuffer;
+namespace utils {
 
 /**
- *
+ * A class for smooth value interpolation.
  */
-class CompositePass : public Pass {
- public:
+class GUA_DLL TagList {
+  public:
 
-  /**
-   *
-   */
-  CompositePass(Pipeline* pipeline);
+    TagList(std::vector<std::string> const& tags = std::vector<std::string>());
 
-  /**
-   *
-   */
-  virtual ~CompositePass();
+    void add_tag(std::string const& tag);
+    void add_tags(std::vector<std::string> const& tags);
 
-  void create(RenderContext const& ctx,
-              std::vector<std::pair<BufferComponent,
-              scm::gl::sampler_state_desc> > const& layers) override;
+    void remove_tag(std::string const& tag);
+    void remove_tags(std::vector<std::string> const& tags);
 
-  LayerMapping const* get_gbuffer_mapping() const override;
+    std::vector<std::string> const get_strings() const;
+    std::bitset<GUA_MAX_TAG_COUNT> const& get_bits() const;
 
-  void print_shaders(std::string const& directory,
-                     std::string const& name) const override;
 
-  bool pre_compile_shaders(RenderContext const& ctx);
+  private:
+    std::bitset<GUA_MAX_TAG_COUNT> tags_;
 
-  void render_scene(Camera const& camera,
-                    SceneGraph const&,
-                    RenderContext const& ctx,
-                    std::size_t view) override;
-
-protected :
-
-  void rendering( SerializedScene const& scene,
-                  RenderContext const& ctx,
-                  CameraMode eye,
-                  Camera const& camera,
-                  FrameBufferObject* target);
-
-  void init_resources (RenderContext const& ctx);
-
- private:
-
-  GBuffer* volume_raygeneration_buffer_;
-
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
-
-  ShaderProgram* composite_shader_;
-  ShaderProgram* ray_generation_shader_;
 };
 
 }
+}
 
-#endif  // GUA_COMPOSITE_PASS_HPP
+#endif  //GUA_TAG_LIST_HPP

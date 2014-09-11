@@ -1,0 +1,10 @@
+
+{
+	"shading_model" : "SimplePhong.gsd",
+	"uniforms" :
+	{
+		"diffuse_color" : "(1.000  0.000  0.000)",
+		"emit" : "0.2",
+		"shinyness" : "10"
+	}
+}

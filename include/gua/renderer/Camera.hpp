@@ -23,6 +23,7 @@
 #define GUA_CAMERA_HPP
 
 #include <gua/platform.hpp>
+#include <gua/utils/Mask.hpp>
 
 // external headers
 #include <string>
@@ -46,18 +47,25 @@ struct Camera {
          std::string const& eye_r =     "unknown_right_eye",
          std::string const& screen_l =  "unknown_left_screen",
          std::string const& screen_r =  "unknown_right_screen",
-         std::string const& g =         "scene_graph", std::string const& m = "",
-         ProjectionMode     p =         PERSPECTIVE)
+         std::string const& g =         "scene_graph",
+         ProjectionMode     p =         PERSPECTIVE,
+         Mask const& mask = Mask()
+         )
       : eye_l(eye_l), eye_r(eye_r), screen_l(screen_l), screen_r(screen_r),
-        scene_graph(g), render_mask(m), mode(p) {}
+        scene_graph(g),
+        render_mask(mask),
+        mode(p) {}
 
   std::string eye_l;
   std::string eye_r;
   std::string screen_l;
   std::string screen_r;
   std::string scene_graph;
-  std::string render_mask;
+
+  Mask render_mask;
+
   ProjectionMode mode;
+
 };
 
 }

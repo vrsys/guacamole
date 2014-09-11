@@ -25,7 +25,6 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/GeometryRessource.hpp>
-#include <gua/renderer/TriMeshUberShader.hpp>
 #include <gua/utils/KDTree.hpp>
 
 // external headers
@@ -90,8 +89,6 @@ class TriMeshRessource : public GeometryRessource {
   scm::math::vec3 get_vertex(unsigned int i) const;
 
   std::vector<unsigned int> get_face(unsigned int i) const;
-
-  /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
  private:
 

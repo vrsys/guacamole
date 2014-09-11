@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 // class header
 #include <gua/renderer/NURBSShader.hpp>
 
@@ -1026,3 +1026,4 @@ std::string NURBSShader::contour_based_trimming()
 
 
 } // namespace gua
+#endif

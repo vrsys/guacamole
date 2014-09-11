@@ -19,60 +19,45 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GEOMETRY_PASS_HPP
-#define GUA_GEOMETRY_PASS_HPP
+#ifndef GUA_TAG_REGISTER_HPP
+#define GUA_TAG_REGISTER_HPP
 
 // guacamole headers
-#include <gua/renderer/Pass.hpp>
+#include <gua/platform.hpp>
+#include <gua/utils/Singleton.hpp>
 
 // external headers
-#include <scm/gl_core/buffer_objects/uniform_buffer_adaptor.h>
+#include <unordered_map>
+#include <string>
+#include <bitset>
+#include <vector>
+
+#define GUA_MAX_TAG_COUNT 64
 
 namespace gua {
+namespace utils {
 
 /**
- * A render pass which draws a part of the SceneGraph.
- *
- * This render pass is the most commonly used pass in rendering pipelines.
- *
- * Render passes are part of a rendering pipeline. Basically they encapsulate
- * some FBOs to which the scene is rendered. The user has to add some color
- * buffers to this pass and a depth stencil buffer if desired. The scene is
- * rendered frome the point of view of a given camera through a given screen.
- * With render masks a part of the scene may be hidden.
+ * A class for smooth value interpolation.
  */
-class GeometryPass : public Pass {
- public:
+class GUA_DLL TagRegister : public Singleton<TagRegister> {
+  public:
+    std::bitset<GUA_MAX_TAG_COUNT> const& get_tag(std::string const& tag);
+    std::vector<std::string> const get_tag_strings(std::bitset<GUA_MAX_TAG_COUNT> const& tags);
 
-  /**
-   *
-   */
-  GeometryPass(Pipeline* pipeline);
+    friend class Singleton<TagRegister>;
 
-  /**
-   * Destructor.
-   *
-   * Deletes the GeometryPass and frees all associated data.
-   */
-  virtual ~GeometryPass() {}
+  private:
+    std::unordered_map<std::string, std::bitset<GUA_MAX_TAG_COUNT>> registered_tags_;
+    std::bitset<GUA_MAX_TAG_COUNT> default_tag_;
 
-  virtual void render_scene(Camera const& camera,
-                            SceneGraph const& current_graph,
-                            RenderContext const& ctx,
-                            std::size_t viewid);
+    // this class is a Singleton --- private c'tor and d'tor
+    TagRegister() {}
+    ~TagRegister() {}
 
- protected:
-  virtual void rendering(SerializedScene const& scene,
-                         SceneGraph const& scene_graph,
-                         RenderContext const& ctx,
-                         CameraMode eye,
-                         Camera const& camera,
-                         FrameBufferObject* target,
-                         View const& view) = 0;
-
- private:
 };
 
 }
+}
 
-#endif  // GUA_GEOMETRY_PASS_HPP
+#endif  //GUA_TAG_REGISTER_HPP

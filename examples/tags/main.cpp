@@ -35,6 +35,30 @@ int main(int argc, char** argv) {
 
   graph.add_node("/", teapot);
 
+
+  teapot->get_tags().add_tags({"red"});
+
+  auto teapot1(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", "data/materials/Green.gmd", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  teapot1->get_tags().add_tags({"green"});
+
+  auto t1_trans = graph.add_node<gua::node::TransformNode>("/", "t1_trans");
+  t1_trans->translate(-1.0, 0.0, 0.0);
+  graph.add_node("/t1_trans", teapot1);
+
+  auto teapot2(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", "data/materials/Blue.gmd", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  teapot2->get_tags().add_tags({"blue"});
+
+  auto t2_trans = graph.add_node<gua::node::TransformNode>("/", "t2_trans");
+  t2_trans->translate(1.0, 0.0, 0.0);
+  graph.add_node("/t2_trans", teapot2);
+
+
+  gua::Camera cam("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph");
+
+  // cam.render_mask.whitelist.add_tags({"green", "red"});
+  // cam.render_mask.blacklist.add_tags({"red"});
+
+
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(5.f);
   light->translate(0, 1.f, 1.f);
@@ -42,23 +66,17 @@ int main(int argc, char** argv) {
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.6f, 1.2f));
 
+  screen->translate(0.0, 0.0, 2.0);
+
   auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
   eye->translate(0, 0, 1.5);
 
-  gua::Camera cam("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph");
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
   // pipe->config.set_enable_fps_display(true);
-  pipe->add_pass<gua::PipelinePass>().set_source(R"(
-    void get_diffuse_color() {
-      gua_color = texture2D(color, gua_texcoords).rgb;
-    }
-  )");
-  pipe->add_pass<gua::LightingPass>();
-  pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
 
   auto window(new gua::GlfwWindow());
-  pipe->set_output_window(window);
+  // pipe->set_window(window);
   gua::Renderer renderer({pipe});
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
@@ -67,14 +85,6 @@ int main(int argc, char** argv) {
     screen->data.set_size(gua::math::vec2(0.002 * new_size.x, 0.002 * new_size.y));
   });
 
-  window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    std::cout << "Cursor: " << pos << std::endl;
-  });
-
-  window->on_button_press.connect([&](int button, int action, int mods) {
-    if (action == 0) std::cout << "Mouse button " << button << " up" << std::endl;
-    else             std::cout << "Mouse button " << button << " down" << std::endl;
-  });
 
 #if WIN32
   window->config.set_display_name("\\\\.\\DISPLAY1");
@@ -89,6 +99,8 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     teapot->rotate(0.1, 0, 1, 0);
+    teapot1->rotate(0.1, 0, 1, 0);
+	  teapot2->rotate(0.1, 0, 1, 0);
 
     window->process_events();
     if (window->should_close()) {
