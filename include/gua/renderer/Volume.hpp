@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/Texture3D.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
@@ -65,7 +65,7 @@
 // 	* Do not use this class directly, it is just used by the Geometry class to
 // 	* store the individual meshes of a file.
 // 	*/
-// 	class Volume : public GeometryRessource {
+// 	class Volume : public GeometryResource {
 // 	public:
 
 // 		/**
@@ -75,7 +75,7 @@
 // 		*/
 // 		Volume();
 
-// 		/** 
+// 		/**
 // 		* Constructor from an Assimp volume.
 // 		*
 // 		* Initializes the volume from a given file path
@@ -132,7 +132,7 @@
 // 			Texture2D const&,
 // 			const scm::data::piecewise_function_1d<float, float>& in_alpha,
 // 			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
-		
+
 // 		mutable bool _update_transfer_function;
 
 // 		////Volume files
@@ -142,7 +142,7 @@
 // 		std::string _volume_file_path;
 
 // 		//Volume boxes for each volume
-// 		mutable std::vector<scm::gl::box_volume_geometry_ptr> 
+// 		mutable std::vector<scm::gl::box_volume_geometry_ptr>
 // 			_volume_boxes_ptr;
 
 // 		//Texture3D for volume data for each volume

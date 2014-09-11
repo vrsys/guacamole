@@ -23,25 +23,90 @@
 #include <gua/renderer/MaterialPass.hpp>
 
 // guacamole headers
+#include <gua/utils/TextFile.hpp>
+#include <gua/utils/Logger.hpp>
+
+#include <jsoncpp/json/json.h>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-
 MaterialPass::MaterialPass(std::string const& name) :
   name_(name) {}
 
 ////////////////////////////////////////////////////////////////////////////////
+MaterialPass& MaterialPass::load_from_file(std::string const& file_name) {
+  if (file_name != "") {
+    TextFile file(file_name);
 
-MaterialPass& MaterialPass::set_source(std::string const& source) {
-  source_ = source;
+    if (file.is_valid()) {
+      load_from_json(file.get_content());
+    } else {
+      Logger::LOG_WARNING << "Failed to load material pass\""
+                          << file_name << "\": "
+                          "File does not exist!" << std::endl;
+    }
+  }
+
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+MaterialPass& MaterialPass::load_from_json(std::string const& json_string) {
+  Json::Value value;
+  Json::Reader reader;
+  if (!reader.parse(json_string, value)) {
+    Logger::LOG_WARNING << "Failed to parse material description: "
+                           "Invalid json String!" << std::endl;
+    return *this;
+  }
 
+  if (value["name"] != Json::Value::null &&
+      value["source"] != Json::Value::null) {
+    set_name(value["name"].asString());
+    set_source(value["source"].asString());
+
+    if (value["uniforms"] != Json::Value::null &&
+        value["uniforms"].isArray()) {
+      for (int i(0); i < value["uniforms"].size(); ++i) {
+        auto uniform(value["uniforms"][i]);
+        if (uniform["name"] != Json::Value::null &&
+            uniform["type"] != Json::Value::null &&
+            uniform["value"] != Json::Value::null) {
+
+          //TODO: convert value to type and set uniform using set_uniform();
+
+        } else {
+          Logger::LOG_WARNING << "Failed to load uniform: "
+                                 "Please provide name, type and value in the description!"
+                              << std::endl;
+        }
+      }
+
+    }
+  } else {
+    Logger::LOG_WARNING << "Failed to load material pass: "
+                           "Please provide name and source in the description!"
+                        << std::endl;
+  }
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+MaterialPass& MaterialPass::set_name(std::string const& name) {
+  name_ = name;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 std::string const& MaterialPass::get_name() const {
   return name_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+MaterialPass& MaterialPass::set_source(std::string const& source) {
+  source_ = source;
+  return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +116,6 @@ std::string const& MaterialPass::get_source() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
 std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> const&
 MaterialPass::get_uniforms() const {
   return uniforms_;

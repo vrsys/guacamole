@@ -47,7 +47,7 @@ namespace node {
 /**
  * Base class for the render ressources (CPU/GPU) for different geometry types
  */
-class GUA_DLL GeometryRessource {
+class GUA_DLL GeometryResource {
  public:
 
   /**

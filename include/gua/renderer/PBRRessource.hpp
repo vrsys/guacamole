@@ -26,7 +26,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/PBRUberShader.hpp>
 #include <gua/utils/KDTree.hpp>
 
@@ -54,7 +54,7 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class PBRRessource : public GeometryRessource {
+class PBRRessource : public GeometryResource {
  public:
 
   /**

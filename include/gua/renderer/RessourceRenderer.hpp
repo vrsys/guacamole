@@ -23,7 +23,7 @@
 #define GUA_RESSOURCE_RENDERER_HPP
 
 // guacamole_headers
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/Material.hpp>
 
 namespace gua {
@@ -33,7 +33,7 @@ class Pipeline;
 class GUA_DLL RessourceRenderer {
  public:
 
-   virtual void draw(std::shared_ptr<GeometryRessource> const& object, 
+   virtual void draw(std::shared_ptr<GeometryResource> const& object,
                      std::shared_ptr<Material> const& material,
                      math::mat4 const& transformation,
                      Pipeline* pipe) const = 0;

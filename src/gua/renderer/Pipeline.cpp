@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/WindowBase.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/Frustum.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 #include <gua/renderer/Serializer.hpp>
@@ -98,7 +98,7 @@ Pipeline::Pipeline() :
   gbuffer_(nullptr),
   dirty_(false),
   ping_pong_(true) {
-  
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   }
 
   // serialize this scenegraph
-  serialize(*current_graph, 
+  serialize(*current_graph,
             config.camera().eye_l, config.camera().screen_l,
             config, current_scene_);
 
@@ -164,11 +164,11 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   ping_pong_ = false;
 
   for (auto pass: passes_) {
-    
+
     if (pass->is_fullscreen_pass()) {
       ping_pong_ = !ping_pong_;
     }
-    
+
     pass->process(this);
   }
 
@@ -218,7 +218,7 @@ SerializedScene const& Pipeline::get_scene() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<RessourceRenderer> Pipeline::get_renderer(GeometryRessource const& type) {
+std::shared_ptr<RessourceRenderer> Pipeline::get_renderer(GeometryResource const& type) {
   std::type_index id = typeid(type);
   auto renderer = renderers_.find(id);
 

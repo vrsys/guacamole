@@ -34,14 +34,14 @@ TriMeshRenderer::TriMeshRenderer():
   shader_(new ShaderProgram()) {
 
   shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_test_vert), 
+    Resources::lookup_shader(Resources::shaders_test_vert),
     Resources::lookup_shader(Resources::shaders_test_frag)
   );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRenderer::draw(std::shared_ptr<GeometryRessource> const& object, 
+void TriMeshRenderer::draw(std::shared_ptr<GeometryResource> const& object,
                            std::shared_ptr<Material> const& material,
                            math::mat4 const& transformation,
                            Pipeline* pipe) const {

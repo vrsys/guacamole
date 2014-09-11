@@ -24,61 +24,60 @@
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-  MaterialInstance::MaterialInstance(std::string const& material_name):
-    material_name_(material_name)
-    {}
+MaterialInstance::MaterialInstance(std::string const& material_name):
+  material_name_(material_name)
+  {}
 
 ////////////////////////////////////////////////////////////////////////////////
-  MaterialInstance::MaterialInstance(MaterialInstance const& to_copy) {
-    material_name_ = to_copy.material_name_;
+MaterialInstance::MaterialInstance(MaterialInstance const& to_copy) {
+  material_name_ = to_copy.material_name_;
 
-    for (auto const& uniform : to_copy.uniforms_) {
-      uniforms_.insert(
-        std::make_pair(uniform.first, uniform.second->get_copy()));
-    }
+  for (auto const& uniform : to_copy.uniforms_) {
+    uniforms_.insert(
+      std::make_pair(uniform.first, uniform.second->get_copy()));
   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-  MaterialInstance::~MaterialInstance() {
-    for (auto const& uniform : uniforms_) {
-      delete uniform.second;
-    }
+MaterialInstance::~MaterialInstance() {
+  for (auto const& uniform : uniforms_) {
+    delete uniform.second;
   }
-
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-  void MaterialInstance::unset_uniform(std::string const& name) {
-    auto pos(uniforms_.find(name));
+void MaterialInstance::unset_uniform(std::string const& name) {
+  auto pos(uniforms_.find(name));
 
-    if (pos != uniforms_.end()) {
-      delete pos->second;
-      uniforms_.erase(pos);
-    }
+  if (pos != uniforms_.end()) {
+    delete pos->second;
+    uniforms_.erase(pos);
   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-  std::unordered_map<std::string, UniformValueBase*> const&
-                              MaterialInstance::get_uniforms() const {
-    return uniforms_;
-  }
+std::unordered_map<std::string, UniformValueBase*> const&
+                            MaterialInstance::get_uniforms() const {
+  return uniforms_;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-  void MaterialInstance::merge(MaterialInstance const& to_merge) {
-    if (material_name_ == to_merge.material_name_) {
-      uniforms_.insert(to_merge.uniforms_.begin(), to_merge.uniforms_.end());
-    } else {
-      //WARNING
-    }
+void MaterialInstance::merge(MaterialInstance const& to_merge) {
+  if (material_name_ == to_merge.material_name_) {
+    uniforms_.insert(to_merge.uniforms_.begin(), to_merge.uniforms_.end());
+  } else {
+    //WARNING
   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-  void MaterialInstance::operator= (MaterialInstance const& rhs) {
-    material_name_ = rhs.material_name_;
+void MaterialInstance::operator= (MaterialInstance const& rhs) {
+  material_name_ = rhs.material_name_;
 
-    for (auto const& uniform : rhs.uniforms_) {
-      uniforms_.insert(
-        std::make_pair(uniform.first, uniform.second->get_copy()));
-    }
+  for (auto const& uniform : rhs.uniforms_) {
+    uniforms_.insert(
+      std::make_pair(uniform.first, uniform.second->get_copy()));
   }
+}
 
 }

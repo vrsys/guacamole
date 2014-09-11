@@ -19,68 +19,32 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_UNIFORM_MAPPING_HPP
-#define GUA_UNIFORM_MAPPING_HPP
+// class header
+#include <gua/renderer/Uniform.hpp>
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/ShadingModel.hpp>
+#include <gua/math/math.hpp>
 
-// external headers
-#include <memory>
+#include <gua/node/GeometryNode.hpp>
 
 namespace gua {
 
-/**
- * Maps stuff like
- *        Red/shinyness -> gua_floats[7], passed as std::pair("gua_floats", 7)
- */
-class GUA_DLL UniformMapping {
- public:
+template<> std::string UniformValue<int>         ::get_glsl_type() const { return "int"; }
+template<> std::string UniformValue<bool>        ::get_glsl_type() const { return "int"; }
+template<> std::string UniformValue<float>       ::get_glsl_type() const { return "float"; }
 
-  /**
-   *
-   */
-  UniformMapping();
+template<> std::string UniformValue<math::mat3>  ::get_glsl_type() const { return "mat3"; }
+template<> std::string UniformValue<math::mat4>  ::get_glsl_type() const { return "mat4"; }
 
-  /**
-   *
-   */
-  void add(std::string const& material, std::string const& uniform);
+template<> std::string UniformValue<math::vec2>  ::get_glsl_type() const { return "vec2"; }
+template<> std::string UniformValue<math::vec3>  ::get_glsl_type() const { return "vec3"; }
+template<> std::string UniformValue<math::vec4>  ::get_glsl_type() const { return "vec4"; }
 
-  /**
-   *
-   */
-  std::pair<std::string, int> const& get_mapping(
-      std::string const& material,
-      std::string const& uniform) const;
+template<> std::string UniformValue<math::vec2i> ::get_glsl_type() const { return "vec2i"; }
+template<> std::string UniformValue<math::vec3i> ::get_glsl_type() const { return "vec3i"; }
+template<> std::string UniformValue<math::vec4i> ::get_glsl_type() const { return "vec4i"; }
 
-  std::string get_uniform_definition() const;
-
-  /**
-   *
-   */
-  int get_uniform_count(UniformType type) const;
-
-  /**
-   *
-   */
-  std::map<UniformType, int> const& get_uniform_counts() const;
-
- private:
-
-  //       material_name, uniform_name, mapped_type, mapped_position
-  std::unordered_map<
-      std::string,
-      std::unordered_map<std::string, std::pair<std::string, int> > > mapping_;
-
-  //       UniformType, count
-  std::map<UniformType, int> uniform_counts_;
-
-  // for error returns
-  std::pair<std::string, int> error_;
-};
+template<> std::string UniformValue<math::vec2ui>::get_glsl_type() const { return "vec2ui"; }
+template<> std::string UniformValue<math::vec3ui>::get_glsl_type() const { return "vec3ui"; }
+template<> std::string UniformValue<math::vec4ui>::get_glsl_type() const { return "vec4ui"; }
 
 }
-
-#endif  // GUA_UNIFORM_MAPPING_HPP

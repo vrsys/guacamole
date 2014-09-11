@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/utils/KDTree.hpp>
 
 // external headers
@@ -51,7 +51,7 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class TriMeshRessource : public GeometryRessource {
+class TriMeshRessource : public GeometryResource {
  public:
 
   /**
