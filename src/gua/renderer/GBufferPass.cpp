@@ -19,20 +19,53 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
-
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/VolumeLoader.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
+// class header
 #include <gua/renderer/GBufferPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+#include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/utils/Logger.hpp>
+
+namespace gua {
+
+void GBufferPass::process(Pipeline* pipe) {
+  RenderContext const& ctx(pipe->get_context());
+  pipe->get_gbuffer().bind(ctx);
+  pipe->get_gbuffer().set_viewport(ctx);
+  pipe->get_gbuffer().clear_color_buffers(ctx, utils::Color3f(0, 1, 0));
+  pipe->get_gbuffer().clear_depth_stencil_buffer(ctx);
+
+  for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
+    auto const& ressources = type_ressource_pair.second;
+    std::shared_ptr<RessourceRenderer> renderer;
+
+    for (auto const& object : ressources) {
+
+      auto const& ressource = GeometryDatabase::instance()->lookup(object->get_filename());
+      if (ressource) {
+        
+        auto const& material = MaterialDatabase::instance()->lookup(object->get_material());
+        if (material) {
+
+          if (!renderer) {
+            renderer = pipe->get_renderer(*ressource);
+          }
+
+          renderer->draw(ressource, material, object->get_cached_world_transform(), pipe);
+          
+        } else {
+          Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object->get_material() << std::endl;
+        }
+
+      } else {
+        Logger::LOG_WARNING << "GBufferPass::process(): Cannot find geometry ressource: " << object->get_filename() << std::endl;
+      }
+    }
+  }
+
+  pipe->get_gbuffer().unbind(ctx);
+} 
+
+}

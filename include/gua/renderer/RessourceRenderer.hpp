@@ -19,20 +19,27 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_RESSOURCE_RENDERER_HPP
+#define GUA_RESSOURCE_RENDERER_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/VolumeLoader.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/GBufferPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+// guacamole_headers
+#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/Material.hpp>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+namespace gua {
+
+class Pipeline;
+
+class GUA_DLL RessourceRenderer {
+ public:
+
+   virtual void draw(std::shared_ptr<GeometryRessource> const& object, 
+                     std::shared_ptr<Material> const& material,
+                     math::mat4 const& transformation,
+                     Pipeline* pipe) const = 0;
+
+};
+
+}
+
+#endif  // GUA_RESSOURCE_RENDERER_HPP

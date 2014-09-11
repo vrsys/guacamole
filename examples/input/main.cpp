@@ -48,14 +48,8 @@ int main(int argc, char** argv) {
   gua::Camera cam("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph");
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
-  // pipe->config.set_enable_fps_display(true);
-  pipe->add_pass<gua::PipelinePass>().set_source(R"(
-    void get_diffuse_color() {
-      gua_color = texture2D(color, gua_texcoords).rgb;
-    }
-  )");
-  pipe->add_pass<gua::LightingPass>();
-  pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
+  pipe->add_pass<gua::GBufferPass>(); 
+  // pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
 
   auto window(new gua::GlfwWindow());
   pipe->set_output_window(window);
