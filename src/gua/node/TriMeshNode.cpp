@@ -234,10 +234,10 @@ namespace node {
     {
       if (material_ != "")
       {
-        if (!MaterialDatabase::instance()->is_supported(material_))
-        {
-          MaterialDatabase::instance()->load_material(material_);
-        }
+        // if (!MaterialDatabase::instance()->is_supported(material_))
+        // {
+        //   MaterialDatabase::instance()->load_material(material_);
+        // }
       }
 
       material_changed_ = false;

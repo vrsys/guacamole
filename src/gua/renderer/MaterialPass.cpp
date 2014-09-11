@@ -74,7 +74,7 @@ MaterialPass& MaterialPass::load_from_json(std::string const& json_string) {
             uniform["type"] != Json::Value::null &&
             uniform["value"] != Json::Value::null) {
 
-          //TODO: convert value to type and set uniform using set_uniform();
+          // set_uniform(uniform["name"])
 
         } else {
           Logger::LOG_WARNING << "Failed to load uniform: "

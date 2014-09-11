@@ -23,6 +23,7 @@
 #include <gua/renderer/Uniform.hpp>
 
 #include <gua/math/math.hpp>
+#include <gua/memory.hpp>
 
 namespace gua {
 
@@ -44,5 +45,58 @@ template<> std::string UniformValue<math::vec4i> ::get_glsl_type() const { retur
 template<> std::string UniformValue<math::vec2ui>::get_glsl_type() const { return "vec2ui"; }
 template<> std::string UniformValue<math::vec3ui>::get_glsl_type() const { return "vec3ui"; }
 template<> std::string UniformValue<math::vec4ui>::get_glsl_type() const { return "vec4ui"; }
+
+std::unique_ptr<UniformValueBase> UniformValue::create_from_string_and_type(
+    std::string const& value,
+    UniformType const& ty) {
+  switch (ty) {
+    case UniformType::INT:
+      return gua::make_unique<UniformValue<int> >(
+          string_utils::from_string<int>(value));
+      break;
+
+    case UniformType::FLOAT:
+      return gua::make_unique<UniformValue<float> >(
+          string_utils::from_string<float>(value));
+      break;
+
+    case UniformType::BOOL:
+      return gua::make_unique<UniformValue<bool> >(
+          string_utils::from_string<bool>(value));
+      break;
+
+    case UniformType::VEC2:
+      return gua::make_unique<UniformValue<math::vec2> >(
+          string_utils::from_string<math::vec2>(value));
+      break;
+
+    case UniformType::VEC3:
+      return gua::make_unique<UniformValue<math::vec3> >(
+          string_utils::from_string<math::vec3>(value));
+      break;
+
+    case UniformType::VEC4:
+      return gua::make_unique<UniformValue<math::vec4> >(
+          string_utils::from_string<math::vec4>(value));
+      break;
+
+    case UniformType::MAT3:
+      return gua::make_unique<UniformValue<math::mat3> >(
+          string_utils::from_string<math::mat3>(value));
+      break;
+
+    case UniformType::MAT4:
+      return gua::make_unique<UniformValue<math::mat4> >(
+          string_utils::from_string<math::mat4>(value));
+      break;
+
+    case UniformType::SAMPLER2D:
+      return gua::make_unique<UniformValue<std::string> >(value);
+      break;
+
+    default:
+      return nullptr;
+  }
+}
 
 }

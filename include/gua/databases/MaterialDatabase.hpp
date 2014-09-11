@@ -53,7 +53,7 @@ class GUA_DLL MaterialDatabase : public Database<Material>,
    *                     directory containing gmd files.
    */
 
-  void add(std::shared_ptr<Material> material);
+  void add(std::shared_ptr<Material> const& material);
 
   void reload_all();
 

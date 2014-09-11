@@ -29,6 +29,7 @@
 #include <gua/databases/TextureDatabase.hpp>
 #include <gua/utils/Color3f.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/renderer/enums.hpp>
 
 // external headers
 #include <string>
@@ -112,6 +113,10 @@ template <typename T> class UniformValue : public UniformValueBase {
   }
 
   virtual std::string get_glsl_type() const;
+
+  static std::unique_ptr<UniformValueBase> create_from_string_and_type(
+                                            std::string const& value,
+                                            UniformType const& ty);
 
  private:
   T value_;
