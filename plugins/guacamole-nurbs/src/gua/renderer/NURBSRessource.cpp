@@ -385,19 +385,20 @@ void NURBSRessource::initialize_transform_feedback(RenderContext const& context)
     tfbuffer->_transform_feedback.resize(context.id + 1);
     tfbuffer->_transform_feedback_vbo.resize(context.id + 1);
     tfbuffer->_transform_feedback_vao.resize(context.id + 1);
-
-    if ( tfbuffer->_transform_feedback[context.id] == 0)
-    {
-      tfbuffer->_transform_feedback_vbo[context.id] =
-        in_device->create_buffer(scm::gl::BIND_TRANSFORM_FEEDBACK_BUFFER,
-        scm::gl::USAGE_DYNAMIC_COPY,
-        MAX_XFB_BUFFER_SIZE_IN_BYTES);
-      tfbuffer->_transform_feedback[context.id] = in_device->create_transform_feedback(
-        scm::gl::stream_output_setup(tfbuffer->_transform_feedback_vbo[context.id]));
-      tfbuffer->_transform_feedback_vao[context.id] = in_device->create_vertex_array(
-        v_fmt, boost::assign::list_of(tfbuffer->_transform_feedback_vbo[context.id]));
-    }
   }
+
+  if ( tfbuffer->_transform_feedback[context.id] == 0)
+  {
+    tfbuffer->_transform_feedback_vbo[context.id] =
+      in_device->create_buffer(scm::gl::BIND_TRANSFORM_FEEDBACK_BUFFER,
+      scm::gl::USAGE_DYNAMIC_COPY,
+      MAX_XFB_BUFFER_SIZE_IN_BYTES);
+    tfbuffer->_transform_feedback[context.id] = in_device->create_transform_feedback(
+      scm::gl::stream_output_setup(tfbuffer->_transform_feedback_vbo[context.id]));
+    tfbuffer->_transform_feedback_vao[context.id] = in_device->create_vertex_array(
+      v_fmt, boost::assign::list_of(tfbuffer->_transform_feedback_vbo[context.id]));
+  }
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
