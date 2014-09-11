@@ -25,7 +25,6 @@
 // guacamole headers
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
 
 // external headers
 #include <string>
@@ -44,7 +43,7 @@
 // 	* This class can load mesh data from files and display them in multiple
 // 	* contexts. A VolumeLoader object is made of several Mesh objects.
 // 	*/
-// 	class GUA_DLL VolumeLoader : public GeometryLoader {
+// 	class GUA_DLL VolumeLoader {
 // 	public:
 
 // 		enum Flags {
@@ -66,7 +65,7 @@
 // 		*
 // 		* Creates a new VolumeLoader from a given file.
 // 		*
-// 		* \param file_name        The file to load the meh's data from.		
+// 		* \param file_name        The file to load the meh's data from.
 // 		*/
 //     /**
 //     *
@@ -92,9 +91,9 @@
 // 		/* virtual */ bool is_supported(std::string const& file_name) const override;
 
 // 	private:
-		
+
 // 		static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
-		
+
 // 		boost::unordered_set<std::string> _supported_file_extensions;
 
 // 	};

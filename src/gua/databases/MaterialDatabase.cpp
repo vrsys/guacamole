@@ -32,29 +32,8 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MaterialDatabase::load_materials_from(std::string const& directory) {
-
-  // gua::Directory dir(directory);
-  // std::stringstream content(dir.get_content());
-  // std::string parse_string;
-
-  // while (content >> parse_string) {
-  //   unsigned suffix_pos = unsigned(parse_string.find(".gmd"));
-
-  //   if (parse_string.length() - suffix_pos == 4) {
-  //     auto name(dir.get_directory_name() + parse_string);
-  //     load_material(name);
-  //   }
-  // }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MaterialDatabase::load_material(std::string const& filename) {
-  // if (!instance()->is_supported(filename)) {
-  //   auto mat = std::make_shared<Material>(filename, filename);
-  //   instance()->add(filename, mat);
-  // }
+void MaterialDatabase::add(std::shared_ptr<Material> material) {
+  add(material->get_name(), material);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

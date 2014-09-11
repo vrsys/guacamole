@@ -37,7 +37,7 @@
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-NURBSLoader::NURBSLoader() : GeometryLoader(), _supported_file_extensions() {
+NURBSLoader::NURBSLoader() : _supported_file_extensions() {
   _supported_file_extensions.insert("igs");
   _supported_file_extensions.insert("iges");
   _supported_file_extensions.insert("IGS");
@@ -46,7 +46,7 @@ NURBSLoader::NURBSLoader() : GeometryLoader(), _supported_file_extensions() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> NURBSLoader::create_geometry_from_file(std::string const& nodename, 
+std::shared_ptr<node::Node> NURBSLoader::create_geometry_from_file(std::string const& nodename,
                                                              std::string const& filename,
                                                              std::string const& material,
                                                              unsigned flags)
@@ -86,7 +86,7 @@ std::shared_ptr<node::Node> NURBSLoader::create_geometry_from_file(std::string c
 
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */
-bool NURBSLoader::is_supported(std::string const& file_name) const 
+bool NURBSLoader::is_supported(std::string const& file_name) const
 {
   std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
   return filename_decomposition.empty()

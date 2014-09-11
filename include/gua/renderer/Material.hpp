@@ -41,11 +41,12 @@ class Material {
 
   MaterialDescription const& get_description() const;
 
-  void use(GeometryResource const& for_type, MaterialInstance const& overwrite = MaterialInstance());
-
+  std::string const&      get_name()             const;
   MaterialInstance const  get_new_instance()     const;
   MaterialInstance const& get_default_instance() const;
   MaterialInstance&       get_default_instance();
+
+  void use(GeometryResource const& for_type, MaterialInstance const& overwrite = MaterialInstance());
 
   void print_shaders() const;
 

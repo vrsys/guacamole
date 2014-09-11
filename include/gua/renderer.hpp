@@ -26,7 +26,6 @@
 #include <gua/config.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/renderer/VolumeLoader.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBufferPass.hpp>
 #include <gua/renderer/Renderer.hpp>

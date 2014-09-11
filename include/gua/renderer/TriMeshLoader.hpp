@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
 
 // external headers
 #include <string>
@@ -51,7 +50,7 @@ class GeometryNode;
  * This class can load mesh data from files and display them in multiple
  * contexts. A MeshLoader object is made of several Mesh objects.
  */
-class GUA_DLL TriMeshLoader : public GeometryLoader {
+class GUA_DLL TriMeshLoader {
 
  public: // typedefs, enums
 
@@ -74,7 +73,7 @@ public:
    TriMeshLoader();
 
    /**
-   * 
+   *
    */
    std::shared_ptr<node::Node> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS);
 

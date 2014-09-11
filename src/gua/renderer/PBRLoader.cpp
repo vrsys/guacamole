@@ -32,7 +32,6 @@
 #include <gua/node/TransformNode.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
 #include <gua/renderer/PBRRessource.hpp>
 #include <gua/databases/MaterialDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
@@ -46,9 +45,8 @@ unsigned PBRLoader::model_counter_ = 0;
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  PBRLoader::PBRLoader() 
-    : GeometryLoader(), 
-      _supported_file_extensions(),
+  PBRLoader::PBRLoader()
+    : _supported_file_extensions(),
       node_counter_(0)
   {
     _supported_file_extensions.insert("xyz_all");
@@ -66,7 +64,7 @@ std::shared_ptr<::gua::node::Node> PBRLoader::create_geometry_from_file(std::str
                                                            std::string const& file_name) {
 
   node_counter_ = 0;
-    
+
     std::shared_ptr<::gua::node::Node> new_node;
 
      std::shared_ptr<pbr::ren::RawPointCloud> point_cloud = std::make_shared<pbr::ren::RawPointCloud>(model_counter_);
@@ -76,9 +74,9 @@ std::shared_ptr<::gua::node::Node> PBRLoader::create_geometry_from_file(std::str
 	     // load point cloud
 	     std::string model_name("type=file&file=" + file_name);
 	     GeometryDatabase::instance()->add(model_name, std::make_shared<PBRRessource>(point_cloud));
-	     
+
 	     ++model_counter_;
-	     
+
 
 	     auto node(std::make_shared<::gua::node::PBRNode>(model_name));
 	     node->set_filename(model_name);
@@ -97,7 +95,7 @@ std::shared_ptr<::gua::node::Node> PBRLoader::create_geometry_from_file(std::str
 
   /////////////////////////////////////////////////////////////////////////////
 
-  bool PBRLoader::is_supported(std::string const& file_name) const 
+  bool PBRLoader::is_supported(std::string const& file_name) const
   {
     std::vector<std::string> filename_decomposition =
       gua::string_utils::split(file_name, '.');
