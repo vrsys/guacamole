@@ -31,7 +31,7 @@ class Pipeline;
 class GBufferPass : public PipelinePass {
  public:
 
-  virtual bool is_fullscreen_pass() const { return true; }
+  virtual bool use_last_color_buffer() const { return false; }
   virtual void process(Pipeline* pipe);
 
   friend class Pipeline;

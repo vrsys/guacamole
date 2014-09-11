@@ -116,7 +116,7 @@ class GUA_DLL FrameBufferObject {
    *
    * \param context The RenderContext to bind to.
    */
-  void bind(RenderContext const& context);
+  virtual void bind(RenderContext const& context);
 
   /**
    * Unbind the FrameBufferObject.
@@ -125,7 +125,7 @@ class GUA_DLL FrameBufferObject {
    *
    * \param context The RenderContext to bind to.
    */
-  void unbind(RenderContext const& context);
+  virtual void unbind(RenderContext const& context);
 
   void copy_depth_stencil_buffer(RenderContext const& ctx,
                                  FrameBufferObject const& source);

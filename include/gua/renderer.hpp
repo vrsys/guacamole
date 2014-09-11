@@ -30,6 +30,7 @@
 #include <gua/renderer/GeometryLoader.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBufferPass.hpp>
+#include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/Window.hpp>
 #ifdef GUACAMOLE_GLFW3

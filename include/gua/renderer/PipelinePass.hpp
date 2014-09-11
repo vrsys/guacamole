@@ -29,7 +29,7 @@ class Pipeline;
 class PipelinePass {
  public:
 
-  virtual bool is_fullscreen_pass() const = 0;
+  virtual bool use_last_color_buffer() const = 0;
   virtual void process(Pipeline* pipe) = 0;
 
   friend class Pipeline;

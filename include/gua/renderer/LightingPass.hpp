@@ -19,52 +19,28 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/GBufferPass.hpp>
+#ifndef GUA_LIGHTING_PASS_HPP
+#define GUA_LIGHTING_PASS_HPP
 
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
-#include <gua/utils/Logger.hpp>
+#include <gua/renderer/PipelinePass.hpp>
 
 namespace gua {
 
-void GBufferPass::process(Pipeline* pipe) {
-  RenderContext const& ctx(pipe->get_context());
-  
-  pipe->get_gbuffer().bind(ctx);
-  pipe->get_gbuffer().set_viewport(ctx);
+class Pipeline;
 
-  for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
-    auto const& ressources = type_ressource_pair.second;
-    std::shared_ptr<RessourceRenderer> renderer;
+class LightingPass : public PipelinePass {
+ public:
 
-    for (auto const& object : ressources) {
+  virtual bool use_last_color_buffer() const { return true; }
+  virtual void process(Pipeline* pipe);
 
-      auto const& ressource = GeometryDatabase::instance()->lookup(object->get_filename());
-      if (ressource) {
+  friend class Pipeline;
 
-        // auto const& material = MaterialDatabase::instance()->lookup(object->get_material());
-        // if (material) {
-
-          if (!renderer) {
-            renderer = pipe->get_renderer(*ressource);
-          }
-
-          renderer->draw(ressource, nullptr, object->get_cached_world_transform(), pipe);
-
-        // } else {
-        //   Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object->get_material() << std::endl;
-        // }
-
-      } else {
-        Logger::LOG_WARNING << "GBufferPass::process(): Cannot find geometry ressource: " << object->get_filename() << std::endl;
-      }
-    }
-  }
-
-  pipe->get_gbuffer().unbind(ctx);
-}
+ protected:
+  LightingPass() {}
+  ~LightingPass() {}
+};
 
 }
+
+#endif  // GUA_LIGHTING_PASS_HPP

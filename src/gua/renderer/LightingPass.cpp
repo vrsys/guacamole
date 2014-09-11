@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/GBufferPass.hpp>
+#include <gua/renderer/LightingPass.hpp>
 
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -30,41 +30,41 @@
 
 namespace gua {
 
-void GBufferPass::process(Pipeline* pipe) {
-  RenderContext const& ctx(pipe->get_context());
+void LightingPass::process(Pipeline* pipe) {
+  // RenderContext const& ctx(pipe->get_context());
   
-  pipe->get_gbuffer().bind(ctx);
-  pipe->get_gbuffer().set_viewport(ctx);
+  // pipe->get_gbuffer().bind(ctx);
+  // pipe->get_gbuffer().set_viewport(ctx);
 
-  for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
-    auto const& ressources = type_ressource_pair.second;
-    std::shared_ptr<RessourceRenderer> renderer;
+  // for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
+  //   auto const& ressources = type_ressource_pair.second;
+  //   std::shared_ptr<RessourceRenderer> renderer;
 
-    for (auto const& object : ressources) {
+  //   for (auto const& object : ressources) {
 
-      auto const& ressource = GeometryDatabase::instance()->lookup(object->get_filename());
-      if (ressource) {
+  //     auto const& ressource = GeometryDatabase::instance()->lookup(object->get_filename());
+  //     if (ressource) {
+        
+  //       auto const& material = MaterialDatabase::instance()->lookup(object->get_material());
+  //       if (material) {
 
-        // auto const& material = MaterialDatabase::instance()->lookup(object->get_material());
-        // if (material) {
+  //         if (!renderer) {
+  //           renderer = pipe->get_renderer(*ressource);
+  //         }
 
-          if (!renderer) {
-            renderer = pipe->get_renderer(*ressource);
-          }
+  //         renderer->draw(ressource, material, object->get_cached_world_transform(), pipe);
+          
+  //       } else {
+  //         Logger::LOG_WARNING << "LightingPass::process(): Cannot find material: " << object->get_material() << std::endl;
+  //       }
 
-          renderer->draw(ressource, nullptr, object->get_cached_world_transform(), pipe);
+  //     } else {
+  //       Logger::LOG_WARNING << "LightingPass::process(): Cannot find geometry ressource: " << object->get_filename() << std::endl;
+  //     }
+  //   }
+  // }
 
-        // } else {
-        //   Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object->get_material() << std::endl;
-        // }
-
-      } else {
-        Logger::LOG_WARNING << "GBufferPass::process(): Cannot find geometry ressource: " << object->get_filename() << std::endl;
-      }
-    }
-  }
-
-  pipe->get_gbuffer().unbind(ctx);
-}
+  // pipe->get_gbuffer().unbind(ctx);
+} 
 
 }
