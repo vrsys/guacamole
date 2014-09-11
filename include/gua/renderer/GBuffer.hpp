@@ -31,20 +31,33 @@ namespace gua {
 /**
  *
  */
-class GBuffer : public FrameBufferObject {
+class GBuffer {
  public:
 
   GBuffer(RenderContext const& ctx, unsigned width, unsigned height);
   virtual ~GBuffer() {}
 
+  void clear(RenderContext const& context);
+  void set_viewport(RenderContext const& context);
+  void bind(RenderContext const& context);
+  void unbind(RenderContext const& context);
+
+  void toggle_ping_pong();
+
   void remove_buffers(RenderContext const& ctx);
 
-  std::shared_ptr<Texture2D> const& get_color_buffer() const;
+  std::shared_ptr<Texture2D> const& get_color_buffer()  const;
+  std::shared_ptr<Texture2D> const& get_pbr_buffer()    const;
   std::shared_ptr<Texture2D> const& get_normal_buffer() const;
-  std::shared_ptr<Texture2D> const& get_depth_buffer() const;
+  std::shared_ptr<Texture2D> const& get_depth_buffer()  const;
 
  private:
-  std::shared_ptr<Texture2D> color_buffer_;
+  std::shared_ptr<FrameBufferObject> fbo_read_;
+  std::shared_ptr<FrameBufferObject> fbo_write_;
+
+  std::shared_ptr<Texture2D> color_buffer_read_;
+  std::shared_ptr<Texture2D> color_buffer_write_;
+  std::shared_ptr<Texture2D> pbr_buffer_;
   std::shared_ptr<Texture2D> normal_buffer_;
   std::shared_ptr<Texture2D> depth_buffer_;
 };
