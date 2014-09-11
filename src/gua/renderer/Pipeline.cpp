@@ -157,12 +157,13 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
             config, current_scene_);
 
   // clear gbuffer
-  gbuffer_->clear(get_context());
+  gbuffer_->clear_all(get_context());
 
   // process all passes
   for (auto pass: passes_) {
     if (pass->use_last_color_buffer()) {
       gbuffer_->toggle_ping_pong();
+      gbuffer_->clear_color(get_context());
     }
     
     pass->process(this);
@@ -170,7 +171,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
   // display the last written colorbuffer of the gbuffer
   if (window_) {
-    // gbuffer_->toggle_ping_pong();
+    gbuffer_->toggle_ping_pong();
     window_->display(gbuffer_->get_color_buffer());
   }
 

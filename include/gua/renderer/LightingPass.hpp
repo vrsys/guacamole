@@ -23,6 +23,10 @@
 #define GUA_LIGHTING_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
+
+#include <memory>
 
 namespace gua {
 
@@ -37,8 +41,15 @@ class LightingPass : public PipelinePass {
   friend class Pipeline;
 
  protected:
-  LightingPass() {}
+  LightingPass();
   ~LightingPass() {}
+
+ private:
+  std::shared_ptr<ShaderProgram>      shader_;
+  std::shared_ptr<GeometryRessource>  light_sphere_;
+  scm::gl::rasterizer_state_ptr       rasterizer_state_front_;
+  scm::gl::depth_stencil_state_ptr    depth_stencil_state_;
+  scm::gl::blend_state_ptr            blend_state_;
 };
 
 }
