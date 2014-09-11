@@ -25,7 +25,6 @@
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialDatabase.hpp>
 #include <gua/node/RayNode.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
 
 // guacamole headers
 

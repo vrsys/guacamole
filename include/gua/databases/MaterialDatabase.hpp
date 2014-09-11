@@ -52,9 +52,8 @@ class GUA_DLL MaterialDatabase : public Database<Material>,
    * \param directory    An absolute or relative path to the
    *                     directory containing gmd files.
    */
-  static void load_materials_from(std::string const& directory);
 
-  static void load_material(std::string const& filename);
+  void add(std::shared_ptr<Material> material);
 
   void reload_all();
 

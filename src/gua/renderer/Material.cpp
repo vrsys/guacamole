@@ -52,6 +52,26 @@ MaterialDescription const& Material::get_description() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+std::string const& Material::get_name() const {
+  return default_instance_.get_material_name();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+MaterialInstance const Material::get_new_instance() const {
+  return MaterialInstance(default_instance_.get_material_name());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+MaterialInstance const& Material::get_default_instance() const {
+  return default_instance_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+MaterialInstance& Material::get_default_instance() {
+  return default_instance_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void Material::use(GeometryResource const& for_type, MaterialInstance const& overwrite) {
   MaterialInstance used_instance(overwrite);
   used_instance.merge(default_instance_);
@@ -166,21 +186,6 @@ void Material::use(GeometryResource const& for_type, MaterialInstance const& ove
 
     // shaders_[typeid(for_type)] = new_shader;
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-MaterialInstance const Material::get_new_instance() const {
-  return MaterialInstance(default_instance_.get_material_name());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-MaterialInstance const& Material::get_default_instance() const {
-  return default_instance_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-MaterialInstance& Material::get_default_instance() {
-  return default_instance_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -23,9 +23,7 @@
 #define GUA_NURBS_LOADER_HPP
 
 // guacamole headers
-#include <gua/node/NURBSNode.hpp>
-#include <gua/renderer/NURBS.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/platform.hpp>
 
 // external headers
 #include <unordered_set>
@@ -42,7 +40,7 @@ class Node;
  * This class can load NURBS data from files and display them in multiple
  * contexts.
  */
-class GUA_NURBS_DLL NURBSLoader : public GeometryLoader {
+class GUA_NURBS_DLL NURBSLoader {
  public:
 
    enum Flags {

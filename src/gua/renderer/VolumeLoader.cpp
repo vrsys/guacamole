@@ -44,7 +44,7 @@
 // 		std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>();
 
 // 	////////////////////////////////////////////////////////////////////////////////
-// 	VolumeLoader::VolumeLoader() : GeometryLoader(), _supported_file_extensions() {
+// 	VolumeLoader::VolumeLoader() : _supported_file_extensions() {
 // 		_supported_file_extensions.insert("raw");
 // 		_supported_file_extensions.insert("vol");
 // 	}

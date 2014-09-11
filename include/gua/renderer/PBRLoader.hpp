@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
 #include <gua/databases/Database.hpp>
 
 // external headers
@@ -40,7 +39,7 @@ class InnerNode;
 class GeometryNode;
 }
 
-class PBRLoader : public GeometryLoader {
+class PBRLoader {
  public:
 
   /**
