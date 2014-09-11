@@ -38,11 +38,11 @@ GBuffer::GBuffer(RenderContext const& ctx, unsigned width, unsigned height) {
     scm::gl::WRAP_MIRRORED_REPEAT);
 
   color_buffer_ = std::make_shared<Texture2D>(width, height,
-                                              scm::gl::FORMAT_RGB_16UI,
+                                              scm::gl::FORMAT_RGB_16F,
                                               1, state);
 
   normal_buffer_ = std::make_shared<Texture2D>(width, height,
-                                              scm::gl::FORMAT_RGB_16UI,
+                                              scm::gl::FORMAT_RGB_16F,
                                               1, state);
 
   depth_buffer_ = std::make_shared<Texture2D>(width, height,

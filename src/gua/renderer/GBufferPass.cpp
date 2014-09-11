@@ -34,7 +34,7 @@ void GBufferPass::process(Pipeline* pipe) {
   RenderContext const& ctx(pipe->get_context());
   pipe->get_gbuffer().bind(ctx);
   pipe->get_gbuffer().set_viewport(ctx);
-  pipe->get_gbuffer().clear_color_buffers(ctx, utils::Color3f(0, 1, 0));
+  pipe->get_gbuffer().clear_color_buffers(ctx, utils::Color3f(0, 0, 0));
   pipe->get_gbuffer().clear_depth_stencil_buffer(ctx);
 
   for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
