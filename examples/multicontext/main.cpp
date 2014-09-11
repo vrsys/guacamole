@@ -238,6 +238,7 @@ int main(int argc, char** argv) {
   teapot->translate(gua::math::vec3{ -2.0f, -1.5f, -4.0f });
 
   // tranform nurbs
+#if 1
   bbox = nurbs_geode->get_bounding_box();
   nurbs->translate(-bbox.center());
   nurbs->scale(5.0f / std::sqrt(bbox.size(0)*bbox.size(0) +
@@ -245,6 +246,7 @@ int main(int argc, char** argv) {
     bbox.size(2)*bbox.size(2)));
   nurbs->rotate(-90, 1, 0, 0);
   nurbs->translate(gua::math::vec3{ 3.0f, -1.5f, -4.0f });
+#endif
 
   // transform plate
   plate->scale(0.07);
@@ -272,7 +274,7 @@ int main(int argc, char** argv) {
 
    teapot_geode->rotate(0.3, 0, 1, 0);
 
-   nurbs_geode->rotate(0.3, 0, 0, 1);
+   //nurbs_geode->rotate(0.3, 0, 0, 1);
 
    plate->translate(-plate->get_bounding_box().center());
    plate->rotate(0.04f, 0, 1, 0);

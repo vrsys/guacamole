@@ -23,7 +23,7 @@
 // guacamole headers
 #include <gpucast/core/trimdomain_serializer_contour_map_binary.hpp>
 
-// external headers
+// external headers 
 #include <algorithm>
 #include <iterator>
 #include <limits>
