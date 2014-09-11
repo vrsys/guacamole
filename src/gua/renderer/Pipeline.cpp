@@ -173,7 +173,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   }
 
   if (window_) {
-    window_->display(gbuffer_->get_color_buffer());
+    window_->display(gbuffer_->get_normal_buffer());
   }
 
   window_->finish_frame();
