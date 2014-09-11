@@ -25,46 +25,88 @@
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
 
 namespace gua {
 
+LightingPass::LightingPass() :
+  shader_(nullptr),
+  light_sphere_(nullptr),
+  rasterizer_state_front_(nullptr),
+  depth_stencil_state_(nullptr),
+  blend_state_(nullptr) {}
+
 void LightingPass::process(Pipeline* pipe) {
-  // RenderContext const& ctx(pipe->get_context());
-  
-  // pipe->get_gbuffer().bind(ctx);
-  // pipe->get_gbuffer().set_viewport(ctx);
 
-  // for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
-  //   auto const& ressources = type_ressource_pair.second;
-  //   std::shared_ptr<RessourceRenderer> renderer;
+  RenderContext const& ctx(pipe->get_context());
 
-  //   for (auto const& object : ressources) {
+  // init resources
+  if (!shader_) {
+    shader_ = std::make_shared<ShaderProgram>();
+    shader_->create_from_sources(
+      Resources::lookup_shader(Resources::shaders_lighting_vert), 
+      Resources::lookup_shader(Resources::shaders_lighting_frag)
+    );
+  }
 
-  //     auto const& ressource = GeometryDatabase::instance()->lookup(object->get_filename());
-  //     if (ressource) {
-        
-  //       auto const& material = MaterialDatabase::instance()->lookup(object->get_material());
-  //       if (material) {
+  if (!light_sphere_) {
+    light_sphere_ = GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
+  }
 
-  //         if (!renderer) {
-  //           renderer = pipe->get_renderer(*ressource);
-  //         }
+  if (!depth_stencil_state_) {
+    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
+  }
 
-  //         renderer->draw(ressource, material, object->get_cached_world_transform(), pipe);
-          
-  //       } else {
-  //         Logger::LOG_WARNING << "LightingPass::process(): Cannot find material: " << object->get_material() << std::endl;
-  //       }
+  if (!rasterizer_state_front_) {
+    rasterizer_state_front_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT);
+  }
 
-  //     } else {
-  //       Logger::LOG_WARNING << "LightingPass::process(): Cannot find geometry ressource: " << object->get_filename() << std::endl;
-  //     }
-  //   }
+  // if (!rasterizer_state_back_) {
+  //   rasterizer_state_back_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
   // }
 
-  // pipe->get_gbuffer().unbind(ctx);
+  if (!blend_state_) {
+    blend_state_ = ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE);
+  }
+
+  // bind gbuffer
+  pipe->get_gbuffer().bind(ctx);
+  pipe->get_gbuffer().set_viewport(ctx);
+
+  // set state
+  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+  ctx.render_context->set_rasterizer_state(rasterizer_state_front_);
+  ctx.render_context->set_blend_state(blend_state_);
+
+  shader_->use(ctx);
+  shader_->set_subroutine(ctx, scm::gl::STAGE_VERTEX_SHADER,   "compute_light", "gua_calculate_point_light");
+  shader_->set_subroutine(ctx, scm::gl::STAGE_FRAGMENT_SHADER, "compute_light", "gua_calculate_point_light");
+  
+  shader_->set_uniform(ctx, pipe->get_scene().frustum.get_projection(), "gua_projection_matrix");
+  shader_->set_uniform(ctx, pipe->get_scene().frustum.get_view(),       "gua_view_matrix");
+  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_width(),     "gua_texel_width");
+  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(),    "gua_texel_height");
+
+  shader_->set_uniform(ctx, pipe->get_gbuffer().get_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
+  shader_->set_uniform(ctx, pipe->get_gbuffer().get_pbr_buffer()->get_handle(ctx),    "gua_gbuffer_pbr");
+  shader_->set_uniform(ctx, pipe->get_gbuffer().get_normal_buffer()->get_handle(ctx), "gua_gbuffer_normal");
+  shader_->set_uniform(ctx, pipe->get_gbuffer().get_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
+
+  // draw all lights
+  for (auto const& light : pipe->get_scene().point_lights_) {
+    shader_->set_uniform(ctx, light->get_cached_world_transform(),        "gua_transform");
+    shader_->set_uniform(ctx, light->data.get_enable_diffuse_shading(),   "gua_light_diffuse_enable");
+    shader_->set_uniform(ctx, light->data.get_enable_specular_shading(),  "gua_light_specular_enable");
+    shader_->set_uniform(ctx, light->data.get_color().vec3(),             "gua_light_color");
+    shader_->set_uniform(ctx, light->data.get_falloff(),                  "gua_light_falloff");
+    shader_->set_uniform(ctx, false,                                      "gua_light_casts_shadow");
+    light_sphere_->draw(ctx);
+  }
+
+  pipe->get_gbuffer().unbind(ctx);
+
+  ctx.render_context->reset_state_objects();
 } 
 
 }

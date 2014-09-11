@@ -61,8 +61,8 @@ int main(int argc, char** argv) {
   graph.add_node("/", teapot);
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
-  light->scale(20.f);
-  light->translate(0,0,12);
+  light->scale(1.4f);
+  light->translate(1.f, 0.f, 0.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(16.0f, 12.0f));
@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
   pipe->add_pass<gua::GBufferPass>(); 
+  pipe->add_pass<gua::LightingPass>(); 
   // pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
 
   auto window(new gua::GlfwWindow());

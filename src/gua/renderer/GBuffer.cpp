@@ -33,7 +33,9 @@ namespace gua {
 
 GBuffer::GBuffer(RenderContext const& ctx, unsigned width, unsigned height):
   fbo_read_(new FrameBufferObject()),
-  fbo_write_(new FrameBufferObject()) {
+  fbo_write_(new FrameBufferObject()),
+  width_(width),
+  height_(height) {
 
   scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
     scm::gl::WRAP_MIRRORED_REPEAT,
@@ -50,7 +52,7 @@ GBuffer::GBuffer(RenderContext const& ctx, unsigned width, unsigned height):
   fbo_read_->attach_color_buffer(ctx, 2, normal_buffer_);
   fbo_read_->attach_depth_stencil_buffer(ctx, depth_buffer_);
 
-  fbo_write_->attach_color_buffer(ctx, 0, color_buffer_read_);
+  fbo_write_->attach_color_buffer(ctx, 0, color_buffer_write_);
   fbo_write_->attach_color_buffer(ctx, 1, pbr_buffer_);
   fbo_write_->attach_color_buffer(ctx, 2, normal_buffer_);
   fbo_write_->attach_depth_stencil_buffer(ctx, depth_buffer_);
@@ -58,9 +60,15 @@ GBuffer::GBuffer(RenderContext const& ctx, unsigned width, unsigned height):
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::clear(RenderContext const& ctx) {
+void GBuffer::clear_all(RenderContext const& ctx) {
   fbo_write_->clear_color_buffers(ctx, utils::Color3f(0, 0, 0));
   fbo_write_->clear_depth_stencil_buffer(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GBuffer::clear_color(RenderContext const& ctx) {
+  fbo_write_->clear_color_buffer(ctx, 0, utils::Color3f(0, 0, 0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
