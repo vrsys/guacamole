@@ -21,6 +21,9 @@
 
 #include <gua/renderer/Material.hpp>
 
+#include <gua/utils/string_utils.hpp>
+#include <gua/databases/Resources.hpp>
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,128 +75,78 @@ MaterialInstance& Material::get_default_instance() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void Material::use(GeometryResource const& for_type, MaterialInstance const& overwrite) {
+ShaderProgram* Material::get_shader(std::shared_ptr<GeometryResource> const& for_type,
+                                    MaterialInstance const& overwrite) {
   MaterialInstance used_instance(overwrite);
   used_instance.merge(default_instance_);
 
-  auto shader(shaders_.find(typeid(for_type)));
+  auto shader(shaders_.find(typeid(*for_type)));
 
   if (shader != shaders_.end()) {
-    // shader->second->use();
+    return shader->second;
   } else {
-
-    std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> global_uniforms;
-
-    global_uniforms["gua_view_matrix"] = std::make_shared<UniformValue<float>>(1.f);
-    global_uniforms["gua_view_id"] = std::make_shared<UniformValue<int>>(43);
-
-    auto compile_description = [global_uniforms](std::list<MaterialPass> const& passes, bool vertex_shader) {
-      std::stringstream source;
-
-      // header ----------------------------------------------------------------
-      source << "#version 420" << std::endl;
-
-      // input and g-buffer output ---------------------------------------------
-      if (vertex_shader) {
-        source << R"(
-          out vec3  gua_position;
-          out vec3  gua_normal;
-          out vec3  gua_tangent;
-          out vec3  gua_bitangent;
-          out vec2  gua_texcoords;
-          out vec2  gua_color;
-          out float gua_shinyness;
-        )";
-
-      } else {
-
-        source << R"(
-          in vec3  gua_position;
-          in vec3  gua_normal;
-          in vec3  gua_tangent;
-          in vec3  gua_bitangent;
-          in vec2  gua_texcoords;
-          in vec2  gua_color;
-          in float gua_shinyness;
-
-          out vec3  gua_gbuffer_normal;
-          out vec2  gua_gbuffer_color;
-          out float gua_gbuffer_shinyness;
-        )";
-      }
-
-      // uniforms --------------------------------------------------------------
-      source << std::endl;
-
-      auto uniforms = global_uniforms;
-
-      // merge uniforms
-      for (auto& pass: passes) {
-        uniforms.insert(pass.get_uniforms().begin(), pass.get_uniforms().end());
-      }
-
-      // print uniforms
-      for (auto& uniform: uniforms) {
-        source << "uniform "
-               << uniform.second->get_glsl_type() << " "
-               << uniform.first << ";"
-               << std::endl;
-      }
-
-
-      // pass sources ----------------------------------------------------------
-      source << std::endl;
-      for (auto& pass: passes) {
-        source << pass.get_source() << std::endl;
-      }
-
-      // main ------------------------------------------------------------------
-      source << std::endl;
-      source << "int main() {" << std::endl;
-
-      for (auto& pass: passes) {
-        if (pass.get_name() != "") {
-          source << pass.get_name() << "();" << std::endl;
-        }
-      }
-
-      // g-buffer output -------------------------------------------------------
-      if (vertex_shader) {
-        source << R"(
-          gl_Position = vec4();
-        )";
-      }
-
-      source << "}" << std::endl;
-
-      // indent and return code ------------------------------------------------
-      return string_utils::format_code(source.str());
-    };
 
     auto v_passes = desc_.get_vertex_passes();
     auto f_passes = desc_.get_fragment_passes();
 
-    v_passes.push_front(for_type.get_vertex_material_pass());
-    f_passes.push_front(for_type.get_fragment_material_pass());
+    auto new_shader = new ShaderProgram();
+    new_shader->create_from_sources(
+      compile_description(v_passes,
+                          Resources::lookup_shader(Resources::shaders_tri_mesh_shader_vert)),
+      compile_description(f_passes,
+                          Resources::lookup_shader(Resources::shaders_tri_mesh_shader_frag))
+    );
 
-    // auto new_shader = new ShaderProgram(
-    //   compile_description(v_passes, true),
-    //   compile_description(f_passes, false)
-    // );
-
-
-    // new_shader->use();
-
-    // shaders_[typeid(for_type)] = new_shader;
+    shaders_[typeid(*for_type)] = new_shader;
+    return new_shader;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 void Material::print_shaders() const {
   // for (auto shader: shaders_) {
   //   shader.second->print_shaders();
   // }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+std::string Material::compile_description(std::list<MaterialPass> const& passes,
+                                          std::string const& shader_source) const {
+  std::string source(shader_source);
+  std::stringstream uniforms;
+
+  std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> pass_uniforms;;
+
+  // collect uniforms from all passes
+  for (auto& pass: passes) {
+    pass_uniforms.insert(pass.get_uniforms().begin(), pass.get_uniforms().end());
+  }
+
+  for (auto& uniform: pass_uniforms) {
+    uniforms << "uniform "
+           << uniform.second->get_glsl_type() << " "
+           << uniform.first << ";"
+           << std::endl;
+  }
+
+  // insert uniforms
+  gua::string_utils::replace(source, "@material_uniforms", uniforms.str());
+
+
+  std::stringstream method_declarations;
+  std::stringstream method_calls;
+
+  // pass sources ----------------------------------------------------------
+  for (auto& pass: passes) {
+    method_declarations << pass.get_source() << std::endl;
+    method_calls << pass.get_name() << "()" << std::endl;
+  }
+  gua::string_utils::replace(source, "@material_method_declarations", method_declarations.str());
+  gua::string_utils::replace(source, "@material_method_calls", method_calls.str());
+
+  // indent code ------------------------------------------------
+  return string_utils::format_code(source);
+}
 
 }

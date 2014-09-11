@@ -32,8 +32,8 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MaterialDatabase::add(std::shared_ptr<Material> material) {
-  add(material->get_name(), material);
+void MaterialDatabase::add(std::shared_ptr<Material> const& material) {
+  Database<Material>::add(material->get_name(), material);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
