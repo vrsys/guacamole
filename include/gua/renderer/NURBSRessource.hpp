@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/nurbs_geometry/NURBSData.hpp>
 
 // external headers
@@ -47,7 +47,7 @@
 
 namespace gua {
 
-class GUA_DLL NURBSRessource : public GeometryRessource {
+class GUA_DLL NURBSRessource : public GeometryResource {
 
  public:
    NURBSRessource(std::shared_ptr<TrimmedBezierSurfaceObject> const& object,

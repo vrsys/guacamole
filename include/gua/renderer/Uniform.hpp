@@ -83,6 +83,10 @@ class UniformValueBase {
       Logger::LOG_WARNING << "Unable to get value of uniform: Types do not match!" << std::endl;
     }
   }
+
+  virtual UniformValueBase* get_copy() const = 0;
+
+  virtual std::string get_glsl_type() const = 0;
 };
 
 
@@ -102,6 +106,12 @@ template <typename T> class UniformValue : public UniformValueBase {
   T const& value() const { return value_; }
 
   void value(T const& value) { value_ = value; }
+
+  virtual UniformValueBase* get_copy() const {
+    return new UniformValue<T>(value_);
+  }
+
+  virtual std::string get_glsl_type() const;
 
  private:
   T value_;
@@ -127,6 +137,14 @@ class UniformValue<std::shared_ptr<Texture> > : public UniformValueBase {
 
   void value(std::shared_ptr<Texture> const& value) { value_ = value; }
 
+  virtual UniformValueBase* get_copy() const {
+    return new UniformValue<std::shared_ptr<Texture>>(value_);
+  }
+
+  virtual std::string get_glsl_type() const {
+    return "sampler2D";
+  }
+
  private:
   std::shared_ptr<Texture> value_;
 };
@@ -147,7 +165,15 @@ class UniformValue<Texture*> : public UniformValueBase {
 
   Texture* value() const { return value_; }
 
+  virtual UniformValueBase* get_copy() const {
+    return new UniformValue<Texture*>(value_);
+  }
+
   void value(Texture* value) { value_ = value; }
+
+  virtual std::string get_glsl_type() const {
+    return "sampler2D";
+  }
 
  private:
   Texture* value_;
@@ -172,6 +198,14 @@ class UniformValue<std::shared_ptr<Texture2D> > : public UniformValueBase {
 
   void value(std::shared_ptr<Texture2D> const& value) { value_ = value; }
 
+  virtual UniformValueBase* get_copy() const {
+    return new UniformValue<std::shared_ptr<Texture2D>>(value_);
+  }
+
+  virtual std::string get_glsl_type() const {
+    return "sampler2D";
+  }
+
  private:
   std::shared_ptr<Texture2D> value_;
 };
@@ -192,7 +226,15 @@ class UniformValue<Texture2D*> : public UniformValueBase {
 
   Texture2D* value() const { return value_; }
 
+  virtual UniformValueBase* get_copy() const {
+    return new UniformValue<Texture2D*>(value_);
+  }
+
   void value(Texture2D* value) { value_ = value; }
+
+  virtual std::string get_glsl_type() const {
+    return "sampler2D";
+  }
 
  private:
   Texture2D* value_;
@@ -216,6 +258,14 @@ class UniformValue<std::shared_ptr<Texture3D> > : public UniformValueBase {
 
   void value(std::shared_ptr<Texture3D> const& value) { value_ = value; }
 
+  virtual UniformValueBase* get_copy() const {
+    return new UniformValue<std::shared_ptr<Texture3D>>(value_);
+  }
+
+  virtual std::string get_glsl_type() const {
+    return "sampler3D";
+  }
+
  private:
   std::shared_ptr<Texture3D> value_;
 };
@@ -237,6 +287,14 @@ class UniformValue<Texture3D*> : public UniformValueBase {
   Texture3D* value() const { return value_; }
 
   void value(Texture3D* value) { value_ = value; }
+
+  virtual UniformValueBase* get_copy() const {
+    return new UniformValue<Texture3D*>(value_);
+  }
+
+  virtual std::string get_glsl_type() const {
+    return "sampler3D";
+  }
 
  private:
   Texture3D* value_;
@@ -261,6 +319,14 @@ template <> class UniformValue<std::string> : public UniformValueBase {
 
   void value(std::string const& value) { value_ = value; }
 
+  virtual UniformValueBase* get_copy() const {
+    return new UniformValue<std::string>(value_);
+  }
+
+  virtual std::string get_glsl_type() const {
+    return "sampler2D";
+  }
+
  private:
   std::string value_;
 };
@@ -283,6 +349,14 @@ template <> class UniformValue<utils::Color3f> : public UniformValueBase {
   utils::Color3f const& value() const { return value_; }
 
   void value(utils::Color3f const& value) { value_ = value; }
+
+  virtual UniformValueBase* get_copy() const {
+    return new UniformValue<utils::Color3f>(value_);
+  }
+
+  virtual std::string get_glsl_type() const {
+    return "vec3";
+  }
 
  private:
   utils::Color3f value_;

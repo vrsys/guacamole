@@ -19,142 +19,97 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
 #include <gua/renderer/MaterialDescription.hpp>
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/utils.hpp>
-#include <gua/databases.hpp>
+#include <gua/utils/TextFile.hpp>
+#include <gua/utils/Logger.hpp>
+#include <gua/renderer/Uniform.hpp>
 
-// external headers
-#include <fstream>
-#include <sstream>
+#include <jsoncpp/json/json.h>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-
-MaterialDescription::MaterialDescription() : file_name_(""), shading_model_(), uniforms_() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MaterialDescription::MaterialDescription(std::string const& file_name)
-    : file_name_(file_name), shading_model_(), uniforms_() {
-
-    reload();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MaterialDescription::MaterialDescription(const char* buffer, unsigned buffer_size)
-    : shading_model_(), uniforms_() {
-
-    construct_from_buffer(buffer, buffer_size);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MaterialDescription::~MaterialDescription() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MaterialDescription::reload() {
-    if (file_name_ != "") {
-        TextFile file(file_name_);
-
-        if (file.is_valid()) {
-            construct_from_file(file);
-        } else {
-            Logger::LOG_WARNING << "Failed to load material \"" << file_name_ << "\": "
-                    "File does not exist!" << std::endl;
-        }
-
-        PathParser p;
-        p.parse(file_name_);
-        shading_model_ = p.get_path(true) + shading_model_;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MaterialDescription::save_to_file(std::string const& file_name) const {
-    Json::Value uniforms;
-    for (auto uniform : uniforms_) {
-        uniforms[uniform.first] = uniform.second;
-    }
-
-    Json::Value root;
-    root["uniforms"] = uniforms;
-    root["shading_model"] = shading_model_;
-
-    std::stringstream str;
-    str << root;
-
+void MaterialDescription::load_from_file(std::string const& file_name) {
+  if (file_name != "") {
     TextFile file(file_name);
-    file.set_content(str.str());
-    file.save();
-}
 
-////////////////////////////////////////////////////////////////////////////////
-
-void MaterialDescription::construct_from_file(TextFile const & file) {
-    Json::Value value;
-    Json::Reader reader;
-    if (!reader.parse(file.get_content(), value)) {
+    if (file.is_valid()) {
+      Json::Value value;
+      Json::Reader reader;
+      if (!reader.parse(file.get_content(), value)) {
         Logger::LOG_WARNING << "Failed to parse material description \"" << file.get_file_name() << "\": "
                 "File does not exist!" << std::endl;
         return;
-    }
-
-    if (value["shading_model"] == Json::Value::null) {
-        Logger::LOG_WARNING << "Failed to parse material description \"" << file.get_file_name() << "\": "
-                "No shading model associated" << std::endl;
-        return;
-    }
-
-    shading_model_ = value["shading_model"].asString();
-    uniforms_.clear();
-
-    if (value["uniforms"] != Json::Value::null) {
-        auto uniforms_strings(value["uniforms"].getMemberNames());
-        for (auto uniform : uniforms_strings) {
-            uniforms_.insert(
-                std::make_pair(uniform, value["uniforms"][uniform].asString()));
-        }
-    }
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MaterialDescription::construct_from_buffer(const char* buffer, unsigned buffer_size) {
-    Json::Value value;
-    Json::Reader reader;
-    if (!reader.parse(buffer, buffer + buffer_size, value)) {
-        Logger::LOG_WARNING << "Failed to parse material description from buffer: "
-                "Buffer invalid!" << std::endl;
-        return;
       }
 
-    if (value["shading_model"] == Json::Value::null) {
-        Logger::LOG_WARNING << "Failed to parse material description from buffer: "
-                "No shading model associated!" << std::endl;
-        return;
-    }
+      if (value["vertex_passes"] != Json::Value::null
+          && value["vertex_passes"].isArray()) {
 
-    shading_model_ = value["shading_model"].asString();
+        for (int i(0); i < value["vertex_passes"].size(); ++i) {
+          auto pass(value["vertex_passes"][i]);
+          MaterialPass vertex_pass;
 
-    if (value["uniforms"] != Json::Value::null) {
-        auto uniforms_strings(value["uniforms"].getMemberNames());
-        for (auto uniform : uniforms_strings) {
-            uniforms_.insert(
-                std::make_pair(uniform, value["uniforms"][uniform].asString()));
+          // load pass from file if file name is set
+          if (pass["file_name"] != Json::Value::null) {
+            vertex_pass.load_from_file(pass["file_name"].asString());
+          // else use name and source
+          } else {
+            std::cout << pass << std::endl;
+            vertex_pass.load_from_json(pass.toStyledString());
+          }
+
+          add_vertex_pass(vertex_pass);
         }
-    }
+      }
 
+      if (value["fragment_passes"] != Json::Value::null
+          && value["fragment_passes"].isArray()) {
+
+        for (int i(0); i < value["fragment_passes"].size(); ++i) {
+          auto pass(value["vertex_passes"][i]);
+          MaterialPass fragment_pass;
+
+          // load pass from file if file name is set
+          if (pass["file_name"] != Json::Value::null) {
+            fragment_pass.load_from_file(pass["file_name"].asString());
+          // else use name and source
+          } else {
+            fragment_pass.load_from_json(pass.toStyledString());
+          }
+
+          add_fragment_pass(fragment_pass);
+        }
+      }
+
+    } else {
+      Logger::LOG_WARNING << "Failed to load material description\""
+                          << file_name << "\": "
+                          "File does not exist!" << std::endl;
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+MaterialDescription& MaterialDescription::add_vertex_pass(MaterialPass const& pass) {
+  vertex_passes_.push_back(pass);
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+MaterialDescription& MaterialDescription::add_fragment_pass(MaterialPass const& pass) {
+  fragment_passes_.push_back(pass);
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::list<MaterialPass> const& MaterialDescription::get_vertex_passes() const {
+  return vertex_passes_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::list<MaterialPass> const& MaterialDescription::get_fragment_passes() const {
+  return fragment_passes_;
+}
 
 }

@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/video3d_geometry/KinectCalibrationFile.hpp>
 #include <gua/renderer/video3d_geometry/FileBuffer.h>
 #include <gua/renderer/Texture2D.hpp>
@@ -56,7 +56,7 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class Video3DRessource : public GeometryRessource {
+class Video3DRessource : public GeometryResource {
  public:
 
   /**
@@ -131,9 +131,9 @@ class Video3DRessource : public GeometryRessource {
   mutable std::vector<scm::gl::texture_2d_ptr> depth_texArrays_;
 
   // cpu resources
-  mutable std::vector<unsigned char*>   color_buffers_; 
-  mutable std::vector<float*>           depth_buffers_; 
-  mutable std::vector<sys::FileBuffer*> file_buffers_;  
+  mutable std::vector<unsigned char*>   color_buffers_;
+  mutable std::vector<float*>           depth_buffers_;
+  mutable std::vector<sys::FileBuffer*> file_buffers_;
 
   mutable std::vector<video3d::NetKinectArray* > nka_per_context_;
   mutable std::vector< std::vector<scm::gl::texture_3d_ptr> > cv_xyz_per_context_;
@@ -148,7 +148,7 @@ class Video3DRessource : public GeometryRessource {
 
   mutable unsigned width_colorimage_;
   mutable unsigned height_colorimage_;
-  
+
   mutable std::mutex upload_mutex_;
 
   mutable bool overwrite_normal_;

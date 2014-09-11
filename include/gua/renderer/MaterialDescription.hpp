@@ -19,88 +19,35 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_NEW_MATERIAL_HPP
-#define GUA_NEW_MATERIAL_HPP
+#ifndef GUA_MATERIAL_DESCRIPTION_HPP
+#define GUA_MATERIAL_DESCRIPTION_HPP
 
-// guacamole headers
-#include <gua/renderer/ShadingModel.hpp>
+#include <gua/renderer/MaterialPass.hpp>
 
-#include <unordered_map>
+#include <list>
 
 namespace gua {
 
-struct RenderContext;
-class TextFile;
-
-/**
- * Stores information on a MaterialDescription.
- *
- */
 class MaterialDescription {
  public:
 
-  /**
-   * Default constructor.
-   *
-   * Creates a new (invalid) material. It won't do anything until being
-   * initialized with the non-default constructor.
-   */
-  MaterialDescription();
+  void load_from_file(std::string const& file_name);
 
-  /**
-   * Constructor from a material description.
-   *
-   * Creates a new MaterialDescription from a given material description.
-   *
-   * \param file_name        The file used to describe this material.
-   */
-  MaterialDescription(std::string const& file_name);
+  MaterialDescription& add_vertex_pass(MaterialPass const& pass);
 
-  /**
-   * Constructor from a buffer.
-   *
-   * Creates a new MaterialDescription from a given buffer.
-   *
-   * \param buffer        A buffer containing a material description.
-   * \param buffer_size   The size of the given buffer.
-   */
-  MaterialDescription(const char* buffer, unsigned buffer_size);
+  MaterialDescription& add_fragment_pass(MaterialPass const& pass);
 
-  /**
-   * Destructor.
-   *
-   * Deletes the MaterialDescription and frees all associated data.
-   */
-  ~MaterialDescription();
+  std::list<MaterialPass> const& get_vertex_passes() const;
 
-  void reload();
-
-  inline void set_shading_model(std::string const& s) { shading_model_ = s; }
-  inline std::string const& get_shading_model() const { return shading_model_; }
-
-
-  inline std::unordered_map<std::string, std::string>& get_uniforms() {
-      return uniforms_;
-  }
-
-  inline std::unordered_map<std::string, std::string> const& get_uniforms() const {
-      return uniforms_;
-  }
-
-  std::string const& get_filename() const {return file_name_;}
-
-  void save_to_file(std::string const& file_name) const;
+  std::list<MaterialPass> const& get_fragment_passes() const;
 
  private:
-  void construct_from_file(TextFile const& file);
-  void construct_from_buffer(const char* buffer, unsigned buffer_size);
+  std::list<MaterialPass> vertex_passes_;
+  std::list<MaterialPass> fragment_passes_;
 
-  std::string file_name_;
 
-  std::string shading_model_;
-  std::unordered_map<std::string, std::string> uniforms_;
 };
 
 }
 
-#endif  // GUA_NEW_MATERIAL_HPP
+#endif  // GUA_MATERIAL_DESCRIPTION_HPP

@@ -36,7 +36,7 @@ class GUA_DLL TriMeshRenderer : public RessourceRenderer {
 
   TriMeshRenderer();
 
-  void draw(std::shared_ptr<GeometryRessource> const& object, 
+  void draw(std::shared_ptr<GeometryResource> const& object,
             std::shared_ptr<Material> const& material,
             math::mat4 const& transformation,
             Pipeline* pipe) const;

@@ -36,7 +36,14 @@ class MaterialPass {
 
   MaterialPass(std::string const& name = "");
 
+  MaterialPass& load_from_file(std::string const& file_name);
+  MaterialPass& load_from_json(std::string const& json_string);
+
+  MaterialPass& set_name(std::string const& name);
+  std::string const& get_name() const;
+
   MaterialPass& set_source(std::string const& source);
+  std::string const& get_source() const;
 
   template <typename T>
   MaterialPass& set_uniform(std::string const& name, T const& value) {
@@ -50,10 +57,6 @@ class MaterialPass {
 
     return *this;
   }
-
-  std::string const& get_name() const;
-
-  std::string const& get_source() const;
 
   std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> const&
   get_uniforms() const;

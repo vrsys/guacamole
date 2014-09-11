@@ -20,8 +20,29 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/Uniform.hpp>
+
+#include <gua/math/math.hpp>
 
 namespace gua {
+
+template<> std::string UniformValue<int>         ::get_glsl_type() const { return "int"; }
+template<> std::string UniformValue<bool>        ::get_glsl_type() const { return "int"; }
+template<> std::string UniformValue<float>       ::get_glsl_type() const { return "float"; }
+
+template<> std::string UniformValue<math::mat3>  ::get_glsl_type() const { return "mat3"; }
+template<> std::string UniformValue<math::mat4>  ::get_glsl_type() const { return "mat4"; }
+
+template<> std::string UniformValue<math::vec2>  ::get_glsl_type() const { return "vec2"; }
+template<> std::string UniformValue<math::vec3>  ::get_glsl_type() const { return "vec3"; }
+template<> std::string UniformValue<math::vec4>  ::get_glsl_type() const { return "vec4"; }
+
+template<> std::string UniformValue<math::vec2i> ::get_glsl_type() const { return "vec2i"; }
+template<> std::string UniformValue<math::vec3i> ::get_glsl_type() const { return "vec3i"; }
+template<> std::string UniformValue<math::vec4i> ::get_glsl_type() const { return "vec4i"; }
+
+template<> std::string UniformValue<math::vec2ui>::get_glsl_type() const { return "vec2ui"; }
+template<> std::string UniformValue<math::vec3ui>::get_glsl_type() const { return "vec3ui"; }
+template<> std::string UniformValue<math::vec4ui>::get_glsl_type() const { return "vec4ui"; }
 
 }
