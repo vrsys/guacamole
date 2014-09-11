@@ -92,26 +92,20 @@ class Pipeline {
   void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 
-  void                              bind_postfx_buffer()  const;
-  std::shared_ptr<Texture2D> const& get_postfx_buffer()   const;
-  std::list<PipelinePass*>   const& get_passes()          const;
-  GBuffer                         & get_gbuffer()         const;
-  RenderContext              const& get_context()         const;
-  SerializedScene            const& get_scene()           const;
+  std::list<PipelinePass*> const& get_passes()  const;
+  GBuffer                       & get_gbuffer() const;
+  RenderContext            const& get_context() const;
+  SerializedScene          const& get_scene()   const;
 
   std::shared_ptr<RessourceRenderer> get_renderer(GeometryResource const& type);
 
  private:
-  std::list<PipelinePass*>                  passes_;
-  GBuffer*                                  gbuffer_;
-  WindowBase*                               window_;
-  SerializedScene                           current_scene_;
+  std::list<PipelinePass*> passes_;
+  GBuffer*                 gbuffer_;
+  WindowBase*              window_;
+  SerializedScene          current_scene_;
 
-  std::array<FrameBufferObject*, 2>         postfx_fbo_;
-  std::array<std::shared_ptr<Texture2D>, 2> postfx_buffer_;
-  bool                                      ping_pong_;
-
-  bool                                      dirty_;
+  bool                     dirty_;
   std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_;
 };
 

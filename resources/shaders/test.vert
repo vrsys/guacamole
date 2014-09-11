@@ -14,6 +14,6 @@ uniform mat4 gua_view_matrix;
 out vec3 gua_normal;
 
 void main() {
-  gua_normal = (gua_normal_transform * vec4(gua_in_normal, 0.0)).xyz;
+  gua_normal = normalize((gua_normal_transform * vec4(gua_in_normal, 0.0)).xyz);
   gl_Position = gua_projection_matrix * gua_view_matrix * gua_transform * vec4(gua_in_position, 1.0);
 }

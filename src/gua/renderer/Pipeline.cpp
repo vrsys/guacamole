@@ -96,10 +96,7 @@ void serialize(SceneGraph const& scene_graph,
 
 Pipeline::Pipeline() :
   gbuffer_(nullptr),
-  dirty_(false),
-  ping_pong_(true) {
-
-}
+  dirty_(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -136,7 +133,6 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
   // recreate gbuffer if resolution changed
   if (dirty_) {
-
     if (gbuffer_) {
       gbuffer_->remove_buffers(get_context());
       delete gbuffer_;
@@ -160,22 +156,26 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
             config.camera().eye_l, config.camera().screen_l,
             config, current_scene_);
 
-  // process all passes
-  ping_pong_ = false;
+  // clear gbuffer
+  gbuffer_->clear(get_context());
 
+  // process all passes
   for (auto pass: passes_) {
 
-    if (pass->is_fullscreen_pass()) {
-      ping_pong_ = !ping_pong_;
+    if (pass->use_last_color_buffer()) {
+      gbuffer_->toggle_ping_pong();
     }
 
     pass->process(this);
   }
 
+  // display the last written colorbuffer of the gbuffer
   if (window_) {
+    // gbuffer_->toggle_ping_pong();
     window_->display(gbuffer_->get_color_buffer());
   }
 
+  // swap buffers
   window_->finish_frame();
   // ++(get_context().framecount);
 }
@@ -184,18 +184,6 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
 GBuffer& Pipeline::get_gbuffer() const {
   return *gbuffer_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Texture2D> const& Pipeline::get_postfx_buffer() const {
-  return postfx_buffer_[ping_pong_? 0 : 1];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Pipeline::bind_postfx_buffer() const {
-  postfx_fbo_[ping_pong_? 1 : 0]->bind(get_context());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
