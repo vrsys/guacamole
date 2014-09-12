@@ -11,9 +11,13 @@ layout(location=0) out vec3 gua_out_color;
 layout(location=1) out vec3 gua_out_pbr;
 layout(location=2) out vec3 gua_out_normal;
 
+@include "shaders/common/gua_global_variable_declaration.glsl"
+
 @material_method_declarations
 
 void main() {
+
+@include "shaders/common/gua_global_variable_assignment.glsl"
 
 @material_method_calls
 

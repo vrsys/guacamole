@@ -19,29 +19,22 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GBUFFER_PASS_HPP
-#define GUA_GBUFFER_PASS_HPP
+@include "shaders/common/header.glsl"
 
-#include <gua/renderer/PipelinePass.hpp>
+// varyings
+in vec2 gua_quad_coords;
 
-namespace gua {
+@include "shaders/common/gua_camera_uniforms.glsl"
+@include "shaders/gbuffer_input.glsl"
 
-class Pipeline;
+// output
+layout(location=0) out vec3 gua_out_color;
 
-class GBufferPass : public PipelinePass {
- public:
+void main() {
+    float depth = gua_get_depth();
+    if (depth < 1) {
+        discard;
+    }
 
-  virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer() const { return false; }
-  virtual void process(Pipeline* pipe);
-
-  friend class Pipeline;
-
- protected:
-  GBufferPass() {}
-  ~GBufferPass() {}
-};
-
+    gua_out_color = vec3(0, 0, 1);
 }
-
-#endif  // GUA_GBUFFER_PASS_HPP

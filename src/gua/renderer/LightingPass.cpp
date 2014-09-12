@@ -71,8 +71,9 @@ void LightingPass::process(Pipeline* pipe) {
   }
 
   // bind gbuffer
-  pipe->get_gbuffer().bind(ctx);
+  pipe->get_gbuffer().bind(ctx, this);
   pipe->get_gbuffer().set_viewport(ctx);
+  pipe->get_gbuffer().clear_color(ctx);
 
   // set state
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
@@ -83,13 +84,7 @@ void LightingPass::process(Pipeline* pipe) {
   shader_->set_subroutine(ctx, scm::gl::STAGE_VERTEX_SHADER,   "compute_light", "gua_calculate_point_light");
   shader_->set_subroutine(ctx, scm::gl::STAGE_FRAGMENT_SHADER, "compute_light", "gua_calculate_point_light");
   
-  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_width(),  "gua_texel_width");
-  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(), "gua_texel_height");
-
-  shader_->set_uniform(ctx, pipe->get_gbuffer().get_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
-  shader_->set_uniform(ctx, pipe->get_gbuffer().get_pbr_buffer()->get_handle(ctx),    "gua_gbuffer_pbr");
-  shader_->set_uniform(ctx, pipe->get_gbuffer().get_normal_buffer()->get_handle(ctx), "gua_gbuffer_normal");
-  shader_->set_uniform(ctx, pipe->get_gbuffer().get_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
+  pipe->bind_gbuffer_input(shader_);
 
   // draw all lights
   for (auto const& light : pipe->get_scene().point_lights_) {

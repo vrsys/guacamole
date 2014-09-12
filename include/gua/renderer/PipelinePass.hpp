@@ -29,7 +29,9 @@ class Pipeline;
 class PipelinePass {
  public:
 
-  virtual bool use_last_color_buffer() const = 0;
+  virtual bool needs_color_buffer_as_input() const = 0;
+  virtual bool writes_only_color_buffer() const = 0;
+  
   virtual void process(Pipeline* pipe) = 0;
 
   friend class Pipeline;

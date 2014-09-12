@@ -1,7 +1,7 @@
-out vec3  gua_position;
-out vec3  gua_normal;
-out vec3  gua_tangent;
-out vec3  gua_bitangent;
-out vec2  gua_texcoords;
-out vec2  gua_color;
-out float gua_shinyness;
+out vec3  gua_varying_position;
+out vec3  gua_varying_normal;
+out vec3  gua_varying_tangent;
+out vec3  gua_varying_bitangent;
+out vec2  gua_varying_texcoords;
+out vec3  gua_varying_color;
+out float gua_varying_shinyness;

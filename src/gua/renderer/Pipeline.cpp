@@ -97,7 +97,8 @@ void serialize(SceneGraph const& scene_graph,
 Pipeline::Pipeline() :
   gbuffer_(nullptr),
   camera_block_(nullptr),
-  dirty_(false) {}
+  dirty_(false),
+  fullscreen_quad_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -174,9 +175,8 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   // process all passes
   for (auto pass: passes_) {
 
-    if (pass->use_last_color_buffer()) {
+    if (pass->needs_color_buffer_as_input()) {
       gbuffer_->toggle_ping_pong();
-      gbuffer_->clear_color(get_context());
     }
 
     pass->process(this);
@@ -185,7 +185,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   // display the last written colorbuffer of the gbuffer
   if (window_) {
     gbuffer_->toggle_ping_pong();
-    window_->display(gbuffer_->get_color_buffer());
+    window_->display(gbuffer_->get_current_color_buffer());
   }
 
   // swap buffers
@@ -220,8 +220,34 @@ SerializedScene const& Pipeline::get_scene() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 
+void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const {
+
+  auto& ctx(get_context());
+
+  shader->set_uniform(ctx, 1.0f / gbuffer_->get_width(),  "gua_texel_width");
+  shader->set_uniform(ctx, 1.0f / gbuffer_->get_height(), "gua_texel_height");
+
+  shader->set_uniform(ctx, gbuffer_->get_current_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
+  shader->set_uniform(ctx, gbuffer_->get_current_pbr_buffer()->get_handle(ctx),    "gua_gbuffer_pbr");
+  shader->set_uniform(ctx, gbuffer_->get_current_normal_buffer()->get_handle(ctx), "gua_gbuffer_normal");
+  shader->set_uniform(ctx, gbuffer_->get_current_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void Pipeline::bind_camera_uniform_block(unsigned location) const {
   get_context().render_context->bind_uniform_buffer(camera_block_->block().block_buffer(), location);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::draw_fullscreen_quad() {
+  if (!fullscreen_quad_) {
+    fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+              get_context().render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+  }
+
+  fullscreen_quad_->draw(get_context().render_context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -156,7 +156,7 @@ std::string Material::compile_description(std::list<MaterialPass> const& passes,
   // pass sources ----------------------------------------------------------
   for (auto& pass: passes) {
     method_declarations << pass.get_source() << std::endl;
-    method_calls << pass.get_name() << "()" << std::endl;
+    method_calls << pass.get_name() << "();" << std::endl;
   }
   gua::string_utils::replace(source, "@material_method_declarations", method_declarations.str());
   gua::string_utils::replace(source, "@material_method_calls", method_calls.str());

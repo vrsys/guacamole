@@ -29,8 +29,6 @@ layout(location=2) in vec3 gua_in_normal;
 // uniforms
 @include "shaders/common/gua_camera_uniforms.glsl"
 @include "shaders/common/gua_object_uniforms.glsl"
-uniform float gua_texel_width;
-uniform float gua_texel_height;
 
 uniform mat4 gua_light_shadow_map_projection_view_matrix_0;
 uniform mat4 gua_light_shadow_map_projection_view_matrix_1;
@@ -46,8 +44,10 @@ out mat4  gua_lightinfo5;
 out mat4  gua_lightinfo6;
 out mat4  gua_lightinfo7;
 
-// BASE LIGHTING CALCULATIONS --------------------------------------------------
+// methods ---------------------------------------------------------------------
+@include "shaders/gbuffer_input.glsl"
 
+// BASE LIGHTING CALCULATIONS --------------------------------------------------
 subroutine void CalculateLightType();
 subroutine uniform CalculateLightType compute_light;
 

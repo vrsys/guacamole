@@ -28,6 +28,8 @@
 
 namespace gua {
 
+class PipelinePass;
+
 /**
  *
  */
@@ -41,17 +43,18 @@ class GBuffer {
   void clear_color(RenderContext const& context);
   
   void set_viewport(RenderContext const& context);
-  void bind(RenderContext const& context);
+
+  void bind(RenderContext const& context, PipelinePass* next_pass);
   void unbind(RenderContext const& context);
 
   void toggle_ping_pong();
 
   void remove_buffers(RenderContext const& ctx);
 
-  std::shared_ptr<Texture2D> const& get_color_buffer()  const;
-  std::shared_ptr<Texture2D> const& get_pbr_buffer()    const;
-  std::shared_ptr<Texture2D> const& get_normal_buffer() const;
-  std::shared_ptr<Texture2D> const& get_depth_buffer()  const;
+  std::shared_ptr<Texture2D> const& get_current_color_buffer()  const;
+  std::shared_ptr<Texture2D> const& get_current_pbr_buffer()    const;
+  std::shared_ptr<Texture2D> const& get_current_normal_buffer() const;
+  std::shared_ptr<Texture2D> const& get_current_depth_buffer()  const;
 
   unsigned get_width()  const { return width_; }
   unsigned get_height() const { return height_; }
@@ -59,6 +62,9 @@ class GBuffer {
  private:
   std::shared_ptr<FrameBufferObject> fbo_read_;
   std::shared_ptr<FrameBufferObject> fbo_write_;
+  
+  std::shared_ptr<FrameBufferObject> fbo_read_only_color_;
+  std::shared_ptr<FrameBufferObject> fbo_write_only_color_;
 
   std::shared_ptr<Texture2D> color_buffer_read_;
   std::shared_ptr<Texture2D> color_buffer_write_;
