@@ -58,10 +58,19 @@ class MaterialPass {
     return *this;
   }
 
+  MaterialPass& set_uniform(std::string const& name,
+                            std::shared_ptr<UniformValueBase> const& uniform) {
+
+    uniforms_[name] = uniform;
+    return *this;
+  }
+
+
   std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> const&
   get_uniforms() const;
 
  private:
+
   std::string name_;
   std::string source_;
   std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> uniforms_;

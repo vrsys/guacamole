@@ -6,7 +6,8 @@ layout(location=2) in vec3 gua_in_normal;
 layout(location=3) in vec3 gua_in_tangent;
 layout(location=4) in vec3 gua_in_bitangent;
 
-@include "shaders/common/gua_uniforms.glsl"
+@include "shaders/common/gua_camera_uniforms.glsl"
+@include "shaders/common/gua_object_uniforms.glsl"
 
 @material_uniforms
 
@@ -16,8 +17,8 @@ layout(location=4) in vec3 gua_in_bitangent;
 
 void main() {
 
-  gua_position = gua_projection_matrix * gua_view_matrix * gua_transform * vec4(gua_in_position, 1.0);
-  gua_normal = normalize((gua_normal_transform * vec4(gua_in_normal, 0.0)).xyz);
+  gua_position = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(gua_in_position, 1.0);
+  gua_normal = normalize((gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz);
   gua_tangent = normalize((gua_projection_matrix * vec4(gua_in_tangent, 0.0)).xyz);
   gua_bitangent = normalize((gua_projection_matrix * vec4(gua_in_bitangent, 0.0)).xyz);
   gua_texcoords = gua_in_texcoords;

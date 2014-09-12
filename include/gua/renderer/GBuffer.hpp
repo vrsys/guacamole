@@ -37,7 +37,9 @@ class GBuffer {
   GBuffer(RenderContext const& ctx, unsigned width, unsigned height);
   virtual ~GBuffer() {}
 
-  void clear(RenderContext const& context);
+  void clear_all(RenderContext const& context);
+  void clear_color(RenderContext const& context);
+  
   void set_viewport(RenderContext const& context);
   void bind(RenderContext const& context);
   void unbind(RenderContext const& context);
@@ -51,6 +53,9 @@ class GBuffer {
   std::shared_ptr<Texture2D> const& get_normal_buffer() const;
   std::shared_ptr<Texture2D> const& get_depth_buffer()  const;
 
+  unsigned get_width()  const { return width_; }
+  unsigned get_height() const { return height_; }
+
  private:
   std::shared_ptr<FrameBufferObject> fbo_read_;
   std::shared_ptr<FrameBufferObject> fbo_write_;
@@ -60,6 +65,8 @@ class GBuffer {
   std::shared_ptr<Texture2D> pbr_buffer_;
   std::shared_ptr<Texture2D> normal_buffer_;
   std::shared_ptr<Texture2D> depth_buffer_;
+
+  unsigned width_, height_;
 };
 
 }

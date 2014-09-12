@@ -30,14 +30,20 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
+  gua::MaterialDescription desc;
+  desc.load_from_file("data/materials/SimpleMaterial.gmd");
+
+  auto mat(std::make_shared<gua::Material>("simple_mat", desc));
+  gua::MaterialDatabase::instance()->add(mat);
+
   gua::TriMeshLoader loader;
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", "data/materials/Red.gmd", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", "simple_mat", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
   graph.add_node("/", teapot);
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
-  light->scale(5.f);
-  light->translate(0, 1.f, 1.f);
+  light->scale(1.4f);
+  light->translate(1.f, 0.f, 0.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.6f, 1.2f));
@@ -48,7 +54,8 @@ int main(int argc, char** argv) {
   gua::Camera cam("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph");
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
-  pipe->add_pass<gua::GBufferPass>(); 
+  pipe->add_pass<gua::GBufferPass>();
+  pipe->add_pass<gua::LightingPass>();
   // pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
 
   auto window(new gua::GlfwWindow());

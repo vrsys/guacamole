@@ -29,6 +29,7 @@
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/RessourceRenderer.hpp>
+#include <gua/renderer/CameraUniformBlock.hpp>
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/math.hpp>
 
@@ -97,6 +98,8 @@ class Pipeline {
   RenderContext            const& get_context() const;
   SerializedScene          const& get_scene()   const;
 
+  void bind_camera_uniform_block(unsigned location) const;
+
   std::shared_ptr<RessourceRenderer> get_renderer(GeometryResource const& type);
 
  private:
@@ -104,9 +107,12 @@ class Pipeline {
   GBuffer*                 gbuffer_;
   WindowBase*              window_;
   SerializedScene          current_scene_;
+  CameraUniformBlock*      camera_block_;
 
   bool                     dirty_;
+
   std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_;
+
 };
 
 }

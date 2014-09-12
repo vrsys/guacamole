@@ -99,4 +99,14 @@ std::unique_ptr<UniformValueBase> UniformValueBase::create_from_string_and_type(
   }
 }
 
+std::unique_ptr<UniformValueBase> UniformValueBase::create_from_strings(
+    std::string const& value,
+    std::string const& ty) {
+
+  return create_from_string_and_type(value,
+                                     gua::enums::parse_uniform_type(ty).get()
+                                    );
+
+}
+
 }

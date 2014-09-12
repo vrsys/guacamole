@@ -32,7 +32,7 @@ namespace gua {
 
 void GBufferPass::process(Pipeline* pipe) {
   RenderContext const& ctx(pipe->get_context());
-  
+
   pipe->get_gbuffer().bind(ctx);
   pipe->get_gbuffer().set_viewport(ctx);
 
@@ -45,18 +45,18 @@ void GBufferPass::process(Pipeline* pipe) {
       auto const& ressource = GeometryDatabase::instance()->lookup(object->get_filename());
       if (ressource) {
 
-        // auto const& material = MaterialDatabase::instance()->lookup(object->get_material());
-        // if (material) {
+        auto const& material = MaterialDatabase::instance()->lookup(object->get_material());
+        if (material) {
 
           if (!renderer) {
             renderer = pipe->get_renderer(*ressource);
           }
 
-          renderer->draw(ressource, nullptr, object->get_cached_world_transform(), pipe);
+          renderer->draw(ressource, material, object->get_cached_world_transform(), pipe);
 
-        // } else {
-        //   Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object->get_material() << std::endl;
-        // }
+        } else {
+          Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object->get_material() << std::endl;
+        }
 
       } else {
         Logger::LOG_WARNING << "GBufferPass::process(): Cannot find geometry ressource: " << object->get_filename() << std::endl;

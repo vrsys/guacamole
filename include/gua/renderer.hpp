@@ -31,6 +31,9 @@
 #include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/Window.hpp>
+#include <gua/renderer/Material.hpp>
+#include <gua/renderer/MaterialDescription.hpp>
+#include <gua/renderer/MaterialInstance.hpp>
 #ifdef GUACAMOLE_GLFW3
 #include <gua/renderer/GlfwWindow.hpp>
 #endif

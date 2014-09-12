@@ -43,6 +43,7 @@ void MaterialDescription::load_from_file(std::string const& file_name) {
         return;
       }
 
+
       if (value["vertex_passes"] != Json::Value::null
           && value["vertex_passes"].isArray()) {
 
@@ -50,12 +51,13 @@ void MaterialDescription::load_from_file(std::string const& file_name) {
           auto pass(value["vertex_passes"][i]);
           MaterialPass vertex_pass;
 
+          std::cout << "vertex pass" << std::endl;
+          std::cout << pass << std::endl;
           // load pass from file if file name is set
           if (pass["file_name"] != Json::Value::null) {
             vertex_pass.load_from_file(pass["file_name"].asString());
           // else use name and source
           } else {
-            std::cout << pass << std::endl;
             vertex_pass.load_from_json(pass.toStyledString());
           }
 
@@ -67,7 +69,7 @@ void MaterialDescription::load_from_file(std::string const& file_name) {
           && value["fragment_passes"].isArray()) {
 
         for (int i(0); i < value["fragment_passes"].size(); ++i) {
-          auto pass(value["vertex_passes"][i]);
+          auto pass(value["fragment_passes"][i]);
           MaterialPass fragment_pass;
 
           // load pass from file if file name is set

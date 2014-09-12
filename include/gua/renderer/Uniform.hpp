@@ -89,6 +89,10 @@ class UniformValueBase {
                                             std::string const& value,
                                             UniformType const& ty);
 
+  static std::unique_ptr<UniformValueBase> create_from_strings(
+                                            std::string const& value,
+                                            std::string const& ty);
+
   virtual UniformValueBase* get_copy() const = 0;
 
   virtual std::string get_glsl_type() const = 0;

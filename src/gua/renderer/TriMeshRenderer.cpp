@@ -38,14 +38,12 @@ void TriMeshRenderer::draw(std::shared_ptr<GeometryResource> const& object,
                            math::mat4 const& transformation,
                            Pipeline* pipe) const {
 
-  auto shader(material->get_shader(object));
+  auto shader(material->get_shader(*object));
   auto const& ctx(pipe->get_context());
 
   shader->use(ctx);
-  shader->set_uniform(ctx, transformation, "gua_transform");
-  shader->set_uniform(ctx, scm::math::transpose(scm::math::inverse(transformation)), "gua_normal_transform");
-  shader->set_uniform(ctx, pipe->get_scene().frustum.get_projection(), "gua_projection_matrix");
-  shader->set_uniform(ctx, pipe->get_scene().frustum.get_view(),       "gua_view_matrix");
+  shader->set_uniform(ctx, transformation, "gua_model_matrix");
+  shader->set_uniform(ctx, scm::math::transpose(scm::math::inverse(transformation)), "gua_normal_matrix");
 
   object->draw(ctx);
 }

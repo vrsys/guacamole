@@ -2,7 +2,8 @@
 
 @include "shaders/common/gua_fragment_shader_input.glsl"
 
-@include "shaders/common/gua_uniforms.glsl"
+@include "shaders/common/gua_camera_uniforms.glsl"
+@include "shaders/common/gua_object_uniforms.glsl"
 
 @material_uniforms
 

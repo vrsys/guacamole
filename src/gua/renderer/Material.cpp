@@ -75,12 +75,13 @@ MaterialInstance& Material::get_default_instance() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ShaderProgram* Material::get_shader(std::shared_ptr<GeometryResource> const& for_type,
+ShaderProgram* Material::get_shader(GeometryResource const& for_type,
                                     MaterialInstance const& overwrite) {
   MaterialInstance used_instance(overwrite);
   used_instance.merge(default_instance_);
 
-  auto shader(shaders_.find(typeid(*for_type)));
+  std::type_index type_id(typeid(for_type));
+  auto shader(shaders_.find(type_id));
 
   if (shader != shaders_.end()) {
     return shader->second;
@@ -90,14 +91,29 @@ ShaderProgram* Material::get_shader(std::shared_ptr<GeometryResource> const& for
     auto f_passes = desc_.get_fragment_passes();
 
     auto new_shader = new ShaderProgram();
-    new_shader->create_from_sources(
-      compile_description(v_passes,
-                          Resources::lookup_shader(Resources::shaders_tri_mesh_shader_vert)),
-      compile_description(f_passes,
-                          Resources::lookup_shader(Resources::shaders_tri_mesh_shader_frag))
-    );
 
-    shaders_[typeid(*for_type)] = new_shader;
+    // std::cout << "VERTEX SHADER " << std::endl;
+    // std::cout << "################################# " << std::endl << std::endl;
+    auto v_shader(compile_description(
+                    v_passes,
+                    Resources::lookup_shader(
+                      Resources::shaders_tri_mesh_shader_vert)
+                    )
+                  );
+
+    // std::cout << std::endl << "FRAGMENT SHADER " << std::endl;
+    // std::cout << "################################# " << std::endl << std::endl;
+
+    auto f_shader(compile_description(
+                    f_passes,
+                    Resources::lookup_shader(
+                      Resources::shaders_tri_mesh_shader_frag)
+                    )
+                  );
+
+    new_shader->create_from_sources(v_shader, f_shader);
+
+    shaders_[type_id] = new_shader;
     return new_shader;
   }
 }
@@ -145,7 +161,9 @@ std::string Material::compile_description(std::list<MaterialPass> const& passes,
   gua::string_utils::replace(source, "@material_method_declarations", method_declarations.str());
   gua::string_utils::replace(source, "@material_method_calls", method_calls.str());
 
-  // indent code ------------------------------------------------
+
+  // std::cout << string_utils::format_code(source) << std::endl;
+  // indent and return code ------------------------------------------------
   return string_utils::format_code(source);
 }
 
