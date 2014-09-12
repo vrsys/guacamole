@@ -30,6 +30,7 @@
 #include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/RessourceRenderer.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/math.hpp>
 
@@ -98,6 +99,7 @@ class Pipeline {
   RenderContext            const& get_context() const;
   SerializedScene          const& get_scene()   const;
   
+  void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_camera_uniform_block(unsigned location) const;
 
   std::shared_ptr<RessourceRenderer> get_renderer(GeometryResource const& type);
