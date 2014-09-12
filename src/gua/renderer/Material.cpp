@@ -75,10 +75,7 @@ MaterialInstance& Material::get_default_instance() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ShaderProgram* Material::get_shader(GeometryResource const& for_type,
-                                    MaterialInstance const& overwrite) {
-  MaterialInstance used_instance(overwrite);
-  used_instance.merge(default_instance_);
+ShaderProgram* Material::get_shader(GeometryResource const& for_type) {
 
   std::type_index type_id(typeid(for_type));
   auto shader(shaders_.find(type_id));
