@@ -85,6 +85,10 @@ class UniformValueBase {
     }
   }
 
+  static std::unique_ptr<UniformValueBase> create_from_string_and_type(
+                                            std::string const& value,
+                                            UniformType const& ty);
+
   virtual UniformValueBase* get_copy() const = 0;
 
   virtual std::string get_glsl_type() const = 0;
@@ -114,9 +118,6 @@ template <typename T> class UniformValue : public UniformValueBase {
 
   virtual std::string get_glsl_type() const;
 
-  static std::unique_ptr<UniformValueBase> create_from_string_and_type(
-                                            std::string const& value,
-                                            UniformType const& ty);
 
  private:
   T value_;
