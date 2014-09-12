@@ -27,9 +27,9 @@ layout(location=1) in vec2 gua_in_texcoord;
 layout(location=2) in vec3 gua_in_normal;
 
 // uniforms
-uniform mat4 gua_transform;
-uniform mat4 gua_projection_matrix;
-uniform mat4 gua_view_matrix;
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+uniform mat4  gua_model_matrix;
+uniform mat4  gua_normal_matrix;
 uniform float gua_texel_width;
 uniform float gua_texel_height;
 
@@ -56,14 +56,14 @@ subroutine uniform CalculateLightType compute_light;
 subroutine( CalculateLightType )
 void gua_calculate_point_light() {
 
-  vec3  light_position = (gua_transform * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-  float light_radius = length(light_position - (gua_transform * vec4(0.0, 0.0, 1.0, 1.0)).xyz);
+  vec3  light_position = (gua_model_matrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+  float light_radius = length(light_position - (gua_model_matrix * vec4(0.0, 0.0, 1.0, 1.0)).xyz);
 
   gua_lightinfo1 = light_position;
   gua_lightinfo2 = vec3(0.0, 0.0, 0.0);
   gua_lightinfo3 = light_radius;
 
-  vec3 position = (gua_transform * vec4(gua_in_position, 1.0)).xyz;
+  vec3 position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
   gl_Position = gua_projection_matrix * gua_view_matrix * vec4(position, 1.0);
 }
 
@@ -76,9 +76,9 @@ void gua_calculate_spot_light() {
   0.0, 0.0, 0.5, 0.0,
   0.5, 0.5, 0.5, 1.0);
 
-  vec3 light_position   = (gua_transform * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-  vec3 beam_direction   = (gua_transform * vec4(0.0, 0.0, -1.0, 1.0)).xyz - light_position;
-  float half_beam_angle = dot(normalize((gua_transform * vec4(0.0, 0.5, -1.0, 0.0)).xyz), normalize(beam_direction));
+  vec3 light_position   = (gua_model_matrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+  vec3 beam_direction   = (gua_model_matrix * vec4(0.0, 0.0, -1.0, 1.0)).xyz - light_position;
+  float half_beam_angle = dot(normalize((gua_model_matrix * vec4(0.0, 0.5, -1.0, 0.0)).xyz), normalize(beam_direction));
   mat4 shadow_map_coords_mat = bias * gua_light_shadow_map_projection_view_matrix_0;
 
   gua_lightinfo1 = light_position;
@@ -86,7 +86,7 @@ void gua_calculate_spot_light() {
   gua_lightinfo3 = half_beam_angle;
   gua_lightinfo4 = shadow_map_coords_mat;
 
-  vec3 position = (gua_transform * vec4(gua_in_position, 1.0)).xyz;
+  vec3 position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
   gl_Position = gua_projection_matrix * gua_view_matrix * vec4(position, 1.0);
 }
 
@@ -99,7 +99,7 @@ void gua_calculate_sun_light() {
   0.0, 0.0, 0.5, 0.0,
   0.5, 0.5, 0.5, 1.0);
 
-  vec3 light_direction = normalize((gua_transform * vec4(0.0, 0.0, 1.0, 0.0)).xyz);
+  vec3 light_direction = normalize((gua_model_matrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz);
   gua_lightinfo1 = light_direction;
   gua_lightinfo4 = bias * gua_light_shadow_map_projection_view_matrix_0;
   gua_lightinfo5 = bias * gua_light_shadow_map_projection_view_matrix_1;

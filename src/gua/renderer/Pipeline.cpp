@@ -96,6 +96,7 @@ void serialize(SceneGraph const& scene_graph,
 
 Pipeline::Pipeline() :
   gbuffer_(nullptr),
+  camera_block_(nullptr),
   dirty_(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +104,10 @@ Pipeline::Pipeline() :
 Pipeline::~Pipeline() {
   for (auto pass: passes_) {
     delete pass;
+  }
+
+  if (camera_block_) {
+    delete camera_block_;
   }
 }
 
@@ -156,6 +161,13 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
             config.camera().eye_l, config.camera().screen_l,
             config, current_scene_);
 
+  // update camera uniform block
+  if (!camera_block_) {
+    camera_block_ = new CameraUniformBlock(get_context().render_device);
+  }
+  camera_block_->update(get_context().render_context, current_scene_.frustum);
+  bind_camera_uniform_block(0);
+  
   // clear gbuffer
   gbuffer_->clear_all(get_context());
 
@@ -202,6 +214,12 @@ RenderContext const& Pipeline::get_context() const {
 
 SerializedScene const& Pipeline::get_scene() const {
   return current_scene_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::bind_camera_uniform_block(unsigned location) const {
+  get_context().render_context->bind_uniform_buffer(camera_block_->block().block_buffer(), location);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

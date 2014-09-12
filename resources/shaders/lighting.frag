@@ -41,10 +41,9 @@ uniform uvec2 gua_gbuffer_depth;
 uniform uvec2 gua_shadow_map;
 
 // uniforms
-uniform mat4 gua_transform;
-uniform mat4 gua_projection_matrix;
-uniform mat4 gua_view_matrix;
-uniform mat4 gua_inverse_projection_view_matrix;
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+uniform mat4  gua_model_matrix;
+uniform mat4  gua_normal_matrix;
 uniform float gua_texel_width;
 uniform float gua_texel_height;
 
@@ -112,18 +111,21 @@ float gua_get_shadow(vec4 smap_coords) {
 }
 
 float gua_get_shadow(mat4 shadow_map_coords_matrix, vec2 lookup_offset, float acne_offset) {
-  if(!gua_light_casts_shadow)
+  if(!gua_light_casts_shadow) {
     return 1.0;
+  }
 
   vec3 position = gua_get_position();
   vec4 smap_coords = shadow_map_coords_matrix * vec4(position, 1.0) + vec4(lookup_offset, 0, 0);
 
   float sum = 0;
   int x, y;
-
-  for (y = -1; y <= 1; ++y)
-    for (x = -1; x <= 1; ++x)
+ 
+  for (y = -1; y <= 1; ++y) {
+    for (x = -1; x <= 1; ++x) {
       sum += gua_get_shadow(smap_coords, ivec2(x, y), acne_offset);
+    }
+  }
 
   float shadow = sum / 9.0;
 
@@ -150,11 +152,13 @@ void gua_calculate_point_light() {
   gua_light_distance  = length(gua_light_direction);
   gua_light_direction /= gua_light_distance;
 
-  if (gua_light_distance > light_radius)
+  if (gua_light_distance > light_radius) {
     discard;
+  }
 
-  if (dot(gbuffer_normal, gua_light_direction) < 0)
+  if (dot(gbuffer_normal, gua_light_direction) < 0) {
     discard;
+  }
 
   gua_light_intensity = pow(1.0 - gua_light_distance/light_radius, gua_light_falloff);
 }
@@ -169,24 +173,28 @@ void gua_calculate_spot_light() {
 
   gua_light_direction = light_position - gua_get_position();
 
-  if (dot(-gua_light_direction, beam_direction) < 0)
+  if (dot(-gua_light_direction, beam_direction) < 0) {
     discard;
+  }
 
   gua_light_distance = length(gua_light_direction);
   gua_light_direction /= gua_light_distance;
 
   float beam_length = length(beam_direction);
 
-  if (gua_light_distance > beam_length)
+  if (gua_light_distance > beam_length) {
     discard;
+  }
 
-  if (dot(gbuffer_normal, gua_light_direction) < 0)
+  if (dot(gbuffer_normal, gua_light_direction) < 0) {
     discard;
+  }
 
   float shadow = gua_get_shadow(gua_lightinfo4, vec2(0), gua_shadow_offset);
 
-  if(shadow <= 0.0)
+  if(shadow <= 0.0) {
     discard;
+  }
 
   float to_light_angle = dot(-gua_light_direction, beam_direction/beam_length);
   float radial_attenuation = (to_light_angle - 1.0) / (half_beam_angle - 1.0);
@@ -209,9 +217,9 @@ void gua_calculate_sun_light() {
   gua_light_direction = light_direction;
   gua_light_distance  = 0.0;
 
-  if (dot(gbuffer_normal, gua_light_direction) < 0)
+  if (dot(gbuffer_normal, gua_light_direction) < 0) {
     discard;
-
+  }
 
   vec3 position = gua_get_position();
 
@@ -234,5 +242,6 @@ void gua_calculate_sun_light() {
 void main() {
   compute_light();
 
-  gua_out_color = texture2D(sampler2D(gua_gbuffer_color), gua_get_quad_coords()).rgb + 0.3;
+  gua_out_color = texture2D(sampler2D(gua_gbuffer_color), gua_get_quad_coords()).rgb;
+  gua_out_color *= gua_light_intensity;
 }
