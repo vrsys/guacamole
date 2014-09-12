@@ -101,6 +101,7 @@ class Pipeline {
   
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_camera_uniform_block(unsigned location) const;
+  void draw_fullscreen_quad();
 
   std::shared_ptr<RessourceRenderer> get_renderer(GeometryRessource const& type);
 
@@ -113,6 +114,8 @@ class Pipeline {
 
   bool                     dirty_;
   std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_; 
+
+  scm::gl::quad_geometry_ptr fullscreen_quad_;
 
 };
 

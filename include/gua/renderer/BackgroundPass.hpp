@@ -19,29 +19,36 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GBUFFER_PASS_HPP
-#define GUA_GBUFFER_PASS_HPP
+#ifndef GUA_BACKGROUND_PASS_HPP
+#define GUA_BACKGROUND_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
+
+#include <memory>
 
 namespace gua {
 
 class Pipeline;
 
-class GBufferPass : public PipelinePass {
+class BackgroundPass : public PipelinePass {
  public:
 
   virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer() const { return false; }
+  virtual bool writes_only_color_buffer()    const { return true; }
   virtual void process(Pipeline* pipe);
 
   friend class Pipeline;
 
  protected:
-  GBufferPass() {}
-  ~GBufferPass() {}
+  BackgroundPass();
+  ~BackgroundPass() {}
+
+ private:
+  std::shared_ptr<ShaderProgram> shader_;
 };
 
 }
 
-#endif  // GUA_GBUFFER_PASS_HPP
+#endif  // GUA_BACKGROUND_PASS_HPP

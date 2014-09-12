@@ -71,8 +71,9 @@ void LightingPass::process(Pipeline* pipe) {
   }
 
   // bind gbuffer
-  pipe->get_gbuffer().bind(ctx, true);
+  pipe->get_gbuffer().bind(ctx, this);
   pipe->get_gbuffer().set_viewport(ctx);
+  pipe->get_gbuffer().clear_color(ctx);
 
   // set state
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);

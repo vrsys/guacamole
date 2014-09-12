@@ -19,29 +19,39 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GBUFFER_PASS_HPP
-#define GUA_GBUFFER_PASS_HPP
+// class header
+#include <gua/renderer/BackgroundPass.hpp>
 
-#include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/Resources.hpp>
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
 
-class Pipeline;
+BackgroundPass::BackgroundPass() :
+  shader_(std::make_shared<ShaderProgram>()) {
 
-class GBufferPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer() const { return false; }
-  virtual void process(Pipeline* pipe);
-
-  friend class Pipeline;
-
- protected:
-  GBufferPass() {}
-  ~GBufferPass() {}
-};
-
+  shader_ = std::make_shared<ShaderProgram>();
+  shader_->create_from_sources(
+    Resources::lookup_shader(Resources::shaders_background_vert), 
+    Resources::lookup_shader(Resources::shaders_background_frag)
+  );
 }
 
-#endif  // GUA_GBUFFER_PASS_HPP
+void BackgroundPass::process(Pipeline* pipe) {
+  RenderContext const& ctx(pipe->get_context());
+
+  // bind gbuffer
+  pipe->get_gbuffer().bind(ctx, this);
+  pipe->get_gbuffer().set_viewport(ctx);
+
+  shader_->use(ctx);
+  
+  pipe->bind_gbuffer_input(shader_);
+  pipe->draw_fullscreen_quad();
+  pipe->get_gbuffer().unbind(ctx);
+} 
+
+}

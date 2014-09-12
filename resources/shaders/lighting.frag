@@ -30,12 +30,12 @@ in float gua_lightinfo3;
 in mat4  gua_lightinfo4;
 in mat4  gua_lightinfo5;
 in mat4  gua_lightinfo6;
-in mat4  gua_lightinfo7;
+in mat4  gua_lightinfo7; 
 
 // uniforms
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 uniform mat4  gua_model_matrix;
-uniform mat4  gua_normal_matrix;
+uniform mat4  gua_normal_matrix; 
 
 uniform mat4 gua_light_shadow_map_projection_view_matrix_0;
 uniform mat4 gua_light_shadow_map_projection_view_matrix_1;
@@ -43,7 +43,6 @@ uniform mat4 gua_light_shadow_map_projection_view_matrix_2;
 uniform mat4 gua_light_shadow_map_projection_view_matrix_3;
 
 uniform uvec2 gua_shadow_map;
-
 uniform vec3  gua_light_color;
 uniform float gua_light_falloff;
 uniform float gua_light_softness;

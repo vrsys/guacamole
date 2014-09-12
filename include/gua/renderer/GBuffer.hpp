@@ -28,6 +28,8 @@
 
 namespace gua {
 
+class PipelinePass;
+
 /**
  *
  */
@@ -41,7 +43,8 @@ class GBuffer {
   void clear_color(RenderContext const& context);
   
   void set_viewport(RenderContext const& context);
-  void bind(RenderContext const& context, bool only_color);
+
+  void bind(RenderContext const& context, PipelinePass* next_pass);
   void unbind(RenderContext const& context);
 
   void toggle_ping_pong();

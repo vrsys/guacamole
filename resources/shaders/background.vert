@@ -19,29 +19,15 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GBUFFER_PASS_HPP
-#define GUA_GBUFFER_PASS_HPP
+@include "shaders/common/header.glsl"
 
-#include <gua/renderer/PipelinePass.hpp>
+layout(location=0) in vec3 gua_in_position;
+layout(location=2) in vec2 gua_in_texcoord;
 
-namespace gua {
+// varyings
+out vec2 gua_quad_coords;
 
-class Pipeline;
-
-class GBufferPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer() const { return false; }
-  virtual void process(Pipeline* pipe);
-
-  friend class Pipeline;
-
- protected:
-  GBufferPass() {}
-  ~GBufferPass() {}
-};
-
+void main() {
+    gua_quad_coords = gua_in_texcoord;
+    gl_Position = vec4(gua_in_position, 1.0);
 }
-
-#endif  // GUA_GBUFFER_PASS_HPP

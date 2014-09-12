@@ -35,7 +35,8 @@ class Pipeline;
 class LightingPass : public PipelinePass {
  public:
 
-  virtual bool use_last_color_buffer() const { return true; }
+  virtual bool needs_color_buffer_as_input() const { return true; }
+  virtual bool writes_only_color_buffer() const { return true; }
   virtual void process(Pipeline* pipe);
 
   friend class Pipeline;
