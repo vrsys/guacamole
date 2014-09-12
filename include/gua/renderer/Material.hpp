@@ -46,8 +46,7 @@ class Material {
   MaterialInstance const& get_default_instance() const;
   MaterialInstance&       get_default_instance();
 
-  ShaderProgram* get_shader(std::shared_ptr<GeometryResource> const& for_type,
-                            MaterialInstance const& overwrite = MaterialInstance());
+  ShaderProgram* get_shader(GeometryResource const& for_type);
 
   void print_shaders() const;
 
