@@ -46,7 +46,7 @@ template<> std::string UniformValue<math::vec2ui>::get_glsl_type() const { retur
 template<> std::string UniformValue<math::vec3ui>::get_glsl_type() const { return "vec3ui"; }
 template<> std::string UniformValue<math::vec4ui>::get_glsl_type() const { return "vec4ui"; }
 
-std::unique_ptr<UniformValueBase> UniformValue::create_from_string_and_type(
+std::unique_ptr<UniformValueBase> UniformValueBase::create_from_string_and_type(
     std::string const& value,
     UniformType const& ty) {
   switch (ty) {
