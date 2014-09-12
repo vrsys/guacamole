@@ -33,7 +33,7 @@ namespace gua {
 void GBufferPass::process(Pipeline* pipe) {
   RenderContext const& ctx(pipe->get_context());
   
-  pipe->get_gbuffer().bind(ctx, false);
+  pipe->get_gbuffer().bind(ctx, this);
   pipe->get_gbuffer().set_viewport(ctx);
 
   for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {

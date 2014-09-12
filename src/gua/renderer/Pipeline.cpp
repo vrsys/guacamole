@@ -97,7 +97,8 @@ void serialize(SceneGraph const& scene_graph,
 Pipeline::Pipeline() :
   gbuffer_(nullptr),
   camera_block_(nullptr),
-  dirty_(false) {}
+  dirty_(false),
+  fullscreen_quad_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -173,9 +174,8 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
   // process all passes
   for (auto pass: passes_) {
-    if (pass->use_last_color_buffer()) {
+    if (pass->needs_color_buffer_as_input()) {
       gbuffer_->toggle_ping_pong();
-      gbuffer_->clear_color(get_context());
     }
 
     pass->process(this);
@@ -235,6 +235,17 @@ void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) 
 
 void Pipeline::bind_camera_uniform_block(unsigned location) const {
   get_context().render_context->bind_uniform_buffer(camera_block_->block().block_buffer(), location);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::draw_fullscreen_quad() {
+  if (!fullscreen_quad_) {
+    fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+              get_context().render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+  }
+
+  fullscreen_quad_->draw(get_context().render_context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
