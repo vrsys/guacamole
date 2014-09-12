@@ -20,13 +20,12 @@ public:
     math::vec4  position;
   };
 
-  typedef scm::gl::uniform_block<CameraBlock>     block_type;
+  typedef scm::gl::uniform_block<CameraBlock> block_type;
 
   CameraUniformBlock(scm::gl::render_device_ptr const& device);
   ~CameraUniformBlock();
 
-  void                update(scm::gl::render_context_ptr const& context,
-                             Frustum const& cam);
+  void update(scm::gl::render_context_ptr const& context, Frustum const& cam);
 
   inline const block_type&   block() const { return uniform_block_; }
 

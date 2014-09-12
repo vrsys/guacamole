@@ -6,10 +6,9 @@ layout(location=2) in vec3 gua_in_normal;
 layout(location=3) in vec3 gua_in_tangent;
 layout(location=4) in vec3 gua_in_bitangent;
 
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 uniform mat4 gua_transform;
 uniform mat4 gua_normal_transform;
-uniform mat4 gua_projection_matrix;
-uniform mat4 gua_view_matrix;
 
 out vec3 gua_normal;
 

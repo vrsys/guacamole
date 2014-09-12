@@ -83,10 +83,8 @@ void LightingPass::process(Pipeline* pipe) {
   shader_->set_subroutine(ctx, scm::gl::STAGE_VERTEX_SHADER,   "compute_light", "gua_calculate_point_light");
   shader_->set_subroutine(ctx, scm::gl::STAGE_FRAGMENT_SHADER, "compute_light", "gua_calculate_point_light");
   
-  shader_->set_uniform(ctx, pipe->get_scene().frustum.get_projection(), "gua_projection_matrix");
-  shader_->set_uniform(ctx, pipe->get_scene().frustum.get_view(),       "gua_view_matrix");
-  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_width(),     "gua_texel_width");
-  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(),    "gua_texel_height");
+  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_width(),  "gua_texel_width");
+  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(), "gua_texel_height");
 
   shader_->set_uniform(ctx, pipe->get_gbuffer().get_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
   shader_->set_uniform(ctx, pipe->get_gbuffer().get_pbr_buffer()->get_handle(ctx),    "gua_gbuffer_pbr");
@@ -95,7 +93,7 @@ void LightingPass::process(Pipeline* pipe) {
 
   // draw all lights
   for (auto const& light : pipe->get_scene().point_lights_) {
-    shader_->set_uniform(ctx, light->get_cached_world_transform(),        "gua_transform");
+    shader_->set_uniform(ctx, light->get_cached_world_transform(),        "gua_model_matrix");
     shader_->set_uniform(ctx, light->data.get_enable_diffuse_shading(),   "gua_light_diffuse_enable");
     shader_->set_uniform(ctx, light->data.get_enable_specular_shading(),  "gua_light_specular_enable");
     shader_->set_uniform(ctx, light->data.get_color().vec3(),             "gua_light_color");

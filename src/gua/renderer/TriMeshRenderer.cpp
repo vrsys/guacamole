@@ -51,8 +51,6 @@ void TriMeshRenderer::draw(std::shared_ptr<GeometryRessource> const& object,
   shader_->use(ctx);
   shader_->set_uniform(ctx, transformation, "gua_transform");
   shader_->set_uniform(ctx, scm::math::transpose(scm::math::inverse(transformation)), "gua_normal_transform");
-  shader_->set_uniform(ctx, pipe->get_scene().frustum.get_projection(), "gua_projection_matrix");
-  shader_->set_uniform(ctx, pipe->get_scene().frustum.get_view(),       "gua_view_matrix");
 
   object->draw(pipe->get_context());
 }
