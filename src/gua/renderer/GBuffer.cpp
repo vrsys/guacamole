@@ -34,6 +34,8 @@ namespace gua {
 GBuffer::GBuffer(RenderContext const& ctx, unsigned width, unsigned height):
   fbo_read_(new FrameBufferObject()),
   fbo_write_(new FrameBufferObject()),
+  fbo_read_only_color_(new FrameBufferObject()),
+  fbo_write_only_color_(new FrameBufferObject()),
   width_(width),
   height_(height) {
 
@@ -56,6 +58,9 @@ GBuffer::GBuffer(RenderContext const& ctx, unsigned width, unsigned height):
   fbo_write_->attach_color_buffer(ctx, 1, pbr_buffer_);
   fbo_write_->attach_color_buffer(ctx, 2, normal_buffer_);
   fbo_write_->attach_depth_stencil_buffer(ctx, depth_buffer_);
+  
+  fbo_read_only_color_->attach_color_buffer(ctx, 0, color_buffer_read_);
+  fbo_write_only_color_->attach_color_buffer(ctx, 0, color_buffer_write_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,20 +84,26 @@ void GBuffer::set_viewport(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::bind(RenderContext const& ctx) {
-  fbo_write_->bind(ctx);
+void GBuffer::bind(RenderContext const& ctx, bool only_color) {
+  if (only_color) {
+    fbo_write_only_color_->bind(ctx);
+  } else {
+    fbo_write_->bind(ctx);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GBuffer::unbind(RenderContext const& ctx) {
   fbo_write_->unbind(ctx);
+  fbo_write_only_color_->unbind(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GBuffer::toggle_ping_pong() {
   std::swap(fbo_write_, fbo_read_);
+  std::swap(fbo_write_only_color_, fbo_read_only_color_);
   std::swap(color_buffer_write_, color_buffer_read_);
 }
 
@@ -124,25 +135,25 @@ void GBuffer::remove_buffers(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Texture2D> const& GBuffer::get_color_buffer() const {
+std::shared_ptr<Texture2D> const& GBuffer::get_current_color_buffer() const {
   return color_buffer_read_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Texture2D> const& GBuffer::get_pbr_buffer() const {
+std::shared_ptr<Texture2D> const& GBuffer::get_current_pbr_buffer() const {
   return pbr_buffer_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Texture2D> const& GBuffer::get_normal_buffer() const {
+std::shared_ptr<Texture2D> const& GBuffer::get_current_normal_buffer() const {
   return normal_buffer_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Texture2D> const& GBuffer::get_depth_buffer() const {
+std::shared_ptr<Texture2D> const& GBuffer::get_current_depth_buffer() const {
   return depth_buffer_;
 }
 

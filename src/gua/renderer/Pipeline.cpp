@@ -167,7 +167,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   }
   camera_block_->update(get_context().render_context, current_scene_.frustum);
   bind_camera_uniform_block(0);
-  
+
   // clear gbuffer
   gbuffer_->clear_all(get_context());
 
@@ -184,7 +184,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   // display the last written colorbuffer of the gbuffer
   if (window_) {
     gbuffer_->toggle_ping_pong();
-    window_->display(gbuffer_->get_color_buffer());
+    window_->display(gbuffer_->get_current_color_buffer());
   }
 
   // swap buffers
@@ -214,6 +214,21 @@ RenderContext const& Pipeline::get_context() const {
 
 SerializedScene const& Pipeline::get_scene() const {
   return current_scene_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const {
+
+  auto& ctx(get_context());
+
+  shader->set_uniform(ctx, 1.0f / gbuffer_->get_width(),  "gua_texel_width");
+  shader->set_uniform(ctx, 1.0f / gbuffer_->get_height(), "gua_texel_height");
+
+  shader->set_uniform(ctx, gbuffer_->get_current_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
+  shader->set_uniform(ctx, gbuffer_->get_current_pbr_buffer()->get_handle(ctx),    "gua_gbuffer_pbr");
+  shader->set_uniform(ctx, gbuffer_->get_current_normal_buffer()->get_handle(ctx), "gua_gbuffer_normal");
+  shader->set_uniform(ctx, gbuffer_->get_current_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
