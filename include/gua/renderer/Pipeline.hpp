@@ -113,6 +113,7 @@ class Pipeline {
   CameraUniformBlock*      camera_block_;
 
   bool                     dirty_;
+  math::vec2ui             last_resolution_;
   std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_; 
 
   scm::gl::quad_geometry_ptr fullscreen_quad_;
