@@ -37,7 +37,13 @@ int main(int argc, char** argv) {
   gua::MaterialDatabase::instance()->add(mat);
 
   gua::TriMeshLoader loader;
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", "simple_mat", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto teapot(loader.create_geometry_from_file(
+    "teapot", "/opt/3d_models/architecture/medieval_harbour/town.obj", 
+    "simple_mat", 
+    gua::TriMeshLoader::NORMALIZE_POSITION | 
+    gua::TriMeshLoader::NORMALIZE_SCALE |
+    gua::TriMeshLoader::LOAD_MATERIALS 
+  ));
 
   graph.add_node("/", teapot);
 
@@ -48,13 +54,13 @@ int main(int argc, char** argv) {
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->data.color = gua::utils::Color3f(1.f, 0.5f, 0.0f);
   light2->scale(3.4f);
-  light2->translate(-1.f, 1.f, 0.f);
+  light2->translate(-2.f, 1.f, 0.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(1.6f, 1.2f));
+  screen->data.set_size(gua::math::vec2(0.8f, 0.6f));
 
   auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
-  eye->translate(0, 0, 1.5);
+  eye->translate(0, 0, 2);
 
   gua::Camera cam("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph");
   auto pipe = new gua::Pipeline();
@@ -72,7 +78,7 @@ int main(int argc, char** argv) {
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_left_resolution(new_size);
     pipe->config.set_resolution(new_size);
-    screen->data.set_size(gua::math::vec2(0.002 * new_size.x, 0.002 * new_size.y));
+    screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
 
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {

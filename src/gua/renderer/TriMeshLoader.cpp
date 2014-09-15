@@ -251,16 +251,16 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
     GeometryDatabase::instance()->add(mesh_name, std::make_shared<TriMeshRessource>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & TriMeshLoader::MAKE_PICKABLE));
 
     // load material
-    std::string material_name("");
+    MaterialInstance material;
     unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]->mMaterialIndex);
 
     if (material_index != 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
       aiMaterial const* material(ai_scene->mMaterials[material_index]);
-      material_name = material_loader.load_material(material, file_name);
+      material = material_loader.load_material(material, file_name);
     }
 
-    return std::make_shared<node::TriMeshNode>(mesh_name, mesh_name, material_name);
+    return std::make_shared<node::TriMeshNode>(mesh_name, mesh_name, material);
   };
 
   // there is only one child -- skip it!

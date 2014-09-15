@@ -119,9 +119,6 @@ int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
 
-  gua::ShadingModelDatabase::load_shading_models_from("data/materials/");
-  gua::MaterialDatabase::load_materials_from("data/materials/");
-
   // initialize Oculus SDK
   OVR::SensorFusion* oculus_sensor = init_oculus();
   if (!oculus_sensor) return 1; // no oculus sensor found
