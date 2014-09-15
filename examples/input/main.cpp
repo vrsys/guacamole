@@ -61,8 +61,8 @@ int main(int argc, char** argv) {
   pipe->config.set_camera(cam);
 
   pipe->add_pass<gua::GBufferPass>();
-  pipe->add_pass<gua::LightingPass>();
-  pipe->add_pass<gua::BackgroundPass>();
+  // pipe->add_pass<gua::LightingPass>();
+  // pipe->add_pass<gua::BackgroundPass>();
   // pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
 
   auto window(new gua::GlfwWindow());

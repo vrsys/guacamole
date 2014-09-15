@@ -24,6 +24,7 @@
 
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/databases/Resources.hpp>
 
 namespace gua {
 
@@ -38,7 +39,15 @@ void TriMeshRenderer::draw(std::shared_ptr<GeometryResource> const& object,
                            math::mat4 const& transformation,
                            Pipeline* pipe) const {
 
-  auto shader(material->get_shader(*object));
+  auto shader(material->get_shader(*object,
+                                   Resources::lookup_shader(
+                                    Resources::shaders_tri_mesh_shader_vert
+                                   ),
+                                   Resources::lookup_shader(
+                                    Resources::shaders_tri_mesh_shader_frag
+                                   )
+                                  )
+              );
   auto const& ctx(pipe->get_context());
 
   // MaterialInstance used_instance(overwrite);

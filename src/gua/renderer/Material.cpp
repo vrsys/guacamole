@@ -22,7 +22,6 @@
 #include <gua/renderer/Material.hpp>
 
 #include <gua/utils/string_utils.hpp>
-#include <gua/databases/Resources.hpp>
 
 namespace gua {
 
@@ -75,7 +74,9 @@ MaterialInstance& Material::get_default_instance() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ShaderProgram* Material::get_shader(GeometryResource const& for_type) {
+ShaderProgram* Material::get_shader(GeometryResource const& for_type,
+                                    std::string const& geometry_v_shader,
+                                    std::string const& geometry_f_shader) {
 
   std::type_index type_id(typeid(for_type));
   auto shader(shaders_.find(type_id));
@@ -89,24 +90,14 @@ ShaderProgram* Material::get_shader(GeometryResource const& for_type) {
 
     auto new_shader = new ShaderProgram();
 
-    // std::cout << "VERTEX SHADER " << std::endl;
-    // std::cout << "################################# " << std::endl << std::endl;
-    auto v_shader(compile_description(
-                    v_passes,
-                    Resources::lookup_shader(
-                      Resources::shaders_tri_mesh_shader_vert)
-                    )
-                  );
+    std::cout << "VERTEX SHADER " << std::endl;
+    std::cout << "################################# " << std::endl << std::endl;
+    auto v_shader(compile_description(v_passes, geometry_v_shader));
 
-    // std::cout << std::endl << "FRAGMENT SHADER " << std::endl;
-    // std::cout << "################################# " << std::endl << std::endl;
+    std::cout << std::endl << "FRAGMENT SHADER " << std::endl;
+    std::cout << "################################# " << std::endl << std::endl;
 
-    auto f_shader(compile_description(
-                    f_passes,
-                    Resources::lookup_shader(
-                      Resources::shaders_tri_mesh_shader_frag)
-                    )
-                  );
+    auto f_shader(compile_description(f_passes, geometry_f_shader));
 
     new_shader->create_from_sources(v_shader, f_shader);
 
@@ -159,7 +150,7 @@ std::string Material::compile_description(std::list<MaterialPass> const& passes,
   gua::string_utils::replace(source, "@material_method_calls", method_calls.str());
 
 
-  // std::cout << string_utils::format_code(source) << std::endl;
+  std::cout << string_utils::format_code(source) << std::endl;
   // indent and return code ------------------------------------------------
   return string_utils::format_code(source);
 }
