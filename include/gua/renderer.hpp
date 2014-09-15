@@ -31,6 +31,7 @@
 #include <gua/renderer/GBufferPass.hpp>
 #include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
+#include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/Window.hpp>
 #include <gua/renderer/Material.hpp>

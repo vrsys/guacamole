@@ -19,7 +19,7 @@
  *                                                                            *
  ******************************************************************************/
 
-@include "shaders/common/header.glsl" 
+@include "shaders/common/header.glsl"
 
 // varyings
 in vec2 gua_quad_coords;
@@ -38,3 +38,4 @@ void main() {
 
     gua_out_color = vec3(0.1, 0.1, 0.1);
 }
+

@@ -19,15 +19,57 @@
  *                                                                            *
  ******************************************************************************/
 
-@include "shaders/common/header.glsl"
+#ifndef GUA_SSAO_PASS_HPP
+#define GUA_SSAO_PASS_HPP
 
-layout(location=0) in vec3 gua_in_position;
-layout(location=2) in vec2 gua_in_texcoord;
+#include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/GeometryResource.hpp>
+#include <gua/renderer/BuiltInTextures.hpp>
 
-// varyings
-out vec2 gua_quad_coords;
+#include <memory>
 
-void main() {
-    gua_quad_coords = gua_in_texcoord;
-    gl_Position = vec4(gua_in_position, 1.0);
+namespace gua {
+
+class Pipeline;
+
+class SSAOPass : public PipelinePass {
+ public:
+
+  virtual bool needs_color_buffer_as_input() const { return false; }
+  virtual bool writes_only_color_buffer()    const { return true;  }
+  virtual bool perform_depth_test()          const { return false; }
+
+  virtual void process(Pipeline* pipe);
+
+  friend class Pipeline;
+
+  float get_radius() const;
+  void set_radius(float radius);
+
+  float get_intensity() const;
+  void set_intensity(float intensity);
+
+  float get_falloff() const;
+  void set_falloff(float falloff);
+
+
+ protected:
+  SSAOPass();
+  ~SSAOPass() {}
+
+ private:
+  std::shared_ptr<ShaderProgram>   shader_;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+  scm::gl::blend_state_ptr         blend_state_;
+
+  float radius_;
+  float intensity_;
+  float falloff_;
+
+  NoiseTexture                     noise_texture_;
+};
+
 }
+
+#endif  // GUA_SSAO_PASS_HPP
