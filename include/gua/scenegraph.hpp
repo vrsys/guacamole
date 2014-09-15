@@ -27,6 +27,7 @@
 
 // node headers
 #include <gua/node/GeometryNode.hpp>
+#include <gua/node/TriMeshNode.hpp>
 #include <gua/node/Video3DNode.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/PointLightNode.hpp>

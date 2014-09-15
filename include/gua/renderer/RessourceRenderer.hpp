@@ -35,6 +35,7 @@ class GUA_DLL RessourceRenderer {
 
    virtual void draw(std::shared_ptr<GeometryResource> const& object,
                      std::shared_ptr<Material> const& material,
+                     MaterialInstance const& material_overwrite,
                      math::mat4 const& transformation,
                      Pipeline* pipe) const = 0;
 

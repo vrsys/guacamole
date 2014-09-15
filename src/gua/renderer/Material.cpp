@@ -108,6 +108,22 @@ ShaderProgram* Material::get_shader(GeometryResource const& for_type,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Material::apply_uniforms(RenderContext const& ctx,
+                              ShaderProgram* shader,
+                              MaterialInstance const& overwrite) const {
+
+  MaterialInstance used_instance(overwrite);
+  used_instance.merge(default_instance_);
+  auto uniforms(used_instance.get_uniforms());
+
+  for (auto const& uniform : uniforms) {
+    shader->apply_uniform(ctx, uniform.second, uniform.first);
+  }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void Material::print_shaders() const {
   // for (auto shader: shaders_) {
   //   shader.second->print_shaders();

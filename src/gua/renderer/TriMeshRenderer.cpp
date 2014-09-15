@@ -36,6 +36,7 @@ TriMeshRenderer::TriMeshRenderer() {}
 
 void TriMeshRenderer::draw(std::shared_ptr<GeometryResource> const& object,
                            std::shared_ptr<Material> const& material,
+                           MaterialInstance const& material_overwrite,
                            math::mat4 const& transformation,
                            Pipeline* pipe) const {
 
@@ -48,13 +49,8 @@ void TriMeshRenderer::draw(std::shared_ptr<GeometryResource> const& object,
                                    )
                                   )
               );
+
   auto const& ctx(pipe->get_context());
-
-  // MaterialInstance used_instance(overwrite);
-  // used_instance.merge(default_instance_);
-
-  auto used_instance(material->get_default_instance());
-  auto uniforms(used_instance.get_uniforms());
 
   shader->use(ctx);
   pipe->bind_camera_uniform_block(0);
@@ -62,9 +58,8 @@ void TriMeshRenderer::draw(std::shared_ptr<GeometryResource> const& object,
   shader->set_uniform(ctx, transformation, "gua_model_matrix");
   shader->set_uniform(ctx, scm::math::transpose(scm::math::inverse(transformation)), "gua_normal_matrix");
 
-  for (auto const& uniform : uniforms) {
-    shader->apply_uniform(ctx, uniform.second, uniform.first);
-  }
+  material->apply_uniforms(ctx, shader, material_overwrite);
+
 
   object->draw(ctx);
 }
