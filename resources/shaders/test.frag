@@ -8,6 +8,6 @@ layout(location=2) out vec3 gua_out_normal;
 
 void main() {
   gua_out_color     = vec3(1, 1, 1);
-  gua_out_pbr       = vec3(0.5, 0.5, 0.5);
+  gua_out_pbr       = vec3(0.1, 0, 0);
   gua_out_normal    = gua_normal/2 + 0.5;
 }
