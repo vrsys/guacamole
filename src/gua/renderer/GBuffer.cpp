@@ -47,7 +47,7 @@ GBuffer::GBuffer(RenderContext const& ctx, unsigned width, unsigned height):
   color_buffer_read_  = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_RGB_8, 1, state);
   color_buffer_write_ = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_RGB_8, 1, state);
   pbr_buffer_         = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_RGB_8, 1, state);
-  normal_buffer_      = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_RGB_8, 1, state);
+  normal_buffer_      = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_RGB_16, 1, state);
   depth_buffer_       = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_D24, 1, state);
 
   fbo_read_->attach_color_buffer(ctx, 0, color_buffer_read_);
@@ -61,7 +61,10 @@ GBuffer::GBuffer(RenderContext const& ctx, unsigned width, unsigned height):
   fbo_write_->attach_depth_stencil_buffer(ctx, depth_buffer_);
   
   fbo_read_only_color_->attach_color_buffer(ctx, 0, color_buffer_read_);
+  fbo_read_only_color_->attach_depth_stencil_buffer(ctx, depth_buffer_);
+
   fbo_write_only_color_->attach_color_buffer(ctx, 0, color_buffer_write_);
+  fbo_write_only_color_->attach_depth_stencil_buffer(ctx, depth_buffer_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
