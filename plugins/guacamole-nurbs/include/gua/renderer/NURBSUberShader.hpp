@@ -35,8 +35,9 @@ class NURBSUberShader : public GeometryUberShader {
   public : // typedefs, enums
 
    enum pass {
-     transform_feedback_pass = 0,
-     final_pass = 1
+     tesselation_pre_pass = 0,
+     tesselation_final_pass = 1,
+     raycasting = 2
    };
 
   public :
@@ -85,6 +86,9 @@ class NURBSUberShader : public GeometryUberShader {
   std::string _final_tess_evaluation_shader() const;
   std::string _final_geometry_shader() const;
   std::string _final_fragment_shader() const;
+
+  std::string _raycast_vertex_shader() const;
+  std::string _raycast_fragment_shader() const;
 
   void        _insert_generic_per_vertex_code(std::string& code) const;
   void        _insert_generic_per_fragment_code(std::string& rcode) const;

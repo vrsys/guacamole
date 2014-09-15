@@ -132,6 +132,21 @@ void NURBSUberShader::create(std::set<std::string> const& material_names)
   auto final_program = std::make_shared<ShaderProgram>();
   final_program->set_shaders(shader_stages);
   add_program(final_program);
+
+  // create ubershader for raycasting
+  std::vector<ShaderProgramStage> raycast_stages;
+
+  auto raycast_vertex_shader_template = _raycast_vertex_shader();
+  _insert_generic_per_vertex_code(raycast_vertex_shader_template);
+  raycast_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, raycast_vertex_shader_template));
+
+  auto raycast_fragment_shader_template = _raycast_fragment_shader();
+  _insert_generic_per_fragment_code(raycast_fragment_shader_template);
+  raycast_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, raycast_fragment_shader_template));
+
+  auto raycast_program = std::make_shared<ShaderProgram>();
+  raycast_program->set_shaders(raycast_stages);
+  add_program(raycast_program);
 }
 
 
@@ -360,6 +375,28 @@ std::string NURBSUberShader::_final_fragment_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+std::string NURBSUberShader::_raycast_vertex_shader() const
+{
+  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
+
+  std::string raycast_vertex_shader_code = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.vert", root_dirs);
+  resolve_includes(raycast_vertex_shader_code, root_dirs);
+
+  return raycast_vertex_shader_code;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::string NURBSUberShader::_raycast_fragment_shader() const
+{
+  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
+
+  std::string raycast_fragment_shader_code = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.frag", root_dirs);
+  resolve_includes(raycast_fragment_shader_code, root_dirs);
+
+  return raycast_fragment_shader_code;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void NURBSUberShader::_insert_generic_per_vertex_code(std::string& code) const
 {
   // material specific uniforms
@@ -438,7 +475,7 @@ void NURBSUberShader::draw(RenderContext const& ctx,
                            std::string const& material_name,
                            scm::math::mat4 const& model_matrix,
                            scm::math::mat4 const& normal_matrix,
-                           Frustum const& /*frustum*/,
+                           Frustum const& frustum,
                            View const& view) const
 {
 
@@ -449,20 +486,33 @@ void NURBSUberShader::draw(RenderContext const& ctx,
   set_uniform(ctx, material->get_id(), "gua_material_id");
   set_uniform(ctx, model_matrix, "gua_model_matrix");
   set_uniform(ctx, normal_matrix, "gua_normal_matrix");
+  
 
+  if ( geometry->raycasting_enabled() ) 
+  {
+    get_program(raycasting)->set_uniform(ctx, frustum.get_clip_near(), "nearplane");
+    get_program(raycasting)->set_uniform(ctx, frustum.get_clip_near(), "farplane");
+
+    get_program(raycasting)->use(ctx);
+    {
+      ctx.render_context->apply();
+      geometry->draw(ctx);
+    }
+    get_program(raycasting)->unuse(ctx);
+  } else {
   #ifdef DEBUG_XFB_OUTPUT
     scm::gl::transform_feedback_statistics_query_ptr q = ctx
       .render_device->create_transform_feedback_statistics_query(0);
     ctx.render_context->begin_query(q);
 #endif
 
-  // pre-tesselate if necessary
-  get_program(transform_feedback_pass)->use(ctx);
-  {
-    ctx.render_context->apply();
-    geometry->predraw(ctx);
-  }
-  get_program(transform_feedback_pass)->unuse(ctx);
+    // pre-tesselate if necessary
+    get_program(tesselation_pre_pass)->use(ctx);
+    {
+      ctx.render_context->apply();
+      geometry->predraw(ctx);
+    }
+    get_program(tesselation_pre_pass)->unuse(ctx);
 
 #ifdef DEBUG_XFB_OUTPUT
     ctx.render_context->end_query(q);
@@ -471,14 +521,14 @@ void NURBSUberShader::draw(RenderContext const& ctx,
       << q->result()._primitives_written << std::endl;
 #endif
 
-  // invoke tesselation/trim shader for adaptive nurbs rendering
-  get_program(final_pass)->use(ctx);
-  {
-    ctx.render_context->apply();
-    geometry->draw(ctx);
+    // invoke tesselation/trim shader for adaptive nurbs rendering
+    get_program(tesselation_final_pass)->use(ctx);
+    {
+      ctx.render_context->apply();
+      geometry->draw(ctx);
+    }
+    get_program(tesselation_final_pass)->unuse(ctx);
   }
-  get_program(final_pass)->unuse(ctx);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

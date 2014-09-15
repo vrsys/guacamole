@@ -56,8 +56,9 @@ int main(int argc, char** argv) {
 
   gua::NURBSLoader loader; 
   auto teapot_geometry(loader.create_geometry_from_file("teapot_geometry", "data/objects/teapot.igs", "data/materials/Red.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION | gua::NURBSLoader::WIREFRAME));
-  //auto teapot2_geometry(loader.create_geometry_from_file("teapot2_geometry", "data/objects/teapot.igs", "data/materials/Yellow.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION | gua::NURBSLoader::WIREFRAME));
   auto teapot2_geometry(loader.create_geometry_from_file("teapot2_geometry", "data/objects/part3.igs", "data/materials/White.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION ));
+  auto teapot3_geometry(loader.create_geometry_from_file("teapot3_geometry", "data/objects/part3.igs", "data/materials/Yellow.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION | gua::NURBSLoader::RAYCASTING));
+
   //std::cout << "[ " << teapot_geometry->get_bounding_box().min << " , " << teapot_geometry->get_bounding_box().max << " ]" << std::endl;
   //teapot_geometry->scale(10.0f);
 
@@ -71,11 +72,17 @@ int main(int argc, char** argv) {
   teapot2_geometry->translate(8,0,0);
   teapot2_geometry->scale(model2_size / scm::math::length(teapot2_geometry->get_bounding_box().max - teapot2_geometry->get_bounding_box().min));
   
+  float const model3_size = 20.0f;
+  teapot3_geometry->translate(-teapot3_geometry->get_bounding_box().center());
+  teapot3_geometry->translate(4, 0, 8);
+  teapot3_geometry->scale(model3_size / scm::math::length(teapot3_geometry->get_bounding_box().max - teapot3_geometry->get_bounding_box().min));
+
   auto input = graph.add_node<gua::node::TransformNode>("/", "input"); 
    
   auto teapot = graph.add_node<gua::node::TransformNode>("/input", "teapot");
   graph.add_node("/input/teapot", teapot_geometry);
   graph.add_node("/input/teapot", teapot2_geometry);
+  graph.add_node("/input/teapot", teapot3_geometry);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->scale(500.f);

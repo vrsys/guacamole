@@ -63,7 +63,7 @@ uniform samplerBuffer attribute_texture;
 ///////////////////////////////////////////////////////////////////////////////
 // functions
 ///////////////////////////////////////////////////////////////////////////////
-#include "shaders/uber_shaders/common/get_sampler_casts.glsl"
+#include "resources/shaders/uber_shaders/common/get_sampler_casts.glsl"
 
 uint gua_get_material_id() {
   return gua_material_id;

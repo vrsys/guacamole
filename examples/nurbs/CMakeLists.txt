@@ -14,7 +14,7 @@ include_directories( ${INCLUDE_PATHS}
 
 add_executable( ${_EXE_NAME} main.cpp)
 
-add_dependencies(${_EXE_NAME} guacamole guacamole-nurbs install)
+add_dependencies(${_EXE_NAME} guacamole guacamole-nurbs)
 
 list(APPEND LIBS guacamole)
 
