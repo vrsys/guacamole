@@ -46,7 +46,10 @@ class Material {
   MaterialInstance const& get_default_instance() const;
   MaterialInstance&       get_default_instance();
 
-  ShaderProgram* get_shader(GeometryResource const& for_type);
+  ShaderProgram* get_shader(GeometryResource const& for_type,
+                            std::string const& geometry_v_shader,
+                            std::string const& geometry_f_shader);
+
 
   void print_shaders() const;
 
