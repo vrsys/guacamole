@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
   pipe->add_pass<gua::GBufferPass>();
   pipe->add_pass<gua::LightingPass>();
   pipe->add_pass<gua::BackgroundPass>();
-  // pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
+  pipe->add_pass<gua::SSAOPass>();
 
   auto window(new gua::GlfwWindow());
   pipe->set_output_window(window);
