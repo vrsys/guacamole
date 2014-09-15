@@ -227,13 +227,14 @@ void gua_calculate_sun_light(vec3 normal, vec3 position) {
 void main() {
   vec3 gbuffer_normal = gua_get_normal();
   vec3 position = gua_get_position();
+  
   compute_light(gbuffer_normal, position);
 
-  float emit = gua_get_pbr().r;
+  vec3 pbr = gua_get_pbr();
   vec3 surface_color = gua_get_color();
   vec3 diffuse   = dot(gbuffer_normal, gua_light_direction) * gua_light_color;
   float specular = dot(reflect(gua_light_direction, gbuffer_normal), normalize(position - gua_camera_position));
-  specular = pow(max(0, specular), 50);
+  specular = pow(max(0, specular), pbr.g*100) * pbr.b;
 
-  gua_out_color = (surface_color*diffuse + specular) * gua_light_intensity * (1-emit);
+  gua_out_color = (surface_color*diffuse + specular) * gua_light_intensity * (1-pbr.r);
 }

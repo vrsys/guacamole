@@ -5,3 +5,5 @@ vec3  gua_bitangent;
 vec2  gua_texcoords;
 vec3  gua_color;
 float gua_shinyness;
+float gua_specularity;
+float gua_emissivity;

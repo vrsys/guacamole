@@ -36,6 +36,7 @@ int main(int argc, char** argv) {
   gua::MaterialDatabase::instance()->add(mat);
 
   gua::TriMeshLoader loader;
+
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   teapot->translate(1.0, 0.0, 0.0);
   auto teapot2(loader.create_geometry_from_file("teapot2", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -48,6 +49,15 @@ int main(int argc, char** argv) {
       casted->get_material().set_uniform("color", gua::math::vec3(0.0, 1.0, 0.0));
   }
 
+  // auto teapot(loader.create_geometry_from_file(
+  //   "teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", 
+  //   mat->get_default_instance(), 
+  //   gua::TriMeshLoader::NORMALIZE_POSITION | 
+  //   gua::TriMeshLoader::NORMALIZE_SCALE |
+  //   gua::TriMeshLoader::LOAD_MATERIALS |
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY 
+  // ));
+
   graph.add_node("/", teapot);
   graph.add_node("/", teapot2);
 
@@ -58,18 +68,19 @@ int main(int argc, char** argv) {
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
   light2->scale(3.4f);
-  light2->translate(-1.f, 1.f, 0.f);
+  light2->translate(-2.f, 1.f, 0.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(1.6f, 1.2f));
-  screen->translate(0, 0, 1.0);
+  screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
+  screen->translate(0, 0, 1.5);
 
   auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
-  eye->translate(0, 0, 1.5);
+  eye->translate(0, 0, 2);
 
   gua::Camera cam("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph");
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
+  pipe->config.set_resolution(gua::math::vec2ui(1920, 1080));
 
   pipe->add_pass<gua::GBufferPass>();
   pipe->add_pass<gua::LightingPass>();
@@ -80,10 +91,14 @@ int main(int argc, char** argv) {
   pipe->set_output_window(window);
   gua::Renderer renderer({pipe});
 
+  window->config.set_enable_vsync(false);
+  window->config.set_size(gua::math::vec2ui(1920, 1080));
+  window->config.set_left_resolution(gua::math::vec2ui(1920, 1080));
+
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_left_resolution(new_size);
     pipe->config.set_resolution(new_size);
-    screen->data.set_size(gua::math::vec2(0.002 * new_size.x, 0.002 * new_size.y));
+    screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
 
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
@@ -95,11 +110,6 @@ int main(int argc, char** argv) {
     else             std::cout << "Mouse button " << button << " down" << std::endl;
   });
 
-#if WIN32
-  window->config.set_display_name("\\\\.\\DISPLAY1");
-#else
-  window->config.set_display_name(":0.0");
-#endif
 
   // application loop
   gua::events::MainLoop loop;
