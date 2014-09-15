@@ -152,7 +152,7 @@ class UniformValue<std::shared_ptr<Texture> > : public UniformValueBase {
   }
 
   virtual std::string get_glsl_type() const {
-    return "sampler2D";
+    return "uvec2";
   }
 
  private:
@@ -182,7 +182,7 @@ class UniformValue<Texture*> : public UniformValueBase {
   void value(Texture* value) { value_ = value; }
 
   virtual std::string get_glsl_type() const {
-    return "sampler2D";
+    return "uvec2";
   }
 
  private:
@@ -213,7 +213,7 @@ class UniformValue<std::shared_ptr<Texture2D> > : public UniformValueBase {
   }
 
   virtual std::string get_glsl_type() const {
-    return "sampler2D";
+    return "uvec2";
   }
 
  private:
@@ -243,7 +243,7 @@ class UniformValue<Texture2D*> : public UniformValueBase {
   void value(Texture2D* value) { value_ = value; }
 
   virtual std::string get_glsl_type() const {
-    return "sampler2D";
+    return "uvec2";
   }
 
  private:
@@ -273,7 +273,7 @@ class UniformValue<std::shared_ptr<Texture3D> > : public UniformValueBase {
   }
 
   virtual std::string get_glsl_type() const {
-    return "sampler3D";
+    return "uvec2";
   }
 
  private:
@@ -303,7 +303,7 @@ class UniformValue<Texture3D*> : public UniformValueBase {
   }
 
   virtual std::string get_glsl_type() const {
-    return "sampler3D";
+    return "uvec2";
   }
 
  private:
@@ -334,7 +334,7 @@ template <> class UniformValue<std::string> : public UniformValueBase {
   }
 
   virtual std::string get_glsl_type() const {
-    return "sampler2D";
+    return "uvec2";
   }
 
  private:
