@@ -20,7 +20,6 @@
  ******************************************************************************/
 
 #include <gua/guacamole.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
 
 int main(int argc, char** argv) {
 
@@ -38,20 +37,32 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader loader;
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  teapot->translate(1.0, 0.0, 0.0);
+  auto teapot2(loader.create_geometry_from_file("teapot2", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  teapot2->translate(-1.0, 0.0, 0.0);
+
+
+  for (auto child : teapot2->get_children()) {
+    auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(child));
+    if (casted)
+      casted->get_material().set_uniform("color", gua::math::vec3(0.0, 1.0, 0.0));
+  }
 
   graph.add_node("/", teapot);
+  graph.add_node("/", teapot2);
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(1.4f);
   light->translate(1.f, 0.f, 0.f);
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->data.color = gua::utils::Color3f(1.f, 0.5f, 0.0f);
+  light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
   light2->scale(3.4f);
   light2->translate(-1.f, 1.f, 0.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.6f, 1.2f));
+  screen->translate(0, 0, 1.0);
 
   auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
   eye->translate(0, 0, 1.5);
@@ -97,6 +108,7 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     teapot->rotate(0.1, 0, 1, 0);
+    teapot2->rotate(0.1, 0, 1, 0);
 
     window->process_events();
     if (window->should_close()) {

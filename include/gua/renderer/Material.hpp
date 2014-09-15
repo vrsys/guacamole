@@ -50,6 +50,10 @@ class Material {
                             std::string const& geometry_v_shader,
                             std::string const& geometry_f_shader);
 
+  void apply_uniforms(RenderContext const& ctx,
+                      ShaderProgram* shader,
+                      MaterialInstance const& overwrite) const;
+
 
   void print_shaders() const;
 
