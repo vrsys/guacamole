@@ -31,6 +31,8 @@ namespace gua {
 
 class MaterialInstance {
   public:
+    MaterialInstance(std::string const& material_name = "");
+
     MaterialInstance(MaterialInstance const& to_copy);
     ~MaterialInstance();
 
@@ -62,8 +64,6 @@ class MaterialInstance {
 
   private:
     friend class Material;
-
-    MaterialInstance(std::string const& material_name = "");
 
     std::string material_name_;
     std::unordered_map<std::string, UniformValueBase*> uniforms_;

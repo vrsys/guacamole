@@ -115,7 +115,7 @@ namespace gua {
   std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file
     (std::string const& node_name,
     std::string const& file_name,
-    std::string const& fallback_material,
+    MaterialInstance const& fallback_material,
     unsigned flags)
   {
     auto cached_node(load_geometry(file_name, flags));
@@ -299,15 +299,13 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
 ////////////////////////////////////////////////////////////////////////////////
 
 void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
-                                             std::string const& fallback_material) const
+                                            MaterialInstance const& fallback_material) const
 {
   auto g_node(std::dynamic_pointer_cast<node::GeometryNode>(root));
 
   if (g_node) {
-    if (g_node->get_material().empty()) {
-      g_node->set_material(fallback_material);
-      g_node->update_cache();
-    }
+    g_node->set_material(fallback_material);
+    g_node->update_cache();
   }
 
   for (auto& child : root->get_children()) {

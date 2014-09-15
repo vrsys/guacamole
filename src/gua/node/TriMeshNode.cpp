@@ -36,7 +36,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   TriMeshNode::TriMeshNode(std::string const& name,
                            std::string const& filename,
-                           std::string const& material,
+                           MaterialInstance const& material,
                            math::mat4 const& transform)
     : GeometryNode(name, filename, material, transform)
   {}
@@ -232,7 +232,7 @@ namespace node {
 
     if (material_changed_)
     {
-      if (material_ != "")
+      if (material_.get_material_name() != "")
       {
         // if (!MaterialDatabase::instance()->is_supported(material_))
         // {

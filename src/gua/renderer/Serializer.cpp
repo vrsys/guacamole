@@ -161,7 +161,8 @@ void Serializer::check(SerializedScene& output,
 
   if (is_visible(node))
   {
-    if (!node->get_filename().empty() && !node->get_material().empty())
+    if (!node->get_filename().empty() &&
+        !node->get_material().get_material_name().empty())
     {
       add_bbox(node);
 
@@ -173,7 +174,7 @@ void Serializer::check(SerializedScene& output,
       }
     }
 
-    data_->materials_.insert(node->get_material());
+    data_->materials_.insert(node->get_material().get_material_name());
 
     visit_children(node);
   }

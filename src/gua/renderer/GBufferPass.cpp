@@ -45,8 +45,8 @@ void GBufferPass::process(Pipeline* pipe) {
       auto const& ressource = GeometryDatabase::instance()->lookup(object->get_filename());
       if (ressource) {
 
-        // auto const& material = MaterialDatabase::instance()->lookup(object->get_material());
-        // if (material) {
+        auto const& material = MaterialDatabase::instance()->lookup(object->get_material().get_material_name());
+        if (material) {
 
           if (!renderer) {
             renderer = pipe->get_renderer(*ressource);
@@ -54,9 +54,9 @@ void GBufferPass::process(Pipeline* pipe) {
 
           renderer->draw(ressource, nullptr, object->get_cached_world_transform(), pipe);
 
-        // } else {
-        //   Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object->get_material() << std::endl;
-        // }
+        } else {
+          Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object->get_material().get_material_name() << std::endl;
+        }
 
       } else {
         Logger::LOG_WARNING << "GBufferPass::process(): Cannot find geometry ressource: " << object->get_filename() << std::endl;
