@@ -98,8 +98,8 @@ void main() {
 
   ao/=32.0;
 
-  // gua_out_color = vec4(0.0, 0.0, 0.0, ao) * gua_ssao_intensity;
-  gua_out_color = vec4(ao, ao, ao, 1.0) * gua_ssao_intensity;
+  gua_out_color = vec4(0.0, 0.0, 0.0, ao) * gua_ssao_intensity;
+  // gua_out_color = vec4(ao, ao, ao, 1.0) * gua_ssao_intensity;
   // gua_out_color = gua_get_color() * max(0.0, 1.0 - ao*gua_ssao_intensity);
   // gua_out_color = gua_get_color() * max(0.0, 1.0 - ao);//*gua_ssao_intensity);
 }

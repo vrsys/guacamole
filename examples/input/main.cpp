@@ -50,12 +50,12 @@ int main(int argc, char** argv) {
   }
 
   // auto teapot(loader.create_geometry_from_file(
-  //   "teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", 
-  //   mat->get_default_instance(), 
-  //   gua::TriMeshLoader::NORMALIZE_POSITION | 
+  //   "teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+  //   mat->get_default_instance(),
+  //   gua::TriMeshLoader::NORMALIZE_POSITION |
   //   gua::TriMeshLoader::NORMALIZE_SCALE |
   //   gua::TriMeshLoader::LOAD_MATERIALS |
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY 
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY
   // ));
 
   graph.add_node("/", teapot);
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
   pipe->add_pass<gua::GBufferPass>();
   pipe->add_pass<gua::LightingPass>();
   pipe->add_pass<gua::BackgroundPass>();
-  pipe->add_pass<gua::SSAOPass>();
+  pipe->add_pass<gua::SSAOPass>().radius(2.f).falloff(2.f);
 
   auto window(new gua::GlfwWindow());
   pipe->set_output_window(window);

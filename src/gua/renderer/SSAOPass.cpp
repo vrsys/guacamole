@@ -35,9 +35,9 @@ SSAOPass::SSAOPass() :
   depth_stencil_state_(nullptr),
   blend_state_(nullptr),
   noise_texture_(),
-  radius_(10.f),
-  intensity_(5.f),
-  falloff_(5.f) {
+  radius_(1.f),
+  intensity_(1.f),
+  falloff_(0.1f) {
 
   shader_ = std::make_shared<ShaderProgram>();
   shader_->create_from_sources(
@@ -46,28 +46,31 @@ SSAOPass::SSAOPass() :
   );
 }
 
-float SSAOPass::get_radius() const{
+float SSAOPass::radius() const{
   return radius_;
 }
 
-void SSAOPass::set_radius(float radius) {
+SSAOPass& SSAOPass::radius(float radius) {
   radius_ = radius;
+  return *this;
 }
 
-float SSAOPass::get_intensity() const{
+float SSAOPass::intensity() const{
   return intensity_;
 }
 
-void SSAOPass::set_intensity(float intensity) {
+SSAOPass& SSAOPass::intensity(float intensity) {
   intensity_ = intensity;
+  return *this;
 }
 
-float SSAOPass::get_falloff() const{
+float SSAOPass::falloff() const{
   return falloff_;
 }
 
-void SSAOPass::set_falloff(float falloff) {
+SSAOPass& SSAOPass::falloff(float falloff) {
   falloff_ = falloff;
+  return *this;
 }
 
 void SSAOPass::process(Pipeline* pipe) {
@@ -79,8 +82,8 @@ void SSAOPass::process(Pipeline* pipe) {
 
   if (!blend_state_) {
     blend_state_ = ctx.render_device->create_blend_state(true,
-                                                         scm::gl::FUNC_ONE,
-                                                         scm::gl::FUNC_ONE,
+                                                         scm::gl::FUNC_SRC_ALPHA,
+                                                         scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
                                                          scm::gl::FUNC_SRC_ALPHA,
                                                          scm::gl::FUNC_ONE_MINUS_SRC_ALPHA
                                                          );
@@ -91,7 +94,7 @@ void SSAOPass::process(Pipeline* pipe) {
   pipe->get_gbuffer().set_viewport(ctx);
 
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-  // ctx.render_context->set_blend_state(blend_state_);
+  ctx.render_context->set_blend_state(blend_state_);
 
   shader_->use(ctx);
 
