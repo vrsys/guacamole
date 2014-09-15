@@ -105,8 +105,8 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
   fillcolor += " \"#CCCCCC\"";
   if (geometry->get_filename() != "")
     parse_data_ += "| geometry: " + geometry->get_filename();
-  if (geometry->get_material() != "")
-    parse_data_ += "| material: " + geometry->get_material();
+  if (geometry->get_material().get_material_name() != "")
+    parse_data_ += "| material: " + geometry->get_material().get_material_name();
 
   fillcolor += "]";
 

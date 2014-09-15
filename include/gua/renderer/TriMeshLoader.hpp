@@ -25,6 +25,8 @@
 // guacamole headers
 #include <gua/renderer/TriMeshRessource.hpp>
 
+#include <gua/renderer/MaterialInstance.hpp>
+
 // external headers
 #include <string>
 #include <list>
@@ -82,7 +84,7 @@ public:
    */
    std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
                                                    std::string const& file_name,
-                                                   std::string const& fallback_material,
+                                                   MaterialInstance const& fallback_material,
                                                    unsigned flags = DEFAULTS);
 
   /**
@@ -120,7 +122,7 @@ public:
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);
 
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::string const& fallback_material) const;
+  void apply_fallback_material(std::shared_ptr<node::Node> const& root, MaterialInstance const& fallback_material) const;
 
 private: // attributes
 

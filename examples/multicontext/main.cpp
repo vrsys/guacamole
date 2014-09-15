@@ -77,8 +77,8 @@ int main(int argc, char** argv) {
   // gua::Video3DLoader videoloader;
 
   // auto video_geode(videoloader.create_geometry_from_file("video_geode", argv[1]));
-  auto teapot_geode(trimeshloader.create_geometry_from_file("teapot_geode", "data/objects/teapot.obj", "data/materials/Red.gmd", gua::TriMeshLoader::DEFAULTS));
-  auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", "data/materials/White.gmd", gua::TriMeshLoader::DEFAULTS));
+  auto teapot_geode(trimeshloader.create_geometry_from_file("teapot_geode", "data/objects/teapot.obj", gua::MaterialInstance(), gua::TriMeshLoader::DEFAULTS));
+  auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", gua::MaterialInstance(), gua::TriMeshLoader::DEFAULTS));
   // auto nurbs_geode(nurbsloader.create_geometry_from_file("nurbs_geode", "data/objects/teapot.igs", "data/materials/Orange.gmd", gua::NURBSLoader::DEFAULTS));
 
   auto video = graph.add_node<gua::node::TransformNode>("/", "video");
