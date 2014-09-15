@@ -90,12 +90,12 @@ ShaderProgram* Material::get_shader(GeometryResource const& for_type,
 
     auto new_shader = new ShaderProgram();
 
-    std::cout << "VERTEX SHADER " << std::endl;
-    std::cout << "################################# " << std::endl << std::endl;
+    // std::cout << "VERTEX SHADER " << std::endl;
+    // std::cout << "################################# " << std::endl << std::endl;
     auto v_shader(compile_description(v_passes, geometry_v_shader));
 
-    std::cout << std::endl << "FRAGMENT SHADER " << std::endl;
-    std::cout << "################################# " << std::endl << std::endl;
+    // std::cout << std::endl << "FRAGMENT SHADER " << std::endl;
+    // std::cout << "################################# " << std::endl << std::endl;
 
     auto f_shader(compile_description(f_passes, geometry_f_shader));
 
@@ -150,7 +150,7 @@ std::string Material::compile_description(std::list<MaterialPass> const& passes,
   gua::string_utils::replace(source, "@material_method_calls", method_calls.str());
 
 
-  std::cout << string_utils::format_code(source) << std::endl;
+  // std::cout << string_utils::format_code(source) << std::endl;
   // indent and return code ------------------------------------------------
   return string_utils::format_code(source);
 }

@@ -19,7 +19,7 @@ layout(location=4) in vec3 gua_in_bitangent;
 
 void main() {
 
-  gua_varying_position = (gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
+  gua_varying_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
   gua_varying_normal = normalize((gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz);
   gua_varying_tangent = normalize((gua_projection_matrix * vec4(gua_in_tangent, 0.0)).xyz);
   gua_varying_bitangent = normalize((gua_projection_matrix * vec4(gua_in_bitangent, 0.0)).xyz);
@@ -31,5 +31,5 @@ void main() {
 
 @include "shaders/common/gua_varyings_assignment.glsl"
 
-  gl_Position = vec4(gua_position, 1.0);
+  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_position, 1.0);
 }

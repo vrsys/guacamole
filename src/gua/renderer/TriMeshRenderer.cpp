@@ -57,6 +57,7 @@ void TriMeshRenderer::draw(std::shared_ptr<GeometryResource> const& object,
   auto uniforms(used_instance.get_uniforms());
 
   shader->use(ctx);
+  pipe->bind_camera_uniform_block(0);
 
   shader->set_uniform(ctx, transformation, "gua_model_matrix");
   shader->set_uniform(ctx, scm::math::transpose(scm::math::inverse(transformation)), "gua_normal_matrix");
