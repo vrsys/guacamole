@@ -44,14 +44,14 @@ class SSAOPass : public PipelinePass {
 
   friend class Pipeline;
 
-  float get_radius() const;
-  void set_radius(float radius);
+  float radius() const;
+  SSAOPass& radius(float radius);
 
-  float get_intensity() const;
-  void set_intensity(float intensity);
+  float intensity() const;
+  SSAOPass& intensity(float intensity);
 
-  float get_falloff() const;
-  void set_falloff(float falloff);
+  float falloff() const;
+  SSAOPass& falloff(float falloff);
 
 
  protected:

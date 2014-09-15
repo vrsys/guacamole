@@ -67,6 +67,18 @@ int main(int argc, char** argv) {
       casted->get_material().set_uniform("color", gua::math::vec3(0.0, 1.0, 0.0));
   }
 
+<<<<<<< HEAD
+=======
+  // auto teapot(loader.create_geometry_from_file(
+  //   "teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+  //   mat->get_default_instance(),
+  //   gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE |
+  //   gua::TriMeshLoader::LOAD_MATERIALS |
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY
+  // ));
+
+>>>>>>> finished ssao pass
   graph.add_node("/", teapot);
   graph.add_node("/", teapot2);
 
@@ -92,10 +104,12 @@ int main(int argc, char** argv) {
   gua::Camera cam("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph");
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
-  pipe->add_pass<gua::GBufferPass>(); 
-  pipe->add_pass<gua::LightingPass>(); 
-  pipe->add_pass<gua::BackgroundPass>(); 
-  pipe->add_pass<gua::SSAOPass>();
+  pipe->config.set_resolution(gua::math::vec2ui(1920, 1080));
+
+  pipe->add_pass<gua::GBufferPass>();
+  pipe->add_pass<gua::LightingPass>();
+  pipe->add_pass<gua::BackgroundPass>();
+  pipe->add_pass<gua::SSAOPass>().radius(2.f).falloff(2.f);
 
   // pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
 
