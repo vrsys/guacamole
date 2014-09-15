@@ -24,7 +24,7 @@
 // varyings
 in vec2 gua_quad_coords;
 
-@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+@include "shaders/common/gua_camera_uniforms.glsl"
 @include "shaders/gbuffer_input.glsl"
 
 // output
