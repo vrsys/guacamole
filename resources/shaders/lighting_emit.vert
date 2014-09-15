@@ -19,43 +19,15 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LIGHTING_PASS_HPP
-#define GUA_LIGHTING_PASS_HPP
+@include "shaders/common/header.glsl"
 
-#include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/GeometryResource.hpp>
+layout(location=0) in vec3 gua_in_position;
+layout(location=2) in vec2 gua_in_texcoord;
 
-#include <memory>
+// varyings
+out vec2 gua_quad_coords;
 
-namespace gua {
-
-class Pipeline;
-
-class LightingPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return true; }
-  virtual bool writes_only_color_buffer()    const { return true; }
-  virtual bool perform_depth_test()          const { return true; }
-
-  virtual void process(Pipeline* pipe);
-
-  friend class Pipeline;
-
- protected:
-  LightingPass();
-  ~LightingPass() {}
-
- private:
-  std::shared_ptr<ShaderProgram>      shader_;
-  std::shared_ptr<ShaderProgram>      emit_shader_;
-  std::shared_ptr<GeometryResource>   light_sphere_;
-  scm::gl::rasterizer_state_ptr       rasterizer_state_front_;
-  scm::gl::depth_stencil_state_ptr    depth_stencil_state_;
-  scm::gl::blend_state_ptr            blend_state_;
-};
-
+void main() {
+    gua_quad_coords = gua_in_texcoord;
+    gl_Position = vec4(gua_in_position, 1.0);
 }
-
-#endif  // GUA_LIGHTING_PASS_HPP

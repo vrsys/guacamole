@@ -19,43 +19,20 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LIGHTING_PASS_HPP
-#define GUA_LIGHTING_PASS_HPP
+@include "shaders/common/header.glsl"
 
-#include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/GeometryResource.hpp>
+// varyings
+in vec2 gua_quad_coords;
 
-#include <memory>
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+@include "shaders/gbuffer_input.glsl"
 
-namespace gua {
+// output
+layout(location=0) out vec3 gua_out_color;
 
-class Pipeline;
+void main() {
+    vec3 surface_color = gua_get_color();
+    float emit = gua_get_pbr().r;
 
-class LightingPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return true; }
-  virtual bool writes_only_color_buffer()    const { return true; }
-  virtual bool perform_depth_test()          const { return true; }
-
-  virtual void process(Pipeline* pipe);
-
-  friend class Pipeline;
-
- protected:
-  LightingPass();
-  ~LightingPass() {}
-
- private:
-  std::shared_ptr<ShaderProgram>      shader_;
-  std::shared_ptr<ShaderProgram>      emit_shader_;
-  std::shared_ptr<GeometryResource>   light_sphere_;
-  scm::gl::rasterizer_state_ptr       rasterizer_state_front_;
-  scm::gl::depth_stencil_state_ptr    depth_stencil_state_;
-  scm::gl::blend_state_ptr            blend_state_;
-};
-
+    gua_out_color = surface_color*emit;
 }
-
-#endif  // GUA_LIGHTING_PASS_HPP

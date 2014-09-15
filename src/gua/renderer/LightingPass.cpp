@@ -32,6 +32,7 @@ namespace gua {
 
 LightingPass::LightingPass() :
   shader_(nullptr),
+  emit_shader_(nullptr),
   light_sphere_(nullptr),
   rasterizer_state_front_(nullptr),
   depth_stencil_state_(nullptr),
@@ -47,6 +48,12 @@ void LightingPass::process(Pipeline* pipe) {
     shader_->create_from_sources(
       Resources::lookup_shader(Resources::shaders_lighting_vert), 
       Resources::lookup_shader(Resources::shaders_lighting_frag)
+    );
+
+    emit_shader_ = std::make_shared<ShaderProgram>();
+    emit_shader_->create_from_sources(
+      Resources::lookup_shader(Resources::shaders_lighting_emit_vert), 
+      Resources::lookup_shader(Resources::shaders_lighting_emit_frag)
     );
   }
 
@@ -77,8 +84,15 @@ void LightingPass::process(Pipeline* pipe) {
 
   // set state
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-  ctx.render_context->set_rasterizer_state(rasterizer_state_front_);
   ctx.render_context->set_blend_state(blend_state_);
+  
+  // draw fullscreen quad for emissive surfaces
+  emit_shader_->use(ctx);
+  pipe->bind_gbuffer_input(emit_shader_);
+  pipe->draw_fullscreen_quad();
+
+  // draw proxy geometries for light sources
+  ctx.render_context->set_rasterizer_state(rasterizer_state_front_);
 
   shader_->use(ctx);
   shader_->set_subroutine(ctx, scm::gl::STAGE_VERTEX_SHADER,   "compute_light", "gua_calculate_point_light");
