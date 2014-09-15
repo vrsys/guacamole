@@ -111,7 +111,6 @@ void LightingPass::process(Pipeline* pipe) {
     light_sphere_->draw(ctx);
   }
 
-
   pipe->get_gbuffer().unbind(ctx);
 
   ctx.render_context->reset_state_objects();

@@ -97,7 +97,8 @@ void serialize(SceneGraph const& scene_graph,
 Pipeline::Pipeline() :
   gbuffer_(nullptr),
   camera_block_(nullptr),
-  dirty_(false),
+  last_resolution_(0, 0),
+  dirty_(true),
   fullscreen_quad_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,6 +136,11 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       window_->create_shader();
     }
     window_->set_active(true);
+  }
+
+  if (last_resolution_ != window_->config.size()) {
+    last_resolution_ = window_->config.size();
+    dirty_ = true;
   }
 
   // recreate gbuffer if resolution changed
