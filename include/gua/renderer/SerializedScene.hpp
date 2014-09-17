@@ -58,7 +58,7 @@ struct SerializedScene {
   /**
   * All geometry nodes.
   */
-  std::unordered_map<std::type_index, std::vector<node::GeometryNode*>> geometrynodes_;
+  std::unordered_map<std::type_index, std::unordered_multimap<std::string, node::GeometryNode*>> geometrynodes_;
 
   /**
   * All Volume nodes.
@@ -89,11 +89,6 @@ struct SerializedScene {
    * The center of interest.
    */
   math::vec3 center_of_interest;
-
-  /**
-   * All used materials.
-   */
-  std::set<std::string> materials_;
 
   /**
    * All bounding boxes.
