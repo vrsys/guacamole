@@ -296,6 +296,8 @@ MaterialInstance& MaterialLoader::get_material_instance(unsigned capabilities) c
     add_property(capabilities & EMIT_MAP,      capabilities & EMIT_COLOR,      "emissivity",   0.0f);
 
     MaterialDatabase::instance()->add(std::make_shared<Material>(material_name, description));
+
+    std::cout << "Add " << material_name << std::endl;
   }
 
   return MaterialDatabase::instance()->lookup(material_name)->get_default_instance();

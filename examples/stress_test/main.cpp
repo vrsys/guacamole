@@ -39,20 +39,28 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader loader;
 
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  teapot->translate(1.0, 0.0, 0.0);
-  auto teapot2(loader.create_geometry_from_file("teapot2", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  teapot2->translate(-1.0, 0.0, 0.0);
+  auto add_oilrig = [&](int x, int y) {
 
+    auto t = graph.add_node<gua::node::TransformNode>("/", "rig_" + std::to_string(x) + "_" + std::to_string(y));
+    t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/3, 0);
 
-  for (auto child : teapot2->get_children()) {
-    auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(child));
-    if (casted)
-      casted->get_material().set_uniform("color", gua::math::vec3(0.0, 1.0, 0.0));
-  }
+    auto rig(loader.create_geometry_from_file(
+      "rig", 
+      "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", 
+      mat->get_default_instance(), 
+      gua::TriMeshLoader::NORMALIZE_POSITION | 
+      gua::TriMeshLoader::NORMALIZE_SCALE |
+      gua::TriMeshLoader::LOAD_MATERIALS |
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY 
+    ));
+    t->add_child(rig);
+  };
 
-  graph.add_node("/", teapot);
-  graph.add_node("/", teapot2);
+  for (int x(0); x<COUNT; ++x) {
+    for (int y(0); y<COUNT; ++y) {
+      add_oilrig(x, y);
+    } 
+  } 
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(4.4f);
@@ -110,8 +118,11 @@ int main(int argc, char** argv) {
 
   ticker.on_tick.connect([&]() {
 
-    teapot->rotate(0.1, 0, 1, 0);
-    teapot2->rotate(0.1, 0, 1, 0);
+    for (int x(0); x<COUNT; ++x) {
+      for (int y(0); y<COUNT; ++y) {
+        graph["/rig_" + std::to_string(x) + "_" + std::to_string(y) + "/rig"]->rotate(0.1, 0, 1, 0);
+      } 
+    } 
 
     window->process_events();
     if (window->should_close()) {

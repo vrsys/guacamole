@@ -1,0 +1,12 @@
+{
+  "vertex_passes" :
+  [],
+
+  "fragment_passes" :
+  [
+    {
+      "file_name" : "data/materials/FragmentColor.gpd"
+    }
+  ]
+
+}

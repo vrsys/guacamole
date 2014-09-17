@@ -38,3 +38,4 @@ plugins/guacamole-oculus/example-oculus/example-oculus
 examples/multicontext/multicontext
 examples/input/input
 examples/tags/tags
+examples/stress_test/stress_test
