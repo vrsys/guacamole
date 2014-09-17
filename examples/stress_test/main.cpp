@@ -45,13 +45,13 @@ int main(int argc, char** argv) {
     t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/3, 0);
 
     auto rig(loader.create_geometry_from_file(
-      "rig", 
-      "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", 
-      mat->get_default_instance(), 
-      gua::TriMeshLoader::NORMALIZE_POSITION | 
+      "rig",
+      "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      mat->get_default_instance(),
+      gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE |
       gua::TriMeshLoader::LOAD_MATERIALS |
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY 
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY
     ));
     t->add_child(rig);
   };
@@ -59,8 +59,8 @@ int main(int argc, char** argv) {
   for (int x(0); x<COUNT; ++x) {
     for (int y(0); y<COUNT; ++y) {
       add_oilrig(x, y);
-    } 
-  } 
+    }
+  }
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(4.4f);
@@ -121,8 +121,8 @@ int main(int argc, char** argv) {
     for (int x(0); x<COUNT; ++x) {
       for (int y(0); y<COUNT; ++y) {
         graph["/rig_" + std::to_string(x) + "_" + std::to_string(y) + "/rig"]->rotate(0.1, 0, 1, 0);
-      } 
-    } 
+      }
+    }
 
     window->process_events();
     if (window->should_close()) {
