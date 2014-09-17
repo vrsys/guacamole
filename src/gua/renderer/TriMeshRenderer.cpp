@@ -60,7 +60,6 @@ void TriMeshRenderer::draw(std::shared_ptr<GeometryResource> const& object,
 
   material->apply_uniforms(ctx, shader, material_overwrite);
 
-
   object->draw(ctx);
 }
 
