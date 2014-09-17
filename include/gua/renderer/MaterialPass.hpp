@@ -47,33 +47,21 @@ class MaterialPass {
 
   template <typename T>
   MaterialPass& set_uniform(std::string const& name, T const& value) {
-    auto uniform(uniforms_.find(name));
-
-    if (uniform == uniforms_.end()) {
-      uniforms_[name] = std::make_shared<UniformValue<T>>(value);
-    } else {
-      uniform->second->set_value(value);
-    }
-
-    return *this;
+    return set_uniform(name, UniformValue(value));
   }
 
-  MaterialPass& set_uniform(std::string const& name,
-                            std::shared_ptr<UniformValueBase> const& uniform) {
-
+  MaterialPass& set_uniform(std::string const& name, UniformValue const& uniform) {
     uniforms_[name] = uniform;
     return *this;
   }
 
-
-  std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> const&
-  get_uniforms() const;
+  std::unordered_map<std::string, UniformValue> const& get_uniforms() const;
 
  private:
 
   std::string name_;
   std::string source_;
-  std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> uniforms_;
+  std::unordered_map<std::string, UniformValue> uniforms_;
 };
 
 }

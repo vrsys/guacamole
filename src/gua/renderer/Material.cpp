@@ -34,17 +34,11 @@ Material::Material(std::string const& name, MaterialDescription const& desc)
   auto f_passes = desc_.get_fragment_passes();
 
   for (auto const& pass : v_passes) {
-    for (auto const& uniform : pass.get_uniforms()) {
-      default_instance_.uniforms_.insert(std::make_pair(
-                                    uniform.first, uniform.second->get_copy()));
-    }
+    default_instance_.uniforms_.insert(pass.get_uniforms().begin(), pass.get_uniforms().end());
   }
 
   for (auto const& pass : f_passes) {
-    for (auto const& uniform : pass.get_uniforms()) {
-      default_instance_.uniforms_.insert(std::make_pair(
-                                    uniform.first, uniform.second->get_copy()));
-    }
+    default_instance_.uniforms_.insert(pass.get_uniforms().begin(), pass.get_uniforms().end());
   }
 }
 
@@ -136,7 +130,7 @@ std::string Material::compile_description(std::list<MaterialPass> const& passes,
   std::string source(shader_source);
   std::stringstream uniforms;
 
-  std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> pass_uniforms;;
+  std::unordered_map<std::string, UniformValue> pass_uniforms;
 
   // collect uniforms from all passes
   for (auto& pass: passes) {
@@ -145,7 +139,7 @@ std::string Material::compile_description(std::list<MaterialPass> const& passes,
 
   for (auto& uniform: pass_uniforms) {
     uniforms << "uniform "
-           << uniform.second->get_glsl_type() << " "
+           << uniform.second.get_glsl_type() << " "
            << uniform.first << ";"
            << std::endl;
   }

@@ -74,8 +74,7 @@ MaterialPass& MaterialPass::load_from_json(std::string const& json_string) {
             uniform_string["type"] != Json::Value::null &&
             uniform_string["value"] != Json::Value::null) {
 
-          std::shared_ptr<UniformValueBase>
-              uniform(gua::UniformValueBase::create_from_strings(
+          auto uniform(UniformValue::create_from_strings(
                         uniform_string["value"].asString(),
                         uniform_string["type"].asString()
                       ));
@@ -124,7 +123,7 @@ std::string const& MaterialPass::get_source() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> const&
+std::unordered_map<std::string, UniformValue> const&
 MaterialPass::get_uniforms() const {
   return uniforms_;
 }

@@ -33,40 +33,27 @@ class MaterialInstance {
   public:
     MaterialInstance(std::string const& material_name = "");
 
-    MaterialInstance(MaterialInstance const& to_copy);
-    ~MaterialInstance();
-
     std::string const& get_material_name() const {
       return material_name_;
     }
 
     template <typename T>
     MaterialInstance& set_uniform(std::string const& name, T const& value) {
-      auto uniform(uniforms_.find(name));
-
-      if (uniform == uniforms_.end()) {
-        uniforms_[name] = new UniformValue<T>(value);
-      } else {
-        uniform->second->set_value(value);
-      }
-
+      uniforms_[name] = UniformValue(value);
       return *this;
     }
 
     void unset_uniform(std::string const& name);
 
-    std::unordered_map<std::string, UniformValueBase*> const&
-                                                           get_uniforms() const;
+    std::unordered_map<std::string, UniformValue> const& get_uniforms() const;
 
     void merge(MaterialInstance const& to_merge);
-
-    void operator= (MaterialInstance const& rhs);
 
   private:
     friend class Material;
 
     std::string material_name_;
-    std::unordered_map<std::string, UniformValueBase*> uniforms_;
+    std::unordered_map<std::string, UniformValue> uniforms_;
 
 };
 
