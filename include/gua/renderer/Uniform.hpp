@@ -38,334 +38,82 @@
 
 namespace gua {
 
-template <typename T> class UniformValue;
+class UniformValue {
+    
+  public:
+    ~UniformValue() { std::cout << "gone " << this << std::endl;}
+    UniformValue() :
+      val_(),
+      apply_impl_([](RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location){
+        std::cout << "muh" << std::endl;
+      }),
+      get_glsl_type_impl_([](){
+        std::cout << "muh" << std::endl;
+        return "muh";
+      }) {}
 
-/**
- * Stores information on an Uniform.
- *
- */
-class UniformValueBase {
- public:
-  /**
-   * Constructor.
-   *
-   */
-  UniformValueBase() {}
+    // -------------------------------------------------------------------------
+    template<typename T>
+    UniformValue(T const& val) :
+      val_(val),
+      apply_impl_([this](RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location){
+        std::cout << "apply_impl_ " << this << std::endl;
+        prog->uniform(name, location, boost::any_cast<T>(val_));
+      }),
+      get_glsl_type_impl_([this](){
+        std::cout << "get_glsl_type_impl_ " << this << std::endl;
+        return get_glsl_type_impl<T>();
+      }) {}
 
-  /**
-   * Destructor.
-   *
-   */
-  virtual ~UniformValueBase() {}
+    // -------------------------------------------------------------------------
+    UniformValue(std::string const& val) :
+      val_(val),
+      apply_impl_([this](RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location){
+        std::cout << "apply_impl_ " << this << std::endl;
+        std::cout << get_glsl_type() << std::endl;
+        auto texture(TextureDatabase::instance()->lookup(boost::any_cast<std::string>(val_)));
+        if (texture) {
+          prog->uniform(name, location, texture->get_handle(ctx));
+        }
+      }),
+      get_glsl_type_impl_([this](){
+        std::cout << "get_glsl_type_impl_ " << this << std::endl;
+        return "uvec2";
+      }) {}
 
-  virtual void apply(RenderContext const& context,
-                     scm::gl::program_ptr program,
-                     std::string const& name,
-                     unsigned position = 0) const = 0;
+    // -------------------------------------------------------------------------
+    static UniformValue create_from_string_and_type(std::string const& value,
+                                                    UniformType const& ty);
 
-  template <typename T> void set_value(T const& value) {
+    static UniformValue create_from_strings(std::string const& value,
+                                            std::string const& ty);
 
-    auto casted(dynamic_cast<UniformValue<T>*>(this));
-
-    if (casted) {
-      casted->value(value);
-    } else {
-      Logger::LOG_WARNING << "Unable to set uniform value: Types do not match!" << std::endl;
+    // -------------------------------------------------------------------------
+    void apply(RenderContext const& ctx,
+               std::string const& name,
+               scm::gl::program_ptr const& prog,
+               unsigned location = 0) const {
+        std::cout << "apply " << this << std::endl;
+      if (apply_impl_) {
+        apply_impl_(ctx, name, prog, location);
+      }
     }
-  }
 
-  template <typename T> T const& get_value() const {
-
-    auto casted(dynamic_cast<UniformValue<T> const*>(this));
-
-    if (casted) {
-      return casted->value();
-    } else {
-      Logger::LOG_WARNING << "Unable to get value of uniform: Types do not match!" << std::endl;
+    std::string get_glsl_type() const {
+        std::cout << "get_glsl_type " << this << std::endl;
+      if (get_glsl_type_impl_) {
+       return get_glsl_type_impl_();
+      }
+      return "muh";
     }
-  }
 
-  static std::unique_ptr<UniformValueBase> create_from_string_and_type(
-                                            std::string const& value,
-                                            UniformType const& ty);
+  private:
+    template<typename T>
+    std::string get_glsl_type_impl() const;
 
-  virtual UniformValueBase* get_copy() const = 0;
-
-  virtual std::string get_glsl_type() const = 0;
-};
-
-
-
-template <typename T> class UniformValue : public UniformValueBase {
- public:
-  UniformValue(T const& value) : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_);
-  }
-
-  T const& value() const { return value_; }
-
-  void value(T const& value) { value_ = value; }
-
-  virtual UniformValueBase* get_copy() const {
-    return new UniformValue<T>(value_);
-  }
-
-  virtual std::string get_glsl_type() const;
-
-
- private:
-  T value_;
-};
-
-
-
-template <>
-class UniformValue<std::shared_ptr<Texture> > : public UniformValueBase {
- public:
-  UniformValue(std::shared_ptr<Texture> const& value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  std::shared_ptr<Texture> const& value() const { return value_; }
-
-  void value(std::shared_ptr<Texture> const& value) { value_ = value; }
-
-  virtual UniformValueBase* get_copy() const {
-    return new UniformValue<std::shared_ptr<Texture>>(value_);
-  }
-
-  virtual std::string get_glsl_type() const {
-    return "sampler2D";
-  }
-
- private:
-  std::shared_ptr<Texture> value_;
-};
-
-template <>
-class UniformValue<Texture*> : public UniformValueBase {
- public:
-  UniformValue(Texture* value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  Texture* value() const { return value_; }
-
-  virtual UniformValueBase* get_copy() const {
-    return new UniformValue<Texture*>(value_);
-  }
-
-  void value(Texture* value) { value_ = value; }
-
-  virtual std::string get_glsl_type() const {
-    return "sampler2D";
-  }
-
- private:
-  Texture* value_;
-};
-
-
-template <>
-class UniformValue<std::shared_ptr<Texture2D> > : public UniformValueBase {
- public:
-  UniformValue(std::shared_ptr<Texture2D> const& value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  std::shared_ptr<Texture2D> const& value() const { return value_; }
-
-  void value(std::shared_ptr<Texture2D> const& value) { value_ = value; }
-
-  virtual UniformValueBase* get_copy() const {
-    return new UniformValue<std::shared_ptr<Texture2D>>(value_);
-  }
-
-  virtual std::string get_glsl_type() const {
-    return "sampler2D";
-  }
-
- private:
-  std::shared_ptr<Texture2D> value_;
-};
-
-template <>
-class UniformValue<Texture2D*> : public UniformValueBase {
- public:
-  UniformValue(Texture2D* value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  Texture2D* value() const { return value_; }
-
-  virtual UniformValueBase* get_copy() const {
-    return new UniformValue<Texture2D*>(value_);
-  }
-
-  void value(Texture2D* value) { value_ = value; }
-
-  virtual std::string get_glsl_type() const {
-    return "sampler2D";
-  }
-
- private:
-  Texture2D* value_;
-};
-
-template <>
-class UniformValue<std::shared_ptr<Texture3D> > : public UniformValueBase {
- public:
-  UniformValue(std::shared_ptr<Texture3D> const& value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  std::shared_ptr<Texture3D> const& value() const { return value_; }
-
-  void value(std::shared_ptr<Texture3D> const& value) { value_ = value; }
-
-  virtual UniformValueBase* get_copy() const {
-    return new UniformValue<std::shared_ptr<Texture3D>>(value_);
-  }
-
-  virtual std::string get_glsl_type() const {
-    return "sampler3D";
-  }
-
- private:
-  std::shared_ptr<Texture3D> value_;
-};
-
-template <>
-class UniformValue<Texture3D*> : public UniformValueBase {
- public:
-  UniformValue(Texture3D* value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  Texture3D* value() const { return value_; }
-
-  void value(Texture3D* value) { value_ = value; }
-
-  virtual UniformValueBase* get_copy() const {
-    return new UniformValue<Texture3D*>(value_);
-  }
-
-  virtual std::string get_glsl_type() const {
-    return "sampler3D";
-  }
-
- private:
-  Texture3D* value_;
-};
-
-template <> class UniformValue<std::string> : public UniformValueBase {
- public:
-  UniformValue(std::string const& value) : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    auto texture(TextureDatabase::instance()->lookup(value_));
-    if (texture) {
-      program->uniform(name, position, texture->get_handle(context));
-    }
-  }
-
-  std::string const& value() const { return value_; }
-
-  void value(std::string const& value) { value_ = value; }
-
-  virtual UniformValueBase* get_copy() const {
-    return new UniformValue<std::string>(value_);
-  }
-
-  virtual std::string get_glsl_type() const {
-    return "sampler2D";
-  }
-
- private:
-  std::string value_;
-};
-
-
-
-template <> class UniformValue<utils::Color3f> : public UniformValueBase {
- public:
-  UniformValue(utils::Color3f const& value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_.vec3());
-  }
-
-  utils::Color3f const& value() const { return value_; }
-
-  void value(utils::Color3f const& value) { value_ = value; }
-
-  virtual UniformValueBase* get_copy() const {
-    return new UniformValue<utils::Color3f>(value_);
-  }
-
-  virtual std::string get_glsl_type() const {
-    return "vec3";
-  }
-
- private:
-  utils::Color3f value_;
+    boost::any  val_;
+    std::function<void(RenderContext const& ctx, std::string const&, scm::gl::program_ptr const&, unsigned location)> apply_impl_;
+    std::function<std::string()> get_glsl_type_impl_;
 };
 
 }

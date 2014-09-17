@@ -35,8 +35,6 @@
 
 namespace gua {
 
-class UniformValueBase;
-
 /**
  *
  */
@@ -147,7 +145,7 @@ class GUA_DLL ShaderProgram {
    * \param context             The context which should use this shader.
    */
   void apply_uniform(RenderContext const& context,
-                     UniformValueBase* uniform,
+                     UniformValue const& uniform,
                      std::string const& name,
                      unsigned position = 0) const;
 
@@ -160,8 +158,7 @@ class GUA_DLL ShaderProgram {
                    std::string const& name,
                    unsigned position = 0) const {
 
-    UniformValue<T> tmp(value);
-    apply_uniform(context, &tmp, name, position);
+    apply_uniform(context, UniformValue(value), name, position);
   }
 
   /**

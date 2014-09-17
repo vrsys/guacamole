@@ -69,12 +69,19 @@ MaterialPass& MaterialPass::load_from_json(std::string const& json_string) {
     if (value["uniforms"] != Json::Value::null &&
         value["uniforms"].isArray()) {
       for (int i(0); i < value["uniforms"].size(); ++i) {
-        auto uniform(value["uniforms"][i]);
-        if (uniform["name"] != Json::Value::null &&
-            uniform["type"] != Json::Value::null &&
-            uniform["value"] != Json::Value::null) {
+        auto uniform_string(value["uniforms"][i]);
+        if (uniform_string["name"] != Json::Value::null &&
+            uniform_string["type"] != Json::Value::null &&
+            uniform_string["value"] != Json::Value::null) {
 
-          // set_uniform(uniform["name"])
+          auto uniform(UniformValue::create_from_strings(
+                        uniform_string["value"].asString(),
+                        uniform_string["type"].asString()
+                      ));
+
+          set_uniform(uniform_string["name"].asString(),
+                      uniform
+                     );
 
         } else {
           Logger::LOG_WARNING << "Failed to load uniform: "
@@ -116,7 +123,7 @@ std::string const& MaterialPass::get_source() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::unordered_map<std::string, std::shared_ptr<UniformValueBase>> const&
+std::unordered_map<std::string, UniformValue> const&
 MaterialPass::get_uniforms() const {
   return uniforms_;
 }
