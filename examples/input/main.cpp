@@ -45,6 +45,8 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
+#define COUNT 5
+
 int main(int argc, char** argv) {
 
   // initialize guacamole
@@ -55,44 +57,55 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader loader;
 
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  teapot->translate(1.0, 0.0, 0.0);
-  auto teapot2(loader.create_geometry_from_file("teapot2", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  teapot2->translate(-1.0, 0.0, 0.0);
+  // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  // teapot->translate(1.0, 0.0, 0.0);
+  // auto teapot2(loader.create_geometry_from_file("teapot2", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  // teapot2->translate(-1.0, 0.0, 0.0);
 
 
-  for (auto child : teapot2->get_children()) {
-    auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(child));
-    if (casted)
-      casted->get_material().set_uniform("color", gua::math::vec3(0.0, 1.0, 0.0));
-  }
+  // for (auto child : teapot2->get_children()) {
+  //   auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(child));
+  //   if (casted)
+  //     casted->get_material().set_uniform("color", gua::math::vec3(0.0, 1.0, 0.0));
+  // }
 
-<<<<<<< HEAD
-=======
-  // auto teapot(loader.create_geometry_from_file(
-  //   "teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-  //   mat->get_default_instance(),
-  //   gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE |
-  //   gua::TriMeshLoader::LOAD_MATERIALS |
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY
-  // ));
+  auto add_oilrig = [&](int x, int y) {
 
->>>>>>> finished ssao pass
-  graph.add_node("/", teapot);
-  graph.add_node("/", teapot2);
+    auto t = graph.add_node<gua::node::TransformNode>("/", "rig_" + std::to_string(x) + "_" + std::to_string(y));
+    t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/3, 0);
+
+    auto rig(loader.create_geometry_from_file(
+      "rig", 
+      "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", 
+      // "data/objects/teapot.obj",
+      mat->get_default_instance(), 
+      gua::TriMeshLoader::NORMALIZE_POSITION | 
+      gua::TriMeshLoader::NORMALIZE_SCALE |
+      // gua::TriMeshLoader::LOAD_MATERIALS |
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY 
+    ));
+    t->add_child(rig);
+  };
+
+  for (int x(0); x<COUNT; ++x) {
+    for (int y(0); y<COUNT; ++y) {
+      add_oilrig(x, y);
+    } 
+  } 
+
+  // graph.add_node("/", teapot2);
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
-  light->scale(1.4f);
-  light->translate(1.f, 0.f, 0.f);
+  light->scale(4.4f);
+  light->translate(1.f, 0.f, 2.f);
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
   light2->scale(3.4f);
-  light2->translate(-2.f, 1.f, 0.f);
+  light2->translate(-2.f, 1.f, 2.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(1.6f, 1.2f));
+  screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
 
   auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
@@ -151,7 +164,7 @@ int main(int argc, char** argv) {
 
   // application loop
   gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/60.0);
+  gua::events::Ticker ticker(loop, 1.0/500.0);
 
   ticker.on_tick.connect([&]() {
 

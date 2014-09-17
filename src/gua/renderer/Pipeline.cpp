@@ -124,6 +124,8 @@ std::list<PipelinePass*> const& Pipeline::get_passes() const {
 void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                        float application_fps, float rendering_fps) {
 
+  std::cout << "App: " << application_fps << " Render: " << rendering_fps << std::endl;
+
   // return if pipeline is disabled
   if (!config.get_enabled()) {
     return;
