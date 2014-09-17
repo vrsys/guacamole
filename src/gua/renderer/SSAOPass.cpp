@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/BackgroundPass.hpp>
+#include <gua/renderer/SSAOPass.hpp>
 
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -30,23 +30,63 @@
 
 namespace gua {
 
-BackgroundPass::BackgroundPass() :
+SSAOPass::SSAOPass() :
   shader_(std::make_shared<ShaderProgram>()),
-  depth_stencil_state_(nullptr) {
+  depth_stencil_state_(nullptr),
+  blend_state_(nullptr),
+  noise_texture_(),
+  radius_(1.f),
+  intensity_(1.f),
+  falloff_(0.1f) {
 
   shader_ = std::make_shared<ShaderProgram>();
   shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
-    Resources::lookup_shader(Resources::shaders_background_frag)
+    Resources::lookup_shader(Resources::shaders_ssao_frag)
   );
 }
 
-void BackgroundPass::process(Pipeline* pipe) {
-  RenderContext const& ctx(pipe->get_context());
+float SSAOPass::radius() const{
+  return radius_;
+}
 
+SSAOPass& SSAOPass::radius(float radius) {
+  radius_ = radius;
+  return *this;
+}
+
+float SSAOPass::intensity() const{
+  return intensity_;
+}
+
+SSAOPass& SSAOPass::intensity(float intensity) {
+  intensity_ = intensity;
+  return *this;
+}
+
+float SSAOPass::falloff() const{
+  return falloff_;
+}
+
+SSAOPass& SSAOPass::falloff(float falloff) {
+  falloff_ = falloff;
+  return *this;
+}
+
+void SSAOPass::process(Pipeline* pipe) {
+  RenderContext const& ctx(pipe->get_context());
 
   if (!depth_stencil_state_) {
     depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
+  }
+
+  if (!blend_state_) {
+    blend_state_ = ctx.render_device->create_blend_state(true,
+                                                         scm::gl::FUNC_SRC_ALPHA,
+                                                         scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
+                                                         scm::gl::FUNC_SRC_ALPHA,
+                                                         scm::gl::FUNC_ONE_MINUS_SRC_ALPHA
+                                                         );
   }
 
   // bind gbuffer
@@ -54,8 +94,14 @@ void BackgroundPass::process(Pipeline* pipe) {
   pipe->get_gbuffer().set_viewport(ctx);
 
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+  ctx.render_context->set_blend_state(blend_state_);
 
   shader_->use(ctx);
+
+  shader_->set_uniform(ctx, noise_texture_.get_handle(ctx), "gua_noise_tex");
+  shader_->set_uniform(ctx, radius_, "gua_ssao_radius");
+  shader_->set_uniform(ctx, intensity_, "gua_ssao_intensity");
+  shader_->set_uniform(ctx, falloff_, "gua_ssao_falloff");
 
   pipe->bind_gbuffer_input(shader_);
   pipe->draw_fullscreen_quad();

@@ -38,7 +38,7 @@ class BackgroundPass : public PipelinePass {
   virtual bool needs_color_buffer_as_input() const { return false; }
   virtual bool writes_only_color_buffer()    const { return true;  }
   virtual bool perform_depth_test()          const { return false; }
-  
+
   virtual void process(Pipeline* pipe);
 
   friend class Pipeline;
@@ -48,7 +48,8 @@ class BackgroundPass : public PipelinePass {
   ~BackgroundPass() {}
 
  private:
-  std::shared_ptr<ShaderProgram> shader_;
+  std::shared_ptr<ShaderProgram>   shader_;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
 };
 
 }
