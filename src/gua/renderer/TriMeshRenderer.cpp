@@ -30,7 +30,14 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TriMeshRenderer::TriMeshRenderer() {}
+TriMeshRenderer::TriMeshRenderer() :
+ vertex_shader_(Resources::lookup_shader(
+                Resources::shaders_tri_mesh_shader_vert
+               )),
+ fragment_shader_(Resources::lookup_shader(
+                  Resources::shaders_tri_mesh_shader_frag
+                 ))
+ {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -40,15 +47,7 @@ void TriMeshRenderer::draw(std::shared_ptr<GeometryResource> const& object,
                            math::mat4 const& transformation,
                            Pipeline* pipe) const {
 
-  auto shader(material->get_shader(*object,
-                                   Resources::lookup_shader(
-                                    Resources::shaders_tri_mesh_shader_vert
-                                   ),
-                                   Resources::lookup_shader(
-                                    Resources::shaders_tri_mesh_shader_frag
-                                   )
-                                  )
-              );
+  auto shader(material->get_shader(*object, vertex_shader_, fragment_shader_));
 
   auto const& ctx(pipe->get_context());
 

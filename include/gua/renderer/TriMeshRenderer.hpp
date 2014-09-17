@@ -42,6 +42,9 @@ class GUA_DLL TriMeshRenderer : public RessourceRenderer {
             math::mat4 const& transformation,
             Pipeline* pipe) const;
 
+ private:
+  std::string vertex_shader_;
+  std::string fragment_shader_;
 
 };
 
