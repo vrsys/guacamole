@@ -118,11 +118,11 @@ int main(int argc, char** argv) {
 
   ticker.on_tick.connect([&]() {
 
-    for (int x(0); x<COUNT; ++x) {
-      for (int y(0); y<COUNT; ++y) {
-        graph["/rig_" + std::to_string(x) + "_" + std::to_string(y) + "/rig"]->rotate(0.1, 0, 1, 0);
-      }
-    }
+    // for (int x(0); x<COUNT; ++x) {
+    //   for (int y(0); y<COUNT; ++y) {
+    //     graph["/rig_" + std::to_string(x) + "_" + std::to_string(y) + "/rig"]->rotate(0.1, 0, 1, 0);
+    //   } 
+    // }
 
     window->process_events();
     if (window->should_close()) {

@@ -42,24 +42,24 @@ void GBufferPass::process(Pipeline* pipe) {
 
     for (auto const& object : ressources) {
 
-      auto const& ressource = GeometryDatabase::instance()->lookup(object->get_filename());
+      auto const& ressource = GeometryDatabase::instance()->lookup(object.second->get_filename());
       if (ressource) {
 
-        auto const& material = MaterialDatabase::instance()->lookup(object->get_material().get_material_name());
+        auto const& material = MaterialDatabase::instance()->lookup(object.second->get_material().get_material_name());
         if (material) {
 
           if (!renderer) {
             renderer = pipe->get_renderer(*ressource);
           }
 
-          renderer->draw(ressource, material, object->get_material(), object->get_cached_world_transform(), pipe);
+          renderer->draw(ressource, material, object.second->get_material(), object.second->get_cached_world_transform(), pipe);
 
         } else {
-          Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object->get_material().get_material_name() << std::endl;
+          Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object.second->get_material().get_material_name() << std::endl;
         }
 
       } else {
-        Logger::LOG_WARNING << "GBufferPass::process(): Cannot find geometry ressource: " << object->get_filename() << std::endl;
+        Logger::LOG_WARNING << "GBufferPass::process(): Cannot find geometry ressource: " << object.second->get_filename() << std::endl;
       }
     }
   }

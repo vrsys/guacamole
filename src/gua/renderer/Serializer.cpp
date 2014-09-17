@@ -89,16 +89,12 @@ void Serializer::check(SerializedScene& output,
   draw_rays_ = draw_rays;
 
   if (draw_bounding_boxes_) {
-    data_->materials_.insert("gua_bounding_box");
     data_->bounding_boxes_.reserve(geometry_count + point_light_count + spot_light_count + ray_count);
   }
 
   if (draw_rays_) {
-    data_->materials_.insert("gua_bounding_box");
     data_->rays_.reserve(ray_count);
   }
-
-  data_->materials_.insert("gua_textured_quad");
 
   // assuming the number of nodes stays quite constant through time,
   // reserving the old size might save some time
@@ -158,23 +154,10 @@ void Serializer::check(SerializedScene& output,
 
 /* virtual */ void Serializer::visit(node::GeometryNode* node) {
 
+  if (is_visible(node)) {
+    add_bbox(node);
 
-  if (is_visible(node))
-  {
-    if (!node->get_filename().empty() &&
-        !node->get_material().get_material_name().empty())
-    {
-      add_bbox(node);
-
-
-      // add geometry to the serialized scene, if it exists in database
-      if (gua::GeometryDatabase::instance()->is_supported(node->get_filename()))
-      {
-        data_->geometrynodes_[std::type_index(typeid(*node))].push_back(node);
-      }
-    }
-
-    data_->materials_.insert(node->get_material().get_material_name());
+    data_->geometrynodes_[std::type_index(typeid(*node))].insert(std::make_pair(node->get_material().get_material_name(), node));
 
     visit_children(node);
   }

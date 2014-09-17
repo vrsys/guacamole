@@ -41,11 +41,12 @@ Mask::Mask(std::vector<std::string> const& whitelist_tags,
 ////////////////////////////////////////////////////////////////////////////////
 
 bool Mask::check(gua::utils::TagList const& tags) const {
-  auto wl(whitelist.get_bits());
-  auto bl(blacklist.get_bits());
-  auto t(tags.get_bits());
+  auto const& t(tags.get_bits());
 
   if (t.any()) {
+    auto const& wl(whitelist.get_bits());
+    auto const& bl(blacklist.get_bits());
+    
     if (wl.any()) {
       return (wl & t).any();
     } else if (bl.any()) {
