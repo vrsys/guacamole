@@ -27,7 +27,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
-#include <unordered_map>
+#include <vector>
 
 namespace gua {
 
@@ -47,21 +47,21 @@ class MaterialPass {
 
   template <typename T>
   MaterialPass& set_uniform(std::string const& name, T const& value) {
-    return set_uniform(name, UniformValue(value));
+    return set_uniform(UniformValue(name, value));
   }
 
-  MaterialPass& set_uniform(std::string const& name, UniformValue const& uniform) {
-    uniforms_[name] = uniform;
+  MaterialPass& set_uniform(UniformValue const& uniform) {
+    uniforms_.push_back(uniform);
     return *this;
   }
 
-  std::unordered_map<std::string, UniformValue> const& get_uniforms() const;
+  std::vector<UniformValue> const& get_uniforms() const;
 
  private:
 
   std::string name_;
   std::string source_;
-  std::unordered_map<std::string, UniformValue> uniforms_;
+  std::vector<UniformValue> uniforms_;
 };
 
 }

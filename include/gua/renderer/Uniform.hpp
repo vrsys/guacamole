@@ -39,60 +39,101 @@
 namespace gua {
 
 class UniformValue {
-    
+  
+  union Data {
+    int int_;
+    bool bool_;
+    float float_;
+
+    math::mat3 mat3_;
+    math::mat4 mat4_;
+
+    math::vec2 vec2_;
+    math::vec3 vec3_;
+    math::vec4 vec4_;
+
+    math::vec2i vec2i_;
+    math::vec3i vec3i_;
+    math::vec4i vec4i_;
+
+    math::vec2ui vec2ui_;
+    math::vec3ui vec3ui_;
+    math::vec4ui vec4ui_;
+
+    std::string texture_;
+
+    Data() : mat4_() {}
+    Data(Data const& copy) : mat4_(copy.mat4_) {}
+    ~Data() {  }
+
+    Data& operator=(Data const& other) {
+      mat4_ = other.mat4_;
+      return *this;
+    }
+  };
+
   public:
     UniformValue() = default;
 
     // -------------------------------------------------------------------------
     template<typename T>
-    UniformValue(T const& val) :
-      val_(val),
-      apply_impl_([](UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location){
-        prog->uniform(name, location, *boost::unsafe_any_cast<T>(&self->val_));
-      }), 
-      get_glsl_type_impl_([](UniformValue const* self){
-        return get_glsl_type_impl<T>();
-      }) {}
+    UniformValue(std::string const& name, T const& val) :
+      name_(name),
+      apply_impl_(apply<T>), 
+      get_glsl_type_impl_(get_glsl_type_impl<T>) { set(val); }
 
     // -------------------------------------------------------------------------
-    UniformValue(std::string const& val) :
-      val_(val),
-      apply_impl_([](UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location){
-        auto texture(TextureDatabase::instance()->lookup(*boost::unsafe_any_cast<std::string>(&self->val_)));
-        if (texture) {
-          prog->uniform(name, location, texture->get_handle(ctx));
-        }
-      }),
-      get_glsl_type_impl_([](UniformValue const* self){
-        return "uvec2";
-      }) {}
-
-    // -------------------------------------------------------------------------
-    static UniformValue create_from_string_and_type(std::string const& value,
+    static UniformValue create_from_string_and_type(std::string const& name,
+                                                    std::string const& value,
                                                     UniformType const& ty);
 
-    static UniformValue create_from_strings(std::string const& value,
+    static UniformValue create_from_strings(std::string const& name,
+                                            std::string const& value,
                                             std::string const& ty);
 
     // -------------------------------------------------------------------------
-    void apply(RenderContext const& ctx,
-               std::string const& name,
-               scm::gl::program_ptr const& prog,
+    void apply(RenderContext const& ctx, scm::gl::program_ptr const& prog,
                unsigned location = 0) const {
-      apply_impl_(this, ctx, name, prog, location);
+      apply_impl_(this, ctx, prog, location);
     }
 
+    std::string const& get_name() const { return name_; }
+    
+
     std::string get_glsl_type() const {
-      return get_glsl_type_impl_(this);
+      return get_glsl_type_impl_();
     }
 
   private:
+
+    void set(int val) { val_.int_ = val; }
+    void set(bool val) { val_.bool_ = val; }
+    void set(float val) { val_.float_ = val; }
+    void set(math::mat3 const& val) { val_.mat3_ = val; }
+    void set(math::mat4 const& val) { val_.mat4_ = val; }
+    void set(math::vec2 const& val) { val_.vec2_ = val; }
+    void set(math::vec3 const& val) { val_.vec3_ = val; }
+    void set(math::vec4 const& val) { val_.vec4_ = val; }
+    void set(math::vec2i const& val) { val_.vec2i_ = val; }
+    void set(math::vec3i const& val) { val_.vec3i_ = val; }
+    void set(math::vec4i const& val) { val_.vec4i_ = val; }
+    void set(math::vec2ui const& val) { val_.vec2ui_ = val; }
+    void set(math::vec3ui const& val) { val_.vec3ui_ = val; }
+    void set(math::vec4ui const& val) { val_.vec4ui_ = val; }
+    void set(std::string const& val) { new (&val_.texture_) std::string; val_.texture_ = val; }
+    
+    template<typename T>
+    static void apply(UniformValue const* self, RenderContext const& ctx,
+                      scm::gl::program_ptr const& prog, unsigned location);
+
     template<typename T>
     static std::string get_glsl_type_impl();
 
-    boost::any val_;
-    std::function<void(UniformValue const*, RenderContext const&, std::string const&, scm::gl::program_ptr const&, unsigned location)> apply_impl_;
-    std::function<std::string(UniformValue const*)> get_glsl_type_impl_;
+    std::string name_;
+
+    Data val_;
+    std::function<void(UniformValue const*, RenderContext const& ctx, scm::gl::program_ptr const&, unsigned location)> apply_impl_;
+    std::function<std::string()> get_glsl_type_impl_;
 };
 
 }

@@ -75,13 +75,12 @@ MaterialPass& MaterialPass::load_from_json(std::string const& json_string) {
             uniform_string["value"] != Json::Value::null) {
 
           auto uniform(UniformValue::create_from_strings(
+                        uniform_string["name"].asString(),
                         uniform_string["value"].asString(),
                         uniform_string["type"].asString()
                       ));
 
-          set_uniform(uniform_string["name"].asString(),
-                      uniform
-                     );
+          set_uniform(uniform);
 
         } else {
           Logger::LOG_WARNING << "Failed to load uniform: "
@@ -123,7 +122,7 @@ std::string const& MaterialPass::get_source() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::unordered_map<std::string, UniformValue> const&
+std::vector<UniformValue> const&
 MaterialPass::get_uniforms() const {
   return uniforms_;
 }

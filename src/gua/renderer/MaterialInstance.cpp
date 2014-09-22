@@ -29,23 +29,13 @@ MaterialInstance::MaterialInstance(std::string const& material_name):
   {}
 
 ////////////////////////////////////////////////////////////////////////////////
-void MaterialInstance::unset_uniform(std::string const& name) {
-  uniforms_.erase(name);
-}
+// void MaterialInstance::unset_uniform(std::string const& name) {
+//   uniforms_.erase(name);
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::unordered_map<std::string, UniformValue> const&
-                            MaterialInstance::get_uniforms() const {
+std::vector<UniformValue> const& MaterialInstance::get_uniforms() const {
   return uniforms_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void MaterialInstance::merge(MaterialInstance const& to_merge) {
-  if (material_name_ == to_merge.material_name_) {
-    uniforms_.insert(to_merge.uniforms_.begin(), to_merge.uniforms_.end());
-  } else {
-    //WARNING
-  }
 }
 
 }

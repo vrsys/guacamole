@@ -28,12 +28,6 @@ int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
 
-  gua::UniformValue u(gua::math::mat4::identity());
-  gua::UniformValue a = u;
-
-
-  std::cout << a.get_glsl_type() << std::endl;
-
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
@@ -124,11 +118,11 @@ int main(int argc, char** argv) {
 
   ticker.on_tick.connect([&]() {
 
-    // for (int x(0); x<COUNT; ++x) {
-    //   for (int y(0); y<COUNT; ++y) {
-    //     graph["/rig_" + std::to_string(x) + "_" + std::to_string(y) + "/rig"]->rotate(0.1, 0, 1, 0);
-    //   } 
-    // }
+    for (int x(0); x<COUNT; ++x) {
+      for (int y(0); y<COUNT; ++y) {
+        graph["/rig_" + std::to_string(x) + "_" + std::to_string(y) + "/rig"]->rotate(0.1, 0, 1, 0);
+      } 
+    }
 
     window->process_events();
     if (window->should_close()) {
