@@ -50,12 +50,6 @@ int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
 
-  gua::UniformValue u(gua::math::mat4::identity());
-  gua::UniformValue a = u;
-
-
-  std::cout << a.get_glsl_type() << std::endl;
-
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 

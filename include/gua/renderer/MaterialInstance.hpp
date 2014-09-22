@@ -25,7 +25,7 @@
 #include <gua/renderer/Uniform.hpp>
 
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 namespace gua {
 
@@ -37,23 +37,31 @@ class MaterialInstance {
       return material_name_;
     }
 
-    template <typename T>
-    MaterialInstance& set_uniform(std::string const& name, T const& value) {
-      uniforms_[name] = UniformValue(value);
+    MaterialInstance& set_uniform(UniformValue const& uniform) {
+      for (auto& val: uniforms_) {
+        if (uniform.get_name() == val.get_name()) {
+          val = uniform;
+          return *this;
+        }
+      }
+      uniforms_.push_back(uniform);
       return *this;
     }
 
-    void unset_uniform(std::string const& name);
+    template <typename T>
+    MaterialInstance& set_uniform(std::string const& name, T const& value) {
+      return set_uniform(UniformValue(name, value));
+    }
 
-    std::unordered_map<std::string, UniformValue> const& get_uniforms() const;
+    // void unset_uniform(std::string const& name);
 
-    void merge(MaterialInstance const& to_merge);
+    std::vector<UniformValue> const& get_uniforms() const;
 
   private:
     friend class Material;
 
     std::string material_name_;
-    std::unordered_map<std::string, UniformValue> uniforms_;
+    std::vector<UniformValue> uniforms_;
 
 };
 

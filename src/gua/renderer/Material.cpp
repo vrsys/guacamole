@@ -34,11 +34,15 @@ Material::Material(std::string const& name, MaterialDescription const& desc)
   auto f_passes = desc_.get_fragment_passes();
 
   for (auto const& pass : v_passes) {
-    default_instance_.uniforms_.insert(pass.get_uniforms().begin(), pass.get_uniforms().end());
+    for (auto const& uniform : pass.get_uniforms()) {
+      default_instance_.set_uniform(uniform);
+    }
   }
 
   for (auto const& pass : f_passes) {
-    default_instance_.uniforms_.insert(pass.get_uniforms().begin(), pass.get_uniforms().end());
+    for (auto const& uniform : pass.get_uniforms()) {
+      default_instance_.set_uniform(uniform);
+    }
   }
 }
 
@@ -106,12 +110,13 @@ void Material::apply_uniforms(RenderContext const& ctx,
                               ShaderProgram* shader,
                               MaterialInstance const& overwrite) const {
 
+
   for (auto const& uniform : default_instance_.get_uniforms()) {
-    shader->apply_uniform(ctx, uniform.second, uniform.first);
+    shader->apply_uniform(ctx, uniform);
   }
 
   for (auto const& uniform : overwrite.get_uniforms()) {
-    shader->apply_uniform(ctx, uniform.second, uniform.first);
+    shader->apply_uniform(ctx, uniform);
   }
 }
 
@@ -129,16 +134,18 @@ std::string Material::compile_description(std::list<MaterialPass> const& passes,
   std::string source(shader_source);
   std::stringstream uniforms;
 
-  std::unordered_map<std::string, UniformValue> pass_uniforms;
+  std::unordered_map<std::string, UniformValue const*> pass_uniforms;
 
   // collect uniforms from all passes
-  for (auto& pass: passes) {
-    pass_uniforms.insert(pass.get_uniforms().begin(), pass.get_uniforms().end());
+  for (auto const& pass: passes) {
+    for (auto const& uniform: pass.get_uniforms()) {
+      pass_uniforms[uniform.get_name()] = &uniform;
+    }
   }
 
-  for (auto& uniform: pass_uniforms) {
+  for (auto const& uniform: pass_uniforms) {
     uniforms << "uniform "
-           << uniform.second.get_glsl_type() << " "
+           << uniform.second->get_glsl_type() << " "
            << uniform.first << ";"
            << std::endl;
   }

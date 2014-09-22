@@ -146,7 +146,6 @@ class GUA_DLL ShaderProgram {
    */
   void apply_uniform(RenderContext const& context,
                      UniformValue const& uniform,
-                     std::string const& name,
                      unsigned position = 0) const;
 
   /**
@@ -158,7 +157,7 @@ class GUA_DLL ShaderProgram {
                    std::string const& name,
                    unsigned position = 0) const {
 
-    apply_uniform(context, UniformValue(value), name, position);
+    apply_uniform(context, UniformValue(name, value), position);
   }
 
   /**
