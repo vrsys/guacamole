@@ -41,43 +41,29 @@ namespace gua {
 class UniformValue {
     
   public:
-    ~UniformValue() { std::cout << "gone " << this << std::endl;}
-    UniformValue() :
-      val_(),
-      apply_impl_([](RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location){
-        std::cout << "muh" << std::endl;
-      }),
-      get_glsl_type_impl_([](){
-        std::cout << "muh" << std::endl;
-        return "muh";
-      }) {}
+    UniformValue() = default;
 
     // -------------------------------------------------------------------------
     template<typename T>
     UniformValue(T const& val) :
       val_(val),
-      apply_impl_([this](RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location){
-        std::cout << "apply_impl_ " << this << std::endl;
-        prog->uniform(name, location, boost::any_cast<T>(val_));
-      }),
-      get_glsl_type_impl_([this](){
-        std::cout << "get_glsl_type_impl_ " << this << std::endl;
+      apply_impl_([](UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location){
+        prog->uniform(name, location, *boost::unsafe_any_cast<T>(&self->val_));
+      }), 
+      get_glsl_type_impl_([](UniformValue const* self){
         return get_glsl_type_impl<T>();
       }) {}
 
     // -------------------------------------------------------------------------
     UniformValue(std::string const& val) :
       val_(val),
-      apply_impl_([this](RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location){
-        std::cout << "apply_impl_ " << this << std::endl;
-        std::cout << get_glsl_type() << std::endl;
-        auto texture(TextureDatabase::instance()->lookup(boost::any_cast<std::string>(val_)));
+      apply_impl_([](UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location){
+        auto texture(TextureDatabase::instance()->lookup(*boost::unsafe_any_cast<std::string>(&self->val_)));
         if (texture) {
           prog->uniform(name, location, texture->get_handle(ctx));
         }
       }),
-      get_glsl_type_impl_([this](){
-        std::cout << "get_glsl_type_impl_ " << this << std::endl;
+      get_glsl_type_impl_([](UniformValue const* self){
         return "uvec2";
       }) {}
 
@@ -93,27 +79,20 @@ class UniformValue {
                std::string const& name,
                scm::gl::program_ptr const& prog,
                unsigned location = 0) const {
-        std::cout << "apply " << this << std::endl;
-      if (apply_impl_) {
-        apply_impl_(ctx, name, prog, location);
-      }
+      apply_impl_(this, ctx, name, prog, location);
     }
 
     std::string get_glsl_type() const {
-        std::cout << "get_glsl_type " << this << std::endl;
-      if (get_glsl_type_impl_) {
-       return get_glsl_type_impl_();
-      }
-      return "muh";
+      return get_glsl_type_impl_(this);
     }
 
   private:
     template<typename T>
-    std::string get_glsl_type_impl() const;
+    static std::string get_glsl_type_impl();
 
-    boost::any  val_;
-    std::function<void(RenderContext const& ctx, std::string const&, scm::gl::program_ptr const&, unsigned location)> apply_impl_;
-    std::function<std::string()> get_glsl_type_impl_;
+    boost::any val_;
+    std::function<void(UniformValue const*, RenderContext const&, std::string const&, scm::gl::program_ptr const&, unsigned location)> apply_impl_;
+    std::function<std::string(UniformValue const*)> get_glsl_type_impl_;
 };
 
 }

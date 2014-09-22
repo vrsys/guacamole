@@ -27,24 +27,24 @@
 
 namespace gua {
 
-template<> std::string UniformValue::get_glsl_type_impl<int>() const { return "int"; }
-template<> std::string UniformValue::get_glsl_type_impl<bool>() const { return "int"; }
-template<> std::string UniformValue::get_glsl_type_impl<float>() const { return "float"; }
+template<> std::string UniformValue::get_glsl_type_impl<int>() { return "int"; }
+template<> std::string UniformValue::get_glsl_type_impl<bool>() { return "int"; }
+template<> std::string UniformValue::get_glsl_type_impl<float>() { return "float"; }
 
-template<> std::string UniformValue::get_glsl_type_impl<math::mat3>() const { return "mat3"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::mat4>() const { return "mat4"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::mat3>() { return "mat3"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::mat4>() { return "mat4"; }
 
-template<> std::string UniformValue::get_glsl_type_impl<math::vec2>() const { return "vec2"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec3>() const { return "vec3"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec4>() const { return "vec4"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::vec2>() { return "vec2"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::vec3>() { return "vec3"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::vec4>() { return "vec4"; }
 
-template<> std::string UniformValue::get_glsl_type_impl<math::vec2i>() const { return "ivec2"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec3i>() const { return "ivec3"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec4i>() const { return "ivec4"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::vec2i>() { return "ivec2"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::vec3i>() { return "ivec3"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::vec4i>() { return "ivec4"; }
 
-template<> std::string UniformValue::get_glsl_type_impl<math::vec2ui>() const { return "uvec2"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec3ui>() const { return "uvec3"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec4ui>() const { return "uvec4"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::vec2ui>() { return "uvec2"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::vec3ui>() { return "uvec3"; }
+template<> std::string UniformValue::get_glsl_type_impl<math::vec4ui>() { return "uvec4"; }
 
 UniformValue UniformValue::create_from_string_and_type(
     std::string const& value,
