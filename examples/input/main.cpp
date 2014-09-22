@@ -21,8 +21,6 @@
 
 #include <gua/guacamole.hpp>
 
-#define COUNT 5
-
 int main(int argc, char** argv) {
 
   // initialize guacamole
