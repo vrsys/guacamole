@@ -52,7 +52,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
 
   Node::~Node() {
-    for (auto child : children_) {
+    for (auto const& child : children_) {
       child->parent_ = nullptr;
     }
   }
@@ -85,7 +85,7 @@ namespace node {
     }
 
     if (child_dirty_) {
-      for (auto child : children_) {
+      for (auto const& child : children_) {
         child->update_cache();
       }
 
@@ -100,7 +100,7 @@ namespace node {
   void Node::clear_children() {
 
     if (children_.size() > 0) {
-      for (auto child : children_) {
+      for (auto const& child : children_) {
         child->parent_ = nullptr;
       }
 
@@ -156,10 +156,10 @@ namespace node {
 
   void Node::set_world_transform(math::mat4 const& transform) {
       if (is_root()) {
-              transform_ = transform;
-          } else {
-              transform_ = scm::math::inverse(parent_->get_world_transform()) * transform;
-          }
+          transform_ = transform;
+      } else {
+          transform_ = scm::math::inverse(parent_->get_world_transform()) * transform;
+      }
 
       set_dirty();
   }
@@ -253,7 +253,7 @@ namespace node {
       return nullptr;
     }
 
-    for (auto child : parent_->get_children()) {
+    for (auto const& child : parent_->get_children()) {
       if (&*child == this) {
         return child;
       }
@@ -322,9 +322,11 @@ namespace node {
   std::shared_ptr<Node> Node::deep_copy() const {
     std::shared_ptr<Node> copied_node = copy();
     copied_node->tags_ = tags_;
+    copied_node->children_.reserve(children_.size());
 
-    for (auto child : children_)
+    for (auto const& child : children_) {
       copied_node->add_child(child->deep_copy());
+    }
 
     copied_node->bounding_box_ = bounding_box_;
     copied_node->user_data_ = user_data_;
@@ -369,7 +371,7 @@ namespace node {
     if (!self_dirty_) {
       self_dirty_ = true;
       child_dirty_ = true;
-      for (auto child : children_) {
+      for (auto const& child : children_) {
         child->set_children_dirty();
       }
     }
