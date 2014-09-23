@@ -164,40 +164,51 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
       break;
     }
   }
-
-  // serialize this scenegraph
-  serialize(*current_graph,
-            config.camera().eye_l, config.camera().screen_l,
-            config, current_scene_);
-
   // update camera uniform block
   if (!camera_block_) {
     camera_block_ = new CameraUniformBlock(get_context().render_device);
   }
-  camera_block_->update(get_context().render_context, current_scene_.frustum);
-  bind_camera_uniform_block(0);
 
-  // clear gbuffer
-  gbuffer_->clear_all(get_context());
+  auto process_passes = [&, this](bool is_left) {
 
-  // process all passes
-  for (auto pass: passes_) {
+    // serialize this scenegraph
+    serialize(*current_graph,
+              is_left ? config.camera().eye_l : config.camera().eye_r,
+              is_left ? config.camera().screen_l : config.camera().screen_r,
+              config, current_scene_);
 
-    if (pass->needs_color_buffer_as_input()) {
-      gbuffer_->toggle_ping_pong();
+    camera_block_->update(get_context().render_context, current_scene_.frustum);
+    bind_camera_uniform_block(0);
+
+    // clear gbuffer
+    gbuffer_->clear_all(get_context());
+
+    // process all passes
+    for (auto pass: passes_) {
+
+      if (pass->needs_color_buffer_as_input()) {
+        gbuffer_->toggle_ping_pong();
+      }
+
+      pass->process(this);
     }
 
-    pass->process(this);
-  }
+    // display the last written colorbuffer of the gbuffer
+    if (window_) {
+      gbuffer_->toggle_ping_pong();
+      window_->display(gbuffer_->get_current_color_buffer(), is_left);
+    }
+  };
 
-  // display the last written colorbuffer of the gbuffer
-  if (window_) {
-    gbuffer_->toggle_ping_pong();
-    window_->display(gbuffer_->get_current_color_buffer());
-  }
+  process_passes(true);
+
+  if (config.get_enable_stereo())
+    process_passes(false);
 
   // swap buffers
-  window_->finish_frame();
+  if (window_) {
+    window_->finish_frame();
+  }
   // ++(get_context().framecount);
 }
 

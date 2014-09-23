@@ -65,13 +65,17 @@ int main(int argc, char** argv) {
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
 
-  auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
-  eye->translate(0, 0, 2);
+  auto eye_l = graph.add_node<gua::node::TransformNode>("/screen", "eye_l");
+  eye_l->translate(0.1, 0, 2);
 
-  gua::Camera cam("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph");
+  auto eye_r = graph.add_node<gua::node::TransformNode>("/screen", "eye_r");
+  eye_r->translate(-0.1, 0, 2);
+
+  gua::Camera cam("/screen/eye_l", "/screen/eye_r", "/screen", "/screen", "main_scenegraph");
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
   pipe->config.set_resolution(gua::math::vec2ui(1920, 1080));
+  pipe->config.set_enable_stereo(true);
 
   pipe->add_pass<gua::GBufferPass>();
   pipe->add_pass<gua::LightingPass>();
@@ -85,6 +89,8 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(gua::math::vec2ui(1920, 1080));
   window->config.set_left_resolution(gua::math::vec2ui(1920, 1080));
+  window->config.set_right_resolution(gua::math::vec2ui(1920, 1080));
+  window->config.set_stereo_mode(gua::StereoMode::MONO);
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_left_resolution(new_size);
