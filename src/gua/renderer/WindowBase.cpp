@@ -164,40 +164,44 @@ void WindowBase::display(std::shared_ptr<Texture2D> const& center_texture) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(std::shared_ptr<Texture2D> const& left_texture,
-                     std::shared_ptr<Texture2D> const& right_texture) {
+void WindowBase::display(std::shared_ptr<Texture2D> const& texture,
+                         bool is_left) {
 
   switch (config.get_stereo_mode()) {
     case StereoMode::MONO:
-      display(left_texture);
+      display(texture);
       break;
     case StereoMode::SIDE_BY_SIDE:
-      display(left_texture, config.get_left_resolution(),
-              config.get_left_position(), WindowBase::FULL, true, true);
-      display(right_texture, config.get_right_resolution(),
-              config.get_right_position(), WindowBase::FULL, false, true);
+      display(texture,
+              is_left ? config.get_left_resolution() : config.get_right_resolution(),
+              is_left ? config.get_left_position() : config.get_right_position(),
+              WindowBase::FULL, is_left, true);
       break;
     case StereoMode::ANAGLYPH_RED_CYAN:
-      display(left_texture, config.get_left_resolution(),
-              config.get_left_position(), WindowBase::RED, true, true);
-      display(right_texture, config.get_right_resolution(),
-              config.get_right_position(), WindowBase::CYAN, false, false);
+      display(texture,
+              is_left ? config.get_left_resolution() : config.get_right_resolution(),
+              is_left ? config.get_left_position() : config.get_right_position(),
+              is_left ? WindowBase::RED : WindowBase::CYAN,
+              is_left, is_left);
       break;
     case StereoMode::ANAGLYPH_RED_GREEN:
-      display(left_texture, config.get_left_resolution(),
-              config.get_left_position(), WindowBase::RED, true, true);
-      display(right_texture, config.get_right_resolution(),
-              config.get_right_position(), WindowBase::GREEN, false, false);
+      display(texture,
+              is_left ? config.get_left_resolution() : config.get_right_resolution(),
+              is_left ? config.get_left_position() : config.get_right_position(),
+              is_left ? WindowBase::RED : WindowBase::GREEN,
+              is_left, is_left);
       break;
     case StereoMode::CHECKERBOARD:
-      display(left_texture, config.get_left_resolution(),
-              config.get_left_position(), WindowBase::CHECKER_EVEN, true, true);
-      display(right_texture, config.get_right_resolution(),
-              config.get_right_position(), WindowBase::CHECKER_ODD, false, true);
+      display(texture,
+              is_left ? config.get_left_resolution() : config.get_right_resolution(),
+              is_left ? config.get_left_position() : config.get_right_position(),
+              is_left ? WindowBase::CHECKER_EVEN : WindowBase::CHECKER_ODD,
+              is_left, true);
       break;
   }
 
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
