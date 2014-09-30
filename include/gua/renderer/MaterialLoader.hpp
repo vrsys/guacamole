@@ -71,7 +71,7 @@ class GUA_DLL MaterialLoader {
                                  std::string const& file_name) const;
 
  private:
-  Material& get_material_instance(unsigned capabilities) const;
+  Material& get_material(unsigned capabilities) const;
 
 };
 
