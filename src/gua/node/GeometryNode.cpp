@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/node/RayNode.hpp>

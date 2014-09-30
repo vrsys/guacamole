@@ -83,7 +83,7 @@ class GUA_DLL GeometryNode : public Node {
     void set_filename(std::string const& filename);
 
     /**
-    * A string referring to an entry in guacamole's MaterialDatabase.
+    * A string referring to an entry in guacamole's MaterialShaderDatabase.
     */
     Material const& get_material() const;
     Material&       get_material();

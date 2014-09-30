@@ -172,7 +172,7 @@ namespace gua {
 //           auto const& ressource =
 //             GeometryDatabase::instance()->lookup(node->get_filename());
 //           auto const& material =
-//             MaterialDatabase::instance()->lookup(node->get_material());
+//             MaterialShaderDatabase::instance()->lookup(node->get_material());
 
 //           ubershader->predraw(ctx,
 //             node->get_filename(),
@@ -196,7 +196,7 @@ namespace gua {
 //           auto const& ressource =
 //             GeometryDatabase::instance()->lookup(node->get_filename());
 //           auto const& material =
-//             MaterialDatabase::instance()->lookup(node->get_material());
+//             MaterialShaderDatabase::instance()->lookup(node->get_material());
 
 //           ubershader->draw(ctx,
 //             node->get_filename(),
@@ -220,7 +220,7 @@ namespace gua {
 //           auto const& ressource =
 //             GeometryDatabase::instance()->lookup(node->get_filename());
 //           auto const& material =
-//             MaterialDatabase::instance()->lookup(node->get_material());
+//             MaterialShaderDatabase::instance()->lookup(node->get_material());
 
 //           ubershader->postdraw(ctx,
 //             node->get_filename(),

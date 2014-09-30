@@ -106,7 +106,7 @@ void create_resource_material(std::string const& material_name,
 
   // std::shared_ptr<Material> material(
   //     new Material(material_name, material_description));
-  // MaterialDatabase::instance()->add(material_name, material);
+  // MaterialShaderDatabase::instance()->add(material_name, material);
 }
 
 

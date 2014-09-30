@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MATERIAL_DATABASE_HPP
-#define GUA_MATERIAL_DATABASE_HPP
+#ifndef GUA_MATERIAL_SHADER_DATABASE_HPP
+#define GUA_MATERIAL_SHADER_DATABASE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -38,8 +38,8 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-class GUA_DLL MaterialDatabase : public Database<MaterialShader>,
-                                 public Singleton<MaterialDatabase> {
+class GUA_DLL MaterialShaderDatabase : public Database<MaterialShader>,
+                                       public Singleton<MaterialShaderDatabase> {
  public:
 
   std::mutex update_lock;
@@ -57,15 +57,15 @@ class GUA_DLL MaterialDatabase : public Database<MaterialShader>,
 
   void reload_all();
 
-  friend class Singleton<MaterialDatabase>;
+  friend class Singleton<MaterialShaderDatabase>;
 
  private:
   // this class is a Singleton --- private c'tor and d'tor
-  MaterialDatabase() {}
-  ~MaterialDatabase() {}
+  MaterialShaderDatabase() {}
+  ~MaterialShaderDatabase() {}
 
 };
 
 }
 
-#endif  // GUA_MATERIAL_DATABASE_HPP
+#endif  // GUA_MATERIAL_SHADER_DATABASE_HPP

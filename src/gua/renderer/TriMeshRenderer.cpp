@@ -26,7 +26,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 
 #define MATERIAL_BUFFER_SIZE 1024*128
 
@@ -59,7 +59,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
   // loop through all materials ------------------------------------------------
   for (auto const& object_list : sorted_objects) {
 
-    auto const& material = MaterialDatabase::instance()->lookup(object_list.first);
+    auto const& material = MaterialShaderDatabase::instance()->lookup(object_list.first);
     if (material) {
       unsigned object_count(object_list.second.size());
 

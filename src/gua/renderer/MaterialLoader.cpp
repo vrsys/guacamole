@@ -29,7 +29,7 @@
 #include <gua/node/Node.hpp>
 #include <gua/renderer/MaterialShader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/ShadingModelDatabase.hpp>
 
@@ -223,7 +223,7 @@ Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
     material_name += "_omap";
   }
 
-  if (!MaterialDatabase::instance()->is_supported(material_name)) {
+  if (!MaterialShaderDatabase::instance()->is_supported(material_name)) {
     MaterialDescription description;
 
     if (capabilities & OPACITY_MAP) {
@@ -295,10 +295,10 @@ Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
     add_property(capabilities & SPECULAR_MAP,  capabilities & SPECULAR_COLOR,  "specularity",  0.5f);
     add_property(capabilities & EMIT_MAP,      capabilities & EMIT_COLOR,      "emissivity",   0.0f);
 
-    MaterialDatabase::instance()->add(std::make_shared<MaterialShader>(material_name, description));
+    MaterialShaderDatabase::instance()->add(std::make_shared<MaterialShader>(material_name, description));
   }
 
-  return MaterialDatabase::instance()->lookup(material_name)->get_default_instance();
+  return MaterialShaderDatabase::instance()->lookup(material_name)->get_default_instance();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
