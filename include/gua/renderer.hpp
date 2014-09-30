@@ -35,7 +35,7 @@
 #include <gua/renderer/Window.hpp>
 #include <gua/renderer/MaterialShader.hpp>
 #include <gua/renderer/MaterialDescription.hpp>
-#include <gua/renderer/MaterialInstance.hpp>
+#include <gua/renderer/Material.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #ifdef GUACAMOLE_GLFW3
 #include <gua/renderer/GlfwWindow.hpp>

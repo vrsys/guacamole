@@ -31,21 +31,21 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   gua::TriMeshLoader loader;
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::MaterialInstance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::Material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
   graph.add_node("/", teapot);
 
 
   teapot->get_tags().add_tags({"red"});
 
-  auto teapot1(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::MaterialInstance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto teapot1(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::Material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   teapot1->get_tags().add_tags({"green"});
 
   auto t1_trans = graph.add_node<gua::node::TransformNode>("/", "t1_trans");
   t1_trans->translate(-1.0, 0.0, 0.0);
   graph.add_node("/t1_trans", teapot1);
 
-  auto teapot2(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::MaterialInstance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto teapot2(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::Material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   teapot2->get_tags().add_tags({"blue"});
 
   auto t2_trans = graph.add_node<gua::node::TransformNode>("/", "t2_trans");

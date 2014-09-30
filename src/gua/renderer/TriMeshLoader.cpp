@@ -114,7 +114,7 @@ namespace gua {
   std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file
     (std::string const& node_name,
     std::string const& file_name,
-    MaterialInstance const& fallback_material,
+    Material const& fallback_material,
     unsigned flags)
   {
     auto cached_node(load_geometry(file_name, flags));
@@ -250,7 +250,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
     GeometryDatabase::instance()->add(mesh_name, std::make_shared<TriMeshRessource>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & TriMeshLoader::MAKE_PICKABLE));
 
     // load material
-    MaterialInstance material;
+    Material material;
     unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]->mMaterialIndex);
 
     if (material_index != 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
@@ -298,7 +298,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
 ////////////////////////////////////////////////////////////////////////////////
 
 void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
-                                            MaterialInstance const& fallback_material) const
+                                            Material const& fallback_material) const
 {
   auto g_node(std::dynamic_pointer_cast<node::GeometryNode>(root));
 

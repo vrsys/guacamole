@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MATERIAL_INSTANCE_HPP
-#define GUA_MATERIAL_INSTANCE_HPP
+#ifndef GUA_MATERIAL_HPP
+#define GUA_MATERIAL_HPP
 
 #include <gua/renderer/Uniform.hpp>
 
@@ -29,15 +29,15 @@
 
 namespace gua {
 
-class MaterialInstance {
+class Material {
   public:
-    MaterialInstance(std::string const& material_name = "");
+    Material(std::string const& material_name = "");
 
     std::string const& get_material_name() const {
       return material_name_;
     }
 
-    MaterialInstance& set_uniform(UniformValue const& uniform) {
+    Material& set_uniform(UniformValue const& uniform) {
       for (auto& val: uniforms_) {
         if (uniform.get_name() == val.get_name()) {
           val = uniform;
@@ -49,7 +49,7 @@ class MaterialInstance {
     }
 
     template <typename T>
-    MaterialInstance& set_uniform(std::string const& name, T const& value) {
+    Material& set_uniform(std::string const& name, T const& value) {
       return set_uniform(UniformValue(name, value));
     }
 
@@ -58,7 +58,7 @@ class MaterialInstance {
     std::vector<UniformValue> const& get_uniforms() const;
 
   private:
-    friend class Material;
+    friend class MaterialShader;
 
     std::string material_name_;
     std::vector<UniformValue> uniforms_;
@@ -67,4 +67,4 @@ class MaterialInstance {
 
 }
 
-#endif  // GUA_MATERIAL_INSTANCE_HPP
+#endif  // GUA_MATERIAL_HPP

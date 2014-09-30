@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/MaterialInstance.hpp>
+#include <gua/renderer/Material.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 
 // external headers
@@ -67,11 +67,11 @@ class GUA_DLL MaterialLoader {
     OPACITY_MAP      = 1 << 12
   };
 
-  MaterialInstance const& load_material(aiMaterial const* material,
+  Material const& load_material(aiMaterial const* material,
                                  std::string const& file_name) const;
 
  private:
-  MaterialInstance& get_material_instance(unsigned capabilities) const;
+  Material& get_material_instance(unsigned capabilities) const;
 
 };
 

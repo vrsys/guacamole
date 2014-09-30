@@ -37,7 +37,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MaterialInstance const& MaterialLoader::load_material(
+Material const& MaterialLoader::load_material(
     aiMaterial const* ai_material,
     std::string const& file_name) const {
 
@@ -131,7 +131,7 @@ MaterialInstance const& MaterialLoader::load_material(
   // std::string ambient_map(get_string(AI_MATKEY_TEXTURE(aiTextureType_AMBIENT, 0)));
   // math::vec3  ambient_color(get_vec3(AI_MATKEY_COLOR_AMBIENT));
 
-  MaterialInstance& instance(get_material_instance(capabilities));
+  Material& instance(get_material_instance(capabilities));
 
   if (capabilities & DIFFUSE_MAP) {
     instance.set_uniform("diffuse_map", assets_directory + diffuse_map);
@@ -179,7 +179,7 @@ MaterialInstance const& MaterialLoader::load_material(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MaterialInstance& MaterialLoader::get_material_instance(unsigned capabilities) const {
+Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
 
   std::string material_name("gua_generated");
 

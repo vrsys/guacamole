@@ -147,7 +147,7 @@ void ConvexHullShape::build_from_geometry(
     ConvexHullShape* shape = new ConvexHullShape();
 
     TriMeshLoader factory;
-    auto node(factory.create_geometry_from_file("", file_name, MaterialInstance(), flags));
+    auto node(factory.create_geometry_from_file("", file_name, Material(), flags));
     if (node) {
       std::vector<std::string> geom_list;
 

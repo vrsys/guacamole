@@ -57,17 +57,17 @@ std::string const& MaterialShader::get_name() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialInstance const MaterialShader::get_new_instance() const {
-  return MaterialInstance(default_instance_.get_material_name());
+Material const MaterialShader::get_new_instance() const {
+  return Material(default_instance_.get_material_name());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialInstance const& MaterialShader::get_default_instance() const {
+Material const& MaterialShader::get_default_instance() const {
   return default_instance_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialInstance& MaterialShader::get_default_instance() {
+Material& MaterialShader::get_default_instance() {
   return default_instance_;
 }
 
@@ -108,7 +108,7 @@ ShaderProgram* MaterialShader::get_shader(GeometryResource const& for_type,
 
 void MaterialShader::apply_uniforms(RenderContext const& ctx,
                               ShaderProgram* shader,
-                              MaterialInstance const& overwrite) const {
+                              Material const& overwrite) const {
 
 
   // for (auto const& uniform : default_instance_.get_uniforms()) {
