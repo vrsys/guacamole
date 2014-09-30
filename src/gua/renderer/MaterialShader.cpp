@@ -28,20 +28,20 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 MaterialShader::MaterialShader(std::string const& name, MaterialShaderDescription const& desc)
   : desc_(desc),
-    default_instance_(name)
+    default_material_(name)
 {
   auto v_methods = desc_.get_vertex_methods();
   auto f_methods = desc_.get_fragment_methods();
 
   for (auto const& method : v_methods) {
     for (auto const& uniform : method.get_uniforms()) {
-      default_instance_.set_uniform(uniform);
+      default_material_.set_uniform(uniform);
     }
   }
 
   for (auto const& method : f_methods) {
     for (auto const& uniform : method.get_uniforms()) {
-      default_instance_.set_uniform(uniform);
+      default_material_.set_uniform(uniform);
     }
   }
 }
@@ -53,22 +53,22 @@ MaterialShaderDescription const& MaterialShader::get_description() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string const& MaterialShader::get_name() const {
-  return default_instance_.get_material_name();
+  return default_material_.get_material_name();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Material const MaterialShader::get_new_instance() const {
-  return Material(default_instance_.get_material_name());
+Material const MaterialShader::get_new_material() const {
+  return Material(default_material_.get_material_name());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Material const& MaterialShader::get_default_instance() const {
-  return default_instance_;
+Material const& MaterialShader::get_default_material() const {
+  return default_material_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Material& MaterialShader::get_default_instance() {
-  return default_instance_;
+Material& MaterialShader::get_default_material() {
+  return default_material_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ void MaterialShader::apply_uniforms(RenderContext const& ctx,
                               Material const& overwrite) const {
 
 
-  // for (auto const& uniform : default_instance_.get_uniforms()) {
+  // for (auto const& uniform : default_material_.get_uniforms()) {
   //   shader->apply_uniform(ctx, uniform);
   // }
 
@@ -139,7 +139,7 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
   sstr << "  mat4 gua_model_matrix;" << std::endl;
   sstr << "  mat4 gua_normal_matrix;" << std::endl;
 
-  for (auto const& uniform: get_default_instance().get_uniforms()) {
+  for (auto const& uniform: get_default_material().get_uniforms()) {
     sstr << uniform.get_glsl_type() << " "
            << uniform.get_name() << ";" << std::endl;
   }
@@ -154,7 +154,7 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
   sstr << "mat4 gua_model_matrix;" << std::endl;
   sstr << "mat4 gua_normal_matrix;" << std::endl;
 
-  for (auto const& uniform: get_default_instance().get_uniforms()) {
+  for (auto const& uniform: get_default_material().get_uniforms()) {
     sstr << uniform.get_glsl_type() << " " << uniform.get_name() + ";" << std::endl;
   }
 
@@ -165,7 +165,7 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
   // global variable assignment ------------------------------------------------
   sstr << "gua_model_matrix = gua_object_data[gua_draw_index].gua_model_matrix;" << std::endl;
   sstr << "gua_normal_matrix = gua_object_data[gua_draw_index].gua_normal_matrix;" << std::endl;
-  for (auto const& uniform: get_default_instance().get_uniforms()) {
+  for (auto const& uniform: get_default_material().get_uniforms()) {
     sstr << uniform.get_name() << " = gua_object_data[gua_draw_index]." << uniform.get_name() + ";" << std::endl;
   }
   gua::string_utils::replace(source, "@material_input", sstr.str());
@@ -176,7 +176,7 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
   sstr << "uniform mat4 gua_model_matrix;" << std::endl;
   sstr << "uniform mat4 gua_normal_matrix;" << std::endl;
 
-  for (auto const& uniform: get_default_instance().get_uniforms()) {
+  for (auto const& uniform: get_default_material().get_uniforms()) {
     sstr << "uniform " << uniform.get_glsl_type() << " "
          << uniform.get_name() << ";" << std::endl;
   }

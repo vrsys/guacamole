@@ -41,10 +41,10 @@ class MaterialShader {
 
   MaterialShaderDescription const& get_description() const;
 
-  std::string const&      get_name()             const;
-  Material const  get_new_instance()     const;
-  Material const& get_default_instance() const;
-  Material&       get_default_instance();
+  std::string const&  get_name()             const;
+  Material const      get_new_material()     const;
+  Material const&     get_default_material() const;
+  Material&           get_default_material();
 
   ShaderProgram* get_shader(GeometryResource const& for_type,
                             std::string const& geometry_v_shader,
@@ -66,7 +66,7 @@ class MaterialShader {
 
   std::unordered_map<std::type_index, ShaderProgram*> shaders_;
 
-  Material default_instance_;
+  Material default_material_;
 };
 
 }

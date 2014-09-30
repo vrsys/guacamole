@@ -131,55 +131,55 @@ Material const& MaterialLoader::load_material(
   // std::string ambient_map(get_string(AI_MATKEY_TEXTURE(aiTextureType_AMBIENT, 0)));
   // math::vec3  ambient_color(get_vec3(AI_MATKEY_COLOR_AMBIENT));
 
-  Material& instance(get_material_instance(capabilities));
+  Material& mat(get_material(capabilities));
 
   if (capabilities & DIFFUSE_MAP) {
-    instance.set_uniform("diffuse_map", assets_directory + diffuse_map);
+    mat.set_uniform("diffuse_map", assets_directory + diffuse_map);
   }
   if (capabilities & DIFFUSE_COLOR) {
-    instance.set_uniform("diffuse_color", diffuse_color);
+    mat.set_uniform("diffuse_color", diffuse_color);
   }
   if (capabilities & SPECULAR_MAP) {
-    instance.set_uniform("specular_map", assets_directory + specular_map);
+    mat.set_uniform("specular_map", assets_directory + specular_map);
   }
   if (capabilities & SPECULAR_COLOR) {
-    instance.set_uniform("specularity", specularity);
+    mat.set_uniform("specularity", specularity);
   }
   if (capabilities & EMIT_MAP) {
-    instance.set_uniform("emit_map", assets_directory + emit_map);
+    mat.set_uniform("emit_map", assets_directory + emit_map);
   }
   if (capabilities & EMIT_COLOR) {
-    instance.set_uniform("emit_color", emissivity);
+    mat.set_uniform("emit_color", emissivity);
   }
   if (capabilities & NORMAL_MAP) {
-    instance.set_uniform("normal_map", assets_directory + normal_map);
+    mat.set_uniform("normal_map", assets_directory + normal_map);
   }
   // if (capabilities & REFLECTION_MAP) {
-  // instance.set_uniform("reflection_map"),
+  // mat.set_uniform("reflection_map"),
   // assets_directory + reflection_map;
   // }
   // if (capabilities & AMBIENT_MAP) {
-  //   instance.set_uniform("ambient_map", assets_directory + ambient_map);
+  //   mat.set_uniform("ambient_map", assets_directory + ambient_map);
   // }
   // if (capabilities & AMBIENT_COLOR) {
-  //   instance.set_uniform("ambient_color", ambient_color);
+  //   mat.set_uniform("ambient_color", ambient_color);
   // }
   if (capabilities & SHININESS_MAP) {
-    instance.set_uniform("shinyness_map", assets_directory + shinyness_map);
+    mat.set_uniform("shinyness_map", assets_directory + shinyness_map);
   }
   if (capabilities & SHININESS_COLOR) {
-    instance.set_uniform("shinyness_color", shinyness);
+    mat.set_uniform("shinyness_color", shinyness);
   }
   if (capabilities & OPACITY_MAP) {
-    instance.set_uniform("opacity_map", assets_directory + opacity_map);
+    mat.set_uniform("opacity_map", assets_directory + opacity_map);
   }
 
-  return instance;
+  return mat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
+Material& MaterialLoader::get_material(unsigned capabilities) const {
 
   std::string material_name("gua_generated");
 
@@ -298,7 +298,7 @@ Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
     MaterialShaderDatabase::instance()->add(std::make_shared<MaterialShader>(material_name, description));
   }
 
-  return MaterialShaderDatabase::instance()->lookup(material_name)->get_default_instance();
+  return MaterialShaderDatabase::instance()->lookup(material_name)->get_default_material();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

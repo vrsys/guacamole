@@ -34,8 +34,8 @@ int main(int argc, char** argv) {
   gua::MaterialShaderDescription desc;
   desc.load_from_file("data/materials/SimpleMaterial.gmd");
 
-  auto mat(std::make_shared<gua::MaterialShader>("simple_mat", desc));
-  gua::MaterialShaderDatabase::instance()->add(mat);
+  auto shader(std::make_shared<gua::MaterialShader>("simple_mat", desc));
+  gua::MaterialShaderDatabase::instance()->add(shader);
 
   gua::TriMeshLoader loader;
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     auto rig(loader.create_geometry_from_file(
       "rig",
       "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-      mat->get_default_instance(),
+      shader->get_default_material(),
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE |
       gua::TriMeshLoader::LOAD_MATERIALS |
