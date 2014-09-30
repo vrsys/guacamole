@@ -36,7 +36,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   TriMeshNode::TriMeshNode(std::string const& name,
                            std::string const& filename,
-                           MaterialInstance const& material,
+                           Material const& material,
                            math::mat4 const& transform)
     : GeometryNode(name, filename, material, transform)
   {}

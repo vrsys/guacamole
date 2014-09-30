@@ -37,7 +37,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MaterialInstance const& MaterialLoader::load_material(
+Material const& MaterialLoader::load_material(
     aiMaterial const* ai_material,
     std::string const& file_name) const {
 
@@ -141,7 +141,7 @@ MaterialInstance const& MaterialLoader::load_material(
     capabilities |= OPACITY_MAP;
   }
 
-  MaterialInstance instance(get_material_instance(capabilities));
+  Material& instance(get_material_instance(capabilities));
 
   if (capabilities & DIFFUSE_MAP) {
     instance.set_uniform("diffuse_map", assets_directory + diffuse_map);
@@ -189,7 +189,7 @@ MaterialInstance const& MaterialLoader::load_material(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MaterialInstance const& MaterialLoader::get_material_instance(unsigned capabilities) const {
+Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
 
   std::string material_name("gua_generated");
 

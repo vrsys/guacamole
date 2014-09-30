@@ -26,7 +26,7 @@
 #include <gua/node/Node.hpp>
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/renderer/enums.hpp>
-#include <gua/renderer/MaterialInstance.hpp>
+#include <gua/renderer/Material.hpp>
 
 // external headers
 #include <string>
@@ -68,7 +68,7 @@ class GUA_DLL GeometryNode : public Node {
      */
     GeometryNode(std::string const& name,
                  std::string const& filename = "gua_default_geometry",
-                 MaterialInstance const& material = MaterialInstance(),
+                 Material const& material = Material(),
                  math::mat4 const& transform = math::mat4::identity(),
                  ShadowMode shadow_mode = ShadowMode::LOW_QUALITY);
 
@@ -85,9 +85,9 @@ class GUA_DLL GeometryNode : public Node {
     /**
     * A string referring to an entry in guacamole's MaterialDatabase.
     */
-    MaterialInstance const& get_material() const;
-    MaterialInstance&       get_material();
-    void set_material(MaterialInstance const& material);
+    Material const& get_material() const;
+    Material&       get_material();
+    void set_material(Material const& material);
 
     /**
     * A value describing the shadow's quality.
@@ -117,7 +117,7 @@ class GUA_DLL GeometryNode : public Node {
 
     std::string filename_;
 
-    MaterialInstance material_;
+    Material material_;
 
     ShadowMode shadow_mode_;
     bool filename_changed_;

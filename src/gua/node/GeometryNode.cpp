@@ -37,7 +37,7 @@ namespace node {
 ////////////////////////////////////////////////////////////////////////////////
 GeometryNode::GeometryNode(std::string const& name,
                            std::string const& filename,
-                           MaterialInstance const& material,
+                           Material const& material,
                            math::mat4 const& transform,
                            ShadowMode shadow_mode)
   : Node(name, transform),
@@ -65,17 +65,17 @@ void GeometryNode::set_filename(std::string const& v) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialInstance const& GeometryNode::get_material() const {
+Material const& GeometryNode::get_material() const {
   return material_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialInstance& GeometryNode::get_material() {
+Material& GeometryNode::get_material() {
   return material_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void GeometryNode::set_material(MaterialInstance const& material) {
+void GeometryNode::set_material(Material const& material) {
   material_ = material;
   material_changed_ = self_dirty_ = true;
 }

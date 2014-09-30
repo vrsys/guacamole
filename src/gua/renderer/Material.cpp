@@ -19,22 +19,22 @@
  *                                                                            *
  ******************************************************************************/
 
-#include <gua/renderer/MaterialInstance.hpp>
+#include <gua/renderer/Material.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialInstance::MaterialInstance(std::string const& material_name):
+Material::Material(std::string const& material_name):
   material_name_(material_name)
   {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// void MaterialInstance::unset_uniform(std::string const& name) {
+// void Material::unset_uniform(std::string const& name) {
 //   uniforms_.erase(name);
 // }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<UniformValue> const& MaterialInstance::get_uniforms() const {
+std::vector<UniformValue> const& Material::get_uniforms() const {
   return uniforms_;
 }
 

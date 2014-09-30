@@ -23,7 +23,7 @@
 #define GUA_MATERIAL_SHADER_HPP
 
 #include <gua/renderer/MaterialDescription.hpp>
-#include <gua/renderer/MaterialInstance.hpp>
+#include <gua/renderer/Material.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/string_utils.hpp>
@@ -42,9 +42,9 @@ class MaterialShader {
   MaterialDescription const& get_description() const;
 
   std::string const&      get_name()             const;
-  MaterialInstance const  get_new_instance()     const;
-  MaterialInstance const& get_default_instance() const;
-  MaterialInstance&       get_default_instance();
+  Material const  get_new_instance()     const;
+  Material const& get_default_instance() const;
+  Material&       get_default_instance();
 
   ShaderProgram* get_shader(GeometryResource const& for_type,
                             std::string const& geometry_v_shader,
@@ -52,7 +52,7 @@ class MaterialShader {
 
   void apply_uniforms(RenderContext const& ctx,
                       ShaderProgram* shader,
-                      MaterialInstance const& overwrite) const;
+                      Material const& overwrite) const;
 
 
   void print_shaders() const;
@@ -66,7 +66,7 @@ class MaterialShader {
 
   std::unordered_map<std::type_index, ShaderProgram*> shaders_;
 
-  MaterialInstance default_instance_;
+  Material default_instance_;
 };
 
 }
