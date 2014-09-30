@@ -37,7 +37,6 @@ INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}
                      ${GUACAMOLE_NURBS_INCLUDE_DIR}
                      ${GPUCAST_INCLUDE_DIR}
-                     ${GPUCAST_MATH_INCLUDE_DIR}
 )
 
 ADD_LIBRARY( guacamole-nurbs SHARED

@@ -46,6 +46,13 @@ namespace gua {
     std::string read_shader_file(std::string const& path, std::vector<std::string> const& root_dirs)
     {
       try {
+        std::string full_path(path);
+        std::ifstream ifstr(full_path.c_str(), std::ios::in);
+
+        if (ifstr.good()) {
+          return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
+        }
+
         for (auto const& root : root_dirs)
         {
           std::string full_path(root + std::string("/") + path);

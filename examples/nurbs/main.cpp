@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
   auto teapot = graph.add_node<gua::node::TransformNode>("/input", "teapot");
   graph.add_node("/input/teapot", teapot_geometry);
   graph.add_node("/input/teapot", teapot2_geometry);
-  graph.add_node("/input/teapot", teapot3_geometry);
+  //graph.add_node("/input/teapot", teapot3_geometry);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->scale(500.f);

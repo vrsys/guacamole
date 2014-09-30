@@ -73,10 +73,10 @@ vec3 gua_get_position() {
 
 @material_methods
 
-#include "gpucast_core/glsl/math/horner_curve.glsl.frag"
-#include "gpucast_core/glsl/trimmed_surface/binary_search.glsl.frag"
-#include "gpucast_core/glsl/trimmed_surface/bisect_curve.glsl.frag"
-#include "gpucast_core/glsl/trimmed_surface/trimming_contourmap_binary.glsl.frag"
+#include "resources/glsl/math/horner_curve.glsl.frag"
+#include "resources/glsl/trimmed_surface/binary_search.glsl.frag"
+#include "resources/glsl/trimmed_surface/bisect_curve.glsl.frag"
+#include "resources/glsl/trimmed_surface/trimming_contourmap_binary.glsl.frag"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

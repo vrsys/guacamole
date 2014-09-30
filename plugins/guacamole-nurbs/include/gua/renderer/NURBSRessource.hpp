@@ -109,7 +109,7 @@ class GUA_NURBS_DLL NURBSRessource : public GeometryRessource {
   /////////////////////////////////////////////////////////////////////////////////////////////
 
   // array and texture buffers for adaptive tesselation
-  mutable struct {
+  struct surface_tesselation_buffer {
     std::vector<scm::gl::vertex_array_ptr>     vertex_array;
                                                
     std::vector<scm::gl::buffer_ptr>           vertex_buffer;
@@ -118,11 +118,12 @@ class GUA_NURBS_DLL NURBSRessource : public GeometryRessource {
     std::vector<scm::gl::texture_buffer_ptr>   parametric_texture_buffer;
     std::vector<scm::gl::texture_buffer_ptr>   attribute_texture_buffer;
     std::vector<scm::gl::texture_buffer_ptr>   domain_texture_buffer;
-  } _surface_tesselation_data;
+  }; 
+  mutable surface_tesselation_buffer _surface_tesselation_data;
   
                
   // array and texture buffers for raycasting
-  mutable struct{
+  struct surface_raycasting_buffer {
     std::vector<scm::gl::vertex_array_ptr>     vertex_array;
 
     std::vector<scm::gl::buffer_ptr>           vertex_attrib0;
@@ -132,7 +133,8 @@ class GUA_NURBS_DLL NURBSRessource : public GeometryRessource {
     std::vector<scm::gl::buffer_ptr>           index_buffer;
 
     std::vector<scm::gl::texture_buffer_ptr>   controlpoints;
-  } _surface_raycasting_data;
+  };
+  mutable surface_raycasting_buffer _surface_raycasting_data;
 
   // texture buffers for trimming   
   mutable struct {

@@ -89,19 +89,19 @@ vec3 gua_get_position() {
 
 @material_methods
 
-#include "gpucast_core/glsl/base/compute_depth.frag"
-#include "gpucast_core/glsl/math/adjoint.glsl.frag"
-#include "gpucast_core/glsl/math/euclidian_space.glsl.frag"
-#include "gpucast_core/glsl/math/horner_surface.glsl.frag"
-#include "gpucast_core/glsl/math/horner_surface_derivatives.glsl.frag"
-#include "gpucast_core/glsl/math/horner_curve.glsl.frag"
-#include "gpucast_core/glsl/math/newton_surface.glsl.frag"
-#include "gpucast_core/glsl/math/raygeneration.glsl.frag" 
-#include "gpucast_core/glsl/trimmed_surface/binary_search.glsl.frag"
-#include "gpucast_core/glsl/trimmed_surface/bisect_curve.glsl.frag"           
-#include "gpucast_core/glsl/trimmed_surface/trimming_contourmap_binary.glsl.frag"
-#include "gpucast_core/glsl/trimmed_surface/trimming.glsl.frag"
-#include "gpucast_core/glsl/trimmed_surface/shade_phong_fresnel.glsl.frag"
+#include "resources/glsl/base/compute_depth.frag"
+#include "resources/glsl/math/adjoint.glsl.frag"
+#include "resources/glsl/math/euclidian_space.glsl.frag"
+#include "resources/glsl/math/horner_surface.glsl.frag"
+#include "resources/glsl/math/horner_surface_derivatives.glsl.frag"
+#include "resources/glsl/math/horner_curve.glsl.frag"
+#include "resources/glsl/math/newton_surface.glsl.frag"
+#include "resources/glsl/math/raygeneration.glsl.frag" 
+#include "resources/glsl/trimmed_surface/binary_search.glsl.frag"
+#include "resources/glsl/trimmed_surface/bisect_curve.glsl.frag"           
+#include "resources/glsl/trimmed_surface/trimming_contourmap_binary.glsl.frag"
+#include "resources/glsl/trimmed_surface/trimming.glsl.frag"
+#include "resources/glsl/trimmed_surface/shade_phong_fresnel.glsl.frag"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
