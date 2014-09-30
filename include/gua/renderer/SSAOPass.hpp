@@ -38,21 +38,19 @@ class SSAOPass : public PipelinePass {
 
   virtual bool needs_color_buffer_as_input() const { return false; }
   virtual bool writes_only_color_buffer()    const { return true;  }
-  virtual bool perform_depth_test()          const { return false; }
 
   virtual void process(Pipeline* pipe);
 
   friend class Pipeline;
 
-  float radius() const;
+  float     radius() const;
   SSAOPass& radius(float radius);
 
-  float intensity() const;
+  float     intensity() const;
   SSAOPass& intensity(float intensity);
 
-  float falloff() const;
+  float     falloff() const;
   SSAOPass& falloff(float falloff);
-
 
  protected:
   SSAOPass();

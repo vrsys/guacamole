@@ -33,7 +33,6 @@ class GeometryPass : public PipelinePass {
 
   virtual bool needs_color_buffer_as_input() const { return false; }
   virtual bool writes_only_color_buffer()    const { return false; }
-  virtual bool perform_depth_test()          const { return true;  }
   
   virtual void process(Pipeline* pipe);
 

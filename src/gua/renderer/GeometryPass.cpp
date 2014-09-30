@@ -29,6 +29,8 @@
 
 namespace gua {
 
+////////////////////////////////////////////////////////////////////////////////
+
 void GeometryPass::process(Pipeline* pipe) {
   RenderContext const& ctx(pipe->get_context());
 
@@ -40,12 +42,14 @@ void GeometryPass::process(Pipeline* pipe) {
 
     if (ressources.size() > 0 && ressources.begin()->second.size() > 0) {
       auto const& ressource = GeometryDatabase::instance()->lookup(ressources.begin()->second[0]->get_filename());
-      auto const& renderer = pipe->get_renderer(*ressource);
+      auto const& renderer  = pipe->get_renderer(*ressource);
       renderer->draw(ressources, pipe);
     }
   }
 
   pipe->get_gbuffer().unbind(ctx);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

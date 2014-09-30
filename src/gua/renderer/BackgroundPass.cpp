@@ -30,6 +30,8 @@
 
 namespace gua {
 
+////////////////////////////////////////////////////////////////////////////////
+
 BackgroundPass::BackgroundPass() :
   shader_(std::make_shared<ShaderProgram>()),
   depth_stencil_state_(nullptr) {
@@ -41,9 +43,10 @@ BackgroundPass::BackgroundPass() :
   );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void BackgroundPass::process(Pipeline* pipe) {
   RenderContext const& ctx(pipe->get_context());
-
 
   if (!depth_stencil_state_) {
     depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
@@ -63,5 +66,7 @@ void BackgroundPass::process(Pipeline* pipe) {
 
   ctx.render_context->reset_state_objects();
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 }
