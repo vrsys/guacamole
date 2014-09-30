@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
   gua::init(argc_d, argv_d);
 
   //gua::ShadingModelDatabase::load_shading_models_from("data/materials/");
-  //gua::MaterialDatabase::load_materials_from("data/materials/");
+  //gua::MaterialShaderDatabase::load_materials_from("data/materials/");
   //gua::TextureDatabase::instance()->load("data/textures/0001MM_diff.jpg");
 
   // setup scene

@@ -23,7 +23,7 @@
 #include <gua/node/TriMeshNode.hpp>
 
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
@@ -226,7 +226,7 @@ namespace node {
     }
 
     // The code below auto-loads a material if it's not already supported by
-    // the MaterialDatabase. It expects a material name like
+    // the MaterialShaderDatabase. It expects a material name like
     //
     // data/materials/Stones.gmd
 
@@ -234,9 +234,9 @@ namespace node {
     {
       if (material_.get_material_name() != "")
       {
-        // if (!MaterialDatabase::instance()->is_supported(material_))
+        // if (!MaterialShaderDatabase::instance()->is_supported(material_))
         // {
-        //   MaterialDatabase::instance()->load_material(material_);
+        //   MaterialShaderDatabase::instance()->load_material(material_);
         // }
       }
 

@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/renderer/Video3DLoader.hpp>
 #include <gua/renderer/Video3DUberShader.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
@@ -101,7 +101,7 @@ namespace node {
     }
 
     // The code below auto-loads a material if it's not already supported by
-    // the MaterialDatabase. It expects a material name like
+    // the MaterialShaderDatabase. It expects a material name like
     //
     // data/materials/Stones.gmd
 
@@ -109,12 +109,12 @@ namespace node {
     {
       if (material_ != "")
       {
-        if (!MaterialDatabase::instance()->is_supported(material_) &&
+        if (!MaterialShaderDatabase::instance()->is_supported(material_) &&
 
             material_ != Video3DUberShader::default_video_material_name() )
         {
           auto mat = std::make_shared<Material>(material_, MaterialDescription(material_));
-          MaterialDatabase::instance()->add(material_, mat);
+          MaterialShaderDatabase::instance()->add(material_, mat);
         }
       }
 
