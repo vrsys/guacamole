@@ -31,7 +31,6 @@ class PipelinePass {
 
   virtual bool needs_color_buffer_as_input() const = 0;
   virtual bool writes_only_color_buffer()    const = 0;
-  virtual bool perform_depth_test()          const = 0;
   
   virtual void process(Pipeline* pipe) = 0;
 

@@ -30,6 +30,8 @@
 
 namespace gua {
 
+////////////////////////////////////////////////////////////////////////////////
+
 SSAOPass::SSAOPass() :
   shader_(std::make_shared<ShaderProgram>()),
   depth_stencil_state_(nullptr),
@@ -46,32 +48,46 @@ SSAOPass::SSAOPass() :
   );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 float SSAOPass::radius() const{
   return radius_;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 SSAOPass& SSAOPass::radius(float radius) {
   radius_ = radius;
   return *this;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 float SSAOPass::intensity() const{
   return intensity_;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 SSAOPass& SSAOPass::intensity(float intensity) {
   intensity_ = intensity;
   return *this;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 float SSAOPass::falloff() const{
   return falloff_;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 SSAOPass& SSAOPass::falloff(float falloff) {
   falloff_ = falloff;
   return *this;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void SSAOPass::process(Pipeline* pipe) {
   RenderContext const& ctx(pipe->get_context());
@@ -81,12 +97,11 @@ void SSAOPass::process(Pipeline* pipe) {
   }
 
   if (!blend_state_) {
-    blend_state_ = ctx.render_device->create_blend_state(true,
-                                                         scm::gl::FUNC_SRC_ALPHA,
-                                                         scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
-                                                         scm::gl::FUNC_SRC_ALPHA,
-                                                         scm::gl::FUNC_ONE_MINUS_SRC_ALPHA
-                                                         );
+    blend_state_ = ctx.render_device->create_blend_state(
+      true,
+      scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
+      scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA
+    );
   }
 
   // bind gbuffer
@@ -99,9 +114,9 @@ void SSAOPass::process(Pipeline* pipe) {
   shader_->use(ctx);
 
   shader_->set_uniform(ctx, noise_texture_.get_handle(ctx), "gua_noise_tex");
-  shader_->set_uniform(ctx, radius_, "gua_ssao_radius");
+  shader_->set_uniform(ctx, radius_,    "gua_ssao_radius");
   shader_->set_uniform(ctx, intensity_, "gua_ssao_intensity");
-  shader_->set_uniform(ctx, falloff_, "gua_ssao_falloff");
+  shader_->set_uniform(ctx, falloff_,   "gua_ssao_falloff");
 
   pipe->bind_gbuffer_input(shader_);
   pipe->draw_fullscreen_quad();
@@ -109,5 +124,7 @@ void SSAOPass::process(Pipeline* pipe) {
 
   ctx.render_context->reset_state_objects();
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

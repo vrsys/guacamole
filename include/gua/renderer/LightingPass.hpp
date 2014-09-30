@@ -37,7 +37,6 @@ class LightingPass : public PipelinePass {
 
   virtual bool needs_color_buffer_as_input() const { return true; }
   virtual bool writes_only_color_buffer()    const { return true; }
-  virtual bool perform_depth_test()          const { return true; }
 
   virtual void process(Pipeline* pipe);
 

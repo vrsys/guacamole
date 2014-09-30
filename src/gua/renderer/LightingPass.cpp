@@ -30,6 +30,8 @@
 
 namespace gua {
 
+////////////////////////////////////////////////////////////////////////////////
+
 LightingPass::LightingPass() :
   shader_(nullptr),
   emit_shader_(nullptr),
@@ -37,6 +39,8 @@ LightingPass::LightingPass() :
   rasterizer_state_front_(nullptr),
   depth_stencil_state_(nullptr),
   blend_state_(nullptr) {}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void LightingPass::process(Pipeline* pipe) {
 
@@ -115,5 +119,7 @@ void LightingPass::process(Pipeline* pipe) {
 
   ctx.render_context->reset_state_objects();
 } 
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

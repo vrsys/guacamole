@@ -95,22 +95,11 @@ class GUA_DLL GeometryResource {
     return bounding_box_;
   }
 
-  virtual MaterialShaderMethod const& get_vertex_material_pass() const {
-    return vertex_material_pass_;
-  }
-
-  virtual MaterialShaderMethod const& get_fragment_material_pass() const {
-    return fragment_material_pass_;
-  }
-
   virtual std::shared_ptr<RessourceRenderer> create_renderer() const = 0;
 
  protected:
 
   math::BoundingBox<math::vec3> bounding_box_;
-
-  MaterialShaderMethod vertex_material_pass_;
-  MaterialShaderMethod fragment_material_pass_;
 };
 
 }
