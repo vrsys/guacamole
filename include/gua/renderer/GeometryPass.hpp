@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GBUFFER_PASS_HPP
-#define GUA_GBUFFER_PASS_HPP
+#ifndef GUA_GEOMETRY_PASS_HPP
+#define GUA_GEOMETRY_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
 
@@ -28,7 +28,7 @@ namespace gua {
 
 class Pipeline;
 
-class GBufferPass : public PipelinePass {
+class GeometryPass : public PipelinePass {
  public:
 
   virtual bool needs_color_buffer_as_input() const { return false; }
@@ -40,10 +40,10 @@ class GBufferPass : public PipelinePass {
   friend class Pipeline;
 
  protected:
-  GBufferPass() {}
-  ~GBufferPass() {}
+  GeometryPass() {}
+  ~GeometryPass() {}
 };
 
 }
 
-#endif  // GUA_GBUFFER_PASS_HPP
+#endif  // GUA_GEOMETRY_PASS_HPP

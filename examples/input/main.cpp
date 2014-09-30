@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
   pipe->config.set_resolution(gua::math::vec2ui(1920, 1080));
   pipe->config.set_enable_stereo(true);
 
-  pipe->add_pass<gua::GBufferPass>();
+  pipe->add_pass<gua::GeometryPass>();
   pipe->add_pass<gua::LightingPass>();
   pipe->add_pass<gua::BackgroundPass>();
   pipe->add_pass<gua::SSAOPass>().radius(2.f).falloff(2.f);

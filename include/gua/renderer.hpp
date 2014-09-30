@@ -27,7 +27,7 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/renderer/VolumeLoader.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/GBufferPass.hpp>
+#include <gua/renderer/GeometryPass.hpp>
 #include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>

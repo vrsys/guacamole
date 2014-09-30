@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/GBufferPass.hpp>
+#include <gua/renderer/GeometryPass.hpp>
 
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -29,7 +29,7 @@
 
 namespace gua {
 
-void GBufferPass::process(Pipeline* pipe) {
+void GeometryPass::process(Pipeline* pipe) {
   RenderContext const& ctx(pipe->get_context());
 
   pipe->get_gbuffer().bind(ctx, this);
