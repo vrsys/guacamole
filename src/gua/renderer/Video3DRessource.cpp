@@ -360,6 +360,8 @@ void Video3DRessource::upload_video_textures(RenderContext const& ctx) const
     framecounter_per_context_.resize(ctx.id + 1);
   }
 
+  std::cout << "Upload video textures" << std::endl;
+
   // initialize Texture Arrays (kinect depths & colors)
   depth_texArrays_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(width_depthimage_, height_depthimage_),
 								  scm::gl::FORMAT_R_32F,
