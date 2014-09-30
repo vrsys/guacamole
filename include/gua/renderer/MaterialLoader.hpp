@@ -31,14 +31,8 @@
 #include <list>
 #include <memory>
 
-#if ASSIMP_VERSION == 3
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#else
-#include <assimp/assimp.hpp>
-#include <assimp/aiPostProcess.h>
-#include <assimp/aiScene.h>
-#endif
 
 namespace Assimp { class Importer; }
 
@@ -72,11 +66,11 @@ class GUA_DLL MaterialLoader {
     OPACITY_MAP = 4096
   };
 
-  std::string const load_material(aiMaterial const* material,
-                                  std::string const& file_name) const;
+  std::string load_material(aiMaterial const* material,
+                            std::string const& file_name) const;
 
  private:
-  std::string const load_shading_model(unsigned capabilities) const;
+  std::string load_shading_model(unsigned capabilities) const;
 
 };
 

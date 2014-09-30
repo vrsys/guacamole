@@ -23,6 +23,7 @@
 #define GUA_UBER_SHADER_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/ShadingModel.hpp>
 #include <gua/renderer/UniformMapping.hpp>
@@ -40,7 +41,7 @@ class UberShaderFactory;
 /**
  * This class represents a (multipass-) stage with material-dependent meta-shader components
  */
-class UberShader {
+class GUA_DLL UberShader {
 
  public:
 
@@ -126,8 +127,8 @@ class UberShader {
   void set_uniform_mapping(UniformMapping const& mapping);
   void set_output_mapping(LayerMapping const& mapping);
 
-  std::string const print_material_switch(UberShaderFactory const& factory) const;
-  std::string const print_material_methods(UberShaderFactory const& factory) const;
+  std::string print_material_switch(UberShaderFactory const& factory) const;
+  std::string print_material_methods(UberShaderFactory const& factory) const;
 
   protected: // attributes
 

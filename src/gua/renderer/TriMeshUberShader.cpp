@@ -91,7 +91,7 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  /*virtual*/ GeometryUberShader::stage_mask const TriMeshUberShader::get_stage_mask() const
+  /*virtual*/ GeometryUberShader::stage_mask TriMeshUberShader::get_stage_mask() const
   {
     return GeometryUberShader::DRAW_STAGE;
   }

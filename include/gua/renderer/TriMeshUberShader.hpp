@@ -33,7 +33,7 @@ class TriMeshUberShader : public GeometryUberShader {
 
   void              create  (std::set<std::string> const& material_names);
 
-  /*virtual*/ stage_mask const get_stage_mask() const;
+  /*virtual*/ stage_mask get_stage_mask() const override;
 
   /*virtual*/ void  preframe  (RenderContext const& context) const;
 

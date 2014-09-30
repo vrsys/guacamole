@@ -5,7 +5,7 @@ include_directories (
   ${UNITTEST++_INCLUDE_DIR}
   )
 
-add_executable( runTests main.cpp testBoundingBox.cpp )
+add_executable( runTests main.cpp testBoundingBox.cpp testBoundingSphere.cpp)
 
 target_link_libraries( runTests
                       unittest++

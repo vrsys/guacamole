@@ -23,7 +23,7 @@
 #define GUA_SCENE_GRAPH_HPP
 
 #include <gua/platform.hpp>
-#include <gua/scenegraph/Node.hpp>
+#include <gua/node/Node.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/Logger.hpp>
 
@@ -34,7 +34,11 @@
 namespace gua {
 
 class NodeVisitor;
+struct Ray;
+
+namespace node {
 class RayNode;
+}
 
 /**
  * A class to represent a scene.
@@ -87,7 +91,7 @@ class GUA_DLL SceneGraph {
 
     auto new_node(std::make_shared<T>(node_name));
 
-    std::shared_ptr<Node> const& parent(find_node(path_to_parent));
+    std::shared_ptr<node::Node> const& parent(find_node(path_to_parent));
 
     if (!parent) {
       Logger::LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
@@ -110,7 +114,7 @@ class GUA_DLL SceneGraph {
    * \return std::shared_ptr<T> A shared pointer to the recently added Node.
    */
   template<typename T>
-  std::shared_ptr<T> add_node(std::shared_ptr<Node> const&  parent, std::string const& node_name) {
+  std::shared_ptr<T> add_node(std::shared_ptr<node::Node> const&  parent, std::string const& node_name) {
 
     auto new_node(std::make_shared<T>(node_name));
 
@@ -136,7 +140,7 @@ class GUA_DLL SceneGraph {
   template<typename T>
   std::shared_ptr<T> add_node(std::string const& path_to_parent, std::shared_ptr<T> const& new_node) {
 
-    std::shared_ptr<Node> const& parent(find_node(path_to_parent));
+    std::shared_ptr<node::Node> const& parent(find_node(path_to_parent));
 
     if (!parent) {
       Logger::LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
@@ -159,7 +163,7 @@ class GUA_DLL SceneGraph {
    * \return std::shared_ptr<T> A shared pointer to the recently added Node.
    */
   template<typename T>
-  std::shared_ptr<T> add_node(std::shared_ptr<Node> const&  parent, std::shared_ptr<T> const& new_node) {
+  std::shared_ptr<T> add_node(std::shared_ptr<node::Node> const&  parent, std::shared_ptr<T> const& new_node) {
     parent->add_child(new_node);
     return new_node;
   }
@@ -180,7 +184,7 @@ class GUA_DLL SceneGraph {
    *
    * \param to_remove   The Node to be removed.
    */
-  void remove_node(std::shared_ptr<Node> const& to_remove);
+  void remove_node(std::shared_ptr<node::Node> const& to_remove);
 
   /**
    * Sets the SceneGraph's name.
@@ -201,14 +205,14 @@ class GUA_DLL SceneGraph {
    *
    * \param root   The SceneGraph's new root Node.
    */
-  void set_root(std::shared_ptr<Node> const& root);
+  void set_root(std::shared_ptr<node::Node> const& root);
 
   /**
    * Returns the SceneGraph's root Node.
    *
    * \return std::shared_ptr<Node>   The SceneGraph's root Node.
    */
-  std::shared_ptr<Node> const& get_root() const;
+  std::shared_ptr<node::Node> const& get_root() const;
 
   /**
    * Allows to access nodes via the index operator.
@@ -220,7 +224,7 @@ class GUA_DLL SceneGraph {
    *
    * \return std::shared_ptr<Node> The wanted Node.
    */
-  std::shared_ptr<Node> operator[](std::string const& path_to_node) const;
+  std::shared_ptr<node::Node> operator[](std::string const& path_to_node) const;
 
   /**
    * Assignment operator.
@@ -269,18 +273,31 @@ class GUA_DLL SceneGraph {
    * \param options   PickResult::Options to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
-  std::set<PickResult> const ray_test(RayNode const& ray,
+  std::set<PickResult> const ray_test(node::RayNode const& ray,
+                                      PickResult::Options options = PickResult::PICK_ALL,
+                                      std::string const& mask = "");
+
+  /**
+   * Intersects a SceneGraph with a given Ray.
+   *
+   * Calls Node::ray_test() on the root Node.
+   *
+   * \param ray       The Ray used to check for intersections.
+   * \param options   PickResult::Options to configure the intersection process.
+   * \param mask      A mask to restrict the intersection to certain Nodes.
+   */
+  std::set<PickResult> const ray_test(Ray const& ray,
                                       PickResult::Options options = PickResult::PICK_ALL,
                                       std::string const& mask = "");
 
  private:
 
-  std::shared_ptr<Node> find_node(std::string const& path_to_node,
+  std::shared_ptr<node::Node> find_node(std::string const& path_to_node,
                   std::string const& path_to_start = "/") const;
 
-  bool has_child(std::shared_ptr<Node> const& parent, std::string const& child_name) const;
+  bool has_child(std::shared_ptr<node::Node> const& parent, std::string const& child_name) const;
 
-  std::shared_ptr<Node> root_;
+  std::shared_ptr<node::Node> root_;
   std::string name_;
 };
 

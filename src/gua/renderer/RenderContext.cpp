@@ -22,7 +22,7 @@
 // class header
 #include "gua/renderer/RenderContext.hpp"
 
-#include <gua/renderer/Window.hpp>
+#include <gua/renderer/WindowBase.hpp>
 
 namespace gua {
 
@@ -31,7 +31,6 @@ namespace gua {
   RenderContext::RenderContext()
     : context(),
     display(),
-    window(),
     render_context(),
     render_device(),
     render_window(nullptr),

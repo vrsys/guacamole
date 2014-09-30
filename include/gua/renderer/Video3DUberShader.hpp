@@ -49,7 +49,7 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
 
   /*virtual*/ bool upload_to(RenderContext const& context) const;
 
-  /*virtual*/ stage_mask const get_stage_mask() const;
+  /*virtual*/ stage_mask get_stage_mask() const override;
 
   /*virtual*/ void preframe(RenderContext const& context) const;
 
@@ -79,29 +79,29 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
 
   /*virtual*/ void postframe(RenderContext const& context) const;
 
-  static std::string const default_video_material_name();
+  static std::string default_video_material_name();
   static void initialize_video_material();
 
  private: // methods
 
   void              _create_default_material () const;
 
-  std::string const _warp_pass_vertex_shader   () const;
-  std::string const _warp_pass_geometry_shader () const;
-  std::string const _warp_pass_fragment_shader () const;
+  std::string _warp_pass_vertex_shader   () const;
+  std::string _warp_pass_geometry_shader () const;
+  std::string _warp_pass_fragment_shader () const;
 
-  std::string const _tmp_pass_vertex_shader() const;
-  std::string const _tmp_pass_fragment_shader() const;
+  std::string _tmp_pass_vertex_shader() const;
+  std::string _tmp_pass_fragment_shader() const;
 
-  std::string const _blend_pass_vertex_shader   () const;
-  std::string const _blend_pass_fragment_shader () const;
+  std::string _blend_pass_vertex_shader   () const;
+  std::string _blend_pass_fragment_shader () const;
 
   private: // attributes
 
   static const unsigned                    MAX_NUM_KINECTS = 6;
 
-  mutable scm::gl::texture_2d_ptr	         warp_depth_result_;
-  mutable scm::gl::texture_2d_ptr	         warp_color_result_;
+  mutable scm::gl::texture_2d_ptr          warp_depth_result_;
+  mutable scm::gl::texture_2d_ptr          warp_color_result_;
   mutable scm::gl::frame_buffer_ptr        warp_result_fbo_;
 
   mutable scm::gl::rasterizer_state_ptr    no_bfc_rasterizer_state_;
@@ -112,9 +112,6 @@ class GUA_DLL Video3DUberShader : public GeometryUberShader {
   mutable scm::gl::depth_stencil_state_ptr depth_stencil_state_blend_pass_;
 
   mutable scm::gl::quad_geometry_ptr       fullscreen_quad_;
-  
-
-
 };
 
 }

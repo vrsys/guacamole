@@ -23,15 +23,15 @@
 #define GUA_SERIALIZED_SCENE_HPP
 
 // guacamole headers
-#include <gua/scenegraph/GeometryNode.hpp>
-#include <gua/scenegraph/Video3DNode.hpp>
-#include <gua/scenegraph/VolumeNode.hpp>
-#include <gua/scenegraph/PointLightNode.hpp>
-#include <gua/scenegraph/SpotLightNode.hpp>
-#include <gua/scenegraph/SunLightNode.hpp>
-#include <gua/scenegraph/ScreenNode.hpp>
-#include <gua/scenegraph/RayNode.hpp>
-#include <gua/scenegraph/TexturedQuadNode.hpp>
+#include <gua/node/GeometryNode.hpp>
+#include <gua/node/Video3DNode.hpp>
+#include <gua/node/VolumeNode.hpp>
+#include <gua/node/PointLightNode.hpp>
+#include <gua/node/SpotLightNode.hpp>
+#include <gua/node/SunLightNode.hpp>
+#include <gua/node/ScreenNode.hpp>
+#include <gua/node/RayNode.hpp>
+#include <gua/node/TexturedQuadNode.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/renderer/Frustum.hpp>
 
@@ -58,27 +58,27 @@ struct SerializedScene {
   /**
   * All geometry nodes.
   */
-  std::unordered_map<std::type_index, std::vector<GeometryNode*>> geometrynodes_;
+  std::unordered_map<std::type_index, std::vector<node::GeometryNode*>> geometrynodes_;
 
   /**
   * All Volume nodes.
   */
-  std::vector<VolumeNode*> volumenodes_;
+  std::vector<node::VolumeNode*> volumenodes_;
 
   /**
    * All point light nodes.
    */
-  std::vector<PointLightNode*> point_lights_;
+  std::vector<node::PointLightNode*> point_lights_;
 
   /**
    * All spot light nodes.
    */
-  std::vector<SpotLightNode*> spot_lights_;
+  std::vector<node::SpotLightNode*> spot_lights_;
 
   /**
    * All sun light nodes.
    */
-  std::vector<SunLightNode*> sun_lights_;
+  std::vector<node::SunLightNode*> sun_lights_;
 
   /**
    * The frustum.
@@ -105,12 +105,12 @@ struct SerializedScene {
   /**
    * All bounding boxes.
    */
-  std::vector<RayNode*> rays_;
+  std::vector<node::RayNode*> rays_;
 
   /**
    * All textured quads.
    */
-  std::vector<TexturedQuadNode*> textured_quads_;
+  std::vector<node::TexturedQuadNode*> textured_quads_;
 };
 
 }

@@ -39,6 +39,9 @@ class GeometryUberShader;
 
 struct Ray;
 
+namespace node {
+  class GeometryNode;
+};
 
 /**
  * Base class for the render ressources (CPU/GPU) for different geometry types
@@ -80,7 +83,7 @@ class GUA_DLL GeometryRessource {
    * \return                  The intersection distance along the ray.
    */
   virtual void ray_test(Ray const& ray, PickResult::Options options,
-                        Node* owner, std::set<PickResult>& hits) = 0;
+                        node::Node* owner, std::set<PickResult>& hits) = 0;
 
   /**
    * Get the local bounding box of the geometry.
@@ -91,6 +94,10 @@ class GUA_DLL GeometryRessource {
     return bounding_box_;
   }
 
+  /**
+  * update ressource from node
+  */
+  virtual void update(node::GeometryNode* geometry);
 
  protected:
 

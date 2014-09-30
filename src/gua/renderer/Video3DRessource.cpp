@@ -495,7 +495,7 @@ void Video3DRessource::update_buffers(RenderContext const& ctx) const
 					   scm::gl::texture_region(scm::math::vec3ui(0, 0 , i),
 								   scm::math::vec3ui(width_colorimage_, height_colorimage_, 1)),
 					   0, //mip-mapping level
-					   scm::gl::FORMAT_BC1_RGBA,
+					   calib_files_[0]->isCompressedRGB() ? scm::gl::FORMAT_BC1_RGBA : scm::gl::FORMAT_RGB_8,
 					   (void*) color_buffers_[i]
 					   );
 
@@ -526,7 +526,7 @@ void Video3DRessource::update_buffers(RenderContext const& ctx) const
 					     scm::gl::texture_region(scm::math::vec3ui(0, 0 , i),
 								     scm::math::vec3ui(width_colorimage_, height_colorimage_, 1)),
 					     0, //mip-mapping level
-					     scm::gl::FORMAT_BC1_RGBA,
+					     calib_files_[0]->isCompressedRGB() ? scm::gl::FORMAT_BC1_RGBA : scm::gl::FORMAT_RGB_8,
 					     (void*) buff
 					     );
       buff += color_size_;

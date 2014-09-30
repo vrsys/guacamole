@@ -73,6 +73,8 @@ Pipeline::Pipeline()
     buffers_need_reload_(true),
     last_shading_model_revision_(0),
     display_loading_screen_(true),
+    last_left_resolution_(0, 0),
+    last_right_resolution_(0, 0),
     camera_block_left_(nullptr),
     camera_block_right_(nullptr) {
 
@@ -104,7 +106,7 @@ void Pipeline::print_shaders(std::string const& directory) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::set_window(Window* window) {
+void Pipeline::set_window(WindowBase* window) {
   std::unique_lock<std::mutex> lock(upload_mutex_);
   window_ = window;
 }
@@ -187,7 +189,7 @@ void Pipeline::serialize(const SceneGraph& scene_graph,
   }
 
   auto screen_it((scene_graph)[screen_name]);
-  auto screen(std::dynamic_pointer_cast<ScreenNode>(screen_it));
+  auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
   if (!screen) {
     Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
     return;
@@ -201,8 +203,8 @@ void Pipeline::serialize(const SceneGraph& scene_graph,
   out.enable_global_clipping_plane = config.get_enable_global_clipping_plane();
   out.global_clipping_plane = config.get_global_clipping_plane();
 
-  serializer_->check(&out,
-                     &scene_graph,
+  serializer_->check(out,
+                     scene_graph,
                      config.camera().render_mask,
                      config.enable_bbox_display(),
                      config.enable_ray_display(),
@@ -223,6 +225,15 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   if (ShadingModel::current_revision != last_shading_model_revision_) {
     passes_need_reload_ = true;
     last_shading_model_revision_ = ShadingModel::current_revision;
+  }
+
+  if (config.left_resolution() != last_left_resolution_ ||
+      config.right_resolution() != last_right_resolution_) {
+
+    buffers_need_reload_ = true;
+
+    last_left_resolution_ = config.left_resolution();
+    last_right_resolution_ = config.right_resolution();
   }
 
   if (window_) {

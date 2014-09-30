@@ -60,7 +60,7 @@ class KDTree {
    *                deleted depending on the supplied options.
    */
   void ray_test(Ray const& ray, aiMesh* mesh, PickResult::Options const& options,
-                Node* owner, std::set<PickResult>& hits) const;
+                node::Node* owner, std::set<PickResult>& hits) const;
 
  private:
 
@@ -127,7 +127,7 @@ class KDTree {
   KDNode* root_;
   std::vector<Triangle> triangles_;
 
-  mutable Node* current_owner_;
+  mutable node::Node* current_owner_;
   mutable PickResult::Options current_options_;
   mutable unsigned current_visit_flag_;
 };

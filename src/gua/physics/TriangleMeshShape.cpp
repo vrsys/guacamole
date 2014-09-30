@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/scenegraph/TriMeshNode.hpp>
+#include <gua/node/TriMeshNode.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/physics/PhysicsUtils.hpp>
 
@@ -163,11 +163,11 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
     if (node) {
       std::vector<std::string> geom_list;
 
-      std::function<void (std::shared_ptr<Node> const&)> add_all_geometries;
+      std::function<void (std::shared_ptr<node::Node> const&)> add_all_geometries;
 
-      add_all_geometries = [&](std::shared_ptr<Node> const& node) {
+      add_all_geometries = [&](std::shared_ptr<node::Node> const& node) {
 
-        auto gnode = std::dynamic_pointer_cast<TriMeshNode>(node);
+        auto gnode = std::dynamic_pointer_cast<node::TriMeshNode>(node);
         if (gnode) {
             geom_list.push_back(gnode->get_filename());
         }

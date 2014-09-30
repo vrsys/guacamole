@@ -24,12 +24,12 @@
 
 // guacamole headers
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/scenegraph/Video3DNode.hpp>
+#include <gua/node/Video3DNode.hpp>
 #include <gua/renderer/Video3DRessource.hpp>
 #include <gua/renderer/Video3DUberShader.hpp>
 
 namespace gua {
-  
+
   ////////////////////////////////////////////////////////////////////////////////
 
   Video3DLoader::Video3DLoader() 
@@ -42,14 +42,14 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Node> Video3DLoader::create_geometry_from_file (std::string const& node_name,
+  std::shared_ptr<node::Node> Video3DLoader::create_geometry_from_file (std::string const& node_name,
                                                                   std::string const& file_name)
   {
     try {
       GeometryDatabase::instance()->add(
         file_name, std::make_shared<Video3DRessource>(file_name));
 
-      auto result = std::make_shared<Video3DNode>(node_name, file_name, Video3DUberShader::default_video_material_name() );
+      auto result = std::make_shared<node::Video3DNode>(node_name, file_name, Video3DUberShader::default_video_material_name() );
       result->update_cache();
 
       return result;
@@ -70,6 +70,5 @@ namespace gua {
       ? false
       : _supported_file_extensions.count(filename_decomposition.back()) > 0;
   }
-
 
 }

@@ -83,7 +83,7 @@ class PBRRessource : public GeometryRessource {
   void draw(RenderContext const& context) const;
 
   void ray_test(Ray const& ray, PickResult::Options options,
-                Node* owner, std::set<PickResult>& hits);
+                node::Node* owner, std::set<PickResult>& hits);
 
 
   /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
@@ -101,7 +101,6 @@ class PBRRessource : public GeometryRessource {
   //KDTree kd_tree_;
 
   std::shared_ptr<pbr::ren::RawPointCloud> point_cloud_;
-
 };
 
 }

@@ -35,14 +35,12 @@
 #include <gua/renderer/GeometryRessource.hpp>
 #include <gua/renderer/GeometryUberShader.hpp>
 
-#include <gua/scenegraph/GeometryNode.hpp>
+#include <gua/node/GeometryNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/scenegraph/TriMeshNode.hpp>
+#include <gua/node/TriMeshNode.hpp>
 
 #include <gua/databases.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-
-
 
 namespace gua {
 
@@ -141,7 +139,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
   // draw all drawable geometries
   for (auto const& type_ressource_pair : scene.geometrynodes_) {
     auto const& type = type_ressource_pair.first;
-    auto const& ressource_container = type_ressource_pair.second;
+    auto const& node_container = type_ressource_pair.second;
     auto ubershader = ubershaders_.at(type);
 
     // set frame-consistent per-ubershader uniforms
@@ -171,6 +169,16 @@ void GBufferPass::rendering(SerializedScene const& scene,
       }
     }
 
+    // 0. synchronize rendering relevant fields between node and ressource
+    for (auto const& node : node_container) {
+      auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
+      auto const& material = MaterialDatabase::instance()->lookup(node->get_material());
+
+      if (ressource && material) {
+        ressource->update(node);
+      }
+    }
+
 
     // 1. call preframe callback if available for type
     if (ubershader->get_stage_mask() & GeometryUberShader::PRE_FRAME_STAGE) {
@@ -180,7 +188,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     // 2. iterate all drawables of current type and call predraw of current
     // ubershader
     if (ubershader->get_stage_mask() & GeometryUberShader::PRE_DRAW_STAGE) {
-      for (auto const& node : ressource_container) {
+      for (auto const& node : node_container) {
         auto const& ressource =
             GeometryDatabase::instance()->lookup(node->get_filename());
         auto const& material =
@@ -213,9 +221,8 @@ void GBufferPass::rendering(SerializedScene const& scene,
 
     // 3. iterate all drawables of current type and call draw of current
     // ubershader
-
     if (ubershader->get_stage_mask() & GeometryUberShader::DRAW_STAGE) {
-      for (auto const& node : ressource_container) {
+      for (auto const& node : node_container) {
         auto const& ressource =
             GeometryDatabase::instance()->lookup(node->get_filename());
         auto const& material =
@@ -249,7 +256,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     // 4. iterate all drawables of current type and call postdraw of current
     // ubershader
     if (ubershader->get_stage_mask() & GeometryUberShader::POST_DRAW_STAGE) {
-      for (auto const& node : ressource_container) {
+      for (auto const& node : node_container) {
         auto const& ressource =
             GeometryDatabase::instance()->lookup(node->get_filename());
         auto const& material =
@@ -307,7 +314,7 @@ void GBufferPass::display_bboxes(RenderContext const& ctx,
                                  View const& view) {
 
 
-  auto meshubershader = ubershaders_[typeid(TriMeshNode)];
+  auto meshubershader = ubershaders_[typeid(node::TriMeshNode)];
 
   if (pipeline_->config.enable_bbox_display()) {
     meshubershader->get_program()->use(ctx);
@@ -343,7 +350,7 @@ void GBufferPass::display_rays(RenderContext const& ctx,
                                SerializedScene const& scene,
                                View const& view)
 {
-  auto meshubershader = ubershaders_[typeid(TriMeshNode)];
+  auto meshubershader = ubershaders_[typeid(node::TriMeshNode)];
 
   if (pipeline_->config.enable_ray_display()) {
     meshubershader->get_program()->use(ctx);
@@ -371,7 +378,7 @@ void GBufferPass::display_quads(RenderContext const& ctx,
                                 CameraMode eye,
                                 View const& view)
 {
-  auto meshubershader = ubershaders_[typeid(TriMeshNode)];
+  auto meshubershader = ubershaders_[typeid(node::TriMeshNode)];
 
   if (!scene.textured_quads_.empty()) {
     meshubershader->get_program()->use(ctx);
@@ -433,8 +440,8 @@ void GBufferPass::update_ubershader_from_scene(RenderContext const& ctx,
   }
 
   if (!ubershader_available) {
-    auto get_ubershader = [&](Node * n) {
-      GeometryNode* geode = dynamic_cast<GeometryNode*>(n);
+    auto get_ubershader = [&](node::Node * n) {
+      node::GeometryNode* geode = dynamic_cast<node::GeometryNode*>(n);
       if (geode) {
         std::type_index type(typeid(*geode));
         if (!ubershaders_.count(type)) {
@@ -497,7 +504,7 @@ void GBufferPass::apply_material_mapping(
 ////////////////////////////////////////////////////////////////////////////////
 
 LayerMapping const* GBufferPass::get_gbuffer_mapping() const {
-  std::type_index trimesh_type = typeid(TriMeshNode);
+  std::type_index trimesh_type = typeid(node::TriMeshNode);
 
   if (!ubershaders_.count(trimesh_type)) {
     // trimesh shader has not been created yet -> return dummy mapping
@@ -511,7 +518,7 @@ LayerMapping const* GBufferPass::get_gbuffer_mapping() const {
 
 void GBufferPass::initialize_trimesh_ubershader(RenderContext const& ctx) const
 {
-  std::type_index trimesh_type = typeid(TriMeshNode);
+  std::type_index trimesh_type = typeid(node::TriMeshNode);
 
   if (!ubershaders_.count(trimesh_type)) {
     auto ubershader = TriMeshRessource().create_ubershader();

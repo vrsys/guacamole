@@ -31,7 +31,7 @@
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/FrameBufferObject.hpp>
-#include <gua/renderer/Window.hpp>
+#include <gua/renderer/WindowBase.hpp>
 #include <gua/renderer/Video3DRessource.hpp>
 
 #include <gua/databases/MaterialDatabase.hpp>
@@ -74,7 +74,7 @@ void Video3DUberShader::create(std::set<std::string> const& material_names)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::_warp_pass_vertex_shader() const
+std::string Video3DUberShader::_warp_pass_vertex_shader() const
 {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_warp_pass_vert)
@@ -85,7 +85,7 @@ std::string const Video3DUberShader::_warp_pass_vertex_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::_warp_pass_geometry_shader() const
+std::string Video3DUberShader::_warp_pass_geometry_shader() const
 {
   std::string geometry_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_warp_pass_geom)
@@ -96,7 +96,7 @@ std::string const Video3DUberShader::_warp_pass_geometry_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::_warp_pass_fragment_shader() const
+std::string Video3DUberShader::_warp_pass_fragment_shader() const
 {
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_warp_pass_frag)
@@ -107,7 +107,7 @@ std::string const Video3DUberShader::_warp_pass_fragment_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::_blend_pass_vertex_shader() const
+std::string Video3DUberShader::_blend_pass_vertex_shader() const
 {
   std::string vertex_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_blend_pass_vert)
@@ -134,7 +134,7 @@ std::string const Video3DUberShader::_blend_pass_vertex_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const Video3DUberShader::_blend_pass_fragment_shader() const
+std::string Video3DUberShader::_blend_pass_fragment_shader() const
 {
   std::string fragment_shader(
     Resources::lookup_shader(Resources::shaders_uber_shaders_gbuffer_video3d_blend_pass_frag)
@@ -199,7 +199,7 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
 								MAX_NUM_KINECTS,
 								1
 								);
-  
+
   warp_depth_result_ = context.render_device->create_texture_2d(
 								left_resolution_,
 								scm::gl::FORMAT_D32F,
@@ -212,19 +212,19 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
 
 
   warp_result_fbo_ = context.render_device->create_frame_buffer();
-  
+
 
   linear_sampler_state_ = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
-  
+
 
   nearest_sampler_state_ = context.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
- 
+
 
   depth_stencil_state_warp_pass_ = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
 
 
   depth_stencil_state_blend_pass_ = context.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
- 
+
   no_bfc_rasterizer_state_ = context.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
 
 
@@ -233,7 +233,7 @@ bool Video3DUberShader::upload_to (RenderContext const& context) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*virtual*/ GeometryUberShader::stage_mask const Video3DUberShader::get_stage_mask() const
+/*virtual*/ GeometryUberShader::stage_mask Video3DUberShader::get_stage_mask() const
 {
   return GeometryUberShader::DRAW_STAGE | GeometryUberShader::POST_FRAME_STAGE;
 }
@@ -324,7 +324,7 @@ void Video3DUberShader::draw(RenderContext const& ctx,
       // set uniforms
       get_program(warp_pass)->set_uniform(ctx, video3d_ressource->calibration_file(layer).getTexSizeInvD(), "tex_size_inv");
       get_program(warp_pass)->set_uniform(ctx, int(layer), "layer");
-      
+
 
       if (material && video3d_ressource)
       {
@@ -414,13 +414,13 @@ void Video3DUberShader::draw(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*static*/ std::string const Video3DUberShader::default_video_material_name() {
+/*static*/ std::string Video3DUberShader::default_video_material_name() {
   return "gua_video3d";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*static*/ void Video3DUberShader::initialize_video_material() 
+/*static*/ void Video3DUberShader::initialize_video_material()
 {
   std::unique_lock<std::mutex> lock (MaterialDatabase::instance()->update_lock);
 

@@ -27,14 +27,8 @@
 #include <iostream>
 
 // external headers
-#if ASSIMP_VERSION == 3
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#else
-#include <assimp/assimp.hpp>
-#include <assimp/aiPostProcess.h>
-#include <assimp/aiScene.h>
-#endif
 
 namespace gua {
 
@@ -70,7 +64,7 @@ void KDTree::generate(aiMesh* mesh) {
 }
 
 void KDTree::ray_test(Ray const& ray, aiMesh* mesh, PickResult::Options const& options,
-                      Node* owner, std::set<PickResult>& hits) const {
+                      node::Node* owner, std::set<PickResult>& hits) const {
 
   if (root_) {
     current_options_ = options;

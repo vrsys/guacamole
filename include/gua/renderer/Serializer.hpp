@@ -59,8 +59,8 @@ class Serializer : public NodeVisitor {
    * \param render_mask          The mask to be applied to the nodes of
    *                             the graph.
    */
-  void check(SerializedScene* output,
-             SceneGraph const* scene_graph,
+  void check(SerializedScene& output,
+             SceneGraph const& scene_graph,
              std::string const& render_mask,
              bool draw_bounding_boxes,
              bool draw_rays,
@@ -73,7 +73,7 @@ class Serializer : public NodeVisitor {
    *
    * \param cam   Pointer to TransformNode
    */
-  /* virtual */ void visit(Node* node);
+  void visit(node::Node* node) override;
 
   /**
    * Visits an LODNode
@@ -82,7 +82,7 @@ class Serializer : public NodeVisitor {
    *
    * \param cam   Pointer to LODNode
    */
-  /* virtual */ void visit(LODNode* lod);
+  void visit(node::LODNode* lod) override;
 
   /**
    * Visits a GeometryNode
@@ -91,7 +91,7 @@ class Serializer : public NodeVisitor {
    *
    * \param geometry   Pointer to GeometryNode
    */
-  /* virtual */ void visit(GeometryNode* geometry);
+  void visit(node::GeometryNode* geometry) override;
 
   /**
   * Visits a VolumeNode
@@ -100,7 +100,7 @@ class Serializer : public NodeVisitor {
   *
   * \param volume   Pointer to VolumeNode
   */
-  /* virtual */ void visit(VolumeNode* volume);
+  void visit(node::VolumeNode* volume) override;
 
   /**
    * Visits a PointLightNode
@@ -109,7 +109,7 @@ class Serializer : public NodeVisitor {
    *
    * \param pointlight   Pointer to PointLightNode
    */
-  /* virtual */ void visit(PointLightNode* pointlight);
+  void visit(node::PointLightNode* pointlight) override;
 
   /**
    * Visits a SpotLightNode
@@ -118,7 +118,7 @@ class Serializer : public NodeVisitor {
    *
    * \param spot   Pointer to SpotLightNode
    */
-  /* virtual */ void visit(SpotLightNode* spot);
+  void visit(node::SpotLightNode* spot) override;
 
    /**
    * Visits a SunLightNode
@@ -127,7 +127,7 @@ class Serializer : public NodeVisitor {
    *
    * \param spot   Pointer to SunLightNode
    */
-  /* virtual */ void visit(SunLightNode* sun);
+  void visit(node::SunLightNode* sun) override;
 
   /**
    * Visits a RayNode
@@ -136,7 +136,7 @@ class Serializer : public NodeVisitor {
    *
    * \param spot   Pointer to RayNode
    */
-  /* virtual */ void visit(RayNode* ray);
+  void visit(node::RayNode* ray) override;
 
   /**
    * Visits a RigidBodyNode
@@ -145,7 +145,7 @@ class Serializer : public NodeVisitor {
    *
    * \param cam   Pointer to RigidBodyNode
    */
-  /* virtual */ void visit(physics::RigidBodyNode*) {}
+  /* virtual */ void visit(physics::RigidBodyNode* node) {}
 
   /**
    * Visits a CollisionShapeNode
@@ -163,13 +163,13 @@ class Serializer : public NodeVisitor {
    *
    * \param node  Pointer to TexturedQuadNode
    */
-  /* virtual */ void visit(TexturedQuadNode* node);
+  void visit(node::TexturedQuadNode* node) override;
 
  private:
 
-  bool is_visible(Node* node) const;
-  void add_bbox(Node* node) const;
-  void visit_children(Node* node);
+  bool is_visible(node::Node* node) const;
+  void add_bbox(node::Node* node) const;
+  void visit_children(node::Node* node);
 
   Frustum current_frustum_;
   Mask current_render_mask_;

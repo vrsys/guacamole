@@ -22,6 +22,8 @@
 #ifndef GUA_STRING_UTILS_HPP
 #define GUA_STRING_UTILS_HPP
 
+#include <gua/platform.hpp>
+
 #include <sstream>
 #include <vector>
 
@@ -41,17 +43,17 @@ template <typename T> inline T from_string(std::string const value) {
   return result;
 }
 
-std::vector<std::string> split(std::string const& s, char delim);
+GUA_DLL std::vector<std::string> split(std::string const& s, char delim);
 
-std::string& replace(std::string& str,
-                     std::string const& old_str,
-                     std::string const& new_str);
+GUA_DLL std::string& replace(std::string& str,
+                             std::string const& old_str,
+                             std::string const& new_str);
 
-std::string const format_code(std::string const& code);
+GUA_DLL std::string format_code(std::string const& code);
 
-std::string demangle_type_name(const char* name);
+GUA_DLL std::string demangle_type_name(const char* name);
 
-std::string sanitize(std::string const& str);
+GUA_DLL std::string sanitize(std::string const& str);
 
 }
 }

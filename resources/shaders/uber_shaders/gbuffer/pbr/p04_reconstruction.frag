@@ -24,6 +24,7 @@ uniform vec2  win_dims;
 
 layout(binding=0) uniform sampler2D p01_depth_texture;
 layout(binding=1) uniform sampler2D p02_color_texture;
+layout(binding=2) uniform sampler2D p02_normal_texture;
 
 
 
@@ -39,36 +40,18 @@ layout(binding=1) uniform sampler2D p02_color_texture;
 ///////////////////////////////////////////////////////////////////////////////
 void main() 
 {
-
   vec3  output_color  = vec3(1.0);
   float output_depth  = 1.0f;
-  vec3  output_normal = vec3(0.0);
+  vec3  output_normal = vec3(1.0);
 
   vec3 coords = vec3(gua_quad_coords, 0.0);
 
 
       
-  output_color = texture2D( p02_color_texture, coords.xy).rgb;
-
-
-
-/*
-      output_color = accumulated_color.rgb;// / accumulated_color.a;
-
-      //output_color = pow(output_color,vec3(1.4f));
-
-
-
-
-  //if ( using_default_pbr_material != 0 )
-
-
-
-*/
-
+        output_color = texture2D( p02_color_texture, coords.xy).rgb;
+        output_normal = texture2D( p02_normal_texture, coords.xy).rgb;
 
         float depthValue = texture2D( p01_depth_texture, coords.xy).r;
-
 
 	{
 
@@ -298,6 +281,7 @@ void main()
 						else
 						{
 							output_color = tempC;
+                                                        output_normal = texture2D(p02_normal_texture, (gl_FragCoord.xy + vec2(+1,-1) )/(win_dims.xy)).rgb;
                                                        // output_color = vec3(1.0,0.0,0.0);
 
                                                         gl_FragDepth = tempD;
@@ -324,11 +308,14 @@ void main()
                  
 
 		}
+                
 
                 
 	}
 
-
+  //gl_FragDepth = 0.5;
+  //output_color = vec3(1.0,0.0,0.0);
+  //output_color = texture2D( p02_color_texture, coords.xy).rgb;
 /////
   {
     @apply_pbr_color

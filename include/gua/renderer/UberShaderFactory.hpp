@@ -23,6 +23,7 @@
 #define GUA_UBER_SHADER_FACTORY_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/UberShader.hpp>
 
 // external headers
@@ -33,7 +34,7 @@ namespace gua {
 /**
  *
  */
-class UberShaderFactory {
+class GUA_DLL UberShaderFactory {
  public:
 
   /**

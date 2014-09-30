@@ -60,11 +60,11 @@ class GBufferPass : public GeometryPass {
   void create(
       RenderContext const& ctx,
       std::vector<std::pair<BufferComponent,
-                            scm::gl::sampler_state_desc> > const& layers);
+                        scm::gl::sampler_state_desc> > const& layers) override;
 
-  /*virtual*/ void cleanup(RenderContext const& ctx);
+  void cleanup(RenderContext const& ctx) override;
 
-  /*virtual*/ bool pre_compile_shaders(const gua::RenderContext &);
+  bool pre_compile_shaders(const gua::RenderContext &) override;
 
   void print_shaders(std::string const& directory,
                      std::string const& name) const override;

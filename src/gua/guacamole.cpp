@@ -25,10 +25,20 @@
 #include <gua/renderer/BuiltInTextures.hpp>
 #include <gua/databases/Resources.hpp>
 
+#ifdef GUACAMOLE_GLFW3
+#include <GLFW/glfw3.h>
+#endif
+
 namespace gua {
 
 void init(int argc, char** argv) {
   static scm::shared_ptr<scm::core> scm_core(new scm::core(argc, argv));
+
+#ifdef GUACAMOLE_GLFW3
+  if (!glfwInit()) {
+    Logger::LOG_ERROR << "Failed to initialize GLFW!" << std::endl;
+  }
+#endif
 
   create_resource_material("gua_bounding_box",
                             Resources::materials_gua_bounding_box_gsd,

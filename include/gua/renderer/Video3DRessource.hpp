@@ -81,7 +81,7 @@ class Video3DRessource : public GeometryRessource {
   *
   */
   void draw(RenderContext const& context) const;
-  
+
   /**
    * Raytest for Video3D
    *
@@ -89,7 +89,7 @@ class Video3DRessource : public GeometryRessource {
    *
    */
   void ray_test(Ray const& ray, PickResult::Options options,
-                Node* owner, std::set<PickResult>& hits) 
+                node::Node* owner, std::set<PickResult>& hits)
   {}
 
   unsigned                        number_of_cameras() const;
@@ -115,7 +115,7 @@ class Video3DRessource : public GeometryRessource {
   void upload_proxy_mesh(RenderContext const& context) const;
   void upload_video_textures(RenderContext const& context) const;
 
-  
+
   std::string                         ks_filename_;
   std::vector<std::shared_ptr<KinectCalibrationFile>> calib_files_;
   std::string                         server_endpoint_;

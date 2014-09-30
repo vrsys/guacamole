@@ -5,64 +5,68 @@
 ///////////////////////////////////////////////////////////////////////////////
 @include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
-                                      
-        // input attributes                          
-        layout (location = 0) in vec3  in_position;  
-        layout (location = 1) in uint  in_r;         
-        layout (location = 2) in uint  in_g;         
-        layout (location = 3) in uint  in_b;         
-        layout (location = 4) in uint empty;         
-        layout (location = 5) in float in_radius;    
-        layout (location = 6) in vec3 in_normal;     
+// input attributes
+layout (location = 0) in vec3  in_position;
+layout (location = 1) in float in_r;
+layout (location = 2) in float in_g;
+layout (location = 3) in float in_b;
+layout (location = 4) in float empty;
+layout (location = 5) in float in_radius;
+layout (location = 6) in vec3 in_normal;
+
+uniform uint gua_material_id;
+uniform float height_divided_by_top_minus_bottom;
+uniform float near_plane;
+uniform float far_minus_near_plane;
+uniform float radius_model_scaling;
+
+uniform mat4 transposed_inverse_model_matrix;
+
+//output to fragment shader
+out vec3 pass_point_color;
+out vec3 pass_normal;
+out vec3 pass_transposed_inverse_normal;
+out float pass_mv_vert_depth;
+out float pass_scaled_radius;
+out float pass_screen_space_splat_size;
+out float pass_view_scaling;
+
+void main() {
+
+  float scaled_radius = radius_model_scaling * in_radius;
+  mat4 model_view_matrix = gua_view_matrix * gua_model_matrix;
+  vec4 pos_es = model_view_matrix * vec4(in_position, 1.0);
+
+  vec4 pos_es_ub = model_view_matrix *
+                   vec4(in_position + vec3(0.0,  0.5 * in_radius, 0.0), 1.0);
+  vec4 pos_es_lb = model_view_matrix *
+                   vec4(in_position + vec3(0.0, -0.5 * in_radius, 0.0), 1.0);
+
+  float view_scaling = length(vec3(pos_es_ub) - vec3(pos_es_lb));
+  pass_view_scaling = view_scaling;
+
+  //gl_Position = gua_projection_matrix * pos_es;
+  //TODO: temp fix
+  gl_Position = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(in_position, 1.0);
+
+  float splat_size = 2.0 * scaled_radius * (near_plane/-pos_es.z) *
+                     height_divided_by_top_minus_bottom;
+
+  gl_PointSize = splat_size;
+
+  pass_point_color = vec3(in_r, in_g, in_b);
+  pass_normal = normalize(( gua_normal_matrix * vec4(in_normal, 0.0)).xyz);
+  pass_transposed_inverse_normal = normalize( transposed_inverse_model_matrix * vec4(in_normal, 0.0)).xyz;
+  pass_mv_vert_depth = pos_es.z;
+  pass_scaled_radius = scaled_radius;
+  pass_screen_space_splat_size = splat_size;
 
 
-        uniform uint gua_material_id;                                                     
+  gl_Position.z  =  - (  ( ( pos_es.z  + 2*scaled_radius+ ( 3.0 * scaled_radius  ) )  - near_plane) / (far_minus_near_plane * 1.0f));
+                 
+  gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
 
-        uniform float height_divided_by_top_minus_bottom;
-        uniform float near_plane;         
-        
-        uniform float radius_model_scaling;    
+  gl_Position.z *= gl_Position.w;
 
- 
-        //output to fragment shader                                             
-        out vec3 pass_point_color;
-        out vec3 pass_normal;
-        out float pass_mv_vert_depth;
-        out float pass_scaled_radius;     
-        out float pass_screen_space_splat_size;
-        out float pass_view_scaling;
-                                                     
-                                                     
-        void main()                                  
-        {                   
-                      
+}
 
-          float scaled_radius = radius_model_scaling * in_radius;
-
-          mat4 model_view_matrix = gua_view_matrix * gua_model_matrix;
-
-          vec4 pos_es = model_view_matrix * vec4(in_position, 1.0);
-
-          vec4 pos_es_ub = model_view_matrix * vec4(in_position + vec3(0.0,  0.5  * in_radius, 0.0), 1.0);
-          vec4 pos_es_lb = model_view_matrix * vec4(in_position + vec3(0.0, -0.5  * in_radius, 0.0), 1.0);
-
-          float view_scaling = length(vec3(pos_es_ub) - vec3(pos_es_lb));
-          pass_view_scaling = view_scaling;
-
-          gl_Position = gua_projection_matrix * pos_es;  
-          
-          float splat_size = 2.0f * scaled_radius * (near_plane/-pos_es.z)* height_divided_by_top_minus_bottom;
-
-          gl_PointSize = splat_size;
-
-                    
-          pass_point_color = vec3((in_r)/255.0f,     
-                             (in_g)/255.0f,     
-                             (in_b)/255.0f);
-
-          pass_normal = normalize(( gua_normal_matrix * vec4(in_normal, 0.0)).xyz);   
-          pass_mv_vert_depth = pos_es.z;
-          pass_scaled_radius = scaled_radius;
-
-          pass_screen_space_splat_size = splat_size ;
-        }                                          

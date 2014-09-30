@@ -23,6 +23,7 @@
 #define GUA_UNIFORM_MAPPING_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/ShadingModel.hpp>
 
 // external headers
@@ -34,7 +35,7 @@ namespace gua {
  * Maps stuff like
  *        Red/shinyness -> gua_floats[7], passed as std::pair("gua_floats", 7)
  */
-class UniformMapping {
+class GUA_DLL UniformMapping {
  public:
 
   /**
@@ -54,7 +55,7 @@ class UniformMapping {
       std::string const& material,
       std::string const& uniform) const;
 
-  std::string const get_uniform_definition() const;
+  std::string get_uniform_definition() const;
 
   /**
    *

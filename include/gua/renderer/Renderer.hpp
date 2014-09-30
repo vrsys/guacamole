@@ -73,6 +73,8 @@ class GUA_DLL Renderer {
    */
   void queue_draw(std::vector<SceneGraph const*> const& scene_graphs);
 
+  void stop();
+
  private:
 
   typedef std::pair<ConstRenderVectorPtr, float> Item;
@@ -83,6 +85,7 @@ class GUA_DLL Renderer {
 
   std::vector<Renderclient> render_clients_;
   FpsCounter application_fps_;
+  bool stop_requested_;
 };
 
 }

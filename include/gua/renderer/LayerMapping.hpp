@@ -23,6 +23,7 @@
 #define GUA_LAYER_MAPPING_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/ShadingModel.hpp>
 
 // external headers
@@ -45,7 +46,7 @@ namespace gua {
  *
  *
  */
-class LayerMapping {
+class GUA_DLL LayerMapping {
  public:
 
   /**
@@ -66,7 +67,7 @@ class LayerMapping {
   /**
    * eg: SimplePhong/normal -> gua_float_gbuffer_out_0.xyz
    */
-  std::string const get_output_string(std::string const& shading_model_name,
+  std::string get_output_string(std::string const& shading_model_name,
                                       std::string const& output_name) const;
 
   /**
@@ -74,23 +75,23 @@ class LayerMapping {
    * texture2D(gua_get_float_sampler(gua_float_gbuffer_in[1]),
    * gua_get_quad_coords()).xyz
    */
-  std::string const get_input_string(std::string const& shading_model_name,
+  std::string get_input_string(std::string const& shading_model_name,
                                      std::string const& input_name,
                                      ShadingModel::StageID from_stage) const;
 
   /**
    *
    */
-  std::string const get_gbuffer_input_definition(
+  std::string get_gbuffer_input_definition(
       ShadingModel::StageID from_stage) const;
-  std::string const get_gbuffer_output_definition(bool as_input,
+  std::string get_gbuffer_output_definition(bool as_input,
                                                   bool as_varying) const;
 
   std::vector<std::pair<BufferComponent,
-                        scm::gl::sampler_state_desc> > const get_layers(
+                        scm::gl::sampler_state_desc> > get_layers(
       BufferComponentType type) const;
   std::vector<std::pair<BufferComponent,
-                        scm::gl::sampler_state_desc> > const get_layers() const;
+                        scm::gl::sampler_state_desc> > get_layers() const;
 
   ShadingModel::StageID get_stage() const;
 
