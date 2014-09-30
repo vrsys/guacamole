@@ -26,7 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
-#include <gua/renderer/Material.hpp>
+#include <gua/renderer/MaterialShader.hpp>
 
 namespace gua {
 
@@ -38,7 +38,7 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-class GUA_DLL MaterialDatabase : public Database<Material>,
+class GUA_DLL MaterialDatabase : public Database<MaterialShader>,
                                  public Singleton<MaterialDatabase> {
  public:
 
@@ -53,7 +53,7 @@ class GUA_DLL MaterialDatabase : public Database<Material>,
    *                     directory containing gmd files.
    */
 
-  void add(std::shared_ptr<Material> const& material);
+  void add(std::shared_ptr<MaterialShader> const& material);
 
   void reload_all();
 

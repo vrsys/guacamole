@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
   gua::MaterialDescription desc;
   desc.load_from_file("data/materials/SimpleMaterial.gmd");
 
-  auto mat(std::make_shared<gua::Material>("simple_mat", desc));
+  auto mat(std::make_shared<gua::MaterialShader>("simple_mat", desc));
   gua::MaterialDatabase::instance()->add(mat);
 
   gua::TriMeshLoader loader;

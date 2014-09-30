@@ -27,7 +27,7 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/node/Node.hpp>
-#include <gua/renderer/Material.hpp>
+#include <gua/renderer/MaterialShader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/databases/MaterialDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
@@ -295,7 +295,7 @@ MaterialInstance& MaterialLoader::get_material_instance(unsigned capabilities) c
     add_property(capabilities & SPECULAR_MAP,  capabilities & SPECULAR_COLOR,  "specularity",  0.5f);
     add_property(capabilities & EMIT_MAP,      capabilities & EMIT_COLOR,      "emissivity",   0.0f);
 
-    MaterialDatabase::instance()->add(std::make_shared<Material>(material_name, description));
+    MaterialDatabase::instance()->add(std::make_shared<MaterialShader>(material_name, description));
   }
 
   return MaterialDatabase::instance()->lookup(material_name)->get_default_instance();
