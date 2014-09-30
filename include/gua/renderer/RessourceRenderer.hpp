@@ -33,10 +33,7 @@ class Pipeline;
 class GUA_DLL RessourceRenderer {
  public:
 
-   virtual void draw(std::shared_ptr<GeometryResource> const& object,
-                     std::shared_ptr<Material> const& material,
-                     MaterialInstance const& material_overwrite,
-                     math::mat4 const& transformation,
+   virtual void draw(std::unordered_map<std::string, std::vector<node::GeometryNode*>> const& sorted_objects,
                      Pipeline* pipe) const = 0;
 
 };

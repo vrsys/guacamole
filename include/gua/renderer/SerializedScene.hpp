@@ -58,7 +58,7 @@ struct SerializedScene {
   /**
   * All geometry nodes.
   */
-  std::unordered_map<std::type_index, std::unordered_multimap<std::string, node::GeometryNode*>> geometrynodes_;
+  std::unordered_map<std::type_index, std::unordered_map<std::string, std::vector<node::GeometryNode*>>> geometrynodes_;
 
   /**
   * All Volume nodes.

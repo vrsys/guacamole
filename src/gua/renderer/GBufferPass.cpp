@@ -24,9 +24,8 @@
 
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
 
 namespace gua {
 
@@ -38,29 +37,11 @@ void GBufferPass::process(Pipeline* pipe) {
 
   for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
     auto const& ressources = type_ressource_pair.second;
-    std::shared_ptr<RessourceRenderer> renderer;
 
-    for (auto const& object : ressources) {
-
-      auto const& ressource = GeometryDatabase::instance()->lookup(object.second->get_filename());
-      if (ressource) {
-
-        auto const& material = MaterialDatabase::instance()->lookup(object.second->get_material().get_material_name());
-        if (material) {
-
-          if (!renderer) {
-            renderer = pipe->get_renderer(*ressource);
-          }
-
-          renderer->draw(ressource, material, object.second->get_material(), object.second->get_cached_world_transform(), pipe);
-
-        } else {
-          Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object.second->get_material().get_material_name() << std::endl;
-        }
-
-      } else {
-        Logger::LOG_WARNING << "GBufferPass::process(): Cannot find geometry ressource: " << object.second->get_filename() << std::endl;
-      }
+    if (ressources.size() > 0 && ressources.begin()->second.size() > 0) {
+      auto const& ressource = GeometryDatabase::instance()->lookup(ressources.begin()->second[0]->get_filename());
+      auto const& renderer = pipe->get_renderer(*ressource);
+      renderer->draw(ressources, pipe);
     }
   }
 

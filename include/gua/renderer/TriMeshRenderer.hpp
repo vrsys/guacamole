@@ -36,16 +36,14 @@ class GUA_DLL TriMeshRenderer : public RessourceRenderer {
 
   TriMeshRenderer();
 
-  void draw(std::shared_ptr<GeometryResource> const& object,
-            std::shared_ptr<Material> const& material,
-            MaterialInstance const& material_overwrite,
-            math::mat4 const& transformation,
+  void draw(std::unordered_map<std::string, std::vector<node::GeometryNode*>> const& sorted_objects,
             Pipeline* pipe) const;
 
  private:
   std::string vertex_shader_;
   std::string fragment_shader_;
 
+  mutable scm::gl::buffer_ptr material_uniform_storage_buffer_;
 };
 
 }

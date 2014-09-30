@@ -88,14 +88,14 @@ ShaderProgram* Material::get_shader(GeometryResource const& for_type,
 
     auto new_shader = new ShaderProgram();
 
-    // std::cout << "VERTEX SHADER " << std::endl;
-    // std::cout << "################################# " << std::endl << std::endl;
     auto v_shader(compile_description(v_passes, geometry_v_shader));
-
-    // std::cout << std::endl << "FRAGMENT SHADER " << std::endl;
-    // std::cout << "################################# " << std::endl << std::endl;
-
     auto f_shader(compile_description(f_passes, geometry_f_shader));
+
+    std::cout << "###############################################" << std::endl;
+    std::cout << "###############################################" << std::endl;
+    std::cout << "###############################################" << std::endl;
+    std::cout << v_shader << std::endl;
+    std::cout << f_shader << std::endl;
 
     new_shader->create_from_sources(v_shader, f_shader);
 
@@ -111,9 +111,9 @@ void Material::apply_uniforms(RenderContext const& ctx,
                               MaterialInstance const& overwrite) const {
 
 
-  for (auto const& uniform : default_instance_.get_uniforms()) {
-    shader->apply_uniform(ctx, uniform);
-  }
+  // for (auto const& uniform : default_instance_.get_uniforms()) {
+  //   shader->apply_uniform(ctx, uniform);
+  // }
 
   for (auto const& uniform : overwrite.get_uniforms()) {
     shader->apply_uniform(ctx, uniform);
@@ -132,42 +132,78 @@ void Material::print_shaders() const {
 std::string Material::compile_description(std::list<MaterialPass> const& passes,
                                           std::string const& shader_source) const {
   std::string source(shader_source);
-  std::stringstream uniforms;
+  std::stringstream sstr;
 
-  std::unordered_map<std::string, UniformValue const*> pass_uniforms;
+  /*
+  sstr << "struct GuaObjectDataStruct {" << std::endl;
+  sstr << "  mat4 gua_model_matrix;" << std::endl;
+  sstr << "  mat4 gua_normal_matrix;" << std::endl;
 
-  // collect uniforms from all passes
-  for (auto const& pass: passes) {
-    for (auto const& uniform: pass.get_uniforms()) {
-      pass_uniforms[uniform.get_name()] = &uniform;
-    }
+  for (auto const& uniform: get_default_instance().get_uniforms()) {
+    sstr << uniform.get_glsl_type() << " "
+           << uniform.get_name() << ";" << std::endl;
   }
+  sstr << "};" << std::endl;
+  sstr << std::endl;
+  sstr << "layout (std430, binding=0) buffer ObjectDataSSBO {" << std::endl;
+  sstr << "  GuaObjectDataStruct gua_object_data[1000];" << std::endl;
+  sstr << "};" << std::endl;
+  sstr << std::endl;
+  sstr << "uniform int gua_draw_index;" << std::endl;
+  sstr << std::endl;
+  sstr << "mat4 gua_model_matrix;" << std::endl;
+  sstr << "mat4 gua_normal_matrix;" << std::endl;
 
-  for (auto const& uniform: pass_uniforms) {
-    uniforms << "uniform "
-           << uniform.second->get_glsl_type() << " "
-           << uniform.first << ";"
-           << std::endl;
+  for (auto const& uniform: get_default_instance().get_uniforms()) {
+    sstr << uniform.get_glsl_type() << " " << uniform.get_name() + ";" << std::endl;
   }
 
   // insert uniforms
-  gua::string_utils::replace(source, "@material_uniforms", uniforms.str());
+  gua::string_utils::replace(source, "@material_uniforms", sstr.str());
+  sstr.str("");
 
-
-  std::stringstream method_declarations;
-  std::stringstream method_calls;
-
-  // pass sources ----------------------------------------------------------
-  for (auto& pass: passes) {
-    method_declarations << pass.get_source() << std::endl;
-    method_calls << pass.get_name() << "();" << std::endl;
+  // global variable assignment ------------------------------------------------
+  sstr << "gua_model_matrix = gua_object_data[gua_draw_index].gua_model_matrix;" << std::endl;
+  sstr << "gua_normal_matrix = gua_object_data[gua_draw_index].gua_normal_matrix;" << std::endl;
+  for (auto const& uniform: get_default_instance().get_uniforms()) {
+    sstr << uniform.get_name() << " = gua_object_data[gua_draw_index]." << uniform.get_name() + ";" << std::endl;
   }
-  gua::string_utils::replace(source, "@material_method_declarations", method_declarations.str());
-  gua::string_utils::replace(source, "@material_method_calls", method_calls.str());
+  gua::string_utils::replace(source, "@material_input", sstr.str());
+  sstr.str("");
+  */
 
+  ///*
+  sstr << "uniform mat4 gua_model_matrix;" << std::endl;
+  sstr << "uniform mat4 gua_normal_matrix;" << std::endl;
 
-  // std::cout << string_utils::format_code(source) << std::endl;
-  // indent and return code ------------------------------------------------
+  for (auto const& uniform: get_default_instance().get_uniforms()) {
+    sstr << "uniform " << uniform.get_glsl_type() << " "
+           << uniform.get_name() << ";" << std::endl;
+  }
+  sstr << std::endl;
+
+  // insert uniforms
+  gua::string_utils::replace(source, "@material_uniforms", sstr.str());
+  sstr.str("");
+
+  // global variable assignment ------------------------------------------------
+  gua::string_utils::replace(source, "@material_input", "");
+  //*/
+
+  // material methods ----------------------------------------------------------
+  for (auto& pass: passes) {
+    sstr << pass.get_source() << std::endl;
+  }
+  gua::string_utils::replace(source, "@material_method_declarations", sstr.str());
+  sstr.str("");
+
+  // material method calls -----------------------------------------------------
+  for (auto& pass: passes) {
+    sstr << pass.get_name() << "();" << std::endl;
+  }
+  gua::string_utils::replace(source, "@material_method_calls", sstr.str());
+
+  // indent and return code ----------------------------------------------------
   return string_utils::format_code(source);
 }
 

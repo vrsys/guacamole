@@ -34,7 +34,9 @@ in mat4  gua_lightinfo7;
 
 // uniforms
 @include "shaders/common/gua_camera_uniforms.glsl"
-@include "shaders/common/gua_object_uniforms.glsl"
+
+uniform mat4 gua_model_matrix;
+uniform mat4 gua_normal_matrix;
 
 uniform mat4 gua_light_shadow_map_projection_view_matrix_0;
 uniform mat4 gua_light_shadow_map_projection_view_matrix_1;
