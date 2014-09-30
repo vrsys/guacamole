@@ -5,7 +5,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
 list(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
 
-link_directories(${LIB_PATHS})
+link_directories(${LIB_PATHS} ${ASSIMP_LIBRARY_DIR})
 
 include_directories( ${INCLUDE_PATHS} 
                      ${PROJECT_SOURCE_DIR}/include
@@ -18,7 +18,15 @@ add_dependencies(${_EXE_NAME} guacamole guacamole-nurbs)
 
 list(APPEND LIBS guacamole)
 
-target_link_libraries( ${_EXE_NAME} ${LIBS} guacamole-nurbs)
+IF (MSVC)
+  target_link_libraries( ${_EXE_NAME} 
+                         debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE} 
+                         general guacamole-nurbs)
+ELSEIF (UNIX)
+  target_link_libraries( ${_EXE_NAME} 
+                         general ${ASSIMP_LIBRARIES} 
+                         general guacamole-nurbs )
+ENDIF (MSVC)
 
 # copy runtime libraries as a post-build process
 if (MSVC)

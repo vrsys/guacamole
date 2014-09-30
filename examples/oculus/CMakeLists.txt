@@ -12,7 +12,7 @@ LINK_DIRECTORIES(${LIB_PATHS})
 
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS} 
                      ${GUACAMOLE_SOURCE_DIR}/include
-                     ${OVR_INCLUDE_DIRS} 
+                     ${OVR_INCLUDE_DIR} 
                      ${GUACAMOLE_OCULUS_INCLUDE_DIR}
 )
 
@@ -24,7 +24,15 @@ ADD_DEPENDENCIES(${_EXE_NAME} guacamole-oculus)
 
 LIST(APPEND LIBS guacamole-oculus guacamole ${OVR_LIBRARIES})
 
-TARGET_LINK_LIBRARIES( ${_EXE_NAME} debug ${LIBS} optimized ${LIBS})
+IF (MSVC)
+  TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
+                         debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
+ELSEIF (UNIX)
+  TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS} 
+			 general ${OVR_LIBRARY}
+                         general ${ASSIMP_LIBRARIES}
+                       )
+ENDIF (MSVC)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

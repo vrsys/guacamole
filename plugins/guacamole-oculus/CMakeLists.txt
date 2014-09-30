@@ -35,4 +35,5 @@ ELSEIF (MSVC)
 ENDIF(UNIX)
 
 find_package (Threads)
+
 target_link_libraries( guacamole-oculus debug ${LIBS} ${CMAKE_THREAD_LIBS_INIT} optimized ${LIBS} ${CMAKE_THREAD_LIBS_INIT})

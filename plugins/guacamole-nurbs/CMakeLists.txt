@@ -2,7 +2,7 @@
 # additional dependencies
 ###############################################################################
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-include(findGPUcast)
+include(FindGPUcast)
 
 ###############################################################################
 # determine source files
@@ -68,7 +68,7 @@ IF (MSVC)
   target_link_libraries( guacamole-nurbs guacamole optimized ${GPUCAST_LIBRARY_RELEASE})
   target_link_libraries( guacamole-nurbs guacamole debug ${GPUCAST_LIBRARY_DEBUG})
 ELSEIF (UNIX)
-  target_link_libraries( guacamole-nurbs guacamole )
+  target_link_libraries( guacamole-nurbs guacamole ${GPUCAST_LIBRARY})
 ENDIF (MSVC)
 
 ###############################################################################
