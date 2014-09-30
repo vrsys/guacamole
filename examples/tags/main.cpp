@@ -72,7 +72,12 @@ int main(int argc, char** argv) {
 
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
-  // pipe->config.set_enable_fps_display(true);
+  pipe->config.set_resolution(gua::math::vec2ui(1920, 1080));
+
+  pipe->add_pass<gua::GeometryPass>();
+  pipe->add_pass<gua::LightingPass>();
+  pipe->add_pass<gua::BackgroundPass>();
+  // pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
 
   auto window(new gua::GlfwWindow());
   // pipe->set_window(window);
