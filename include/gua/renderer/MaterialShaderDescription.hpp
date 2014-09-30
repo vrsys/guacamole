@@ -22,7 +22,7 @@
 #ifndef GUA_MATERIAL_SHADER_DESCRIPTION_HPP
 #define GUA_MATERIAL_SHADER_DESCRIPTION_HPP
 
-#include <gua/renderer/MaterialPass.hpp>
+#include <gua/renderer/MaterialShaderMethod.hpp>
 
 #include <list>
 
@@ -33,17 +33,15 @@ class MaterialShaderDescription {
 
   void load_from_file(std::string const& file_name);
 
-  MaterialShaderDescription& add_vertex_pass(MaterialPass const& pass);
+  MaterialShaderDescription& add_vertex_method(MaterialShaderMethod const& method);
+  MaterialShaderDescription& add_fragment_method(MaterialShaderMethod const& method);
 
-  MaterialShaderDescription& add_fragment_pass(MaterialPass const& pass);
-
-  std::list<MaterialPass> const& get_vertex_passes() const;
-
-  std::list<MaterialPass> const& get_fragment_passes() const;
+  std::list<MaterialShaderMethod> const& get_vertex_methods() const;
+  std::list<MaterialShaderMethod> const& get_fragment_methods() const;
 
  private:
-  std::list<MaterialPass> vertex_passes_;
-  std::list<MaterialPass> fragment_passes_;
+  std::list<MaterialShaderMethod> vertex_methods_;
+  std::list<MaterialShaderMethod> fragment_methods_;
 
 
 };
