@@ -45,6 +45,8 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
+#define COUNT 6
+
 int main(int argc, char** argv) {
 
   // initialize guacamole

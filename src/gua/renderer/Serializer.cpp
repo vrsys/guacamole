@@ -157,7 +157,7 @@ void Serializer::check(SerializedScene& output,
   if (is_visible(node)) {
     add_bbox(node);
 
-    data_->geometrynodes_[std::type_index(typeid(*node))].insert(std::make_pair(node->get_material().get_material_name(), node));
+    data_->geometrynodes_[std::type_index(typeid(*node))][node->get_material().get_material_name()].push_back(node);
 
     visit_children(node);
   }

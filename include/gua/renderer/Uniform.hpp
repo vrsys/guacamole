@@ -80,16 +80,17 @@ class UniformValue {
     UniformValue(std::string const& name, T const& val) :
       name_(name),
       apply_impl_(apply<T>), 
-      get_glsl_type_impl_(get_glsl_type_impl<T>) { set(val); }
+      get_glsl_type_impl_(get_glsl_type_impl<T>),
+      write_bytes_impl_(write_bytes_impl<T>) { set(val); }
 
     // -------------------------------------------------------------------------
-    static UniformValue create_from_string_and_type(std::string const& name,
-                                                    std::string const& value,
-                                                    UniformType const& ty);
+    static UniformValue create_from_string_and_type(
+      std::string const& name, std::string const& value, UniformType const& ty
+    );
 
-    static UniformValue create_from_strings(std::string const& name,
-                                            std::string const& value,
-                                            std::string const& ty);
+    static UniformValue create_from_strings(
+      std::string const& name, std::string const& value, std::string const& ty
+    );
 
     // -------------------------------------------------------------------------
     void apply(RenderContext const& ctx, scm::gl::program_ptr const& prog,
@@ -99,9 +100,12 @@ class UniformValue {
 
     std::string const& get_name() const { return name_; }
     
-
     std::string get_glsl_type() const {
       return get_glsl_type_impl_();
+    }
+
+    unsigned write_bytes(RenderContext const& ctx, char* target) const {
+      return write_bytes_impl_(this, ctx, target);
     }
 
   private:
@@ -129,11 +133,15 @@ class UniformValue {
     template<typename T>
     static std::string get_glsl_type_impl();
 
+    template<typename T>
+    static unsigned write_bytes_impl(UniformValue const* self, RenderContext const& ctx, char* target);
+
     std::string name_;
 
     Data val_;
-    std::function<void(UniformValue const*, RenderContext const& ctx, scm::gl::program_ptr const&, unsigned location)> apply_impl_;
+    std::function<void(UniformValue const*, RenderContext const&, scm::gl::program_ptr const&, unsigned)> apply_impl_;
     std::function<std::string()> get_glsl_type_impl_;
+    std::function<unsigned(UniformValue const*, RenderContext const&, char*)> write_bytes_impl_;
 };
 
 }
