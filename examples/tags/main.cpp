@@ -34,7 +34,6 @@ int main(int argc, char** argv) {
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::Material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/", teapot);
 
-
   teapot->get_tags().add_tags({"red"});
 
   auto teapot1(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::Material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));

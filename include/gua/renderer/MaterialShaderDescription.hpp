@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MATERIAL_DESCRIPTION_HPP
-#define GUA_MATERIAL_DESCRIPTION_HPP
+#ifndef GUA_MATERIAL_SHADER_DESCRIPTION_HPP
+#define GUA_MATERIAL_SHADER_DESCRIPTION_HPP
 
 #include <gua/renderer/MaterialPass.hpp>
 
@@ -28,14 +28,14 @@
 
 namespace gua {
 
-class MaterialDescription {
+class MaterialShaderDescription {
  public:
 
   void load_from_file(std::string const& file_name);
 
-  MaterialDescription& add_vertex_pass(MaterialPass const& pass);
+  MaterialShaderDescription& add_vertex_pass(MaterialPass const& pass);
 
-  MaterialDescription& add_fragment_pass(MaterialPass const& pass);
+  MaterialShaderDescription& add_fragment_pass(MaterialPass const& pass);
 
   std::list<MaterialPass> const& get_vertex_passes() const;
 
@@ -50,4 +50,4 @@ class MaterialDescription {
 
 }
 
-#endif  // GUA_MATERIAL_DESCRIPTION_HPP
+#endif  // GUA_MATERIAL_SHADER_DESCRIPTION_HPP

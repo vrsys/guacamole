@@ -100,7 +100,7 @@ void create_resource_material(std::string const& material_name,
   ShadingModelDatabase::instance()->add(material_name,
                                         shading_model);
 
-  // MaterialDescription material_description(
+  // MaterialShaderDescription material_description(
   //                      Resources::lookup_string(material_resource).c_str(),
   //                      material_resource.size());
 

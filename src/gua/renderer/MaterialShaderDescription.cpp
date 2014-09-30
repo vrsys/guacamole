@@ -19,7 +19,7 @@
  *                                                                            *
  ******************************************************************************/
 
-#include <gua/renderer/MaterialDescription.hpp>
+#include <gua/renderer/MaterialShaderDescription.hpp>
 
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Logger.hpp>
@@ -30,7 +30,7 @@
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-void MaterialDescription::load_from_file(std::string const& file_name) {
+void MaterialShaderDescription::load_from_file(std::string const& file_name) {
   if (file_name != "") {
     TextFile file(file_name);
 
@@ -91,24 +91,24 @@ void MaterialDescription::load_from_file(std::string const& file_name) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialDescription& MaterialDescription::add_vertex_pass(MaterialPass const& pass) {
+MaterialShaderDescription& MaterialShaderDescription::add_vertex_pass(MaterialPass const& pass) {
   vertex_passes_.push_back(pass);
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialDescription& MaterialDescription::add_fragment_pass(MaterialPass const& pass) {
+MaterialShaderDescription& MaterialShaderDescription::add_fragment_pass(MaterialPass const& pass) {
   fragment_passes_.push_back(pass);
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<MaterialPass> const& MaterialDescription::get_vertex_passes() const {
+std::list<MaterialPass> const& MaterialShaderDescription::get_vertex_passes() const {
   return vertex_passes_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<MaterialPass> const& MaterialDescription::get_fragment_passes() const {
+std::list<MaterialPass> const& MaterialShaderDescription::get_fragment_passes() const {
   return fragment_passes_;
 }
 

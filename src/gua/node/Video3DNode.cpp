@@ -113,7 +113,7 @@ namespace node {
 
             material_ != Video3DUberShader::default_video_material_name() )
         {
-          auto mat = std::make_shared<Material>(material_, MaterialDescription(material_));
+          auto mat = std::make_shared<Material>(material_, MaterialShaderDescription(material_));
           MaterialShaderDatabase::instance()->add(material_, mat);
         }
       }

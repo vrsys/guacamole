@@ -234,7 +234,7 @@ Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
   }
 
   if (!MaterialShaderDatabase::instance()->is_supported(material_name)) {
-    MaterialDescription description;
+    MaterialShaderDescription description;
 
     if (capabilities & OPACITY_MAP) {
       description.add_fragment_pass(MaterialPass("opacity_pass").set_source(R"(
