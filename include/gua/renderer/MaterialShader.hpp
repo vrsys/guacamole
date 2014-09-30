@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MATERIAL_HPP
-#define GUA_MATERIAL_HPP
+#ifndef GUA_MATERIAL_SHADER_HPP
+#define GUA_MATERIAL_SHADER_HPP
 
 #include <gua/renderer/MaterialDescription.hpp>
 #include <gua/renderer/MaterialInstance.hpp>
@@ -34,10 +34,10 @@
 
 namespace gua {
 
-class Material {
+class MaterialShader {
  public:
 
-  Material(std::string const& name, MaterialDescription const& desc);
+  MaterialShader(std::string const& name, MaterialDescription const& desc);
 
   MaterialDescription const& get_description() const;
 
@@ -71,4 +71,4 @@ class Material {
 
 }
 
-#endif  // GUA_MATERIAL_HPP
+#endif  // GUA_MATERIAL_SHADER_HPP

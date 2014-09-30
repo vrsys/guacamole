@@ -24,7 +24,6 @@
 
 // guacamole_headers
 #include <gua/renderer/GeometryResource.hpp>
-#include <gua/renderer/Material.hpp>
 
 namespace gua {
 

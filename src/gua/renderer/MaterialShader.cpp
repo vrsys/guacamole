@@ -19,14 +19,14 @@
  *                                                                            *
  ******************************************************************************/
 
-#include <gua/renderer/Material.hpp>
+#include <gua/renderer/MaterialShader.hpp>
 
 #include <gua/utils/string_utils.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-Material::Material(std::string const& name, MaterialDescription const& desc)
+MaterialShader::MaterialShader(std::string const& name, MaterialDescription const& desc)
   : desc_(desc),
     default_instance_(name)
 {
@@ -47,32 +47,32 @@ Material::Material(std::string const& name, MaterialDescription const& desc)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialDescription const& Material::get_description() const {
+MaterialDescription const& MaterialShader::get_description() const {
   return desc_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& Material::get_name() const {
+std::string const& MaterialShader::get_name() const {
   return default_instance_.get_material_name();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialInstance const Material::get_new_instance() const {
+MaterialInstance const MaterialShader::get_new_instance() const {
   return MaterialInstance(default_instance_.get_material_name());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialInstance const& Material::get_default_instance() const {
+MaterialInstance const& MaterialShader::get_default_instance() const {
   return default_instance_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialInstance& Material::get_default_instance() {
+MaterialInstance& MaterialShader::get_default_instance() {
   return default_instance_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ShaderProgram* Material::get_shader(GeometryResource const& for_type,
+ShaderProgram* MaterialShader::get_shader(GeometryResource const& for_type,
                                     std::string const& geometry_v_shader,
                                     std::string const& geometry_f_shader) {
 
@@ -106,7 +106,7 @@ ShaderProgram* Material::get_shader(GeometryResource const& for_type,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Material::apply_uniforms(RenderContext const& ctx,
+void MaterialShader::apply_uniforms(RenderContext const& ctx,
                               ShaderProgram* shader,
                               MaterialInstance const& overwrite) const {
 
@@ -122,14 +122,14 @@ void Material::apply_uniforms(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Material::print_shaders() const {
+void MaterialShader::print_shaders() const {
   // for (auto shader: shaders_) {
   //   shader.second->print_shaders();
   // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string Material::compile_description(std::list<MaterialPass> const& passes,
+std::string MaterialShader::compile_description(std::list<MaterialPass> const& passes,
                                           std::string const& shader_source) const {
   std::string source(shader_source);
   std::stringstream sstr;

@@ -55,6 +55,12 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
+  gua::MaterialDescription desc;
+  desc.load_from_file("data/materials/SimpleMaterial.gmd");
+
+  auto mat(std::make_shared<gua::MaterialShader>("simple_mat", desc));
+  gua::MaterialDatabase::instance()->add(mat);
+
   gua::TriMeshLoader loader;
 
   // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat->get_default_instance(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
