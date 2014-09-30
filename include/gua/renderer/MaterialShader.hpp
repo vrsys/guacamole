@@ -59,7 +59,7 @@ class MaterialShader {
 
  private:
 
-  std::string compile_description(std::list<MaterialPass> const& passes,
+  std::string compile_description(std::list<MaterialShaderMethod> const& passes,
                                   std::string const& shader_source) const;
 
   MaterialShaderDescription desc_;

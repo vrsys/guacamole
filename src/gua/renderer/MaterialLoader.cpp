@@ -227,8 +227,8 @@ Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
     MaterialShaderDescription description;
 
     if (capabilities & OPACITY_MAP) {
-      description.add_fragment_pass(MaterialPass("opacity_pass").set_source(R"(
-        void opacity_pass() {
+      description.add_fragment_method(MaterialShaderMethod("opacity_method").set_source(R"(
+        void opacity_method() {
           if (texture2D(sampler2D(opacity_map), gua_texcoords).r < 0.5) {
             discard;
           } 
@@ -237,8 +237,8 @@ Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
     }
 
     if (capabilities & NORMAL_MAP) {
-      description.add_fragment_pass(MaterialPass("normal_mapping_pass").set_source(R"(
-        void normal_mapping_pass() {
+      description.add_fragment_method(MaterialShaderMethod("normal_mapping_method").set_source(R"(
+        void normal_mapping_method() {
           vec3 ts_normal = normalize(texture2D(sampler2D(normal_map), gua_texcoords).rgb * 2.0 - 1.0);
           gua_normal     = normalize(gua_varying_tangent * ts_normal.x 
                                  + gua_varying_bitangent * ts_normal.y 
@@ -248,8 +248,8 @@ Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
     }
 
     if (capabilities & DIFFUSE_MAP) {
-      description.add_fragment_pass(MaterialPass("diffuse_pass").set_source(R"(
-        void diffuse_pass() {
+      description.add_fragment_method(MaterialShaderMethod("diffuse_method").set_source(R"(
+        void diffuse_method() {
           vec4 color = texture2D(sampler2D(diffuse_map), gua_texcoords);
           if (color.a < 0.5) {
             discard;
@@ -259,8 +259,8 @@ Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
         }
       )").set_uniform("diffuse_map", std::string("gua_default_texture")));
     } else if (capabilities & DIFFUSE_COLOR) {
-      description.add_fragment_pass(MaterialPass("diffuse_pass").set_source(R"(
-        void diffuse_pass() {
+      description.add_fragment_method(MaterialShaderMethod("diffuse_method").set_source(R"(
+        void diffuse_method() {
           gua_color = diffuse_color; 
         }
       )").set_uniform("diffuse_color", math::vec3(1, 1, 1)));
@@ -271,20 +271,20 @@ Material& MaterialLoader::get_material_instance(unsigned capabilities) const {
                             std::string const & name, 
                             float default_val) {
       if (as_texture) {
-        description.add_fragment_pass(MaterialPass(name + "_pass").set_source(R"(
-          void )" + name + R"(_pass() {
+        description.add_fragment_method(MaterialShaderMethod(name + "_method").set_source(R"(
+          void )" + name + R"(_method() {
             gua_)" + name + R"( = texture2D(sampler2D()" + name + R"(_map), gua_texcoords).r;
           }
         )").set_uniform(name + "_map", std::string("gua_default_texture")));
       } else if (as_color) {
-        description.add_fragment_pass(MaterialPass(name + "_pass").set_source(R"(
-          void )" + name + R"(_pass() {
+        description.add_fragment_method(MaterialShaderMethod(name + "_method").set_source(R"(
+          void )" + name + R"(_method() {
             gua_)" + name + R"( = )" + name + R"(;
           }
         )").set_uniform(name, default_val));
       } else {
-         description.add_fragment_pass(MaterialPass(name + "_pass").set_source(R"(
-          void )" + name + R"(_pass() {
+         description.add_fragment_method(MaterialShaderMethod(name + "_method").set_source(R"(
+          void )" + name + R"(_method() {
             gua_)" + name + R"( = )" + std::to_string(default_val) + R"(;
           }
         )"));

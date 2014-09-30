@@ -30,17 +30,17 @@ MaterialShader::MaterialShader(std::string const& name, MaterialShaderDescriptio
   : desc_(desc),
     default_instance_(name)
 {
-  auto v_passes = desc_.get_vertex_passes();
-  auto f_passes = desc_.get_fragment_passes();
+  auto v_methods = desc_.get_vertex_methods();
+  auto f_methods = desc_.get_fragment_methods();
 
-  for (auto const& pass : v_passes) {
-    for (auto const& uniform : pass.get_uniforms()) {
+  for (auto const& method : v_methods) {
+    for (auto const& uniform : method.get_uniforms()) {
       default_instance_.set_uniform(uniform);
     }
   }
 
-  for (auto const& pass : f_passes) {
-    for (auto const& uniform : pass.get_uniforms()) {
+  for (auto const& method : f_methods) {
+    for (auto const& uniform : method.get_uniforms()) {
       default_instance_.set_uniform(uniform);
     }
   }
@@ -83,13 +83,13 @@ ShaderProgram* MaterialShader::get_shader(GeometryResource const& for_type,
     return shader->second;
   } else {
 
-    auto v_passes = desc_.get_vertex_passes();
-    auto f_passes = desc_.get_fragment_passes();
+    auto v_methods = desc_.get_vertex_methods();
+    auto f_methods = desc_.get_fragment_methods();
 
     auto new_shader = new ShaderProgram();
 
-    auto v_shader(compile_description(v_passes, geometry_v_shader));
-    auto f_shader(compile_description(f_passes, geometry_f_shader));
+    auto v_shader(compile_description(v_methods, geometry_v_shader));
+    auto f_shader(compile_description(f_methods, geometry_f_shader));
 
     std::cout << "###############################################" << std::endl;
     std::cout << "###############################################" << std::endl;
@@ -129,8 +129,8 @@ void MaterialShader::print_shaders() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string MaterialShader::compile_description(std::list<MaterialPass> const& passes,
-                                          std::string const& shader_source) const {
+std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> const& methods,
+                                                std::string const& shader_source) const {
   std::string source(shader_source);
   std::stringstream sstr;
 
@@ -178,7 +178,7 @@ std::string MaterialShader::compile_description(std::list<MaterialPass> const& p
 
   for (auto const& uniform: get_default_instance().get_uniforms()) {
     sstr << "uniform " << uniform.get_glsl_type() << " "
-           << uniform.get_name() << ";" << std::endl;
+         << uniform.get_name() << ";" << std::endl;
   }
   sstr << std::endl;
 
@@ -191,15 +191,15 @@ std::string MaterialShader::compile_description(std::list<MaterialPass> const& p
   //*/
 
   // material methods ----------------------------------------------------------
-  for (auto& pass: passes) {
-    sstr << pass.get_source() << std::endl;
+  for (auto& method: methods) {
+    sstr << method.get_source() << std::endl;
   }
   gua::string_utils::replace(source, "@material_method_declarations", sstr.str());
   sstr.str("");
 
   // material method calls -----------------------------------------------------
-  for (auto& pass: passes) {
-    sstr << pass.get_name() << "();" << std::endl;
+  for (auto& method: methods) {
+    sstr << method.get_name() << "();" << std::endl;
   }
   gua::string_utils::replace(source, "@material_method_calls", sstr.str());
 

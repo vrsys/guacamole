@@ -1,8 +1,8 @@
 {
-  "vertex_passes" :
+  "vertex_methods" :
   [],
 
-  "fragment_passes" :
+  "fragment_methods" :
   [
     {
       "file_name" : "data/materials/FragmentColor.gpd"

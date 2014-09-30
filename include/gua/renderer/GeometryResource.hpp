@@ -25,7 +25,7 @@
 // guacamole_headers
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/MaterialPass.hpp>
+#include <gua/renderer/MaterialShaderMethod.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/scenegraph/PickResult.hpp>
 
@@ -92,11 +92,11 @@ class GUA_DLL GeometryResource {
     return bounding_box_;
   }
 
-  virtual MaterialPass const& get_vertex_material_pass() const {
+  virtual MaterialShaderMethod const& get_vertex_material_pass() const {
     return vertex_material_pass_;
   }
 
-  virtual MaterialPass const& get_fragment_material_pass() const {
+  virtual MaterialShaderMethod const& get_fragment_material_pass() const {
     return fragment_material_pass_;
   }
 
@@ -106,8 +106,8 @@ class GUA_DLL GeometryResource {
 
   math::BoundingBox<math::vec3> bounding_box_;
 
-  MaterialPass vertex_material_pass_;
-  MaterialPass fragment_material_pass_;
+  MaterialShaderMethod vertex_material_pass_;
+  MaterialShaderMethod fragment_material_pass_;
 };
 
 }

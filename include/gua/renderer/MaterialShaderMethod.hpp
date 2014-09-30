@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MATERIAL_PASS_HPP
-#define GUA_MATERIAL_PASS_HPP
+#ifndef GUA_MATERIAL_SHADER_METHOD_HPP
+#define GUA_MATERIAL_SHADER_METHOD_HPP
 
 #include <gua/renderer/Uniform.hpp>
 
@@ -31,26 +31,26 @@
 
 namespace gua {
 
-class MaterialPass {
+class MaterialShaderMethod {
  public:
 
-  MaterialPass(std::string const& name = "");
+  MaterialShaderMethod(std::string const& name = "");
 
-  MaterialPass& load_from_file(std::string const& file_name);
-  MaterialPass& load_from_json(std::string const& json_string);
+  MaterialShaderMethod& load_from_file(std::string const& file_name);
+  MaterialShaderMethod& load_from_json(std::string const& json_string);
 
-  MaterialPass& set_name(std::string const& name);
-  std::string const& get_name() const;
+  MaterialShaderMethod& set_name(std::string const& name);
+  std::string const&    get_name() const;
 
-  MaterialPass& set_source(std::string const& source);
-  std::string const& get_source() const;
+  MaterialShaderMethod& set_source(std::string const& source);
+  std::string const&    get_source() const;
 
   template <typename T>
-  MaterialPass& set_uniform(std::string const& name, T const& value) {
+  MaterialShaderMethod& set_uniform(std::string const& name, T const& value) {
     return set_uniform(UniformValue(name, value));
   }
 
-  MaterialPass& set_uniform(UniformValue const& uniform) {
+  MaterialShaderMethod& set_uniform(UniformValue const& uniform) {
     uniforms_.push_back(uniform);
     return *this;
   }
@@ -58,7 +58,6 @@ class MaterialPass {
   std::vector<UniformValue> const& get_uniforms() const;
 
  private:
-
   std::string name_;
   std::string source_;
   std::vector<UniformValue> uniforms_;
@@ -66,4 +65,4 @@ class MaterialPass {
 
 }
 
-#endif  // GUA_MATERIAL_PASS_HPP
+#endif  // GUA_MATERIAL_SHADER_METHOD_HPP

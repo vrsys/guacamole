@@ -44,43 +44,43 @@ void MaterialShaderDescription::load_from_file(std::string const& file_name) {
       }
 
 
-      if (value["vertex_passes"] != Json::Value::null
-          && value["vertex_passes"].isArray()) {
+      if (value["vertex_methods"] != Json::Value::null
+          && value["vertex_methods"].isArray()) {
 
-        for (int i(0); i < value["vertex_passes"].size(); ++i) {
-          auto pass(value["vertex_passes"][i]);
-          MaterialPass vertex_pass;
+        for (int i(0); i < value["vertex_methods"].size(); ++i) {
+          auto method(value["vertex_methods"][i]);
+          MaterialShaderMethod vertex_method;
 
-          std::cout << "vertex pass" << std::endl;
-          std::cout << pass << std::endl;
-          // load pass from file if file name is set
-          if (pass["file_name"] != Json::Value::null) {
-            vertex_pass.load_from_file(pass["file_name"].asString());
+          std::cout << "vertex method" << std::endl;
+          std::cout << method << std::endl;
+          // load method from file if file name is set
+          if (method["file_name"] != Json::Value::null) {
+            vertex_method.load_from_file(method["file_name"].asString());
           // else use name and source
           } else {
-            vertex_pass.load_from_json(pass.toStyledString());
+            vertex_method.load_from_json(method.toStyledString());
           }
 
-          add_vertex_pass(vertex_pass);
+          add_vertex_method(vertex_method);
         }
       }
 
-      if (value["fragment_passes"] != Json::Value::null
-          && value["fragment_passes"].isArray()) {
+      if (value["fragment_methods"] != Json::Value::null
+          && value["fragment_methods"].isArray()) {
 
-        for (int i(0); i < value["fragment_passes"].size(); ++i) {
-          auto pass(value["fragment_passes"][i]);
-          MaterialPass fragment_pass;
+        for (int i(0); i < value["fragment_methods"].size(); ++i) {
+          auto method(value["fragment_methods"][i]);
+          MaterialShaderMethod fragment_method;
 
-          // load pass from file if file name is set
-          if (pass["file_name"] != Json::Value::null) {
-            fragment_pass.load_from_file(pass["file_name"].asString());
+          // load method from file if file name is set
+          if (method["file_name"] != Json::Value::null) {
+            fragment_method.load_from_file(method["file_name"].asString());
           // else use name and source
           } else {
-            fragment_pass.load_from_json(pass.toStyledString());
+            fragment_method.load_from_json(method.toStyledString());
           }
 
-          add_fragment_pass(fragment_pass);
+          add_fragment_method(fragment_method);
         }
       }
 
@@ -93,25 +93,25 @@ void MaterialShaderDescription::load_from_file(std::string const& file_name) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderDescription& MaterialShaderDescription::add_vertex_pass(MaterialPass const& pass) {
-  vertex_passes_.push_back(pass);
+MaterialShaderDescription& MaterialShaderDescription::add_vertex_method(MaterialShaderMethod const& method) {
+  vertex_methods_.push_back(method);
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderDescription& MaterialShaderDescription::add_fragment_pass(MaterialPass const& pass) {
-  fragment_passes_.push_back(pass);
+MaterialShaderDescription& MaterialShaderDescription::add_fragment_method(MaterialShaderMethod const& method) {
+  fragment_methods_.push_back(method);
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<MaterialPass> const& MaterialShaderDescription::get_vertex_passes() const {
-  return vertex_passes_;
+std::list<MaterialShaderMethod> const& MaterialShaderDescription::get_vertex_methods() const {
+  return vertex_methods_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<MaterialPass> const& MaterialShaderDescription::get_fragment_passes() const {
-  return fragment_passes_;
+std::list<MaterialShaderMethod> const& MaterialShaderDescription::get_fragment_methods() const {
+  return fragment_methods_;
 }
 
 }

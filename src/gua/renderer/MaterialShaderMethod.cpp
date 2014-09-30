@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/MaterialPass.hpp>
+#include <gua/renderer/MaterialShaderMethod.hpp>
 
 // guacamole headers
 #include <gua/utils/TextFile.hpp>
@@ -31,11 +31,11 @@
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialPass::MaterialPass(std::string const& name) :
+MaterialShaderMethod::MaterialShaderMethod(std::string const& name) :
   name_(name) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialPass& MaterialPass::load_from_file(std::string const& file_name) {
+MaterialShaderMethod& MaterialShaderMethod::load_from_file(std::string const& file_name) {
   if (file_name != "") {
     TextFile file(file_name);
 
@@ -52,7 +52,7 @@ MaterialPass& MaterialPass::load_from_file(std::string const& file_name) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialPass& MaterialPass::load_from_json(std::string const& json_string) {
+MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& json_string) {
   Json::Value value;
   Json::Reader reader;
   if (!reader.parse(json_string, value)) {
@@ -99,31 +99,31 @@ MaterialPass& MaterialPass::load_from_json(std::string const& json_string) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialPass& MaterialPass::set_name(std::string const& name) {
+MaterialShaderMethod& MaterialShaderMethod::set_name(std::string const& name) {
   name_ = name;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& MaterialPass::get_name() const {
+std::string const& MaterialShaderMethod::get_name() const {
   return name_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialPass& MaterialPass::set_source(std::string const& source) {
+MaterialShaderMethod& MaterialShaderMethod::set_source(std::string const& source) {
   source_ = source;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const& MaterialPass::get_source() const {
+std::string const& MaterialShaderMethod::get_source() const {
   return source_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 std::vector<UniformValue> const&
-MaterialPass::get_uniforms() const {
+MaterialShaderMethod::get_uniforms() const {
   return uniforms_;
 }
 
