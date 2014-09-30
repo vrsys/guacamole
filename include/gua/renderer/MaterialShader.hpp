@@ -22,7 +22,7 @@
 #ifndef GUA_MATERIAL_SHADER_HPP
 #define GUA_MATERIAL_SHADER_HPP
 
-#include <gua/renderer/MaterialDescription.hpp>
+#include <gua/renderer/MaterialShaderDescription.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
@@ -37,9 +37,9 @@ namespace gua {
 class MaterialShader {
  public:
 
-  MaterialShader(std::string const& name, MaterialDescription const& desc);
+  MaterialShader(std::string const& name, MaterialShaderDescription const& desc);
 
-  MaterialDescription const& get_description() const;
+  MaterialShaderDescription const& get_description() const;
 
   std::string const&      get_name()             const;
   Material const  get_new_instance()     const;
@@ -62,7 +62,7 @@ class MaterialShader {
   std::string compile_description(std::list<MaterialPass> const& passes,
                                   std::string const& shader_source) const;
 
-  MaterialDescription desc_;
+  MaterialShaderDescription desc_;
 
   std::unordered_map<std::type_index, ShaderProgram*> shaders_;
 

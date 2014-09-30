@@ -26,7 +26,7 @@
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShader::MaterialShader(std::string const& name, MaterialDescription const& desc)
+MaterialShader::MaterialShader(std::string const& name, MaterialShaderDescription const& desc)
   : desc_(desc),
     default_instance_(name)
 {
@@ -47,7 +47,7 @@ MaterialShader::MaterialShader(std::string const& name, MaterialDescription cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialDescription const& MaterialShader::get_description() const {
+MaterialShaderDescription const& MaterialShader::get_description() const {
   return desc_;
 }
 
