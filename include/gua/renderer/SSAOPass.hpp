@@ -65,7 +65,7 @@ class SSAOPass : public PipelinePass {
   float intensity_;
   float falloff_;
 
-  NoiseTexture                     noise_texture_;
+  NoiseTexture noise_texture_;
 };
 
 }
