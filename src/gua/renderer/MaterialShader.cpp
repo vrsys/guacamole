@@ -53,12 +53,12 @@ MaterialShaderDescription const& MaterialShader::get_description() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string const& MaterialShader::get_name() const {
-  return default_material_.get_material_name();
+  return default_material_.get_shader_name();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 Material const MaterialShader::get_new_material() const {
-  return Material(default_material_.get_material_name());
+  return Material(default_material_.get_shader_name());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -202,8 +202,9 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
   process_passes(true);
 
-  if (config.get_enable_stereo())
+  if (config.get_enable_stereo()) {
     process_passes(false);
+  }
 
   // swap buffers
   if (window_) {

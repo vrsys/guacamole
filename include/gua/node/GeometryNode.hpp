@@ -87,13 +87,13 @@ class GUA_DLL GeometryNode : public Node {
     */
     Material const& get_material() const;
     Material&       get_material();
-    void set_material(Material const& material);
+    void            set_material(Material const& material);
 
     /**
     * A value describing the shadow's quality.
     */
     ShadowMode get_shadow_mode() const { return shadow_mode_; }
-    void set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
+    void       set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
 
     /**
     * Updates bounding box by accessing the ressource in the databse

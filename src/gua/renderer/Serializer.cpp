@@ -74,14 +74,12 @@ void Serializer::check(SerializedScene& output,
   std::size_t spot_light_count = data_->spot_lights_.size();
   std::size_t sun_light_count = data_->sun_lights_.size();
   std::size_t ray_count = data_->rays_.size();
-  std::size_t textured_quad_count = data_->textured_quads_.size();
 
   data_->geometrynodes_.clear();
   data_->volumenodes_.clear();
   data_->point_lights_.clear();
   data_->spot_lights_.clear();
   data_->sun_lights_.clear();
-  data_->textured_quads_.clear();
 
   data_->bounding_boxes_.clear();
   data_->rays_.clear();
@@ -103,7 +101,6 @@ void Serializer::check(SerializedScene& output,
   data_->point_lights_.reserve(point_light_count);
   data_->spot_lights_.reserve(spot_light_count);
   data_->sun_lights_.reserve(sun_light_count);
-  data_->textured_quads_.reserve(textured_quad_count);
 
   enable_frustum_culling_ = enable_frustum_culling;
 
@@ -157,7 +154,7 @@ void Serializer::check(SerializedScene& output,
   if (is_visible(node)) {
     add_bbox(node);
 
-    data_->geometrynodes_[std::type_index(typeid(*node))][node->get_material().get_material_name()].push_back(node);
+    data_->geometrynodes_[std::type_index(typeid(*node))][node->get_material().get_shader_name()].push_back(node);
 
     visit_children(node);
   }
@@ -239,7 +236,7 @@ void Serializer::check(SerializedScene& output,
 
     add_bbox(node);
 
-    data_->textured_quads_.push_back(node);
+    // data_->geometrynodes_[std::type_index(typeid(*node))][node->get_texture()].push_back(node);
 
     visit_children(node);
   }

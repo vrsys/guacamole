@@ -174,7 +174,7 @@ void TriMeshRessource::draw(RenderContext const& ctx) const {
     upload_to(ctx);
   }
 
-  scm::gl::context_vertex_input_guard vig(ctx.render_context);
+  // scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
   ctx.render_context->bind_vertex_array(vertex_array_[ctx.id]);
 
