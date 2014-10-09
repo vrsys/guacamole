@@ -99,11 +99,6 @@ struct SerializedScene {
    * All bounding boxes.
    */
   std::vector<node::RayNode*> rays_;
-
-  /**
-   * All textured quads.
-   */
-  std::vector<node::TexturedQuadNode*> textured_quads_;
 };
 
 }

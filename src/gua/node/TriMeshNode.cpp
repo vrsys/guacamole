@@ -232,7 +232,7 @@ namespace node {
 
     if (material_changed_)
     {
-      if (material_.get_material_name() != "")
+      if (material_.get_shader_name() != "")
       {
         // if (!MaterialShaderDatabase::instance()->is_supported(material_))
         // {

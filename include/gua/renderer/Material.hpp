@@ -31,10 +31,10 @@ namespace gua {
 
 class Material {
   public:
-    Material(std::string const& material_name = "");
+    Material(std::string const& shader_name = "");
 
-    std::string const& get_material_name() const {
-      return material_name_;
+    std::string const& get_shader_name() const {
+      return shader_name_;
     }
 
     Material& set_uniform(UniformValue const& uniform) {
@@ -60,7 +60,7 @@ class Material {
   private:
     friend class MaterialShader;
 
-    std::string material_name_;
+    std::string shader_name_;
     std::vector<UniformValue> uniforms_;
 
 };

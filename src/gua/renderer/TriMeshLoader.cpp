@@ -302,7 +302,7 @@ void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const& r
 {
   auto g_node(std::dynamic_pointer_cast<node::GeometryNode>(root));
 
-  if (g_node) {
+  if (g_node && g_node->get_material().get_shader_name() == "") {
     g_node->set_material(fallback_material);
     g_node->update_cache();
   }
@@ -310,7 +310,6 @@ void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const& r
   for (auto& child : root->get_children()) {
     apply_fallback_material(child, fallback_material);
   }
-
 
 }
 
