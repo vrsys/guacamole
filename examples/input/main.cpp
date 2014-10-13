@@ -45,6 +45,7 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
+#define COUNT 6
 
 int main(int argc, char** argv) {
 
@@ -54,43 +55,67 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
+  gua::MaterialShaderDescription desc;
+  desc.load_from_file("data/materials/SimpleMaterial.gmd");
+
+  auto shader(std::make_shared<gua::MaterialShader>("simple_mat", desc));
+  gua::MaterialShaderDatabase::instance()->add(shader);
+
   gua::TriMeshLoader loader;
-  auto teapot_geometry(loader.create_geometry_from_file("teapot_geometry", "data/objects/teapot.obj", "data/materials/Red.gmd", gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION));
-  
-  auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
-  graph.add_node("/teapot", teapot_geometry);
+
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", shader->get_default_material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  graph.add_node("/", teapot);
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
-  light->scale(20.f);
-  light->translate(0,0,12);
+  light->scale(4.4f);
+  light->translate(1.f, 0.f, -2.f);
+
+  auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
+  light2->data.color = gua::utils::Color3f(1.0f, 0.0f, 1.0f);
+  light2->scale(3.4f);
+  light2->translate(-2.f, 1.f, -2.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(16.0f, 12.0f));
-  screen->translate(0, 0, 5);
-
-  auto eye = graph.add_node<gua::node::TransformNode>("/screen", "eye");
-  eye->translate(0, 0, 7);
+  screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
+  screen->translate(0, 0, 1.0);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1600, 1200);
+  auto resolution = gua::math::vec2ui(1920, 1080);
+  
+  auto eye_l = graph.add_node<gua::node::TransformNode>("/screen", "eye_l");
+  eye_l->translate(0.1, 0, 2);
 
+  auto eye_r = graph.add_node<gua::node::TransformNode>("/screen", "eye_r");
+  eye_r->translate(-0.1, 0, 2);
+
+  gua::Camera cam("/screen/eye_l", "/screen/eye_r", "/screen", "/screen", "main_scenegraph");
   auto pipe = new gua::Pipeline();
-  pipe->config.set_camera(gua::Camera("/screen/eye", "/screen/eye", "/screen", "/screen", "main_scenegraph"));
-  pipe->config.set_enable_fps_display(true);
-  pipe->config.set_left_resolution(resolution);
-  pipe->config.set_right_resolution(resolution);
+  pipe->config.set_camera(cam);
+  pipe->config.set_resolution(resolution);
+  pipe->config.set_enable_stereo(true);
+
+  pipe->add_pass<gua::GeometryPass>();
+  pipe->add_pass<gua::LightingPass>();
+  pipe->add_pass<gua::BackgroundPass>();
+  // pipe->add_pass<gua::SSAOPass>().radius(2.f).falloff(2.f);
 
   auto window(new gua::GlfwWindow());
-  pipe->set_window(window);
+  pipe->set_output_window(window);
   gua::Renderer renderer({pipe});
 
   // add mouse interaction
-  gua::utils::Trackball trackball;
+  gua::utils::Trackball trackball(0.1, 0.05, 0.2);
+
+  window->config.set_enable_vsync(false);
+  window->config.set_size(resolution);
+  window->config.set_left_resolution(resolution);
+  window->config.set_right_resolution(resolution);
+  window->config.set_stereo_mode(gua::StereoMode::MONO);
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_left_resolution(new_size);
-    pipe->config.set_left_resolution(new_size);
-    screen->data.set_size(gua::math::vec2(0.002 * new_size.x, 0.002 * new_size.y));
+    pipe->config.set_resolution(new_size);
+    screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
 
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
@@ -118,7 +143,7 @@ int main(int argc, char** argv) {
 
   // application loop
   gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/60.0);
+  gua::events::Ticker ticker(loop, 1.0/500.0);
 
   ticker.on_tick.connect([&]() {
 

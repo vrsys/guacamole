@@ -102,6 +102,20 @@ class GUA_DLL FrameBufferObject {
                                utils::Color3f());
 
   /**
+   * Clears one specific color buffer.
+   *
+   * All color buffers are set to the given color. Black if no
+   * argument is given.
+   *
+   * \param context              The RenderContext to bind to.
+   * \param which                The attachment id to clear.
+   * \param clear_color          The color used for clearing.
+   */
+  void clear_color_buffer(RenderContext const& context, unsigned which,
+                           utils::Color3f const& clear_color =
+                               utils::Color3f());
+
+  /**
    * Clears the depth stencil buffer.
    *
    * \param context              The RenderContext to bind to.
@@ -116,7 +130,7 @@ class GUA_DLL FrameBufferObject {
    *
    * \param context The RenderContext to bind to.
    */
-  void bind(RenderContext const& context);
+  virtual void bind(RenderContext const& context);
 
   /**
    * Unbind the FrameBufferObject.
@@ -125,7 +139,7 @@ class GUA_DLL FrameBufferObject {
    *
    * \param context The RenderContext to bind to.
    */
-  void unbind(RenderContext const& context);
+  virtual void unbind(RenderContext const& context);
 
   void copy_depth_stencil_buffer(RenderContext const& ctx,
                                  FrameBufferObject const& source);

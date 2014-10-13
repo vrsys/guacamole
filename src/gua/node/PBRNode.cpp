@@ -23,9 +23,8 @@
 #include <gua/node/PBRNode.hpp>
 
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/node/RayNode.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
 
 // guacamole headers
 

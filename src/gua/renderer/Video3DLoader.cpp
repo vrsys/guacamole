@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 // class header
 #include <gua/renderer/Video3DLoader.hpp>
 
@@ -32,11 +32,10 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  Video3DLoader::Video3DLoader() 
-    : GeometryLoader(), 
-      _supported_file_extensions() 
+  Video3DLoader::Video3DLoader()
+    : _supported_file_extensions()
   {
-    _supported_file_extensions.insert("ks");    
+    _supported_file_extensions.insert("ks");
   }
 
 
@@ -62,7 +61,7 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  bool Video3DLoader::is_supported(std::string const& file_name) const 
+  bool Video3DLoader::is_supported(std::string const& file_name) const
   {
     std::vector<std::string> filename_decomposition =
       gua::string_utils::split(file_name, '.');
@@ -72,3 +71,4 @@ namespace gua {
   }
 
 }
+#endif

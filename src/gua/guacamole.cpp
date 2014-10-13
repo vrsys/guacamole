@@ -55,36 +55,36 @@ void init(int argc, char** argv) {
 
   GeometryDatabase::instance()->add(
       "gua_light_sphere_proxy",
-      std::shared_ptr<GeometryRessource>(
-      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryResource>(
+      static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_light_sphere_obj).c_str(),
               Resources::geometry_gua_light_sphere_obj.size(), false)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_light_cone_proxy",
-      std::shared_ptr<GeometryRessource>(
-      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryResource>(
+      static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_light_cone_obj).c_str(),
               Resources::geometry_gua_light_cone_obj.size(), false)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_ray_geometry",
-      std::shared_ptr<GeometryRessource>(
-      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryResource>(
+      static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_ray_obj).c_str(),
               Resources::geometry_gua_ray_obj.size(), false)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_plane_geometry",
-      std::shared_ptr<GeometryRessource>(
-      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryResource>(
+      static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_plane_obj).c_str(),
               Resources::geometry_gua_plane_obj.size(), true)[0])));
 
   GeometryDatabase::instance()->add(
       "gua_bounding_box_geometry",
-      std::shared_ptr<GeometryRessource>(
-      static_cast<GeometryRessource*>(mesh_loader.load_from_buffer(
+      std::shared_ptr<GeometryResource>(
+      static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_bounding_box_obj).c_str(),
               Resources::geometry_gua_bounding_box_obj.size(), false)[0])));
 }
@@ -100,13 +100,13 @@ void create_resource_material(std::string const& material_name,
   ShadingModelDatabase::instance()->add(material_name,
                                         shading_model);
 
-  MaterialDescription material_description(
-                       Resources::lookup_string(material_resource).c_str(),
-                       material_resource.size());
+  // MaterialShaderDescription material_description(
+  //                      Resources::lookup_string(material_resource).c_str(),
+  //                      material_resource.size());
 
-  std::shared_ptr<Material> material(
-      new Material(material_name, material_description));
-  MaterialDatabase::instance()->add(material_name, material);
+  // std::shared_ptr<Material> material(
+  //     new Material(material_name, material_description));
+  // MaterialShaderDatabase::instance()->add(material_name, material);
 }
 
 

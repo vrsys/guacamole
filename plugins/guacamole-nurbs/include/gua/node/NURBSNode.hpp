@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 #ifndef GUA_NURBS_NODE_HPP
 #define GUA_NURBS_NODE_HPP
 
@@ -75,3 +75,4 @@ private : // attributes e.g. special attributes for drawing
 } // namespace gua {
 
 #endif  // GUA_NURBS_NODE_HPP
+#endif

@@ -46,14 +46,13 @@ namespace node {
     bounding_box_(),
     child_dirty_(true),
     self_dirty_(true),
-    group_list_(),
     user_data_()
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
 
   Node::~Node() {
-    for (auto child : children_) {
+    for (auto const& child : children_) {
       child->parent_ = nullptr;
     }
   }
@@ -62,7 +61,7 @@ namespace node {
 
   void Node::update_cache() {
 
-    if (self_dirty_) 
+    if (self_dirty_)
     {
       math::mat4 old_world_trans(world_transform_);
       if (is_root()) {
@@ -86,7 +85,7 @@ namespace node {
     }
 
     if (child_dirty_) {
-      for (auto child : children_) {
+      for (auto const& child : children_) {
         child->update_cache();
       }
 
@@ -101,7 +100,7 @@ namespace node {
   void Node::clear_children() {
 
     if (children_.size() > 0) {
-      for (auto child : children_) {
+      for (auto const& child : children_) {
         child->parent_ = nullptr;
       }
 
@@ -128,30 +127,14 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::add_to_group(std::string const & group) {
-
-    group_list_.insert(group);
+  gua::utils::TagList const& Node::get_tags() const {
+    return tags_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::add_to_groups(std::set<std::string> const & groups) {
-
-    group_list_.insert(groups.begin(), groups.end());
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  void Node::remove_from_group(std::string const & group) {
-
-    group_list_.erase(group);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  bool Node::is_in_group(std::string const & group) const {
-
-    return group_list_.find(group) != group_list_.end();
+  gua::utils::TagList& Node::get_tags() {
+    return tags_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -173,10 +156,10 @@ namespace node {
 
   void Node::set_world_transform(math::mat4 const& transform) {
       if (is_root()) {
-              transform_ = transform;
-          } else {
-              transform_ = scm::math::inverse(parent_->get_world_transform()) * transform;
-          }
+          transform_ = transform;
+      } else {
+          transform_ = scm::math::inverse(parent_->get_world_transform()) * transform;
+      }
 
       set_dirty();
   }
@@ -270,7 +253,7 @@ namespace node {
       return nullptr;
     }
 
-    for (auto child : parent_->get_children()) {
+    for (auto const& child : parent_->get_children()) {
       if (&*child == this) {
         return child;
       }
@@ -294,7 +277,7 @@ namespace node {
 
   std::set<PickResult> const Node::ray_test(RayNode const& ray,
                                             PickResult::Options options,
-                                            std::string const& mask) {
+                                            Mask const& mask) {
 
     return ray_test(ray.get_world_ray(), options, mask);
   }
@@ -303,10 +286,9 @@ namespace node {
 
   std::set<PickResult> const Node::ray_test(Ray const& ray,
                                             PickResult::Options options,
-                                            std::string const& mask) {
-    Mask pick_mask(mask);
+                                            Mask const& mask) {
     std::set<PickResult> hits;
-    ray_test_impl(ray, options, pick_mask, hits);
+    ray_test_impl(ray, options, mask, hits);
     return hits;
   }
   ////////////////////////////////////////////////////////////////////////////////
@@ -341,10 +323,12 @@ namespace node {
 
   std::shared_ptr<Node> Node::deep_copy() const {
     std::shared_ptr<Node> copied_node = copy();
-    copied_node->add_to_groups(group_list_);
+    copied_node->tags_ = tags_;
+    copied_node->children_.reserve(children_.size());
 
-    for (auto child : children_)
+    for (auto const& child : children_) {
       copied_node->add_child(child->deep_copy());
+    }
 
     copied_node->bounding_box_ = bounding_box_;
     copied_node->user_data_ = user_data_;
@@ -389,7 +373,7 @@ namespace node {
     if (!self_dirty_) {
       self_dirty_ = true;
       child_dirty_ = true;
-      for (auto child : children_) {
+      for (auto const& child : children_) {
         child->set_children_dirty();
       }
     }

@@ -22,72 +22,37 @@
 #ifndef GUA_LIGHTING_PASS_HPP
 #define GUA_LIGHTING_PASS_HPP
 
-// guacamole headers
-#include <gua/renderer/GeometryPass.hpp>
-#include <gua/renderer/ShadowMap.hpp>
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/GeometryResource.hpp>
+
+#include <memory>
 
 namespace gua {
 
-class LightingUberShader;
-class Serializer;
-class LayerMapping;
+class Pipeline;
 
-/**
- *
- */
-class LightingPass : public GeometryPass {
+class LightingPass : public PipelinePass {
  public:
 
-  /**
-   *
-   */
-  LightingPass(Pipeline* pipeline);
+  virtual bool needs_color_buffer_as_input() const { return true; }
+  virtual bool writes_only_color_buffer()    const { return true; }
 
-  /**
-   * Destructor.
-   *
-   * Deletes the FullscreenPass and frees all associated data.
-   */
-  virtual ~LightingPass();
+  virtual void process(Pipeline* pipe);
 
-  void apply_material_mapping(
-      std::set<std::string> const& material_names,
-      std::vector<LayerMapping const*> const& inputs) const;
+  friend class Pipeline;
 
-  LayerMapping const* get_gbuffer_mapping() const;
-
-  /* virtual */ void print_shaders(std::string const& directory,
-                                   std::string const& name) const;
-
-  bool pre_compile_shaders(RenderContext const& ctx);
-
-  virtual void cleanup(RenderContext const& context);
-
-public:
-  ShadowMap shadow_map_;
+ protected:
+  LightingPass();
+  ~LightingPass() {}
 
  private:
-  void rendering(SerializedScene const& scene,
-                 SceneGraph const& scene_graph,
-                 RenderContext const& ctx,
-                 CameraMode eye,
-                 Camera const& camera,
-                 FrameBufferObject* target,
-                 View const& view);
-
-  void init_resources(RenderContext const& ctx);
-
-  LightingUberShader* shader_;
-  std::shared_ptr<GeometryRessource> light_sphere_;
-  std::shared_ptr<GeometryRessource> light_cone_;
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
-
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::rasterizer_state_ptr rasterizer_state_front_;
-  scm::gl::rasterizer_state_ptr rasterizer_state_back_;
-  scm::gl::blend_state_ptr blend_state_;
+  std::shared_ptr<ShaderProgram>      shader_;
+  std::shared_ptr<ShaderProgram>      emit_shader_;
+  std::shared_ptr<GeometryResource>   light_sphere_;
+  scm::gl::rasterizer_state_ptr       rasterizer_state_front_;
+  scm::gl::depth_stencil_state_ptr    depth_stencil_state_;
+  scm::gl::blend_state_ptr            blend_state_;
 };
 
 }

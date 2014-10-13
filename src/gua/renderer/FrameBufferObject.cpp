@@ -113,6 +113,17 @@ void FrameBufferObject::clear_color_buffers(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void FrameBufferObject::clear_color_buffer(RenderContext const& ctx,
+                                           unsigned which,
+                                           utils::Color3f const& color) {
+
+  if (ctx.id < fbos_.size())
+    ctx.render_context->clear_color_buffer(
+        fbos_[ctx.id], which, math::vec4(color.r(), color.g(), color.b(), 0.f));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void FrameBufferObject::clear_depth_stencil_buffer(RenderContext const& ctx) {
 
   if (ctx.id < fbos_.size())

@@ -22,55 +22,25 @@
 #ifndef GUA_GEOMETRY_PASS_HPP
 #define GUA_GEOMETRY_PASS_HPP
 
-// guacamole headers
-#include <gua/renderer/Pass.hpp>
-
-// external headers
-#include <scm/gl_core/buffer_objects/uniform_buffer_adaptor.h>
+#include <gua/renderer/PipelinePass.hpp>
 
 namespace gua {
 
-/**
- * A render pass which draws a part of the SceneGraph.
- *
- * This render pass is the most commonly used pass in rendering pipelines.
- *
- * Render passes are part of a rendering pipeline. Basically they encapsulate
- * some FBOs to which the scene is rendered. The user has to add some color
- * buffers to this pass and a depth stencil buffer if desired. The scene is
- * rendered frome the point of view of a given camera through a given screen.
- * With render masks a part of the scene may be hidden.
- */
-class GeometryPass : public Pass {
+class Pipeline;
+
+class GeometryPass : public PipelinePass {
  public:
 
-  /**
-   *
-   */
-  GeometryPass(Pipeline* pipeline);
+  virtual bool needs_color_buffer_as_input() const { return false; }
+  virtual bool writes_only_color_buffer()    const { return false; }
+  
+  virtual void process(Pipeline* pipe);
 
-  /**
-   * Destructor.
-   *
-   * Deletes the GeometryPass and frees all associated data.
-   */
-  virtual ~GeometryPass() {}
-
-  virtual void render_scene(Camera const& camera,
-                            SceneGraph const& current_graph,
-                            RenderContext const& ctx,
-                            std::size_t viewid);
+  friend class Pipeline;
 
  protected:
-  virtual void rendering(SerializedScene const& scene,
-                         SceneGraph const& scene_graph,
-                         RenderContext const& ctx,
-                         CameraMode eye,
-                         Camera const& camera,
-                         FrameBufferObject* target,
-                         View const& view) = 0;
-
- private:
+  GeometryPass() {}
+  ~GeometryPass() {}
 };
 
 }

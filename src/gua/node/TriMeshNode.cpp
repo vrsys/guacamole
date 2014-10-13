@@ -23,7 +23,7 @@
 #include <gua/node/TriMeshNode.hpp>
 
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
@@ -36,7 +36,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   TriMeshNode::TriMeshNode(std::string const& name,
                            std::string const& filename,
-                           std::string const& material,
+                           Material const& material,
                            math::mat4 const& transform)
     : GeometryNode(name, filename, material, transform)
   {}
@@ -65,7 +65,7 @@ namespace node {
     }
 
     // bbox is intersected, but check geometry only if mask tells us to check
-    if (get_filename() != "" && mask.check(get_groups())) {
+    if (get_filename() != "" && mask.check(get_tags())) {
 
       auto geometry(GeometryDatabase::instance()->lookup(get_filename()));
 
@@ -226,18 +226,18 @@ namespace node {
     }
 
     // The code below auto-loads a material if it's not already supported by
-    // the MaterialDatabase. It expects a material name like
+    // the MaterialShaderDatabase. It expects a material name like
     //
     // data/materials/Stones.gmd
 
     if (material_changed_)
     {
-      if (material_ != "")
+      if (material_.get_shader_name() != "")
       {
-        if (!MaterialDatabase::instance()->is_supported(material_))
-        {
-          MaterialDatabase::instance()->load_material(material_);
-        }
+        // if (!MaterialShaderDatabase::instance()->is_supported(material_))
+        // {
+        //   MaterialShaderDatabase::instance()->load_material(material_);
+        // }
       }
 
       material_changed_ = false;

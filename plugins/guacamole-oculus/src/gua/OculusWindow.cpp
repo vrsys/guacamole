@@ -144,7 +144,7 @@ void OculusWindow::display(std::shared_ptr<Texture2D> const& texture,
 
 
   fullscreen_shader_.use(*get_context());
-  fullscreen_shader_.set_uniform(*get_context(), texture, "sampler");
+  fullscreen_shader_.set_uniform(*get_context(), texture->get_handle(ctx_), "sampler");
 
   if (left) fullscreen_shader_.set_uniform(*get_context(), math::vec2(0.6f, 0.5f), "lens_center");
   else      fullscreen_shader_.set_uniform(*get_context(), math::vec2(0.4f, 0.5f), "lens_center");

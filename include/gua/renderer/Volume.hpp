@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/Texture3D.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
@@ -53,124 +53,122 @@
 //struct aiMesh;
 
 
-namespace gua {
+// namespace gua {
 
-	struct RenderContext;
+// 	struct RenderContext;
 
-	/**
-	* Stores geometry data.
-	*
-	* A volume can be loaded from an Assimp volume and the draw onto multiple
-	* contexts.
-	* Do not use this class directly, it is just used by the Geometry class to
-	* store the individual meshes of a file.
-	*/
-	class Volume : public GeometryRessource {
-	public:
+// 	/**
+// 	* Stores geometry data.
+// 	*
+// 	* A volume can be loaded from an Assimp volume and the draw onto multiple
+// 	* contexts.
+// 	* Do not use this class directly, it is just used by the Geometry class to
+// 	* store the individual meshes of a file.
+// 	*/
+// 	class Volume : public GeometryResource {
+// 	public:
 
-		/**
-		* Default constructor.
-		*
-		* Creates a new and empty Volume.
-		*/
-		Volume();
+// 		/**
+// 		* Default constructor.
+// 		*
+// 		* Creates a new and empty Volume.
+// 		*/
+// 		Volume();
 
-		/**
-		* Constructor from an Assimp volume.
-		*
-		* Initializes the volume from a given file path
-		*
-		* \param volume             The Assimp volume to load the data from.
-		*/
-		Volume(std::string const& file_name);
+// 		/**
+// 		* Constructor from an Assimp volume.
+// 		*
+// 		* Initializes the volume from a given file path
+// 		*
+// 		* \param volume             The Assimp volume to load the data from.
+// 		*/
+// 		Volume(std::string const& file_name);
 
-		/**
-		* Draws the Volume.
-		*
-		* Draws the Volume to the given context. There is no compositing happening
-		*
-		* \param context          The RenderContext to draw onto.
-		*/
-    void draw(RenderContext const& context) const;
+// 		/**
+// 		* Draws the Volume.
+// 		*
+// 		* Draws the Volume to the given context. There is no compositing happening
+// 		*
+// 		* \param context          The RenderContext to draw onto.
+// 		*/
+//    	void draw(RenderContext const& context) const;
 
-		/**
-		* Draws the Volume.
-		*
-		* Draws the Volume proxy to the given context.
-		*
-		* \param context          The RenderContext to draw onto.
-		*/
-		void draw_proxy(RenderContext const& context) const;
+// 		/**
+// 		* Draws the Volume.
+// 		*
+// 		* Draws the Volume proxy to the given context.
+// 		*
+// 		* \param context          The RenderContext to draw onto.
+// 		*/
+// 		void draw_proxy(RenderContext const& context) const;
 
-		/**
-		* Sets the necessary uniform values for compositing shader
-		*
-		* Draws the Volume proxy to the given context.
-		*
-		* \param shaderProgram          The RenderContext to draw onto.
-		*/
-		void set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const;
+// 		/**
+// 		* Sets the necessary uniform values for compositing shader
+// 		*
+// 		* Draws the Volume proxy to the given context.
+// 		*
+// 		* \param shaderProgram          The RenderContext to draw onto.
+// 		*/
+// 		void set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const;
 
-		void ray_test(Ray const& ray, PickResult::Options options,
-			node::Node* owner, std::set<PickResult>& hits);
-
-
-		float step_size() const;
-		void step_size(const float size);
-
-		void set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color);
-
-    /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const { throw std::runtime_error("not implemented yet"); };
-
-	private:
-		void upload_to(RenderContext const& context) const;
-
-		std::shared_ptr<Texture2D> create_color_map(RenderContext const& context,
-			unsigned in_size,
-			const scm::data::piecewise_function_1d<float, float>& in_alpha,
-			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
-
-		bool update_color_map(RenderContext const& context,
-			Texture2D const&,
-			const scm::data::piecewise_function_1d<float, float>& in_alpha,
-			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
-		
-		mutable bool _update_transfer_function;
-
-		////Volume files
-		//mutable std::vector<std::string>
-		//	_volume_file_pathes;
-		// Volume File path
-		std::string _volume_file_path;
-
-		//Volume boxes for each volume
-		mutable std::vector<scm::gl::box_volume_geometry_ptr> 
-			_volume_boxes_ptr;
-
-		//Texture3D for volume data for each volume
-		mutable std::vector<std::shared_ptr<Texture3D>>
-			_volume_texture_ptr;
-
-		mutable std::vector<std::shared_ptr<Texture2D>>
-			_transfer_texture_ptr;
-
-		mutable std::vector<scm::gl::sampler_state_ptr> _sstate;
-
-		mutable std::mutex upload_mutex_;
+// 		void ray_test(Ray const& ray, PickResult::Options options,
+// 			node::Node* owner, std::set<PickResult>& hits);
 
 
-		scm::data::piecewise_function_1d<float, float>                 _alpha_transfer;
-		scm::data::piecewise_function_1d<float, scm::math::vec3f>      _color_transfer;
+// 		float step_size() const;
+// 		void step_size(const float size);
 
-		///Volume Info
-		math::vec3ui	_volume_dimensions;
-		math::vec3		_volume_dimensions_normalized;
-		float			_step_size;
+// 		void set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color);
 
-	public:
+// 	private:
+// 		void upload_to(RenderContext const& context) const;
 
-	};
+// 		std::shared_ptr<Texture2D> create_color_map(RenderContext const& context,
+// 			unsigned in_size,
+// 			const scm::data::piecewise_function_1d<float, float>& in_alpha,
+// 			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
 
-}
+// 		bool update_color_map(RenderContext const& context,
+// 			Texture2D const&,
+// 			const scm::data::piecewise_function_1d<float, float>& in_alpha,
+// 			const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const;
+
+// 		mutable bool _update_transfer_function;
+
+// 		////Volume files
+// 		//mutable std::vector<std::string>
+// 		//	_volume_file_pathes;
+// 		// Volume File path
+// 		std::string _volume_file_path;
+
+// 		//Volume boxes for each volume
+// 		mutable std::vector<scm::gl::box_volume_geometry_ptr>
+// 			_volume_boxes_ptr;
+
+// 		//Texture3D for volume data for each volume
+// 		mutable std::vector<std::shared_ptr<Texture3D>>
+// 			_volume_texture_ptr;
+
+// 		mutable std::vector<std::shared_ptr<Texture2D>>
+// 			_transfer_texture_ptr;
+
+// 		mutable std::vector<scm::gl::sampler_state_ptr> _sstate;
+
+// 		mutable std::mutex upload_mutex_;
+
+
+// 		scm::data::piecewise_function_1d<float, float>                 _alpha_transfer;
+// 		scm::data::piecewise_function_1d<float, scm::math::vec3f>      _color_transfer;
+
+// 		///Volume Info
+// 		math::vec3ui	_volume_dimensions;
+// 		math::vec3		_volume_dimensions_normalized;
+// 		float			_step_size;
+
+// 	public:
+
+// 	};
+
+// }
 
 #endif  // GUA_VOLUME_HPP

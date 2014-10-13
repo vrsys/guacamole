@@ -38,7 +38,7 @@ class GUA_DLL TriMeshNode : public GeometryNode {
 
   TriMeshNode(std::string const& name,
               std::string const& geometry = "gua_default_geometry",
-              std::string const& material = "gua_default_material",
+              Material const& material = Material(),
               math::mat4 const& transform = math::mat4::identity());
 
   /**

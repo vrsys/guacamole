@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
+#include <gua/renderer/TriMeshRenderer.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/Logger.hpp>
@@ -173,7 +174,7 @@ void TriMeshRessource::draw(RenderContext const& ctx) const {
     upload_to(ctx);
   }
 
-  scm::gl::context_vertex_input_guard vig(ctx.render_context);
+  // scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
   ctx.render_context->bind_vertex_array(vertex_array_[ctx.id]);
 
@@ -220,8 +221,8 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*virtual*/ std::shared_ptr<GeometryUberShader> TriMeshRessource::create_ubershader() const {
-  return std::make_shared<TriMeshUberShader>();
+std::shared_ptr<RessourceRenderer> TriMeshRessource::create_renderer() const {
+  return std::make_shared<TriMeshRenderer>();
 }
 
 }

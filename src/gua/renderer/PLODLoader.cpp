@@ -41,7 +41,7 @@ PLODLoader::PLODLoader() {
 
   _supported_file_extensions.insert("kdn");
 
-  if (!MaterialDatabase::instance()->is_supported("gua_pbr")) {
+  if (!MaterialShaderDatabase::instance()->is_supported("gua_pbr")) {
     create_resource_material("gua_pbr",
                              Resources::materials_gua_pbr_gsd,
                              Resources::materials_gua_pbr_gmd);

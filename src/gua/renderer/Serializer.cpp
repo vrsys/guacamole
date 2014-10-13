@@ -50,7 +50,6 @@ namespace gua {
 
 Serializer::Serializer()
     : data_(nullptr),
-      current_render_mask_(""),
       current_frustum_(),
       current_center_of_interest_(),
       draw_bounding_boxes_(false),
@@ -61,7 +60,7 @@ Serializer::Serializer()
 
 void Serializer::check(SerializedScene& output,
                        SceneGraph const& scene_graph,
-                       std::string const& render_mask,
+                       Mask const& mask,
                        bool draw_bounding_boxes,
                        bool draw_rays,
                        bool enable_frustum_culling) {
@@ -75,14 +74,12 @@ void Serializer::check(SerializedScene& output,
   std::size_t spot_light_count = data_->spot_lights_.size();
   std::size_t sun_light_count = data_->sun_lights_.size();
   std::size_t ray_count = data_->rays_.size();
-  std::size_t textured_quad_count = data_->textured_quads_.size();
 
   data_->geometrynodes_.clear();
   data_->volumenodes_.clear();
   data_->point_lights_.clear();
   data_->spot_lights_.clear();
   data_->sun_lights_.clear();
-  data_->textured_quads_.clear();
 
   data_->bounding_boxes_.clear();
   data_->rays_.clear();
@@ -90,16 +87,12 @@ void Serializer::check(SerializedScene& output,
   draw_rays_ = draw_rays;
 
   if (draw_bounding_boxes_) {
-    data_->materials_.insert("gua_bounding_box");
     data_->bounding_boxes_.reserve(geometry_count + point_light_count + spot_light_count + ray_count);
   }
 
   if (draw_rays_) {
-    data_->materials_.insert("gua_bounding_box");
     data_->rays_.reserve(ray_count);
   }
-
-  data_->materials_.insert("gua_textured_quad");
 
   // assuming the number of nodes stays quite constant through time,
   // reserving the old size might save some time
@@ -108,11 +101,11 @@ void Serializer::check(SerializedScene& output,
   data_->point_lights_.reserve(point_light_count);
   data_->spot_lights_.reserve(spot_light_count);
   data_->sun_lights_.reserve(sun_light_count);
-  data_->textured_quads_.reserve(textured_quad_count);
 
   enable_frustum_culling_ = enable_frustum_culling;
 
-  current_render_mask_ = Mask(render_mask);
+  current_render_mask_ = mask;
+
   current_frustum_ = output.frustum;
   current_center_of_interest_ = output.center_of_interest;
 
@@ -158,22 +151,10 @@ void Serializer::check(SerializedScene& output,
 
 /* virtual */ void Serializer::visit(node::GeometryNode* node) {
 
+  if (is_visible(node)) {
+    add_bbox(node);
 
-  if (is_visible(node))
-  {
-    if (!node->get_filename().empty() && !node->get_material().empty())
-    {
-      add_bbox(node);
-
-
-      // add geometry to the serialized scene, if it exists in database
-      if (gua::GeometryDatabase::instance()->is_supported(node->get_filename()))
-      {
-        data_->geometrynodes_[std::type_index(typeid(*node))].push_back(node);
-      }
-    }
-
-    data_->materials_.insert(node->get_material());
+    data_->geometrynodes_[std::type_index(typeid(*node))][node->get_material().get_shader_name()].push_back(node);
 
     visit_children(node);
   }
@@ -255,7 +236,7 @@ void Serializer::check(SerializedScene& output,
 
     add_bbox(node);
 
-    data_->textured_quads_.push_back(node);
+    // data_->geometrynodes_[std::type_index(typeid(*node))][node->get_texture()].push_back(node);
 
     visit_children(node);
   }
@@ -273,10 +254,9 @@ bool Serializer::is_visible(node::Node* node) const {
     }
   }
 
+
   if (is_visible) {
-    if (!node->get_groups().empty()) {
-      is_visible = current_render_mask_.check(node->get_groups());
-    }
+    is_visible = current_render_mask_.check(node->get_tags());
   }
 
   return is_visible;

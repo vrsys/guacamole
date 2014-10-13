@@ -25,7 +25,6 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 

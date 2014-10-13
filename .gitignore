@@ -32,7 +32,6 @@ guacamole.sublime-workspace
 include/gua/generated/*
 include/gua/config.hpp
 src/gua/generated/*
-tags
 .nfs*
 .vim.custom
 tests/tests

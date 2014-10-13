@@ -18,13 +18,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 #ifndef GUA_VIDEO3D_LOADER_HPP
 #define GUA_VIDEO3D_LOADER_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
 #include <gua/databases/Database.hpp>
 
 // external headers
@@ -47,7 +46,7 @@ class Video3DNode;
  * This class can load Video3D data from files and display them in multiple
  * contexts. A MeshLoader object is made of several Video3D objects.
  */
-class GUA_DLL Video3DLoader : public GeometryLoader {
+class GUA_DLL Video3DLoader {
  public:
 
   Video3DLoader();
@@ -66,3 +65,4 @@ class GUA_DLL Video3DLoader : public GeometryLoader {
 }
 
 #endif  // GUA_VIDEO3D_LOADER_HPP
+#endif

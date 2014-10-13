@@ -26,10 +26,18 @@
 #include <gua/config.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/renderer/VolumeLoader.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/GeometryPass.hpp>
+#include <gua/renderer/LightingPass.hpp>
+#include <gua/renderer/BackgroundPass.hpp>
+#include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/Window.hpp>
+#include <gua/renderer/MaterialShader.hpp>
+#include <gua/renderer/MaterialShaderDescription.hpp>
+#include <gua/renderer/Material.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #ifdef GUACAMOLE_GLFW3
 #include <gua/renderer/GlfwWindow.hpp>
 #endif

@@ -18,14 +18,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+#if 0
 #ifndef GUA_NURBS_LOADER_HPP
 #define GUA_NURBS_LOADER_HPP
 
 // guacamole headers
-#include <gua/node/NURBSNode.hpp>
-#include <gua/renderer/NURBS.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/platform.hpp>
 
 // external headers
 #include <unordered_set>
@@ -42,7 +40,7 @@ class Node;
  * This class can load NURBS data from files and display them in multiple
  * contexts.
  */
-class GUA_NURBS_DLL NURBSLoader : public GeometryLoader {
+class GUA_NURBS_DLL NURBSLoader {
  public:
 
    enum Flags {
@@ -79,3 +77,4 @@ class GUA_NURBS_DLL NURBSLoader : public GeometryLoader {
 }
 
 #endif  // GUA_NURBS_LOADER_HPP
+#endif

@@ -29,6 +29,7 @@
 #include <gua/scenegraph/PickResult.hpp>
 #include <gua/utils/Mask.hpp>
 #include <gua/events/Signal.hpp>
+#include <gua/utils/TagList.hpp>
 
 // external headers
 #include <map>
@@ -158,45 +159,8 @@ class GUA_DLL Node {
    */
   void clear_children();
 
-  /**
-   * Adds the Node to a group.
-   *
-   * \param group     The name of the group the Node will be added to.
-   */
-  void add_to_group(std::string const& group);
-
-  /**
-   * Adds the Node to several groups.
-   *
-   * \param groups    The names of the groups the Node will be added to.
-   */
-  void add_to_groups(std::set<std::string> const& groups);
-
-  /**
-   * Removes the Node from a group.
-   *
-   * \param group     The name of the group the Node will removed from.
-   */
-  void remove_from_group(std::string const& group);
-
-  /**
-   * Checks whether the Node is in a certain group.
-   *
-   * \param group   The name of the group to be checked.
-   *
-   * \return bool   Returns true if the Node is in the given group,
-   *                else false.
-   */
-  bool is_in_group(std::string const& group) const;
-
-  /**
-   * Returns the groups the Node is in.
-   *
-   * \return std::set<std::string>  Returns all groups the Node is in.
-   */
-  inline std::set<std::string> const& get_groups() const {
-    return group_list_;
-  }
+  gua::utils::TagList const& get_tags() const;
+  gua::utils::TagList& get_tags();
 
 
   /**
@@ -375,8 +339,8 @@ class GUA_DLL Node {
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   virtual std::set<PickResult> const ray_test(RayNode const& ray,
-                                            PickResult::Options options = PickResult::PICK_ALL,
-                                            std::string const& mask = "");
+                                              PickResult::Options options = PickResult::PICK_ALL,
+                                              Mask const& mask = Mask());
 
   /**
    * Intersects a Node with a given Ray.
@@ -393,7 +357,7 @@ class GUA_DLL Node {
    */
   virtual std::set<PickResult> const ray_test(Ray const& ray,
                                               PickResult::Options options = PickResult::PICK_ALL,
-                                              std::string const& mask = "");
+                                              Mask const& mask = Mask());
 
   /**
    * Accepts a visitor and calls concrete visit method
@@ -489,7 +453,7 @@ class GUA_DLL Node {
   std::vector<std::shared_ptr<Node>> children_;
 
   // internal annotations
-  std::set<std::string> group_list_;
+  gua::utils::TagList tags_;
   std::vector<void*> user_data_;
   std::string name_;
   math::mat4 transform_; // invertible affine transformation

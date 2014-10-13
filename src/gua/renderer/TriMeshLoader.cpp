@@ -28,11 +28,10 @@
 #include <gua/utils/string_utils.hpp>
 #include <gua/node/TriMeshNode.hpp>
 #include <gua/node/TransformNode.hpp>
-#include <gua/renderer/Material.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/ShadingModelDatabase.hpp>
 
@@ -54,8 +53,7 @@ namespace gua {
   /////////////////////////////////////////////////////////////////////////////
 
   TriMeshLoader::TriMeshLoader()
-    : GeometryLoader(),
-      node_counter_(0)
+    : node_counter_(0)
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +114,7 @@ namespace gua {
   std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file
     (std::string const& node_name,
     std::string const& file_name,
-    std::string const& fallback_material,
+    Material const& fallback_material,
     unsigned flags)
   {
     auto cached_node(load_geometry(file_name, flags));
@@ -252,16 +250,16 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
     GeometryDatabase::instance()->add(mesh_name, std::make_shared<TriMeshRessource>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & TriMeshLoader::MAKE_PICKABLE));
 
     // load material
-    std::string material_name("");
+    Material material;
     unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]->mMaterialIndex);
 
     if (material_index != 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
-      aiMaterial const* material(ai_scene->mMaterials[material_index]);
-      material_name = material_loader.load_material(material, file_name);
+      aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
+      material = material_loader.load_material(ai_material, file_name);
     }
 
-    return std::make_shared<node::TriMeshNode>(mesh_name, mesh_name, material_name);
+    return std::make_shared<node::TriMeshNode>(mesh_name, mesh_name, material);
   };
 
   // there is only one child -- skip it!
@@ -300,21 +298,18 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
 ////////////////////////////////////////////////////////////////////////////////
 
 void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
-                                             std::string const& fallback_material) const
+                                            Material const& fallback_material) const
 {
   auto g_node(std::dynamic_pointer_cast<node::GeometryNode>(root));
 
-  if (g_node) {
-    if (g_node->get_material().empty()) {
-      g_node->set_material(fallback_material);
-      g_node->update_cache();
-    }
+  if (g_node && g_node->get_material().get_shader_name() == "") {
+    g_node->set_material(fallback_material);
+    g_node->update_cache();
   }
 
   for (auto& child : root->get_children()) {
     apply_fallback_material(child, fallback_material);
   }
-
 
 }
 

@@ -22,60 +22,32 @@
 // class header
 #include <gua/renderer/GeometryPass.hpp>
 
-// guacamole headers
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
+#include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/View.hpp>
-#include <gua/databases.hpp>
-#include <gua/utils.hpp>
+#include <gua/utils/Logger.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GeometryPass::GeometryPass(Pipeline* pipeline) : Pass(pipeline) {}
+void GeometryPass::process(Pipeline* pipe) {
+  RenderContext const& ctx(pipe->get_context());
+  
+  pipe->get_gbuffer().bind(ctx, this);
+  pipe->get_gbuffer().set_viewport(ctx);
 
-////////////////////////////////////////////////////////////////////////////////
+  for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
+    auto const& ressources = type_ressource_pair.second;
 
-void GeometryPass::render_scene(Camera const& camera,
-                                SceneGraph const& current_graph,
-                                RenderContext const& ctx,
-                                std::size_t viewid) {
-
-  gbuffer_->clear(ctx);
-
-  bool is_stereo = gbuffer_->get_eye_buffers().size() > 1;
-  View view(viewid, is_stereo);
-
-  if (is_stereo) // stereo -> todo: combine frusta?
-  {
-    view.left  = pipeline_->get_current_scene(CameraMode::LEFT).frustum;
-    view.right = pipeline_->get_current_scene(CameraMode::RIGHT).frustum;
-  } else {       // mono -> just use left frustum
-    view.left = pipeline_->get_current_scene(CameraMode::LEFT).frustum;
-  }
-
-  for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
-
-    FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
-
-    CameraMode eye;
-    if (!is_stereo) {
-      eye = CameraMode::CENTER;
-    } else {
-      eye = (i == 0) ? CameraMode::LEFT : CameraMode::RIGHT;
+    if (ressources.size() > 0 && ressources.begin()->second.size() > 0) {
+      auto const& ressource = GeometryDatabase::instance()->lookup(ressources.begin()->second[0]->get_filename());
+      auto const& renderer  = pipe->get_renderer(*ressource);
+      renderer->draw(ressources, pipe);
     }
-
-    fbo->bind(ctx);
-
-    ctx.render_context->set_viewport(scm::gl::viewport(
-        math::vec2(0, 0), ::scm::math::vec2f(fbo->width(), fbo->height())));
-
-    rendering(pipeline_->get_current_scene(eye), current_graph, ctx, eye, camera, fbo, view);
-
-    fbo->unbind(ctx);
   }
+
+  pipe->get_gbuffer().unbind(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

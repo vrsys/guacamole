@@ -24,7 +24,8 @@
 
 // guacamole headers
 #include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
+
+#include <gua/renderer/Material.hpp>
 
 // external headers
 #include <string>
@@ -51,7 +52,7 @@ class GeometryNode;
  * This class can load mesh data from files and display them in multiple
  * contexts. A MeshLoader object is made of several Mesh objects.
  */
-class GUA_DLL TriMeshLoader : public GeometryLoader {
+class GUA_DLL TriMeshLoader {
 
  public: // typedefs, enums
 
@@ -74,7 +75,7 @@ public:
    TriMeshLoader();
 
    /**
-   * 
+   *
    */
    std::shared_ptr<node::Node> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS);
 
@@ -83,7 +84,7 @@ public:
    */
    std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
                                                    std::string const& file_name,
-                                                   std::string const& fallback_material,
+                                                   Material const& fallback_material,
                                                    unsigned flags = DEFAULTS);
 
   /**
@@ -111,7 +112,7 @@ public:
   /**
   *
   */
-  bool is_supported(std::string const& file_name) const override;
+  bool is_supported(std::string const& file_name) const;
 
  private: // methods
 
@@ -121,7 +122,7 @@ public:
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);
 
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::string const& fallback_material) const;
+  void apply_fallback_material(std::shared_ptr<node::Node> const& root, Material const& fallback_material) const;
 
 private: // attributes
 

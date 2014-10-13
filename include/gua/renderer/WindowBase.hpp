@@ -41,7 +41,6 @@ namespace gua {
 
 class Geometry;
 class Texture2D;
-class StereoBuffer;
 
 /**
  * A base class for various windows.
@@ -142,8 +141,8 @@ class GUA_DLL WindowBase {
    */
   virtual void display(std::shared_ptr<Texture2D> const& center_texture);
 
-  virtual void display(std::shared_ptr<Texture2D> const& left_texture,
-                       std::shared_ptr<Texture2D> const& right_texture);
+  virtual void display(std::shared_ptr<Texture2D> const& center_texture,
+                       bool is_left);
 
   /**
    * Get the RenderContext of this window.

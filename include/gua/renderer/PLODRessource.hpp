@@ -24,7 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/PLODUberShader.hpp>
 #include <gua/utils/KDTree.hpp>
 
@@ -44,7 +44,7 @@ struct RenderContext;
  *
  * This class simply a wrapper for accessing models of PBR library
  */
-class PLODRessource : public GeometryRessource {
+class PLODRessource : public GeometryResource {
  public:
 
   explicit PLODRessource(pbr::model_t model_id, bool is_pickable);

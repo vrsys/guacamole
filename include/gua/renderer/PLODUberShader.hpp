@@ -22,6 +22,8 @@
 #ifndef GUA_PLOD_UBER_SHADER_HPP
 #define GUA_PLOD_UBER_SHADER_HPP
 
+#if 0
+
 // guacamole headers
 #include <gua/renderer/GeometryUberShader.hpp>
 #include <pbr/ren/cut_database_record.h>
@@ -189,4 +191,5 @@ class PLODUberShader : public GeometryUberShader {
 
 }
 
+#endif 
 #endif  // GUA_PLOD_UBER_SHADER_HPP

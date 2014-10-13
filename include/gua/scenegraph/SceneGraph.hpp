@@ -275,7 +275,7 @@ class GUA_DLL SceneGraph {
    */
   std::set<PickResult> const ray_test(node::RayNode const& ray,
                                       PickResult::Options options = PickResult::PICK_ALL,
-                                      std::string const& mask = "");
+                                      Mask const& mask = Mask());
 
   /**
    * Intersects a SceneGraph with a given Ray.
@@ -288,7 +288,7 @@ class GUA_DLL SceneGraph {
    */
   std::set<PickResult> const ray_test(Ray const& ray,
                                       PickResult::Options options = PickResult::PICK_ALL,
-                                      std::string const& mask = "");
+                                      Mask const& mask = Mask());
 
  private:
 

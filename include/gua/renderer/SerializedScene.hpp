@@ -58,7 +58,7 @@ struct SerializedScene {
   /**
   * All geometry nodes.
   */
-  std::unordered_map<std::type_index, std::vector<node::GeometryNode*>> geometrynodes_;
+  std::unordered_map<std::type_index, std::unordered_map<std::string, std::vector<node::GeometryNode*>>> geometrynodes_;
 
   /**
   * All Volume nodes.
@@ -84,18 +84,11 @@ struct SerializedScene {
    * The frustum.
    */
   Frustum frustum;
-  bool enable_global_clipping_plane;
-  math::vec4 global_clipping_plane;
 
   /**
    * The center of interest.
    */
   math::vec3 center_of_interest;
-
-  /**
-   * All used materials.
-   */
-  std::set<std::string> materials_;
 
   /**
    * All bounding boxes.
@@ -106,11 +99,6 @@ struct SerializedScene {
    * All bounding boxes.
    */
   std::vector<node::RayNode*> rays_;
-
-  /**
-   * All textured quads.
-   */
-  std::vector<node::TexturedQuadNode*> textured_quads_;
 };
 
 }
