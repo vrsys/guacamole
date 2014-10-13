@@ -24,7 +24,6 @@
 
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
 
 #include <memory>
 

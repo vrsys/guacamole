@@ -65,17 +65,7 @@ int main(int argc, char** argv) {
 
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", shader->get_default_material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   teapot->translate(1.0, 0.0, 0.0);
-  auto teapot2(loader.create_geometry_from_file("teapot2", "data/objects/teapot.obj", shader->get_default_material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  teapot2->translate(-1.0, 0.0, 0.0);
-
-
-  for (auto child : teapot2->get_children()) {
-    auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(child));
-    if (casted)
-      casted->get_material().set_uniform("color", gua::math::vec3(0.0, 1.0, 0.0));
-  }
-
-  // graph.add_node("/", teapot2);
+  graph.add_node("/", teapot);
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(4.4f);
@@ -91,7 +81,7 @@ int main(int argc, char** argv) {
   screen->translate(0, 0, 1.0);
 
   // setup rendering pipeline and window
-  auto resolution = resolution;
+  auto resolution = gua::math::vec2ui(1920, 1080);
   
   auto eye_l = graph.add_node<gua::node::TransformNode>("/screen", "eye_l");
   eye_l->translate(0.1, 0, 2);
@@ -109,8 +99,6 @@ int main(int argc, char** argv) {
   pipe->add_pass<gua::LightingPass>();
   pipe->add_pass<gua::BackgroundPass>();
   pipe->add_pass<gua::SSAOPass>().radius(2.f).falloff(2.f);
-
-  // pipe->add_pass<gua::SSAOPass>().set_radius(10.f).set_intensity(0.5f);
 
   auto window(new gua::GlfwWindow());
   pipe->set_output_window(window);

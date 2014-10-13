@@ -243,7 +243,7 @@ Material& MaterialLoader::get_material(unsigned capabilities) const {
             discard;
           } 
         }
-      )").set_uniform("opacity_map", "gua_default_texture"));
+      )").set_uniform("opacity_map", std::string("gua_default_texture")));
     }
 
     if (capabilities & NORMAL_MAP) {
@@ -254,7 +254,7 @@ Material& MaterialLoader::get_material(unsigned capabilities) const {
                                  + gua_varying_bitangent * ts_normal.y 
                                     + gua_varying_normal * ts_normal.z);
         }
-      )").set_uniform("normal_map", "gua_default_texture"));
+      )").set_uniform("normal_map", std::string("gua_default_texture")));
     }
 
     if (capabilities & DIFFUSE_MAP) {
@@ -267,9 +267,9 @@ Material& MaterialLoader::get_material(unsigned capabilities) const {
 
           gua_color = color.rgb; 
         }
-      )").set_uniform("diffuse_map", "gua_default_texture"));
+      )").set_uniform("diffuse_map", std::string("gua_default_texture")));
     } else if (capabilities & DIFFUSE_COLOR) {
-      description.add_fragment_pass(MaterialShaderMethod("diffuse_method").set_source(R"(
+      description.add_fragment_method(MaterialShaderMethod("diffuse_method").set_source(R"(
         void diffuse_method() {
           vec4 color = diffuse_color;
           if (color.a < 0.5) {
@@ -290,7 +290,7 @@ Material& MaterialLoader::get_material(unsigned capabilities) const {
           void )" + name + R"(_method() {
             gua_)" + name + R"( = texture2D(sampler2D()" + name + R"(_map), gua_texcoords).r;
           }
-        )").set_uniform(name + "_map", "gua_default_texture"));
+        )").set_uniform(name + "_map", std::string("gua_default_texture")));
       } else if (as_color) {
         description.add_fragment_method(MaterialShaderMethod(name + "_method").set_source(R"(
           void )" + name + R"(_method() {

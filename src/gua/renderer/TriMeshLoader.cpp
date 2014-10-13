@@ -255,8 +255,8 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
 
     if (material_index != 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
-      aiMaterial const* material(ai_scene->mMaterials[material_index]);
-      material = material_loader.load_material(material, file_name);
+      aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
+      material = material_loader.load_material(ai_material, file_name);
     }
 
     return std::make_shared<node::TriMeshNode>(mesh_name, mesh_name, material);

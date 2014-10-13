@@ -161,7 +161,7 @@ endif()
 if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated)
 endif()
-
+ 
 
 IF (UNIX)
     ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
@@ -175,7 +175,7 @@ IF (UNIX)
     ADD_CUSTOM_TARGET(CompileResources ALL
        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
     )
-
+ 
 ELSEIF(MSVC)
     ADD_CUSTOM_TARGET(CompileResources ALL
        DEPENDS ${RESOURCES} guarc

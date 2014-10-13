@@ -76,7 +76,8 @@ ShaderProgram* MaterialShader::get_shader(GeometryResource const& for_type,
                                     std::string const& geometry_v_shader,
                                     std::string const& geometry_f_shader) {
 
-  auto shader(shaders_.find(typeid(*for_type)));
+  std::type_index type_id(typeid(for_type));
+  auto shader(shaders_.find(type_id));
 
   if (shader != shaders_.end()) {
     return shader->second;

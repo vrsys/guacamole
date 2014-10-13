@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+/*
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/OculusWindow.hpp>
@@ -44,7 +44,7 @@ std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGrap
       loader.create_geometry_from_file(
       "sphere" + gua::string_utils::to_string(i),
       "data/objects/light_sphere.obj",
-      "data/materials/White.gmd"
+      shader->get_default_material()
     ));
 
     sphere_geometry->scale(0.04, 0.04, 0.04);
@@ -113,9 +113,9 @@ gua::math::mat4 const get_oculus_transform(OVR::SensorFusion* sensor) {
                           mat.M[2][0], mat.M[2][1], mat.M[2][2], mat.M[2][3],
                           mat.M[3][0], mat.M[3][1], mat.M[3][2], mat.M[3][3]);
 }
-
+*/
 int main(int argc, char** argv) {
-
+/*
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -236,7 +236,7 @@ int main(int argc, char** argv) {
   });
 
   loop.start();
-
+*/
   return 0;
 }
 
