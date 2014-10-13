@@ -64,17 +64,16 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", shader->get_default_material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  teapot->translate(1.0, 0.0, 0.0);
   graph.add_node("/", teapot);
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(4.4f);
-  light->translate(1.f, 0.f, 2.f);
+  light->translate(1.f, 0.f, -2.f);
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
+  light2->data.color = gua::utils::Color3f(1.0f, 0.0f, 1.0f);
   light2->scale(3.4f);
-  light2->translate(-2.f, 1.f, 2.f);
+  light2->translate(-2.f, 1.f, -2.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -98,14 +97,14 @@ int main(int argc, char** argv) {
   pipe->add_pass<gua::GeometryPass>();
   pipe->add_pass<gua::LightingPass>();
   pipe->add_pass<gua::BackgroundPass>();
-  pipe->add_pass<gua::SSAOPass>().radius(2.f).falloff(2.f);
+  // pipe->add_pass<gua::SSAOPass>().radius(2.f).falloff(2.f);
 
   auto window(new gua::GlfwWindow());
   pipe->set_output_window(window);
   gua::Renderer renderer({pipe});
 
   // add mouse interaction
-  gua::utils::Trackball trackball;
+  gua::utils::Trackball trackball(0.1, 0.05, 0.2);
 
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
