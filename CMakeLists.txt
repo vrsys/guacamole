@@ -8,7 +8,7 @@ ENABLE_LANGUAGE(C)
 # version number
 set(GUACAMOLE_MAJOR 0)
 set(GUACAMOLE_MINOR 8)
-set(GUACAMOLE_PATCH 17)
+set(GUACAMOLE_PATCH 18)
 set(GUACAMOLE_VERSION ${GUACAMOLE_MAJOR}.${GUACAMOLE_MINOR}.${GUACAMOLE_PATCH})
 set(GUACAMOLE_DESCRIPTION "GUACAMOLE - an astonishing virtual reality engine")
 set(GUACAMOLE_HOMEPAGE "http://www.GUACAMOLE.org")
@@ -38,6 +38,8 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/config.hpp.in
   ${PROJECT_BINARY_DIR}/include/gua/config.hpp
   )
+
+install(FILES ${PROJECT_BINARY_DIR}/include/gua/config.hpp DESTINATION include/gua)
 
 # add the binary tree to the search path for include files
 # so that we will find the generated config.hpp
@@ -103,7 +105,7 @@ set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${SCHISM_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIRS}
-    ${ASSIMP_INCLUDE_DIRS}
+    ${ASSIMP_INCLUDE_DIR}
     ${JSON_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
@@ -133,8 +135,8 @@ IF (UNIX)
 	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
 	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
 ELSEIF(MSVC)
-	set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
-	set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG /MDd /Zi")
+	set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _USE_MATH_DEFINES -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
+	set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -D _USE_MATH_DEFINES /MDd /Zi /MP")
 ENDIF(UNIX)
 
 ################################################################

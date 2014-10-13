@@ -135,10 +135,12 @@ class PLODUberShader : public GeometryUberShader {
 
   //accumulation pass FBO & attachments
   mutable scm::gl::texture_2d_ptr accumulation_pass_color_result_;
+  mutable scm::gl::texture_2d_ptr accumulation_pass_normal_result_;
   mutable scm::gl::frame_buffer_ptr accumulation_pass_result_fbo_;
 
   //normalization pass FBO & attachments
   mutable scm::gl::texture_2d_ptr normalization_pass_color_result_;
+  mutable scm::gl::texture_2d_ptr normalization_pass_normal_result_;
   mutable scm::gl::frame_buffer_ptr normalization_pass_result_fbo_;
 
   //temp buffer front & back
@@ -161,14 +163,16 @@ class PLODUberShader : public GeometryUberShader {
   mutable scm::gl::rasterizer_state_ptr change_point_size_in_shader_state_;
 
   mutable scm::gl::sampler_state_ptr linear_sampler_state_;
+  mutable scm::gl::sampler_state_ptr nearest_sampler_state_;
+
   mutable scm::gl::depth_stencil_state_ptr no_depth_test_depth_stencil_state_;
+  mutable scm::gl::depth_stencil_state_ptr depth_test_without_writing_depth_stencil_state_;
 
   mutable scm::gl::blend_state_ptr color_accumulation_state_;
 
   //frustum dependent variables:
   /////////////////////////////////////////////////////////////////////////////////////
-  mutable std::vector<unsigned int> frustum_culling_results_;
-
+  mutable std::map<pbr::model_t, std::vector<bool> > model_frustum_culling_results_;
   //misc:
   ////////////////////////////////////////////////////////////////////////////////////
   mutable unsigned int material_id_;

@@ -23,6 +23,7 @@
 #define GUA_GUA_METHODS_FACTORY_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/ShadingModel.hpp>
 
 // external headers
@@ -32,7 +33,7 @@
 
 namespace gua {
 
-class GuaMethodsFactory {
+class GUA_DLL GuaMethodsFactory {
  public:
   std::string get_sampler_casts() const;
   std::string get_material_id() const;

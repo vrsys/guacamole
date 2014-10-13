@@ -46,9 +46,9 @@ void on_window_resize(GLFWwindow* glfw_window, int width, int height) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void on_window_key_pres(GLFWwindow* glfw_window, int key, int scancode, int action, int mods) {
+void on_window_key_press(GLFWwindow* glfw_window, int key, int scancode, int action, int mods) {
   auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
-  window->on_key_pres.emit(key, scancode, action, mods);
+  window->on_key_press.emit(key, scancode, action, mods);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -137,7 +137,7 @@ void GlfwWindow::open() {
   glfwSetWindowUserPointer(glfw_window_, this);
   glfwSetWindowSizeCallback(glfw_window_, &on_window_resize);
 
-  glfwSetKeyCallback(         glfw_window_, &on_window_key_pres);
+  glfwSetKeyCallback(         glfw_window_, &on_window_key_press);
   glfwSetCharCallback(        glfw_window_, &on_window_char);
   glfwSetMouseButtonCallback( glfw_window_, &on_window_button_press);
   glfwSetCursorPosCallback(   glfw_window_, &on_window_move_cursor);
@@ -193,6 +193,11 @@ void GlfwWindow::finish_frame() const {
 
   glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
   glfwSwapBuffers(glfw_window_);
+
+  // Workaround for Windows Window Handling
+  // Poll events from rendering thread and not application mainloop
+  // Otherwise application window is stalling 
+  glfwPollEvents();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

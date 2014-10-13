@@ -23,6 +23,7 @@
 #define GUA_LAYER_MAPPING_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/renderer/ShadingModel.hpp>
 
 // external headers
@@ -45,7 +46,7 @@ namespace gua {
  *
  *
  */
-class LayerMapping {
+class GUA_DLL LayerMapping {
  public:
 
   /**

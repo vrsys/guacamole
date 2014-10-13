@@ -34,7 +34,7 @@
 namespace gua {
 
 class NodeVisitor;
-class Ray;
+struct Ray;
 
 namespace node {
 class RayNode;

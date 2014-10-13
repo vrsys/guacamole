@@ -139,7 +139,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
   // draw all drawable geometries
   for (auto const& type_ressource_pair : scene.geometrynodes_) {
     auto const& type = type_ressource_pair.first;
-    auto const& ressource_container = type_ressource_pair.second;
+    auto const& node_container = type_ressource_pair.second;
     auto ubershader = ubershaders_.at(type);
 
     // set frame-consistent per-ubershader uniforms
@@ -169,6 +169,16 @@ void GBufferPass::rendering(SerializedScene const& scene,
       }
     }
 
+    // 0. synchronize rendering relevant fields between node and ressource
+    for (auto const& node : node_container) {
+      auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
+      auto const& material = MaterialDatabase::instance()->lookup(node->get_material());
+
+      if (ressource && material) {
+        ressource->update(node);
+      }
+    }
+
 
     // 1. call preframe callback if available for type
     if (ubershader->get_stage_mask() & GeometryUberShader::PRE_FRAME_STAGE) {
@@ -178,7 +188,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     // 2. iterate all drawables of current type and call predraw of current
     // ubershader
     if (ubershader->get_stage_mask() & GeometryUberShader::PRE_DRAW_STAGE) {
-      for (auto const& node : ressource_container) {
+      for (auto const& node : node_container) {
         auto const& ressource =
             GeometryDatabase::instance()->lookup(node->get_filename());
         auto const& material =
@@ -212,7 +222,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     // 3. iterate all drawables of current type and call draw of current
     // ubershader
     if (ubershader->get_stage_mask() & GeometryUberShader::DRAW_STAGE) {
-      for (auto const& node : ressource_container) {
+      for (auto const& node : node_container) {
         auto const& ressource =
             GeometryDatabase::instance()->lookup(node->get_filename());
         auto const& material =
@@ -246,7 +256,7 @@ void GBufferPass::rendering(SerializedScene const& scene,
     // 4. iterate all drawables of current type and call postdraw of current
     // ubershader
     if (ubershader->get_stage_mask() & GeometryUberShader::POST_DRAW_STAGE) {
-      for (auto const& node : ressource_container) {
+      for (auto const& node : node_container) {
         auto const& ressource =
             GeometryDatabase::instance()->lookup(node->get_filename());
         auto const& material =

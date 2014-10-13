@@ -250,12 +250,12 @@ void PLODUberShader::update_textures(RenderContext const& context) const {
   render_window_dims_ = left_resolution_;
 
   //initialize attachments for depth pass
-  depth_pass_log_depth_result_ = context.render_device
+  depth_pass_linear_depth_result_ = context.render_device
       ->create_texture_2d(render_window_dims_,
-                          scm::gl::FORMAT_D32,
+                          scm::gl::FORMAT_D32F,
                           1, 1, 1);
 
-  depth_pass_linear_depth_result_ = context.render_device
+  depth_pass_log_depth_result_ = context.render_device
       ->create_texture_2d(render_window_dims_,
                           scm::gl::FORMAT_R_32F,
                           1, 1, 1);
@@ -266,28 +266,43 @@ void PLODUberShader::update_textures(RenderContext const& context) const {
                           scm::gl::FORMAT_RGBA_32F,
                           1, 1, 1);
 
+  accumulation_pass_normal_result_ = context.render_device
+      ->create_texture_2d(render_window_dims_,
+                          scm::gl::FORMAT_RGBA_32F,
+                          1, 1, 1);
+
   //initialize attachment for normalization pass
   normalization_pass_color_result_ = context.render_device
       ->create_texture_2d(render_window_dims_,
                           scm::gl::FORMAT_RGB_8,
                           1, 1, 1);
 
+  normalization_pass_normal_result_ = context.render_device
+      ->create_texture_2d(render_window_dims_,
+                          scm::gl::FORMAT_RGB_32F,
+                          1, 1, 1);
+
   //configure depth FBO
   depth_pass_result_fbo_->clear_attachments();
   depth_pass_result_fbo_->attach_depth_stencil_buffer(
-      depth_pass_log_depth_result_);
+      depth_pass_linear_depth_result_);
   depth_pass_result_fbo_->attach_color_buffer(0,
-                                              depth_pass_linear_depth_result_);
+                                              depth_pass_log_depth_result_);
 
   //configure accumulation FBO
   accumulation_pass_result_fbo_->clear_attachments();
   accumulation_pass_result_fbo_->attach_color_buffer(
       0, accumulation_pass_color_result_);
+  accumulation_pass_result_fbo_->attach_color_buffer(
+      1, accumulation_pass_normal_result_);
+
 
   //configure normalization FBO
   normalization_pass_result_fbo_->clear_attachments();
   normalization_pass_result_fbo_->attach_color_buffer(
       0, normalization_pass_color_result_);
+  normalization_pass_result_fbo_->attach_color_buffer(
+      1, normalization_pass_normal_result_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -326,6 +341,9 @@ bool PLODUberShader::upload_to(RenderContext const& context) const {
 
   no_depth_test_depth_stencil_state_ = context.render_device
       ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_ALWAYS);
+
+  depth_test_without_writing_depth_stencil_state_ = context.render_device
+      ->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS);
 
   color_accumulation_state_ =
       context.render_device->create_blend_state(true,
@@ -433,7 +451,6 @@ bool PLODUberShader::upload_to(RenderContext const& context) const {
 
   previous_framecount_ = -1;
 
-  frustum_culling_results_.clear();
   return upload_succeeded;
 }
 
@@ -506,7 +523,7 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
     //clear depth FBOS depth attachments
     ctx.render_context->clear_depth_stencil_buffer(depth_pass_result_fbo_);
     ctx.render_context->clear_color_buffer(
-        depth_pass_result_fbo_, 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+        depth_pass_result_fbo_, 0, scm::math::vec4f(1.0f, 1.0f, 1.0f, 1.0f));
 
     //clear_accumulation FBOS color attachment
     ctx.render_context
@@ -514,13 +531,24 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
                              0,
                              scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 
+    ctx.render_context
+        ->clear_color_buffer(accumulation_pass_result_fbo_,
+                             1,
+                             scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+
     //clear normalization FBOs color attachment
     ctx.render_context
         ->clear_color_buffer(normalization_pass_result_fbo_,
                              0,
                              scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+    ctx.render_context
+        ->clear_color_buffer(normalization_pass_result_fbo_,
+                             1,
+                             scm::math::vec3f(0.0f, 0.0f, 0.0f));
   }
 
+  //clear cached frustum culling results for all models
+  model_frustum_culling_results_.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -592,14 +620,16 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
   std::vector<scm::gl::boxf> const& model_bounding_boxes =
       kdn_tree->bounding_boxes();
 
-  frustum_culling_results_.clear();
-  frustum_culling_results_.resize(model_bounding_boxes.size());
+  model_frustum_culling_results_[model_id].clear();
+  model_frustum_culling_results_[model_id].resize(node_list.size());
 
   unsigned int node_counter = 0;
   for (const auto& n : node_list) {
     ++node_counter;
-    frustum_culling_results_[node_counter] =
-        culling_frustum.classify(model_bounding_boxes[n.node_id_]);
+
+    //0 = completely in frustum, 1 = completely outside frustum, 2 = intersecting frustum
+    bool is_in_frustum = culling_frustum.classify(model_bounding_boxes[n.node_id_]) != 1;
+    model_frustum_culling_results_[model_id][node_counter] = is_in_frustum;
   }
 
   auto plod_ressource = std::static_pointer_cast<PLODRessource>(
@@ -628,7 +658,7 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
                          view_id,
                          model_id,
                          vertex_array_,
-                         frustum_culling_results_);
+                         model_frustum_culling_results_[model_id]);
     get_program(depth_pass)->unuse(ctx);
   }
 
@@ -674,14 +704,20 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
         ->set_rasterizer_state(change_point_size_in_shader_state_);
 
     //disable depth test
+    //ctx.render_context
+    //    ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
+
     ctx.render_context
-        ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
+        ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
 
     //set blend state to accumulate
     ctx.render_context->set_blend_state(color_accumulation_state_);
 
     // bind accumulation FBO
     ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
+
+    //attach linear depth buffer of depth past for early-z rejection
+    accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
 
     std::vector<math::vec3> corner_values = frustum.get_corners();
 
@@ -725,6 +761,11 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
                     "gua_normal_matrix");
   get_program(accumulation_pass)
       ->set_uniform(ctx, model_matrix, "gua_model_matrix");
+ 
+  get_program(accumulation_pass)
+      ->set_uniform(ctx,
+                    transpose(inverse(model_matrix)),
+                    "transposed_inverse_model_matrix");
 
   if (material && plod_ressource) {
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
@@ -755,23 +796,13 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
     std::vector<scm::gl::boxf> const& model_bounding_boxes =
         kdn_tree->bounding_boxes();
 
-    frustum_culling_results_.clear();
-    frustum_culling_results_.resize(model_bounding_boxes.size());
-
-    unsigned int node_counter = 0;
-    for (const auto& n : node_list) {
-      ++node_counter;
-      frustum_culling_results_[node_counter] =
-          culling_frustum.classify(model_bounding_boxes[n.node_id_]);
-    }
-
     get_program(accumulation_pass)->use(ctx);
     plod_ressource->draw(ctx,
                          context_id,
                          view_id,
                          model_id,
                          vertex_array_,
-                         frustum_culling_results_);
+                         model_frustum_culling_results_[model_id]);
     get_program(accumulation_pass)->unuse(ctx);
   }
 }
@@ -794,11 +825,16 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
       get_program(normalization_pass)->set_uniform(
           ctx, using_default_pbr_material, "using_default_pbr_material");
 
-      //bind color output for gbuffer
+      //bind color outputs to be normalized for third pass
       ctx.render_context->bind_texture(
           accumulation_pass_color_result_, linear_sampler_state_, 0);
       get_program(normalization_pass)->get_program(ctx)
           ->uniform_sampler("p02_color_texture", 0);
+
+      ctx.render_context->bind_texture(
+          accumulation_pass_normal_result_, linear_sampler_state_, 1);
+      get_program(normalization_pass)->get_program(ctx)
+          ->uniform_sampler("p02_normal_texture", 1);
 
       fullscreen_quad_->draw(ctx.render_context);
       get_program(normalization_pass)->unuse(ctx);
@@ -827,6 +863,13 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
           normalization_pass_color_result_, linear_sampler_state_, 1);
       get_program(reconstruction_pass)->get_program(ctx)
           ->uniform_sampler("p02_color_texture", 1);
+
+      //bind normal output for gbuffer
+      ctx.render_context->bind_texture(
+          normalization_pass_normal_result_, linear_sampler_state_, 2);
+      get_program(reconstruction_pass)->get_program(ctx)
+          ->uniform_sampler("p02_normal_texture", 2);
+
       fullscreen_quad_->draw(ctx.render_context);
       get_program(reconstruction_pass)->unuse(ctx);
 

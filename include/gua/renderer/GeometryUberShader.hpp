@@ -32,7 +32,7 @@ struct View;
 /**
  * This class represents a (multipass-) stage for rendering geometry into a layered fbo
  */
-class GeometryUberShader : public UberShader {
+class GUA_DLL GeometryUberShader : public UberShader {
 
  public: // typedefs, enums etc
 

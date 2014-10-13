@@ -26,7 +26,7 @@
 #include <gua/renderer/WindowBase.hpp>
 #include <gua/events.hpp>
 
-class GLFWwindow;
+struct GLFWwindow;
 
 namespace gua {
 
@@ -76,10 +76,10 @@ class GUA_DLL GlfwWindow : public WindowBase {
    */
   void finish_frame() const;
 
-  events::Signal<math::vec2ui>        on_resize;
-  events::Signal<int, int, int, int>  on_key_pres;
+  events::Signal<math::vec2ui>        on_resize;    
+  events::Signal<int, int, int, int>  on_key_press;    // int key, int scancode, int action, int mods
   events::Signal<unsigned>            on_char;
-  events::Signal<int, int, int>       on_button_press;
+  events::Signal<int, int, int>       on_button_press; // int button, int action, int mods
   events::Signal<math::vec2>          on_move_cursor;
   events::Signal<math::vec2>          on_scroll;
   events::Signal<bool>                on_enter;
