@@ -28,7 +28,8 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 MaterialShader::MaterialShader(std::string const& name, MaterialShaderDescription const& desc)
   : desc_(desc),
-    default_material_(name)
+    default_material_(name),
+    max_object_count_(0)
 {
   auto v_methods = desc_.get_vertex_methods();
   auto f_methods = desc_.get_fragment_methods();
@@ -72,9 +73,10 @@ Material& MaterialShader::get_default_material() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ShaderProgram* MaterialShader::get_shader(GeometryResource const& for_type,
-                                    std::string const& geometry_v_shader,
-                                    std::string const& geometry_f_shader) {
+ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
+                                          GeometryResource const& for_type,
+                                          std::string const& geometry_v_shader,
+                                          std::string const& geometry_f_shader) {
 
   std::type_index type_id(typeid(for_type));
   auto shader(shaders_.find(type_id));
@@ -88,19 +90,18 @@ ShaderProgram* MaterialShader::get_shader(GeometryResource const& for_type,
 
     auto new_shader = new ShaderProgram();
 
-    auto v_shader(compile_description(v_methods, geometry_v_shader));
-    auto f_shader(compile_description(f_methods, geometry_f_shader));
+    auto v_shader(compile_description(ctx, v_methods, geometry_v_shader));
+    auto f_shader(compile_description(ctx, f_methods, geometry_f_shader));
 
-    std::cout << "###############################################" << std::endl;
-    std::cout << "###############################################" << std::endl;
-    std::cout << "###############################################" << std::endl;
-    std::cout << v_shader << std::endl;
-    std::cout << f_shader << std::endl;
+    // std::cout << "###############################################" << std::endl;
+    // std::cout << "###############################################" << std::endl;
+    // std::cout << "###############################################" << std::endl;
+    // std::cout << v_shader << std::endl;
+    // std::cout << f_shader << std::endl;
 
     new_shader->create_from_sources(v_shader, f_shader);
 
     shaders_[type_id] = new_shader;
-
     return new_shader;
   }
 }
@@ -108,8 +109,8 @@ ShaderProgram* MaterialShader::get_shader(GeometryResource const& for_type,
 ////////////////////////////////////////////////////////////////////////////////
 
 void MaterialShader::apply_uniforms(RenderContext const& ctx,
-                              ShaderProgram* shader,
-                              Material const& overwrite) const {
+                                    ShaderProgram* shader,
+                                    Material const& overwrite) const {
 
 
   // for (auto const& uniform : default_material_.get_uniforms()) {
@@ -130,24 +131,32 @@ void MaterialShader::print_shaders() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> const& methods,
+std::string MaterialShader::compile_description(RenderContext const& ctx,
+                                                std::list<MaterialShaderMethod> const& methods,
                                                 std::string const& shader_source) const {
   std::string source(shader_source);
   std::stringstream sstr;
 
-  /*
+  unsigned vec4_count(0);
+
   sstr << "struct GuaObjectDataStruct {" << std::endl;
   sstr << "  mat4 gua_model_matrix;" << std::endl;
+  vec4_count += 4;
   sstr << "  mat4 gua_normal_matrix;" << std::endl;
+  vec4_count += 4;
 
   for (auto const& uniform: get_default_material().get_uniforms()) {
     sstr << uniform.get_glsl_type() << " "
            << uniform.get_name() << ";" << std::endl;
+    ++vec4_count;
   }
+
+  max_object_count_ = ctx.render_device->capabilities()._max_uniform_block_size / (vec4_count * 16);
+
   sstr << "};" << std::endl;
   sstr << std::endl;
-  sstr << "layout (std430, binding=0) buffer ObjectDataSSBO {" << std::endl;
-  sstr << "  GuaObjectDataStruct gua_object_data[1000];" << std::endl;
+  sstr << "layout (std140, binding=1) uniform GuaObjectData {" << std::endl;
+  sstr << "  GuaObjectDataStruct gua_object_data[" << max_object_count_ << "];" << std::endl;
   sstr << "};" << std::endl;
   sstr << std::endl;
   sstr << "uniform int gua_draw_index;" << std::endl;
@@ -171,9 +180,9 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
   }
   gua::string_utils::replace(source, "@material_input", sstr.str());
   sstr.str("");
-  */
 
-  ///*
+
+  /*
   sstr << "uniform mat4 gua_model_matrix;" << std::endl;
   sstr << "uniform mat4 gua_normal_matrix;" << std::endl;
 
@@ -189,7 +198,7 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
 
   // global variable assignment ------------------------------------------------
   gua::string_utils::replace(source, "@material_input", "");
-  //*/
+  */
 
   // material methods ----------------------------------------------------------
   for (auto& method: methods) {

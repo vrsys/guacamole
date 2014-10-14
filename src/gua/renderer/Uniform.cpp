@@ -25,8 +25,6 @@
 #include <gua/math/math.hpp>
 #include <gua/memory.hpp>
 
-#include <gua/node/GeometryNode.hpp>
-
 namespace gua {
 
 template<> std::string UniformValue::get_glsl_type_impl<int>()          { return "int"; }
@@ -59,34 +57,50 @@ template<> void UniformValue::apply<math::vec4i>  (UniformValue const* self, Ren
 template<> void UniformValue::apply<math::vec2ui> (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec2ui_); }
 template<> void UniformValue::apply<math::vec3ui> (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec3ui_); }
 template<> void UniformValue::apply<math::vec4ui> (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec4ui_); }
-template<> void UniformValue::apply<std::string>  (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { 
+template<> void UniformValue::apply<std::string>  (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) {
   auto texture(TextureDatabase::instance()->lookup(self->val_.texture_));
   if (texture) {
     prog->uniform(self->get_name(), location, texture->get_handle(ctx));
   }
 }
 
-template<> unsigned UniformValue::write_bytes_impl<int>         (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.int_,     sizeof(int));           return sizeof(int); }
-template<> unsigned UniformValue::write_bytes_impl<bool>        (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.bool_,    sizeof(bool));          return sizeof(bool); }
-template<> unsigned UniformValue::write_bytes_impl<float>       (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.float_,   sizeof(float));         return sizeof(float); }
-template<> unsigned UniformValue::write_bytes_impl<math::mat3>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.mat3_,    sizeof(math::mat3));    return sizeof(math::mat3); }
-template<> unsigned UniformValue::write_bytes_impl<math::mat4>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.mat4_,    sizeof(math::mat4));    return sizeof(math::mat4); }
-template<> unsigned UniformValue::write_bytes_impl<math::vec2>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec2_,    sizeof(math::vec2));    return sizeof(math::vec2); }
-template<> unsigned UniformValue::write_bytes_impl<math::vec3>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec3_,    sizeof(math::vec3));    return sizeof(math::vec3); }
-template<> unsigned UniformValue::write_bytes_impl<math::vec4>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec4_,    sizeof(math::vec4));    return sizeof(math::vec4); }
-template<> unsigned UniformValue::write_bytes_impl<math::vec2i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec2i_,   sizeof(math::vec2i));   return sizeof(math::vec2i); }
-template<> unsigned UniformValue::write_bytes_impl<math::vec3i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec3i_,   sizeof(math::vec3i));   return sizeof(math::vec3i); }
-template<> unsigned UniformValue::write_bytes_impl<math::vec4i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec4i_,   sizeof(math::vec4i));   return sizeof(math::vec4i); }
-template<> unsigned UniformValue::write_bytes_impl<math::vec2ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec2ui_,  sizeof(math::vec2ui));  return sizeof(math::vec2ui); }
-template<> unsigned UniformValue::write_bytes_impl<math::vec3ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec3ui_,  sizeof(math::vec3ui));  return sizeof(math::vec3ui); }
-template<> unsigned UniformValue::write_bytes_impl<math::vec4ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec4ui_,  sizeof(math::vec4ui));  return sizeof(math::vec4ui); }
-template<> unsigned UniformValue::write_bytes_impl<std::string> (UniformValue const* self, RenderContext const& ctx, char* target) { 
+template<> unsigned UniformValue::get_byte_size_impl<int>         () { return sizeof(int); }
+template<> unsigned UniformValue::get_byte_size_impl<bool>        () { return sizeof(int); }
+template<> unsigned UniformValue::get_byte_size_impl<float>       () { return sizeof(float); }
+template<> unsigned UniformValue::get_byte_size_impl<math::mat3>  () { return sizeof(math::mat3); }
+template<> unsigned UniformValue::get_byte_size_impl<math::mat4>  () { return sizeof(math::mat4); }
+template<> unsigned UniformValue::get_byte_size_impl<math::vec2>  () { return sizeof(math::vec2); }
+template<> unsigned UniformValue::get_byte_size_impl<math::vec3>  () { return sizeof(math::vec3); }
+template<> unsigned UniformValue::get_byte_size_impl<math::vec4>  () { return sizeof(math::vec4); }
+template<> unsigned UniformValue::get_byte_size_impl<math::vec2i> () { return sizeof(math::vec2i); }
+template<> unsigned UniformValue::get_byte_size_impl<math::vec3i> () { return sizeof(math::vec3i); }
+template<> unsigned UniformValue::get_byte_size_impl<math::vec4i> () { return sizeof(math::vec4i); }
+template<> unsigned UniformValue::get_byte_size_impl<math::vec2ui>() { return sizeof(math::vec2ui); }
+template<> unsigned UniformValue::get_byte_size_impl<math::vec3ui>() { return sizeof(math::vec3ui); }
+template<> unsigned UniformValue::get_byte_size_impl<math::vec4ui>() { return sizeof(math::vec4ui); }
+template<> unsigned UniformValue::get_byte_size_impl<std::string> () { return sizeof(math::vec2ui); }
+
+
+template<> void UniformValue::write_bytes_impl<int>         (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.int_,     sizeof(int));          }
+template<> void UniformValue::write_bytes_impl<bool>        (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.bool_,    sizeof(int));         }
+template<> void UniformValue::write_bytes_impl<float>       (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.float_,   sizeof(float));        }
+template<> void UniformValue::write_bytes_impl<math::mat3>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.mat3_,    sizeof(math::mat3));   }
+template<> void UniformValue::write_bytes_impl<math::mat4>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.mat4_,    sizeof(math::mat4));   }
+template<> void UniformValue::write_bytes_impl<math::vec2>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec2_,    sizeof(math::vec2));   }
+template<> void UniformValue::write_bytes_impl<math::vec3>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec3_,    sizeof(math::vec3));   }
+template<> void UniformValue::write_bytes_impl<math::vec4>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec4_,    sizeof(math::vec4));   }
+template<> void UniformValue::write_bytes_impl<math::vec2i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec2i_,   sizeof(math::vec2i));  }
+template<> void UniformValue::write_bytes_impl<math::vec3i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec3i_,   sizeof(math::vec3i));  }
+template<> void UniformValue::write_bytes_impl<math::vec4i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec4i_,   sizeof(math::vec4i));  }
+template<> void UniformValue::write_bytes_impl<math::vec2ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec2ui_,  sizeof(math::vec2ui)); }
+template<> void UniformValue::write_bytes_impl<math::vec3ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec3ui_,  sizeof(math::vec3ui)); }
+template<> void UniformValue::write_bytes_impl<math::vec4ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec4ui_,  sizeof(math::vec4ui)); }
+template<> void UniformValue::write_bytes_impl<std::string> (UniformValue const* self, RenderContext const& ctx, char* target) {
   auto texture(TextureDatabase::instance()->lookup(self->val_.texture_));
   if (texture) {
     auto& handle(texture->get_handle(ctx));
     memcpy(target, &handle, sizeof(math::vec2ui));
   }
-  return sizeof(math::vec2ui);
 }
 
 
