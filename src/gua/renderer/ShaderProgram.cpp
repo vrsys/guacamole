@@ -219,8 +219,6 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
 
             programs_[context.id] = context.render_device->create_program(
                 shaders, capture_array, in_rasterization_discard_);
-            //programs_[context.id] = context.render_device->create_program (
-            //shaders, capture_array, in_rasterization_discard_ );
         }
 
         if (!programs_[context.id]) {
@@ -228,10 +226,6 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
 
           return false;
         }
-
-        // if (programs_[context.id]->info_log() != "")
-        //   std::cout << programs_[context.id]->info_log().c_str() << std::endl;
-
     }
 
     return true;
