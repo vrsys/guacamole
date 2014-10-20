@@ -96,7 +96,7 @@ Material const& MaterialLoader::load_material(
   std::string ambient_color(get_color(AI_MATKEY_COLOR_AMBIENT));
 
   std::string shinyness_map(get_sampler(AI_MATKEY_TEXTURE(aiTextureType_SHININESS, 0)));
-  std::string shinyness_color(get_float(AI_MATKEY_SHININESS));
+  std::string shinyness(get_float(AI_MATKEY_SHININESS));
 
   std::string opacity_map(get_sampler(AI_MATKEY_TEXTURE(aiTextureType_OPACITY, 0)));
 
@@ -122,18 +122,18 @@ Material const& MaterialLoader::load_material(
     capabilities |= NORMAL_MAP;
   }
 
-  if (reflection_map != "")
-    capabilities |= REFLECTION_MAP;
+  // if (reflection_map != "")
+  //   capabilities |= REFLECTION_MAP;
 
-  if (ambient_map != "") {
-    capabilities |= AMBIENT_MAP;
-  } else if (ambient_color != "") {
-    capabilities |= AMBIENT_COLOR;
-  }
+  // if (ambient_map != "") {
+  //   capabilities |= AMBIENT_MAP;
+  // } else if (ambient_color != "") {
+  //   capabilities |= AMBIENT_COLOR;
+  // }
 
   if (shinyness_map != "") {
     capabilities |= SHININESS_MAP;
-  } else if (shinyness_color != "" && shinyness_color != "0") {
+  } else if (shinyness != "" && shinyness != "0") {
     capabilities |= SHININESS_COLOR;
   }
 
@@ -147,19 +147,19 @@ Material const& MaterialLoader::load_material(
     mat.set_uniform("diffuse_map", assets_directory + diffuse_map);
   }
   if (capabilities & DIFFUSE_COLOR) {
-    mat.set_uniform("diffuse_color", diffuse_color);
+    mat.set_uniform("diffuse_color", string_utils::from_string<math::vec3>(diffuse_color));
   }
   if (capabilities & SPECULAR_MAP) {
-    mat.set_uniform("specular_map", assets_directory + specular_map);
+    mat.set_uniform("specularity_map", assets_directory + specular_map);
   }
   if (capabilities & SPECULAR_COLOR) {
-    mat.set_uniform("specular_color", specular_color);
+    mat.set_uniform("specularity", string_utils::from_string<math::vec3>(specular_color)[0]);
   }
   if (capabilities & EMIT_MAP) {
-    mat.set_uniform("emit_map", assets_directory + emit_map);
+    mat.set_uniform("emissivity_map", assets_directory + emit_map);
   }
   if (capabilities & EMIT_COLOR) {
-    mat.set_uniform("emit_color", emit_color);
+    mat.set_uniform("emissivity", string_utils::from_string<math::vec3>(emit_color)[0]);
   }
   if (capabilities & NORMAL_MAP) {
     mat.set_uniform("normal_map", assets_directory + normal_map);
@@ -168,17 +168,17 @@ Material const& MaterialLoader::load_material(
   // mat.set_uniform("reflection_map"),
   // assets_directory + reflection_map;
   // }
-  if (capabilities & AMBIENT_MAP) {
-    mat.set_uniform("ambient_map", assets_directory + ambient_map);
-  }
-  if (capabilities & AMBIENT_COLOR) {
-    mat.set_uniform("ambient_color", ambient_color);
-  }
+  // if (capabilities & AMBIENT_MAP) {
+  //   mat.set_uniform("ambient_map", assets_directory + ambient_map);
+  // }
+  // if (capabilities & AMBIENT_COLOR) {
+  //   mat.set_uniform("ambient_color", string_utils::from_string<math::vec3>(ambient_color));
+  // }
   if (capabilities & SHININESS_MAP) {
     mat.set_uniform("shinyness_map", assets_directory + shinyness_map);
   }
   if (capabilities & SHININESS_COLOR) {
-    mat.set_uniform("shinyness_color", shinyness_color);
+    mat.set_uniform("shinyness", string_utils::from_string<float>(shinyness));
   }
   if (capabilities & OPACITY_MAP) {
     mat.set_uniform("opacity_map", assets_directory + opacity_map);
@@ -214,15 +214,15 @@ Material& MaterialLoader::get_material(unsigned capabilities) const {
   if (capabilities & NORMAL_MAP) {
     material_name += "_nmap";
   }
-  if (capabilities & REFLECTION_MAP) {
-    material_name += "_rmap";
-  }
-  if (capabilities & AMBIENT_MAP) {
-    material_name += "_amap";
-  }
-  if (capabilities & AMBIENT_COLOR) {
-    material_name += "_acol";
-  }
+  // if (capabilities & REFLECTION_MAP) {
+  //   material_name += "_rmap";
+  // }
+  // if (capabilities & AMBIENT_MAP) {
+  //   material_name += "_amap";
+  // }
+  // if (capabilities & AMBIENT_COLOR) {
+  //   material_name += "_acol";
+  // }
   if (capabilities & SHININESS_MAP) {
     material_name += "_shmap";
   }
@@ -236,6 +236,7 @@ Material& MaterialLoader::get_material(unsigned capabilities) const {
   if (!MaterialShaderDatabase::instance()->is_supported(material_name)) {
     MaterialShaderDescription description;
 
+    // perform stencil mapping when an opacity map is provided
     if (capabilities & OPACITY_MAP) {
       description.add_fragment_method(MaterialShaderMethod("opacity_method").set_source(R"(
         void opacity_method() {
@@ -246,6 +247,7 @@ Material& MaterialLoader::get_material(unsigned capabilities) const {
       )").set_uniform("opacity_map", std::string("gua_default_texture")));
     }
 
+    // perform normal mapping when a normal map is provided
     if (capabilities & NORMAL_MAP) {
       description.add_fragment_method(MaterialShaderMethod("normal_mapping_method").set_source(R"(
         void normal_mapping_method() {
@@ -257,6 +259,7 @@ Material& MaterialLoader::get_material(unsigned capabilities) const {
       )").set_uniform("normal_map", std::string("gua_default_texture")));
     }
 
+    // perform stencil mapping based on alpha channel of diffuse texture
     if (capabilities & DIFFUSE_MAP) {
       description.add_fragment_method(MaterialShaderMethod("diffuse_method").set_source(R"(
         void diffuse_method() {
@@ -271,14 +274,9 @@ Material& MaterialLoader::get_material(unsigned capabilities) const {
     } else if (capabilities & DIFFUSE_COLOR) {
       description.add_fragment_method(MaterialShaderMethod("diffuse_method").set_source(R"(
         void diffuse_method() {
-          vec4 color = diffuse_color;
-          if (color.a < 0.5) {
-            discard;
-          } 
-
-          gua_color = color.rgb; 
+          gua_color = diffuse_color; 
         }
-      )").set_uniform("diffuse_color", math::vec4(1, 1, 1, 1)));
+      )").set_uniform("diffuse_color", math::vec3(1, 1, 1)));
     }
 
 

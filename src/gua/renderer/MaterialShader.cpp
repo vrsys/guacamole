@@ -91,12 +91,6 @@ ShaderProgram* MaterialShader::get_shader(GeometryResource const& for_type,
     auto v_shader(compile_description(v_methods, geometry_v_shader));
     auto f_shader(compile_description(f_methods, geometry_f_shader));
 
-    std::cout << "###############################################" << std::endl;
-    std::cout << "###############################################" << std::endl;
-    std::cout << "###############################################" << std::endl;
-    std::cout << v_shader << std::endl;
-    std::cout << f_shader << std::endl;
-
     new_shader->create_from_sources(v_shader, f_shader);
 
     shaders_[type_id] = new_shader;
