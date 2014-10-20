@@ -19,23 +19,39 @@
  *                                                                            *
  ******************************************************************************/
 
-#include <gua/renderer/Material.hpp>
+#ifndef GUA_VIEW_DEPENDENT_UNIFORM_HPP
+#define GUA_VIEW_DEPENDENT_UNIFORM_HPP
+
+#include <gua/renderer/Uniform.hpp>
+
+#include <string>
+#include <vector>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
-Material::Material(std::string const& shader_name):
-  shader_name_(shader_name)
-  {}
+class ViewDependentUniform {
+  public:
+    ViewDependentUniform(UniformValue const& value = UniformValue());
 
-////////////////////////////////////////////////////////////////////////////////
-// void Material::unset_uniform(std::string const& name) {
-//   uniforms_.erase(name);
-// }
+    UniformValue const& get() const;
+    UniformValue const& get(int view) const;
 
-////////////////////////////////////////////////////////////////////////////////
-std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() const {
-  return uniforms_;
+    void set(UniformValue const& value);
+
+    void set(int view, UniformValue const& value);
+
+
+    void apply(RenderContext const& ctx, std::string const& name, int view,
+               scm::gl::program_ptr const& prog, unsigned location = 0) const;
+
+
+  private:
+
+    UniformValue default_;
+    std::map<int, UniformValue> uniforms_;
+
+};
+
 }
 
-}
+#endif  // GUA_VIEW_DEPENDENT_UNIFORM_HPP

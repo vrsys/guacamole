@@ -89,8 +89,8 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
           int current_object(i + current_bind * max_object_count);
           auto const& node(object_list.second[current_object]);
 
-          UniformValue model_mat("gua_model_matrix", node->get_cached_world_transform());
-          UniformValue normal_mat("gua_normal_matrix", scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
+          UniformValue model_mat(node->get_cached_world_transform());
+          UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
 
 
           model_mat.write_bytes(ctx, buffer + current_pos);
@@ -104,13 +104,13 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
               // if (overwrite.get_name() == uniform.get_name()) {
                 // value = &overwrite;
 
-              auto byte_size(overwrite.get_byte_size());
+              auto byte_size(overwrite.second.get().get_byte_size());
               auto bytes_left(sizeof(math::vec4) - (current_pos % sizeof(math::vec4)));
 
               if (bytes_left < byte_size)
                 current_pos += bytes_left;
 
-              overwrite.write_bytes(ctx, buffer + current_pos);
+              overwrite.second.get().write_bytes(ctx, buffer + current_pos);
               current_pos += byte_size;
                 // break;
               // }
