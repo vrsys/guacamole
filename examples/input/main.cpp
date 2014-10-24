@@ -26,7 +26,7 @@
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
-void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods) 
+void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
   gua::utils::Trackball::button_type button;
   gua::utils::Trackball::state_type state;
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
-  
+
   auto eye_l = graph.add_node<gua::node::TransformNode>("/screen", "eye_l");
   eye_l->translate(0.1, 0, 2);
 
@@ -95,7 +95,6 @@ int main(int argc, char** argv) {
   auto pipe = new gua::Pipeline();
   pipe->config.set_camera(cam);
   pipe->config.set_resolution(resolution);
-  pipe->config.set_enable_stereo(true);
 
   pipe->add_pass<gua::GeometryPass>();
   pipe->add_pass<gua::LightingPass>();
@@ -158,7 +157,7 @@ int main(int argc, char** argv) {
       renderer.stop();
       window->close();
       loop.stop();
-    } else { 
+    } else {
       renderer.queue_draw({&graph});
     }
   });

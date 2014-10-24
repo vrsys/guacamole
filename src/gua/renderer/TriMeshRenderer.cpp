@@ -74,7 +74,6 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
 
       for (unsigned current_bind(0); current_bind < rebind_num; ++current_bind) {
 
-        ctx.render_context->bind_uniform_buffer(material_uniform_storage_buffer_, 1);
         char* buffer = reinterpret_cast<char*>(ctx.render_context->map_buffer(material_uniform_storage_buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
         unsigned object_count(current_bind < rebind_num - 1 ?
@@ -92,40 +91,37 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
           UniformValue model_mat(node->get_cached_world_transform());
           UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
 
-
           model_mat.write_bytes(ctx, buffer + current_pos);
           current_pos += model_mat.get_byte_size();
           normal_mat.write_bytes(ctx, buffer + current_pos);
           current_pos += normal_mat.get_byte_size();
 
-          // for (auto const& uniform : material->get_default_instance().get_uniforms()) {
-            // UniformValue const* value(&uniform);
-            for (auto const& overwrite : node->get_material().get_uniforms()) {
-              // if (overwrite.get_name() == uniform.get_name()) {
-                // value = &overwrite;
+          for (auto const& overwrite : node->get_material().get_uniforms()) {
 
-              auto byte_size(overwrite.second.get().get_byte_size());
-              auto bytes_left(sizeof(math::vec4) - (current_pos % sizeof(math::vec4)));
+            auto byte_size(overwrite.second.get().get_byte_size());
+            auto bytes_left(sizeof(math::vec4) - (current_pos % sizeof(math::vec4)));
 
-              if (bytes_left < byte_size)
-                current_pos += bytes_left;
+            if (bytes_left < byte_size)
+              current_pos += bytes_left;
 
-              overwrite.second.get().write_bytes(ctx, buffer + current_pos);
-              current_pos += byte_size;
-                // break;
-              // }
-            }
-            // current_pos += value->write_bytes(ctx, buffer + current_pos);
-          // }
+            overwrite.second.get().write_bytes(ctx, buffer + current_pos);
+            current_pos += byte_size;
+          }
 
-          auto bytes_left(sizeof(math::vec4) - (current_pos % sizeof(math::vec4)));
-          current_pos += bytes_left;
+
+          auto mod_pos(current_pos % sizeof(math::vec4));
+          if (mod_pos != 0) {
+            auto bytes_left(sizeof(math::vec4) - mod_pos);
+            current_pos += bytes_left;
+          }
+
         }
 
         ctx.render_context->unmap_buffer(material_uniform_storage_buffer_);
 
         shader->use(ctx);
 
+        ctx.render_context->bind_uniform_buffer(material_uniform_storage_buffer_, 1);
         // draw all objects ------------------------------------------------------
         for (int i(0); i < object_count; ++i) {
 
@@ -144,7 +140,6 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
 
         }
 
-        // ctx.render_context->reset_uniform_buffers();
       }
 
     } else {
