@@ -34,6 +34,7 @@ IF (GUACAMOLE_EXAMPLES)
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
     add_subdirectory(input)
+    add_subdirectory(stress_test)
   ENDIF (${GUACAMOLE_GLFW3})
 
   # nurbs example requires GLFW3 and nurbs-plugin
