@@ -41,6 +41,11 @@ CameraNode::CameraNode(std::string const& name,
 
 std::shared_ptr<SerializedCameraNode> CameraNode::serialize() const {
     SerializedCameraNode s = {config, get_world_transform()};
+
+    for (auto const& cam: pre_render_cameras_) {
+        s.pre_render_cameras.push_back(cam->serialize());
+    }
+
     return std::make_shared<SerializedCameraNode>(s);
 }
 

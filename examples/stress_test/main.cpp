@@ -60,6 +60,8 @@ int main(int argc, char** argv) {
     } 
   } 
 
+  auto resolution = gua::math::vec2ui(1920, 1080);
+
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(4.4f);
   light->translate(1.f, 0.f, 2.f);
@@ -70,12 +72,12 @@ int main(int argc, char** argv) {
   light2->translate(-2.f, 1.f, 2.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
+  screen->data.set_size(gua::math::vec2(0.001 * resolution.x, 0.001 * resolution.y));
   screen->translate(0, 0, 1.0);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
-  camera->config.set_resolution(gua::math::vec2ui(1920, 1080));
+  camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
@@ -84,22 +86,13 @@ int main(int argc, char** argv) {
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
-  window->config.set_size(gua::math::vec2ui(1920, 1080));
-  window->config.set_resolution(gua::math::vec2ui(1920, 1080));
+  window->config.set_size(resolution);
+  window->config.set_resolution(resolution);
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
-  });
-
-  window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    std::cout << "Cursor: " << pos << std::endl;
-  });
-
-  window->on_button_press.connect([&](int button, int action, int mods) {
-    if (action == 0) std::cout << "Mouse button " << button << " up" << std::endl;
-    else             std::cout << "Mouse button " << button << " down" << std::endl;
   });
 
   gua::Renderer renderer;

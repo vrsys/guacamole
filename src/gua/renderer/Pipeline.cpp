@@ -32,6 +32,7 @@
 #include <gua/renderer/WindowBase.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/databases/WindowDatabase.hpp>
+#include <gua/databases/TextureDatabase.hpp>
 #include <gua/renderer/Frustum.hpp>
 #include <gua/node/CameraNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
@@ -114,7 +115,8 @@ Pipeline::Pipeline() :
   gbuffer_(nullptr),
   camera_block_(nullptr),
   last_resolution_(0, 0),
-  fullscreen_quad_(nullptr) {}
+  fullscreen_quad_(nullptr),
+  window_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -147,7 +149,17 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     return;
   }
 
-  window_ = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
+  // for (auto const& cam: camera.pre_render_cameras) {
+  //   cam->process(*cam, scene_graphs, application_fps, rendering_fps);
+  // }
+
+  bool reload_gbuffer(false);
+
+  auto new_window(WindowDatabase::instance()->lookup(camera.config.get_output_window_name()));
+  if (new_window != window_) {
+    window_ = new_window;
+    reload_gbuffer = true;
+  }
 
   // update window if one is assigned
   if (window_) {
@@ -158,10 +170,9 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     window_->set_active(true);
   }
 
-  bool reload_gbuffer(false);
 
-  if (last_resolution_ != window_->config.size()) {
-    last_resolution_ = window_->config.size();
+  if (last_resolution_ != camera.config.get_resolution()) {
+    last_resolution_ = camera.config.get_resolution();
     reload_gbuffer = true;
   }
 
@@ -176,7 +187,13 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
   }
 
   // recreate pipeline passes if pipeline description changed
-  bool reload_passes(camera.config.get_pipeline_description().is_dirty() || reload_gbuffer);
+  bool reload_passes(reload_gbuffer);
+
+  if (camera.config.get_pipeline_description() != last_description_) {
+    last_description_ = camera.config.get_pipeline_description(); 
+    reload_passes = true;
+  }
+
   if (reload_passes) {
     for (auto pass: passes_) {
       pass->on_delete(this);
@@ -204,7 +221,7 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     camera_block_ = new CameraUniformBlock(get_context().render_device);
   }
 
-  auto process_passes = [&, this](bool is_left) {
+  auto process_passes = [&](bool is_left) {
 
     // serialize this scenegraph
     serialize(*current_graph, is_left, camera, current_scene_);
@@ -228,7 +245,17 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     // display the last written colorbuffer of the gbuffer
     if (window_) {
       gbuffer_->toggle_ping_pong();
-      window_->display(gbuffer_->get_current_color_buffer(), is_left);
+
+      auto tex_name(camera.config.get_output_texture_name());
+      if (camera.config.get_enable_stereo()) {
+        tex_name += is_left ? "_left" : "_right";
+      }
+
+      // add texture to texture database
+      auto const& tex(gbuffer_->get_current_color_buffer());
+      TextureDatabase::instance()->add(tex_name, tex);
+
+      window_->display(tex, is_left);
     }
   };
 
@@ -242,7 +269,8 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
   if (window_) {
     window_->finish_frame();
   }
-  // ++(get_context().framecount);
+
+  ++(get_context().framecount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,6 +282,12 @@ GBuffer& Pipeline::get_gbuffer() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 RenderContext const& Pipeline::get_context() const {
+  return *window_->get_context();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RenderContext& Pipeline::get_context() {
   return *window_->get_context();
 }
 

@@ -44,13 +44,10 @@ class RenderContext;
 class PipelineDescription {
  public:
 
-  PipelineDescription():
-    dirty_(true) {}
+  PipelineDescription() {}
 
-  PipelineDescription(PipelineDescription const& to_copy):
-    dirty_(to_copy.dirty_) {
-
-    for (auto pass: to_copy.passes_) {
+  PipelineDescription(PipelineDescription const& other) {
+    for (auto pass: other.passes_) {
       passes_.push_back(pass->make_copy());
     }
   }
@@ -63,7 +60,6 @@ class PipelineDescription {
 
   template<class T>
   T& add_pass() {
-    dirty_ = true;
     T* t = new T();
     passes_.push_back(t);
     return *t;
@@ -73,12 +69,40 @@ class PipelineDescription {
     return passes_;
   }
 
-  bool is_dirty() const {
-    return dirty_;
+
+  bool operator==(PipelineDescription const& other) const {
+    if (passes_.size() != other.passes_.size()) {
+      return false;
+    }
+
+    for (int i(0); i<passes_.size(); ++i) {
+      if (typeid(passes_[i]) != typeid(other.passes_[i])) {
+        return false;
+      }
+    } 
+
+    return true;
+  }
+
+  bool operator!=(PipelineDescription const& other) const {
+    return !(*this == other);
+  }
+
+  PipelineDescription& operator=(PipelineDescription const& other) {
+    for (auto pass: passes_) {
+      delete pass;
+    } 
+
+    passes_.clear();
+
+    for (auto pass: other.passes_) {
+      passes_.push_back(pass->make_copy());
+    }
+
+    return *this;
   }
  
  private:
-  bool                                  dirty_;
   std::vector<PipelinePassDescription*> passes_;
 };
 
@@ -97,10 +121,11 @@ class Pipeline {
                std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 
-  std::vector<PipelinePass*> const& get_passes()  const;
-  GBuffer                         & get_gbuffer() const;
-  RenderContext              const& get_context() const;
-  SerializedScene            const& get_scene()   const;
+  std::vector<PipelinePass*>  const& get_passes()  const;
+  GBuffer                          & get_gbuffer() const;
+  SerializedScene             const& get_scene()   const;
+  RenderContext               const& get_context() const;
+  RenderContext                    & get_context();
   
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_camera_uniform_block(unsigned location) const;
@@ -109,17 +134,18 @@ class Pipeline {
   std::shared_ptr<RessourceRenderer> get_renderer(GeometryResource const& type);
 
  private:
-  GBuffer*                    gbuffer_;
-  std::shared_ptr<WindowBase> window_;
-  SerializedScene             current_scene_;
-  CameraUniformBlock*         camera_block_;
+  GBuffer*                           gbuffer_;
+  std::shared_ptr<WindowBase>        window_;
+  SerializedScene                    current_scene_;
+  CameraUniformBlock*                camera_block_;
 
-  math::vec2ui                last_resolution_;
+  math::vec2ui                       last_resolution_;
+  PipelineDescription                last_description_;
   
-  std::vector<PipelinePass*> passes_;
+  std::vector<PipelinePass*>         passes_;
   std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_; 
 
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
+  scm::gl::quad_geometry_ptr         fullscreen_quad_;
 
 };
 

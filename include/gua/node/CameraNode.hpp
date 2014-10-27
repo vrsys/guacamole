@@ -121,6 +121,18 @@ class GUA_DLL CameraNode : public Node {
              Configuration const& configuration = Configuration(),
              math::mat4 const& transform = math::mat4::identity());
 
+  std::vector<std::shared_ptr<CameraNode>> const& get_pre_render_cameras() const {
+    return pre_render_cameras_;
+  }
+
+  std::vector<std::shared_ptr<CameraNode>>& get_pre_render_cameras() {
+    return pre_render_cameras_;
+  }
+
+  void set_pre_render_cameras(std::vector<std::shared_ptr<CameraNode>> const& cams) {
+    pre_render_cameras_ = cams;
+  }
+
   /**
    * Accepts a visitor and calls concrete visit method.
    *
@@ -136,12 +148,15 @@ class GUA_DLL CameraNode : public Node {
 
   std::shared_ptr<Node> copy() const override;
 
+  std::vector<std::shared_ptr<CameraNode>> pre_render_cameras_;
 };
 
   
 struct GUA_DLL SerializedCameraNode {
   CameraNode::Configuration config;
   math::mat4                transform;
+
+  std::vector<std::shared_ptr<SerializedCameraNode>> pre_render_cameras;
 };
 
 } // namespace node {
