@@ -155,10 +155,12 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
 
   bool reload_gbuffer(false);
 
-  auto new_window(WindowDatabase::instance()->lookup(camera.config.get_output_window_name()));
-  if (new_window != window_) {
-    window_ = new_window;
-    reload_gbuffer = true;
+  if (camera.config.get_output_window_name() != "") {
+    auto new_window(WindowDatabase::instance()->lookup(camera.config.get_output_window_name()));
+    if (new_window != window_) {
+      window_ = new_window;
+      reload_gbuffer = true;
+    }
   }
 
   // update window if one is assigned
@@ -246,14 +248,17 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     if (window_) {
       gbuffer_->toggle_ping_pong();
 
-      auto tex_name(camera.config.get_output_texture_name());
-      if (camera.config.get_enable_stereo()) {
-        tex_name += is_left ? "_left" : "_right";
-      }
-
-      // add texture to texture database
       auto const& tex(gbuffer_->get_current_color_buffer());
-      TextureDatabase::instance()->add(tex_name, tex);
+      auto tex_name(camera.config.get_output_texture_name());
+      
+      if (tex_name != "") {
+        if (camera.config.get_enable_stereo()) {
+          tex_name += is_left ? "_left" : "_right";
+        }
+
+        // add texture to texture database
+        TextureDatabase::instance()->add(tex_name, tex);
+      }
 
       window_->display(tex, is_left);
     }

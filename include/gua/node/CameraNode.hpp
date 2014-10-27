@@ -47,40 +47,53 @@ class GUA_DLL CameraNode : public Node {
   };
 
   struct Configuration {
-    GUA_ADD_PROPERTY(PipelineDescription, pipeline_description, Pipeline::make_default());
-
-    GUA_ADD_PROPERTY(float,          eye_dist,          0.07f);
-    GUA_ADD_PROPERTY(float,          eye_offset,        0.f);
-    GUA_ADD_PROPERTY(std::string,    left_screen_path,  "unknown_screen");
-    GUA_ADD_PROPERTY(std::string,    right_screen_path, "unknown_screen");
-    GUA_ADD_PROPERTY(std::string,    scene_graph_name,  "unknown_scene_graph");
-    GUA_ADD_PROPERTY(ProjectionMode, mode,              PERSPECTIVE);
-    GUA_ADD_PROPERTY(Mask,           mask,              Mask());
 
     // if set to false, this camera won't render anything
-    GUA_ADD_PROPERTY(bool, enabled, true);
+    GUA_ADD_PROPERTY(bool,            enabled,                true);
 
-    GUA_ADD_PROPERTY(bool, enable_stereo, false);
+    // based on this description the rendering is performed
+    GUA_ADD_PROPERTY(PipelineDescription, pipeline_description, Pipeline::make_default());
+
+    // the camera renders a view into this scenegraph. The camera itself does
+    // not neccessarily has to be in the very same scenegraph. 
+    GUA_ADD_PROPERTY(std::string,     scene_graph_name,       "unknown_scene_graph");
+
+    // limits the rendered object to a set defined by the mask
+    GUA_ADD_PROPERTY(Mask,            mask,                   Mask());
+    
+    // whether this camera renders in perspective or orthographic mode
+    GUA_ADD_PROPERTY(ProjectionMode,  mode,                   PERSPECTIVE);
+
+    // viewing setup and stereo configuration
+    GUA_ADD_PROPERTY(bool,            enable_stereo,          false);
+    GUA_ADD_PROPERTY(float,           eye_dist,               0.07f);
+    GUA_ADD_PROPERTY(float,           eye_offset,             0.f);
+    GUA_ADD_PROPERTY(std::string,     left_screen_path,       "unknown_screen");
+    GUA_ADD_PROPERTY(std::string,     right_screen_path,      "unknown_screen");
+
+    // the rendering is performed with thid resolution. Usually it should match
+    // the output window's size.
+    GUA_ADD_PROPERTY(math::vec2ui,    resolution,             math::vec2ui(800, 600));
 
     // the final image of this camera will be stored in the texture database
     // with this name. if enable_stereo is set to true, two images with postfixes
     // _left and _right will be stored
-    GUA_ADD_PROPERTY(std::string, output_texture_name, "gua_pipeline");
-    GUA_ADD_PROPERTY(std::string, output_window_name,  "gua_window");
+    GUA_ADD_PROPERTY(std::string,     output_texture_name,    "");
 
-    // stereo configuration
-    GUA_ADD_PROPERTY(math::vec2ui, resolution, math::vec2ui(800, 600));
+    // if set to a non-empty string the produced texture will be displayed in a
+    // window of the window database with this name
+    GUA_ADD_PROPERTY(std::string,     output_window_name,     "");
 
     // various display options
-    GUA_ADD_PROPERTY(bool, enable_ray_display, false);
-    GUA_ADD_PROPERTY(bool, enable_bbox_display, false);
+    GUA_ADD_PROPERTY(bool,            enable_ray_display,     false);
+    GUA_ADD_PROPERTY(bool,            enable_bbox_display,    false);
 
     // clipping
-    GUA_ADD_PROPERTY(float, near_clip, 0.1f);
-    GUA_ADD_PROPERTY(float, far_clip, 1000.0f);
+    GUA_ADD_PROPERTY(float,           near_clip,              0.1f);
+    GUA_ADD_PROPERTY(float,           far_clip,               1000.0f);
 
     // culling
-    GUA_ADD_PROPERTY(bool, enable_frustum_culling, true);
+    GUA_ADD_PROPERTY(bool,            enable_frustum_culling, true);
 
     // convenience access to screen
     void set_screen_path(std::string const& path) {
