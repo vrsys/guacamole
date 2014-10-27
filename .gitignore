@@ -37,6 +37,6 @@ src/gua/generated/*
 tests/tests
 plugins/guacamole-oculus/example-oculus/example-oculus
 examples/oculus/example-oculus
-examples/multicontext/multicontext
+examples/multicontext/example-multicontext
 examples/input/example-input
 examples/stress_test/stress_test

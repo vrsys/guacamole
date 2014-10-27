@@ -62,8 +62,7 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", shader->get_default_material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS));
-  // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", shader->get_default_material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", shader->get_default_material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
@@ -91,12 +90,14 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
+  camera->config.set_enable_stereo(true);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
+  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_left_resolution(new_size);
     camera->config.set_resolution(new_size);
@@ -106,13 +107,6 @@ int main(int argc, char** argv) {
     trackball.motion(pos.x, pos.y);
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-  window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
-    if (action) {
-      std::cout << char(key) << " pressed." << std::endl;
-    } else {
-      std::cout << char(key) << " released." << std::endl;
-    }
-  });
 
   gua::Renderer renderer;
 

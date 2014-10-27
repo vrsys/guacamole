@@ -83,8 +83,6 @@ int main(int argc, char** argv) {
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
-
-
   window->config.set_enable_vsync(false);
   window->config.set_size(gua::math::vec2ui(1920, 1080));
   window->config.set_resolution(gua::math::vec2ui(1920, 1080));

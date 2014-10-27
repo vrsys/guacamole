@@ -48,8 +48,8 @@ IF (GUACAMOLE_EXAMPLES)
   ENDIF (${PLUGIN_guacamole-oculus})
 
   # multicontext example requires nurbs-plugin
-  IF (${PLUGIN_guacamole-nurbs})
+  # IF (${PLUGIN_guacamole-nurbs})
     add_subdirectory(multicontext)
-  ENDIF (${PLUGIN_guacamole-nurbs})
+  # ENDIF (${PLUGIN_guacamole-nurbs})
 
 ENDIF (GUACAMOLE_EXAMPLES)
