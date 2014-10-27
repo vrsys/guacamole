@@ -32,14 +32,69 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+SSAOPassDescription::SSAOPassDescription() :
+  radius_(1.f),
+  intensity_(1.f),
+  falloff_(0.1f) {}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float SSAOPassDescription::radius() const{
+  return radius_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+SSAOPassDescription& SSAOPassDescription::radius(float radius) {
+  radius_ = radius;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float SSAOPassDescription::intensity() const{
+  return intensity_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+SSAOPassDescription& SSAOPassDescription::intensity(float intensity) {
+  intensity_ = intensity;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float SSAOPassDescription::falloff() const{
+  return falloff_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+SSAOPassDescription& SSAOPassDescription::falloff(float falloff) {
+  falloff_ = falloff;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePassDescription* SSAOPassDescription::make_copy() const {
+  return new SSAOPassDescription(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+  
+PipelinePass* SSAOPassDescription::make_pass() const {
+  return new SSAOPass();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 SSAOPass::SSAOPass() :
   shader_(std::make_shared<ShaderProgram>()),
   depth_stencil_state_(nullptr),
   blend_state_(nullptr),
-  noise_texture_(),
-  radius_(1.f),
-  intensity_(1.f),
-  falloff_(0.1f) {
+  noise_texture_() {
 
   shader_ = std::make_shared<ShaderProgram>();
   shader_->create_from_sources(
@@ -50,46 +105,8 @@ SSAOPass::SSAOPass() :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float SSAOPass::radius() const{
-  return radius_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-SSAOPass& SSAOPass::radius(float radius) {
-  radius_ = radius;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-float SSAOPass::intensity() const{
-  return intensity_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-SSAOPass& SSAOPass::intensity(float intensity) {
-  intensity_ = intensity;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-float SSAOPass::falloff() const{
-  return falloff_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-SSAOPass& SSAOPass::falloff(float falloff) {
-  falloff_ = falloff;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void SSAOPass::process(Pipeline* pipe) {
+void SSAOPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
+  SSAOPassDescription* d(dynamic_cast<SSAOPassDescription*>(desc));
   RenderContext const& ctx(pipe->get_context());
 
   if (!depth_stencil_state_) {
@@ -114,9 +131,9 @@ void SSAOPass::process(Pipeline* pipe) {
   shader_->use(ctx);
 
   shader_->set_uniform(ctx, noise_texture_.get_handle(ctx), "gua_noise_tex");
-  shader_->set_uniform(ctx, radius_,    "gua_ssao_radius");
-  shader_->set_uniform(ctx, intensity_, "gua_ssao_intensity");
-  shader_->set_uniform(ctx, falloff_,   "gua_ssao_falloff");
+  shader_->set_uniform(ctx, d->radius(),    "gua_ssao_radius");
+  shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
+  shader_->set_uniform(ctx, d->falloff(),   "gua_ssao_falloff");
 
   pipe->bind_gbuffer_input(shader_);
   pipe->draw_fullscreen_quad();

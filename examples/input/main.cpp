@@ -45,8 +45,6 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
-#define COUNT 6
-
 int main(int argc, char** argv) {
 
   // initialize guacamole
@@ -68,7 +66,6 @@ int main(int argc, char** argv) {
   // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", shader->get_default_material(), gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
 
-
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(10.f);
   light->translate(2.f, 0.f, 5.f);
@@ -82,51 +79,33 @@ int main(int argc, char** argv) {
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
 
-  // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1920, 1080);
-  
-  auto eye_l = graph.add_node<gua::node::TransformNode>("/screen", "eye_l");
-  eye_l->translate(0.1, 0, 2);
-
-  auto eye_r = graph.add_node<gua::node::TransformNode>("/screen", "eye_r");
-  eye_r->translate(-0.1, 0, 2);
-
-  gua::Camera cam("/screen/eye_l", "/screen/eye_r", "/screen", "/screen", "main_scenegraph");
-  auto pipe = new gua::Pipeline();
-  pipe->config.set_camera(cam);
-  pipe->config.set_resolution(resolution);
-  pipe->config.set_enable_stereo(true);
-
-  pipe->add_pass<gua::GeometryPass>();
-  pipe->add_pass<gua::LightingPass>();
-  pipe->add_pass<gua::BackgroundPass>();
-  pipe->add_pass<gua::SSAOPass>().radius(2.f).falloff(2.f);
-
-  auto window(new gua::GlfwWindow());
-  pipe->set_output_window(window);
-  gua::Renderer renderer({pipe});
-
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
+  // setup rendering pipeline and window
+  auto resolution = gua::math::vec2ui(1920, 1080);
+  
+  auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
+  camera->translate(0, 0, 2.0);
+  camera->config.set_resolution(resolution);
+  camera->config.set_screen_path("/screen");
+  camera->config.set_scene_graph_name("main_scenegraph");
+  camera->config.set_output_window_name("main_window");
+
+  auto window = std::make_shared<gua::GlfwWindow>();
+  gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
-  window->config.set_left_resolution(resolution);
-  window->config.set_right_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
-
+  window->config.set_resolution(resolution);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_left_resolution(new_size);
-    pipe->config.set_resolution(new_size);
+    camera->config.set_resolution(new_size);
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
-
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
     trackball.motion(pos.x, pos.y);
   });
-
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
     if (action) {
       std::cout << char(key) << " pressed." << std::endl;
@@ -135,14 +114,7 @@ int main(int argc, char** argv) {
     }
   });
 
-#if WIN32
-  window->config.set_display_name("\\\\.\\DISPLAY1");
-  window->config.set_left_resolution(resolution);
-  window->config.set_right_resolution(resolution);
-  window->config.set_size(resolution);
-#else
-  window->config.set_display_name(":0.0");
-#endif
+  gua::Renderer renderer;
 
   // application loop
   gua::events::MainLoop loop;
@@ -159,7 +131,7 @@ int main(int argc, char** argv) {
       window->close();
       loop.stop();
     } else { 
-      renderer.queue_draw({&graph});
+      renderer.queue_draw({&graph}, {camera});
     }
   });
 

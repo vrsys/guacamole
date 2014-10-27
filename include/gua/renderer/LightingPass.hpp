@@ -31,6 +31,16 @@
 namespace gua {
 
 class Pipeline;
+class LightingPass;
+
+class LightingPassDescription : public PipelinePassDescription {
+ public:
+  virtual PipelinePassDescription* make_copy() const;
+  friend class Pipeline;
+  
+ protected:
+  virtual PipelinePass* make_pass() const;
+};
 
 class LightingPass : public PipelinePass {
  public:
@@ -38,9 +48,9 @@ class LightingPass : public PipelinePass {
   virtual bool needs_color_buffer_as_input() const { return true; }
   virtual bool writes_only_color_buffer()    const { return true; }
 
-  virtual void process(Pipeline* pipe);
+  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
 
-  friend class Pipeline;
+  friend class LightingPassDescription;
 
  protected:
   LightingPass();

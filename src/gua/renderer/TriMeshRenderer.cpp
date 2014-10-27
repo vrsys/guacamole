@@ -134,7 +134,6 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
 
           auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
           if (ressource) {
-
             shader->set_uniform(ctx, i, "gua_draw_index");
             ressource->draw(ctx);
 

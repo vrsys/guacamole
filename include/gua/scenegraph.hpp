@@ -34,5 +34,6 @@
 #include <gua/node/RayNode.hpp>
 #include <gua/node/ScreenNode.hpp>
 #include <gua/node/SpotLightNode.hpp>
+#include <gua/node/CameraNode.hpp>
 
 #endif  // GUA_INCLUDE_SCENEGRAPH_HPP

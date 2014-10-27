@@ -27,6 +27,8 @@
 #include <gua/platform.hpp>
 #include <gua/scenegraph.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/databases/WindowDatabase.hpp>
+#include <gua/node/CameraNode.hpp>
 #include <gua/utils.hpp>
 #include <gua/concurrent/Doublebuffer.hpp>
 #include <gua/concurrent/pull_items_iterator.hpp>
@@ -49,48 +51,62 @@ std::shared_ptr<Renderer::ConstRenderVector> garbage_collected_copy(
   return sgs;
 }
 
+
 Renderer::~Renderer() {
-  for (auto& rc : render_clients_) { rc.first->close(); }
-  for (auto& rc : render_clients_) { rc.second.join(); }
+  for (auto& rc : render_clients_) { rc.second.first->close(); }
+  for (auto& rc : render_clients_) { rc.second.second.join(); }
 }
 
-void Renderer::renderclient(Mailbox in, Pipeline* pipe) {
+void Renderer::renderclient(Mailbox in) {
   FpsCounter fpsc(20);
   fpsc.start();
+  Pipeline pipe;
 
   for (auto& x : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
-    pipe->process(*(x.first), x.second, fpsc.fps);
+    pipe.process(*std::get<0>(x), *std::get<1>(x), std::get<2>(x), fpsc.fps);
     fpsc.step();
   }
-
 }
 
-Renderer::Renderer(std::vector<Pipeline*> const& pipelines)
-    : render_clients_(),
-      application_fps_(20) {
+Renderer::Renderer()
+  : render_clients_(),
+    application_fps_(20) {
+
   application_fps_.start();
-  for (auto& pipe : pipelines) {
-    auto p = spawnDoublebufferred<Item>();
-    render_clients_.emplace_back(
-        std::make_pair(p.first,
-          std::thread(Renderer::renderclient, p.second, pipe)));
-  }
 }
 
-void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
+void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
+                          std::vector<std::shared_ptr<node::CameraNode>> const& cameras) {
   for (auto graph : scene_graphs) {
     graph->update_cache();
   }
   auto sgs = garbage_collected_copy(scene_graphs);
-  for (auto& rclient : render_clients_) {
-    rclient.first->push_back({sgs, application_fps_.fps});
+  for (auto& cam : cameras) {
+    auto window_name(cam->config.get_output_window_name());
+    auto rclient(render_clients_.find(window_name));
+    if (rclient != render_clients_.end()) {
+      rclient->second.first->push_back(std::make_tuple(cam->serialize(), sgs, application_fps_.fps));
+    } else {
+      auto window(WindowDatabase::instance()->lookup(window_name));
+
+      if (window) {
+        auto p = spawnDoublebufferred<Item>();
+        p.first->push_back(std::make_tuple(cam->serialize(), sgs, application_fps_.fps));
+        render_clients_[window_name] = std::make_pair(p.first, std::thread(Renderer::renderclient, p.second));
+      } else {
+        Logger::LOG_WARNING << "Cannot render camera: window \"" 
+                            << window_name 
+                            << "\" not registered in WindowDatabase!" 
+                            << std::endl;
+      }
+    }
   }
   application_fps_.step();
 }
 
 void Renderer::stop() {
   for (auto& rclient : render_clients_) {
-    rclient.first->close();
+    rclient.second.first->close();
   }
 }
 

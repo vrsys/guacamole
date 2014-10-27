@@ -23,10 +23,17 @@
 #include <gua/renderer/Pipeline.hpp>
 
 // guacamole headers
+#include <gua/node/CameraNode.hpp>
+#include <gua/renderer/GeometryPass.hpp>
+#include <gua/renderer/LightingPass.hpp>
+#include <gua/renderer/SSAOPass.hpp>
+#include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/WindowBase.hpp>
 #include <gua/renderer/GeometryResource.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 #include <gua/renderer/Frustum.hpp>
+#include <gua/node/CameraNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 #include <gua/renderer/Serializer.hpp>
 
@@ -39,10 +46,10 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Frustum camera_frustum(Camera::ProjectionMode const& mode,
+Frustum camera_frustum(node::CameraNode::ProjectionMode const& mode,
     math::mat4 const& transf, math::mat4 const& screen,
     float near, float far) {
-  if (mode == Camera::ProjectionMode::PERSPECTIVE) {
+  if (mode == node::CameraNode::ProjectionMode::PERSPECTIVE) {
     return Frustum::perspective(transf, screen, near, far);
   } else {
     return Frustum::orthographic(transf, screen, near, far);
@@ -51,18 +58,10 @@ Frustum camera_frustum(Camera::ProjectionMode const& mode,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void serialize(SceneGraph const& scene_graph,
-               std::string const& eye_name,
-               std::string const& screen_name,
-               Pipeline::Configuration const& config,
-               SerializedScene& out) {
+void serialize(SceneGraph const& scene_graph, bool is_left,
+               node::SerializedCameraNode const& camera, SerializedScene& out) {
 
-  auto eye((scene_graph)[eye_name]);
-  if (!eye) {
-    Logger::LOG_WARNING << "Cannot render scene: No valid eye specified" << std::endl;
-    return;
-  }
-
+  std::string screen_name(is_left ? camera.config.left_screen_path() : camera.config.right_screen_path());
   auto screen_it((scene_graph)[screen_name]);
   auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
   if (!screen) {
@@ -70,27 +69,44 @@ void serialize(SceneGraph const& scene_graph,
     return;
   }
 
-  out.frustum = camera_frustum(config.camera().mode, eye->get_world_transform(),
-                               screen->get_scaled_world_transform(),
-                               config.near_clip(),
-                               config.far_clip());
+  auto eye_transform(camera.transform);
 
-  out.center_of_interest = eye->get_world_position();
+  if (camera.config.get_enable_stereo()) {
+    if (is_left) {
+      eye_transform *= scm::math::make_translation(camera.config.eye_offset() - 0.5f * camera.config.eye_dist(), 0.f, 0.f);
+    } else {
+      eye_transform *= scm::math::make_translation(camera.config.eye_offset() + 0.5f * camera.config.eye_dist(), 0.f, 0.f);
+    }
+  }
+  camera.config.eye_dist(), camera.config.eye_offset();
+
+  out.frustum = camera_frustum(camera.config.mode(), eye_transform,
+                               screen->get_scaled_world_transform(),
+                               camera.config.near_clip(),
+                               camera.config.far_clip());
+
+  out.center_of_interest = math::get_translation(camera.transform);
 
   Serializer serializer;
   serializer.check(out, scene_graph,
-                   config.camera().render_mask,
-                   config.enable_bbox_display(),
-                   config.enable_ray_display(),
-                   config.enable_frustum_culling());
+                   camera.config.mask(),
+                   camera.config.enable_bbox_display(),
+                   camera.config.enable_ray_display(),
+                   camera.config.enable_frustum_culling());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 }
 
+PipelineDescription Pipeline::make_default() {
+  PipelineDescription pipe;
+  pipe.add_pass<GeometryPassDescription>();
+  pipe.add_pass<LightingPassDescription>();
+  pipe.add_pass<BackgroundPassDescription>();
 
+  return pipe;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -98,7 +114,6 @@ Pipeline::Pipeline() :
   gbuffer_(nullptr),
   camera_block_(nullptr),
   last_resolution_(0, 0),
-  dirty_(true),
   fullscreen_quad_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,21 +130,24 @@ Pipeline::~Pipeline() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::list<PipelinePass*> const& Pipeline::get_passes() const {
+std::vector<PipelinePass*> const& Pipeline::get_passes() const {
   return passes_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
+void Pipeline::process(node::SerializedCameraNode const& camera,
+                       std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                        float application_fps, float rendering_fps) {
 
   std::cout << "App: " << application_fps << " Render: " << rendering_fps << std::endl;
 
   // return if pipeline is disabled
-  if (!config.get_enabled()) {
+  if (!camera.config.get_enabled()) {
     return;
   }
+
+  window_ = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
 
   // update window if one is assigned
   if (window_) {
@@ -140,30 +158,47 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     window_->set_active(true);
   }
 
+  bool reload_gbuffer(false);
+
   if (last_resolution_ != window_->config.size()) {
     last_resolution_ = window_->config.size();
-    dirty_ = true;
+    reload_gbuffer = true;
   }
 
   // recreate gbuffer if resolution changed
-  if (dirty_) {
+  if (reload_gbuffer) {
     if (gbuffer_) {
       gbuffer_->remove_buffers(get_context());
       delete gbuffer_;
     }
 
-    gbuffer_ = new GBuffer(get_context(), config.resolution().x, config.resolution().y);
-    dirty_ = false;
+    gbuffer_ = new GBuffer(get_context(), camera.config.resolution());
+  }
+
+  // recreate pipeline passes if pipeline description changed
+  bool reload_passes(camera.config.get_pipeline_description().is_dirty() || reload_gbuffer);
+  if (reload_passes) {
+    for (auto pass: passes_) {
+      pass->on_delete(this);
+      delete pass;
+    }
+
+    passes_.clear();
+    
+    for (auto pass: camera.config.get_pipeline_description().get_passes()) {
+      passes_.push_back(pass->make_pass());
+    }
   }
 
   // get scenegraph which shall be rendered
   SceneGraph const* current_graph = nullptr;
   for (auto& graph: scene_graphs) {
-    if (graph->get_name() == config.camera().scene_graph) {
+    if (graph->get_name() == camera.config.get_scene_graph_name()) {
       current_graph = graph.get();
       break;
     }
   }
+
   // update camera uniform block
   if (!camera_block_) {
     camera_block_ = new CameraUniformBlock(get_context().render_device);
@@ -172,10 +207,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
   auto process_passes = [&, this](bool is_left) {
 
     // serialize this scenegraph
-    serialize(*current_graph,
-              is_left ? config.camera().eye_l : config.camera().eye_r,
-              is_left ? config.camera().screen_l : config.camera().screen_r,
-              config, current_scene_);
+    serialize(*current_graph, is_left, camera, current_scene_);
 
     camera_block_->update(get_context().render_context, current_scene_.frustum);
     bind_camera_uniform_block(0);
@@ -184,13 +216,13 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
     gbuffer_->clear_all(get_context());
 
     // process all passes
-    for (auto pass: passes_) {
+    for (int i(0); i < passes_.size(); ++i) {
 
-      if (pass->needs_color_buffer_as_input()) {
+      if (passes_[i]->needs_color_buffer_as_input()) {
         gbuffer_->toggle_ping_pong();
       }
 
-      pass->process(this);
+      passes_[i]->process(camera.config.get_pipeline_description().get_passes()[i], this);
     }
 
     // display the last written colorbuffer of the gbuffer
@@ -202,7 +234,7 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
   process_passes(true);
 
-  if (config.get_enable_stereo()) {
+  if (camera.config.get_enable_stereo()) {
     process_passes(false);
   }
 
@@ -217,12 +249,6 @@ void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& sce
 
 GBuffer& Pipeline::get_gbuffer() const {
   return *gbuffer_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Pipeline::set_output_window(WindowBase* window) {
-  window_ = window;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

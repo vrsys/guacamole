@@ -19,77 +19,37 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SHADING_MODEL_HPP
-#define GUA_SHADING_MODEL_HPP
+#ifndef GUA_WINDOW_DATABASE_HPP
+#define GUA_WINDOW_DATABASE_HPP
 
 // guacamole headers
-#include <gua/renderer/ShaderStage.hpp>
-#include <gua/utils/TextFile.hpp>
+#include <gua/platform.hpp>
+#include <gua/utils/Singleton.hpp>
+#include <gua/databases/Database.hpp>
+#include <gua/renderer/WindowBase.hpp>
 
 namespace gua {
+
 /**
- * Stores information on a ShadingModel.
+ * A data base for windows.
  *
+ * This Database stores windows. It can be accessed via string
+ * identifiers.
  *
+ * \ingroup gua_databases
  */
-class ShadingModel {
+class GUA_DLL WindowDatabase : public Database<WindowBase>,
+                               public Singleton<WindowDatabase> {
  public:
-
-  enum StageID {
-    GBUFFER_VERTEX_STAGE,
-    GBUFFER_FRAGMENT_STAGE,
-    LIGHTING_STAGE,
-    FINAL_STAGE
-  };
-  /**
-   * Default constructor.
-   *
-   */
-  ShadingModel();
-
-  /**
-   * Constructor from a ShadingModel description.
-   *
-   */
-  ShadingModel(std::string const& name);
-
-  /**
-   * Constructor from a ShadingModel description.
-   *
-   */
-  ShadingModel(std::string const& name, std::string const& file_name);
-
-  /**
-   * Constructor from a buffer.
-   *
-   */
-  ShadingModel(std::string const& name, const char* buffer, unsigned buffer_size);
-
-  void reload();
-
-  inline std::string const& get_name() const { return name_; }
-  inline std::vector<ShaderStage>& get_stages() { return shader_stages_; }
-
-  ShaderStage& get_gbuffer_vertex_stage();
-  ShaderStage& get_gbuffer_fragment_stage();
-  ShaderStage& get_lbuffer_stage();
-  ShaderStage& get_final_shading_stage();
-
-  void save_to_file(std::string const& file_name) const;
-
-  static unsigned current_revision;
+  friend class Singleton<WindowDatabase>;
 
  private:
-  void construct_from_file(TextFile const& file);
-  void construct_from_buffer(const char* buffer, unsigned buffer_size);
+  // this class is a Singleton --- private c'tor and d'tor
+  WindowDatabase() {}
+  ~WindowDatabase() {}
 
-
-  std::string file_name_;
-
-  std::vector<ShaderStage> shader_stages_;
-  std::string name_;
 };
 
 }
 
-#endif  // GUA_SHADING_MODEL_HPP
+#endif  // GUA_WINDOW_DATABASE_HPP

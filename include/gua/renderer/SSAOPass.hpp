@@ -32,6 +32,35 @@
 namespace gua {
 
 class Pipeline;
+class SSAOPass;
+
+class SSAOPassDescription : public PipelinePassDescription {
+ public:
+
+  SSAOPassDescription();
+  SSAOPassDescription(SSAOPassDescription const& copy) = default;
+
+  float                radius() const;
+  SSAOPassDescription& radius(float radius);
+
+  float                intensity() const;
+  SSAOPassDescription& intensity(float intensity);
+
+  float                falloff() const;
+  SSAOPassDescription& falloff(float falloff);
+
+  virtual PipelinePassDescription* make_copy() const;
+
+  friend class Pipeline;
+  
+ protected:
+  virtual PipelinePass* make_pass() const;
+  float radius_;
+  float intensity_;
+  float falloff_;
+};
+
+
 
 class SSAOPass : public PipelinePass {
  public:
@@ -39,18 +68,9 @@ class SSAOPass : public PipelinePass {
   virtual bool needs_color_buffer_as_input() const { return false; }
   virtual bool writes_only_color_buffer()    const { return true;  }
 
-  virtual void process(Pipeline* pipe);
+  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
 
-  friend class Pipeline;
-
-  float     radius() const;
-  SSAOPass& radius(float radius);
-
-  float     intensity() const;
-  SSAOPass& intensity(float intensity);
-
-  float     falloff() const;
-  SSAOPass& falloff(float falloff);
+  friend class SSAOPassDescription;
 
  protected:
   SSAOPass();
@@ -60,12 +80,7 @@ class SSAOPass : public PipelinePass {
   std::shared_ptr<ShaderProgram>   shader_;
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::blend_state_ptr         blend_state_;
-
-  float radius_;
-  float intensity_;
-  float falloff_;
-
-  NoiseTexture noise_texture_;
+  NoiseTexture                     noise_texture_;
 };
 
 }

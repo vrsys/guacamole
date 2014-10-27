@@ -27,6 +27,16 @@
 namespace gua {
 
 class Pipeline;
+class GeometryPass;
+
+class GeometryPassDescription : public PipelinePassDescription {
+ public:
+  virtual PipelinePassDescription* make_copy() const;
+  friend class Pipeline;
+  
+ protected:
+  virtual PipelinePass* make_pass() const;
+};
 
 class GeometryPass : public PipelinePass {
  public:
@@ -34,9 +44,9 @@ class GeometryPass : public PipelinePass {
   virtual bool needs_color_buffer_as_input() const { return false; }
   virtual bool writes_only_color_buffer()    const { return false; }
   
-  virtual void process(Pipeline* pipe);
+  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
 
-  friend class Pipeline;
+  friend class GeometryPassDescription;
 
  protected:
   GeometryPass() {}

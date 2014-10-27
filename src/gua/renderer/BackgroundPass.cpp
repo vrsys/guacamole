@@ -32,6 +32,18 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+PipelinePassDescription* BackgroundPassDescription::make_copy() const {
+  return new BackgroundPassDescription(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass* BackgroundPassDescription::make_pass() const {
+  return new BackgroundPass();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 BackgroundPass::BackgroundPass() :
   shader_(std::make_shared<ShaderProgram>()),
   depth_stencil_state_(nullptr) {
@@ -45,7 +57,7 @@ BackgroundPass::BackgroundPass() :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void BackgroundPass::process(Pipeline* pipe) {
+void BackgroundPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   RenderContext const& ctx(pipe->get_context());
 
   if (!depth_stencil_state_) {

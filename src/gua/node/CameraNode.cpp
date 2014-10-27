@@ -19,55 +19,34 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_CAMERA_HPP
-#define GUA_CAMERA_HPP
+// class header
+#include <gua/node/CameraNode.hpp>
 
-#include <gua/platform.hpp>
-#include <gua/utils/Mask.hpp>
-
-// external headers
-#include <string>
+// guacamole header
+#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
+namespace node {
 
-/**
- *  This struct describes a user's view on the scene.
- *
- *  It is defined by a screen, a view point a a render mask.
- */
+CameraNode::CameraNode(std::string const& name,
+                       Configuration const& configuration,
+                       math::mat4 const& transform)
+    : Node(name, transform), config(configuration) {}
 
-struct Camera {
+/* virtual */ void CameraNode::accept(NodeVisitor& visitor) {
 
-  enum ProjectionMode {
-    PERSPECTIVE,
-    ORTHOGRAPHIC
-  };
-
-  Camera(std::string const& eye_l =     "unknown_left_eye",
-         std::string const& eye_r =     "unknown_right_eye",
-         std::string const& screen_l =  "unknown_left_screen",
-         std::string const& screen_r =  "unknown_right_screen",
-         std::string const& g =         "scene_graph",
-         ProjectionMode     p =         PERSPECTIVE,
-         Mask const& mask = Mask()
-         )
-      : eye_l(eye_l), eye_r(eye_r), screen_l(screen_l), screen_r(screen_r),
-        scene_graph(g),
-        render_mask(mask),
-        mode(p) {}
-
-  std::string eye_l;
-  std::string eye_r;
-  std::string screen_l;
-  std::string screen_r;
-  std::string scene_graph;
-
-  Mask render_mask;
-
-  ProjectionMode mode;
-
-};
-
+  visitor.visit(this);
 }
 
-#endif  // GUA_CAMERA_HPP
+std::shared_ptr<SerializedCameraNode> CameraNode::serialize() const {
+    SerializedCameraNode s = {config, get_world_transform()};
+    return std::make_shared<SerializedCameraNode>(s);
+}
+
+std::shared_ptr<Node> CameraNode::copy() const {
+    return std::make_shared<CameraNode>(get_name(), config, get_transform());
+}
+
+}
+}

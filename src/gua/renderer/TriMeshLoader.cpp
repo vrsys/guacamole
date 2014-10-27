@@ -33,7 +33,6 @@
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/ShadingModelDatabase.hpp>
 
 namespace gua {
 
