@@ -43,24 +43,24 @@ template<> std::string UniformValue::get_glsl_type_impl<math::vec3ui>() { return
 template<> std::string UniformValue::get_glsl_type_impl<math::vec4ui>() { return "uvec4"; }
 template<> std::string UniformValue::get_glsl_type_impl<std::string>()  { return "uvec2"; }
 
-template<> void UniformValue::apply<int>          (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.int_); }
-template<> void UniformValue::apply<bool>         (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.bool_); }
-template<> void UniformValue::apply<float>        (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.float_); }
-template<> void UniformValue::apply<math::mat3>   (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.mat3_); }
-template<> void UniformValue::apply<math::mat4>   (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.mat4_); }
-template<> void UniformValue::apply<math::vec2>   (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec2_); }
-template<> void UniformValue::apply<math::vec3>   (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec3_); }
-template<> void UniformValue::apply<math::vec4>   (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec4_); }
-template<> void UniformValue::apply<math::vec2i>  (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec2i_); }
-template<> void UniformValue::apply<math::vec3i>  (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec3i_); }
-template<> void UniformValue::apply<math::vec4i>  (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec4i_); }
-template<> void UniformValue::apply<math::vec2ui> (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec2ui_); }
-template<> void UniformValue::apply<math::vec3ui> (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec3ui_); }
-template<> void UniformValue::apply<math::vec4ui> (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(self->get_name(), location, self->val_.vec4ui_); }
-template<> void UniformValue::apply<std::string>  (UniformValue const* self, RenderContext const& ctx, scm::gl::program_ptr const& prog, unsigned location) {
+template<> void UniformValue::apply<int>          (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.int_); }
+template<> void UniformValue::apply<bool>         (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.bool_); }
+template<> void UniformValue::apply<float>        (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.float_); }
+template<> void UniformValue::apply<math::mat3>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.mat3_); }
+template<> void UniformValue::apply<math::mat4>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.mat4_); }
+template<> void UniformValue::apply<math::vec2>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec2_); }
+template<> void UniformValue::apply<math::vec3>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec3_); }
+template<> void UniformValue::apply<math::vec4>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec4_); }
+template<> void UniformValue::apply<math::vec2i>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec2i_); }
+template<> void UniformValue::apply<math::vec3i>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec3i_); }
+template<> void UniformValue::apply<math::vec4i>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec4i_); }
+template<> void UniformValue::apply<math::vec2ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec2ui_); }
+template<> void UniformValue::apply<math::vec3ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec3ui_); }
+template<> void UniformValue::apply<math::vec4ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec4ui_); }
+template<> void UniformValue::apply<std::string>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) {
   auto texture(TextureDatabase::instance()->lookup(self->val_.texture_));
   if (texture) {
-    prog->uniform(self->get_name(), location, texture->get_handle(ctx));
+    prog->uniform(name, location, texture->get_handle(ctx));
   }
 }
 
@@ -105,37 +105,35 @@ template<> void UniformValue::write_bytes_impl<std::string> (UniformValue const*
 
 
 UniformValue UniformValue::create_from_string_and_type(
-    std::string const& name,
     std::string const& value,
     UniformType const& ty) {
   switch (ty) {
     case UniformType::INT:
-      return UniformValue(name, string_utils::from_string<int>(value));
+      return UniformValue(string_utils::from_string<int>(value));
     case UniformType::FLOAT:
-      return UniformValue(name, string_utils::from_string<float>(value));
+      return UniformValue(string_utils::from_string<float>(value));
     case UniformType::BOOL:
-      return UniformValue(name, string_utils::from_string<bool>(value));
+      return UniformValue(string_utils::from_string<bool>(value));
     case UniformType::VEC2:
-      return UniformValue(name, string_utils::from_string<math::vec2>(value));
+      return UniformValue(string_utils::from_string<math::vec2>(value));
     case UniformType::VEC3:
-      return UniformValue(name, string_utils::from_string<math::vec3>(value));
+      return UniformValue(string_utils::from_string<math::vec3>(value));
     case UniformType::VEC4:
-      return UniformValue(name, string_utils::from_string<math::vec4>(value));
+      return UniformValue(string_utils::from_string<math::vec4>(value));
     case UniformType::MAT3:
-      return UniformValue(name, string_utils::from_string<math::mat3>(value));
+      return UniformValue(string_utils::from_string<math::mat3>(value));
     case UniformType::MAT4:
-      return UniformValue(name, string_utils::from_string<math::mat4>(value));
+      return UniformValue(string_utils::from_string<math::mat4>(value));
     case UniformType::SAMPLER2D:
-      return UniformValue(name, value);
+      return UniformValue(value);
   }
 }
 
 UniformValue UniformValue::create_from_strings(
-    std::string const& name,
     std::string const& value,
     std::string const& ty) {
 
-  return create_from_string_and_type(name, value,
+  return create_from_string_and_type(value,
                                      gua::enums::parse_uniform_type(ty).get()
                                     );
 

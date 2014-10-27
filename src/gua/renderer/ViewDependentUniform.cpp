@@ -19,23 +19,50 @@
  *                                                                            *
  ******************************************************************************/
 
-#include <gua/renderer/Material.hpp>
+#include <gua/renderer/ViewDependentUniform.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-Material::Material(std::string const& shader_name):
-  shader_name_(shader_name)
+ViewDependentUniform::ViewDependentUniform(UniformValue const& value):
+  default_(value)
   {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// void Material::unset_uniform(std::string const& name) {
-//   uniforms_.erase(name);
-// }
+UniformValue const& ViewDependentUniform::get() const{
+  return default_;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() const {
-  return uniforms_;
+UniformValue const& ViewDependentUniform::get(int view) const{
+  auto overwrite(uniforms_.find(view));
+  if (overwrite != uniforms_.end()) {
+    return overwrite->second;
+  }
+  return default_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void ViewDependentUniform::set(UniformValue const& value) {
+  default_ = value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void ViewDependentUniform::set(int view, UniformValue const& value) {
+  uniforms_[view] = value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void ViewDependentUniform::apply(RenderContext const& ctx,
+                                 std::string const& name, int view,
+                                 scm::gl::program_ptr const& prog,
+                                 unsigned location) const {
+  auto overwrite(uniforms_.find(view));
+  if (overwrite != uniforms_.end()) {
+    overwrite->second.apply(ctx, name, prog, location);
+  } else {
+    default_.apply(ctx, name, prog, location);
+  }
 }
 
 }

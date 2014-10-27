@@ -36,13 +36,13 @@ MaterialShader::MaterialShader(std::string const& name, MaterialShaderDescriptio
 
   for (auto const& method : v_methods) {
     for (auto const& uniform : method.get_uniforms()) {
-      default_material_.set_uniform(uniform);
+      default_material_.set_uniform(uniform.first, uniform.second);
     }
   }
 
   for (auto const& method : f_methods) {
     for (auto const& uniform : method.get_uniforms()) {
-      default_material_.set_uniform(uniform);
+      default_material_.set_uniform(uniform.first, uniform.second);
     }
   }
 }
@@ -93,6 +93,11 @@ ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
     auto v_shader(compile_description(ctx, v_methods, geometry_v_shader));
     auto f_shader(compile_description(ctx, f_methods, geometry_f_shader));
 
+    // std::cout << "VERTEX" << std::endl;
+    // std::cout << v_shader << std::endl << std::endl;
+    // std::cout << "FRAGMENT" << std::endl;
+    // std::cout << f_shader << std::endl;
+
     new_shader->create_from_sources(v_shader, f_shader);
 
     shaders_[type_id] = new_shader;
@@ -112,7 +117,7 @@ void MaterialShader::apply_uniforms(RenderContext const& ctx,
   // }
 
   for (auto const& uniform : overwrite.get_uniforms()) {
-    shader->apply_uniform(ctx, uniform);
+    shader->apply_uniform(ctx, uniform.first, uniform.second.get());
   }
 }
 
@@ -140,8 +145,8 @@ std::string MaterialShader::compile_description(RenderContext const& ctx,
   vec4_count += 4;
 
   for (auto const& uniform: get_default_material().get_uniforms()) {
-    sstr << uniform.get_glsl_type() << " "
-           << uniform.get_name() << ";" << std::endl;
+    sstr << uniform.second.get().get_glsl_type() << " "
+           << uniform.first << ";" << std::endl;
     ++vec4_count;
   }
 
@@ -159,7 +164,7 @@ std::string MaterialShader::compile_description(RenderContext const& ctx,
   sstr << "mat4 gua_normal_matrix;" << std::endl;
 
   for (auto const& uniform: get_default_material().get_uniforms()) {
-    sstr << uniform.get_glsl_type() << " " << uniform.get_name() + ";" << std::endl;
+    sstr << uniform.second.get().get_glsl_type() << " " << uniform.first + ";" << std::endl;
   }
 
   // insert uniforms
@@ -170,7 +175,7 @@ std::string MaterialShader::compile_description(RenderContext const& ctx,
   sstr << "gua_model_matrix = gua_object_data[gua_draw_index].gua_model_matrix;" << std::endl;
   sstr << "gua_normal_matrix = gua_object_data[gua_draw_index].gua_normal_matrix;" << std::endl;
   for (auto const& uniform: get_default_material().get_uniforms()) {
-    sstr << uniform.get_name() << " = gua_object_data[gua_draw_index]." << uniform.get_name() + ";" << std::endl;
+    sstr << uniform.first << " = gua_object_data[gua_draw_index]." << uniform.first + ";" << std::endl;
   }
   gua::string_utils::replace(source, "@material_input", sstr.str());
   sstr.str("");

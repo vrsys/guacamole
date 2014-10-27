@@ -26,7 +26,7 @@
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
-void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods) 
+void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
   gua::utils::Trackball::button_type button;
   gua::utils::Trackball::state_type state;
