@@ -37,13 +37,10 @@ class ViewDependentUniform {
     UniformValue const& get(int view) const;
 
     void set(UniformValue const& value);
-
     void set(int view, UniformValue const& value);
-
 
     void apply(RenderContext const& ctx, std::string const& name, int view,
                scm::gl::program_ptr const& prog, unsigned location = 0) const;
-
 
   private:
 

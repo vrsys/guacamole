@@ -24,7 +24,7 @@
 
 #include <gua/platform.hpp>
 #include <gua/node/Node.hpp>
-#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/PipelineDescription.hpp>
 #include <gua/utils/Mask.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
@@ -52,7 +52,7 @@ class GUA_DLL CameraNode : public Node {
     GUA_ADD_PROPERTY(bool,            enabled,                true);
 
     // based on this description the rendering is performed
-    GUA_ADD_PROPERTY(PipelineDescription, pipeline_description, Pipeline::make_default());
+    GUA_ADD_PROPERTY(PipelineDescription, pipeline_description, PipelineDescription::make_default());
 
     // the camera renders a view into this scenegraph. The camera itself does
     // not neccessarily has to be in the very same scenegraph. 
@@ -61,6 +61,10 @@ class GUA_DLL CameraNode : public Node {
     // limits the rendered object to a set defined by the mask
     GUA_ADD_PROPERTY(Mask,            mask,                   Mask());
     
+    // a user-defined view id, can be used to customize material parameters for
+    // objects rendered by this camera
+    GUA_ADD_PROPERTY(int,             view_id,                0);
+
     // whether this camera renders in perspective or orthographic mode
     GUA_ADD_PROPERTY(ProjectionMode,  mode,                   PERSPECTIVE);
 

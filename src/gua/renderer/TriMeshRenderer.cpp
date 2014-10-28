@@ -71,6 +71,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
 
       unsigned total_object_count(object_list.second.size());
       unsigned rebind_num(ceil(total_object_count * 1.f / max_object_count));
+      int view_id(pipe->get_camera().config.get_view_id());
 
       for (unsigned current_bind(0); current_bind < rebind_num; ++current_bind) {
 
@@ -104,7 +105,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
             if (bytes_left < byte_size)
               current_pos += bytes_left;
 
-            overwrite.second.get().write_bytes(ctx, buffer + current_pos);
+            overwrite.second.get(view_id).write_bytes(ctx, buffer + current_pos);
             current_pos += byte_size;
           }
 

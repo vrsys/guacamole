@@ -56,12 +56,17 @@ int main(int argc, char** argv) {
   auto shader(std::make_shared<gua::MaterialShader>("simple_mat", desc));
   gua::MaterialShaderDatabase::instance()->add(shader);
 
+  auto mat(shader->get_default_material());
+  mat.set_uniform("color", gua::math::vec3(1, 0, 0));
+  mat.set_uniform("color", gua::math::vec3(0, 1, 1), 1);
+  mat.set_uniform("color", gua::math::vec3(1, 0, 1), 2);
+
   gua::TriMeshLoader trimeshloader;
   // gua::NURBSLoader nurbsloader;
   // gua::Video3DLoader videoloader;
 
-  auto teapot_geode(trimeshloader.create_geometry_from_file("teapot_geode", "data/objects/teapot.obj", shader->get_default_material(), gua::TriMeshLoader::DEFAULTS));
-  auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", shader->get_default_material(), gua::TriMeshLoader::DEFAULTS));
+  auto teapot_geode(trimeshloader.create_geometry_from_file("teapot_geode", "data/objects/teapot.obj", mat, gua::TriMeshLoader::DEFAULTS));
+  auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", mat, gua::TriMeshLoader::DEFAULTS));
   // auto video_geode(videoloader.create_geometry_from_file("video_geode", argv[1]));
   // auto nurbs_geode(nurbsloader.create_geometry_from_file("nurbs_geode", "data/objects/teapot.igs", "data/materials/Orange.gmd", gua::NURBSLoader::DEFAULTS));
 
@@ -92,6 +97,7 @@ int main(int argc, char** argv) {
   cam1->config.set_screen_path("/screen1");
   cam1->config.set_scene_graph_name("main_scenegraph");
   cam1->config.set_resolution(resolution);
+  cam1->config.set_view_id(1);
 
   auto cam2 = graph.add_node<gua::node::CameraNode>("/screen1", "cam2");
   cam2->translate(0.0, 0, 7.5);
@@ -99,6 +105,7 @@ int main(int argc, char** argv) {
   cam2->config.set_screen_path("/screen1");
   cam2->config.set_scene_graph_name("main_scenegraph");
   cam2->config.set_resolution(resolution);
+  cam2->config.set_view_id(2);
 
   auto cam3 = graph.add_node<gua::node::CameraNode>("/screen2", "cam3");
   cam3->translate(0.0, 0, 6.5);
@@ -106,6 +113,7 @@ int main(int argc, char** argv) {
   cam3->config.set_screen_path("/screen2");
   cam3->config.set_scene_graph_name("main_scenegraph");
   cam3->config.set_resolution(resolution);
+  cam3->config.set_view_id(2);
 
   auto cam4 = graph.add_node<gua::node::CameraNode>("/screen2", "cam4");
   cam4->translate(0.0, 0, 8.5);

@@ -24,10 +24,6 @@
 
 // guacamole headers
 #include <gua/node/CameraNode.hpp>
-#include <gua/renderer/GeometryPass.hpp>
-#include <gua/renderer/LightingPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/WindowBase.hpp>
 #include <gua/renderer/GeometryResource.hpp>
@@ -100,15 +96,6 @@ void serialize(SceneGraph const& scene_graph, bool is_left,
 
 }
 
-PipelineDescription Pipeline::make_default() {
-  PipelineDescription pipe;
-  pipe.add_pass<GeometryPassDescription>();
-  pipe.add_pass<LightingPassDescription>();
-  pipe.add_pass<BackgroundPassDescription>();
-
-  return pipe;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline() :
@@ -148,6 +135,8 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
   if (!camera.config.get_enabled()) {
     return;
   }
+
+  current_camera_ = camera;
 
   // for (auto const& cam: camera.pre_render_cameras) {
   //   cam->process(*cam, scene_graphs, application_fps, rendering_fps);
@@ -282,6 +271,12 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
 
 GBuffer& Pipeline::get_gbuffer() const {
   return *gbuffer_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+node::SerializedCameraNode const& Pipeline::get_camera() const {
+  return current_camera_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

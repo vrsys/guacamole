@@ -22,15 +22,12 @@
 #ifndef GUA_PIPELINE_HPP
 #define GUA_PIPELINE_HPP
 
+#include <gua/node/CameraNode.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/SerializedScene.hpp>
-#include <gua/renderer/Texture2D.hpp>
-#include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/RessourceRenderer.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/utils/configuration_macro.hpp>
 #include <gua/math.hpp>
 
 #include <memory>
@@ -40,79 +37,10 @@ namespace gua {
 class GBuffer;
 class WindowBase;
 class RenderContext;
-
-class PipelineDescription {
- public:
-
-  PipelineDescription() {}
-
-  PipelineDescription(PipelineDescription const& other) {
-    for (auto pass: other.passes_) {
-      passes_.push_back(pass->make_copy());
-    }
-  }
-
-  virtual ~PipelineDescription() {
-    for (auto pass: passes_) {
-      delete pass;
-    } 
-  }
-
-  template<class T>
-  T& add_pass() {
-    T* t = new T();
-    passes_.push_back(t);
-    return *t;
-  }
-
-  std::vector<PipelinePassDescription*> const& get_passes() const {
-    return passes_;
-  }
-
-
-  bool operator==(PipelineDescription const& other) const {
-    if (passes_.size() != other.passes_.size()) {
-      return false;
-    }
-
-    for (int i(0); i<passes_.size(); ++i) {
-      if (typeid(passes_[i]) != typeid(other.passes_[i])) {
-        return false;
-      }
-    } 
-
-    return true;
-  }
-
-  bool operator!=(PipelineDescription const& other) const {
-    return !(*this == other);
-  }
-
-  PipelineDescription& operator=(PipelineDescription const& other) {
-    for (auto pass: passes_) {
-      delete pass;
-    } 
-
-    passes_.clear();
-
-    for (auto pass: other.passes_) {
-      passes_.push_back(pass->make_copy());
-    }
-
-    return *this;
-  }
- 
- private:
-  std::vector<PipelinePassDescription*> passes_;
-};
-
-
-
+class ShaderProgram;
 
 class Pipeline {
  public:
-  
-  static PipelineDescription make_default();
 
   Pipeline();
   ~Pipeline();
@@ -125,6 +53,7 @@ class Pipeline {
   GBuffer                          & get_gbuffer() const;
   SerializedScene             const& get_scene()   const;
   RenderContext               const& get_context() const;
+  node::SerializedCameraNode  const& get_camera()  const;
   RenderContext                    & get_context();
   
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
@@ -136,8 +65,10 @@ class Pipeline {
  private:
   GBuffer*                           gbuffer_;
   std::shared_ptr<WindowBase>        window_;
-  SerializedScene                    current_scene_;
   CameraUniformBlock*                camera_block_;
+
+  SerializedScene                    current_scene_;
+  node::SerializedCameraNode         current_camera_;
 
   math::vec2ui                       last_resolution_;
   PipelineDescription                last_description_;

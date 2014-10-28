@@ -19,60 +19,43 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MATERIAL_HPP
-#define GUA_MATERIAL_HPP
+#ifndef GUA_PIPELINE_DESCRIPTION_HPP
+#define GUA_PIPELINE_DESCRIPTION_HPP
 
-#include <gua/renderer/ViewDependentUniform.hpp>
+#include <gua/renderer/PipelinePass.hpp>
+#include <gua/math.hpp>
 
-#include <string>
-#include <vector>
+#include <memory>
 
 namespace gua {
 
-class Material {
-  public:
-    Material(std::string const& shader_name = "");
+class PipelineDescription {
+ public:
 
-    std::string const& get_shader_name() const {
-      return shader_name_;
-    }
+  static PipelineDescription make_default();
 
-    Material& set_uniform(std::string const& name, ViewDependentUniform const& uniform) {
-      uniforms_[name] = uniform;
-      return *this;
-    }
+  PipelineDescription() {}
+  PipelineDescription(PipelineDescription const& other);
+  
+  virtual ~PipelineDescription();
 
-    template <typename T>
-    Material& set_uniform(std::string const& name, T const& value) {
-      return set_uniform(name, ViewDependentUniform(UniformValue(value)));
-    }
+  template<class T>
+  T& add_pass() {
+    T* t = new T();
+    passes_.push_back(t);
+    return *t;
+  }
 
-    template <typename T>
-    Material& set_uniform(std::string const& name, T const& value, int view_id) {
-      auto uniform(uniforms_.find(name));
+  std::vector<PipelinePassDescription*> const& get_passes() const;
 
-      if (uniform == uniforms_.end()) {
-        set_uniform(name, value);
-        set_uniform(name, value, view_id);
-      } else {
-        uniform->second.set(view_id, value);
-      }
-
-      return *this;
-    }
-
-    // void unset_uniform(std::string const& name);
-
-    std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
-
-  private:
-    friend class MaterialShader;
-
-    std::string shader_name_;
-    std::map<std::string, ViewDependentUniform> uniforms_;
-
+  bool operator==(PipelineDescription const& other) const;
+  bool operator!=(PipelineDescription const& other) const;
+  PipelineDescription& operator=(PipelineDescription const& other);
+ 
+ private:
+  std::vector<PipelinePassDescription*> passes_;
 };
 
 }
 
-#endif  // GUA_MATERIAL_HPP
+#endif  // GUA_PIPELINE_DESCRIPTION_HPP
