@@ -300,7 +300,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
 void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
                                             Material const& fallback_material) const
 {
-  auto g_node(std::dynamic_pointer_cast<node::GeometryNode>(root));
+  auto g_node(std::dynamic_pointer_cast<node::TriMeshNode>(root));
 
   if (g_node && g_node->get_material().get_shader_name() == "") {
     g_node->set_material(fallback_material);

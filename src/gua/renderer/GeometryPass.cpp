@@ -33,17 +33,21 @@ namespace gua {
 
 void GeometryPass::process(Pipeline* pipe) {
   RenderContext const& ctx(pipe->get_context());
-  
+
   pipe->get_gbuffer().bind(ctx, this);
   pipe->get_gbuffer().set_viewport(ctx);
 
   for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
     auto const& ressources = type_ressource_pair.second;
-
     if (ressources.size() > 0 && ressources.begin()->second.size() > 0) {
-      auto const& ressource = GeometryDatabase::instance()->lookup(ressources.begin()->second[0]->get_filename());
-      auto const& renderer  = pipe->get_renderer(*ressource);
-      renderer->draw(ressources, pipe);
+      auto const& renderer = pipe->get_renderer(type_ressource_pair.first);
+      if (renderer)
+        renderer->draw(ressources, pipe);
+      else
+        Logger::LOG_WARNING << "Unable to render geometry of type "
+                            << type_ressource_pair.first.name()
+                            << ": No renderer registered!"
+                            << std::endl;
     }
   }
 

@@ -19,51 +19,37 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RESSOURCE_RENDERER_HPP
-#define GUA_RESSOURCE_RENDERER_HPP
+// class header
+#include <gua/renderer/RessourceRenderer.hpp>
 
-// guacamole_headers
-#include <gua/platform.hpp>
-
-// external headers
-#include <functional>
-#include <memory>
-#include <map>
-#include <unordered_map>
-#include <vector>
-#include <typeindex>
-#include <string>
 
 namespace gua {
 
-class Pipeline;
+////////////////////////////////////////////////////////////////////////////////
 
-namespace node {
-  class GeometryNode;
+creation_function_map RessourceRenderer::creation_functions_ = creation_function_map();
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RessourceRenderer::register_renderer(std::type_index const& id,
+                                          creation_function const& creation_function) {
+
+  creation_functions_[id] = creation_function;
 }
 
-class Pipeline;
+////////////////////////////////////////////////////////////////////////////////
 
-class RessourceRenderer;
-typedef std::function<std::shared_ptr<RessourceRenderer>(void)> creation_function;
-typedef std::map<std::type_index, creation_function>            creation_function_map;
+std::shared_ptr<RessourceRenderer> RessourceRenderer::get_renderer(std::type_index const& id) {
+  auto function(creation_functions_.find(id));
 
-class GUA_DLL RessourceRenderer {
-  public:
+  if (function != creation_functions_.end()) {
+    return function->second();
+  }
 
-    virtual void draw(std::unordered_map<std::string, std::vector<node::GeometryNode*>> const& sorted_objects,
-                      Pipeline* pipe) const = 0;
+  return nullptr;
+}
 
-    static void register_renderer(std::type_index const& id,
-                                  creation_function const& creation_function);
-
-    static std::shared_ptr<RessourceRenderer> get_renderer(std::type_index const& id);
-
-  private:
-    static creation_function_map creation_functions_;
-
-};
+////////////////////////////////////////////////////////////////////////////////
 
 }
 
-#endif  // GUA_RESSOURCE_RENDERER_HPP

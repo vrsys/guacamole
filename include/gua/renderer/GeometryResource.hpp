@@ -26,6 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/MaterialShaderMethod.hpp>
+#include <gua/renderer/RessourceRenderer.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/scenegraph/PickResult.hpp>
 
@@ -95,11 +96,22 @@ class GUA_DLL GeometryResource {
     return bounding_box_;
   }
 
-  virtual std::shared_ptr<RessourceRenderer> create_renderer() const = 0;
+  template <typename NodeType, typename RendererType>
+  void register_renderer() {
+    static bool registered(false);
+    if (!registered) {
+      NodeType tmp;
+      ::gua::RessourceRenderer::register_renderer(std::type_index(typeid(tmp)), []() {
+        return std::make_shared<RendererType>();
+      });
+      registered = true;
+    }
+  }
 
  protected:
 
   math::BoundingBox<math::vec3> bounding_box_;
+
 };
 
 }

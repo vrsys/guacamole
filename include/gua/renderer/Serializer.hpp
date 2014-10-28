@@ -36,6 +36,10 @@ namespace gua {
 
 class SceneGraph;
 
+namespace node {
+  class TriMeshNode;
+}
+
 /**
  * This class is used to convert the scengraph to a (opimized) sequence.
  *
@@ -91,7 +95,7 @@ class Serializer : public NodeVisitor {
    *
    * \param geometry   Pointer to GeometryNode
    */
-  void visit(node::GeometryNode* geometry) override;
+  void visit(node::TriMeshNode* geometry) override;
 
   /**
   * Visits a VolumeNode

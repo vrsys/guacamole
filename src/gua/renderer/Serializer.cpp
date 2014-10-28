@@ -30,7 +30,7 @@
 #include <gua/node/Node.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/LODNode.hpp>
-#include <gua/node/GeometryNode.hpp>
+#include <gua/node/TriMeshNode.hpp>
 #include <gua/node/Video3DNode.hpp>
 #include <gua/node/VolumeNode.hpp>
 #include <gua/node/PointLightNode.hpp>
@@ -149,7 +149,7 @@ void Serializer::check(SerializedScene& output,
 
 ////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(node::GeometryNode* node) {
+/* virtual */ void Serializer::visit(node::TriMeshNode* node) {
 
   if (is_visible(node)) {
     add_bbox(node);

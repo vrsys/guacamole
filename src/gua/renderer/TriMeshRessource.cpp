@@ -27,6 +27,7 @@
 #include <gua/renderer/TriMeshRenderer.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
+#include <gua/node/TriMeshNode.hpp>
 #include <gua/utils/Logger.hpp>
 
 // external headers
@@ -48,7 +49,10 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 TriMeshRessource::TriMeshRessource()
-    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_(nullptr) {}
+    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_(nullptr) {
+
+  register_renderer<node::TriMeshNode, TriMeshRenderer>();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,6 +64,8 @@ TriMeshRessource::TriMeshRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importe
       upload_mutex_(),
       mesh_(mesh),
       importer_(importer) {
+
+  register_renderer<node::TriMeshNode, TriMeshRenderer>();
 
   if (mesh_->HasPositions()) {
     bounding_box_ = math::BoundingBox<math::vec3>();

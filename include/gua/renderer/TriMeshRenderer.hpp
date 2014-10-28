@@ -26,6 +26,7 @@
 #include <gua/renderer/RessourceRenderer.hpp>
 
 // external headers
+#include <scm/gl_core/buffer_objects.h>
 
 namespace gua {
 

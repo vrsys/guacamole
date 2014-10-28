@@ -27,6 +27,7 @@
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/node/TriMeshNode.hpp>
 
 #include <math.h>
 
@@ -64,7 +65,8 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
     auto const& material = MaterialShaderDatabase::instance()->lookup(object_list.first);
     if (material) {
       // get shader for this material
-      auto const& ressource = GeometryDatabase::instance()->lookup(object_list.second[0]->get_filename());
+      auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object_list.second[0]));
+      auto const& ressource = GeometryDatabase::instance()->lookup(tri_mesh_node->get_filename());
       auto const& shader(material->get_shader(ctx, *ressource, vertex_shader_, fragment_shader_));
 
       auto max_object_count(material->max_object_count());
@@ -86,7 +88,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
         for (int i(0); i < object_count; ++i) {
 
           int current_object(i + current_bind * max_object_count);
-          auto const& node(object_list.second[current_object]);
+          auto const& node(reinterpret_cast<node::TriMeshNode*>(object_list.second[current_object]));
 
           UniformValue model_mat(node->get_cached_world_transform());
           UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
@@ -126,7 +128,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
         for (int i(0); i < object_count; ++i) {
 
           int current_object(i + current_bind * max_object_count);
-          auto const& node(object_list.second[current_object]);
+          auto const& node(reinterpret_cast<node::TriMeshNode*>(object_list.second[current_object]));
 
           auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
           if (ressource) {

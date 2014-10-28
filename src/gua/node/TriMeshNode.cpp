@@ -38,8 +38,41 @@ namespace node {
                            std::string const& filename,
                            Material const& material,
                            math::mat4 const& transform)
-    : GeometryNode(name, filename, material, transform)
+    : GeometryNode(name, transform),
+      filename_(filename),
+      material_(material),
+      filename_changed_(true),
+      material_changed_(true)
   {}
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  std::string const& TriMeshNode::get_filename() const {
+    return filename_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void TriMeshNode::set_filename(std::string const& v) {
+    filename_ = v;
+    filename_changed_ = self_dirty_ = true;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  Material const& TriMeshNode::get_material() const {
+    return material_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  Material& TriMeshNode::get_material() {
+    return material_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void TriMeshNode::set_material(Material const& material) {
+    material_ = material;
+    material_changed_ = self_dirty_ = true;
+  }
+
 
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -244,6 +277,28 @@ namespace node {
     }
 
     GeometryNode::update_cache();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /* virtual */ void TriMeshNode::accept(NodeVisitor& visitor) {
+    visitor.visit(this);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void TriMeshNode::update_bounding_box() const {
+
+    if (get_filename() != "") {
+      auto geometry_bbox(GeometryDatabase::instance()->lookup(get_filename())->get_bounding_box());
+      bounding_box_ = transform(geometry_bbox, world_transform_);
+
+      for (auto child : get_children()) {
+        bounding_box_.expandBy(child->get_bounding_box());
+      }
+    } else {
+      Node::update_bounding_box();
+    }
   }
 
   ////////////////////////////////////////////////////////////////////////////////
