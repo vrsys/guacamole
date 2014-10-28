@@ -129,13 +129,10 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
           int current_object(i + current_bind * max_object_count);
           auto const& node(reinterpret_cast<node::TriMeshNode*>(object_list.second[current_object]));
 
-          auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
-          if (ressource) {
+          // auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
+          if (node->get_geometry()) {
             shader->set_uniform(ctx, i, "gua_draw_index");
-            ressource->draw(ctx);
-
-          } else {
-            Logger::LOG_WARNING << "TriMeshRenderer::draw(): Cannot find geometry ressource: " << node->get_filename() << std::endl;
+            node->get_geometry()->draw(ctx);
           }
         }
       }

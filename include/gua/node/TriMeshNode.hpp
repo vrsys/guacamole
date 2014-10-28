@@ -26,6 +26,9 @@
 #include <gua/node/GeometryNode.hpp>
 
 namespace gua {
+
+class GeometryResource;
+
 namespace node {
 
 /**
@@ -74,6 +77,8 @@ class GUA_DLL TriMeshNode : public GeometryNode {
 
   void update_cache() override;
 
+  std::shared_ptr<GeometryResource> const& get_geometry() const;
+
   /**
    * Accepts a visitor and calls concrete visit method.
    *
@@ -88,6 +93,8 @@ class GUA_DLL TriMeshNode : public GeometryNode {
   std::shared_ptr<Node> copy() const override;
 
  private:  // attributes e.g. special attributes for drawing
+
+  std::shared_ptr<GeometryResource> geometry_;
 
   std::string filename_;
 

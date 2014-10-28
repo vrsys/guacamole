@@ -39,6 +39,7 @@ namespace node {
                            Material const& material,
                            math::mat4 const& transform)
     : GeometryNode(name, transform),
+      geometry_(nullptr),
       filename_(filename),
       material_(material),
       filename_changed_(true),
@@ -253,6 +254,8 @@ namespace node {
             Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": The name does not contain a type, file, id and flag parameter!" << std::endl;
           }
         }
+
+        geometry_ = GeometryDatabase::instance()->lookup(filename_);
       }
 
       filename_changed_ = false;
@@ -281,6 +284,10 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
+  std::shared_ptr<GeometryResource> const& TriMeshNode::get_geometry() const {
+    return geometry_;
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
   /* virtual */ void TriMeshNode::accept(NodeVisitor& visitor) {
     visitor.visit(this);
@@ -289,8 +296,8 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   void TriMeshNode::update_bounding_box() const {
 
-    if (get_filename() != "") {
-      auto geometry_bbox(GeometryDatabase::instance()->lookup(get_filename())->get_bounding_box());
+    if (geometry_) {
+      auto geometry_bbox(geometry_->get_bounding_box());
       bounding_box_ = transform(geometry_bbox, world_transform_);
 
       for (auto child : get_children()) {
@@ -306,6 +313,7 @@ namespace node {
   std::shared_ptr<Node> TriMeshNode::copy() const {
     auto result(std::make_shared<TriMeshNode>(get_name(), filename_, material_, get_transform()));
     result->shadow_mode_ = shadow_mode_;
+    result->geometry_ = geometry_;
     return result;
   }
 }
