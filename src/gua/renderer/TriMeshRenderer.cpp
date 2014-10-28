@@ -66,8 +66,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
     if (material) {
       // get shader for this material
       auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object_list.second[0]));
-      auto const& ressource = GeometryDatabase::instance()->lookup(tri_mesh_node->get_filename());
-      auto const& shader(material->get_shader(ctx, *ressource, vertex_shader_, fragment_shader_));
+      auto const& shader(material->get_shader(ctx, *tri_mesh_node->get_geometry(), vertex_shader_, fragment_shader_));
 
       auto max_object_count(material->max_object_count());
 
