@@ -109,13 +109,11 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
             current_pos += byte_size;
           }
 
-
           auto mod_pos(current_pos % sizeof(math::vec4));
           if (mod_pos != 0) {
             auto bytes_left(sizeof(math::vec4) - mod_pos);
             current_pos += bytes_left;
           }
-
         }
 
         ctx.render_context->unmap_buffer(material_uniform_storage_buffer_);
@@ -137,9 +135,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
           } else {
             Logger::LOG_WARNING << "TriMeshRenderer::draw(): Cannot find geometry ressource: " << node->get_filename() << std::endl;
           }
-
         }
-
       }
 
     } else {

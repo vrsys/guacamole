@@ -103,7 +103,7 @@ Pipeline::Pipeline() :
   camera_block_(nullptr),
   last_resolution_(0, 0),
   fullscreen_quad_(nullptr),
-  window_(nullptr) {}
+  context_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,30 +139,35 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
   // store the current camera data
   current_camera_ = camera;
 
-  // for (auto const& cam: camera.pre_render_cameras) {
-  //   cam->process(*cam, scene_graphs, application_fps, rendering_fps);
-  // }
-
   bool reload_gbuffer(false);
 
+  std::shared_ptr<WindowBase> window;
+
   if (camera.config.get_output_window_name() != "") {
-    auto new_window(WindowDatabase::instance()->lookup(camera.config.get_output_window_name()));
+    window = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
 
     // reload gbuffer if now rendering to another window (with a new context)
-    if (new_window != window_) {
-      window_ = new_window;
+    if (context_ != window->get_context()) {
+      context_ = window->get_context();
       reload_gbuffer = true;
     }
   }
 
   // update window if one is assigned
-  if (window_) {
-    if (!window_->get_is_open()) {
-      window_->open();
-      window_->create_shader();
+  if (window) {
+    if (!window->get_is_open()) {
+      window->open();
+      window->create_shader();
     }
-    window_->set_active(true);
+    window->set_active(true);
   }
+
+  // execute all prerender cameras
+  for (auto const& cam: camera.pre_render_cameras) {
+    cam.rendering_pipeline->context_ = context_;
+    cam.rendering_pipeline->process(cam, scene_graphs, application_fps, rendering_fps);
+  }
+
 
   // recreate gbuffer if resolution changed
   if (last_resolution_ != camera.config.get_resolution()) {
@@ -214,10 +219,12 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     camera_block_ = new CameraUniformBlock(get_context().render_device);
   }
 
-  auto process_passes = [&](bool is_left) {
+  auto process_passes = [&](CameraMode mode) {
+
+    context_->mode = mode;
 
     // serialize this scenegraph
-    serialize(*current_graph, is_left, camera, current_scene_);
+    serialize(*current_graph, mode != CameraMode::RIGHT, camera, current_scene_);
 
     camera_block_->update(get_context().render_context, current_scene_.frustum);
     bind_camera_uniform_block(0);
@@ -242,31 +249,33 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     auto tex_name(camera.config.get_output_texture_name());
     
     if (tex_name != "") {
-      if (camera.config.get_enable_stereo()) {
-        tex_name += is_left ? "_left" : "_right";
+      if (mode == CameraMode::LEFT) {
+        tex_name += "_left";
+      } else if (mode == CameraMode::RIGHT) {
+        tex_name += "_right";
       }
 
       TextureDatabase::instance()->add(tex_name, tex);
     }
 
     // display the last written colorbuffer of the gbuffer
-    if (window_) {
-      window_->display(tex, is_left);
+    if (window) {
+      window->display(tex, mode != CameraMode::RIGHT);
     }
   };
 
-  process_passes(true);
-
   if (camera.config.get_enable_stereo()) {
-    process_passes(false);
+    process_passes(CameraMode::LEFT);
+    process_passes(CameraMode::RIGHT);
+  } else {
+    process_passes(CameraMode::CENTER);
   }
 
   // swap buffers
-  if (window_) {
-    window_->finish_frame();
+  if (window) {
+    window->finish_frame();
+    ++(window->get_context()->framecount);
   }
-
-  ++(get_context().framecount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,13 +293,7 @@ node::SerializedCameraNode const& Pipeline::get_camera() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 RenderContext const& Pipeline::get_context() const {
-  return *window_->get_context();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-RenderContext& Pipeline::get_context() {
-  return *window_->get_context();
+  return *context_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

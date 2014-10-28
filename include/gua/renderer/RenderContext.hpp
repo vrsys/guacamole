@@ -22,6 +22,8 @@
 #ifndef GUA_RENDERCONTEXT_HPP
 #define GUA_RENDERCONTEXT_HPP
 
+#include <gua/renderer/enums.hpp>
+
 // external headers
 #include <scm/gl_core/config.h>
 #include <scm/gl_core/data_formats.h>
@@ -87,6 +89,8 @@ struct RenderContext {
   * framecounter for this context
   */
   unsigned framecount;
+
+  gua::CameraMode mode;
 };
 
 }

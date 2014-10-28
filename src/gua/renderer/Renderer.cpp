@@ -60,10 +60,9 @@ Renderer::~Renderer() {
 void Renderer::renderclient(Mailbox in) {
   FpsCounter fpsc(20);
   fpsc.start();
-  Pipeline pipe;
 
   for (auto& x : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
-    pipe.process(*std::get<0>(x), *std::get<1>(x), std::get<2>(x), fpsc.fps);
+    std::get<0>(x)->rendering_pipeline->process(*std::get<0>(x), *std::get<1>(x), std::get<2>(x), fpsc.fps);
     fpsc.step();
   }
 }
@@ -85,13 +84,13 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
     auto window_name(cam->config.get_output_window_name());
     auto rclient(render_clients_.find(window_name));
     if (rclient != render_clients_.end()) {
-      rclient->second.first->push_back(std::make_tuple(cam->serialize(), sgs, application_fps_.fps));
+      rclient->second.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, application_fps_.fps));
     } else {
       auto window(WindowDatabase::instance()->lookup(window_name));
 
       if (window) {
         auto p = spawnDoublebufferred<Item>();
-        p.first->push_back(std::make_tuple(cam->serialize(), sgs, application_fps_.fps));
+        p.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, application_fps_.fps));
         render_clients_[window_name] = std::make_pair(p.first, std::thread(Renderer::renderclient, p.second));
       } else {
         Logger::LOG_WARNING << "Cannot render camera: window \"" 

@@ -58,9 +58,22 @@ template<> void UniformValue::apply<math::vec2ui> (UniformValue const* self, Ren
 template<> void UniformValue::apply<math::vec3ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec3ui_); }
 template<> void UniformValue::apply<math::vec4ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec4ui_); }
 template<> void UniformValue::apply<std::string>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) {
+
   auto texture(TextureDatabase::instance()->lookup(self->val_.texture_));
   if (texture) {
     prog->uniform(name, location, texture->get_handle(ctx));
+  } else if (ctx.mode != CameraMode::CENTER) {
+    if ((ctx.mode != CameraMode::LEFT)) {
+      auto left_texture(TextureDatabase::instance()->lookup(self->val_.texture_ + "_left"));
+      if (left_texture) {
+        prog->uniform(name, location, left_texture->get_handle(ctx));
+      }
+    } else {
+      auto right_texture(TextureDatabase::instance()->lookup(self->val_.texture_ + "_right"));
+      if (right_texture) {
+        prog->uniform(name, location, right_texture->get_handle(ctx));
+      }
+    }   
   }
 }
 
@@ -100,6 +113,20 @@ template<> void UniformValue::write_bytes_impl<std::string> (UniformValue const*
   if (texture) {
     auto& handle(texture->get_handle(ctx));
     memcpy(target, &handle, sizeof(math::vec2ui));
+  } else if (ctx.mode != CameraMode::CENTER) {
+    if ((ctx.mode != CameraMode::LEFT)) {
+      auto left_texture(TextureDatabase::instance()->lookup(self->val_.texture_ + "_left"));
+      if (left_texture) {
+        auto& handle(left_texture->get_handle(ctx));
+        memcpy(target, &handle, sizeof(math::vec2ui));
+      }
+    } else {
+      auto right_texture(TextureDatabase::instance()->lookup(self->val_.texture_ + "_right"));
+      if (right_texture) {
+        auto& handle(right_texture->get_handle(ctx));
+        memcpy(target, &handle, sizeof(math::vec2ui));
+      }
+    }   
   }
 }
 

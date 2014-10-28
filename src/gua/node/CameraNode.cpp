@@ -24,34 +24,44 @@
 
 // guacamole header
 #include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
 
 namespace gua {
 namespace node {
 
+////////////////////////////////////////////////////////////////////////////////
+
 CameraNode::CameraNode(std::string const& name,
                        Configuration const& configuration,
                        math::mat4 const& transform)
-    : Node(name, transform), config(configuration) {}
+    : Node(name, transform), config(configuration)
+    , rendering_pipeline_(std::make_shared<Pipeline>()) {}
 
 /* virtual */ void CameraNode::accept(NodeVisitor& visitor) {
 
   visitor.visit(this);
 }
 
-std::shared_ptr<SerializedCameraNode> CameraNode::serialize() const {
-    SerializedCameraNode s = {config, get_world_transform()};
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Node> CameraNode::copy() const {
+    return std::make_shared<CameraNode>(get_name(), config, get_transform());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+SerializedCameraNode CameraNode::serialize() const {
+    SerializedCameraNode s = {config, get_world_transform(), rendering_pipeline_};
 
     for (auto const& cam: pre_render_cameras_) {
         s.pre_render_cameras.push_back(cam->serialize());
     }
 
-    return std::make_shared<SerializedCameraNode>(s);
+    return s;
 }
 
-std::shared_ptr<Node> CameraNode::copy() const {
-    return std::make_shared<CameraNode>(get_name(), config, get_transform());
-}
+////////////////////////////////////////////////////////////////////////////////
 
 }
 }

@@ -54,7 +54,6 @@ class Pipeline {
   SerializedScene             const& get_scene()   const;
   RenderContext               const& get_context() const;
   node::SerializedCameraNode  const& get_camera()  const;
-  RenderContext                    & get_context();
   
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_camera_uniform_block(unsigned location) const;
@@ -64,7 +63,7 @@ class Pipeline {
 
  private:
   GBuffer*                           gbuffer_;
-  std::shared_ptr<WindowBase>        window_;
+  RenderContext*                     context_;
   CameraUniformBlock*                camera_block_;
 
   SerializedScene                    current_scene_;

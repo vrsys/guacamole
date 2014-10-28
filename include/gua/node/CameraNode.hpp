@@ -150,6 +150,8 @@ class GUA_DLL CameraNode : public Node {
     pre_render_cameras_ = cams;
   }
 
+  SerializedCameraNode serialize() const;
+  
   /**
    * Accepts a visitor and calls concrete visit method.
    *
@@ -159,22 +161,25 @@ class GUA_DLL CameraNode : public Node {
    */
   void accept(NodeVisitor& visitor) override;
 
-  std::shared_ptr<SerializedCameraNode> serialize() const;
-
  private:
 
   std::shared_ptr<Node> copy() const override;
 
+
+  // access this member only from the rendering thread!
+  std::shared_ptr<Pipeline> rendering_pipeline_;
+
   std::vector<std::shared_ptr<CameraNode>> pre_render_cameras_;
 };
 
-  
 struct GUA_DLL SerializedCameraNode {
   CameraNode::Configuration config;
   math::mat4                transform;
+  std::shared_ptr<Pipeline> rendering_pipeline;
 
-  std::vector<std::shared_ptr<SerializedCameraNode>> pre_render_cameras;
+  std::vector<SerializedCameraNode> pre_render_cameras;
 };
+
 
 } // namespace node {
 } // namespace gua {
