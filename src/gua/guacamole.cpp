@@ -92,13 +92,13 @@ void init(int argc, char** argv) {
 void create_resource_material(std::string const& material_name,
                               std::vector<unsigned char> const& shading_model_resource,
                               std::vector<unsigned char> const& material_resource) {
-  std::shared_ptr<ShadingModel> shading_model(
-      new ShadingModel(material_name,
-                       Resources::lookup_string(shading_model_resource).c_str(),
-                       shading_model_resource.size()));
+  // std::shared_ptr<ShadingModel> shading_model(
+  //     new ShadingModel(material_name,
+  //                      Resources::lookup_string(shading_model_resource).c_str(),
+  //                      shading_model_resource.size()));
 
-  ShadingModelDatabase::instance()->add(material_name,
-                                        shading_model);
+  // ShadingModelDatabase::instance()->add(material_name,
+  //                                       shading_model);
 
   // MaterialShaderDescription material_description(
   //                      Resources::lookup_string(material_resource).c_str(),
@@ -107,6 +107,8 @@ void create_resource_material(std::string const& material_name,
   // std::shared_ptr<Material> material(
   //     new Material(material_name, material_description));
   // MaterialShaderDatabase::instance()->add(material_name, material);
+
+  Logger::LOG_WARNING << "TODO: create material " << material_name << std::endl;
 }
 
 

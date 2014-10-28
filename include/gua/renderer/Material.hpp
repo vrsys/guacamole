@@ -47,6 +47,20 @@ class Material {
       return set_uniform(name, ViewDependentUniform(UniformValue(value)));
     }
 
+    template <typename T>
+    Material& set_uniform(std::string const& name, T const& value, int view_id) {
+      auto uniform(uniforms_.find(name));
+
+      if (uniform == uniforms_.end()) {
+        set_uniform(name, value);
+        set_uniform(name, value, view_id);
+      } else {
+        uniform->second.set(view_id, value);
+      }
+
+      return *this;
+    }
+
     // void unset_uniform(std::string const& name);
 
     std::map<std::string, ViewDependentUniform> const& get_uniforms() const;

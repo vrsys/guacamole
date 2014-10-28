@@ -73,6 +73,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
 
       unsigned total_object_count(object_list.second.size());
       unsigned rebind_num(ceil(total_object_count * 1.f / max_object_count));
+      int view_id(pipe->get_camera().config.get_view_id());
 
       for (unsigned current_bind(0); current_bind < rebind_num; ++current_bind) {
 
@@ -106,17 +107,15 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
             if (bytes_left < byte_size)
               current_pos += bytes_left;
 
-            overwrite.second.get().write_bytes(ctx, buffer + current_pos);
+            overwrite.second.get(view_id).write_bytes(ctx, buffer + current_pos);
             current_pos += byte_size;
           }
-
 
           auto mod_pos(current_pos % sizeof(math::vec4));
           if (mod_pos != 0) {
             auto bytes_left(sizeof(math::vec4) - mod_pos);
             current_pos += bytes_left;
           }
-
         }
 
         ctx.render_context->unmap_buffer(material_uniform_storage_buffer_);
@@ -132,16 +131,13 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
 
           auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
           if (ressource) {
-
             shader->set_uniform(ctx, i, "gua_draw_index");
             ressource->draw(ctx);
 
           } else {
             Logger::LOG_WARNING << "TriMeshRenderer::draw(): Cannot find geometry ressource: " << node->get_filename() << std::endl;
           }
-
         }
-
       }
 
     } else {

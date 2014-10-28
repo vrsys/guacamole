@@ -26,7 +26,6 @@
 
 // guacamole headers
 #include <gua/renderer/SerializedScene.hpp>
-#include <gua/renderer/Camera.hpp>
 #include <gua/renderer/Frustum.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/Mask.hpp>

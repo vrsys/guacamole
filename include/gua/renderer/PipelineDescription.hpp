@@ -19,55 +19,43 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_CAMERA_HPP
-#define GUA_CAMERA_HPP
+#ifndef GUA_PIPELINE_DESCRIPTION_HPP
+#define GUA_PIPELINE_DESCRIPTION_HPP
 
-#include <gua/platform.hpp>
-#include <gua/utils/Mask.hpp>
+#include <gua/renderer/PipelinePass.hpp>
+#include <gua/math.hpp>
 
-// external headers
-#include <string>
+#include <memory>
 
 namespace gua {
 
-/**
- *  This struct describes a user's view on the scene.
- *
- *  It is defined by a screen, a view point a a render mask.
- */
+class PipelineDescription {
+ public:
 
-struct Camera {
+  static PipelineDescription make_default();
 
-  enum ProjectionMode {
-    PERSPECTIVE,
-    ORTHOGRAPHIC
-  };
+  PipelineDescription() {}
+  PipelineDescription(PipelineDescription const& other);
+  
+  virtual ~PipelineDescription();
 
-  Camera(std::string const& eye_l =     "unknown_left_eye",
-         std::string const& eye_r =     "unknown_right_eye",
-         std::string const& screen_l =  "unknown_left_screen",
-         std::string const& screen_r =  "unknown_right_screen",
-         std::string const& g =         "scene_graph",
-         ProjectionMode     p =         PERSPECTIVE,
-         Mask const& mask = Mask()
-         )
-      : eye_l(eye_l), eye_r(eye_r), screen_l(screen_l), screen_r(screen_r),
-        scene_graph(g),
-        render_mask(mask),
-        mode(p) {}
+  template<class T>
+  T& add_pass() {
+    T* t = new T();
+    passes_.push_back(t);
+    return *t;
+  }
 
-  std::string eye_l;
-  std::string eye_r;
-  std::string screen_l;
-  std::string screen_r;
-  std::string scene_graph;
+  std::vector<PipelinePassDescription*> const& get_passes() const;
 
-  Mask render_mask;
-
-  ProjectionMode mode;
-
+  bool operator==(PipelineDescription const& other) const;
+  bool operator!=(PipelineDescription const& other) const;
+  PipelineDescription& operator=(PipelineDescription const& other);
+ 
+ private:
+  std::vector<PipelinePassDescription*> passes_;
 };
 
 }
 
-#endif  // GUA_CAMERA_HPP
+#endif  // GUA_PIPELINE_DESCRIPTION_HPP

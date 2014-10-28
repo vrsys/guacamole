@@ -19,51 +19,37 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SHADING_MODEL_DATA_BASE_HPP
-#define GUA_SHADING_MODEL_DATA_BASE_HPP
+#ifndef GUA_WINDOW_DATABASE_HPP
+#define GUA_WINDOW_DATABASE_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
-#include <gua/renderer/ShadingModel.hpp>
+#include <gua/renderer/WindowBase.hpp>
 
 namespace gua {
 
 /**
- * A data base for shading models.
+ * A data base for windows.
  *
- * This Database stores shading model data. It can be accessed via string
+ * This Database stores windows. It can be accessed via string
  * identifiers.
  *
  * \ingroup gua_databases
  */
-class GUA_DLL ShadingModelDatabase : public Database<ShadingModel>,
-                                     public Singleton<ShadingModelDatabase> {
+class GUA_DLL WindowDatabase : public Database<WindowBase>,
+                               public Singleton<WindowDatabase> {
  public:
-
-  /**
-   * Pre-loads some shading models.
-   *
-   * This method loads gsd shading models to the data base.
-   *
-   * \param directory    An absolute or relative path to the
-   *                     directory containing gsd files.
-   */
-  static void load_shading_models_from(std::string const& directory);
-
-  static void load_shading_model(std::string const& filename);
-
-  void reload_all();
-
-  friend class Singleton<ShadingModelDatabase>;
+  friend class Singleton<WindowDatabase>;
 
  private:
   // this class is a Singleton --- private c'tor and d'tor
-  ShadingModelDatabase() {}
-  ~ShadingModelDatabase() {}
+  WindowDatabase() {}
+  ~WindowDatabase() {}
 
 };
 
 }
 
-#endif  // GUA_SHADING_MODEL_DATA_BASE_HPP
+#endif  // GUA_WINDOW_DATABASE_HPP

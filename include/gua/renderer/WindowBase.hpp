@@ -88,6 +88,25 @@ class GUA_DLL WindowBase {
     GUA_ADD_PROPERTY(std::string, warp_matrix_red_left, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_green_left, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_blue_left, "");
+
+    // convenience access to resolution
+    void set_resolution(math::vec2ui const& res) {
+      left_resolution() = right_resolution() = res;
+    }
+
+    math::vec2ui const& get_resolution() {
+      return get_left_resolution();
+    }
+
+    // convenience access to position
+    void set_position(math::vec2ui const& pos) {
+      left_position() = right_position() = pos;
+    }
+
+    math::vec2ui const& get_position() {
+      return get_left_position();
+    }
+
   } config;
 
   /**

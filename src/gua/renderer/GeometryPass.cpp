@@ -31,7 +31,20 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GeometryPass::process(Pipeline* pipe) {
+PipelinePassDescription* GeometryPassDescription::make_copy() const {
+  return new GeometryPassDescription(*this);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass* GeometryPassDescription::make_pass() const {
+  return new GeometryPass();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GeometryPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   RenderContext const& ctx(pipe->get_context());
 
   pipe->get_gbuffer().bind(ctx, this);

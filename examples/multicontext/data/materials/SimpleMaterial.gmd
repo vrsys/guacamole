@@ -1,0 +1,12 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "file_name" : "data/materials/FragmentColor.gpd"
+    }
+  ]
+
+}

@@ -14,18 +14,21 @@ include_directories( ${INCLUDE_PATHS}
 
 add_executable( ${_EXE_NAME} main.cpp)
 
-add_dependencies(${_EXE_NAME} guacamole guacamole-nurbs)
+add_dependencies(${_EXE_NAME} guacamole)
+# add_dependencies(${_EXE_NAME} guacamole guacamole-nurbs)
 
 list(APPEND LIBS guacamole)
 
 IF (MSVC)
   target_link_libraries( ${_EXE_NAME} 
                          debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE} 
-                         general guacamole-nurbs)
+                         general guacamole)
+                         # general guacamole-nurbs)
 ELSEIF (UNIX)
   target_link_libraries( ${_EXE_NAME} 
                          general ${ASSIMP_LIBRARIES} 
-                         general guacamole-nurbs )
+                         general guacamole )
+                         # general guacamole-nurbs )
 ENDIF (MSVC)
 
 # copy runtime libraries as a post-build process

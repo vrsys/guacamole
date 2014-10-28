@@ -20,52 +20,88 @@
  ******************************************************************************/
 
 // class header
-#include <gua/databases/ShadingModelDatabase.hpp>
+#include <gua/renderer/PipelineDescription.hpp>
 
 // guacamole headers
-#include <gua/utils/Directory.hpp>
-
-// external headers
-#include <sstream>
+#include <gua/renderer/GeometryPass.hpp>
+#include <gua/renderer/LightingPass.hpp>
+#include <gua/renderer/SSAOPass.hpp>
+#include <gua/renderer/BackgroundPass.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadingModelDatabase::load_shading_models_from(
-    std::string const& directory) {
+PipelineDescription PipelineDescription::make_default() {
+  PipelineDescription pipe;
+  pipe.add_pass<GeometryPassDescription>();
+  pipe.add_pass<LightingPassDescription>();
+  pipe.add_pass<BackgroundPassDescription>();
 
-  gua::Directory dir(directory);
-  std::stringstream content(dir.get_content());
-  std::string parse_string;
+  return pipe;
+}
 
-  while (content >> parse_string) {
-    unsigned suffix_pos = unsigned(parse_string.find(".gsd"));
+////////////////////////////////////////////////////////////////////////////////
 
-    if (parse_string.length() - suffix_pos == 4) {
-      auto name(dir.get_directory_name() + parse_string);
-      load_shading_model(name);
+PipelineDescription::PipelineDescription(PipelineDescription const& other) {
+  for (auto pass: other.passes_) {
+    passes_.push_back(pass->make_copy());
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelineDescription::~PipelineDescription() {
+  for (auto pass: passes_) {
+    delete pass;
+  } 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::vector<PipelinePassDescription*> const& PipelineDescription::get_passes() const {
+  return passes_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool PipelineDescription::operator==(PipelineDescription const& other) const {
+  if (passes_.size() != other.passes_.size()) {
+    return false;
+  }
+
+  for (int i(0); i<passes_.size(); ++i) {
+    if (typeid(passes_[i]) != typeid(other.passes_[i])) {
+      return false;
     }
-  }
+  } 
+
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadingModelDatabase::load_shading_model(std::string const& filename) {
-  if (!instance()->is_supported(filename)) {
-    auto mod = std::make_shared<ShadingModel>(filename, filename);
-    instance()->add(filename, mod);
-  }
+bool PipelineDescription::operator!=(PipelineDescription const& other) const {
+  return !(*this == other);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadingModelDatabase::reload_all() {
-  for (auto const& date: data_) {
-    date.second->reload();
+PipelineDescription& PipelineDescription::operator=(PipelineDescription const& other) {
+  for (auto pass: passes_) {
+    delete pass;
+  } 
+
+  passes_.clear();
+
+  for (auto pass: other.passes_) {
+    passes_.push_back(pass->make_copy());
   }
+
+  return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 }
+
