@@ -136,6 +136,7 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     return;
   }
 
+  // store the current camera data
   current_camera_ = camera;
 
   // for (auto const& cam: camera.pre_render_cameras) {
@@ -146,6 +147,8 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
 
   if (camera.config.get_output_window_name() != "") {
     auto new_window(WindowDatabase::instance()->lookup(camera.config.get_output_window_name()));
+
+    // reload gbuffer if now rendering to another window (with a new context)
     if (new_window != window_) {
       window_ = new_window;
       reload_gbuffer = true;
@@ -161,13 +164,12 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     window_->set_active(true);
   }
 
-
+  // recreate gbuffer if resolution changed
   if (last_resolution_ != camera.config.get_resolution()) {
     last_resolution_ = camera.config.get_resolution();
     reload_gbuffer = true;
   }
 
-  // recreate gbuffer if resolution changed
   if (reload_gbuffer) {
     if (gbuffer_) {
       gbuffer_->remove_buffers(get_context());
@@ -233,22 +235,22 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
       passes_[i]->process(camera.config.get_pipeline_description().get_passes()[i], this);
     }
 
-    // display the last written colorbuffer of the gbuffer
-    if (window_) {
-      gbuffer_->toggle_ping_pong();
+    gbuffer_->toggle_ping_pong();
 
-      auto const& tex(gbuffer_->get_current_color_buffer());
-      auto tex_name(camera.config.get_output_texture_name());
-      
-      if (tex_name != "") {
-        if (camera.config.get_enable_stereo()) {
-          tex_name += is_left ? "_left" : "_right";
-        }
-
-        // add texture to texture database
-        TextureDatabase::instance()->add(tex_name, tex);
+    // add texture to texture database
+    auto const& tex(gbuffer_->get_current_color_buffer());
+    auto tex_name(camera.config.get_output_texture_name());
+    
+    if (tex_name != "") {
+      if (camera.config.get_enable_stereo()) {
+        tex_name += is_left ? "_left" : "_right";
       }
 
+      TextureDatabase::instance()->add(tex_name, tex);
+    }
+
+    // display the last written colorbuffer of the gbuffer
+    if (window_) {
       window_->display(tex, is_left);
     }
   };
