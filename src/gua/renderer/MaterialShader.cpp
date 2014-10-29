@@ -23,7 +23,7 @@
 
 #include <gua/utils/string_utils.hpp>
 
-#define USE_UBO 0
+#define USE_UBO 0 // also set in TriMeshRenderer.cpp
 
 namespace gua {
 

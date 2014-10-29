@@ -33,7 +33,7 @@
 #include <math.h>
 
 #define MATERIAL_BUFFER_SIZE 2048*128
-#define USE_UBO 0
+#define USE_UBO 0 // also set in MaterialShader.cpp
 
 namespace gua {
 
