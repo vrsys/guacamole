@@ -145,6 +145,7 @@ class GUA_DLL ShaderProgram {
    * \param context             The context which should use this shader.
    */
   void apply_uniform(RenderContext const& context,
+                     std::string const& name,
                      UniformValue const& uniform,
                      unsigned position = 0) const;
 
@@ -157,7 +158,7 @@ class GUA_DLL ShaderProgram {
                    std::string const& name,
                    unsigned position = 0) const {
 
-    apply_uniform(context, UniformValue(name, value), position);
+    apply_uniform(context, name, UniformValue(value), position);
   }
 
   /**

@@ -22,101 +22,61 @@
 #ifndef GUA_PIPELINE_HPP
 #define GUA_PIPELINE_HPP
 
+#include <gua/node/CameraNode.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/Camera.hpp>
 #include <gua/renderer/SerializedScene.hpp>
-#include <gua/renderer/Texture2D.hpp>
-#include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/RessourceRenderer.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/utils/configuration_macro.hpp>
 #include <gua/math.hpp>
 
 #include <memory>
-#include <list>
 
 namespace gua {
 
 class GBuffer;
 class WindowBase;
 class RenderContext;
+class ShaderProgram;
 
 class Pipeline {
  public:
 
-  struct Configuration {
-
-    // camera for this pipeline
-    GUA_ADD_PROPERTY(Camera, camera, Camera());
-
-    // if set to false, this pipeline won't render anything
-    GUA_ADD_PROPERTY(bool, enabled, true);
-
-    GUA_ADD_PROPERTY(bool, enable_stereo, false);
-
-    // the final image of this pipeline will be stored in the texture database
-    // with this name. if enable_stereo is set to true, two images with postfixes
-    // _left and _right will be stored
-    GUA_ADD_PROPERTY(std::string, output_texture_name, "gua_pipeline");
-
-    // stereo configuration
-    GUA_ADD_PROPERTY(math::vec2ui, resolution, math::vec2ui(800, 600));
-
-    // various display options
-    GUA_ADD_PROPERTY(bool, enable_ray_display, false);
-    GUA_ADD_PROPERTY(bool, enable_bbox_display, false);
-
-    // clipping
-    GUA_ADD_PROPERTY(float, near_clip, 0.1f);
-    GUA_ADD_PROPERTY(float, far_clip, 1000.0f);
-
-    // culling
-    GUA_ADD_PROPERTY(bool, enable_frustum_culling, true);
-  };
-
   Pipeline();
   ~Pipeline();
 
-  Configuration config;
-
-  template<class T>
-  T& add_pass() {
-    dirty_ = true;
-    T* t = new T();
-    passes_.push_back(t);
-    return *t;
-  }
-
-  void set_output_window(WindowBase* window);
-
-  void process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
+  void process(node::SerializedCameraNode const& camera,
+               std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 
-  std::list<PipelinePass*> const& get_passes()  const;
-  GBuffer                       & get_gbuffer() const;
-  RenderContext            const& get_context() const;
-  SerializedScene          const& get_scene()   const;
-  
+  std::vector<PipelinePass*>  const& get_passes()  const;
+  GBuffer                          & get_gbuffer() const;
+  SerializedScene             const& get_scene()   const;
+  RenderContext               const& get_context() const;
+  node::SerializedCameraNode  const& get_camera()  const;
+
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_camera_uniform_block(unsigned location) const;
   void draw_fullscreen_quad();
 
-  std::shared_ptr<RessourceRenderer> get_renderer(GeometryResource const& type);
+  std::shared_ptr<RessourceRenderer> get_renderer(std::type_index const& id);
 
  private:
-  std::list<PipelinePass*> passes_;
-  GBuffer*                 gbuffer_;
-  WindowBase*              window_;
-  SerializedScene          current_scene_;
-  CameraUniformBlock*      camera_block_;
 
-  bool                     dirty_;
-  math::vec2ui             last_resolution_;
-  std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_; 
+  GBuffer*                           gbuffer_;
+  RenderContext*                     context_;
+  CameraUniformBlock*                camera_block_;
 
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
+  SerializedScene                    current_scene_;
+  node::SerializedCameraNode         current_camera_;
+
+  math::vec2ui                       last_resolution_;
+  PipelineDescription                last_description_;
+
+  std::vector<PipelinePass*>         passes_;
+  std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_;
+
+  scm::gl::quad_geometry_ptr         fullscreen_quad_;
 
 };
 

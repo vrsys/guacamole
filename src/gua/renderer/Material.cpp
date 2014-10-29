@@ -34,7 +34,7 @@ Material::Material(std::string const& shader_name):
 // }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<UniformValue> const& Material::get_uniforms() const {
+std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() const {
   return uniforms_;
 }
 

@@ -26,9 +26,22 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/utils/Logger.hpp>
 
 namespace gua {
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePassDescription* LightingPassDescription::make_copy() const {
+  return new LightingPassDescription(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass* LightingPassDescription::make_pass() const {
+  return new LightingPass();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +55,7 @@ LightingPass::LightingPass() :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightingPass::process(Pipeline* pipe) {
+void LightingPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
 
   RenderContext const& ctx(pipe->get_context());
 

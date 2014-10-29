@@ -27,6 +27,7 @@
 #include <gua/renderer/TriMeshRenderer.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
+#include <gua/node/TriMeshNode.hpp>
 #include <gua/utils/Logger.hpp>
 
 // external headers
@@ -48,7 +49,10 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 TriMeshRessource::TriMeshRessource()
-    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_(nullptr) {}
+    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_(nullptr) {
+
+  register_renderer<node::TriMeshNode, TriMeshRenderer>();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,6 +64,8 @@ TriMeshRessource::TriMeshRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importe
       upload_mutex_(),
       mesh_(mesh),
       importer_(importer) {
+
+  register_renderer<node::TriMeshNode, TriMeshRenderer>();
 
   if (mesh_->HasPositions()) {
     bounding_box_ = math::BoundingBox<math::vec3>();
@@ -79,90 +85,91 @@ TriMeshRessource::TriMeshRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importe
 
 void TriMeshRessource::upload_to(RenderContext const& ctx) const {
 
-  if (!mesh_->HasPositions()) {
-    Logger::LOG_WARNING << "Unable to load Mesh! Has no vertex data." << std::endl;
-    return;
-  }
-
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  if (vertices_.size() <= ctx.id) {
-    vertices_.resize(ctx.id + 1);
-    indices_.resize(ctx.id + 1);
-    vertex_array_.resize(ctx.id + 1);
-  }
-
-  vertices_[ctx.id] =
-      ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       mesh_->mNumVertices * sizeof(Vertex),
-                                       0);
-
-
-
-  Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
-      vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
-
-  for (unsigned v(0); v < mesh_->mNumVertices; ++v) {
-    data[v].pos = scm::math::vec3(
-        mesh_->mVertices[v].x, mesh_->mVertices[v].y, mesh_->mVertices[v].z);
-
-    if (mesh_->HasTextureCoords(0)) {
-      data[v].tex = scm::math::vec2(mesh_->mTextureCoords[0][v].x,
-                                    mesh_->mTextureCoords[0][v].y);
-    } else {
-      data[v].tex = scm::math::vec2(0.f, 0.f);
+  if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
+    if (!mesh_->HasPositions()) {
+      Logger::LOG_WARNING << "Unable to load Mesh! Has no vertex data." << std::endl;
+      return;
     }
 
-    if (mesh_->HasNormals()) {
-      data[v].normal = scm::math::vec3(
-          mesh_->mNormals[v].x, mesh_->mNormals[v].y, mesh_->mNormals[v].z);
-    } else {
-      data[v].normal = scm::math::vec3(0.f, 0.f, 0.f);
+    std::unique_lock<std::mutex> lock(upload_mutex_);
+
+    if (vertices_.size() <= ctx.id) {
+      vertices_.resize(ctx.id + 1);
+      indices_.resize(ctx.id + 1);
+      vertex_array_.resize(ctx.id + 1);
     }
 
-    if (mesh_->HasTangentsAndBitangents()) {
-      data[v].tangent = scm::math::vec3(
-          mesh_->mTangents[v].x, mesh_->mTangents[v].y, mesh_->mTangents[v].z);
+    vertices_[ctx.id] =
+        ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
+                                         scm::gl::USAGE_STATIC_DRAW,
+                                         mesh_->mNumVertices * sizeof(Vertex),
+                                         0);
 
-      data[v].bitangent = scm::math::vec3(mesh_->mBitangents[v].x,
-                                          mesh_->mBitangents[v].y,
-                                          mesh_->mBitangents[v].z);
-    } else {
-      data[v].tangent = scm::math::vec3(0.f, 0.f, 0.f);
-      data[v].bitangent = scm::math::vec3(0.f, 0.f, 0.f);
+
+
+    Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
+        vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+
+    for (unsigned v(0); v < mesh_->mNumVertices; ++v) {
+      data[v].pos = scm::math::vec3(
+          mesh_->mVertices[v].x, mesh_->mVertices[v].y, mesh_->mVertices[v].z);
+
+      if (mesh_->HasTextureCoords(0)) {
+        data[v].tex = scm::math::vec2(mesh_->mTextureCoords[0][v].x,
+                                      mesh_->mTextureCoords[0][v].y);
+      } else {
+        data[v].tex = scm::math::vec2(0.f, 0.f);
+      }
+
+      if (mesh_->HasNormals()) {
+        data[v].normal = scm::math::vec3(
+            mesh_->mNormals[v].x, mesh_->mNormals[v].y, mesh_->mNormals[v].z);
+      } else {
+        data[v].normal = scm::math::vec3(0.f, 0.f, 0.f);
+      }
+
+      if (mesh_->HasTangentsAndBitangents()) {
+        data[v].tangent = scm::math::vec3(
+            mesh_->mTangents[v].x, mesh_->mTangents[v].y, mesh_->mTangents[v].z);
+
+        data[v].bitangent = scm::math::vec3(mesh_->mBitangents[v].x,
+                                            mesh_->mBitangents[v].y,
+                                            mesh_->mBitangents[v].z);
+      } else {
+        data[v].tangent = scm::math::vec3(0.f, 0.f, 0.f);
+        data[v].bitangent = scm::math::vec3(0.f, 0.f, 0.f);
+      }
     }
+
+    ctx.render_context->unmap_buffer(vertices_[ctx.id]);
+
+    std::vector<unsigned> index_array(mesh_->mNumFaces * 3);
+
+    for (unsigned t = 0; t < mesh_->mNumFaces; ++t) {
+      const struct aiFace* face = &mesh_->mFaces[t];
+
+      index_array[t * 3] = face->mIndices[0];
+      index_array[t * 3 + 1] = face->mIndices[1];
+      index_array[t * 3 + 2] = face->mIndices[2];
+    }
+
+    indices_[ctx.id] =
+        ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
+                                         scm::gl::USAGE_STATIC_DRAW,
+                                         mesh_->mNumFaces * 3 * sizeof(unsigned),
+                                         &index_array[0]);
+
+    std::vector<scm::gl::buffer_ptr> buffer_arrays;
+    buffer_arrays.push_back(vertices_[ctx.id]);
+
+    vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
+        scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+            0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
+            0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+            0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+            0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex)),
+        buffer_arrays);
   }
-
-  ctx.render_context->unmap_buffer(vertices_[ctx.id]);
-
-  std::vector<unsigned> index_array(mesh_->mNumFaces * 3);
-
-  for (unsigned t = 0; t < mesh_->mNumFaces; ++t) {
-    const struct aiFace* face = &mesh_->mFaces[t];
-
-    index_array[t * 3] = face->mIndices[0];
-    index_array[t * 3 + 1] = face->mIndices[1];
-    index_array[t * 3 + 2] = face->mIndices[2];
-  }
-
-  indices_[ctx.id] =
-      ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       mesh_->mNumFaces * 3 * sizeof(unsigned),
-                                       &index_array[0]);
-
-  std::vector<scm::gl::buffer_ptr> buffer_arrays;
-  buffer_arrays.push_back(vertices_[ctx.id]);
-
-  vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
-      scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-          0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
-          0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-          0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-          0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex)),
-      buffer_arrays);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,9 +177,7 @@ void TriMeshRessource::upload_to(RenderContext const& ctx) const {
 void TriMeshRessource::draw(RenderContext const& ctx) const {
 
   // upload to GPU if neccessary
-  if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
-    upload_to(ctx);
-  }
+  upload_to(ctx);
 
   // scm::gl::context_vertex_input_guard vig(ctx.render_context);
 

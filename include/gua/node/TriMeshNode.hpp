@@ -26,6 +26,9 @@
 #include <gua/node/GeometryNode.hpp>
 
 namespace gua {
+
+class GeometryResource;
+
 namespace node {
 
 /**
@@ -36,10 +39,28 @@ namespace node {
 class GUA_DLL TriMeshNode : public GeometryNode {
  public:  // member
 
-  TriMeshNode(std::string const& name,
-              std::string const& geometry = "gua_default_geometry",
+  TriMeshNode(std::string const& name = "",
+              std::string const& filename = "gua_default_geometry",
               Material const& material = Material(),
               math::mat4 const& transform = math::mat4::identity());
+
+
+  /**
+  * Get the string referring to an entry in guacamole's GeometryDatabase.
+  */
+  std::string const& get_filename() const;
+
+  /**
+  * Set the string referring to an entry in guacamole's GeometryDatabase.
+  */
+  void set_filename(std::string const& filename);
+
+  /**
+  * A string referring to an entry in guacamole's MaterialShaderDatabase.
+  */
+  Material const& get_material() const;
+  Material&       get_material();
+  void            set_material(Material const& material);
 
   /**
   * Implements ray picking for a triangular mesh
@@ -49,13 +70,38 @@ class GUA_DLL TriMeshNode : public GeometryNode {
                      Mask const& mask,
                      std::set<PickResult>& hits) override;
 
+  /**
+  * Updates bounding box by accessing the ressource in the databse
+  */
+  void update_bounding_box() const override;
+
   void update_cache() override;
+
+  std::shared_ptr<GeometryResource> const& get_geometry() const;
+
+  /**
+   * Accepts a visitor and calls concrete visit method.
+   *
+   * This method implements the visitor pattern for Nodes.
+   *
+   * \param visitor  A visitor to process the GeometryNode's data.
+   */
+  void accept(NodeVisitor& visitor) override;
 
  protected:
 
   std::shared_ptr<Node> copy() const override;
 
  private:  // attributes e.g. special attributes for drawing
+
+  std::shared_ptr<GeometryResource> geometry_;
+
+  std::string filename_;
+
+  Material material_;
+
+  bool filename_changed_;
+  bool material_changed_;
 
 };
 

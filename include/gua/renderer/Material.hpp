@@ -22,7 +22,7 @@
 #ifndef GUA_MATERIAL_HPP
 #define GUA_MATERIAL_HPP
 
-#include <gua/renderer/Uniform.hpp>
+#include <gua/renderer/ViewDependentUniform.hpp>
 
 #include <string>
 #include <vector>
@@ -37,31 +37,39 @@ class Material {
       return shader_name_;
     }
 
-    Material& set_uniform(UniformValue const& uniform) {
-      for (auto& val: uniforms_) {
-        if (uniform.get_name() == val.get_name()) {
-          val = uniform;
-          return *this;
-        }
-      }
-      uniforms_.push_back(uniform);
+    Material& set_uniform(std::string const& name, ViewDependentUniform const& uniform) {
+      uniforms_[name] = uniform;
       return *this;
     }
 
     template <typename T>
     Material& set_uniform(std::string const& name, T const& value) {
-      return set_uniform(UniformValue(name, value));
+      return set_uniform(name, ViewDependentUniform(UniformValue(value)));
+    }
+
+    template <typename T>
+    Material& set_uniform(std::string const& name, T const& value, int view_id) {
+      auto uniform(uniforms_.find(name));
+
+      if (uniform == uniforms_.end()) {
+        set_uniform(name, value);
+        set_uniform(name, value, view_id);
+      } else {
+        uniform->second.set(view_id, value);
+      }
+
+      return *this;
     }
 
     // void unset_uniform(std::string const& name);
 
-    std::vector<UniformValue> const& get_uniforms() const;
+    std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
 
   private:
     friend class MaterialShader;
 
     std::string shader_name_;
-    std::vector<UniformValue> uniforms_;
+    std::map<std::string, ViewDependentUniform> uniforms_;
 
 };
 

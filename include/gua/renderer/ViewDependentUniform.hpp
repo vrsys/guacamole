@@ -19,51 +19,36 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SHADING_MODEL_DATA_BASE_HPP
-#define GUA_SHADING_MODEL_DATA_BASE_HPP
+#ifndef GUA_VIEW_DEPENDENT_UNIFORM_HPP
+#define GUA_VIEW_DEPENDENT_UNIFORM_HPP
 
-// guacamole headers
-#include <gua/utils/Singleton.hpp>
-#include <gua/databases/Database.hpp>
-#include <gua/renderer/ShadingModel.hpp>
+#include <gua/renderer/Uniform.hpp>
+
+#include <string>
+#include <vector>
 
 namespace gua {
 
-/**
- * A data base for shading models.
- *
- * This Database stores shading model data. It can be accessed via string
- * identifiers.
- *
- * \ingroup gua_databases
- */
-class GUA_DLL ShadingModelDatabase : public Database<ShadingModel>,
-                                     public Singleton<ShadingModelDatabase> {
- public:
+class ViewDependentUniform {
+  public:
+    ViewDependentUniform(UniformValue const& value = UniformValue());
 
-  /**
-   * Pre-loads some shading models.
-   *
-   * This method loads gsd shading models to the data base.
-   *
-   * \param directory    An absolute or relative path to the
-   *                     directory containing gsd files.
-   */
-  static void load_shading_models_from(std::string const& directory);
+    UniformValue const& get() const;
+    UniformValue const& get(int view) const;
 
-  static void load_shading_model(std::string const& filename);
+    void set(UniformValue const& value);
+    void set(int view, UniformValue const& value);
 
-  void reload_all();
+    void apply(RenderContext const& ctx, std::string const& name, int view,
+               scm::gl::program_ptr const& prog, unsigned location = 0) const;
 
-  friend class Singleton<ShadingModelDatabase>;
+  private:
 
- private:
-  // this class is a Singleton --- private c'tor and d'tor
-  ShadingModelDatabase() {}
-  ~ShadingModelDatabase() {}
+    UniformValue default_;
+    std::map<int, UniformValue> uniforms_;
 
 };
 
 }
 
-#endif  // GUA_SHADING_MODEL_DATA_BASE_HPP
+#endif  // GUA_VIEW_DEPENDENT_UNIFORM_HPP

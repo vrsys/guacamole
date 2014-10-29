@@ -36,5 +36,7 @@ src/gua/generated/*
 .vim.custom
 tests/tests
 plugins/guacamole-oculus/example-oculus/example-oculus
-examples/multicontext/multicontext
-examples/input/input
+examples/oculus/example-oculus
+examples/multicontext/example-multicontext
+examples/input/example-input
+examples/stress_test/stress_test

@@ -19,80 +19,37 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RENDERCONTEXT_HPP
-#define GUA_RENDERCONTEXT_HPP
+// class header
+#include <gua/renderer/RessourceRenderer.hpp>
 
-#include <gua/renderer/enums.hpp>
-
-// external headers
-#include <scm/gl_core/config.h>
-#include <scm/gl_core/data_formats.h>
-#include <scm/core.h>
-#include <scm/gl_core.h>
-#include <scm/gl_core/window_management/context.h>
-#include <scm/gl_core/window_management/display.h>
-#include <scm/gl_core/window_management/surface.h>
-#include <atomic>
 
 namespace gua {
 
-class WindowBase;
+////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Information on a specific context.
- *
- * Stores all relevant information on a OpenGL context.
- */
-struct RenderContext {
+creation_function_map RessourceRenderer::creation_functions_ = creation_function_map();
 
-  /**
-  * c'tor
-  */
-  RenderContext();
+////////////////////////////////////////////////////////////////////////////////
 
-  /**
-  * d'tor
-  */
-  ~RenderContext();
+void RessourceRenderer::register_renderer(std::type_index const& id,
+                                          creation_function const& creation_function) {
 
-   /**
-   * The schism context of this RenderContext.
-   */
-  scm::gl::wm::context_ptr context;
+  creation_functions_[id] = creation_function;
+}
 
-  /**
-   * The display where this context was opened.
-   */
-  scm::gl::wm::display_ptr display;
+////////////////////////////////////////////////////////////////////////////////
 
-  /**
-   * The schism render constext associated with this context.
-   */
-  scm::gl::render_context_ptr render_context;
+std::shared_ptr<RessourceRenderer> RessourceRenderer::get_renderer(std::type_index const& id) {
+  auto function(creation_functions_.find(id));
 
-  /**
-   * The schism render device associated with this context.
-   */
-  scm::gl::render_device_ptr render_device;
+  if (function != creation_functions_.end()) {
+    return function->second();
+  }
 
-  /**
-   * The window which is rendered into.
-   */
-  WindowBase* render_window;
+  return nullptr;
+}
 
-  /**
-   * A unique ID for this context.
-   */
-  unsigned id;
-
-  /**
-  * framecounter for this context
-  */
-  unsigned framecount;
-
-  gua::CameraMode mode;
-};
+////////////////////////////////////////////////////////////////////////////////
 
 }
 
-#endif  // GUA_RENDERCONTEXT_HPP

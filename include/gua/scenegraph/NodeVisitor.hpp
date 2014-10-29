@@ -32,7 +32,7 @@ namespace node {
 class Node;
 class TransformNode;
 class LODNode;
-class GeometryNode;
+class TriMeshNode;
 class Video3DNode;
 class VolumeNode;
 class PointLightNode;
@@ -110,7 +110,7 @@ class NodeVisitor {
    *
    * \param cam   Pointer to a GeometryNode.
    */
-  virtual void visit(node::GeometryNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+  virtual void visit(node::TriMeshNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
   * Visits a Video3DNode

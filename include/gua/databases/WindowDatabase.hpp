@@ -19,53 +19,37 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/databases/ShadingModelDatabase.hpp>
+#ifndef GUA_WINDOW_DATABASE_HPP
+#define GUA_WINDOW_DATABASE_HPP
 
 // guacamole headers
-#include <gua/utils/Directory.hpp>
-
-// external headers
-#include <sstream>
+#include <gua/platform.hpp>
+#include <gua/utils/Singleton.hpp>
+#include <gua/databases/Database.hpp>
+#include <gua/renderer/WindowBase.hpp>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * A data base for windows.
+ *
+ * This Database stores windows. It can be accessed via string
+ * identifiers.
+ *
+ * \ingroup gua_databases
+ */
+class GUA_DLL WindowDatabase : public Database<WindowBase>,
+                               public Singleton<WindowDatabase> {
+ public:
+  friend class Singleton<WindowDatabase>;
 
-void ShadingModelDatabase::load_shading_models_from(
-    std::string const& directory) {
+ private:
+  // this class is a Singleton --- private c'tor and d'tor
+  WindowDatabase() {}
+  ~WindowDatabase() {}
 
-  gua::Directory dir(directory);
-  std::stringstream content(dir.get_content());
-  std::string parse_string;
-
-  while (content >> parse_string) {
-    unsigned suffix_pos = unsigned(parse_string.find(".gsd"));
-
-    if (parse_string.length() - suffix_pos == 4) {
-      auto name(dir.get_directory_name() + parse_string);
-      load_shading_model(name);
-    }
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShadingModelDatabase::load_shading_model(std::string const& filename) {
-  if (!instance()->is_supported(filename)) {
-    auto mod = std::make_shared<ShadingModel>(filename, filename);
-    instance()->add(filename, mod);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShadingModelDatabase::reload_all() {
-  for (auto const& date: data_) {
-    date.second->reload();
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
+};
 
 }
+
+#endif  // GUA_WINDOW_DATABASE_HPP

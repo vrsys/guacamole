@@ -36,64 +36,12 @@ namespace node {
 
 ////////////////////////////////////////////////////////////////////////////////
 GeometryNode::GeometryNode(std::string const& name,
-                           std::string const& filename,
-                           Material const& material,
                            math::mat4 const& transform,
                            ShadowMode shadow_mode)
   : Node(name, transform),
-    filename_(filename),
-    material_(material),
-    shadow_mode_(shadow_mode),
-    filename_changed_(true),
-    material_changed_(true)
+    shadow_mode_(shadow_mode)
 {}
 
-////////////////////////////////////////////////////////////////////////////////
-std::string const& GeometryNode::get_filename() const {
-  return filename_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void GeometryNode::set_filename(std::string const& v) {
-  filename_ = v;
-  filename_changed_ = self_dirty_ = true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void GeometryNode::accept(NodeVisitor& visitor) {
-  visitor.visit(this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-Material const& GeometryNode::get_material() const {
-  return material_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-Material& GeometryNode::get_material() {
-  return material_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void GeometryNode::set_material(Material const& material) {
-  material_ = material;
-  material_changed_ = self_dirty_ = true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void GeometryNode::update_bounding_box() const {
-
-  if (get_filename() != "") {
-    auto geometry_bbox(GeometryDatabase::instance()->lookup(get_filename())->get_bounding_box());
-    bounding_box_ = transform(geometry_bbox, world_transform_);
-
-    for (auto child : get_children()) {
-      bounding_box_.expandBy(child->get_bounding_box());
-    }
-  } else {
-    Node::update_bounding_box();
-  }
-}
 
 }
 }

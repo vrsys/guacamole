@@ -101,24 +101,24 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */ void DotGenerator::visit(node::GeometryNode* geometry) {
-  pre_node_info(geometry);
+  // pre_node_info(geometry);
 
-  std::string fillcolor("[fillcolor =");
-  fillcolor += " \"#CCCCCC\"";
-  if (geometry->get_filename() != "") {
-    parse_data_ += "| geometry: " + geometry->get_filename();
-  }
-  if (geometry->get_material().get_shader_name() != "") {
-    parse_data_ += "| material: " + geometry->get_material().get_shader_name();
-  }
+  // std::string fillcolor("[fillcolor =");
+  // fillcolor += " \"#CCCCCC\"";
+  // if (geometry->get_filename() != "") {
+  //   parse_data_ += "| geometry: " + geometry->get_filename();
+  // }
+  // if (geometry->get_material().get_shader_name() != "") {
+  //   parse_data_ += "| material: " + geometry->get_material().get_shader_name();
+  // }
 
-  fillcolor += "]";
+  // fillcolor += "]";
 
-  post_node_info(geometry, fillcolor);
+  // post_node_info(geometry, fillcolor);
 
-  for (auto child : geometry->children_) {
-    child->accept(*this);
-  }
+  // for (auto child : geometry->children_) {
+  //   child->accept(*this);
+  // }
 }
 
 

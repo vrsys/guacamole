@@ -20,65 +20,88 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/BackgroundPass.hpp>
+#include <gua/renderer/PipelineDescription.hpp>
 
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/Resources.hpp>
-#include <gua/utils/Logger.hpp>
+// guacamole headers
+#include <gua/renderer/GeometryPass.hpp>
+#include <gua/renderer/LightingPass.hpp>
+#include <gua/renderer/SSAOPass.hpp>
+#include <gua/renderer/BackgroundPass.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* BackgroundPassDescription::make_copy() const {
-  return new BackgroundPassDescription(*this);
+PipelineDescription PipelineDescription::make_default() {
+  PipelineDescription pipe;
+  pipe.add_pass<GeometryPassDescription>();
+  pipe.add_pass<LightingPassDescription>();
+  pipe.add_pass<BackgroundPassDescription>();
+
+  return pipe;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* BackgroundPassDescription::make_pass() const {
-  return new BackgroundPass();
+PipelineDescription::PipelineDescription(PipelineDescription const& other) {
+  for (auto pass: other.passes_) {
+    passes_.push_back(pass->make_copy());
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BackgroundPass::BackgroundPass() :
-  shader_(std::make_shared<ShaderProgram>()),
-  depth_stencil_state_(nullptr) {
-
-  shader_ = std::make_shared<ShaderProgram>();
-  shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
-    Resources::lookup_shader(Resources::shaders_background_frag)
-  );
+PipelineDescription::~PipelineDescription() {
+  for (auto pass: passes_) {
+    delete pass;
+  } 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void BackgroundPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
-  RenderContext const& ctx(pipe->get_context());
+std::vector<PipelinePassDescription*> const& PipelineDescription::get_passes() const {
+  return passes_;
+}
 
-  if (!depth_stencil_state_) {
-    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
+////////////////////////////////////////////////////////////////////////////////
+
+bool PipelineDescription::operator==(PipelineDescription const& other) const {
+  if (passes_.size() != other.passes_.size()) {
+    return false;
   }
 
-  // bind gbuffer
-  pipe->get_gbuffer().bind(ctx, this);
-  pipe->get_gbuffer().set_viewport(ctx);
+  for (int i(0); i<passes_.size(); ++i) {
+    if (typeid(passes_[i]) != typeid(other.passes_[i])) {
+      return false;
+    }
+  } 
 
-  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+  return true;
+}
 
-  shader_->use(ctx);
+////////////////////////////////////////////////////////////////////////////////
 
-  pipe->bind_gbuffer_input(shader_);
-  pipe->draw_fullscreen_quad();
-  pipe->get_gbuffer().unbind(ctx);
+bool PipelineDescription::operator!=(PipelineDescription const& other) const {
+  return !(*this == other);
+}
 
-  ctx.render_context->reset_state_objects();
+////////////////////////////////////////////////////////////////////////////////
+
+PipelineDescription& PipelineDescription::operator=(PipelineDescription const& other) {
+  for (auto pass: passes_) {
+    delete pass;
+  } 
+
+  passes_.clear();
+
+  for (auto pass: other.passes_) {
+    passes_.push_back(pass->make_copy());
+  }
+
+  return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 }
+

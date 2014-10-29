@@ -32,23 +32,23 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GBuffer::GBuffer(RenderContext const& ctx, unsigned width, unsigned height):
+GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
   fbo_read_(new FrameBufferObject()),
   fbo_write_(new FrameBufferObject()),
   fbo_read_only_color_(new FrameBufferObject()),
   fbo_write_only_color_(new FrameBufferObject()),
-  width_(width),
-  height_(height) {
+  width_(resolution.x),
+  height_(resolution.y) {
 
   scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
     scm::gl::WRAP_MIRRORED_REPEAT,
     scm::gl::WRAP_MIRRORED_REPEAT);
 
-  color_buffer_read_  = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_RGB_8, 1, state);
-  color_buffer_write_ = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_RGB_8, 1, state);
-  pbr_buffer_         = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_RGB_8, 1, state);
-  normal_buffer_      = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_RGB_16, 1, state);
-  depth_buffer_       = std::make_shared<Texture2D>(width, height, scm::gl::FORMAT_D24, 1, state);
+  color_buffer_read_  = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_8, 1, state);
+  color_buffer_write_ = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_8, 1, state);
+  pbr_buffer_         = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_8, 1, state);
+  normal_buffer_      = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_16, 1, state);
+  depth_buffer_       = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_D24, 1, state);
 
   fbo_read_->attach_color_buffer(ctx, 0, color_buffer_read_);
   fbo_read_->attach_color_buffer(ctx, 1, pbr_buffer_);

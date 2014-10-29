@@ -39,7 +39,7 @@
 namespace gua {
 
 class UniformValue {
-  
+
   union Data {
     int int_;
     bool bool_;
@@ -77,35 +77,53 @@ class UniformValue {
 
     // -------------------------------------------------------------------------
     template<typename T>
-    UniformValue(std::string const& name, T const& val) :
-      name_(name),
-      apply_impl_(apply<T>), 
+    UniformValue(T const& val) :
+      apply_impl_(apply<T>),
       get_glsl_type_impl_(get_glsl_type_impl<T>),
+      get_byte_size_impl_(get_byte_size_impl<T>),
       write_bytes_impl_(write_bytes_impl<T>) { set(val); }
+
+    UniformValue(UniformValue const& to_copy) = default;
+    // UniformValue(UniformValue const& to_copy) :
+    //   apply_impl_(to_copy.apply_impl_),
+    //   get_glsl_type_impl_(to_copy.get_glsl_type_impl_),
+    //   get_byte_size_impl_(to_copy.get_byte_size_impl_),
+    //   write_bytes_impl_(to_copy.write_bytes_impl_),
+    //   val_(to_copy.val_) {}
 
     // -------------------------------------------------------------------------
     static UniformValue create_from_string_and_type(
-      std::string const& name, std::string const& value, UniformType const& ty
+      std::string const& value, UniformType const& ty
     );
 
     static UniformValue create_from_strings(
-      std::string const& name, std::string const& value, std::string const& ty
+      std::string const& value, std::string const& ty
     );
 
     // -------------------------------------------------------------------------
-    void apply(RenderContext const& ctx, scm::gl::program_ptr const& prog,
-               unsigned location = 0) const {
-      apply_impl_(this, ctx, prog, location);
+    void apply(RenderContext const& ctx, std::string const& name,
+               scm::gl::program_ptr const& prog, unsigned location = 0) const {
+      apply_impl_(this, ctx, name, prog, location);
     }
 
-    std::string const& get_name() const { return name_; }
-    
     std::string get_glsl_type() const {
       return get_glsl_type_impl_();
     }
 
-    unsigned write_bytes(RenderContext const& ctx, char* target) const {
-      return write_bytes_impl_(this, ctx, target);
+    unsigned get_byte_size() const {
+      return get_byte_size_impl_();
+    }
+
+    void write_bytes(RenderContext const& ctx, char* target) const {
+      write_bytes_impl_(this, ctx, target);
+    }
+
+    void operator= (UniformValue const& to_copy) {
+      apply_impl_         = to_copy.apply_impl_;
+      get_glsl_type_impl_ = to_copy.get_glsl_type_impl_;
+      get_byte_size_impl_ = to_copy.get_byte_size_impl_;
+      write_bytes_impl_   = to_copy.write_bytes_impl_;
+      val_                = to_copy.val_;
     }
 
   private:
@@ -125,23 +143,26 @@ class UniformValue {
     void set(math::vec3ui const& val) { val_.vec3ui_ = val; }
     void set(math::vec4ui const& val) { val_.vec4ui_ = val; }
     void set(std::string const& val) { new (&val_.texture_) std::string; val_.texture_ = val; }
-    
+
     template<typename T>
     static void apply(UniformValue const* self, RenderContext const& ctx,
-                      scm::gl::program_ptr const& prog, unsigned location);
+                      std::string const& name, scm::gl::program_ptr const& prog,
+                      unsigned location);
 
     template<typename T>
     static std::string get_glsl_type_impl();
 
     template<typename T>
-    static unsigned write_bytes_impl(UniformValue const* self, RenderContext const& ctx, char* target);
+    static unsigned get_byte_size_impl();
 
-    std::string name_;
+    template<typename T>
+    static void write_bytes_impl(UniformValue const* self, RenderContext const& ctx, char* target);
 
     Data val_;
-    std::function<void(UniformValue const*, RenderContext const&, scm::gl::program_ptr const&, unsigned)> apply_impl_;
+    std::function<void(UniformValue const*, RenderContext const&, std::string const&, scm::gl::program_ptr const&, unsigned)> apply_impl_;
     std::function<std::string()> get_glsl_type_impl_;
-    std::function<unsigned(UniformValue const*, RenderContext const&, char*)> write_bytes_impl_;
+    std::function<unsigned()> get_byte_size_impl_;
+    std::function<void(UniformValue const*, RenderContext const&, char*)> write_bytes_impl_;
 };
 
 }

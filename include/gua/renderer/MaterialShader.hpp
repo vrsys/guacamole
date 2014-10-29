@@ -46,7 +46,8 @@ class MaterialShader {
   Material const&     get_default_material() const;
   Material&           get_default_material();
 
-  ShaderProgram* get_shader(GeometryResource const& for_type,
+  ShaderProgram* get_shader(RenderContext const& ctx,
+                            GeometryResource const& for_type,
                             std::string const& geometry_v_shader,
                             std::string const& geometry_f_shader);
 
@@ -57,9 +58,14 @@ class MaterialShader {
 
   void print_shaders() const;
 
+  unsigned max_object_count() const {
+    return max_object_count_;
+  }
+
  private:
 
-  std::string compile_description(std::list<MaterialShaderMethod> const& passes,
+  std::string compile_description(RenderContext const& ctx,
+                                  std::list<MaterialShaderMethod> const& passes,
                                   std::string const& shader_source) const;
 
   MaterialShaderDescription desc_;
@@ -67,6 +73,7 @@ class MaterialShader {
   std::unordered_map<std::type_index, ShaderProgram*> shaders_;
 
   Material default_material_;
+  mutable unsigned max_object_count_;
 };
 
 }

@@ -26,8 +26,8 @@
 #include <gua/databases/CollisionShapeDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
-#include <gua/databases/ShadingModelDatabase.hpp>
 #include <gua/databases/TextureDatabase.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 
 #endif  // GUA_INCLUDE_DATABASES_HPP

@@ -165,13 +165,14 @@ void ShaderProgram::unuse(RenderContext const & context) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShaderProgram::apply_uniform(RenderContext const & context,
+                                  std::string const& name,
                                   UniformValue const& uniform,
                                   unsigned position) const {
 
     // upload to GPU if neccessary
     upload_to(context);
 
-    uniform.apply(context, programs_[context.id], position);
+    uniform.apply(context, name, programs_[context.id], position);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

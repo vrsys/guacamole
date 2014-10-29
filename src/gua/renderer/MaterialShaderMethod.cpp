@@ -75,12 +75,11 @@ MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& js
             uniform_string["value"] != Json::Value::null) {
 
           auto uniform(UniformValue::create_from_strings(
-                        uniform_string["name"].asString(),
                         uniform_string["value"].asString(),
                         uniform_string["type"].asString()
                       ));
 
-          set_uniform(uniform);
+          set_uniform(uniform_string["name"].asString(), ViewDependentUniform(uniform));
 
         } else {
           Logger::LOG_WARNING << "Failed to load uniform: "
@@ -122,7 +121,7 @@ std::string const& MaterialShaderMethod::get_source() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<UniformValue> const&
+std::map<std::string, ViewDependentUniform> const&
 MaterialShaderMethod::get_uniforms() const {
   return uniforms_;
 }

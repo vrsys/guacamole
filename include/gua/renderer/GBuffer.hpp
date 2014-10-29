@@ -36,7 +36,7 @@ class PipelinePass;
 class GBuffer {
  public:
 
-  GBuffer(RenderContext const& ctx, unsigned width, unsigned height);
+  GBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
   virtual ~GBuffer() {}
 
   void clear_all(RenderContext const& context);

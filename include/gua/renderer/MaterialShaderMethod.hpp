@@ -22,7 +22,7 @@
 #ifndef GUA_MATERIAL_SHADER_METHOD_HPP
 #define GUA_MATERIAL_SHADER_METHOD_HPP
 
-#include <gua/renderer/Uniform.hpp>
+#include <gua/renderer/ViewDependentUniform.hpp>
 
 #include <iostream>
 #include <string>
@@ -47,20 +47,20 @@ class MaterialShaderMethod {
 
   template <typename T>
   MaterialShaderMethod& set_uniform(std::string const& name, T const& value) {
-    return set_uniform(UniformValue(name, value));
+    return set_uniform(name, ViewDependentUniform(UniformValue(value)));
   }
 
-  MaterialShaderMethod& set_uniform(UniformValue const& uniform) {
-    uniforms_.push_back(uniform);
+  MaterialShaderMethod& set_uniform(std::string const& name, ViewDependentUniform const& uniform) {
+    uniforms_[name] = uniform;
     return *this;
   }
 
-  std::vector<UniformValue> const& get_uniforms() const;
+  std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
 
  private:
   std::string name_;
   std::string source_;
-  std::vector<UniformValue> uniforms_;
+  std::map<std::string, ViewDependentUniform> uniforms_;
 };
 
 }

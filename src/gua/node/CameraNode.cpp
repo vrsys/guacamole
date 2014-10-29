@@ -19,77 +19,49 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SHADING_MODEL_HPP
-#define GUA_SHADING_MODEL_HPP
+// class header
+#include <gua/node/CameraNode.hpp>
 
-// guacamole headers
-#include <gua/renderer/ShaderStage.hpp>
-#include <gua/utils/TextFile.hpp>
+// guacamole header
+#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
-/**
- * Stores information on a ShadingModel.
- *
- *
- */
-class ShadingModel {
- public:
+namespace node {
 
-  enum StageID {
-    GBUFFER_VERTEX_STAGE,
-    GBUFFER_FRAGMENT_STAGE,
-    LIGHTING_STAGE,
-    FINAL_STAGE
-  };
-  /**
-   * Default constructor.
-   *
-   */
-  ShadingModel();
+////////////////////////////////////////////////////////////////////////////////
 
-  /**
-   * Constructor from a ShadingModel description.
-   *
-   */
-  ShadingModel(std::string const& name);
+CameraNode::CameraNode(std::string const& name,
+                       Configuration const& configuration,
+                       math::mat4 const& transform)
+    : Node(name, transform), config(configuration)
+    , rendering_pipeline_(std::make_shared<Pipeline>()) {}
 
-  /**
-   * Constructor from a ShadingModel description.
-   *
-   */
-  ShadingModel(std::string const& name, std::string const& file_name);
+/* virtual */ void CameraNode::accept(NodeVisitor& visitor) {
 
-  /**
-   * Constructor from a buffer.
-   *
-   */
-  ShadingModel(std::string const& name, const char* buffer, unsigned buffer_size);
-
-  void reload();
-
-  inline std::string const& get_name() const { return name_; }
-  inline std::vector<ShaderStage>& get_stages() { return shader_stages_; }
-
-  ShaderStage& get_gbuffer_vertex_stage();
-  ShaderStage& get_gbuffer_fragment_stage();
-  ShaderStage& get_lbuffer_stage();
-  ShaderStage& get_final_shading_stage();
-
-  void save_to_file(std::string const& file_name) const;
-
-  static unsigned current_revision;
-
- private:
-  void construct_from_file(TextFile const& file);
-  void construct_from_buffer(const char* buffer, unsigned buffer_size);
-
-
-  std::string file_name_;
-
-  std::vector<ShaderStage> shader_stages_;
-  std::string name_;
-};
-
+  visitor.visit(this);
 }
 
-#endif  // GUA_SHADING_MODEL_HPP
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Node> CameraNode::copy() const {
+    return std::make_shared<CameraNode>(get_name(), config, get_transform());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+SerializedCameraNode CameraNode::serialize() const {
+    SerializedCameraNode s = {config, get_world_transform(), rendering_pipeline_};
+
+    for (auto const& cam: pre_render_cameras_) {
+        s.pre_render_cameras.push_back(cam->serialize());
+    }
+
+    return s;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+}
+}

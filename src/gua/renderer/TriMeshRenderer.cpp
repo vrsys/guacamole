@@ -24,11 +24,16 @@
 
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/node/TriMeshNode.hpp>
 
-#define MATERIAL_BUFFER_SIZE 1024*128
+#include <math.h>
+
+#define MATERIAL_BUFFER_SIZE 2048*128
+#define USE_UBO 0 // also set in MaterialShader.cpp
 
 namespace gua {
 
@@ -50,10 +55,11 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
 
   auto const& ctx(pipe->get_context());
 
+  #if USE_UBO
   // initialize storage buffer
   if (!material_uniform_storage_buffer_) {
     material_uniform_storage_buffer_ = ctx.render_device->create_buffer(
-      scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STATIC_READ, MATERIAL_BUFFER_SIZE);
+      scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_STREAM_DRAW, MATERIAL_BUFFER_SIZE);
   }
 
   // loop through all materials ------------------------------------------------
@@ -61,76 +67,123 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
 
     auto const& material = MaterialShaderDatabase::instance()->lookup(object_list.first);
     if (material) {
-      unsigned object_count(object_list.second.size());
-
-      /*
-      char* buffer = reinterpret_cast<char*>(ctx.render_context->map_buffer(material_uniform_storage_buffer_, scm::gl::ACCESS_WRITE_ONLY));
-      
-      unsigned current_pos(0);
-      
-      // gather all uniform of all nodes for this material ---------------------
-      for (int i(0); i<object_count; i++) {
-        auto const& node(object_list.second[i]);
-        
-        UniformValue model_mat("gua_model_matrix", node->get_cached_world_transform());
-        UniformValue normal_mat("gua_normal_matrix", scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
-
-        current_pos += model_mat.write_bytes(ctx, buffer + current_pos);
-        current_pos += normal_mat.write_bytes(ctx, buffer + current_pos);
-
-        // for (auto const& uniform : material->get_default_instance().get_uniforms()) {
-          // UniformValue const* value(&uniform);
-          for (auto const& overwrite : node->get_material().get_uniforms()) {
-            // if (overwrite.get_name() == uniform.get_name()) {
-              // value = &overwrite;    
-            current_pos += overwrite.write_bytes(ctx, buffer + current_pos);
-              // break;
-            // }
-          }
-          // current_pos += value->write_bytes(ctx, buffer + current_pos);
-        // }
-
-        int padding(sizeof(math::vec4) - current_pos % sizeof(math::vec4));
-        current_pos += padding % sizeof(math::vec4);
-      }
-
-      ctx.render_context->unmap_buffer(material_uniform_storage_buffer_);
-      ctx.render_context->bind_storage_buffer(material_uniform_storage_buffer_, 0);
-      */
-
       // get shader for this material
-      auto const& ressource = GeometryDatabase::instance()->lookup(object_list.second[0]->get_filename());
-      auto const& shader(material->get_shader(*ressource, vertex_shader_, fragment_shader_));
-      shader->use(ctx);
+      auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object_list.second[0]));
+      auto const& shader(material->get_shader(ctx, *tri_mesh_node->get_geometry(), vertex_shader_, fragment_shader_));
 
-      // draw all objects ------------------------------------------------------
-      for (int i(0); i<object_count; i++) {
-        auto const& node(object_list.second[i]);
+      auto max_object_count(material->max_object_count());
 
-        auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
-        if (ressource) {
+      unsigned total_object_count(object_list.second.size());
+      unsigned rebind_num(ceil(total_object_count * 1.f / max_object_count));
+      int view_id(pipe->get_camera().config.get_view_id());
 
-          ///*
-          material->apply_uniforms(ctx, shader, node->get_material());
-          shader->set_uniform(ctx, node->get_cached_world_transform(), "gua_model_matrix");
-          shader->set_uniform(ctx, scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())), "gua_normal_matrix");
-          //*/
+      for (unsigned current_bind(0); current_bind < rebind_num; ++current_bind) {
 
-          //shader->set_uniform(ctx, i, "gua_draw_index");
-          ressource->draw(ctx);
+        char* buffer = reinterpret_cast<char*>(ctx.render_context->map_buffer(material_uniform_storage_buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
-        } else {
-          Logger::LOG_WARNING << "GBufferPass::process(): Cannot find geometry ressource: " << node->get_filename() << std::endl;
+        unsigned object_count(current_bind < rebind_num - 1 ?
+                              max_object_count              :
+                              total_object_count - (rebind_num - 1) * max_object_count);
+
+        unsigned current_pos(0);
+
+        // gather all uniform of all nodes for this material ---------------------
+        for (int i(0); i < object_count; ++i) {
+
+          int current_object(i + current_bind * max_object_count);
+          auto const& node(reinterpret_cast<node::TriMeshNode*>(object_list.second[current_object]));
+
+          UniformValue model_mat(node->get_cached_world_transform());
+          UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
+
+          model_mat.write_bytes(ctx, buffer + current_pos);
+          current_pos += model_mat.get_byte_size();
+          normal_mat.write_bytes(ctx, buffer + current_pos);
+          current_pos += normal_mat.get_byte_size();
+
+          for (auto const& overwrite : node->get_material().get_uniforms()) {
+
+            auto byte_size(overwrite.second.get().get_byte_size());
+            auto bytes_left(sizeof(math::vec4) - (current_pos % sizeof(math::vec4)));
+
+            if (bytes_left < byte_size)
+              current_pos += bytes_left;
+
+            overwrite.second.get(view_id).write_bytes(ctx, buffer + current_pos);
+            current_pos += byte_size;
+          }
+
+          auto mod_pos(current_pos % sizeof(math::vec4));
+          if (mod_pos != 0) {
+            auto bytes_left(sizeof(math::vec4) - mod_pos);
+            current_pos += bytes_left;
+          }
         }
 
+        ctx.render_context->unmap_buffer(material_uniform_storage_buffer_);
+
+        shader->use(ctx);
+
+        ctx.render_context->bind_uniform_buffer(material_uniform_storage_buffer_, 1);
+        // draw all objects ------------------------------------------------------
+        for (int i(0); i < object_count; ++i) {
+
+          int current_object(i + current_bind * max_object_count);
+          auto const& node(reinterpret_cast<node::TriMeshNode*>(object_list.second[current_object]));
+
+          // auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
+          if (node->get_geometry()) {
+            shader->set_uniform(ctx, i, "gua_draw_index");
+            node->get_geometry()->draw(ctx);
+          }
+        }
       }
 
-      ctx.render_context->reset_storage_buffers();
-
     } else {
-      Logger::LOG_WARNING << "GBufferPass::process(): Cannot find material: " << object_list.first << std::endl;
+      Logger::LOG_WARNING << "TriMeshRenderer::draw(): Cannot find material: " << object_list.first << std::endl;
     }
   }
+
+  #else
+
+  int view_id(pipe->get_camera().config.get_view_id());
+
+  // loop through all materials ------------------------------------------------
+  for (auto const& object_list : sorted_objects) {
+
+    auto const& material = MaterialShaderDatabase::instance()->lookup(object_list.first);
+    if (material) {
+      // get shader for this material
+      auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object_list.second[0]));
+      auto const& shader(material->get_shader(ctx, *tri_mesh_node->get_geometry(), vertex_shader_, fragment_shader_));
+
+      shader->use(ctx);
+
+      for (auto const& n: object_list.second) {
+
+        auto const& node(reinterpret_cast<node::TriMeshNode*>(n));
+
+        if (node->get_geometry()) {
+          UniformValue model_mat(node->get_cached_world_transform());
+          UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
+
+          shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
+          shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
+          for (auto const& overwrite : node->get_material().get_uniforms()) {
+            shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
+          }
+
+          node->get_geometry()->draw(ctx);
+        }
+      }
+
+    } else {
+      Logger::LOG_WARNING << "TriMeshRenderer::draw(): Cannot find material: " << object_list.first << std::endl;
+    }
+  }
+
+  #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

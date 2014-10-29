@@ -23,17 +23,44 @@
 #define GUA_RESSOURCE_RENDERER_HPP
 
 // guacamole_headers
-#include <gua/renderer/GeometryResource.hpp>
+#include <gua/platform.hpp>
+
+// external headers
+#include <functional>
+#include <memory>
+#include <map>
+#include <unordered_map>
+#include <vector>
+#include <typeindex>
+#include <string>
 
 namespace gua {
 
 class Pipeline;
 
-class GUA_DLL RessourceRenderer {
- public:
+namespace node {
+  class GeometryNode;
+}
 
-   virtual void draw(std::unordered_map<std::string, std::vector<node::GeometryNode*>> const& sorted_objects,
-                     Pipeline* pipe) const = 0;
+class Pipeline;
+
+class RessourceRenderer;
+typedef std::function<std::shared_ptr<RessourceRenderer>(void)> creation_function;
+typedef std::map<std::type_index, creation_function>            creation_function_map;
+
+class GUA_DLL RessourceRenderer {
+  public:
+
+    virtual void draw(std::unordered_map<std::string, std::vector<node::GeometryNode*>> const& sorted_objects,
+                      Pipeline* pipe) const = 0;
+
+    static void register_renderer(std::type_index const& id,
+                                  creation_function const& creation_function);
+
+    static std::shared_ptr<RessourceRenderer> get_renderer(std::type_index const& id);
+
+  private:
+    static creation_function_map creation_functions_;
 
 };
 

@@ -67,27 +67,8 @@ class GUA_DLL GeometryNode : public Node {
      *                       transformation.
      */
     GeometryNode(std::string const& name,
-                 std::string const& filename = "gua_default_geometry",
-                 Material const& material = Material(),
                  math::mat4 const& transform = math::mat4::identity(),
                  ShadowMode shadow_mode = ShadowMode::LOW_QUALITY);
-
-    /**
-    * Get the string referring to an entry in guacamole's GeometryDatabase.
-    */
-    std::string const& get_filename() const;
-
-    /**
-    * Set the string referring to an entry in guacamole's GeometryDatabase.
-    */
-    void set_filename(std::string const& filename);
-
-    /**
-    * A string referring to an entry in guacamole's MaterialShaderDatabase.
-    */
-    Material const& get_material() const;
-    Material&       get_material();
-    void            set_material(Material const& material);
 
     /**
     * A value describing the shadow's quality.
@@ -95,33 +76,14 @@ class GUA_DLL GeometryNode : public Node {
     ShadowMode get_shadow_mode() const { return shadow_mode_; }
     void       set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
 
-    /**
-    * Updates bounding box by accessing the ressource in the databse
-    */
-    void update_bounding_box() const override;
-
     inline void update_cache() override { Node::update_cache(); }
-
-    /**
-     * Accepts a visitor and calls concrete visit method.
-     *
-     * This method implements the visitor pattern for Nodes.
-     *
-     * \param visitor  A visitor to process the GeometryNode's data.
-     */
-    void accept(NodeVisitor& visitor) override;
 
   protected:
 
     // virtual std::shared_ptr<Node> copy() const = 0;
 
-    std::string filename_;
-
-    Material material_;
-
     ShadowMode shadow_mode_;
-    bool filename_changed_;
-    bool material_changed_;
+
 };
 
 } // namespace node {
