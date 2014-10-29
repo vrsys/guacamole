@@ -26,6 +26,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/utils/Logger.hpp>
 
 namespace gua {

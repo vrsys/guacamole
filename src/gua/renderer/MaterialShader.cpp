@@ -23,6 +23,8 @@
 
 #include <gua/utils/string_utils.hpp>
 
+#define USE_UBO 0
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +138,8 @@ std::string MaterialShader::compile_description(RenderContext const& ctx,
   std::string source(shader_source);
   std::stringstream sstr;
 
+  #if USE_UBO
+
   unsigned vec4_count(0);
 
   sstr << "struct GuaObjectDataStruct {" << std::endl;
@@ -177,27 +181,27 @@ std::string MaterialShader::compile_description(RenderContext const& ctx,
   for (auto const& uniform: get_default_material().get_uniforms()) {
     sstr << uniform.first << " = gua_object_data[gua_draw_index]." << uniform.first + ";" << std::endl;
   }
+
   gua::string_utils::replace(source, "@material_input", sstr.str());
-  sstr.str("");
 
-
-  /*
+  #else
+  
   sstr << "uniform mat4 gua_model_matrix;" << std::endl;
   sstr << "uniform mat4 gua_normal_matrix;" << std::endl;
 
   for (auto const& uniform: get_default_material().get_uniforms()) {
-    sstr << "uniform " << uniform.get_glsl_type() << " "
-         << uniform.get_name() << ";" << std::endl;
+    sstr << "uniform " << uniform.second.get().get_glsl_type() << " "
+         << uniform.first << ";" << std::endl;
   }
   sstr << std::endl;
 
   // insert uniforms
   gua::string_utils::replace(source, "@material_uniforms", sstr.str());
-  sstr.str("");
-
-  // global variable assignment ------------------------------------------------
   gua::string_utils::replace(source, "@material_input", "");
-  */
+
+  #endif
+
+  sstr.str("");
 
   // material methods ----------------------------------------------------------
   for (auto& method: methods) {

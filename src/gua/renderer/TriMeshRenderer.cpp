@@ -24,6 +24,7 @@
 
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
@@ -32,6 +33,7 @@
 #include <math.h>
 
 #define MATERIAL_BUFFER_SIZE 2048*128
+#define USE_UBO 0
 
 namespace gua {
 
@@ -53,6 +55,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
 
   auto const& ctx(pipe->get_context());
 
+  #if USE_UBO
   // initialize storage buffer
   if (!material_uniform_storage_buffer_) {
     material_uniform_storage_buffer_ = ctx.render_device->create_buffer(
@@ -140,6 +143,47 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
       Logger::LOG_WARNING << "TriMeshRenderer::draw(): Cannot find material: " << object_list.first << std::endl;
     }
   }
+
+  #else
+
+  int view_id(pipe->get_camera().config.get_view_id());
+
+  // loop through all materials ------------------------------------------------
+  for (auto const& object_list : sorted_objects) {
+
+    auto const& material = MaterialShaderDatabase::instance()->lookup(object_list.first);
+    if (material) {
+      // get shader for this material
+      auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object_list.second[0]));
+      auto const& shader(material->get_shader(ctx, *tri_mesh_node->get_geometry(), vertex_shader_, fragment_shader_));
+
+      shader->use(ctx);
+
+      for (auto const& n: object_list.second) {
+
+        auto const& node(reinterpret_cast<node::TriMeshNode*>(n));
+
+        if (node->get_geometry()) {
+          UniformValue model_mat(node->get_cached_world_transform());
+          UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
+
+          shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
+          shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
+          for (auto const& overwrite : node->get_material().get_uniforms()) {
+            shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
+          }
+
+          node->get_geometry()->draw(ctx);
+        }
+      }
+
+    } else {
+      Logger::LOG_WARNING << "TriMeshRenderer::draw(): Cannot find material: " << object_list.first << std::endl;
+    }
+  }
+
+  #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
