@@ -266,10 +266,20 @@ void PLODUberShader::update_textures(RenderContext const& context) const {
                           scm::gl::FORMAT_RGBA_32F,
                           1, 1, 1);
 
+  accumulation_pass_normal_result_ = context.render_device
+      ->create_texture_2d(render_window_dims_,
+                          scm::gl::FORMAT_RGBA_32F,
+                          1, 1, 1);
+
   //initialize attachment for normalization pass
   normalization_pass_color_result_ = context.render_device
       ->create_texture_2d(render_window_dims_,
                           scm::gl::FORMAT_RGB_8,
+                          1, 1, 1);
+
+  normalization_pass_normal_result_ = context.render_device
+      ->create_texture_2d(render_window_dims_,
+                          scm::gl::FORMAT_RGB_32F,
                           1, 1, 1);
 
   //configure depth FBO
@@ -283,11 +293,15 @@ void PLODUberShader::update_textures(RenderContext const& context) const {
   accumulation_pass_result_fbo_->clear_attachments();
   accumulation_pass_result_fbo_->attach_color_buffer(
       0, accumulation_pass_color_result_);
+  accumulation_pass_result_fbo_->attach_color_buffer(
+      1, accumulation_pass_normal_result_);
 
   //configure normalization FBO
   normalization_pass_result_fbo_->clear_attachments();
   normalization_pass_result_fbo_->attach_color_buffer(
       0, normalization_pass_color_result_);
+  normalization_pass_result_fbo_->attach_color_buffer(
+      1, normalization_pass_normal_result_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -519,11 +533,21 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
                              0,
                              scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 
+    ctx.render_context
+        ->clear_color_buffer(accumulation_pass_result_fbo_,
+                             1,
+                             scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+
     //clear normalization FBOs color attachment
     ctx.render_context
         ->clear_color_buffer(normalization_pass_result_fbo_,
                              0,
                              scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+
+    ctx.render_context
+        ->clear_color_buffer(normalization_pass_result_fbo_,
+                             1,
+                             scm::math::vec3f(0.0f, 0.0f, 0.0f));
   }
 
 }
@@ -740,6 +764,11 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
   get_program(accumulation_pass)
       ->set_uniform(ctx, model_matrix, "gua_model_matrix");
 
+  get_program(accumulation_pass)
+      ->set_uniform(ctx,
+                    transpose(inverse(model_matrix)),
+                    "transposed_inverse_model_matrix");
+
   if (material && plod_ressource) {
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
@@ -816,6 +845,11 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
       get_program(normalization_pass)->get_program(ctx)
           ->uniform_sampler("p02_color_texture", 0);
 
+      ctx.render_context->bind_texture(
+          accumulation_pass_normal_result_, linear_sampler_state_, 1);
+      get_program(normalization_pass)->get_program(ctx)
+          ->uniform_sampler("p02_normal_texture", 1);
+
       fullscreen_quad_->draw(ctx.render_context);
       get_program(normalization_pass)->unuse(ctx);
 
@@ -843,6 +877,13 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
           normalization_pass_color_result_, linear_sampler_state_, 1);
       get_program(reconstruction_pass)->get_program(ctx)
           ->uniform_sampler("p02_color_texture", 1);
+
+      //bind normal output for gbuffer
+      ctx.render_context->bind_texture(
+          normalization_pass_normal_result_, linear_sampler_state_, 2);
+      get_program(reconstruction_pass)->get_program(ctx)
+          ->uniform_sampler("p02_normal_texture", 2);
+
       fullscreen_quad_->draw(ctx.render_context);
       get_program(reconstruction_pass)->unuse(ctx);
 

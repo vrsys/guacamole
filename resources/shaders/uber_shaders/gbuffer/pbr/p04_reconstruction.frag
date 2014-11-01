@@ -24,6 +24,7 @@ uniform vec2  win_dims;
 
 layout(binding=0) uniform sampler2D p01_depth_texture;
 layout(binding=1) uniform sampler2D p02_color_texture;
+layout(binding=2) uniform sampler2D p02_normal_texture;
 
 
 
@@ -48,7 +49,7 @@ void main()
 
       
   output_color = texture2D( p02_color_texture, coords.xy).rgb;
-
+  output_normal = texture2D(p02_normal_texture, coords.xy).rgb;
 
         float depthValue = texture2D( p01_depth_texture, coords.xy).r;
 
@@ -314,7 +315,7 @@ void main()
 
   //gl_FragDepth = 0.5;
   //output_color = vec3(1.0,0.0,0.0);
-  output_color = texture2D( p02_color_texture, coords.xy).rgb;
+  //output_color = texture2D( p02_color_texture, coords.xy).rgb;
 /////
   {
     @apply_pbr_color

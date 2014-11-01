@@ -135,10 +135,12 @@ class PLODUberShader : public GeometryUberShader {
 
   //accumulation pass FBO & attachments
   mutable scm::gl::texture_2d_ptr accumulation_pass_color_result_;
+  mutable scm::gl::texture_2d_ptr accumulation_pass_normal_result_;
   mutable scm::gl::frame_buffer_ptr accumulation_pass_result_fbo_;
 
   //normalization pass FBO & attachments
   mutable scm::gl::texture_2d_ptr normalization_pass_color_result_;
+  mutable scm::gl::texture_2d_ptr normalization_pass_normal_result_;
   mutable scm::gl::frame_buffer_ptr normalization_pass_result_fbo_;
 
   //temp buffer front & back

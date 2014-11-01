@@ -23,6 +23,7 @@ in float pass_view_scaling;
 ///////////////////////////////////////////////////////////////////////////////
 
 layout (location = 0) out vec4 out_accumulated_color;
+layout (location = 1) out vec4 out_accumulated_normal;
 
 ///////////////////////////////////////////////////////////////////////////////
 //sampler
@@ -87,8 +88,10 @@ void main() {
   vec3 adjustedNormal = pass_normal;
   //adjustedNormal = vec3(0.0, 1.0, 0.0);
 
+  float normalAdjustmentFactor = 1.0;
+
   if (pass_normal.z < 0.0) {
-    //discard;
+    normalAdjustmentFactor = -1.0;
     adjustedNormal *= -1.0;
   }
 
@@ -109,6 +112,7 @@ void main() {
 
   if ( abs(depthValue - depth_to_compare) <= 3.0 * pass_scaled_radius) {
     out_accumulated_color = vec4(pass_point_color * weight, weight);
+    out_accumulated_normal = normalAdjustmentFactor * vec4(pass_transposed_inverse_normal * weight, weight);
   }
   else {
     discard;
