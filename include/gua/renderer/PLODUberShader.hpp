@@ -166,7 +166,7 @@ class PLODUberShader : public GeometryUberShader {
   mutable scm::gl::sampler_state_ptr nearest_sampler_state_;
 
   mutable scm::gl::depth_stencil_state_ptr no_depth_test_depth_stencil_state_;
-  mutable scm::gl::depth_stencil_state_ptr depth_test_without_writing_depth_stencil_state_;
+  mutable scm::gl::depth_stencil_state_ptr depth_test_without_writing_depth_stencil_state_;  
 
   mutable scm::gl::blend_state_ptr color_accumulation_state_;
 

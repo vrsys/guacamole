@@ -55,7 +55,7 @@ void main()
 
 	{
 
-		if(depthValue != 1.0f)
+		if(depthValue != 0.0f)
                 {
 		  //out_color = texture2D(p02_color_texture, gl_FragCoord.xy/(win_size.xy));
                   //output_color = vec3(0.0,0.0,1.0);
@@ -164,6 +164,7 @@ void main()
 		  }
 		  else
 		  {
+                  /*
 			output_color = vec3(1.0,0.0,0.0);
 			
 
@@ -302,8 +303,9 @@ void main()
 
 
 
-
-		  }
+                  */
+                  discard;
+		  }//end else
 
                  
 
