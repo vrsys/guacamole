@@ -73,7 +73,6 @@ void PLODRessource::draw(
 
   pbr::node_t node_counter = 0;
   for (const auto& n : node_list) {
-    ++node_counter;
     // 0 = completely inside of frustum,
     // 1 = completely outside of frustum,
     // 2 = intersects frustum
@@ -82,6 +81,7 @@ void PLODRessource::draw(
                                       n.slot_id_ * surfels_per_node,
                                       surfels_per_node_of_model);
     }
+    ++node_counter;
   }
 }
 

@@ -461,7 +461,9 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
 
     controller->ResetSystem();
 
-    pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+    //pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+    //portal quickfix
+    pbr::context_t context_id = controller->DeduceContextId( (size_t)(this) );
 
     if (controller->IsSystemResetSignaled(context_id)) {
       reset(ctx);
@@ -565,7 +567,9 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
   pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
   pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
 
-  pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+  //pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+  //portal quickfix
+  pbr::context_t context_id = controller->DeduceContextId( (size_t)(this) );
   pbr::view_t view_id = controller->DeduceViewId(context_id, view.id);
   pbr::model_t model_id = controller->DeduceModelId(file_name);
 
@@ -577,6 +581,8 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
   cuts->SendHeightDividedByTopMinusBottom(
       context_id, view_id, height_divided_by_top_minus_bottom);
   cuts->SendTransform(context_id, model_id, model_matrix);
+  cuts->SendRendered(context_id, model_id);
+  cuts->SendImportance(context_id, model_id, 1.f);
 
   pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
   std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
@@ -597,9 +603,9 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
 
   unsigned int node_counter = 0;
   for (const auto& n : node_list) {
-    ++node_counter;
     frustum_culling_results_[node_counter] =
         culling_frustum.classify(model_bounding_boxes[n.node_id_]);
+    ++node_counter;
   }
 
   auto plod_ressource = std::static_pointer_cast<PLODRessource>(
@@ -729,7 +735,9 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
   if (material && plod_ressource) {
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-    pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+    //pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+    //quick portal fix
+    pbr::context_t context_id = controller->DeduceContextId( (size_t)(this) );
     pbr::model_t model_id = controller->DeduceModelId(file_name);
     pbr::view_t view_id = controller->DeduceViewId(context_id, view.id);
 
@@ -760,9 +768,9 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
 
     unsigned int node_counter = 0;
     for (const auto& n : node_list) {
-      ++node_counter;
       frustum_culling_results_[node_counter] =
           culling_frustum.classify(model_bounding_boxes[n.node_id_]);
+      ++node_counter;
     }
 
     get_program(accumulation_pass)->use(ctx);
@@ -906,7 +914,9 @@ void PLODUberShader::copy_to_main_memory(
 
   pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
 
-  pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+  //pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+  //quick portal fix
+  pbr::context_t context_id = controller->DeduceContextId( (size_t)(this) );
 
   switch (buffer) {
     case pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A: {
