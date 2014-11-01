@@ -16,11 +16,13 @@ uniform int   using_default_pbr_material;
 layout(binding=0) uniform sampler2D p02_color_texture;
 layout(binding=1) uniform sampler2D p02_normal_texture;
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // output
 ///////////////////////////////////////////////////////////////////////////////
 layout (location=0) out vec3 out_normalized_color;
 layout (location=1) out vec3 out_normalized_normal;
+
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,14 +36,15 @@ void main() {
   vec3 accumulated_normal = texture(p02_normal_texture, coords.xy).rgb;
 
   float accumulated_weight = accumulated_color.a;
+
+  float accumulated_weight = accumulated_color.a;
   normalized_color = accumulated_color.rgb / accumulated_weight ;
   //normalized_color = accumulated_color.rgb;
   normalized_color = pow(normalized_color, vec3(1.4));
+ 
+  vec3 normalized_normal = normalize(accumulated_normal.rgb / accumulated_weight);
 
-  vec3 normalized_normal = accumulated_normal.rgb / accumulated_weight;
-  
   out_normalized_color = normalized_color;
   out_normalized_normal = normalized_normal;
-
 }
 
