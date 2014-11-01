@@ -73,14 +73,15 @@ void PLODRessource::draw(
 
   pbr::node_t node_counter = 0;
   for (const auto& n : node_list) {
-    ++node_counter;
-    // true == inside or intersecting frustum
-    // false == outside frustum
+    // 0 = completely inside of frustum,
+    // 1 = completely outside of frustum,
+    // 2 = intersects frustum
     if (frustum_culling_results[node_counter] == true) {
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
                                       n.slot_id_ * surfels_per_node,
                                       surfels_per_node_of_model);
     }
+    ++node_counter;
   }
 }
 
