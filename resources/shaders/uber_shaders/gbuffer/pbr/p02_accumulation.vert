@@ -17,11 +17,15 @@ layout (location = 6) in vec3 in_normal;
 uniform uint gua_material_id;
 uniform float height_divided_by_top_minus_bottom;
 uniform float near_plane;
+uniform float far_minus_near_plane;
 uniform float radius_model_scaling;
+
+uniform mat4 transposed_inverse_model_matrix;
 
 //output to fragment shader
 out vec3 pass_point_color;
 out vec3 pass_normal;
+out vec3 pass_transposed_inverse_normal;
 out float pass_mv_vert_depth;
 out float pass_scaled_radius;
 out float pass_screen_space_splat_size;
@@ -52,8 +56,15 @@ void main() {
 
   pass_point_color = vec3(in_r, in_g, in_b);
   pass_normal = normalize(( gua_normal_matrix * vec4(in_normal, 0.0)).xyz);
+  pass_transposed_inverse_normal = normalize(transposed_inverse_model_matrix * vec4(in_normal, 0.0)).xyz;
   pass_mv_vert_depth = pos_es.z;
   pass_scaled_radius = scaled_radius;
   pass_screen_space_splat_size = splat_size ;
+
+  gl_Position.z  =  - (  ( ( pos_es.z  + 2*scaled_radius+ ( 3.0 * scaled_radius  ) )  - near_plane) / (far_minus_near_plane * 1.0f));
+                 
+  gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
+
+  gl_Position.z *= gl_Position.w;
 }
 

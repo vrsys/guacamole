@@ -17,6 +17,7 @@ layout(location = 6) in vec3 in_normal;
 uniform uint gua_material_id;
 uniform float height_divided_by_top_minus_bottom;
 uniform float near_plane;
+uniform float far_minus_near_plane;
 uniform float radius_model_scaling;
 
 //output to fragment shader
@@ -24,6 +25,8 @@ out vec3 pass_normal;
 out float pass_mv_vert_depth;
 out float pass_scaled_radius;
 out float pass_view_scaling;
+
+out float pass_log_depth;
 
 void main() {
 
@@ -51,5 +54,10 @@ void main() {
   pass_mv_vert_depth = pos_es.z;
   pass_scaled_radius = scaled_radius;
 
+  pass_log_depth = (gl_Position.z/gl_Position.w)/2 + 0.5;
+
+  gl_Position.z = - ( ( ( pos_es.z + 2*scaled_radius + (3.0 * scaled_radius) ) - near_plane) / (far_minus_near_plane * 1.0 ) );
+  gl_Position.z = (gl_Position.z - 0.5) * 2.0;
+  gl_Position.z *= gl_Position.w;
 }
 

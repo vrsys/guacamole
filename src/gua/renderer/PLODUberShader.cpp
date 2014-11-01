@@ -250,12 +250,12 @@ void PLODUberShader::update_textures(RenderContext const& context) const {
   render_window_dims_ = left_resolution_;
 
   //initialize attachments for depth pass
-  depth_pass_log_depth_result_ = context.render_device
+  depth_pass_linear_depth_result_ = context.render_device
       ->create_texture_2d(render_window_dims_,
                           scm::gl::FORMAT_D32,
                           1, 1, 1);
 
-  depth_pass_linear_depth_result_ = context.render_device
+  depth_pass_log_depth_result_ = context.render_device
       ->create_texture_2d(render_window_dims_,
                           scm::gl::FORMAT_R_32F,
                           1, 1, 1);
@@ -275,9 +275,9 @@ void PLODUberShader::update_textures(RenderContext const& context) const {
   //configure depth FBO
   depth_pass_result_fbo_->clear_attachments();
   depth_pass_result_fbo_->attach_depth_stencil_buffer(
-      depth_pass_log_depth_result_);
+      depth_pass_linear_depth_result_);
   depth_pass_result_fbo_->attach_color_buffer(0,
-                                              depth_pass_linear_depth_result_);
+                                              depth_pass_log_depth_result_);
 
   //configure accumulation FBO
   accumulation_pass_result_fbo_->clear_attachments();
@@ -326,6 +326,9 @@ bool PLODUberShader::upload_to(RenderContext const& context) const {
 
   no_depth_test_depth_stencil_state_ = context.render_device
       ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_ALWAYS);
+
+  depth_test_without_writing_depth_stencil_state_ = context.render_device
+      ->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS);
 
   color_accumulation_state_ =
       context.render_device->create_blend_state(true,
@@ -680,14 +683,19 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
         ->set_rasterizer_state(change_point_size_in_shader_state_);
 
     //disable depth test
+    //ctx.render_context
+    //    ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
     ctx.render_context
-        ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
+        ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
 
     //set blend state to accumulate
     ctx.render_context->set_blend_state(color_accumulation_state_);
 
     // bind accumulation FBO
     ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
+
+    //attach linear depth buffer of depth pass for early depth rejection
+    accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
 
     std::vector<math::vec3> corner_values = frustum.get_corners();
 
@@ -906,7 +914,6 @@ void PLODUberShader::copy_to_main_memory(
     RenderContext const& ctx,
     pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const {
   pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-
   size_t size_of_node_in_bytes =
       database->surfels_per_node() * database->size_of_surfel();
 

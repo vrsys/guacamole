@@ -8,12 +8,13 @@ in float pass_mv_vert_depth;
 in float pass_scaled_radius;
 in float pass_view_scaling;
 
+in float pass_log_depth;
 ///////////////////////////////////////////////////////////////////////////////
 // output
 ///////////////////////////////////////////////////////////////////////////////
 
 // No output other than depth texture
-layout (location = 0) out float out_linear_depth;
+layout (location = 0) out float out_logarithmic_depth;
 
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
@@ -80,8 +81,14 @@ void main() {
 
   float depth_offset = calc_depth_offset(mappedPointCoord, adjustedNormal);
   get_gaussianValue(depth_offset, mappedPointCoord, adjustedNormal);
-  out_linear_depth = -((pass_mv_vert_depth + depth_offset *
+  /*out_linear_depth = -((pass_mv_vert_depth + depth_offset *
                         pass_scaled_radius * pass_view_scaling) - near_plane) /
                       (far_minus_near_plane * 1.0);
+  */
+   out_logarithmic_depth = pass_log_depth;
+
+   gl_FragDepth = -((pass_mv_vert_depth + depth_offset * 
+                     pass_scaled_radius * pass_view_scaling) - near_plane) / (far_minus_near_plane * 1.0);
+      
 }
 

@@ -12,6 +12,7 @@ const float gaussian[32] = float[](
 ///////////////////////////////////////////////////////////////////////////////
 in vec3 pass_point_color;
 in vec3 pass_normal;
+in vec3 pass_transposed_inverse_normal;
 in float pass_mv_vert_depth;
 in float pass_scaled_radius;
 in float pass_screen_space_splat_size;
@@ -106,11 +107,12 @@ void main() {
   float weight = 0.0;
   weight = get_gaussianValue(depth_offset, mappedPointCoord, adjustedNormal) ;
 
-  if (depthValue - depth_to_compare <= 3.0 * pass_scaled_radius) {
+  if ( abs(depthValue - depth_to_compare) <= 3.0 * pass_scaled_radius) {
     out_accumulated_color = vec4(pass_point_color * weight, weight);
   }
   else {
     discard;
   }
+
 }
 
