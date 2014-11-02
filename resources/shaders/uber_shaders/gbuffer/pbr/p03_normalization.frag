@@ -36,8 +36,6 @@ void main() {
   vec3 accumulated_normal = texture(p02_normal_texture, coords.xy).rgb;
 
   float accumulated_weight = accumulated_color.a;
-
-  float accumulated_weight = accumulated_color.a;
   normalized_color = accumulated_color.rgb / accumulated_weight ;
   //normalized_color = accumulated_color.rgb;
   normalized_color = pow(normalized_color, vec3(1.4));
