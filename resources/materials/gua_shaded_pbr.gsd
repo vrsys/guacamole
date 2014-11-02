@@ -2,7 +2,7 @@
 {
 	"final_shading_stage" : 
 	{
-		"body" : "gua_color = gua_pbr_output_color/*0.1*gua_pbr_output_color + diffuse * gua_pbr_output_color*/;\n",
+		"body" : "gua_color = /*gua_pbr_output_color*/0.1*gua_pbr_output_color + diffuse * gua_pbr_output_color;\n",
 		"functions" : "",
 		"outputs" : null,
 		"uniforms" : null
