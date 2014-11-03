@@ -125,6 +125,8 @@ void LightingPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
     shader_->set_uniform(ctx, light->data.get_color().vec3(),             "gua_light_color");
     shader_->set_uniform(ctx, light->data.get_falloff(),                  "gua_light_falloff");
     shader_->set_uniform(ctx, false,                                      "gua_light_casts_shadow");
+
+    ctx.render_context->apply();
     light_sphere_->draw(ctx);
   }
 

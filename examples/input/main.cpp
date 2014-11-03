@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-    window->config.set_left_resolution(new_size);
+    window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });

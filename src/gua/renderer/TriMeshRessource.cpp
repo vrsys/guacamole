@@ -169,6 +169,8 @@ void TriMeshRessource::upload_to(RenderContext const& ctx) const {
             0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
             0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex)),
         buffer_arrays);
+
+    ctx.render_context->apply();
   }
 }
 
@@ -186,7 +188,7 @@ void TriMeshRessource::draw(RenderContext const& ctx) const {
   ctx.render_context->bind_index_buffer(
       indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
 
-  ctx.render_context->apply();
+  ctx.render_context->apply_vertex_input();
   ctx.render_context->draw_elements(mesh_->mNumFaces * 3);
 }
 
