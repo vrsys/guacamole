@@ -99,6 +99,8 @@ void serialize(SceneGraph const& scene_graph, bool is_left,
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline() :
+  fps_count_(0),
+  fps_sum_(0.f, 0.f),
   gbuffer_(nullptr),
   camera_block_(nullptr),
   last_resolution_(0, 0),
@@ -129,7 +131,15 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
                        std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                        float application_fps, float rendering_fps) {
 
-  std::cout << "App: " << application_fps << " Render: " << rendering_fps << std::endl;
+  if (fps_count_ > 100) {
+    std::cout << "App: " << fps_sum_[0]/fps_count_ << " Render: " << fps_sum_[1]/fps_count_ << std::endl;
+    fps_count_ = 0;
+    fps_sum_ = math::vec2(0.f, 0.f);
+  } else {
+    ++fps_count_;
+    fps_sum_[0] += application_fps;
+    fps_sum_[1] += rendering_fps;
+  }
 
   // return if pipeline is disabled
   if (!camera.config.get_enabled()) {
@@ -188,7 +198,7 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
   bool reload_passes(reload_gbuffer);
 
   if (camera.config.get_pipeline_description() != last_description_) {
-    last_description_ = camera.config.get_pipeline_description(); 
+    last_description_ = camera.config.get_pipeline_description();
     reload_passes = true;
   }
 
@@ -199,7 +209,7 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     }
 
     passes_.clear();
-    
+
     for (auto pass: camera.config.get_pipeline_description().get_passes()) {
       passes_.push_back(pass->make_pass());
     }
@@ -247,7 +257,7 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     // add texture to texture database
     auto const& tex(gbuffer_->get_current_color_buffer());
     auto tex_name(camera.config.get_output_texture_name());
-    
+
     if (tex_name != "") {
       if (mode == CameraMode::LEFT) {
         tex_name += "_left";
