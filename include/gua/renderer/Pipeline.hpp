@@ -63,6 +63,9 @@ class Pipeline {
 
  private:
 
+  int                                fps_count_;
+  math::vec2                         fps_sum_;
+
   GBuffer*                           gbuffer_;
   RenderContext*                     context_;
   CameraUniformBlock*                camera_block_;
