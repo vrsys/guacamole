@@ -44,13 +44,14 @@ class Pipeline {
   Pipeline();
   ~Pipeline();
 
-  void process(node::SerializedCameraNode const& camera,
+  void process(RenderContext* ctx, node::SerializedCameraNode const& camera,
                std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 
   std::vector<PipelinePass*>  const& get_passes()  const;
   GBuffer                          & get_gbuffer() const;
   SerializedScene             const& get_scene()   const;
+  SceneGraph                  const& get_graph()   const;
   RenderContext               const& get_context() const;
   node::SerializedCameraNode  const& get_camera()  const;
 
@@ -67,6 +68,7 @@ class Pipeline {
   RenderContext*                     context_;
   CameraUniformBlock*                camera_block_;
 
+  SceneGraph const*                  current_graph_;
   SerializedScene                    current_scene_;
   node::SerializedCameraNode         current_camera_;
 
