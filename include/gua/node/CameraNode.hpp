@@ -90,7 +90,6 @@ class GUA_DLL CameraNode : public Node {
 
     // various display options
     GUA_ADD_PROPERTY(bool,            enable_ray_display,     false);
-    GUA_ADD_PROPERTY(bool,            enable_bbox_display,    false);
 
     // clipping
     GUA_ADD_PROPERTY(float,           near_clip,              0.1f);

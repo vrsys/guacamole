@@ -26,6 +26,7 @@
 #include <gua/renderer/GeometryPass.hpp>
 #include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
+#include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 
 namespace gua {
@@ -37,6 +38,7 @@ PipelineDescription PipelineDescription::make_default() {
   pipe.add_pass<GeometryPassDescription>();
   pipe.add_pass<LightingPassDescription>();
   pipe.add_pass<BackgroundPassDescription>();
+  pipe.add_pass<BBoxPassDescription>();
 
   return pipe;
 }

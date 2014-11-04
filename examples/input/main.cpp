@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
+  teapot->set_draw_bounding_box(true);
 
   auto portal(loader.create_geometry_from_file("portal", "data/objects/plane.obj", mat2, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   portal->translate(0.5f, 0.f, 0.f);

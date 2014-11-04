@@ -65,7 +65,6 @@ class Serializer : public NodeVisitor {
   void check(SerializedScene& output,
              SceneGraph const& scene_graph,
              Mask const& mask,
-             bool draw_bounding_boxes,
              bool draw_rays,
              bool enable_frustum_culling);
 
@@ -171,7 +170,6 @@ class Serializer : public NodeVisitor {
  private:
 
   bool is_visible(node::Node* node) const;
-  void add_bbox(node::Node* node) const;
   void visit_children(node::Node* node);
 
   Frustum current_frustum_;
@@ -180,7 +178,6 @@ class Serializer : public NodeVisitor {
   Mask current_render_mask_;
 
   SerializedScene* data_;
-  bool draw_bounding_boxes_;
   bool draw_rays_;
   bool enable_frustum_culling_;
 

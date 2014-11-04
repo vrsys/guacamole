@@ -87,7 +87,6 @@ void serialize(SceneGraph const& scene_graph, bool is_left,
   Serializer serializer;
   serializer.check(out, scene_graph,
                    camera.config.mask(),
-                   camera.config.enable_bbox_display(),
                    camera.config.enable_ray_display(),
                    camera.config.enable_frustum_culling());
 }

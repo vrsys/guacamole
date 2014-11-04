@@ -111,8 +111,26 @@ void ShaderProgram::create_from_sources(std::string const & v_source,
   interleaved_stream_capture_.clear();
 
   stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, v_source, true),
-              ShaderProgramStage(
-                  scm::gl::STAGE_FRAGMENT_SHADER, f_source, true) };
+              ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_source, true) };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShaderProgram::create_from_sources(std::string const & v_source,
+                                        std::string const & g_source,
+                                        std::string const & f_source) {
+
+  for (auto p : programs_) {
+    p.reset();
+
+  }
+
+  programs_.clear();
+  interleaved_stream_capture_.clear();
+
+  stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, v_source, true),
+              ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, g_source, true),
+              ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_source, true) };
 }
 
 ////////////////////////////////////////////////////////////////////////
