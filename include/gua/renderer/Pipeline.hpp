@@ -26,7 +26,6 @@
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/SerializedScene.hpp>
-#include <gua/renderer/RessourceRenderer.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
 #include <gua/math.hpp>
 
@@ -59,8 +58,6 @@ class Pipeline {
   void bind_camera_uniform_block(unsigned location) const;
   void draw_fullscreen_quad();
 
-  std::shared_ptr<RessourceRenderer> get_renderer(std::type_index const& id);
-
  private:
 
   int                                fps_count_;
@@ -77,8 +74,6 @@ class Pipeline {
   PipelineDescription                last_description_;
 
   std::vector<PipelinePass*>         passes_;
-  std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_;
-
   scm::gl::quad_geometry_ptr         fullscreen_quad_;
 
 };

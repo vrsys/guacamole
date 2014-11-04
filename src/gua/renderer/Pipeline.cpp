@@ -345,19 +345,4 @@ void Pipeline::draw_fullscreen_quad() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<RessourceRenderer> Pipeline::get_renderer(std::type_index const& id) {
-  auto renderer = renderers_.find(id);
-
-  if (renderer != renderers_.end()) {
-    return renderer->second;
-  }
-
-  auto new_renderer = RessourceRenderer::get_renderer(id);
-  renderers_[id] = new_renderer;
-
-  return new_renderer;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 }

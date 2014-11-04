@@ -78,9 +78,11 @@ int main(int argc, char** argv) {
   portal->rotate(-20, 0.f, 1.f, 0.f);
   graph.add_node("/", portal);
 
-  auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
+  auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
+  light->data.set_enable_shadows(true);
   light->scale(10.f);
-  light->translate(2.f, 0.f, 5.f);
+  light->rotate(-20, 0.f, 1.f, 0.f);
+  light->translate(-1.f, 0.f,  3.f);
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->data.color = gua::utils::Color3f(0.5f, 0.5f, 1.0f);
