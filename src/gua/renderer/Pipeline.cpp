@@ -250,10 +250,11 @@ void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& cam
       TextureDatabase::instance()->add(tex_name, tex);
     }
 
-    // display the last written colorbuffer of the gbuffer
-    auto window = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
-    if (window) {
-      window->display(tex, mode != CameraMode::RIGHT);
+    if (camera.config.get_output_window_name() != "") {
+      auto window = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
+      if (window) {
+        window->display(tex, mode != CameraMode::RIGHT);
+      }
     }
   };
 
