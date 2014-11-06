@@ -30,9 +30,6 @@ namespace gua {
 
 class PipelinePass;
 
-/**
- *
- */
 class GBuffer {
  public:
 

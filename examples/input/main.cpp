@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
+  teapot->set_draw_bounding_box(true);
 
   auto portal(loader.create_geometry_from_file("portal", "data/objects/plane.obj", mat2, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   portal->translate(0.5f, 0.f, 0.f);
@@ -77,9 +78,11 @@ int main(int argc, char** argv) {
   portal->rotate(-20, 0.f, 1.f, 0.f);
   graph.add_node("/", portal);
 
-  auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
+  auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
+  light->data.set_enable_shadows(true);
   light->scale(10.f);
-  light->translate(2.f, 0.f, 5.f);
+  light->rotate(-20, 0.f, 1.f, 0.f);
+  light->translate(-1.f, 0.f,  3.f);
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->data.color = gua::utils::Color3f(0.5f, 0.5f, 1.0f);
@@ -125,7 +128,7 @@ int main(int argc, char** argv) {
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-    window->config.set_left_resolution(new_size);
+    window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });

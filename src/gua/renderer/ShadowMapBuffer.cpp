@@ -20,67 +20,69 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/GeometryPass.hpp>
+#include <gua/renderer/ShadowMapBuffer.hpp>
 
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/Pipeline.hpp>
+// guacamole headers
+#include <gua/platform.hpp>
+#include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/renderer/RessourceRenderer.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* GeometryPassDescription::make_copy() const {
-  return new GeometryPassDescription(*this);
-}
+ShadowMapBuffer::ShadowMapBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
+  fbo_(new FrameBufferObject()),
+  width_(resolution.x),
+  height_(resolution.y) {
 
+  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
+    scm::gl::WRAP_MIRRORED_REPEAT,
+    scm::gl::WRAP_MIRRORED_REPEAT);
+
+  depth_buffer_ = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_D24, 1, state);
+  fbo_->attach_depth_stencil_buffer(ctx, depth_buffer_);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* GeometryPassDescription::make_pass() const {
-  return new GeometryPass();
+void ShadowMapBuffer::clear(RenderContext const& ctx) {
+  fbo_->clear_depth_stencil_buffer(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GeometryPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
-  RenderContext const& ctx(pipe->get_context());
+void ShadowMapBuffer::set_viewport(RenderContext const& ctx) {
+  fbo_->set_viewport(ctx);
+}
 
-  pipe->get_gbuffer().bind(ctx, this);
-  pipe->get_gbuffer().set_viewport(ctx);
+////////////////////////////////////////////////////////////////////////////////
 
-  for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
-    auto const& ressources = type_ressource_pair.second;
-    if (ressources.size() > 0 && ressources.begin()->second.size() > 0) {
-      auto const& renderer = get_renderer(type_ressource_pair.first);
-      if (renderer)
-        renderer->draw(ressources, pipe);
-      else
-        Logger::LOG_WARNING << "Unable to render geometry of type "
-                            << type_ressource_pair.first.name()
-                            << ": No renderer registered!"
-                            << std::endl;
-    }
+void ShadowMapBuffer::bind(RenderContext const& ctx) {
+  fbo_->bind(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadowMapBuffer::unbind(RenderContext const& ctx) {
+  fbo_->unbind(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadowMapBuffer::remove_buffers(RenderContext const& ctx) {
+  fbo_->unbind(ctx);
+  fbo_->remove_attachments();
+
+  if (depth_buffer_) {
+    depth_buffer_->make_non_resident(ctx);
   }
-
-  pipe->get_gbuffer().unbind(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<RessourceRenderer> GeometryPass::get_renderer(std::type_index const& id) {
-  auto renderer = renderers_.find(id);
-
-  if (renderer != renderers_.end()) {
-    return renderer->second;
-  }
-
-  auto new_renderer = RessourceRenderer::get_renderer(id);
-  renderers_[id] = new_renderer;
-
-  return new_renderer;
+std::shared_ptr<Texture2D> const& ShadowMapBuffer::get_depth_buffer() const {
+  return depth_buffer_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

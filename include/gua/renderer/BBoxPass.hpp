@@ -19,22 +19,20 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GEOMETRY_PASS_HPP
-#define GUA_GEOMETRY_PASS_HPP
+#ifndef GUA_BBOX_PASS_HPP
+#define GUA_BBOX_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
-#include <typeindex>
 #include <memory>
-#include <unordered_map>
 
 namespace gua {
 
 class Pipeline;
-class RessourceRenderer;
-class GeometryPass;
+class BBoxPass;
 
-class GeometryPassDescription : public PipelinePassDescription {
+class BBoxPassDescription : public PipelinePassDescription {
  public:
   virtual PipelinePassDescription* make_copy() const;
   friend class Pipeline;
@@ -43,26 +41,27 @@ class GeometryPassDescription : public PipelinePassDescription {
   virtual PipelinePass* make_pass() const;
 };
 
-class GeometryPass : public PipelinePass {
+class BBoxPass : public PipelinePass {
  public:
 
   virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer()    const { return false; }
-  
+  virtual bool writes_only_color_buffer()    const { return true;  }
+
   virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
 
-  friend class GeometryPassDescription;
+  friend class BBoxPassDescription;
 
  protected:
-  GeometryPass() {}
-  ~GeometryPass() {}
-
-  std::shared_ptr<RessourceRenderer> get_renderer(std::type_index const& id);
+  BBoxPass();
+  ~BBoxPass() {}
 
  private:
-  std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_;
+  std::shared_ptr<ShaderProgram>   shader_;
+  scm::gl::rasterizer_state_ptr    rasterizer_state_;        
+  scm::gl::buffer_ptr              buffer_;
+  scm::gl::vertex_array_ptr        vao_;
 };
 
 }
 
-#endif  // GUA_GEOMETRY_PASS_HPP
+#endif  // GUA_BBOX_PASS_HPP

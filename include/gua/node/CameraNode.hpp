@@ -25,6 +25,7 @@
 #include <gua/platform.hpp>
 #include <gua/node/Node.hpp>
 #include <gua/renderer/PipelineDescription.hpp>
+#include <gua/renderer/enums.hpp>
 #include <gua/utils/Mask.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
@@ -74,6 +75,7 @@ class GUA_DLL CameraNode : public Node {
     GUA_ADD_PROPERTY(float,           eye_offset,             0.f);
     GUA_ADD_PROPERTY(std::string,     left_screen_path,       "unknown_screen");
     GUA_ADD_PROPERTY(std::string,     right_screen_path,      "unknown_screen");
+    GUA_ADD_PROPERTY(CameraMode,      mono_mode,              CameraMode::CENTER);
 
     // the rendering is performed with thid resolution. Usually it should match
     // the output window's size.
@@ -90,7 +92,6 @@ class GUA_DLL CameraNode : public Node {
 
     // various display options
     GUA_ADD_PROPERTY(bool,            enable_ray_display,     false);
-    GUA_ADD_PROPERTY(bool,            enable_bbox_display,    false);
 
     // clipping
     GUA_ADD_PROPERTY(float,           near_clip,              0.1f);

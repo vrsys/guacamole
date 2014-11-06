@@ -93,6 +93,20 @@ class GUA_DLL ShaderProgram {
                            std::string const& f_shader_source);
 
   /**
+   * Constructor.
+   *
+   * This method takes a vertex shader source, a geomtry shader source 
+   * and a fragment shader source and combines them to a ShaderProgram.
+   *
+   * \param v_shader_source      The vertex shader source.
+   * \param g_shader_source      The geometry shader source.
+   * \param f_shader_source      The fragment shader source.
+   */
+  void create_from_sources(std::string const& v_shader_source,
+                           std::string const& g_shader_source,
+                           std::string const& f_shader_source);
+
+  /**
    *
    */
   void set_shaders(std::vector<ShaderProgramStage> const& shaders,

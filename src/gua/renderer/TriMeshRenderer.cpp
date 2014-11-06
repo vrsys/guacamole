@@ -123,6 +123,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
         ctx.render_context->unmap_buffer(material_uniform_storage_buffer_);
 
         shader->use(ctx);
+        ctx.render_context->apply();
 
         ctx.render_context->bind_uniform_buffer(material_uniform_storage_buffer_, 1);
         // draw all objects ------------------------------------------------------
@@ -131,9 +132,9 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
           int current_object(i + current_bind * max_object_count);
           auto const& node(reinterpret_cast<node::TriMeshNode*>(object_list.second[current_object]));
 
-          // auto const& ressource = GeometryDatabase::instance()->lookup(node->get_filename());
           if (node->get_geometry()) {
             shader->set_uniform(ctx, i, "gua_draw_index");
+            ctx.render_context->apply_program();
             node->get_geometry()->draw(ctx);
           }
         }
@@ -148,6 +149,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
 
   int view_id(pipe->get_camera().config.get_view_id());
 
+
   // loop through all materials ------------------------------------------------
   for (auto const& object_list : sorted_objects) {
 
@@ -158,6 +160,7 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
       auto const& shader(material->get_shader(ctx, *tri_mesh_node->get_geometry(), vertex_shader_, fragment_shader_));
 
       shader->use(ctx);
+      ctx.render_context->apply();
 
       for (auto const& n: object_list.second) {
 
@@ -173,6 +176,8 @@ void TriMeshRenderer::draw(std::unordered_map<std::string, std::vector<node::Geo
           for (auto const& overwrite : node->get_material().get_uniforms()) {
             shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
           }
+
+          ctx.render_context->apply_program();
 
           node->get_geometry()->draw(ctx);
         }

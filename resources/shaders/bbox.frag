@@ -19,50 +19,18 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GEOMETRY_PASS_HPP
-#define GUA_GEOMETRY_PASS_HPP
+@include "shaders/common/header.glsl"
 
-#include <gua/renderer/PipelinePass.hpp>
+// varyings
+in vec2 gua_quad_coords;
 
-#include <typeindex>
-#include <memory>
-#include <unordered_map>
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+@include "shaders/gbuffer_input.glsl"
 
-namespace gua {
+// output
+layout(location=0) out vec3 gua_out_color;
 
-class Pipeline;
-class RessourceRenderer;
-class GeometryPass;
-
-class GeometryPassDescription : public PipelinePassDescription {
- public:
-  virtual PipelinePassDescription* make_copy() const;
-  friend class Pipeline;
-  
- protected:
-  virtual PipelinePass* make_pass() const;
-};
-
-class GeometryPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer()    const { return false; }
-  
-  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
-
-  friend class GeometryPassDescription;
-
- protected:
-  GeometryPass() {}
-  ~GeometryPass() {}
-
-  std::shared_ptr<RessourceRenderer> get_renderer(std::type_index const& id);
-
- private:
-  std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_;
-};
-
+void main() {
+    gua_out_color = vec3(1, 1, 1);
 }
 
-#endif  // GUA_GEOMETRY_PASS_HPP

@@ -24,36 +24,36 @@
 
 // guacamole headers
 
-// #include <gua/renderer/Serializer.hpp>
-// #include <gua/renderer/GBuffer.hpp>
-// #include <gua/renderer/Pipeline.hpp>
-// #include <gua/renderer/View.hpp>
-// #include <gua/databases.hpp>
-// #include <gua/memory.hpp>
+#include <gua/renderer/Serializer.hpp>
+#include <gua/renderer/ShadowMapBuffer.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/View.hpp>
+#include <gua/databases.hpp>
+#include <gua/memory.hpp>
 
 namespace gua {
 
-// ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-// ShadowMap::ShadowMap(Pipeline* pipeline)
-//     : serializer_(gua::make_unique<Serializer>()),
-//       pipeline_(pipeline),
-//       buffer_(nullptr),
-//       projection_view_matrices_(),
-//       camera_block_(nullptr) {
-// }
+ShadowMap::ShadowMap()
+  : serializer_(gua::make_unique<Serializer>()),
+    buffer_(nullptr),
+    projection_view_matrices_(),
+    camera_block_(nullptr) {
+}
 
 
-// ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-// ShadowMap::~ShadowMap() {
-//     if (buffer_)
-//       delete buffer_;
-// }
+ShadowMap::~ShadowMap() {
+  if (buffer_) {
+    delete buffer_;
+  }
+}
 
-// ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-// void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
+void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
 //     //check whether shadow map size is sufficient
 //     if (buffer_ && buffer_->width() < map_size) {
 //       buffer_->remove_buffers(ctx);
@@ -65,7 +65,7 @@ namespace gua {
 //         scm::gl::sampler_state_desc state;
 //         state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
 
-//         buffer_ = new GBuffer({{ BufferComponent::DEPTH_16, state }},
+//         buffer_ = new ShadowMapBuffer({{ BufferComponent::DEPTH_16, state }},
 //                               map_size,
 //                               map_size);
 //         buffer_->create(ctx);
@@ -82,16 +82,17 @@ namespace gua {
 //     if (!camera_block_)
 //       camera_block_ = std::make_shared<CameraUniformBlock>(ctx.render_device);
 
-// }
+}
 
-// ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-// void ShadowMap::cleanup(RenderContext const& context)
-// {
-//   if (buffer_) buffer_->remove_buffers(context);
-// }
+void ShadowMap::cleanup(RenderContext const& context) {
+  if (buffer_) {
+    buffer_->remove_buffers(context);
+  } 
+}
 
-// ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 // void ShadowMap::render_geometry(RenderContext const & ctx,
 //                                 SceneGraph const& current_graph,
@@ -244,49 +245,46 @@ namespace gua {
 //   }
 // }
 
-// ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-// void ShadowMap::render(RenderContext const& ctx,
-//                        SceneGraph const& scene_graph,
-//                        math::vec3 const& center_of_interest,
-//                        Camera const& scene_camera,
-//                        math::mat4 const& transform,
-//                        unsigned map_size) {
+void ShadowMap::render(Pipeline* pipe,
+                       math::mat4 const& transform,
+                       unsigned map_size) {
 
-//     // init members
-//     update_members(ctx, map_size);
-//     projection_view_matrices_ = std::vector<math::mat4>(1);
+  auto const& ctx(pipe->get_context());
 
-//     buffer_->bind(ctx);
-//     buffer_->clear_depth_stencil_buffer(ctx);
+  // init members
+  update_members(ctx, map_size);
+  projection_view_matrices_ = std::vector<math::mat4>(1);
 
-//     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-//     ctx.render_context->set_rasterizer_state(rasterizer_state_);
+  // buffer_->bind(ctx);
+  // buffer_->clear_depth_stencil_buffer(ctx);
 
+  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+  ctx.render_context->set_rasterizer_state(rasterizer_state_);
+  ctx.render_context->set_viewport(scm::gl::viewport(
+    math::vec2(0, 0),
+    math::vec2(map_size, map_size))
+  );
 
-//     ctx.render_context->set_viewport(scm::gl::viewport(
-//         math::vec2(0, 0),
-//         math::vec2(map_size, map_size)));
+  // calculate light frustum
+  math::mat4 screen_transform(scm::math::make_translation(0.f, 0.f, -1.f));
+  screen_transform = transform * screen_transform;
 
-//     // calculate light frustum
-//     math::mat4 screen_transform(scm::math::make_translation(0.f, 0.f, -1.f));
-//     screen_transform = transform * screen_transform;
+  Frustum shadow_frustum = Frustum::perspective(
+    transform, screen_transform,
+    pipe->get_camera().config.near_clip(), pipe->get_camera().config.far_clip()
+  );
 
-//     Frustum shadow_frustum = Frustum::perspective(transform,
-//                            screen_transform,
-//                            pipeline_->config.near_clip(),
-//                            pipeline_->config.far_clip());
+  // render geometries
+  // render_geometry(Pipeline* pipe, shadow_frustum, 0, map_size);
 
-//     // render geometries
-//     render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum,
-//                     scene_camera, 0, map_size);
+  ctx.render_context->reset_state_objects();
 
-//     ctx.render_context->reset_state_objects();
+  // buffer_->unbind(ctx);
+}
 
-//     buffer_->unbind(ctx);
-// }
-
-// ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 // void ShadowMap::render_cascaded(RenderContext const& ctx,
 //               SceneGraph const& scene_graph,
