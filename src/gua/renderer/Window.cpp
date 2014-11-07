@@ -64,7 +64,7 @@ void Window::open() {
       scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_D24_S8, true, false);
 
   scm::gl::wm::context::attribute_desc context_attribs(
-      4, 3, false, config.get_debug(), false);
+      4, 4, false, config.get_debug(), false);
 
   ctx_.display =
       scm::gl::wm::display_ptr(new scm::gl::wm::display(config.get_display_name()));
