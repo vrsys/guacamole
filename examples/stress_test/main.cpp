@@ -21,7 +21,7 @@
 
 #include <gua/guacamole.hpp>
 
-#define COUNT 2
+#define COUNT 5
 
 int main(int argc, char** argv) {
 

@@ -286,7 +286,7 @@ RenderContext const& Pipeline::get_context() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SerializedScene const& Pipeline::get_scene() const {
+SerializedScene& Pipeline::get_scene() {
   return current_scene_;
 }
 
