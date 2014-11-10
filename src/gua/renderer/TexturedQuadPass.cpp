@@ -19,33 +19,54 @@
  *                                                                            *
  ******************************************************************************/
 
-#include <gua/renderer/Material.hpp>
+// class header
+#include <gua/renderer/TexturedQuadPass.hpp>
 
-#include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/node/TexturedQuadNode.hpp>
+#include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/utils/Logger.hpp>
+#include <gua/databases/Resources.hpp>
+
+#define USE_UBO 0 // also set in MaterialShader.cpp
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Material::Material(std::string const& shader_name):
-  shader_name_(shader_name),
-  shader_cache_(nullptr)
-  {}
+PipelinePassDescription* TexturedQuadPassDescription::make_copy() const {
+  return new TexturedQuadPassDescription(*this);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MaterialShader* Material::get_shader() const {
-  if (!shader_cache_) {
-    shader_cache_ = MaterialShaderDatabase::instance()->lookup(shader_name_).get();
+PipelinePass* TexturedQuadPassDescription::make_pass() const {
+  return new TexturedQuadPass();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+TexturedQuadPass::TexturedQuadPass() {
+  // shader_.create_from_sources(
+  //   Resources::lookup_shader(Resources::shaders_textured_quad_vert), 
+  //   Resources::lookup_shader(Resources::shaders_textured_quad_frag)
+  // );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TexturedQuadPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
+  for (auto const& node : pipe->get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
+    auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
+
+    // shader_.set_uniform(ctx, quad_node->get_scaled_world_transform(), "gua_model_matrix");
+    // shader_.set_uniform(ctx, quad_node->data.get_falloff(),           "gua_texture");
+    
+    // pipe->draw_quad();
   }
-
-  return shader_cache_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() const {
-  return uniforms_;
-}
 
 }

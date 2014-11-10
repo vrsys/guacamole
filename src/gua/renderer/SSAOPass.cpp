@@ -136,7 +136,7 @@ void SSAOPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   shader_->set_uniform(ctx, d->falloff(),   "gua_ssao_falloff");
 
   pipe->bind_gbuffer_input(shader_);
-  pipe->draw_fullscreen_quad();
+  pipe->draw_quad();
   pipe->get_gbuffer().unbind(ctx);
 
   ctx.render_context->reset_state_objects();

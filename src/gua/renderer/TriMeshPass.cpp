@@ -63,9 +63,13 @@ TriMeshPass::TriMeshPass() :
 void TriMeshPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
 
   
-  auto sorted_objects(pipe->get_scene().geometrynodes_.find(std::type_index(typeid(node::TriMeshNode))));
+  auto sorted_objects(pipe->get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
-  if (sorted_objects != pipe->get_scene().geometrynodes_.end() && sorted_objects->second.size() > 0) {
+  if (sorted_objects != pipe->get_scene().nodes.end() && sorted_objects->second.size() > 0) {
+
+    std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
+      return reinterpret_cast<node::TriMeshNode*>(a)->get_material().get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material().get_shader();
+    });
 
     RenderContext const& ctx(pipe->get_context());
 
@@ -82,7 +86,7 @@ void TriMeshPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
     // loop through all materials ------------------------------------------------
     for (auto const& object_list : sorted_objects->second) {
 
-      auto const& material = MaterialShaderDatabase::instance()->lookup(object_list.first);
+      auto material = MaterialShaderDatabase::instance()->lookup(object_list.first);
       if (material) {
         // get shader for this material
         auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object_list.second[0]));
@@ -166,42 +170,41 @@ void TriMeshPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
 
     int view_id(pipe->get_camera().config.get_view_id());
 
+    MaterialShader* current_material(nullptr);
+    ShaderProgram*  current_shader(nullptr);
 
-    // loop through all materials ------------------------------------------------
-    for (auto const& object_list : sorted_objects->second) {
+    // loop through all objects, sorted by material ----------------------------
+    for (auto const& object : sorted_objects->second) {
 
-      auto const& material = MaterialShaderDatabase::instance()->lookup(object_list.first);
-      if (material) {
-        // get shader for this material
-        auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object_list.second[0]));
-        auto const& shader(material->get_shader(ctx, *tri_mesh_node->get_geometry(), vertex_shader_, fragment_shader_));
+      auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
+      
+      if (current_material != tri_mesh_node->get_material().get_shader()) {
+        current_material = tri_mesh_node->get_material().get_shader();
+        if (current_material) {
+          current_shader = current_material->get_shader(ctx, *tri_mesh_node->get_geometry(), vertex_shader_, fragment_shader_);
+        } else {
+          Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material().get_shader_name() << std::endl;
+        }
+        if (current_shader) {
+          current_shader->use(ctx);
+          ctx.render_context->apply();
+        } 
+      }
 
-        shader->use(ctx);
-        ctx.render_context->apply();
+      if (current_shader && tri_mesh_node->get_geometry()) {
+        UniformValue model_mat(tri_mesh_node->get_cached_world_transform());
+        UniformValue normal_mat(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform())));
 
-        for (auto const& n: object_list.second) {
+        current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
+        current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
-          auto const& node(reinterpret_cast<node::TriMeshNode*>(n));
-
-          if (node->get_geometry()) {
-            UniformValue model_mat(node->get_cached_world_transform());
-            UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
-
-            shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
-            shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-
-            for (auto const& overwrite : node->get_material().get_uniforms()) {
-              shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
-            }
-
-            ctx.render_context->apply_program();
-
-            node->get_geometry()->draw(ctx);
-          }
+        for (auto const& overwrite : tri_mesh_node->get_material().get_uniforms()) {
+          current_shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
         }
 
-      } else {
-        Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << object_list.first << std::endl;
+        ctx.render_context->apply_program();
+
+        tri_mesh_node->get_geometry()->draw(ctx);
       }
     }
 

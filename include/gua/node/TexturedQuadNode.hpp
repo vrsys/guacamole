@@ -98,8 +98,6 @@ class GUA_DLL TexturedQuadNode : public Node {
 
   void update_cache() override;
 
- public:  // get and set methods
-
   std::string const& get_texture() const;
   void set_texture(std::string const& name);
 

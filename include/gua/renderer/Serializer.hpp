@@ -65,7 +65,6 @@ class Serializer : public NodeVisitor {
   void check(SerializedScene& output,
              SceneGraph const& scene_graph,
              Mask const& mask,
-             bool draw_rays,
              bool enable_frustum_culling);
 
   /**
@@ -132,33 +131,6 @@ class Serializer : public NodeVisitor {
   void visit(node::SunLightNode* sun) override;
 
   /**
-   * Visits a RayNode
-   *
-   * This function provides the interface to visit a RayNode
-   *
-   * \param spot   Pointer to RayNode
-   */
-  void visit(node::RayNode* ray) override;
-
-  /**
-   * Visits a RigidBodyNode
-   *
-   * This function provides the interface to visit a RigidBodyNode
-   *
-   * \param cam   Pointer to RigidBodyNode
-   */
-  /* virtual */ void visit(physics::RigidBodyNode* node) {}
-
-  /**
-   * Visits a CollisionShapeNode
-   *
-   * This function provides the interface to visit a CollisionShapeNode
-   *
-   * \param cam   Pointer to CollisionShapeNode
-   */
-  /* virtual */ void visit(physics::CollisionShapeNode*) {}
-
-  /**
    * Visits a TexturedQuadNode
    *
    * This function provides the interface to visit a TexturedQuadNode
@@ -178,7 +150,6 @@ class Serializer : public NodeVisitor {
   Mask current_render_mask_;
 
   SerializedScene* data_;
-  bool draw_rays_;
   bool enable_frustum_culling_;
 
 };

@@ -47,7 +47,7 @@ out mat4  gua_lightinfo6;
 out mat4  gua_lightinfo7;
 
 // methods ---------------------------------------------------------------------
-@include "shaders/gbuffer_input.glsl"
+@include "shaders/common/gua_gbuffer_input.glsl"
 
 // BASE LIGHTING CALCULATIONS --------------------------------------------------
 subroutine void CalculateLightType();

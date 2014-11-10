@@ -40,14 +40,6 @@ void init(int argc, char** argv) {
   }
 #endif
 
-  create_resource_material("gua_bounding_box",
-                            Resources::materials_gua_bounding_box_gsd,
-                            Resources::materials_gua_bounding_box_gmd);
-
-  create_resource_material("gua_textured_quad",
-                            Resources::materials_gua_textured_quad_gsd,
-                            Resources::materials_gua_textured_quad_gmd);
-
   gua::TextureDatabase::instance()->add("gua_default_texture", std::shared_ptr<Texture2D>(new DefaultTexture()));
   gua::TextureDatabase::instance()->add("gua_loading_texture", std::shared_ptr<Texture2D>(new LoadingTexture()));
 
@@ -66,49 +58,6 @@ void init(int argc, char** argv) {
       static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_light_cone_obj).c_str(),
               Resources::geometry_gua_light_cone_obj.size(), false)[0])));
-
-  GeometryDatabase::instance()->add(
-      "gua_ray_geometry",
-      std::shared_ptr<GeometryResource>(
-      static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
-              Resources::lookup_string(Resources::geometry_gua_ray_obj).c_str(),
-              Resources::geometry_gua_ray_obj.size(), false)[0])));
-
-  GeometryDatabase::instance()->add(
-      "gua_plane_geometry",
-      std::shared_ptr<GeometryResource>(
-      static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
-              Resources::lookup_string(Resources::geometry_gua_plane_obj).c_str(),
-              Resources::geometry_gua_plane_obj.size(), true)[0])));
-
-  GeometryDatabase::instance()->add(
-      "gua_bounding_box_geometry",
-      std::shared_ptr<GeometryResource>(
-      static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
-              Resources::lookup_string(Resources::geometry_gua_bounding_box_obj).c_str(),
-              Resources::geometry_gua_bounding_box_obj.size(), false)[0])));
-}
-
-void create_resource_material(std::string const& material_name,
-                              std::vector<unsigned char> const& shading_model_resource,
-                              std::vector<unsigned char> const& material_resource) {
-  // std::shared_ptr<ShadingModel> shading_model(
-  //     new ShadingModel(material_name,
-  //                      Resources::lookup_string(shading_model_resource).c_str(),
-  //                      shading_model_resource.size()));
-
-  // ShadingModelDatabase::instance()->add(material_name,
-  //                                       shading_model);
-
-  // MaterialShaderDescription material_description(
-  //                      Resources::lookup_string(material_resource).c_str(),
-  //                      material_resource.size());
-
-  // std::shared_ptr<Material> material(
-  //     new Material(material_name, material_description));
-  // MaterialShaderDatabase::instance()->add(material_name, material);
-
-  Logger::LOG_WARNING << "TODO: create material " << material_name << std::endl;
 }
 
 

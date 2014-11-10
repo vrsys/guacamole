@@ -36,6 +36,7 @@
 #include <gua/node/PointLightNode.hpp>
 #include <gua/node/SpotLightNode.hpp>
 #include <gua/node/SunLightNode.hpp>
+#include <gua/node/TexturedQuadNode.hpp>
 #include <gua/node/ScreenNode.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
@@ -52,7 +53,6 @@ Serializer::Serializer()
     : data_(nullptr),
       current_frustum_(),
       current_center_of_interest_(),
-      draw_rays_(false),
       enable_frustum_culling_(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,45 +60,15 @@ Serializer::Serializer()
 void Serializer::check(SerializedScene& output,
                        SceneGraph const& scene_graph,
                        Mask const& mask,
-                       bool draw_rays,
                        bool enable_frustum_culling) {
 
   data_ = &output;
-
-  std::size_t geometry_count = data_->geometrynodes_.size();
-  std::size_t volume_count = data_->volumenodes_.size();
-  std::size_t point_light_count = data_->point_lights_.size();
-  std::size_t spot_light_count = data_->spot_lights_.size();
-  std::size_t sun_light_count = data_->sun_lights_.size();
-  std::size_t ray_count = data_->rays_.size();
-
-  data_->geometrynodes_.clear();
-  data_->volumenodes_.clear();
-  data_->point_lights_.clear();
-  data_->spot_lights_.clear();
-  data_->sun_lights_.clear();
-
-  data_->bounding_boxes_.clear();
-  data_->rays_.clear();
-  draw_rays_ = draw_rays;
-
-  if (draw_rays_) {
-    data_->rays_.reserve(ray_count);
-  }
-
-  // assuming the number of nodes stays quite constant through time,
-  // reserving the old size might save some time
-
-  data_->volumenodes_.reserve(volume_count);
-  data_->point_lights_.reserve(point_light_count);
-  data_->spot_lights_.reserve(spot_light_count);
-  data_->sun_lights_.reserve(sun_light_count);
-
-  enable_frustum_culling_ = enable_frustum_culling;
-
-  current_render_mask_ = mask;
-
-  current_frustum_ = output.frustum;
+  data_->nodes.clear();
+  data_->bounding_boxes.clear();
+  
+  enable_frustum_culling_     = enable_frustum_culling;
+  current_render_mask_        = mask;
+  current_frustum_            = output.frustum;
   current_center_of_interest_ = output.center_of_interest;
 
   scene_graph.accept(*this);
@@ -144,7 +114,7 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::TriMeshNode* node) {
 
   if (is_visible(node)) {
-    data_->geometrynodes_[std::type_index(typeid(*node))][node->get_material().get_shader_name()].push_back(node);
+    data_->nodes[std::type_index(typeid(*node))].push_back(node);
 
     visit_children(node);
   }
@@ -157,7 +127,7 @@ void Serializer::check(SerializedScene& output,
 
   if ( is_visible(node) ) {
     if ( !node->data.get_volume().empty() ) {
-      data_->volumenodes_.push_back(node);
+      data_->nodes[std::type_index(typeid(*node))].push_back(node);
     }
 
     visit_children(node);
@@ -169,7 +139,7 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::PointLightNode* node) {
 
   if (is_visible(node)) {
-    data_->point_lights_.push_back(node);
+    data_->nodes[std::type_index(typeid(*node))].push_back(node);
 
     visit_children(node);
   }
@@ -180,7 +150,7 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::SpotLightNode* node) {
 
   if (is_visible(node)) {
-    data_->spot_lights_.push_back(node);
+    data_->nodes[std::type_index(typeid(*node))].push_back(node);
 
     visit_children(node);
   }
@@ -191,21 +161,7 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::SunLightNode* node) {
 
   if (is_visible(node)) {
-    data_->sun_lights_.push_back(node);
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(node::RayNode* node) {
-
-  if (is_visible(node)) {
-
-    if (draw_rays_) {
-      data_->rays_.push_back(node);
-    }
+    data_->nodes[std::type_index(typeid(*node))].push_back(node);
 
     visit_children(node);
   }
@@ -216,7 +172,7 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::TexturedQuadNode* node) {
 
   if (is_visible(node)) {
-    // data_->geometrynodes_[std::type_index(typeid(*node))][node->get_texture()].push_back(node);
+    data_->nodes[std::type_index(typeid(*node))].push_back(node);
 
     visit_children(node);
   }
@@ -240,7 +196,7 @@ bool Serializer::is_visible(node::Node* node) const {
   }
 
   if (is_visible && node->get_draw_bounding_box()) {
-    data_->bounding_boxes_.push_back(node->get_bounding_box());
+    data_->bounding_boxes.push_back(node->get_bounding_box());
   }
 
   return is_visible;

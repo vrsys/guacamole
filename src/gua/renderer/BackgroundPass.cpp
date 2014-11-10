@@ -75,7 +75,7 @@ void BackgroundPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(),  "gua_texel_height");
   shader_->set_uniform(ctx, pipe->get_gbuffer().get_current_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
   
-  pipe->draw_fullscreen_quad();
+  pipe->draw_quad();
   pipe->get_gbuffer().unbind(ctx);
 
   ctx.render_context->reset_state_objects();

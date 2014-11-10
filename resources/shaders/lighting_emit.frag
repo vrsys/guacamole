@@ -25,7 +25,7 @@
 in vec2 gua_quad_coords;
 
 @include "shaders/common/gua_camera_uniforms.glsl"
-@include "shaders/gbuffer_input.glsl"
+@include "shaders/common/gua_gbuffer_input.glsl"
 
 // output
 layout(location=0) out vec3 gua_out_color;
