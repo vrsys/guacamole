@@ -42,7 +42,7 @@ PipelinePassDescription* LightingPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* LightingPassDescription::make_pass() const {
+PipelinePass* LightingPassDescription::make_pass(RenderContext const& ctx) const {
   return new LightingPass();
 }
 

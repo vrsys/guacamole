@@ -26,6 +26,7 @@ namespace gua {
 
 class Pipeline;
 class PipelinePass;
+class RenderContext;
 
 class PipelinePassDescription {
  public:
@@ -34,7 +35,7 @@ class PipelinePassDescription {
 
   friend class Pipeline;
  protected:
-  virtual PipelinePass* make_pass() const = 0;
+  virtual PipelinePass* make_pass(RenderContext const& ctx) const = 0;
 };
 
 

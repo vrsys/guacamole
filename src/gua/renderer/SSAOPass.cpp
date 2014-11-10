@@ -84,7 +84,7 @@ PipelinePassDescription* SSAOPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
   
-PipelinePass* SSAOPassDescription::make_pass() const {
+PipelinePass* SSAOPassDescription::make_pass(RenderContext const& ctx) const {
   return new SSAOPass();
 }
 

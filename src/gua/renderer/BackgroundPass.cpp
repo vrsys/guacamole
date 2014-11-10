@@ -38,7 +38,7 @@ PipelinePassDescription* BackgroundPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* BackgroundPassDescription::make_pass() const {
+PipelinePass* BackgroundPassDescription::make_pass(RenderContext const& ctx) const {
   return new BackgroundPass();
 }
 

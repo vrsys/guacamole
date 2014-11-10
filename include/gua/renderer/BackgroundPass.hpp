@@ -38,7 +38,7 @@ class BackgroundPassDescription : public PipelinePassDescription {
   friend class Pipeline;
   
  protected:
-  virtual PipelinePass* make_pass() const;
+  virtual PipelinePass* make_pass(RenderContext const& ctx) const;
 };
 
 class BackgroundPass : public PipelinePass {
