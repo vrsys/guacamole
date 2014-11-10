@@ -103,7 +103,7 @@ void BBoxPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
     pipe->get_gbuffer().set_viewport(ctx);
 
     shader_->use(ctx);
-    pipe->bind_gbuffer_input(shader_);
+
     ctx.render_context->bind_vertex_array(vao_);
 
     ctx.render_context->apply();

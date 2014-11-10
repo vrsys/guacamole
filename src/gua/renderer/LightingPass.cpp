@@ -92,7 +92,12 @@ void LightingPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   
   // draw fullscreen quad for emissive surfaces
   emit_shader_->use(ctx);
-  pipe->bind_gbuffer_input(emit_shader_);
+  
+  emit_shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_width(),  "gua_texel_width");
+  emit_shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(),  "gua_texel_height");
+  emit_shader_->set_uniform(ctx, pipe->get_gbuffer().get_current_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
+  emit_shader_->set_uniform(ctx, pipe->get_gbuffer().get_current_pbr_buffer()->get_handle(ctx),  "gua_gbuffer_pbr");
+
   pipe->draw_fullscreen_quad();
 
   // draw proxy geometries for light sources

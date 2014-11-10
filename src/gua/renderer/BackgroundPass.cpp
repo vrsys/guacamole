@@ -71,8 +71,10 @@ void BackgroundPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
   shader_->use(ctx);
-
-  pipe->bind_gbuffer_input(shader_);
+  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_width(),  "gua_texel_width");
+  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(),  "gua_texel_height");
+  shader_->set_uniform(ctx, pipe->get_gbuffer().get_current_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
+  
   pipe->draw_fullscreen_quad();
   pipe->get_gbuffer().unbind(ctx);
 

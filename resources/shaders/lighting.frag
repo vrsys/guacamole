@@ -232,10 +232,21 @@ void main() {
   compute_light(gbuffer_normal, position);
 
   float emit = gua_get_pbr().r;
-  vec3 surface_color = gua_get_color();
-  vec3 diffuse   = dot(gbuffer_normal, gua_light_direction) * gua_light_color;
-  float specular = dot(reflect(gua_light_direction, gbuffer_normal), normalize(position - gua_camera_position));
-  specular = pow(max(0, specular), 50);
+  
+  vec3 diffuse = vec3(0);
 
-  gua_out_color = (surface_color*diffuse + specular) * gua_light_intensity * (1-emit);  
+  if (gua_light_diffuse_enable) {
+    vec3 surface_color = gua_get_color();
+    diffuse = dot(gbuffer_normal, gua_light_direction) * gua_light_color;
+    diffuse *= surface_color;
+  }
+
+  float specular = 0;
+
+  if (gua_light_specular_enable) {
+    specular = dot(reflect(gua_light_direction, gbuffer_normal), normalize(position - gua_camera_position));
+    specular = pow(max(0, specular), 50);
+  }
+
+  gua_out_color = (diffuse + specular) * gua_light_intensity * (1-emit);  
 }
