@@ -30,7 +30,6 @@
 namespace gua {
 
 class Pipeline;
-class BBoxPass;
 
 class BBoxPassDescription : public PipelinePassDescription {
  public:
@@ -38,28 +37,7 @@ class BBoxPassDescription : public PipelinePassDescription {
   friend class Pipeline;
   
  protected:
-  virtual PipelinePass* make_pass(RenderContext const& ctx) const;
-};
-
-class BBoxPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer()    const { return true;  }
-
-  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
-
-  friend class BBoxPassDescription;
-
- protected:
-  BBoxPass();
-  ~BBoxPass() {}
-
- private:
-  std::shared_ptr<ShaderProgram>   shader_;
-  scm::gl::rasterizer_state_ptr    rasterizer_state_;        
-  scm::gl::buffer_ptr              buffer_;
-  scm::gl::vertex_array_ptr        vao_;
+  virtual PipelinePass* make_pass(RenderContext const&) const;
 };
 
 }

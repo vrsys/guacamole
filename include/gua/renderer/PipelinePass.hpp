@@ -22,6 +22,9 @@
 #ifndef GUA_PIPELINE_PASS_HPP
 #define GUA_PIPELINE_PASS_HPP
 
+#include <scm/gl_core.h>
+#include <gua/renderer/ShaderProgram.hpp>
+
 namespace gua {
 
 class Pipeline;
@@ -42,18 +45,39 @@ class PipelinePassDescription {
 class PipelinePass {
  public:
 
-  virtual bool needs_color_buffer_as_input() const = 0;
-  virtual bool writes_only_color_buffer()    const = 0;
-  
-  virtual void process(PipelinePassDescription* desc, Pipeline* pipe) = 0;
+  inline bool needs_color_buffer_as_input() const {
+    return needs_color_buffer_as_input_;
+  }
+  inline bool writes_only_color_buffer()    const {
+    return writes_only_color_buffer_;
+  }
+
+  virtual void process(PipelinePassDescription* desc, Pipeline* pipe) {
+    process_(desc, pipe);
+  }
   virtual void on_delete(Pipeline* pipe) {};
 
   friend class Pipeline;
 
  protected:
+ public: // for refactoring purposes
   PipelinePass() {}
+  PipelinePass(bool in, bool out)
+        : needs_color_buffer_as_input_(in), writes_only_color_buffer_(out) {}
   ~PipelinePass() {}
-};
+
+  std::shared_ptr<ShaderProgram> shader_ = nullptr;
+
+  scm::gl::rasterizer_state_ptr rasterizer_state_ = nullptr;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_ = nullptr;
+  scm::gl::blend_state_ptr blend_state_ = nullptr;
+
+  bool needs_color_buffer_as_input_ = false;
+  bool writes_only_color_buffer_ = false;
+
+  std::function<void(PipelinePassDescription*, Pipeline*)> process_ =
+  [](PipelinePassDescription*,Pipeline*) { return; };
+  };
 
 }
 

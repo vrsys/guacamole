@@ -30,34 +30,14 @@
 namespace gua {
 
 class Pipeline;
-class BackgroundPass;
 
 class BackgroundPassDescription : public PipelinePassDescription {
  public:
   virtual PipelinePassDescription* make_copy() const;
   friend class Pipeline;
-  
- protected:
-  virtual PipelinePass* make_pass(RenderContext const& ctx) const;
-};
-
-class BackgroundPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer()    const { return true;  }
-
-  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
-
-  friend class BackgroundPassDescription;
 
  protected:
-  BackgroundPass();
-  ~BackgroundPass() {}
-
- private:
-  std::shared_ptr<ShaderProgram>   shader_;
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+  virtual PipelinePass* make_pass(RenderContext const&) const;
 };
 
 }

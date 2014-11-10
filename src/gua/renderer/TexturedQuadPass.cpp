@@ -41,30 +41,9 @@ PipelinePassDescription* TexturedQuadPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* TexturedQuadPassDescription::make_pass() const {
-  return new TexturedQuadPass();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-TexturedQuadPass::TexturedQuadPass() {
-  // shader_.create_from_sources(
-  //   Resources::lookup_shader(Resources::shaders_textured_quad_vert), 
-  //   Resources::lookup_shader(Resources::shaders_textured_quad_frag)
-  // );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TexturedQuadPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
-  for (auto const& node : pipe->get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
-    auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
-
-    // shader_.set_uniform(ctx, quad_node->get_scaled_world_transform(), "gua_model_matrix");
-    // shader_.set_uniform(ctx, quad_node->data.get_falloff(),           "gua_texture");
-    
-    // pipe->draw_quad();
-  }
+PipelinePass* TexturedQuadPassDescription::make_pass(RenderContext const& ctx) const {
+  auto pass = new PipelinePass{};
+  return pass;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
