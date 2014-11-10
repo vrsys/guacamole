@@ -53,7 +53,6 @@ Serializer::Serializer()
     : data_(nullptr),
       current_frustum_(),
       current_center_of_interest_(),
-      draw_rays_(false),
       enable_frustum_culling_(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,15 +60,12 @@ Serializer::Serializer()
 void Serializer::check(SerializedScene& output,
                        SceneGraph const& scene_graph,
                        Mask const& mask,
-                       bool draw_rays,
                        bool enable_frustum_culling) {
 
   data_ = &output;
   data_->nodes.clear();
-
   data_->bounding_boxes.clear();
-  draw_rays_ = draw_rays;
-
+  
   enable_frustum_culling_     = enable_frustum_culling;
   current_render_mask_        = mask;
   current_frustum_            = output.frustum;
@@ -166,20 +162,6 @@ void Serializer::check(SerializedScene& output,
 
   if (is_visible(node)) {
     data_->nodes[std::type_index(typeid(*node))].push_back(node);
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(node::RayNode* node) {
-
-  if (is_visible(node)) {
-
-    if (draw_rays_) {
-      data_->nodes[std::type_index(typeid(*node))].push_back(node);
-    }
 
     visit_children(node);
   }
