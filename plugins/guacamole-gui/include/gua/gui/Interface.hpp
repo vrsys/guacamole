@@ -19,31 +19,56 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RESOURCES_HPP
-#define GUA_RESOURCES_HPP
+#ifndef GUA_GUI_INTERFACE_HPP
+#define GUA_GUI_INTERFACE_HPP
 
-// external headers
-#include <vector>
-#include <string>
+// includes  -------------------------------------------------------------------
+#include <gua/utils/Singleton.hpp>
+#include <gua/renderer/RenderContext.hpp>
+#include <gua/events/Signal.hpp>
+
+// forward declares ------------------------------------------------------------
+namespace Awesomium {
+  class WebCore;
+  class WebView;
+  class WebSession;
+}
 
 namespace gua {
 
-namespace Resources {
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  std::string                       lookup_string(std::string const& file);
-  std::string                       lookup_string(std::vector<unsigned char> const& resource);
+// -----------------------------------------------------------------------------
+class GUA_DLL Interface : public Singleton<Interface> {
 
-  std::string                       lookup_shader(std::string const& file);
-  std::string                       lookup_shader(std::vector<unsigned char> const& resource);
+ ///////////////////////////////////////////////////////////////////////////////
+ // ----------------------------------------------------------- public interface
+ public:
 
-  std::vector<unsigned char> const& lookup(std::string const& file);
+  events::Signal<Cursor> on_cursor_change;
 
-  void resolve_includes(std::string& shader_source);
+  void update() const;
 
-  // generated header
-  #include <gua/generated/R.inl>
+  friend class GuiNode;
+  friend class Singleton<Interface>;
+
+ ///////////////////////////////////////////////////////////////////////////////
+ // ---------------------------------------------------------- private interface
+ private:
+  // this class is a Singleton --- private c'tor and d'tor
+  Interface();
+  ~Interface();
+
+  bool bind(Awesomium::WebView* view, RenderContext const& ctx, unsigned location) const;
+  Awesomium::WebView* create_webview(int width, int height) const;
+
+  Awesomium::WebCore* web_core_;
+  Awesomium::WebSession* web_session_;
+};
+
+// -----------------------------------------------------------------------------
 
 }
-}
 
-#endif  // GUA_RESOURCES_HPP
+#endif // GUA_GUI_INTERFACE_HPP

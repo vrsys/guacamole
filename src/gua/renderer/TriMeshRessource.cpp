@@ -226,10 +226,4 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const {
   return face;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<RessourceRenderer> TriMeshRessource::create_renderer() const {
-  return std::make_shared<TriMeshRenderer>();
-}
-
 }

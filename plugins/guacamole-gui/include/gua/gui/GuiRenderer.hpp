@@ -19,31 +19,32 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RESOURCES_HPP
-#define GUA_RESOURCES_HPP
+#ifndef GUA_GUI_RENDERER_HPP
+#define GUA_GUI_RENDERER_HPP
+
+// guacamole_headers
+#include <gua/renderer/RessourceRenderer.hpp>
 
 // external headers
-#include <vector>
-#include <string>
 
 namespace gua {
 
-namespace Resources {
+class ShaderProgram;
 
-  std::string                       lookup_string(std::string const& file);
-  std::string                       lookup_string(std::vector<unsigned char> const& resource);
+class GUA_DLL GuiRenderer : public RessourceRenderer {
+ public:
 
-  std::string                       lookup_shader(std::string const& file);
-  std::string                       lookup_shader(std::vector<unsigned char> const& resource);
+  GuiRenderer();
 
-  std::vector<unsigned char> const& lookup(std::string const& file);
+  void draw(std::unordered_map<std::string, std::vector<node::GeometryNode*>> const& sorted_objects,
+            Pipeline* pipe) const;
 
-  void resolve_includes(std::string& shader_source);
+ private:
 
-  // generated header
-  #include <gua/generated/R.inl>
+  ShaderProgram* shader_;
+  scm::gl::quad_geometry_ptr   quad_;
+};
 
 }
-}
 
-#endif  // GUA_RESOURCES_HPP
+#endif  // GUA_GUI_RENDERER_HPP

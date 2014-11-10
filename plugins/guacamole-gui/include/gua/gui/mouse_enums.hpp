@@ -19,31 +19,71 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RESOURCES_HPP
-#define GUA_RESOURCES_HPP
+#ifndef GUA_GUI_MOUSE_ENUMS_HPP
+#define GUA_GUI_MOUSE_ENUMS_HPP
 
-// external headers
-#include <vector>
-#include <string>
 
-namespace gua {
+namespace swift {
 
-namespace Resources {
+enum class Button : int {
+  BUTTON_1     =   0,
+  BUTTON_2     =   1,
+  BUTTON_3     =   2,
+  BUTTON_4     =   3,
+  BUTTON_5     =   4,
+  BUTTON_6     =   5,
+  BUTTON_7     =   6,
+  BUTTON_8     =   7
+};
 
-  std::string                       lookup_string(std::string const& file);
-  std::string                       lookup_string(std::vector<unsigned char> const& resource);
+enum class Cursor : int {
+  POINTER,
+  CROSS,
+  HAND,
+  IBEAM,
+  WAIT,
+  HELP,
+  EAST_RESIZE,
+  NORTH_RESIZE,
+  NORTH_EAST_RESIZE,
+  NORTH_WEST_RESIZE,
+  SOUTH_RESIZE,
+  SOUTH_EAST_RESIZE,
+  SOUTH_WEST_RESIZE,
+  WEST_RESIZE,
+  NORTH_SOUTH_RESIZE,
+  EAST_WEST_RESIZE,
+  NORTH_EAST_SOUTH_WEST_RESIZE,
+  NORTH_WEST_SOUTH_EAST_RESIZE,
+  COLUMN_RESIZE,
+  ROW_RESIZE,
+  MIDDLE_PANNING,
+  EAST_PANNING,
+  NORTH__PANNING,
+  NORTH_EAST_PANNING,
+  NORTH_WEST_PANNING,
+  SOUTH__PANNING,
+  SOUTH_EAST_PANNING,
+  SOUTH_WEST_PANNING,
+  WEST_PANNING,
+  MOVE,
+  VERTICAL_TEXT,
+  CELL,
+  CONTEXT_MENU,
+  ALIAS,
+  PROGRESS,
+  NO_DROP,
+  COPY,
+  NONE,
+  NOT_ALLOWED,
+  ZOOM_IN,
+  ZOOM_OUT,
+  GRAB,
+  GRABBING,
+  CUSTOM
+};
 
-  std::string                       lookup_shader(std::string const& file);
-  std::string                       lookup_shader(std::vector<unsigned char> const& resource);
-
-  std::vector<unsigned char> const& lookup(std::string const& file);
-
-  void resolve_includes(std::string& shader_source);
-
-  // generated header
-  #include <gua/generated/R.inl>
 
 }
-}
 
-#endif  // GUA_RESOURCES_HPP
+#endif // GUA_GUI_MOUSE_ENUMS_HPP

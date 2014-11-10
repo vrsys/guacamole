@@ -19,31 +19,69 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RESOURCES_HPP
-#define GUA_RESOURCES_HPP
+#ifndef GUA_GUI_NODE_HPP
+#define GUA_GUI_NODE_HPP
 
-// external headers
-#include <vector>
-#include <string>
+// guacamole headers
+#include <gua/node/GeometryNode.hpp>
 
 namespace gua {
+namespace gui {
 
-namespace Resources {
+class GuiResource;
 
-  std::string                       lookup_string(std::string const& file);
-  std::string                       lookup_string(std::vector<unsigned char> const& resource);
+/**
+ * This class is used to represent polygonal geometry in the SceneGraph.
+ *
+ * \ingroup gua_scenegraph
+ */
+class GUA_DLL GuiNode : public GeometryNode {
+ public:  // member
 
-  std::string                       lookup_shader(std::string const& file);
-  std::string                       lookup_shader(std::vector<unsigned char> const& resource);
+  GuiNode(std::string const& name = "",
+          std::string const& resource_name = "",
+          math::mat4 const& transform = math::mat4::identity());
 
-  std::vector<unsigned char> const& lookup(std::string const& file);
 
-  void resolve_includes(std::string& shader_source);
+  /**
+  * Implements ray picking for a gui node
+  */
+  void ray_test_impl(Ray const& ray,
+                     PickResult::Options options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
 
-  // generated header
-  #include <gua/generated/R.inl>
+  /**
+  * Updates bounding box by accessing the ressource in the databse
+  */
+  void update_bounding_box() const override;
+  void update_cache() override;
 
-}
-}
+  std::shared_ptr<GuiResource> const& get_resource() const;
 
-#endif  // GUA_RESOURCES_HPP
+  /**
+   * Accepts a visitor and calls concrete visit method.
+   *
+   * This method implements the visitor pattern for Nodes.
+   *
+   * \param visitor  A visitor to process the GeometryNode's data.
+   */
+  void accept(NodeVisitor& visitor) override;
+
+ protected:
+
+  std::shared_ptr<Node> copy() const override;
+
+ private:  // attributes e.g. special attributes for drawing
+
+  std::shared_ptr<GuiResource> resource_;
+
+  std::string resource_name_;
+  bool resource_name_changed_;
+
+};
+
+} // namespace gui {
+} // namespace gua {
+
+#endif  // GUA_GUI_NODE_HPP
