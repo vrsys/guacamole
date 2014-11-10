@@ -41,6 +41,7 @@ PipelinePassDescription* BackgroundPassDescription::make_copy() const {
 PipelinePass* BackgroundPassDescription::make_pass(RenderContext const& ctx) const {
   auto pass = new PipelinePass{};
 
+  pass->description_ = this;
   pass->shader_ = std::make_shared<ShaderProgram>();
   pass->shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
@@ -54,25 +55,25 @@ PipelinePass* BackgroundPassDescription::make_pass(RenderContext const& ctx) con
   pass->depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
   pass->blend_state_ = nullptr;
 
-  pass->process_ = [pass](PipelinePassDescription* desc,Pipeline* pipe) {
-    auto const& ctx(pipe->get_context());
+  pass->process_ = [](PipelinePass& pass, Pipeline& pipe) {
+    auto const& ctx(pipe.get_context());
 
     // bind gbuffer
-    pipe->get_gbuffer().bind(ctx, pass);
-    pipe->get_gbuffer().set_viewport(ctx);
+    pipe.get_gbuffer().bind(ctx, &pass);
+    pipe.get_gbuffer().set_viewport(ctx);
 
-    if (pass->depth_stencil_state_)
-      ctx.render_context->set_depth_stencil_state(pass->depth_stencil_state_);
-    if (pass->blend_state_)
-      ctx.render_context->set_blend_state(pass->blend_state_);
-    if (pass->rasterizer_state_)
-      ctx.render_context->set_rasterizer_state(pass->rasterizer_state_);
+    if (pass.depth_stencil_state_)
+      ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+    if (pass.blend_state_)
+      ctx.render_context->set_blend_state(pass.blend_state_);
+    if (pass.rasterizer_state_)
+      ctx.render_context->set_rasterizer_state(pass.rasterizer_state_);
 
-    pass->shader_->use(ctx);
+    pass.shader_->use(ctx);
 
-    pipe->bind_gbuffer_input(pass->shader_);
-    pipe->draw_fullscreen_quad();
-    pipe->get_gbuffer().unbind(ctx);
+    pipe.bind_gbuffer_input(pass.shader_);
+    pipe.draw_fullscreen_quad();
+    pipe.get_gbuffer().unbind(ctx);
 
     ctx.render_context->reset_state_objects();
   };

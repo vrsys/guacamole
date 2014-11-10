@@ -52,8 +52,8 @@ class PipelinePass {
     return writes_only_color_buffer_;
   }
 
-  virtual void process(PipelinePassDescription* desc, Pipeline* pipe) {
-    process_(desc, pipe);
+  virtual void process(Pipeline& pipe) {
+    process_(*this, pipe);
   }
   virtual void on_delete(Pipeline* pipe) {};
 
@@ -64,6 +64,7 @@ class PipelinePass {
   PipelinePass() {}
   ~PipelinePass() {}
 
+  const PipelinePassDescription* description_ = nullptr;
   std::shared_ptr<ShaderProgram> shader_ = nullptr;
 
   scm::gl::rasterizer_state_ptr rasterizer_state_ = nullptr;
@@ -73,9 +74,9 @@ class PipelinePass {
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
 
-  std::function<void(PipelinePassDescription*, Pipeline*)> process_ =
-  [](PipelinePassDescription*,Pipeline*) { return; };
-  };
+  std::function<void(PipelinePass&, Pipeline&)> process_ =
+    [](PipelinePass&,Pipeline&) { return; };
+};
 
 }
 
