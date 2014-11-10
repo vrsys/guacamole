@@ -87,6 +87,7 @@ PipelinePassDescription* SSAOPassDescription::make_copy() const {
 PipelinePass* SSAOPassDescription::make_pass(RenderContext const& ctx) const {
   auto pass = new PipelinePass();
 
+  pass->description_ = this;
   pass->shader_ = std::make_shared<ShaderProgram>();
   pass->shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
@@ -106,29 +107,29 @@ PipelinePass* SSAOPassDescription::make_pass(RenderContext const& ctx) const {
 
   auto noise_texture_ = std::make_shared<NoiseTexture>();
 
-  pass->process_ = [=](PipelinePassDescription* desc,Pipeline* pipe) {
-    auto const& ctx(pipe->get_context());
+  pass->process_ = [noise_texture_](PipelinePass& pass,Pipeline& pipe) {
+    auto const& ctx(pipe.get_context());
 
     // bind gbuffer
-    pipe->get_gbuffer().bind(ctx, pass);
-    pipe->get_gbuffer().set_viewport(ctx);
+    pipe.get_gbuffer().bind(ctx, &pass);
+    pipe.get_gbuffer().set_viewport(ctx);
 
-    if (pass->depth_stencil_state_)
-      ctx.render_context->set_depth_stencil_state(pass->depth_stencil_state_);
-    if (pass->blend_state_)
-      ctx.render_context->set_blend_state(pass->blend_state_);
+    if (pass.depth_stencil_state_)
+      ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+    if (pass.blend_state_)
+      ctx.render_context->set_blend_state(pass.blend_state_);
 
-    pass->shader_->use(ctx);
+    pass.shader_->use(ctx);
 
-    SSAOPassDescription* d(dynamic_cast<SSAOPassDescription*>(desc));
-    pass->shader_->set_uniform(ctx, noise_texture_->get_handle(ctx), "gua_noise_tex");
-    pass->shader_->set_uniform(ctx, d->radius(),    "gua_ssao_radius");
-    pass->shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
-    pass->shader_->set_uniform(ctx, d->falloff(),   "gua_ssao_falloff");
+    SSAOPassDescription const* d(dynamic_cast<SSAOPassDescription const*>(pass.description_));
+    pass.shader_->set_uniform(ctx, noise_texture_->get_handle(ctx), "gua_noise_tex");
+    pass.shader_->set_uniform(ctx, d->radius(),    "gua_ssao_radius");
+    pass.shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
+    pass.shader_->set_uniform(ctx, d->falloff(),   "gua_ssao_falloff");
 
-    pipe->bind_gbuffer_input(pass->shader_);
-    pipe->draw_quad();
-    pipe->get_gbuffer().unbind(ctx);
+    pipe.bind_gbuffer_input(pass.shader_);
+    pipe.draw_quad();
+    pipe.get_gbuffer().unbind(ctx);
 
     ctx.render_context->reset_state_objects();
 

@@ -230,7 +230,7 @@ void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& cam
         gbuffer_->toggle_ping_pong();
       }
 
-      passes_[i]->process(camera.config.get_pipeline_description().get_passes()[i], this);
+      passes_[i]->process(*this);
     }
 
     gbuffer_->toggle_ping_pong();

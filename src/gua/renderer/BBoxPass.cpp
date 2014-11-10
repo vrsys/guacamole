@@ -41,6 +41,7 @@ PipelinePassDescription* BBoxPassDescription::make_copy() const {
 PipelinePass* BBoxPassDescription::make_pass(RenderContext const& ctx) const {
   auto pass = new PipelinePass{};
 
+  pass->description_ = this;
   pass->shader_ = std::make_shared<ShaderProgram>(),
   pass->shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_bbox_vert),
@@ -70,13 +71,13 @@ PipelinePass* BBoxPassDescription::make_pass(RenderContext const& ctx) const {
         0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
         0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)), {buffer_});
 
-  pass->process_ = [pass, buffer_, vao_](PipelinePassDescription* desc,Pipeline* pipe) {
+  pass->process_ = [buffer_, vao_](PipelinePass& pass, Pipeline& pipe) {
 
-    auto count(pipe->get_scene().bounding_boxes_.size());
+    auto count(pipe.get_scene().bounding_boxes_.size());
 
     if (count > 0) {
 
-      RenderContext const& ctx(pipe->get_context());
+      RenderContext const& ctx(pipe.get_context());
 
       ctx.render_device->resize_buffer(buffer_, count * 2 * sizeof(math::vec3));
 
@@ -84,25 +85,25 @@ PipelinePass* BBoxPassDescription::make_pass(RenderContext const& ctx) const {
                               buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
       for (int i(0); i<count; ++i) {
-        data[2*i]   = pipe->get_scene().bounding_boxes_[i].min;
-        data[2*i+1] = pipe->get_scene().bounding_boxes_[i].max;
+        data[2*i]   = pipe.get_scene().bounding_boxes_[i].min;
+        data[2*i+1] = pipe.get_scene().bounding_boxes_[i].max;
       }
 
       ctx.render_context->unmap_buffer(buffer_);
-      if (pass->rasterizer_state_)
-        ctx.render_context->set_rasterizer_state(pass->rasterizer_state_);
+      if (pass.rasterizer_state_)
+        ctx.render_context->set_rasterizer_state(pass.rasterizer_state_);
 
       // bind gbuffer
-      pipe->get_gbuffer().bind(ctx, pass);
-      pipe->get_gbuffer().set_viewport(ctx);
+      pipe.get_gbuffer().bind(ctx, &pass);
+      pipe.get_gbuffer().set_viewport(ctx);
 
-      pass->shader_->use(ctx);
-      pipe->bind_gbuffer_input(pass->shader_);
+      pass.shader_->use(ctx);
+      pipe.bind_gbuffer_input(pass.shader_);
       ctx.render_context->bind_vertex_array(vao_);
 
       ctx.render_context->apply();
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, count);
-      pipe->get_gbuffer().unbind(ctx);
+      pipe.get_gbuffer().unbind(ctx);
 
       ctx.render_context->reset_state_objects();
     }
