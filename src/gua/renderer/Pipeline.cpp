@@ -87,7 +87,6 @@ void serialize(SceneGraph const& scene_graph, bool is_left,
   Serializer serializer;
   serializer.check(out, scene_graph,
                    camera.config.mask(),
-                   camera.config.enable_bbox_display(),
                    camera.config.enable_ray_display(),
                    camera.config.enable_frustum_culling());
 }
@@ -127,7 +126,7 @@ std::vector<PipelinePass*> const& Pipeline::get_passes() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::process(node::SerializedCameraNode const& camera,
+void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& camera,
                        std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                        float application_fps, float rendering_fps) {
 
@@ -151,33 +150,16 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
 
   bool reload_gbuffer(false);
 
-  std::shared_ptr<WindowBase> window;
-
-  if (camera.config.get_output_window_name() != "") {
-    window = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
-
-    // reload gbuffer if now rendering to another window (with a new context)
-    if (context_ != window->get_context()) {
-      context_ = window->get_context();
-      reload_gbuffer = true;
-    }
-  }
-
-  // update window if one is assigned
-  if (window) {
-    if (!window->get_is_open()) {
-      window->open();
-      window->create_shader();
-    }
-    window->set_active(true);
+  // reload gbuffer if now rendering to another window (with a new context)
+  if (context_ != ctx) {
+    context_ = ctx;
+    reload_gbuffer = true;
   }
 
   // execute all prerender cameras
   for (auto const& cam: camera.pre_render_cameras) {
-    cam.rendering_pipeline->context_ = context_;
-    cam.rendering_pipeline->process(cam, scene_graphs, application_fps, rendering_fps);
+    cam.rendering_pipeline->process(ctx, cam, scene_graphs, application_fps, rendering_fps);
   }
-
 
   // recreate gbuffer if resolution changed
   if (last_resolution_ != camera.config.get_resolution()) {
@@ -216,10 +198,10 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
   }
 
   // get scenegraph which shall be rendered
-  SceneGraph const* current_graph = nullptr;
+  current_graph_ = nullptr;
   for (auto& graph: scene_graphs) {
     if (graph->get_name() == camera.config.get_scene_graph_name()) {
-      current_graph = graph.get();
+      current_graph_ = graph.get();
       break;
     }
   }
@@ -234,7 +216,7 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     context_->mode = mode;
 
     // serialize this scenegraph
-    serialize(*current_graph, mode != CameraMode::RIGHT, camera, current_scene_);
+    serialize(*current_graph_, mode != CameraMode::RIGHT, camera, current_scene_);
 
     camera_block_->update(get_context().render_context, current_scene_.frustum);
     bind_camera_uniform_block(0);
@@ -268,9 +250,11 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
       TextureDatabase::instance()->add(tex_name, tex);
     }
 
-    // display the last written colorbuffer of the gbuffer
-    if (window) {
-      window->display(tex, mode != CameraMode::RIGHT);
+    if (camera.config.get_output_window_name() != "") {
+      auto window = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
+      if (window) {
+        window->display(tex, mode != CameraMode::RIGHT);
+      }
     }
   };
 
@@ -278,13 +262,7 @@ void Pipeline::process(node::SerializedCameraNode const& camera,
     process_passes(CameraMode::LEFT);
     process_passes(CameraMode::RIGHT);
   } else {
-    process_passes(CameraMode::CENTER);
-  }
-
-  // swap buffers
-  if (window) {
-    window->finish_frame();
-    ++(window->get_context()->framecount);
+    process_passes(camera.config.get_mono_mode());
   }
 }
 
@@ -314,6 +292,12 @@ SerializedScene const& Pipeline::get_scene() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+SceneGraph const& Pipeline::get_graph() const {
+  return *current_graph_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const {
 
   auto& ctx(get_context());
@@ -330,7 +314,9 @@ void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) 
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::bind_camera_uniform_block(unsigned location) const {
-  get_context().render_context->bind_uniform_buffer(camera_block_->block().block_buffer(), location);
+  get_context().render_context->bind_uniform_buffer(
+    camera_block_->block().block_buffer(), location
+  );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -338,25 +324,11 @@ void Pipeline::bind_camera_uniform_block(unsigned location) const {
 void Pipeline::draw_fullscreen_quad() {
   if (!fullscreen_quad_) {
     fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-              get_context().render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+      get_context().render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f))
+    );
   }
 
   fullscreen_quad_->draw(get_context().render_context);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<RessourceRenderer> Pipeline::get_renderer(std::type_index const& id) {
-  auto renderer = renderers_.find(id);
-
-  if (renderer != renderers_.end()) {
-    return renderer->second;
-  }
-
-  auto new_renderer = RessourceRenderer::get_renderer(id);
-  renderers_[id] = new_renderer;
-
-  return new_renderer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

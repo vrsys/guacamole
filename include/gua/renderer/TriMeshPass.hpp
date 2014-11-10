@@ -19,27 +19,55 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_TRIMESH_PASS_HPP
+#define GUA_TRIMESH_PASS_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/VolumeLoader.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/LightingPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
-#include <gua/renderer/Material.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+#include <gua/renderer/PipelinePass.hpp>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+// external headers
+#include <scm/gl_core/buffer_objects.h>
+
+#include <typeindex>
+#include <memory>
+#include <unordered_map>
+
+namespace gua {
+
+class Pipeline;
+class TriMeshPass;
+
+class TriMeshPassDescription : public PipelinePassDescription {
+ public:
+  virtual PipelinePassDescription* make_copy() const;
+  friend class Pipeline;
+  
+ protected:
+  virtual PipelinePass* make_pass() const;
+};
+
+
+
+class TriMeshPass : public PipelinePass {
+ public:
+
+  virtual bool needs_color_buffer_as_input() const { return false; }
+  virtual bool writes_only_color_buffer()    const { return false; }
+  
+  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
+
+  friend class TriMeshPassDescription;
+
+ protected:
+  TriMeshPass();
+  ~TriMeshPass() {}
+
+ private:
+  std::string vertex_shader_;
+  std::string fragment_shader_;
+
+  mutable scm::gl::buffer_ptr material_uniform_storage_buffer_;
+};
+
+}
+
+#endif  // GUA_TRIMESH_PASS_HPP

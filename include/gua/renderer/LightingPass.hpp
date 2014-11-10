@@ -25,6 +25,7 @@
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/GeometryResource.hpp>
+#include <gua/renderer/ShadowMap.hpp>
 
 #include <memory>
 
@@ -60,9 +61,12 @@ class LightingPass : public PipelinePass {
   std::shared_ptr<ShaderProgram>      shader_;
   std::shared_ptr<ShaderProgram>      emit_shader_;
   std::shared_ptr<GeometryResource>   light_sphere_;
-  scm::gl::rasterizer_state_ptr       rasterizer_state_front_;
+  std::shared_ptr<GeometryResource>   light_cone_;
+  scm::gl::rasterizer_state_ptr       rasterizer_state_;
   scm::gl::depth_stencil_state_ptr    depth_stencil_state_;
   scm::gl::blend_state_ptr            blend_state_;
+
+  ShadowMap                           shadow_map_;
 };
 
 }

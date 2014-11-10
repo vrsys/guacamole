@@ -52,7 +52,6 @@ Serializer::Serializer()
     : data_(nullptr),
       current_frustum_(),
       current_center_of_interest_(),
-      draw_bounding_boxes_(false),
       draw_rays_(false),
       enable_frustum_culling_(false) {}
 
@@ -61,12 +60,10 @@ Serializer::Serializer()
 void Serializer::check(SerializedScene& output,
                        SceneGraph const& scene_graph,
                        Mask const& mask,
-                       bool draw_bounding_boxes,
                        bool draw_rays,
                        bool enable_frustum_culling) {
 
   data_ = &output;
-
 
   std::size_t geometry_count = data_->geometrynodes_.size();
   std::size_t volume_count = data_->volumenodes_.size();
@@ -83,12 +80,7 @@ void Serializer::check(SerializedScene& output,
 
   data_->bounding_boxes_.clear();
   data_->rays_.clear();
-  draw_bounding_boxes_ = draw_bounding_boxes;
   draw_rays_ = draw_rays;
-
-  if (draw_bounding_boxes_) {
-    data_->bounding_boxes_.reserve(geometry_count + point_light_count + spot_light_count + ray_count);
-  }
 
   if (draw_rays_) {
     data_->rays_.reserve(ray_count);
@@ -152,8 +144,6 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::TriMeshNode* node) {
 
   if (is_visible(node)) {
-    add_bbox(node);
-
     data_->geometrynodes_[std::type_index(typeid(*node))][node->get_material().get_shader_name()].push_back(node);
 
     visit_children(node);
@@ -167,7 +157,6 @@ void Serializer::check(SerializedScene& output,
 
   if ( is_visible(node) ) {
     if ( !node->data.get_volume().empty() ) {
-      add_bbox(node);
       data_->volumenodes_.push_back(node);
     }
 
@@ -180,9 +169,6 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::PointLightNode* node) {
 
   if (is_visible(node)) {
-
-    add_bbox(node);
-
     data_->point_lights_.push_back(node);
 
     visit_children(node);
@@ -194,9 +180,6 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::SpotLightNode* node) {
 
   if (is_visible(node)) {
-
-    add_bbox(node);
-
     data_->spot_lights_.push_back(node);
 
     visit_children(node);
@@ -233,9 +216,6 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::TexturedQuadNode* node) {
 
   if (is_visible(node)) {
-
-    add_bbox(node);
-
     // data_->geometrynodes_[std::type_index(typeid(*node))][node->get_texture()].push_back(node);
 
     visit_children(node);
@@ -259,16 +239,11 @@ bool Serializer::is_visible(node::Node* node) const {
     is_visible = current_render_mask_.check(node->get_tags());
   }
 
-  return is_visible;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-void Serializer::add_bbox(node::Node* node) const {
-  if (draw_bounding_boxes_) {
-    auto bbox(node->get_bounding_box());
-    data_->bounding_boxes_.push_back(bbox);
+  if (is_visible && node->get_draw_bounding_box()) {
+    data_->bounding_boxes_.push_back(node->get_bounding_box());
   }
+
+  return is_visible;
 }
 
 ////////////////////////////////////////////////////////////////////////

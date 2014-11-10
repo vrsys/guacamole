@@ -62,8 +62,32 @@ void Renderer::renderclient(Mailbox in) {
   fpsc.start();
 
   for (auto& x : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
-    std::get<0>(x)->rendering_pipeline->process(*std::get<0>(x), *std::get<1>(x), std::get<2>(x), fpsc.fps);
-    fpsc.step();
+
+    auto window_name(std::get<0>(x)->config.get_output_window_name());
+
+    if (window_name != "") {
+      auto window = WindowDatabase::instance()->lookup(window_name);
+
+      // update window if one is assigned
+      if (window) {
+        if (!window->get_is_open()) {
+          window->open();
+          window->create_shader();
+        }
+        window->set_active(true);
+      
+        std::get<0>(x)->rendering_pipeline->process(
+          window->get_context(), *std::get<0>(x), *std::get<1>(x), 
+          std::get<2>(x), fpsc.fps
+        );
+
+        // swap buffers
+        window->finish_frame();
+        ++(window->get_context()->framecount);
+
+        fpsc.step();
+      }
+    }
   }
 }
 

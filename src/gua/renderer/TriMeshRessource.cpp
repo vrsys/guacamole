@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/TriMeshRenderer.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/node/TriMeshNode.hpp>
@@ -49,10 +48,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 TriMeshRessource::TriMeshRessource()
-    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_(nullptr) {
-
-  register_renderer<node::TriMeshNode, TriMeshRenderer>();
-}
+    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,8 +60,6 @@ TriMeshRessource::TriMeshRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importe
       upload_mutex_(),
       mesh_(mesh),
       importer_(importer) {
-
-  register_renderer<node::TriMeshNode, TriMeshRenderer>();
 
   if (mesh_->HasPositions()) {
     bounding_box_ = math::BoundingBox<math::vec3>();
@@ -159,16 +153,13 @@ void TriMeshRessource::upload_to(RenderContext const& ctx) const {
                                          mesh_->mNumFaces * 3 * sizeof(unsigned),
                                          &index_array[0]);
 
-    std::vector<scm::gl::buffer_ptr> buffer_arrays;
-    buffer_arrays.push_back(vertices_[ctx.id]);
-
     vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
         scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
             0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
             0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
             0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
             0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex)),
-        buffer_arrays);
+        {vertices_[ctx.id]});
 
     ctx.render_context->apply();
   }
@@ -181,13 +172,8 @@ void TriMeshRessource::draw(RenderContext const& ctx) const {
   // upload to GPU if neccessary
   upload_to(ctx);
 
-  // scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
   ctx.render_context->bind_vertex_array(vertex_array_[ctx.id]);
-
-  ctx.render_context->bind_index_buffer(
-      indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
-
+  ctx.render_context->bind_index_buffer(indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
   ctx.render_context->apply_vertex_input();
   ctx.render_context->draw_elements(mesh_->mNumFaces * 3);
 }
@@ -225,5 +211,7 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const {
     face[j] = mesh_->mFaces[i].mIndices[j];
   return face;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

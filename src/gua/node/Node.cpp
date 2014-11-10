@@ -44,6 +44,7 @@ namespace node {
     name_(name),
     transform_(transform),
     bounding_box_(),
+    draw_bounding_box_(false),
     child_dirty_(true),
     self_dirty_(true),
     user_data_()
@@ -275,6 +276,18 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
+  void Node::set_draw_bounding_box(bool draw) {
+    draw_bounding_box_ = draw;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  bool Node::get_draw_bounding_box() const {
+    return draw_bounding_box_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
   std::set<PickResult> const Node::ray_test(RayNode const& ray,
                                             PickResult::Options options,
                                             Mask const& mask) {
@@ -324,6 +337,7 @@ namespace node {
   std::shared_ptr<Node> Node::deep_copy() const {
     std::shared_ptr<Node> copied_node = copy();
     copied_node->tags_ = tags_;
+    copied_node->draw_bounding_box_ = draw_bounding_box_;
     copied_node->children_.reserve(children_.size());
 
     for (auto const& child : children_) {

@@ -19,37 +19,21 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/RessourceRenderer.hpp>
+@include "shaders/common/header.glsl"
 
+// input
+layout(location=0) in vec3 gua_in_min;
+layout(location=1) in vec3 gua_in_max;
 
-namespace gua {
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
 
-////////////////////////////////////////////////////////////////////////////////
+// output
+out vec3 gua_min;
+out vec3 gua_max;
 
-creation_function_map RessourceRenderer::creation_functions_ = creation_function_map();
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RessourceRenderer::register_renderer(std::type_index const& id,
-                                          creation_function const& creation_function) {
-
-  creation_functions_[id] = creation_function;
+// body
+void main() { 
+    gua_min = gua_in_min;
+    gua_max = gua_in_max;
+    // gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_in_min, 1.0);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<RessourceRenderer> RessourceRenderer::get_renderer(std::type_index const& id) {
-  auto function(creation_functions_.find(id));
-
-  if (function != creation_functions_.end()) {
-    return function->second();
-  }
-
-  return nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
-

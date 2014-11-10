@@ -19,51 +19,18 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RESSOURCE_RENDERER_HPP
-#define GUA_RESSOURCE_RENDERER_HPP
+@include "shaders/common/header.glsl"
 
-// guacamole_headers
-#include <gua/platform.hpp>
+// varyings
+in vec2 gua_quad_coords;
 
-// external headers
-#include <functional>
-#include <memory>
-#include <map>
-#include <unordered_map>
-#include <vector>
-#include <typeindex>
-#include <string>
+@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+@include "shaders/gbuffer_input.glsl"
 
-namespace gua {
+// output
+layout(location=0) out vec3 gua_out_color;
 
-class Pipeline;
-
-namespace node {
-  class GeometryNode;
+void main() {
+    gua_out_color = vec3(1, 1, 1);
 }
 
-class Pipeline;
-
-class RessourceRenderer;
-typedef std::function<std::shared_ptr<RessourceRenderer>(void)> creation_function;
-typedef std::map<std::type_index, creation_function>            creation_function_map;
-
-class GUA_DLL RessourceRenderer {
-  public:
-
-    virtual void draw(std::unordered_map<std::string, std::vector<node::GeometryNode*>> const& sorted_objects,
-                      Pipeline* pipe) const = 0;
-
-    static void register_renderer(std::type_index const& id,
-                                  creation_function const& creation_function);
-
-    static std::shared_ptr<RessourceRenderer> get_renderer(std::type_index const& id);
-
-  private:
-    static creation_function_map creation_functions_;
-
-};
-
-}
-
-#endif  // GUA_RESSOURCE_RENDERER_HPP

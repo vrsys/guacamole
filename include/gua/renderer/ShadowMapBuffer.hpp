@@ -19,40 +19,40 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GEOMETRY_PASS_HPP
-#define GUA_GEOMETRY_PASS_HPP
+#ifndef GUA_SHADOW_MAP_BUFFER_HPP
+#define GUA_SHADOW_MAP_BUFFER_HPP
 
-#include <gua/renderer/PipelinePass.hpp>
+// guacamole headers
+#include <gua/renderer/FrameBufferObject.hpp>
+#include <gua/renderer/enums.hpp>
 
 namespace gua {
 
-class Pipeline;
-class GeometryPass;
-
-class GeometryPassDescription : public PipelinePassDescription {
- public:
-  virtual PipelinePassDescription* make_copy() const;
-  friend class Pipeline;
-  
- protected:
-  virtual PipelinePass* make_pass() const;
-};
-
-class GeometryPass : public PipelinePass {
+class ShadowMapBuffer {
  public:
 
-  virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer()    const { return false; }
-  
-  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
+  ShadowMapBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
 
-  friend class GeometryPassDescription;
+  void clear(RenderContext const& context);
+  void set_viewport(RenderContext const& context);
 
- protected:
-  GeometryPass() {}
-  ~GeometryPass() {}
+  void bind(RenderContext const& context);
+  void unbind(RenderContext const& context);
+
+  void remove_buffers(RenderContext const& ctx);
+
+  std::shared_ptr<Texture2D> const& get_depth_buffer()  const;
+
+  unsigned get_width()  const { return width_; }
+  unsigned get_height() const { return height_; }
+
+ private:
+  std::shared_ptr<FrameBufferObject> fbo_;
+  std::shared_ptr<Texture2D> depth_buffer_;
+
+  unsigned width_, height_;
 };
 
 }
 
-#endif  // GUA_GEOMETRY_PASS_HPP
+#endif  // GUA_SHADOW_MAP_BUFFER_HPP

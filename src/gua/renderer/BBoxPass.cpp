@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/BackgroundPass.hpp>
+#include <gua/renderer/BBoxPass.hpp>
 
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -32,53 +32,86 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* BackgroundPassDescription::make_copy() const {
-  return new BackgroundPassDescription(*this);
+PipelinePassDescription* BBoxPassDescription::make_copy() const {
+  return new BBoxPassDescription(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* BackgroundPassDescription::make_pass() const {
-  return new BackgroundPass();
+PipelinePass* BBoxPassDescription::make_pass() const {
+  return new BBoxPass();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BackgroundPass::BackgroundPass() :
+BBoxPass::BBoxPass() :
   shader_(std::make_shared<ShaderProgram>()),
-  depth_stencil_state_(nullptr) {
+  buffer_(nullptr),
+  vao_(nullptr) {
 
   shader_ = std::make_shared<ShaderProgram>();
   shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
-    Resources::lookup_shader(Resources::shaders_background_frag)
+    Resources::lookup_shader(Resources::shaders_bbox_vert),
+    Resources::lookup_shader(Resources::shaders_bbox_geom),
+    Resources::lookup_shader(Resources::shaders_bbox_frag)
   );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void BackgroundPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
-  RenderContext const& ctx(pipe->get_context());
-
-  if (!depth_stencil_state_) {
-    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
-  }
-
-  // bind gbuffer
-  pipe->get_gbuffer().bind(ctx, this);
-  pipe->get_gbuffer().set_viewport(ctx);
-
-  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-
-  shader_->use(ctx);
-  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_width(),  "gua_texel_width");
-  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(),  "gua_texel_height");
-  shader_->set_uniform(ctx, pipe->get_gbuffer().get_current_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
+void BBoxPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   
-  pipe->draw_fullscreen_quad();
-  pipe->get_gbuffer().unbind(ctx);
+  auto count(pipe->get_scene().bounding_boxes_.size());
 
-  ctx.render_context->reset_state_objects();
+  if (count > 0) {
+
+    RenderContext const& ctx(pipe->get_context());
+
+    if (!buffer_) {
+      buffer_ = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
+                                       scm::gl::USAGE_DYNAMIC_DRAW,
+                                       count * 2 * sizeof(math::vec3),
+                                       0);
+
+      vao_ = ctx.render_device->create_vertex_array(
+        scm::gl::vertex_format(
+            0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
+            0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)), {buffer_});
+
+      rasterizer_state_ = ctx.render_device->create_rasterizer_state(
+        scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false, 
+        false, 0.0f, false, true, scm::gl::point_raster_state(true)
+      );
+    }
+
+    ctx.render_device->resize_buffer(buffer_, count * 2 * sizeof(math::vec3));
+
+    math::vec3* data(static_cast<math::vec3*>(ctx.render_context->map_buffer(
+                            buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+
+    for (int i(0); i<count; ++i) {
+      data[2*i]   = pipe->get_scene().bounding_boxes_[i].min;
+      data[2*i+1] = pipe->get_scene().bounding_boxes_[i].max;
+    }
+
+
+    ctx.render_context->unmap_buffer(buffer_);
+    ctx.render_context->set_rasterizer_state(rasterizer_state_);
+
+    // bind gbuffer
+    pipe->get_gbuffer().bind(ctx, this);
+    pipe->get_gbuffer().set_viewport(ctx);
+
+    shader_->use(ctx);
+
+    ctx.render_context->bind_vertex_array(vao_);
+
+    ctx.render_context->apply();
+    ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, count);
+    pipe->get_gbuffer().unbind(ctx);
+
+    ctx.render_context->reset_state_objects();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -19,34 +19,49 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TRI_MESH_RENDERER_HPP
-#define GUA_TRI_MESH_RENDERER_HPP
+#ifndef GUA_BBOX_PASS_HPP
+#define GUA_BBOX_PASS_HPP
 
-// guacamole_headers
-#include <gua/renderer/RessourceRenderer.hpp>
+#include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
-// external headers
-#include <scm/gl_core/buffer_objects.h>
+#include <memory>
 
 namespace gua {
 
-class ShaderProgram;
+class Pipeline;
+class BBoxPass;
 
-class GUA_DLL TriMeshRenderer : public RessourceRenderer {
+class BBoxPassDescription : public PipelinePassDescription {
+ public:
+  virtual PipelinePassDescription* make_copy() const;
+  friend class Pipeline;
+  
+ protected:
+  virtual PipelinePass* make_pass() const;
+};
+
+class BBoxPass : public PipelinePass {
  public:
 
-  TriMeshRenderer();
+  virtual bool needs_color_buffer_as_input() const { return false; }
+  virtual bool writes_only_color_buffer()    const { return true;  }
 
-  void draw(std::unordered_map<std::string, std::vector<node::GeometryNode*>> const& sorted_objects,
-            Pipeline* pipe) const;
+  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
+
+  friend class BBoxPassDescription;
+
+ protected:
+  BBoxPass();
+  ~BBoxPass() {}
 
  private:
-  std::string vertex_shader_;
-  std::string fragment_shader_;
-
-  mutable scm::gl::buffer_ptr material_uniform_storage_buffer_;
+  std::shared_ptr<ShaderProgram>   shader_;
+  scm::gl::rasterizer_state_ptr    rasterizer_state_;        
+  scm::gl::buffer_ptr              buffer_;
+  scm::gl::vertex_array_ptr        vao_;
 };
 
 }
 
-#endif  // GUA_TRI_MESH_RENDERER_HPP
+#endif  // GUA_BBOX_PASS_HPP

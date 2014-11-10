@@ -326,6 +326,15 @@ class GUA_DLL Node {
   virtual void update_bounding_box() const;
 
   /**
+   * Draw a Node's BoundingBox.
+   *
+   * If set to true and the current pipeline contains a bounding box pass the
+   * node's bounding box will be drawn.
+   */
+  void set_draw_bounding_box(bool draw);
+  bool get_draw_bounding_box() const;
+
+  /**
    * Intersects a Node with a given RayNode.
    *
    * The function checks wheter a given RayNode intersects the Node or not. If
@@ -467,6 +476,7 @@ class GUA_DLL Node {
 
   // up (cached) annotations
   mutable math::BoundingBox<math::vec3> bounding_box_;
+  bool draw_bounding_box_;
 
   // down (cached) annotations
   mutable math::mat4 world_transform_;
