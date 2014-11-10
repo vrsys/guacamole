@@ -87,7 +87,6 @@ PipelinePassDescription* SSAOPassDescription::make_copy() const {
 PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
   PipelinePass pass{};
 
-  pass.description_ = this;
   pass.shader_ = std::make_shared<ShaderProgram>();
   pass.shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
@@ -107,7 +106,7 @@ PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
 
   auto noise_texture_ = std::make_shared<NoiseTexture>();
 
-  pass.process_ = [noise_texture_](PipelinePass& pass,Pipeline& pipe) {
+  pass.process_ = [noise_texture_](PipelinePass& pass, PipelinePassDescription* desc, Pipeline& pipe) {
     auto const& ctx(pipe.get_context());
 
     // bind gbuffer
@@ -121,11 +120,13 @@ PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
 
     pass.shader_->use(ctx);
 
-    SSAOPassDescription const* d(dynamic_cast<SSAOPassDescription const*>(pass.description_));
+    SSAOPassDescription const* d(dynamic_cast<SSAOPassDescription const*>(desc));
+    if (d) {
+      pass.shader_->set_uniform(ctx, d->radius(),    "gua_ssao_radius");
+      pass.shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
+      pass.shader_->set_uniform(ctx, d->falloff(),   "gua_ssao_falloff");
+    }
     pass.shader_->set_uniform(ctx, noise_texture_->get_handle(ctx), "gua_noise_tex");
-    pass.shader_->set_uniform(ctx, d->radius(),    "gua_ssao_radius");
-    pass.shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
-    pass.shader_->set_uniform(ctx, d->falloff(),   "gua_ssao_falloff");
 
     pipe.bind_gbuffer_input(pass.shader_);
     pipe.draw_fullscreen_quad();

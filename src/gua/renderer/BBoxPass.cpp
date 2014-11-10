@@ -41,7 +41,6 @@ PipelinePassDescription* BBoxPassDescription::make_copy() const {
 PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
   PipelinePass pass{};
 
-  pass.description_ = this;
   pass.shader_ = std::make_shared<ShaderProgram>(),
   pass.shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_bbox_vert),
@@ -71,7 +70,7 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
         0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
         0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)), {buffer_});
 
-  pass.process_ = [buffer_, vao_](PipelinePass& pass, Pipeline& pipe) {
+  pass.process_ = [buffer_, vao_](PipelinePass& pass, PipelinePassDescription*, Pipeline& pipe) {
 
     auto count(pipe.get_scene().bounding_boxes_.size());
 
