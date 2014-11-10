@@ -62,8 +62,6 @@ class PipelinePass {
  protected:
  public: // for refactoring purposes
   PipelinePass() {}
-  PipelinePass(bool in, bool out)
-        : needs_color_buffer_as_input_(in), writes_only_color_buffer_(out) {}
   ~PipelinePass() {}
 
   std::shared_ptr<ShaderProgram> shader_ = nullptr;
