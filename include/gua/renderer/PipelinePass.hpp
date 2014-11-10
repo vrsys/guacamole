@@ -31,6 +31,8 @@ class Pipeline;
 class PipelinePass;
 class RenderContext;
 
+enum class RenderMode { Callback };
+
 class PipelinePassDescription {
  public:
 
@@ -52,8 +54,25 @@ class PipelinePass {
     return writes_only_color_buffer_;
   }
 
-  virtual void process(PipelinePassDescription* desc, Pipeline& pipe) {
+  void process(PipelinePassDescription* desc, Pipeline& pipe) {
+#if 0
+    auto const& ctx(pipe.get_context());
+    pipe.get_gbuffer().bind(ctx, &pass);
+    pipe.get_gbuffer().set_viewport(ctx);
+    //pipe.get_gbuffer().clear_color(ctx);
+    if (depth_stencil_state_)
+      ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+    if (blend_state_)
+      ctx.render_context->set_blend_state(pass.blend_state_);
+    if (rasterizer_state_)
+      ctx.render_context->set_rasterizer_state(rasterizer_state_);
+    shader_->use(ctx);
+#endif
     process_(*this, desc, pipe);
+#if 0
+    pipe.get_gbuffer().unbind(ctx);
+    ctx.render_context->reset_state_objects();
+#endif
   }
   virtual void on_delete(Pipeline* pipe) {};
 
@@ -75,6 +94,7 @@ class PipelinePass {
 
   std::function<void(PipelinePass&, PipelinePassDescription* desc, Pipeline&)> process_ =
     [](PipelinePass&, PipelinePassDescription*, Pipeline&) { return; };
+  RenderMode rendermode_ = RenderMode::Callback;
 };
 
 }
