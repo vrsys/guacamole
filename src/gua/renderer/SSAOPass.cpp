@@ -83,63 +83,57 @@ PipelinePassDescription* SSAOPassDescription::make_copy() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-  
+
 PipelinePass* SSAOPassDescription::make_pass(RenderContext const& ctx) const {
-  return new SSAOPass();
-}
+  auto pass = new PipelinePass();
 
-////////////////////////////////////////////////////////////////////////////////
-
-SSAOPass::SSAOPass() :
-  shader_(std::make_shared<ShaderProgram>()),
-  depth_stencil_state_(nullptr),
-  blend_state_(nullptr),
-  noise_texture_() {
-
-  shader_ = std::make_shared<ShaderProgram>();
-  shader_->create_from_sources(
+  pass->shader_ = std::make_shared<ShaderProgram>();
+  pass->shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
     Resources::lookup_shader(Resources::shaders_ssao_frag)
   );
-}
 
-////////////////////////////////////////////////////////////////////////////////
+  pass->needs_color_buffer_as_input_ = false;
+  pass->writes_only_color_buffer_ = true;
 
-void SSAOPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
-  SSAOPassDescription* d(dynamic_cast<SSAOPassDescription*>(desc));
-  RenderContext const& ctx(pipe->get_context());
+  pass->rasterizer_state_ = nullptr;
+  pass->depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
+  pass->blend_state_ = ctx.render_device->create_blend_state(
+    true,
+    scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
+    scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA
+  );
 
-  if (!depth_stencil_state_) {
-    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
-  }
+  auto noise_texture_ = std::make_shared<NoiseTexture>();
 
-  if (!blend_state_) {
-    blend_state_ = ctx.render_device->create_blend_state(
-      true,
-      scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
-      scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA
-    );
-  }
+  pass->process_ = [=](PipelinePassDescription* desc,Pipeline* pipe) {
+    auto const& ctx(pipe->get_context());
 
-  // bind gbuffer
-  pipe->get_gbuffer().bind(ctx, this);
-  pipe->get_gbuffer().set_viewport(ctx);
+    // bind gbuffer
+    pipe->get_gbuffer().bind(ctx, pass);
+    pipe->get_gbuffer().set_viewport(ctx);
 
-  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-  ctx.render_context->set_blend_state(blend_state_);
+    if (pass->depth_stencil_state_)
+      ctx.render_context->set_depth_stencil_state(pass->depth_stencil_state_);
+    if (pass->blend_state_)
+      ctx.render_context->set_blend_state(pass->blend_state_);
 
-  shader_->use(ctx);
+    pass->shader_->use(ctx);
 
-  shader_->set_uniform(ctx, noise_texture_.get_handle(ctx), "gua_noise_tex");
-  shader_->set_uniform(ctx, d->radius(),    "gua_ssao_radius");
-  shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
-  shader_->set_uniform(ctx, d->falloff(),   "gua_ssao_falloff");
+    SSAOPassDescription* d(dynamic_cast<SSAOPassDescription*>(desc));
+    pass->shader_->set_uniform(ctx, noise_texture_->get_handle(ctx), "gua_noise_tex");
+    pass->shader_->set_uniform(ctx, d->radius(),    "gua_ssao_radius");
+    pass->shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
+    pass->shader_->set_uniform(ctx, d->falloff(),   "gua_ssao_falloff");
 
-  pipe->bind_gbuffer_input(shader_);
-  pipe->draw_fullscreen_quad();
-  pipe->get_gbuffer().unbind(ctx);
+    pipe->bind_gbuffer_input(pass->shader_);
+    pipe->draw_fullscreen_quad();
+    pipe->get_gbuffer().unbind(ctx);
 
-  ctx.render_context->reset_state_objects();
+    ctx.render_context->reset_state_objects();
+
+  };
+  return pass;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

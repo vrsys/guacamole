@@ -32,7 +32,6 @@
 namespace gua {
 
 class Pipeline;
-class SSAOPass;
 
 class SSAOPassDescription : public PipelinePassDescription {
  public:
@@ -54,33 +53,10 @@ class SSAOPassDescription : public PipelinePassDescription {
   friend class Pipeline;
   
  protected:
-  virtual PipelinePass* make_pass(RenderContext const& ctx) const;
+  virtual PipelinePass* make_pass(RenderContext const&) const;
   float radius_;
   float intensity_;
   float falloff_;
-};
-
-
-
-class SSAOPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer()    const { return true;  }
-
-  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
-
-  friend class SSAOPassDescription;
-
- protected:
-  SSAOPass();
-  ~SSAOPass() {}
-
- private:
-  std::shared_ptr<ShaderProgram>   shader_;
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::blend_state_ptr         blend_state_;
-  NoiseTexture                     noise_texture_;
 };
 
 }

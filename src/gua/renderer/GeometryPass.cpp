@@ -40,47 +40,53 @@ PipelinePassDescription* GeometryPassDescription::make_copy() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass* GeometryPassDescription::make_pass(RenderContext const& ctx) const {
-  return new GeometryPass();
-}
+  auto pass = new PipelinePass{};
 
-////////////////////////////////////////////////////////////////////////////////
+  pass->needs_color_buffer_as_input_ = false;
+  pass->writes_only_color_buffer_ = false;
 
-void GeometryPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
-  RenderContext const& ctx(pipe->get_context());
+  auto renderers_ = std::make_shared<
+    std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>>>();
 
-  pipe->get_gbuffer().bind(ctx, this);
-  pipe->get_gbuffer().set_viewport(ctx);
+  pass->process_ = [=](PipelinePassDescription* desc,Pipeline* pipe) {
 
-  for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
-    auto const& ressources = type_ressource_pair.second;
-    if (ressources.size() > 0 && ressources.begin()->second.size() > 0) {
-      auto const& renderer = get_renderer(type_ressource_pair.first);
-      if (renderer)
-        renderer->draw(ressources, pipe);
-      else
-        Logger::LOG_WARNING << "Unable to render geometry of type "
-                            << type_ressource_pair.first.name()
-                            << ": No renderer registered!"
-                            << std::endl;
+    auto get_renderer = [&](std::type_index const& id)
+        -> std::shared_ptr<RessourceRenderer> {
+      auto renderer = renderers_->find(id);
+
+      if (renderer != renderers_->end()) {
+        return renderer->second;
+      }
+
+      auto new_renderer = RessourceRenderer::get_renderer(id);
+      (*renderers_)[id] = new_renderer;
+
+      return new_renderer;
+    };
+
+    auto const& ctx(pipe->get_context());
+
+    pipe->get_gbuffer().bind(ctx, pass);
+    pipe->get_gbuffer().set_viewport(ctx);
+
+    for (auto const& type_ressource_pair : pipe->get_scene().geometrynodes_) {
+      auto const& ressources = type_ressource_pair.second;
+      if (ressources.size() > 0 && ressources.begin()->second.size() > 0) {
+        auto const& renderer = get_renderer(type_ressource_pair.first);
+        if (renderer)
+          renderer->draw(ressources, pipe);
+        else
+          Logger::LOG_WARNING << "Unable to render geometry of type "
+                              << type_ressource_pair.first.name()
+                              << ": No renderer registered!"
+                              << std::endl;
+      }
     }
-  }
 
-  pipe->get_gbuffer().unbind(ctx);
-}
+    pipe->get_gbuffer().unbind(ctx);
+  };
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<RessourceRenderer> GeometryPass::get_renderer(std::type_index const& id) {
-  auto renderer = renderers_.find(id);
-
-  if (renderer != renderers_.end()) {
-    return renderer->second;
-  }
-
-  auto new_renderer = RessourceRenderer::get_renderer(id);
-  renderers_[id] = new_renderer;
-
-  return new_renderer;
+  return pass;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
