@@ -39,7 +39,7 @@ PipelinePassDescription* GeometryPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* GeometryPassDescription::make_pass() const {
+PipelinePass* GeometryPassDescription::make_pass(RenderContext const& ctx) const {
   return new GeometryPass();
 }
 

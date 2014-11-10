@@ -38,7 +38,7 @@ PipelinePassDescription* BBoxPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* BBoxPassDescription::make_pass() const {
+PipelinePass* BBoxPassDescription::make_pass(RenderContext const& ctx) const {
   return new BBoxPass();
 }
 
