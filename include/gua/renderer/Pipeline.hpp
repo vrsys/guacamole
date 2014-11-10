@@ -59,7 +59,7 @@ class Pipeline {
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_camera_uniform_block(unsigned location) const;
-  void draw_fullscreen_quad();
+  void draw_quad();
 
  private:
 
@@ -78,7 +78,7 @@ class Pipeline {
   PipelineDescription                last_description_;
 
   std::vector<PipelinePass*>         passes_;
-  scm::gl::quad_geometry_ptr         fullscreen_quad_;
+  scm::gl::quad_geometry_ptr         quad_;
 
 };
 

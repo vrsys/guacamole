@@ -172,7 +172,7 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::TexturedQuadNode* node) {
 
   if (is_visible(node)) {
-    // data_->nodes[std::type_index(typeid(*node))][node->get_texture()].push_back(node);
+    data_->nodes[std::type_index(typeid(*node))].push_back(node);
 
     visit_children(node);
   }

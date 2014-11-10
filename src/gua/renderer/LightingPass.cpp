@@ -100,7 +100,7 @@ void LightingPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   emit_shader_->set_uniform(ctx, pipe->get_gbuffer().get_current_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
   emit_shader_->set_uniform(ctx, pipe->get_gbuffer().get_current_pbr_buffer()->get_handle(ctx),  "gua_gbuffer_pbr");
 
-  pipe->draw_fullscreen_quad();
+  pipe->draw_quad();
 
   // draw proxy geometries for light sources
   ctx.render_context->set_rasterizer_state(rasterizer_state_);

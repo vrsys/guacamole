@@ -20,65 +20,51 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/BackgroundPass.hpp>
+#include <gua/renderer/TexturedQuadPass.hpp>
 
+#include <gua/node/TexturedQuadNode.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/databases/Resources.hpp>
+
+#define USE_UBO 0 // also set in MaterialShader.cpp
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* BackgroundPassDescription::make_copy() const {
-  return new BackgroundPassDescription(*this);
+PipelinePassDescription* TexturedQuadPassDescription::make_copy() const {
+  return new TexturedQuadPassDescription(*this);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass* TexturedQuadPassDescription::make_pass() const {
+  return new TexturedQuadPass();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* BackgroundPassDescription::make_pass() const {
-  return new BackgroundPass();
+TexturedQuadPass::TexturedQuadPass() {
+  // shader_.create_from_sources(
+  //   Resources::lookup_shader(Resources::shaders_textured_quad_vert), 
+  //   Resources::lookup_shader(Resources::shaders_textured_quad_frag)
+  // );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BackgroundPass::BackgroundPass() :
-  shader_(std::make_shared<ShaderProgram>()),
-  depth_stencil_state_(nullptr) {
+void TexturedQuadPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
+  for (auto const& node : pipe->get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
+    auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
 
-  shader_ = std::make_shared<ShaderProgram>();
-  shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
-    Resources::lookup_shader(Resources::shaders_background_frag)
-  );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void BackgroundPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
-  RenderContext const& ctx(pipe->get_context());
-
-  if (!depth_stencil_state_) {
-    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
+    // shader_.set_uniform(ctx, quad_node->get_scaled_world_transform(), "gua_model_matrix");
+    // shader_.set_uniform(ctx, quad_node->data.get_falloff(),           "gua_texture");
+    
+    // pipe->draw_quad();
   }
-
-  // bind gbuffer
-  pipe->get_gbuffer().bind(ctx, this);
-  pipe->get_gbuffer().set_viewport(ctx);
-
-  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-
-  shader_->use(ctx);
-  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_width(),  "gua_texel_width");
-  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(),  "gua_texel_height");
-  shader_->set_uniform(ctx, pipe->get_gbuffer().get_current_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
-  
-  pipe->draw_quad();
-  pipe->get_gbuffer().unbind(ctx);
-
-  ctx.render_context->reset_state_objects();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
