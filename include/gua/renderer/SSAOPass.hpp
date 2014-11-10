@@ -53,7 +53,7 @@ class SSAOPassDescription : public PipelinePassDescription {
   friend class Pipeline;
   
  protected:
-  virtual PipelinePass* make_pass(RenderContext const&) const;
+  virtual PipelinePass make_pass(RenderContext const&) const;
   float radius_;
   float intensity_;
   float falloff_;

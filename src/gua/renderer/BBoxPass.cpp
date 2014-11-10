@@ -38,26 +38,26 @@ PipelinePassDescription* BBoxPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* BBoxPassDescription::make_pass(RenderContext const& ctx) const {
-  auto pass = new PipelinePass{};
+PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
+  PipelinePass pass{};
 
-  pass->description_ = this;
-  pass->shader_ = std::make_shared<ShaderProgram>(),
-  pass->shader_->create_from_sources(
+  pass.description_ = this;
+  pass.shader_ = std::make_shared<ShaderProgram>(),
+  pass.shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_bbox_vert),
     Resources::lookup_shader(Resources::shaders_bbox_geom),
     Resources::lookup_shader(Resources::shaders_bbox_frag)
   );
 
-  pass->needs_color_buffer_as_input_ = false;
-  pass->writes_only_color_buffer_ = true;
+  pass.needs_color_buffer_as_input_ = false;
+  pass.writes_only_color_buffer_ = true;
 
-  pass->rasterizer_state_ = ctx.render_device->create_rasterizer_state(
+  pass.rasterizer_state_ = ctx.render_device->create_rasterizer_state(
     scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false,
     false, 0.0f, false, true, scm::gl::point_raster_state(true)
   );
-  pass->depth_stencil_state_ = nullptr;
-  pass->blend_state_ = nullptr;
+  pass.depth_stencil_state_ = nullptr;
+  pass.blend_state_ = nullptr;
 
   auto count = 1;
   scm::gl::buffer_ptr buffer_ = ctx.render_device->create_buffer(
@@ -71,7 +71,7 @@ PipelinePass* BBoxPassDescription::make_pass(RenderContext const& ctx) const {
         0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
         0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)), {buffer_});
 
-  pass->process_ = [buffer_, vao_](PipelinePass& pass, Pipeline& pipe) {
+  pass.process_ = [buffer_, vao_](PipelinePass& pass, Pipeline& pipe) {
 
     auto count(pipe.get_scene().bounding_boxes_.size());
 

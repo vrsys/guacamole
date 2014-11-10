@@ -84,22 +84,22 @@ PipelinePassDescription* SSAOPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* SSAOPassDescription::make_pass(RenderContext const& ctx) const {
-  auto pass = new PipelinePass();
+PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
+  PipelinePass pass{};
 
-  pass->description_ = this;
-  pass->shader_ = std::make_shared<ShaderProgram>();
-  pass->shader_->create_from_sources(
+  pass.description_ = this;
+  pass.shader_ = std::make_shared<ShaderProgram>();
+  pass.shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
     Resources::lookup_shader(Resources::shaders_ssao_frag)
   );
 
-  pass->needs_color_buffer_as_input_ = false;
-  pass->writes_only_color_buffer_ = true;
+  pass.needs_color_buffer_as_input_ = false;
+  pass.writes_only_color_buffer_ = true;
 
-  pass->rasterizer_state_ = nullptr;
-  pass->depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
-  pass->blend_state_ = ctx.render_device->create_blend_state(
+  pass.rasterizer_state_ = nullptr;
+  pass.depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
+  pass.blend_state_ = ctx.render_device->create_blend_state(
     true,
     scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
     scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA
@@ -107,7 +107,7 @@ PipelinePass* SSAOPassDescription::make_pass(RenderContext const& ctx) const {
 
   auto noise_texture_ = std::make_shared<NoiseTexture>();
 
-  pass->process_ = [noise_texture_](PipelinePass& pass,Pipeline& pipe) {
+  pass.process_ = [noise_texture_](PipelinePass& pass,Pipeline& pipe) {
     auto const& ctx(pipe.get_context());
 
     // bind gbuffer
