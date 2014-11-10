@@ -19,10 +19,13 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GEOMETRY_PASS_HPP
-#define GUA_GEOMETRY_PASS_HPP
+#ifndef GUA_TRIMESH_PASS_HPP
+#define GUA_TRIMESH_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
+
+// external headers
+#include <scm/gl_core/buffer_objects.h>
 
 #include <typeindex>
 #include <memory>
@@ -31,10 +34,9 @@
 namespace gua {
 
 class Pipeline;
-class RessourceRenderer;
-class GeometryPass;
+class TriMeshPass;
 
-class GeometryPassDescription : public PipelinePassDescription {
+class TriMeshPassDescription : public PipelinePassDescription {
  public:
   virtual PipelinePassDescription* make_copy() const;
   friend class Pipeline;
@@ -43,7 +45,9 @@ class GeometryPassDescription : public PipelinePassDescription {
   virtual PipelinePass* make_pass() const;
 };
 
-class GeometryPass : public PipelinePass {
+
+
+class TriMeshPass : public PipelinePass {
  public:
 
   virtual bool needs_color_buffer_as_input() const { return false; }
@@ -51,18 +55,19 @@ class GeometryPass : public PipelinePass {
   
   virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
 
-  friend class GeometryPassDescription;
+  friend class TriMeshPassDescription;
 
  protected:
-  GeometryPass() {}
-  ~GeometryPass() {}
-
-  std::shared_ptr<RessourceRenderer> get_renderer(std::type_index const& id);
+  TriMeshPass();
+  ~TriMeshPass() {}
 
  private:
-  std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_;
+  std::string vertex_shader_;
+  std::string fragment_shader_;
+
+  mutable scm::gl::buffer_ptr material_uniform_storage_buffer_;
 };
 
 }
 
-#endif  // GUA_GEOMETRY_PASS_HPP
+#endif  // GUA_TRIMESH_PASS_HPP

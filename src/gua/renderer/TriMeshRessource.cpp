@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/TriMeshRenderer.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/node/TriMeshNode.hpp>
@@ -49,10 +48,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 TriMeshRessource::TriMeshRessource()
-    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_(nullptr) {
-
-  register_renderer<node::TriMeshNode, TriMeshRenderer>();
-}
+    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,8 +60,6 @@ TriMeshRessource::TriMeshRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importe
       upload_mutex_(),
       mesh_(mesh),
       importer_(importer) {
-
-  register_renderer<node::TriMeshNode, TriMeshRenderer>();
 
   if (mesh_->HasPositions()) {
     bounding_box_ = math::BoundingBox<math::vec3>();
@@ -219,9 +213,5 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<RessourceRenderer> TriMeshRessource::create_renderer() const {
-  return std::make_shared<TriMeshRenderer>();
-}
 
 }
