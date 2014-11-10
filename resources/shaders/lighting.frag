@@ -63,7 +63,7 @@ float gua_light_distance;
 float gua_light_intensity;
 
 // methods ---------------------------------------------------------------------
-@include "shaders/gbuffer_input.glsl"
+@include "shaders/common/gua_gbuffer_input.glsl"
 
 // -----------------------------------------------------------------------------
 // shadow calculations ---------------------------------------------------------

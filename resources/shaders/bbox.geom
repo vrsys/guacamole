@@ -21,7 +21,7 @@
 
 
 @include "shaders/common/header.glsl"
-@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+@include "shaders/common/gua_camera_uniforms.glsl"
 
 layout(points) in;
 layout(line_strip, max_vertices = 16) out;
