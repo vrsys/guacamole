@@ -48,7 +48,7 @@ class Pipeline {
                std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 
-  std::vector<PipelinePass*>  const& get_passes()  const;
+  std::vector<PipelinePass>   const& get_passes()  const;
   GBuffer                          & get_gbuffer() const;
   SerializedScene             const& get_scene()   const;
   SceneGraph                  const& get_graph()   const;
@@ -75,7 +75,7 @@ class Pipeline {
   math::vec2ui                       last_resolution_;
   PipelineDescription                last_description_;
 
-  std::vector<PipelinePass*>         passes_;
+  std::vector<PipelinePass>          passes_;
   scm::gl::quad_geometry_ptr         fullscreen_quad_;
 
 };

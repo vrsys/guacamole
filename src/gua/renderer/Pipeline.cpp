@@ -109,10 +109,6 @@ Pipeline::Pipeline() :
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::~Pipeline() {
-  for (auto pass: passes_) {
-    delete pass;
-  }
-
   if (camera_block_) {
     delete camera_block_;
   }
@@ -120,7 +116,7 @@ Pipeline::~Pipeline() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<PipelinePass*> const& Pipeline::get_passes() const {
+std::vector<PipelinePass> const& Pipeline::get_passes() const {
   return passes_;
 }
 
@@ -185,9 +181,8 @@ void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& cam
   }
 
   if (reload_passes) {
-    for (auto pass: passes_) {
-      pass->on_delete(this);
-      delete pass;
+    for (auto & pass: passes_) {
+      pass.on_delete(this);
     }
 
     passes_.clear();
@@ -227,11 +222,11 @@ void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& cam
     // process all passes
     for (int i(0); i < passes_.size(); ++i) {
 
-      if (passes_[i]->needs_color_buffer_as_input()) {
+      if (passes_[i].needs_color_buffer_as_input()) {
         gbuffer_->toggle_ping_pong();
       }
 
-      passes_[i]->process(*this);
+      passes_[i].process(*this);
     }
 
     gbuffer_->toggle_ping_pong();

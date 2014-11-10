@@ -38,7 +38,7 @@ class PipelinePassDescription {
 
   friend class Pipeline;
  protected:
-  virtual PipelinePass* make_pass(RenderContext const& ctx) const = 0;
+  virtual PipelinePass make_pass(RenderContext const& ctx) const = 0;
 };
 
 

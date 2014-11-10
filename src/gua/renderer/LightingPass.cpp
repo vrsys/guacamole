@@ -40,23 +40,23 @@ PipelinePassDescription* LightingPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass* LightingPassDescription::make_pass(RenderContext const& ctx) const {
-  auto pass = new PipelinePass{};
+PipelinePass LightingPassDescription::make_pass(RenderContext const& ctx) const {
+  PipelinePass pass{};
 
-  pass->description_ = this;
-  pass->shader_ = std::make_shared<ShaderProgram>();
-  pass->shader_->create_from_sources(
+  pass.description_ = this;
+  pass.shader_ = std::make_shared<ShaderProgram>();
+  pass.shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_lighting_vert),
     Resources::lookup_shader(Resources::shaders_lighting_frag)
   );
 
-  pass->needs_color_buffer_as_input_ = true;
-  pass->writes_only_color_buffer_ = true;
+  pass.needs_color_buffer_as_input_ = true;
+  pass.writes_only_color_buffer_ = true;
 
-  pass->rasterizer_state_ = ctx.render_device->create_rasterizer_state(
+  pass.rasterizer_state_ = ctx.render_device->create_rasterizer_state(
       scm::gl::FILL_SOLID, scm::gl::CULL_FRONT);
-  pass->depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
-  pass->blend_state_ = ctx.render_device->create_blend_state(
+  pass.depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
+  pass.blend_state_ = ctx.render_device->create_blend_state(
       true,
       scm::gl::FUNC_ONE,
       scm::gl::FUNC_ONE,
@@ -72,7 +72,7 @@ PipelinePass* LightingPassDescription::make_pass(RenderContext const& ctx) const
   auto light_sphere = GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
   auto light_cone   = GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
 
-  pass->process_ = [emit_shader_,light_sphere,light_cone](PipelinePass& pass ,Pipeline& pipe) {
+  pass.process_ = [emit_shader_,light_sphere,light_cone](PipelinePass& pass ,Pipeline& pipe) {
     auto const& ctx(pipe.get_context());
 
     // init resources
