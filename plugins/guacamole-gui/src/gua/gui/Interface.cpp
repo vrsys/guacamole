@@ -9,9 +9,8 @@
 // includes  -------------------------------------------------------------------
 #include <swift2d/gui/Interface.hpp>
 
-#include <swift2d/utils/Logger.hpp>
-#include <swift2d/utils/TextFile.hpp>
-#include <swift2d/application/Paths.hpp>
+#include <gua/utils/Logger.hpp>
+#include <gua/renderer/Texture2D.hpp>
 
 #include <Awesomium/WebCore.h>
 #include <Awesomium/BitmapSurface.h>
@@ -24,7 +23,8 @@
 Awesomium::DataSource::~DataSource(){}
 #endif
 
-namespace swift {
+namespace gua {
+namespace gui {
 
 namespace {
 
@@ -51,7 +51,7 @@ Interface::Interface() {
   web_session_ = web_core_->CreateWebSession(Awesomium::WSLit(""), prefs);
 
   Awesomium::DataSource* data_source = new AweDataSource();
-  web_session_->AddDataSource(Awesomium::WSLit("swift2d"), data_source);
+  web_session_->AddDataSource(Awesomium::WSLit("gua"), data_source);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,9 +65,9 @@ Interface::~Interface() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool Interface::bind(Awesomium::WebView* view, RenderContext const& ctx, unsigned location) const {
+bool Interface::bind(Awesomium::WebView* view, RenderContext const& ctx, ShaderProgram* program) const {
   auto surface = static_cast<GLSurface*>(view->surface());
-  return surface && surface->bind(ctx, location);
+  return surface && surface->bind(ctx, program);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,5 +79,6 @@ Awesomium::WebView* Interface::create_webview(int width, int height) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+}
 }
 

@@ -60,7 +60,7 @@ class GUA_DLL Interface : public Singleton<Interface> {
   Interface();
   ~Interface();
 
-  bool bind(Awesomium::WebView* view, RenderContext const& ctx, unsigned location) const;
+  bool bind(Awesomium::WebView* view, RenderContext const& ctx, ShaderProgram* program) const;
   Awesomium::WebView* create_webview(int width, int height) const;
 
   Awesomium::WebCore* web_core_;

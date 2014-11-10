@@ -39,7 +39,7 @@ class GUA_DLL GuiNode : public GeometryNode {
  public:  // member
 
   GuiNode(std::string const& name = "",
-          std::string const& resource_name = "",
+          std::string const& resource_url = "",
           math::mat4 const& transform = math::mat4::identity());
 
 
@@ -56,6 +56,10 @@ class GUA_DLL GuiNode : public GeometryNode {
   */
   void update_bounding_box() const override;
   void update_cache() override;
+
+
+  void set_resource_url(std::string const& resource_url);
+  std::string const& get_resource_url() const;
 
   std::shared_ptr<GuiResource> const& get_resource() const;
 
@@ -76,8 +80,8 @@ class GUA_DLL GuiNode : public GeometryNode {
 
   std::shared_ptr<GuiResource> resource_;
 
-  std::string resource_name_;
-  bool resource_name_changed_;
+  std::string resource_url_;
+  bool resource_url_changed_;
 
 };
 

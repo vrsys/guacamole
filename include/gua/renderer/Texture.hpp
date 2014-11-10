@@ -55,6 +55,7 @@ class GUA_DLL Texture {
    * \param state_descripton The sampler state for the loaded texture.
    */
   Texture(scm::gl::data_format color_format,
+          scm::gl::data_format internal_format,
           std::vector<void*> const& data,
           unsigned mipmap_layers = 1,
           scm::gl::sampler_state_desc const& state_descripton =
@@ -95,6 +96,13 @@ class GUA_DLL Texture {
 
   virtual ~Texture();
 
+
+  void update_sub_data(RenderContext const& ctx,
+                       scm::gl::texture_region const& region,
+                       unsigned level,
+                       scm::gl::data_format format,
+                       std::vector<void*> const& data);
+
   void generate_mipmaps(RenderContext const& context);
 
   /**
@@ -122,6 +130,7 @@ class GUA_DLL Texture {
 
   mutable unsigned mipmap_layers_;
   scm::gl::data_format color_format_;
+  scm::gl::data_format internal_format_;
   scm::gl::sampler_state_desc state_descripton_;
   mutable std::vector<scm::gl::texture_image_ptr> textures_;
   //mutable std::vector<scm::gl::texture_handle_ptr> texture_handles_;

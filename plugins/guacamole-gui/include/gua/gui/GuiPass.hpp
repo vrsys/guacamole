@@ -23,26 +23,45 @@
 #define GUA_GUI_RENDERER_HPP
 
 // guacamole_headers
-#include <gua/renderer/RessourceRenderer.hpp>
+#include <gua/renderer/PipelinePass.hpp>
 
 // external headers
 
 namespace gua {
 
 class ShaderProgram;
+class Pipeline;
+class GuiPass;
 
-class GUA_DLL GuiRenderer : public RessourceRenderer {
+class GUA_DLL GuiPassDescription : public PipelinePassDescription {
+ public:
+  virtual PipelinePassDescription* make_copy() const;
+  friend class Pipeline;
+
+ protected:
+  virtual PipelinePass* make_pass() const;
+};
+
+class GUA_DLL GuiPass : public PipelinePass {
  public:
 
-  GuiRenderer();
 
-  void draw(std::unordered_map<std::string, std::vector<node::GeometryNode*>> const& sorted_objects,
-            Pipeline* pipe) const;
+  virtual bool needs_color_buffer_as_input() const { return false; }
+  virtual bool writes_only_color_buffer()    const { return false; }
+
+
+  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
+
+  friend class GuiPassDescription;
+
+protected:
+  GuiPass();
+  ~GuiPass() {}
 
  private:
 
-  ShaderProgram* shader_;
-  scm::gl::quad_geometry_ptr   quad_;
+  ShaderProgram*             shader_;
+  scm::gl::quad_geometry_ptr quad_;
 };
 
 }

@@ -27,32 +27,28 @@
 // external headers
 #include <scm/gl_core/buffer_objects.h>
 
-#include <typeindex>
-#include <memory>
-#include <unordered_map>
-
 namespace gua {
 
 class Pipeline;
 class TriMeshPass;
 
-class TriMeshPassDescription : public PipelinePassDescription {
+class GUA_DLL TriMeshPassDescription : public PipelinePassDescription {
  public:
   virtual PipelinePassDescription* make_copy() const;
   friend class Pipeline;
-  
+
  protected:
   virtual PipelinePass* make_pass() const;
 };
 
 
 
-class TriMeshPass : public PipelinePass {
+class GUA_DLL TriMeshPass : public PipelinePass {
  public:
 
   virtual bool needs_color_buffer_as_input() const { return false; }
   virtual bool writes_only_color_buffer()    const { return false; }
-  
+
   virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
 
   friend class TriMeshPassDescription;

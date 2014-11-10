@@ -20,9 +20,7 @@ class GLSurface : public Awesomium::Surface {
     , height_(height)
     , needs_update_(false) {}
 
-  ~GLSurface() {
-    delete tex_;
-  }
+  ~GLSurface() {}
 
   // ------------------------------------------------------------ public methods
 
@@ -30,45 +28,32 @@ class GLSurface : public Awesomium::Surface {
 
   void init(RenderContext const& ctx) {
     std::unique_lock<std::mutex> lock(mutex_);
-    tex_ = new oglplus::Texture();
-    oglplus::Texture::Active(0);
-    ctx.gl.Bound(oglplus::Texture::Target::_2D, *tex_)
-      .Image2D(0, oglplus::PixelDataInternalFormat::RGBA, width_, height_,
-        0, oglplus::PixelDataFormat::BGRA,
-        oglplus::PixelDataType::UnsignedByte, &buffer_.front()
-      )
-      .MaxLevel(0)
-      .MinFilter(oglplus::TextureMinFilter::Linear)
-      .MagFilter(oglplus::TextureMagFilter::Linear)
-      .WrapS(oglplus::TextureWrap::ClampToEdge)
-      .WrapT(oglplus::TextureWrap::ClampToEdge);
+    tex_ = std::make_shared<Texture2D>(
+      width_, height_,
+      scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_BGRA_8,
+      buffer_
+    );
+    tex_->upload_to(ctx);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  bool bind(RenderContext const& ctx, unsigned location) {
+  bool bind(RenderContext const& ctx, ShaderProgram* program) {
 
     if (!tex_) {
-      if (ctx.upload_budget > 0) {
-        --ctx.upload_budget;
-         init(ctx);
-      } else {
-        ++ctx.upload_remaining;
-        return false;
-      }
+      init(ctx);
     }
 
-    tex_->Active(location);
-    ctx.gl.Bind(ose::_2D(), *tex_);
+    program->set_uniform(ctx, tex_->get_handle(), "gua_gui_diffuse_tex")
 
     if (needs_update_) {
       std::unique_lock<std::mutex> lock(mutex_);
       needs_update_ = false;
 
-      tex_->SubImage2D(
-        oglplus::Texture::Target::_2D, 0, 0, 0, width_, height_,
-        oglplus::PixelDataFormat::BGRA, oglplus::PixelDataType::UnsignedByte,
-        &buffer_.front()
+      tex_->updated_sub_data(
+        ctx,
+        scm::gl::texture_region(math::vec3ui(0,0,0), math::vec3ui(width_, height_, 0)),
+        0, scm::gl::FORMAT_BGRA_8, buffer_
       );
     }
 
@@ -148,7 +133,7 @@ class GLSurface : public Awesomium::Surface {
  ///////////////////////////////////////////////////////////////////////////////
  // ---------------------------------------------------------- private interface
  private:
-  oglplus::Texture* tex_;
+  std::shared_ptr<Tecutre2D> tex_;
 
   std::vector<unsigned char>  buffer_;
 

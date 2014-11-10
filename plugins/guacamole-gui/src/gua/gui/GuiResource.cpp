@@ -53,7 +53,6 @@ GuiResource::GuiResource(std::string const& url)
   : url_("")
   , view_(nullptr)
   , js_window_(nullptr)
-  , callbacks_(5)
   , interactive_(true)
 {
   register_renderer<GuiNode, GuiRenderer>();
@@ -208,20 +207,14 @@ void GuiResource::add_javascript_getter(std::string const& name, std::function<s
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GuiResource::bind(RenderContext const& ctx) const {
-  Interface::get().bind(view_, ctx, 0);
+void GuiResource::bind(RenderContext const& ctx, ShaderProgram* program) const {
+  Interface::get().bind(view_, ctx, program);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::ray_test(Ray const& ray, PickResult::Options options,
                     node::Node* owner, std::set<PickResult>& hits) {
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void GuiResource::upload_to(RenderContext const& ctx) const {
 
 }
 

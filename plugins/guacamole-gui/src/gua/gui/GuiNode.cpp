@@ -34,12 +34,12 @@ namespace gui {
 
   ////////////////////////////////////////////////////////////////////////////////
   GuiNode::GuiNode(std::string const& name,
-                   std::string const& resource_name = "",
+                   std::string const& resource_url = "",
                    math::mat4 const& transform)
     : GeometryNode(name, transform),
       resource_(nullptr)
-      resource_name_(resource_name),
-      resource_name_changed_(true)
+      resource_url_(resource_url),
+      resource_url_changed_(true)
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +49,18 @@ namespace gui {
 
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void GuiNode::set_resource_url(std::string const& resource_url) {
+    resource_url_ = resource_url;
+    resource_url_changed_ = true;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::string const& GuiNode::get_resource_url() const {
+    return resource_url_;
+  }
 
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,21 +84,21 @@ namespace gui {
 
   void TriMeshNode::update_cache() {
 
-    if (resource_name_changed_) {
-      if (resource_name_ != "") {
-        if (!GeometryDatabase::instance()->is_supported(resource_name_)) {
+    if (resource_url_changed_) {
+      if (resource_url_ != "") {
+        if (!GeometryDatabase::instance()->is_supported(resource_url_)) {
 
-          resource_ = std::make_shared<GuiResource>(resource_name_);
-          GeometryDatabase::instance()->add(resource_name_, resource_);
+          resource_ = std::make_shared<GuiResource>(resource_url_);
+          GeometryDatabase::instance()->add(resource_url_, resource_);
 
         } else {
 
-          resource_ = GeometryDatabase::instance()->lookup(resource_name_);
+          resource_ = GeometryDatabase::instance()->lookup(resource_url_);
         }
 
       }
 
-      resource_name_changed_ = false;
+      resource_url_changed_ = false;
     }
 
     GeometryNode::update_cache();

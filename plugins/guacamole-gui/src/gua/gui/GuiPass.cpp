@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/gui/GuiRenderer.hpp>
+#include <gua/gui/GuiPass.hpp>
 
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -33,7 +33,21 @@ namespace gui {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GuiRenderer::GuiRenderer() :
+
+PipelinePassDescription* GuiPassDescription::make_copy() const {
+  return new GuiPassDescription(*this);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass* GuiPassDescription::make_pass() const {
+  return new GuiPass();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+GuiPass::GuiPass() :
   shader_(new ShaderProgram()),
   fullscreen_quad_(nullptr) {
 
@@ -70,7 +84,7 @@ GuiRenderer::GuiRenderer() :
       in vec2 tex_coords;
 
       // uniforms
-      uniform sampler2D gui_diffuse_tex;
+      uniform sampler2D gua_gui_diffuse_tex;
 
       // output
       @include "shaders/common/gua_fragment_shader_output.glsl"
@@ -93,38 +107,43 @@ GuiRenderer::GuiRenderer() :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GuiRenderer::draw(std::unordered_map<std::string, std::vector<node::GeometryNode*>> const& sorted_objects,
-                       Pipeline* pipe) const {
+void GuiPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
 
-  auto const& ctx(pipe->get_context());
+  auto gui_nodes(pipe->get_scene().nodes.find(std::type_index(typeid(gui::GuiNode))));
 
-  // loop through all materials ------------------------------------------------
-  for (auto const& object_list : sorted_objects) {
+  if (gui_nodes != pipe->get_scene().nodes.end() && gui_nodes.size() > 0) {
 
-    shader_->use(ctx);
-    ctx.render_context->apply();
+    auto const& ctx(pipe->get_context());
 
-    for (auto const& n: object_list.second) {
+    if (!quad_) {
+      quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+              get_context().render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    }
 
-      auto const& node(reinterpret_cast<node::GuiNode*>(n));
+    pipe->get_gbuffer().bind(ctx, this);
+    pipe->get_gbuffer().set_viewport(ctx);
 
-      UniformValue model_mat(node->get_cached_world_transform());
+    for (auto const& node : gui_nodes) {
+
+      shader_->use(ctx);
+      ctx.render_context->apply();
+
+      auto const& gui_node(reinterpret_cast<gui::GuiNode*>(node));
+
+      UniformValue model_mat(gui_node->get_cached_world_transform());
       // UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
 
 
       shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
-      shader->apply_uniform(ctx, "gui_diffuse_tex", 0);
+      shader->apply_uniform(ctx, "gua_gui_diffuse_tex", 0);
 
       ctx.render_context->apply_program();
 
-      if (!quad_) {
-        quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-                get_context().render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
-      }
-
-      node->get_resource()->bind(ctx);
+      gui_node->get_resource()->bind(ctx, shader);
       quad_->draw(get_context().render_context);
     }
+
+    pipe->get_gbuffer().unbind(ctx);
   }
 
 }

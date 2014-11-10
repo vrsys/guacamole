@@ -85,15 +85,13 @@ class GuiResource : public GeometryResource {
 
 
 
-    void bind(RenderContext const& context) const;
+    void bind(RenderContext const& context, ShaderProgram* program) const;
 
     /*virtual*/ void ray_test(Ray const& ray, PickResult::Options options,
                   node::Node* owner, std::set<PickResult>& hits);
 
 
   private:
-
-    void upload_to(RenderContext const& context) const;
 
     void call_javascript_impl(std::string const& method, std::vector<std::string> const& args) const;
     void add_javascript_callback(std::string const& callback, bool with_result);
