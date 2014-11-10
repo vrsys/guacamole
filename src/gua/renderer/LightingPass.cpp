@@ -45,7 +45,6 @@ PipelinePassDescription* LightingPassDescription::make_copy() const {
 PipelinePass LightingPassDescription::make_pass(RenderContext const& ctx) const {
   PipelinePass pass{};
 
-  pass.description_ = this;
   pass.shader_ = std::make_shared<ShaderProgram>();
   pass.shader_->create_from_sources(
     Resources::lookup_shader(Resources::shaders_lighting_vert),
@@ -74,7 +73,7 @@ PipelinePass LightingPassDescription::make_pass(RenderContext const& ctx) const 
   auto light_sphere = GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
   auto light_cone   = GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
 
-  pass.process_ = [emit_shader_,light_sphere,light_cone](PipelinePass& pass ,Pipeline& pipe) {
+  pass.process_ = [emit_shader_,light_sphere,light_cone](PipelinePass& pass, PipelinePassDescription*, Pipeline& pipe) {
     auto const& ctx(pipe.get_context());
 
     // init resources

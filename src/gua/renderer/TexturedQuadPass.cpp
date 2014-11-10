@@ -44,14 +44,13 @@ PipelinePassDescription* TexturedQuadPassDescription::make_copy() const {
 PipelinePass TexturedQuadPassDescription::make_pass(RenderContext const& ctx) const {
   PipelinePass pass{};
 
-  pass.description_ = this;
   pass.needs_color_buffer_as_input_ = false;
   pass.writes_only_color_buffer_ = false;
 
   auto renderers_ = std::make_shared<
     std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>>>();
 
-  pass.process_ = [renderers_](PipelinePass& pass, Pipeline& pipe) {
+  pass.process_ = [renderers_](PipelinePass& pass, PipelinePassDescription*, Pipeline& pipe) {
 
     auto get_renderer = [&](std::type_index const& id)
         -> std::shared_ptr<RessourceRenderer> {
