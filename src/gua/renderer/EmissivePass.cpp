@@ -53,7 +53,6 @@ PipelinePass EmissivePassDescription::make_pass(
   pass.writes_only_color_buffer_ = true;
   pass.doClear_ = true;
 
-  pass.rasterizer_state_ = nullptr;
   pass.depth_stencil_state_ =
       ctx.render_device->create_depth_stencil_state(false, false);
   pass.blend_state_ = ctx.render_device->create_blend_state(true,
