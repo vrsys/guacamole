@@ -38,23 +38,25 @@ PipelinePassDescription* BackgroundPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass BackgroundPassDescription::make_pass(RenderContext const& ctx) const {
+PipelinePass BackgroundPassDescription::make_pass(
+    RenderContext const& ctx) const {
   PipelinePass pass{};
 
   pass.shader_ = std::make_shared<ShaderProgram>();
   pass.shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
-    Resources::lookup_shader(Resources::shaders_background_frag)
-  );
+      Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
+      Resources::lookup_shader(Resources::shaders_background_frag));
 
   pass.needs_color_buffer_as_input_ = false;
   pass.writes_only_color_buffer_ = true;
 
   pass.rasterizer_state_ = nullptr;
-  pass.depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
+  pass.depth_stencil_state_ =
+      ctx.render_device->create_depth_stencil_state(false, false);
   pass.blend_state_ = nullptr;
 
-  pass.process_ = [](PipelinePass& pass, PipelinePassDescription*, Pipeline& pipe) {
+  pass.process_ =
+      [](PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
     auto const& ctx(pipe.get_context());
 
     // bind gbuffer
@@ -76,6 +78,7 @@ PipelinePass BackgroundPassDescription::make_pass(RenderContext const& ctx) cons
 
     ctx.render_context->reset_state_objects();
   };
+  pass.rendermode_ = RenderMode::Custom;
 
   return pass;
 }

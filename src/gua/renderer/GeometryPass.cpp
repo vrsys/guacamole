@@ -36,22 +36,24 @@ PipelinePassDescription* GeometryPassDescription::make_copy() const {
   return new GeometryPassDescription(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass GeometryPassDescription::make_pass(RenderContext const& ctx) const {
+PipelinePass GeometryPassDescription::make_pass(
+    RenderContext const& ctx) const {
   PipelinePass pass{};
 
   pass.needs_color_buffer_as_input_ = false;
   pass.writes_only_color_buffer_ = false;
 
   auto renderers_ = std::make_shared<
-    std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>>>();
+      std::unordered_map<std::type_index,
+                         std::shared_ptr<RessourceRenderer> > >();
 
-  pass.process_ = [renderers_](PipelinePass& pass, PipelinePassDescription*, Pipeline& pipe) {
+  pass.process_ = [renderers_](
+      PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
 
-    auto get_renderer = [&](std::type_index const& id)
-        -> std::shared_ptr<RessourceRenderer> {
+    auto get_renderer =
+        [&](std::type_index const & id)->std::shared_ptr<RessourceRenderer> {
       auto renderer = renderers_->find(id);
 
       if (renderer != renderers_->end()) {
@@ -78,8 +80,7 @@ PipelinePass GeometryPassDescription::make_pass(RenderContext const& ctx) const 
         else
           Logger::LOG_WARNING << "Unable to render geometry of type "
                               << type_ressource_pair.first.name()
-                              << ": No renderer registered!"
-                              << std::endl;
+                              << ": No renderer registered!" << std::endl;
       }
     }
 
