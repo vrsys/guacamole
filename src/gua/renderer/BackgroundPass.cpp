@@ -47,17 +47,13 @@ PipelinePass BackgroundPassDescription::make_pass(
       Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
       Resources::lookup_shader(Resources::shaders_background_frag));
 
-  pass.needs_color_buffer_as_input_ = false;
   pass.writes_only_color_buffer_ = true;
 
-  pass.rasterizer_state_ = nullptr;
   pass.depth_stencil_state_ =
       ctx.render_device->create_depth_stencil_state(false, false);
-  pass.blend_state_ = nullptr;
 
   pass.process_ =
       [](PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
-    auto const& ctx(pipe.get_context());
     pipe.bind_gbuffer_input(pass.shader_);
     pipe.draw_fullscreen_quad();
   };
