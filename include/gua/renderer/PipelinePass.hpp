@@ -32,7 +32,7 @@ class PipelinePass;
 class RenderContext;
 
 enum class RenderMode {
-  Custom, Callback
+  Custom, Callback, Quad
 };
 
 class PipelinePassDescription {

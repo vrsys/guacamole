@@ -33,7 +33,7 @@ namespace gua {
 void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
   if (RenderMode::Custom == rendermode_) {
     process_(*this, desc, pipe);
-  } else if (RenderMode::Callback == rendermode_) {
+  } else {
     auto const& ctx(pipe.get_context());
     pipe.get_gbuffer().bind(ctx, this);
     pipe.get_gbuffer().set_viewport(ctx);
@@ -46,7 +46,12 @@ void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
     if (rasterizer_state_)
       ctx.render_context->set_rasterizer_state(rasterizer_state_);
     shader_->use(ctx);
-    process_(*this, desc, pipe);
+    if (RenderMode::Callback == rendermode_) {
+      process_(*this, desc, pipe);
+    } else { // RenderMode::Quad
+      pipe.bind_gbuffer_input(shader_);
+      pipe.draw_fullscreen_quad();
+    }
     pipe.get_gbuffer().unbind(ctx);
     ctx.render_context->reset_state_objects();
   }
