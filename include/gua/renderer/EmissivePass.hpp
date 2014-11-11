@@ -35,7 +35,8 @@ class Pipeline;
 
 class EmissivePassDescription : public PipelinePassDescription {
  public:
-  virtual PipelinePassDescription* make_copy() const;
+  EmissivePassDescription();
+  PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
   
  protected:

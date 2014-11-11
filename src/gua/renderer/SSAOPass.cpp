@@ -33,7 +33,13 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 SSAOPassDescription::SSAOPassDescription()
-    : radius_(1.f), intensity_(1.f), falloff_(0.1f) {}
+  : PipelinePassDescription(), radius_(1.f), intensity_(1.f), falloff_(0.1f) {
+
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = true;
+  doClear_ = false;
+  rendermode_ = RenderMode::Callback;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -84,8 +90,10 @@ PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
       Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
       Resources::lookup_shader(Resources::shaders_ssao_frag));
 
-  pass.needs_color_buffer_as_input_ = false;
-  pass.writes_only_color_buffer_ = true;
+  pass.needs_color_buffer_as_input_ = needs_color_buffer_as_input_;
+  pass.writes_only_color_buffer_    = writes_only_color_buffer_;
+  pass.doClear_                     = doClear_;
+  pass.rendermode_                  = rendermode_;
 
   pass.rasterizer_state_ = nullptr;
   pass.depth_stencil_state_ =
@@ -116,7 +124,6 @@ PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
     pipe.bind_gbuffer_input(pass.shader_);
     pipe.draw_quad();
   };
-  pass.rendermode_ = RenderMode::Callback;
 
   return pass;
 }

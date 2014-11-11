@@ -30,6 +30,13 @@
 
 namespace gua {
 
+BBoxPassDescription::BBoxPassDescription()
+  : PipelinePassDescription()
+{
+  writes_only_color_buffer_ = true;
+  rendermode_ = RenderMode::Custom;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePassDescription* BBoxPassDescription::make_copy() const {
@@ -47,8 +54,10 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
       Resources::lookup_shader(Resources::shaders_bbox_geom),
       Resources::lookup_shader(Resources::shaders_bbox_frag));
 
-  pass.needs_color_buffer_as_input_ = false;
-  pass.writes_only_color_buffer_ = true;
+  pass.needs_color_buffer_as_input_ = needs_color_buffer_as_input_;
+  pass.writes_only_color_buffer_    = writes_only_color_buffer_;
+  pass.doClear_                     = doClear_;
+  pass.rendermode_                  = rendermode_;
 
   pass.rasterizer_state_ = ctx.render_device
       ->create_rasterizer_state(scm::gl::FILL_SOLID,
@@ -112,7 +121,6 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
       ctx.render_context->reset_state_objects();
     }
   };
-  pass.rendermode_ = RenderMode::Custom;
 
   return pass;
 }

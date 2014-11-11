@@ -32,6 +32,14 @@
 
 namespace gua {
 
+GeometryPassDescription::GeometryPassDescription()
+  : PipelinePassDescription() {
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = false;
+  doClear_ = false;
+  rendermode_ = RenderMode::Custom;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePassDescription* TexturedQuadPassDescription::make_copy() const {
@@ -44,8 +52,10 @@ PipelinePass TexturedQuadPassDescription::make_pass(
     RenderContext const& ctx) const {
   PipelinePass pass{};
 
-  pass.needs_color_buffer_as_input_ = false;
-  pass.writes_only_color_buffer_ = false;
+  pass.needs_color_buffer_as_input_ = needs_color_buffer_as_input_;
+  pass.writes_only_color_buffer_    = writes_only_color_buffer_;
+  pass.doClear_                     = doClear_;
+  pass.rendermode_                  = rendermode_;
 
   auto renderers_ = std::make_shared<
       std::unordered_map<std::type_index,
