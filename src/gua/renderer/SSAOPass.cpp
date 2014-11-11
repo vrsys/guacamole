@@ -99,21 +99,10 @@ PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
 
   auto noise_texture_ = std::make_shared<NoiseTexture>();
 
+  // set uniforms and draw a full screen quad
   pass.process_ = [noise_texture_](
       PipelinePass & pass, PipelinePassDescription * desc, Pipeline & pipe) {
     auto const& ctx(pipe.get_context());
-
-    // bind gbuffer
-    pipe.get_gbuffer().bind(ctx, &pass);
-    pipe.get_gbuffer().set_viewport(ctx);
-
-    if (pass.depth_stencil_state_)
-      ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
-    if (pass.blend_state_)
-      ctx.render_context->set_blend_state(pass.blend_state_);
-
-    pass.shader_->use(ctx);
-
     SSAOPassDescription const* d(
         dynamic_cast<SSAOPassDescription const*>(desc));
     if (d) {
@@ -126,11 +115,8 @@ PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
 
     pipe.bind_gbuffer_input(pass.shader_);
     pipe.draw_quad();
-    pipe.get_gbuffer().unbind(ctx);
-
-    ctx.render_context->reset_state_objects();
   };
-  pass.rendermode_ = RenderMode::Custom;
+  pass.rendermode_ = RenderMode::Callback;
 
   return pass;
 }
