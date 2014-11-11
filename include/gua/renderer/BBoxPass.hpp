@@ -33,7 +33,8 @@ class Pipeline;
 
 class BBoxPassDescription : public PipelinePassDescription {
  public:
-  virtual PipelinePassDescription* make_copy() const;
+  BBoxPassDescription();
+  PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
   
  protected:

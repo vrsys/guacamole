@@ -30,6 +30,13 @@
 
 namespace gua {
 
+BackgroundPassDescription::BackgroundPassDescription()
+  : PipelinePassDescription()
+{
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = true;
+  rendermode_ = RenderMode::Quad;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePassDescription* BackgroundPassDescription::make_copy() const {
@@ -46,10 +53,14 @@ PipelinePass BackgroundPassDescription::make_pass(
   pass.shader_->create_from_sources(
       Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
       Resources::lookup_shader(Resources::shaders_background_frag));
-  pass.writes_only_color_buffer_ = true;
+
+  pass.needs_color_buffer_as_input_ = needs_color_buffer_as_input_;
+  pass.writes_only_color_buffer_    = writes_only_color_buffer_;
+  pass.doClear_                     = doClear_;
+  pass.rendermode_                  = rendermode_;
+
   pass.depth_stencil_state_ =
       ctx.render_device->create_depth_stencil_state(false, false);
-  pass.rendermode_ = RenderMode::Quad;
 
   return pass;
 }

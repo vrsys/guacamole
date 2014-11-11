@@ -39,11 +39,26 @@ class PipelinePassDescription {
  public:
 
   virtual PipelinePassDescription* make_copy() const = 0;
+  virtual ~PipelinePassDescription() {}
 
   friend class Pipeline;
 
  protected:
   virtual PipelinePass make_pass(RenderContext const& ctx) const = 0;
+
+  // shader names
+
+  bool needs_color_buffer_as_input_ = false;
+  bool writes_only_color_buffer_ = false;
+  bool doClear_ = false;
+
+  RenderMode rendermode_ = RenderMode::Custom;
+
+  boost::optional<scm::gl::rasterizer_state_desc> rasterizer_state_;
+  boost::optional<scm::gl::blend_state_desc> blend_state_;
+  boost::optional<scm::gl::depth_stencil_state_desc> depth_stencil_state_;
+
+  // std::function< ... process
 };
 
 class PipelinePass {
@@ -75,12 +90,12 @@ class PipelinePass {
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
   bool doClear_ = false;
+  RenderMode rendermode_ = RenderMode::Custom;
 
   std::function<void(PipelinePass&, PipelinePassDescription* desc, Pipeline&)>
     process_ = [](PipelinePass&, PipelinePassDescription*, Pipeline&) {
       return;
     };
-  RenderMode rendermode_ = RenderMode::Custom;
 };
 
 }

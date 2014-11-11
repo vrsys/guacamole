@@ -32,6 +32,16 @@
 
 namespace gua {
 
+LightingPassDescription::LightingPassDescription()
+  : PipelinePassDescription() {
+  // here we assume, that the emissive pass was run previously
+  // so we don't swap and don't clear the colorbuffer
+  needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
+  writes_only_color_buffer_ = true; // we write out a color
+  doClear_ = false;
+  rendermode_ = RenderMode::Custom;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePassDescription* LightingPassDescription::make_copy() const {
@@ -49,11 +59,10 @@ PipelinePass LightingPassDescription::make_pass(
       Resources::lookup_shader(Resources::shaders_lighting_vert),
       Resources::lookup_shader(Resources::shaders_lighting_frag));
 
-  // here we assume, that the emissive pass was run previously
-  // so we don't swap and don't clear the colorbuffer
-  pass.needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
-  pass.writes_only_color_buffer_ = true; // we write out a color
-  pass.doClear_ = false;
+  pass.needs_color_buffer_as_input_ = needs_color_buffer_as_input_;
+  pass.writes_only_color_buffer_    = writes_only_color_buffer_;
+  pass.doClear_                     = doClear_;
+  pass.rendermode_                  = rendermode_;
 
   pass.rasterizer_state_ = ctx.render_device
       ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT);
@@ -65,13 +74,14 @@ PipelinePass LightingPassDescription::make_pass(
                                                             scm::gl::FUNC_ONE,
                                                             scm::gl::FUNC_ONE);
 
-  auto light_sphere =
-      GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
-  auto light_cone =
-      GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
-
-  pass.process_ = [light_sphere, light_cone](
+  pass.process_ = [](
       PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
+
+    auto light_sphere =
+        GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
+    auto light_cone =
+        GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
+
     auto const& ctx(pipe.get_context());
 
     // init resources
@@ -197,7 +207,6 @@ PipelinePass LightingPassDescription::make_pass(
 
     ctx.render_context->reset_state_objects();
   };
-  pass.rendermode_ = RenderMode::Custom;
 
   return pass;
 }

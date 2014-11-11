@@ -34,7 +34,8 @@ class Pipeline;
 
 class GeometryPassDescription : public PipelinePassDescription {
  public:
-  virtual PipelinePassDescription* make_copy() const;
+  GeometryPassDescription();
+  PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
 
  protected:
