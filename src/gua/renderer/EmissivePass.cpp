@@ -61,12 +61,7 @@ PipelinePass EmissivePassDescription::make_pass(
                                                             scm::gl::FUNC_ONE,
                                                             scm::gl::FUNC_ONE);
 
-  pass.process_ = [](
-      PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
-    pipe.bind_gbuffer_input(pass.shader_);
-    pipe.draw_fullscreen_quad();
-  };
-  pass.rendermode_ = RenderMode::Callback;
+  pass.rendermode_ = RenderMode::Quad;
 
   return pass;
 }
