@@ -72,10 +72,7 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
 
   scm::gl::vertex_array_ptr vao_ = ctx.render_device->create_vertex_array(
       scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
-          0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)),
-      {
-    buffer_
-  });
+          0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)), { buffer_ });
 
   pass.process_ = [buffer_, vao_](
       PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {

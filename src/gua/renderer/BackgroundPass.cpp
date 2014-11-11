@@ -58,27 +58,10 @@ PipelinePass BackgroundPassDescription::make_pass(
   pass.process_ =
       [](PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
     auto const& ctx(pipe.get_context());
-
-    // bind gbuffer
-    pipe.get_gbuffer().bind(ctx, &pass);
-    pipe.get_gbuffer().set_viewport(ctx);
-
-    if (pass.depth_stencil_state_)
-      ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
-    if (pass.blend_state_)
-      ctx.render_context->set_blend_state(pass.blend_state_);
-    if (pass.rasterizer_state_)
-      ctx.render_context->set_rasterizer_state(pass.rasterizer_state_);
-
-    pass.shader_->use(ctx);
-
     pipe.bind_gbuffer_input(pass.shader_);
     pipe.draw_fullscreen_quad();
-    pipe.get_gbuffer().unbind(ctx);
-
-    ctx.render_context->reset_state_objects();
   };
-  pass.rendermode_ = RenderMode::Custom;
+  pass.rendermode_ = RenderMode::Callback;
 
   return pass;
 }
