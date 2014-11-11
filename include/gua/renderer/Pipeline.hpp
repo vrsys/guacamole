@@ -29,6 +29,8 @@
 #include <gua/renderer/CameraUniformBlock.hpp>
 #include <gua/math.hpp>
 
+#include <scm/gl_util/primitives/quad.h>
+
 #include <memory>
 
 namespace gua {
@@ -50,14 +52,14 @@ class Pipeline {
 
   std::vector<PipelinePass*>  const& get_passes()  const;
   GBuffer                          & get_gbuffer() const;
-  SerializedScene             const& get_scene()   const;
+  SerializedScene                  & get_scene();
   SceneGraph                  const& get_graph()   const;
   RenderContext               const& get_context() const;
   node::SerializedCameraNode  const& get_camera()  const;
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_camera_uniform_block(unsigned location) const;
-  void draw_fullscreen_quad();
+  void draw_quad();
 
  private:
 
@@ -76,7 +78,7 @@ class Pipeline {
   PipelineDescription                last_description_;
 
   std::vector<PipelinePass*>         passes_;
-  scm::gl::quad_geometry_ptr         fullscreen_quad_;
+  scm::gl::quad_geometry_ptr         quad_;
 
 };
 

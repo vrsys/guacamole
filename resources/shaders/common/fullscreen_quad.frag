@@ -28,7 +28,7 @@ in vec2 gua_quad_coords;
 // write outputs
 layout(location=0) out vec3 gua_out_color;
 
-@include "shaders/uber_shaders/common/get_sampler_casts.glsl"
+@include "shaders/common/get_sampler_casts.glsl" 
 
 // God Rays
 void main() {

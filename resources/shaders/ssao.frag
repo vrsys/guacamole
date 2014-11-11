@@ -25,7 +25,7 @@
 in vec2 gua_quad_coords;
 
 @include "shaders/common/gua_camera_uniforms.glsl"
-@include "shaders/gbuffer_input.glsl"
+@include "shaders/common/gua_gbuffer_input.glsl"
 
 uniform uvec2 gua_noise_tex;
 uniform float gua_ssao_radius;

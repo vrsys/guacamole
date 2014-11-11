@@ -90,9 +90,6 @@ class GUA_DLL CameraNode : public Node {
     // window of the window database with this name
     GUA_ADD_PROPERTY(std::string,     output_window_name,     "");
 
-    // various display options
-    GUA_ADD_PROPERTY(bool,            enable_ray_display,     false);
-
     // clipping
     GUA_ADD_PROPERTY(float,           near_clip,              0.1f);
     GUA_ADD_PROPERTY(float,           far_clip,               1000.0f);

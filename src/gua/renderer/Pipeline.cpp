@@ -87,7 +87,6 @@ void serialize(SceneGraph const& scene_graph, bool is_left,
   Serializer serializer;
   serializer.check(out, scene_graph,
                    camera.config.mask(),
-                   camera.config.enable_ray_display(),
                    camera.config.enable_frustum_culling());
 }
 
@@ -103,7 +102,7 @@ Pipeline::Pipeline() :
   gbuffer_(nullptr),
   camera_block_(nullptr),
   last_resolution_(0, 0),
-  fullscreen_quad_(nullptr),
+  quad_(nullptr),
   context_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -286,7 +285,7 @@ RenderContext const& Pipeline::get_context() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SerializedScene const& Pipeline::get_scene() const {
+SerializedScene& Pipeline::get_scene() {
   return current_scene_;
 }
 
@@ -321,14 +320,14 @@ void Pipeline::bind_camera_uniform_block(unsigned location) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::draw_fullscreen_quad() {
-  if (!fullscreen_quad_) {
-    fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+void Pipeline::draw_quad() {
+  if (!quad_) {
+    quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
       get_context().render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f))
     );
   }
 
-  fullscreen_quad_->draw(get_context().render_context);
+  quad_->draw(get_context().render_context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

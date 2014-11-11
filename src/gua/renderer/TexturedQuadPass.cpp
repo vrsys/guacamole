@@ -19,50 +19,54 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GEOMETRY_PASS_HPP
-#define GUA_GEOMETRY_PASS_HPP
+// class header
+#include <gua/renderer/TexturedQuadPass.hpp>
 
-#include <gua/renderer/PipelinePass.hpp>
+#include <gua/node/TexturedQuadNode.hpp>
+#include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/utils/Logger.hpp>
+#include <gua/databases/Resources.hpp>
 
-#include <typeindex>
-#include <memory>
-#include <unordered_map>
+#define USE_UBO 0 // also set in MaterialShader.cpp
 
 namespace gua {
 
-class Pipeline;
-class RessourceRenderer;
-class GeometryPass;
+////////////////////////////////////////////////////////////////////////////////
 
-class GeometryPassDescription : public PipelinePassDescription {
- public:
-  virtual PipelinePassDescription* make_copy() const;
-  friend class Pipeline;
-  
- protected:
-  virtual PipelinePass* make_pass() const;
-};
-
-class GeometryPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer()    const { return false; }
-  
-  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
-
-  friend class GeometryPassDescription;
-
- protected:
-  GeometryPass() {}
-  ~GeometryPass() {}
-
-  std::shared_ptr<RessourceRenderer> get_renderer(std::type_index const& id);
-
- private:
-  std::unordered_map<std::type_index, std::shared_ptr<RessourceRenderer>> renderers_;
-};
-
+PipelinePassDescription* TexturedQuadPassDescription::make_copy() const {
+  return new TexturedQuadPassDescription(*this);
 }
 
-#endif  // GUA_GEOMETRY_PASS_HPP
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass* TexturedQuadPassDescription::make_pass() const {
+  return new TexturedQuadPass();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+TexturedQuadPass::TexturedQuadPass() {
+  // shader_.create_from_sources(
+  //   Resources::lookup_shader(Resources::shaders_textured_quad_vert), 
+  //   Resources::lookup_shader(Resources::shaders_textured_quad_frag)
+  // );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TexturedQuadPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
+  for (auto const& node : pipe->get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
+    auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
+
+    // shader_.set_uniform(ctx, quad_node->get_scaled_world_transform(), "gua_model_matrix");
+    // shader_.set_uniform(ctx, quad_node->data.get_falloff(),           "gua_texture");
+    
+    // pipe->draw_quad();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+}

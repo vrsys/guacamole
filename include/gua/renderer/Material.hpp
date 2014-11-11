@@ -29,6 +29,8 @@
 
 namespace gua {
 
+class MaterialShader;
+
 class Material {
   public:
     Material(std::string const& shader_name = "");
@@ -36,6 +38,8 @@ class Material {
     std::string const& get_shader_name() const {
       return shader_name_;
     }
+
+    MaterialShader* get_shader() const;
 
     Material& set_uniform(std::string const& name, ViewDependentUniform const& uniform) {
       uniforms_[name] = uniform;
@@ -69,6 +73,7 @@ class Material {
     friend class MaterialShader;
 
     std::string shader_name_;
+    mutable MaterialShader* shader_cache_;
     std::map<std::string, ViewDependentUniform> uniforms_;
 
 };

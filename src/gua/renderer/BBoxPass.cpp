@@ -61,7 +61,7 @@ BBoxPass::BBoxPass() :
 
 void BBoxPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   
-  auto count(pipe->get_scene().bounding_boxes_.size());
+  auto count(pipe->get_scene().bounding_boxes.size());
 
   if (count > 0) {
 
@@ -90,10 +90,9 @@ void BBoxPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
                             buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
     for (int i(0); i<count; ++i) {
-      data[2*i]   = pipe->get_scene().bounding_boxes_[i].min;
-      data[2*i+1] = pipe->get_scene().bounding_boxes_[i].max;
+      data[2*i]   = pipe->get_scene().bounding_boxes[i].min;
+      data[2*i+1] = pipe->get_scene().bounding_boxes[i].max;
     }
-
 
     ctx.render_context->unmap_buffer(buffer_);
     ctx.render_context->set_rasterizer_state(rasterizer_state_);
@@ -103,7 +102,7 @@ void BBoxPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
     pipe->get_gbuffer().set_viewport(ctx);
 
     shader_->use(ctx);
-    pipe->bind_gbuffer_input(shader_);
+
     ctx.render_context->bind_vertex_array(vao_);
 
     ctx.render_context->apply();

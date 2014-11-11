@@ -19,15 +19,55 @@
  *                                                                            *
  ******************************************************************************/
 
-@include "shaders/common/header.glsl"
+#ifndef GUA_TRIMESH_PASS_HPP
+#define GUA_TRIMESH_PASS_HPP
 
-// uniforms
-@include "shaders/uber_shaders/common/gua_camera_uniforms.glsl"
+#include <gua/renderer/PipelinePass.hpp>
 
-// input
-layout(location=0) in vec3 gua_in_position;
+// external headers
+#include <scm/gl_core/buffer_objects.h>
 
-void main() {
-    gl_Position = vec4(gua_in_position, 1.0);
+#include <typeindex>
+#include <memory>
+#include <unordered_map>
+
+namespace gua {
+
+class Pipeline;
+class TriMeshPass;
+
+class TriMeshPassDescription : public PipelinePassDescription {
+ public:
+  virtual PipelinePassDescription* make_copy() const;
+  friend class Pipeline;
+  
+ protected:
+  virtual PipelinePass* make_pass() const;
+};
+
+
+
+class TriMeshPass : public PipelinePass {
+ public:
+
+  virtual bool needs_color_buffer_as_input() const { return false; }
+  virtual bool writes_only_color_buffer()    const { return false; }
+  
+  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
+
+  friend class TriMeshPassDescription;
+
+ protected:
+  TriMeshPass();
+  ~TriMeshPass() {}
+
+ private:
+  std::string vertex_shader_;
+  std::string fragment_shader_;
+
+  mutable scm::gl::buffer_ptr material_uniform_storage_buffer_;
+};
+
 }
 
+#endif  // GUA_TRIMESH_PASS_HPP

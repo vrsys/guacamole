@@ -21,19 +21,29 @@
 
 #include <gua/renderer/Material.hpp>
 
+#include <gua/databases/MaterialShaderDatabase.hpp>
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
+
 Material::Material(std::string const& shader_name):
-  shader_name_(shader_name)
+  shader_name_(shader_name),
+  shader_cache_(nullptr)
   {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// void Material::unset_uniform(std::string const& name) {
-//   uniforms_.erase(name);
-// }
+
+MaterialShader* Material::get_shader() const {
+  if (!shader_cache_) {
+    shader_cache_ = MaterialShaderDatabase::instance()->lookup(shader_name_).get();
+  }
+
+  return shader_cache_;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
+
 std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() const {
   return uniforms_;
 }

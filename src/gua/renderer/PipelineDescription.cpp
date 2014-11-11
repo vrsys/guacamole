@@ -23,10 +23,11 @@
 #include <gua/renderer/PipelineDescription.hpp>
 
 // guacamole headers
-#include <gua/renderer/GeometryPass.hpp>
+#include <gua/renderer/TriMeshPass.hpp>
 #include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
+#include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 
 namespace gua {
@@ -35,10 +36,11 @@ namespace gua {
 
 PipelineDescription PipelineDescription::make_default() {
   PipelineDescription pipe;
-  pipe.add_pass<GeometryPassDescription>();
+  pipe.add_pass<TriMeshPassDescription>();
   pipe.add_pass<LightingPassDescription>();
-  pipe.add_pass<BackgroundPassDescription>();
+  pipe.add_pass<TexturedQuadPassDescription>();
   pipe.add_pass<BBoxPassDescription>();
+  pipe.add_pass<BackgroundPassDescription>();
 
   return pipe;
 }

@@ -1,8 +1,0 @@
-
-{
-	"shading_model" : "gua_bounding_box",
-	"uniforms" : 
-	{
-		"diffuse_color" : "(0.700  0.200  0.000)"
-	}
-}
