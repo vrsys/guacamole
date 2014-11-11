@@ -51,8 +51,11 @@ PipelinePass LightingPassDescription::make_pass(
       Resources::lookup_shader(Resources::shaders_lighting_vert),
       Resources::lookup_shader(Resources::shaders_lighting_frag));
 
-  pass.needs_color_buffer_as_input_ = true;
-  pass.writes_only_color_buffer_ = true;
+  // here we assume, that the emissive pass was run previously
+  // so we don't swap and don't clear the colorbuffer
+  pass.needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
+  pass.writes_only_color_buffer_ = true; // we write out a color
+  pass.doClear_ = false;
 
   pass.rasterizer_state_ = ctx.render_device
       ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT);
@@ -64,17 +67,12 @@ PipelinePass LightingPassDescription::make_pass(
                                                             scm::gl::FUNC_ONE,
                                                             scm::gl::FUNC_ONE);
 
-  auto emit_shader_ = std::make_shared<ShaderProgram>();
-  emit_shader_->create_from_sources(
-      Resources::lookup_shader(Resources::shaders_lighting_emit_vert),
-      Resources::lookup_shader(Resources::shaders_lighting_emit_frag));
-
   auto light_sphere =
       GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
   auto light_cone =
       GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
 
-  pass.process_ = [emit_shader_, light_sphere, light_cone](
+  pass.process_ = [light_sphere, light_cone](
       PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
     auto const& ctx(pipe.get_context());
 
@@ -82,23 +80,18 @@ PipelinePass LightingPassDescription::make_pass(
     // bind gbuffer
     pipe.get_gbuffer().bind(ctx, &pass);
     pipe.get_gbuffer().set_viewport(ctx);
-    pipe.get_gbuffer().clear_color(ctx);
+    if (pass.doClear_)
+      pipe.get_gbuffer().clear_color(ctx);
 
     // set state
     if (pass.depth_stencil_state_)
       ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
     if (pass.blend_state_)
       ctx.render_context->set_blend_state(pass.blend_state_);
-
-    // draw fullscreen quad for emissive surfaces
-    emit_shader_->use(ctx);
-    pipe.bind_gbuffer_input(emit_shader_);
-    pipe.draw_quad();
-
-    // draw proxy geometries for light sources
     if (pass.rasterizer_state_)
       ctx.render_context->set_rasterizer_state(pass.rasterizer_state_);
 
+    // draw proxy geometries for light sources
     pass.shader_->use(ctx);
     pipe.bind_gbuffer_input(pass.shader_);
 
