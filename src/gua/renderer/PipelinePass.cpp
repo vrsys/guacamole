@@ -33,7 +33,7 @@ namespace gua {
 void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
   if (RenderMode::Custom == rendermode_) {
     process_(*this, desc, pipe);
-  } else {
+  } else if (RenderMode::Callback == rendermode_) {
     auto const& ctx(pipe.get_context());
     pipe.get_gbuffer().bind(ctx, this);
     pipe.get_gbuffer().set_viewport(ctx);
