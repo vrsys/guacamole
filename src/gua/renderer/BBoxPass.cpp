@@ -43,34 +43,42 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
 
   pass.shader_ = std::make_shared<ShaderProgram>(),
   pass.shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_bbox_vert),
-    Resources::lookup_shader(Resources::shaders_bbox_geom),
-    Resources::lookup_shader(Resources::shaders_bbox_frag)
-  );
+      Resources::lookup_shader(Resources::shaders_bbox_vert),
+      Resources::lookup_shader(Resources::shaders_bbox_geom),
+      Resources::lookup_shader(Resources::shaders_bbox_frag));
 
   pass.needs_color_buffer_as_input_ = false;
   pass.writes_only_color_buffer_ = true;
 
-  pass.rasterizer_state_ = ctx.render_device->create_rasterizer_state(
-    scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false,
-    false, 0.0f, false, true, scm::gl::point_raster_state(true)
-  );
+  pass.rasterizer_state_ = ctx.render_device
+      ->create_rasterizer_state(scm::gl::FILL_SOLID,
+                                scm::gl::CULL_NONE,
+                                scm::gl::ORIENT_CCW,
+                                false,
+                                false,
+                                0.0f,
+                                false,
+                                true,
+                                scm::gl::point_raster_state(true));
   pass.depth_stencil_state_ = nullptr;
   pass.blend_state_ = nullptr;
 
   auto count = 1;
-  scm::gl::buffer_ptr buffer_ = ctx.render_device->create_buffer(
-                                    scm::gl::BIND_VERTEX_BUFFER,
-                                    scm::gl::USAGE_DYNAMIC_DRAW,
-                                    count * 2 * sizeof(math::vec3),
-                                    0);
+  scm::gl::buffer_ptr buffer_ =
+      ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
+                                       scm::gl::USAGE_DYNAMIC_DRAW,
+                                       count * 2 * sizeof(math::vec3),
+                                       0);
 
   scm::gl::vertex_array_ptr vao_ = ctx.render_device->create_vertex_array(
-    scm::gl::vertex_format(
-        0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
-        0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)), {buffer_});
+      scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
+          0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)),
+      {
+    buffer_
+  });
 
-  pass.process_ = [buffer_, vao_](PipelinePass& pass, PipelinePassDescription*, Pipeline& pipe) {
+  pass.process_ = [buffer_, vao_](
+      PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
 
     auto count(pipe.get_scene().bounding_boxes_.size());
 
@@ -81,11 +89,11 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
       ctx.render_device->resize_buffer(buffer_, count * 2 * sizeof(math::vec3));
 
       math::vec3* data(static_cast<math::vec3*>(ctx.render_context->map_buffer(
-                              buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+          buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
-      for (int i(0); i<count; ++i) {
-        data[2*i]   = pipe.get_scene().bounding_boxes_[i].min;
-        data[2*i+1] = pipe.get_scene().bounding_boxes_[i].max;
+      for (int i(0); i < count; ++i) {
+        data[2 * i] = pipe.get_scene().bounding_boxes_[i].min;
+        data[2 * i + 1] = pipe.get_scene().bounding_boxes_[i].max;
       }
 
       ctx.render_context->unmap_buffer(buffer_);
@@ -107,6 +115,7 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
       ctx.render_context->reset_state_objects();
     }
   };
+  pass.rendermode_ = RenderMode::Custom;
 
   return pass;
 }

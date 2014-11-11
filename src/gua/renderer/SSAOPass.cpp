@@ -32,16 +32,12 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SSAOPassDescription::SSAOPassDescription() :
-  radius_(1.f),
-  intensity_(1.f),
-  falloff_(0.1f) {}
+SSAOPassDescription::SSAOPassDescription()
+    : radius_(1.f), intensity_(1.f), falloff_(0.1f) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float SSAOPassDescription::radius() const{
-  return radius_;
-}
+float SSAOPassDescription::radius() const { return radius_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,9 +48,7 @@ SSAOPassDescription& SSAOPassDescription::radius(float radius) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float SSAOPassDescription::intensity() const{
-  return intensity_;
-}
+float SSAOPassDescription::intensity() const { return intensity_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -65,9 +59,7 @@ SSAOPassDescription& SSAOPassDescription::intensity(float intensity) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float SSAOPassDescription::falloff() const{
-  return falloff_;
-}
+float SSAOPassDescription::falloff() const { return falloff_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,24 +81,26 @@ PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
 
   pass.shader_ = std::make_shared<ShaderProgram>();
   pass.shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
-    Resources::lookup_shader(Resources::shaders_ssao_frag)
-  );
+      Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
+      Resources::lookup_shader(Resources::shaders_ssao_frag));
 
   pass.needs_color_buffer_as_input_ = false;
   pass.writes_only_color_buffer_ = true;
 
   pass.rasterizer_state_ = nullptr;
-  pass.depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
-  pass.blend_state_ = ctx.render_device->create_blend_state(
-    true,
-    scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
-    scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA
-  );
+  pass.depth_stencil_state_ =
+      ctx.render_device->create_depth_stencil_state(false, false);
+  pass.blend_state_ =
+      ctx.render_device->create_blend_state(true,
+                                            scm::gl::FUNC_SRC_ALPHA,
+                                            scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
+                                            scm::gl::FUNC_SRC_ALPHA,
+                                            scm::gl::FUNC_ONE_MINUS_SRC_ALPHA);
 
   auto noise_texture_ = std::make_shared<NoiseTexture>();
 
-  pass.process_ = [noise_texture_](PipelinePass& pass, PipelinePassDescription* desc, Pipeline& pipe) {
+  pass.process_ = [noise_texture_](
+      PipelinePass & pass, PipelinePassDescription * desc, Pipeline & pipe) {
     auto const& ctx(pipe.get_context());
 
     // bind gbuffer
@@ -120,21 +114,24 @@ PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
 
     pass.shader_->use(ctx);
 
-    SSAOPassDescription const* d(dynamic_cast<SSAOPassDescription const*>(desc));
+    SSAOPassDescription const* d(
+        dynamic_cast<SSAOPassDescription const*>(desc));
     if (d) {
-      pass.shader_->set_uniform(ctx, d->radius(),    "gua_ssao_radius");
+      pass.shader_->set_uniform(ctx, d->radius(), "gua_ssao_radius");
       pass.shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
-      pass.shader_->set_uniform(ctx, d->falloff(),   "gua_ssao_falloff");
+      pass.shader_->set_uniform(ctx, d->falloff(), "gua_ssao_falloff");
     }
-    pass.shader_->set_uniform(ctx, noise_texture_->get_handle(ctx), "gua_noise_tex");
+    pass.shader_
+        ->set_uniform(ctx, noise_texture_->get_handle(ctx), "gua_noise_tex");
 
     pipe.bind_gbuffer_input(pass.shader_);
     pipe.draw_quad();
     pipe.get_gbuffer().unbind(ctx);
 
     ctx.render_context->reset_state_objects();
-
   };
+  pass.rendermode_ = RenderMode::Custom;
+
   return pass;
 }
 

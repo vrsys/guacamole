@@ -42,38 +42,40 @@ PipelinePassDescription* LightingPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass LightingPassDescription::make_pass(RenderContext const& ctx) const {
+PipelinePass LightingPassDescription::make_pass(
+    RenderContext const& ctx) const {
   PipelinePass pass{};
 
   pass.shader_ = std::make_shared<ShaderProgram>();
   pass.shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_lighting_vert),
-    Resources::lookup_shader(Resources::shaders_lighting_frag)
-  );
+      Resources::lookup_shader(Resources::shaders_lighting_vert),
+      Resources::lookup_shader(Resources::shaders_lighting_frag));
 
   pass.needs_color_buffer_as_input_ = true;
   pass.writes_only_color_buffer_ = true;
 
-  pass.rasterizer_state_ = ctx.render_device->create_rasterizer_state(
-      scm::gl::FILL_SOLID, scm::gl::CULL_FRONT);
-  pass.depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
-  pass.blend_state_ = ctx.render_device->create_blend_state(
-      true,
-      scm::gl::FUNC_ONE,
-      scm::gl::FUNC_ONE,
-      scm::gl::FUNC_ONE,
-      scm::gl::FUNC_ONE);
+  pass.rasterizer_state_ = ctx.render_device
+      ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT);
+  pass.depth_stencil_state_ =
+      ctx.render_device->create_depth_stencil_state(false, false);
+  pass.blend_state_ = ctx.render_device->create_blend_state(true,
+                                                            scm::gl::FUNC_ONE,
+                                                            scm::gl::FUNC_ONE,
+                                                            scm::gl::FUNC_ONE,
+                                                            scm::gl::FUNC_ONE);
 
   auto emit_shader_ = std::make_shared<ShaderProgram>();
   emit_shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_lighting_emit_vert),
-    Resources::lookup_shader(Resources::shaders_lighting_emit_frag)
-  );
+      Resources::lookup_shader(Resources::shaders_lighting_emit_vert),
+      Resources::lookup_shader(Resources::shaders_lighting_emit_frag));
 
-  auto light_sphere = GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
-  auto light_cone   = GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
+  auto light_sphere =
+      GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
+  auto light_cone =
+      GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
 
-  pass.process_ = [emit_shader_,light_sphere,light_cone](PipelinePass& pass, PipelinePassDescription*, Pipeline& pipe) {
+  pass.process_ = [emit_shader_, light_sphere, light_cone](
+      PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
     auto const& ctx(pipe.get_context());
 
     // init resources
@@ -100,27 +102,48 @@ PipelinePass LightingPassDescription::make_pass(RenderContext const& ctx) const 
     pass.shader_->use(ctx);
     pipe.bind_gbuffer_input(pass.shader_);
 
-    // point lights --------------------------------------------------------------
+    // point lights
+    // --------------------------------------------------------------
 
-    pass.shader_->set_subroutine(ctx, scm::gl::STAGE_VERTEX_SHADER,   "compute_light", "gua_calculate_point_light");
-    pass.shader_->set_subroutine(ctx, scm::gl::STAGE_FRAGMENT_SHADER, "compute_light", "gua_calculate_point_light");
-    
+    pass.shader_->set_subroutine(ctx,
+                                 scm::gl::STAGE_VERTEX_SHADER,
+                                 "compute_light",
+                                 "gua_calculate_point_light");
+    pass.shader_->set_subroutine(ctx,
+                                 scm::gl::STAGE_FRAGMENT_SHADER,
+                                 "compute_light",
+                                 "gua_calculate_point_light");
+
     for (auto const& light : pipe.get_scene().point_lights_) {
-      pass.shader_->set_uniform(ctx, light->get_cached_world_transform(),        "gua_model_matrix");
-      pass.shader_->set_uniform(ctx, light->data.get_enable_diffuse_shading(),   "gua_light_diffuse_enable");
-      pass.shader_->set_uniform(ctx, light->data.get_enable_specular_shading(),  "gua_light_specular_enable");
-      pass.shader_->set_uniform(ctx, light->data.get_color().vec3(),             "gua_light_color");
-      pass.shader_->set_uniform(ctx, light->data.get_falloff(),                  "gua_light_falloff");
-      pass.shader_->set_uniform(ctx, false,                                      "gua_light_casts_shadow");
+      pass.shader_->set_uniform(
+          ctx, light->get_cached_world_transform(), "gua_model_matrix");
+      pass.shader_->set_uniform(ctx,
+                                light->data.get_enable_diffuse_shading(),
+                                "gua_light_diffuse_enable");
+      pass.shader_->set_uniform(ctx,
+                                light->data.get_enable_specular_shading(),
+                                "gua_light_specular_enable");
+      pass.shader_
+          ->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
+      pass.shader_
+          ->set_uniform(ctx, light->data.get_falloff(), "gua_light_falloff");
+      pass.shader_->set_uniform(ctx, false, "gua_light_casts_shadow");
 
       ctx.render_context->apply();
       light_sphere->draw(ctx);
     }
 
-    pass.shader_->set_subroutine(ctx, scm::gl::STAGE_VERTEX_SHADER,   "compute_light", "gua_calculate_spot_light");
-    pass.shader_->set_subroutine(ctx, scm::gl::STAGE_FRAGMENT_SHADER, "compute_light", "gua_calculate_spot_light");
-    
-    // spot lights ---------------------------------------------------------------
+    pass.shader_->set_subroutine(ctx,
+                                 scm::gl::STAGE_VERTEX_SHADER,
+                                 "compute_light",
+                                 "gua_calculate_spot_light");
+    pass.shader_->set_subroutine(ctx,
+                                 scm::gl::STAGE_FRAGMENT_SHADER,
+                                 "compute_light",
+                                 "gua_calculate_spot_light");
+
+    // spot lights
+    // ---------------------------------------------------------------
 
     for (auto const& light : pipe.get_scene().spot_lights_) {
 
@@ -128,7 +151,8 @@ PipelinePass LightingPassDescription::make_pass(RenderContext const& ctx) const 
         // ctx.render_context->reset_state_objects();
 
         // shadow_map_.render(
-        //   pipe, light->get_cached_world_transform(), light->data.get_shadow_map_size()
+        //   pipe, light->get_cached_world_transform(),
+        // light->data.get_shadow_map_size()
         // );
 
         // shader_->use(ctx);
@@ -140,24 +164,39 @@ PipelinePass LightingPassDescription::make_pass(RenderContext const& ctx) const 
         // ctx.render_context->set_blend_state(blend_state_);
 
         // float shadow_map_portion(
-        //   1.f * light->data.get_shadow_map_size() / 
+        //   1.f * light->data.get_shadow_map_size() /
         //   shadow_map_.get_buffer()->get_width()
         // );
 
-        // shader_->set_uniform(ctx, shadow_map_portion,                             "gua_light_shadow_map_portion");
-        // shader_->set_uniform(ctx, shadow_map_.get_projection_view_matrices()[0],  "gua_light_shadow_map_projection_view_matrix_0");
-        // shader_->set_uniform(ctx, shadow_map_.get_buffer()->get_depth_buffer()->get_handle(ctx), "gua_light_shadow_map");
-        // shader_->set_uniform(ctx, light->data.get_shadow_offset(),                "gua_shadow_offset");
+        // shader_->set_uniform(ctx, shadow_map_portion,
+        // "gua_light_shadow_map_portion");
+        // shader_->set_uniform(ctx,
+        // shadow_map_.get_projection_view_matrices()[0],
+        // "gua_light_shadow_map_projection_view_matrix_0");
+        // shader_->set_uniform(ctx,
+        // shadow_map_.get_buffer()->get_depth_buffer()->get_handle(ctx),
+        // "gua_light_shadow_map");
+        // shader_->set_uniform(ctx, light->data.get_shadow_offset(),
+        // "gua_shadow_offset");
       }
 
-      pass.shader_->set_uniform(ctx, light->get_cached_world_transform(),              "gua_model_matrix");
-      pass.shader_->set_uniform(ctx, light->data.get_enable_diffuse_shading(),         "gua_light_diffuse_enable");
-      pass.shader_->set_uniform(ctx, light->data.get_enable_specular_shading(),        "gua_light_specular_enable");
-      pass.shader_->set_uniform(ctx, light->data.get_color().vec3(),                   "gua_light_color");
-      pass.shader_->set_uniform(ctx, light->data.get_falloff(),                        "gua_light_falloff");
-      pass.shader_->set_uniform(ctx, light->data.get_softness(),                       "gua_light_softness");
-      pass.shader_->set_uniform(ctx, false,                 "gua_light_casts_shadow");
-      // shader_->set_uniform(ctx, light->data.get_enable_shadows(),                 "gua_light_casts_shadow");
+      pass.shader_->set_uniform(
+          ctx, light->get_cached_world_transform(), "gua_model_matrix");
+      pass.shader_->set_uniform(ctx,
+                                light->data.get_enable_diffuse_shading(),
+                                "gua_light_diffuse_enable");
+      pass.shader_->set_uniform(ctx,
+                                light->data.get_enable_specular_shading(),
+                                "gua_light_specular_enable");
+      pass.shader_
+          ->set_uniform(ctx, light->data.get_color().vec3(), "gua_light_color");
+      pass.shader_
+          ->set_uniform(ctx, light->data.get_falloff(), "gua_light_falloff");
+      pass.shader_
+          ->set_uniform(ctx, light->data.get_softness(), "gua_light_softness");
+      pass.shader_->set_uniform(ctx, false, "gua_light_casts_shadow");
+      // shader_->set_uniform(ctx, light->data.get_enable_shadows(),
+      // "gua_light_casts_shadow");
 
       ctx.render_context->apply();
       light_cone->draw(ctx);
@@ -167,6 +206,7 @@ PipelinePass LightingPassDescription::make_pass(RenderContext const& ctx) const 
 
     ctx.render_context->reset_state_objects();
   };
+  pass.rendermode_ = RenderMode::Custom;
 
   return pass;
 }

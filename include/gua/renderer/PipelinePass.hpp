@@ -31,7 +31,9 @@ class Pipeline;
 class PipelinePass;
 class RenderContext;
 
-enum class RenderMode { Callback };
+enum class RenderMode {
+  Custom, Callback
+};
 
 class PipelinePassDescription {
  public:
@@ -39,10 +41,10 @@ class PipelinePassDescription {
   virtual PipelinePassDescription* make_copy() const = 0;
 
   friend class Pipeline;
+
  protected:
   virtual PipelinePass make_pass(RenderContext const& ctx) const = 0;
 };
-
 
 class PipelinePass {
  public:
@@ -50,36 +52,38 @@ class PipelinePass {
   inline bool needs_color_buffer_as_input() const {
     return needs_color_buffer_as_input_;
   }
-  inline bool writes_only_color_buffer()    const {
+  inline bool writes_only_color_buffer() const {
     return writes_only_color_buffer_;
   }
 
   void process(PipelinePassDescription* desc, Pipeline& pipe) {
+    if (RenderMode::Custom == rendermode_) {
+      process_(*this, desc, pipe);
+    } else {
 #if 0
-    auto const& ctx(pipe.get_context());
-    pipe.get_gbuffer().bind(ctx, &pass);
-    pipe.get_gbuffer().set_viewport(ctx);
-    //pipe.get_gbuffer().clear_color(ctx);
-    if (depth_stencil_state_)
-      ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
-    if (blend_state_)
-      ctx.render_context->set_blend_state(pass.blend_state_);
-    if (rasterizer_state_)
-      ctx.render_context->set_rasterizer_state(rasterizer_state_);
-    shader_->use(ctx);
+      auto const& ctx(pipe.get_context());
+      pipe.get_gbuffer().bind(ctx, &pass);
+      pipe.get_gbuffer().set_viewport(ctx);
+      //pipe.get_gbuffer().clear_color(ctx);
+      if (depth_stencil_state_)
+        ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+      if (blend_state_)
+        ctx.render_context->set_blend_state(pass.blend_state_);
+      if (rasterizer_state_)
+        ctx.render_context->set_rasterizer_state(rasterizer_state_);
+      shader_->use(ctx);
+      process_(*this, desc, pipe);
+      pipe.get_gbuffer().unbind(ctx);
+      ctx.render_context->reset_state_objects();
 #endif
-    process_(*this, desc, pipe);
-#if 0
-    pipe.get_gbuffer().unbind(ctx);
-    ctx.render_context->reset_state_objects();
-#endif
+    }
   }
-  virtual void on_delete(Pipeline* pipe) {};
+  virtual void on_delete(Pipeline* pipe) {}
 
   friend class Pipeline;
 
  protected:
- public: // for refactoring purposes
+ public:  // for refactoring purposes
   PipelinePass() {}
   ~PipelinePass() {}
 
@@ -92,9 +96,11 @@ class PipelinePass {
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
 
-  std::function<void(PipelinePass&, PipelinePassDescription* desc, Pipeline&)> process_ =
-    [](PipelinePass&, PipelinePassDescription*, Pipeline&) { return; };
-  RenderMode rendermode_ = RenderMode::Callback;
+  std::function<void(PipelinePass&, PipelinePassDescription* desc, Pipeline&)>
+    process_ = [](PipelinePass&, PipelinePassDescription*, Pipeline&) {
+      return;
+    };
+  RenderMode rendermode_ = RenderMode::Custom;
 };
 
 }
