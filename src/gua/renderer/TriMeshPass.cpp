@@ -23,6 +23,7 @@
 #include <gua/renderer/TriMeshPass.hpp>
 
 #include <gua/node/TriMeshNode.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
@@ -62,7 +63,7 @@ TriMeshPass::TriMeshPass() :
 
 void TriMeshPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
 
-  
+
   auto sorted_objects(pipe->get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
   if (sorted_objects != pipe->get_scene().nodes.end() && sorted_objects->second.size() > 0) {
@@ -177,18 +178,18 @@ void TriMeshPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
     for (auto const& object : sorted_objects->second) {
 
       auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
-      
+
       if (current_material != tri_mesh_node->get_material().get_shader()) {
         current_material = tri_mesh_node->get_material().get_shader();
         if (current_material) {
-          current_shader = current_material->get_shader(ctx, *tri_mesh_node->get_geometry(), vertex_shader_, fragment_shader_);
+          current_shader = current_material->get_shader(ctx, typeid(*tri_mesh_node->get_geometry()), vertex_shader_, fragment_shader_);
         } else {
           Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material().get_shader_name() << std::endl;
         }
         if (current_shader) {
           current_shader->use(ctx);
           ctx.render_context->apply();
-        } 
+        }
       }
 
       if (current_shader && tri_mesh_node->get_geometry()) {

@@ -30,14 +30,13 @@
 // guacamole headers
 
 namespace gua {
-namespace gui {
 
   ////////////////////////////////////////////////////////////////////////////////
   GuiNode::GuiNode(std::string const& name,
-                   std::string const& resource_url = "",
+                   std::string const& resource_url,
                    math::mat4 const& transform)
     : GeometryNode(name, transform),
-      resource_(nullptr)
+      resource_(nullptr),
       resource_url_(resource_url),
       resource_url_changed_(true)
   {}
@@ -64,7 +63,7 @@ namespace gui {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<GeometryResource> const& GuiNode::get_resource() const {
+  std::shared_ptr<GuiResource> const& GuiNode::get_resource() const {
     return resource_;
   }
 
@@ -82,7 +81,7 @@ namespace gui {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void TriMeshNode::update_cache() {
+  void GuiNode::update_cache() {
 
     if (resource_url_changed_) {
       if (resource_url_ != "") {
@@ -106,11 +105,11 @@ namespace gui {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Node> GuiNode::copy() const {
+  std::shared_ptr<node::Node> GuiNode::copy() const {
     auto result(std::make_shared<GuiNode>(get_name(), get_transform()));
     result->shadow_mode_ = shadow_mode_;
     result->resource_ = resource_;
     return result;
   }
-}
+
 }

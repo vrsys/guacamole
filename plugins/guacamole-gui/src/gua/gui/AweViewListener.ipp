@@ -33,7 +33,7 @@ class AweViewListener : public Awesomium::WebViewListener::View {
     Awesomium::WebView* caller,
     Awesomium::Cursor cursor) {
 
-    Interface::get().on_cursor_change.emit(static_cast<Cursor>(cursor));
+    Interface::instance()->on_cursor_change.emit(static_cast<Cursor>(cursor));
   }
 
   void OnChangeFocus(
@@ -44,7 +44,7 @@ class AweViewListener : public Awesomium::WebViewListener::View {
     Awesomium::WebView* caller, const Awesomium::WebString& message,
     int line_number, const Awesomium::WebString& source) {
 
-    LOG_MESSAGE << message << " (" << source << ":"
+    Logger::LOG_MESSAGE << message << " (" << source << ":"
                         << line_number << ")" << std::endl;
   }
 

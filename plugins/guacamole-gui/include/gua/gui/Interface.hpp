@@ -26,6 +26,7 @@
 #include <gua/utils/Singleton.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/events/Signal.hpp>
+#include <gua/gui/mouse_enums.hpp>
 
 // forward declares ------------------------------------------------------------
 namespace Awesomium {
@@ -35,6 +36,8 @@ namespace Awesomium {
 }
 
 namespace gua {
+
+class ShaderProgram;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +53,7 @@ class GUA_DLL Interface : public Singleton<Interface> {
 
   void update() const;
 
-  friend class GuiNode;
+  friend class GuiResource;
   friend class Singleton<Interface>;
 
  ///////////////////////////////////////////////////////////////////////////////

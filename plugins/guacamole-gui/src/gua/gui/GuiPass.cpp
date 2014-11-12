@@ -29,7 +29,6 @@
 #include <gua/gui/GuiNode.hpp>
 
 namespace gua {
-namespace gui {
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,9 +48,9 @@ PipelinePass* GuiPassDescription::make_pass() const {
 
 GuiPass::GuiPass() :
   shader_(new ShaderProgram()),
-  fullscreen_quad_(nullptr) {
+  quad_(nullptr) {
 
-  std::string const v_shader(
+  std::string v_shader(
     R"(
       // vertex shader ---------------------------------------------------------
       @include "shaders/common/header.glsl"
@@ -75,7 +74,7 @@ GuiPass::GuiPass() :
     )"
   );
 
-  std::string const f_shader(
+  std::string f_shader(
     R"(
       // fragment shader -------------------------------------------------------
       @include "shaders/common/header.glsl"
@@ -109,7 +108,7 @@ GuiPass::GuiPass() :
 
 void GuiPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
 
-  auto gui_nodes(pipe->get_scene().nodes.find(std::type_index(typeid(gui::GuiNode))));
+  auto gui_nodes(pipe->get_scene().nodes.find(std::type_index(typeid(GuiNode))));
 
   if (gui_nodes != pipe->get_scene().nodes.end() && gui_nodes.size() > 0) {
 
@@ -128,7 +127,7 @@ void GuiPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
       shader_->use(ctx);
       ctx.render_context->apply();
 
-      auto const& gui_node(reinterpret_cast<gui::GuiNode*>(node));
+      auto const& gui_node(reinterpret_cast<GuiNode*>(node));
 
       UniformValue model_mat(gui_node->get_cached_world_transform());
       // UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
@@ -150,6 +149,5 @@ void GuiPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}
 }
 

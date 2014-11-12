@@ -19,71 +19,48 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GUI_NODE_HPP
-#define GUA_GUI_NODE_HPP
+#ifndef GUA_GUI_PATHS_HPP
+#define GUA_GUI_PATHS_HPP
 
-// guacamole headers
-#include <gua/node/GeometryNode.hpp>
+// includes  -------------------------------------------------------------------
+#include <gua/utils/Singleton.hpp>
+#include <gua/platform.hpp>
+
+#include <string>
 
 namespace gua {
 
-class GuiResource;
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-/**
- * This class is used to represent polygonal geometry in the SceneGraph.
- *
- * \ingroup gua_scenegraph
- */
-class GUA_DLL GuiNode : public node::GeometryNode {
- public:  // member
+// -----------------------------------------------------------------------------
+class GUA_DLL Paths : public Singleton<Paths> {
 
-  GuiNode(std::string const& name = "",
-          std::string const& resource_url = "",
-          math::mat4 const& transform = math::mat4::identity());
+ ///////////////////////////////////////////////////////////////////////////////
+ // ----------------------------------------------------------- public interface
+ public:
 
+  // ------------------------------------------------------------ public methods
+  void init(int argc, char** argv);
+  void clean_up();
 
-  /**
-  * Implements ray picking for a gui node
-  */
-  void ray_test_impl(Ray const& ray,
-                     PickResult::Options options,
-                     Mask const& mask,
-                     std::set<PickResult>& hits) override;
+  std::string tmp_file(std::string const& suffix = "tmp") const;
+  std::string resource(std::string const& type, std::string const& file) const;
+  std::string make_absolute(std::string const& file) const;
+  std::string get_extension(std::string const& file) const;
 
-  /**
-  * Updates bounding box by accessing the ressource in the databse
-  */
-  void update_bounding_box() const override;
-  void update_cache() override;
+  friend class Singleton<Paths>;
 
+ ///////////////////////////////////////////////////////////////////////////////
+ // ---------------------------------------------------------- private interface
+ private:
+  // this class is a Singleton --- private c'tor and d'tor
+  Paths();
+  ~Paths() {}
 
-  void set_resource_url(std::string const& resource_url);
-  std::string const& get_resource_url() const;
-
-  std::shared_ptr<GuiResource> const& get_resource() const;
-
-  /**
-   * Accepts a visitor and calls concrete visit method.
-   *
-   * This method implements the visitor pattern for Nodes.
-   *
-   * \param visitor  A visitor to process the GeometryNode's data.
-   */
-  void accept(NodeVisitor& visitor) override;
-
- protected:
-
-  std::shared_ptr<node::Node> copy() const override;
-
- private:  // attributes e.g. special attributes for drawing
-
-  std::shared_ptr<GuiResource> resource_;
-
-  std::string resource_url_;
-  bool resource_url_changed_;
-
+  std::string executable_;
 };
 
-} // namespace gua {
+}
 
-#endif  // GUA_GUI_NODE_HPP
+#endif  // GUA_GUI_PATHS_HPP

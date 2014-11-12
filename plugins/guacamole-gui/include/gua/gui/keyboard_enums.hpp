@@ -23,7 +23,7 @@
 #define GUA_GUI_KEYBOARD_ENUMS_HPP
 
 
-namespace swift {
+namespace gua {
 
 enum class Key : int {
   UNKNOWN            =   -1,

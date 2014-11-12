@@ -13,7 +13,7 @@ class AweJSMethodHandler : public Awesomium::JSMethodHandler {
  public:
 
   // ----------------------------------------------------- contruction interface
-  AweJSMethodHandler(GuiComponent* parent)
+  AweJSMethodHandler(GuiResource* parent)
     : parent_(parent) {}
 
   // ------------------------------------------------------------ public methods
@@ -46,6 +46,6 @@ class AweJSMethodHandler : public Awesomium::JSMethodHandler {
  ///////////////////////////////////////////////////////////////////////////////
  // ---------------------------------------------------------- private interface
  private:
-  GuiComponent* parent_;
+  GuiResource* parent_;
 
 };

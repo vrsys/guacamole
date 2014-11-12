@@ -66,18 +66,18 @@ void LightingPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   if (!shader_) {
     shader_ = std::make_shared<ShaderProgram>();
     shader_->create_from_sources(
-      Resources::lookup_shader(Resources::shaders_lighting_vert), 
+      Resources::lookup_shader(Resources::shaders_lighting_vert),
       Resources::lookup_shader(Resources::shaders_lighting_frag)
     );
 
     emit_shader_ = std::make_shared<ShaderProgram>();
     emit_shader_->create_from_sources(
-      Resources::lookup_shader(Resources::shaders_lighting_emit_vert), 
+      Resources::lookup_shader(Resources::shaders_lighting_emit_vert),
       Resources::lookup_shader(Resources::shaders_lighting_emit_frag)
     );
 
-    light_sphere_         = GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
-    light_cone_           = GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
+    light_sphere_         = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_sphere_proxy"));
+    light_cone_           = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_cone_proxy"));
     depth_stencil_state_  = ctx.render_device->create_depth_stencil_state(false, false);
     rasterizer_state_     = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT);
     blend_state_          = ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE);
@@ -91,10 +91,10 @@ void LightingPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   // set state
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
   ctx.render_context->set_blend_state(blend_state_);
-  
+
   // draw fullscreen quad for emissive surfaces
   emit_shader_->use(ctx);
-  
+
   emit_shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_width(),  "gua_texel_width");
   emit_shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(),  "gua_texel_height");
   emit_shader_->set_uniform(ctx, pipe->get_gbuffer().get_current_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
@@ -112,7 +112,7 @@ void LightingPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
 
   shader_->set_subroutine(ctx, scm::gl::STAGE_VERTEX_SHADER,   "compute_light", "gua_calculate_point_light");
   shader_->set_subroutine(ctx, scm::gl::STAGE_FRAGMENT_SHADER, "compute_light", "gua_calculate_point_light");
-  
+
   for (auto const& light : pipe->get_scene().nodes[std::type_index(typeid(node::PointLightNode))]) {
     auto point_light(reinterpret_cast<node::PointLightNode*>(light));
 
@@ -129,7 +129,7 @@ void LightingPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
 
   shader_->set_subroutine(ctx, scm::gl::STAGE_VERTEX_SHADER,   "compute_light", "gua_calculate_spot_light");
   shader_->set_subroutine(ctx, scm::gl::STAGE_FRAGMENT_SHADER, "compute_light", "gua_calculate_spot_light");
-  
+
   // spot lights ---------------------------------------------------------------
 
   for (auto const& light : pipe->get_scene().nodes[std::type_index(typeid(node::SpotLightNode))]) {
@@ -151,7 +151,7 @@ void LightingPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
       // ctx.render_context->set_blend_state(blend_state_);
 
       // float shadow_map_portion(
-      //   1.f * spot_light->data.get_shadow_map_size() / 
+      //   1.f * spot_light->data.get_shadow_map_size() /
       //   shadow_map_.get_buffer()->get_width()
       // );
 
@@ -177,7 +177,7 @@ void LightingPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
   pipe->get_gbuffer().unbind(ctx);
 
   ctx.render_context->reset_state_objects();
-} 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

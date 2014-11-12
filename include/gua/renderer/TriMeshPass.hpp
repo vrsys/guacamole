@@ -24,6 +24,8 @@
 
 #include <gua/renderer/PipelinePass.hpp>
 
+#include <gua/platform.hpp>
+
 // external headers
 #include <scm/gl_core/buffer_objects.h>
 

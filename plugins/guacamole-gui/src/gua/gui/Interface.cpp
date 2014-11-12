@@ -7,10 +7,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // includes  -------------------------------------------------------------------
-#include <swift2d/gui/Interface.hpp>
+#include <gua/gui/Interface.hpp>
+#include <gua/gui/Paths.hpp>
 
 #include <gua/utils/Logger.hpp>
 #include <gua/renderer/Texture2D.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+#include <gua/utils/TextFile.hpp>
 
 #include <Awesomium/WebCore.h>
 #include <Awesomium/BitmapSurface.h>
@@ -24,7 +27,6 @@ Awesomium::DataSource::~DataSource(){}
 #endif
 
 namespace gua {
-namespace gui {
 
 namespace {
 
@@ -79,6 +81,5 @@ Awesomium::WebView* Interface::create_webview(int width, int height) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}
 }
 

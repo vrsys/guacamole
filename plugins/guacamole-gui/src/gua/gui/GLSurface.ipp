@@ -38,22 +38,22 @@ class GLSurface : public Awesomium::Surface {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  bool bind(RenderContext const& ctx, ShaderProgram* program) {
+  bool bind(RenderContext const& ctx, gua::ShaderProgram* program) {
 
     if (!tex_) {
       init(ctx);
     }
 
-    program->set_uniform(ctx, tex_->get_handle(), "gua_gui_diffuse_tex")
+    program->set_uniform(ctx, tex_->get_handle(ctx), "gua_gui_diffuse_tex");
 
     if (needs_update_) {
       std::unique_lock<std::mutex> lock(mutex_);
       needs_update_ = false;
 
-      tex_->updated_sub_data(
+      tex_->update_sub_data(
         ctx,
         scm::gl::texture_region(math::vec3ui(0,0,0), math::vec3ui(width_, height_, 0)),
-        0, scm::gl::FORMAT_BGRA_8, buffer_
+        0u, scm::gl::FORMAT_BGRA_8, &buffer_.front()
       );
     }
 
@@ -133,7 +133,7 @@ class GLSurface : public Awesomium::Surface {
  ///////////////////////////////////////////////////////////////////////////////
  // ---------------------------------------------------------- private interface
  private:
-  std::shared_ptr<Tecutre2D> tex_;
+  std::shared_ptr<gua::Texture2D> tex_;
 
   std::vector<unsigned char>  buffer_;
 

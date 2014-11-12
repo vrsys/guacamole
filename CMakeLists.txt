@@ -103,6 +103,7 @@ set(LIB_PATHS
 set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/build
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
     ${SCHISM_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIR}
@@ -161,7 +162,7 @@ endif()
 if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated)
 endif()
- 
+
 
 IF (UNIX)
     ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
@@ -175,7 +176,7 @@ IF (UNIX)
     ADD_CUSTOM_TARGET(CompileResources ALL
        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
     )
- 
+
 ELSEIF(MSVC)
     ADD_CUSTOM_TARGET(CompileResources ALL
        DEPENDS ${RESOURCES} guarc

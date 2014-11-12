@@ -23,7 +23,8 @@
 #include <gua/gui/GuiResource.hpp>
 
 // guacamole headers
-#include <gua/gui/GuiRenderer.hpp>
+#include <gua/gui/GuiPass.hpp>
+#include <gua/gui/Interface.hpp>
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
@@ -45,17 +46,14 @@ namespace {
 
 }
 
-namespace gui {
-
 ////////////////////////////////////////////////////////////////////////////////
 
-GuiResource::GuiResource(std::string const& url)
+GuiResource::GuiResource(std::string const& url, math::vec2 const& size)
   : url_("")
   , view_(nullptr)
   , js_window_(nullptr)
   , interactive_(true)
 {
-  register_renderer<GuiNode, GuiRenderer>();
 
   on_loaded.connect([this]() {
     js_window_ = new Awesomium::JSValue();
@@ -64,11 +62,11 @@ GuiResource::GuiResource(std::string const& url)
     );
 
     if (!js_window_->IsObject()) {
-      LOG_WARNING << "Failed to initialize GuiResource!" << std::endl;
+      Logger::LOG_WARNING << "Failed to initialize GuiResource!" << std::endl;
     }
   });
 
-  view_ = Interface::get().create_webview(Size().x(), Size().y());
+  view_ = Interface::instance()->create_webview(size.x, size.y);
   view_->SetTransparent(true);
   view_->Focus();
   view_->set_view_listener(new AweViewListener());
@@ -98,8 +96,8 @@ GuiResource::~GuiResource() {
 
 void GuiResource::set_url(std::string const& url) {
   url_ = url;
-  Awesomium::WebURL url(Awesomium::WSLit(url_.c_str()));
-  view_->LoadURL(url);
+  Awesomium::WebURL u(Awesomium::WSLit(url_.c_str()));
+  view_->LoadURL(u);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -153,7 +151,7 @@ void GuiResource::inject_char_event(unsigned c) const {
 
 void GuiResource::inject_mouse_position(math::vec2 const& position) const {
   if (interactive_) {
-    view_->InjectMouseMove(pos.x() - corner.x(), size.y() - pos.y() - corner.y());
+    view_->InjectMouseMove(position.x, /*size.y -*/ position.y);
   }
 }
 
@@ -173,7 +171,7 @@ void GuiResource::inject_mouse_button(Button button, int action, int mods) const
 
 void GuiResource::inject_mouse_wheel(math::vec2 const& direction) const {
   if (interactive_) {
-    view_->InjectMouseWheel(direction.y(), direction.x());
+    view_->InjectMouseWheel(direction.y, direction.x);
   }
 }
 
@@ -208,7 +206,7 @@ void GuiResource::add_javascript_getter(std::string const& name, std::function<s
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::bind(RenderContext const& ctx, ShaderProgram* program) const {
-  Interface::get().bind(view_, ctx, program);
+  Interface::instance()->bind(view_, ctx, program);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,6 +230,4 @@ void GuiResource::add_javascript_callback(std::string const& callback, bool with
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-}
 }

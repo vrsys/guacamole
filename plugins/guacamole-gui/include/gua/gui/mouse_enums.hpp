@@ -23,7 +23,7 @@
 #define GUA_GUI_MOUSE_ENUMS_HPP
 
 
-namespace swift {
+namespace gua {
 
 enum class Button : int {
   BUTTON_1     =   0,

@@ -29,12 +29,16 @@
 #include <gua/gui/keyboard_enums.hpp>
 #include <gua/gui/mouse_enums.hpp>
 
-// external headers
+
+namespace Awesomium {
+  class WebView;
+  class JSValue;
+}
 
 namespace gua {
-namespace gui {
 
-struct RenderContext;
+class RenderContext;
+class ShaderProgram;
 
 /**
  * Stores geometry data.
@@ -52,7 +56,7 @@ class GuiResource : public GeometryResource {
      *
      * Creates a new and empty Mesh.
      */
-    GuiResource(std::string const& url = "");
+    GuiResource(std::string const& url = "", math::vec2 const& size = math::vec2(0.f, 0.f));
     ~GuiResource();
 
     events::Signal<std::string, std::vector<std::string>> on_javascript_callback;
@@ -84,6 +88,9 @@ class GuiResource : public GeometryResource {
     void add_javascript_getter(std::string const& name, std::function<std::string()> callback);
 
 
+    std::unordered_map<std::string, std::function<std::string()>> const& get_result_callbacks() const {
+      return result_callbacks_;
+    }
 
     void bind(RenderContext const& context, ShaderProgram* program) const;
 
@@ -105,7 +112,6 @@ class GuiResource : public GeometryResource {
 
 };
 
-}
 }
 
 #endif  // GUA_GUI_RESOURCE_HPP

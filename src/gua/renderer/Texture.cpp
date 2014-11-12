@@ -91,11 +91,11 @@ Texture::~Texture() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Texture::update_sub_data(RenderContext const& ctx,
+void Texture::update_sub_data(RenderContext const& context,
                               scm::gl::texture_region const& region,
                               unsigned level,
                               scm::gl::data_format format,
-                              std::vector<void*> const& data) {
+                              const void* const data) {
   if (textures_.size() <= context.id || textures_[context.id] == 0) {
     upload_to(context);
   }
@@ -103,7 +103,7 @@ void Texture::update_sub_data(RenderContext const& ctx,
   if (textures_[context.id])
     context.render_context->update_sub_texture(
       textures_[context.id],
-      region, level, format, &data.front()
+      region, level, format, data
     );
 }
 

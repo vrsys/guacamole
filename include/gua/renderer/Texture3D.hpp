@@ -61,15 +61,16 @@ class GUA_DLL Texture3D : public Texture {
    * \param state_descripton The sampler state for the loaded 3D texture.
    */
   Texture3D(unsigned width,
-          unsigned height,
-          unsigned depth,
-          scm::gl::data_format color_format,
-          std::vector<void*> const& data,
-          unsigned mipmap_layers = 1,
-          scm::gl::sampler_state_desc const& state_descripton =
-              scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE));
+            unsigned height,
+            unsigned depth,
+            scm::gl::data_format color_format,
+            scm::gl::data_format internal_format,
+            std::vector<void*> const& data,
+            unsigned mipmap_layers = 1,
+            scm::gl::sampler_state_desc const& state_descripton =
+                scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE));
 
   /**
    * Constructor.
@@ -84,14 +85,14 @@ class GUA_DLL Texture3D : public Texture {
    * \param state_descripton The sampler state for the loaded texture.
    */
   Texture3D(unsigned width,
-          unsigned height,
-          unsigned depth,
-          scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
-          unsigned mipmap_layers = 1,
-          scm::gl::sampler_state_desc const& state_descripton =
-              scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE));
+            unsigned height,
+            unsigned depth,
+            scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
+            unsigned mipmap_layers = 1,
+            scm::gl::sampler_state_desc const& state_descripton =
+                scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE));
 
   /**
    * Constructor.
@@ -102,11 +103,11 @@ class GUA_DLL Texture3D : public Texture {
    * \param state_descripton The sampler state for the loaded texture.
    */
   Texture3D(std::string const& file,
-          bool generate_mipmaps = false,
-          scm::gl::sampler_state_desc const& state_descripton =
-              scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
-                                          scm::gl::WRAP_REPEAT,
-                                          scm::gl::WRAP_REPEAT));
+            bool generate_mipmaps = false,
+            scm::gl::sampler_state_desc const& state_descripton =
+                scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
+                                            scm::gl::WRAP_REPEAT,
+                                            scm::gl::WRAP_REPEAT));
 
   virtual ~Texture3D() {}
 

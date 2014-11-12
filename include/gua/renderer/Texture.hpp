@@ -97,11 +97,11 @@ class GUA_DLL Texture {
   virtual ~Texture();
 
 
-  void update_sub_data(RenderContext const& ctx,
+  void update_sub_data(RenderContext const& context,
                        scm::gl::texture_region const& region,
                        unsigned level,
                        scm::gl::data_format format,
-                       std::vector<void*> const& data);
+                       const void* const data);
 
   void generate_mipmaps(RenderContext const& context);
 
