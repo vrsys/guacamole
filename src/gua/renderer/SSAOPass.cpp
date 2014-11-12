@@ -35,6 +35,9 @@ namespace gua {
 SSAOPassDescription::SSAOPassDescription()
   : PipelinePassDescription(), radius_(1.f), intensity_(1.f), falloff_(0.1f) {
 
+  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+  fragment_shader_ = "shaders/ssao.frag";
+
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = true;
   doClear_ = false;
@@ -50,6 +53,27 @@ SSAOPassDescription::SSAOPassDescription()
                                             scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
                                             scm::gl::FUNC_SRC_ALPHA,
                                             scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
+
+  auto noise_texture_ = std::make_shared<NoiseTexture>();
+
+  // set uniforms and draw a full screen quad
+  process_ = [noise_texture_](
+      PipelinePass & pass, PipelinePassDescription * desc, Pipeline & pipe) {
+    auto const& ctx(pipe.get_context());
+    SSAOPassDescription const* d(
+        dynamic_cast<SSAOPassDescription const*>(desc));
+    if (d) {
+      pass.shader_->set_uniform(ctx, d->radius(), "gua_ssao_radius");
+      pass.shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
+      pass.shader_->set_uniform(ctx, d->falloff(), "gua_ssao_falloff");
+    }
+    pass.shader_
+        ->set_uniform(ctx, noise_texture_->get_handle(ctx), "gua_noise_tex");
+
+    pipe.bind_gbuffer_input(pass.shader_);
+    pipe.draw_fullscreen_quad();
+  };
+
 
 }
 
@@ -90,56 +114,6 @@ SSAOPassDescription& SSAOPassDescription::falloff(float falloff) {
 
 PipelinePassDescription* SSAOPassDescription::make_copy() const {
   return new SSAOPassDescription(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
-  PipelinePass pass{};
-
-  pass.shader_ = std::make_shared<ShaderProgram>();
-  pass.shader_->create_from_sources(
-      Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
-      Resources::lookup_shader(Resources::shaders_ssao_frag));
-
-  pass.needs_color_buffer_as_input_ = needs_color_buffer_as_input_;
-  pass.writes_only_color_buffer_    = writes_only_color_buffer_;
-  pass.doClear_                     = doClear_;
-  pass.rendermode_                  = rendermode_;
-
-  if (depth_stencil_state_) {
-    pass.depth_stencil_state_ =
-        ctx.render_device->create_depth_stencil_state(*depth_stencil_state_);
-  }
-  if (blend_state_) {
-    pass.blend_state_ = ctx.render_device->create_blend_state(*blend_state_);
-  }
-  if (rasterizer_state_) {
-    pass.rasterizer_state_ =
-      ctx.render_device->create_rasterizer_state(*rasterizer_state_);
-  }
-
-  auto noise_texture_ = std::make_shared<NoiseTexture>();
-
-  // set uniforms and draw a full screen quad
-  pass.process_ = [noise_texture_](
-      PipelinePass & pass, PipelinePassDescription * desc, Pipeline & pipe) {
-    auto const& ctx(pipe.get_context());
-    SSAOPassDescription const* d(
-        dynamic_cast<SSAOPassDescription const*>(desc));
-    if (d) {
-      pass.shader_->set_uniform(ctx, d->radius(), "gua_ssao_radius");
-      pass.shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
-      pass.shader_->set_uniform(ctx, d->falloff(), "gua_ssao_falloff");
-    }
-    pass.shader_
-        ->set_uniform(ctx, noise_texture_->get_handle(ctx), "gua_noise_tex");
-
-    pipe.bind_gbuffer_input(pass.shader_);
-    pipe.draw_quad();
-  };
-
-  return pass;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

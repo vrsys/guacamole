@@ -42,11 +42,13 @@ class PipelinePassDescription {
   virtual ~PipelinePassDescription() {}
 
   friend class Pipeline;
+  friend class PipelinePass;
 
  protected:
-  virtual PipelinePass make_pass(RenderContext const& ctx) const = 0;
-
   // shader names
+  std::string vertex_shader_ = "";
+  std::string fragment_shader_ = "";
+  std::string geometry_shader_ = "";
 
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
@@ -58,7 +60,10 @@ class PipelinePassDescription {
   boost::optional<scm::gl::blend_state_desc> blend_state_;
   boost::optional<scm::gl::depth_stencil_state_desc> depth_stencil_state_;
 
-  // std::function< ... process
+  std::function<void(PipelinePass&, PipelinePassDescription* desc, Pipeline&)>
+    process_ = [](PipelinePass&, PipelinePassDescription*, Pipeline&) {
+      return;
+    };
 };
 
 class PipelinePass {
@@ -79,6 +84,7 @@ class PipelinePass {
  protected:
  public:  // for refactoring purposes
   PipelinePass() {}
+  PipelinePass(PipelinePassDescription const&, RenderContext const&);
   ~PipelinePass() {}
 
   std::shared_ptr<ShaderProgram> shader_ = nullptr;
