@@ -38,6 +38,16 @@ EmissivePassDescription::EmissivePassDescription()
   writes_only_color_buffer_ = true;
   doClear_ = true;
   rendermode_ = RenderMode::Quad;
+
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
+  blend_state_ = boost::make_optional(
+      scm::gl::blend_state_desc(scm::gl::blend_ops(true,
+                                                    scm::gl::FUNC_ONE,
+                                                    scm::gl::FUNC_ONE,
+                                                    scm::gl::FUNC_ONE,
+                                                    scm::gl::FUNC_ONE)));
+
 }
 
 
@@ -63,15 +73,17 @@ PipelinePass EmissivePassDescription::make_pass(
   pass.doClear_                     = doClear_;
   pass.rendermode_                  = rendermode_;
 
-  pass.depth_stencil_state_ =
-      ctx.render_device->create_depth_stencil_state(false, false);
-  pass.blend_state_ = ctx.render_device->create_blend_state(true,
-                                                            scm::gl::FUNC_ONE,
-                                                            scm::gl::FUNC_ONE,
-                                                            scm::gl::FUNC_ONE,
-                                                            scm::gl::FUNC_ONE);
-
-  pass.rendermode_ = RenderMode::Quad;
+  if (depth_stencil_state_) {
+    pass.depth_stencil_state_ =
+        ctx.render_device->create_depth_stencil_state(*depth_stencil_state_);
+  }
+  if (blend_state_) {
+    pass.blend_state_ = ctx.render_device->create_blend_state(*blend_state_);
+  }
+  if (rasterizer_state_) {
+    pass.rasterizer_state_ =
+      ctx.render_device->create_rasterizer_state(*rasterizer_state_);
+  }
 
   return pass;
 }

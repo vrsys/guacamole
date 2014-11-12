@@ -35,6 +35,17 @@ BBoxPassDescription::BBoxPassDescription()
 {
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Custom;
+  rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
+                                scm::gl::FILL_SOLID,
+                                scm::gl::CULL_NONE,
+                                scm::gl::ORIENT_CCW,
+                                false,
+                                false,
+                                0.0f,
+                                false,
+                                true,
+                                scm::gl::point_raster_state(true)));
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,18 +70,17 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
   pass.doClear_                     = doClear_;
   pass.rendermode_                  = rendermode_;
 
-  pass.rasterizer_state_ = ctx.render_device
-      ->create_rasterizer_state(scm::gl::FILL_SOLID,
-                                scm::gl::CULL_NONE,
-                                scm::gl::ORIENT_CCW,
-                                false,
-                                false,
-                                0.0f,
-                                false,
-                                true,
-                                scm::gl::point_raster_state(true));
-  pass.depth_stencil_state_ = nullptr;
-  pass.blend_state_ = nullptr;
+  if (depth_stencil_state_) {
+    pass.depth_stencil_state_ =
+        ctx.render_device->create_depth_stencil_state(*depth_stencil_state_);
+  }
+  if (blend_state_) {
+    pass.blend_state_ = ctx.render_device->create_blend_state(*blend_state_);
+  }
+  if (rasterizer_state_) {
+    pass.rasterizer_state_ =
+      ctx.render_device->create_rasterizer_state(*rasterizer_state_);
+  }
 
   auto count = 1;
   scm::gl::buffer_ptr buffer_ =

@@ -36,6 +36,8 @@ BackgroundPassDescription::BackgroundPassDescription()
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Quad;
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
 }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,8 +61,17 @@ PipelinePass BackgroundPassDescription::make_pass(
   pass.doClear_                     = doClear_;
   pass.rendermode_                  = rendermode_;
 
-  pass.depth_stencil_state_ =
-      ctx.render_device->create_depth_stencil_state(false, false);
+  if (depth_stencil_state_) {
+    pass.depth_stencil_state_ =
+        ctx.render_device->create_depth_stencil_state(*depth_stencil_state_);
+  }
+  if (blend_state_) {
+    pass.blend_state_ = ctx.render_device->create_blend_state(*blend_state_);
+  }
+  if (rasterizer_state_) {
+    pass.rasterizer_state_ =
+      ctx.render_device->create_rasterizer_state(*rasterizer_state_);
+  }
 
   return pass;
 }
