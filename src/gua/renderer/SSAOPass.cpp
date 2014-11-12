@@ -39,6 +39,18 @@ SSAOPassDescription::SSAOPassDescription()
   writes_only_color_buffer_ = true;
   doClear_ = false;
   rendermode_ = RenderMode::Callback;
+
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
+
+  blend_state_ = boost::make_optional(
+      scm::gl::blend_state_desc(scm::gl::blend_ops(
+                                            true,
+                                            scm::gl::FUNC_SRC_ALPHA,
+                                            scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
+                                            scm::gl::FUNC_SRC_ALPHA,
+                                            scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,15 +107,17 @@ PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx) const {
   pass.doClear_                     = doClear_;
   pass.rendermode_                  = rendermode_;
 
-  pass.rasterizer_state_ = nullptr;
-  pass.depth_stencil_state_ =
-      ctx.render_device->create_depth_stencil_state(false, false);
-  pass.blend_state_ =
-      ctx.render_device->create_blend_state(true,
-                                            scm::gl::FUNC_SRC_ALPHA,
-                                            scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
-                                            scm::gl::FUNC_SRC_ALPHA,
-                                            scm::gl::FUNC_ONE_MINUS_SRC_ALPHA);
+  if (depth_stencil_state_) {
+    pass.depth_stencil_state_ =
+        ctx.render_device->create_depth_stencil_state(*depth_stencil_state_);
+  }
+  if (blend_state_) {
+    pass.blend_state_ = ctx.render_device->create_blend_state(*blend_state_);
+  }
+  if (rasterizer_state_) {
+    pass.rasterizer_state_ =
+      ctx.render_device->create_rasterizer_state(*rasterizer_state_);
+  }
 
   auto noise_texture_ = std::make_shared<NoiseTexture>();
 
