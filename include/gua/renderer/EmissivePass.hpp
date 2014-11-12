@@ -38,9 +38,6 @@ class EmissivePassDescription : public PipelinePassDescription {
   EmissivePassDescription();
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
-  
- protected:
-  PipelinePass make_pass(RenderContext const&) const override;
 };
 
 }

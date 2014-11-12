@@ -36,42 +36,12 @@ GeometryPassDescription::GeometryPassDescription()
   writes_only_color_buffer_ = false;
   doClear_ = false;
   rendermode_ = RenderMode::Custom;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePassDescription* GeometryPassDescription::make_copy() const {
-  return new GeometryPassDescription(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass GeometryPassDescription::make_pass(
-    RenderContext const& ctx) const {
-  PipelinePass pass{};
-
-  pass.needs_color_buffer_as_input_ = needs_color_buffer_as_input_;
-  pass.writes_only_color_buffer_    = writes_only_color_buffer_;
-  pass.doClear_                     = doClear_;
-  pass.rendermode_                  = rendermode_;
-
-  if (depth_stencil_state_) {
-    pass.depth_stencil_state_ =
-        ctx.render_device->create_depth_stencil_state(*depth_stencil_state_);
-  }
-  if (blend_state_) {
-    pass.blend_state_ = ctx.render_device->create_blend_state(*blend_state_);
-  }
-  if (rasterizer_state_) {
-    pass.rasterizer_state_ =
-      ctx.render_device->create_rasterizer_state(*rasterizer_state_);
-  }
 
   auto renderers_ = std::make_shared<
       std::unordered_map<std::type_index,
                          std::shared_ptr<RessourceRenderer> > >();
 
-  pass.process_ = [renderers_](
+  process_ = [renderers_](
       PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
 
     auto get_renderer =
@@ -108,8 +78,12 @@ PipelinePass GeometryPassDescription::make_pass(
 
     pipe.get_gbuffer().unbind(ctx);
   };
+}
 
-  return pass;
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePassDescription* GeometryPassDescription::make_copy() const {
+  return new GeometryPassDescription(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

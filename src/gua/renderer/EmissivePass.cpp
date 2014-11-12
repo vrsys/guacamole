@@ -34,6 +34,8 @@ namespace gua {
 
 EmissivePassDescription::EmissivePassDescription()
   : PipelinePassDescription() {
+  vertex_shader_ = "shaders/lighting_emit.vert";
+  fragment_shader_ = "shaders/lighting_emit.frag";
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
   doClear_ = true;
@@ -47,47 +49,12 @@ EmissivePassDescription::EmissivePassDescription()
                                                     scm::gl::FUNC_ONE,
                                                     scm::gl::FUNC_ONE,
                                                     scm::gl::FUNC_ONE)));
-
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePassDescription* EmissivePassDescription::make_copy() const {
   return new EmissivePassDescription(*this);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass EmissivePassDescription::make_pass(
-    RenderContext const& ctx) const {
-  PipelinePass pass{};
-
-  pass.shader_ = std::make_shared<ShaderProgram>();
-  pass.shader_->create_from_sources(
-      Resources::lookup_shader(Resources::shaders_lighting_emit_vert),
-      Resources::lookup_shader(Resources::shaders_lighting_emit_frag));
-
-  pass.needs_color_buffer_as_input_ = needs_color_buffer_as_input_;
-  pass.writes_only_color_buffer_    = writes_only_color_buffer_;
-  pass.doClear_                     = doClear_;
-  pass.rendermode_                  = rendermode_;
-
-  if (depth_stencil_state_) {
-    pass.depth_stencil_state_ =
-        ctx.render_device->create_depth_stencil_state(*depth_stencil_state_);
-  }
-  if (blend_state_) {
-    pass.blend_state_ = ctx.render_device->create_blend_state(*blend_state_);
-  }
-  if (rasterizer_state_) {
-    pass.rasterizer_state_ =
-      ctx.render_device->create_rasterizer_state(*rasterizer_state_);
-  }
-
-  return pass;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 }

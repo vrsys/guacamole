@@ -30,6 +30,44 @@
 
 namespace gua {
 
+PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const& ctx)
+  : shader_(std::make_shared<ShaderProgram>())
+  , rasterizer_state_(nullptr)
+  , depth_stencil_state_(nullptr)
+  , blend_state_(nullptr)
+  , needs_color_buffer_as_input_(d.needs_color_buffer_as_input_)
+  , writes_only_color_buffer_(d.writes_only_color_buffer_)
+  , doClear_(d.doClear_)
+  , rendermode_(d.rendermode_)
+  , process_(d.process_)
+{
+  if (!d.vertex_shader_.empty() && !d.fragment_shader_.empty()) {
+    if (!d.geometry_shader_.empty()) {
+      shader_->create_from_sources(
+          Resources::lookup_shader(d.vertex_shader_),
+          Resources::lookup_shader(d.geometry_shader_),
+          Resources::lookup_shader(d.fragment_shader_)
+          );
+    } else {
+      shader_->create_from_sources(
+          Resources::lookup_shader(d.vertex_shader_),
+          Resources::lookup_shader(d.fragment_shader_));
+    }
+  }
+
+  if (d.depth_stencil_state_) {
+    depth_stencil_state_ =
+        ctx.render_device->create_depth_stencil_state(*d.depth_stencil_state_);
+  }
+  if (d.blend_state_) {
+    blend_state_ = ctx.render_device->create_blend_state(*d.blend_state_);
+  }
+  if (d.rasterizer_state_) {
+    rasterizer_state_ =
+      ctx.render_device->create_rasterizer_state(*d.rasterizer_state_);
+  }
+}
+
 void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
   if (RenderMode::Custom == rendermode_) {
     process_(*this, desc, pipe);

@@ -36,6 +36,8 @@ LightingPassDescription::LightingPassDescription()
   : PipelinePassDescription() {
   // here we assume, that the emissive pass was run previously
   // so we don't swap and don't clear the colorbuffer
+  vertex_shader_ = "shaders/lighting.vert";
+  fragment_shader_ = "shaders/lighting.frag";
   needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
   writes_only_color_buffer_ = true; // we write out a color
   doClear_ = false;
@@ -51,43 +53,8 @@ LightingPassDescription::LightingPassDescription()
                                                     scm::gl::FUNC_ONE)));
   rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
         scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));
-}
 
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePassDescription* LightingPassDescription::make_copy() const {
-  return new LightingPassDescription(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass LightingPassDescription::make_pass(
-    RenderContext const& ctx) const {
-  PipelinePass pass{};
-
-  pass.shader_ = std::make_shared<ShaderProgram>();
-  pass.shader_->create_from_sources(
-      Resources::lookup_shader(Resources::shaders_lighting_vert),
-      Resources::lookup_shader(Resources::shaders_lighting_frag));
-
-  pass.needs_color_buffer_as_input_ = needs_color_buffer_as_input_;
-  pass.writes_only_color_buffer_    = writes_only_color_buffer_;
-  pass.doClear_                     = doClear_;
-  pass.rendermode_                  = rendermode_;
-
-  if (depth_stencil_state_) {
-    pass.depth_stencil_state_ =
-        ctx.render_device->create_depth_stencil_state(*depth_stencil_state_);
-  }
-  if (blend_state_) {
-    pass.blend_state_ = ctx.render_device->create_blend_state(*blend_state_);
-  }
-  if (rasterizer_state_) {
-    pass.rasterizer_state_ =
-      ctx.render_device->create_rasterizer_state(*rasterizer_state_);
-  }
-
-  pass.process_ = [](
+  process_ = [](
       PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
 
     auto light_sphere =
@@ -220,8 +187,12 @@ PipelinePass LightingPassDescription::make_pass(
 
     ctx.render_context->reset_state_objects();
   };
+}
 
-  return pass;
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePassDescription* LightingPassDescription::make_copy() const {
+  return new LightingPassDescription(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
