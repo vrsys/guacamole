@@ -39,23 +39,23 @@ GeometryPassDescription::GeometryPassDescription()
   doClear_ = false;
   rendermode_ = RenderMode::Custom;
 
-  auto renderers_ = std::make_shared<
+  auto renderers = std::make_shared<
       std::unordered_map<std::type_index,
                          std::shared_ptr<RessourceRenderer> > >();
 
-  process_ = [renderers_](
+  process_ = [renderers](
       PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
 
     auto get_renderer =
         [&](std::type_index const & id)->std::shared_ptr<RessourceRenderer> {
-      auto renderer = renderers_->find(id);
+      auto renderer = renderers->find(id);
 
-      if (renderer != renderers_->end()) {
+      if (renderer != renderers->end()) {
         return renderer->second;
       }
 
       auto new_renderer = RessourceRenderer::get_renderer(id);
-      (*renderers_)[id] = new_renderer;
+      (*renderers)[id] = new_renderer;
 
       return new_renderer;
     };
