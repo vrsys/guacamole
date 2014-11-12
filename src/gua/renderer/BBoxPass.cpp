@@ -104,15 +104,18 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx) const {
 
       ctx.render_device->resize_buffer(buffer_, count * 2 * sizeof(math::vec3));
 
-      math::vec3* data(static_cast<math::vec3*>(ctx.render_context->map_buffer(
-          buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+      {
+        auto data = static_cast<math::vec3*>(ctx.render_context->map_buffer(
+              buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
-      for (int i(0); i < count; ++i) {
-        data[2 * i] = pipe.get_scene().bounding_boxes_[i].min;
-        data[2 * i + 1] = pipe.get_scene().bounding_boxes_[i].max;
+        for (int i(0); i < count; ++i) {
+          data[2 * i] = pipe.get_scene().bounding_boxes_[i].min;
+          data[2 * i + 1] = pipe.get_scene().bounding_boxes_[i].max;
+        }
+
+        ctx.render_context->unmap_buffer(buffer_);
       }
 
-      ctx.render_context->unmap_buffer(buffer_);
       if (pass.rasterizer_state_)
         ctx.render_context->set_rasterizer_state(pass.rasterizer_state_);
 
