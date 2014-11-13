@@ -43,7 +43,7 @@ LightingPassDescription::LightingPassDescription()
   needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
   writes_only_color_buffer_ = true; // we write out a color
   doClear_ = false;
-  rendermode_ = RenderMode::Custom;
+  rendermode_ = RenderMode::Callback;
 
   depth_stencil_state_ = boost::make_optional(
       scm::gl::depth_stencil_state_desc(false, false));
@@ -59,30 +59,10 @@ LightingPassDescription::LightingPassDescription()
   process_ = [](
       PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
 
-    auto light_sphere =
-        GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
-    auto light_cone =
-        GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
-
     auto const& ctx(pipe.get_context());
 
     // init resources
     // bind gbuffer
-    pipe.get_gbuffer().bind(ctx, pass.writes_only_color_buffer_);
-    pipe.get_gbuffer().set_viewport(ctx);
-    if (pass.doClear_)
-      pipe.get_gbuffer().clear_color(ctx);
-
-    // set state
-    if (pass.depth_stencil_state_)
-      ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
-    if (pass.blend_state_)
-      ctx.render_context->set_blend_state(pass.blend_state_);
-    if (pass.rasterizer_state_)
-      ctx.render_context->set_rasterizer_state(pass.rasterizer_state_);
-
-    // draw proxy geometries for light sources
-    pass.shader_->use(ctx);
     pipe.bind_gbuffer_input(pass.shader_);
 
     // point lights
@@ -97,6 +77,8 @@ LightingPassDescription::LightingPassDescription()
                                  "compute_light",
                                  "gua_calculate_point_light");
 
+    auto light_sphere =
+        GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
     for (auto const& l : pipe.get_scene().nodes[std::type_index(typeid(node::PointLightNode))]) {
       auto light(reinterpret_cast<node::PointLightNode*>(l));
 
@@ -129,6 +111,9 @@ LightingPassDescription::LightingPassDescription()
 
     // spot lights
     // ---------------------------------------------------------------
+
+    auto light_cone =
+        GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
 
     for (auto const& l : pipe.get_scene().nodes[std::type_index(typeid(node::SpotLightNode))]) {
       auto light(reinterpret_cast<node::SpotLightNode*>(l));
@@ -187,10 +172,6 @@ LightingPassDescription::LightingPassDescription()
       ctx.render_context->apply();
       light_cone->draw(ctx);
     }
-
-    pipe.get_gbuffer().unbind(ctx);
-
-    ctx.render_context->reset_state_objects();
   };
 }
 

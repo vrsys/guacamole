@@ -87,7 +87,7 @@ void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
     if (RenderMode::Callback == rendermode_) {
       process_(*this, desc, pipe);
     } else { // RenderMode::Quad
-      //pipe.bind_gbuffer_input(shader_);
+      pipe.bind_gbuffer_input(shader_);
       pipe.draw_quad();
     }
     pipe.get_gbuffer().unbind(ctx);

@@ -36,7 +36,7 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
   fragment_shader_ = "shaders/bbox.frag";
 
   writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Custom;
+  rendermode_ = RenderMode::Callback;
   rasterizer_state_ = boost::make_optional(
       scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID,
                                      scm::gl::CULL_NONE,
@@ -54,60 +54,49 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
       std::make_pair(nullptr, nullptr));
 
   process_ = [buffer_vao_pair](
-      PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
+      PipelinePass &, PipelinePassDescription*, Pipeline & pipe) {
 
     auto count(pipe.get_scene().bounding_boxes.size());
 
-    if (count > 0) {
-      RenderContext const& ctx(pipe.get_context());
-      if (!buffer_vao_pair->first) {
-        buffer_vao_pair->first =
-            ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                             scm::gl::USAGE_DYNAMIC_DRAW,
-                                             count * 2 * sizeof(math::vec3),
-                                             0);
+    if (count < 1)
+      return;
+    // else
+    RenderContext const& ctx(pipe.get_context());
+    if (!buffer_vao_pair->first) {
+      buffer_vao_pair->first =
+          ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
+                                           scm::gl::USAGE_DYNAMIC_DRAW,
+                                           count * 2 * sizeof(math::vec3),
+                                           0);
 
-        buffer_vao_pair->second = ctx.render_device->create_vertex_array(
-            scm::gl::vertex_format(
-                0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
-                0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)),
-            {
-          buffer_vao_pair->first
-        });
-      }
-
-      ctx.render_device->resize_buffer(buffer_vao_pair->first,
-                                       count * 2 * sizeof(math::vec3));
-
-      {
-        auto data = static_cast<math::vec3*>(ctx.render_context->map_buffer(
-            buffer_vao_pair->first, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
-
-        for (int i(0); i < count; ++i) {
-          data[2 * i] = pipe.get_scene().bounding_boxes[i].min;
-          data[2 * i + 1] = pipe.get_scene().bounding_boxes[i].max;
-        }
-
-        ctx.render_context->unmap_buffer(buffer_vao_pair->first);
-      }
-
-      if (pass.rasterizer_state_)
-        ctx.render_context->set_rasterizer_state(pass.rasterizer_state_);
-
-      // bind gbuffer
-      pipe.get_gbuffer().bind(ctx, pass.writes_only_color_buffer_);
-      pipe.get_gbuffer().set_viewport(ctx);
-
-      pass.shader_->use(ctx);
-      //pipe.bind_gbuffer_input(pass.shader_);
-      ctx.render_context->bind_vertex_array(buffer_vao_pair->second);
-
-      ctx.render_context->apply();
-      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, count);
-      pipe.get_gbuffer().unbind(ctx);
-
-      ctx.render_context->reset_state_objects();
+      buffer_vao_pair->second = ctx.render_device->create_vertex_array(
+          scm::gl::vertex_format(
+              0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
+              0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)),
+          {
+        buffer_vao_pair->first
+      });
     }
+
+    ctx.render_device->resize_buffer(buffer_vao_pair->first,
+                                     count * 2 * sizeof(math::vec3));
+
+    {
+      auto data = static_cast<math::vec3*>(ctx.render_context->map_buffer(
+          buffer_vao_pair->first, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
+
+      for (int i(0); i < count; ++i) {
+        data[2 * i] = pipe.get_scene().bounding_boxes[i].min;
+        data[2 * i + 1] = pipe.get_scene().bounding_boxes[i].max;
+      }
+
+      ctx.render_context->unmap_buffer(buffer_vao_pair->first);
+    }
+
+    ctx.render_context->bind_vertex_array(buffer_vao_pair->second);
+
+    ctx.render_context->apply();
+    ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, count);
   };
 }
 
