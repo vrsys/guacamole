@@ -85,6 +85,7 @@ void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
       ctx.render_context->set_rasterizer_state(rasterizer_state_);
     shader_->use(ctx);
     if (RenderMode::Callback == rendermode_) {
+      //pipe.bind_gbuffer_input(shader_);
       process_(*this, desc, pipe);
     } else { // RenderMode::Quad
       pipe.bind_gbuffer_input(shader_);
