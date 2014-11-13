@@ -32,60 +32,26 @@
 
 namespace gua {
 
-GeometryPassDescription::GeometryPassDescription()
+TexturedQuadPassDescription::TexturedQuadPassDescription()
   : PipelinePassDescription() {
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
   doClear_ = false;
   rendermode_ = RenderMode::Custom;
 
-  auto renderers = std::make_shared<
-      std::unordered_map<std::type_index,
-                         std::shared_ptr<RessourceRenderer> > >();
-
-  process_ = [renderers](
+  process_ = [](
       PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
 
-    auto get_renderer =
-        [&](std::type_index const & id)->std::shared_ptr<RessourceRenderer> {
-      auto renderer = renderers->find(id);
-
-      if (renderer != renderers->end()) {
-        return renderer->second;
-      }
-
-      auto new_renderer = RessourceRenderer::get_renderer(id);
-      (*renderers)[id] = new_renderer;
-
-      return new_renderer;
-    };
-
-    auto const& ctx(pipe.get_context());
-
-    pipe.get_gbuffer().bind(ctx, &pass);
-    pipe.get_gbuffer().set_viewport(ctx);
-
-    for (auto const& type_ressource_pair : pipe.get_scene().geometrynodes_) {
-      auto const& ressources = type_ressource_pair.second;
-      if (ressources.size() > 0 && ressources.begin()->second.size() > 0) {
-        auto const& renderer = get_renderer(type_ressource_pair.first);
-        if (renderer)
-          renderer->draw(ressources, &pipe);
-        else
-          Logger::LOG_WARNING << "Unable to render geometry of type "
-                              << type_ressource_pair.first.name()
-                              << ": No renderer registered!" << std::endl;
-      }
+    for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
+      auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
     }
-
-    pipe.get_gbuffer().unbind(ctx);
   };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* GeometryPassDescription::make_copy() const {
-  return new GeometryPassDescription(*this);
+PipelinePassDescription* TexturedQuadPassDescription::make_copy() const {
+  return new TexturedQuadPassDescription(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

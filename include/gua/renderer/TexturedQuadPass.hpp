@@ -39,7 +39,7 @@ class TexturedQuadPass;
 
 class TexturedQuadPassDescription : public PipelinePassDescription {
  public:
-  GeometryPassDescription();
+  TexturedQuadPassDescription();
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
 };

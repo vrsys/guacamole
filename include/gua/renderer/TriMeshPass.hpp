@@ -38,34 +38,9 @@ class TriMeshPass;
 
 class TriMeshPassDescription : public PipelinePassDescription {
  public:
+  TriMeshPassDescription();
   virtual PipelinePassDescription* make_copy() const;
   friend class Pipeline;
-  
- protected:
-  virtual PipelinePass* make_pass() const;
-};
-
-
-
-class TriMeshPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return false; }
-  virtual bool writes_only_color_buffer()    const { return false; }
-  
-  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
-
-  friend class TriMeshPassDescription;
-
- protected:
-  TriMeshPass();
-  ~TriMeshPass() {}
-
- private:
-  std::string vertex_shader_;
-  std::string fragment_shader_;
-
-  mutable scm::gl::buffer_ptr material_uniform_storage_buffer_;
 };
 
 }
