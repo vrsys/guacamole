@@ -71,7 +71,7 @@ SSAOPassDescription::SSAOPassDescription()
         ->set_uniform(ctx, noise_texture->get_handle(ctx), "gua_noise_tex");
 
     pipe.bind_gbuffer_input(pass.shader_);
-    pipe.draw_fullscreen_quad();
+    pipe.draw_quad();
   };
 
 
