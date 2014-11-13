@@ -73,7 +73,7 @@ void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
     process_(*this, desc, pipe);
   } else {
     auto const& ctx(pipe.get_context());
-    pipe.get_gbuffer().bind(ctx, this);
+    pipe.get_gbuffer().bind(ctx, writes_only_color_buffer_);
     pipe.get_gbuffer().set_viewport(ctx);
     if (doClear_)
       pipe.get_gbuffer().clear_color(ctx);
@@ -87,8 +87,8 @@ void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
     if (RenderMode::Callback == rendermode_) {
       process_(*this, desc, pipe);
     } else { // RenderMode::Quad
-      pipe.bind_gbuffer_input(shader_);
-      pipe.draw_fullscreen_quad();
+      //pipe.bind_gbuffer_input(shader_);
+      pipe.draw_quad();
     }
     pipe.get_gbuffer().unbind(ctx);
     ctx.render_context->reset_state_objects();
