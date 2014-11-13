@@ -68,7 +68,7 @@ LightingPassDescription::LightingPassDescription()
 
     // init resources
     // bind gbuffer
-    pipe.get_gbuffer().bind(ctx, &pass);
+    pipe.get_gbuffer().bind(ctx, pass.writes_only_color_buffer_);
     pipe.get_gbuffer().set_viewport(ctx);
     if (pass.doClear_)
       pipe.get_gbuffer().clear_color(ctx);
@@ -97,7 +97,9 @@ LightingPassDescription::LightingPassDescription()
                                  "compute_light",
                                  "gua_calculate_point_light");
 
-    for (auto const& light : pipe.get_scene().point_lights_) {
+    for (auto const& l : pipe.get_scene().nodes[std::type_index(typeid(node::PointLightNode))]) {
+      auto light(reinterpret_cast<node::PointLightNode*>(l));
+
       pass.shader_->set_uniform(
           ctx, light->get_cached_world_transform(), "gua_model_matrix");
       pass.shader_->set_uniform(ctx,
@@ -128,7 +130,8 @@ LightingPassDescription::LightingPassDescription()
     // spot lights
     // ---------------------------------------------------------------
 
-    for (auto const& light : pipe.get_scene().spot_lights_) {
+    for (auto const& l : pipe.get_scene().nodes[std::type_index(typeid(node::SpotLightNode))]) {
+      auto light(reinterpret_cast<node::SpotLightNode*>(l));
 
       if (light->data.get_enable_shadows()) {
         // ctx.render_context->reset_state_objects();
