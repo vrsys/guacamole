@@ -39,7 +39,7 @@ EmissivePassDescription::EmissivePassDescription()
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
   doClear_ = true;
-  rendermode_ = RenderMode::Callback; // RenderMode::Quad;
+  rendermode_ = RenderMode::Quad;
 
   depth_stencil_state_ = boost::make_optional(
       scm::gl::depth_stencil_state_desc(false, false));
@@ -49,16 +49,6 @@ EmissivePassDescription::EmissivePassDescription()
                                                     scm::gl::FUNC_ONE,
                                                     scm::gl::FUNC_ONE,
                                                     scm::gl::FUNC_ONE)));
-  process_ = [](
-      PipelinePass & pass, PipelinePassDescription * desc, Pipeline & pipe) {
-    auto const& ctx(pipe.get_context());
-    pass.shader_->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_width(), "gua_texel_width");
-    pass.shader_->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_height(), "gua_texel_height");
-    pass.shader_->set_uniform(ctx, pipe.get_gbuffer().get_current_color_buffer()->get_handle(ctx), "gua_gbuffer_color");
-    pass.shader_->set_uniform(ctx, pipe.get_gbuffer().get_current_pbr_buffer()->get_handle(ctx), "gua_gbuffer_pbr");
-    //pipe.bind_gbuffer_input(pass.shader_);
-    pipe.draw_quad();
-  };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
