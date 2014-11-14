@@ -36,8 +36,8 @@ namespace gua {
 
 TriMeshPassDescription::TriMeshPassDescription()
   : PipelinePassDescription() {
-  vertex_shader_ = "shaders/tri_mesh_shader.vert";
-  fragment_shader_ = "shaders/tri_mesh_shader.frag";
+  vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
+  fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
@@ -45,8 +45,8 @@ TriMeshPassDescription::TriMeshPassDescription()
   rendermode_ = RenderMode::Custom;
 
   std::shared_ptr<scm::gl::buffer_ptr> material_uniform_storage_buffer = std::make_shared<scm::gl::buffer_ptr>(nullptr);
-  auto vertex_shader = Resources::lookup_shader(vertex_shader_);
-  auto fragment_shader = Resources::lookup_shader(fragment_shader_);
+  auto vertex_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
+  auto fragment_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
   process_ = [material_uniform_storage_buffer, vertex_shader, fragment_shader](
       PipelinePass&, PipelinePassDescription*, Pipeline & pipe) {
 
