@@ -61,7 +61,7 @@ SSAOPassDescription::SSAOPassDescription()
 
   // set uniforms and draw a full screen quad
   process_ = [tex](
-      PipelinePass & pass, PipelinePassDescription* , Pipeline & pipe) {
+      PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe) {
     pipe.get_context().render_context->current_program()->uniform(
         "gua_noise_tex", 0, tex->get_handle(pipe.get_context()));
 

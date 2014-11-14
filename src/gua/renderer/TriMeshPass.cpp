@@ -48,7 +48,7 @@ TriMeshPassDescription::TriMeshPassDescription()
   auto vertex_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
   auto fragment_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
   process_ = [material_uniform_storage_buffer, vertex_shader, fragment_shader](
-      PipelinePass&, PipelinePassDescription*, Pipeline & pipe) {
+      PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
 
     auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
 

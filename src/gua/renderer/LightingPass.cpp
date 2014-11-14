@@ -57,7 +57,7 @@ LightingPassDescription::LightingPassDescription()
         scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));
 
   process_ = [](
-      PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
+      PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe) {
 
     auto const& ctx(pipe.get_context());
     auto gl_program(ctx.render_context->current_program());

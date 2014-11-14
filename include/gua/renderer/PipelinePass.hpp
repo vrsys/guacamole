@@ -60,8 +60,8 @@ class PipelinePassDescription {
   boost::optional<scm::gl::blend_state_desc> blend_state_;
   boost::optional<scm::gl::depth_stencil_state_desc> depth_stencil_state_;
 
-  std::function<void(PipelinePass&, PipelinePassDescription* desc, Pipeline&)>
-    process_ = [](PipelinePass&, PipelinePassDescription*, Pipeline&) {
+  std::function<void(PipelinePass&, PipelinePassDescription const& , Pipeline&)>
+    process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) {
       return;
     };
  public:
@@ -78,7 +78,7 @@ class PipelinePass {
     return writes_only_color_buffer_;
   }
 
-  void process(PipelinePassDescription* desc, Pipeline& pipe);
+  void process(PipelinePassDescription const& desc, Pipeline& pipe);
   virtual void on_delete(Pipeline* pipe) {}
 
   friend class Pipeline;
@@ -100,8 +100,8 @@ class PipelinePass {
   bool doClear_ = false;
   RenderMode rendermode_ = RenderMode::Custom;
 
-  std::function<void(PipelinePass&, PipelinePassDescription* desc, Pipeline&)>
-    process_ = [](PipelinePass&, PipelinePassDescription*, Pipeline&) {
+  std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&)>
+    process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) {
       return;
     };
 };

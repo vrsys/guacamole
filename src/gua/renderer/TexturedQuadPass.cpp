@@ -40,7 +40,7 @@ TexturedQuadPassDescription::TexturedQuadPassDescription()
   rendermode_ = RenderMode::Custom;
 
   process_ = [](
-      PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
+      PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe) {
 
     for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
       auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));

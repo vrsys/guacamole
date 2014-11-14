@@ -53,7 +53,7 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
       std::make_pair(nullptr, nullptr));
 
   process_ = [buffer_vao_pair](
-      PipelinePass &, PipelinePassDescription*, Pipeline & pipe) {
+      PipelinePass &, PipelinePassDescription const&, Pipeline & pipe) {
 
     auto count(pipe.get_scene().bounding_boxes.size());
 

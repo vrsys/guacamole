@@ -69,7 +69,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
   }
 }
 
-void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
+void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) {
   if (RenderMode::Custom == rendermode_) {
     process_(*this, desc, pipe);
   } else {
@@ -86,7 +86,7 @@ void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
       ctx.render_context->set_rasterizer_state(rasterizer_state_);
     shader_->use(ctx);
 
-    for (auto const& u : desc->uniforms1f) {
+    for (auto const& u : desc.uniforms1f) {
       ctx.render_context->current_program()->uniform(u.first, 0, u.second);
     }
 
