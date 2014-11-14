@@ -54,21 +54,21 @@ SSAOPassDescription::SSAOPassDescription()
                                             scm::gl::FUNC_SRC_ALPHA,
                                             scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
 
-  auto noise_texture = std::make_shared<NoiseTexture>();
+  auto tex = std::make_shared<NoiseTexture>();
 
   // set uniforms and draw a full screen quad
-  process_ = [noise_texture](
+  process_ = [tex](
       PipelinePass & pass, PipelinePassDescription * desc, Pipeline & pipe) {
     auto const& ctx(pipe.get_context());
+    auto gl_program(ctx.render_context->current_program());
     SSAOPassDescription const* d(
         dynamic_cast<SSAOPassDescription const*>(desc));
     if (d) {
-      pass.shader_->set_uniform(ctx, d->radius(), "gua_ssao_radius");
-      pass.shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
-      pass.shader_->set_uniform(ctx, d->falloff(), "gua_ssao_falloff");
+      gl_program->uniform("gua_ssao_radius", 0, d->radius());
+      gl_program->uniform("gua_ssao_intensity", 0, d->intensity());
+      gl_program->uniform("gua_ssao_falloff", 0, d->falloff());
     }
-    pass.shader_
-        ->set_uniform(ctx, noise_texture->get_handle(ctx), "gua_noise_tex");
+    gl_program->uniform("gua_noise_tex", 0, tex->get_handle(ctx));
 
     pipe.bind_gbuffer_input(pass.shader_);
     pipe.draw_quad();
