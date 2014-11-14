@@ -85,11 +85,15 @@ void PipelinePass::process(PipelinePassDescription* desc, Pipeline& pipe) {
     if (rasterizer_state_)
       ctx.render_context->set_rasterizer_state(rasterizer_state_);
     shader_->use(ctx);
+
+    for (auto const& u : desc->uniforms1f) {
+      ctx.render_context->current_program()->uniform(u.first, 0, u.second);
+    }
+
+    pipe.bind_gbuffer_input(shader_);
     if (RenderMode::Callback == rendermode_) {
-      //pipe.bind_gbuffer_input(shader_);
       process_(*this, desc, pipe);
     } else { // RenderMode::Quad
-      pipe.bind_gbuffer_input(shader_);
       pipe.draw_quad();
     }
     pipe.get_gbuffer().unbind(ctx);

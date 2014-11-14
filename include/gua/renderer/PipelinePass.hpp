@@ -64,6 +64,8 @@ class PipelinePassDescription {
     process_ = [](PipelinePass&, PipelinePassDescription*, Pipeline&) {
       return;
     };
+ public:
+  std::map<std::string, float> uniforms1f;
 };
 
 class PipelinePass {
