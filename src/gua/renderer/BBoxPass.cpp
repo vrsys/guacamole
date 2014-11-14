@@ -48,7 +48,6 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
                                      true,
                                      scm::gl::point_raster_state(true)));
 
-  auto count = 1;
   auto buffer_vao_pair = std::make_shared<
       std::pair<scm::gl::buffer_ptr, scm::gl::vertex_array_ptr> >(
       std::make_pair(nullptr, nullptr));
@@ -73,9 +72,7 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
           scm::gl::vertex_format(
               0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
               0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)),
-          {
-        buffer_vao_pair->first
-      });
+              {buffer_vao_pair->first});
     }
 
     ctx.render_device->resize_buffer(buffer_vao_pair->first,
