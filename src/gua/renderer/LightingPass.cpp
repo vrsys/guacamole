@@ -60,15 +60,9 @@ LightingPassDescription::LightingPassDescription()
       PipelinePass & pass, PipelinePassDescription*, Pipeline & pipe) {
 
     auto const& ctx(pipe.get_context());
-
-    // init resources
-    // bind gbuffer
-    pipe.bind_gbuffer_input(pass.shader_);
-
     auto gl_program(ctx.render_context->current_program());
-    // point lights
-    // --------------------------------------------------------------
 
+    // point lights
     gl_program->uniform_subroutine( scm::gl::STAGE_VERTEX_SHADER,
                                     "compute_light",
                                     "gua_calculate_point_light");
@@ -105,8 +99,6 @@ LightingPassDescription::LightingPassDescription()
                                  "gua_calculate_spot_light");
 
     // spot lights
-    // ---------------------------------------------------------------
-
     auto light_cone =
         GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
 

@@ -33,7 +33,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 SSAOPassDescription::SSAOPassDescription()
-  : PipelinePassDescription(), radius_(1.f), intensity_(1.f), falloff_(0.1f) {
+  : PipelinePassDescription() {
 
   vertex_shader_ = "shaders/common/fullscreen_quad.vert";
   fragment_shader_ = "shaders/ssao.frag";
@@ -53,61 +53,20 @@ SSAOPassDescription::SSAOPassDescription()
                                             scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
                                             scm::gl::FUNC_SRC_ALPHA,
                                             scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
+  uniforms1f["gua_ssao_radius"]    = 1.0f;
+  uniforms1f["gua_ssao_intensity"] = 1.0f;
+  uniforms1f["gua_ssao_falloff"]   = 0.1f;
 
   auto tex = std::make_shared<NoiseTexture>();
 
   // set uniforms and draw a full screen quad
   process_ = [tex](
-      PipelinePass & pass, PipelinePassDescription * desc, Pipeline & pipe) {
-    auto const& ctx(pipe.get_context());
-    auto gl_program(ctx.render_context->current_program());
-    SSAOPassDescription const* d(
-        dynamic_cast<SSAOPassDescription const*>(desc));
-    if (d) {
-      gl_program->uniform("gua_ssao_radius", 0, d->radius());
-      gl_program->uniform("gua_ssao_intensity", 0, d->intensity());
-      gl_program->uniform("gua_ssao_falloff", 0, d->falloff());
-    }
-    gl_program->uniform("gua_noise_tex", 0, tex->get_handle(ctx));
+      PipelinePass & pass, PipelinePassDescription* , Pipeline & pipe) {
+    pipe.get_context().render_context->current_program()->uniform(
+        "gua_noise_tex", 0, tex->get_handle(pipe.get_context()));
 
-    pipe.bind_gbuffer_input(pass.shader_);
     pipe.draw_quad();
   };
-
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-float SSAOPassDescription::radius() const { return radius_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-SSAOPassDescription& SSAOPassDescription::radius(float radius) {
-  radius_ = radius;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-float SSAOPassDescription::intensity() const { return intensity_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-SSAOPassDescription& SSAOPassDescription::intensity(float intensity) {
-  intensity_ = intensity;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-float SSAOPassDescription::falloff() const { return falloff_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-SSAOPassDescription& SSAOPassDescription::falloff(float falloff) {
-  falloff_ = falloff;
-  return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
