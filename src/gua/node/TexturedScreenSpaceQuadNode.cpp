@@ -20,97 +20,65 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/PipelineDescription.hpp>
+#include <gua/node/TexturedScreenSpaceQuadNode.hpp>
 
-// guacamole headers
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/EmissivePass.hpp>
-#include <gua/renderer/LightingPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/BBoxPass.hpp>
-#include <gua/renderer/TexturedQuadPass.hpp>
-#include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
+// guacamole header
+#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/utils/Logger.hpp>
+#include <gua/databases/TextureDatabase.hpp>
+#include <gua/renderer/SerializedScene.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
+namespace node {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelineDescription PipelineDescription::make_default() {
-  PipelineDescription pipe;
-  pipe.add_pass<TriMeshPassDescription>();
-  pipe.add_pass<TexturedQuadPassDescription>();
-  pipe.add_pass<EmissivePassDescription>();
-  pipe.add_pass<LightingPassDescription>();
-  pipe.add_pass<SSAOPassDescription>();
-  pipe.add_pass<BBoxPassDescription>();
-  pipe.add_pass<BackgroundPassDescription>();
-  pipe.add_pass<TexturedScreenSpaceQuadPassDescription>();
+TexturedScreenSpaceQuadNode::TexturedScreenSpaceQuadNode() {}
 
-  return pipe;
+////////////////////////////////////////////////////////////////////////////////
+
+TexturedScreenSpaceQuadNode::TexturedScreenSpaceQuadNode(
+    std::string const& name,
+    Configuration const& configuration)
+    : SerializableNode(name),
+      data(configuration) {}
+
+/* virtual */ void TexturedScreenSpaceQuadNode::accept(NodeVisitor& visitor) {
+  visitor.visit(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelineDescription::PipelineDescription(PipelineDescription const& other) {
-  for (auto pass: other.passes_) {
-    passes_.push_back(pass->make_copy());
+void TexturedScreenSpaceQuadNode::update_bounding_box() const {
+  math::BoundingBox<math::vec3> geometry_bbox(
+      math::vec3(-0.5 * data.size().x, -0.5 * data.size().y, 0),
+      math::vec3(0.5 * data.size().x, 0.5 * data.size().y, 0));
+
+  bounding_box_ = transform(geometry_bbox, world_transform_);
+
+  for (auto child : get_children()) {
+    bounding_box_.expandBy(child->get_bounding_box());
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelineDescription::~PipelineDescription() {
-  for (auto pass: passes_) {
-    delete pass;
+void TexturedScreenSpaceQuadNode::update_cache() {
+  Node::update_cache();
+
+  if (!TextureDatabase::instance()->is_supported(data.texture())) {
+    TextureDatabase::instance()->load(data.texture());
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<PipelinePassDescription*> const& PipelineDescription::get_all_passes() const {
-  return passes_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool PipelineDescription::operator==(PipelineDescription const& other) const {
-  if (passes_.size() != other.passes_.size()) {
-    return false;
-  }
-
-  for (int i(0); i<passes_.size(); ++i) {
-    if (typeid(passes_[i]) != typeid(other.passes_[i])) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool PipelineDescription::operator!=(PipelineDescription const& other) const {
-  return !(*this == other);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelineDescription& PipelineDescription::operator=(PipelineDescription const& other) {
-  for (auto pass: passes_) {
-    delete pass;
-  }
-
-  passes_.clear();
-
-  for (auto pass: other.passes_) {
-    passes_.push_back(pass->make_copy());
-  }
-
-  return *this;
+std::shared_ptr<Node> TexturedScreenSpaceQuadNode::copy() const {
+  return std::make_shared<TexturedScreenSpaceQuadNode>(get_name(), data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 }
-
+}

@@ -69,9 +69,12 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto gui = std::make_shared<gua::GuiResource>("nyan", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gua::math::vec2(1024.f, 1024.f));
 
-  auto quad = std::make_shared<gua::node::TexturedQuadNode>("quad");
+  auto quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("quad");
   quad->data.texture() = "nyan";
-  graph.add_node(transform, quad);
+  quad->data.size() = gua::math::vec2i(1024, 1024);
+  quad->data.anchor() = gua::math::vec2(-1.f, -1.f);
+  quad->data.offset() = gua::math::vec2(10.f, 10.f);
+  graph.add_node("/", quad);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
