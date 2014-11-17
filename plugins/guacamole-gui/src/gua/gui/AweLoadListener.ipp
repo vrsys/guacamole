@@ -47,7 +47,7 @@ class AweLoadListener : public Awesomium::WebViewListener::Load {
 
   void OnDocumentReady(
     Awesomium::WebView* caller, const Awesomium::WebURL& url) {
-    caller->CreateGlobalJavascriptObject(Awesomium::WSLit("Swift2D"));
+    caller->CreateGlobalJavascriptObject(Awesomium::WSLit("gua"));
     parent_->on_loaded.emit();
   }
 

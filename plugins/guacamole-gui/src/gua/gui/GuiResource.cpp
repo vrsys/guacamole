@@ -219,7 +219,7 @@ void GuiResource::add_javascript_getter(std::string const& name, std::function<s
 
 void GuiResource::add_javascript_callback(std::string const& callback, bool with_result) {
   Awesomium::JSValue o = view_->ExecuteJavascriptWithResult(
-    Awesomium::WSLit("guacamole"), Awesomium::WSLit("")
+    Awesomium::WSLit("gua"), Awesomium::WSLit("")
   );
 
   if (o.IsObject()) {
