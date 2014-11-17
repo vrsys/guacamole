@@ -152,12 +152,18 @@ void GuiResource::inject_char_event(unsigned c) const {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void GuiResource::inject_mouse_position_relative(math::vec2 const& position) const {
+  inject_mouse_position(position * math::vec2(gui_texture_->width(), gui_texture_->height()));
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_position(math::vec2 const& position) const {
   if (interactive_) {
-    view_->InjectMouseMove(position.x, /*size.y -*/ position.y);
+    view_->InjectMouseMove(position.x, gui_texture_->height() - position.y);
   }
 }
 
@@ -177,7 +183,7 @@ void GuiResource::inject_mouse_button(Button button, int action, int mods) const
 
 void GuiResource::inject_mouse_wheel(math::vec2 const& direction) const {
   if (interactive_) {
-    view_->InjectMouseWheel(direction.y, direction.x);
+    view_->InjectMouseWheel(direction.y*20, direction.x*20);
   }
 }
 
@@ -207,13 +213,6 @@ void GuiResource::add_javascript_callback(std::string const& name) {
 void GuiResource::add_javascript_getter(std::string const& name, std::function<std::string()> callback) {
   add_javascript_callback(name, true);
   result_callbacks_[name] = callback;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void GuiResource::ray_test(Ray const& ray, PickResult::Options options,
-                    node::Node* owner, std::set<PickResult>& hits) {
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -79,7 +79,7 @@ class TriMeshRessource : public GeometryResource {
    */
   void draw(RenderContext const& context) const;
 
-  void ray_test(Ray const& ray, PickResult::Options options,
+  void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits);
 
   unsigned int num_vertices() const;

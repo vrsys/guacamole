@@ -63,7 +63,7 @@ class GUA_DLL GeometryResource {
    *
    * \return                  The intersection distance along the ray.
    */
-  virtual void ray_test(Ray const& ray, PickResult::Options options,
+  virtual void ray_test(Ray const& ray, int options,
                         node::Node* owner, std::set<PickResult>& hits) = 0;
 
   /**

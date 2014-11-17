@@ -43,7 +43,7 @@
 
 //   ////////////////////////////////////////////////////////////////////////////////
 
-//   void GuiNode::ray_test_impl(Ray const& ray, PickResult::Options options,
+//   void GuiNode::ray_test_impl(Ray const& ray, int options,
 //     Mask const& mask, std::set<PickResult>& hits) {
 
 //   }

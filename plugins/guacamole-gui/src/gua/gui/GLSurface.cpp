@@ -110,16 +110,18 @@ namespace gua {
 
     } else if (dy < 0 && dx == 0) {
       // Area shifted down by dy
-      for (int i = 0; i < clip_rect.height + dy ; i++)
-        memcpy(&buffer_.front() + (i + clip_rect.y) * width_*4 + (clip_rect.x * 4),
-               &buffer_.front() + (i + clip_rect.y - dy) * width_*4 + (clip_rect.x * 4),
+      for (int i = 0; i < clip_rect.height + dy ; i++) {
+        memcpy(&buffer_.front() + (clip_rect.height - 1 - i - clip_rect.y) * width_*4 + (clip_rect.x * 4),
+               &buffer_.front() + (clip_rect.height - 1 - i - clip_rect.y + dy) * width_*4 + (clip_rect.x * 4),
                clip_rect.width * 4);
+      }
     } else if (dy > 0 && dx == 0) {
       // Area shifted up by dy
-      for (int i = clip_rect.height - 1; i >= dy; i--)
-        memcpy(&buffer_.front() + (i + clip_rect.y) * width_*4 + (clip_rect.x * 4),
-               &buffer_.front() + (i + clip_rect.y - dy) * width_*4 + (clip_rect.x * 4),
+      for (int i = clip_rect.height - 1; i >= dy; i--) {
+        memcpy(&buffer_.front() + (clip_rect.height - 1 - i - clip_rect.y) * width_*4 + (clip_rect.x * 4),
+               &buffer_.front() + (clip_rect.height - 1 - i - clip_rect.y + dy) * width_*4 + (clip_rect.x * 4),
                clip_rect.width * 4);
+      }
     }
 
     needs_update_ = true;

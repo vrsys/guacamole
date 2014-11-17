@@ -85,8 +85,8 @@ int main(int argc, char** argv) {
   light2->translate(-2.f, 3.f, 5.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  screen->translate(0, 0, 1.0);
+  screen->data.set_size(gua::math::vec2(1.92f*0.25, 1.08f*0.25));
+  screen->translate(0, 0, 2.0);
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
@@ -94,8 +94,8 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
 
-  auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 2.0);
+  auto camera = screen->add_child<gua::node::CameraNode>("cam");
+  camera->translate(0, 0, 0.5);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
@@ -106,6 +106,18 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
+  window->on_char.connect([&](unsigned c) {
+    gui->inject_char_event(c);
+  });
+  window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+    gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
+  });
+  window->on_button_press.connect([&](int key, int action, int mods) {
+    gui->inject_mouse_button(gua::Button(key), action, mods);
+  });
+  window->on_scroll.connect([&](gua::math::vec2 const& dir) {
+    gui->inject_mouse_wheel(dir);
+  });
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
@@ -113,6 +125,19 @@ int main(int argc, char** argv) {
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
     trackball.motion(pos.x, pos.y);
+
+    auto screen_space_pos(pos/resolution-0.5);
+
+    gua::math::vec3 origin(screen->get_scaled_world_transform() * gua::math::vec3(screen_space_pos.x, screen_space_pos.y, 0));
+    gua::math::vec3 direction(origin - camera->get_world_position());
+
+    gua::Ray ray(origin, direction, 1000);
+
+    auto result = quad->ray_test(ray, gua::PickResult::PICK_ALL | gua::PickResult::GET_TEXTURE_COORDS);
+
+    if (result.size() > 0) {
+      gui->inject_mouse_position_relative(result.begin()->texture_coords);
+    }
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
@@ -124,11 +149,13 @@ int main(int argc, char** argv) {
 
   ticker.on_tick.connect([&]() {
 
+    // ray->rotate(1, 0, 1, 0);
     gua::Interface::instance()->update();
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
 
+    window->process_events();
     if (window->should_close()) {
       renderer.stop();
       window->close();

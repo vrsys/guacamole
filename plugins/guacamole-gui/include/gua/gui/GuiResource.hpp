@@ -49,7 +49,7 @@ class ShaderProgram;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class GuiResource : public GeometryResource {
+class GuiResource {
   public:
 
     /**
@@ -77,6 +77,7 @@ class GuiResource : public GeometryResource {
     void inject_keyboard_event(Key key, int scancode, int action, int mods) const;
     void inject_char_event(unsigned c) const;
 
+    void inject_mouse_position_relative(math::vec2 const& position) const;
     void inject_mouse_position(math::vec2 const& position) const;
     void inject_mouse_button(Button button, int action, int mods) const;
     void inject_mouse_wheel(math::vec2 const& direction) const;
@@ -94,10 +95,6 @@ class GuiResource : public GeometryResource {
     std::unordered_map<std::string, std::function<std::string()>> const& get_result_callbacks() const {
       return result_callbacks_;
     }
-
-    /*virtual*/ void ray_test(Ray const& ray, PickResult::Options options,
-                  node::Node* owner, std::set<PickResult>& hits);
-
 
   private:
 

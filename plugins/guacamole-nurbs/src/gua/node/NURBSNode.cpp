@@ -48,7 +48,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
 
   void NURBSNode::ray_test_impl(Ray const& ray,
-                                PickResult::Options options,
+                                int options,
                                 Mask const& mask,
                                 std::set<PickResult>& hits) {
     Logger::LOG_WARNING << "NURBSNode::ray_test_impl() : Ray test not implemented yet for NURBS" << std::endl;

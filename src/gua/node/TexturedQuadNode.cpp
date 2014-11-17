@@ -28,6 +28,7 @@
 #include <gua/databases/TextureDatabase.hpp>
 #include <gua/renderer/SerializedScene.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
+#include <gua/node/RayNode.hpp>
 
 namespace gua {
 namespace node {
@@ -71,6 +72,87 @@ void TexturedQuadNode::update_cache() {
     TextureDatabase::instance()->load(data.texture());
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TexturedQuadNode::ray_test_impl(Ray const& ray, int options,
+  Mask const& mask, std::set<PickResult>& hits) {
+
+  // first of all, check bbox
+  auto box_hits(::gua::intersect(ray, bounding_box_));
+
+  // ray did not intersect bbox -- therefore it wont intersect
+  if (box_hits.first == Ray::END && box_hits.second == Ray::END) {
+    return;
+  }
+
+  // return if only first object shall be returned and the current first hit
+  // is in front of the bbox entry point and the ray does not start inside
+  // the bbox
+  if (options & PickResult::PICK_ONLY_FIRST_OBJECT
+    && hits.size() > 0 && hits.begin()->distance < box_hits.first
+    && box_hits.first != Ray::END) {
+
+    return;
+  }
+
+  // bbox is intersected, but check geometry only if mask tells us to check
+  if (mask.check(get_tags())) {
+
+    math::mat4 world_transform(get_world_transform());
+    math::mat4 ori_transform(scm::math::inverse(world_transform));
+
+    math::vec4 ori(ray.origin_[0],
+      ray.origin_[1],
+      ray.origin_[2],
+      1.0);
+    math::vec4 dir(ray.direction_[0],
+      ray.direction_[1],
+      ray.direction_[2],
+      0.0);
+
+    ori = ori_transform * ori;
+    dir = ori_transform * dir;
+
+    Ray object_ray(ori, dir, ray.t_max_);
+    auto result(intersect(object_ray, math::BoundingBox<math::vec3>(math::vec3(-0.5, -0.5, 0), math::vec3(0.5, 0.5, 0))));
+
+    float const inf(std::numeric_limits<float>::max());
+
+    if (result.first != Ray::END) {
+      hits.insert(PickResult(
+        result.first, this, ori + result.first*dir, math::vec3(inf, inf, inf), 
+        math::vec3(0, 0, 1), math::vec3(inf, inf, inf), 
+        ori + result.first*dir + 0.5));
+    }
+
+    if (options & PickResult::GET_WORLD_POSITIONS) {
+      for (auto& hit : hits) {
+        if (hit.world_position == math::vec3(inf, inf, inf)) {
+          auto transformed(world_transform * math::vec4(hit.position.x, hit.position.y, hit.position.z, 0.0));
+          hit.world_position = scm::math::vec3(transformed.x, transformed.y, transformed.z);
+        }
+      }
+    }
+
+    if (options & PickResult::GET_WORLD_NORMALS) {
+      math::mat4 normal_matrix(scm::math::inverse(scm::math::transpose(world_transform)));
+      for (auto& hit : hits) {
+        if (hit.world_normal == math::vec3(inf, inf, inf)) {
+          auto transformed(normal_matrix * math::vec4(hit.normal.x, hit.normal.y, hit.normal.z, 0.0));
+          hit.world_normal = scm::math::normalize(scm::math::vec3(transformed.x, transformed.y, transformed.z));
+        }
+      }
+    }
+  }
+
+  for (auto child : get_children()) {
+    // test for intersection with each child
+    child->ray_test_impl(ray, options, mask, hits);
+  }
+
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

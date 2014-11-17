@@ -275,11 +275,11 @@ class GUA_DLL SceneGraph {
    * Calls Node::ray_test() on the root Node.
    *
    * \param ray       The RayNode used to check for intersections.
-   * \param options   PickResult::Options to configure the intersection process.
+   * \param options   int to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   std::set<PickResult> const ray_test(node::RayNode const& ray,
-                                      PickResult::Options options = PickResult::PICK_ALL,
+                                      int options = PickResult::PICK_ALL,
                                       Mask const& mask = Mask());
 
   /**
@@ -288,11 +288,11 @@ class GUA_DLL SceneGraph {
    * Calls Node::ray_test() on the root Node.
    *
    * \param ray       The Ray used to check for intersections.
-   * \param options   PickResult::Options to configure the intersection process.
+   * \param options   int to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   std::set<PickResult> const ray_test(Ray const& ray,
-                                      PickResult::Options options = PickResult::PICK_ALL,
+                                      int options = PickResult::PICK_ALL,
                                       Mask const& mask = Mask());
 
  private:

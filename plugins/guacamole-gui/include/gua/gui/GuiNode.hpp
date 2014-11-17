@@ -46,7 +46,7 @@
 //   * Implements ray picking for a gui node
 //   */
 //   void ray_test_impl(Ray const& ray,
-//                      PickResult::Options options,
+//                      int options,
 //                      Mask const& mask,
 //                      std::set<PickResult>& hits) override;
 

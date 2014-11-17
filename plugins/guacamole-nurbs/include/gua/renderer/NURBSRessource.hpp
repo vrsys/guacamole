@@ -83,7 +83,7 @@ class GUA_NURBS_DLL NURBSRessource : public GeometryRessource {
 
   /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
-  void ray_test(Ray const& ray, PickResult::Options options,
+  void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits) {}
 
   scm::gl::buffer_ptr const& vertex_buffer() const;

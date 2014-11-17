@@ -178,7 +178,7 @@ void SceneGraph::accept(NodeVisitor & visitor) const { root_->accept(visitor); }
 ////////////////////////////////////////////////////////////////////////////////
 
 std::set<PickResult> const SceneGraph::ray_test(node::RayNode const& ray,
-                                                PickResult::Options options,
+                                                int options,
                                                 Mask const& mask) {
     return root_->ray_test(ray, options, mask);
 }
@@ -186,7 +186,7 @@ std::set<PickResult> const SceneGraph::ray_test(node::RayNode const& ray,
 ////////////////////////////////////////////////////////////////////////////////
 
 std::set<PickResult> const SceneGraph::ray_test(Ray const& ray,
-                                                PickResult::Options options,
+                                                int options,
                                                 Mask const& mask) {
     return root_->ray_test(ray, options, mask);
 }

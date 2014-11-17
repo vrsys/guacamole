@@ -289,7 +289,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
 
   std::set<PickResult> const Node::ray_test(RayNode const& ray,
-                                            PickResult::Options options,
+                                            int options,
                                             Mask const& mask) {
 
     return ray_test(ray.get_world_ray(), options, mask);
@@ -298,7 +298,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
 
   std::set<PickResult> const Node::ray_test(Ray const& ray,
-                                            PickResult::Options options,
+                                            int options,
                                             Mask const& mask) {
     std::set<PickResult> hits;
     ray_test_impl(ray, options, mask, hits);
@@ -306,7 +306,7 @@ namespace node {
   }
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::ray_test_impl(Ray const& ray, PickResult::Options options,
+  void Node::ray_test_impl(Ray const& ray, int options,
                            Mask const& mask, std::set<PickResult>& hits) {
 
     auto box_hits(::gua::intersect(ray, bounding_box_));
@@ -384,14 +384,11 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
 
   void Node::set_children_dirty() const {
-    if (!self_dirty_) {
-      self_dirty_ = true;
-      child_dirty_ = true;
-      for (auto const& child : children_) {
-        child->set_children_dirty();
-      }
+    self_dirty_ = true;
+    child_dirty_ = true;
+    for (auto const& child : children_) {
+      child->set_children_dirty();
     }
-
   }
 
   ////////////////////////////////////////////////////////////////////////////////
