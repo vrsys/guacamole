@@ -53,9 +53,9 @@ SSAOPassDescription::SSAOPassDescription()
                                             scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
                                             scm::gl::FUNC_SRC_ALPHA,
                                             scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
-  uniforms1f["gua_ssao_radius"]    = 1.0f;
-  uniforms1f["gua_ssao_intensity"] = 1.0f;
-  uniforms1f["gua_ssao_falloff"]   = 0.1f;
+  uniforms["gua_ssao_radius"]    = 1.0f;
+  uniforms["gua_ssao_intensity"] = 1.0f;
+  uniforms["gua_ssao_falloff"]   = 0.1f;
 
   auto tex = std::make_shared<NoiseTexture>();
 

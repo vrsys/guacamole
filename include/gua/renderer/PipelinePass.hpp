@@ -65,7 +65,7 @@ class PipelinePassDescription {
       return;
     };
  public:
-  std::map<std::string, float> uniforms1f;
+  std::map<std::string, UniformValue> uniforms;
 };
 
 class PipelinePass {

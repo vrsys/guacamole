@@ -86,8 +86,8 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
       ctx.render_context->set_rasterizer_state(rasterizer_state_);
     shader_->use(ctx);
 
-    for (auto const& u : desc.uniforms1f) {
-      ctx.render_context->current_program()->uniform(u.first, 0, u.second);
+    for (auto const& u : desc.uniforms) {
+      u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
     }
 
     pipe.bind_gbuffer_input(shader_);
