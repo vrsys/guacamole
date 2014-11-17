@@ -30,7 +30,7 @@ set(INCLUDE_PATHS
   )
 
 IF (GUACAMOLE_EXAMPLES)
-  
+
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
     add_subdirectory(input)
@@ -46,6 +46,11 @@ IF (GUACAMOLE_EXAMPLES)
   IF (${PLUGIN_guacamole-oculus})
     add_subdirectory(oculus)
   ENDIF (${PLUGIN_guacamole-oculus})
+
+  # gui example requires gui-plugin
+  IF (${PLUGIN_guacamole-gui})
+    add_subdirectory(gui)
+  ENDIF (${PLUGIN_guacamole-gui})
 
   # multicontext example requires nurbs-plugin
   # IF (${PLUGIN_guacamole-nurbs})

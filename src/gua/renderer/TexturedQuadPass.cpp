@@ -28,15 +28,13 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/databases/Resources.hpp>
 
-#define USE_UBO 0 // also set in MaterialShader.cpp
-
 namespace gua {
 
 TexturedQuadPassDescription::TexturedQuadPassDescription()
   : PipelinePassDescription() {
 
   vertex_shader_ = "shaders/common/quad.vert";
-  fragment_shader_ = "shaders/common/quad.frag";
+  fragment_shader_ = "shaders/textured_quad.frag";
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;

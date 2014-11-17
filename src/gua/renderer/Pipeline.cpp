@@ -70,7 +70,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
                        float application_fps, float rendering_fps) {
 
   if (fps_count_ > 100) {
-    std::cout << "App: " << fps_sum_[0]/fps_count_ << " Render: " << fps_sum_[1]/fps_count_ << std::endl;
+    // std::cout << "App: " << fps_sum_[0]/fps_count_ << " Render: " << fps_sum_[1]/fps_count_ << std::endl;
     fps_count_ = 0;
     fps_sum_ = math::vec2(0.f, 0.f);
   } else {

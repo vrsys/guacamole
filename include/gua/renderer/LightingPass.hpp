@@ -24,7 +24,7 @@
 
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/GeometryResource.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/ShadowMap.hpp>
 
 #include <memory>
@@ -38,6 +38,7 @@ class LightingPassDescription : public PipelinePassDescription {
   LightingPassDescription();
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
+
 };
 
 }

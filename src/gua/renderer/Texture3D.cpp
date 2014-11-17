@@ -37,10 +37,11 @@ Texture3D::Texture3D(unsigned width,
                  unsigned height,
                  unsigned depth,
                  scm::gl::data_format color_format,
+                 scm::gl::data_format internal_format,
                  std::vector<void*> const& data,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : Texture(color_format, data, mipmap_layers, state_descripton),
+    : Texture(color_format, internal_format, data, mipmap_layers, state_descripton),
       width_(width),
       height_(height),
       depth_(depth) {}

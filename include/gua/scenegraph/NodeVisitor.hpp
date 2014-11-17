@@ -44,6 +44,7 @@ class SerializableNode;
 class TexturedQuadNode;
 }
 
+
 namespace physics {
 
 class RigidBodyNode;
@@ -112,6 +113,7 @@ class NodeVisitor {
    * \param cam   Pointer to a GeometryNode.
    */
   // virtual void visit(node::TriMeshNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+
 
   /**
   * Visits a Video3DNode
