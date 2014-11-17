@@ -130,7 +130,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
 
     passes_.clear();
 
-    for (auto pass: camera.config.get_pipeline_description().get_passes()) {
+    for (auto pass: camera.config.get_pipeline_description().get_all_passes()) {
       passes_.push_back(PipelinePass{*pass,*ctx});
     }
   }
@@ -167,7 +167,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
       gbuffer_->toggle_ping_pong();
     }
 
-    passes_[i].process(*camera.config.get_pipeline_description().get_passes()[i], *this);
+    passes_[i].process(*camera.config.get_pipeline_description().get_all_passes()[i], *this);
   }
 
   gbuffer_->toggle_ping_pong();

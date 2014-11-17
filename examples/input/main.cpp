@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
   portal_camera->config.set_screen_path("/portal_screen");
   portal_camera->config.set_scene_graph_name("main_scenegraph");
   portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(true);
+  portal_camera->config.set_enable_stereo(false);
 
   gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
 
@@ -123,15 +123,17 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
   camera->set_pre_render_cameras({portal_camera});
+  camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>().mode(gua::BackgroundPassDescription::QUAD_TEXTURE).texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>().radius(3).intensity(2);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+  window->config.set_stereo_mode(gua::StereoMode::MONO);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);

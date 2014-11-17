@@ -66,7 +66,7 @@ PipelineDescription::~PipelineDescription() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<PipelinePassDescription*> const& PipelineDescription::get_passes() const {
+std::vector<PipelinePassDescription*> const& PipelineDescription::get_all_passes() const {
   return passes_;
 }
 
