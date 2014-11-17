@@ -65,7 +65,12 @@ int main(int argc, char** argv) {
   auto mat1(load_mat("data/materials/SimpleMaterial.gmd"));
   mat1.set_uniform("tex", std::string("google"));
 
+
+  auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+
   gua::TriMeshLoader loader;
+  auto monkey(loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::MAKE_PICKABLE | gua::TriMeshLoader::NORMALIZE_SCALE));
+  graph.add_node("/transform", monkey);
 
   gua::math::vec2 gui_size(1024.f, 1024.f);
 
@@ -77,6 +82,7 @@ int main(int argc, char** argv) {
   // quad->data.offset() = gua::math::vec2(10.f, 10.f);
   // quad->data.opacity() = 0.5f;
   // graph.add_node("/", quad);
+  auto gui = std::make_shared<gua::GuiResource>("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
 
   gua::math::vec2 fps_size(150.f, 50.f);
 
@@ -87,14 +93,28 @@ int main(int argc, char** argv) {
   fps_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
   fps_quad->data.offset() = gua::math::vec2(2.f, 2.f);
 
-
   graph.add_node("/", fps_quad);
 
-  auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto gui = std::make_shared<gua::GuiResource>("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
+  gua::math::vec2 address_bar_size(450.f, 50.f);
 
-  auto quad(loader.create_geometry_from_file("quad", "data/objects/monkey.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::MAKE_PICKABLE | gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform", quad);
+  auto address_bar = std::make_shared<gua::GuiResource>("address_bar", "asset://gua/data/html/address_bar.html", address_bar_size);
+  auto address_bar_quad = std::make_shared<gua::node::TexturedQuadNode>("address_bar_quad");
+  address_bar_quad->data.texture() = "address_bar";
+  address_bar_quad->translate(0.f, -1.3f, 1.f);
+  address_bar_quad->data.size() = gua::math::vec2(1.f, address_bar_size.y/address_bar_size.x);
+
+  graph.add_node("/transform/monkey", address_bar_quad);
+
+
+  address_bar->on_loaded.connect([address_bar]() {
+    address_bar->add_javascript_callback("update_monkey_address");
+  });
+
+  address_bar->on_javascript_callback.connect([gui](std::string const& callback, std::vector<std::string> const& params) {
+    if (callback == "update_monkey_address")
+      gui->set_url(params[0]);
+  });
+
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
@@ -131,15 +151,19 @@ int main(int argc, char** argv) {
   window->config.set_resolution(resolution);
   window->on_char.connect([&](unsigned c) {
     gui->inject_char_event(c);
+    address_bar->inject_char_event(c);
   });
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
     gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
+    address_bar->inject_keyboard_event(gua::Key(key), scancode, action, mods);
   });
   window->on_button_press.connect([&](int key, int action, int mods) {
     gui->inject_mouse_button(gua::Button(key), action, mods);
+    address_bar->inject_mouse_button(gua::Button(key), action, mods);
   });
   window->on_scroll.connect([&](gua::math::vec2 const& dir) {
     gui->inject_mouse_wheel(dir);
+    address_bar->inject_mouse_wheel(dir);
   });
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
@@ -156,9 +180,14 @@ int main(int argc, char** argv) {
 
     gua::Ray ray(origin, direction*100, 1);
 
-    auto result = graph.ray_test(ray, gua::PickResult::GET_POSITIONS | gua::PickResult::GET_TEXTURE_COORDS);
+    auto result = graph.ray_test(ray, gua::PickResult::PICK_ONLY_FIRST_OBJECT | gua::PickResult::PICK_ONLY_FIRST_FACE | gua::PickResult::GET_TEXTURE_COORDS);
     if (result.size() > 0) {
-      gui->inject_mouse_position_relative(result.begin()->texture_coords);
+      for (auto const& r : result) {
+        if (r.object->get_name() == "address_bar_quad")
+          address_bar->inject_mouse_position_relative(r.texture_coords);
+        else
+          gui->inject_mouse_position_relative(r.texture_coords);
+      }
     }
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
