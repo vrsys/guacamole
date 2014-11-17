@@ -35,7 +35,7 @@ BackgroundPassDescription::BackgroundPassDescription()
 {
   vertex_shader_ = "shaders/common/fullscreen_quad.vert";
   fragment_shader_ = "shaders/background.frag";
-  needs_color_buffer_as_input_ = false;
+  needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Quad;
   depth_stencil_state_ = boost::make_optional(
@@ -44,6 +44,9 @@ BackgroundPassDescription::BackgroundPassDescription()
   uniforms["background_color"] = math::vec3(0.2, 0.2, 0.2);
   uniforms["background_mode"] = (int)COLOR;
   uniforms["background_texture"] = std::string("gua_default_texture");
+  uniforms["enable_fog"] = false;
+  uniforms["fog_start"] = 10.f;
+  uniforms["fog_end"] = 1000.f;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +89,48 @@ BackgroundPassDescription& BackgroundPassDescription::mode(BackgroundPassDescrip
 BackgroundPassDescription::BackgroundMode BackgroundPassDescription::mode() const {
   auto uniform(uniforms.find("background_mode"));
   return BackgroundPassDescription::BackgroundMode(uniform->second.data.int_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+BackgroundPassDescription& BackgroundPassDescription::enable_fog(bool enable_fog) {
+  uniforms["enable_fog"] = enable_fog;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool BackgroundPassDescription::enable_fog() const {
+  auto uniform(uniforms.find("enable_fog"));
+  return uniform->second.data.bool_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+BackgroundPassDescription& BackgroundPassDescription::fog_start(float fog_start) {
+  uniforms["fog_start"] = fog_start;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float BackgroundPassDescription::fog_start() const {
+  auto uniform(uniforms.find("fog_start"));
+  return uniform->second.data.float_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+BackgroundPassDescription& BackgroundPassDescription::fog_end(float fog_end) {
+  uniforms["fog_end"] = fog_end;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float BackgroundPassDescription::fog_end() const {
+  auto uniform(uniforms.find("fog_end"));
+  return uniform->second.data.float_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

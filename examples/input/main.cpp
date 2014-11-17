@@ -114,7 +114,9 @@ int main(int argc, char** argv) {
   portal_pipe.add_pass<gua::TriMeshPassDescription>();
   portal_pipe.add_pass<gua::EmissivePassDescription>();
   portal_pipe.add_pass<gua::LightingPassDescription>();
-  portal_pipe.add_pass<gua::BackgroundPassDescription>().mode(gua::BackgroundPassDescription::QUAD_TEXTURE).texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  portal_pipe.add_pass<gua::BackgroundPassDescription>()
+    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
   portal_camera->config.set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
@@ -125,8 +127,15 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
   camera->set_pre_render_cameras({portal_camera});
-  camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>().mode(gua::BackgroundPassDescription::QUAD_TEXTURE).texture("/opt/guacamole/resources/skymaps/skymap.jpg");
-  camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>().radius(3).intensity(2);
+  camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
+    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+    .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
+    .enable_fog(true)
+    .fog_start(1)
+    .fog_end(10);
+  camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
+    .radius(3)
+    .intensity(2);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);

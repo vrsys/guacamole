@@ -51,6 +51,17 @@ class BackgroundPassDescription : public PipelinePassDescription {
   BackgroundPassDescription& mode(BackgroundMode const& mode);
   BackgroundMode mode() const;
 
+
+  BackgroundPassDescription& enable_fog(bool enable_fog);
+  bool enable_fog() const;
+
+  BackgroundPassDescription& fog_start(float fog_start);
+  float fog_start() const;
+
+  BackgroundPassDescription& fog_end(float fog_end);
+  float fog_end() const;
+
+
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
 };
