@@ -43,33 +43,33 @@ template<> std::string UniformValue::get_glsl_type_impl<math::vec3ui>() { return
 template<> std::string UniformValue::get_glsl_type_impl<math::vec4ui>() { return "uvec4"; }
 template<> std::string UniformValue::get_glsl_type_impl<std::string>()  { return "uvec2"; }
 
-template<> void UniformValue::apply<int>          (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.int_); }
-template<> void UniformValue::apply<bool>         (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.bool_); }
-template<> void UniformValue::apply<float>        (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.float_); }
-template<> void UniformValue::apply<math::mat3>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.mat3_); }
-template<> void UniformValue::apply<math::mat4>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.mat4_); }
-template<> void UniformValue::apply<math::vec2>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec2_); }
-template<> void UniformValue::apply<math::vec3>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec3_); }
-template<> void UniformValue::apply<math::vec4>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec4_); }
-template<> void UniformValue::apply<math::vec2i>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec2i_); }
-template<> void UniformValue::apply<math::vec3i>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec3i_); }
-template<> void UniformValue::apply<math::vec4i>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec4i_); }
-template<> void UniformValue::apply<math::vec2ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec2ui_); }
-template<> void UniformValue::apply<math::vec3ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec3ui_); }
-template<> void UniformValue::apply<math::vec4ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->val_.vec4ui_); }
+template<> void UniformValue::apply<int>          (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.int_); }
+template<> void UniformValue::apply<bool>         (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.bool_); }
+template<> void UniformValue::apply<float>        (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.float_); }
+template<> void UniformValue::apply<math::mat3>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.mat3_); }
+template<> void UniformValue::apply<math::mat4>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.mat4_); }
+template<> void UniformValue::apply<math::vec2>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.vec2_); }
+template<> void UniformValue::apply<math::vec3>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.vec3_); }
+template<> void UniformValue::apply<math::vec4>   (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.vec4_); }
+template<> void UniformValue::apply<math::vec2i>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.vec2i_); }
+template<> void UniformValue::apply<math::vec3i>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.vec3i_); }
+template<> void UniformValue::apply<math::vec4i>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.vec4i_); }
+template<> void UniformValue::apply<math::vec2ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.vec2ui_); }
+template<> void UniformValue::apply<math::vec3ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.vec3ui_); }
+template<> void UniformValue::apply<math::vec4ui> (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) { prog->uniform(name, location, self->data.vec4ui_); }
 template<> void UniformValue::apply<std::string>  (UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) {
 
-  auto texture(TextureDatabase::instance()->lookup(self->val_.texture_));
+  auto texture(TextureDatabase::instance()->lookup(self->data.texture_));
   if (texture) {
     prog->uniform(name, location, texture->get_handle(ctx));
   } else if (ctx.mode != CameraMode::CENTER) {
     if ((ctx.mode != CameraMode::LEFT)) {
-      auto left_texture(TextureDatabase::instance()->lookup(self->val_.texture_ + "_left"));
+      auto left_texture(TextureDatabase::instance()->lookup(self->data.texture_ + "_left"));
       if (left_texture) {
         prog->uniform(name, location, left_texture->get_handle(ctx));
       }
     } else {
-      auto right_texture(TextureDatabase::instance()->lookup(self->val_.texture_ + "_right"));
+      auto right_texture(TextureDatabase::instance()->lookup(self->data.texture_ + "_right"));
       if (right_texture) {
         prog->uniform(name, location, right_texture->get_handle(ctx));
       }
@@ -94,34 +94,34 @@ template<> unsigned UniformValue::get_byte_size_impl<math::vec4ui>() { return si
 template<> unsigned UniformValue::get_byte_size_impl<std::string> () { return sizeof(math::vec2ui); }
 
 
-template<> void UniformValue::write_bytes_impl<int>         (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.int_,     sizeof(int));          }
-template<> void UniformValue::write_bytes_impl<bool>        (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.bool_,    sizeof(int));         }
-template<> void UniformValue::write_bytes_impl<float>       (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.float_,   sizeof(float));        }
-template<> void UniformValue::write_bytes_impl<math::mat3>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.mat3_,    sizeof(math::mat3));   }
-template<> void UniformValue::write_bytes_impl<math::mat4>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.mat4_,    sizeof(math::mat4));   }
-template<> void UniformValue::write_bytes_impl<math::vec2>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec2_,    sizeof(math::vec2));   }
-template<> void UniformValue::write_bytes_impl<math::vec3>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec3_,    sizeof(math::vec3));   }
-template<> void UniformValue::write_bytes_impl<math::vec4>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec4_,    sizeof(math::vec4));   }
-template<> void UniformValue::write_bytes_impl<math::vec2i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec2i_,   sizeof(math::vec2i));  }
-template<> void UniformValue::write_bytes_impl<math::vec3i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec3i_,   sizeof(math::vec3i));  }
-template<> void UniformValue::write_bytes_impl<math::vec4i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec4i_,   sizeof(math::vec4i));  }
-template<> void UniformValue::write_bytes_impl<math::vec2ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec2ui_,  sizeof(math::vec2ui)); }
-template<> void UniformValue::write_bytes_impl<math::vec3ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec3ui_,  sizeof(math::vec3ui)); }
-template<> void UniformValue::write_bytes_impl<math::vec4ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->val_.vec4ui_,  sizeof(math::vec4ui)); }
+template<> void UniformValue::write_bytes_impl<int>         (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.int_,     sizeof(int));          }
+template<> void UniformValue::write_bytes_impl<bool>        (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.bool_,    sizeof(int));         }
+template<> void UniformValue::write_bytes_impl<float>       (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.float_,   sizeof(float));        }
+template<> void UniformValue::write_bytes_impl<math::mat3>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.mat3_,    sizeof(math::mat3));   }
+template<> void UniformValue::write_bytes_impl<math::mat4>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.mat4_,    sizeof(math::mat4));   }
+template<> void UniformValue::write_bytes_impl<math::vec2>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.vec2_,    sizeof(math::vec2));   }
+template<> void UniformValue::write_bytes_impl<math::vec3>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.vec3_,    sizeof(math::vec3));   }
+template<> void UniformValue::write_bytes_impl<math::vec4>  (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.vec4_,    sizeof(math::vec4));   }
+template<> void UniformValue::write_bytes_impl<math::vec2i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.vec2i_,   sizeof(math::vec2i));  }
+template<> void UniformValue::write_bytes_impl<math::vec3i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.vec3i_,   sizeof(math::vec3i));  }
+template<> void UniformValue::write_bytes_impl<math::vec4i> (UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.vec4i_,   sizeof(math::vec4i));  }
+template<> void UniformValue::write_bytes_impl<math::vec2ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.vec2ui_,  sizeof(math::vec2ui)); }
+template<> void UniformValue::write_bytes_impl<math::vec3ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.vec3ui_,  sizeof(math::vec3ui)); }
+template<> void UniformValue::write_bytes_impl<math::vec4ui>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &self->data.vec4ui_,  sizeof(math::vec4ui)); }
 template<> void UniformValue::write_bytes_impl<std::string> (UniformValue const* self, RenderContext const& ctx, char* target) {
-  auto texture(TextureDatabase::instance()->lookup(self->val_.texture_));
+  auto texture(TextureDatabase::instance()->lookup(self->data.texture_));
   if (texture) {
     auto& handle(texture->get_handle(ctx));
     memcpy(target, &handle, sizeof(math::vec2ui));
   } else if (ctx.mode != CameraMode::CENTER) {
     if ((ctx.mode != CameraMode::LEFT)) {
-      auto left_texture(TextureDatabase::instance()->lookup(self->val_.texture_ + "_left"));
+      auto left_texture(TextureDatabase::instance()->lookup(self->data.texture_ + "_left"));
       if (left_texture) {
         auto& handle(left_texture->get_handle(ctx));
         memcpy(target, &handle, sizeof(math::vec2ui));
       }
     } else {
-      auto right_texture(TextureDatabase::instance()->lookup(self->val_.texture_ + "_right"));
+      auto right_texture(TextureDatabase::instance()->lookup(self->data.texture_ + "_right"));
       if (right_texture) {
         auto& handle(right_texture->get_handle(ctx));
         memcpy(target, &handle, sizeof(math::vec2ui));

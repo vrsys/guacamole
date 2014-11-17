@@ -89,7 +89,7 @@ class UniformValue {
     //   get_glsl_type_impl_(to_copy.get_glsl_type_impl_),
     //   get_byte_size_impl_(to_copy.get_byte_size_impl_),
     //   write_bytes_impl_(to_copy.write_bytes_impl_),
-    //   val_(to_copy.val_) {}
+    //   data(to_copy.data) {}
 
     // -------------------------------------------------------------------------
     static UniformValue create_from_string_and_type(
@@ -123,26 +123,28 @@ class UniformValue {
       get_glsl_type_impl_ = to_copy.get_glsl_type_impl_;
       get_byte_size_impl_ = to_copy.get_byte_size_impl_;
       write_bytes_impl_   = to_copy.write_bytes_impl_;
-      val_                = to_copy.val_;
+      data                = to_copy.data;
     }
+
+    Data data;
 
   private:
 
-    void set(int val) { val_.int_ = val; }
-    void set(bool val) { val_.bool_ = val; }
-    void set(float val) { val_.float_ = val; }
-    void set(math::mat3 const& val) { val_.mat3_ = val; }
-    void set(math::mat4 const& val) { val_.mat4_ = val; }
-    void set(math::vec2 const& val) { val_.vec2_ = val; }
-    void set(math::vec3 const& val) { val_.vec3_ = val; }
-    void set(math::vec4 const& val) { val_.vec4_ = val; }
-    void set(math::vec2i const& val) { val_.vec2i_ = val; }
-    void set(math::vec3i const& val) { val_.vec3i_ = val; }
-    void set(math::vec4i const& val) { val_.vec4i_ = val; }
-    void set(math::vec2ui const& val) { val_.vec2ui_ = val; }
-    void set(math::vec3ui const& val) { val_.vec3ui_ = val; }
-    void set(math::vec4ui const& val) { val_.vec4ui_ = val; }
-    void set(std::string const& val) { new (&val_.texture_) std::string; val_.texture_ = val; }
+    void set(int val) { data.int_ = val; }
+    void set(bool val) { data.bool_ = val; }
+    void set(float val) { data.float_ = val; }
+    void set(math::mat3 const& val) { data.mat3_ = val; }
+    void set(math::mat4 const& val) { data.mat4_ = val; }
+    void set(math::vec2 const& val) { data.vec2_ = val; }
+    void set(math::vec3 const& val) { data.vec3_ = val; }
+    void set(math::vec4 const& val) { data.vec4_ = val; }
+    void set(math::vec2i const& val) { data.vec2i_ = val; }
+    void set(math::vec3i const& val) { data.vec3i_ = val; }
+    void set(math::vec4i const& val) { data.vec4i_ = val; }
+    void set(math::vec2ui const& val) { data.vec2ui_ = val; }
+    void set(math::vec3ui const& val) { data.vec3ui_ = val; }
+    void set(math::vec4ui const& val) { data.vec4ui_ = val; }
+    void set(std::string const& val) { new (&data.texture_) std::string; data.texture_ = val; }
 
     template<typename T>
     static void apply(UniformValue const* self, RenderContext const& ctx,
@@ -158,7 +160,6 @@ class UniformValue {
     template<typename T>
     static void write_bytes_impl(UniformValue const* self, RenderContext const& ctx, char* target);
 
-    Data val_;
     std::function<void(UniformValue const*, RenderContext const&, std::string const&, scm::gl::program_ptr const&, unsigned)> apply_impl_;
     std::function<std::string()> get_glsl_type_impl_;
     std::function<unsigned()> get_byte_size_impl_;
