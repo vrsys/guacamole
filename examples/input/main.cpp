@@ -108,11 +108,13 @@ int main(int argc, char** argv) {
   portal_camera->config.set_output_texture_name("portal");
   portal_camera->config.set_enable_stereo(true);
 
+  gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
+
   gua::PipelineDescription portal_pipe;
   portal_pipe.add_pass<gua::TriMeshPassDescription>();
   portal_pipe.add_pass<gua::EmissivePassDescription>();
   portal_pipe.add_pass<gua::LightingPassDescription>();
-  portal_pipe.add_pass<gua::BackgroundPassDescription>().color(gua::utils::Color3f(0.5, 0.5, 0.5));
+  portal_pipe.add_pass<gua::BackgroundPassDescription>().mode(gua::BackgroundPassDescription::QUAD_TEXTURE).texture("/opt/guacamole/resources/skymaps/skymap.jpg");
   portal_camera->config.set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");

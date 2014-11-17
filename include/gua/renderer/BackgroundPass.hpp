@@ -33,10 +33,23 @@ class Pipeline;
 
 class BackgroundPassDescription : public PipelinePassDescription {
  public:
+  
+  enum BackgroundMode {
+    COLOR = 0,
+    SKYMAP_TEXTURE = 1,
+    QUAD_TEXTURE = 2,
+  };
+
   BackgroundPassDescription();
 
   BackgroundPassDescription& color(utils::Color3f const& color);
   utils::Color3f color() const;
+
+  BackgroundPassDescription& texture(std::string const& texture);
+  std::string texture() const;
+
+  BackgroundPassDescription& mode(BackgroundMode const& mode);
+  BackgroundMode mode() const;
 
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;

@@ -42,6 +42,8 @@ BackgroundPassDescription::BackgroundPassDescription()
       scm::gl::depth_stencil_state_desc(false, false));
 
   uniforms["background_color"] = math::vec3(0.2, 0.2, 0.2);
+  uniforms["background_mode"] = (int)COLOR;
+  uniforms["background_texture"] = std::string("gua_default_texture");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,6 +58,34 @@ BackgroundPassDescription& BackgroundPassDescription::color(utils::Color3f const
 utils::Color3f BackgroundPassDescription::color() const {
   auto uniform(uniforms.find("background_color"));
   return utils::Color3f(uniform->second.data.vec3_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+BackgroundPassDescription& BackgroundPassDescription::texture(std::string const& texture) {
+  uniforms["background_texture"] = texture;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string BackgroundPassDescription::texture() const {
+  auto uniform(uniforms.find("background_texture"));
+  return uniform->second.data.texture_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+BackgroundPassDescription& BackgroundPassDescription::mode(BackgroundPassDescription::BackgroundMode const& mode) {
+  uniforms["background_mode"] = (int)mode;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+BackgroundPassDescription::BackgroundMode BackgroundPassDescription::mode() const {
+  auto uniform(uniforms.find("background_mode"));
+  return BackgroundPassDescription::BackgroundMode(uniform->second.data.int_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
