@@ -13,7 +13,7 @@ class GLSurface : public Awesomium::Surface {
  public:
 
   // ----------------------------------------------------- contruction interface
-  GLSurface(int width, int height)
+  GLSurface(unsigned width, unsigned height)
     : tex_(nullptr)
     , buffer_(width * height * 4)
     , width_(width)
@@ -31,7 +31,7 @@ class GLSurface : public Awesomium::Surface {
     tex_ = std::make_shared<Texture2D>(
       width_, height_,
       scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_BGRA_8,
-      buffer_
+      std::vector<void*>()
     );
     tex_->upload_to(ctx);
   }
@@ -137,8 +137,8 @@ class GLSurface : public Awesomium::Surface {
 
   std::vector<unsigned char>  buffer_;
 
-  int        width_;
-  int        height_;
+  unsigned   width_;
+  unsigned   height_;
   std::mutex mutex_;
   bool       needs_update_;
 };

@@ -27,7 +27,7 @@ void Paths::init(int argc, char** argv) {
   executable_ = boost::filesystem::system_complete(argv[0]).normalize().remove_filename().string();
 
   if (executable_ == "") {
-    LOG_ERROR << "Failed to get executable path!" << std::endl;
+    Logger::LOG_ERROR << "Failed to get executable path!" << std::endl;
     return;
   }
 
@@ -41,7 +41,7 @@ void Paths::clean_up() {
 
   // delete tmp directory ------------------------------------------------------
   if (!boost::filesystem::remove_all(executable_ + "/tmp")) {
-    LOG_ERROR << "Failed to delete temporary directory!" << std::endl;
+    Logger::LOG_ERROR << "Failed to delete temporary directory!" << std::endl;
   }
 }
 

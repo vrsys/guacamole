@@ -92,7 +92,7 @@ namespace gua {
 
         } else {
 
-          resource_ = GeometryDatabase::instance()->lookup(resource_url_);
+          resource_ = std::dynamic_pointer_cast<GuiResource>(GeometryDatabase::instance()->lookup(resource_url_));
         }
 
       }
@@ -106,7 +106,7 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
 
   std::shared_ptr<node::Node> GuiNode::copy() const {
-    auto result(std::make_shared<GuiNode>(get_name(), get_transform()));
+    auto result(std::make_shared<GuiNode>(get_name(), get_resource_url(), get_transform()));
     result->shadow_mode_ = shadow_mode_;
     result->resource_ = resource_;
     return result;

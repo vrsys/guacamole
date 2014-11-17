@@ -24,6 +24,7 @@
 
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/GBuffer.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/gui/GuiResource.hpp>
 #include <gua/gui/GuiNode.hpp>
@@ -110,19 +111,20 @@ void GuiPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
 
   auto gui_nodes(pipe->get_scene().nodes.find(std::type_index(typeid(GuiNode))));
 
-  if (gui_nodes != pipe->get_scene().nodes.end() && gui_nodes.size() > 0) {
+  if (gui_nodes != pipe->get_scene().nodes.end() && gui_nodes->second.size() > 0) {
 
     auto const& ctx(pipe->get_context());
 
     if (!quad_) {
       quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-              get_context().render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+              pipe->get_context().render_device,
+              math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
     }
 
     pipe->get_gbuffer().bind(ctx, this);
     pipe->get_gbuffer().set_viewport(ctx);
 
-    for (auto const& node : gui_nodes) {
+    for (auto const& node : gui_nodes->second) {
 
       shader_->use(ctx);
       ctx.render_context->apply();
@@ -133,13 +135,13 @@ void GuiPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
       // UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
 
 
-      shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
-      shader->apply_uniform(ctx, "gua_gui_diffuse_tex", 0);
+      shader_->apply_uniform(ctx, "gua_model_matrix", model_mat);
+      shader_->apply_uniform(ctx, "gua_gui_diffuse_tex", 0);
 
       ctx.render_context->apply_program();
 
-      gui_node->get_resource()->bind(ctx, shader);
-      quad_->draw(get_context().render_context);
+      gui_node->get_resource()->bind(ctx, shader_);
+      quad_->draw(pipe->get_context().render_context);
     }
 
     pipe->get_gbuffer().unbind(ctx);
