@@ -46,7 +46,7 @@ class Pipeline {
   Pipeline();
   ~Pipeline();
 
-  void process(RenderContext* ctx, node::SerializedCameraNode const& camera,
+  void process(RenderContext* ctx, CameraMode mode, node::SerializedCameraNode const& camera,
                std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                float application_fps, float rendering_fps);
 

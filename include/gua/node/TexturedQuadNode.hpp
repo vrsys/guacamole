@@ -45,7 +45,6 @@ class GUA_DLL TexturedQuadNode : public Node {
   struct Configuration {
     GUA_ADD_PROPERTY(std::string, texture,    "gua_default_texture");
     GUA_ADD_PROPERTY(math::vec2,  size,       math::vec2(1.f, 1.f));
-    GUA_ADD_PROPERTY(bool,        is_stereo,  false);
     GUA_ADD_PROPERTY(bool,        flip_x,     false);
     GUA_ADD_PROPERTY(bool,        flip_y,     false);
   };

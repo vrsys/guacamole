@@ -38,12 +38,12 @@ namespace gua {
 PipelineDescription PipelineDescription::make_default() {
   PipelineDescription pipe;
   pipe.add_pass<TriMeshPassDescription>();
+  pipe.add_pass<TexturedQuadPassDescription>();
   pipe.add_pass<EmissivePassDescription>();
   pipe.add_pass<LightingPassDescription>();
-  pipe.add_pass<TexturedQuadPassDescription>();
   pipe.add_pass<BBoxPassDescription>();
   pipe.add_pass<BackgroundPassDescription>();
-  pipe.add_pass<SSAOPassDescription>();
+  // pipe.add_pass<SSAOPassDescription>();
 
   return pipe;
 }

@@ -19,27 +19,25 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TRIMESH_PASS_HPP
-#define GUA_TRIMESH_PASS_HPP
+@include "shaders/common/header.glsl"
 
-#include <gua/renderer/PipelinePass.hpp>
+// input
+layout(location=0) in vec3 gua_in_position;
+layout(location=2) in vec2 gua_in_texcoord;
 
-// external headers
-#include <scm/gl_core/buffer_objects.h>
+// uniforms
+@include "shaders/common/gua_camera_uniforms.glsl"
 
-#include <typeindex>
-#include <memory>
-#include <unordered_map>
+uniform mat4 gua_model_matrix;
+uniform mat4 gua_normal_matrix;
 
-namespace gua {
+// output
+out vec2 gua_quad_coords;
+out vec3 gua_normal;
 
-class TriMeshPassDescription : public PipelinePassDescription {
- public:
-  TriMeshPassDescription();
-  virtual PipelinePassDescription* make_copy() const;
-  friend class Pipeline;
-};
-
+// body
+void main() {
+    gua_quad_coords = gua_in_texcoord;
+    gua_normal = (gua_normal_matrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz;
+    gl_Position = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(gua_in_position*0.5, 1.0);
 }
-
-#endif  // GUA_TRIMESH_PASS_HPP

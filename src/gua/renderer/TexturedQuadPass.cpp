@@ -34,16 +34,34 @@ namespace gua {
 
 TexturedQuadPassDescription::TexturedQuadPassDescription()
   : PipelinePassDescription() {
+
+  vertex_shader_ = "shaders/common/quad.vert";
+  fragment_shader_ = "shaders/common/quad.frag";
+
   needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = true;
+  writes_only_color_buffer_ = false;
   doClear_ = false;
-  rendermode_ = RenderMode::Custom;
+  rendermode_ = RenderMode::Callback;
 
   process_ = [](
       PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe) {
 
     for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
       auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
+
+      UniformValue model_mat(quad_node->get_scaled_world_transform());
+      UniformValue normal_mat(scm::math::transpose(scm::math::inverse(quad_node->get_scaled_world_transform())));
+      UniformValue tex(quad_node->data.get_texture());
+      UniformValue flip(math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
+
+      auto const& ctx(pipe.get_context());
+
+      pass.shader_->apply_uniform(ctx, "gua_model_matrix", model_mat);
+      pass.shader_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+      pass.shader_->apply_uniform(ctx, "gua_in_texture", tex);
+      pass.shader_->apply_uniform(ctx, "flip", flip);
+
+      pipe.draw_quad();
     }
   };
 }
