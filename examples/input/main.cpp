@@ -112,6 +112,7 @@ int main(int argc, char** argv) {
   portal_pipe.add_pass<gua::TriMeshPassDescription>();
   portal_pipe.add_pass<gua::EmissivePassDescription>();
   portal_pipe.add_pass<gua::LightingPassDescription>();
+  portal_pipe.add_pass<gua::BackgroundPassDescription>().color(gua::utils::Color3f(0.5, 0.5, 0.5));
   portal_camera->config.set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");

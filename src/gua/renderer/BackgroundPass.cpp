@@ -40,7 +40,24 @@ BackgroundPassDescription::BackgroundPassDescription()
   rendermode_ = RenderMode::Quad;
   depth_stencil_state_ = boost::make_optional(
       scm::gl::depth_stencil_state_desc(false, false));
+
+  uniforms["background_color"] = math::vec3(0.2, 0.2, 0.2);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+BackgroundPassDescription& BackgroundPassDescription::color(utils::Color3f const& color) {
+  uniforms["background_color"] = color.vec3();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+utils::Color3f BackgroundPassDescription::color() const {
+  auto uniform(uniforms.find("background_color"));
+  return utils::Color3f(uniform->second.data.vec3_);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePassDescription* BackgroundPassDescription::make_copy() const {

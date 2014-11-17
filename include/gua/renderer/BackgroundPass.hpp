@@ -34,6 +34,10 @@ class Pipeline;
 class BackgroundPassDescription : public PipelinePassDescription {
  public:
   BackgroundPassDescription();
+
+  BackgroundPassDescription& color(utils::Color3f const& color);
+  utils::Color3f color() const;
+
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
 };
