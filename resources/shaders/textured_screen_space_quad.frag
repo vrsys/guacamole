@@ -23,18 +23,14 @@
 
 uniform uvec2 gua_in_texture;
 uniform ivec2 flip;
+uniform float opacity;
 
 in vec2 gua_quad_coords;
-in vec3 gua_normal;
 
-@include "shaders/common/gua_fragment_shader_output.glsl"
+layout(location=0) out vec4 gua_out_color;
 
 void main() {
-    vec3 gua_color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5).rgb;
-
-    float gua_emissivity = 1.0;
-    float gua_shinyness = 0.0;
-    float gua_specularity = 0.0;
-
-    @include "shaders/common/gua_write_gbuffer.glsl"
+  vec4 color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5) * opacity;
+  color.rgb /= color.a;
+  gua_out_color = color;
 }

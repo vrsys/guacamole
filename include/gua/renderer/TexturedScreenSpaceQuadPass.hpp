@@ -19,22 +19,28 @@
  *                                                                            *
  ******************************************************************************/
 
-@include "shaders/common/header.glsl"
+#ifndef GUA_TEXTURED_SCREEN_SPACE_QUAD_PASS_HPP
+#define GUA_TEXTURED_SCREEN_SPACE_QUAD_PASS_HPP
 
-uniform uvec2 gua_in_texture;
-uniform ivec2 flip;
+#include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
-in vec2 gua_quad_coords;
-in vec3 gua_normal;
+// external headers
+#include <scm/gl_core/buffer_objects.h>
 
-@include "shaders/common/gua_fragment_shader_output.glsl"
+#include <typeindex>
+#include <memory>
+#include <unordered_map>
 
-void main() {
-    vec3 gua_color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5).rgb;
+namespace gua {
 
-    float gua_emissivity = 1.0;
-    float gua_shinyness = 0.0;
-    float gua_specularity = 0.0;
+class TexturedScreenSpaceQuadPassDescription : public PipelinePassDescription {
+ public:
+  TexturedScreenSpaceQuadPassDescription();
+  PipelinePassDescription* make_copy() const override;
+  friend class Pipeline;
+};
 
-    @include "shaders/common/gua_write_gbuffer.glsl"
 }
+
+#endif  // GUA_TEXTURED_SCREEN_SPACE_QUAD_PASS_HPP

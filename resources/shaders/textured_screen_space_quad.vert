@@ -21,20 +21,20 @@
 
 @include "shaders/common/header.glsl"
 
-uniform uvec2 gua_in_texture;
-uniform ivec2 flip;
+// input
+layout(location=0) in vec3 gua_in_position;
+layout(location=2) in vec2 gua_in_texcoord;
 
-in vec2 gua_quad_coords;
-in vec3 gua_normal;
+// uniforms
 
-@include "shaders/common/gua_fragment_shader_output.glsl"
+uniform vec2 size;
+uniform vec2 offset;
 
+// output
+out vec2 gua_quad_coords;
+
+// body
 void main() {
-    vec3 gua_color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5).rgb;
-
-    float gua_emissivity = 1.0;
-    float gua_shinyness = 0.0;
-    float gua_specularity = 0.0;
-
-    @include "shaders/common/gua_write_gbuffer.glsl"
+  gua_quad_coords = gua_in_texcoord;
+  gl_Position = vec4(gua_in_position.xy * size + offset, 0.0, 1.0);
 }
