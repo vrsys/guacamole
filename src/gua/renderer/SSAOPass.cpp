@@ -61,6 +61,48 @@ SSAOPassDescription::SSAOPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+SSAOPassDescription& SSAOPassDescription::radius(float radius) {
+  uniforms["gua_ssao_radius"] = radius;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float SSAOPassDescription::radius() const {
+  auto uniform(uniforms.find("gua_ssao_radius"));
+  return uniform->second.data.float_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+SSAOPassDescription& SSAOPassDescription::intensity(float intensity) {
+  uniforms["gua_ssao_intensity"] = intensity;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float SSAOPassDescription::intensity() const {
+  auto uniform(uniforms.find("gua_ssao_intensity"));
+  return uniform->second.data.float_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+SSAOPassDescription& SSAOPassDescription::falloff(float falloff) {
+  uniforms["gua_ssao_falloff"] = falloff;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float SSAOPassDescription::falloff() const {
+  auto uniform(uniforms.find("gua_ssao_falloff"));
+  return uniform->second.data.float_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 PipelinePassDescription* SSAOPassDescription::make_copy() const {
   return new SSAOPassDescription(*this);
 }
