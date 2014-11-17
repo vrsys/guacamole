@@ -28,6 +28,7 @@
 #include <gua/events/Signal.hpp>
 #include <gua/gui/keyboard_enums.hpp>
 #include <gua/gui/mouse_enums.hpp>
+#include <gua/gui/stl_helpers.hpp>
 
 
 namespace Awesomium {
@@ -83,7 +84,7 @@ class GuiResource : public GeometryResource {
 
     template<typename ...Args>
     void call_javascript(std::string const& method, Args&& ... a) const {
-      std::vector<std::string> args = {(to_string(a))...};
+      std::vector<std::string> args = {(gua::to_string(a))...};
       call_javascript_impl(method, args);
     }
 

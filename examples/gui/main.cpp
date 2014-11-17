@@ -68,8 +68,8 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   gua::math::vec2 gui_size(1024.f, 1024.f);
-  auto gui = std::make_shared<gua::GuiResource>("nyan", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gui_size);
 
+  auto gui = std::make_shared<gua::GuiResource>("nyan", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gui_size);
   auto quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("quad");
   quad->data.texture() = "nyan";
   quad->data.size() = gui_size;
@@ -78,14 +78,17 @@ int main(int argc, char** argv) {
   quad->data.opacity() = 0.5f;
   graph.add_node("/", quad);
 
-  auto gui2 = std::make_shared<gua::GuiResource>("nyan2", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gui_size);
-  auto quad2 = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("quad2");
-  quad2->data.texture() = "nyan2";
-  quad2->data.size() = gui_size;
-  quad2->data.anchor() = gua::math::vec2(0.f, -1.f);
-  quad2->data.offset() = gua::math::vec2(10.f, 10.f);
-  quad2->data.opacity() = 0.5f;
-  graph.add_node("/", quad2);
+  gua::math::vec2 fps_size(150.f, 50.f);
+
+  auto fps = std::make_shared<gua::GuiResource>("fps", "asset://gua/data/html/fps.html", fps_size);
+  auto fps_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("fps_quad");
+  fps_quad->data.texture() = "fps";
+  fps_quad->data.size() = fps_size;
+  fps_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
+  fps_quad->data.offset() = gua::math::vec2(2.f, 2.f);
+
+
+  graph.add_node("/", fps_quad);
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -141,6 +144,12 @@ int main(int argc, char** argv) {
   gua::events::Ticker ticker(loop, 1.0/500.0);
 
   ticker.on_tick.connect([&]() {
+    std::stringstream sstr;
+    sstr.precision(1);
+    sstr.setf(std::ios::fixed, std::ios::floatfield);
+    sstr << "FPS: " << camera->get_application_fps()
+         << " / " << camera->get_rendering_fps();
+    fps->call_javascript("set_fps_text", sstr.str());
 
     gua::Interface::instance()->update();
     // apply trackball matrix to object

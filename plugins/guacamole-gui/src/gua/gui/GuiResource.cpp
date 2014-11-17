@@ -70,7 +70,7 @@ GuiResource::GuiResource(std::string const& name, std::string const& url, math::
   });
 
   view_ = Interface::instance()->create_webview(size.x, size.y);
-  view_->SetTransparent(false);
+  view_->SetTransparent(true);
   view_->Focus();
   view_->set_view_listener(new AweViewListener());
   view_->set_load_listener(new AweLoadListener(this));

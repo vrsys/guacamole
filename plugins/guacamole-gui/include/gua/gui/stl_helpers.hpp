@@ -19,74 +19,82 @@
  *                                                                            *
  ******************************************************************************/
 
+
+#ifndef GUA_GUI_STL_HELPERS_HPP
+#define GUA_GUI_STL_HELPERS_HPP
+
 // includes  -------------------------------------------------------------------
-#include <gua/gui/Interface.hpp>
-#include <gua/gui/Paths.hpp>
-#include <gua/gui/GuiTexture.hpp>
-
-#include <gua/utils/Logger.hpp>
-#include <gua/renderer/Texture2D.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/utils/TextFile.hpp>
-
-#include <Awesomium/WebCore.h>
-#include <Awesomium/STLHelpers.h>
-
-#include <mutex>
-
-#include "GLSurface.inl"
-
-// Awesomium bug in linux
-#ifndef _WIN32
-Awesomium::DataSource::~DataSource(){}
-#endif
+#include <vector>
+#include <iostream>
+#include <sstream>
 
 namespace gua {
 
-namespace {
+////////////////////////////////////////////////////////////////////////////////
 
-#include "GLSurfaceFactory.ipp"
-#include "AweDataSource.ipp"
-
+template <typename T>
+T clamp(T val, T a, T b) {
+  return std::min(std::max(val, a<b?a:b), a<b?b:a);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Interface::update() const {
-  web_core_->Update();
+template <typename T>
+T from_string(std::string const& v) {
+  std::istringstream iss(v);
+  T result;
+  iss >> result;
+  return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Interface::Interface() {
-  web_core_ = Awesomium::WebCore::Initialize(Awesomium::WebConfig());
-  web_core_->set_surface_factory(new GLSurfaceFactory());
-
-  Awesomium::WebPreferences prefs;
-  prefs.enable_smooth_scrolling = true;
-  web_session_ = web_core_->CreateWebSession(Awesomium::WSLit(""), prefs);
-
-  Awesomium::DataSource* data_source = new AweDataSource();
-  web_session_->AddDataSource(Awesomium::WSLit("gua"), data_source);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Interface::~Interface() {
-  auto factory = static_cast<GLSurfaceFactory*>(web_core_->surface_factory());
-  Awesomium::WebCore::Shutdown();
-  delete factory;
-  web_session_->Release();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Awesomium::WebView* Interface::create_webview(int width, int height) const {
-  return web_core_->CreateWebView(width, height, web_session_,
-                                  Awesomium::kWebViewType_Offscreen);
+template <typename T>
+std::string to_string(T const& v) {
+  std::ostringstream oss;
+  oss << v;
+  return oss.str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 }
 
+namespace std {
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, std::vector<T> const& v) {
+
+  typename std::vector<T>::const_iterator i(v.begin());
+  while (i != v.end()) {
+      os << *i;
+
+      if (++i != v.end()) {
+        os << " ";
+      }
+  }
+  return os;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+std::istream& operator>>(std::istream& is, std::vector<T>& v) {
+  v.clear();
+
+  T new_one;
+  while (is >> new_one) {
+    v.push_back(new_one);
+  }
+
+  is.clear();
+
+  return is;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+}
+#endif //GUA_GUI_STL_HELPERS_HPP
