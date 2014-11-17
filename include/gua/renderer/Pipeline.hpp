@@ -47,8 +47,7 @@ class Pipeline {
   ~Pipeline();
 
   void process(RenderContext* ctx, CameraMode mode, node::SerializedCameraNode const& camera,
-               std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
-               float application_fps, float rendering_fps);
+               std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
   std::vector<PipelinePass>   const& get_passes()  const;
   GBuffer                          & get_gbuffer() const;
@@ -62,9 +61,6 @@ class Pipeline {
   void draw_quad();
 
  private:
-
-  int                                fps_count_;
-  math::vec2                         fps_sum_;
 
   GBuffer*                           gbuffer_;
   RenderContext*                     context_;

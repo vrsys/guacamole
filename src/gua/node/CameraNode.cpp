@@ -36,7 +36,9 @@ CameraNode::CameraNode(std::string const& name,
                        Configuration const& configuration,
                        math::mat4 const& transform)
     : Node(name, transform), config(configuration)
-    , rendering_pipeline_(std::make_shared<Pipeline>()) {}
+    , rendering_pipeline_(std::make_shared<Pipeline>())
+    , application_fps_(0.f)
+    , rendering_fps_(0.f) {}
 
 /* virtual */ void CameraNode::accept(NodeVisitor& visitor) {
 
