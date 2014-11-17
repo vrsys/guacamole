@@ -89,6 +89,7 @@ namespace node {
       return;
     }
 
+
     // return if only first object shall be returned and the current first hit
     // is in front of the bbox entry point and the ray does not start inside
     // the bbox

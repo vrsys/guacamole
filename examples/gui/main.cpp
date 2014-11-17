@@ -22,7 +22,6 @@
 #include <functional>
 
 #include <gua/guacamole.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/utils/Trackball.hpp>
 #include <gua/gui/GuiResource.hpp>
 #include <gua/gui/Interface.hpp>
@@ -64,32 +63,15 @@ int main(int argc, char** argv) {
   };
 
   auto mat1(load_mat("data/materials/SimpleMaterial.gmd"));
+  mat1.set_uniform("tex", std::string("google"));
 
   gua::TriMeshLoader loader;
 
-  gua::math::vec2 gui_size(1024.f, 1024.f);
-  auto gui = std::make_shared<gua::GuiResource>("nyan", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gui_size);
-
-  auto quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("quad");
-  quad->data.texture() = "nyan";
-  quad->data.size() = gui_size;
-  quad->data.anchor() = gua::math::vec2(-1.f, -1.f);
-  quad->data.offset() = gua::math::vec2(10.f, 10.f);
-  quad->data.opacity() = 0.5f;
-  graph.add_node("/", quad);
-
-  auto gui2 = std::make_shared<gua::GuiResource>("nyan2", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gui_size);
-  auto quad2 = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("quad2");
-  quad2->data.texture() = "nyan2";
-  quad2->data.size() = gui_size;
-  quad2->data.anchor() = gua::math::vec2(0.f, -1.f);
-  quad2->data.offset() = gua::math::vec2(10.f, 10.f);
-  quad2->data.opacity() = 0.5f;
-  graph.add_node("/", quad2);
-
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform", teapot);
+  auto gui = std::make_shared<gua::GuiResource>("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
+
+  auto quad(loader.create_geometry_from_file("quad", "data/objects/monkey.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::MAKE_PICKABLE | gua::TriMeshLoader::NORMALIZE_SCALE));
+  graph.add_node("/transform", quad);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
@@ -149,10 +131,9 @@ int main(int argc, char** argv) {
     gua::math::vec3 origin(screen->get_scaled_world_transform() * gua::math::vec3(screen_space_pos.x, screen_space_pos.y, 0));
     gua::math::vec3 direction(origin - camera->get_world_position());
 
-    gua::Ray ray(origin, direction, 1000);
+    gua::Ray ray(origin, direction*100, 1);
 
-    auto result = quad->ray_test(ray, gua::PickResult::PICK_ALL | gua::PickResult::GET_TEXTURE_COORDS);
-
+    auto result = graph.ray_test(ray, gua::PickResult::GET_POSITIONS | gua::PickResult::GET_TEXTURE_COORDS);
     if (result.size() > 0) {
       gui->inject_mouse_position_relative(result.begin()->texture_coords);
     }
