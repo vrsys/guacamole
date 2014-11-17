@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+</head>
+
+
+<body>
+<form class="form-inline" role="form">
+  <div class="form-group">
+    <div class="input-group">
+      <input type="address" class="form-control" id="address" placeholder="Adresse eingeben...">
+      <div class="input-group-addon btn" id="submit"> Los! </div>
+    </div>
+  </div>
+</form>
+
+<script type="text/javascript">
+  $("#submit").click(function() {
+    gua.update_monkey_address($("#address").val());
+  });
+
+</script>
+
+</body>
+
+</html>

@@ -47,7 +47,7 @@ class MaterialShader {
   Material&           get_default_material();
 
   ShaderProgram* get_shader(RenderContext const& ctx,
-                            GeometryResource const& for_type,
+                            std::type_index const& for_type,
                             std::string const& geometry_v_shader,
                             std::string const& geometry_f_shader);
 

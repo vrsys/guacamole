@@ -23,6 +23,7 @@
 #include <gua/renderer/TriMeshPass.hpp>
 
 #include <gua/node/TriMeshNode.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
@@ -64,6 +65,7 @@ TriMeshPassDescription::TriMeshPassDescription()
       pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
       pipe.get_gbuffer().set_viewport(ctx);
 
+
 #if USE_UBO
       // initialize storage buffer
       if (!(*material_uniform_storage_buffer)) {
@@ -78,7 +80,7 @@ TriMeshPassDescription::TriMeshPassDescription()
         if (material) {
           // get shader for this material
           auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object_list.second[0]));
-          auto const& shader(material->get_shader(ctx, *tri_mesh_node->get_geometry(), vertex_shader, fragment_shader));
+          auto const& shader(material->get_shader(ctx, typeid(*tri_mesh_node->get_geometry(), vertex_shader, fragment_shader));
 
           auto max_object_count(material->max_object_count());
 
@@ -165,18 +167,18 @@ TriMeshPassDescription::TriMeshPassDescription()
       for (auto const& object : sorted_objects->second) {
 
         auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
-        
+
         if (current_material != tri_mesh_node->get_material().get_shader()) {
           current_material = tri_mesh_node->get_material().get_shader();
           if (current_material) {
-            current_shader = current_material->get_shader(ctx, *tri_mesh_node->get_geometry(), vertex_shader, fragment_shader);
+            current_shader = current_material->get_shader(ctx, typeid(*tri_mesh_node->get_geometry()), vertex_shader, fragment_shader);
           } else {
             Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material().get_shader_name() << std::endl;
           }
           if (current_shader) {
             current_shader->use(ctx);
             ctx.render_context->apply();
-          } 
+          }
         }
 
         if (current_shader && tri_mesh_node->get_geometry()) {

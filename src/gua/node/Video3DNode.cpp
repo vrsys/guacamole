@@ -47,7 +47,7 @@ namespace node {
 
   /////////////////////////////////////////////////////////////////////////////
 
-  void Video3DNode::ray_test_impl(Ray const& ray, PickResult::Options options,
+  void Video3DNode::ray_test_impl(Ray const& ray, int options,
                              Mask const& mask, std::set<PickResult>& hits) {
 
     // first of all, check bbox

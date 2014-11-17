@@ -68,7 +68,7 @@ void on_window_button_press(GLFWwindow* glfw_window, int button, int action, int
 
 void on_window_move_cursor(GLFWwindow* glfw_window, double x, double y) {
   auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
-  window->on_move_cursor.emit(math::vec2(x, y));
+  window->on_move_cursor.emit(math::vec2(x, window->config.get_size().y - y));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +196,7 @@ void GlfwWindow::finish_frame() const {
   // Workaround for Windows Window Handling
   // Poll events from rendering thread and not application mainloop
   // Otherwise application window is stalling 
-  glfwPollEvents();
+  // glfwPollEvents();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

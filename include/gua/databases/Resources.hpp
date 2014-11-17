@@ -38,6 +38,8 @@ namespace Resources {
 
   std::vector<unsigned char> const& lookup(std::string const& file);
 
+  void resolve_includes(std::string& shader_source);
+
   // generated header
   #include <gua/generated/R.inl>
 

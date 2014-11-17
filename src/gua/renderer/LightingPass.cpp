@@ -71,7 +71,7 @@ LightingPassDescription::LightingPassDescription()
                                     "gua_calculate_point_light");
 
     auto light_sphere =
-        GeometryDatabase::instance()->lookup("gua_light_sphere_proxy");
+        std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_sphere_proxy"));
     for (auto const& l : pipe.get_scene().nodes[std::type_index(typeid(node::PointLightNode))]) {
       auto light(reinterpret_cast<node::PointLightNode*>(l));
 
@@ -100,7 +100,7 @@ LightingPassDescription::LightingPassDescription()
 
     // spot lights
     auto light_cone =
-        GeometryDatabase::instance()->lookup("gua_light_cone_proxy");
+        std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_cone_proxy"));
 
     for (auto const& l : pipe.get_scene().nodes[std::type_index(typeid(node::SpotLightNode))]) {
       auto light(reinterpret_cast<node::SpotLightNode*>(l));

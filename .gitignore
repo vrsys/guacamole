@@ -39,4 +39,5 @@ plugins/guacamole-oculus/example-oculus/example-oculus
 examples/oculus/example-oculus
 examples/multicontext/example-multicontext
 examples/input/example-input
+examples/gui/example-gui
 examples/stress_test/stress_test

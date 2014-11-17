@@ -41,8 +41,6 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline() :
-  fps_count_(0),
-  fps_sum_(0.f, 0.f),
   gbuffer_(nullptr),
   camera_block_(nullptr),
   last_resolution_(0, 0),
@@ -66,18 +64,7 @@ std::vector<PipelinePass> const& Pipeline::get_passes() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCameraNode const& camera,
-                       std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
-                       float application_fps, float rendering_fps) {
-
-  if (fps_count_ > 100) {
-    std::cout << "App: " << fps_sum_[0]/fps_count_ << " Render: " << fps_sum_[1]/fps_count_ << std::endl;
-    fps_count_ = 0;
-    fps_sum_ = math::vec2(0.f, 0.f);
-  } else {
-    ++fps_count_;
-    fps_sum_[0] += application_fps;
-    fps_sum_[1] += rendering_fps;
-  }
+                       std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs) {
 
   // return if pipeline is disabled
   if (!camera.config.get_enabled()) {
@@ -97,7 +84,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
 
   // execute all prerender cameras
   for (auto const& cam: camera.pre_render_cameras) {
-    cam.rendering_pipeline->process(ctx, mode, cam, scene_graphs, application_fps, rendering_fps);
+    cam.rendering_pipeline->process(ctx, mode, cam, scene_graphs);
   }
 
   // recreate gbuffer if resolution changed

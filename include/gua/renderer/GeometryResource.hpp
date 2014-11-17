@@ -51,26 +51,6 @@ class GUA_DLL GeometryResource {
  public:
 
   /**
-   * Draws the Geometry.
-   *
-   * Draws this Geometry object to the given context.
-   *
-   * \param context           The RenderContext to which this object
-   *                          should be drawn.
-   */
-   virtual void draw(RenderContext const& context) const = 0;
-
-  /**
-   * Interface to implement pre-draw tasks (occlusion queries, LOD etc.)
-   *
-   * Predraw tasks that need to be done before drawing geometry
-   *
-   * \param context           The RenderContext to which this object
-   *                          should be predrawn.
-   */
-   virtual void predraw(RenderContext const& context) const {}
-
-  /**
   * Interface which provides the appropriate UberShader for the ressource
   */
    // virtual std::shared_ptr<GeometryUberShader> create_ubershader() const = 0;
@@ -83,7 +63,7 @@ class GUA_DLL GeometryResource {
    *
    * \return                  The intersection distance along the ray.
    */
-  virtual void ray_test(Ray const& ray, PickResult::Options options,
+  virtual void ray_test(Ray const& ray, int options,
                         node::Node* owner, std::set<PickResult>& hits) = 0;
 
   /**

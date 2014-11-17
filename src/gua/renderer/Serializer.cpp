@@ -57,7 +57,7 @@ void Serializer::check(SerializedScene& output,
   data_ = &output;
   data_->nodes.clear();
   data_->bounding_boxes.clear();
-  
+
   enable_frustum_culling_     = enable_frustum_culling;
   current_render_mask_        = mask;
   current_frustum_            = output.frustum;

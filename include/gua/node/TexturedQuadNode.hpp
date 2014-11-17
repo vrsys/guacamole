@@ -106,6 +106,11 @@ class GUA_DLL TexturedQuadNode : public SerializableNode {
 
   virtual void update_cache() override;
 
+  void ray_test_impl(Ray const& ray,
+                     int options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
+
  private:  // methods
 
   std::shared_ptr<Node> copy() const override;
