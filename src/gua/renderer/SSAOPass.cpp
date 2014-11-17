@@ -41,7 +41,7 @@ SSAOPassDescription::SSAOPassDescription()
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = true;
   doClear_ = false;
-  rendermode_ = RenderMode::Callback;
+  rendermode_ = RenderMode::Quad;
 
   depth_stencil_state_ = boost::make_optional(
       scm::gl::depth_stencil_state_desc(false, false));
@@ -56,17 +56,7 @@ SSAOPassDescription::SSAOPassDescription()
   uniforms["gua_ssao_radius"]    = 1.0f;
   uniforms["gua_ssao_intensity"] = 1.0f;
   uniforms["gua_ssao_falloff"]   = 0.1f;
-
-  auto tex = std::make_shared<NoiseTexture>();
-
-  // set uniforms and draw a full screen quad
-  process_ = [tex](
-      PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe) {
-    pipe.get_context().render_context->current_program()->uniform(
-        "gua_noise_tex", 0, tex->get_handle(pipe.get_context()));
-
-    pipe.draw_quad();
-  };
+  uniforms["gua_noise_tex"]      = std::string("gua_noise_texture");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
