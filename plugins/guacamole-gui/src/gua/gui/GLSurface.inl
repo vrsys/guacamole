@@ -19,58 +19,58 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GUI_INTERFACE_HPP
-#define GUA_GUI_INTERFACE_HPP
+#ifndef GUA_GUI_GL_SURFACE_INL
+#define GUA_GUI_GL_SURFACE_INL
 
-// includes  -------------------------------------------------------------------
-#include <gua/utils/Singleton.hpp>
 #include <gua/renderer/RenderContext.hpp>
-#include <gua/events/Signal.hpp>
-#include <gua/gui/mouse_enums.hpp>
 
-// forward declares ------------------------------------------------------------
-namespace Awesomium {
-  class WebCore;
-  class WebView;
-  class WebSession;
-}
+#include <Awesomium/BitmapSurface.h>
+
+#include <mutex>
 
 namespace gua {
 
-class ShaderProgram;
+class GuiTexture;
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// -----------------------------------------------------------------------------
-class GUA_DLL Interface : public Singleton<Interface> {
+class GLSurface : public Awesomium::Surface {
 
  ///////////////////////////////////////////////////////////////////////////////
  // ----------------------------------------------------------- public interface
  public:
 
-  events::Signal<Cursor> on_cursor_change;
+  // ----------------------------------------------------- contruction interface
+  GLSurface(unsigned width, unsigned height);
 
-  void update() const;
 
-  friend class GuiResource;
-  friend class Singleton<Interface>;
+  ~GLSurface() {}
+
+  // ------------------------------------------------------------ public methods
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  bool bind(RenderContext const& ctx, const GuiTexture* gui_texture);
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  void Paint(unsigned char* src_buffer, int src_row_span,
+             Awesomium::Rect const& src_rect,
+             Awesomium::Rect const& dest_rect);
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  void Scroll(int dx, int dy, Awesomium::Rect const& clip_rect);
 
  ///////////////////////////////////////////////////////////////////////////////
  // ---------------------------------------------------------- private interface
  private:
-  // this class is a Singleton --- private c'tor and d'tor
-  Interface();
-  ~Interface();
 
-  Awesomium::WebView* create_webview(int width, int height) const;
+  std::vector<unsigned char>  buffer_;
 
-  Awesomium::WebCore* web_core_;
-  Awesomium::WebSession* web_session_;
+  unsigned   width_;
+  unsigned   height_;
+  std::mutex mutex_;
+  bool       needs_update_;
 };
 
-// -----------------------------------------------------------------------------
-
 }
-
-#endif // GUA_GUI_INTERFACE_HPP
+#endif  // GUA_GUI_GL_SURFACE_INL

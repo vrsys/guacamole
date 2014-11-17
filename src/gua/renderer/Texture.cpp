@@ -95,7 +95,7 @@ void Texture::update_sub_data(RenderContext const& context,
                               scm::gl::texture_region const& region,
                               unsigned level,
                               scm::gl::data_format format,
-                              const void* const data) {
+                              const void* const data) const{
   if (textures_.size() <= context.id || textures_[context.id] == 0) {
     upload_to(context);
   }

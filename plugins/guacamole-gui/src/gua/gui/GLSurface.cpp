@@ -1,54 +1,51 @@
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// This file is part of Swift2D.                                              //
-//                                                                            //
-// Copyright: (c) 2011-2014 Simon Schneegans & Felix Lauer                    //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * guacamole - delicious VR                                                   *
+ *                                                                            *
+ * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
+ * Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
+ *                                                                            *
+ * This program is free software: you can redistribute it and/or modify it    *
+ * under the terms of the GNU General Public License as published by the Free *
+ * Software Foundation, either version 3 of the License, or (at your option)  *
+ * any later version.                                                         *
+ *                                                                            *
+ * This program is distributed in the hope that it will be useful, but        *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY *
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License   *
+ * for more details.                                                          *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License along    *
+ * with this program. If not, see <http://www.gnu.org/licenses/>.             *
+ *                                                                            *
+ ******************************************************************************/
 
-class GLSurface : public Awesomium::Surface {
+#include "GLSurface.inl"
+
+#include <gua/gui/GuiTexture.hpp>
+
+namespace gua {
 
  ///////////////////////////////////////////////////////////////////////////////
  // ----------------------------------------------------------- public interface
- public:
 
   // ----------------------------------------------------- contruction interface
-  GLSurface(unsigned width, unsigned height)
-    : tex_(nullptr)
-    , buffer_(width * height * 4)
+  GLSurface::GLSurface(unsigned width, unsigned height)
+    : buffer_(width * height * 4)
     , width_(width)
     , height_(height)
     , needs_update_(false) {}
 
-  ~GLSurface() {}
 
   // ------------------------------------------------------------ public methods
 
   //////////////////////////////////////////////////////////////////////////////
 
-  void init(RenderContext const& ctx) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    tex_ = std::make_shared<Texture2D>(
-      width_, height_,
-      scm::gl::FORMAT_RGBA_8
-    );
-    tex_->upload_to(ctx);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  bool bind(RenderContext const& ctx) {
-
-    if (!tex_) {
-      init(ctx);
-    }
-
-    ctx.render_context->current_program()->uniform("gua_in_texture", tex_->get_handle(ctx));
+  bool GLSurface::bind(RenderContext const& ctx, const GuiTexture* gui_texture) {
 
     if (needs_update_) {
       std::unique_lock<std::mutex> lock(mutex_);
       needs_update_ = false;
-      tex_->update_sub_data(
+      gui_texture->update_sub_data(
         ctx,
         scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width_, height_, 1)),
         0u, scm::gl::FORMAT_BGRA_8, &buffer_.front()
@@ -60,15 +57,16 @@ class GLSurface : public Awesomium::Surface {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  void Paint(unsigned char* src_buffer, int src_row_span,
-             Awesomium::Rect const& src_rect,
-             Awesomium::Rect const& dest_rect) {
+  void GLSurface::Paint(unsigned char* src_buffer, int src_row_span,
+                        Awesomium::Rect const& src_rect,
+                        Awesomium::Rect const& dest_rect) {
 
     std::unique_lock<std::mutex> lock(mutex_);
 
-    for (int row = 0; row < dest_rect.height; row++) {
-      memcpy(&buffer_.front() + (row + dest_rect.y) * width_*4 + (dest_rect.x * 4),
-             src_buffer + (row + src_rect.y) * src_row_span + (src_rect.x * 4),
+    for (int r = 0; r < dest_rect.height; r++) {
+      auto row(height_ - r - dest_rect.y - 1);
+      memcpy(&buffer_.front() + row * width_*4 + (dest_rect.x * 4),
+             src_buffer + (r + src_rect.y) * src_row_span + (src_rect.x * 4),
              dest_rect.width * 4);
     }
 
@@ -77,8 +75,7 @@ class GLSurface : public Awesomium::Surface {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  void Scroll(int dx, int dy, Awesomium::Rect const& clip_rect) {
-
+  void GLSurface::Scroll(int dx, int dy, Awesomium::Rect const& clip_rect) {
     if (abs(dx) >= clip_rect.width || abs(dy) >= clip_rect.height) {
       return;
     }
@@ -128,15 +125,4 @@ class GLSurface : public Awesomium::Surface {
     needs_update_ = true;
   }
 
- ///////////////////////////////////////////////////////////////////////////////
- // ---------------------------------------------------------- private interface
- private:
-  std::shared_ptr<gua::Texture2D> tex_;
-
-  std::vector<unsigned char>  buffer_;
-
-  unsigned   width_;
-  unsigned   height_;
-  std::mutex mutex_;
-  bool       needs_update_;
-};
+}

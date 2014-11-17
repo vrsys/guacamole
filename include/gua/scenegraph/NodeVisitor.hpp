@@ -43,7 +43,6 @@ class RayNode;
 class TexturedQuadNode;
 }
 
-class GuiNode;
 
 namespace physics {
 
@@ -114,8 +113,6 @@ class NodeVisitor {
    */
   virtual void visit(node::TriMeshNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
-
-  virtual void visit(GuiNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
   * Visits a Video3DNode

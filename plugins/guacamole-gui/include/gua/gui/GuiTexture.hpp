@@ -19,58 +19,41 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GUI_INTERFACE_HPP
-#define GUA_GUI_INTERFACE_HPP
+#ifndef GUA_GUI_TEXTURE_HPP
+#define GUA_GUI_TEXTURE_HPP
 
-// includes  -------------------------------------------------------------------
-#include <gua/utils/Singleton.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/events/Signal.hpp>
-#include <gua/gui/mouse_enums.hpp>
+// guacamole headers
+#include <gua/renderer/Texture2D.hpp>
 
-// forward declares ------------------------------------------------------------
 namespace Awesomium {
-  class WebCore;
   class WebView;
-  class WebSession;
 }
 
 namespace gua {
 
-class ShaderProgram;
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// -----------------------------------------------------------------------------
-class GUA_DLL Interface : public Singleton<Interface> {
-
- ///////////////////////////////////////////////////////////////////////////////
- // ----------------------------------------------------------- public interface
+/**
+ * A class representing a texture.
+ *
+ * This class allows to load texture data from a file and bind the
+ * texture to an OpenGL context.
+ */
+class GUA_DLL GuiTexture : public Texture2D {
  public:
 
-  events::Signal<Cursor> on_cursor_change;
+  /**
+   * Constructor.
+   */
+  GuiTexture(unsigned width, unsigned height, Awesomium::WebView* view);
 
-  void update() const;
+  /*virtual*/ math::vec2ui const get_handle(RenderContext const& context) const;
 
-  friend class GuiResource;
-  friend class Singleton<Interface>;
 
- ///////////////////////////////////////////////////////////////////////////////
- // ---------------------------------------------------------- private interface
- private:
-  // this class is a Singleton --- private c'tor and d'tor
-  Interface();
-  ~Interface();
+ protected:
+  Awesomium::WebView* view_;
 
-  Awesomium::WebView* create_webview(int width, int height) const;
+  std::mutex mutex_;
 
-  Awesomium::WebCore* web_core_;
-  Awesomium::WebSession* web_session_;
 };
 
-// -----------------------------------------------------------------------------
-
 }
-
-#endif // GUA_GUI_INTERFACE_HPP
+#endif  // GUA_GUI_TEXTURE_HPP

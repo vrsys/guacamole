@@ -37,6 +37,7 @@ namespace Awesomium {
 
 namespace gua {
 
+class GuiTexture;
 class RenderContext;
 class ShaderProgram;
 
@@ -56,7 +57,9 @@ class GuiResource : public GeometryResource {
      *
      * Creates a new and empty Mesh.
      */
-    GuiResource(std::string const& url = "", math::vec2 const& size = math::vec2(1000.f, 1000.f));
+    GuiResource(std::string const& name,
+                std::string const& url = "",
+                math::vec2 const& size = math::vec2(1000.f, 1000.f));
     ~GuiResource();
 
     events::Signal<std::string, std::vector<std::string>> on_javascript_callback;
@@ -92,8 +95,6 @@ class GuiResource : public GeometryResource {
       return result_callbacks_;
     }
 
-    void bind(RenderContext const& context) const;
-
     /*virtual*/ void ray_test(Ray const& ray, PickResult::Options options,
                   node::Node* owner, std::set<PickResult>& hits);
 
@@ -103,7 +104,10 @@ class GuiResource : public GeometryResource {
     void call_javascript_impl(std::string const& method, std::vector<std::string> const& args) const;
     void add_javascript_callback(std::string const& callback, bool with_result);
 
+    std::string name_;
     std::string url_;
+
+    std::shared_ptr<GuiTexture> gui_texture_;
 
     std::unordered_map<std::string, std::function<std::string()>> result_callbacks_;
     Awesomium::WebView* view_;

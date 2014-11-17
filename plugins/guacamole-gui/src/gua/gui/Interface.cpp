@@ -9,6 +9,7 @@
 // includes  -------------------------------------------------------------------
 #include <gua/gui/Interface.hpp>
 #include <gua/gui/Paths.hpp>
+#include <gua/gui/GuiTexture.hpp>
 
 #include <gua/utils/Logger.hpp>
 #include <gua/renderer/Texture2D.hpp>
@@ -16,10 +17,11 @@
 #include <gua/utils/TextFile.hpp>
 
 #include <Awesomium/WebCore.h>
-#include <Awesomium/BitmapSurface.h>
 #include <Awesomium/STLHelpers.h>
 
 #include <mutex>
+
+#include "GLSurface.inl"
 
 // Awesomium bug in linux
 #ifndef _WIN32
@@ -30,7 +32,6 @@ namespace gua {
 
 namespace {
 
-#include "GLSurface.ipp"
 #include "GLSurfaceFactory.ipp"
 #include "AweDataSource.ipp"
 
@@ -63,13 +64,6 @@ Interface::~Interface() {
   Awesomium::WebCore::Shutdown();
   delete factory;
   web_session_->Release();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool Interface::bind(Awesomium::WebView* view, RenderContext const& ctx) const {
-  auto surface = static_cast<GLSurface*>(view->surface());
-  return surface && surface->bind(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

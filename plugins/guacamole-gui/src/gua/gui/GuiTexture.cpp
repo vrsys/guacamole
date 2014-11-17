@@ -19,58 +19,26 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GUI_INTERFACE_HPP
-#define GUA_GUI_INTERFACE_HPP
+// class header
+#include <gua/gui/GuiTexture.hpp>
 
-// includes  -------------------------------------------------------------------
-#include <gua/utils/Singleton.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/events/Signal.hpp>
-#include <gua/gui/mouse_enums.hpp>
+#include "GLSurface.inl"
 
-// forward declares ------------------------------------------------------------
-namespace Awesomium {
-  class WebCore;
-  class WebView;
-  class WebSession;
-}
+#include <Awesomium/WebCore.h>
 
 namespace gua {
 
-class ShaderProgram;
+GuiTexture::GuiTexture(unsigned width, unsigned height, Awesomium::WebView* view)
+    : Texture2D(width, height, scm::gl::FORMAT_RGBA_8)
+    , view_(view)
+  {}
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+math::vec2ui const GuiTexture::get_handle(RenderContext const& context) const {
 
-// -----------------------------------------------------------------------------
-class GUA_DLL Interface : public Singleton<Interface> {
+  auto surface = static_cast<GLSurface*>(view_->surface());
+  surface->bind(context, this);
 
- ///////////////////////////////////////////////////////////////////////////////
- // ----------------------------------------------------------- public interface
- public:
-
-  events::Signal<Cursor> on_cursor_change;
-
-  void update() const;
-
-  friend class GuiResource;
-  friend class Singleton<Interface>;
-
- ///////////////////////////////////////////////////////////////////////////////
- // ---------------------------------------------------------- private interface
- private:
-  // this class is a Singleton --- private c'tor and d'tor
-  Interface();
-  ~Interface();
-
-  Awesomium::WebView* create_webview(int width, int height) const;
-
-  Awesomium::WebCore* web_core_;
-  Awesomium::WebSession* web_session_;
-};
-
-// -----------------------------------------------------------------------------
-
+  return Texture2D::get_handle(context);
 }
 
-#endif // GUA_GUI_INTERFACE_HPP
+}

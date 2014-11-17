@@ -41,8 +41,6 @@
 #include <gua/node/RayNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
-#include <gua/gui/GuiNode.hpp>
-
 // external headers
 #include <stack>
 #include <utility>
@@ -114,17 +112,6 @@ void Serializer::check(SerializedScene& output,
 ////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void Serializer::visit(node::TriMeshNode* node) {
-
-  if (is_visible(node)) {
-    data_->nodes[std::type_index(typeid(*node))].push_back(node);
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(GuiNode* node) {
 
   if (is_visible(node)) {
     data_->nodes[std::type_index(typeid(*node))].push_back(node);

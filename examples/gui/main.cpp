@@ -23,8 +23,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/utils/Trackball.hpp>
-#include <gua/gui/GuiNode.hpp>
-#include <gua/gui/GuiPass.hpp>
+#include <gua/gui/GuiResource.hpp>
 #include <gua/gui/Interface.hpp>
 
 // forward mouse interaction to trackball
@@ -68,8 +67,11 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto gui = std::make_shared<gua::GuiNode>("gui", "http://sdw.histoglobe.com");
-  graph.add_node(transform, gui);
+  auto gui = std::make_shared<gua::GuiResource>("nyan", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gua::math::vec2(1024.f, 1024.f));
+
+  auto quad = std::make_shared<gua::node::TexturedQuadNode>("quad");
+  quad->data.texture() = "nyan";
+  graph.add_node(transform, quad);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
@@ -98,8 +100,6 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-
-  camera->config.pipeline_description().add_pass<gua::GuiPassDescription>();
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);

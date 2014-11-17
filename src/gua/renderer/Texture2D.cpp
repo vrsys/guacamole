@@ -101,4 +101,8 @@ void Texture2D::upload_to(RenderContext const& context) const {
   }
 }
 
+std::vector<void*>& Texture2D::get_data() {
+  return data_;
+}
+
 }

@@ -101,7 +101,7 @@ class GUA_DLL Texture {
                        scm::gl::texture_region const& region,
                        unsigned level,
                        scm::gl::data_format format,
-                       const void* const data);
+                       const void* const data) const;
 
   void generate_mipmaps(RenderContext const& context);
 
@@ -139,7 +139,7 @@ class GUA_DLL Texture {
   mutable std::mutex upload_mutex_;
 
 
-  std::vector<void*> data_;
+  mutable std::vector<void*> data_;
   std::string file_name_;
 
  private:

@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/gui/GuiPass.hpp>
 #include <gua/gui/Interface.hpp>
+#include <gua/gui/GuiTexture.hpp>
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
@@ -48,8 +49,10 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GuiResource::GuiResource(std::string const& url, math::vec2 const& size)
-  : url_("")
+GuiResource::GuiResource(std::string const& name, std::string const& url, math::vec2 const& size)
+  : name_(name)
+  , url_("")
+  , gui_texture_(nullptr)
   , view_(nullptr)
   , js_window_(nullptr)
   , interactive_(true)
@@ -76,6 +79,9 @@ GuiResource::GuiResource(std::string const& url, math::vec2 const& size)
 
   set_url(url);
 
+  gui_texture_ = std::make_shared<GuiTexture>(size.x, size.y, view_);
+
+  gua::TextureDatabase::instance()->add(name, gui_texture_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,12 +207,6 @@ void GuiResource::add_javascript_callback(std::string const& name) {
 void GuiResource::add_javascript_getter(std::string const& name, std::function<std::string()> callback) {
   add_javascript_callback(name, true);
   result_callbacks_[name] = callback;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void GuiResource::bind(RenderContext const& ctx) const {
-  Interface::instance()->bind(view_, ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

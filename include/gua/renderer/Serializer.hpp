@@ -39,8 +39,6 @@ namespace node {
   class TriMeshNode;
 }
 
-class GuiNode;
-
 
 /**
  * This class is used to convert the scengraph to a (opimized) sequence.
@@ -96,15 +94,6 @@ class Serializer : public NodeVisitor {
    * \param geometry   Pointer to GeometryNode
    */
   void visit(node::TriMeshNode* geometry) override;
-
-    /**
-   * Visits a GeometryNode
-   *
-   * This function provides the interface to visit a GeometryNode
-   *
-   * \param geometry   Pointer to GeometryNode
-   */
-  void visit(GuiNode* geometry) override;
 
   /**
   * Visits a VolumeNode
