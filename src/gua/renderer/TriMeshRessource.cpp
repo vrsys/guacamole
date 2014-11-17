@@ -180,9 +180,8 @@ void TriMeshRessource::draw(RenderContext const& ctx) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRessource::ray_test(Ray const& ray, PickResult::Options options,
+void TriMeshRessource::ray_test(Ray const& ray, int options,
                     node::Node* owner, std::set<PickResult>& hits) {
-
   kd_tree_.ray_test(ray, mesh_, options, owner, hits);
 }
 

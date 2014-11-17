@@ -87,7 +87,7 @@ void PLODRessource::draw(
 ////////////////////////////////////////////////////////////////////////////////
 
 void PLODRessource::ray_test(Ray const& ray,
-                             PickResult::Options options,
+                             int options,
                              node::Node* owner,
                              std::set<PickResult>& hits) {
 

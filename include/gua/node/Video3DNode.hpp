@@ -45,7 +45,7 @@ public:
                 math::mat4  const& transform = math::mat4::identity());
 
     void ray_test_impl(Ray const& ray,
-                       PickResult::Options options,
+                       int options,
                        Mask const& mask,
                        std::set<PickResult>& hits) override;
 

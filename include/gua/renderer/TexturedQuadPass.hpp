@@ -34,9 +34,6 @@
 
 namespace gua {
 
-class Pipeline;
-class TexturedQuadPass;
-
 class TexturedQuadPassDescription : public PipelinePassDescription {
  public:
   TexturedQuadPassDescription();

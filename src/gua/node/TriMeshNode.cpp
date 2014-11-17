@@ -1,4 +1,4 @@
-#/******************************************************************************
+/******************************************************************************
  * guacamole - delicious VR                                                   *
  *                                                                            *
  * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
@@ -26,6 +26,7 @@
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 // guacamole headers
@@ -77,7 +78,7 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void TriMeshNode::ray_test_impl(Ray const& ray, PickResult::Options options,
+  void TriMeshNode::ray_test_impl(Ray const& ray, int options,
     Mask const& mask, std::set<PickResult>& hits) {
 
     // first of all, check bbox
@@ -87,6 +88,7 @@ namespace node {
     if (box_hits.first == Ray::END && box_hits.second == Ray::END) {
       return;
     }
+
 
     // return if only first object shall be returned and the current first hit
     // is in front of the bbox entry point and the ray does not start inside
@@ -255,7 +257,11 @@ namespace node {
           }
         }
 
-        geometry_ = GeometryDatabase::instance()->lookup(filename_);
+        geometry_ = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup(filename_));
+
+        if (!geometry_) {
+          Logger::LOG_WARNING << "Failed to get TriMeshRessource for " << filename_ << ": The data base entry is of wrong type!" << std::endl;
+        }
       }
 
       filename_changed_ = false;
@@ -284,7 +290,7 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<GeometryResource> const& TriMeshNode::get_geometry() const {
+  std::shared_ptr<TriMeshRessource> const& TriMeshNode::get_geometry() const {
     return geometry_;
   }
 

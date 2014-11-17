@@ -59,7 +59,7 @@ class KDTree {
    * \param hits    A reference to the resulting set. Any contained data will be
    *                deleted depending on the supplied options.
    */
-  void ray_test(Ray const& ray, aiMesh* mesh, PickResult::Options const& options,
+  void ray_test(Ray const& ray, aiMesh* mesh, int options,
                 node::Node* owner, std::set<PickResult>& hits) const;
 
  private:
@@ -112,7 +112,7 @@ class KDTree {
   bool intersect_one(KDNode* node,
                      Ray const& ray,
                      aiMesh* mesh,
-                     PickResult::Options const& options,
+                     int options,
                      std::vector<Triangle> const& triangles,
                      std::set<PickResult>& hits) const;
 
@@ -120,7 +120,7 @@ class KDTree {
   void intersect_all(KDNode* node,
                      Ray const& ray,
                      aiMesh* mesh,
-                     PickResult::Options const& options,
+                     int options,
                      std::vector<Triangle> const& triangles,
                      std::set<PickResult>& hits) const;
 
@@ -128,7 +128,7 @@ class KDTree {
   std::vector<Triangle> triangles_;
 
   mutable node::Node* current_owner_;
-  mutable PickResult::Options current_options_;
+  mutable int current_options_;
   mutable unsigned current_visit_flag_;
 };
 

@@ -39,6 +39,7 @@ namespace node {
   class SerializableNode;
 }
 
+
 /**
  * This class is used to convert the scengraph to a (opimized) sequence.
  *

@@ -36,10 +36,11 @@ namespace gua {
 Texture2D::Texture2D(unsigned width,
                  unsigned height,
                  scm::gl::data_format color_format,
+                 scm::gl::data_format internal_format,
                  std::vector<void*> const& data,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : Texture(color_format, data, mipmap_layers, state_descripton),
+    : Texture(color_format, internal_format, data, mipmap_layers, state_descripton),
       width_(width),
       height_(height) {}
 
@@ -76,10 +77,9 @@ void Texture2D::upload_to(RenderContext const& context) const {
           math::vec2ui(width_, height_), color_format_, mipmap_layers_);
     else
       textures_[context.id] = context.render_device->create_texture_2d(
-    scm::gl::texture_2d_desc(
-              math::vec2ui(width_, height_), color_format_, mipmap_layers_),
-          color_format_,
-          data_);
+          scm::gl::texture_2d_desc(
+              math::vec2ui(width_, height_), color_format_, mipmap_layers_
+          ), internal_format_, data_);
   } else {
     scm::gl::texture_loader loader;
     textures_[context.id] = loader.load_texture_2d(
@@ -99,6 +99,10 @@ void Texture2D::upload_to(RenderContext const& context) const {
 
     make_resident(context);
   }
+}
+
+std::vector<void*>& Texture2D::get_data() {
+  return data_;
 }
 
 }

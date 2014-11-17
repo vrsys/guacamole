@@ -103,5 +103,6 @@ void main() {
         gua_out_color = gua_apply_background_texture();
     }
   }
+
 }
 

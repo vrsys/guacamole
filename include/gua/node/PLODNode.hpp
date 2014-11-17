@@ -45,7 +45,7 @@ class GUA_DLL PLODNode : public GeometryNode {
   * Implements ray picking for a point cloud
   */
   void ray_test_impl(Ray const& ray,
-                     PickResult::Options options,
+                     int options,
                      Mask const& mask,
                      std::set<PickResult>& hits) override;
 
