@@ -34,7 +34,7 @@ namespace node {
 SpotLightNode::SpotLightNode(std::string const& name,
                              Configuration const& configuration,
                              math::mat4 const& transform)
-    : Node(name, transform), data(configuration) {}
+    : SerializableNode(name, transform), data(configuration) {}
 
 /* virtual */ void SpotLightNode::accept(NodeVisitor& visitor) {
     visitor.visit(this);

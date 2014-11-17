@@ -32,67 +32,11 @@
 #include <gua/renderer/Frustum.hpp>
 #include <gua/node/CameraNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/renderer/Serializer.hpp>
 
 // external headers
 #include <iostream>
 
 namespace gua {
-
-namespace {
-
-////////////////////////////////////////////////////////////////////////////////
-
-Frustum camera_frustum(node::CameraNode::ProjectionMode const& mode,
-    math::mat4 const& transf, math::mat4 const& screen,
-    float near, float far) {
-  if (mode == node::CameraNode::ProjectionMode::PERSPECTIVE) {
-    return Frustum::perspective(transf, screen, near, far);
-  } else {
-    return Frustum::orthographic(transf, screen, near, far);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void serialize(SceneGraph const& scene_graph, bool is_left,
-               node::SerializedCameraNode const& camera, SerializedScene& out) {
-
-  std::string screen_name(is_left ? camera.config.left_screen_path() : camera.config.right_screen_path());
-  auto screen_it((scene_graph)[screen_name]);
-  auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
-  if (!screen) {
-    Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
-    return;
-  }
-
-  auto eye_transform(camera.transform);
-
-  if (camera.config.get_enable_stereo()) {
-    if (is_left) {
-      eye_transform *= scm::math::make_translation(camera.config.eye_offset() - 0.5f * camera.config.eye_dist(), 0.f, 0.f);
-    } else {
-      eye_transform *= scm::math::make_translation(camera.config.eye_offset() + 0.5f * camera.config.eye_dist(), 0.f, 0.f);
-    }
-  }
-  camera.config.eye_dist(), camera.config.eye_offset();
-
-  out.frustum = camera_frustum(camera.config.mode(), eye_transform,
-                               screen->get_scaled_world_transform(),
-                               camera.config.near_clip(),
-                               camera.config.far_clip());
-
-  out.center_of_interest = math::get_translation(camera.transform);
-
-  Serializer serializer;
-  serializer.check(out, scene_graph,
-                   camera.config.mask(),
-                   camera.config.enable_frustum_culling());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -208,7 +152,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   context_->mode = mode;
 
   // serialize this scenegraph
-  serialize(*current_graph_, mode != CameraMode::RIGHT, camera, current_scene_);
+  current_scene_ = current_graph_->serialize(camera, mode);
 
   camera_block_->update(get_context().render_context, current_scene_.frustum);
   bind_camera_uniform_block(0);

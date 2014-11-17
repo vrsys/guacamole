@@ -26,6 +26,8 @@
 #include <gua/node/Node.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/renderer/SerializedScene.hpp>
+#include <gua/renderer/enums.hpp>
 
 #include <memory>
 #include <string>
@@ -38,6 +40,7 @@ struct Ray;
 
 namespace node {
 class RayNode;
+class SerializedCameraNode;
 }
 
 /**
@@ -263,6 +266,8 @@ class GUA_DLL SceneGraph {
    * \param visitor The NodeVisitor to pe accepted.
    */
   void accept(NodeVisitor& visitor) const;
+
+  SerializedScene serialize(node::SerializedCameraNode const& camera, CameraMode mode) const;
 
   /**
    * Intersects a SceneGraph with a given RayNode.

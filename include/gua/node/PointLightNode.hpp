@@ -23,7 +23,7 @@
 #define GUA_POINT_LIGHT_NODE_HPP
 
 #include <gua/platform.hpp>
-#include <gua/node/Node.hpp>
+#include <gua/node/SerializableNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
 #include <gua/utils/Color3f.hpp>
@@ -38,7 +38,7 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL PointLightNode : public Node {
+class GUA_DLL PointLightNode : public SerializableNode {
  public:
 
   struct Configuration {

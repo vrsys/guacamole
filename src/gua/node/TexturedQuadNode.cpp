@@ -26,22 +26,29 @@
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/databases/TextureDatabase.hpp>
+#include <gua/renderer/SerializedScene.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 namespace gua {
 namespace node {
 
+////////////////////////////////////////////////////////////////////////////////
+
 TexturedQuadNode::TexturedQuadNode() {}
+
+////////////////////////////////////////////////////////////////////////////////
 
 TexturedQuadNode::TexturedQuadNode(std::string const& name,
                                    Configuration const& configuration,
                                    math::mat4 const& transform)
-    : Node(name, transform),
+    : SerializableNode(name, transform),
       data(configuration) {}
 
 /* virtual */ void TexturedQuadNode::accept(NodeVisitor& visitor) {
   visitor.visit(this);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void TexturedQuadNode::update_bounding_box() const {
   math::BoundingBox<math::vec3> geometry_bbox(
@@ -55,6 +62,8 @@ void TexturedQuadNode::update_bounding_box() const {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void TexturedQuadNode::update_cache() {
   Node::update_cache();
 
@@ -63,21 +72,29 @@ void TexturedQuadNode::update_cache() {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 math::mat4 TexturedQuadNode::get_scaled_transform() const {
   math::mat4 scale(scm::math::make_scale(data.size().x, data.size().y, 1.f));
   return get_transform() * scale;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 math::mat4 TexturedQuadNode::get_scaled_world_transform() const {
   math::mat4 scale(scm::math::make_scale(data.size().x, data.size().y, 1.f));
   return get_world_transform() * scale;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<Node> TexturedQuadNode::copy() const {
   return std::make_shared<TexturedQuadNode>(get_name(),
                                             data,
                                             get_transform());
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 }
 }

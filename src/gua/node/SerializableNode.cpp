@@ -1,4 +1,4 @@
-#/******************************************************************************
+/******************************************************************************
  * guacamole - delicious VR                                                   *
  *                                                                            *
  * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
@@ -20,19 +20,13 @@
  ******************************************************************************/
 
 // class header
-#include <gua/node/GeometryNode.hpp>
+#include <gua/node/SerializableNode.hpp>
 
 namespace gua {
 namespace node {
 
-////////////////////////////////////////////////////////////////////////////////
-GeometryNode::GeometryNode(std::string const& name,
-                           math::mat4 const& transform,
-                           ShadowMode shadow_mode)
-  : SerializableNode(name, transform),
-    shadow_mode_(shadow_mode)
-{}
-
+SerializableNode::SerializableNode(std::string const& name, math::mat4 const& transform)
+    : Node(name, transform) {}
 
 }
 }

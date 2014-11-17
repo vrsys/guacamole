@@ -24,7 +24,7 @@
 
 #include <string>
 
-#include <gua/node/Node.hpp>
+#include <gua/node/SerializableNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
 namespace gua {
@@ -38,7 +38,7 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL TexturedQuadNode : public Node {
+class GUA_DLL TexturedQuadNode : public SerializableNode {
 
  public:
 
@@ -98,11 +98,13 @@ class GUA_DLL TexturedQuadNode : public Node {
    *
    * \param visitor  A visitor to process the TexturedQuadNode's data.
    */
-  void accept(NodeVisitor& visitor) override;
+  virtual void accept(NodeVisitor& visitor) override;
 
-  void update_bounding_box() const override;
+  // virtual void serialize(SerializedScene& scene, node::SerializedCameraNode const& camera) override;
 
-  void update_cache() override;
+  virtual void update_bounding_box() const override;
+
+  virtual void update_cache() override;
 
  private:  // methods
 

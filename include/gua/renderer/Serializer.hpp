@@ -36,7 +36,7 @@ namespace gua {
 class SceneGraph;
 
 namespace node {
-  class TriMeshNode;
+  class SerializableNode;
 }
 
 /**
@@ -92,52 +92,9 @@ class Serializer : public NodeVisitor {
    *
    * \param geometry   Pointer to GeometryNode
    */
-  void visit(node::TriMeshNode* geometry) override;
+  void visit(node::SerializableNode* geometry) override;
 
-  /**
-  * Visits a VolumeNode
-  *
-  * This function provides the interface to visit a VolumeNode
-  *
-  * \param volume   Pointer to VolumeNode
-  */
-  void visit(node::VolumeNode* volume) override;
-
-  /**
-   * Visits a PointLightNode
-   *
-   * This function provides the interface to visit a PointLightNode
-   *
-   * \param pointlight   Pointer to PointLightNode
-   */
-  void visit(node::PointLightNode* pointlight) override;
-
-  /**
-   * Visits a SpotLightNode
-   *
-   * This function provides the interface to visit a SpotLightNode
-   *
-   * \param spot   Pointer to SpotLightNode
-   */
-  void visit(node::SpotLightNode* spot) override;
-
-   /**
-   * Visits a SunLightNode
-   *
-   * This function provides the interface to visit a SunLightNode
-   *
-   * \param spot   Pointer to SunLightNode
-   */
-  void visit(node::SunLightNode* sun) override;
-
-  /**
-   * Visits a TexturedQuadNode
-   *
-   * This function provides the interface to visit a TexturedQuadNode
-   *
-   * \param node  Pointer to TexturedQuadNode
-   */
-  void visit(node::TexturedQuadNode* node) override;
+  
 
  private:
 

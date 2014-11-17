@@ -29,19 +29,27 @@
 #include <gua/utils/DotGenerator.hpp>
 #include <gua/utils/Mask.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/renderer/Serializer.hpp>
+#include <gua/node/CameraNode.hpp>
 
 // external headers
 #include <iostream>
 
 namespace gua {
 
+////////////////////////////////////////////////////////////////////////////////
+
 SceneGraph::SceneGraph(std::string const& name)
     : root_(new node::TransformNode("/", math::mat4::identity())),
       name_(name) {}
 
+////////////////////////////////////////////////////////////////////////////////
+
 SceneGraph::SceneGraph(SceneGraph const& graph)
     : root_(graph.root_ ? graph.root_->deep_copy() : nullptr),
       name_(graph.name_) {}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void SceneGraph::remove_node(std::string const& path_to_node) {
 
@@ -52,27 +60,39 @@ void SceneGraph::remove_node(std::string const& path_to_node) {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void SceneGraph::remove_node(std::shared_ptr<node::Node> const& to_remove) {
     if (to_remove->get_parent()) {
         to_remove->get_parent()->remove_child(to_remove);
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void SceneGraph::set_name(std::string const& name) {
   name_ = name;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 std::string const& SceneGraph::get_name() const {
   return name_;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void SceneGraph::set_root(std::shared_ptr<node::Node> const& root) {
   root_ = root;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<node::Node> const& SceneGraph::get_root() const {
   return root_;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<node::Node> SceneGraph::operator[](std::string const& path_to_node) const {
 
@@ -83,6 +103,8 @@ std::shared_ptr<node::Node> SceneGraph::operator[](std::string const& path_to_no
     return result;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 SceneGraph const& SceneGraph::operator=(SceneGraph const& rhs) {
 
     root_ = rhs.root_ ? rhs.root_->deep_copy() : nullptr;
@@ -90,17 +112,23 @@ SceneGraph const& SceneGraph::operator=(SceneGraph const& rhs) {
     return *this;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void SceneGraph::to_dot_file(std::string const& file) const {
     DotGenerator generator;
     generator.parse_graph(this);
     generator.save(file);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void SceneGraph::update_cache() const {
     if (root_) {
         root_->update_cache();
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<node::Node> SceneGraph::find_node(std::string const& path_to_node,
                             std::string const& path_to_start) const {
@@ -128,6 +156,8 @@ std::shared_ptr<node::Node> SceneGraph::find_node(std::string const& path_to_nod
     return to_be_found;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 bool SceneGraph::has_child(std::shared_ptr<node::Node> const& parent,
                            std::string const & child_name) const {
 
@@ -141,7 +171,11 @@ bool SceneGraph::has_child(std::shared_ptr<node::Node> const& parent,
     return false;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void SceneGraph::accept(NodeVisitor & visitor) const { root_->accept(visitor); }
+
+////////////////////////////////////////////////////////////////////////////////
 
 std::set<PickResult> const SceneGraph::ray_test(node::RayNode const& ray,
                                                 PickResult::Options options,
@@ -149,10 +183,58 @@ std::set<PickResult> const SceneGraph::ray_test(node::RayNode const& ray,
     return root_->ray_test(ray, options, mask);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 std::set<PickResult> const SceneGraph::ray_test(Ray const& ray,
                                                 PickResult::Options options,
                                                 Mask const& mask) {
     return root_->ray_test(ray, options, mask);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+SerializedScene SceneGraph::serialize(node::SerializedCameraNode const& camera, CameraMode mode) const {
+    std::string screen_name(mode != CameraMode::RIGHT ? camera.config.left_screen_path() : camera.config.right_screen_path());
+    auto screen_it(find_node(screen_name, "/"));
+    auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
+    if (!screen) {
+        Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
+        return SerializedScene();
+    }
+
+    auto eye_transform(camera.transform);
+
+    if (camera.config.get_enable_stereo()) {
+        if (mode != CameraMode::RIGHT) {
+            eye_transform *= scm::math::make_translation(camera.config.eye_offset() - 0.5f * camera.config.eye_dist(), 0.f, 0.f);
+        } else {
+            eye_transform *= scm::math::make_translation(camera.config.eye_offset() + 0.5f * camera.config.eye_dist(), 0.f, 0.f);
+        }
+    }
+    camera.config.eye_dist(), camera.config.eye_offset();
+
+    SerializedScene out;
+
+    if (camera.config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
+        out.frustum = Frustum::perspective(
+            eye_transform, screen->get_scaled_world_transform(), 
+            camera.config.near_clip(), camera.config.far_clip()
+        );
+    } else {
+        out.frustum = Frustum::orthographic(
+            eye_transform, screen->get_scaled_world_transform(), 
+            camera.config.near_clip(), camera.config.far_clip()
+        );
+    }
+
+    out.center_of_interest = math::get_translation(camera.transform);
+
+    Serializer s;
+    s.check(out, *this, camera.config.mask(), camera.config.enable_frustum_culling());
+
+    return out;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

@@ -30,15 +30,7 @@
 #include <gua/node/Node.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/LODNode.hpp>
-#include <gua/node/TriMeshNode.hpp>
-#include <gua/node/Video3DNode.hpp>
-#include <gua/node/VolumeNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
-#include <gua/node/SunLightNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
-#include <gua/node/ScreenNode.hpp>
-#include <gua/node/RayNode.hpp>
+#include <gua/node/SerializableNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
 // external headers
@@ -74,7 +66,7 @@ void Serializer::check(SerializedScene& output,
   scene_graph.accept(*this);
 }
 
-////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void Serializer::visit(node::Node* node) {
   if (is_visible(node)) {
@@ -82,7 +74,7 @@ void Serializer::check(SerializedScene& output,
   }
 }
 
-////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void Serializer::visit(node::LODNode* node) {
   if (is_visible(node)) {
@@ -109,10 +101,9 @@ void Serializer::check(SerializedScene& output,
   }
 }
 
-////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(node::TriMeshNode* node) {
-
+/* virtual */ void Serializer::visit(node::SerializableNode* node) {
   if (is_visible(node)) {
     data_->nodes[std::type_index(typeid(*node))].push_back(node);
 
@@ -120,65 +111,7 @@ void Serializer::check(SerializedScene& output,
   }
 }
 
-////////////////////////////////////////////////////////////////////////
-
-
-/* virtual */ void Serializer::visit(node::VolumeNode* node) {
-
-  if ( is_visible(node) ) {
-    if ( !node->data.get_volume().empty() ) {
-      data_->nodes[std::type_index(typeid(*node))].push_back(node);
-    }
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(node::PointLightNode* node) {
-
-  if (is_visible(node)) {
-    data_->nodes[std::type_index(typeid(*node))].push_back(node);
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(node::SpotLightNode* node) {
-
-  if (is_visible(node)) {
-    data_->nodes[std::type_index(typeid(*node))].push_back(node);
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(node::SunLightNode* node) {
-
-  if (is_visible(node)) {
-    data_->nodes[std::type_index(typeid(*node))].push_back(node);
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void Serializer::visit(node::TexturedQuadNode* node) {
-
-  if (is_visible(node)) {
-    data_->nodes[std::type_index(typeid(*node))].push_back(node);
-
-    visit_children(node);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 bool Serializer::is_visible(node::Node* node) const {
   bool is_visible(true);
@@ -202,7 +135,7 @@ bool Serializer::is_visible(node::Node* node) const {
   return is_visible;
 }
 
-////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 void Serializer::visit_children(node::Node* node) {
   for (auto & c : node->children_) { c->accept(*this); }

@@ -23,7 +23,7 @@
 #define GUA_GEOMETRY_NODE_HPP
 
 // guacamole headers
-#include <gua/node/Node.hpp>
+#include <gua/node/SerializableNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/renderer/Material.hpp>
@@ -43,7 +43,7 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL GeometryNode : public Node {
+class GUA_DLL GeometryNode : public SerializableNode {
 
   public:
 

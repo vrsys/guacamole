@@ -34,7 +34,7 @@ namespace node {
 PointLightNode::PointLightNode(std::string const& name,
                                Configuration const& configuration,
                                math::mat4 const& transform)
-    : Node(name, transform), data(configuration) {}
+    : SerializableNode(name, transform), data(configuration) {}
 
 /* virtual */ void PointLightNode::accept(NodeVisitor& visitor) {
     visitor.visit(this);

@@ -44,6 +44,7 @@ class NodeVisitor;
 class SceneGraph;
 class Serializer;
 class DotGenerator;
+class SerializedScene;
 
 struct Ray;
 
@@ -51,6 +52,7 @@ namespace physics { class CollisionShapeNodeVisitor; }
 
 namespace node {
 
+class SerializedCameraNode;
 class RayNode;
 
 
@@ -468,6 +470,8 @@ class GUA_DLL Node {
   math::mat4 transform_; // invertible affine transformation
 
  protected:
+  bool is_visible_in(SerializedScene const& scene, node::SerializedCameraNode const& camera) const;
+
   void set_dirty() const;
   void set_parent_dirty() const;
   void set_children_dirty() const;
