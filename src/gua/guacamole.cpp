@@ -41,6 +41,7 @@ void init(int argc, char** argv) {
 #endif
 
   gua::TextureDatabase::instance()->add("gua_default_texture", std::shared_ptr<Texture2D>(new DefaultTexture()));
+  gua::TextureDatabase::instance()->add("gua_noise_texture", std::shared_ptr<Texture2D>(new NoiseTexture()));
   gua::TextureDatabase::instance()->add("gua_loading_texture", std::shared_ptr<Texture2D>(new LoadingTexture()));
 
   TriMeshLoader mesh_loader;
