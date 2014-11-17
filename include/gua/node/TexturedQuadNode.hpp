@@ -41,6 +41,16 @@ namespace node {
 class GUA_DLL TexturedQuadNode : public Node {
 
  public:
+
+  struct Configuration {
+    GUA_ADD_PROPERTY(std::string, texture,    "gua_default_texture");
+    GUA_ADD_PROPERTY(math::vec2,  size,       math::vec2(1.f, 1.f));
+    GUA_ADD_PROPERTY(bool,        flip_x,     false);
+    GUA_ADD_PROPERTY(bool,        flip_y,     false);
+  };
+
+  Configuration data;
+
   /**
    * Constructor.
    *
@@ -62,12 +72,8 @@ class GUA_DLL TexturedQuadNode : public Node {
    *                       aligned with the xy-plane and facing in +z direction.
    */
   TexturedQuadNode(std::string const& name,
-                   std::string const& texture = "",
-                   math::mat4 const& transform = math::mat4::identity(),
-                   math::vec2 const& size = math::vec2(1.0f, 1.0f),
-                   bool is_stereo = false,
-                   bool flip_x = false,
-                   bool flip_y = false);
+                   Configuration const& configuration = Configuration(),
+                   math::mat4 const& transform = math::mat4::identity());
 
   /**
    * Returns the TexturedQuadNode's transformation, considering the scaling
@@ -98,33 +104,9 @@ class GUA_DLL TexturedQuadNode : public Node {
 
   void update_cache() override;
 
-  std::string const& get_texture() const;
-  void set_texture(std::string const& name);
-
-  math::vec2 const& get_size() const;
-  void get_size(math::vec2 const& size);
-
-  bool is_stereo_texture() const;
-  void is_stereo_texture(bool enable);
-
-  bool flip_x() const;
-  void flip_x(bool enable);
-
-  bool flip_y() const;
-  void flip_y(bool enable);
-
  private:  // methods
 
   std::shared_ptr<Node> copy() const override;
-
- private:  // attributes
-
-  std::string texture_;
-  math::vec2 size_;
-
-  bool is_stereo_texture_;
-  bool flip_x_;
-  bool flip_y_;
 
 };
 

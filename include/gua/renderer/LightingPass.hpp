@@ -32,41 +32,13 @@
 namespace gua {
 
 class Pipeline;
-class LightingPass;
 
 class LightingPassDescription : public PipelinePassDescription {
  public:
-  virtual PipelinePassDescription* make_copy() const;
+  LightingPassDescription();
+  PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
 
- protected:
-  virtual PipelinePass* make_pass() const;
-};
-
-class LightingPass : public PipelinePass {
- public:
-
-  virtual bool needs_color_buffer_as_input() const { return true; }
-  virtual bool writes_only_color_buffer()    const { return true; }
-
-  virtual void process(PipelinePassDescription* desc, Pipeline* pipe);
-
-  friend class LightingPassDescription;
-
- protected:
-  LightingPass();
-  ~LightingPass() {}
-
- private:
-  std::shared_ptr<ShaderProgram>      shader_;
-  std::shared_ptr<ShaderProgram>      emit_shader_;
-  std::shared_ptr<TriMeshRessource>   light_sphere_;
-  std::shared_ptr<TriMeshRessource>   light_cone_;
-  scm::gl::rasterizer_state_ptr       rasterizer_state_;
-  scm::gl::depth_stencil_state_ptr    depth_stencil_state_;
-  scm::gl::blend_state_ptr            blend_state_;
-
-  ShadowMap                           shadow_map_;
 };
 
 }

@@ -75,12 +75,23 @@ void Renderer::renderclient(Mailbox in) {
           window->create_shader();
         }
         window->set_active(true);
-      
-        std::get<0>(x)->rendering_pipeline->process(
-          window->get_context(), *std::get<0>(x), *std::get<1>(x), 
-          std::get<2>(x), fpsc.fps
-        );
 
+        auto const& camera(*std::get<0>(x));
+
+        auto process = [&](CameraMode mode) {
+          std::get<0>(x)->rendering_pipeline->process(
+            window->get_context(), mode, camera, *std::get<1>(x), 
+            std::get<2>(x), fpsc.fps
+          );
+        };
+
+        if (camera.config.get_enable_stereo()) {
+          process(CameraMode::LEFT);
+          process(CameraMode::RIGHT);
+        } else {
+          process(camera.config.get_mono_mode());
+        }
+      
         // swap buffers
         window->finish_frame();
         ++(window->get_context()->framecount);

@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto gui = std::make_shared<gua::GuiNode>("gui", "data/test.html");
+  auto gui = std::make_shared<gua::GuiNode>("gui", "http://sdw.histoglobe.com");
   graph.add_node(transform, gui);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");

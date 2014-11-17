@@ -67,7 +67,7 @@ GuiResource::GuiResource(std::string const& url, math::vec2 const& size)
   });
 
   view_ = Interface::instance()->create_webview(size.x, size.y);
-  view_->SetTransparent(true);
+  view_->SetTransparent(false);
   view_->Focus();
   view_->set_view_listener(new AweViewListener());
   view_->set_load_listener(new AweLoadListener(this));
@@ -205,8 +205,8 @@ void GuiResource::add_javascript_getter(std::string const& name, std::function<s
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GuiResource::bind(RenderContext const& ctx, ShaderProgram* program) const {
-  Interface::instance()->bind(view_, ctx, program);
+void GuiResource::bind(RenderContext const& ctx) const {
+  Interface::instance()->bind(view_, ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

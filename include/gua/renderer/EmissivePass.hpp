@@ -19,28 +19,27 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GUI_PASS_HPP
-#define GUA_GUI_PASS_HPP
+#ifndef GUA_EMISSIVE_PASS_HPP
+#define GUA_EMISSIVE_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/GeometryResource.hpp>
+#include <gua/renderer/ShadowMap.hpp>
 
-// external headers
-#include <scm/gl_core/buffer_objects.h>
-
-#include <typeindex>
 #include <memory>
-#include <unordered_map>
 
 namespace gua {
 
-class GuiPassDescription : public PipelinePassDescription {
+class Pipeline;
+
+class EmissivePassDescription : public PipelinePassDescription {
  public:
-  GuiPassDescription();
+  EmissivePassDescription();
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
 };
 
 }
 
-#endif  // GUA_GUI_PASS_HPP
+#endif  // GUA_EMISSIVE_PASS_HPP

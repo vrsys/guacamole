@@ -30,55 +30,21 @@
 
 namespace gua {
 
+BackgroundPassDescription::BackgroundPassDescription()
+  : PipelinePassDescription()
+{
+  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+  fragment_shader_ = "shaders/background.frag";
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = true;
+  rendermode_ = RenderMode::Quad;
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePassDescription* BackgroundPassDescription::make_copy() const {
   return new BackgroundPassDescription(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass* BackgroundPassDescription::make_pass() const {
-  return new BackgroundPass();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-BackgroundPass::BackgroundPass() :
-  shader_(std::make_shared<ShaderProgram>()),
-  depth_stencil_state_(nullptr) {
-
-  shader_ = std::make_shared<ShaderProgram>();
-  shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
-    Resources::lookup_shader(Resources::shaders_background_frag)
-  );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void BackgroundPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
-  RenderContext const& ctx(pipe->get_context());
-
-  if (!depth_stencil_state_) {
-    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
-  }
-
-  // bind gbuffer
-  pipe->get_gbuffer().bind(ctx, this);
-  pipe->get_gbuffer().set_viewport(ctx);
-
-  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-
-  shader_->use(ctx);
-  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_width(),  "gua_texel_width");
-  shader_->set_uniform(ctx, 1.0f / pipe->get_gbuffer().get_height(),  "gua_texel_height");
-  shader_->set_uniform(ctx, pipe->get_gbuffer().get_current_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
-  
-  pipe->draw_quad();
-  pipe->get_gbuffer().unbind(ctx);
-
-  ctx.render_context->reset_state_objects();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

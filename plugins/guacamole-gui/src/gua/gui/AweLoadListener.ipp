@@ -40,13 +40,13 @@ class AweLoadListener : public Awesomium::WebViewListener::Load {
     bool is_main_frame, const Awesomium::WebURL& url,
     int error_code, const Awesomium::WebString& error_desc) {}
 
+
   void OnFinishLoadingFrame(
     Awesomium::WebView* caller, int64 frame_id,
     bool is_main_frame, const Awesomium::WebURL& url) {}
 
   void OnDocumentReady(
     Awesomium::WebView* caller, const Awesomium::WebURL& url) {
-
     caller->CreateGlobalJavascriptObject(Awesomium::WSLit("Swift2D"));
     parent_->on_loaded.emit();
   }

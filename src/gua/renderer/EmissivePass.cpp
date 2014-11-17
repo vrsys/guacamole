@@ -19,28 +19,42 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GUI_PASS_HPP
-#define GUA_GUI_PASS_HPP
+// class header
+#include <gua/renderer/EmissivePass.hpp>
 
-#include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-
-// external headers
-#include <scm/gl_core/buffer_objects.h>
-
-#include <typeindex>
-#include <memory>
-#include <unordered_map>
+#include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/ShadowMapBuffer.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/Resources.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
+#include <gua/utils/Logger.hpp>
 
 namespace gua {
 
-class GuiPassDescription : public PipelinePassDescription {
- public:
-  GuiPassDescription();
-  PipelinePassDescription* make_copy() const override;
-  friend class Pipeline;
-};
+EmissivePassDescription::EmissivePassDescription()
+  : PipelinePassDescription() {
+  vertex_shader_ = "shaders/lighting_emit.vert";
+  fragment_shader_ = "shaders/lighting_emit.frag";
+  needs_color_buffer_as_input_ = true;
+  writes_only_color_buffer_ = true;
+  doClear_ = true;
+  rendermode_ = RenderMode::Quad;
 
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
+  blend_state_ = boost::make_optional(
+      scm::gl::blend_state_desc(scm::gl::blend_ops(true,
+                                                    scm::gl::FUNC_ONE,
+                                                    scm::gl::FUNC_ONE,
+                                                    scm::gl::FUNC_ONE,
+                                                    scm::gl::FUNC_ONE)));
 }
 
-#endif  // GUA_GUI_PASS_HPP
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePassDescription* EmissivePassDescription::make_copy() const {
+  return new EmissivePassDescription(*this);
+}
+
+}

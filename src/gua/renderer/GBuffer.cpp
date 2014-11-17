@@ -23,7 +23,6 @@
 #include <gua/renderer/GBuffer.hpp>
 
 // guacamole headers
-#include <gua/renderer/PipelinePass.hpp>
 #include <gua/platform.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
@@ -88,8 +87,8 @@ void GBuffer::set_viewport(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::bind(RenderContext const& ctx, PipelinePass* next_pass) {
-  if (next_pass->writes_only_color_buffer()) {
+void GBuffer::bind(RenderContext const& ctx, bool pass_writes_only_color_buffer) {
+  if (pass_writes_only_color_buffer) {
     fbo_write_only_color_->bind(ctx);
   } else {
     fbo_write_->bind(ctx);

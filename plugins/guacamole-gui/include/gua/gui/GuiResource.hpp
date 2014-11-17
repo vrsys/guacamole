@@ -56,7 +56,7 @@ class GuiResource : public GeometryResource {
      *
      * Creates a new and empty Mesh.
      */
-    GuiResource(std::string const& url = "", math::vec2 const& size = math::vec2(100.f, 100.f));
+    GuiResource(std::string const& url = "", math::vec2 const& size = math::vec2(1000.f, 1000.f));
     ~GuiResource();
 
     events::Signal<std::string, std::vector<std::string>> on_javascript_callback;
@@ -92,7 +92,7 @@ class GuiResource : public GeometryResource {
       return result_callbacks_;
     }
 
-    void bind(RenderContext const& context, ShaderProgram* program) const;
+    void bind(RenderContext const& context) const;
 
     /*virtual*/ void ray_test(Ray const& ray, PickResult::Options options,
                   node::Node* owner, std::set<PickResult>& hits);

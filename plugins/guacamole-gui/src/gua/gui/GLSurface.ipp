@@ -30,29 +30,27 @@ class GLSurface : public Awesomium::Surface {
     std::unique_lock<std::mutex> lock(mutex_);
     tex_ = std::make_shared<Texture2D>(
       width_, height_,
-      scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_BGRA_8,
-      std::vector<void*>()
+      scm::gl::FORMAT_RGBA_8
     );
     tex_->upload_to(ctx);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  bool bind(RenderContext const& ctx, gua::ShaderProgram* program) {
+  bool bind(RenderContext const& ctx) {
 
     if (!tex_) {
       init(ctx);
     }
 
-    program->set_uniform(ctx, tex_->get_handle(ctx), "gua_gui_diffuse_tex");
+    ctx.render_context->current_program()->uniform("gua_in_texture", tex_->get_handle(ctx));
 
     if (needs_update_) {
       std::unique_lock<std::mutex> lock(mutex_);
       needs_update_ = false;
-
       tex_->update_sub_data(
         ctx,
-        scm::gl::texture_region(math::vec3ui(0,0,0), math::vec3ui(width_, height_, 0)),
+        scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width_, height_, 1)),
         0u, scm::gl::FORMAT_BGRA_8, &buffer_.front()
       );
     }

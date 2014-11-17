@@ -32,114 +32,47 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SSAOPassDescription::SSAOPassDescription() :
-  radius_(1.f),
-  intensity_(1.f),
-  falloff_(0.1f) {}
+SSAOPassDescription::SSAOPassDescription()
+  : PipelinePassDescription() {
 
-////////////////////////////////////////////////////////////////////////////////
+  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+  fragment_shader_ = "shaders/ssao.frag";
 
-float SSAOPassDescription::radius() const{
-  return radius_;
-}
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = true;
+  doClear_ = false;
+  rendermode_ = RenderMode::Callback;
 
-////////////////////////////////////////////////////////////////////////////////
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
 
-SSAOPassDescription& SSAOPassDescription::radius(float radius) {
-  radius_ = radius;
-  return *this;
-}
+  blend_state_ = boost::make_optional(
+      scm::gl::blend_state_desc(scm::gl::blend_ops(
+                                            true,
+                                            scm::gl::FUNC_SRC_ALPHA,
+                                            scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
+                                            scm::gl::FUNC_SRC_ALPHA,
+                                            scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
+  uniforms["gua_ssao_radius"]    = 1.0f;
+  uniforms["gua_ssao_intensity"] = 1.0f;
+  uniforms["gua_ssao_falloff"]   = 0.1f;
 
-////////////////////////////////////////////////////////////////////////////////
+  auto tex = std::make_shared<NoiseTexture>();
 
-float SSAOPassDescription::intensity() const{
-  return intensity_;
-}
+  // set uniforms and draw a full screen quad
+  process_ = [tex](
+      PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe) {
+    pipe.get_context().render_context->current_program()->uniform(
+        "gua_noise_tex", 0, tex->get_handle(pipe.get_context()));
 
-////////////////////////////////////////////////////////////////////////////////
-
-SSAOPassDescription& SSAOPassDescription::intensity(float intensity) {
-  intensity_ = intensity;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-float SSAOPassDescription::falloff() const{
-  return falloff_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-SSAOPassDescription& SSAOPassDescription::falloff(float falloff) {
-  falloff_ = falloff;
-  return *this;
+    pipe.draw_quad();
+  };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePassDescription* SSAOPassDescription::make_copy() const {
   return new SSAOPassDescription(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-  
-PipelinePass* SSAOPassDescription::make_pass() const {
-  return new SSAOPass();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-SSAOPass::SSAOPass() :
-  shader_(std::make_shared<ShaderProgram>()),
-  depth_stencil_state_(nullptr),
-  blend_state_(nullptr),
-  noise_texture_() {
-
-  shader_ = std::make_shared<ShaderProgram>();
-  shader_->create_from_sources(
-    Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert),
-    Resources::lookup_shader(Resources::shaders_ssao_frag)
-  );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void SSAOPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
-  SSAOPassDescription* d(dynamic_cast<SSAOPassDescription*>(desc));
-  RenderContext const& ctx(pipe->get_context());
-
-  if (!depth_stencil_state_) {
-    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false);
-  }
-
-  if (!blend_state_) {
-    blend_state_ = ctx.render_device->create_blend_state(
-      true,
-      scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
-      scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA
-    );
-  }
-
-  // bind gbuffer
-  pipe->get_gbuffer().bind(ctx, this);
-  pipe->get_gbuffer().set_viewport(ctx);
-
-  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-  ctx.render_context->set_blend_state(blend_state_);
-
-  shader_->use(ctx);
-
-  shader_->set_uniform(ctx, noise_texture_.get_handle(ctx), "gua_noise_tex");
-  shader_->set_uniform(ctx, d->radius(),    "gua_ssao_radius");
-  shader_->set_uniform(ctx, d->intensity(), "gua_ssao_intensity");
-  shader_->set_uniform(ctx, d->falloff(),   "gua_ssao_falloff");
-
-  pipe->bind_gbuffer_input(shader_);
-  pipe->draw_quad();
-  pipe->get_gbuffer().unbind(ctx);
-
-  ctx.render_context->reset_state_objects();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

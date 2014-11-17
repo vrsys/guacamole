@@ -19,28 +19,22 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GUI_PASS_HPP
-#define GUA_GUI_PASS_HPP
+@include "shaders/common/header.glsl"
 
-#include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
+uniform uvec2 gua_in_texture;
+uniform ivec2 flip;
 
-// external headers
-#include <scm/gl_core/buffer_objects.h>
+in vec2 gua_quad_coords;
+in vec3 gua_normal;
 
-#include <typeindex>
-#include <memory>
-#include <unordered_map>
+@include "shaders/common/gua_fragment_shader_output.glsl"
 
-namespace gua {
+void main() {
+    vec3 gua_color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5).rgb;
+    // vec3 gua_color = vec3(gua_quad_coords, 0);
+    float gua_emissivity = 1.0;
+    float gua_shinyness = 0.0;
+    float gua_specularity = 0.0;
 
-class GuiPassDescription : public PipelinePassDescription {
- public:
-  GuiPassDescription();
-  PipelinePassDescription* make_copy() const override;
-  friend class Pipeline;
-};
-
+    @include "shaders/common/gua_write_gbuffer.glsl"
 }
-
-#endif  // GUA_GUI_PASS_HPP

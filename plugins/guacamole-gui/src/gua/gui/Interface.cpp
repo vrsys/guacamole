@@ -67,9 +67,9 @@ Interface::~Interface() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool Interface::bind(Awesomium::WebView* view, RenderContext const& ctx, ShaderProgram* program) const {
+bool Interface::bind(Awesomium::WebView* view, RenderContext const& ctx) const {
   auto surface = static_cast<GLSurface*>(view->surface());
-  return surface && surface->bind(ctx, program);
+  return surface && surface->bind(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

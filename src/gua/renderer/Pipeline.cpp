@@ -108,10 +108,6 @@ Pipeline::Pipeline() :
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::~Pipeline() {
-  for (auto pass: passes_) {
-    delete pass;
-  }
-
   if (camera_block_) {
     delete camera_block_;
   }
@@ -119,13 +115,13 @@ Pipeline::~Pipeline() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<PipelinePass*> const& Pipeline::get_passes() const {
+std::vector<PipelinePass> const& Pipeline::get_passes() const {
   return passes_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& camera,
+void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCameraNode const& camera,
                        std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
                        float application_fps, float rendering_fps) {
 
@@ -157,7 +153,7 @@ void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& cam
 
   // execute all prerender cameras
   for (auto const& cam: camera.pre_render_cameras) {
-    cam.rendering_pipeline->process(ctx, cam, scene_graphs, application_fps, rendering_fps);
+    cam.rendering_pipeline->process(ctx, mode, cam, scene_graphs, application_fps, rendering_fps);
   }
 
   // recreate gbuffer if resolution changed
@@ -184,15 +180,14 @@ void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& cam
   }
 
   if (reload_passes) {
-    for (auto pass: passes_) {
-      pass->on_delete(this);
-      delete pass;
+    for (auto & pass: passes_) {
+      pass.on_delete(this);
     }
 
     passes_.clear();
 
     for (auto pass: camera.config.get_pipeline_description().get_passes()) {
-      passes_.push_back(pass->make_pass());
+      passes_.push_back(PipelinePass{*pass,*ctx});
     }
   }
 
@@ -210,58 +205,42 @@ void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& cam
     camera_block_ = new CameraUniformBlock(get_context().render_device);
   }
 
-  auto process_passes = [&](CameraMode mode) {
+  context_->mode = mode;
 
-    context_->mode = mode;
+  // serialize this scenegraph
+  serialize(*current_graph_, mode != CameraMode::RIGHT, camera, current_scene_);
 
-    // serialize this scenegraph
-    serialize(*current_graph_, mode != CameraMode::RIGHT, camera, current_scene_);
+  camera_block_->update(get_context().render_context, current_scene_.frustum);
+  bind_camera_uniform_block(0);
 
-    camera_block_->update(get_context().render_context, current_scene_.frustum);
-    bind_camera_uniform_block(0);
+  // clear gbuffer
+  gbuffer_->clear_all(get_context());
 
-    // clear gbuffer
-    gbuffer_->clear_all(get_context());
+  // process all passes
+  for (int i(0); i < passes_.size(); ++i) {
 
-    // process all passes
-    for (int i(0); i < passes_.size(); ++i) {
-
-      if (passes_[i]->needs_color_buffer_as_input()) {
-        gbuffer_->toggle_ping_pong();
-      }
-
-      passes_[i]->process(camera.config.get_pipeline_description().get_passes()[i], this);
+    if (passes_[i].needs_color_buffer_as_input()) {
+      gbuffer_->toggle_ping_pong();
     }
 
-    gbuffer_->toggle_ping_pong();
+    passes_[i].process(*camera.config.get_pipeline_description().get_passes()[i], *this);
+  }
 
-    // add texture to texture database
-    auto const& tex(gbuffer_->get_current_color_buffer());
-    auto tex_name(camera.config.get_output_texture_name());
+  gbuffer_->toggle_ping_pong();
 
-    if (tex_name != "") {
-      if (mode == CameraMode::LEFT) {
-        tex_name += "_left";
-      } else if (mode == CameraMode::RIGHT) {
-        tex_name += "_right";
-      }
+  // add texture to texture database
+  auto const& tex(gbuffer_->get_current_color_buffer());
+  auto tex_name(camera.config.get_output_texture_name());
 
-      TextureDatabase::instance()->add(tex_name, tex);
+  if (tex_name != "") {
+    TextureDatabase::instance()->add(tex_name, tex);
+  }
+
+  if (camera.config.get_output_window_name() != "") {
+    auto window = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
+    if (window) {
+      window->display(tex, mode != CameraMode::RIGHT);
     }
-
-    if (camera.config.get_output_window_name() != "") {
-      auto window = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
-      if (window) {
-        window->display(tex, mode != CameraMode::RIGHT);
-      }
-    }
-  };
-
-  if (camera.config.get_enable_stereo()) {
-    process_passes(CameraMode::LEFT);
-    process_passes(CameraMode::RIGHT);
-  } else {
-    process_passes(camera.config.get_mono_mode());
   }
 }
 
