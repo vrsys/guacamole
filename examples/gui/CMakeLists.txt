@@ -13,23 +13,22 @@ LINK_DIRECTORIES(${LIB_PATHS})
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}/include
                      ${AWESOMIUM_INCLUDE_DIR}
-                     ${GUACAMOLE_OCULUS_INCLUDE_DIR}
+                     ${GUACAMOLE_GUI_INCLUDE_DIR}
 )
 
 ADD_EXECUTABLE( ${_EXE_NAME}
     ${EXAMPLE_SRC}
 )
 
-ADD_DEPENDENCIES(${_EXE_NAME} guacamole-oculus)
+ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui)
 
-LIST(APPEND LIBS guacamole-oculus guacamole ${AWESOMIUM_LIBRARIES})
+LIST(APPEND LIBS guacamole-gui guacamole ${AWESOMIUM_LIBRARY} udev)
 
 IF (MSVC)
   TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
                          debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
 ELSEIF (UNIX)
   TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
-			 general ${AWESOMIUM_LIBRARIES}
                          general ${ASSIMP_LIBRARIES}
                        )
 ENDIF (MSVC)

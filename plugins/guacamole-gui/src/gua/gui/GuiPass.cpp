@@ -63,6 +63,7 @@ GuiPass::GuiPass() :
       // uniforms
       // uniform vec2 size;
       // uniform vec2 offset;
+      uniform mat4 gua_model_matrix;
 
       // varyings
       out vec2 tex_coords;
@@ -70,7 +71,9 @@ GuiPass::GuiPass() :
       void main(void) {
         tex_coords  = vec2(position.x + 1.0, 1.0 - position.y) * 0.5;
         // vec2 pos    = position*size + offset;
-        gl_Position = vec4(position, 1.0);
+
+        gl_Position = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(position, 1.0);
+
       }
     )"
   );
@@ -84,17 +87,18 @@ GuiPass::GuiPass() :
       in vec2 tex_coords;
 
       // uniforms
-      uniform sampler2D gua_gui_diffuse_tex;
+      uniform uvec2 gua_gui_diffuse_tex;
 
       // output
       @include "shaders/common/gua_fragment_shader_output.glsl"
 
 
       void main(void){
-        vec4 color = texture(diffuse, tex_coords);
-        color.rgb /= color.a;
+        vec4 color = texture(sampler2D(gua_gui_diffuse_tex), tex_coords);
 
-        gua_out_color = color;
+        gua_out_color = color.rgb;
+
+        // gua_out_color = vec3(tex_coords, 0.0);
       }
     )"
   );
@@ -132,15 +136,15 @@ void GuiPass::process(PipelinePassDescription* desc, Pipeline* pipe) {
       auto const& gui_node(reinterpret_cast<GuiNode*>(node));
 
       UniformValue model_mat(gui_node->get_cached_world_transform());
-      // UniformValue normal_mat(scm::math::transpose(scm::math::inverse(node->get_cached_world_transform())));
-
+      UniformValue normal_mat(scm::math::transpose(scm::math::inverse(gui_node->get_cached_world_transform())));
 
       shader_->apply_uniform(ctx, "gua_model_matrix", model_mat);
-      shader_->apply_uniform(ctx, "gua_gui_diffuse_tex", 0);
+
+      // gui_node->get_resource()->bind(ctx, shader_);
+      auto tex(TextureDatabase::instance()->lookup("gua_default_texture"));
+      shader_->set_uniform(ctx, tex->get_handle(ctx), "gua_gui_diffuse_tex");
 
       ctx.render_context->apply_program();
-
-      gui_node->get_resource()->bind(ctx, shader_);
       quad_->draw(pipe->get_context().render_context);
     }
 
