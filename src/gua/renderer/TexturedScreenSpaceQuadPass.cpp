@@ -41,6 +41,16 @@ TexturedScreenSpaceQuadPassDescription::TexturedScreenSpaceQuadPassDescription()
   doClear_ = false;
   rendermode_ = RenderMode::Callback;
 
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
+
+  blend_state_ = boost::make_optional(
+      scm::gl::blend_state_desc(scm::gl::blend_ops(true,
+                                                   scm::gl::FUNC_SRC_ALPHA,
+                                                   scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
+                                                   scm::gl::FUNC_SRC_ALPHA,
+                                                   scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
+
   process_ = [](
       PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe) {
 
@@ -49,6 +59,7 @@ TexturedScreenSpaceQuadPassDescription::TexturedScreenSpaceQuadPassDescription()
 
       UniformValue tex(quad_node->data.get_texture());
       UniformValue flip(math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
+      UniformValue opacity(quad_node->data.get_opacity());
 
       auto width(pipe.get_gbuffer().get_width());
       auto height(pipe.get_gbuffer().get_height());
@@ -69,6 +80,7 @@ TexturedScreenSpaceQuadPassDescription::TexturedScreenSpaceQuadPassDescription()
       pass.shader_->apply_uniform(ctx, "flip", flip);
       pass.shader_->apply_uniform(ctx, "size", size);
       pass.shader_->apply_uniform(ctx, "offset", offset);
+      pass.shader_->apply_uniform(ctx, "opacity", opacity);
 
       pipe.draw_quad();
     }

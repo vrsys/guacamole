@@ -23,11 +23,14 @@
 
 uniform uvec2 gua_in_texture;
 uniform ivec2 flip;
+uniform float opacity;
 
 in vec2 gua_quad_coords;
 
-layout(location=0) out vec3 gua_out_color;
+layout(location=0) out vec4 gua_out_color;
 
 void main() {
-  gua_out_color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5).rgb;
+  vec4 color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5) * opacity;
+  color.rgb /= color.a;
+  gua_out_color = color;
 }

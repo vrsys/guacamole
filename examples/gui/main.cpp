@@ -22,6 +22,7 @@
 #include <functional>
 
 #include <gua/guacamole.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/utils/Trackball.hpp>
 #include <gua/gui/GuiResource.hpp>
 #include <gua/gui/Interface.hpp>
@@ -66,15 +67,29 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader loader;
 
-  auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto gui = std::make_shared<gua::GuiResource>("nyan", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gua::math::vec2(1024.f, 1024.f));
+  gua::math::vec2 gui_size(1024.f, 1024.f);
+  auto gui = std::make_shared<gua::GuiResource>("nyan", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gui_size);
 
   auto quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("quad");
   quad->data.texture() = "nyan";
-  quad->data.size() = gua::math::vec2i(1024, 1024);
+  quad->data.size() = gui_size;
   quad->data.anchor() = gua::math::vec2(-1.f, -1.f);
   quad->data.offset() = gua::math::vec2(10.f, 10.f);
+  quad->data.opacity() = 0.5f;
   graph.add_node("/", quad);
+
+  auto gui2 = std::make_shared<gua::GuiResource>("nyan2", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gui_size);
+  auto quad2 = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("quad2");
+  quad2->data.texture() = "nyan2";
+  quad2->data.size() = gui_size;
+  quad2->data.anchor() = gua::math::vec2(0.f, -1.f);
+  quad2->data.offset() = gua::math::vec2(10.f, 10.f);
+  quad2->data.opacity() = 0.5f;
+  graph.add_node("/", quad2);
+
+  auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  graph.add_node("/transform", teapot);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
