@@ -64,18 +64,16 @@ int main(int argc, char** argv) {
 
   auto mat1(load_mat("data/materials/pinky.gmd"));*/
 
-
-
   gua::SkeletalAnimationLoader loader;
   gua::SkeletalAnimationLoader loader2;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
 
-  auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  loader2.load_animation(teapot2, "data/objects/pinky/idle1.md5anim", 0);
-  loader2.load_animation(teapot2, "data/objects/pinky/attack.md5anim", 0);
-  loader2.load_animation(teapot2, "data/objects/pinky/run.md5anim", 0);
+  // auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // loader2.load_animation(teapot2, "data/objects/pinky/idle1.md5anim", 0);
+  // loader2.load_animation(teapot2, "data/objects/pinky/attack.md5anim", 0);
+  // loader2.load_animation(teapot2, "data/objects/pinky/run.md5anim", 0);
   
   auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
@@ -84,11 +82,12 @@ int main(int argc, char** argv) {
   loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
   loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
 
-  //std::shared_ptr<gua::node::SkeletalAnimationNode> skel_node = std::dynamic_pointer_cast<gua::node::SkeletalAnimationNode>(teapot2);
-  //skel_node->set_animation_mode(0);
-  
   // auto teapot(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/bob/boblampclean.md5anim", 0);
+  
+  auto rock(loader.create_geometry_from_file("fbx", "data/objects/fbx/barrel.fbx", mat1));
+  rock->set_draw_bounding_box(true);
+  graph.add_node("/transform2", rock);
   
 
   graph.add_node("/transform", teapot);

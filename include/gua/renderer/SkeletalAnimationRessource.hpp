@@ -35,9 +35,7 @@
 #include <mutex>
 #include <thread>
 
-#define ZERO_MEM(a) memset(a, 0, sizeof(a))
 #include <vector>
-//#include <assimp/scene.h>       // Output data structure
 
 
 namespace Assimp { class Importer; }
@@ -71,7 +69,7 @@ class SkeletalAnimationRessource : public GeometryResource {
    *
    * \param mesh             The Assimp mesh to load the data from.
    */
-   SkeletalAnimationRessource(aiMesh const* mesh, std::shared_ptr<SkeletalAnimationDirector> animation_director, std::shared_ptr<Assimp::Importer> const& importer, bool build_kd_tree);
+   SkeletalAnimationRessource(Mesh const& mesh, std::shared_ptr<SkeletalAnimationDirector> animation_director, bool build_kd_tree);
 
   /**
    * Draws the Mesh.
@@ -99,51 +97,9 @@ class SkeletalAnimationRessource : public GeometryResource {
 
  private:
 
-  struct BoneInfo
-  {
-      scm::math::mat4f BoneOffset;
-      scm::math::mat4f FinalTransformation;        
-
-      BoneInfo()
-      {
-
-          BoneOffset = scm::math::mat4f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-          FinalTransformation = scm::math::mat4f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-                      
-      }
-  };
-
-  struct VertexBoneData
-  {        
-      uint IDs[4];
-      float Weights[4];
-
-      VertexBoneData()
-      {
-          Reset();
-      };
-      
-      void Reset()
-      {
-          ZERO_MEM(IDs);
-          ZERO_MEM(Weights);        
-      }
-      
-      void AddBoneData(uint BoneID, float Weight);
-  };
-
-  void LoadBones(std::vector<VertexBoneData>& Bones);
-
-  void InitMesh(    std::vector<scm::math::vec3>& Positions,
-                    std::vector<scm::math::vec3>& Normals,
-                    std::vector<scm::math::vec2>& TexCoords,
-                    std::vector<scm::math::vec3>& Tangents,
-                    std::vector<scm::math::vec3>& Bitangents,
-                    std::vector<VertexBoneData>& Bones,
-                    std::vector<uint>& Indices);
-
   void upload_to(RenderContext const& context) /*const*/;
 
+  Mesh mesh_;
 
   mutable std::vector<scm::gl::buffer_ptr> vertices_;
   mutable std::vector<scm::gl::buffer_ptr> indices_;
@@ -169,11 +125,6 @@ class SkeletalAnimationRessource : public GeometryResource {
     
     //std::vector<MeshEntry> entries_;
 
-    
-
-    unsigned int num_vertices_;
-    unsigned int num_faces_;
-
     std::shared_ptr<SkeletalAnimationDirector> animation_director_;
 
     std::vector<math::BoundingBox<math::vec3>> bone_boxes_;
@@ -184,8 +135,8 @@ class SkeletalAnimationRessource : public GeometryResource {
 
   KDTree kd_tree_;
 
-  aiMesh const* mesh_;
-  std::shared_ptr<Assimp::Importer> importer_;
+  // aiMesh const* mesh_;
+  // std::shared_ptr<Assimp::Importer> importer_;
 };
 
 }
