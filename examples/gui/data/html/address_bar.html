@@ -13,6 +13,17 @@
 <style type="text/css">
   body {
     background: rgba(0, 0, 0, 0);
+    margin: 0;
+    overflow: hidden;
+  }
+
+  #bg {
+    position: relative;
+    border-radius: 0 0 5px 0;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 10px;
+    width: 330px;
+    height: 55px;
   }
 </style>
 
@@ -20,16 +31,18 @@
 
 
 <body>
-<form class="form-inline" role="form">
-  <div class="form-group">
-    <div class="input-group">
-      <input type="address" class="form-control" id="address" placeholder="Adresse eingeben...">
-      <div class="input-group-addon btn" id="submit"> <i class="fa fa-search"></i> </div>
-      <div class="input-group-addon btn" id="back"> <i class="fa fa-caret-left"></i> </div>
-      <div class="input-group-addon btn" id="forward"> <i class="fa fa-caret-right"></i> </div>
+  <div id="bg">
+  <form class="form-inline" role="form">
+    <div class="form-group">
+      <div class="input-group">
+        <input type="address" class="form-control" id="address" placeholder="Adresse eingeben...">
+        <div class="input-group-addon btn" id="submit"> <i class="fa fa-search"></i> </div>
+        <div class="input-group-addon btn" id="back"> <i class="fa fa-caret-left"></i> </div>
+        <div class="input-group-addon btn" id="forward"> <i class="fa fa-caret-right"></i> </div>
+      </div>
     </div>
   </div>
-</form>
+  </form>
 
 <script type="text/javascript">
   $("#submit").click(function() {

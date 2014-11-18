@@ -50,6 +50,32 @@ TexturedScreenSpaceQuadNode::TexturedScreenSpaceQuadNode(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool TexturedScreenSpaceQuadNode::pixel_to_texcoords(
+  math::vec2 const& pixel, math::vec2ui const& screen_size, 
+  math::vec2& result) const {
+  
+  math::vec2 pos(pixel/screen_size*2-1);
+
+  math::vec2 size(
+    1.0 * data.get_size().x / screen_size.x,
+    1.0 * data.get_size().y / screen_size.y
+  );
+
+  math::vec2 offset(
+    (2.0 * data.get_offset().x + data.get_anchor().x * (screen_size.x - data.get_size().x))/screen_size.x,
+    (2.0 * data.get_offset().y + data.get_anchor().y * (screen_size.y - data.get_size().y))/screen_size.y
+  );
+
+  pos -= offset;
+  pos /= size;
+
+  result = pos*0.5+0.5;
+
+  return result.x >=0 && result.x < 1 && result.y >=0 && result.y < 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void TexturedScreenSpaceQuadNode::update_bounding_box() const {
   math::BoundingBox<math::vec3> geometry_bbox(
       math::vec3(-0.5 * data.size().x, -0.5 * data.size().y, 0),

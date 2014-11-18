@@ -77,6 +77,8 @@ class GUA_DLL TexturedScreenSpaceQuadNode : public SerializableNode {
   TexturedScreenSpaceQuadNode(std::string const& name,
                               Configuration const& configuration = Configuration());
 
+  bool pixel_to_texcoords(math::vec2 const& pixel, math::vec2ui const& screen_size, math::vec2& result) const;
+
   /**
    * Accepts a visitor and calls concrete visit method.
    *
