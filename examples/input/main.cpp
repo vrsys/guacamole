@@ -165,6 +165,7 @@ int main(int argc, char** argv) {
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
 
+    window->process_events();
     if (window->should_close()) {
       renderer.stop();
       window->close();
