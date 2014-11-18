@@ -36,6 +36,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <gua/fbx/Common.hpp>
 
 namespace Assimp { class Importer; }
 
@@ -46,6 +47,7 @@ class Node;
 class InnerNode;
 class GeometryNode;
 }
+
 
 /**
  * Loads and draws meshes.
@@ -93,10 +95,6 @@ public:
                                                    std::shared_ptr<Material> const& fallback_material,
                                                    unsigned flags = DEFAULTS);
 
-   std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
-                                                   std::string const& file_name,
-                                                   unsigned flags = DEFAULTS);
-
   /**
    * Constructor from a file.
    *
@@ -132,6 +130,13 @@ public:
                 aiNode* ai_root,
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);*/
+
+  FbxMesh* traverse(FbxNode*);
+
+  std::shared_ptr<node::Node> create_animation_node(FbxScene const* fbx_scene,
+  std::string const& file_name,
+  std::string const& node_name,
+  unsigned flags);
 
   std::shared_ptr<node::Node> create_animation_node(std::shared_ptr<Assimp::Importer> const& importer,
                                               aiScene const* ai_scene,

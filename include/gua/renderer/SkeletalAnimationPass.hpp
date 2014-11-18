@@ -37,6 +37,7 @@ class GUA_DLL SkeletalAnimationPassDescription : public PipelinePassDescription 
   SkeletalAnimationPassDescription();
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
+  
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
