@@ -69,6 +69,10 @@ class GuiResource {
     void set_url(std::string const& url);
     std::string const& get_url() const;
 
+    void go_forward();
+    void go_back();
+    void go_to_history_offset(int offset);
+
     void reload();
     void focus();
 

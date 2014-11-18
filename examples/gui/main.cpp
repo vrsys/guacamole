@@ -107,12 +107,19 @@ int main(int argc, char** argv) {
 
 
   address_bar->on_loaded.connect([address_bar]() {
-    address_bar->add_javascript_callback("update_monkey_address");
+    address_bar->add_javascript_callback("update_address");
+    address_bar->add_javascript_callback("address_back");
+    address_bar->add_javascript_callback("address_forward");
   });
 
   address_bar->on_javascript_callback.connect([gui](std::string const& callback, std::vector<std::string> const& params) {
-    if (callback == "update_monkey_address")
+    if (callback == "update_address") {
       gui->set_url(params[0]);
+    } else if (callback == "address_back") {
+      gui->go_back();
+    } else if (callback == "address_forward") {
+      gui->go_forward();
+    }
   });
 
 
