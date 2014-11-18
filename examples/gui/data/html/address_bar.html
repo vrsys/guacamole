@@ -9,6 +9,13 @@
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    background: rgba(0, 0, 0, 0);
+  }
+</style>
+
 </head>
 
 
@@ -35,6 +42,13 @@
 
   $("#forward").click(function() {
     gua.address_forward();
+  });
+
+  $(document).keypress(function(e) {
+    var val = $("#address").val();
+    if(e.which == 13 && val != "") {
+      gua.update_address(val);
+    }
   });
 
 </script>
