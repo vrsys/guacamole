@@ -19,36 +19,26 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_SKELETAL_ANIMATION_PASS_HPP
+#define GUA_SKELETAL_ANIMATION_PASS_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/SkeletalAnimationLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/SkeletalAnimationPass.hpp>
-#include <gua/renderer/EmissivePass.hpp>
-#include <gua/renderer/LightingPass.hpp>
-#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
-#include <gua/renderer/LightVisibilityPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/ResolvePass.hpp>
-#include <gua/renderer/SkyMapPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/FullscreenPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/HeadlessSurface.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
-#include <gua/renderer/Material.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+#include <gua/renderer/PipelinePass.hpp>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+#include <gua/platform.hpp>
+
+// external headers
+#include <scm/gl_core/buffer_objects.h>
+
+namespace gua {
+
+
+class GUA_DLL SkeletalAnimationPassDescription : public PipelinePassDescription {
+ public:
+  SkeletalAnimationPassDescription();
+  virtual PipelinePassDescription* make_copy() const;
+  friend class Pipeline;
+};
+
+}
+
+#endif  // GUA_SKELETAL_ANIMATION_PASS_HPP

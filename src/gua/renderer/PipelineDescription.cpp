@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/renderer/StencilPass.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
+#include <gua/renderer/SkeletalAnimationPass.hpp>
 #include <gua/renderer/EmissivePass.hpp>
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
 #include <gua/renderer/LightVisibilityPass.hpp>
