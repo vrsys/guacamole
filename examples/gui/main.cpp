@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 
   auto gui = std::make_shared<gua::GuiResource>("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
 
-  gua::math::vec2 fps_size(170.f, 38.f);
+  gua::math::vec2 fps_size(170.f, 55.f);
 
   auto fps = std::make_shared<gua::GuiResource>("fps", "asset://gua/data/html/fps.html", fps_size);
   auto fps_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("fps_quad");
@@ -86,13 +86,13 @@ int main(int argc, char** argv) {
 
   graph.add_node("/", fps_quad);
 
-  gua::math::vec2 address_bar_size(450.f, 50.f);
+  gua::math::vec2 address_bar_size(340.f, 55.f);
 
   auto address_bar = std::make_shared<gua::GuiResource>("address_bar", "asset://gua/data/html/address_bar.html", address_bar_size);
-  auto address_bar_quad = std::make_shared<gua::node::TexturedQuadNode>("address_bar_quad");
+  auto address_bar_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("address_bar_quad");
   address_bar_quad->data.texture() = "address_bar";
-  address_bar_quad->translate(0.f, 1.1f, 0.5f);
-  address_bar_quad->data.size() = gua::math::vec2(1.f, address_bar_size.y/address_bar_size.x);
+  address_bar_quad->data.size() = address_bar_size;
+  address_bar_quad->data.anchor() = gua::math::vec2(-1.f, 1.f);
 
   graph.add_node("/transform/monkey", address_bar_quad);
 
@@ -176,28 +176,29 @@ int main(int argc, char** argv) {
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
 
-    std::cout << pos << " " << fps_quad->pixel_to_texcoords(pos, resolution)*fps_size << std::endl; 
+    gua::math::vec2 hit_pos;
 
-    auto screen_space_pos(pos/resolution-0.5);
-
-    gua::math::vec3 origin(screen->get_scaled_world_transform() * gua::math::vec3(screen_space_pos.x, screen_space_pos.y, 0));
-    gua::math::vec3 direction(origin - camera->get_world_position());
-
-    gua::Ray ray(origin, direction*100, 1);
-
-    auto result = graph.ray_test(ray, gua::PickResult::PICK_ONLY_FIRST_OBJECT | gua::PickResult::PICK_ONLY_FIRST_FACE | gua::PickResult::GET_TEXTURE_COORDS);
-    if (result.size() > 0) {
-      for (auto const& r : result) {
-        if (r.object->get_name() == "address_bar_quad") {
-          focused_element = address_bar;
-        } else {
-          focused_element = gui;
-        }
-        focused_element->inject_mouse_position_relative(r.texture_coords);
-      }
+    if (address_bar_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
+      address_bar->inject_mouse_position_relative(hit_pos);
+      focused_element = address_bar;
     } else {
-      focused_element = nullptr;
-      trackball.motion(pos.x, pos.y);
+      auto screen_space_pos(pos/resolution-0.5);
+
+      gua::math::vec3 origin(screen->get_scaled_world_transform() * gua::math::vec3(screen_space_pos.x, screen_space_pos.y, 0));
+      gua::math::vec3 direction(origin - camera->get_world_position());
+
+      gua::Ray ray(origin, direction*100, 1);
+
+      auto result = graph.ray_test(ray, gua::PickResult::PICK_ONLY_FIRST_OBJECT | gua::PickResult::PICK_ONLY_FIRST_FACE | gua::PickResult::GET_TEXTURE_COORDS);
+      if (result.size() > 0) {
+        for (auto const& r : result) {
+          focused_element = gui;
+          focused_element->inject_mouse_position_relative(r.texture_coords);
+        }
+      } else {
+        focused_element = nullptr;
+        trackball.motion(pos.x, pos.y);
+      }
     }
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));

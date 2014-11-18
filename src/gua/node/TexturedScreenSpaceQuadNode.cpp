@@ -50,7 +50,9 @@ TexturedScreenSpaceQuadNode::TexturedScreenSpaceQuadNode(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::vec2 TexturedScreenSpaceQuadNode::pixel_to_texcoords(math::vec2 const& pixel, math::vec2ui const& screen_size) const {
+bool TexturedScreenSpaceQuadNode::pixel_to_texcoords(
+  math::vec2 const& pixel, math::vec2ui const& screen_size, 
+  math::vec2& result) const {
   
   math::vec2 pos(pixel/screen_size*2-1);
 
@@ -67,7 +69,9 @@ math::vec2 TexturedScreenSpaceQuadNode::pixel_to_texcoords(math::vec2 const& pix
   pos -= offset;
   pos /= size;
 
-  return pos*0.5+0.5;
+  result = pos*0.5+0.5;
+
+  return result.x >=0 && result.x < 1 && result.y >=0 && result.y < 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
