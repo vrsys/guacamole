@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
   auto address_bar = std::make_shared<gua::GuiResource>("address_bar", "asset://gua/data/html/address_bar.html", address_bar_size);
   auto address_bar_quad = std::make_shared<gua::node::TexturedQuadNode>("address_bar_quad");
   address_bar_quad->data.texture() = "address_bar";
-  address_bar_quad->translate(0.f, -1.3f, 1.f);
+  address_bar_quad->translate(0.f, 1.1f, 0.5f);
   address_bar_quad->data.size() = gua::math::vec2(1.f, address_bar_size.y/address_bar_size.x);
 
   graph.add_node("/transform/monkey", address_bar_quad);
