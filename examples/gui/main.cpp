@@ -74,17 +74,9 @@ int main(int argc, char** argv) {
 
   gua::math::vec2 gui_size(1024.f, 1024.f);
 
-  // auto gui = std::make_shared<gua::GuiResource>("nyan", "https://www.youtube.com/watch?v=QH2-TGUlwu4", gui_size);
-  // auto quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("quad");
-  // quad->data.texture() = "nyan";
-  // quad->data.size() = gui_size;
-  // quad->data.anchor() = gua::math::vec2(-1.f, -1.f);
-  // quad->data.offset() = gua::math::vec2(10.f, 10.f);
-  // quad->data.opacity() = 0.5f;
-  // graph.add_node("/", quad);
   auto gui = std::make_shared<gua::GuiResource>("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
 
-  gua::math::vec2 fps_size(150.f, 50.f);
+  gua::math::vec2 fps_size(170.f, 38.f);
 
   auto fps = std::make_shared<gua::GuiResource>("fps", "asset://gua/data/html/fps.html", fps_size);
   auto fps_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("fps_quad");
@@ -144,6 +136,8 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
 
+  std::shared_ptr<gua::GuiResource> focused_element;
+
   auto camera = screen->add_child<gua::node::CameraNode>("cam");
   camera->translate(0, 0, 0.5);
   camera->config.set_resolution(resolution);
@@ -157,20 +151,24 @@ int main(int argc, char** argv) {
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
   window->on_char.connect([&](unsigned c) {
-    gui->inject_char_event(c);
-    address_bar->inject_char_event(c);
+    if (focused_element) {
+      focused_element->inject_char_event(c);
+    }
   });
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
-    gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
-    address_bar->inject_keyboard_event(gua::Key(key), scancode, action, mods);
+    if (focused_element) {
+      focused_element->inject_keyboard_event(gua::Key(key), scancode, action, mods);
+    }
   });
   window->on_button_press.connect([&](int key, int action, int mods) {
-    gui->inject_mouse_button(gua::Button(key), action, mods);
-    address_bar->inject_mouse_button(gua::Button(key), action, mods);
+    if (focused_element) {
+      focused_element->inject_mouse_button(gua::Button(key), action, mods);
+    }
   });
   window->on_scroll.connect([&](gua::math::vec2 const& dir) {
-    gui->inject_mouse_wheel(dir);
-    address_bar->inject_mouse_wheel(dir);
+    if (focused_element) {
+      focused_element->inject_mouse_wheel(dir);
+    }
   });
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
@@ -178,7 +176,6 @@ int main(int argc, char** argv) {
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    trackball.motion(pos.x, pos.y);
 
     auto screen_space_pos(pos/resolution-0.5);
 
@@ -190,11 +187,16 @@ int main(int argc, char** argv) {
     auto result = graph.ray_test(ray, gua::PickResult::PICK_ONLY_FIRST_OBJECT | gua::PickResult::PICK_ONLY_FIRST_FACE | gua::PickResult::GET_TEXTURE_COORDS);
     if (result.size() > 0) {
       for (auto const& r : result) {
-        if (r.object->get_name() == "address_bar_quad")
-          address_bar->inject_mouse_position_relative(r.texture_coords);
-        else
-          gui->inject_mouse_position_relative(r.texture_coords);
+        if (r.object->get_name() == "address_bar_quad") {
+          focused_element = address_bar;
+        } else {
+          focused_element = gui;
+        }
+        focused_element->inject_mouse_position_relative(r.texture_coords);
       }
+    } else {
+      focused_element = nullptr;
+      trackball.motion(pos.x, pos.y);
     }
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
