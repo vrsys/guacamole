@@ -83,7 +83,6 @@ int main(int argc, char** argv) {
   fps_quad->data.texture() = "fps";
   fps_quad->data.size() = fps_size;
   fps_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
-  fps_quad->data.offset() = gua::math::vec2(2.f, 2.f);
 
   graph.add_node("/", fps_quad);
 
@@ -176,6 +175,8 @@ int main(int argc, char** argv) {
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
+
+    std::cout << pos << " " << fps_quad->pixel_to_texcoords(pos, resolution)*fps_size << std::endl; 
 
     auto screen_space_pos(pos/resolution-0.5);
 
