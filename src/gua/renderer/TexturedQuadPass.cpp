@@ -41,6 +41,9 @@ TexturedQuadPassDescription::TexturedQuadPassDescription()
   doClear_ = false;
   rendermode_ = RenderMode::Callback;
 
+  rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
+        scm::gl::FILL_SOLID, scm::gl::CULL_NONE));
+
   process_ = [](
       PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe) {
 

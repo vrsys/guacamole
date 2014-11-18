@@ -30,7 +30,11 @@ in vec3 gua_normal;
 @include "shaders/common/gua_fragment_shader_output.glsl"
 
 void main() {
-    vec3 gua_color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5).rgb;
+    vec4 color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5);
+
+    if (color.a <= 0.8) discard;
+
+    vec3 gua_color = color.rgb;
 
     float gua_emissivity = 1.0;
     float gua_shinyness = 0.0;
