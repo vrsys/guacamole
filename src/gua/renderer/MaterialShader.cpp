@@ -74,40 +74,6 @@ Material& MaterialShader::get_default_material() {
   return default_material_;
 }
 
-#if 0
-////////////////////////////////////////////////////////////////////////////////
-ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
-                                          std::type_index const& for_type,
-                                          std::string const& geometry_v_shader,
-                                          std::string const& geometry_f_shader) {
-
-  // std::type_index type_id(typeid(for_type));
-  auto shader(shaders_.find(for_type));
-
-  if (shader != shaders_.end()) {
-    return shader->second;
-  } else {
-
-    auto v_methods = desc_.get_vertex_methods();
-    auto f_methods = desc_.get_fragment_methods();
-
-    auto new_shader = new ShaderProgram();
-
-    auto v_shader(compile_description(ctx, v_methods, geometry_v_shader));
-    auto f_shader(compile_description(ctx, f_methods, geometry_f_shader));
-
-    // std::cout << "VERTEX" << std::endl;
-    // std::cout << v_shader << std::endl << std::endl;
-    // std::cout << "FRAGMENT" << std::endl;
-    // std::cout << f_shader << std::endl;
-
-    new_shader->create_from_sources(v_shader, f_shader);
-
-    shaders_[for_type] = new_shader;
-    return new_shader;
-  }
-}
-#else
 ////////////////////////////////////////////////////////////////////////////////
 ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
                                           std::type_index const& for_type, 
@@ -131,9 +97,6 @@ ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
     auto v_methods = desc_.get_vertex_methods();
     auto f_methods = desc_.get_fragment_methods();
 
-    assert(program_description.count(STAGE_VERTEX_SHADER) &&
-           program_description.count(STAGE_FRAGMENT_SHADER));
-
     for (auto const& stage : program_description)
     {
       // insert material code in vertex and fragment shader
@@ -154,7 +117,6 @@ ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
     }
     
     new_shader->set_shaders(final_program_description, interleaved_stream_capture, in_rasterization_discard);
-
     shaders_[for_type] = new_shader;
     return new_shader;
   }
