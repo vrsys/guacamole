@@ -73,6 +73,7 @@ class GUA_DLL PipelineDescription {
         return *casted;
       }
     }
+    throw std::runtime_error("PipelineDescription::get_pass(): pass not valid");
   }
 
   bool operator==(PipelineDescription const& other) const;

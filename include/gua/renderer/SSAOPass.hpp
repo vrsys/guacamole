@@ -33,7 +33,7 @@ namespace gua {
 
 class Pipeline;
 
-class SSAOPassDescription : public PipelinePassDescription {
+class GUA_DLL SSAOPassDescription : public PipelinePassDescription {
  public:
 
   SSAOPassDescription();
