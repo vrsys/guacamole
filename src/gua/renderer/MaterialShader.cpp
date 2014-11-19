@@ -122,7 +122,6 @@ ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
   }
 }
 
-#endif
 ////////////////////////////////////////////////////////////////////////////////
 ShaderProgram* get_shader(RenderContext const& ctx,
   std::type_index const& for_type,
