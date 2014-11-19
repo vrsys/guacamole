@@ -31,7 +31,7 @@ namespace gua {
 
 class Pipeline;
 
-class BackgroundPassDescription : public PipelinePassDescription {
+class GUA_DLL BackgroundPassDescription : public PipelinePassDescription {
  public:
   
   enum BackgroundMode {

@@ -153,7 +153,7 @@ IF (MSVC)
 ENDIF(MSVC)
 
 # link static libraries
-TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES})
+TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES} general ${GL_LIBRARIES})
 IF (MSVC)
   TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})  
 ELSEIF (UNIX)

@@ -34,7 +34,7 @@
 
 namespace gua {
 
-class TexturedQuadPassDescription : public PipelinePassDescription {
+class GUA_DLL TexturedQuadPassDescription : public PipelinePassDescription {
  public:
   TexturedQuadPassDescription();
   PipelinePassDescription* make_copy() const override;
