@@ -48,7 +48,7 @@ class SSAOPassDescription : public PipelinePassDescription {
   SSAOPassDescription& falloff(float falloff);
   float falloff() const;
 
-  virtual PipelinePassDescription* make_copy() const;
+  PipelinePassDescription* make_copy() const override;
 
   friend class Pipeline;
 };
