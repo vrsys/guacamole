@@ -74,6 +74,7 @@ Material& MaterialShader::get_default_material() {
   return default_material_;
 }
 
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
                                           std::type_index const& for_type,
@@ -106,6 +107,65 @@ ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
     return new_shader;
   }
 }
+#else
+////////////////////////////////////////////////////////////////////////////////
+ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
+                                          std::type_index const& for_type, 
+                                          std::map<scm::gl::shader_stage, std::string> const& program_description,
+                                          std::list<std::string> const& interleaved_stream_capture,
+                                          bool in_rasterization_discard)
+{
+
+  // std::type_index type_id(typeid(for_type));
+  auto shader(shaders_.find(for_type));
+
+  if (shader != shaders_.end()) {
+    return shader->second;
+  }
+  else {
+    using namespace scm::gl;
+
+    std::vector<ShaderProgramStage> final_program_description;
+    auto new_shader = new ShaderProgram();
+
+    auto v_methods = desc_.get_vertex_methods();
+    auto f_methods = desc_.get_fragment_methods();
+
+    assert(program_description.count(STAGE_VERTEX_SHADER) &&
+           program_description.count(STAGE_FRAGMENT_SHADER));
+
+    for (auto const& stage : program_description)
+    {
+      // insert material code in vertex and fragment shader
+      if (stage.first == STAGE_VERTEX_SHADER) {
+        auto v_shader(compile_description(ctx, v_methods, program_description.at(STAGE_VERTEX_SHADER)));
+        final_program_description.push_back(ShaderProgramStage(STAGE_VERTEX_SHADER, v_shader));
+      }
+      else {
+        if (stage.first == STAGE_FRAGMENT_SHADER) {
+          auto f_shader(compile_description(ctx, f_methods, program_description.at(STAGE_FRAGMENT_SHADER)));
+          final_program_description.push_back(ShaderProgramStage(STAGE_FRAGMENT_SHADER, f_shader));
+        }
+        else {
+          // keep code for other shading stages
+          final_program_description.push_back(ShaderProgramStage(stage.first, stage.second));
+        }
+      }
+    }
+    
+    new_shader->set_shaders(final_program_description, interleaved_stream_capture, in_rasterization_discard);
+
+    shaders_[for_type] = new_shader;
+    return new_shader;
+  }
+}
+
+#endif
+////////////////////////////////////////////////////////////////////////////////
+ShaderProgram* get_shader(RenderContext const& ctx,
+  std::type_index const& for_type,
+  std::vector<ShaderProgramStage> const& program_description);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
