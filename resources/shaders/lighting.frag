@@ -380,6 +380,8 @@ void main() {
   vec3 cspec = vec3(0.06);
   vec3 cdiff = gua_get_color();
 
+  vec3 pbr = gua_get_pbr();
+
   float metalness = 0.0f;
   float blablaRougness = 0.2f;
   float roughness = max(blablaRougness, 0.0001f);

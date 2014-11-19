@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     return shader->get_default_material();
   };
 
-  auto mat1(load_mat("data/materials/SimpleMaterial.gmd"));
+  auto mat1(load_mat("data/materials/Cerberus.gmd"));
 
   gua::TriMeshLoader loader;
 
@@ -72,8 +72,8 @@ int main(int argc, char** argv) {
         , "data/objects/Cerberus_LP.3ds"
         , mat1
         , gua::TriMeshLoader::NORMALIZE_POSITION
-        | gua::TriMeshLoader::NORMALIZE_SCALE)
-        );
+        | gua::TriMeshLoader::NORMALIZE_SCALE
+        ));
   graph.add_node("/transform", cerberus);
   cerberus->set_draw_bounding_box(true);
   cerberus->rotate(90, 0.f, 1.f, 0.f);
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
 #endif
 
   auto pointLight = graph.add_node<gua::node::PointLightNode>("/", "pointLight");
-  pointLight->data.color = gua::utils::Color3f(0.5f, 0.5f, 1.0f);
+  pointLight->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
   pointLight->scale(10.f);
   pointLight->translate(-2.f, 3.f, 5.f);
 
