@@ -40,8 +40,12 @@ void TextureDatabase::load(std::string const& id) {
   std::string extension(fp.extension().string());
   boost::algorithm::to_lower(extension);
 
-  if (extension == ".png" || extension == ".jpg" || extension == ".bmp" ||
-      extension == ".tif" || extension == ".tga") {
+  if (extension == ".png"
+      || extension == ".jpg"
+      || extension == ".bmp"
+      || extension == ".dds"
+      || extension == ".tif"
+      || extension == ".tga") {
     instance()->add(id, std::make_shared<Texture2D>(id, true));
   } else if (extension == ".vol") {
     instance()->add(id, std::make_shared<Texture3D>(id, true));
