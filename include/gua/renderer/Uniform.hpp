@@ -36,41 +36,29 @@
 #include <scm/gl_core/shader_objects/program.h>
 #include <scm/gl_core/buffer_objects/uniform_buffer_adaptor.h>
 
+#include <boost/variant.hpp>
+
 namespace gua {
 
-class UniformValue {
+class GUA_DLL UniformValue {
 
-  union Data {
-    int int_;
-    bool bool_;
-    float float_;
-
-    math::mat3 mat3_;
-    math::mat4 mat4_;
-
-    math::vec2 vec2_;
-    math::vec3 vec3_;
-    math::vec4 vec4_;
-
-    math::vec2i vec2i_;
-    math::vec3i vec3i_;
-    math::vec4i vec4i_;
-
-    math::vec2ui vec2ui_;
-    math::vec3ui vec3ui_;
-    math::vec4ui vec4ui_;
-
-    std::string texture_;
-
-    Data() : mat4_() {}
-    Data(Data const& copy) : mat4_(copy.mat4_) {}
-    ~Data() {  }
-
-    Data& operator=(Data const& other) {
-      mat4_ = other.mat4_;
-      return *this;
-    }
-  };
+  typedef boost::variant < 
+    int, 
+    bool,
+    float,
+    math::mat3, 
+    math::mat4, 
+    math::vec2, 
+    math::vec3, 
+    math::vec4, 
+    math::vec2i,
+    math::vec3i,
+    math::vec4i,
+    math::vec2ui,
+    math::vec3ui,
+    math::vec4ui,
+    std::string
+  > Data;
 
   public:
     UniformValue() = default;
@@ -128,43 +116,51 @@ class UniformValue {
 
   private:
 
-    void set(int val) { val_.int_ = val; }
-    void set(bool val) { val_.bool_ = val; }
-    void set(float val) { val_.float_ = val; }
-    void set(math::mat3 const& val) { val_.mat3_ = val; }
-    void set(math::mat4 const& val) { val_.mat4_ = val; }
-    void set(math::vec2 const& val) { val_.vec2_ = val; }
-    void set(math::vec3 const& val) { val_.vec3_ = val; }
-    void set(math::vec4 const& val) { val_.vec4_ = val; }
-    void set(math::vec2i const& val) { val_.vec2i_ = val; }
-    void set(math::vec3i const& val) { val_.vec3i_ = val; }
-    void set(math::vec4i const& val) { val_.vec4i_ = val; }
-    void set(math::vec2ui const& val) { val_.vec2ui_ = val; }
-    void set(math::vec3ui const& val) { val_.vec3ui_ = val; }
-    void set(math::vec4ui const& val) { val_.vec4ui_ = val; }
-    void set(std::string const& val) { new (&val_.texture_) std::string; val_.texture_ = val; }
+    template<typename T>
+    void set(T const& val) 
+    { 
+      val_ = val; 
+    }
 
     template<typename T>
     static void apply(UniformValue const* self, RenderContext const& ctx,
-                      std::string const& name, scm::gl::program_ptr const& prog,
-                      unsigned location);
+      std::string const& name, scm::gl::program_ptr const& prog,
+      unsigned location)
+    {
+      prog->uniform(name, location, boost::get<T>(self->val_));
+    }
+
+    template<typename T>
+    static unsigned get_byte_size_impl()
+    {
+      return sizeof(T);
+    }
+
+    template<typename T>
+    static void write_bytes_impl(UniformValue const* self, RenderContext const& ctx, char* target)
+    {
+      memcpy(target, &boost::get<T>(self->val_), sizeof(T));
+    }
 
     template<typename T>
     static std::string get_glsl_type_impl();
 
-    template<typename T>
-    static unsigned get_byte_size_impl();
-
-    template<typename T>
-    static void write_bytes_impl(UniformValue const* self, RenderContext const& ctx, char* target);
-
     Data val_;
+
     std::function<void(UniformValue const*, RenderContext const&, std::string const&, scm::gl::program_ptr const&, unsigned)> apply_impl_;
     std::function<std::string()> get_glsl_type_impl_;
     std::function<unsigned()> get_byte_size_impl_;
     std::function<void(UniformValue const*, RenderContext const&, char*)> write_bytes_impl_;
 };
 
-}
+// specializations
+template<> void UniformValue::apply<std::string>(UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location);
+
+template<> void UniformValue::write_bytes_impl<std::string>(UniformValue const* self, RenderContext const& ctx, char* target);
+template<> void UniformValue::write_bytes_impl<bool>(UniformValue const* self, RenderContext const& ctx, char* target);
+
+template<> unsigned UniformValue::get_byte_size_impl<bool>();
+template<> unsigned UniformValue::get_byte_size_impl<std::string>();
+}                                                                                                                                                                                                                                                             
 
 #endif  // GUA_UNIFORM_HPP
