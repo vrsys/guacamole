@@ -29,7 +29,7 @@
 
 namespace gua {
 
-class ViewDependentUniform {
+class GUA_DLL ViewDependentUniform {
   public:
     ViewDependentUniform(UniformValue const& value = UniformValue());
 

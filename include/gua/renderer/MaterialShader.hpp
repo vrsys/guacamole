@@ -48,8 +48,9 @@ class GUA_DLL MaterialShader {
 
   ShaderProgram* get_shader(RenderContext const& ctx,
                             std::type_index const& for_type,
-                            std::string const& geometry_v_shader,
-                            std::string const& geometry_f_shader);
+                            std::map<scm::gl::shader_stage, std::string> const& program_description,
+                            std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
+                            bool in_rasterization_discard = false);
 
   void apply_uniforms(RenderContext const& ctx,
                       ShaderProgram* shader,
