@@ -39,7 +39,7 @@ class Pipeline;
 
 namespace node {
   class CameraNode;
-  class SerializedCameraNode;
+  struct SerializedCameraNode;
 }
 
 /**

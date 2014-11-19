@@ -37,7 +37,7 @@ namespace gua {
 
 class GBuffer;
 class WindowBase;
-class RenderContext;
+struct RenderContext;
 class ShaderProgram;
 
 class Pipeline {

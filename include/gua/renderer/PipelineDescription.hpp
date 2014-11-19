@@ -29,7 +29,7 @@
 
 namespace gua {
 
-class PipelineDescription {
+class GUA_DLL PipelineDescription {
  public:
 
   static PipelineDescription make_default();

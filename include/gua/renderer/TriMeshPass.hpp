@@ -36,7 +36,7 @@ namespace gua {
 class Pipeline;
 class TriMeshPass;
 
-class TriMeshPassDescription : public PipelinePassDescription {
+class GUA_DLL TriMeshPassDescription : public PipelinePassDescription {
  public:
   TriMeshPassDescription();
   virtual PipelinePassDescription* make_copy() const;

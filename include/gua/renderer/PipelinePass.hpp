@@ -29,7 +29,7 @@ namespace gua {
 
 class Pipeline;
 class PipelinePass;
-class RenderContext;
+struct RenderContext;
 
 enum class RenderMode {
   Custom, Callback, Quad
