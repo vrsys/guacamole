@@ -56,6 +56,8 @@ struct GUA_DLL Color3f {
    */
   Color3f(float red, float green, float blue);
 
+  Color3f(math::vec3 const& rgb);
+
   ///@{
   /**
    * Returns a single Color value.

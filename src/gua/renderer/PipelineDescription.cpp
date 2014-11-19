@@ -29,6 +29,7 @@
 #include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
+#include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 
 namespace gua {
@@ -38,12 +39,13 @@ namespace gua {
 PipelineDescription PipelineDescription::make_default() {
   PipelineDescription pipe;
   pipe.add_pass<TriMeshPassDescription>();
+  pipe.add_pass<TexturedQuadPassDescription>();
+  pipe.add_pass<SSAOPassDescription>();
   pipe.add_pass<EmissivePassDescription>();
   pipe.add_pass<LightingPassDescription>();
-  pipe.add_pass<TexturedQuadPassDescription>();
   pipe.add_pass<BBoxPassDescription>();
   pipe.add_pass<BackgroundPassDescription>();
-  pipe.add_pass<SSAOPassDescription>();
+  pipe.add_pass<TexturedScreenSpaceQuadPassDescription>();
 
   return pipe;
 }
@@ -61,12 +63,12 @@ PipelineDescription::PipelineDescription(PipelineDescription const& other) {
 PipelineDescription::~PipelineDescription() {
   for (auto pass: passes_) {
     delete pass;
-  } 
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<PipelinePassDescription*> const& PipelineDescription::get_passes() const {
+std::vector<PipelinePassDescription*> const& PipelineDescription::get_all_passes() const {
   return passes_;
 }
 
@@ -81,7 +83,7 @@ bool PipelineDescription::operator==(PipelineDescription const& other) const {
     if (typeid(passes_[i]) != typeid(other.passes_[i])) {
       return false;
     }
-  } 
+  }
 
   return true;
 }
@@ -97,7 +99,7 @@ bool PipelineDescription::operator!=(PipelineDescription const& other) const {
 PipelineDescription& PipelineDescription::operator=(PipelineDescription const& other) {
   for (auto pass: passes_) {
     delete pass;
-  } 
+  }
 
   passes_.clear();
 

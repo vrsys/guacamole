@@ -75,11 +75,23 @@ void Renderer::renderclient(Mailbox in) {
           window->create_shader();
         }
         window->set_active(true);
-      
-        std::get<0>(x)->rendering_pipeline->process(
-          window->get_context(), *std::get<0>(x), *std::get<1>(x), 
-          std::get<2>(x), fpsc.fps
-        );
+
+        auto const& camera(*std::get<0>(x));
+
+        auto process = [&](CameraMode mode) {
+          std::get<0>(x)->rendering_pipeline->process(
+            window->get_context(), mode, camera, *std::get<1>(x)
+          );
+        };
+
+        std::get<2>(x)->set_rendering_fps(fpsc.fps);
+
+        if (camera.config.get_enable_stereo()) {
+          process(CameraMode::LEFT);
+          process(CameraMode::RIGHT);
+        } else {
+          process(camera.config.get_mono_mode());
+        }
 
         // swap buffers
         window->finish_frame();
@@ -107,8 +119,9 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
   for (auto& cam : cameras) {
     auto window_name(cam->config.get_output_window_name());
     auto rclient(render_clients_.find(window_name));
+    cam->set_application_fps(application_fps_.fps);
     if (rclient != render_clients_.end()) {
-      rclient->second.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, application_fps_.fps));
+      rclient->second.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
     } else {
       auto window(WindowDatabase::instance()->lookup(window_name));
 
@@ -121,12 +134,12 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
         //   fpsc.step();
         // }
         auto p = spawnDoublebufferred<Item>();
-        p.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, application_fps_.fps));
+        p.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
         render_clients_[window_name] = std::make_pair(p.first, std::thread(Renderer::renderclient, p.second));
       } else {
-        Logger::LOG_WARNING << "Cannot render camera: window \"" 
-                            << window_name 
-                            << "\" not registered in WindowDatabase!" 
+        Logger::LOG_WARNING << "Cannot render camera: window \""
+                            << window_name
+                            << "\" not registered in WindowDatabase!"
                             << std::endl;
       }
     }

@@ -32,73 +32,15 @@
 #include <gua/renderer/Frustum.hpp>
 #include <gua/node/CameraNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
-#include <gua/renderer/Serializer.hpp>
 
 // external headers
 #include <iostream>
 
 namespace gua {
 
-namespace {
-
-////////////////////////////////////////////////////////////////////////////////
-
-Frustum camera_frustum(node::CameraNode::ProjectionMode const& mode,
-    math::mat4 const& transf, math::mat4 const& screen,
-    float near, float far) {
-  if (mode == node::CameraNode::ProjectionMode::PERSPECTIVE) {
-    return Frustum::perspective(transf, screen, near, far);
-  } else {
-    return Frustum::orthographic(transf, screen, near, far);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void serialize(SceneGraph const& scene_graph, bool is_left,
-               node::SerializedCameraNode const& camera, SerializedScene& out) {
-
-  std::string screen_name(is_left ? camera.config.left_screen_path() : camera.config.right_screen_path());
-  auto screen_it((scene_graph)[screen_name]);
-  auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
-  if (!screen) {
-    Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
-    return;
-  }
-
-  auto eye_transform(camera.transform);
-
-  if (camera.config.get_enable_stereo()) {
-    if (is_left) {
-      eye_transform *= scm::math::make_translation(camera.config.eye_offset() - 0.5f * camera.config.eye_dist(), 0.f, 0.f);
-    } else {
-      eye_transform *= scm::math::make_translation(camera.config.eye_offset() + 0.5f * camera.config.eye_dist(), 0.f, 0.f);
-    }
-  }
-  camera.config.eye_dist(), camera.config.eye_offset();
-
-  out.frustum = camera_frustum(camera.config.mode(), eye_transform,
-                               screen->get_scaled_world_transform(),
-                               camera.config.near_clip(),
-                               camera.config.far_clip());
-
-  out.center_of_interest = math::get_translation(camera.transform);
-
-  Serializer serializer;
-  serializer.check(out, scene_graph,
-                   camera.config.mask(),
-                   camera.config.enable_frustum_culling());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline() :
-  fps_count_(0),
-  fps_sum_(0.f, 0.f),
   gbuffer_(nullptr),
   camera_block_(nullptr),
   last_resolution_(0, 0),
@@ -121,19 +63,8 @@ std::vector<PipelinePass> const& Pipeline::get_passes() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& camera,
-                       std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
-                       float application_fps, float rendering_fps) {
-
-  if (fps_count_ > 100) {
-    std::cout << "App: " << fps_sum_[0]/fps_count_ << " Render: " << fps_sum_[1]/fps_count_ << std::endl;
-    fps_count_ = 0;
-    fps_sum_ = math::vec2(0.f, 0.f);
-  } else {
-    ++fps_count_;
-    fps_sum_[0] += application_fps;
-    fps_sum_[1] += rendering_fps;
-  }
+void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCameraNode const& camera,
+                       std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs) {
 
   // return if pipeline is disabled
   if (!camera.config.get_enabled()) {
@@ -153,7 +84,7 @@ void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& cam
 
   // execute all prerender cameras
   for (auto const& cam: camera.pre_render_cameras) {
-    cam.rendering_pipeline->process(ctx, cam, scene_graphs, application_fps, rendering_fps);
+    cam.rendering_pipeline->process(ctx, mode, cam, scene_graphs);
   }
 
   // recreate gbuffer if resolution changed
@@ -186,7 +117,7 @@ void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& cam
 
     passes_.clear();
 
-    for (auto pass: camera.config.get_pipeline_description().get_passes()) {
+    for (auto pass: camera.config.get_pipeline_description().get_all_passes()) {
       passes_.push_back(PipelinePass{*pass,*ctx});
     }
   }
@@ -205,58 +136,42 @@ void Pipeline::process(RenderContext* ctx, node::SerializedCameraNode const& cam
     camera_block_ = new CameraUniformBlock(get_context().render_device);
   }
 
-  auto process_passes = [&](CameraMode mode) {
+  context_->mode = mode;
 
-    context_->mode = mode;
+  // serialize this scenegraph
+  current_scene_ = current_graph_->serialize(camera, mode);
 
-    // serialize this scenegraph
-    serialize(*current_graph_, mode != CameraMode::RIGHT, camera, current_scene_);
+  camera_block_->update(get_context().render_context, current_scene_.frustum);
+  bind_camera_uniform_block(0);
 
-    camera_block_->update(get_context().render_context, current_scene_.frustum);
-    bind_camera_uniform_block(0);
+  // clear gbuffer
+  gbuffer_->clear_all(get_context());
 
-    // clear gbuffer
-    gbuffer_->clear_all(get_context());
+  // process all passes
+  for (int i(0); i < passes_.size(); ++i) {
 
-    // process all passes
-    for (int i(0); i < passes_.size(); ++i) {
-
-      if (passes_[i].needs_color_buffer_as_input()) {
-        gbuffer_->toggle_ping_pong();
-      }
-
-      passes_[i].process(*camera.config.get_pipeline_description().get_passes()[i], *this);
+    if (passes_[i].needs_color_buffer_as_input()) {
+      gbuffer_->toggle_ping_pong();
     }
 
-    gbuffer_->toggle_ping_pong();
+    passes_[i].process(*camera.config.get_pipeline_description().get_all_passes()[i], *this);
+  }
 
-    // add texture to texture database
-    auto const& tex(gbuffer_->get_current_color_buffer());
-    auto tex_name(camera.config.get_output_texture_name());
+  gbuffer_->toggle_ping_pong();
 
-    if (tex_name != "") {
-      if (mode == CameraMode::LEFT) {
-        tex_name += "_left";
-      } else if (mode == CameraMode::RIGHT) {
-        tex_name += "_right";
-      }
+  // add texture to texture database
+  auto const& tex(gbuffer_->get_current_color_buffer());
+  auto tex_name(camera.config.get_output_texture_name());
 
-      TextureDatabase::instance()->add(tex_name, tex);
+  if (tex_name != "") {
+    TextureDatabase::instance()->add(tex_name, tex);
+  }
+
+  if (camera.config.get_output_window_name() != "") {
+    auto window = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
+    if (window) {
+      window->display(tex, mode != CameraMode::RIGHT);
     }
-
-    if (camera.config.get_output_window_name() != "") {
-      auto window = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
-      if (window) {
-        window->display(tex, mode != CameraMode::RIGHT);
-      }
-    }
-  };
-
-  if (camera.config.get_enable_stereo()) {
-    process_passes(CameraMode::LEFT);
-    process_passes(CameraMode::RIGHT);
-  } else {
-    process_passes(camera.config.get_mono_mode());
   }
 }
 

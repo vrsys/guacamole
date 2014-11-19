@@ -27,7 +27,7 @@
 
 namespace gua {
 
-class GeometryResource;
+class TriMeshRessource;
 
 namespace node {
 
@@ -66,7 +66,7 @@ class GUA_DLL TriMeshNode : public GeometryNode {
   * Implements ray picking for a triangular mesh
   */
   void ray_test_impl(Ray const& ray,
-                     PickResult::Options options,
+                     int options,
                      Mask const& mask,
                      std::set<PickResult>& hits) override;
 
@@ -77,7 +77,7 @@ class GUA_DLL TriMeshNode : public GeometryNode {
 
   void update_cache() override;
 
-  std::shared_ptr<GeometryResource> const& get_geometry() const;
+  std::shared_ptr<TriMeshRessource> const& get_geometry() const;
 
   /**
    * Accepts a visitor and calls concrete visit method.
@@ -94,7 +94,7 @@ class GUA_DLL TriMeshNode : public GeometryNode {
 
  private:  // attributes e.g. special attributes for drawing
 
-  std::shared_ptr<GeometryResource> geometry_;
+  std::shared_ptr<TriMeshRessource> geometry_;
 
   std::string filename_;
 

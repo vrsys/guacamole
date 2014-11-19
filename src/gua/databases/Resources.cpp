@@ -38,36 +38,37 @@ namespace Resources {
 
   namespace {
     const std::unordered_map<std::string, std::vector<unsigned char> const*> data_(R_fill_map());
+  }
 
-    void resolve_includes(std::string& shader_source) {
-      std::size_t search_pos(0);
+  //////////////////////////////////////////////////////////////////////////////
 
-      std::string search("@include");
+  void resolve_includes(std::string& shader_source) {
+    std::size_t search_pos(0);
 
-      while(search_pos != std::string::npos) {
-        // find incluse
-        search_pos = shader_source.find(search, search_pos);
+    std::string search("@include");
 
-        if (search_pos != std::string::npos) {
+    while(search_pos != std::string::npos) {
+      // find incluse
+      search_pos = shader_source.find(search, search_pos);
 
-          // get file name
-          std::size_t start(shader_source.find('\"', search_pos)+1);
-          std::size_t end  (shader_source.find('\"', start));
+      if (search_pos != std::string::npos) {
 
-          std::string file(shader_source.substr(start, end-start));
+        // get file name
+        std::size_t start(shader_source.find('\"', search_pos)+1);
+        std::size_t end  (shader_source.find('\"', start));
 
-          // get included file
-          std::string include(lookup_shader(file));
+        std::string file(shader_source.substr(start, end-start));
 
-          // include it
-          shader_source.replace(search_pos, end-search_pos + 2, include);
+        // get included file
+        std::string include(lookup_shader(file));
 
-          // advance search pos
-          search_pos = search_pos + include.length();
-        }
+        // include it
+        shader_source.replace(search_pos, end-search_pos + 2, include);
+
+        // advance search pos
+        search_pos = search_pos + include.length();
       }
     }
-
   }
 
   //////////////////////////////////////////////////////////////////////////////

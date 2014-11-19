@@ -23,7 +23,7 @@
 #define GUA_VOLUME_NODE_HPP
 
 // guacamole headers
-#include <gua/node/Node.hpp>
+#include <gua/node/SerializableNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
 // external headers
@@ -37,7 +37,7 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL VolumeNode : public Node {
+class GUA_DLL VolumeNode : public SerializableNode {
 public:
 
   struct Configuration {

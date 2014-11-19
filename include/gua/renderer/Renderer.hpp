@@ -84,7 +84,7 @@ class GUA_DLL Renderer {
 
  private:
 
-  typedef std::tuple<std::shared_ptr<node::SerializedCameraNode>, ConstRenderVectorPtr, float> Item;
+  typedef std::tuple<std::shared_ptr<node::SerializedCameraNode>, ConstRenderVectorPtr, std::shared_ptr<node::CameraNode>> Item;
   typedef std::shared_ptr<gua::concurrent::Doublebuffer<Item> > Mailbox;
   typedef std::pair<Mailbox, std::thread> Renderclient;
 

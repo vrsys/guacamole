@@ -36,6 +36,8 @@ Color3f::Color3f() : r_(0.0f), g_(0.0f), b_(0.0f) {}
 
 Color3f::Color3f(float r, float g, float b) : r_(r), g_(g), b_(b) {}
 
+Color3f::Color3f(math::vec3 const& rgb) : r_(rgb.x), g_(rgb.y), b_(rgb.z) {}
+
 float Color3f::h() const {
 
   if (s() > 0.0f) {

@@ -44,6 +44,7 @@ class NodeVisitor;
 class SceneGraph;
 class Serializer;
 class DotGenerator;
+struct SerializedScene;
 
 struct Ray;
 
@@ -51,6 +52,7 @@ namespace physics { class CollisionShapeNodeVisitor; }
 
 namespace node {
 
+struct SerializedCameraNode;
 class RayNode;
 
 
@@ -339,16 +341,16 @@ class GUA_DLL Node {
    *
    * The function checks wheter a given RayNode intersects the Node or not. If
    * an intersection was found, a std::set<PickResult> is returned, containing
-   * information about individual hits. The user may specify PickResult::Options
+   * information about individual hits. The user may specify int
    * and a mask (referring to Nodes' group names) to configure the intersection
    * process.
    *
    * \param ray       The RayNode used to check for intersections.
-   * \param options   PickResult::Options to configure the intersection process.
+   * \param options   int to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   virtual std::set<PickResult> const ray_test(RayNode const& ray,
-                                              PickResult::Options options = PickResult::PICK_ALL,
+                                              int options = PickResult::PICK_ALL,
                                               Mask const& mask = Mask());
 
   /**
@@ -356,16 +358,16 @@ class GUA_DLL Node {
    *
    * The function checks wheter a given Ray intersects the Node or not. If
    * an intersection was found, a std::set<PickResult> is returned, containing
-   * information about individual hits. The user may specify PickResult::Options
+   * information about individual hits. The user may specify int
    * and a mask (referring to Nodes' group names) to configure the intersection
    * process.
    *
    * \param ray       The Ray used to check for intersections.
-   * \param options   PickResult::Options to configure the intersection process.
+   * \param options   int to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   virtual std::set<PickResult> const ray_test(Ray const& ray,
-                                              PickResult::Options options = PickResult::PICK_ALL,
+                                              int options = PickResult::PICK_ALL,
                                               Mask const& mask = Mask());
 
   /**
@@ -419,7 +421,7 @@ class GUA_DLL Node {
   friend class ::gua::DotGenerator;
   friend class ::gua::physics::CollisionShapeNodeVisitor;
 
-  virtual void ray_test_impl(Ray const& ray, PickResult::Options options,
+  virtual void ray_test_impl(Ray const& ray, int options,
                              Mask const& mask, std::set<PickResult>& hits);
 
   /**
@@ -468,6 +470,8 @@ class GUA_DLL Node {
   math::mat4 transform_; // invertible affine transformation
 
  protected:
+  bool is_visible_in(SerializedScene const& scene, node::SerializedCameraNode const& camera) const;
+
   void set_dirty() const;
   void set_parent_dirty() const;
   void set_children_dirty() const;

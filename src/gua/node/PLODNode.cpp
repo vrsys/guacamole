@@ -41,7 +41,7 @@ PLODNode::PLODNode(std::string const& name,
 ////////////////////////////////////////////////////////////////////////////////
 
 void PLODNode::ray_test_impl(Ray const& ray,
-                             PickResult::Options options,
+                             int options,
                              Mask const& mask,
                              std::set<PickResult>& hits) {
 

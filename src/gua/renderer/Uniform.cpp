@@ -45,17 +45,17 @@ template<> std::string UniformValue::get_glsl_type_impl<std::string>()  { return
 
 template<> void UniformValue::apply<std::string>(UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) {
 
-  auto texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->val_)));
+  auto texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data)));
   if (texture) {
     prog->uniform(name, location, texture->get_handle(ctx));
   } else if (ctx.mode != CameraMode::CENTER) {
     if ((ctx.mode != CameraMode::LEFT)) {
-      auto left_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->val_) + "_left"));
+      auto left_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data) + "_left"));
       if (left_texture) {
         prog->uniform(name, location, left_texture->get_handle(ctx));
       }
     } else {
-      auto right_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->val_) + "_right"));
+      auto right_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data) + "_right"));
       if (right_texture) {
         prog->uniform(name, location, right_texture->get_handle(ctx));
       }
@@ -67,23 +67,23 @@ template<> unsigned UniformValue::get_byte_size_impl<bool>        () { return si
 template<> unsigned UniformValue::get_byte_size_impl<std::string> () { return sizeof(math::vec2ui); }
 
 
-template<> void UniformValue::write_bytes_impl<bool>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &boost::get<bool>(self->val_), sizeof(int)); }
+template<> void UniformValue::write_bytes_impl<bool>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &boost::get<bool>(self->data), sizeof(int)); }
 
 template<> void UniformValue::write_bytes_impl<std::string> (UniformValue const* self, RenderContext const& ctx, char* target) 
 {
-  auto texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->val_)));
+  auto texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data)));
   if (texture) {
     auto& handle(texture->get_handle(ctx));
     memcpy(target, &handle, sizeof(math::vec2ui));
   } else if (ctx.mode != CameraMode::CENTER) {
     if ((ctx.mode != CameraMode::LEFT)) {
-      auto left_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->val_) + "_left"));
+      auto left_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data) + "_left"));
       if (left_texture) {
         auto& handle(left_texture->get_handle(ctx));
         memcpy(target, &handle, sizeof(math::vec2ui));
       }
     } else {
-      auto right_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->val_) + "_right"));
+      auto right_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data) + "_right"));
       if (right_texture) {
         auto& handle(right_texture->get_handle(ctx));
         memcpy(target, &handle, sizeof(math::vec2ui));

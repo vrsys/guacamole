@@ -46,7 +46,34 @@ class GUA_DLL PipelineDescription {
     return *t;
   }
 
-  std::vector<PipelinePassDescription*> const& get_passes() const;
+  std::vector<PipelinePassDescription*> const& get_all_passes() const;
+
+  template<class T>
+  std::vector<T*> get_passes() const {
+    std::vector<T*> result;
+
+    for (auto pass: passes_) {
+      T* casted(dynamic_cast<T*>(pass));
+
+      if (casted) {
+        result.push_back(casted);
+      }
+    }
+
+    return result;
+  }
+
+  template<class T>
+  T& get_pass() const {
+
+    for (auto pass: passes_) {
+      T* casted(dynamic_cast<T*>(pass));
+
+      if (casted) {
+        return *casted;
+      }
+    }
+  }
 
   bool operator==(PipelineDescription const& other) const;
   bool operator!=(PipelineDescription const& other) const;

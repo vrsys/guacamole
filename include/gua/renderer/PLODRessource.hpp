@@ -66,7 +66,7 @@ class PLODRessource : public GeometryResource {
             std::vector<bool> const& frustum_culling_results) const;
 
   void ray_test(Ray const& ray,
-                PickResult::Options options,
+                int options,
                 node::Node* owner,
                 std::set<PickResult>& hits);
 

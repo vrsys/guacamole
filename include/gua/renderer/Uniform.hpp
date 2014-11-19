@@ -77,7 +77,7 @@ class GUA_DLL UniformValue {
     //   get_glsl_type_impl_(to_copy.get_glsl_type_impl_),
     //   get_byte_size_impl_(to_copy.get_byte_size_impl_),
     //   write_bytes_impl_(to_copy.write_bytes_impl_),
-    //   val_(to_copy.val_) {}
+    //   data(to_copy.data) {}
 
     // -------------------------------------------------------------------------
     static UniformValue create_from_string_and_type(
@@ -111,15 +111,17 @@ class GUA_DLL UniformValue {
       get_glsl_type_impl_ = to_copy.get_glsl_type_impl_;
       get_byte_size_impl_ = to_copy.get_byte_size_impl_;
       write_bytes_impl_   = to_copy.write_bytes_impl_;
-      val_                = to_copy.val_;
+      data                = to_copy.data;
     }
+
+    Data data;
 
   private:
 
     template<typename T>
     void set(T const& val) 
     { 
-      val_ = val; 
+      data = val; 
     }
 
     template<typename T>
@@ -127,7 +129,7 @@ class GUA_DLL UniformValue {
       std::string const& name, scm::gl::program_ptr const& prog,
       unsigned location)
     {
-      prog->uniform(name, location, boost::get<T>(self->val_));
+      prog->uniform(name, location, boost::get<T>(self->data));
     }
 
     template<typename T>
@@ -139,13 +141,12 @@ class GUA_DLL UniformValue {
     template<typename T>
     static void write_bytes_impl(UniformValue const* self, RenderContext const& ctx, char* target)
     {
-      memcpy(target, &boost::get<T>(self->val_), sizeof(T));
+      memcpy(target, &boost::get<T>(self->data), sizeof(T));
     }
 
     template<typename T>
     static std::string get_glsl_type_impl();
 
-    Data val_;
 
     std::function<void(UniformValue const*, RenderContext const&, std::string const&, scm::gl::program_ptr const&, unsigned)> apply_impl_;
     std::function<std::string()> get_glsl_type_impl_;

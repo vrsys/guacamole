@@ -24,7 +24,7 @@
 
 #include <string>
 
-#include <gua/node/Node.hpp>
+#include <gua/node/SerializableNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
 namespace gua {
@@ -38,14 +38,13 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL TexturedQuadNode : public Node {
+class GUA_DLL TexturedQuadNode : public SerializableNode {
 
  public:
 
   struct Configuration {
     GUA_ADD_PROPERTY(std::string, texture,    "gua_default_texture");
     GUA_ADD_PROPERTY(math::vec2,  size,       math::vec2(1.f, 1.f));
-    GUA_ADD_PROPERTY(bool,        is_stereo,  false);
     GUA_ADD_PROPERTY(bool,        flip_x,     false);
     GUA_ADD_PROPERTY(bool,        flip_y,     false);
   };
@@ -99,11 +98,18 @@ class GUA_DLL TexturedQuadNode : public Node {
    *
    * \param visitor  A visitor to process the TexturedQuadNode's data.
    */
-  void accept(NodeVisitor& visitor) override;
+  virtual void accept(NodeVisitor& visitor) override;
 
-  void update_bounding_box() const override;
+  // virtual void serialize(SerializedScene& scene, node::SerializedCameraNode const& camera) override;
 
-  void update_cache() override;
+  virtual void update_bounding_box() const override;
+
+  virtual void update_cache() override;
+
+  void ray_test_impl(Ray const& ray,
+                     int options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
 
  private:  // methods
 

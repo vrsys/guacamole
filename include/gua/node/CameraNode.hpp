@@ -42,7 +42,7 @@ struct SerializedCameraNode;
 class GUA_DLL CameraNode : public Node {
  public:
 
-  enum ProjectionMode {
+  enum class ProjectionMode {
     PERSPECTIVE,
     ORTHOGRAPHIC
   };
@@ -56,18 +56,18 @@ class GUA_DLL CameraNode : public Node {
     GUA_ADD_PROPERTY(PipelineDescription, pipeline_description, PipelineDescription::make_default());
 
     // the camera renders a view into this scenegraph. The camera itself does
-    // not neccessarily has to be in the very same scenegraph. 
+    // not neccessarily has to be in the very same scenegraph.
     GUA_ADD_PROPERTY(std::string,     scene_graph_name,       "unknown_scene_graph");
 
     // limits the rendered object to a set defined by the mask
     GUA_ADD_PROPERTY(Mask,            mask,                   Mask());
-    
+
     // a user-defined view id, can be used to customize material parameters for
     // objects rendered by this camera
     GUA_ADD_PROPERTY(int,             view_id,                0);
 
     // whether this camera renders in perspective or orthographic mode
-    GUA_ADD_PROPERTY(ProjectionMode,  mode,                   PERSPECTIVE);
+    GUA_ADD_PROPERTY(ProjectionMode,  mode,                   ProjectionMode::PERSPECTIVE);
 
     // viewing setup and stereo configuration
     GUA_ADD_PROPERTY(bool,            enable_stereo,          false);
@@ -118,7 +118,9 @@ class GUA_DLL CameraNode : public Node {
    * This constructs an empty CameraNode.
    *
    */
-  CameraNode() {}
+  CameraNode()
+    : application_fps_(0.f)
+    , rendering_fps_(0.f) {}
 
   /**
    * Constructor.
@@ -148,8 +150,25 @@ class GUA_DLL CameraNode : public Node {
     pre_render_cameras_ = cams;
   }
 
+
+  float get_application_fps() const {
+    return application_fps_;
+  }
+
+  float get_rendering_fps() const {
+    return rendering_fps_;
+  }
+
+  void set_application_fps(float application_fps) {
+    application_fps_ = application_fps;
+  }
+
+  void set_rendering_fps(float rendering_fps) {
+    rendering_fps_ = rendering_fps;
+  }
+
   SerializedCameraNode serialize() const;
-  
+
   /**
    * Accepts a visitor and calls concrete visit method.
    *
@@ -160,6 +179,9 @@ class GUA_DLL CameraNode : public Node {
   void accept(NodeVisitor& visitor) override;
 
  private:
+
+  float application_fps_;
+  float rendering_fps_;
 
   std::shared_ptr<Node> copy() const override;
 

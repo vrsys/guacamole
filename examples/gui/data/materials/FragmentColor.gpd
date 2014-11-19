@@ -1,0 +1,16 @@
+{
+  "name" : "FragmentColor",
+  "source" : "
+    void FragmentColor() {
+      gua_color = texture(sampler2D(tex), gua_texcoords).rgb;
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "tex",
+      "type" : "sampler2D",
+      "value" : "gua_default_texture"
+    }
+  ]
+}

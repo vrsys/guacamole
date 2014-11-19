@@ -39,21 +39,21 @@ layout(location=0) out vec4 gua_out_color;
 float gua_ssao_aoFF(in vec3 ddiff,in vec3 cnorm, in float c1, in float c2, in vec2 texcoord) {
   float rd = length(ddiff);
   vec3 vv = ddiff / rd;
-  return (1.0-clamp(dot(normalize(gua_get_normal(texcoord+vec2(c1,c2))),-vv),0.0,1.0)) *
+  return (1.0-clamp(dot(gua_get_normal(texcoord+vec2(c1,c2)),-vv),0.0,1.0)) *
         clamp(dot( cnorm,vv ),0.0,1.0) * (1.0 - 1.0/sqrt(1.0/(rd*rd*gua_ssao_falloff) + 1.0));
 }
 
 float gua_ssao_giFF(in vec3 ddiff,in vec3 cnorm, in float c1, in float c2, in vec2 texcoord, in sampler2D gnormals) {
   float rd = length(ddiff);
   vec3 vv = ddiff / rd;
-  return 1.0*clamp(dot(normalize(gua_get_normal(texcoord+vec2(c1,c2))),-vv),0.0,1.0)*clamp(dot( cnorm,vv ),0.0,1.0)/(rd*rd+1.0);
+  return 1.0*clamp(dot(gua_get_normal(texcoord+vec2(c1,c2)),-vv),0.0,1.0)*clamp(dot( cnorm,vv ),0.0,1.0)/(rd*rd+1.0);
 }
 
 
 void main() {
   vec2 texcoords = gua_get_quad_coords();
 
-  vec3 n = normalize(gua_get_normal());
+  vec3 n = gua_get_normal();
   vec3 p = gua_get_position();
 
   //randomization texture

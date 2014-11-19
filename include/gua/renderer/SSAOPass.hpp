@@ -39,7 +39,16 @@ class SSAOPassDescription : public PipelinePassDescription {
   SSAOPassDescription();
   SSAOPassDescription(SSAOPassDescription const& copy) = default;
 
-  virtual PipelinePassDescription* make_copy() const;
+  SSAOPassDescription& radius(float radius);
+  float radius() const;
+
+  SSAOPassDescription& intensity(float intensity);
+  float intensity() const;
+
+  SSAOPassDescription& falloff(float falloff);
+  float falloff() const;
+
+  PipelinePassDescription* make_copy() const override;
 
   friend class Pipeline;
 };

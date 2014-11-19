@@ -22,15 +22,6 @@
 // class header
 #include <gua/node/GeometryNode.hpp>
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialShaderDatabase.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/scenegraph/NodeVisitor.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/math/BoundingBoxAlgo.hpp>
-
 namespace gua {
 namespace node {
 
@@ -38,7 +29,7 @@ namespace node {
 GeometryNode::GeometryNode(std::string const& name,
                            math::mat4 const& transform,
                            ShadowMode shadow_mode)
-  : Node(name, transform),
+  : SerializableNode(name, transform),
     shadow_mode_(shadow_mode)
 {}
 

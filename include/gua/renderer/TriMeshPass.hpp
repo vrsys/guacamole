@@ -24,22 +24,18 @@
 
 #include <gua/renderer/PipelinePass.hpp>
 
+#include <gua/platform.hpp>
+
 // external headers
 #include <scm/gl_core/buffer_objects.h>
 
-#include <typeindex>
-#include <memory>
-#include <unordered_map>
-
 namespace gua {
 
-class Pipeline;
-class TriMeshPass;
 
 class GUA_DLL TriMeshPassDescription : public PipelinePassDescription {
  public:
   TriMeshPassDescription();
-  virtual PipelinePassDescription* make_copy() const;
+  PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
 };
 

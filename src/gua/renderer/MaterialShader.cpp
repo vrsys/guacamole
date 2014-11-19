@@ -76,12 +76,12 @@ Material& MaterialShader::get_default_material() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
-                                          GeometryResource const& for_type,
+                                          std::type_index const& for_type,
                                           std::string const& geometry_v_shader,
                                           std::string const& geometry_f_shader) {
 
-  std::type_index type_id(typeid(for_type));
-  auto shader(shaders_.find(type_id));
+  // std::type_index type_id(typeid(for_type));
+  auto shader(shaders_.find(for_type));
 
   if (shader != shaders_.end()) {
     return shader->second;
@@ -102,7 +102,7 @@ ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
 
     new_shader->create_from_sources(v_shader, f_shader);
 
-    shaders_[type_id] = new_shader;
+    shaders_[for_type] = new_shader;
     return new_shader;
   }
 }
@@ -185,7 +185,7 @@ std::string MaterialShader::compile_description(RenderContext const& ctx,
   gua::string_utils::replace(source, "@material_input", sstr.str());
 
   #else
-  
+
   sstr << "uniform mat4 gua_model_matrix;" << std::endl;
   sstr << "uniform mat4 gua_normal_matrix;" << std::endl;
 
