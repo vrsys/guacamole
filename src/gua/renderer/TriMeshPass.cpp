@@ -46,9 +46,12 @@ TriMeshPassDescription::TriMeshPassDescription()
   rendermode_ = RenderMode::Custom;
 
   std::shared_ptr<scm::gl::buffer_ptr> material_uniform_storage_buffer = std::make_shared<scm::gl::buffer_ptr>(nullptr);
-  auto vertex_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
-  auto fragment_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
-  process_ = [material_uniform_storage_buffer, vertex_shader, fragment_shader](
+
+  std::map<scm::gl::shader_stage, std::string> program_description;
+  program_description[scm::gl::shader_stage::STAGE_VERTEX_SHADER] = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
+  program_description[scm::gl::shader_stage::STAGE_FRAGMENT_SHADER] = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
+
+  process_ = [material_uniform_storage_buffer, program_description](
       PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
 
     auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
@@ -171,7 +174,7 @@ TriMeshPassDescription::TriMeshPassDescription()
         if (current_material != tri_mesh_node->get_material().get_shader()) {
           current_material = tri_mesh_node->get_material().get_shader();
           if (current_material) {
-            current_shader = current_material->get_shader(ctx, typeid(*tri_mesh_node->get_geometry()), vertex_shader, fragment_shader);
+            current_shader = current_material->get_shader(ctx, typeid(*tri_mesh_node->get_geometry()), program_description);
           } else {
             Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material().get_shader_name() << std::endl;
           }
