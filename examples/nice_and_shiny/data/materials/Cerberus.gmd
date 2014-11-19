@@ -1,0 +1,45 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "name" : "FragmentTexture",
+      "source" : "
+        void FragmentTexture() {
+          vec2 tc = gua_texcoords;
+          tc.y = 1.0 - tc.y;
+          gua_color = pow(texture(sampler2D(Albedo), tc).rgb, vec3(2.2));
+
+          gua_shinyness = texture(sampler2D(Roughness), tc).rgb;
+          gua_specularity = texture(sampler2D(Metalness), tc).rgb;
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "Albedo",
+          "type" : "sampler2D",
+          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.dds"
+        },
+        {
+          "name" : "Normal",
+          "type" : "sampler2D",
+          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_N.dds"
+        },
+        {
+          "name" : "Roughness",
+          "type" : "sampler2D",
+          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_R.dds"
+        },
+        {
+          "name" : "Metalness",
+          "type" : "sampler2D",
+          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_M.dds"
+        }
+      ]
+    }
+  ]
+
+}
