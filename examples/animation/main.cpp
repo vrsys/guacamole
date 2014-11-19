@@ -70,12 +70,6 @@ int main(int argc, char** argv) {
   graph.add_node("/transform", teapot);
   teapot->set_draw_bounding_box(true);
 
-  auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
-  portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal->data.set_texture("portal");
-  portal->translate(0.5f, 0.f, -0.2f);
-  portal->rotate(-30, 0.f, 1.f, 0.f);
-
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
   light->scale(10.f);
@@ -91,33 +85,13 @@ int main(int argc, char** argv) {
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
 
-  auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
-  portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
-
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
   
-  auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0, 0, 2.0);
-  portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
-  portal_camera->config.set_screen_path("/portal_screen");
-  portal_camera->config.set_scene_graph_name("main_scenegraph");
-  portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(false);
-
   gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
-
-  gua::PipelineDescription portal_pipe;
-  portal_pipe.add_pass<gua::SkeletalAnimationPassDescription>();
-  portal_pipe.add_pass<gua::EmissivePassDescription>();
-  portal_pipe.add_pass<gua::LightingPassDescription>();
-  portal_pipe.add_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
-  portal_camera->config.set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -126,7 +100,6 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-  camera->set_pre_render_cameras({portal_camera});
   camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
