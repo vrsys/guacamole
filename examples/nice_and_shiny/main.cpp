@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 #include <functional>
+#include <future>
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
@@ -62,55 +63,75 @@ int main(int argc, char** argv) {
   };
 
   auto mat1(load_mat("data/materials/SimpleMaterial.gmd"));
-  auto mat2(load_mat("data/materials/PortalMaterial.gmd"));
-
 
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform", teapot);
-  teapot->set_draw_bounding_box(true);
+  auto cerberus(loader.create_geometry_from_file(
+          "cerberus"
+        , "data/objects/Cerberus_LP.3ds"
+        , mat1
+        , gua::TriMeshLoader::NORMALIZE_POSITION
+        | gua::TriMeshLoader::NORMALIZE_SCALE)
+        );
+  graph.add_node("/transform", cerberus);
+  cerberus->set_draw_bounding_box(true);
+  cerberus->rotate(90, 0.f, 1.f, 0.f);
+  cerberus->rotate(90, 0.f, 0.f, 1.f);
 
-  auto portal(loader.create_geometry_from_file("portal", "data/objects/plane.obj", mat2, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  portal->translate(0.5f, 0.f, 0.f);
-  portal->rotate(90, 1.f, 0.f, 0.f);
-  portal->rotate(-20, 0.f, 1.f, 0.f);
-  graph.add_node("/", portal);
-
+#if 0
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
   light->scale(10.f);
   light->rotate(-20, 0.f, 1.f, 0.f);
   light->translate(-1.f, 0.f,  3.f);
+#endif
 
-  auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->data.color = gua::utils::Color3f(0.5f, 0.5f, 1.0f);
-  light2->scale(10.f);
-  light2->translate(-2.f, 3.f, 5.f);
+  auto pointLight = graph.add_node<gua::node::PointLightNode>("/", "pointLight");
+  pointLight->data.color = gua::utils::Color3f(0.5f, 0.5f, 1.0f);
+  pointLight->scale(10.f);
+  pointLight->translate(-2.f, 3.f, 5.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
-
-  auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
-  portal_screen->data.set_size(gua::math::vec2(1.f, 1.f));
-  portal_screen->translate(0, 0, 1.0);
-  portal_screen->rotate(90, 0, 1, 0);
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
-  
-  auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0, 0, 2.0);
-  portal_camera->config.set_resolution(gua::math::vec2ui(800, 800));
-  portal_camera->config.set_screen_path("/portal_screen");
-  portal_camera->config.set_scene_graph_name("main_scenegraph");
-  portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(true);
+
+  std::async(std::launch::async, []() {
+    gua::TextureDatabase::instance()->load(
+      "/opt/guacamole/resources/skymaps/skymap.jpg");
+  });
+
+  auto a = std::async(std::launch::async, []() {
+    gua::TextureDatabase::instance()->load(
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.dds");
+  });
+  auto b = std::async(std::launch::async, []() {
+    gua::TextureDatabase::instance()->load(
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_R.dds");
+  });
+  auto c = std::async(std::launch::async, []() {
+    gua::TextureDatabase::instance()->load(
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_M.dds");
+  });
+  auto d = std::async(std::launch::async, []() {
+    gua::TextureDatabase::instance()->load(
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_N.dds");
+  });
+  a.get(); b.get(); c.get(); d.get();
+
+  gua::PipelineDescription pipe;
+  pipe.add_pass<gua::TriMeshPassDescription>();
+  pipe.add_pass<gua::EmissivePassDescription>();
+  pipe.add_pass<gua::LightingPassDescription>();
+  pipe.add_pass<gua::BackgroundPassDescription>()
+    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+    .texture("/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.dds");
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -118,15 +139,15 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(true);
-  camera->set_pre_render_cameras({portal_camera});
+  camera->config.set_enable_stereo(false);
+  camera->config.set_pipeline_description(pipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+  window->config.set_stereo_mode(gua::StereoMode::MONO);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
@@ -149,6 +170,7 @@ int main(int argc, char** argv) {
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
 
+    window->process_events();
     if (window->should_close()) {
       renderer.stop();
       window->close();
