@@ -89,7 +89,7 @@ class TriMeshRessource : public GeometryResource {
   std::vector<unsigned int> get_face(unsigned int i) const;
 
 
-  friend class TriMeshRenderer;
+  //friend class TriMeshRenderer;
   friend class LightingPass;
 
  private:

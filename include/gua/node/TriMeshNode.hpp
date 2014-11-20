@@ -107,7 +107,6 @@ public : // methods
 
   Material                          material_;
   bool                              material_changed_;
-
 };
 
 } // namespace node {

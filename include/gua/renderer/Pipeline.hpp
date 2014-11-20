@@ -44,6 +44,7 @@ class Pipeline {
  public:
 
   Pipeline();
+  Pipeline(Pipeline const&) = delete;
   ~Pipeline();
 
   void process(RenderContext* ctx, CameraMode mode, node::SerializedCameraNode const& camera,

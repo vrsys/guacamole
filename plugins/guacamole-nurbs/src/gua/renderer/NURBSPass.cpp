@@ -191,89 +191,92 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 NURBSPassDescription::NURBSPassDescription()
-  : PipelinePassDescription()
+  : PipelinePassDescription(),
+    shaders_loaded_(false)
 {
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
   doClear_ = false;
   rendermode_ = RenderMode::Custom;
-
-  //init_process_callback();
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-void NURBSPassDescription::make_pass()
-{
-  std::shared_ptr<scm::gl::buffer_ptr> material_uniform_storage_buffer = std::make_shared<scm::gl::buffer_ptr>(nullptr);
-
-  auto vertex_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
-  auto fragment_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
-
-  // create shader for predraw pass to pre-tesselate if necessary
-  std::map<scm::gl::shader_stage, std::string> pre_shader_stages;
-  pre_shader_stages[scm::gl::STAGE_VERTEX_SHADER]          = _transform_feedback_vertex_shader();
-  pre_shader_stages[scm::gl::STAGE_TESS_CONTROL_SHADER]    = _transform_feedback_tess_control_shader();
-  pre_shader_stages[scm::gl::STAGE_TESS_EVALUATION_SHADER] = _transform_feedback_tess_evaluation_shader();
-  pre_shader_stages[scm::gl::STAGE_GEOMETRY_SHADER]        = _transform_feedback_geometry_shader();
-
-  std::list<std::string> pre_shader_interleaved_stream_capture;
-  pre_shader_interleaved_stream_capture.push_back("xfb_position");
-  pre_shader_interleaved_stream_capture.push_back("xfb_index");
-  pre_shader_interleaved_stream_capture.push_back("xfb_tesscoord");
-
-  // create final ubershader that writes to gbuffer
-  std::map<scm::gl::shader_stage, std::string> shader_stages;
-  shader_stages[scm::gl::STAGE_VERTEX_SHADER]          = _final_vertex_shader();
-  shader_stages[scm::gl::STAGE_TESS_CONTROL_SHADER]    = _final_tess_control_shader();
-  shader_stages[scm::gl::STAGE_TESS_EVALUATION_SHADER] = _final_tess_evaluation_shader();
-  shader_stages[scm::gl::STAGE_GEOMETRY_SHADER]        = _final_geometry_shader();
-  shader_stages[scm::gl::STAGE_FRAGMENT_SHADER]        = _final_fragment_shader();
-
-  // create ubershader for alternative raycasting
-  std::map<scm::gl::shader_stage, std::string> raycast_stages;
-
-  raycast_stages[scm::gl::STAGE_VERTEX_SHADER] = _raycast_vertex_shader();
-  raycast_stages[scm::gl::STAGE_FRAGMENT_SHADER] = _raycast_fragment_shader();
-
-
-  process_ = [material_uniform_storage_buffer, 
-              pre_shader_stages, 
-              pre_shader_interleaved_stream_capture,
-              shader_stages,
-              raycast_stages]
-              (PipelinePass&, PipelinePassDescription const&, Pipeline& pipe) 
+  ////////////////////////////////////////////////////////////////////////////////
+  PipelinePass NURBSPassDescription::make_pass(RenderContext const& ctx)
   {
-    auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
+    _load_shaders();
 
-    if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
+    std::shared_ptr<scm::gl::buffer_ptr> material_uniform_storage_buffer = std::make_shared<scm::gl::buffer_ptr>(nullptr);
 
-      std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
-        return reinterpret_cast<node::NURBSNode*>(a)->get_material().get_shader() < reinterpret_cast<node::NURBSNode*>(b)->get_material().get_shader();
-      });
+    process_ = [material_uniform_storage_buffer, this]
+                (PipelinePass&, PipelinePassDescription const&, Pipeline& pipe) 
+    {
+      auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
-      RenderContext const& ctx(pipe.get_context());
+      if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
 
-      bool writes_only_color_buffer = false;
-      pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
-      pipe.get_gbuffer().set_viewport(ctx);
-      int view_id(pipe.get_camera().config.get_view_id());
+        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
+          return reinterpret_cast<node::NURBSNode*>(a)->get_material().get_shader() < reinterpret_cast<node::NURBSNode*>(b)->get_material().get_shader();
+        });
 
-      MaterialShader* current_material(nullptr);
-      ShaderProgram*  current_shader(nullptr);
+        RenderContext const& ctx(pipe.get_context());
+
+        bool writes_only_color_buffer = false;
+        pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
+        pipe.get_gbuffer().set_viewport(ctx);
+        int view_id(pipe.get_camera().config.get_view_id());
+
+        MaterialShader* current_material(nullptr);
+        ShaderProgram*  current_shader(nullptr);
+
+    };
+
+    ///UberShader::create(material_names);
 
 
-    auto xfb_program = std::make_shared<ShaderProgram>();
-    xfb_program->set_shaders(pre_shader_stages, interleaved_stream_capture, true);
-  };
-
-  ///UberShader::create(material_names);
 
 
 
+  }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSPassDescription::reload_programs()
+  {
+    shaders_loaded_ = false;
+  }
 
-}
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSPassDescription::_load_shaders()
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    // create stages only with one thread!
+    if (!shaders_loaded_)
+    {
+      pre_tesselation_interleaved_stream_capture_.clear();
+
+      pre_tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER] = _transform_feedback_vertex_shader();
+      pre_tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER] = _transform_feedback_tess_control_shader();
+      pre_tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = _transform_feedback_tess_evaluation_shader();
+      pre_tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER] = _transform_feedback_geometry_shader();
+
+      pre_tesselation_interleaved_stream_capture_.push_back("xfb_position");
+      pre_tesselation_interleaved_stream_capture_.push_back("xfb_index");
+      pre_tesselation_interleaved_stream_capture_.push_back("xfb_tesscoord");
+
+      tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER] = _final_vertex_shader();
+      tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER] = _final_tess_control_shader();
+      tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = _final_tess_evaluation_shader();
+      tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER] = _final_geometry_shader();
+      tesselation_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER] = _final_fragment_shader();
+
+      raycasting_shader_stages_[scm::gl::STAGE_VERTEX_SHADER] = _raycast_vertex_shader();
+      raycasting_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER] = _raycast_fragment_shader();
+
+      shaders_loaded_ = true;
+    }
+    lock.release();
+  }
 
 
 ////////////////////////////////////////////////////////////////////////////////

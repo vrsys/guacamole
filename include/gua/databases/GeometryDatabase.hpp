@@ -27,69 +27,9 @@
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
 #include <gua/renderer/GeometryResource.hpp>
-
-#include <boost/lexical_cast.hpp>
+#include <gua/databases/GeometryDescription.hpp>
 
 namespace gua {
-
-  class GeometryDescription
-  {
-  public: // construction
-
-    GeometryDescription(std::string const& type,
-      std::string const& filename,
-      unsigned id,
-      unsigned flags)
-      : 
-      type_(type),
-      filename_(filename),
-      id_(id),
-      flags_(flags)
-    {
-      unique_key_ = type + "|" + filename + "|" + std::to_string(id) + "|" + std::to_string(flags);
-    }
-
-    GeometryDescription(std::string const& unique_key)
-      : unique_key_(unique_key)
-    {
-      std::istringstream sstr(unique_key_);
-      std::string token;
-
-      try {
-        std::getline(sstr, type_, '|');
-        std::getline(sstr, filename_, '|');
-
-        std::getline(sstr, token, '|');
-        id_ = boost::lexical_cast<unsigned>(token);
-
-        std::getline(sstr, token, '|');
-        flags_ = boost::lexical_cast<unsigned>(token);
-      }
-      catch ( std::exception& e )
-      {
-        Logger::LOG_WARNING << "GeometryDescription(std::string const& unique_key): Failed to tokenize unique key." << e.what() << std::endl;
-      }
-    }
-
-  public: // methods
-
-    std::string const& type() const { return type_; }
-    std::string const& filepath() const { return filename_; }
-
-    unsigned flags() const { return flags_; }
-    unsigned id() const { return flags_; }
-
-    std::string const& unique_key() const { return unique_key_; }
-
-  private:
-
-    std::string type_;
-    std::string filename_;
-    unsigned id_;
-    unsigned flags_;
-
-    std::string unique_key_;
-  };
 
 /**
  * A data base for different kinds of geometry.

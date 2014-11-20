@@ -36,32 +36,44 @@ namespace gua {
      raycasting = 2
    };
 
+   friend class Pipeline;
+
   public :
 
-  void init_process_callback();
+    PipelinePass make_pass(RenderContext const&) override;
 
-  void draw     () const;
+    void draw     () const;
+
+    void reload_programs();
 
  private:  // auxiliary methods
 
-  std::string _transform_feedback_vertex_shader() const;
-  std::string _transform_feedback_geometry_shader() const;
-  std::string _transform_feedback_tess_control_shader() const;
-  std::string _transform_feedback_tess_evaluation_shader() const;
+   void _load_shaders();
 
-  std::string _final_vertex_shader() const;
-  std::string _final_tess_control_shader() const;
-  std::string _final_tess_evaluation_shader() const;
-  std::string _final_geometry_shader() const;
-  std::string _final_fragment_shader() const;
-
-  std::string _raycast_vertex_shader() const;
-  std::string _raycast_fragment_shader() const;
-
-  void        _insert_generic_per_vertex_code(std::string& code) const;
-  void        _insert_generic_per_fragment_code(std::string& rcode) const;
+   std::string _transform_feedback_vertex_shader() const;
+   std::string _transform_feedback_geometry_shader() const;
+   std::string _transform_feedback_tess_control_shader() const;
+   std::string _transform_feedback_tess_evaluation_shader() const;
+   
+   std::string _final_vertex_shader() const;
+   std::string _final_tess_control_shader() const;
+   std::string _final_tess_evaluation_shader() const;
+   std::string _final_geometry_shader() const;
+   std::string _final_fragment_shader() const;
+   
+   std::string _raycast_vertex_shader() const;
+   std::string _raycast_fragment_shader() const;
 
  private:  // attributes
+
+   std::mutex                                   mutex_;
+   bool                                         shaders_loaded_;
+
+   std::map<scm::gl::shader_stage, std::string> pre_tesselation_shader_stages_;
+   std::list<std::string>                       pre_tesselation_interleaved_stream_capture_;
+   std::map<scm::gl::shader_stage, std::string> tesselation_shader_stages_;
+
+   std::map<scm::gl::shader_stage, std::string> raycasting_shader_stages_;
 
 };
 
