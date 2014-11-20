@@ -9,34 +9,35 @@
       "source" : "
         void FragmentTexture() {
           vec2 tc = gua_texcoords;
-          tc.y = 1.0 - tc.y;
-          gua_color = pow(texture(sampler2D(Albedo), tc).rgb, vec3(2.2));
-
-          gua_shinyness = texture(sampler2D(Roughness), tc).rgb;
-          gua_specularity = texture(sampler2D(Metalness), tc).rgb;
+          gua_color       = pow(texture(sampler2D(AlbedoMap), tc).rgb, vec3(2.2));
+          gua_shinyness   = texture(sampler2D(RoughnessMap), tc).rgb;
+          gua_specularity = texture(sampler2D(MetalnessMap), tc).rgb;
+          vec3 normalTS   = normalize(texture(sampler2D(NormalMap), tc).rgb*2.0-1.0);
+          vec3 newNormal  = normalize(gua_tangent*normalTS.x+gua_bitangent*normalTS.y+gua_normal*normalTS.z);
+          gua_normal = newNormal;
         }
       ",
       "uniforms" :
       [
         {
-          "name" : "Albedo",
+          "name" : "AlbedoMap",
           "type" : "sampler2D",
-          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.dds"
+          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.tga"
         },
         {
-          "name" : "Normal",
+          "name" : "RoughnessMap",
           "type" : "sampler2D",
-          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_N.dds"
+          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_R.tga"
         },
         {
-          "name" : "Roughness",
+          "name" : "MetalnessMap",
           "type" : "sampler2D",
-          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_R.dds"
+          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_M.tga"
         },
         {
-          "name" : "Metalness",
+          "name" : "NormalMap",
           "type" : "sampler2D",
-          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_M.dds"
+          "value" : "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_N.tga"
         }
       ]
     }

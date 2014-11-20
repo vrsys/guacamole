@@ -62,7 +62,17 @@ int main(int argc, char** argv) {
     return shader->get_default_material();
   };
 
-  auto mat1(load_mat("data/materials/Cerberus.gmd"));
+  auto pbrMat(load_mat("data/materials/Cerberus.gmd"));
+#if 0
+  pbrMat.set_uniform("AlbedoMap",
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.tga");
+  pbrMat.set_uniform("MetalnessMap",
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_M.tga");
+  pbrMat.set_uniform("RoughnessMap",
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_R.tga");
+  pbrMat.set_uniform("NormalMap",
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_N.tga");
+#endif
 
   gua::TriMeshLoader loader;
 
@@ -70,7 +80,7 @@ int main(int argc, char** argv) {
   auto cerberus(loader.create_geometry_from_file(
           "cerberus"
         , "data/objects/Cerberus_LP.3ds"
-        , mat1
+        , pbrMat
         , gua::TriMeshLoader::NORMALIZE_POSITION
         | gua::TriMeshLoader::NORMALIZE_SCALE
         ));
@@ -109,19 +119,19 @@ int main(int argc, char** argv) {
 
   auto a = std::async(std::launch::async, []() {
     gua::TextureDatabase::instance()->load(
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.dds");
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.tga");
   });
   auto b = std::async(std::launch::async, []() {
     gua::TextureDatabase::instance()->load(
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_R.dds");
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_R.tga");
   });
   auto c = std::async(std::launch::async, []() {
     gua::TextureDatabase::instance()->load(
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_M.dds");
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_M.tga");
   });
   auto d = std::async(std::launch::async, []() {
     gua::TextureDatabase::instance()->load(
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_N.dds");
+        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_N.tga");
   });
   a.get(); b.get(); c.get(); d.get();
 
@@ -131,7 +141,8 @@ int main(int argc, char** argv) {
   pipe.add_pass<gua::LightingPassDescription>();
   pipe.add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.dds");
+    .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
+    ;
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
