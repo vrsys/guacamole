@@ -86,7 +86,7 @@ namespace node {
     {
       if (filename_ != "")
       {
-        if (!GeometryDatabase::instance()->is_supported(filename_))
+        if (!GeometryDatabase::instance()->contains(filename_))
         {
           Video3DLoader loader;
           loader.create_geometry_from_file("dummy", filename_);
@@ -109,7 +109,7 @@ namespace node {
     {
       if (material_ != "")
       {
-        if (!MaterialShaderDatabase::instance()->is_supported(material_) &&
+        if (!MaterialShaderDatabase::instance()->contains(material_) &&
 
             material_ != Video3DUberShader::default_video_material_name() )
         {

@@ -68,7 +68,7 @@ void TexturedQuadNode::update_bounding_box() const {
 void TexturedQuadNode::update_cache() {
   Node::update_cache();
 
-  if (!TextureDatabase::instance()->is_supported(data.texture())) {
+  if (!TextureDatabase::instance()->contains(data.texture())) {
     TextureDatabase::instance()->load(data.texture());
   }
 }

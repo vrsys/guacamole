@@ -18,7 +18,6 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#if 0
 #ifndef GUA_NURBS_NODE_HPP
 #define GUA_NURBS_NODE_HPP
 
@@ -28,21 +27,26 @@
 #include <gua/node/GeometryNode.hpp>
 
 namespace gua {
+
+class NURBSRessource;
+
 namespace node {
 
 /**
- * This class is used to represent polygonal geometry in the SceneGraph.
- *
- * \ingroup gua_scenegraph
- */
+* This class is used to represent NURBS geometry in the SceneGraph.
+*
+* \ingroup gua_scenegraph
+*/
 class GUA_NURBS_DLL NURBSNode : public GeometryNode
 {
-public : // member
+public : // c'tor
 
   NURBSNode(std::string const& name,
             std::string const& geometry = "gua_default_geometry",
             std::string const& material = "gua_default_material",
             math::mat4  const& transform = math::mat4::identity());
+
+public : // virtual/override methods
 
   /**
   * Implements ray picking for a NURBS object
@@ -52,7 +56,17 @@ public : // member
                      Mask const& mask,
                      std::set<PickResult>& hits) override;
 
+  void update_bounding_box() const override;
+
   void update_cache() override;
+
+  void accept(NodeVisitor& visitor) override;
+
+public : // methods
+
+  std::shared_ptr<NURBSRessource> const& get_geometry() const;
+
+public : // render configuration
 
   float max_pre_tesselation() const;
   void  max_pre_tesselation(float t);
@@ -66,8 +80,17 @@ protected:
 
 private : // attributes e.g. special attributes for drawing
 
-  float max_tess_level_pre_pass; 
-  float max_tess_level_final_pass;
+  std::shared_ptr<NURBSRessource> geometry_;
+
+  std::string filename_;
+
+  Material material_;
+
+  bool filename_changed_;
+  bool material_changed_;
+
+  float max_tess_level_pre_pass_; 
+  float max_tess_level_final_pass_;
 
 };
 
@@ -75,4 +98,3 @@ private : // attributes e.g. special attributes for drawing
 } // namespace gua {
 
 #endif  // GUA_NURBS_NODE_HPP
-#endif

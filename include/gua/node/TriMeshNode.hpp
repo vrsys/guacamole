@@ -37,29 +37,36 @@ namespace node {
  * \ingroup gua_scenegraph
  */
 class GUA_DLL TriMeshNode : public GeometryNode {
- public:  // member
 
-  TriMeshNode(std::string const& name = "",
-              std::string const& filename = "gua_default_geometry",
+public : // typedef/enums/friends
+
+  friend class TriMeshLoader;
+
+private : // c'tor / d'tor
+
+  TriMeshNode(std::string const& node_name = "",
+              std::string const& geometry_description = "gua_default_geometry",
               Material const& material = Material(),
               math::mat4 const& transform = math::mat4::identity());
 
+public : // methods
 
   /**
   * Get the string referring to an entry in guacamole's GeometryDatabase.
   */
-  std::string const& get_filename() const;
+  std::string const& get_geometry_description() const;
 
   /**
   * Set the string referring to an entry in guacamole's GeometryDatabase.
   */
-  void set_filename(std::string const& filename);
+  void set_geometry_description(std::string const& geometry_description);
 
   /**
   * A string referring to an entry in guacamole's MaterialShaderDatabase.
   */
   Material const& get_material() const;
   Material&       get_material();
+
   void            set_material(Material const& material);
 
   /**
@@ -95,13 +102,11 @@ class GUA_DLL TriMeshNode : public GeometryNode {
  private:  // attributes e.g. special attributes for drawing
 
   std::shared_ptr<TriMeshRessource> geometry_;
+  std::string                       geometry_description_;
+  bool                              geometry_changed_;
 
-  std::string filename_;
-
-  Material material_;
-
-  bool filename_changed_;
-  bool material_changed_;
+  Material                          material_;
+  bool                              material_changed_;
 
 };
 

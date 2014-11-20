@@ -18,7 +18,6 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#if 0
 #ifndef GUA_NURBS_LOADER_HPP
 #define GUA_NURBS_LOADER_HPP
 
@@ -66,7 +65,7 @@ class GUA_NURBS_DLL NURBSLoader {
 
  private:
 
-  bool is_supported(std::string const& file_name) const override;
+  bool is_supported(std::string const& file_name) const;
 
  private:
 
@@ -77,4 +76,3 @@ class GUA_NURBS_DLL NURBSLoader {
 }
 
 #endif  // GUA_NURBS_LOADER_HPP
-#endif

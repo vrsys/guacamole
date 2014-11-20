@@ -18,19 +18,15 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#if 0
-#ifndef GUA_NURBS_UBER_SHADER_HPP
-#define GUA_NURBS_UBER_SHADER_HPP
+#ifndef GUA_NURBSPASS_HPP
+#define GUA_NURBSPASS_HPP
 
 // guacamole headers
-#include <gua/renderer/GeometryUberShader.hpp>
+#include <gua/renderer/PipelinePass.hpp>
 
 namespace gua {
 
-/**
- *
- */
-class NURBSUberShader : public GeometryUberShader {
+  class NURBSPassDescription : public PipelinePassDescription {
 
   public : // typedefs, enums
 
@@ -42,37 +38,9 @@ class NURBSUberShader : public GeometryUberShader {
 
   public :
 
-  /*virtual*/ void create   (std::set<std::string> const& material_names);
+  void init_process_callback();
 
-  /*virtual*/ stage_mask get_stage_mask() const override;
-
-  /*virtual*/ void preframe (RenderContext const& ctx) const;
-
-  /*virtual*/ void predraw  (RenderContext const& ctx,
-                             std::string const& ksfile_name,
-                             std::string const& material_name,
-                             scm::math::mat4 const& model_matrix,
-                             scm::math::mat4 const& normal_matrix,
-                             Frustum const& /*frustum*/,
-                             View const& view) const;
-
-  /*virtual*/ void draw     (RenderContext const& ctx,
-                             std::string const& ksfile_name,
-                             std::string const& material_name,
-                             scm::math::mat4 const& model_matrix,
-                             scm::math::mat4 const& normal_matrix,
-                             Frustum const& /*frustum*/,
-                             View const& view) const;
-
-  /*virtual*/ void postdraw (RenderContext const& ctx,
-                             std::string const& ksfile_name,
-                             std::string const& material_name,
-                             scm::math::mat4 const& model_matrix,
-                             scm::math::mat4 const& normal_matrix,
-                             Frustum const& /*frustum*/,
-                             View const& view) const;
-
-  /*virtual*/ void postframe(RenderContext const& ctx) const;
+  void draw     () const;
 
  private:  // auxiliary methods
 
@@ -99,5 +67,4 @@ class NURBSUberShader : public GeometryUberShader {
 
 }
 
-#endif  // GUA_NURBS_UBER_SHADER_HPP
-#endif
+#endif  // GUA_NURBSPASS_HPP

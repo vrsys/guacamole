@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 
     auto rig(loader.create_geometry_from_file(
       "rig",
-      "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      "data/object/teapot.obj",
       shader->get_default_material(),
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE |

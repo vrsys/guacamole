@@ -29,7 +29,6 @@
 #include <gua/node/TriMeshNode.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
@@ -249,10 +248,10 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
                                               unsigned flags, unsigned& mesh_count) {
 
   // creates a geometry node and returns it
-  auto load_geometry = [&](int i) {
-    // load geometry
-    std::string mesh_name("type=file&file=" + file_name + "&id=" + string_utils::to_string(mesh_count++) + "&flags=" + string_utils::to_string(flags));
-    GeometryDatabase::instance()->add(mesh_name, std::make_shared<TriMeshRessource>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & TriMeshLoader::MAKE_PICKABLE));
+  auto load_geometry = [&](int i) 
+  {
+    GeometryDescription desc ("TriMesh", file_name, mesh_count++, flags);
+    GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(ai_scene->mMeshes[ai_root->mMeshes[i]], importer, flags & TriMeshLoader::MAKE_PICKABLE));
 
     // load material
     Material material;
@@ -264,7 +263,8 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
       material = material_loader.load_material(ai_material, file_name);
     }
 
-    return std::make_shared<node::TriMeshNode>(mesh_name, mesh_name, material);
+    //return std::make_shared<node::TriMeshNode>("", desc.unique_key(), material); // not allowed -> private c'tor
+    return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
   };
 
   // there is only one child -- skip it!

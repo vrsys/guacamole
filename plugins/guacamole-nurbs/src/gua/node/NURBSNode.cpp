@@ -18,9 +18,8 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#if 0
 // class header
-#include <gua/node/NURBSNode.hpp>
+#include "gua/node/NURBSNode.hpp"
 
 #include <algorithm>
 
@@ -28,6 +27,7 @@
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
+#include <gua/renderer/Material.hpp>
 
 // guacamole headers
 
@@ -40,8 +40,8 @@ namespace node {
                        std::string const& material,
                        math::mat4 const& transform)
     : GeometryNode(name, filename, material, transform),
-      max_tess_level_pre_pass(1.0f),
-      max_tess_level_final_pass(4.0f)
+      max_tess_level_pre_pass_(1.0f),
+      max_tess_level_final_pass_(4.0f)
   {}
 
 
@@ -67,7 +67,7 @@ namespace node {
     {
       if (filename_ != "")
       {
-        if (!GeometryDatabase::instance()->is_supported(filename_))
+        if (!GeometryDatabase::instance()->contains(filename_))
         {
           auto params(string_utils::split(filename_, '&'));
 
@@ -117,16 +117,21 @@ namespace node {
     {
       if (material_ != "")
       {
-        if (!MaterialShaderDatabase::instance()->is_supported(material_))
-        {
-          MaterialShaderDatabase::instance()->load_material(material_);
-        }
+        //if (!MaterialShaderDatabase::instance()->contains(material_))
+        //{
+        //  MaterialShaderDatabase::instance()->load_material(material_);
+        //}
       }
 
       material_changed_ = false;
     }
 
     GeometryNode::update_cache();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /* virtual */ void NURBSNode::accept(NodeVisitor& visitor) {
+    visitor.visit(this);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -143,27 +148,26 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   float NURBSNode::max_pre_tesselation() const
   {
-    return max_tess_level_pre_pass;
+    return max_tess_level_pre_pass_;
   } 
 
   ////////////////////////////////////////////////////////////////////////////////
   void NURBSNode::max_pre_tesselation(float t)
   {
-    max_tess_level_pre_pass = std::max(1.0f, std::min(t, 64.0f));
+    max_tess_level_pre_pass_ = std::max(1.0f, std::min(t, 64.0f));
   }
 
   ////////////////////////////////////////////////////////////////////////////////
   float NURBSNode::max_final_tesselation() const
   {
-    return max_tess_level_final_pass;
+    return max_tess_level_final_pass_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
   void NURBSNode::max_final_tesselation(float t)
   {
-    max_tess_level_final_pass = std::max(1.0f, std::min(t, 64.0f));
+    max_tess_level_final_pass_ = std::max(1.0f, std::min(t, 64.0f));
   }
 
 }
 }
-#endif
