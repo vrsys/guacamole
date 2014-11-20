@@ -41,14 +41,23 @@ VolumePassDescription::VolumePassDescription()
   writes_only_color_buffer_ = true;
   doClear_ = false;
   rendermode_ = RenderMode::Custom;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx) {
+
+  PipelinePass pass{*this, ctx};
 
   auto renderer(std::make_shared<VolumeRenderer>());
 
-  process_ = [renderer](
+  pass.process_ = [renderer](
       PipelinePass & pass, PipelinePassDescription const&, Pipeline& pipe) {
 
       renderer->render(pipe);
   };
+
+  return pass;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -37,6 +37,9 @@ namespace gua {
 class VolumePassDescription : public PipelinePassDescription {
  public:
   VolumePassDescription();
+
+  PipelinePass make_pass(RenderContext const& ctx);
+
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
 };
