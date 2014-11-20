@@ -109,4 +109,10 @@ PipelinePassDescription* SSAOPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
+
 }

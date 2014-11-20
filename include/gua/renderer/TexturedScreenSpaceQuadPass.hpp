@@ -39,6 +39,8 @@ class TexturedScreenSpaceQuadPassDescription : public PipelinePassDescription {
   TexturedScreenSpaceQuadPassDescription();
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const&) override;
 };
 
 }

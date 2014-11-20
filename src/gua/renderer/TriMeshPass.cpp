@@ -216,4 +216,10 @@ PipelinePassDescription* TriMeshPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+PipelinePass TriMeshPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
+
 }

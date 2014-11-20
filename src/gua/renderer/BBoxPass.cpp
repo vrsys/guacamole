@@ -47,12 +47,30 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
                                      false,
                                      true,
                                      scm::gl::point_raster_state(true)));
+}
 
-  auto buffer_vao_pair = std::make_shared<
-      std::pair<scm::gl::buffer_ptr, scm::gl::vertex_array_ptr> >(
-      std::make_pair(nullptr, nullptr));
+////////////////////////////////////////////////////////////////////////////////
 
-  process_ = [buffer_vao_pair](
+PipelinePassDescription* BBoxPassDescription::make_copy() const {
+  return new BBoxPassDescription(*this);
+}
+
+PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+
+  auto count = 1;
+  scm::gl::buffer_ptr buffer_ = ctx.render_device->create_buffer(
+      scm::gl::BIND_VERTEX_BUFFER,
+      scm::gl::USAGE_DYNAMIC_DRAW,
+      count * 2 * sizeof(math::vec3),
+      0);
+  scm::gl::vertex_array_ptr vao_ = ctx.render_device->create_vertex_array(
+      scm::gl::vertex_format(
+        0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
+        0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)), {buffer_});
+
+  pass.process_ = [buffer_, vao_](
       PipelinePass &, PipelinePassDescription const&, Pipeline & pipe) {
 
     auto count(pipe.get_scene().bounding_boxes.size());
@@ -61,46 +79,28 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
       return;
     // else
     RenderContext const& ctx(pipe.get_context());
-    if (!buffer_vao_pair->first) {
-      buffer_vao_pair->first =
-          ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                           scm::gl::USAGE_DYNAMIC_DRAW,
-                                           count * 2 * sizeof(math::vec3),
-                                           0);
 
-      buffer_vao_pair->second = ctx.render_device->create_vertex_array(
-          scm::gl::vertex_format(
-              0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
-              0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)),
-              {buffer_vao_pair->first});
-    }
-
-    ctx.render_device->resize_buffer(buffer_vao_pair->first,
-                                     count * 2 * sizeof(math::vec3));
+    ctx.render_device->resize_buffer(buffer_, count * 2 * sizeof(math::vec3));
 
     {
       auto data = static_cast<math::vec3*>(ctx.render_context->map_buffer(
-          buffer_vao_pair->first, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
+          buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
       for (int i(0); i < count; ++i) {
         data[2 * i] = pipe.get_scene().bounding_boxes[i].min;
         data[2 * i + 1] = pipe.get_scene().bounding_boxes[i].max;
       }
 
-      ctx.render_context->unmap_buffer(buffer_vao_pair->first);
+      ctx.render_context->unmap_buffer(buffer_);
     }
 
-    ctx.render_context->bind_vertex_array(buffer_vao_pair->second);
+    ctx.render_context->bind_vertex_array(vao_);
 
     ctx.render_context->apply();
     ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, count);
   };
-}
 
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePassDescription* BBoxPassDescription::make_copy() const {
-  return new BBoxPassDescription(*this);
+  return pass;
 }
 
 }

@@ -75,4 +75,10 @@ PipelinePassDescription* TexturedQuadPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+PipelinePass TexturedQuadPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
+
 }
