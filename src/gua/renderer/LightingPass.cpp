@@ -85,6 +85,8 @@ LightingPassDescription::LightingPassDescription()
           0, light->data.get_color().vec3());
       gl_program->uniform("gua_light_falloff",
           0, light->data.get_falloff());
+      gl_program->uniform("gua_light_brightness",
+          0, light->data.get_brightness());
       gl_program->uniform("gua_light_casts_shadow", 0, false);
 
       ctx.render_context->apply();

@@ -45,6 +45,7 @@ uniform mat4 gua_light_shadow_map_projection_view_matrix_3;
 
 uniform uvec2 gua_shadow_map;
 uniform vec3  gua_light_color;
+uniform float gua_light_brightness;
 uniform float gua_light_falloff;
 uniform float gua_light_softness;
 uniform float gua_shadow_offset;
@@ -396,9 +397,8 @@ void main() {
   float lightRadius = gua_lightinfo3;
   float x = clamp(1.0 - pow( (distance / lightRadius) , 4), 0, 1);
   float falloff = x*x/ (distance*distance + 1);
-  // fixed
-  float light_brightness = 50.0f;
-  vec3 Cl = falloff * gua_light_color * light_brightness;
+
+  vec3 Cl = falloff * gua_light_color * gua_light_brightness;
 
   vec3 brdf = ( 1.0 - Fresnel(cspec, H, L) ) * cdiff + GGX_Specular(roughness, N, H, Vn, L, cspec);
   vec3 col = Cl * brdf * NdotL;

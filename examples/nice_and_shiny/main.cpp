@@ -63,23 +63,21 @@ int main(int argc, char** argv) {
   };
 
   auto pbrMat(load_mat("data/materials/Cerberus.gmd"));
-#if 0
-  pbrMat.set_uniform("AlbedoMap",
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.tga");
-  pbrMat.set_uniform("MetalnessMap",
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_M.tga");
-  pbrMat.set_uniform("RoughnessMap",
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_R.tga");
-  pbrMat.set_uniform("NormalMap",
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_N.tga");
-#endif
+  pbrMat.set_uniform("AlbedoMap", std::string(
+        "/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/Cerberus_A.tga"));
+  pbrMat.set_uniform("MetalnessMap", std::string(
+        "/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/Cerberus_M.tga"));
+  pbrMat.set_uniform("RoughnessMap", std::string(
+        "/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/Cerberus_R.tga"));
+  pbrMat.set_uniform("NormalMap", std::string(
+        "/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/Cerberus_N.tga"));
 
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto cerberus(loader.create_geometry_from_file(
           "cerberus"
-        , "data/objects/Cerberus_LP.3ds"
+        , "/opt/3d_models/Cerberus_by_Andrew_Maximov/Cerberus_LP.3ds"
         , pbrMat
         , gua::TriMeshLoader::NORMALIZE_POSITION
         | gua::TriMeshLoader::NORMALIZE_SCALE
@@ -89,16 +87,9 @@ int main(int argc, char** argv) {
   cerberus->rotate(90, 0.f, 1.f, 0.f);
   cerberus->rotate(90, 0.f, 0.f, 1.f);
 
-#if 0
-  auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
-  light->data.set_enable_shadows(true);
-  light->scale(10.f);
-  light->rotate(-20, 0.f, 1.f, 0.f);
-  light->translate(-1.f, 0.f,  3.f);
-#endif
-
   auto pointLight = graph.add_node<gua::node::PointLightNode>("/", "pointLight");
   pointLight->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
+  pointLight->data.brightness = 100.0f; // lm
   pointLight->scale(10.f);
   pointLight->translate(-2.f, 3.f, 5.f);
 
@@ -110,30 +101,23 @@ int main(int argc, char** argv) {
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1920, 1080);
+  //auto resolution = gua::math::vec2ui(1920, 1080);
+  auto resolution = gua::math::vec2ui(2560,1440);
 
   std::async(std::launch::async, []() {
     gua::TextureDatabase::instance()->load(
       "/opt/guacamole/resources/skymaps/skymap.jpg");
   });
 
-  auto a = std::async(std::launch::async, []() {
-    gua::TextureDatabase::instance()->load(
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_A.tga");
-  });
-  auto b = std::async(std::launch::async, []() {
-    gua::TextureDatabase::instance()->load(
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_R.tga");
-  });
-  auto c = std::async(std::launch::async, []() {
-    gua::TextureDatabase::instance()->load(
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_M.tga");
-  });
-  auto d = std::async(std::launch::async, []() {
-    gua::TextureDatabase::instance()->load(
-        "/home/bernste4/src/github/guacamole/examples/nice_and_shiny/data/Cerberus_N.tga");
-  });
-  a.get(); b.get(); c.get(); d.get();
+  std::string dir("/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/");
+  for (auto const& file : {
+        "Cerberus_A.tga",
+        "Cerberus_M.tga",
+        "Cerberus_R.tga",
+        "Cerberus_N.tga"
+        }) {
+    gua::TextureDatabase::instance()->load(dir + file);
+  }
 
   gua::PipelineDescription pipe;
   pipe.add_pass<gua::TriMeshPassDescription>();
