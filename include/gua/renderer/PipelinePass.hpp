@@ -45,6 +45,7 @@ class PipelinePassDescription {
   friend class PipelinePass;
 
  protected:
+  virtual PipelinePass make_pass(RenderContext const& ctx) = 0;
   // shader names
   std::string vertex_shader_ = "";
   std::string fragment_shader_ = "";

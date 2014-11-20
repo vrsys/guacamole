@@ -95,4 +95,10 @@ PipelinePassDescription* TexturedScreenSpaceQuadPassDescription::make_copy() con
 
 ////////////////////////////////////////////////////////////////////////////////
 
+PipelinePass TexturedScreenSpaceQuadPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
+
 }

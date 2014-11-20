@@ -39,6 +39,8 @@ class GUA_DLL TexturedQuadPassDescription : public PipelinePassDescription {
   TexturedQuadPassDescription();
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const&) override;
 };
 
 }

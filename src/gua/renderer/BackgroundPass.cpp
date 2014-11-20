@@ -143,4 +143,10 @@ PipelinePassDescription* BackgroundPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+PipelinePass BackgroundPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
+
 }

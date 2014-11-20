@@ -103,4 +103,10 @@ PipelinePassDescription* BBoxPassDescription::make_copy() const {
   return new BBoxPassDescription(*this);
 }
 
+PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
+
 }

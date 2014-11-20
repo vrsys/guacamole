@@ -168,4 +168,10 @@ PipelinePassDescription* LightingPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+PipelinePass LightingPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
+
 }
