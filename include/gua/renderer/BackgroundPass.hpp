@@ -31,7 +31,7 @@ namespace gua {
 
 class Pipeline;
 
-class BackgroundPassDescription : public PipelinePassDescription {
+class GUA_DLL BackgroundPassDescription : public PipelinePassDescription {
  public:
   
   enum BackgroundMode {
@@ -64,6 +64,8 @@ class BackgroundPassDescription : public PipelinePassDescription {
 
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const&) override;
 };
 
 }

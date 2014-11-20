@@ -29,7 +29,7 @@
 
 namespace gua {
 
-class PipelineDescription {
+class GUA_DLL PipelineDescription {
  public:
 
   static PipelineDescription make_default();
@@ -73,6 +73,7 @@ class PipelineDescription {
         return *casted;
       }
     }
+    throw std::runtime_error("PipelineDescription::get_pass(): pass not valid");
   }
 
   bool operator==(PipelineDescription const& other) const;

@@ -42,7 +42,7 @@ struct SerializedCameraNode;
 class GUA_DLL CameraNode : public Node {
  public:
 
-  enum ProjectionMode {
+  enum class ProjectionMode {
     PERSPECTIVE,
     ORTHOGRAPHIC
   };
@@ -67,7 +67,7 @@ class GUA_DLL CameraNode : public Node {
     GUA_ADD_PROPERTY(int,             view_id,                0);
 
     // whether this camera renders in perspective or orthographic mode
-    GUA_ADD_PROPERTY(ProjectionMode,  mode,                   PERSPECTIVE);
+    GUA_ADD_PROPERTY(ProjectionMode,  mode,                   ProjectionMode::PERSPECTIVE);
 
     // viewing setup and stereo configuration
     GUA_ADD_PROPERTY(bool,            enable_stereo,          false);

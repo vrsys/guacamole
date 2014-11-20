@@ -118,7 +118,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
     passes_.clear();
 
     for (auto pass: camera.config.get_pipeline_description().get_all_passes()) {
-      passes_.push_back(PipelinePass{*pass,*ctx});
+      passes_.push_back(pass->make_pass(*ctx));
     }
   }
 

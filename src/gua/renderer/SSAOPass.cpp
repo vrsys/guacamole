@@ -70,7 +70,7 @@ SSAOPassDescription& SSAOPassDescription::radius(float radius) {
 
 float SSAOPassDescription::radius() const {
   auto uniform(uniforms.find("gua_ssao_radius"));
-  return uniform->second.data.float_;
+  return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ SSAOPassDescription& SSAOPassDescription::intensity(float intensity) {
 
 float SSAOPassDescription::intensity() const {
   auto uniform(uniforms.find("gua_ssao_intensity"));
-  return uniform->second.data.float_;
+  return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +98,7 @@ SSAOPassDescription& SSAOPassDescription::falloff(float falloff) {
 
 float SSAOPassDescription::falloff() const {
   auto uniform(uniforms.find("gua_ssao_falloff"));
-  return uniform->second.data.float_;
+  return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,5 +108,11 @@ PipelinePassDescription* SSAOPassDescription::make_copy() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
 
 }

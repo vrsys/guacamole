@@ -44,7 +44,7 @@ class NodeVisitor;
 class SceneGraph;
 class Serializer;
 class DotGenerator;
-class SerializedScene;
+struct SerializedScene;
 
 struct Ray;
 
@@ -52,7 +52,7 @@ namespace physics { class CollisionShapeNodeVisitor; }
 
 namespace node {
 
-class SerializedCameraNode;
+struct SerializedCameraNode;
 class RayNode;
 
 
