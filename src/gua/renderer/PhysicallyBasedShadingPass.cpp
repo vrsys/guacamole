@@ -171,4 +171,10 @@ PipelinePassDescription* PhysicallyBasedShadingPassDescription::make_copy() cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
+PipelinePass PhysicallyBasedShadingPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
+
 }
