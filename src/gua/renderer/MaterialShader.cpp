@@ -23,8 +23,6 @@
 
 #include <gua/utils/string_utils.hpp>
 
-#define USE_UBO 0 // also set in TriMeshRenderer.cpp
-
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,64 +73,47 @@ Material& MaterialShader::get_default_material() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ShaderProgram* MaterialShader::get_shader(RenderContext const& ctx,
-                                          std::type_index const& for_type, 
-                                          std::map<scm::gl::shader_stage, std::string> const& program_description,
+ShaderProgram* MaterialShader::get_shader(std::map<scm::gl::shader_stage, std::string> const& program_description,
                                           std::list<std::string> const& interleaved_stream_capture,
-                                          bool in_rasterization_discard)
+                                          bool in_rasterization_discard)  
 {
-
   // std::type_index type_id(typeid(for_type));
-  auto shader(shaders_.find(for_type));
+  using namespace scm::gl;
 
-  if (shader != shaders_.end()) {
-    return shader->second;
-  }
-  else {
-    using namespace scm::gl;
+  std::vector<ShaderProgramStage> final_program_description;
+  auto new_shader = new ShaderProgram();
 
-    std::vector<ShaderProgramStage> final_program_description;
-    auto new_shader = new ShaderProgram();
+  auto v_methods = desc_.get_vertex_methods();
+  auto f_methods = desc_.get_fragment_methods();
 
-    auto v_methods = desc_.get_vertex_methods();
-    auto f_methods = desc_.get_fragment_methods();
-
-    for (auto const& stage : program_description)
-    {
-      // insert material code in vertex and fragment shader
-      if (stage.first == STAGE_VERTEX_SHADER) {
-        auto v_shader(compile_description(ctx, v_methods, program_description.at(STAGE_VERTEX_SHADER)));
-        final_program_description.push_back(ShaderProgramStage(STAGE_VERTEX_SHADER, v_shader));
+  for (auto const& stage : program_description)
+  {
+    // insert material code in vertex and fragment shader
+    if (stage.first == STAGE_VERTEX_SHADER) {
+      auto v_shader(compile_description(v_methods, program_description.at(STAGE_VERTEX_SHADER)));
+      final_program_description.push_back(ShaderProgramStage(STAGE_VERTEX_SHADER, v_shader));
+    }
+    else {
+      if (stage.first == STAGE_FRAGMENT_SHADER) {
+        auto f_shader(compile_description(f_methods, program_description.at(STAGE_FRAGMENT_SHADER)));
+        final_program_description.push_back(ShaderProgramStage(STAGE_FRAGMENT_SHADER, f_shader));
       }
       else {
-        if (stage.first == STAGE_FRAGMENT_SHADER) {
-          auto f_shader(compile_description(ctx, f_methods, program_description.at(STAGE_FRAGMENT_SHADER)));
-          final_program_description.push_back(ShaderProgramStage(STAGE_FRAGMENT_SHADER, f_shader));
-        }
-        else {
-          // keep code for other shading stages
-          final_program_description.push_back(ShaderProgramStage(stage.first, stage.second));
-        }
+        // keep code for other shading stages
+        final_program_description.push_back(ShaderProgramStage(stage.first, stage.second));
       }
     }
-    
-    new_shader->set_shaders(final_program_description, interleaved_stream_capture, in_rasterization_discard);
-    shaders_[for_type] = new_shader;
-    return new_shader;
   }
+    
+  new_shader->set_shaders(final_program_description, interleaved_stream_capture, in_rasterization_discard);
+  return new_shader;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
 void MaterialShader::apply_uniforms(RenderContext const& ctx,
                                     ShaderProgram* shader,
                                     Material const& overwrite) const {
-
-
-  // for (auto const& uniform : default_material_.get_uniforms()) {
-  //   shader->apply_uniform(ctx, uniform);
-  // }
 
   for (auto const& uniform : overwrite.get_uniforms()) {
     shader->apply_uniform(ctx, uniform.first, uniform.second.get());
@@ -147,60 +128,12 @@ void MaterialShader::print_shaders() const {
   // }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-std::string MaterialShader::compile_description(RenderContext const& ctx,
-                                                std::list<MaterialShaderMethod> const& methods,
+std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> const& methods,
                                                 std::string const& shader_source) const {
   std::string source(shader_source);
   std::stringstream sstr;
-
-  #if USE_UBO
-
-  unsigned vec4_count(0);
-
-  sstr << "struct GuaObjectDataStruct {" << std::endl;
-  sstr << "  mat4 gua_model_matrix;" << std::endl;
-  vec4_count += 4;
-  sstr << "  mat4 gua_normal_matrix;" << std::endl;
-  vec4_count += 4;
-
-  for (auto const& uniform: get_default_material().get_uniforms()) {
-    sstr << uniform.second.get().get_glsl_type() << " "
-           << uniform.first << ";" << std::endl;
-    ++vec4_count;
-  }
-
-  max_object_count_ = ctx.render_device->capabilities()._max_uniform_block_size / (vec4_count * 16);
-
-  sstr << "};" << std::endl;
-  sstr << std::endl;
-  sstr << "layout (std140, binding=1) uniform GuaObjectData {" << std::endl;
-  sstr << "  GuaObjectDataStruct gua_object_data[" << max_object_count_ << "];" << std::endl;
-  sstr << "};" << std::endl;
-  sstr << std::endl;
-  sstr << "uniform int gua_draw_index;" << std::endl;
-  sstr << std::endl;
-  sstr << "mat4 gua_model_matrix;" << std::endl;
-  sstr << "mat4 gua_normal_matrix;" << std::endl;
-
-  for (auto const& uniform: get_default_material().get_uniforms()) {
-    sstr << uniform.second.get().get_glsl_type() << " " << uniform.first + ";" << std::endl;
-  }
-
-  // insert uniforms
-  gua::string_utils::replace(source, "@material_uniforms", sstr.str());
-  sstr.str("");
-
-  // global variable assignment ------------------------------------------------
-  sstr << "gua_model_matrix = gua_object_data[gua_draw_index].gua_model_matrix;" << std::endl;
-  sstr << "gua_normal_matrix = gua_object_data[gua_draw_index].gua_normal_matrix;" << std::endl;
-  for (auto const& uniform: get_default_material().get_uniforms()) {
-    sstr << uniform.first << " = gua_object_data[gua_draw_index]." << uniform.first + ";" << std::endl;
-  }
-
-  gua::string_utils::replace(source, "@material_input", sstr.str());
-
-  #else
 
   sstr << "uniform mat4 gua_model_matrix;" << std::endl;
   sstr << "uniform mat4 gua_normal_matrix;" << std::endl;
@@ -214,8 +147,6 @@ std::string MaterialShader::compile_description(RenderContext const& ctx,
   // insert uniforms
   gua::string_utils::replace(source, "@material_uniforms", sstr.str());
   gua::string_utils::replace(source, "@material_input", "");
-
-  #endif
 
   sstr.str("");
 
