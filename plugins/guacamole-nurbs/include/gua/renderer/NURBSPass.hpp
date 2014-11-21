@@ -40,6 +40,7 @@ namespace gua {
 
   public :
 
+    NURBSPassDescription();
     PipelinePass make_pass(RenderContext const&) override;
 
 };

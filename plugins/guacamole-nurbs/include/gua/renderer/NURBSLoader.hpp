@@ -31,6 +31,8 @@
 
 namespace gua {
 
+  class Material;
+
 namespace node {
   class Node;
   class NURBSNode;

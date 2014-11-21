@@ -23,12 +23,13 @@
 
 // guacamole headers
 #include <gua/renderer/NURBS.hpp>
+#include <gua/renderer/Material.hpp>
 
 #include <gua/node/GeometryNode.hpp>
 
 namespace gua {
 
-class NURBSRessource;
+class NURBSResource;
 
 namespace node {
 
@@ -50,7 +51,7 @@ private : // c'tor
 
 public: // methods
 
-  std::shared_ptr<NURBSRessource> const& get_geometry() const;
+  std::shared_ptr<NURBSResource> const& get_geometry() const;
 
   std::string const&  get_geometry_description() const;
   void                set_geometry_description(std::string const& v);
@@ -86,7 +87,7 @@ protected:
 
 private : // attributes e.g. special attributes for drawing
 
-  std::shared_ptr<NURBSRessource> geometry_;
+  std::shared_ptr<NURBSResource>  geometry_;
   std::string                     geometry_description_;
   bool                            geometry_changed_;
 

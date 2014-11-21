@@ -22,7 +22,7 @@
 #include <gua/renderer/NURBSRenderer.hpp>
 
 // guacamole headers
-#include <gua/renderer/NURBSRessource.hpp>
+#include <gua/renderer/NURBSResource.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/node/NURBSNode.hpp>
 #include <gua/databases.hpp>
@@ -190,6 +190,7 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
   NURBSRenderer::NURBSRenderer()
+    : shaders_loaded_(false)
   {
     _load_shaders();
   }
@@ -478,61 +479,13 @@ std::string NURBSRenderer::_raycast_fragment_shader() const
   return raycast_fragment_shader_code;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-void NURBSRenderer::_insert_generic_per_vertex_code(std::string& code) const
-{
-#if 0
-  // material specific uniforms
-  string_utils::replace(code, "@uniform_definition",
-    get_uniform_mapping()->get_uniform_definition());
-
-  // output
-  string_utils::replace(code, "@output_definition",
-    vshader_factory_->get_output_mapping().get_gbuffer_output_definition(false, true));
-
-  // print material specific methods
-  string_utils::replace(code, "@material_methods",
-    UberShader::print_material_methods(*vshader_factory_));
-
-  // print main switch(es)
-  string_utils::replace(code, "@material_switch",
-    UberShader::print_material_switch(*vshader_factory_));
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void NURBSPassDescription::_insert_generic_per_fragment_code(std::string& code) const
-{
-#if 0
-  // input from vertex shader
-  string_utils::replace(code, "@input_definition",
-    vshader_factory_->get_output_mapping().get_gbuffer_output_definition(true, true));
-
-  // material specific uniforms
-  string_utils::replace(code, "@uniform_definition",
-    get_uniform_mapping()->get_uniform_definition());
-
-  // outputs
-  string_utils::replace(code, "@output_definition",
-    get_gbuffer_mapping()->get_gbuffer_output_definition(false, false));
-
-  // print material specific methods
-  string_utils::replace(code, "@material_methods",
-    UberShader::print_material_methods(*fshader_factory_));
-
-  // print main switch(es)
-  string_utils::replace(code, "@material_switch",
-    UberShader::print_material_switch(*fshader_factory_));
-#endif
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void NURBSRenderer::render(Pipeline& pipe)
 {
 #if 0
-  auto geometry = std::static_pointer_cast<NURBSRessource>(GeometryDatabase::instance()->lookup(filename));
+  auto geometry = std::static_pointer_cast<NURBSResource>(GeometryDatabase::instance()->lookup(filename));
   auto material = MaterialDatabase::instance()->lookup(material_name);
 
   //set_uniform(ctx, 8, "gua_max_tesselation");

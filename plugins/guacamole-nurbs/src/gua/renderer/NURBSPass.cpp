@@ -22,9 +22,8 @@
 #include <gua/renderer/NURBSPass.hpp>
 
 // guacamole headers
-//#include <gua/renderer/UberShaderFactory.hpp>
-//#include <gua/renderer/GuaMethodsFactory.hpp>
-#include <gua/renderer/NURBSRessource.hpp>
+#include <gua/renderer/NURBSResource.hpp>
+#include <gua/renderer/NURBSRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
@@ -213,65 +212,6 @@ PipelinePass NURBSPassDescription::make_pass(RenderContext const& ctx)
   };
 
   return pass;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void NURBSPassDescription::draw() const
-{
-
-  auto geometry = std::static_pointer_cast<NURBSRessource>(GeometryDatabase::instance()->lookup(filename));
-  auto material = MaterialDatabase::instance()->lookup(material_name);
-
-  //set_uniform(ctx, 8, "gua_max_tesselation");
-  set_uniform(ctx, material->get_id(), "gua_material_id");
-  set_uniform(ctx, model_matrix, "gua_model_matrix");
-  set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-  
-
-  if ( geometry->raycasting_enabled() ) 
-  {
-    get_program(raycasting)->set_uniform(ctx, frustum.get_clip_near(), "nearplane");
-    get_program(raycasting)->set_uniform(ctx, frustum.get_clip_near(), "farplane");
-
-    get_program(raycasting)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->draw(ctx);
-    }
-    get_program(raycasting)->unuse(ctx);
-  } else {
-  #ifdef DEBUG_XFB_OUTPUT
-    scm::gl::transform_feedback_statistics_query_ptr q = ctx
-      .render_device->create_transform_feedback_statistics_query(0);
-    ctx.render_context->begin_query(q);
-#endif
-
-    // pre-tesselate if necessary
-    get_program(tesselation_pre_pass)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->predraw(ctx);
-    }
-    get_program(tesselation_pre_pass)->unuse(ctx);
-
-#ifdef DEBUG_XFB_OUTPUT
-    ctx.render_context->end_query(q);
-    ctx.render_context->collect_query_results(q);
-    std::cout << q->result()._primitives_generated << " , "
-      << q->result()._primitives_written << std::endl;
-#endif
-
-    // invoke tesselation/trim shader for adaptive nurbs rendering
-    get_program(tesselation_final_pass)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->draw(ctx);
-    }
-    get_program(tesselation_final_pass)->unuse(ctx);
-  }
 }
 
 }

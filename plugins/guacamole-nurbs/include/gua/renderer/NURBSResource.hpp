@@ -66,22 +66,18 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
 
  public : // c'tor / d'tor
 
-   NURBSRessource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
+   NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
                   scm::gl::fill_mode in_fill_mode = scm::gl::FILL_SOLID,
                   //scm::gl::fill_mode in_fill_mode = scm::gl::FILL_WIREFRAME,
                   bool enable_raycasting = false);
 
-   ~NURBSRessource();
+   ~NURBSResource();
 
  public : // methods
 
   /*virtual*/ void predraw(RenderContext const& context) const;
 
   /*virtual*/ void draw(RenderContext const& context) const;
-
-  /*virtual*/ void update(node::GeometryNode* node) override;
-
-  /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits) {}

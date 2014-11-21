@@ -39,11 +39,8 @@ namespace gua {
 
   public:
 
-    NURBSRenderer()
-    {}
-
-    NURBSRenderer()
-    {}
+    NURBSRenderer();
+    ~NURBSRenderer();
 
     void render(Pipeline& pipe);
 
@@ -70,6 +67,7 @@ namespace gua {
   private:  // attributes
 
     std::mutex                                   mutex_;
+    bool                                         shaders_loaded_;
 
     // CPU Ressources
     std::map<scm::gl::shader_stage, std::string> pre_tesselation_shader_stages_;

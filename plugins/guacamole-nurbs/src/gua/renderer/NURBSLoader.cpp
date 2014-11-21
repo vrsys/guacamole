@@ -23,10 +23,11 @@
 
 // guacamole headers
 #include <gua/utils.hpp>
+#include <gua/utils/Logger.hpp>
 
 #include <gua/node/NURBSNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/renderer/NURBSRessource.hpp>
+#include <gua/renderer/NURBSResource.hpp>
 
 #include <gpucast/core/import/igs.hpp>
 #include <gpucast/core/surface_converter.hpp>
@@ -52,20 +53,22 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& n
   auto cached_node(load_geometry(filename, flags));
 
   if (cached_node) {
-    auto copy(cached_node->deep_copy());
+    auto copy = std::dynamic_pointer_cast<node::NURBSNode>(cached_node->deep_copy());
 
-    apply_fallback_material(copy, fallback_material);
-
-    copy->set_name(nodename);
-    return copy;
+    if (copy) {
+      apply_fallback_material(copy, fallback_material);
+      copy->set_name(nodename);
+      return copy;
+    }
   }
-
-  return std::make_shared<node::TransformNode>(node_name);
+  
+  Logger::LOG_WARNING << "NURBSLoader::load_geometry() : unable to create NURBS Node" << std::endl;
+  return std::shared_ptr<node::NURBSNode>(new node::NURBSNode(nodename));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& nodename, unsigned flags)
+std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& filename, unsigned flags)
 {
   try {
     if (!is_supported(filename))
@@ -85,12 +88,12 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& n
 
       auto fill_mode = flags & WIREFRAME ? scm::gl::FILL_WIREFRAME : scm::gl::FILL_SOLID;
       auto raycasting_enabled = flags & RAYCASTING;
-      auto ressource = std::make_shared<NURBSRessource>(bezier_object, fill_mode, raycasting_enabled);
+      auto ressource = std::make_shared<NURBSResource>(bezier_object, fill_mode, raycasting_enabled != 0);
 
-      std::string ressource_name("type=file&file=" + filename + "&flags=" + string_utils::to_string(flags));
-      GeometryDatabase::instance()->add(ressource_name, ressource);
+      GeometryDescription desc("NURBS", filename, 0, flags);
+      GeometryDatabase::instance()->add(desc.unique_key(), ressource);
 
-      auto node = std::make_shared<node::NURBSNode>(nodename, ressource_name, material);
+      std::shared_ptr<node::NURBSNode> node(new node::NURBSNode(filename));
       node->update_cache();
 
       return node;

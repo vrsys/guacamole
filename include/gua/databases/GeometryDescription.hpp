@@ -23,12 +23,14 @@
 
 #include <string>
 
+#include <gua/platform.hpp>
+
 namespace gua {
 
   /*
   * helper class to generate unique geometry string from parametrization and vice versa
   */
-  class GeometryDescription
+  class GUA_DLL GeometryDescription
   {
   public: // construction
 

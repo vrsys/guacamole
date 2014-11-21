@@ -253,16 +253,6 @@ void NURBSResource::draw(RenderContext const& context) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSResource::update(node::GeometryNode* geode)
-{
-  node::NURBSNode* node = dynamic_cast<node::NURBSNode*>(geode);
-
-  _max_pre_tesselation = node->max_pre_tesselation();
-  _max_final_tesselation = node->max_final_tesselation();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 void NURBSResource::upload_to(RenderContext const& context) const 
 {
   using namespace scm::gl;
@@ -522,12 +512,6 @@ void NURBSResource::initialize_transform_feedback(RenderContext const& context) 
     tfbuffer->_transform_feedback_vao[context.id] = in_device->create_vertex_array(
       v_fmt, boost::assign::list_of(tfbuffer->_transform_feedback_vbo[context.id]));
   }  
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/*virtual*/ std::shared_ptr<GeometryUberShader> NURBSResource::create_ubershader() const {
-  return std::make_shared<NURBSUberShader>();
 }
 
 }  //namespace scm
