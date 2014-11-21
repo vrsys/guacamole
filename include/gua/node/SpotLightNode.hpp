@@ -49,6 +49,11 @@ class GUA_DLL SpotLightNode : public SerializableNode {
     GUA_ADD_PROPERTY(utils::Color3f,  color,                    utils::Color3f(1.f, 1.f, 1.f));
 
     /**
+     * The intensity of the light source in Lumen (lm).
+     */
+    GUA_ADD_PROPERTY(float,           brightness,              100.0f);
+
+    /**
      * The exponent of distance attenuation.
      * E.g. a value of 2 means quadratic falloff, 1 means linear falloff
      */
