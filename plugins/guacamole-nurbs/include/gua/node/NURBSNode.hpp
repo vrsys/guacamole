@@ -39,18 +39,36 @@ namespace node {
 */
 class GUA_NURBS_DLL NURBSNode : public GeometryNode
 {
-public : // c'tor
+  friend class NURBSLoader;
 
-  NURBSNode(std::string const& name,
+private : // c'tor
+
+  NURBSNode(std::string const& node_name,
             std::string const& geometry = "gua_default_geometry",
-            std::string const& material = "gua_default_material",
+            Material const& material = Material(),
             math::mat4  const& transform = math::mat4::identity());
 
-public : // virtual/override methods
+public: // methods
 
-  /**
-  * Implements ray picking for a NURBS object
-  */
+  std::shared_ptr<NURBSRessource> const& get_geometry() const;
+
+  std::string const&  get_geometry_description() const;
+  void                set_geometry_description(std::string const& v);
+
+  Material const&     get_material() const;
+  Material&           get_material();
+  void                set_material(Material const& material);
+
+public: // render configuration
+
+  float max_pre_tesselation() const;
+  void  max_pre_tesselation(float t);
+
+  float max_final_tesselation() const;
+  void  max_final_tesselation(float t);
+
+public: // virtual/override methods
+
   void ray_test_impl(Ray const& ray,
                      int options,
                      Mask const& mask,
@@ -62,18 +80,6 @@ public : // virtual/override methods
 
   void accept(NodeVisitor& visitor) override;
 
-public : // methods
-
-  std::shared_ptr<NURBSRessource> const& get_geometry() const;
-
-public : // render configuration
-
-  float max_pre_tesselation() const;
-  void  max_pre_tesselation(float t);
-
-  float max_final_tesselation() const;
-  void  max_final_tesselation(float t);
-
 protected:
 
   std::shared_ptr<Node> copy() const override;
@@ -81,16 +87,14 @@ protected:
 private : // attributes e.g. special attributes for drawing
 
   std::shared_ptr<NURBSRessource> geometry_;
+  std::string                     geometry_description_;
+  bool                            geometry_changed_;
 
-  std::string filename_;
+  Material                        material_;
+  bool                            material_changed_;
 
-  Material material_;
-
-  bool filename_changed_;
-  bool material_changed_;
-
-  float max_tess_level_pre_pass_; 
-  float max_tess_level_final_pass_;
+  float                           max_tess_level_pre_pass_; 
+  float                           max_tess_level_final_pass_;
 
 };
 

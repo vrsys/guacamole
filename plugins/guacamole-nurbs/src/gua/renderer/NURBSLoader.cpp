@@ -44,10 +44,28 @@ NURBSLoader::NURBSLoader() : _supported_file_extensions() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::NURBSNode> NURBSLoader::create_geometry_from_file(std::string const& nodename, 
-                                                                        std::string const& filename,
-                                                                        std::string const& material,
-                                                                        unsigned flags)
+std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& nodename,
+                                                            std::string const& filename, 
+                                                            Material const& fallback_material,
+                                                            unsigned flags)
+{
+  auto cached_node(load_geometry(filename, flags));
+
+  if (cached_node) {
+    auto copy(cached_node->deep_copy());
+
+    apply_fallback_material(copy, fallback_material);
+
+    copy->set_name(nodename);
+    return copy;
+  }
+
+  return std::make_shared<node::TransformNode>(node_name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& nodename, unsigned flags)
 {
   try {
     if (!is_supported(filename))
@@ -85,7 +103,7 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::create_geometry_from_file(std::str
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */
+
 bool NURBSLoader::is_supported(std::string const& file_name) const
 {
   std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
@@ -93,6 +111,23 @@ bool NURBSLoader::is_supported(std::string const& file_name) const
              ? false
              : _supported_file_extensions.count(filename_decomposition.back()) >
                    0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void NURBSLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, Material const& fallback_material) const
+{
+  auto g_node(std::dynamic_pointer_cast<node::NURBSNode>(root));
+
+  if (g_node && g_node->get_material().get_shader_name() == "") {
+    g_node->set_material(fallback_material);
+    g_node->update_cache();
+  }
+
+  for (auto& child : root->get_children()) {
+    apply_fallback_material(child, fallback_material);
+  }
+
 }
 
 }  // namespace gua

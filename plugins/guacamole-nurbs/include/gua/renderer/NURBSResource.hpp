@@ -19,13 +19,13 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_NURBS_RESSOURCE_HPP
-#define GUA_NURBS_RESSOURCE_HPP
+#ifndef GUA_NURBS_RESOURCE_HPP
+#define GUA_NURBS_RESOURCE_HPP
 
 // guacamole headers
 #include <gua/renderer/NURBS.hpp>
 #include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/detail/NURBSData.hpp>
 
 // external headers
@@ -58,7 +58,7 @@ namespace gua {
     return container.size() * sizeof(value_type);
   };
 
-class GUA_NURBS_DLL NURBSRessource : public GeometryRessource {
+class GUA_NURBS_DLL NURBSResource : public GeometryResource {
 
  public: // constants
 

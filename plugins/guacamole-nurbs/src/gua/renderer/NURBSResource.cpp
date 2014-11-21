@@ -18,10 +18,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#include <gua/renderer/NURBSRessource.hpp>
+#include <gua/renderer/NURBSResource.hpp>
 
 #include <gua/utils/Singleton.hpp>
-#include <gua/renderer/NURBSUberShader.hpp>
 #include <gua/node/NURBSNode.hpp>
 
 #include <scm/gl_core/render_device.h>
@@ -39,7 +38,7 @@ namespace gua {
   
 
 ////////////////////////////////////////////////////////////////////////////////
-NURBSRessource::NURBSRessource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
+NURBSResource::NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
              scm::gl::fill_mode in_fill_mode,
              bool raycasting_enabled)
     : _data(std::make_shared<NURBSData>(object)),
@@ -56,7 +55,7 @@ NURBSRessource::NURBSRessource(std::shared_ptr<gpucast::beziersurfaceobject> con
 
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */
-NURBSRessource::~NURBSRessource() 
+NURBSResource::~NURBSResource() 
 {
   for (auto it  : _surface_tesselation_data.parametric_texture_buffer) it.reset();
   for (auto it :  _surface_tesselation_data.attribute_texture_buffer) it.reset();  
@@ -81,7 +80,7 @@ NURBSRessource::~NURBSRessource()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSRessource::predraw(RenderContext const& context) const
+void NURBSResource::predraw(RenderContext const& context) const
 {
   // upload to GPU if neccessary
   if (_surface_tesselation_data.vertex_array.size() <= context.id || _surface_tesselation_data.vertex_array[context.id] == nullptr) {
@@ -171,7 +170,7 @@ void NURBSRessource::predraw(RenderContext const& context) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSRessource::draw(RenderContext const& context) const
+void NURBSResource::draw(RenderContext const& context) const
 {
   // upload to GPU if neccessary: todo: check if this is sufficient for thread-safety
   if (_surface_tesselation_data.vertex_array.size() <= context.id || _surface_tesselation_data.vertex_array[context.id] == nullptr) {
@@ -254,7 +253,7 @@ void NURBSRessource::draw(RenderContext const& context) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSRessource::update(node::GeometryNode* geode)
+void NURBSResource::update(node::GeometryNode* geode)
 {
   node::NURBSNode* node = dynamic_cast<node::NURBSNode*>(geode);
 
@@ -264,7 +263,7 @@ void NURBSRessource::update(node::GeometryNode* geode)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSRessource::upload_to(RenderContext const& context) const 
+void NURBSResource::upload_to(RenderContext const& context) const 
 {
   using namespace scm::gl;
 
@@ -283,7 +282,7 @@ void NURBSRessource::upload_to(RenderContext const& context) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSRessource::initialize_ressources(RenderContext const& context) const
+void NURBSResource::initialize_ressources(RenderContext const& context) const
 {
   if (_surface_tesselation_data.vertex_array.size() <= context.id) {
     _surface_tesselation_data.vertex_array.resize(context.id + 1);
@@ -312,7 +311,7 @@ void NURBSRessource::initialize_ressources(RenderContext const& context) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSRessource::initialize_states(RenderContext const& context) const
+void NURBSResource::initialize_states(RenderContext const& context) const
 {
   auto in_device = context.render_device;
 
@@ -332,7 +331,7 @@ void NURBSRessource::initialize_states(RenderContext const& context) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSRessource::initialize_texture_buffers(RenderContext const& context) const 
+void NURBSResource::initialize_texture_buffers(RenderContext const& context) const 
 {
   validate_texture_buffers();
 
@@ -393,7 +392,7 @@ void NURBSRessource::initialize_texture_buffers(RenderContext const& context) co
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSRessource::validate_texture_buffers() const
+void NURBSResource::validate_texture_buffers() const
 {
   if (_data->tess_parametric_data.empty()) _data->tess_parametric_data.resize(1);
   if (_data->tess_attribute_data.empty())  _data->tess_attribute_data.resize(1);
@@ -409,7 +408,7 @@ void NURBSRessource::validate_texture_buffers() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSRessource::initialize_vertex_data(RenderContext const& context) const 
+void NURBSResource::initialize_vertex_data(RenderContext const& context) const 
 {
   auto in_device = context.render_device;
 
@@ -485,7 +484,7 @@ void NURBSRessource::initialize_vertex_data(RenderContext const& context) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSRessource::initialize_transform_feedback(RenderContext const& context) const 
+void NURBSResource::initialize_transform_feedback(RenderContext const& context) const 
 {
   auto in_device = context.render_device;
 
@@ -527,7 +526,7 @@ void NURBSRessource::initialize_transform_feedback(RenderContext const& context)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/*virtual*/ std::shared_ptr<GeometryUberShader> NURBSRessource::create_ubershader() const {
+/*virtual*/ std::shared_ptr<GeometryUberShader> NURBSResource::create_ubershader() const {
   return std::make_shared<NURBSUberShader>();
 }
 

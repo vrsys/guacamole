@@ -223,7 +223,7 @@ namespace node {
           GeometryDescription desc(geometry_description_);
           try {
             gua::TriMeshLoader loader;
-            loader.load_geometry(desc.filepath(), desc.flags());
+            loader.create_geometry_from_file(desc.filepath(), desc.flags());
           }
           catch ( std::exception& e ) {
             Logger::LOG_WARNING << "TriMeshNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
