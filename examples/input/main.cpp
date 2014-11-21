@@ -91,6 +91,10 @@ int main(int argc, char** argv) {
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
 
+  //gua::VolumeLoader vloader;
+  //auto volume(vloader.create_volume_from_file("volume", "/opt/gua_vrgeo_2013/data/objects/head_w256_h256_d225_c1_b8.raw", 0));
+  //graph.add_node("/transform", volume);
+
   auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
   portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
 
