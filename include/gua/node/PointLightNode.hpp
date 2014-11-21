@@ -50,7 +50,6 @@ class GUA_DLL PointLightNode : public SerializableNode {
 
     /**
      * The intensity of the light source in Lumen (lm).
-     * It's possible to use negative values and values > 1.
      */
     GUA_ADD_PROPERTY(float,           brightness,              100.0f);
 
