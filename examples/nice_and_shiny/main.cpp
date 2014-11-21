@@ -64,14 +64,11 @@ int main(int argc, char** argv) {
   };
 
   auto pbrMat(load_mat("data/materials/Cerberus.gmd"));
-  pbrMat.set_uniform("AlbedoMap", std::string(
-        "/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/Cerberus_A.tga"));
-  pbrMat.set_uniform("MetalnessMap", std::string(
-        "/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/Cerberus_M.tga"));
-  pbrMat.set_uniform("RoughnessMap", std::string(
-        "/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/Cerberus_R.tga"));
-  pbrMat.set_uniform("NormalMap", std::string(
-        "/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/Cerberus_N.tga"));
+  std::string directory("/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/");
+  pbrMat.set_uniform("AlbedoMap",    directory + "Cerberus_A.tga");
+  pbrMat.set_uniform("MetalnessMap", directory + "Cerberus_M.tga");
+  pbrMat.set_uniform("RoughnessMap", directory + "Cerberus_R.tga");
+  pbrMat.set_uniform("NormalMap",    directory + "Cerberus_N.tga");
 
   gua::TriMeshLoader loader;
 
@@ -110,25 +107,34 @@ int main(int argc, char** argv) {
       "/opt/guacamole/resources/skymaps/skymap.jpg");
   });
 
-  std::string dir("/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/");
   for (auto const& file : {
         "Cerberus_A.tga",
         "Cerberus_M.tga",
         "Cerberus_R.tga",
         "Cerberus_N.tga"
         }) {
-    gua::TextureDatabase::instance()->load(dir + file);
+    gua::TextureDatabase::instance()->load(directory + file);
   }
 
-  gua::PipelineDescription pipe;
-  pipe.add_pass<gua::TriMeshPassDescription>();
-  pipe.add_pass<gua::EmissivePassDescription>();
-  //pipe.add_pass<gua::LightingPassDescription>();
-  pipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  pipe.add_pass<gua::BackgroundPassDescription>()
+  gua::PipelineDescription standardPipe;
+  standardPipe.add_pass<gua::TriMeshPassDescription>();
+  standardPipe.add_pass<gua::EmissivePassDescription>();
+  standardPipe.add_pass<gua::LightingPassDescription>();
+  standardPipe.add_pass<gua::BackgroundPassDescription>()
+    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+    //.texture("/opt/guacamole/resources/skymaps/skymap.jpg")
+    ;
+
+  gua::PipelineDescription pbrPipe;
+  pbrPipe.add_pass<gua::TriMeshPassDescription>();
+  pbrPipe.add_pass<gua::EmissivePassDescription>();
+  pbrPipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
+#if 0
+  pbrPipe.add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
     ;
+#endif
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -137,7 +143,7 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-  camera->config.set_pipeline_description(pipe);
+  camera->config.set_pipeline_description(pbrPipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -154,6 +160,13 @@ int main(int argc, char** argv) {
     trackball.motion(pos.x, pos.y);
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+  window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+      if ('1' == key) {
+        camera->config.set_pipeline_description(pbrPipe);
+      } else if ('2' == key) {
+        camera->config.set_pipeline_description(standardPipe);
+      }
+    });
 
   gua::Renderer renderer;
 
@@ -172,7 +185,7 @@ int main(int argc, char** argv) {
       renderer.stop();
       window->close();
       loop.stop();
-    } else { 
+    } else {
       renderer.queue_draw({&graph}, {camera});
     }
   });
