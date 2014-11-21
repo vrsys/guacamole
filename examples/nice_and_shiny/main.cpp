@@ -24,6 +24,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -122,7 +123,8 @@ int main(int argc, char** argv) {
   gua::PipelineDescription pipe;
   pipe.add_pass<gua::TriMeshPassDescription>();
   pipe.add_pass<gua::EmissivePassDescription>();
-  pipe.add_pass<gua::LightingPassDescription>();
+  //pipe.add_pass<gua::LightingPassDescription>();
+  pipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
   pipe.add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
