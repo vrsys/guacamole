@@ -63,6 +63,8 @@ vec3  gua_light_direction;
 float gua_light_distance;
 float gua_light_intensity;
 
+vec3  gua_light_radiance = vec3(0.0);
+
 // methods ---------------------------------------------------------------------
 @include "shaders/common/gua_gbuffer_input.glsl"
 
@@ -152,7 +154,15 @@ void gua_calculate_point_light(vec3 normal, vec3 position) {
     discard;
   }
 
-  gua_light_intensity = pow(1.0 - gua_light_distance/light_radius, gua_light_falloff);
+  //gua_light_intensity = pow(1.0 - gua_light_distance/light_radius, gua_light_falloff);
+
+  // point lights only
+  float lightRadius = gua_lightinfo3;
+  float x = clamp(1.0 - pow( (gua_light_distance / lightRadius) , 4), 0, 1);
+  float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
+
+  vec3 Cl = falloff * gua_light_color * gua_light_brightness;
+  gua_light_radiance = Cl;
 }
 
 // base lighting calculations for spot lights ----------------------------------
@@ -197,6 +207,9 @@ void gua_calculate_spot_light(vec3 normal, vec3 position) {
   radial_attenuation = pow(1.0 - radial_attenuation, gua_light_softness);
 
   gua_light_intensity = radial_attenuation * length_attenuation * shadow;
+
+  vec3 Cl = radial_attenuation * length_attenuation * gua_light_color * gua_light_brightness;
+  gua_light_radiance = Cl;
 }
 
 // base lighting calculations for point lights ---------------------------------
@@ -224,6 +237,9 @@ void gua_calculate_sun_light(vec3 normal, vec3 position) {
   }
 
   gua_light_intensity = 1.0 * shadow;
+
+  vec3 Cl = shadow * gua_light_color * gua_light_brightness;
+  gua_light_radiance = Cl;
 }
 
 float saturate(float x) { return clamp(x,0,1); }
@@ -383,6 +399,7 @@ void main() {
 
   vec3 pbr = gua_get_pbr();
 
+  float emit      = pbr.r;
   float metalness = pbr.b;
   float roughness = max(pbr.g, 0.0001f);
 
@@ -392,36 +409,11 @@ void main() {
   vec3 Vn = normalize( E - P );
   vec3 H = normalize(L + Vn);
   float NdotL = clamp(dot( N, L ), 0, 1);
-  float distance = gua_light_distance;
-  // point lights only
-  float lightRadius = gua_lightinfo3;
-  float x = clamp(1.0 - pow( (distance / lightRadius) , 4), 0, 1);
-  float falloff = x*x/ (distance*distance + 1);
 
-  vec3 Cl = falloff * gua_light_color * gua_light_brightness;
+  vec3 Cl = gua_light_radiance;
 
   vec3 brdf = ( 1.0 - Fresnel(cspec, H, L) ) * cdiff + GGX_Specular(roughness, N, H, Vn, L, cspec);
   vec3 col = Cl * brdf * NdotL;
 
-#if 0
-  float emit = gua_get_pbr().r;
-  
-  vec3 diffuse = vec3(0);
-
-  if (gua_light_diffuse_enable) {
-    vec3 surface_color = gua_get_color();
-    diffuse = dot(N, gua_light_direction) * gua_light_color;
-    diffuse *= surface_color;
-  }
-
-  float specular = 0;
-
-  if (gua_light_specular_enable) {
-    specular = dot(reflect(gua_light_direction, N), normalize(P - gua_camera_position));
-    specular = pow(max(0, specular), 50);
-  }
-
-  gua_out_color = (diffuse + specular) * gua_light_intensity * (1-emit);  
-#endif
   gua_out_color = col;
 }
