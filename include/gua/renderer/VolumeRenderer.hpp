@@ -47,7 +47,9 @@ class VolumeRenderer {
 
   std::shared_ptr<ShaderProgram> composite_shader_;
   std::shared_ptr<ShaderProgram> ray_generation_shader_;
+
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+  scm::gl::blend_state_ptr blend_state_;
 };
 
 }

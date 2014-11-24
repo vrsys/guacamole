@@ -37,7 +37,9 @@ VolumeRenderer::VolumeRenderer():
   volume_raygeneration_color_buffer_(),
   volume_raygeneration_depth_buffer_(),
   composite_shader_(),
-  ray_generation_shader_() {}
+  ray_generation_shader_(),
+  depth_stencil_state_(nullptr),
+  blend_state_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,20 +51,47 @@ VolumeRenderer::~VolumeRenderer() {
 
 void VolumeRenderer::render(Pipeline& pipe) {
 
-  if (!volume_raygeneration_fbo_) {
-    init_resources(pipe);
-  }
+  if (pipe.get_scene().nodes[std::type_index(typeid(node::VolumeNode))].size() > 0) {
+    
+    if (!volume_raygeneration_fbo_) {
+      init_resources(pipe);
+    }
 
-  auto const& ctx(pipe.get_context());
+    auto const& ctx(pipe.get_context());
 
-  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+    ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
-  // 1. render proxy geometry into fbo
-  volume_raygeneration_fbo_->bind(ctx);
-  {
-    volume_raygeneration_fbo_->set_viewport(ctx);
-    volume_raygeneration_fbo_->clear_color_buffers(ctx, gua::utils::Color3f(0.0f, 0.0f, 0.0f));
-    volume_raygeneration_fbo_->clear_depth_stencil_buffer(ctx);
+    // 1. render proxy geometry into fbo
+    volume_raygeneration_fbo_->bind(ctx);
+    {
+      volume_raygeneration_fbo_->set_viewport(ctx);
+      volume_raygeneration_fbo_->clear_color_buffers(ctx, gua::utils::Color3f(0.0f, 0.0f, 0.0f));
+      volume_raygeneration_fbo_->clear_depth_stencil_buffer(ctx);
+
+      for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::VolumeNode))]) {
+
+        auto volume_node = reinterpret_cast<gua::node::VolumeNode*>(node);
+        auto volume = std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(volume_node->data.get_volume()));
+
+        if (volume) {
+          ray_generation_shader_->set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
+          ray_generation_shader_->set_uniform(ctx, 0, "volume_frag_id");
+          ray_generation_shader_->use(ctx);
+          volume->draw_proxy(ctx);
+          ray_generation_shader_->unuse(ctx);
+        }
+      }
+    }
+    volume_raygeneration_fbo_->unbind(ctx);
+
+    scm::gl::context_all_guard cug(ctx.render_context);
+    
+    ctx.render_context->set_blend_state(blend_state_);
+
+    // 2. render fullscreen quad for compositing and volume ray casting
+    pipe.get_gbuffer().bind(ctx, true);
+    pipe.bind_gbuffer_input(composite_shader_);
+    composite_shader_->set_uniform(ctx, volume_raygeneration_color_buffer_->get_handle(ctx), "gua_ray_entry_in");
 
     for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::VolumeNode))]) {
 
@@ -70,41 +99,19 @@ void VolumeRenderer::render(Pipeline& pipe) {
       auto volume = std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(volume_node->data.get_volume()));
 
       if (volume) {
-        ray_generation_shader_->set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
-        ray_generation_shader_->set_uniform(ctx, 0, "volume_frag_id");
-        ray_generation_shader_->use(ctx);
-        volume->draw_proxy(ctx);
-        ray_generation_shader_->unuse(ctx);
+        composite_shader_->set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
+
+        volume->set_uniforms(ctx, composite_shader_.get());
+
+        composite_shader_->use(ctx);
+        pipe.draw_quad();
+        composite_shader_->unuse(ctx);
       }
     }
+
+    pipe.get_gbuffer().unbind(ctx);
+    ctx.render_context->reset_state_objects();
   }
-  volume_raygeneration_fbo_->unbind(ctx);
-
-  scm::gl::context_all_guard cug(ctx.render_context);
-
-  // 2. render fullscreen quad for compositing and volume ray casting
-  pipe.get_gbuffer().bind(ctx, true);
-  pipe.bind_gbuffer_input(composite_shader_);
-  composite_shader_->set_uniform(ctx, volume_raygeneration_color_buffer_->get_handle(ctx), "gua_ray_entry_in");
-
-  for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::VolumeNode))]) {
-
-    auto volume_node = reinterpret_cast<gua::node::VolumeNode*>(node);
-    auto volume = std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(volume_node->data.get_volume()));
-
-    if (volume) {
-      composite_shader_->set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
-
-      volume->set_uniforms(ctx, composite_shader_.get());
-
-      composite_shader_->use(ctx);
-      pipe.draw_quad();
-      composite_shader_->unuse(ctx);
-    }
-  }
-
-  pipe.get_gbuffer().unbind(ctx);
-  ctx.render_context->reset_state_objects();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +154,12 @@ void VolumeRenderer::init_resources(Pipeline& pipe) {
   ray_generation_shader_->create_from_sources(ray_generation_vertex_shader, ray_generation_fragment_shader);
 
   depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
+
+  blend_state_ = ctx.render_device->create_blend_state(true,
+                         scm::gl::FUNC_SRC_ALPHA,
+                         scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
+                         scm::gl::FUNC_SRC_ALPHA,
+                         scm::gl::FUNC_ONE_MINUS_SRC_ALPHA);
 }
 
 }

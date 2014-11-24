@@ -37,7 +37,7 @@ in vec2 gua_quad_coords;
 @include "shaders/common/gua_gbuffer_input.glsl"
 
 // write outputs ---------------------------------------------------------------
-layout(location=0) out vec3 gua_out_color;
+layout(location=0) out vec4 gua_out_color;
 
 // methods ---------------------------------------------------------------------
 float get_depth_z(vec3 world_position) {
@@ -117,12 +117,10 @@ void main() {
      gua_object_volume_position.y != 0.00 || 
      gua_object_volume_position.z != 0.00)) {
 
-    vec4 compositing_color = get_raycast_color(gua_object_volume_position, d_gbuffer, d_volume);
-    vec3 gbuffer_color     = gua_get_color();
-    gua_out_color          = gbuffer_color * (1.0 - compositing_color.a) + compositing_color.rgb;
+    gua_out_color = get_raycast_color(gua_object_volume_position, d_gbuffer, d_volume);
 
   } else {
-    gua_out_color = gua_get_color();
+    gua_out_color = vec4(0);
   }
 }
 
