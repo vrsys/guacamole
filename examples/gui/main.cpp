@@ -23,8 +23,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/utils/Trackball.hpp>
-#include <gua/gui/GuiResource.hpp>
-#include <gua/gui/Interface.hpp>
+#include <gua/gui.hpp>
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -72,7 +71,7 @@ int main(int argc, char** argv) {
   auto monkey(loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::MAKE_PICKABLE | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", monkey);
 
-  gua::math::vec2 gui_size(1024.f, 1024.f);
+  gua::math::vec2 gui_size(1024.f, 1024.f);  
 
   auto gui = std::make_shared<gua::GuiResource>("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
 

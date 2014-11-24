@@ -34,6 +34,8 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 
+#include <fstream>
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +66,16 @@ std::shared_ptr<node::Node> VolumeLoader::create_volume_from_file(std::string co
     cached_node = searched->second;
 
   } else {
+
+    std::ifstream f(file_name.c_str());
+
+    if (!f.good()) {
+      f.close();
+      Logger::LOG_WARNING << "Unable to load " << file_name << ": File does not exist!" << std::endl;
+      return std::make_shared<node::TransformNode>(node_name);
+    }
+
+    f.close();
 
     if (is_supported(file_name)) {
       cached_node = load(file_name, flags);
