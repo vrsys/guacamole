@@ -13,6 +13,8 @@
           gua_shinyness   = texture(sampler2D(RoughnessMap), tc).rgb;
           gua_specularity = texture(sampler2D(MetalnessMap), tc).rgb;
           vec3 normalTS   = normalize(texture(sampler2D(NormalMap), tc).rgb*2.0-1.0);
+          // Green/Y channel is flipped in Cerberus NormalMap
+          normalTS.y *= -1.0;
           gua_normal      = normalize(gua_tangent*normalTS.x +
                                       gua_bitangent*normalTS.y +
                                       gua_normal*normalTS.z);
