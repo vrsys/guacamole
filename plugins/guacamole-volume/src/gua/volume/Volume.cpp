@@ -175,13 +175,6 @@ std::shared_ptr<Texture2D> Volume::create_color_map(RenderContext const& ctx,
     combined_lut[i * 4 + 3] = alpha_lut[i];
   }
 
-  //for (unsigned i = 0; i < in_size; ++i) {
-  //  combined_lut[i * 4] = i;
-  //  combined_lut[i * 4 + 1] = i;
-  //  combined_lut[i * 4 + 2] = i;
-  //  combined_lut[i * 4 + 3] = 1.0;
-  //}
-
   std::vector<void*> in_data;
   in_data.push_back(combined_lut.get());
 
@@ -191,10 +184,8 @@ std::shared_ptr<Texture2D> Volume::create_color_map(RenderContext const& ctx,
     std::cerr << "Volume::create_color_map(): error during color map texture generation." << std::endl;
     return std::make_shared<Texture2D>(in_size, 1);
   }
-  else{
-    //std::cout << "Volume::create_color_map(): color map texture generated." << std::endl;
-    return (new_tex);
-  }
+
+  return (new_tex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,13 +257,8 @@ void Volume::draw(RenderContext const& ctx) const {
 
   scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
-  ctx.render_context->bind_texture( _volume_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 5);
-  ctx.render_context->bind_texture(_transfer_texture_ptr[ctx.id]->get_buffer(ctx), _sstate[ctx.id], 6);
   scm::gl::program_ptr p = ctx.render_context->current_program();
-  p->uniform_sampler("volume_texture", 5);
-  p->uniform_sampler("transfer_texture", 6);
   p->uniform("sampling_distance", _step_size);
-  //p->uniform("iso_value", 0.8f);
   p->uniform("volume_bounds", _volume_dimensions_normalized);
 
   ctx.render_context->apply();
@@ -304,9 +290,6 @@ void Volume::set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const {
     _update_transfer_function = false;
   }
 
-  //_volume_texture_ptr[ctx.id]->make_resident(ctx);
-  //_transfer_texture_ptr[ctx.id]->make_resident(ctx);
-
   if (!_transfer_texture_ptr[ctx.id]){
     std::cerr << "No Transfer Texture2D ptr!" << std::endl;
     return;
@@ -316,10 +299,6 @@ void Volume::set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const {
   cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id]->get_handle(ctx), "transfer_texture");
   cs->set_uniform(ctx, _step_size,                                     "sampling_distance");
   cs->set_uniform(ctx, _volume_dimensions_normalized,                  "volume_bounds");
-
-  //_volume_texture_ptr[ctx.id]->make_non_resident(ctx);
-  //_transfer_texture_ptr[ctx.id]->make_non_resident(ctx);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

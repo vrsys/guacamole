@@ -38,7 +38,14 @@ namespace node {
   VolumeNode::VolumeNode(std::string const& name,
                            Configuration const& configuration,
                            math::mat4 const& transform)
-    : SerializableNode(name, transform), data(configuration) {}
+    : SerializableNode(name, transform), data(configuration) {
+
+    data.alpha_transfer()[0.f] = 0.f;
+    data.alpha_transfer()[1.f] = 1.f;
+
+    data.color_transfer()[0.f] = utils::Color3f(0, 0, 0);
+    data.color_transfer()[1.f] = utils::Color3f(1, 1, 1);
+  }
 
   /////////////////////////////////////////////////////////////////////////////
 
