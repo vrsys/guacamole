@@ -157,6 +157,8 @@ int main(int argc, char** argv) {
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
+  window->open();
+
   gua::Renderer renderer;
 
   // application loop

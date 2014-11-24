@@ -38,10 +38,14 @@ namespace gua {
 FrameBufferObject::FrameBufferObject()
     : fbos_(), upload_mutex_(), width_(0), height_(0) {}
 
+////////////////////////////////////////////////////////////////////////////////
+
 FrameBufferObject::~FrameBufferObject() {
 
   remove_attachments();
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void FrameBufferObject::remove_attachments() {
 

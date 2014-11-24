@@ -73,46 +73,7 @@ WindowBase::WindowBase(Configuration const& configuration)
       warpBR_(nullptr),
       warpRL_(nullptr),
       warpGL_(nullptr),
-      warpBL_(nullptr) {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WindowBase::~WindowBase() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void WindowBase::open() {
-  set_active(true);
-
-  ctx_.render_device = scm::gl::render_device_ptr(new scm::gl::render_device());
-  ctx_.render_context = ctx_.render_device->main_context();
-
-  {
-    std::lock_guard<std::mutex> lock(last_context_id_mutex_);
-    ctx_.id = last_context_id_++;
-  }
-
-  ctx_.render_window = this;
-
-  fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-      ctx_.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
-
-  depth_stencil_state_ = ctx_.render_device
-      ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
-
-  blend_state_ = ctx_.render_device->create_blend_state(true,
-                                                        scm::gl::FUNC_ONE,
-                                                        scm::gl::FUNC_ONE,
-                                                        scm::gl::FUNC_ONE,
-                                                        scm::gl::FUNC_ONE);
-  if (config.get_debug()) {
-    ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void WindowBase::create_shader() {
+      warpBL_(nullptr) {
 
   if (config.get_warp_matrix_red_right() == "" ||
       config.get_warp_matrix_green_right() == "" ||
@@ -141,6 +102,39 @@ void WindowBase::create_shader() {
       Resources::lookup_shader(Resources::shaders_display_shader_vert),
       Resources::lookup_shader(Resources::shaders_display_shader_warped_frag)
     );
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WindowBase::~WindowBase() {}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WindowBase::init_context() {
+  ctx_.render_device  = scm::gl::render_device_ptr(new scm::gl::render_device());
+  ctx_.render_context = ctx_.render_device->main_context();
+
+  {
+    std::lock_guard<std::mutex> lock(last_context_id_mutex_);
+    ctx_.id = last_context_id_++;
+  }
+
+  ctx_.render_window = this;
+
+  fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+      ctx_.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+
+  depth_stencil_state_ = ctx_.render_device
+      ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
+
+  blend_state_ = ctx_.render_device->create_blend_state(true,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE);
+  if (config.get_debug()) {
+    ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
   }
 }
 

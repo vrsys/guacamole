@@ -69,15 +69,10 @@ void Renderer::renderclient(Mailbox in) {
       auto window = WindowDatabase::instance()->lookup(window_name);
 
       // update window if one is assigned
-      if (window) {
-        if (!window->get_is_open()) {
-          window->open();
-          window->create_shader();
-        }
+      if (window && window->get_is_open()) {
         window->set_active(true);
 
         auto const& camera(*std::get<0>(x));
-
         auto process = [&](CameraMode mode) {
           std::get<0>(x)->rendering_pipeline->process(
             window->get_context(), mode, camera, *std::get<1>(x)

@@ -38,12 +38,4 @@ namespace gua {
     framecount(0)
   {}
 
-  ////////////////////////////////////////////////////////////////////////////////
-
-  RenderContext::~RenderContext() {
-    if (render_window) {
-      delete render_window;
-    }
-  }
-
 }

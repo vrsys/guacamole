@@ -175,6 +175,8 @@ int main(int argc, char** argv) {
       }
     });
 
+  window->open();
+
   gua::Renderer renderer;
 
   // application loop
