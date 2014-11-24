@@ -27,7 +27,6 @@
 #include <gua/renderer/EmissivePass.hpp>
 #include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/VolumePass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
@@ -46,7 +45,6 @@ PipelineDescription PipelineDescription::make_default() {
   pipe.add_pass<LightingPassDescription>();
   pipe.add_pass<BBoxPassDescription>();
   pipe.add_pass<BackgroundPassDescription>();
-  pipe.add_pass<VolumePassDescription>();
   pipe.add_pass<TexturedScreenSpaceQuadPassDescription>();
 
   return pipe;

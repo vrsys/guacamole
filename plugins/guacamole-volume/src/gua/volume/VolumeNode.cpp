@@ -20,12 +20,12 @@
  ******************************************************************************/
 
 // class header
-#include <gua/node/VolumeNode.hpp>
+#include <gua/volume/VolumeNode.hpp>
 
 // guacamole headers
 #include <gua/platform.hpp>
+#include <gua/volume/VolumeLoader.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/renderer/VolumeLoader.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>

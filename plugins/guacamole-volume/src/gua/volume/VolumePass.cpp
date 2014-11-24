@@ -19,28 +19,51 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+// class header
+#include <gua/volume/VolumePass.hpp>
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/volume/VolumeNode.hpp>
+#include <gua/volume/VolumeRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/EmissivePass.hpp>
-#include <gua/renderer/LightingPass.hpp>
-#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
-#include <gua/renderer/Material.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+#include <gua/databases/Resources.hpp>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+namespace gua {
+
+VolumePassDescription::VolumePassDescription()
+  : PipelinePassDescription() {
+
+  vertex_shader_ = "shaders/textured_screen_space_quad.vert";
+  fragment_shader_ = "shaders/textured_screen_space_quad.frag";
+
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = true;
+  doClear_ = false;
+  rendermode_ = RenderMode::Custom;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx) {
+
+  PipelinePass pass{*this, ctx};
+
+  auto renderer(std::make_shared<VolumeRenderer>());
+
+  pass.process_ = [renderer](
+      PipelinePass & pass, PipelinePassDescription const&, Pipeline& pipe) {
+
+      renderer->render(pipe);
+  };
+
+  return pass;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePassDescription* VolumePassDescription::make_copy() const {
+  return new VolumePassDescription(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+}

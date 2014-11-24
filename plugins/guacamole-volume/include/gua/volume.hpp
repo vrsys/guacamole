@@ -19,53 +19,11 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/VolumePass.hpp>
+#ifndef GUA_INCLUDE_VOLUME_HPP
+#define GUA_INCLUDE_VOLUME_HPP
 
-#include <gua/node/VolumeNode.hpp>
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/VolumeRenderer.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/utils/Logger.hpp>
-#include <gua/databases/Resources.hpp>
+#include <gua/volume/VolumeNode.hpp>
+#include <gua/volume/VolumePass.hpp>
+#include <gua/volume/VolumeLoader.hpp>
 
-namespace gua {
-
-VolumePassDescription::VolumePassDescription()
-  : PipelinePassDescription() {
-
-  vertex_shader_ = "shaders/textured_screen_space_quad.vert";
-  fragment_shader_ = "shaders/textured_screen_space_quad.frag";
-
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = true;
-  doClear_ = false;
-  rendermode_ = RenderMode::Custom;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx) {
-
-  PipelinePass pass{*this, ctx};
-
-  auto renderer(std::make_shared<VolumeRenderer>());
-
-  pass.process_ = [renderer](
-      PipelinePass & pass, PipelinePassDescription const&, Pipeline& pipe) {
-
-      renderer->render(pipe);
-  };
-
-  return pass;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePassDescription* VolumePassDescription::make_copy() const {
-  return new VolumePassDescription(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
+#endif  // GUA_INCLUDE_VOLUME_HPP

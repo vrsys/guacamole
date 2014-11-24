@@ -20,7 +20,7 @@
 ******************************************************************************/
 
 // class header
-#include <gua/renderer/Volume.hpp>
+#include <gua/volume/Volume.hpp>
 
 // guacamole headers
 #include <gua/platform.hpp>

@@ -20,16 +20,15 @@
 ******************************************************************************/
 
 // class header
-#include "gua/renderer/VolumeLoader.hpp"
+#include "gua/volume/VolumeLoader.hpp"
 
 // guacamole headers
 #include <gua/platform.hpp>
+#include <gua/volume/VolumeNode.hpp>
+#include <gua/volume/Volume.hpp>
 #include <gua/node/TransformNode.hpp>
-#include <gua/node/VolumeNode.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/renderer/Volume.hpp>
 
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Logger.hpp>

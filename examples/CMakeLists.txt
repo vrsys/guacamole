@@ -53,6 +53,11 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(gui)
   ENDIF (${PLUGIN_guacamole-gui})
 
+  # volume example requires volume-plugin
+  IF (${PLUGIN_guacamole-volume})
+    add_subdirectory(volume)
+  ENDIF (${PLUGIN_guacamole-volume})
+
   # multicontext example requires nurbs-plugin
   # IF (${PLUGIN_guacamole-nurbs})
     add_subdirectory(multicontext)

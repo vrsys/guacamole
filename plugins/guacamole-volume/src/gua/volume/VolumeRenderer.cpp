@@ -20,13 +20,13 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/VolumeRenderer.hpp>
+#include <gua/volume/VolumeRenderer.hpp>
 
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+#include <gua/volume/Volume.hpp>
+#include <gua/volume/VolumeNode.hpp>
 #include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/Volume.hpp>
-#include <gua/node/VolumeNode.hpp>
 
 namespace gua {
 
