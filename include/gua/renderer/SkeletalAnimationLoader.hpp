@@ -106,9 +106,10 @@ public:
    * \param buffer_name      The buffer to load the meh's data from.
    * \param buffer_size      The buffer's size.
    */
-  std::vector<SkeletalAnimationRessource*> const load_from_buffer(char const* buffer_name,
+  // TODO
+  /*std::vector<SkeletalAnimationRessource*> const load_from_buffer(char const* buffer_name,
                                                         unsigned buffer_size,
-                                                        bool build_kd_tree);
+                                                        bool build_kd_tree);*/
   /**
   *
   */
@@ -116,11 +117,17 @@ public:
 
  private: // methods
 
-  std::shared_ptr<node::Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
+  /*std::shared_ptr<node::Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
                 aiScene const* ai_scene,
                 aiNode* ai_root,
                 std::string const& file_name,
-                unsigned flags, unsigned& mesh_count);
+                unsigned flags, unsigned& mesh_count);*/
+
+  std::shared_ptr<node::Node> create_ressource(std::shared_ptr<Assimp::Importer> const& importer,
+                                              aiScene const* ai_scene,
+                                              /*aiNode* ai_root,*/
+                                              std::string const& file_name,
+                                              unsigned flags);
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, Material const& fallback_material) const;
 

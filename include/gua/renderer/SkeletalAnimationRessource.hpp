@@ -35,7 +35,7 @@
 
 #include <vector>
 
-struct aiMesh;
+struct aiScene;
 
 namespace Assimp { class Importer; }
 
@@ -68,7 +68,7 @@ class SkeletalAnimationRessource : public GeometryResource {
    *
    * \param mesh             The Assimp mesh to load the data from.
    */
-   SkeletalAnimationRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importer> const& importer, bool build_kd_tree);
+   SkeletalAnimationRessource(aiScene const* scene, std::shared_ptr<Assimp::Importer> const& importer, bool build_kd_tree);
 
   /**
    * Draws the Mesh.
@@ -77,7 +77,7 @@ class SkeletalAnimationRessource : public GeometryResource {
    *
    * \param context          The RenderContext to draw onto.
    */
-  void draw(RenderContext const& context) const;
+  void draw(RenderContext const& context) /*const*/;
 
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits);
@@ -94,18 +94,51 @@ class SkeletalAnimationRessource : public GeometryResource {
 
  private:
 
-  void upload_to(RenderContext const& context) const;
+  void InitMesh(uint MeshIndex,
+                    const aiMesh* paiMesh,
+                    std::vector<scm::math::vec3>& Positions,
+                    std::vector<scm::math::vec3>& Normals,
+                    std::vector<scm::math::vec2>& TexCoords,
+                    /*std::vector<VertexBoneData>& Bones,*/
+                    std::vector<uint>& Indices);
+
+  void upload_to(RenderContext const& context) /*const*/;
 
   mutable std::vector<scm::gl::buffer_ptr> vertices_;
   mutable std::vector<scm::gl::buffer_ptr> indices_;
   mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
   mutable std::mutex upload_mutex_;
 
+  // intermediate mesh meta data
+  #define INVALID_MATERIAL 0xFFFFFFFF // TODO
+  struct MeshEntry {
+        MeshEntry()
+        {
+            NumIndices    = 0;
+            BaseVertex    = 0;
+            BaseIndex     = 0;
+            MaterialIndex = INVALID_MATERIAL;
+        }
+        
+        unsigned int NumIndices;
+        unsigned int BaseVertex;
+        unsigned int BaseIndex;
+        unsigned int MaterialIndex;
+    };
+    
+    std::vector<MeshEntry> entries_;
+
+
+    unsigned int num_vertices_;
+    unsigned int num_faces_;
+
+    /////////////////////////////////
+
  public:
 
   KDTree kd_tree_;
 
-  aiMesh* mesh_;
+  aiScene const* scene_;
   std::shared_ptr<Assimp::Importer> importer_;
 };
 

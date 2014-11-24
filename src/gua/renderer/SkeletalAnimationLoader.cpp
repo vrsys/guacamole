@@ -182,8 +182,10 @@ namespace gua {
       // new_node = std::make_shared(new GeometryNode("unnamed",
       //                             GeometryNode::Configuration("", ""),
       //                             math::mat4::identity()));
-      unsigned count(0);
-      new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
+      //unsigned count(0);
+      //new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
+      new_node = create_ressource(importer, scene, file_name, flags);
+
 
     } else {
       Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": No valid root node contained!" << std::endl;
@@ -199,8 +201,32 @@ namespace gua {
 }
 
   /////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<node::Node> SkeletalAnimationLoader::create_ressource(std::shared_ptr<Assimp::Importer> const& importer,
+                                              aiScene const* ai_scene,
+                                              /*aiNode* ai_root,*/
+                                              std::string const& file_name,
+                                              unsigned flags) {
 
-std::vector<SkeletalAnimationRessource*> const SkeletalAnimationLoader::load_from_buffer(char const* buffer_name,
+
+  std::string mesh_name = file_name;
+  GeometryDatabase::instance()->add(mesh_name 
+                                    ,std::make_shared<SkeletalAnimationRessource>(ai_scene
+                                                                                  , importer
+                                                                                  , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
+
+  Material material;
+  //create (materials) and node
+  return std::make_shared<node::SkeletalAnimationNode>(mesh_name, mesh_name, material);
+
+
+
+}
+
+
+  /////////////////////////////////////////////////////////////////////////////
+
+// TODO
+/*std::vector<SkeletalAnimationRessource*> const SkeletalAnimationLoader::load_from_buffer(char const* buffer_name,
                                                                      unsigned buffer_size,
                                                                      bool build_kd_tree) {
 
@@ -219,7 +245,7 @@ std::vector<SkeletalAnimationRessource*> const SkeletalAnimationLoader::load_fro
 
   return meshes;
 
-}
+}*/
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -236,7 +262,7 @@ bool SkeletalAnimationLoader::is_supported(std::string const& file_name) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> SkeletalAnimationLoader::get_tree(std::shared_ptr<Assimp::Importer> const& importer,
+/*std::shared_ptr<node::Node> SkeletalAnimationLoader::get_tree(std::shared_ptr<Assimp::Importer> const& importer,
                                               aiScene const* ai_scene,
                                               aiNode* ai_root,
                                               std::string const& file_name,
@@ -291,7 +317,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_tree(std::shared_ptr<As
   }
 
   return group;
-}
+}*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
