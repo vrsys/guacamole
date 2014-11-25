@@ -33,17 +33,43 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+#define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
+
 namespace {
+scm::math::mat4 to_gua(aiMatrix4x4 const& m){
+  scm::math::mat4 res(m.a1,m.a2,m.a3,m.a4
+                      ,m.b1,m.b2,m.b3,m.b4
+                      ,m.c1,m.c2,m.c3,m.c4
+                      ,m.d1,m.d2,m.d3,m.d4);
+  return res;
+}
+
 struct Vertex {
   scm::math::vec3f pos;
   scm::math::vec2f tex;
   scm::math::vec3f normal;
   scm::math::vec3f tangent;
   scm::math::vec3f bitangent;
+  scm::math::vec4f bone_weights;
+  scm::math::vec4i bone_ids;
 };
 }
 
 namespace gua {
+
+void SkeletalAnimationRessource::VertexBoneData::AddBoneData(uint BoneID, float Weight)
+{
+    for (uint i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(IDs) ; i++) {
+        if (Weights[i] == 0.0) {
+            IDs[i]     = BoneID;
+            Weights[i] = Weight;
+            return;
+        }        
+    }
+    std::cout << "Warning: Ignoring bone associated to vertex (more than " << ARRAY_SIZE_IN_ELEMENTS(IDs) << ")" << std::endl;
+    // should never get here - more bones than we have space for
+    //assert(0);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +85,8 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiScene const* scene, std
       vertex_array_(),
       upload_mutex_(),
       scene_(scene),
-      importer_(importer) {
+      importer_(importer),
+      num_bones_(0) {
 
 
   //if (mesh_->HasPositions()) {
@@ -83,12 +110,47 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiScene const* scene, std
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void SkeletalAnimationRessource::LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones)
+{
+
+    for (uint i = 0 ; i < pMesh->mNumBones ; i++) {
+
+        uint BoneIndex = 0;        
+        std::string BoneName(pMesh->mBones[i]->mName.data);      
+
+        
+        if (bone_mapping_.find(BoneName) == bone_mapping_.end()) {
+
+            // Allocate an index for a new bone
+            BoneIndex = num_bones_;
+            num_bones_++;            
+            BoneInfo bi;      
+
+            bone_info_.push_back(bi);
+            bone_info_[BoneIndex].BoneOffset = to_gua(pMesh->mBones[i]->mOffsetMatrix);    
+            bone_mapping_[BoneName] = BoneIndex;
+        }
+        else {
+            BoneIndex = bone_mapping_[BoneName];
+        }
+        
+        for (uint j = 0 ; j < pMesh->mBones[i]->mNumWeights ; j++) {
+            uint VertexID = entries_[MeshIndex].BaseVertex + pMesh->mBones[i]->mWeights[j].mVertexId;
+            float Weight  = pMesh->mBones[i]->mWeights[j].mWeight;                   
+            Bones[VertexID].AddBoneData(BoneIndex, Weight);
+        }
+    }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void SkeletalAnimationRessource::InitMesh(uint MeshIndex,
                     const aiMesh* paiMesh,
                     std::vector<scm::math::vec3>& Positions,
                     std::vector<scm::math::vec3>& Normals,
                     std::vector<scm::math::vec2>& TexCoords,
-                    /*std::vector<VertexBoneData>& Bones,*/
+                    std::vector<VertexBoneData>& Bones,
                     std::vector<uint>& Indices)
 {    
     const scm::math::vec3 Zero3D(0.0f, 0.0f, 0.0f);
@@ -104,8 +166,7 @@ void SkeletalAnimationRessource::InitMesh(uint MeshIndex,
         TexCoords.push_back(scm::math::vec2(pTexCoord[0], pTexCoord[1]));        
     }
     
-    //TODO
-    //LoadBones(MeshIndex, paiMesh, Bones);
+    LoadBones(MeshIndex, paiMesh, Bones);
     
     // Populate the index buffer
     for (uint i = 0 ; i < paiMesh->mNumFaces ; i++) {
@@ -132,7 +193,7 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     std::vector<scm::math::vec3> Positions;
     std::vector<scm::math::vec3> Normals;
     std::vector<scm::math::vec2> TexCoords;
-    //std::vector<VertexBoneData> Bones; // TODO
+    std::vector<VertexBoneData> Bones;
     std::vector<uint> Indices;
        
     uint NumVertices = 0;
@@ -156,13 +217,13 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     Positions.reserve(NumVertices);
     Normals.reserve(NumVertices);
     TexCoords.reserve(NumVertices);
-    //Bones.resize(NumVertices); // TODO
+    Bones.resize(NumVertices);
     Indices.reserve(NumIndices);
         
     // Initialize the meshes in the scene one by one
     for (uint i = 0 ; i < entries_.size() ; i++) {
         const aiMesh* paiMesh = scene_->mMeshes[i];
-        InitMesh(i, paiMesh, Positions, Normals, TexCoords, /*Bones,*/ Indices);
+        InitMesh(i, paiMesh, Positions, Normals, TexCoords, Bones, Indices);
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -214,6 +275,14 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
       } else {*/
       data[v].tangent = scm::math::vec3(0.f, 0.f, 0.f);
       data[v].bitangent = scm::math::vec3(0.f, 0.f, 0.f);
+
+
+
+      //bone information:
+      data[v].bone_weights = scm::math::vec4f(Bones[v].Weights[0],Bones[v].Weights[1],Bones[v].Weights[2],Bones[v].Weights[3]);
+      data[v].bone_ids = scm::math::vec4i(Bones[v].IDs[0],Bones[v].IDs[1],Bones[v].IDs[2],Bones[v].IDs[3]);
+
+
       //}
     }
 

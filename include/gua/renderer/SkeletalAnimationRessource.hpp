@@ -33,7 +33,9 @@
 #include <mutex>
 #include <thread>
 
+#define ZERO_MEM(a) memset(a, 0, sizeof(a))
 #include <vector>
+#include <map>
 
 struct aiScene;
 
@@ -94,12 +96,49 @@ class SkeletalAnimationRessource : public GeometryResource {
 
  private:
 
+  struct BoneInfo
+  {
+      scm::math::mat4 BoneOffset;
+      scm::math::mat4 FinalTransformation;        
+
+      BoneInfo()
+      {
+          //BoneOffset.SetZero();
+          //FinalTransformation.SetZero();
+
+          BoneOffset = scm::math::mat4(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+          FinalTransformation = scm::math::mat4(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+                      
+      }
+  };
+
+  struct VertexBoneData
+  {        
+      uint IDs[4];
+      float Weights[4];
+
+      VertexBoneData()
+      {
+          Reset();
+      };
+      
+      void Reset()
+      {
+          ZERO_MEM(IDs);
+          ZERO_MEM(Weights);        
+      }
+      
+      void AddBoneData(uint BoneID, float Weight);
+  };
+
+  void LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones);
+
   void InitMesh(uint MeshIndex,
                     const aiMesh* paiMesh,
                     std::vector<scm::math::vec3>& Positions,
                     std::vector<scm::math::vec3>& Normals,
                     std::vector<scm::math::vec2>& TexCoords,
-                    /*std::vector<VertexBoneData>& Bones,*/
+                    std::vector<VertexBoneData>& Bones,
                     std::vector<uint>& Indices);
 
   void upload_to(RenderContext const& context) /*const*/;
@@ -128,6 +167,9 @@ class SkeletalAnimationRessource : public GeometryResource {
     
     std::vector<MeshEntry> entries_;
 
+    std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
+    uint num_bones_;
+    std::vector<BoneInfo> bone_info_;
 
     unsigned int num_vertices_;
     unsigned int num_faces_;
