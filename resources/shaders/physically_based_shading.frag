@@ -146,17 +146,6 @@ void gua_calculate_point_light(vec3 normal, vec3 position) {
   gua_light_distance  = length(gua_light_direction);
   gua_light_direction /= gua_light_distance;
 
-  if (gua_light_distance > light_radius) {
-    discard;
-  }
-
-  if (dot(normal, gua_light_direction) < 0) {
-    discard;
-  }
-
-  //gua_light_intensity = pow(1.0 - gua_light_distance/light_radius, gua_light_falloff);
-
-  // point lights only
   float lightRadius = gua_lightinfo3;
   float x = clamp(1.0 - pow( (gua_light_distance / lightRadius) , 4), 0, 1);
   float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
@@ -416,4 +405,5 @@ void main() {
   vec3 col = Cl * brdf * NdotL;
 
   gua_out_color = col;
+  //gua_out_color = NdotL * vec3(1.0);
 }

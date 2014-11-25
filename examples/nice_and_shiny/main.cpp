@@ -87,16 +87,18 @@ int main(int argc, char** argv) {
 
   auto pointLight = graph.add_node<gua::node::PointLightNode>("/", "pointLight");
   pointLight->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
-  pointLight->data.brightness = 100.0f; // lm
+  pointLight->data.brightness = 150.0f; // lm
   pointLight->scale(10.f);
   pointLight->translate(-2.f, 3.f, 5.f);
 
+#if 0
   auto spotLight = graph.add_node<gua::node::SpotLightNode>("/", "spotLight");
   spotLight->data.set_enable_shadows(true);
   spotLight->data.brightness = 10.0f; // lm
   spotLight->scale(10.f);
   spotLight->rotate(-20, 0.f, 1.f, 0.f);
   spotLight->translate(-1.f, 0.f,  3.f);
+#endif
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
