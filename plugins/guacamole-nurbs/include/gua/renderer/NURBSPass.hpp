@@ -22,11 +22,12 @@
 #define GUA_NURBSPASS_HPP
 
 // guacamole headers
+#include <gua/renderer/NURBS.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
 namespace gua {
 
-  class NURBSPassDescription : public PipelinePassDescription {
+  class GUA_NURBS_DLL NURBSPassDescription : public PipelinePassDescription {
 
   public : // typedefs, enums
 
@@ -41,6 +42,7 @@ namespace gua {
   public :
 
     NURBSPassDescription();
+    PipelinePassDescription* make_copy() const override;
     PipelinePass make_pass(RenderContext const&) override;
 
 };

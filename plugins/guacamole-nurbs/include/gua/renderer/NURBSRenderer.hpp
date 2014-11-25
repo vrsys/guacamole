@@ -28,14 +28,14 @@
 
 // guacamole headers
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/NURBS.hpp>
 
 namespace gua {
 
   class MaterialShader;
   class ShaderProgram;
 
-  class NURBSRenderer {
+  class GUA_NURBS_DLL NURBSRenderer {
 
   public:
 
@@ -48,7 +48,9 @@ namespace gua {
 
   private:  // auxiliary methods
 
-    void _load_shaders();
+    void           _load_shaders();
+    void           _initialize_pre_tesselation_program();
+    void           _initialize_tesselation_program(MaterialShader*);
 
     std::string _transform_feedback_vertex_shader() const;
     std::string _transform_feedback_geometry_shader() const;
@@ -66,21 +68,19 @@ namespace gua {
 
   private:  // attributes
 
-    std::mutex                                   mutex_;
-    bool                                         shaders_loaded_;
-
-    // CPU Ressources
-    std::map<scm::gl::shader_stage, std::string> pre_tesselation_shader_stages_;
-    std::list<std::string>                       pre_tesselation_interleaved_stream_capture_;
-
-    std::map<scm::gl::shader_stage, std::string> tesselation_shader_stages_;
-
-    std::map<scm::gl::shader_stage, std::string> raycasting_shader_stages_;
+    std::mutex                                          mutex_;
+    bool                                                shaders_loaded_;
+                                                        
+    // CPU Ressources                                   
+    std::vector<ShaderProgramStage>                     pre_tesselation_shader_stages_;
+    std::list<std::string>                              pre_tesselation_interleaved_stream_capture_;
+    std::map<scm::gl::shader_stage, std::string>        tesselation_shader_stages_;                 
+    std::map<scm::gl::shader_stage, std::string>        raycasting_shader_stages_;
 
     // GPU Ressources
-    std::unordered_map<MaterialShader*, ShaderProgram*> pre_tesselation_program_description_;
-    std::unordered_map<MaterialShader*, ShaderProgram*> tesselation_program_description_;
-    std::unordered_map<MaterialShader*, ShaderProgram*> raycasting_program_description_;
+    ShaderProgram*                                      pre_tesselation_program_;
+    std::unordered_map<MaterialShader*, ShaderProgram*> tesselation_programs_;
+    std::unordered_map<MaterialShader*, ShaderProgram*> raycasting_programs_;
 
   };
 

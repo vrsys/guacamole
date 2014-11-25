@@ -93,8 +93,16 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
       GeometryDescription desc("NURBS", filename, 0, flags);
       GeometryDatabase::instance()->add(desc.unique_key(), ressource);
 
-      std::shared_ptr<node::NURBSNode> node(new node::NURBSNode(filename));
+      std::shared_ptr<node::NURBSNode> node(new node::NURBSNode(filename, desc.unique_key()));
       node->update_cache();
+
+      auto bbox = ressource->get_bounding_box();
+
+      auto normalize_position = flags & NORMALIZE_POSITION;
+      node->translate(-bbox.center());
+
+      auto normalize_node = flags & NORMALIZE_SCALE;
+      node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
 
       return node;
     }

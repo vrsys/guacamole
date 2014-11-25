@@ -28,9 +28,6 @@ layout(location=2) in vec2 gua_in_texcoord;
 // uniforms
 @include "shaders/common/gua_camera_uniforms.glsl"
 
-uniform mat4 gua_model_matrix;
-uniform mat4 gua_normal_matrix;
-
 // output
 out vec2 gua_quad_coords;
 out vec3 gua_normal;

@@ -210,6 +210,7 @@ void ShaderProgram::set_subroutine(RenderContext const & context,
 ////////////////////////////////////////////////////////////////////////////////
 
 bool ShaderProgram::upload_to(RenderContext const & context) const {
+  
     if (programs_.size() <= context.id || !programs_[context.id]) {
         std::unique_lock<std::mutex> lock(upload_mutex_);
         if (programs_.size() <= context.id) {

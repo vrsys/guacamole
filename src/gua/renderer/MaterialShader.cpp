@@ -21,6 +21,7 @@
 
 #include <gua/renderer/MaterialShader.hpp>
 
+#include <gua/databases/Resources.hpp>
 #include <gua/utils/string_utils.hpp>
 
 namespace gua {
@@ -94,13 +95,19 @@ ShaderProgram* MaterialShader::get_shader(std::map<scm::gl::shader_stage, std::s
       final_program_description.push_back(ShaderProgramStage(STAGE_VERTEX_SHADER, v_shader));
     }
     else {
-      if (stage.first == STAGE_FRAGMENT_SHADER) {
-        auto f_shader(compile_description(f_methods, program_description.at(STAGE_FRAGMENT_SHADER)));
-        final_program_description.push_back(ShaderProgramStage(STAGE_FRAGMENT_SHADER, f_shader));
+      if (stage.first == STAGE_GEOMETRY_SHADER) {
+        auto g_shader(compile_description(v_methods, program_description.at(STAGE_GEOMETRY_SHADER)));
+        final_program_description.push_back(ShaderProgramStage(STAGE_GEOMETRY_SHADER, g_shader));
       }
       else {
-        // keep code for other shading stages
-        final_program_description.push_back(ShaderProgramStage(stage.first, stage.second));
+        if (stage.first == STAGE_FRAGMENT_SHADER) {
+          auto f_shader(compile_description(f_methods, program_description.at(STAGE_FRAGMENT_SHADER)));
+          final_program_description.push_back(ShaderProgramStage(STAGE_FRAGMENT_SHADER, f_shader));
+        }
+        else {
+          // keep code for other shading stages
+          final_program_description.push_back(ShaderProgramStage(stage.first, stage.second));
+        }
       }
     }
   }
@@ -134,9 +141,6 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
                                                 std::string const& shader_source) const {
   std::string source(shader_source);
   std::stringstream sstr;
-
-  sstr << "uniform mat4 gua_model_matrix;" << std::endl;
-  sstr << "uniform mat4 gua_normal_matrix;" << std::endl;
 
   for (auto const& uniform: get_default_material().get_uniforms()) {
     sstr << "uniform " << uniform.second.get().get_glsl_type() << " "

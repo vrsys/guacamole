@@ -25,6 +25,7 @@
 
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
 #include <gua/renderer/NURBSResource.hpp>
@@ -37,10 +38,12 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   NURBSNode::NURBSNode(std::string const& name,
-                       std::string const& filename,
+                       std::string const& geometry_description,
                        Material const& material,
                        math::mat4 const& transform)
     : GeometryNode(name, transform),
+      geometry_description_(geometry_description),
+      material_(material),
       max_tess_level_pre_pass_(1.0f),
       max_tess_level_final_pass_(4.0f)
   {}
@@ -196,6 +199,9 @@ namespace node {
   std::shared_ptr<Node> NURBSNode::copy() const 
   {
     std::shared_ptr<NURBSNode> result(new NURBSNode(get_name(), geometry_description_, material_, get_transform()));
+
+    result->update_cache();
+
     result->shadow_mode_ = shadow_mode_;
 
     result->max_final_tesselation(this->max_final_tesselation());

@@ -97,7 +97,9 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx)
     ctx.render_context->bind_vertex_array(vao_);
 
     ctx.render_context->apply();
-    ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, count);
+
+    assert(count < std::numeric_limits<unsigned>::max());
+    ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count));
   };
 
   return pass;

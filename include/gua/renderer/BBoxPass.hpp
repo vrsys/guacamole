@@ -31,7 +31,7 @@ namespace gua {
 
 class Pipeline;
 
-class BBoxPassDescription : public PipelinePassDescription {
+class GUA_DLL BBoxPassDescription : public PipelinePassDescription {
  public:
   BBoxPassDescription();
   PipelinePassDescription* make_copy() const override;

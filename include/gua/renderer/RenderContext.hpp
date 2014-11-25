@@ -22,6 +22,7 @@
 #ifndef GUA_RENDERCONTEXT_HPP
 #define GUA_RENDERCONTEXT_HPP
 
+#include <gua/platform.hpp>
 #include <gua/renderer/enums.hpp>
 
 // external headers
@@ -43,7 +44,7 @@ class WindowBase;
  *
  * Stores all relevant information on a OpenGL context.
  */
-struct RenderContext {
+struct GUA_DLL RenderContext {
 
   /**
   * c'tor

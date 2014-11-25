@@ -1,6 +1,4 @@
- #version 420 core
-#extension GL_NV_bindless_texture : require
-#extension GL_NV_gpu_shader5 : enable
+@include "resources/shaders/common/header.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // constants
@@ -24,7 +22,7 @@ flat in vec4 uvrange;
 flat in int  trimtype;
 
 // generic input
-@input_definition
+@include "resources/shaders/common/gua_fragment_shader_input.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -32,28 +30,17 @@ flat in int  trimtype;
 layout (location = 0) out vec4  out_color;
 layout (depth_any)    out float gl_FragDepth;
 
-@output_definition
+@include "resources/shaders/common/gua_fragment_shader_output.glsl"
+@include "resources/shaders/common/gua_global_variable_declaration.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
 ///////////////////////////////////////////////////////////////////////////////    
 
-// uniforms
-layout (std140, binding=0) uniform cameraBlock
-{
-  mat4 gua_view_matrix;
-  mat4 gua_projection_matrix;
-  mat4 gua_inverse_projection_matrix;
-  mat4 gua_inverse_projection_view_matrix;
-  vec3 gua_camera_position;
-};
+@include "resources/shaders/common/gua_camera_uniforms.glsl"
 
 uniform float nearplane;
 uniform float farplane;
-
-// built-in uniforms
-uniform mat4 gua_model_matrix;
-uniform mat4 gua_normal_matrix;
 
 uniform float gua_texel_width;
 uniform float gua_texel_height;
@@ -67,27 +54,13 @@ uniform samplerBuffer trim_curvelist;
 uniform samplerBuffer trim_curvedata;
 uniform samplerBuffer trim_pointdata;
 
-// generic uniforms
-@uniform_definition
+@material_uniforms
 
 ///////////////////////////////////////////////////////////////////////////////
 // methods
 ///////////////////////////////////////////////////////////////////////////////    
-#include "resources/shaders/uber_shaders/common/get_sampler_casts.glsl"
 
-vec2 gua_get_quad_coords() {
-    return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
-}
-
-uint gua_get_material_id() {
-    return gua_uint_gbuffer_varying_0.x;
-}
-
-vec3 gua_get_position() {
-    return gua_position_varying;
-}
-
-@material_methods
+@material_method_declarations
 
 #include "resources/glsl/base/compute_depth.frag"
 #include "resources/glsl/math/adjoint.glsl.frag"
@@ -155,7 +128,10 @@ void main()
     discard;
   }
 
-  @material_switch
+  @material_input
+  @include "resources/shaders/common/gua_global_variable_assignment.glsl"
+  @material_method_calls
+  @include "resources/shaders/common/gua_write_gbuffer.glsl"
 
   /*********************************************************************
    * depth correction
@@ -163,9 +139,4 @@ void main()
   vec4 p_world = modelviewmatrix * vec4(p.xyz, 1.0);
   float corrected_depth = compute_depth ( p_world, nearplane, farplane );
   gl_FragDepth = corrected_depth;
-
-  /*********************************************************************
-   * set built-in output
-   *********************************************************************/
-  gua_uint_gbuffer_out_0.x = gua_uint_gbuffer_varying_0.x;
 }

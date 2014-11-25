@@ -53,8 +53,8 @@ TexturedQuadNode::TexturedQuadNode(std::string const& name,
 
 void TexturedQuadNode::update_bounding_box() const {
   math::BoundingBox<math::vec3> geometry_bbox(
-      math::vec3(-0.5 * data.size().x, -0.5 * data.size().y, 0),
-      math::vec3(0.5 * data.size().x, 0.5 * data.size().y, 0));
+      math::vec3(-0.5f * data.size().x, -0.5f * data.size().y, 0.f),
+      math::vec3(0.5f * data.size().x, 0.5f * data.size().y, 0.f));
 
   bounding_box_ = transform(geometry_bbox, world_transform_);
 
@@ -122,8 +122,8 @@ void TexturedQuadNode::ray_test_impl(Ray const& ray, int options,
     if (result.first != Ray::END) {
       hits.insert(PickResult(
         result.first, this, ori + result.first*dir, math::vec3(inf, inf, inf), 
-        math::vec3(0, 0, 1), math::vec3(inf, inf, inf), 
-        ori + result.first*dir + 0.5));
+        math::vec3(0.f, 0.f, 1.f), math::vec3(inf, inf, inf), 
+        ori + result.first*dir + 0.5f));
     }
 
     if (options & PickResult::GET_WORLD_POSITIONS) {

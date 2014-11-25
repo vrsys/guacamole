@@ -155,13 +155,30 @@ class GUA_DLL UniformValue {
 };
 
 // specializations
-template<> void UniformValue::apply<std::string>(UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location);
+template<> GUA_DLL void UniformValue::apply<std::string>(UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location);
 
-template<> void UniformValue::write_bytes_impl<std::string>(UniformValue const* self, RenderContext const& ctx, char* target);
-template<> void UniformValue::write_bytes_impl<bool>(UniformValue const* self, RenderContext const& ctx, char* target);
+template<> GUA_DLL void UniformValue::write_bytes_impl<std::string>(UniformValue const* self, RenderContext const& ctx, char* target);
+template<> GUA_DLL void UniformValue::write_bytes_impl<bool>(UniformValue const* self, RenderContext const& ctx, char* target);
 
-template<> unsigned UniformValue::get_byte_size_impl<bool>();
-template<> unsigned UniformValue::get_byte_size_impl<std::string>();
+template<> GUA_DLL unsigned UniformValue::get_byte_size_impl<bool>();
+template<> GUA_DLL unsigned UniformValue::get_byte_size_impl<std::string>();
+
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<int>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<bool>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<float>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::mat3>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::mat4>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec2>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec3>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec4>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec2i>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec3i>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec4i>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec2ui>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec3ui>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec4ui>();
+template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<std::string>();
+
 }                                                                                                                                                                                                                                                             
 
 #endif  // GUA_UNIFORM_HPP

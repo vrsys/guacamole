@@ -40,7 +40,7 @@ class WindowBase;
 struct RenderContext;
 class ShaderProgram;
 
-class Pipeline {
+class GUA_DLL Pipeline {
  public:
 
   Pipeline();

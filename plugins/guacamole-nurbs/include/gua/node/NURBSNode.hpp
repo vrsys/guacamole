@@ -45,7 +45,7 @@ class GUA_NURBS_DLL NURBSNode : public GeometryNode
 private : // c'tor
 
   NURBSNode(std::string const& node_name,
-            std::string const& geometry = "gua_default_geometry",
+            std::string const& geometry_description = "gua_default_geometry",
             Material const& material = Material(),
             math::mat4  const& transform = math::mat4::identity());
 

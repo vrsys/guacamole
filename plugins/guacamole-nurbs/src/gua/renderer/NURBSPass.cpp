@@ -200,6 +200,12 @@ NURBSPassDescription::NURBSPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+PipelinePassDescription* NURBSPassDescription::make_copy() const {
+  return new NURBSPassDescription(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 PipelinePass NURBSPassDescription::make_pass(RenderContext const& ctx)
 {
   PipelinePass pass{ *this, ctx };

@@ -43,7 +43,8 @@ NURBSResource::NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const
              bool raycasting_enabled)
     : _data(std::make_shared<NURBSData>(object)),
       _fill_mode(in_fill_mode),
-      _raycasting(raycasting_enabled)
+      _raycasting(raycasting_enabled),
+      _max_pre_tesselation(1.0)
 {
   bounding_box_ = math::BoundingBox<math::vec3>(
       math::vec3(
