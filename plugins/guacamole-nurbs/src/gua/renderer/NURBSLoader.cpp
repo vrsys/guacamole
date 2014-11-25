@@ -77,6 +77,7 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
     }
     else {
 
+      // import model
       gpucast::igs_loader igsloader;
       gpucast::surface_converter surface_converter;
 
@@ -86,10 +87,12 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
       nurbs_object = igsloader.load(filename);
       surface_converter.convert(nurbs_object, bezier_object);
 
+      // check and set rendering mode and create render resource
       auto fill_mode = flags & WIREFRAME ? scm::gl::FILL_WIREFRAME : scm::gl::FILL_SOLID;
       auto raycasting_enabled = flags & RAYCASTING;
       auto ressource = std::make_shared<NURBSResource>(bezier_object, fill_mode, raycasting_enabled != 0);
 
+      // add resource to database
       GeometryDescription desc("NURBS", filename, 0, flags);
       GeometryDatabase::instance()->add(desc.unique_key(), ressource);
 
@@ -98,9 +101,11 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
 
       auto bbox = ressource->get_bounding_box();
 
+      // normalize position? 
       auto normalize_position = flags & NORMALIZE_POSITION;
       node->translate(-bbox.center());
 
+      // normalize scale? 
       auto normalize_node = flags & NORMALIZE_SCALE;
       node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
 
