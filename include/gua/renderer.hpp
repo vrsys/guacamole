@@ -25,12 +25,12 @@
 // renderer headers
 #include <gua/config.hpp>
 #include <gua/renderer/enums.hpp>
-#include <gua/renderer/VolumeLoader.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
 #include <gua/renderer/EmissivePass.hpp>
 #include <gua/renderer/LightingPass.hpp>
+#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/Renderer.hpp>

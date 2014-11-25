@@ -126,12 +126,11 @@ class GUA_DLL WindowBase {
    */
   virtual ~WindowBase();
 
-  virtual void open();
+  virtual void open() = 0; 
   virtual bool get_is_open() const = 0;
-
-  virtual void create_shader();
-
   virtual void close() = 0;
+
+  void init_context();
 
   /**
    * Activate the context of this window.
@@ -139,7 +138,7 @@ class GUA_DLL WindowBase {
    * Makes the RenderContext of this window current. All preceeding
    * OpenGL calls will be invoked on this window.
    */
-  virtual void set_active(bool active) const = 0;
+  virtual void set_active(bool active) = 0;
 
   /**
    * Starts the drawing of a new frame.
@@ -187,7 +186,7 @@ protected:
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::blend_state_ptr blend_state_;
-  RenderContext ctx_;
+  mutable RenderContext ctx_;
 
  private:
   void display(std::shared_ptr<Texture2D> const& texture,

@@ -99,7 +99,6 @@ GlfwWindow::GlfwWindow(Configuration const& configuration)
 ////////////////////////////////////////////////////////////////////////////////
 
 GlfwWindow::~GlfwWindow() {
-
   close();
 }
 
@@ -148,8 +147,6 @@ void GlfwWindow::open() {
     glfwTerminate();
     return;
   }
-
-  WindowBase::open();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,6 +166,7 @@ bool GlfwWindow::should_close() const {
 void GlfwWindow::close() {
   if (get_is_open()) {
     glfwDestroyWindow(glfw_window_);
+    glfw_window_ = nullptr;
   }
 }
 
@@ -180,23 +178,18 @@ void GlfwWindow::process_events() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GlfwWindow::set_active(bool active) const {
+void GlfwWindow::set_active(bool active) {
   glfwMakeContextCurrent(glfw_window_);
+  if (!ctx_.render_device) {
+    init_context();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GlfwWindow::finish_frame() const {
-
-  set_active(true);
-
   glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
   glfwSwapBuffers(glfw_window_);
-
-  // Workaround for Windows Window Handling
-  // Poll events from rendering thread and not application mainloop
-  // Otherwise application window is stalling 
-  // glfwPollEvents();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -34,6 +34,7 @@ IF (GUACAMOLE_EXAMPLES)
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
     add_subdirectory(input)
+    add_subdirectory(nice_and_shiny)
     add_subdirectory(stress_test)
   ENDIF (${GUACAMOLE_GLFW3})
 
@@ -50,7 +51,12 @@ IF (GUACAMOLE_EXAMPLES)
   # gui example requires gui-plugin
   IF (${PLUGIN_guacamole-gui})
     add_subdirectory(gui)
+    # volume example requires volume-plugin and gui-plugin
+    IF (${PLUGIN_guacamole-volume})
+      add_subdirectory(volume)
+    ENDIF (${PLUGIN_guacamole-volume})
   ENDIF (${PLUGIN_guacamole-gui})
+
 
   # multicontext example requires nurbs-plugin
   # IF (${PLUGIN_guacamole-nurbs})

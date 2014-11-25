@@ -31,7 +31,6 @@
 #include <gua/node/Node.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/GeometryNode.hpp>
-#include <gua/node/VolumeNode.hpp>
 #include <gua/node/PointLightNode.hpp>
 #include <gua/node/SpotLightNode.hpp>
 #include <gua/node/ScreenNode.hpp>
@@ -105,8 +104,6 @@ class CollisionShapeNodeVisitor : public NodeVisitor {
 
   /* virtual */ void visit(node::GeometryNode* node) { generic_visit(node); }
   
-  /* virtual */ void visit(node::VolumeNode* node) { generic_visit(node); }
-
   /* virtual */ void visit(node::PointLightNode* node) { generic_visit(node); }
 
   /* virtual */ void visit(node::ScreenNode* node) { generic_visit(node); }

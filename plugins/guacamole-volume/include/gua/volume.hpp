@@ -19,55 +19,11 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/node/VolumeNode.hpp>
+#ifndef GUA_INCLUDE_VOLUME_HPP
+#define GUA_INCLUDE_VOLUME_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/renderer/VolumeLoader.hpp>
-#include <gua/scenegraph/NodeVisitor.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/math/BoundingBoxAlgo.hpp>
+#include <gua/volume/VolumeNode.hpp>
+#include <gua/volume/VolumePass.hpp>
+#include <gua/volume/VolumeLoader.hpp>
 
-namespace gua {
-namespace node {
-
-  /////////////////////////////////////////////////////////////////////////////
-
-  VolumeNode::VolumeNode(std::string const& name,
-                           Configuration const& configuration,
-                           math::mat4 const& transform)
-    : SerializableNode(name, transform), data(configuration) {}
-
-  /////////////////////////////////////////////////////////////////////////////
-
-  /* virtual */ void VolumeNode::accept(NodeVisitor& visitor) {
-    visitor.visit(this);
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-
-  void VolumeNode::update_bounding_box() const {
-
-    if (data.get_volume() != "") {
-
-      auto geometry_bbox(GeometryDatabase::instance()->lookup(data.get_volume())->get_bounding_box());
-      bounding_box_ = transform(geometry_bbox, world_transform_);
-
-      for (auto child : get_children()) {
-        bounding_box_.expandBy(child->get_bounding_box());
-      }
-    } else {
-      Node::update_bounding_box();
-    }
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-
-  std::shared_ptr<Node> VolumeNode::copy() const {
-    return std::make_shared<VolumeNode>(get_name(), data, get_transform());
-  }
-
-} // namespace node
-} // namespace gua
+#endif  // GUA_INCLUDE_VOLUME_HPP

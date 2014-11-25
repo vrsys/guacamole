@@ -51,11 +51,6 @@ struct GUA_DLL RenderContext {
   */
   RenderContext();
 
-  /**
-  * d'tor
-  */
-  ~RenderContext();
-
    /**
    * The schism context of this RenderContext.
    */

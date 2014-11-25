@@ -25,8 +25,10 @@
 // guacamole headers
 #include <gua/node/SerializableNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
+#include <gua/utils/Color3f.hpp>
 
 // external headers
+#include <scm/gl_util/data/analysis/transfer_function/piecewise_function_1d.h>
 #include <string>
 
 namespace gua {
@@ -39,12 +41,17 @@ namespace node {
  */
 class GUA_DLL VolumeNode : public SerializableNode {
 public:
+  
+  #define ALPHA_TRANSFER_TYPE scm::data::piecewise_function_1d<float, float>
+  #define COLOR_TRANSFER_TYPE scm::data::piecewise_function_1d<float, math::vec3>
 
   struct Configuration {
     /**
      * A string referring to an entry in guacamole's GeometryDatabase.
      */
     GUA_ADD_PROPERTY(std::string, volume, "gua_volume_default");
+    GUA_ADD_PROPERTY(ALPHA_TRANSFER_TYPE, alpha_transfer, {});
+    GUA_ADD_PROPERTY(COLOR_TRANSFER_TYPE, color_transfer, {});
   };
 
   /**

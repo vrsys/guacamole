@@ -96,6 +96,8 @@ int main(int argc, char** argv) {
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
 
+  window->open();
+
   gua::Renderer renderer;
 
   // application loop

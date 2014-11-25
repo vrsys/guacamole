@@ -42,6 +42,7 @@ uniform mat4 gua_light_shadow_map_projection_view_matrix_3;
 
 uniform uvec2 gua_shadow_map;
 uniform vec3  gua_light_color;
+uniform float gua_light_brightness;
 uniform float gua_light_falloff;
 uniform float gua_light_softness;
 uniform float gua_shadow_offset;

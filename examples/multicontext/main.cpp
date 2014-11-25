@@ -151,6 +151,11 @@ int main(int argc, char** argv) {
   set_window_default(window3, resolution);
   set_window_default(window4, resolution);
 
+  window1->open();
+  window2->open();
+  window3->open();
+  window4->open();
+
   gua::Renderer renderer;
 
   // transform teapot

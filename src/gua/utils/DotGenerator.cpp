@@ -26,7 +26,6 @@
 #include <gua/scenegraph/SceneGraph.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/GeometryNode.hpp>
-#include <gua/node/VolumeNode.hpp>
 #include <gua/node/PointLightNode.hpp>
 #include <gua/node/SpotLightNode.hpp>
 #include <gua/node/ScreenNode.hpp>
@@ -119,26 +118,6 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
   // for (auto child : geometry->children_) {
   //   child->accept(*this);
   // }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(node::VolumeNode* volume) {
-	pre_node_info(volume);
-
-	std::string fillcolor("[fillcolor =");
-	fillcolor += " \"#CCEECC\"";
-	if (volume->data.get_volume() != "") {
-		parse_data_ += "| volume: " + volume->data.get_volume();
-  }
-
-	fillcolor += "]";
-
-	post_node_info(volume, fillcolor);
-
-	for (auto child : volume->children_) {
-		child->accept(*this);
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

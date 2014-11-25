@@ -81,8 +81,6 @@ void Window::open() {
       new scm::gl::wm::context(window_, context_attribs));
 
   window_->show();
-
-  WindowBase::open();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,14 +99,16 @@ void Window::close() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::set_active(bool active) const {
+void Window::set_active(bool active) {
   ctx_.context->make_current(window_, active);
+  if (!ctx_.render_device) {
+    init_context();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void Window::finish_frame() const {
-  set_active(true);
   window_->swap_buffers(config.get_enable_vsync());
 }
 
