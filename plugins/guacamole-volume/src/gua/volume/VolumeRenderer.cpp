@@ -101,6 +101,7 @@ void VolumeRenderer::render(Pipeline& pipe) {
       if (volume) {
         composite_shader_->set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
 
+        volume->set_transfer_function(volume_node->data.alpha_transfer(), volume_node->data.color_transfer());
         volume->set_uniforms(ctx, composite_shader_.get());
 
         composite_shader_->use(ctx);

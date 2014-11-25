@@ -84,15 +84,6 @@ namespace gua {
     /**
     * Draws the Volume.
     *
-    * Draws the Volume to the given context. There is no compositing happening
-    *
-    * \param context          The RenderContext to draw onto.
-    */
-     void draw(RenderContext const& context) const;
-
-    /**
-    * Draws the Volume.
-    *
     * Draws the Volume proxy to the given context.
     *
     * \param context          The RenderContext to draw onto.
