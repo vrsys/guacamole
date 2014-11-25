@@ -19,73 +19,73 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_PLOD_LOADER_HPP
-#define GUA_PLOD_LOADER_HPP
+// #ifndef GUA_PLOD_LOADER_HPP
+// #define GUA_PLOD_LOADER_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
-#include <gua/databases/Database.hpp>
+// // guacamole headers
+// #include <gua/platform.hpp>
+// #include <gua/renderer/GeometryLoader.hpp>
+// #include <gua/databases/Database.hpp>
 
-// external headers
-#include <string>
-#include <list>
-#include <memory>
+// // external headers
+// #include <string>
+// #include <list>
+// #include <memory>
 
-namespace gua {
+// namespace gua {
 
-class Node;
-class InnerNode;
-class GeometryNode;
-class PLODRessource;
+// class Node;
+// class InnerNode;
+// class GeometryNode;
+// class PLODRessource;
 
-class PLODLoader : public GeometryLoader {
- public:
+// class PLODLoader : public GeometryLoader {
+//  public:
 
-  enum Flags {
-    DEFAULTS = 0,
-    MAKE_PICKABLE = 1 << 0,
-    NORMALIZE_POSITION = 1 << 1,
-    NORMALIZE_SCALE = 1 << 2
-  };
+//   enum Flags {
+//     DEFAULTS = 0,
+//     MAKE_PICKABLE = 1 << 0,
+//     NORMALIZE_POSITION = 1 << 1,
+//     NORMALIZE_SCALE = 1 << 2
+//   };
 
-  /**
-   * Default constructor.
-   *
-   * Constructs a new and empty PLODLoader.
-   */
-  PLODLoader();
+//   /**
+//    * Default constructor.
+//    *
+//    * Constructs a new and empty PLODLoader.
+//    */
+//   PLODLoader();
 
-  /**
-   * Constructor from a file.
-   *
-   * Creates a new PLODLoader from a given file.
-   *
-   * \param node_name  Name of the scenegraph node.
-   * \param file_name  The file to load the pointclouds data from.
-   * \param flags      Loading flags
-   */
-  std::shared_ptr<gua::node::Node> create_geometry_from_file(
-      std::string const& node_name,
-      std::string const& file_name,
-      unsigned flags = DEFAULTS);
+//   *
+//    * Constructor from a file.
+//    *
+//    * Creates a new PLODLoader from a given file.
+//    *
+//    * \param node_name  Name of the scenegraph node.
+//    * \param file_name  The file to load the pointclouds data from.
+//    * \param flags      Loading flags
 
-  bool is_supported(std::string const& file_name) const override;
+//   std::shared_ptr<gua::node::Node> create_geometry_from_file(
+//       std::string const& node_name,
+//       std::string const& file_name,
+//       unsigned flags = DEFAULTS);
 
-  size_t get_upload_budget_in_mb() const;
-  size_t get_render_budget_in_mb() const;
-  size_t get_out_of_core_budget_in_mb() const;
+//   bool is_supported(std::string const& file_name) const override;
 
-  void   set_upload_budget_in_mb(const size_t upload_budget);
-  void   set_render_budget_in_mb(const size_t render_budget);
-  void   set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
+//   size_t get_upload_budget_in_mb() const;
+//   size_t get_render_budget_in_mb() const;
+//   size_t get_out_of_core_budget_in_mb() const;
 
- private:
+//   void   set_upload_budget_in_mb(const size_t upload_budget);
+//   void   set_render_budget_in_mb(const size_t render_budget);
+//   void   set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
 
-  boost::unordered_set<std::string> _supported_file_extensions;
+//  private:
 
-};
+//   boost::unordered_set<std::string> _supported_file_extensions;
 
-}
+// };
 
-#endif  // GUA_PLOD_LOADER_HPP
+// }
+
+// #endif  // GUA_PLOD_LOADER_HPP
