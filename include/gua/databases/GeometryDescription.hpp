@@ -18,28 +18,50 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
+#ifndef GUA_GEOMETRY_DESCRIPTION_HPP
+#define GUA_GEOMETRY_DESCRIPTION_HPP
 
-#ifndef GUA_BBOX_PASS_HPP
-#define GUA_BBOX_PASS_HPP
+#include <string>
 
-#include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-
-#include <memory>
+#include <gua/platform.hpp>
 
 namespace gua {
 
-class Pipeline;
+  /*
+  * helper class to generate unique geometry string from parametrization and vice versa
+  */
+  class GUA_DLL GeometryDescription
+  {
+  public: // construction
 
-class GUA_DLL BBoxPassDescription : public PipelinePassDescription {
- public:
-  BBoxPassDescription();
-  PipelinePassDescription* make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&) override;
-};
+    GeometryDescription (std::string const& type,
+                         std::string const& filename,
+                         unsigned id, 
+                         unsigned flags);
+      
+    GeometryDescription(std::string const& unique_key);
+      
+  public: // methods
 
-}
+    std::string const& type() const;
+    std::string const& filepath() const;
 
-#endif  // GUA_BBOX_PASS_HPP
+    unsigned flags() const;
+    unsigned id() const;
+
+    std::string const& unique_key() const;
+
+  private:
+
+    std::string type_;
+    std::string filename_;
+
+    unsigned    id_;
+    unsigned    flags_;
+
+    std::string unique_key_;
+  };
+
+} // namespace gua
+
+#endif  // GUA_GEOMETRY_DESCRIPTION_HPP

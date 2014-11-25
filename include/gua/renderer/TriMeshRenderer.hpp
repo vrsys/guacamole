@@ -19,27 +19,38 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_BBOX_PASS_HPP
-#define GUA_BBOX_PASS_HPP
+#ifndef GUA_TRIMESH_RENDERER_HPP
+#define GUA_TRIMESH_RENDERER_HPP
 
-#include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
+#include <map>
+#include <unordered_map>
 
-#include <memory>
+#include <gua/platform.hpp>
+
+#include <scm/gl_core/shader_objects.h>
 
 namespace gua {
 
-class Pipeline;
+  class MaterialShader;
+  class ShaderProgram;
+  class Pipeline;
 
-class GUA_DLL BBoxPassDescription : public PipelinePassDescription {
+class TriMeshRenderer {
+
  public:
-  BBoxPassDescription();
-  PipelinePassDescription* make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&) override;
+
+   TriMeshRenderer();
+   ~TriMeshRenderer();
+  
+   void render(Pipeline& pipe);
+
+ private:
+
+   std::map<scm::gl::shader_stage, std::string>         program_description_;
+   std::unordered_map<MaterialShader*, ShaderProgram*>  programs_;
+  
 };
 
 }
 
-#endif  // GUA_BBOX_PASS_HPP
+#endif  // GUA_TRIMESH_RENDERER_HPP

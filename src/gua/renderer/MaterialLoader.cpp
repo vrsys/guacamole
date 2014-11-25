@@ -232,7 +232,7 @@ Material& MaterialLoader::get_material(unsigned capabilities) const {
     material_name += "_omap";
   }
 
-  if (!MaterialShaderDatabase::instance()->is_supported(material_name)) {
+  if (!MaterialShaderDatabase::instance()->contains(material_name)) {
     MaterialShaderDescription description;
 
     // perform stencil mapping when an opacity map is provided

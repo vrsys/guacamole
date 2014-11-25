@@ -35,7 +35,7 @@ enum class RenderMode {
   Custom, Callback, Quad
 };
 
-class PipelinePassDescription {
+class GUA_DLL PipelinePassDescription {
  public:
 
   virtual PipelinePassDescription* make_copy() const = 0;
@@ -69,7 +69,7 @@ class PipelinePassDescription {
   std::map<std::string, UniformValue> uniforms;
 };
 
-class PipelinePass {
+class GUA_DLL PipelinePass {
  public:
 
   inline bool needs_color_buffer_as_input() const {

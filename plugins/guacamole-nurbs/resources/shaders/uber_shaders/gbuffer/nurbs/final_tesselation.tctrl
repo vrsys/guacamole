@@ -1,5 +1,4 @@
-#version 420 core                                 
-#extension GL_NV_gpu_shader5      : enable        
+@include "resources/shaders/common/header.glsl" 
                                                           
 #define ID gl_InvocationID                        
 
@@ -21,21 +20,11 @@ flat out vec2 tcTessCoord[];
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
 ///////////////////////////////////////////////////////////////////////////////                                                            
+@include "resources/shaders/common/gua_camera_uniforms.glsl"
+
 uniform samplerBuffer parameter_texture;          
 uniform samplerBuffer attribute_texture;      
-    
-// uniforms                                       
-layout (std140, binding=0) uniform cameraBlock    
-{                                                 
-  mat4 gua_view_matrix;                           
-  mat4 gua_projection_matrix;                     
-  mat4 gua_inverse_projection_matrix;             
-  mat4 gua_inverse_projection_view_matrix;        
-  vec3 gua_camera_position;                       
-};                                                
-                                                          
-uniform mat4 gua_model_matrix;                    
-uniform mat4 gua_normal_matrix;                   
+                
 uniform float gua_tesselation_max_error;   
 uniform float max_final_tesselation;
                                                           
@@ -45,15 +34,15 @@ uniform float gua_texel_height;
 ///////////////////////////////////////////////////////////////////////////////
 // functions
 ///////////////////////////////////////////////////////////////////////////////                        
-#include "resources/glsl/math/horner_surface.glsl.frag"
+@include "resources/glsl/math/horner_surface.glsl.frag"
 
-#include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/to_screen_space.glsl"
-#include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/edge_length.glsl"
-#include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/control_polygon_length.glsl"
-#include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/edge_tess_level.glsl"
-#include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/inner_tess_level.glsl"
-#include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/is_inside.glsl"
-#include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/frustum_cull.glsl"
+@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/to_screen_space.glsl"
+@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/edge_length.glsl"
+@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/control_polygon_length.glsl"
+@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/edge_tess_level.glsl"
+@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/inner_tess_level.glsl"
+@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/is_inside.glsl"
+@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/frustum_cull.glsl"
            
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -68,21 +68,21 @@ void on_window_button_press(GLFWwindow* glfw_window, int button, int action, int
 
 void on_window_move_cursor(GLFWwindow* glfw_window, double x, double y) {
   auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
-  window->on_move_cursor.emit(math::vec2(x, window->config.get_size().y - y));
+  window->on_move_cursor.emit(math::vec2(float(x), float(window->config.get_size().y - y)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void on_window_scroll(GLFWwindow* glfw_window, double x, double y) {
   auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
-  window->on_scroll.emit(math::vec2(x, y));
+  window->on_scroll.emit(math::vec2(float(x), float(y)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void on_window_enter(GLFWwindow* glfw_window, int enter) {
   auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
-  window->on_enter.emit(enter);
+  window->on_enter.emit(enter != 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,7 +152,7 @@ void GlfwWindow::open() {
 ////////////////////////////////////////////////////////////////////////////////
 
 bool GlfwWindow::get_is_open() const {
-  return glfw_window_;
+  return glfw_window_ != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

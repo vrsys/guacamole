@@ -38,8 +38,8 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-class GUA_DLL WindowDatabase : public Database<WindowBase>,
-                               public Singleton<WindowDatabase> {
+  class GUA_DLL WindowDatabase : public Database<WindowBase>,
+                                 public Singleton<WindowDatabase> {
  public:
   friend class Singleton<WindowDatabase>;
 

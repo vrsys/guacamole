@@ -32,6 +32,7 @@
 #include <string>
 
 namespace gua {
+
 namespace node {
 
 /**

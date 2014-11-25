@@ -22,6 +22,7 @@
 #ifndef GUA_BOUNDING_BOX_ALGO_HPP
 #define GUA_BOUNDING_BOX_ALGO_HPP
 
+#include <gua/platform.hpp>
 #include <gua/math/math.hpp>
 #include <gua/math/BoundingBox.hpp>
 
@@ -29,7 +30,7 @@ namespace gua {
 
 namespace math {
 
-math::BoundingBox<math::vec3> transform(
+GUA_DLL math::BoundingBox<math::vec3> transform(
     math::BoundingBox<math::vec3> const& bbox,
     math::mat4 const& mat);
 

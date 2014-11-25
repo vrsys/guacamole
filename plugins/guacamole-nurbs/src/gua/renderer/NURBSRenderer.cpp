@@ -18,19 +18,24 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
 // class header
-#include <gua/renderer/NURBSUberShader.hpp>
+#include <gua/renderer/NURBSRenderer.hpp>
 
 // guacamole headers
-#include <gua/renderer/UberShaderFactory.hpp>
-#include <gua/renderer/GuaMethodsFactory.hpp>
-#include <gua/renderer/NURBSRessource.hpp>
+#include <gua/renderer/NURBSResource.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/GBuffer.hpp>
+
+#include <gua/node/NURBSNode.hpp>
+
 #include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
 
 #include <gua/config.hpp>
 #include <gpucast/core/config.hpp>
+
+#include <scm/gl_core/shader_objects.h>
 
 // external headers
 #include <sstream>
@@ -76,7 +81,7 @@ namespace gua {
     {
       std::size_t search_pos(0);
 
-      std::string search("#include");
+      std::string search("@include");
 
       while (search_pos != std::string::npos) 
       {
@@ -100,65 +105,176 @@ namespace gua {
   }
 
 
+#if 0
+
+  TriMeshPassDescription::TriMeshPassDescription()
+    : PipelinePassDescription() {
+    vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
+    fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
+
+    needs_color_buffer_as_input_ = false;
+    writes_only_color_buffer_ = false;
+    doClear_ = false;
+    rendermode_ = RenderMode::Custom;
+
+    std::shared_ptr<scm::gl::buffer_ptr> material_uniform_storage_buffer = std::make_shared<scm::gl::buffer_ptr>(nullptr);
+    auto vertex_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
+    auto fragment_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
+    process_ = [material_uniform_storage_buffer, vertex_shader, fragment_shader](
+      PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
+
+      auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
+
+      if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
+
+        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
+          return reinterpret_cast<node::TriMeshNode*>(a)->get_material().get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material().get_shader();
+        });
+
+        RenderContext const& ctx(pipe.get_context());
+
+        bool writes_only_color_buffer = false;
+        pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
+        pipe.get_gbuffer().set_viewport(ctx);
+        int view_id(pipe.get_camera().config.get_view_id());
+
+        MaterialShader* current_material(nullptr);
+        ShaderProgram*  current_shader(nullptr);
+
+        // loop through all objects, sorted by material ----------------------------
+        for (auto const& object : sorted_objects->second) {
+
+          auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
+
+          if (current_material != tri_mesh_node->get_material().get_shader()) {
+            current_material = tri_mesh_node->get_material().get_shader();
+            if (current_material) {
+              current_shader = current_material->get_shader(ctx, typeid(*tri_mesh_node->get_geometry()), vertex_shader, fragment_shader);
+            }
+            else {
+              Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material().get_shader_name() << std::endl;
+            }
+            if (current_shader) {
+              current_shader->use(ctx);
+              ctx.render_context->apply();
+            }
+          }
+
+          if (current_shader && tri_mesh_node->get_geometry()) {
+            UniformValue model_mat(tri_mesh_node->get_cached_world_transform());
+            UniformValue normal_mat(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform())));
+
+            current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
+            current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
+            for (auto const& overwrite : tri_mesh_node->get_material().get_uniforms()) {
+              current_shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
+            }
+
+            ctx.render_context->apply_program();
+
+            tri_mesh_node->get_geometry()->draw(ctx);
+          }
+        }
+
+        pipe.get_gbuffer().unbind(ctx);
+      }
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  PipelinePassDescription* TriMeshPassDescription::make_copy() const {
+    return new TriMeshPassDescription(*this);
+  }
+
+
+#endif
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  NURBSRenderer::NURBSRenderer()
+    : shaders_loaded_(false),
+      pre_tesselation_program_(nullptr)
+  {
+    _load_shaders();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  NURBSRenderer::~NURBSRenderer()
+  {
+    if (pre_tesselation_program_) {
+      delete pre_tesselation_program_;
+    }
+
+    for (auto prog : tesselation_programs_) {
+      if (prog.second) {
+        delete prog.second;
+      }
+    }
+
+    for (auto prog : raycasting_programs_) {
+      if (prog.second) {
+        delete prog.second;
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSRenderer::_load_shaders()
+  {
+    // create stages only with one thread!
+    if (!shaders_loaded_)
+    {
+      pre_tesselation_shader_stages_.clear();
+      pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,_transform_feedback_vertex_shader()));
+      pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, _transform_feedback_tess_control_shader()));
+      pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, _transform_feedback_tess_evaluation_shader()));
+      pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, _transform_feedback_geometry_shader()));
+
+      pre_tesselation_interleaved_stream_capture_.clear();
+      pre_tesselation_interleaved_stream_capture_.push_back("xfb_position");
+      pre_tesselation_interleaved_stream_capture_.push_back("xfb_index");
+      pre_tesselation_interleaved_stream_capture_.push_back("xfb_tesscoord");
+
+      tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER] = _final_vertex_shader();
+      tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER] = _final_tess_control_shader();
+      tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = _final_tess_evaluation_shader();
+      tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER] = _final_geometry_shader();
+      tesselation_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER] = _final_fragment_shader();
+
+      raycasting_shader_stages_[scm::gl::STAGE_VERTEX_SHADER] = _raycast_vertex_shader();
+      raycasting_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER] = _raycast_fragment_shader();
+
+      shaders_loaded_ = true;
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSRenderer::_initialize_pre_tesselation_program() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!pre_tesselation_program_)
+    {
+      auto new_program = new ShaderProgram;
+      new_program->set_shaders(pre_tesselation_shader_stages_, pre_tesselation_interleaved_stream_capture_, true);
+      pre_tesselation_program_ = new_program;
+    }
+    assert(pre_tesselation_program_);
+  }
+
+  void NURBSRenderer::_initialize_tesselation_program(MaterialShader* material)
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!tesselation_programs_.count(material))
+    {
+      auto program = material->get_shader(tesselation_shader_stages_);
+      tesselation_programs_[material] = program;
+    }
+    assert(tesselation_programs_.count(material));
+  }
+
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSUberShader::create(std::set<std::string> const& material_names)
-{
-  UberShader::create(material_names);
-
-  // create shader for predraw pass to pre-tesselate if necessary
-  std::vector<ShaderProgramStage>   pre_shader_stages;
-  std::list<std::string>            interleaved_stream_capture;
-
-  pre_shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, _transform_feedback_vertex_shader()));
-  pre_shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, _transform_feedback_tess_control_shader()));
-  pre_shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, _transform_feedback_tess_evaluation_shader()));
-  pre_shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, _transform_feedback_geometry_shader()));
-
-  interleaved_stream_capture.push_back("xfb_position");
-  interleaved_stream_capture.push_back("xfb_index");
-  interleaved_stream_capture.push_back("xfb_tesscoord");
-
-  auto xfb_program = std::make_shared<ShaderProgram>();
-  xfb_program->set_shaders(pre_shader_stages, interleaved_stream_capture, true);
-  add_program(xfb_program);
-
-  // create final ubershader that writes to gbuffer
-  std::vector<ShaderProgramStage> shader_stages;
-  shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,          _final_vertex_shader()));
-  shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_TESS_CONTROL_SHADER,    _final_tess_control_shader()));
-  shader_stages.push_back( ShaderProgramStage( scm::gl::STAGE_TESS_EVALUATION_SHADER, _final_tess_evaluation_shader()));
-
-  auto geometry_shader_template = _final_geometry_shader();
-  _insert_generic_per_vertex_code(geometry_shader_template);
-  shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, geometry_shader_template));
-
-  auto fragment_shader_template = _final_fragment_shader();
-  _insert_generic_per_fragment_code(fragment_shader_template);
-  shader_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, fragment_shader_template));
-
-  auto final_program = std::make_shared<ShaderProgram>();
-  final_program->set_shaders(shader_stages);
-  add_program(final_program);
-
-  // create ubershader for raycasting
-  std::vector<ShaderProgramStage> raycast_stages;
-
-  auto raycast_vertex_shader_template = _raycast_vertex_shader();
-  _insert_generic_per_vertex_code(raycast_vertex_shader_template);
-  raycast_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, raycast_vertex_shader_template));
-
-  auto raycast_fragment_shader_template = _raycast_fragment_shader();
-  _insert_generic_per_fragment_code(raycast_fragment_shader_template);
-  raycast_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, raycast_fragment_shader_template));
-
-  auto raycast_program = std::make_shared<ShaderProgram>();
-  raycast_program->set_shaders(raycast_stages);
-  add_program(raycast_program);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_transform_feedback_vertex_shader () const
+  std::string NURBSRenderer::_transform_feedback_vertex_shader() const
 {
   std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
 
@@ -169,7 +285,7 @@ std::string NURBSUberShader::_transform_feedback_vertex_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_transform_feedback_tess_control_shader () const
+  std::string NURBSRenderer::_transform_feedback_tess_control_shader() const
 {
 #if 0
     std::stringstream tess_control;
@@ -303,7 +419,7 @@ std::string NURBSUberShader::_transform_feedback_tess_control_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_transform_feedback_tess_evaluation_shader () const
+std::string NURBSRenderer::_transform_feedback_tess_evaluation_shader() const
 {
   std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
 
@@ -314,7 +430,7 @@ std::string NURBSUberShader::_transform_feedback_tess_evaluation_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_transform_feedback_geometry_shader () const
+std::string NURBSRenderer::_transform_feedback_geometry_shader() const
 {
   std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
 
@@ -326,7 +442,7 @@ std::string NURBSUberShader::_transform_feedback_geometry_shader () const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_final_vertex_shader () const
+std::string NURBSRenderer::_final_vertex_shader() const
 {
   std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
 
@@ -337,7 +453,7 @@ std::string NURBSUberShader::_final_vertex_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_final_tess_control_shader () const
+std::string NURBSRenderer::_final_tess_control_shader() const
 {
   std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
 
@@ -348,7 +464,7 @@ std::string NURBSUberShader::_final_tess_control_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_final_tess_evaluation_shader () const
+std::string NURBSRenderer::_final_tess_evaluation_shader() const
 {
   std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
 
@@ -360,7 +476,7 @@ std::string NURBSUberShader::_final_tess_evaluation_shader () const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_final_geometry_shader () const
+std::string NURBSRenderer::_final_geometry_shader() const
 {
   std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
 
@@ -371,7 +487,7 @@ std::string NURBSUberShader::_final_geometry_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_final_fragment_shader () const
+std::string NURBSRenderer::_final_fragment_shader() const
 {
   std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
 
@@ -382,7 +498,7 @@ std::string NURBSUberShader::_final_fragment_shader () const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_raycast_vertex_shader() const
+std::string NURBSRenderer::_raycast_vertex_shader() const
 {
   std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
 
@@ -393,7 +509,7 @@ std::string NURBSUberShader::_raycast_vertex_shader() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string NURBSUberShader::_raycast_fragment_shader() const
+std::string NURBSRenderer::_raycast_fragment_shader() const
 {
   std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
 
@@ -403,90 +519,114 @@ std::string NURBSUberShader::_raycast_fragment_shader() const
   return raycast_fragment_shader_code;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSUberShader::_insert_generic_per_vertex_code(std::string& code) const
+
+void NURBSRenderer::render(Pipeline& pipe)
 {
-  // material specific uniforms
-  string_utils::replace(code, "@uniform_definition",
-    get_uniform_mapping()->get_uniform_definition());
+  auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::NURBSNode))));
 
-  // output
-  string_utils::replace(code, "@output_definition",
-    vshader_factory_->get_output_mapping().get_gbuffer_output_definition(false, true));
+  if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
 
-  // print material specific methods
-  string_utils::replace(code, "@material_methods",
-    UberShader::print_material_methods(*vshader_factory_));
+    std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
+      return reinterpret_cast<node::NURBSNode*>(a)->get_material().get_shader() < reinterpret_cast<node::NURBSNode*>(b)->get_material().get_shader();
+    });
 
-  // print main switch(es)
-  string_utils::replace(code, "@material_switch",
-    UberShader::print_material_switch(*vshader_factory_));
+    RenderContext const& ctx(pipe.get_context());
+
+    bool writes_only_color_buffer = false;
+    pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
+    pipe.get_gbuffer().set_viewport(ctx);
+
+    int view_id(pipe.get_camera().config.get_view_id());
+    
+    MaterialShader* current_material(nullptr);
+    ShaderProgram*  current_material_program(nullptr);
+
+    if (!pre_tesselation_program_) {
+      _initialize_pre_tesselation_program();
+      pre_tesselation_program_->save_to_file(".", "pre_tesselation");
+    }
+
+    // loop through all objects, sorted by material ----------------------------
+    for (auto const& object : sorted_objects->second) 
+    {
+      auto nurbs_node(reinterpret_cast<node::NURBSNode*>(object));
+      current_material = nurbs_node->get_material().get_shader();
+
+      auto shader_iterator = tesselation_programs_.find(current_material);
+      if (shader_iterator == tesselation_programs_.end())
+      {
+        try {
+          _initialize_tesselation_program(current_material);
+          current_material_program = tesselation_programs_.at(current_material);
+          current_material_program->save_to_file(".", "final_tesselation");
+        }
+        catch (std::exception& e) {
+          Logger::LOG_WARNING << "NURBSPass::render(): Cannot create material program: " << nurbs_node->get_material().get_shader_name() << " : " << e.what() << std::endl;
+          return;
+        }
+      } else {
+        current_material_program = shader_iterator->second;
+      }
+
+      UniformValue model_mat(nurbs_node->get_cached_world_transform());
+      UniformValue normal_mat(scm::math::transpose(scm::math::inverse(nurbs_node->get_cached_world_transform())));
+
+      auto nurbs_ressource = nurbs_node->get_geometry();
+
+      if (nurbs_ressource && pre_tesselation_program_ && current_material_program) {
+
+#define DEBUG_XFB_OUTPUT 1
+#if DEBUG_XFB_OUTPUT
+        scm::gl::transform_feedback_statistics_query_ptr q = ctx
+          .render_device->create_transform_feedback_statistics_query(0);
+        ctx.render_context->begin_query(q);
+#endif
+
+        pre_tesselation_program_->use(ctx);
+        {
+          pre_tesselation_program_->apply_uniform(ctx, "gua_model_matrix", model_mat);
+          pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
+          ctx.render_context->apply();
+          nurbs_ressource->predraw(ctx);
+        }
+        pre_tesselation_program_->unuse(ctx);
+
+#if DEBUG_XFB_OUTPUT
+        ctx.render_context->end_query(q);
+        ctx.render_context->collect_query_results(q);
+        std::cout << q->result()._primitives_generated << " , "
+          << q->result()._primitives_written << std::endl;
+#endif
+
+        current_material_program->use(ctx);
+        {
+          for (auto const& overwrite : nurbs_node->get_material().get_uniforms()) {
+            current_material_program->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
+          }
+
+          current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
+          current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
+          ctx.render_context->apply();
+          nurbs_ressource->draw(ctx);
+        }
+        current_material_program->unuse(ctx);
+      }
+      else {
+        Logger::LOG_WARNING << "NURBSPass::render(): Cannot find ressources for node: " << nurbs_node->get_name() << std::endl;
+      }
+      
+    }
+
+    pipe.get_gbuffer().unbind(ctx);
+  }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-void NURBSUberShader::_insert_generic_per_fragment_code(std::string& code) const
-{
-  // input from vertex shader
-  string_utils::replace(code, "@input_definition",
-    vshader_factory_->get_output_mapping().get_gbuffer_output_definition(true, true));
-
-  // material specific uniforms
-  string_utils::replace(code, "@uniform_definition",
-    get_uniform_mapping()->get_uniform_definition());
-
-  // outputs
-  string_utils::replace(code, "@output_definition",
-    get_gbuffer_mapping()->get_gbuffer_output_definition(false, false));
-
-  // print material specific methods
-  string_utils::replace(code, "@material_methods",
-    UberShader::print_material_methods(*fshader_factory_));
-
-  // print main switch(es)
-  string_utils::replace(code, "@material_switch",
-    UberShader::print_material_switch(*fshader_factory_));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*virtual*/ GeometryUberShader::stage_mask NURBSUberShader::get_stage_mask() const
-{
-  return GeometryUberShader::DRAW_STAGE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*virtual*/ void NURBSUberShader::preframe(RenderContext const& ctx) const
-{
-  throw std::runtime_error("NURBSUberShader::preframe(): not implemented");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*virtual*/ void NURBSUberShader::predraw(RenderContext const& ctx,
-                                          std::string const& ksfile_name,
-                                          std::string const& material_name,
-                                          scm::math::mat4 const& model_matrix,
-                                          scm::math::mat4 const& normal_matrix,
-                                          Frustum const& /*frustum*/,
-                                          View const& view) const
-{
-  throw std::runtime_error("NURBSUberShader::predraw(): not implemented");
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void NURBSUberShader::draw(RenderContext const& ctx,
-                           std::string const& filename,
-                           std::string const& material_name,
-                           scm::math::mat4 const& model_matrix,
-                           scm::math::mat4 const& normal_matrix,
-                           Frustum const& frustum,
-                           View const& view) const
-{
-
-  auto geometry = std::static_pointer_cast<NURBSRessource>(GeometryDatabase::instance()->lookup(filename));
+#if 0
+  auto geometry = std::static_pointer_cast<NURBSResource>(GeometryDatabase::instance()->lookup(filename));
   auto material = MaterialDatabase::instance()->lookup(material_name);
 
   //set_uniform(ctx, 8, "gua_max_tesselation");
@@ -536,27 +676,7 @@ void NURBSUberShader::draw(RenderContext const& ctx,
     }
     get_program(tesselation_final_pass)->unuse(ctx);
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*virtual*/ void NURBSUberShader::postdraw(RenderContext const& ctx,
-  std::string const& ksfile_name,
-  std::string const& material_name,
-  scm::math::mat4 const& model_matrix,
-  scm::math::mat4 const& normal_matrix,
-  Frustum const& /*frustum*/,
-  View const& view) const
-{
-  throw std::runtime_error("NURBSUberShader::postdraw(): not implemented");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*virtual*/ void NURBSUberShader::postframe(RenderContext const& ctx) const
-{
-  throw std::runtime_error("NURBSUberShader::postframe(): not implemented");
-}
+#endif
 
 
-}
+} // namespace gua

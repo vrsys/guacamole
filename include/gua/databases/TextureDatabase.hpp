@@ -38,8 +38,8 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-class GUA_DLL TextureDatabase : public Database<Texture>,
-                                public Singleton<TextureDatabase> {
+  class GUA_DLL TextureDatabase : public Database<Texture>,
+                                  public Singleton<TextureDatabase> {
  public:
 
   /**

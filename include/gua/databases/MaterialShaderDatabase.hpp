@@ -38,8 +38,8 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-class GUA_DLL MaterialShaderDatabase : public Database<MaterialShader>,
-                                       public Singleton<MaterialShaderDatabase> {
+  class GUA_DLL MaterialShaderDatabase : public Database<MaterialShader>,
+                                         public Singleton<MaterialShaderDatabase> {
  public:
 
   std::mutex update_lock;

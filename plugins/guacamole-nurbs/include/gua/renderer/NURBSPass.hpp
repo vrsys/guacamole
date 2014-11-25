@@ -18,28 +18,35 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
+#ifndef GUA_NURBSPASS_HPP
+#define GUA_NURBSPASS_HPP
 
-#ifndef GUA_BBOX_PASS_HPP
-#define GUA_BBOX_PASS_HPP
-
+// guacamole headers
+#include <gua/renderer/NURBS.hpp>
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-
-#include <memory>
 
 namespace gua {
 
-class Pipeline;
+  class GUA_NURBS_DLL NURBSPassDescription : public PipelinePassDescription {
 
-class GUA_DLL BBoxPassDescription : public PipelinePassDescription {
- public:
-  BBoxPassDescription();
-  PipelinePassDescription* make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&) override;
+  public : // typedefs, enums
+
+   enum pass {
+     tesselation_pre_pass = 0,
+     tesselation_final_pass = 1,
+     raycasting = 2
+   };
+
+   friend class Pipeline;
+
+  public :
+
+    NURBSPassDescription();
+    PipelinePassDescription* make_copy() const override;
+    PipelinePass make_pass(RenderContext const&) override;
+
 };
 
 }
 
-#endif  // GUA_BBOX_PASS_HPP
+#endif  // GUA_NURBSPASS_HPP
