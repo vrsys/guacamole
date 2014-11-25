@@ -299,7 +299,9 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
             0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
             0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
             0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-            0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex)),
+            0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+            0, 5, scm::gl::TYPE_VEC4F, sizeof(Vertex))(
+            0, 6, scm::gl::TYPE_VEC4I, sizeof(Vertex)),
         {vertices_[ctx.id]});
 
     ctx.render_context->apply();

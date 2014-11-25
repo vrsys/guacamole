@@ -46,8 +46,8 @@ SkeletalAnimationPassDescription::SkeletalAnimationPassDescription()
   rendermode_ = RenderMode::Custom;
 
   std::shared_ptr<scm::gl::buffer_ptr> material_uniform_storage_buffer = std::make_shared<scm::gl::buffer_ptr>(nullptr);
-  auto vertex_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
-  auto fragment_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
+  auto vertex_shader = Resources::lookup_shader("shaders/skeletal_animation_shader.vert");
+  auto fragment_shader = Resources::lookup_shader("shaders/skeletal_animation_shader.frag");
   process_ = [material_uniform_storage_buffer, vertex_shader, fragment_shader](
       PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
 
