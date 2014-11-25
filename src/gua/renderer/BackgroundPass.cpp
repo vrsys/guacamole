@@ -28,6 +28,8 @@
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
 
+#include <boost/variant.hpp>
+
 namespace gua {
 
 BackgroundPassDescription::BackgroundPassDescription()
@@ -60,7 +62,7 @@ BackgroundPassDescription& BackgroundPassDescription::color(utils::Color3f const
 
 utils::Color3f BackgroundPassDescription::color() const {
   auto uniform(uniforms.find("background_color"));
-  return utils::Color3f(uniform->second.data.vec3_);
+  return utils::Color3f(boost::get<math::vec3>(uniform->second.data));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +76,7 @@ BackgroundPassDescription& BackgroundPassDescription::texture(std::string const&
 
 std::string BackgroundPassDescription::texture() const {
   auto uniform(uniforms.find("background_texture"));
-  return uniform->second.data.texture_;
+  return boost::get<std::string>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +90,7 @@ BackgroundPassDescription& BackgroundPassDescription::mode(BackgroundPassDescrip
 
 BackgroundPassDescription::BackgroundMode BackgroundPassDescription::mode() const {
   auto uniform(uniforms.find("background_mode"));
-  return BackgroundPassDescription::BackgroundMode(uniform->second.data.int_);
+  return BackgroundPassDescription::BackgroundMode(boost::get<int>(uniform->second.data));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +104,7 @@ BackgroundPassDescription& BackgroundPassDescription::enable_fog(bool enable_fog
 
 bool BackgroundPassDescription::enable_fog() const {
   auto uniform(uniforms.find("enable_fog"));
-  return uniform->second.data.bool_;
+  return boost::get<bool>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +118,7 @@ BackgroundPassDescription& BackgroundPassDescription::fog_start(float fog_start)
 
 float BackgroundPassDescription::fog_start() const {
   auto uniform(uniforms.find("fog_start"));
-  return uniform->second.data.float_;
+  return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +132,7 @@ BackgroundPassDescription& BackgroundPassDescription::fog_end(float fog_end) {
 
 float BackgroundPassDescription::fog_end() const {
   auto uniform(uniforms.find("fog_end"));
-  return uniform->second.data.float_;
+  return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,5 +142,11 @@ PipelinePassDescription* BackgroundPassDescription::make_copy() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass BackgroundPassDescription::make_pass(RenderContext const& ctx)
+{
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
 
 }

@@ -50,11 +50,6 @@ struct RenderContext {
   */
   RenderContext();
 
-  /**
-  * d'tor
-  */
-  ~RenderContext();
-
    /**
    * The schism context of this RenderContext.
    */

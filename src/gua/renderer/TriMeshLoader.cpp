@@ -178,6 +178,12 @@ namespace gua {
 
     std::shared_ptr<node::Node> new_node;
 
+    std::string error = importer->GetErrorString();
+    if (!error.empty())
+    {
+      Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, " << error << std::endl;
+    }
+
     if (scene->mRootNode) {
       // new_node = std::make_shared(new GeometryNode("unnamed",
       //                             GeometryNode::Configuration("", ""),

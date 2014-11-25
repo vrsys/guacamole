@@ -22,7 +22,7 @@ ADD_EXECUTABLE( ${_EXE_NAME}
 
 ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui)
 
-LIST(APPEND LIBS guacamole-gui guacamole ${AWESOMIUM_LIBRARY} udev)
+LIST(APPEND LIBS guacamole-gui guacamole udev)
 
 IF (MSVC)
   TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}

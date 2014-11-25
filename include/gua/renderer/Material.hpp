@@ -31,7 +31,7 @@ namespace gua {
 
 class MaterialShader;
 
-class Material {
+class GUA_DLL Material {
   public:
     Material(std::string const& shader_name = "");
 

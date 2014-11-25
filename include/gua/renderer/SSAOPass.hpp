@@ -33,7 +33,7 @@ namespace gua {
 
 class Pipeline;
 
-class SSAOPassDescription : public PipelinePassDescription {
+class GUA_DLL SSAOPassDescription : public PipelinePassDescription {
  public:
 
   SSAOPassDescription();
@@ -48,9 +48,11 @@ class SSAOPassDescription : public PipelinePassDescription {
   SSAOPassDescription& falloff(float falloff);
   float falloff() const;
 
-  virtual PipelinePassDescription* make_copy() const;
+  PipelinePassDescription* make_copy() const override;
 
   friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const&) override;
 };
 
 }

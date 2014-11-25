@@ -40,7 +40,7 @@ struct Ray;
 
 namespace node {
 class RayNode;
-class SerializedCameraNode;
+struct SerializedCameraNode;
 }
 
 /**

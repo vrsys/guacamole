@@ -62,7 +62,7 @@ class GUA_DLL Window : public WindowBase {
    * Makes the RenderContext of this window current. All preceeding
    * OpenGL calls will be invoked on this window.
    */
-  virtual void set_active(bool active) const;
+  virtual void set_active(bool active);
 
   /**
    * Ends the drawing of a new frame.

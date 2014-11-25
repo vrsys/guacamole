@@ -23,7 +23,6 @@
 #include <gua/gui/GuiResource.hpp>
 
 // guacamole headers
-#include <gua/gui/GuiPass.hpp>
 #include <gua/gui/Interface.hpp>
 #include <gua/gui/GuiTexture.hpp>
 #include <gua/platform.hpp>

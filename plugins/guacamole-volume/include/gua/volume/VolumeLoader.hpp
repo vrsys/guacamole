@@ -31,73 +31,73 @@
 #include <list>
 #include <memory>
 
-// namespace gua {
+namespace gua {
 
-// 	class Node;
-// 	class InnerNode;
-// 	class VolumeNode;
+  class Node;
+  class InnerNode;
+  class VolumeNode;
 
-// 	/**
-// 	* Loads and draws meshes.
-// 	*
-// 	* This class can load mesh data from files and display them in multiple
-// 	* contexts. A VolumeLoader object is made of several Mesh objects.
-// 	*/
-// 	class GUA_DLL VolumeLoader {
-// 	public:
+  /**
+  * Loads and draws meshes.
+  *
+  * This class can load mesh data from files and display them in multiple
+  * contexts. A VolumeLoader object is made of several Mesh objects.
+  */
+  class GUA_DLL VolumeLoader {
+  public:
 
-// 		enum Flags {
-// 			DEFAULTS = 0,
-// 			MAKE_PICKABLE = 1 << 0,
-// 			NORMALIZE_POSITION = 1 << 1,
-// 			NORMALIZE_SCALE = 1 << 2
-// 		};
+    enum Flags {
+      DEFAULTS = 0,
+      MAKE_PICKABLE = 1 << 0,
+      NORMALIZE_POSITION = 1 << 1,
+      NORMALIZE_SCALE = 1 << 2
+    };
 
-// 		/**
-// 		* Default constructor.
-// 		*
-// 		* Constructs a new and empty VolumeLoader.
-// 		*/
-// 		VolumeLoader();
+    /**
+    * Default constructor.
+    *
+    * Constructs a new and empty VolumeLoader.
+    */
+    VolumeLoader();
 
-// 		/**
-// 		* Constructor from a file.
-// 		*
-// 		* Creates a new VolumeLoader from a given file.
-// 		*
-// 		* \param file_name        The file to load the meh's data from.
-// 		*/
-//     /**
-//     *
-//     */
-// 		std::shared_ptr<node::Node> create_volume_from_file(std::string const& node_name,
-// 													  std::string const& file_name,
-// 													  unsigned flags);
+    /**
+    * Constructor from a file.
+    *
+    * Creates a new VolumeLoader from a given file.
+    *
+    * \param file_name        The file to load the meh's data from.
+    */
+    /**
+    *
+    */
+    std::shared_ptr<node::Node> create_volume_from_file(std::string const& node_name,
+                            std::string const& file_name,
+                            unsigned flags);
 
-// 		std::shared_ptr<node::Node> load(std::string const& file_name,
-// 								   unsigned flags);
+    std::shared_ptr<node::Node> load(std::string const& file_name,
+                   unsigned flags);
 
-// 		/**
-// 		* Constructor from memory buffer.
-// 		*
-// 		* Creates a new VolumeLoader from a existing memory buffer.
-// 		*
-// 		* \param buffer_name      The buffer to load the meh's data from.
-// 		* \param buffer_size      The buffer's size.
-// 		*/
-// 		//std::vector<Volume*> const load_from_buffer(char const* buffer_name,
-// 		//	unsigned buffer_size);
+    /**
+    * Constructor from memory buffer.
+    *
+    * Creates a new VolumeLoader from a existing memory buffer.
+    *
+    * \param buffer_name      The buffer to load the meh's data from.
+    * \param buffer_size      The buffer's size.
+    */
+    //std::vector<Volume*> const load_from_buffer(char const* buffer_name,
+    //  unsigned buffer_size);
 
-// 		/* virtual */ bool is_supported(std::string const& file_name) const override;
+    bool is_supported(std::string const& file_name) const;
 
-// 	private:
+  private:
 
-// 		static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
+    static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
 
-// 		boost::unordered_set<std::string> _supported_file_extensions;
+    boost::unordered_set<std::string> _supported_file_extensions;
 
-// 	};
+  };
 
-// }
+}
 
 #endif  // GUA_VOLUME_LOADER_HPP
