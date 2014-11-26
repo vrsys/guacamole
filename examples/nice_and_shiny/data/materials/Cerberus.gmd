@@ -9,19 +9,49 @@
       "source" : "
         void FragmentTexture() {
           vec2 tc = gua_texcoords;
-          gua_color       = pow(texture(sampler2D(AlbedoMap), tc).rgb, vec3(2.2));
-          gua_shinyness   = texture(sampler2D(RoughnessMap), tc).rgb;
-          gua_specularity = texture(sampler2D(MetalnessMap), tc).rgb;
-          vec3 normalTS   = normalize(texture(sampler2D(NormalMap), tc).rgb*2.0-1.0);
-          // Green/Y channel is flipped in Cerberus NormalMap
-          normalTS.y *= -1.0;
-          gua_normal      = normalize(gua_tangent*normalTS.x +
-                                      gua_bitangent*normalTS.y +
-                                      gua_normal*normalTS.z);
+          if (0 != AlbedoMap) {
+            gua_color       = pow(texture(sampler2D(AlbedoMap), tc).rgb, vec3(2.2));
+          } else {
+            gua_color = Color;
+          }
+          // gua_color = AlbedoMap * (pow(texture(sampler2D(AlbedoMap), tc).rgb, vec3(2.2))) + (1-AlbedoMap)*Color;
+          if (0 != RoughnessMap) {
+            gua_shinyness   = texture(sampler2D(RoughnessMap), tc).r;
+          } else {
+            gua_shinyness = Roughness;
+          }
+          if (0 != MetalnessMap) {
+            gua_specularity = texture(sampler2D(MetalnessMap), tc).r;
+          } else {
+            gua_specularity = Metalness;
+          }
+          if (0 != NormalMap) {
+            vec3 normalTS   = normalize(texture(sampler2D(NormalMap), tc).rgb*2.0-1.0);
+            // Green/Y channel is flipped in Cerberus NormalMap
+            normalTS.y *= -1.0;
+            gua_normal      = normalize(gua_tangent*normalTS.x +
+                                        gua_bitangent*normalTS.y +
+                                        gua_normal*normalTS.z);
+          }
         }
       ",
       "uniforms" :
       [
+        {
+          "name" : "Color",
+          "type" : "vec3",
+          "value" : "(0.0 0.0 1.0)"
+        },
+        {
+          "name" : "Roughness",
+          "type" : "float",
+          "value" : "1.0"
+        },
+        {
+          "name" : "Metalness",
+          "type" : "float",
+          "value" : "0.0"
+        },
         {
           "name" : "AlbedoMap",
           "type" : "sampler2D",
