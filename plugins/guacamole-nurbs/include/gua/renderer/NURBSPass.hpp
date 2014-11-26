@@ -31,12 +31,6 @@ namespace gua {
 
   public : // typedefs, enums
 
-   enum pass {
-     tesselation_pre_pass = 0,
-     tesselation_final_pass = 1,
-     raycasting = 2
-   };
-
    friend class Pipeline;
 
   public :
