@@ -28,6 +28,7 @@
 namespace gua {
 
 class TriMeshRessource;
+class TriMeshLoader;
 
 namespace node {
 
@@ -40,7 +41,7 @@ class GUA_DLL TriMeshNode : public GeometryNode {
 
 public : // typedef/enums/friends
 
-  friend class TriMeshLoader;
+  friend class ::gua::TriMeshLoader;
 
 private : // c'tor / d'tor
 
