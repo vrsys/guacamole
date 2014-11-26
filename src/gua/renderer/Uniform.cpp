@@ -27,58 +27,71 @@
 
 namespace gua {
 
-template<> void UniformValue::apply<std::string>(UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) {
+template <>
+void UniformValue::apply<std::string>(UniformValue const* self,
+                                      RenderContext const& ctx,
+                                      std::string const& name,
+                                      scm::gl::program_ptr const& prog,
+                                      unsigned location) {
 
-  auto texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data)));
+  auto texture(
+      TextureDatabase::instance()->lookup(boost::get<std::string>(self->data)));
   if (texture) {
     prog->uniform(name, location, texture->get_handle(ctx));
   } else if (ctx.mode != CameraMode::CENTER) {
     if ((ctx.mode != CameraMode::LEFT)) {
-      auto left_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data) + "_left"));
+      auto left_texture(TextureDatabase::instance()->lookup(
+          boost::get<std::string>(self->data) + "_left"));
       if (left_texture) {
         prog->uniform(name, location, left_texture->get_handle(ctx));
       }
     } else {
-      auto right_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data) + "_right"));
+      auto right_texture(TextureDatabase::instance()->lookup(
+          boost::get<std::string>(self->data) + "_right"));
       if (right_texture) {
         prog->uniform(name, location, right_texture->get_handle(ctx));
       }
-    }   
+    }
   }
 }
 
-template<> unsigned UniformValue::get_byte_size_impl<bool>        () { return sizeof(int); }
-template<> unsigned UniformValue::get_byte_size_impl<std::string> () { return sizeof(math::vec2ui); }
+template <>
+void UniformValue::write_bytes_impl<bool>(UniformValue const* self,
+                                          RenderContext const& ctx,
+                                          char* target) {
+  memcpy(target, &boost::get<bool>(self->data), sizeof(int));
+}
 
-
-template<> void UniformValue::write_bytes_impl<bool>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &boost::get<bool>(self->data), sizeof(int)); }
-
-template<> void UniformValue::write_bytes_impl<std::string> (UniformValue const* self, RenderContext const& ctx, char* target)
-{
-  auto texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data)));
+template <>
+void UniformValue::write_bytes_impl<std::string>(UniformValue const* self,
+                                                 RenderContext const& ctx,
+                                                 char* target) {
+  auto texture(
+      TextureDatabase::instance()->lookup(boost::get<std::string>(self->data)));
   if (texture) {
     auto& handle(texture->get_handle(ctx));
     memcpy(target, &handle, sizeof(math::vec2ui));
   } else if (ctx.mode != CameraMode::CENTER) {
     if ((ctx.mode != CameraMode::LEFT)) {
-      auto left_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data) + "_left"));
+      auto left_texture(TextureDatabase::instance()->lookup(
+          boost::get<std::string>(self->data) + "_left"));
       if (left_texture) {
         auto& handle(left_texture->get_handle(ctx));
         memcpy(target, &handle, sizeof(math::vec2ui));
       }
     } else {
-      auto right_texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data) + "_right"));
+      auto right_texture(TextureDatabase::instance()->lookup(
+          boost::get<std::string>(self->data) + "_right"));
       if (right_texture) {
         auto& handle(right_texture->get_handle(ctx));
         memcpy(target, &handle, sizeof(math::vec2ui));
       }
-    }   
+    }
   }
 }
 
-UniformValue UniformValue::create_from_string_and_type(
-    std::string const& value,
-    UniformType const& ty) {
+UniformValue UniformValue::create_from_string_and_type(std::string const& value,
+                                                       UniformType const& ty) {
   switch (ty) {
     case UniformType::INT:
       return UniformValue(string_utils::from_string<int>(value));
@@ -99,16 +112,15 @@ UniformValue UniformValue::create_from_string_and_type(
     case UniformType::SAMPLER2D:
       return UniformValue(value);
   }
-  throw std::runtime_error("UniformValue::create_from_string_and_type(): Invalid type");
+  throw std::runtime_error(
+      "UniformValue::create_from_string_and_type(): Invalid type");
 }
 
-UniformValue UniformValue::create_from_strings(
-    std::string const& value,
-    std::string const& ty) {
+UniformValue UniformValue::create_from_strings(std::string const& value,
+                                               std::string const& ty) {
 
   return create_from_string_and_type(value,
-                                     gua::enums::parse_uniform_type(ty).get()
-                                    );
+                                     gua::enums::parse_uniform_type(ty).get());
 
 }
 
