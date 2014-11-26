@@ -19,56 +19,38 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/SkeletalAnimationPass.hpp>
+#ifndef GUA_SKELETAL_ANIMATION_RENDERER_HPP
+#define GUA_SKELETAL_ANIMATION_RENDERER_HPP
 
-#include <gua/node/SkeletalAnimationNode.hpp>
-#include <gua/renderer/SkeletalAnimationRessource.hpp>
-#include <gua/renderer/SkeletalAnimationRenderer.hpp>
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/utils/Logger.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialShaderDatabase.hpp>
-#include <gua/databases/Resources.hpp>
+#include <map>
+#include <unordered_map>
+
+#include <gua/platform.hpp>
+
+#include <scm/gl_core/shader_objects.h>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
+  class MaterialShader;
+  class ShaderProgram;
+  class Pipeline;
 
-SkeletalAnimationPassDescription::SkeletalAnimationPassDescription()
-  : PipelinePassDescription() {
-  vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
-  fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
+class SkeletalAnimationRenderer {
 
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  doClear_ = false;
-  rendermode_ = RenderMode::Custom;
-}
+ public:
 
+   SkeletalAnimationRenderer();
+   ~SkeletalAnimationRenderer();
+  
+   void render(Pipeline& pipe);
 
-////////////////////////////////////////////////////////////////////////////////
+ private:
 
-PipelinePassDescription* SkeletalAnimationPassDescription::make_copy() const {
-  return new SkeletalAnimationPassDescription(*this);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass SkeletalAnimationPassDescription::make_pass(RenderContext const& ctx)
-{
-  PipelinePass pass{*this, ctx};
-
-  auto renderer = std::make_shared<SkeletalAnimationRenderer>();
-
-  pass.process_ = [renderer](
-    PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
-    renderer->render(pipe);
-  };
-
-  return pass;
-}
+   std::map<scm::gl::shader_stage, std::string>         program_description_;
+   std::unordered_map<MaterialShader*, ShaderProgram*>  programs_;
+  
+};
 
 }
+
+#endif  // GUA_SKELETAL_ANIMATION_RENDERER_HPP

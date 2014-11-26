@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
   gua::SkeletalAnimationLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE | gua::SkeletalAnimationLoader::LOAD_MATERIALS));
+  auto teapot(loader.create_geometry_from_file("bob", "data/objects/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
   teapot->set_draw_bounding_box(true);
 
@@ -85,6 +85,10 @@ int main(int argc, char** argv) {
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
 
+  //gua::VolumeLoader vloader;
+  //auto volume(vloader.create_volume_from_file("volume", "/opt/gua_vrgeo_2013/data/objects/head_w256_h256_d225_c1_b8.raw", 0));
+  //graph.add_node("/transform", volume);
+
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
@@ -102,10 +106,10 @@ int main(int argc, char** argv) {
   camera->config.set_enable_stereo(false);
   camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
-    // .enable_fog(false)
-    // .fog_start(1)
-    // .fog_end(10);
+    .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
+    .enable_fog(true)
+    .fog_start(1)
+    .fog_end(10);
   camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
     .radius(3)
     .intensity(2);
@@ -125,6 +129,8 @@ int main(int argc, char** argv) {
     trackball.motion(pos.x, pos.y);
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+  window->open();
 
   gua::Renderer renderer;
 

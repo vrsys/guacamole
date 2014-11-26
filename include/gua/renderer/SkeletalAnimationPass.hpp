@@ -35,8 +35,10 @@ namespace gua {
 class GUA_DLL SkeletalAnimationPassDescription : public PipelinePassDescription {
  public:
   SkeletalAnimationPassDescription();
-  virtual PipelinePassDescription* make_copy() const;
+  PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const&) override;
 };
 
 }

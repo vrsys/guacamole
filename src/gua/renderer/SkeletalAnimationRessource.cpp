@@ -401,20 +401,20 @@ void SkeletalAnimationRessource::updateBoneTransforms()
 
 void SkeletalAnimationRessource::BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms)
 {
-    scm::math::mat4f Identity = scm::math::mat4f::identity();
+    // scm::math::mat4f Identity = scm::math::mat4f::identity();
     
-    //if no frame frquequency is given, set to 25
-    float TicksPerSecond = (float)(scene_->mAnimations[0]->mTicksPerSecond != 0 ? scene_->mAnimations[0]->mTicksPerSecond : 25.0f);
-    float TimeInTicks = TimeInSeconds * TicksPerSecond;
-    float AnimationTime = fmod(TimeInTicks, (float)scene_->mAnimations[0]->mDuration);
+    // //if no frame frquequency is given, set to 25
+    // float TicksPerSecond = (float)(scene_->mAnimations[0]->mTicksPerSecond != 0 ? scene_->mAnimations[0]->mTicksPerSecond : 25.0f);
+    // float TimeInTicks = TimeInSeconds * TicksPerSecond;
+    // float AnimationTime = fmod(TimeInTicks, (float)scene_->mAnimations[0]->mDuration);
 
-    ReadNodeHierarchy(AnimationTime, scene_->mRootNode, Identity);
+    // ReadNodeHierarchy(AnimationTime, scene_->mRootNode, Identity);
 
-    Transforms.resize(num_bones_);
+    // Transforms.resize(num_bones_);
 
-    for (uint i = 0 ; i < num_bones_ ; i++) {
-        Transforms[i] = bone_info_[i].FinalTransformation;
-    }
+    // for (uint i = 0 ; i < num_bones_ ; i++) {
+    //     Transforms[i] = bone_info_[i].FinalTransformation;
+    // }
 }
 
 void SkeletalAnimationRessource::ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const scm::math::mat4f& ParentTransform)

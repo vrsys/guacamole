@@ -29,7 +29,6 @@
 #include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
-#include <gua/renderer/SkeletalAnimationLoader.hpp>
 #include <gua/renderer/SkeletalAnimationRessource.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
@@ -216,7 +215,8 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_ressource(std::share
 
   Material material;
   //create (materials) and node
-  return std::make_shared<node::SkeletalAnimationNode>(mesh_name, mesh_name, material);
+  // return std::make_shared<node::SkeletalAnimationNode>(mesh_name, mesh_name, material);
+  return std::shared_ptr<node::SkeletalAnimationNode>(new node::SkeletalAnimationNode(mesh_name, mesh_name, material));
 
 
 
