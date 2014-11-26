@@ -1,5 +1,6 @@
 Guacamole
 =========
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/vrsys/guacamole?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [![Build Status](https://secure.travis-ci.org/vrsys/guacamole.png)](http://travis-ci.org/vrsys/guacamole)
 
