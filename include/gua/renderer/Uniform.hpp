@@ -40,6 +40,25 @@
 
 namespace gua {
 
+struct GetGlslType : public boost::static_visitor<std::string>
+{
+  std::string operator()(int)          const { return "int"; }
+  std::string operator()(bool)         const { return "int"; }
+  std::string operator()(float)        const { return "float"; }
+  std::string operator()(math::mat3)   const { return "mat3"; }
+  std::string operator()(math::mat4)   const { return "mat4"; }
+  std::string operator()(math::vec2)   const { return "vec2"; }
+  std::string operator()(math::vec3)   const { return "vec3"; }
+  std::string operator()(math::vec4)   const { return "vec4"; }
+  std::string operator()(math::vec2i)  const { return "ivec2"; }
+  std::string operator()(math::vec3i)  const { return "ivec3"; }
+  std::string operator()(math::vec4i)  const { return "ivec4"; }
+  std::string operator()(math::vec2ui) const { return "uvec2"; }
+  std::string operator()(math::vec3ui) const { return "uvec3"; }
+  std::string operator()(math::vec4ui) const { return "uvec4"; }
+  std::string operator()(std::string)  const { return "uvec2"; }
+};
+
 class GUA_DLL UniformValue {
 
   typedef boost::variant < 
@@ -67,14 +86,12 @@ class GUA_DLL UniformValue {
     template<typename T>
     UniformValue(T const& val) :
       apply_impl_(apply<T>),
-      get_glsl_type_impl_(get_glsl_type_impl<T>),
       get_byte_size_impl_(get_byte_size_impl<T>),
       write_bytes_impl_(write_bytes_impl<T>) { set(val); }
 
     UniformValue(UniformValue const& to_copy) = default;
     // UniformValue(UniformValue const& to_copy) :
     //   apply_impl_(to_copy.apply_impl_),
-    //   get_glsl_type_impl_(to_copy.get_glsl_type_impl_),
     //   get_byte_size_impl_(to_copy.get_byte_size_impl_),
     //   write_bytes_impl_(to_copy.write_bytes_impl_),
     //   data(to_copy.data) {}
@@ -95,7 +112,7 @@ class GUA_DLL UniformValue {
     }
 
     std::string get_glsl_type() const {
-      return get_glsl_type_impl_();
+      return boost::apply_visitor(GetGlslType(), data);
     }
 
     unsigned get_byte_size() const {
@@ -108,7 +125,6 @@ class GUA_DLL UniformValue {
 
     void operator= (UniformValue const& to_copy) {
       apply_impl_         = to_copy.apply_impl_;
-      get_glsl_type_impl_ = to_copy.get_glsl_type_impl_;
       get_byte_size_impl_ = to_copy.get_byte_size_impl_;
       write_bytes_impl_   = to_copy.write_bytes_impl_;
       data                = to_copy.data;
@@ -119,10 +135,7 @@ class GUA_DLL UniformValue {
   private:
 
     template<typename T>
-    void set(T const& val) 
-    { 
-      data = val; 
-    }
+    void set(T const& val) { data = val; }
 
     template<typename T>
     static void apply(UniformValue const* self, RenderContext const& ctx,
@@ -144,12 +157,7 @@ class GUA_DLL UniformValue {
       memcpy(target, &boost::get<T>(self->data), sizeof(T));
     }
 
-    template<typename T>
-    static std::string get_glsl_type_impl();
-
-
     std::function<void(UniformValue const*, RenderContext const&, std::string const&, scm::gl::program_ptr const&, unsigned)> apply_impl_;
-    std::function<std::string()> get_glsl_type_impl_;
     std::function<unsigned()> get_byte_size_impl_;
     std::function<void(UniformValue const*, RenderContext const&, char*)> write_bytes_impl_;
 };
@@ -162,22 +170,6 @@ template<> GUA_DLL void UniformValue::write_bytes_impl<bool>(UniformValue const*
 
 template<> GUA_DLL unsigned UniformValue::get_byte_size_impl<bool>();
 template<> GUA_DLL unsigned UniformValue::get_byte_size_impl<std::string>();
-
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<int>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<bool>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<float>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::mat3>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::mat4>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec2>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec3>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec4>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec2i>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec3i>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec4i>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec2ui>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec3ui>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec4ui>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<std::string>();
 
 }                                                                                                                                                                                                                                                             
 

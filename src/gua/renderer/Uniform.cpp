@@ -27,22 +27,6 @@
 
 namespace gua {
 
-template<> std::string UniformValue::get_glsl_type_impl<int>()          { return "int"; }
-template<> std::string UniformValue::get_glsl_type_impl<bool>()         { return "int"; }
-template<> std::string UniformValue::get_glsl_type_impl<float>()        { return "float"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::mat3>()   { return "mat3"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::mat4>()   { return "mat4"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec2>()   { return "vec2"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec3>()   { return "vec3"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec4>()   { return "vec4"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec2i>()  { return "ivec2"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec3i>()  { return "ivec3"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec4i>()  { return "ivec4"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec2ui>() { return "uvec2"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec3ui>() { return "uvec3"; }
-template<> std::string UniformValue::get_glsl_type_impl<math::vec4ui>() { return "uvec4"; }
-template<> std::string UniformValue::get_glsl_type_impl<std::string>()  { return "uvec2"; }
-
 template<> void UniformValue::apply<std::string>(UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) {
 
   auto texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data)));
