@@ -23,11 +23,6 @@
 #define GUA_LIGHTING_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/renderer/ShadowMap.hpp>
-
-#include <memory>
 
 namespace gua {
 

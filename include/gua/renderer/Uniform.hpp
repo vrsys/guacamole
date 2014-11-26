@@ -40,145 +40,159 @@
 
 namespace gua {
 
+struct GetGlslType : public boost::static_visitor<std::string> {
+  std::string operator()(int) const { return "int"; }
+  std::string operator()(bool) const { return "int"; }
+  std::string operator()(float) const { return "float"; }
+  std::string operator()(math::mat3) const { return "mat3"; }
+  std::string operator()(math::mat4) const { return "mat4"; }
+  std::string operator()(math::vec2) const { return "vec2"; }
+  std::string operator()(math::vec3) const { return "vec3"; }
+  std::string operator()(math::vec4) const { return "vec4"; }
+  std::string operator()(math::vec2i) const { return "ivec2"; }
+  std::string operator()(math::vec3i) const { return "ivec3"; }
+  std::string operator()(math::vec4i) const { return "ivec4"; }
+  std::string operator()(math::vec2ui) const { return "uvec2"; }
+  std::string operator()(math::vec3ui) const { return "uvec3"; }
+  std::string operator()(math::vec4ui) const { return "uvec4"; }
+  std::string operator()(std::string) const { return "uvec2"; }
+};
+
+struct GetByteSize : public boost::static_visitor<unsigned> {
+  unsigned operator()(int) const { return sizeof(int); }
+  unsigned operator()(bool) const { return sizeof(int); }
+  unsigned operator()(float) const { return sizeof(float); }
+  unsigned operator()(math::mat3) const { return sizeof(math::mat3); }
+  unsigned operator()(math::mat4) const { return sizeof(math::mat4); }
+  unsigned operator()(math::vec2) const { return sizeof(math::vec2); }
+  unsigned operator()(math::vec3) const { return sizeof(math::vec3); }
+  unsigned operator()(math::vec4) const { return sizeof(math::vec4); }
+  unsigned operator()(math::vec2i) const { return sizeof(math::vec2i); }
+  unsigned operator()(math::vec3i) const { return sizeof(math::vec3i); }
+  unsigned operator()(math::vec4i) const { return sizeof(math::vec4i); }
+  unsigned operator()(math::vec2ui) const { return sizeof(math::vec2ui); }
+  unsigned operator()(math::vec3ui) const { return sizeof(math::vec3ui); }
+  unsigned operator()(math::vec4ui) const { return sizeof(math::vec4ui); }
+  unsigned operator()(std::string) const { return sizeof(math::vec2ui); }
+};
+
 class GUA_DLL UniformValue {
 
-  typedef boost::variant < 
-    int, 
-    bool,
-    float,
-    math::mat3, 
-    math::mat4, 
-    math::vec2, 
-    math::vec3, 
-    math::vec4, 
-    math::vec2i,
-    math::vec3i,
-    math::vec4i,
-    math::vec2ui,
-    math::vec3ui,
-    math::vec4ui,
-    std::string
-  > Data;
+  typedef boost::variant<int,
+                         bool,
+                         float,
+                         math::mat3,
+                         math::mat4,
+                         math::vec2,
+                         math::vec3,
+                         math::vec4,
+                         math::vec2i,
+                         math::vec3i,
+                         math::vec4i,
+                         math::vec2ui,
+                         math::vec3ui,
+                         math::vec4ui,
+                         std::string> Data;
 
-  public:
-    UniformValue() = default;
+ public:
+  UniformValue() = default;
 
-    // -------------------------------------------------------------------------
-    template<typename T>
-    UniformValue(T const& val) :
-      apply_impl_(apply<T>),
-      get_glsl_type_impl_(get_glsl_type_impl<T>),
-      get_byte_size_impl_(get_byte_size_impl<T>),
-      write_bytes_impl_(write_bytes_impl<T>) { set(val); }
+  // -------------------------------------------------------------------------
+  template <typename T>
+  UniformValue(T const& val)
+      : apply_impl_(apply<T>), write_bytes_impl_(write_bytes_impl<T>) {
+    set(val);
+  }
 
-    UniformValue(UniformValue const& to_copy) = default;
-    // UniformValue(UniformValue const& to_copy) :
-    //   apply_impl_(to_copy.apply_impl_),
-    //   get_glsl_type_impl_(to_copy.get_glsl_type_impl_),
-    //   get_byte_size_impl_(to_copy.get_byte_size_impl_),
-    //   write_bytes_impl_(to_copy.write_bytes_impl_),
-    //   data(to_copy.data) {}
+  UniformValue(UniformValue const& to_copy) = default;
+  // UniformValue(UniformValue const& to_copy) :
+  //   apply_impl_(to_copy.apply_impl_),
+  //   write_bytes_impl_(to_copy.write_bytes_impl_),
+  //   data(to_copy.data) {}
 
-    // -------------------------------------------------------------------------
-    static UniformValue create_from_string_and_type(
-      std::string const& value, UniformType const& ty
-    );
+  // -------------------------------------------------------------------------
+  static UniformValue create_from_string_and_type(std::string const& value,
+                                                  UniformType const& ty);
 
-    static UniformValue create_from_strings(
-      std::string const& value, std::string const& ty
-    );
+  static UniformValue create_from_strings(std::string const& value,
+                                          std::string const& ty);
 
-    // -------------------------------------------------------------------------
-    void apply(RenderContext const& ctx, std::string const& name,
-               scm::gl::program_ptr const& prog, unsigned location = 0) const {
-      apply_impl_(this, ctx, name, prog, location);
-    }
+  // -------------------------------------------------------------------------
+  void apply(RenderContext const& ctx,
+             std::string const& name,
+             scm::gl::program_ptr const& prog,
+             unsigned location = 0) const {
+    apply_impl_(this, ctx, name, prog, location);
+  }
 
-    std::string get_glsl_type() const {
-      return get_glsl_type_impl_();
-    }
+  std::string get_glsl_type() const {
+    return boost::apply_visitor(GetGlslType(), data);
+  }
 
-    unsigned get_byte_size() const {
-      return get_byte_size_impl_();
-    }
+  unsigned get_byte_size() const {
+    return boost::apply_visitor(GetByteSize(), data);
+  }
 
-    void write_bytes(RenderContext const& ctx, char* target) const {
-      write_bytes_impl_(this, ctx, target);
-    }
+  void write_bytes(RenderContext const& ctx, char* target) const {
+    write_bytes_impl_(this, ctx, target);
+  }
 
-    void operator= (UniformValue const& to_copy) {
-      apply_impl_         = to_copy.apply_impl_;
-      get_glsl_type_impl_ = to_copy.get_glsl_type_impl_;
-      get_byte_size_impl_ = to_copy.get_byte_size_impl_;
-      write_bytes_impl_   = to_copy.write_bytes_impl_;
-      data                = to_copy.data;
-    }
+  void operator=(UniformValue const& to_copy) {
+    apply_impl_ = to_copy.apply_impl_;
+    write_bytes_impl_ = to_copy.write_bytes_impl_;
+    data = to_copy.data;
+  }
 
-    Data data;
+  Data data;
 
-  private:
+ private:
 
-    template<typename T>
-    void set(T const& val) 
-    { 
-      data = val; 
-    }
+  template <typename T> void set(T const& val) { data = val; }
 
-    template<typename T>
-    static void apply(UniformValue const* self, RenderContext const& ctx,
-      std::string const& name, scm::gl::program_ptr const& prog,
-      unsigned location)
-    {
-      prog->uniform(name, location, boost::get<T>(self->data));
-    }
+  template <typename T>
+  static void apply(UniformValue const* self,
+                    RenderContext const& ctx,
+                    std::string const& name,
+                    scm::gl::program_ptr const& prog,
+                    unsigned location) {
+    prog->uniform(name, location, boost::get<T>(self->data));
+  }
 
-    template<typename T>
-    static unsigned get_byte_size_impl()
-    {
-      return sizeof(T);
-    }
+  template <typename T>
+  static void write_bytes_impl(UniformValue const* self,
+                               RenderContext const& ctx,
+                               char* target) {
+    memcpy(target, &boost::get<T>(self->data), sizeof(T));
+  }
 
-    template<typename T>
-    static void write_bytes_impl(UniformValue const* self, RenderContext const& ctx, char* target)
-    {
-      memcpy(target, &boost::get<T>(self->data), sizeof(T));
-    }
-
-    template<typename T>
-    static std::string get_glsl_type_impl();
-
-
-    std::function<void(UniformValue const*, RenderContext const&, std::string const&, scm::gl::program_ptr const&, unsigned)> apply_impl_;
-    std::function<std::string()> get_glsl_type_impl_;
-    std::function<unsigned()> get_byte_size_impl_;
-    std::function<void(UniformValue const*, RenderContext const&, char*)> write_bytes_impl_;
+  std::function<void(UniformValue const*,
+                     RenderContext const&,
+                     std::string const&,
+                     scm::gl::program_ptr const&,
+                     unsigned)> apply_impl_;
+  std::function<void(UniformValue const*, RenderContext const&, char*)>
+      write_bytes_impl_;
 };
 
 // specializations
-template<> GUA_DLL void UniformValue::apply<std::string>(UniformValue const* self, RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location);
+template <>
+GUA_DLL void UniformValue::apply<std::string>(UniformValue const* self,
+                                              RenderContext const& ctx,
+                                              std::string const& name,
+                                              scm::gl::program_ptr const& prog,
+                                              unsigned location);
 
-template<> GUA_DLL void UniformValue::write_bytes_impl<std::string>(UniformValue const* self, RenderContext const& ctx, char* target);
-template<> GUA_DLL void UniformValue::write_bytes_impl<bool>(UniformValue const* self, RenderContext const& ctx, char* target);
+template <>
+GUA_DLL void UniformValue::write_bytes_impl<std::string>(
+    UniformValue const* self,
+    RenderContext const& ctx,
+    char* target);
 
-template<> GUA_DLL unsigned UniformValue::get_byte_size_impl<bool>();
-template<> GUA_DLL unsigned UniformValue::get_byte_size_impl<std::string>();
+template <>
+GUA_DLL void UniformValue::write_bytes_impl<bool>(UniformValue const* self,
+                                                  RenderContext const& ctx,
+                                                  char* target);
 
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<int>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<bool>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<float>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::mat3>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::mat4>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec2>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec3>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec4>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec2i>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec3i>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec4i>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec2ui>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec3ui>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<math::vec4ui>();
-template<> GUA_DLL std::string UniformValue::get_glsl_type_impl<std::string>();
-
-}                                                                                                                                                                                                                                                             
+}
 
 #endif  // GUA_UNIFORM_HPP

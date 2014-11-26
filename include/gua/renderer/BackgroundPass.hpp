@@ -23,7 +23,6 @@
 #define GUA_BACKGROUND_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
 
 #include <memory>
 
@@ -33,7 +32,7 @@ class Pipeline;
 
 class GUA_DLL BackgroundPassDescription : public PipelinePassDescription {
  public:
-  
+
   enum BackgroundMode {
     COLOR = 0,
     SKYMAP_TEXTURE = 1,
