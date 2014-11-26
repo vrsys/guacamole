@@ -18,29 +18,71 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#ifndef GUA_NURBSPASS_HPP
-#define GUA_NURBSPASS_HPP
+
+#ifndef GUA_PLOD_RESSOURCE_HPP
+#define GUA_PLOD_RESSOURCE_HPP
 
 // guacamole headers
-#include <gua/renderer/NURBS.hpp>
-#include <gua/renderer/PipelinePass.hpp>
+#include <gua/platform.hpp>
+#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/PLODUberShader.hpp>
+#include <gua/utils/KDTree.hpp>
+
+// external headers
+#include <pbr/types.h>
+#include <pbr/ren/model_database.h>
+#include <pbr/ren/cut_database.h>
+#include <pbr/ren/cut.h>
+#include <pbr/ren/lod_point_cloud.h>
 
 namespace gua {
 
-  class GUA_NURBS_DLL NURBSPassDescription : public PipelinePassDescription {
+struct RenderContext;
 
-  public : // typedefs, enums
+/**
+ * Stores a point cloud model with LOD.
+ *
+ * This class simply a wrapper for accessing models of PBR library
+ */
+class PLODRessource : public GeometryRessource {
+ public:
 
-   friend class Pipeline;
+  explicit PLODRessource(pbr::model_t model_id, bool is_pickable);
 
-  public :
+  void draw(RenderContext const& ctx) const {}
 
-    NURBSPassDescription();
-    PipelinePassDescription* make_copy() const override;
-    PipelinePass make_pass(RenderContext const&) override;
+  /**
+   * Draws the point cloud.
+   *
+   * Draws the point cloud to the given context.
+   *
+   * \param context  The RenderContext to draw onto.
+   */
+  void draw(RenderContext const& ctx,
+            pbr::context_t context_id,
+            pbr::view_t view_id,
+            pbr::model_t model_id,
+            scm::gl::vertex_array_ptr const& vertex_array,
+            std::vector<bool> const& frustum_culling_results) const;
+
+  void ray_test(Ray const& ray,
+                PickResult::Options options,
+                node::Node* owner,
+                std::set<PickResult>& hits);
+
+  std::shared_ptr<GeometryUberShader> create_ubershader() const override {
+    return std::make_shared<PLODUberShader>();
+  }
+
+ private:
+
+  bool is_pickable_;
+
+  // TODO: do we need it here?
+  pbr::model_t model_id_;
 
 };
 
 }
 
-#endif  // GUA_NURBSPASS_HPP
+#endif  // GUA_PLOD_RESSOURCE_HPP

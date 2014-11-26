@@ -18,29 +18,46 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#ifndef GUA_NURBSPASS_HPP
-#define GUA_NURBSPASS_HPP
+
+#ifndef GUA_PLOD_NODE_HPP
+#define GUA_PLOD_NODE_HPP
 
 // guacamole headers
-#include <gua/renderer/NURBS.hpp>
-#include <gua/renderer/PipelinePass.hpp>
+#include <gua/node/GeometryNode.hpp>
 
 namespace gua {
+namespace node {
 
-  class GUA_NURBS_DLL NURBSPassDescription : public PipelinePassDescription {
+/**
+ * This class is used to represent pointcloud in the SceneGraph.
+ *
+ * \ingroup gua_scenegraph
+ */
+class GUA_DLL PLODNode : public GeometryNode {
+ public:  // member
 
-  public : // typedefs, enums
+  PLODNode(std::string const& name,
+           std::string const& filename = "gua_default_geometry",
+           std::string const& material = "gua_default_material",
+           math::mat4 const& transform = math::mat4::identity());
 
-   friend class Pipeline;
+  /**
+  * Implements ray picking for a point cloud
+  */
+  void ray_test_impl(Ray const& ray,
+                     PickResult::Options options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
 
-  public :
+ protected:
 
-    NURBSPassDescription();
-    PipelinePassDescription* make_copy() const override;
-    PipelinePass make_pass(RenderContext const&) override;
+  std::shared_ptr<Node> copy() const override;
+
+ private:  // attributes e.g. special attributes for drawing
 
 };
 
-}
+}  // namespace node {
+}  // namespace gua {
 
-#endif  // GUA_NURBSPASS_HPP
+#endif  // GUA_PLOD_NODE_HPP
