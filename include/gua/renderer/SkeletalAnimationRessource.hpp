@@ -29,6 +29,7 @@
 
 // external headers
 #include <scm/gl_core.h>
+#include <scm/core/math/quat.h>
 
 #include <mutex>
 #include <thread>
@@ -36,8 +37,9 @@
 #define ZERO_MEM(a) memset(a, 0, sizeof(a))
 #include <vector>
 #include <map>
+#include <assimp/scene.h>       // Output data structure
+#define MAX_BONES 100
 
-struct aiScene;
 
 namespace Assimp { class Importer; }
 
@@ -98,16 +100,16 @@ class SkeletalAnimationRessource : public GeometryResource {
 
   struct BoneInfo
   {
-      scm::math::mat4 BoneOffset;
-      scm::math::mat4 FinalTransformation;        
+      scm::math::mat4f BoneOffset;
+      scm::math::mat4f FinalTransformation;        
 
       BoneInfo()
       {
           //BoneOffset.SetZero();
           //FinalTransformation.SetZero();
 
-          BoneOffset = scm::math::mat4(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-          FinalTransformation = scm::math::mat4(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+          BoneOffset = scm::math::mat4f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+          FinalTransformation = scm::math::mat4f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
                       
       }
   };
@@ -143,6 +145,17 @@ class SkeletalAnimationRessource : public GeometryResource {
 
   void upload_to(RenderContext const& context) /*const*/;
 
+  void updateBoneTransforms();
+  void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
+  void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const scm::math::mat4f& ParentTransform);
+  void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
+  void CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
+  void CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);    
+  uint FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim);
+  uint FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim);
+  uint FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim);
+  const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName);
+
   mutable std::vector<scm::gl::buffer_ptr> vertices_;
   mutable std::vector<scm::gl::buffer_ptr> indices_;
   mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
@@ -170,6 +183,7 @@ class SkeletalAnimationRessource : public GeometryResource {
     std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
     uint num_bones_;
     std::vector<BoneInfo> bone_info_;
+    uint boneLocation_[MAX_BONES];
 
     unsigned int num_vertices_;
     unsigned int num_faces_;
