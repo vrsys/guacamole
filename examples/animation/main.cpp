@@ -106,10 +106,7 @@ int main(int argc, char** argv) {
   camera->config.set_enable_stereo(false);
   camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
-    .enable_fog(true)
-    .fog_start(1)
-    .fog_end(10);
+    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
   camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
     .radius(3)
     .intensity(2);

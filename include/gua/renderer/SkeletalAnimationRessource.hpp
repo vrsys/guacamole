@@ -26,6 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/utils/KDTree.hpp>
+#include <gua/renderer/BoneTransformUniformBlock.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -145,7 +146,7 @@ class SkeletalAnimationRessource : public GeometryResource {
 
   void upload_to(RenderContext const& context) /*const*/;
 
-  void updateBoneTransforms();
+  void updateBoneTransforms(RenderContext const& ctx);
   void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
   void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const scm::math::mat4f& ParentTransform);
   void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
@@ -185,9 +186,12 @@ class SkeletalAnimationRessource : public GeometryResource {
     std::vector<BoneInfo> bone_info_;
     uint boneLocation_[MAX_BONES];
 
+    BoneTransformUniformBlock* bone_transforms_block_;
+
     unsigned int num_vertices_;
     unsigned int num_faces_;
 
+    float pseudo_time_;
     /////////////////////////////////
 
  public:

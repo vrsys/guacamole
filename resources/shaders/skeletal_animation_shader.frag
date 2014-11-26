@@ -10,8 +10,13 @@
 @material_method_declarations
 
 void main() {
+  // vec3 tmp = gua_varying_color;
+  
   @material_input
   @include "shaders/common/gua_global_variable_assignment.glsl"
   @material_method_calls
+
+  // gua_color = tmp;
+  
   @include "shaders/common/gua_write_gbuffer.glsl"
 }

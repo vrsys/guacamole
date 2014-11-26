@@ -29,6 +29,7 @@
 #include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/utils/Logger.hpp>
 
+
 // external headers
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -38,10 +39,10 @@
 namespace {
 
 scm::math::mat4f to_gua(aiMatrix4x4 const& m){
-  scm::math::mat4f res(m.a1,m.a2,m.a3,m.a4
-                      ,m.b1,m.b2,m.b3,m.b4
-                      ,m.c1,m.c2,m.c3,m.c4
-                      ,m.d1,m.d2,m.d3,m.d4);
+  scm::math::mat4f res(m.a1,m.b1,m.c1,m.d1
+                      ,m.a2,m.b2,m.c2,m.d2
+                      ,m.a3,m.b3,m.c3,m.d3
+                      ,m.a4,m.b4,m.c4,m.d4);
   return res;
 }
 
@@ -86,7 +87,7 @@ void SkeletalAnimationRessource::VertexBoneData::AddBoneData(uint BoneID, float 
 ////////////////////////////////////////////////////////////////////////////////
 
 SkeletalAnimationRessource::SkeletalAnimationRessource()
-    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), scene_(nullptr) {}
+    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), scene_(nullptr), bone_transforms_block_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -98,6 +99,7 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiScene const* scene, std
       upload_mutex_(),
       scene_(scene),
       importer_(importer),
+      bone_transforms_block_(nullptr),
       num_bones_(0) {
 
 
@@ -194,9 +196,10 @@ void SkeletalAnimationRessource::InitMesh(uint MeshIndex,
 
 void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
 
-  
-  if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
+    
 
+  if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
+    pseudo_time_ = 0.0;
     //new
     ///////////////////////////////////////////////////////////////////////
 
@@ -323,6 +326,14 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     //   boneLocation_[i] = glGetUniformLocation(program,Name);
     // }
 
+    bone_transforms_block_ = new BoneTransformUniformBlock(ctx.render_device);
+    
+    std::vector< math::mat4 > tmp_transforms;
+
+    std::for_each( bone_info_.begin(), bone_info_.end(), [&tmp_transforms](BoneInfo const& bi){tmp_transforms.push_back(bi.FinalTransformation);});
+
+    bone_transforms_block_->update(ctx.render_context, tmp_transforms);
+    ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
 
     ctx.render_context->apply();
   }
@@ -335,9 +346,9 @@ void SkeletalAnimationRessource::draw(RenderContext const& ctx) /*const*/ {
 
   // upload to GPU if neccessary
   upload_to(ctx);
-
+  pseudo_time_ += 1.0/101 ;
   //TODO: update bone transformations
-  updateBoneTransforms();
+  updateBoneTransforms(ctx);
 
   ctx.render_context->bind_vertex_array(vertex_array_[ctx.id]);
   ctx.render_context->bind_index_buffer(indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
@@ -385,36 +396,40 @@ std::vector<unsigned int> SkeletalAnimationRessource::get_face(unsigned int i) c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkeletalAnimationRessource::updateBoneTransforms()
+void SkeletalAnimationRessource::updateBoneTransforms(RenderContext const& ctx)
 {
     std::vector<scm::math::mat4f> Transforms;
 
-    BoneTransform(static_cast<float>(5), Transforms);
+    // add time
+    BoneTransform(pseudo_time_, Transforms);
 
-    // for (uint i = 0 ; i < Transforms.size() ; i++) {
-    //     assert(i < MAX_BONES);
-    //     //needs pointer to 4x4 array as last parameter
-    //     glUniformMatrix4fv(boneLocation_[i], 1, GL_TRUE, (const GLfloat*)Transforms[i]);
-    // }
+    bone_transforms_block_ = new BoneTransformUniformBlock(ctx.render_device);
+    std::vector< math::mat4 > tmp_transforms;
+
+    std::for_each( bone_info_.begin(), bone_info_.end(), [&tmp_transforms](BoneInfo const& bi){tmp_transforms.push_back(bi.FinalTransformation);});
+    
+    bone_transforms_block_->update(ctx.render_context, tmp_transforms);
+    ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
+
 }
 
 
 void SkeletalAnimationRessource::BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms)
 {
-    // scm::math::mat4f Identity = scm::math::mat4f::identity();
+    scm::math::mat4f Identity = scm::math::mat4f::identity();
     
-    // //if no frame frquequency is given, set to 25
-    // float TicksPerSecond = (float)(scene_->mAnimations[0]->mTicksPerSecond != 0 ? scene_->mAnimations[0]->mTicksPerSecond : 25.0f);
-    // float TimeInTicks = TimeInSeconds * TicksPerSecond;
-    // float AnimationTime = fmod(TimeInTicks, (float)scene_->mAnimations[0]->mDuration);
+    //if no frame frquequency is given, set to 25
+    float TicksPerSecond = (float)(scene_->mAnimations[0]->mTicksPerSecond != 0 ? scene_->mAnimations[0]->mTicksPerSecond : 25.0f);
+    float TimeInTicks = TimeInSeconds * TicksPerSecond;
+    float AnimationTime = fmod(TimeInTicks, (float)scene_->mAnimations[0]->mDuration);
 
-    // ReadNodeHierarchy(AnimationTime, scene_->mRootNode, Identity);
+    ReadNodeHierarchy(AnimationTime, scene_->mRootNode, Identity);
 
-    // Transforms.resize(num_bones_);
+    Transforms.resize(num_bones_);
 
-    // for (uint i = 0 ; i < num_bones_ ; i++) {
-    //     Transforms[i] = bone_info_[i].FinalTransformation;
-    // }
+    for (uint i = 0 ; i < num_bones_ ; i++) {
+        Transforms[i] = bone_info_[i].FinalTransformation;
+    }
 }
 
 void SkeletalAnimationRessource::ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const scm::math::mat4f& ParentTransform)
