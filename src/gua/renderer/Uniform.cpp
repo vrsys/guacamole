@@ -53,7 +53,7 @@ template<> unsigned UniformValue::get_byte_size_impl<std::string> () { return si
 
 template<> void UniformValue::write_bytes_impl<bool>(UniformValue const* self, RenderContext const& ctx, char* target) { memcpy(target, &boost::get<bool>(self->data), sizeof(int)); }
 
-template<> void UniformValue::write_bytes_impl<std::string> (UniformValue const* self, RenderContext const& ctx, char* target) 
+template<> void UniformValue::write_bytes_impl<std::string> (UniformValue const* self, RenderContext const& ctx, char* target)
 {
   auto texture(TextureDatabase::instance()->lookup(boost::get<std::string>(self->data)));
   if (texture) {

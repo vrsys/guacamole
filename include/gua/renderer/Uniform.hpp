@@ -61,15 +61,15 @@ struct GetGlslType : public boost::static_visitor<std::string>
 
 class GUA_DLL UniformValue {
 
-  typedef boost::variant < 
-    int, 
+  typedef boost::variant <
+    int,
     bool,
     float,
-    math::mat3, 
-    math::mat4, 
-    math::vec2, 
-    math::vec3, 
-    math::vec4, 
+    math::mat3,
+    math::mat4,
+    math::vec2,
+    math::vec3,
+    math::vec4,
     math::vec2i,
     math::vec3i,
     math::vec4i,
@@ -171,6 +171,6 @@ template<> GUA_DLL void UniformValue::write_bytes_impl<bool>(UniformValue const*
 template<> GUA_DLL unsigned UniformValue::get_byte_size_impl<bool>();
 template<> GUA_DLL unsigned UniformValue::get_byte_size_impl<std::string>();
 
-}                                                                                                                                                                                                                                                             
+}
 
 #endif  // GUA_UNIFORM_HPP
