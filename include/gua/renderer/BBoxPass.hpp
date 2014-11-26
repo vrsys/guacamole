@@ -23,7 +23,6 @@
 #define GUA_BBOX_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
 
 #include <memory>
 

@@ -23,9 +23,6 @@
 #define GUA_EMISSIVE_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/GeometryResource.hpp>
-#include <gua/renderer/ShadowMap.hpp>
 
 #include <memory>
 
