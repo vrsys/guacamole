@@ -23,9 +23,11 @@
 #define GUA_GEOMETRY_DATABASE_HPP
 
 // guacamole headers
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
 #include <gua/renderer/GeometryResource.hpp>
+#include <gua/databases/GeometryDescription.hpp>
 
 namespace gua {
 
@@ -37,8 +39,8 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-class GUA_DLL GeometryDatabase : public Database<GeometryResource>,
-                                 public Singleton<GeometryDatabase> {
+  class GUA_DLL GeometryDatabase : public Database<GeometryResource>,
+                                   public Singleton<GeometryDatabase> {
  public:
 
   friend class Singleton<GeometryDatabase>;

@@ -23,6 +23,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/volume.hpp>
+#include <gua/gui.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -56,8 +57,39 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
   gua::VolumeLoader vloader;
-  auto volume(vloader.create_volume_from_file("volume", "data/head_w256_h256_d225_c1_b8.raw", 0));
+  auto volume(vloader.create_volume_from_file("volume", "/opt/gua_vrgeo_2013/data/objects/head_w256_h256_d225_c1_b8.raw", 0));
+  volume->translate(-0.5, -0.5, -0.5);
   graph.add_node("/transform", volume);
+
+  auto vnode = std::dynamic_pointer_cast<gua::node::VolumeNode>(volume);
+  vnode->data.alpha_transfer().add_stop(0.5f, 0.1f);
+
+  auto transfer_widget = std::make_shared<gua::GuiResource>("transfer_widget", "asset://gua/data/html/transfer_widget.html", gua::math::vec2(500, 300.f));
+  auto transfer_widget_quad = graph.add_node<gua::node::TexturedScreenSpaceQuadNode>("/", "transfer_widget_quad");
+  transfer_widget_quad->data.texture() = "transfer_widget";
+  transfer_widget_quad->data.size() = gua::math::vec2(500, 300.f);
+  transfer_widget_quad->data.anchor() = gua::math::vec2(-1.f, 1.f);
+
+  transfer_widget->on_loaded.connect([transfer_widget]() {
+    transfer_widget->add_javascript_callback("set_transfer_function");
+  });
+  transfer_widget->on_javascript_callback.connect([vnode](std::string const&, std::vector<std::string> const& params) {
+    
+    vnode->data.alpha_transfer().clear();
+    vnode->data.color_transfer().clear();
+    std::stringstream sstr(params[0]);
+
+    while (sstr) {
+      gua::math::vec4 color;
+      float pos;
+
+      sstr >> pos >> color;
+      vnode->data.alpha_transfer().add_stop(pos, color.w);
+      vnode->data.color_transfer().add_stop(pos, gua::math::vec3(color.x, color.y, color.z));
+    }
+  });
+
+  std::shared_ptr<gua::GuiResource> focused_element;
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f*0.25, 1.08f*0.25));
@@ -88,9 +120,23 @@ int main(int argc, char** argv) {
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    trackball.motion(pos.x, pos.y);
+    gua::math::vec2 hit_pos;
+
+    if (transfer_widget_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
+      transfer_widget->inject_mouse_position_relative(hit_pos);
+      focused_element = transfer_widget;
+    } else {
+      focused_element = nullptr;
+      trackball.motion(pos.x, pos.y);
+    }
   });
-  window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+  window->on_button_press.connect([&](int key, int action, int mods) {
+    if (focused_element) {
+      focused_element->inject_mouse_button(gua::Button(key), action, mods);
+    } else {
+      mouse_button(trackball, key, action, mods);
+    }
+  });
 
   window->open();
 
@@ -104,6 +150,8 @@ int main(int argc, char** argv) {
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
+
+    gua::Interface::instance()->update();
 
     window->process_events();
     if (window->should_close()) {

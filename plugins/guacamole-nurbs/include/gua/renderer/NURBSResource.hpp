@@ -19,13 +19,13 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_NURBS_RESSOURCE_HPP
-#define GUA_NURBS_RESSOURCE_HPP
+#ifndef GUA_NURBS_RESOURCE_HPP
+#define GUA_NURBS_RESOURCE_HPP
 
 // guacamole headers
 #include <gua/renderer/NURBS.hpp>
 #include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/detail/NURBSData.hpp>
 
 // external headers
@@ -58,7 +58,7 @@ namespace gua {
     return container.size() * sizeof(value_type);
   };
 
-class GUA_NURBS_DLL NURBSRessource : public GeometryRessource {
+class GUA_NURBS_DLL NURBSResource : public GeometryResource {
 
  public: // constants
 
@@ -66,22 +66,18 @@ class GUA_NURBS_DLL NURBSRessource : public GeometryRessource {
 
  public : // c'tor / d'tor
 
-   NURBSRessource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
+   NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
                   scm::gl::fill_mode in_fill_mode = scm::gl::FILL_SOLID,
                   //scm::gl::fill_mode in_fill_mode = scm::gl::FILL_WIREFRAME,
                   bool enable_raycasting = false);
 
-   ~NURBSRessource();
+   ~NURBSResource();
 
  public : // methods
 
   /*virtual*/ void predraw(RenderContext const& context) const;
 
   /*virtual*/ void draw(RenderContext const& context) const;
-
-  /*virtual*/ void update(node::GeometryNode* node) override;
-
-  /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
 
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits) {}

@@ -32,6 +32,8 @@
 #include <sstream>
 #include <iostream>
 
+#define MATERIAL_SHADER_PROGRAMS 0
+
 namespace gua {
 
 class GUA_DLL MaterialShader {
@@ -46,9 +48,7 @@ class GUA_DLL MaterialShader {
   Material const&     get_default_material() const;
   Material&           get_default_material();
 
-  ShaderProgram* get_shader(RenderContext const& ctx,
-                            std::type_index const& for_type,
-                            std::map<scm::gl::shader_stage, std::string> const& program_description,
+  ShaderProgram* get_shader(std::map<scm::gl::shader_stage, std::string> const& program_description,
                             std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
                             bool in_rasterization_discard = false);
 
@@ -65,13 +65,10 @@ class GUA_DLL MaterialShader {
 
  private:
 
-  std::string compile_description(RenderContext const& ctx,
-                                  std::list<MaterialShaderMethod> const& passes,
-                                  std::string const& shader_source) const;
+   std::string compile_description(std::list<MaterialShaderMethod> const& passes,
+                                   std::string const& shader_source) const;
 
   MaterialShaderDescription desc_;
-
-  std::unordered_map<std::type_index, ShaderProgram*> shaders_;
 
   Material default_material_;
   mutable unsigned max_object_count_;

@@ -40,11 +40,12 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
   auto add_oilrig = [&](int x, int y) {
     auto t = graph.add_node<gua::node::TransformNode>("/", "rig_" + std::to_string(x) + "_" + std::to_string(y));
-    t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/3, 0);
+    t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/2, 0);
 
     auto rig(loader.create_geometry_from_file(
       "rig",
-      "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      //"I:/models/Paris/Paris2010_0.obj",
+      "I:/models/Batman/Batman.obj",
       shader->get_default_material(),
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE |

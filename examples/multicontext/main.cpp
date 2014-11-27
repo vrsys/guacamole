@@ -25,7 +25,6 @@
 #include <gua/platform.hpp>
 
 #include <gua/renderer/TriMeshLoader.hpp>
-// #include <gua/renderer/NURBSLoader.hpp>
 #include <gua/renderer/Video3DLoader.hpp>
 
 #include <thread>
@@ -57,9 +56,9 @@ int main(int argc, char** argv) {
   gua::MaterialShaderDatabase::instance()->add(shader);
 
   auto mat(shader->get_default_material());
-  mat.set_uniform("color", gua::math::vec3(1, 0, 0));
-  mat.set_uniform("color", gua::math::vec3(0, 1, 1), 1);
-  mat.set_uniform("color", gua::math::vec3(1, 0, 1), 2);
+  //mat.set_uniform("color", gua::math::vec3(1, 0, 0));
+  //mat.set_uniform("color", gua::math::vec3(0, 1, 1), 1);
+  //mat.set_uniform("color", gua::math::vec3(1, 0, 1), 2);
 
   gua::TriMeshLoader trimeshloader;
   // gua::NURBSLoader nurbsloader;

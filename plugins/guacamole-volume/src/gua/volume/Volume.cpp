@@ -241,32 +241,6 @@ bool Volume::update_color_map(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Volume::draw(RenderContext const& ctx) const {
-
-  // upload to GPU if neccessary
-  if (_volume_boxes_ptr.size() <= ctx.id || _volume_boxes_ptr[ctx.id] == nullptr) {
-    upload_to(ctx);
-  }
-
-  if (_update_transfer_function){
-    for (auto color_map_texture : _transfer_texture_ptr) {
-      update_color_map(ctx, *color_map_texture, _alpha_transfer, _color_transfer);
-    }
-    _update_transfer_function = false;
-  }
-
-  scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-  scm::gl::program_ptr p = ctx.render_context->current_program();
-  p->uniform("sampling_distance", _step_size);
-  p->uniform("volume_bounds", _volume_dimensions_normalized);
-
-  ctx.render_context->apply();
-  _volume_boxes_ptr[ctx.id]->draw(ctx.render_context);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void Volume::draw_proxy(RenderContext const& ctx) const {
 
   // upload to GPU if neccessary
@@ -323,14 +297,38 @@ void Volume::step_size(const float in_step_size) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+template<typename T>
+bool piecewise_functions_equal(T const& func_a, T const& func_b){
+  if (func_a.num_stops() != func_b.num_stops()) {
+    return false;
+  } 
+
+  auto a(func_a.stops_begin());
+  auto b(func_b.stops_begin());
+
+  while (*a == *b && b != func_b.stops_end()) {
+    ++a;
+    ++b;
+  }
+
+  if (b != func_b.stops_end()) {
+    return false;
+  }
+  
+  return true;
+}
+
 void Volume::set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) {
-  _alpha_transfer.clear();
-  _color_transfer.clear();
+  
+  if (!piecewise_functions_equal(_alpha_transfer, in_alpha)) {
+    _alpha_transfer = in_alpha;
+    _update_transfer_function = true;
+  }
 
-  _alpha_transfer = in_alpha;
-  _color_transfer = in_color;
-
-  _update_transfer_function = true;
+  if (!piecewise_functions_equal(_color_transfer, in_color)) {
+    _color_transfer = in_color;
+    _update_transfer_function = true;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

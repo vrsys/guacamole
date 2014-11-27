@@ -23,18 +23,10 @@
 #define GUA_TEXTURED_SCREEN_SPACE_QUAD_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-
-// external headers
-#include <scm/gl_core/buffer_objects.h>
-
-#include <typeindex>
-#include <memory>
-#include <unordered_map>
 
 namespace gua {
 
-class TexturedScreenSpaceQuadPassDescription : public PipelinePassDescription {
+class GUA_DLL TexturedScreenSpaceQuadPassDescription : public PipelinePassDescription {
  public:
   TexturedScreenSpaceQuadPassDescription();
   PipelinePassDescription* make_copy() const override;

@@ -41,7 +41,7 @@ namespace gua {
  * When the optimizer traverses the scene graph, it produces an SerializedScene
  * which contains relevant nodes only.
  */
-struct SerializedScene {
+struct GUA_DLL SerializedScene {
 
   /**
   * All geometry nodes.

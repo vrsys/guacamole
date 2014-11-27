@@ -23,11 +23,6 @@
 #define GUA_SSAO_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/GeometryResource.hpp>
-#include <gua/renderer/BuiltInTextures.hpp>
-
-#include <memory>
 
 namespace gua {
 

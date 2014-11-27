@@ -1,5 +1,4 @@
-#version 420 core                          
-#extension GL_NV_gpu_shader5      : enable 
+@include "resources/shaders/common/header.glsl"
                                                    
 ///////////////////////////////////////////////////////////////////////////////
 // input
@@ -38,25 +37,13 @@ out vec3      gua_object_position;
 out vec3      gua_object_tangent;   
 out vec3      gua_object_bitangent; 
 
-
-
 // generic output
 @output_definition
 
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
 ///////////////////////////////////////////////////////////////////////////////
-layout (std140, binding=0) uniform cameraBlock    
-{                                                 
-  mat4 gua_view_matrix;                           
-  mat4 gua_projection_matrix;                     
-  mat4 gua_inverse_projection_matrix;             
-  mat4 gua_inverse_projection_view_matrix;        
-  vec3 gua_camera_position;                       
-}; 
-
-uniform mat4 gua_model_matrix;                    
-uniform mat4 gua_normal_matrix;      
+@include "resources/shaders/common/gua_camera_uniforms.glsl"   
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

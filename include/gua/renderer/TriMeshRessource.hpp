@@ -88,8 +88,6 @@ class TriMeshRessource : public GeometryResource {
   scm::math::vec3 get_vertex(unsigned int i) const;
   std::vector<unsigned int> get_face(unsigned int i) const;
 
-
-  friend class TriMeshRenderer;
   friend class LightingPass;
 
  private:

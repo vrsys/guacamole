@@ -28,8 +28,8 @@
 #include <gua/utils/Color3f.hpp>
 
 // external headers
+#include <scm/gl_util/data/analysis/transfer_function/piecewise_function_1d.h>
 #include <string>
-
 
 namespace gua {
 namespace node {
@@ -42,8 +42,8 @@ namespace node {
 class GUA_DLL VolumeNode : public SerializableNode {
 public:
   
-  #define ALPHA_TRANSFER_TYPE std::map<float, float>
-  #define COLOR_TRANSFER_TYPE std::map<float, utils::Color3f>
+  #define ALPHA_TRANSFER_TYPE scm::data::piecewise_function_1d<float, float>
+  #define COLOR_TRANSFER_TYPE scm::data::piecewise_function_1d<float, math::vec3>
 
   struct Configuration {
     /**

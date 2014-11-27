@@ -263,7 +263,7 @@ void ShadowMap::render(Pipeline* pipe,
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
   ctx.render_context->set_rasterizer_state(rasterizer_state_);
   ctx.render_context->set_viewport(scm::gl::viewport(
-    math::vec2(0, 0),
+    math::vec2(0.f, 0.f),
     math::vec2(map_size, map_size))
   );
 

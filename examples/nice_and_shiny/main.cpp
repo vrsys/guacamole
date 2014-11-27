@@ -63,7 +63,22 @@ int main(int argc, char** argv) {
     return shader->get_default_material();
   };
 
+  gua::math::vec3 iron(0.560, 0.570, 0.580);
+  gua::math::vec3 silver(0.972, 0.960, 0.915);
+  gua::math::vec3 aluminium(0.913, 0.921, 0.925);
+  gua::math::vec3 gold(1.000, 0.766, 0.336);
+  gua::math::vec3 copper(0.955, 0.637, 0.538);
+  gua::math::vec3 chromium(0.550, 0.556, 0.554);
+  gua::math::vec3 nickel(0.660, 0.609, 0.526);
+  gua::math::vec3 titanium(0.542, 0.497, 0.449);
+  gua::math::vec3 cobalt(0.662, 0.655, 0.634);
+  gua::math::vec3 platinum(0.672, 0.637, 0.585);
+
   auto pbrMat(load_mat("data/materials/Cerberus.gmd"));
+  pbrMat.set_uniform("Color", chromium);
+  pbrMat.set_uniform("Roughness", 0.2f);
+  pbrMat.set_uniform("Metalness", 1.0f);
+
   std::string directory("/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/");
   pbrMat.set_uniform("AlbedoMap",    directory + "Cerberus_A.tga");
   pbrMat.set_uniform("MetalnessMap", directory + "Cerberus_M.tga");

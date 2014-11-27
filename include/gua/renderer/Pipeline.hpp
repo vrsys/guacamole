@@ -40,10 +40,11 @@ class WindowBase;
 struct RenderContext;
 class ShaderProgram;
 
-class Pipeline {
+class GUA_DLL Pipeline {
  public:
 
   Pipeline();
+  Pipeline(Pipeline const&) = delete;
   ~Pipeline();
 
   void process(RenderContext* ctx, CameraMode mode, node::SerializedCameraNode const& camera,

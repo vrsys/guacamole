@@ -18,20 +18,24 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#if 0
 #ifndef GUA_NURBS_LOADER_HPP
 #define GUA_NURBS_LOADER_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
+#include <gua/renderer/NURBS.hpp>
 
 // external headers
 #include <unordered_set>
+#include <memory>
 
 namespace gua {
 
+  class Material;
+
 namespace node {
-class Node;
+  class Node;
+  class NURBSNode;
 }
 
 /**
@@ -52,21 +56,24 @@ class GUA_NURBS_DLL NURBSLoader {
      RAYCASTING = 1 << 4
    };
 
-  /**
-   * Default constructor.
-   *
-   * Constructs a new and empty NURBSLoader.
-   */
+
   NURBSLoader();
 
-  std::shared_ptr<node::NURBSNode> create_geometry_from_file(std::string const& nodename,
-                                                             std::string const& filename,
-                                                             std::string const& material,
-                                                             unsigned flags);
+public:
 
+  std::shared_ptr<node::NURBSNode> load_geometry(std::string const& file_name,
+                                                 unsigned flags = DEFAULTS);
+
+  std::shared_ptr<node::NURBSNode> load_geometry(std::string const& node_name,
+                                                 std::string const& file_name,
+                                                 Material const& fallback_material,
+                                                 unsigned flags = DEFAULTS);
+
+  void apply_fallback_material(std::shared_ptr<node::Node> const& root, Material const& fallback_material) const;
+ 
  private:
 
-  bool is_supported(std::string const& file_name) const override;
+  bool is_supported(std::string const& file_name) const;
 
  private:
 
@@ -77,4 +84,3 @@ class GUA_NURBS_DLL NURBSLoader {
 }
 
 #endif  // GUA_NURBS_LOADER_HPP
-#endif
