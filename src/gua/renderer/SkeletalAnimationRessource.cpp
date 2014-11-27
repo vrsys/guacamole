@@ -87,7 +87,7 @@ void SkeletalAnimationRessource::VertexBoneData::AddBoneData(uint BoneID, float 
 ////////////////////////////////////////////////////////////////////////////////
 
 SkeletalAnimationRessource::SkeletalAnimationRessource()
-    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), scene_(nullptr), bone_transforms_block_(nullptr) {}
+    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), scene_(nullptr), bone_transforms_block_(nullptr), timer_() {timer_.start();}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -100,7 +100,8 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiScene const* scene, std
       scene_(scene),
       importer_(importer),
       bone_transforms_block_(nullptr),
-      num_bones_(0) {
+      num_bones_(0),
+      timer_() {
 
 
   //if (mesh_->HasPositions()) {
@@ -120,6 +121,8 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiScene const* scene, std
       kd_tree_.generate(mesh_);
     }
   //}*/
+
+  timer_.start();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +202,6 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     
 
   if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
-    pseudo_time_ = 0.0;
     //new
     ///////////////////////////////////////////////////////////////////////
 
@@ -346,8 +348,7 @@ void SkeletalAnimationRessource::draw(RenderContext const& ctx) /*const*/ {
 
   // upload to GPU if neccessary
   upload_to(ctx);
-  pseudo_time_ += 1.0/101 ;
-  //TODO: update bone transformations
+
   updateBoneTransforms(ctx);
 
   ctx.render_context->bind_vertex_array(vertex_array_[ctx.id]);
@@ -376,7 +377,7 @@ unsigned int SkeletalAnimationRessource::num_faces() const { return num_faces_; 
 
 scm::math::vec3 SkeletalAnimationRessource::get_vertex(unsigned int i) const {
 
-  // TODO
+  //TODO
   /*return scm::math::vec3(
       mesh_->mVertices[i].x, mesh_->mVertices[i].y, mesh_->mVertices[i].z);*/
   return scm::math::vec3();
@@ -400,8 +401,7 @@ void SkeletalAnimationRessource::updateBoneTransforms(RenderContext const& ctx)
 {
     std::vector<scm::math::mat4f> Transforms;
 
-    // add time
-    BoneTransform(pseudo_time_, Transforms);
+    BoneTransform(timer_.get_elapsed(), Transforms);
 
     bone_transforms_block_ = new BoneTransformUniformBlock(ctx.render_device);
     std::vector< math::mat4 > tmp_transforms;

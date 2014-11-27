@@ -27,6 +27,7 @@
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/utils/KDTree.hpp>
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
+#include <gua/utils/Timer.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -191,7 +192,7 @@ class SkeletalAnimationRessource : public GeometryResource {
     unsigned int num_vertices_;
     unsigned int num_faces_;
 
-    float pseudo_time_;
+    Timer timer_;
     /////////////////////////////////
 
  public:
