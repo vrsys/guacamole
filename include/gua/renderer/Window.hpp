@@ -54,7 +54,7 @@ class GUA_DLL Window : public WindowBase {
 
   virtual void open();
   virtual bool get_is_open() const;
-  virtual bool should_close() { return false; }
+  virtual bool should_close() const { return false; }
   virtual void close();
 
   virtual void process_events() { }
