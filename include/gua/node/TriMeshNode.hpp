@@ -43,8 +43,6 @@ public : // typedef/enums/friends
 
   friend class ::gua::TriMeshLoader;
 
-private : // c'tor / d'tor
-
   TriMeshNode(std::string const& node_name = "",
               std::string const& geometry_description = "gua_default_geometry",
               Material const& material = Material(),
