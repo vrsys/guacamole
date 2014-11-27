@@ -30,6 +30,7 @@
 namespace gua {
 
 class NURBSResource;
+class NURBSLoader;
 
 namespace node {
 
@@ -40,7 +41,7 @@ namespace node {
 */
 class GUA_NURBS_DLL NURBSNode : public GeometryNode
 {
-  friend class NURBSLoader;
+  friend class ::gua::NURBSLoader;
 
 private : // c'tor
 
@@ -94,7 +95,7 @@ private : // attributes e.g. special attributes for drawing
   Material                        material_;
   bool                            material_changed_;
 
-  float                           max_tess_level_pre_pass_; 
+  float                           max_tess_level_pre_pass_;
   float                           max_tess_level_final_pass_;
 
 };

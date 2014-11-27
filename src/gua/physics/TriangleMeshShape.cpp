@@ -169,7 +169,7 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
 
         auto gnode = std::dynamic_pointer_cast<node::TriMeshNode>(node);
         if (gnode) {
-            geom_list.push_back(gnode->get_filename());
+            geom_list.push_back(gnode->get_geometry_description());
         }
 
         for (auto const& n: node->get_children()) {
