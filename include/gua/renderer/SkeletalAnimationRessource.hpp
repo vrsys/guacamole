@@ -29,6 +29,8 @@
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
 #include <gua/utils/Timer.hpp>
 
+#include <gua/renderer/SkeletalAnimationDirector.hpp>
+
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
@@ -184,15 +186,12 @@ class SkeletalAnimationRessource : public GeometryResource {
     
     std::vector<MeshEntry> entries_;
 
-    std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
-    uint num_bones_;
-    std::vector<BoneInfo> bone_info_;
-    uint boneLocation_[MAX_BONES];
-
     std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
 
     unsigned int num_vertices_;
     unsigned int num_faces_;
+
+    std::shared_ptr<SkeletalAnimationDirector> animation_director_;
 
     Timer timer_;
     /////////////////////////////////
