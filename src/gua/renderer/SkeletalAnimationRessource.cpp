@@ -78,9 +78,9 @@ void SkeletalAnimationRessource::VertexBoneData::AddBoneData(uint BoneID, float 
             return;
         }        
     }
-    std::cout << "Warning: Ignoring bone associated to vertex (more than " << numWeights << ")" << std::endl;
     // should never get here - more bones than we have space for
-    //assert(0);
+    Logger::LOG_WARNING << "Warning: Ignoring bone associated to vertex (more than " << numWeights << ")" << std::endl;
+    //assert(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,7 +210,12 @@ void SkeletalAnimationRessource::InitMesh(uint MeshIndex,
   // Populate the index buffer
   for (uint i = 0 ; i < paiMesh->mNumFaces ; i++) {
     const aiFace& Face = paiMesh->mFaces[i];
-    assert(Face.mNumIndices == 3);
+
+    if(Face.mNumIndices != 3) {
+      Logger::LOG_ERROR << "InitMesh - face doesnt have 3 vertices" << std::endl;
+      assert(false);
+    }
+
     Indices.push_back(Face.mIndices[0] + entries_[MeshIndex].BaseVertex);
     Indices.push_back(Face.mIndices[1] + entries_[MeshIndex].BaseVertex);
     Indices.push_back(Face.mIndices[2] + entries_[MeshIndex].BaseVertex);
@@ -352,7 +357,7 @@ void SkeletalAnimationRessource::draw(RenderContext const& ctx) /*const*/ {
 void SkeletalAnimationRessource::ray_test(Ray const& ray, int options,
                     node::Node* owner, std::set<PickResult>& hits) {
   //TODO raycasting
-  Logger::LOG_WARNING << "dynamic ray testing -SkeletalAnimationResource::ray_test()- not supported " << std::endl;
+  Logger::LOG_ERROR << "get_vertex() dynamic ray testing not supported " << std::endl;
   //kd_tree_.ray_test(ray, mesh_, options, owner, hits);
 }
 
@@ -369,7 +374,7 @@ unsigned int SkeletalAnimationRessource::num_faces() const { return num_faces_; 
 scm::math::vec3 SkeletalAnimationRessource::get_vertex(unsigned int i) const {
 
   //TODO physics handling
-  Logger::LOG_WARNING << "dynamic vertex positions -SkeletalAnimationResource::get_vertex()- not supported " << std::endl;
+  Logger::LOG_ERROR << "get_vertex() dynamic vertex positions not supported " << std::endl;
   return scm::math::vec3();
 }
 
@@ -378,7 +383,7 @@ scm::math::vec3 SkeletalAnimationRessource::get_vertex(unsigned int i) const {
 std::vector<unsigned int> SkeletalAnimationRessource::get_face(unsigned int i) const {
 
   //TODO cpu representation of mesh
-  Logger::LOG_WARNING << "SkeletalAnimationRessource::get_face() of merged neshes not supported " << std::endl;
+  Logger::LOG_ERROR << "get_face() of merged neshes not supported " << std::endl;
   /*std::vector<unsigned int> face(mesh_->mFaces[i].mNumIndices);
   for (unsigned int j = 0; j < mesh_->mFaces[i].mNumIndices; ++j)
     face[j] = mesh_->mFaces[i].mIndices[j];
@@ -486,13 +491,19 @@ const aiNodeAnim* SkeletalAnimationRessource::FindNodeAnim(const aiAnimation* pA
 
 uint SkeletalAnimationRessource::FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
 {    
+  if(pNodeAnim->mNumPositionKeys < 1) {
+    Logger::LOG_ERROR << "FindPosition - no translation keys" << std::endl;
+    assert(false);
+  } 
+
   for (uint i = 0 ; i < pNodeAnim->mNumPositionKeys - 1 ; i++) {
     if (AnimationTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
         return i;
     }
   }
-  
-  assert(0);
+
+  Logger::LOG_ERROR << "FindPosition failed" << std::endl;
+  assert(false);
 
   return 0;
 }
@@ -500,7 +511,10 @@ uint SkeletalAnimationRessource::FindPosition(float AnimationTime, const aiNodeA
 
 uint SkeletalAnimationRessource::FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
-  assert(pNodeAnim->mNumRotationKeys > 0);
+  if(pNodeAnim->mNumRotationKeys < 1) {
+    Logger::LOG_ERROR << "FindRotation - no rotation keys" << std::endl;
+    assert(false);
+  }
 
   for (uint i = 0 ; i < pNodeAnim->mNumRotationKeys - 1 ; i++) {
     if (AnimationTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
@@ -508,7 +522,8 @@ uint SkeletalAnimationRessource::FindRotation(float AnimationTime, const aiNodeA
     }
   }
   
-  assert(0);
+  Logger::LOG_ERROR << "FindRotation failed" << std::endl;
+  assert(false);
 
   return 0;
 }
@@ -516,7 +531,10 @@ uint SkeletalAnimationRessource::FindRotation(float AnimationTime, const aiNodeA
 
 uint SkeletalAnimationRessource::FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
-  assert(pNodeAnim->mNumScalingKeys > 0);
+  if(pNodeAnim->mNumScalingKeys < 1) {
+    Logger::LOG_ERROR << "FindScaling - no scaling keys" << std::endl;
+    assert(false);
+  }
   
   for (uint i = 0 ; i < pNodeAnim->mNumScalingKeys - 1 ; i++) {
     if (AnimationTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
@@ -524,7 +542,7 @@ uint SkeletalAnimationRessource::FindScaling(float AnimationTime, const aiNodeAn
     }
   }
   
-  assert(0);
+  Logger::LOG_ERROR << "FindScaling failed" << std::endl;
 
   return 0;
 }
@@ -539,10 +557,15 @@ void SkeletalAnimationRessource::CalcInterpolatedPosition(scm::math::vec3& Out, 
           
   uint PositionIndex = FindPosition(AnimationTime, pNodeAnim);
   uint NextPositionIndex = (PositionIndex + 1);
-  assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
+
+  if(NextPositionIndex > pNodeAnim->mNumPositionKeys) {
+    Logger::LOG_ERROR << "CalcInterpolatedPosition - frame out of range" << std::endl;
+    assert(false);
+  }
+
   float DeltaTime = (float)(pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime);
   float Factor = (AnimationTime - (float)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
-  assert(Factor >= 0.0f && Factor <= 1.0f);
+  //assert(Factor >= 0.0f && Factor <= 1.0f);
   const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
   const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
   aiVector3D Delta = End - Start;
@@ -560,10 +583,15 @@ void SkeletalAnimationRessource::CalcInterpolatedRotation(scm::math::quatf& Out,
   
   uint RotationIndex = FindRotation(AnimationTime, pNodeAnim);
   uint NextRotationIndex = (RotationIndex + 1);
-  assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
+
+  if(NextRotationIndex > pNodeAnim->mNumRotationKeys) {
+    Logger::LOG_ERROR << "CalcInterpolatedRotation - frame out of range" << std::endl;
+    assert(false);
+  }
+
   float DeltaTime = (float)(pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime);
   float Factor = (AnimationTime - (float)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
-  assert(Factor >= 0.0f && Factor <= 1.0f);
+  //assert(Factor >= 0.0f && Factor <= 1.0f);
   const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
   const aiQuaternion& EndRotationQ   = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;  
   aiQuaternion temp;  
@@ -581,10 +609,15 @@ void SkeletalAnimationRessource::CalcInterpolatedScaling(scm::math::vec3& Out, f
 
   uint ScalingIndex = FindScaling(AnimationTime, pNodeAnim);
   uint NextScalingIndex = (ScalingIndex + 1);
-  assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
+
+  if(NextScalingIndex > pNodeAnim->mNumScalingKeys) {
+    Logger::LOG_ERROR << "CalcInterpolatedScaling - frame out of range" << std::endl;
+    assert(false);
+  }
+
   float DeltaTime = (float)(pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime);
   float Factor = (AnimationTime - (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
-  assert(Factor >= 0.0f && Factor <= 1.0f);
+  //assert(Factor >= 0.0f && Factor <= 1.0f);
   const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
   const aiVector3D& End   = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
   aiVector3D Delta = End - Start;
