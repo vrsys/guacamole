@@ -167,6 +167,8 @@ void SkeletalAnimationRessource::InitMesh(uint MeshIndex,
                     std::vector<scm::math::vec3>& Positions,
                     std::vector<scm::math::vec3>& Normals,
                     std::vector<scm::math::vec2>& TexCoords,
+                    std::vector<scm::math::vec3>& Tangents,
+                    std::vector<scm::math::vec3>& Bitangents,
                     std::vector<VertexBoneData>& Bones,
                     std::vector<uint>& Indices)
 {    
@@ -174,13 +176,37 @@ void SkeletalAnimationRessource::InitMesh(uint MeshIndex,
     
     // Populate the vertex attribute vectors
     for (uint i = 0 ; i < paiMesh->mNumVertices ; i++) { // TODO catch: haspositions and hasnormals
-        scm::math::vec3 pPos      = scm::math::vec3(paiMesh->mVertices[i][0],paiMesh->mVertices[i][1],paiMesh->mVertices[i][2]);
-        scm::math::vec3 pNormal   = scm::math::vec3(paiMesh->mNormals[i][0],paiMesh->mNormals[i][1],paiMesh->mNormals[i][2]);
-        scm::math::vec3 pTexCoord = paiMesh->HasTextureCoords(0) ? scm::math::vec3(paiMesh->mTextureCoords[0][i][0],paiMesh->mTextureCoords[0][i][1],paiMesh->mTextureCoords[0][i][2]) : scm::math::vec3(0,0,0);
+        
+        scm::math::vec3 pPos = scm::math::vec3(0.f, 0.f, 0.f);
+        if(paiMesh->HasPositions()) {
+          pPos = scm::math::vec3(paiMesh->mVertices[i].x,paiMesh->mVertices[i].y,paiMesh->mVertices[i].z);
+        }
+
+        scm::math::vec3 pNormal = scm::math::vec3(0.f, 0.f, 0.f);
+        if(paiMesh->HasNormals()) {
+          pNormal = scm::math::vec3(paiMesh->mNormals[i].x,paiMesh->mNormals[i].y,paiMesh->mNormals[i].z);
+        }
+
+        scm::math::vec3 pTexCoord = scm::math::vec3(0,0,0);
+        if(paiMesh->HasTextureCoords(0)) {}
+        {
+          pTexCoord = scm::math::vec3(paiMesh->mTextureCoords[0][i].x,paiMesh->mTextureCoords[0][i].y,paiMesh->mTextureCoords[0][i].z);
+        }
+
+        scm::math::vec3 pTangent = scm::math::vec3(0.f, 0.f, 0.f);
+        scm::math::vec3 pBitangent = scm::math::vec3(0.f, 0.f, 0.f);
+        if (paiMesh->HasTangentsAndBitangents()) {
+          pTangent = scm::math::vec3(paiMesh->mTangents[i].x, paiMesh->mTangents[i].y, paiMesh->mTangents[i].z);
+
+          pBitangent = scm::math::vec3(paiMesh->mBitangents[i].x, paiMesh->mBitangents[i].y, paiMesh->mBitangents[i].z);
+        }
 
         Positions.push_back(pPos);
         Normals.push_back(pNormal);
-        TexCoords.push_back(scm::math::vec2(pTexCoord[0], pTexCoord[1]));        
+        Bitangents.push_back(pBitangent);
+        Tangents.push_back(pTangent);
+        TexCoords.push_back(scm::math::vec2(pTexCoord[0], pTexCoord[1]));
+
     }
     
     LoadBones(MeshIndex, paiMesh, Bones);
@@ -202,14 +228,14 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     
 
   if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
-    //new
-    ///////////////////////////////////////////////////////////////////////
 
     entries_.resize(scene_->mNumMeshes);
 
     std::vector<scm::math::vec3> Positions;
     std::vector<scm::math::vec3> Normals;
     std::vector<scm::math::vec2> TexCoords;
+    std::vector<scm::math::vec3> Tangents;
+    std::vector<scm::math::vec3> Bitangents;
     std::vector<VertexBoneData> Bones;
     std::vector<uint> Indices;
        
@@ -234,16 +260,16 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     Positions.reserve(NumVertices);
     Normals.reserve(NumVertices);
     TexCoords.reserve(NumVertices);
+    Tangents.reserve(NumVertices);
+    Bitangents.reserve(NumVertices);
     Bones.resize(NumVertices);
     Indices.reserve(NumIndices);
         
     // Initialize the meshes in the scene one by one
     for (uint i = 0 ; i < entries_.size() ; i++) {
         const aiMesh* paiMesh = scene_->mMeshes[i];
-        InitMesh(i, paiMesh, Positions, Normals, TexCoords, Bones, Indices);
+        InitMesh(i, paiMesh, Positions, Normals, TexCoords, Tangents, Bitangents, Bones, Indices);
     }
-
-    ///////////////////////////////////////////////////////////////////////
 
     std::unique_lock<std::mutex> lock(upload_mutex_);
 
@@ -264,43 +290,20 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
         vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
     for (unsigned v(0); v < num_vertices_; ++v) {
-      data[v].pos = scm::math::vec3(
-          Positions[v].x, Positions[v].y, Positions[v].z);
 
-      //if (mesh_->HasTextureCoords(0)) {
-      data[v].tex = scm::math::vec2(TexCoords[v].x,
-                                    TexCoords[v].y);
-      //} else {
-      //  data[v].tex = scm::math::vec2(0.f, 0.f);
-      //}
+      data[v].pos = scm::math::vec3( Positions[v].x, Positions[v].y, Positions[v].z);
 
-      //if (mesh_->HasNormals()) {
-      data[v].normal = scm::math::vec3(
-            Normals[v].x, Normals[v].y, Normals[v].z);
-      //} else {
-      //  data[v].normal = scm::math::vec3(0.f, 0.f, 0.f);
-      //}
+      data[v].tex = scm::math::vec2(TexCoords[v].x, TexCoords[v].y);
 
-      //if (mesh_->HasTangentsAndBitangents()) {
-      /*if (false) {                              // TODO!!!!!!!!!!!!!!!!!!!!!
-        data[v].tangent = scm::math::vec3(
-            mesh_->mTangents[v].x, mesh_->mTangents[v].y, mesh_->mTangents[v].z);
+      data[v].normal = scm::math::vec3(Normals[v].x, Normals[v].y, Normals[v].z);
 
-        data[v].bitangent = scm::math::vec3(mesh_->mBitangents[v].x,
-                                            mesh_->mBitangents[v].y,
-                                            mesh_->mBitangents[v].z);
-      } else {*/
-      data[v].tangent = scm::math::vec3(0.f, 0.f, 0.f);
-      data[v].bitangent = scm::math::vec3(0.f, 0.f, 0.f);
+      data[v].tangent = scm::math::vec3(Tangents[v].x, Tangents[v].y, Tangents[v].z);
 
+      data[v].bitangent = scm::math::vec3(Bitangents[v].x, Bitangents[v].y, Bitangents[v].z);
 
-
-      //bone information:
       data[v].bone_weights = scm::math::vec4f(Bones[v].Weights[0],Bones[v].Weights[1],Bones[v].Weights[2],Bones[v].Weights[3]);
+      
       data[v].bone_ids = scm::math::vec4i(Bones[v].IDs[0],Bones[v].IDs[1],Bones[v].IDs[2],Bones[v].IDs[3]);
-
-
-      //}
     }
 
     ctx.render_context->unmap_buffer(vertices_[ctx.id]);
@@ -321,14 +324,7 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
             0, 6, scm::gl::TYPE_VEC4I, sizeof(Vertex)),
         {vertices_[ctx.id]});
 
-    // for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(boneLocation_) ; i++) {
-    //   char Name[128];
-    //   memset(Name, 0, sizeof(Name));
-    //   SNPRINTF(Name, sizeof(Name), "gBones[%d]", i);
-    //   boneLocation_[i] = glGetUniformLocation(program,Name);
-    // }
-
-    bone_transforms_block_ = new BoneTransformUniformBlock(ctx.render_device);
+    bone_transforms_block_ = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
     
     std::vector< math::mat4 > tmp_transforms;
 
@@ -403,8 +399,7 @@ void SkeletalAnimationRessource::updateBoneTransforms(RenderContext const& ctx)
 
     BoneTransform(timer_.get_elapsed(), Transforms);
 
-    bone_transforms_block_ = new BoneTransformUniformBlock(ctx.render_device);
-    std::vector< math::mat4 > tmp_transforms;
+    std::vector<math::mat4> tmp_transforms;
 
     std::for_each( bone_info_.begin(), bone_info_.end(), [&tmp_transforms](BoneInfo const& bi){tmp_transforms.push_back(bi.FinalTransformation);});
     

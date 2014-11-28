@@ -142,6 +142,8 @@ class SkeletalAnimationRessource : public GeometryResource {
                     std::vector<scm::math::vec3>& Positions,
                     std::vector<scm::math::vec3>& Normals,
                     std::vector<scm::math::vec2>& TexCoords,
+                    std::vector<scm::math::vec3>& Tangents,
+                    std::vector<scm::math::vec3>& Bitangents,
                     std::vector<VertexBoneData>& Bones,
                     std::vector<uint>& Indices);
 
@@ -187,7 +189,7 @@ class SkeletalAnimationRessource : public GeometryResource {
     std::vector<BoneInfo> bone_info_;
     uint boneLocation_[MAX_BONES];
 
-    BoneTransformUniformBlock* bone_transforms_block_;
+    std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
 
     unsigned int num_vertices_;
     unsigned int num_faces_;
