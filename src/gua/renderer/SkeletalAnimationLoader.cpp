@@ -214,7 +214,17 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_ressource(std::share
                                                                                   , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
   Material material;
-  //create (materials) and node
+  //TODO : texture atlas since multiple meshes in one resource !!!
+  unsigned material_index(ai_scene->mMeshes[0]->mMaterialIndex);
+
+  //if (material_index != 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
+  if (flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
+    MaterialLoader material_loader;
+    aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
+    material = material_loader.load_material(ai_material, file_name);
+  }
+
+
   // return std::make_shared<node::SkeletalAnimationNode>(mesh_name, mesh_name, material);
   return std::shared_ptr<node::SkeletalAnimationNode>(new node::SkeletalAnimationNode(mesh_name, mesh_name, material));
 
