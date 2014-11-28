@@ -30,12 +30,13 @@ void main() {
        BoneTransform += bone_transformation[gua_bone_ids[2]] * gua_bone_weights[2];
 
   @material_input
+  mat4 normalBoneTransform = inverse(transpose(BoneTransform));
 
   gua_position  = (gua_model_matrix * BoneTransform * vec4(gua_in_position, 1.0)).xyz;
-  gua_normal    = (gua_normal_matrix * BoneTransform * vec4(gua_in_normal, 0.0)).xyz;
+  gua_normal    = (gua_normal_matrix * normalBoneTransform * vec4(gua_in_normal, 0.0)).xyz;
   gua_normal    = normalize(gua_normal);
-  gua_tangent   = (gua_normal_matrix * vec4(gua_in_tangent, 0.0)).xyz;
-  gua_bitangent = (gua_normal_matrix * vec4(gua_in_bitangent, 0.0)).xyz;
+  gua_tangent   = (gua_normal_matrix * normalBoneTransform * vec4(gua_in_tangent, 0.0)).xyz;
+  gua_bitangent = (gua_normal_matrix * normalBoneTransform * vec4(gua_in_bitangent, 0.0)).xyz;
   gua_texcoords = gua_in_texcoords;
   gua_specularity = 0;
   gua_shinyness   = 50;
