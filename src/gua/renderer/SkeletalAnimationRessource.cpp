@@ -34,8 +34,6 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-#define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
-
 namespace {
 
 scm::math::mat4f to_gua(aiMatrix4x4 const& m){
@@ -72,14 +70,15 @@ namespace gua {
 
 void SkeletalAnimationRessource::VertexBoneData::AddBoneData(uint BoneID, float Weight)
 {
-    for (uint i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(IDs) ; i++) {
+    uint numWeights = (sizeof(IDs)/sizeof(IDs[0]));
+    for (uint i = 0 ; i <  numWeights; i++) {
         if (Weights[i] == 0.0) {
             IDs[i]     = BoneID;
             Weights[i] = Weight;
             return;
         }        
     }
-    std::cout << "Warning: Ignoring bone associated to vertex (more than " << ARRAY_SIZE_IN_ELEMENTS(IDs) << ")" << std::endl;
+    std::cout << "Warning: Ignoring bone associated to vertex (more than " << numWeights << ")" << std::endl;
     // should never get here - more bones than we have space for
     //assert(0);
 }
@@ -104,6 +103,7 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiScene const* scene, std
       timer_() {
 
 
+//TODO generate BBox and KDTree
   //if (mesh_->HasPositions()) {
   bounding_box_ = math::BoundingBox<math::vec3>();
 
@@ -129,35 +129,32 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiScene const* scene, std
 
 void SkeletalAnimationRessource::LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones)
 {
+  for (uint i = 0 ; i < pMesh->mNumBones ; i++) {
 
-    for (uint i = 0 ; i < pMesh->mNumBones ; i++) {
+    uint BoneIndex = 0;        
+    std::string BoneName(pMesh->mBones[i]->mName.data);      
+    
+    if (bone_mapping_.find(BoneName) == bone_mapping_.end()) {
 
-        uint BoneIndex = 0;        
-        std::string BoneName(pMesh->mBones[i]->mName.data);      
+      // Allocate an index for a new bone
+      BoneIndex = num_bones_;
+      num_bones_++;            
+      BoneInfo bi;      
 
-        
-        if (bone_mapping_.find(BoneName) == bone_mapping_.end()) {
-
-            // Allocate an index for a new bone
-            BoneIndex = num_bones_;
-            num_bones_++;            
-            BoneInfo bi;      
-
-            bone_info_.push_back(bi);
-            bone_info_[BoneIndex].BoneOffset = to_gua(pMesh->mBones[i]->mOffsetMatrix);    
-            bone_mapping_[BoneName] = BoneIndex;
-        }
-        else {
-            BoneIndex = bone_mapping_[BoneName];
-        }
-        
-        for (uint j = 0 ; j < pMesh->mBones[i]->mNumWeights ; j++) {
-            uint VertexID = entries_[MeshIndex].BaseVertex + pMesh->mBones[i]->mWeights[j].mVertexId;
-            float Weight  = pMesh->mBones[i]->mWeights[j].mWeight;                   
-            Bones[VertexID].AddBoneData(BoneIndex, Weight);
-        }
+      bone_info_.push_back(bi);
+      bone_info_[BoneIndex].BoneOffset = to_gua(pMesh->mBones[i]->mOffsetMatrix);    
+      bone_mapping_[BoneName] = BoneIndex;
     }
-
+    else {
+      BoneIndex = bone_mapping_[BoneName];
+    }
+    
+    for (uint j = 0 ; j < pMesh->mBones[i]->mNumWeights ; j++) {
+      uint VertexID = entries_[MeshIndex].BaseVertex + pMesh->mBones[i]->mWeights[j].mVertexId;
+      float Weight  = pMesh->mBones[i]->mWeights[j].mWeight;                   
+      Bones[VertexID].AddBoneData(BoneIndex, Weight);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,60 +169,57 @@ void SkeletalAnimationRessource::InitMesh(uint MeshIndex,
                     std::vector<VertexBoneData>& Bones,
                     std::vector<uint>& Indices)
 {    
-    const scm::math::vec3 Zero3D(0.0f, 0.0f, 0.0f);
+  const scm::math::vec3 Zero3D(0.0f, 0.0f, 0.0f);
+  
+  // Populate the vertex attribute vectors
+  for (uint i = 0 ; i < paiMesh->mNumVertices ; i++) { // TODO catch: haspositions and hasnormals
     
-    // Populate the vertex attribute vectors
-    for (uint i = 0 ; i < paiMesh->mNumVertices ; i++) { // TODO catch: haspositions and hasnormals
-        
-        scm::math::vec3 pPos = scm::math::vec3(0.f, 0.f, 0.f);
-        if(paiMesh->HasPositions()) {
-          pPos = scm::math::vec3(paiMesh->mVertices[i].x,paiMesh->mVertices[i].y,paiMesh->mVertices[i].z);
-        }
-
-        scm::math::vec3 pNormal = scm::math::vec3(0.f, 0.f, 0.f);
-        if(paiMesh->HasNormals()) {
-          pNormal = scm::math::vec3(paiMesh->mNormals[i].x,paiMesh->mNormals[i].y,paiMesh->mNormals[i].z);
-        }
-
-        scm::math::vec3 pTexCoord = scm::math::vec3(0,0,0);
-        if(paiMesh->HasTextureCoords(0)) {}
-        {
-          pTexCoord = scm::math::vec3(paiMesh->mTextureCoords[0][i].x,paiMesh->mTextureCoords[0][i].y,paiMesh->mTextureCoords[0][i].z);
-        }
-
-        scm::math::vec3 pTangent = scm::math::vec3(0.f, 0.f, 0.f);
-        scm::math::vec3 pBitangent = scm::math::vec3(0.f, 0.f, 0.f);
-        if (paiMesh->HasTangentsAndBitangents()) {
-          pTangent = scm::math::vec3(paiMesh->mTangents[i].x, paiMesh->mTangents[i].y, paiMesh->mTangents[i].z);
-
-          pBitangent = scm::math::vec3(paiMesh->mBitangents[i].x, paiMesh->mBitangents[i].y, paiMesh->mBitangents[i].z);
-        }
-
-        Positions.push_back(pPos);
-        Normals.push_back(pNormal);
-        Bitangents.push_back(pBitangent);
-        Tangents.push_back(pTangent);
-        TexCoords.push_back(scm::math::vec2(pTexCoord[0], pTexCoord[1]));
-
+    scm::math::vec3 pPos = scm::math::vec3(0.f, 0.f, 0.f);
+    if(paiMesh->HasPositions()) {
+      pPos = scm::math::vec3(paiMesh->mVertices[i].x,paiMesh->mVertices[i].y,paiMesh->mVertices[i].z);
     }
-    
-    LoadBones(MeshIndex, paiMesh, Bones);
-    
-    // Populate the index buffer
-    for (uint i = 0 ; i < paiMesh->mNumFaces ; i++) {
-        const aiFace& Face = paiMesh->mFaces[i];
-        assert(Face.mNumIndices == 3);
-        Indices.push_back(Face.mIndices[0] + entries_[MeshIndex].BaseVertex);
-        Indices.push_back(Face.mIndices[1] + entries_[MeshIndex].BaseVertex);
-        Indices.push_back(Face.mIndices[2] + entries_[MeshIndex].BaseVertex);
+
+    scm::math::vec3 pNormal = scm::math::vec3(0.f, 0.f, 0.f);
+    if(paiMesh->HasNormals()) {
+      pNormal = scm::math::vec3(paiMesh->mNormals[i].x,paiMesh->mNormals[i].y,paiMesh->mNormals[i].z);
     }
+
+    scm::math::vec3 pTexCoord = scm::math::vec3(0.0f,0.0f,0.0f);
+    if(paiMesh->HasTextureCoords(0)) {}
+    {
+      pTexCoord = scm::math::vec3(paiMesh->mTextureCoords[0][i].x,paiMesh->mTextureCoords[0][i].y,paiMesh->mTextureCoords[0][i].z);
+    }
+
+    scm::math::vec3 pTangent = scm::math::vec3(0.f, 0.f, 0.f);
+    scm::math::vec3 pBitangent = scm::math::vec3(0.f, 0.f, 0.f);
+    if (paiMesh->HasTangentsAndBitangents()) {
+      pTangent = scm::math::vec3(paiMesh->mTangents[i].x, paiMesh->mTangents[i].y, paiMesh->mTangents[i].z);
+
+      pBitangent = scm::math::vec3(paiMesh->mBitangents[i].x, paiMesh->mBitangents[i].y, paiMesh->mBitangents[i].z);
+    }
+
+    Positions.push_back(pPos);
+    Normals.push_back(pNormal);
+    Bitangents.push_back(pBitangent);
+    Tangents.push_back(pTangent);
+    TexCoords.push_back(scm::math::vec2(pTexCoord[0], pTexCoord[1]));
+  }
+  
+  LoadBones(MeshIndex, paiMesh, Bones);
+  
+  // Populate the index buffer
+  for (uint i = 0 ; i < paiMesh->mNumFaces ; i++) {
+    const aiFace& Face = paiMesh->mFaces[i];
+    assert(Face.mNumIndices == 3);
+    Indices.push_back(Face.mIndices[0] + entries_[MeshIndex].BaseVertex);
+    Indices.push_back(Face.mIndices[1] + entries_[MeshIndex].BaseVertex);
+    Indices.push_back(Face.mIndices[2] + entries_[MeshIndex].BaseVertex);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
-
-    
 
   if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
 
@@ -267,8 +261,8 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
         
     // Initialize the meshes in the scene one by one
     for (uint i = 0 ; i < entries_.size() ; i++) {
-        const aiMesh* paiMesh = scene_->mMeshes[i];
-        InitMesh(i, paiMesh, Positions, Normals, TexCoords, Tangents, Bitangents, Bones, Indices);
+      const aiMesh* paiMesh = scene_->mMeshes[i];
+      InitMesh(i, paiMesh, Positions, Normals, TexCoords, Tangents, Bitangents, Bones, Indices);
     }
 
     std::unique_lock<std::mutex> lock(upload_mutex_);
@@ -357,7 +351,8 @@ void SkeletalAnimationRessource::draw(RenderContext const& ctx) /*const*/ {
 
 void SkeletalAnimationRessource::ray_test(Ray const& ray, int options,
                     node::Node* owner, std::set<PickResult>& hits) {
-  //TODO
+  //TODO raycasting
+  Logger::LOG_WARNING << "dynamic ray testing -SkeletalAnimationResource::ray_test()- not supported " << std::endl;
   //kd_tree_.ray_test(ray, mesh_, options, owner, hits);
 }
 
@@ -373,9 +368,8 @@ unsigned int SkeletalAnimationRessource::num_faces() const { return num_faces_; 
 
 scm::math::vec3 SkeletalAnimationRessource::get_vertex(unsigned int i) const {
 
-  //TODO
-  /*return scm::math::vec3(
-      mesh_->mVertices[i].x, mesh_->mVertices[i].y, mesh_->mVertices[i].z);*/
+  //TODO physics handling
+  Logger::LOG_WARNING << "dynamic vertex positions -SkeletalAnimationResource::get_vertex()- not supported " << std::endl;
   return scm::math::vec3();
 }
 
@@ -383,7 +377,8 @@ scm::math::vec3 SkeletalAnimationRessource::get_vertex(unsigned int i) const {
 
 std::vector<unsigned int> SkeletalAnimationRessource::get_face(unsigned int i) const {
 
-  //TODO
+  //TODO cpu representation of mesh
+  Logger::LOG_WARNING << "SkeletalAnimationRessource::get_face() of merged neshes not supported " << std::endl;
   /*std::vector<unsigned int> face(mesh_->mFaces[i].mNumIndices);
   for (unsigned int j = 0; j < mesh_->mFaces[i].mNumIndices; ++j)
     face[j] = mesh_->mFaces[i].mIndices[j];
@@ -395,201 +390,205 @@ std::vector<unsigned int> SkeletalAnimationRessource::get_face(unsigned int i) c
 
 void SkeletalAnimationRessource::updateBoneTransforms(RenderContext const& ctx)
 {
-    std::vector<scm::math::mat4f> Transforms;
+  std::vector<scm::math::mat4f> Transforms;
 
-    BoneTransform(timer_.get_elapsed(), Transforms);
+  BoneTransform(timer_.get_elapsed(), Transforms);
 
-    std::vector<math::mat4> tmp_transforms;
+  std::vector<math::mat4> tmp_transforms;
 
-    std::for_each( bone_info_.begin(), bone_info_.end(), [&tmp_transforms](BoneInfo const& bi){tmp_transforms.push_back(bi.FinalTransformation);});
-    
-    bone_transforms_block_->update(ctx.render_context, tmp_transforms);
-    ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
+  std::for_each( bone_info_.begin(), bone_info_.end(), [&tmp_transforms](BoneInfo const& bi){tmp_transforms.push_back(bi.FinalTransformation);});
+  
+  bone_transforms_block_->update(ctx.render_context, tmp_transforms);
+  ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
 
 }
 
 
 void SkeletalAnimationRessource::BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms)
 {
-    scm::math::mat4f Identity = scm::math::mat4f::identity();
-    
-    //if no frame frquequency is given, set to 25
-    float TicksPerSecond = (float)(scene_->mAnimations[0]->mTicksPerSecond != 0 ? scene_->mAnimations[0]->mTicksPerSecond : 25.0f);
-    float TimeInTicks = TimeInSeconds * TicksPerSecond;
-    float AnimationTime = fmod(TimeInTicks, (float)scene_->mAnimations[0]->mDuration);
+  scm::math::mat4f Identity = scm::math::mat4f::identity();
+  
+  //if no frame frequency is given, set to 25
+  float TicksPerSecond = 25.0f;
+  if(scene_->mAnimations[0]->mTicksPerSecond != 0)
+  {
+    TicksPerSecond = scene_->mAnimations[0]->mTicksPerSecond;
+  } 
 
-    ReadNodeHierarchy(AnimationTime, scene_->mRootNode, Identity);
+  float TimeInTicks = TimeInSeconds * TicksPerSecond;
+  float AnimationTime = fmod(TimeInTicks, (float)scene_->mAnimations[0]->mDuration);
 
-    Transforms.resize(num_bones_);
+  ReadNodeHierarchy(AnimationTime, scene_->mRootNode, Identity);
 
-    for (uint i = 0 ; i < num_bones_ ; i++) {
-        Transforms[i] = bone_info_[i].FinalTransformation;
-    }
+  Transforms.resize(num_bones_);
+
+  for (uint i = 0 ; i < num_bones_ ; i++) {
+      Transforms[i] = bone_info_[i].FinalTransformation;
+  }
 }
 
 void SkeletalAnimationRessource::ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const scm::math::mat4f& ParentTransform)
 {    
-    std::string NodeName(pNode->mName.data);
-    
-    const aiAnimation* pAnimation = scene_->mAnimations[0];
-        
-    scm::math::mat4f NodeTransformation(to_gua(pNode->mTransformation));
-     
-    const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
-    
-    if (pNodeAnim) {
-      // Interpolate scaling and generate scaling transformation matrix
-      scm::math::vec3 Scaling;
-      CalcInterpolatedScaling(Scaling, AnimationTime, pNodeAnim);
-      scm::math::mat4f ScalingM = scm::math::make_scale(Scaling);
-
-      // Interpolate rotation and generate rotation transformation matrix
-      scm::math::quatf RotationQ;
-      CalcInterpolatedRotation(RotationQ, AnimationTime, pNodeAnim); 
-      scm::math::mat4f RotationM = RotationQ.to_matrix();
-
-      // Interpolate translation and generate translation transformation matrix
-      scm::math::vec3 Translation;
-      CalcInterpolatedPosition(Translation, AnimationTime, pNodeAnim);
-      scm::math::mat4f TranslationM = scm::math::make_translation(Translation);
+  std::string NodeName(pNode->mName.data);
+  
+  const aiAnimation* pAnimation = scene_->mAnimations[0];
       
-      // Combine the above transformations
-      NodeTransformation = TranslationM * RotationM * ScalingM;
-    }
-       
-    scm::math::mat4f GlobalTransformation = ParentTransform * NodeTransformation;
+  scm::math::mat4f NodeTransformation(to_gua(pNode->mTransformation));
+   
+  const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
+  
+  if (pNodeAnim) {
+    // Interpolate scaling and generate scaling transformation matrix
+    scm::math::vec3 Scaling;
+    CalcInterpolatedScaling(Scaling, AnimationTime, pNodeAnim);
+    scm::math::mat4f ScalingM = scm::math::make_scale(Scaling);
+
+    // Interpolate rotation and generate rotation transformation matrix
+    scm::math::quatf RotationQ;
+    CalcInterpolatedRotation(RotationQ, AnimationTime, pNodeAnim); 
+    scm::math::mat4f RotationM = RotationQ.to_matrix();
+
+    // Interpolate translation and generate translation transformation matrix
+    scm::math::vec3 Translation;
+    CalcInterpolatedPosition(Translation, AnimationTime, pNodeAnim);
+    scm::math::mat4f TranslationM = scm::math::make_translation(Translation);
     
-    if (bone_mapping_.find(NodeName) != bone_mapping_.end()) {
-        uint BoneIndex = bone_mapping_[NodeName];
-        //bone_info_[BoneIndex].FinalTransformation = m_GlobalInverseTransform * GlobalTransformation * bone_info_[BoneIndex].BoneOffset;
-        bone_info_[BoneIndex].FinalTransformation = GlobalTransformation * bone_info_[BoneIndex].BoneOffset;
-    }
-    
-    for (uint i = 0 ; i < pNode->mNumChildren ; i++) {
-        ReadNodeHierarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
-    }
+    // Combine the above transformations
+    NodeTransformation = TranslationM * RotationM * ScalingM;
+  }
+     
+  scm::math::mat4f GlobalTransformation = ParentTransform * NodeTransformation;
+  
+  if (bone_mapping_.find(NodeName) != bone_mapping_.end()) {
+    uint BoneIndex = bone_mapping_[NodeName];
+    //bone_info_[BoneIndex].FinalTransformation = m_GlobalInverseTransform * GlobalTransformation * bone_info_[BoneIndex].BoneOffset;
+    bone_info_[BoneIndex].FinalTransformation = GlobalTransformation * bone_info_[BoneIndex].BoneOffset;
+  }
+  
+  for (uint i = 0 ; i < pNode->mNumChildren ; i++) {
+    ReadNodeHierarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
+  }
 }
 ////////////////////////////////////////////////////////////////////////////////
 
 const aiNodeAnim* SkeletalAnimationRessource::FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName)
 {
-    for (uint i = 0 ; i < pAnimation->mNumChannels ; i++) {
-        const aiNodeAnim* pNodeAnim = pAnimation->mChannels[i];
-        
-        if (std::string(pNodeAnim->mNodeName.data) == NodeName) {
-            return pNodeAnim;
-        }
-    }
+  for (uint i = 0 ; i < pAnimation->mNumChannels ; i++) {
+    const aiNodeAnim* pNodeAnim = pAnimation->mChannels[i];
     
-    return NULL;
+    if (std::string(pNodeAnim->mNodeName.data) == NodeName) {
+        return pNodeAnim;
+    }
+  }
+  
+  return NULL;
 }
 
 uint SkeletalAnimationRessource::FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
 {    
-    for (uint i = 0 ; i < pNodeAnim->mNumPositionKeys - 1 ; i++) {
-        if (AnimationTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
-            return i;
-        }
+  for (uint i = 0 ; i < pNodeAnim->mNumPositionKeys - 1 ; i++) {
+    if (AnimationTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
+        return i;
     }
-    
-    assert(0);
+  }
+  
+  assert(0);
 
-    return 0;
+  return 0;
 }
 
 
 uint SkeletalAnimationRessource::FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
-    assert(pNodeAnim->mNumRotationKeys > 0);
+  assert(pNodeAnim->mNumRotationKeys > 0);
 
-    for (uint i = 0 ; i < pNodeAnim->mNumRotationKeys - 1 ; i++) {
-        if (AnimationTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
-            return i;
-        }
+  for (uint i = 0 ; i < pNodeAnim->mNumRotationKeys - 1 ; i++) {
+    if (AnimationTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
+        return i;
     }
-    
-    assert(0);
+  }
+  
+  assert(0);
 
-    return 0;
+  return 0;
 }
 
 
 uint SkeletalAnimationRessource::FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
-    assert(pNodeAnim->mNumScalingKeys > 0);
-    
-    for (uint i = 0 ; i < pNodeAnim->mNumScalingKeys - 1 ; i++) {
-        if (AnimationTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
-            return i;
-        }
+  assert(pNodeAnim->mNumScalingKeys > 0);
+  
+  for (uint i = 0 ; i < pNodeAnim->mNumScalingKeys - 1 ; i++) {
+    if (AnimationTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
+        return i;
     }
-    
-    assert(0);
+  }
+  
+  assert(0);
 
-    return 0;
+  return 0;
 }
 
 
 void SkeletalAnimationRessource::CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
-    if (pNodeAnim->mNumPositionKeys == 1) {
-        Out = to_gua(pNodeAnim->mPositionKeys[0].mValue);
-        return;
-    }
-            
-    uint PositionIndex = FindPosition(AnimationTime, pNodeAnim);
-    uint NextPositionIndex = (PositionIndex + 1);
-    assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
-    float DeltaTime = (float)(pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime);
-    float Factor = (AnimationTime - (float)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
-    assert(Factor >= 0.0f && Factor <= 1.0f);
-    const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
-    const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
-    aiVector3D Delta = End - Start;
-    Out = to_gua(Start + Factor * Delta);
+  if (pNodeAnim->mNumPositionKeys == 1) {
+      Out = to_gua(pNodeAnim->mPositionKeys[0].mValue);
+      return;
+  }
+          
+  uint PositionIndex = FindPosition(AnimationTime, pNodeAnim);
+  uint NextPositionIndex = (PositionIndex + 1);
+  assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
+  float DeltaTime = (float)(pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime);
+  float Factor = (AnimationTime - (float)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
+  assert(Factor >= 0.0f && Factor <= 1.0f);
+  const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
+  const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
+  aiVector3D Delta = End - Start;
+  Out = to_gua(Start + Factor * Delta);
 }
 
 
 void SkeletalAnimationRessource::CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
   // we need at least two values to interpolate...
-    if (pNodeAnim->mNumRotationKeys == 1) {
-        Out = to_gua(pNodeAnim->mRotationKeys[0].mValue);
-        return;
-    }
-    
-    uint RotationIndex = FindRotation(AnimationTime, pNodeAnim);
-    uint NextRotationIndex = (RotationIndex + 1);
-    assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
-    float DeltaTime = (float)(pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime);
-    float Factor = (AnimationTime - (float)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
-    assert(Factor >= 0.0f && Factor <= 1.0f);
-    const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
-    const aiQuaternion& EndRotationQ   = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;  
-    aiQuaternion temp;  
-    aiQuaternion::Interpolate(temp, StartRotationQ, EndRotationQ, Factor);
-    Out = to_gua(temp.Normalize());
+  if (pNodeAnim->mNumRotationKeys == 1) {
+      Out = to_gua(pNodeAnim->mRotationKeys[0].mValue);
+      return;
+  }
+  
+  uint RotationIndex = FindRotation(AnimationTime, pNodeAnim);
+  uint NextRotationIndex = (RotationIndex + 1);
+  assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
+  float DeltaTime = (float)(pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime);
+  float Factor = (AnimationTime - (float)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
+  assert(Factor >= 0.0f && Factor <= 1.0f);
+  const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
+  const aiQuaternion& EndRotationQ   = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;  
+  aiQuaternion temp;  
+  aiQuaternion::Interpolate(temp, StartRotationQ, EndRotationQ, Factor);
+  Out = to_gua(temp.Normalize());
 }
 
 
 void SkeletalAnimationRessource::CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
-    if (pNodeAnim->mNumScalingKeys == 1) {
-        Out = to_gua(pNodeAnim->mScalingKeys[0].mValue);
-        return;
-    }
+  if (pNodeAnim->mNumScalingKeys == 1) {
+      Out = to_gua(pNodeAnim->mScalingKeys[0].mValue);
+      return;
+  }
 
-    uint ScalingIndex = FindScaling(AnimationTime, pNodeAnim);
-    uint NextScalingIndex = (ScalingIndex + 1);
-    assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
-    float DeltaTime = (float)(pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime);
-    float Factor = (AnimationTime - (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
-    assert(Factor >= 0.0f && Factor <= 1.0f);
-    const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
-    const aiVector3D& End   = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
-    aiVector3D Delta = End - Start;
-    Out = to_gua(Start + Factor * Delta);
+  uint ScalingIndex = FindScaling(AnimationTime, pNodeAnim);
+  uint NextScalingIndex = (ScalingIndex + 1);
+  assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
+  float DeltaTime = (float)(pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime);
+  float Factor = (AnimationTime - (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
+  assert(Factor >= 0.0f && Factor <= 1.0f);
+  const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
+  const aiVector3D& End   = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
+  aiVector3D Delta = End - Start;
+  Out = to_gua(Start + Factor * Delta);
 }
-////////////////////////////////////////////////////////////////////////////////
 
 }
