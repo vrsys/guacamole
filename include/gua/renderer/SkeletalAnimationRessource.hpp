@@ -28,7 +28,6 @@
 #include <gua/utils/KDTree.hpp>
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
 #include <gua/utils/Timer.hpp>
-
 #include <gua/renderer/SkeletalAnimationDirector.hpp>
 
 // external headers
@@ -40,9 +39,7 @@
 
 #define ZERO_MEM(a) memset(a, 0, sizeof(a))
 #include <vector>
-#include <map>
 #include <assimp/scene.h>       // Output data structure
-#define MAX_BONES 100
 
 
 namespace Assimp { class Importer; }
@@ -109,8 +106,6 @@ class SkeletalAnimationRessource : public GeometryResource {
 
       BoneInfo()
       {
-          //BoneOffset.SetZero();
-          //FinalTransformation.SetZero();
 
           BoneOffset = scm::math::mat4f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
           FinalTransformation = scm::math::mat4f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);

@@ -33,7 +33,6 @@
 #include <vector>
 #include <map>
 #include <assimp/scene.h>       // Output data structure
-#define MAX_BONES 100
 
 namespace gua {
 
@@ -84,8 +83,6 @@ class SkeletalAnimationDirector{
 
   //std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
   /////////////////////////////////
-
- public:
 
   aiScene const* scene_;
 };
