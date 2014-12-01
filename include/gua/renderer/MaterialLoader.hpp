@@ -51,27 +51,8 @@ class GeometryNode;
 class GUA_DLL MaterialLoader {
  public:
 
-  enum ShadingCapabilities {
-    DIFFUSE_MAP      = 1 << 0,
-    DIFFUSE_COLOR    = 1 << 1,
-    SPECULAR_MAP     = 1 << 2,
-    SPECULAR_COLOR   = 1 << 3,
-    EMIT_MAP         = 1 << 4,
-    EMIT_COLOR       = 1 << 5,
-    AMBIENT_MAP      = 1 << 6,
-    AMBIENT_COLOR    = 1 << 7,
-    SHININESS_MAP    = 1 << 8,
-    SHININESS_COLOR  = 1 << 9,
-    NORMAL_MAP       = 1 << 10,
-    REFLECTION_MAP   = 1 << 11,
-    OPACITY_MAP      = 1 << 12
-  };
-
-  Material const& load_material(aiMaterial const* material,
-                                 std::string const& file_name) const;
-
- private:
-  Material& get_material(unsigned capabilities) const;
+  Material load_material(aiMaterial const* material,
+                                std::string const& assets_directory) const;
 
 };
 

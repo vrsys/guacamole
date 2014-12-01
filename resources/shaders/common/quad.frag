@@ -32,8 +32,8 @@ void main() {
     vec3 gua_color = texture2D(sampler2D(gua_in_texture), gua_quad_coords).rgb;
     // vec3 gua_color = vec3(gua_quad_coords, 0);
     float gua_emissivity = 1.0;
-    float gua_shinyness = 0.0;
-    float gua_specularity = 0.0;
+    float gua_roughness = 0.0;
+    float gua_metalness = 0.0;
 
     @include "shaders/common/gua_write_gbuffer.glsl"
 }

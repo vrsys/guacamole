@@ -120,10 +120,15 @@ ShaderProgram* MaterialShader::get_shader(std::map<scm::gl::shader_stage, std::s
 ////////////////////////////////////////////////////////////////////////////////
 void MaterialShader::apply_uniforms(RenderContext const& ctx,
                                     ShaderProgram* shader,
+                                    int view,
                                     Material const& overwrite) const {
 
+  for (auto const& uniform : default_material_.get_uniforms()) {
+    uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
+  }
+
   for (auto const& uniform : overwrite.get_uniforms()) {
-    shader->apply_uniform(ctx, uniform.first, uniform.second.get());
+    uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
   }
 }
 

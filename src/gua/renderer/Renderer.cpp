@@ -62,7 +62,6 @@ void Renderer::renderclient(Mailbox in) {
   fpsc.start();
 
   for (auto& x : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
-
     auto window_name(std::get<0>(x)->config.get_output_window_name());
 
     if (window_name != "") {

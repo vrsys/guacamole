@@ -55,32 +55,24 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  auto load_mat = [](std::string const& file){
-    gua::MaterialShaderDescription desc;
-    desc.load_from_file(file);
-    auto shader(std::make_shared<gua::MaterialShader>(file, desc));
-    gua::MaterialShaderDatabase::instance()->add(shader);
-    return shader->get_default_material();
-  };
+  gua::math::vec4 iron(0.560, 0.570, 0.580, 1);
+  gua::math::vec4 silver(0.972, 0.960, 0.915, 1);
+  gua::math::vec4 aluminium(0.913, 0.921, 0.925, 1);
+  gua::math::vec4 gold(1.000, 0.766, 0.336, 1);
+  gua::math::vec4 copper(0.955, 0.637, 0.538, 1);
+  gua::math::vec4 chromium(0.550, 0.556, 0.554, 1);
+  gua::math::vec4 nickel(0.660, 0.609, 0.526, 1);
+  gua::math::vec4 titanium(0.542, 0.497, 0.449, 1);
+  gua::math::vec4 cobalt(0.662, 0.655, 0.634, 1);
+  gua::math::vec4 platinum(0.672, 0.637, 0.585, 1);
 
-  gua::math::vec3 iron(0.560, 0.570, 0.580);
-  gua::math::vec3 silver(0.972, 0.960, 0.915);
-  gua::math::vec3 aluminium(0.913, 0.921, 0.925);
-  gua::math::vec3 gold(1.000, 0.766, 0.336);
-  gua::math::vec3 copper(0.955, 0.637, 0.538);
-  gua::math::vec3 chromium(0.550, 0.556, 0.554);
-  gua::math::vec3 nickel(0.660, 0.609, 0.526);
-  gua::math::vec3 titanium(0.542, 0.497, 0.449);
-  gua::math::vec3 cobalt(0.662, 0.655, 0.634);
-  gua::math::vec3 platinum(0.672, 0.637, 0.585);
-
-  auto pbrMat(load_mat("data/materials/Cerberus.gmd"));
-  pbrMat.set_uniform("Color", chromium);
-  pbrMat.set_uniform("Roughness", 0.2f);
-  pbrMat.set_uniform("Metalness", 1.0f);
+  auto pbrMat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->get_new_material());
+  // pbrMat.set_uniform("Color", chromium);
+  // pbrMat.set_uniform("Roughness", 0.2f);
+  // pbrMat.set_uniform("Metalness", 1.0f);
 
   std::string directory("/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/");
-  pbrMat.set_uniform("AlbedoMap",    directory + "Cerberus_A.tga");
+  pbrMat.set_uniform("ColorMap",     directory + "Cerberus_A.tga");
   pbrMat.set_uniform("MetalnessMap", directory + "Cerberus_M.tga");
   pbrMat.set_uniform("RoughnessMap", directory + "Cerberus_R.tga");
   pbrMat.set_uniform("NormalMap",    directory + "Cerberus_N.tga");

@@ -54,6 +54,7 @@ class GUA_DLL MaterialShader {
 
   void apply_uniforms(RenderContext const& ctx,
                       ShaderProgram* shader,
+                      int view,
                       Material const& overwrite) const;
 
 

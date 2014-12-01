@@ -31,7 +31,7 @@ uniform int   background_mode;
 uniform vec3  background_color;
 uniform uvec2 background_texture;
 uniform bool  enable_fog;
-uniform float fog_start;
+uniform float fog_start; 
 uniform float fog_end;
 
 // output

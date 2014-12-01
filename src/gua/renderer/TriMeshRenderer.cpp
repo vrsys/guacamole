@@ -83,7 +83,7 @@ namespace gua {
 
         auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
 
-        if (current_material != tri_mesh_node->get_material().get_shader()) {
+        if (current_material != tri_mesh_node->get_material().get_shader()) {          
           current_material = tri_mesh_node->get_material().get_shader();
           if (current_material) {
 
@@ -114,9 +114,7 @@ namespace gua {
           current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
           current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
-          for (auto const& overwrite : tri_mesh_node->get_material().get_uniforms()) {
-            current_shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
-          }
+          tri_mesh_node->get_material().get_shader()->apply_uniforms(ctx, current_shader, view_id, tri_mesh_node->get_material());
 
           ctx.render_context->apply_program();
 

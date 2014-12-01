@@ -59,6 +59,12 @@ void init(int argc, char** argv) {
       static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
               Resources::lookup_string(Resources::geometry_gua_light_cone_obj).c_str(),
               Resources::geometry_gua_light_cone_obj.size(), false)[0])));
+
+  gua::MaterialShaderDescription desc;
+  desc.load_from_buffer(Resources::lookup_string(Resources::materials_pbs_gmd).c_str());
+
+  auto shader(std::make_shared<gua::MaterialShader>("gua_default_material", desc));
+  gua::MaterialShaderDatabase::instance()->add(shader);
 }
 
 

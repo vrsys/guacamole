@@ -3,6 +3,9 @@
   "source" : "
     void FragmentColor() {
       gua_color = color;
+      gua_roughness = 0.05;
+      gua_metalness = 0.2;
+      gua_emissivity = 0;
     }
   ",
   "uniforms" :
