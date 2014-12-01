@@ -64,7 +64,7 @@ namespace gua {
     if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
 
       std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
-        return reinterpret_cast<node::TriMeshNode*>(a)->get_material().get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material().get_shader();
+        return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
       });
 
       RenderContext const& ctx(pipe.get_context());
@@ -78,13 +78,15 @@ namespace gua {
       MaterialShader* current_material(nullptr);
       ShaderProgram*  current_shader(nullptr);
 
+      ctx.render_context->apply();
+
       // loop through all objects, sorted by material ----------------------------
       for (auto const& object : sorted_objects->second) {
 
         auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
 
-        if (current_material != tri_mesh_node->get_material().get_shader()) {          
-          current_material = tri_mesh_node->get_material().get_shader();
+        if (current_material != tri_mesh_node->get_material()->get_shader()) {          
+          current_material = tri_mesh_node->get_material()->get_shader();
           if (current_material) {
 
             auto shader_iterator = programs_.find(current_material);
@@ -99,11 +101,10 @@ namespace gua {
             }           
           }
           else {
-            Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material().get_shader_name() << std::endl;
+            Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material()->get_shader_name() << std::endl;
           }
           if (current_shader) {
             current_shader->use(ctx);
-            ctx.render_context->apply();
           }
         }
 
@@ -114,7 +115,7 @@ namespace gua {
           current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
           current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
-          tri_mesh_node->get_material().get_shader()->apply_uniforms(ctx, current_shader, view_id, tri_mesh_node->get_material());
+          tri_mesh_node->get_material()->get_shader()->apply_uniforms(ctx, current_shader, view_id, tri_mesh_node->get_material());
 
           ctx.render_context->apply_program();
 

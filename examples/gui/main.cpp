@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
   };
 
   auto mat1(load_mat("data/materials/SimpleMaterial.gmd"));
-  mat1.set_uniform("tex", std::string("google"));
+  mat1->set_uniform("tex", std::string("google"));
 
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");

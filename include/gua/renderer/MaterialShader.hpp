@@ -44,9 +44,8 @@ class GUA_DLL MaterialShader {
   MaterialShaderDescription const& get_description() const;
 
   std::string const&  get_name()             const;
-  Material const      get_new_material()     const;
-  Material const&     get_default_material() const;
-  Material&           get_default_material();
+  std::shared_ptr<Material>            get_new_material()     const;
+  std::shared_ptr<Material> const&     get_default_material() const;
 
   ShaderProgram* get_shader(std::map<scm::gl::shader_stage, std::string> const& program_description,
                             std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
@@ -55,7 +54,7 @@ class GUA_DLL MaterialShader {
   void apply_uniforms(RenderContext const& ctx,
                       ShaderProgram* shader,
                       int view,
-                      Material const& overwrite) const;
+                      std::shared_ptr<Material> const& overwrite) const;
 
 
   void print_shaders() const;
@@ -71,7 +70,7 @@ class GUA_DLL MaterialShader {
 
   MaterialShaderDescription desc_;
 
-  Material default_material_;
+  std::shared_ptr<Material> default_material_;
   mutable unsigned max_object_count_;
 };
 

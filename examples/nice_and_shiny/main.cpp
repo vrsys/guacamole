@@ -72,10 +72,10 @@ int main(int argc, char** argv) {
   // pbrMat.set_uniform("Metalness", 1.0f);
 
   std::string directory("/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/");
-  pbrMat.set_uniform("ColorMap",     directory + "Cerberus_A.tga");
-  pbrMat.set_uniform("MetalnessMap", directory + "Cerberus_M.tga");
-  pbrMat.set_uniform("RoughnessMap", directory + "Cerberus_R.tga");
-  pbrMat.set_uniform("NormalMap",    directory + "Cerberus_N.tga");
+  pbrMat->set_uniform("ColorMap",     directory + "Cerberus_A.tga");
+  pbrMat->set_uniform("MetalnessMap", directory + "Cerberus_M.tga");
+  pbrMat->set_uniform("RoughnessMap", directory + "Cerberus_R.tga");
+  pbrMat->set_uniform("NormalMap",    directory + "Cerberus_N.tga");
 
   gua::TriMeshLoader loader;
 

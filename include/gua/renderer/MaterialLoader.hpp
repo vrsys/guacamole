@@ -51,7 +51,7 @@ class GeometryNode;
 class GUA_DLL MaterialLoader {
  public:
 
-  Material load_material(aiMaterial const* material,
+  std::shared_ptr<Material> load_material(aiMaterial const* material,
                                 std::string const& assets_directory) const;
 
 };

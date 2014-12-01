@@ -36,7 +36,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Material MaterialLoader::load_material(
+std::shared_ptr<Material> MaterialLoader::load_material(
     aiMaterial const* ai_material,
     std::string const& assets_directory) const {
 
@@ -93,37 +93,57 @@ Material MaterialLoader::load_material(
   auto new_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->get_new_material());
 
   if (uniform_color_map != "") {
-    new_mat.set_uniform("ColorMap", assets + uniform_color_map);
+    new_mat->set_uniform("ColorMap", assets + uniform_color_map);
   } else if (uniform_color != "") {
-    new_mat.set_uniform("Color", string_utils::from_string<math::vec3>(uniform_color));
+    new_mat->set_uniform("Color", string_utils::from_string<math::vec3>(uniform_color));
+    // new_mat->set_uniform("ColorMap", std::string("0"));
+  } else  {
+    // new_mat->set_uniform("Color", math::vec3(0, 0, 0));
+    // new_mat->set_uniform("ColorMap", std::string("0"));
   }
 
   if (uniform_roughness_map != "") {
-    new_mat.set_uniform("RoughnessMap", assets + uniform_roughness_map);
+    new_mat->set_uniform("RoughnessMap", assets + uniform_roughness_map);
   } else if (uniform_roughness != "" && uniform_roughness != "0") {
-    // specular exponent is taken to the power of 0.1 in order to move it to the desired range
-    new_mat.set_uniform("uniform_roughness", std::min(1.f, std::pow(string_utils::from_string<float>(uniform_roughness), 0.1f)-1.f));
+    // specular exponent is taken to the power of 0.02 in order to move it to the desired range
+    new_mat->set_uniform("Roughness", std::min(1.f, std::pow(string_utils::from_string<float>(uniform_roughness), 0.02f)-1.f));
+    // new_mat->set_uniform("RoughnessMap", std::string("0"));
+  } else  {
+    // new_mat->set_uniform("Roughness", 0.1f);
+    // new_mat->set_uniform("RoughnessMap", std::string("0"));
   }
 
   if (uniform_metalness_map != "") {
-    new_mat.set_uniform("MetalnessMap", assets + uniform_metalness_map);
+    new_mat->set_uniform("MetalnessMap", assets + uniform_metalness_map);
   } else if (uniform_metalness != "") {
     // multiplying with 0.5, since metalness of 1.0 is seldomly wanted but specularity of 1.0 often given
-    new_mat.set_uniform("Metalness", string_utils::from_string<math::vec3>(uniform_metalness)[0]*0.5f);
+    new_mat->set_uniform("Metalness", string_utils::from_string<math::vec3>(uniform_metalness)[0]*0.5f);
+    // new_mat->set_uniform("MetalnessMap", std::string("0"));
+  } else  {
+    // new_mat->set_uniform("Metalness", 0.01f);
+    // new_mat->set_uniform("MetalnessMap", std::string("0"));
   }
 
   if (uniform_emit_map != "") {
-    new_mat.set_uniform("EmissivityMap", assets + uniform_emit_map);
+    new_mat->set_uniform("EmissivityMap", assets + uniform_emit_map);
   } else if (uniform_emit != "") {
-    new_mat.set_uniform("Emissivity", string_utils::from_string<math::vec3>(uniform_emit)[0]);
+    new_mat->set_uniform("Emissivity", string_utils::from_string<math::vec3>(uniform_emit)[0]);
+    // new_mat->set_uniform("EmissivityMap", std::string("0"));
+  } else  {
+    // new_mat->set_uniform("Emissivity", 0.f);
+    // new_mat->set_uniform("EmissivityMap", std::string("0"));
   }
 
   if (uniform_normal_map != "") {
-    new_mat.set_uniform("NormalMap", assets + uniform_normal_map);
+    new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
+  } else {
+    // new_mat->set_uniform("NormalMap", std::string("0"));
   }
 
   if (uniform_opacity_map != "") {
-    new_mat.set_uniform("OpacityMap", assets + uniform_opacity_map);
+    new_mat->set_uniform("OpacityMap", assets + uniform_opacity_map);
+  } else {
+    // new_mat->set_uniform("OpacityMap", std::string("0"));
   }
   
   // if (uniform_reflection_map != "")

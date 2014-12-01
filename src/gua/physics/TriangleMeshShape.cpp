@@ -159,7 +159,7 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
     TriangleMeshShape* shape = new TriangleMeshShape();
 
     TriMeshLoader factory;
-    auto node(factory.create_geometry_from_file("", file_name, Material(), flags));
+    auto node(factory.create_geometry_from_file("", file_name, std::make_shared<Material>(), flags));
     if (node) {
       std::vector<std::string> geom_list;
 
