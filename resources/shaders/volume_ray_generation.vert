@@ -27,8 +27,6 @@
 // input
 layout(location=0) in vec3 gua_in_position;
 
-uniform mat4 gua_model_matrix;
-
 // output
 out vec3 gua_position_varying;
 
