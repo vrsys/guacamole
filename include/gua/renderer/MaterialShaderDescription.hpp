@@ -30,8 +30,13 @@ namespace gua {
 
 class GUA_DLL MaterialShaderDescription {
  public:
+  MaterialShaderDescription() : file_name_("") {}
+
 
   void load_from_file(std::string const& file_name);
+  std::string const& get_file_name() const {
+    return file_name_;
+  }
 
   MaterialShaderDescription& add_vertex_method(MaterialShaderMethod const& method);
   MaterialShaderDescription& add_fragment_method(MaterialShaderMethod const& method);
@@ -42,6 +47,8 @@ class GUA_DLL MaterialShaderDescription {
  private:
   std::list<MaterialShaderMethod> vertex_methods_;
   std::list<MaterialShaderMethod> fragment_methods_;
+
+  std::string file_name_;
 
 
 };

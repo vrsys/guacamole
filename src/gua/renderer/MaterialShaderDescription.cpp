@@ -43,6 +43,7 @@ void MaterialShaderDescription::load_from_file(std::string const& file_name) {
         return;
       }
 
+      file_name_ = file_name;
       vertex_methods_.clear();
       fragment_methods_.clear();
 
