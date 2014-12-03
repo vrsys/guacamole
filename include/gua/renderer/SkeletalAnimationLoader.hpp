@@ -123,7 +123,7 @@ public:
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);*/
 
-  std::shared_ptr<node::Node> create_ressource(std::shared_ptr<Assimp::Importer> const& importer,
+  std::shared_ptr<node::Node> create_animation_node(std::shared_ptr<Assimp::Importer> const& importer,
                                               aiScene const* ai_scene,
                                               /*aiNode* ai_root,*/
                                               std::string const& file_name,

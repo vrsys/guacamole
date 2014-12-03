@@ -83,6 +83,17 @@ namespace node {
     material_changed_ = self_dirty_ = true;
   }*/
 
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void SkeletalAnimationNode::set_fallback_materials(Material const& material) {
+    for(auto & mat: materials_){
+      if(mat.get_shader_name() == ""){
+        mat = material;
+        material_changed_= self_dirty_ = true;
+      }
+    }
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
 
   void SkeletalAnimationNode::ray_test_impl(Ray const& ray, int options,

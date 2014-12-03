@@ -183,7 +183,7 @@ namespace gua {
       //                             math::mat4::identity()));
       //unsigned count(0);
       //new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
-      new_node = create_ressource(importer, scene, file_name, flags);
+      new_node = create_animation_node(importer, scene, file_name, flags);
 
 
     } else {
@@ -200,7 +200,7 @@ namespace gua {
 }
 
   /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::Node> SkeletalAnimationLoader::create_ressource(std::shared_ptr<Assimp::Importer> const& importer,
+std::shared_ptr<node::Node> SkeletalAnimationLoader::create_animation_node(std::shared_ptr<Assimp::Importer> const& importer,
                                               aiScene const* ai_scene,
                                               /*aiNode* ai_root,*/
                                               std::string const& file_name,
@@ -227,7 +227,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_ressource(std::share
     Material material;
     //TODO : texture atlas since multiple meshes in one resource !!!
     unsigned material_index(ai_scene->mMeshes[mesh_count]->mMaterialIndex);
-
     //if (material_index != 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
     if (flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
@@ -350,15 +349,14 @@ bool SkeletalAnimationLoader::is_supported(std::string const& file_name) const {
 void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
                                             Material const& fallback_material) const
 {
-  //TODO
-  /*auto g_node(std::dynamic_pointer_cast<node::SkeletalAnimationNode>(root));
+auto g_node(std::dynamic_pointer_cast<node::SkeletalAnimationNode>(root));
 
-  if (g_node && g_node->get_material().get_shader_name() == "") {
-    g_node->set_material(fallback_material);
+  if (g_node) {
+    g_node->set_fallback_materials(fallback_material);
     g_node->update_cache();
   }
 
-  for (auto& child : root->get_children()) {
+  /*for (auto& child : root->get_children()) {
     apply_fallback_material(child, fallback_material);
   }*/
 

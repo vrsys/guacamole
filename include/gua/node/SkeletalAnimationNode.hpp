@@ -76,6 +76,7 @@ public : // methods
 
   //TODO
   //void            set_material(Material const& material);
+  void            set_fallback_materials(Material const& material);
 
   /**
   * Implements ray picking for a triangular mesh
