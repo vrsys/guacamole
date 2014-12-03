@@ -207,26 +207,41 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_ressource(std::share
                                               unsigned flags) {
 
 
-  std::string mesh_name = file_name;
-  GeometryDatabase::instance()->add(mesh_name 
-                                    ,std::make_shared<SkeletalAnimationRessource>(ai_scene
-                                                                                  , importer
-                                                                                  , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
+  auto animation_director = std::make_shared<SkeletalAnimationDirector>(ai_scene);
 
-  Material material;
-  //TODO : texture atlas since multiple meshes in one resource !!!
-  unsigned material_index(ai_scene->mMeshes[0]->mMaterialIndex);
+  std::vector<std::string> geometry_descriptions{};
+  std::vector<Material> materials{};
 
-  //if (material_index != 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
-  if (flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
-    MaterialLoader material_loader;
-    aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
-    material = material_loader.load_material(ai_material, file_name);
+  for(uint mesh_count(0);mesh_count<ai_scene->mNumMeshes;++mesh_count){
+
+
+    GeometryDescription desc("SkeletalAnimation", file_name, mesh_count,flags);
+    geometry_descriptions.push_back(desc.unique_key());
+
+    GeometryDatabase::instance()->add(desc.unique_key() 
+                                      ,std::make_shared<SkeletalAnimationRessource>(ai_scene->mMeshes[mesh_count]
+                                                                                    , animation_director
+                                                                                    , importer
+                                                                                    , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
+
+    Material material;
+    //TODO : texture atlas since multiple meshes in one resource !!!
+    unsigned material_index(ai_scene->mMeshes[mesh_count]->mMaterialIndex);
+
+    //if (material_index != 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
+    if (flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
+      MaterialLoader material_loader;
+      aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
+      material = material_loader.load_material(ai_material, file_name);
+    }
+
+    materials.push_back(material);
+
   }
 
-
   // return std::make_shared<node::SkeletalAnimationNode>(mesh_name, mesh_name, material);
-  return std::shared_ptr<node::SkeletalAnimationNode>(new node::SkeletalAnimationNode(mesh_name, mesh_name, material));
+  //return std::shared_ptr<node::SkeletalAnimationNode>(new node::SkeletalAnimationNode(mesh_name, mesh_name, material, animation_director));
+  return std::shared_ptr<node::SkeletalAnimationNode>(new node::SkeletalAnimationNode(file_name, geometry_descriptions, materials, animation_director));
 
 
 
@@ -335,7 +350,8 @@ bool SkeletalAnimationLoader::is_supported(std::string const& file_name) const {
 void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
                                             Material const& fallback_material) const
 {
-  auto g_node(std::dynamic_pointer_cast<node::SkeletalAnimationNode>(root));
+  //TODO
+  /*auto g_node(std::dynamic_pointer_cast<node::SkeletalAnimationNode>(root));
 
   if (g_node && g_node->get_material().get_shader_name() == "") {
     g_node->set_material(fallback_material);
@@ -344,7 +360,7 @@ void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::Node
 
   for (auto& child : root->get_children()) {
     apply_fallback_material(child, fallback_material);
-  }
+  }*/
 
 }
 

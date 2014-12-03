@@ -33,7 +33,10 @@ scm::math::quatf to_gua(aiQuaternion const& q){
 namespace gua
 {
 SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene)
-    :num_bones_(0){
+    :num_bones_(0),
+    bone_transforms_block_(nullptr),
+    timer_(){
+  timer_.start();
   scene_ = scene;
   LoadBones();
 }
@@ -134,6 +137,28 @@ void SkeletalAnimationDirector::ReadNodeHierarchy(float AnimationTime, const aiN
   }
 }
 ////////////////////////////////////////////////////////////////////////////////
+
+void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
+{
+
+  if(!bone_transforms_block_){
+    //TODO one transform block per context
+    bone_transforms_block_ = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
+  }
+
+  std::vector<scm::math::mat4f> Transforms;
+
+  BoneTransform(timer_.get_elapsed(), Transforms);
+
+  bone_transforms_block_->update(ctx.render_context, Transforms);
+  ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 const aiNodeAnim* SkeletalAnimationDirector::FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName)
 {

@@ -32,7 +32,7 @@
 
 // external headers
 #include <assimp/postprocess.h>
-#include <assimp/scene.h>
+//#include <assimp/scene.h>
 
 namespace {
 
@@ -69,35 +69,30 @@ void SkeletalAnimationRessource::VertexBoneData::AddBoneData(uint BoneID, float 
 ////////////////////////////////////////////////////////////////////////////////
 
 SkeletalAnimationRessource::SkeletalAnimationRessource()
-    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), scene_(nullptr), bone_transforms_block_(nullptr), timer_() {timer_.start();}
+    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_(nullptr){}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SkeletalAnimationRessource::SkeletalAnimationRessource(aiScene const* scene, std::shared_ptr<Assimp::Importer> const& importer,
+SkeletalAnimationRessource::SkeletalAnimationRessource(aiMesh const* mesh,std::shared_ptr<SkeletalAnimationDirector> animation_director , std::shared_ptr<Assimp::Importer> const& importer,
            bool build_kd_tree)
     : vertices_(),
       indices_(),
       vertex_array_(),
       upload_mutex_(),
-      scene_(scene),
-      importer_(importer),
-      bone_transforms_block_(nullptr),
-      timer_(){
-
-  animation_director_= std::make_shared<SkeletalAnimationDirector>(scene);
+      mesh_(mesh),
+      animation_director_(animation_director),
+      importer_(importer){
 
   //TODO generate BBox and KDTree
   //if (mesh_->HasPositions()) {
   bounding_box_ = math::BoundingBox<math::vec3>();
 
-  for (unsigned i(0); i < scene_->mNumMeshes; ++i){
 
-    for (unsigned v(0); v < scene->mMeshes[i]->mNumVertices; ++v) {
-      bounding_box_.expandBy(scm::math::vec3(
-          scene->mMeshes[i]->mVertices[v].x, scene->mMeshes[i]->mVertices[v].y, scene->mMeshes[i]->mVertices[v].z));
-    }
-
+  for (unsigned v(0); v < mesh->mNumVertices; ++v) {
+    bounding_box_.expandBy(scm::math::vec3(
+        mesh->mVertices[v].x, mesh->mVertices[v].y, mesh->mVertices[v].z));
   }
+
 
     // TODO
     /*if (build_kd_tree) {
@@ -105,21 +100,21 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiScene const* scene, std
     }
   //}*/
 
-  timer_.start();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkeletalAnimationRessource::LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones)
+void SkeletalAnimationRessource::LoadBones(std::vector<VertexBoneData>& Bones)
 {
-  for (uint i = 0 ; i < pMesh->mNumBones ; i++) {
+  for (uint i = 0 ; i < mesh_->mNumBones ; i++) {
 
-    std::string BoneName(pMesh->mBones[i]->mName.data);      
+    std::string BoneName(mesh_->mBones[i]->mName.data);      
     uint BoneIndex = animation_director_->getBoneID(BoneName);        
     
-    for (uint j = 0 ; j < pMesh->mBones[i]->mNumWeights ; j++) {
-      uint VertexID = entries_[MeshIndex].BaseVertex + pMesh->mBones[i]->mWeights[j].mVertexId;
-      float Weight  = pMesh->mBones[i]->mWeights[j].mWeight;                   
+    for (uint j = 0 ; j < mesh_->mBones[i]->mNumWeights ; j++) {
+      //uint VertexID = entries_[MeshIndex].BaseVertex + mesh_->mBones[i]->mWeights[j].mVertexId;//no BaseVertex needed anymore???
+      uint VertexID = mesh_->mBones[i]->mWeights[j].mVertexId;
+      float Weight  = mesh_->mBones[i]->mWeights[j].mWeight;                   
       Bones[VertexID].AddBoneData(BoneIndex, Weight);
     }
   }
@@ -127,9 +122,7 @@ void SkeletalAnimationRessource::LoadBones(uint MeshIndex, const aiMesh* pMesh, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkeletalAnimationRessource::InitMesh(uint MeshIndex,
-                    const aiMesh* paiMesh,
-                    std::vector<scm::math::vec3>& Positions,
+void SkeletalAnimationRessource::InitMesh(std::vector<scm::math::vec3>& Positions,
                     std::vector<scm::math::vec3>& Normals,
                     std::vector<scm::math::vec2>& TexCoords,
                     std::vector<scm::math::vec3>& Tangents,
@@ -140,30 +133,30 @@ void SkeletalAnimationRessource::InitMesh(uint MeshIndex,
   const scm::math::vec3 Zero3D(0.0f, 0.0f, 0.0f);
   
   // Populate the vertex attribute vectors
-  for (uint i = 0 ; i < paiMesh->mNumVertices ; i++) { // TODO catch: haspositions and hasnormals
+  for (uint i = 0 ; i < mesh_->mNumVertices ; i++) { // TODO catch: haspositions and hasnormals
     
     scm::math::vec3 pPos = scm::math::vec3(0.f, 0.f, 0.f);
-    if(paiMesh->HasPositions()) {
-      pPos = scm::math::vec3(paiMesh->mVertices[i].x,paiMesh->mVertices[i].y,paiMesh->mVertices[i].z);
+    if(mesh_->HasPositions()) {
+      pPos = scm::math::vec3(mesh_->mVertices[i].x,mesh_->mVertices[i].y,mesh_->mVertices[i].z);
     }
 
     scm::math::vec3 pNormal = scm::math::vec3(0.f, 0.f, 0.f);
-    if(paiMesh->HasNormals()) {
-      pNormal = scm::math::vec3(paiMesh->mNormals[i].x,paiMesh->mNormals[i].y,paiMesh->mNormals[i].z);
+    if(mesh_->HasNormals()) {
+      pNormal = scm::math::vec3(mesh_->mNormals[i].x,mesh_->mNormals[i].y,mesh_->mNormals[i].z);
     }
 
     scm::math::vec3 pTexCoord = scm::math::vec3(0.0f,0.0f,0.0f);
-    if(paiMesh->HasTextureCoords(0)) {}
+    if(mesh_->HasTextureCoords(0)) {}
     {
-      pTexCoord = scm::math::vec3(paiMesh->mTextureCoords[0][i].x,paiMesh->mTextureCoords[0][i].y,paiMesh->mTextureCoords[0][i].z);
+      pTexCoord = scm::math::vec3(mesh_->mTextureCoords[0][i].x,mesh_->mTextureCoords[0][i].y,mesh_->mTextureCoords[0][i].z);
     }
 
     scm::math::vec3 pTangent = scm::math::vec3(0.f, 0.f, 0.f);
     scm::math::vec3 pBitangent = scm::math::vec3(0.f, 0.f, 0.f);
-    if (paiMesh->HasTangentsAndBitangents()) {
-      pTangent = scm::math::vec3(paiMesh->mTangents[i].x, paiMesh->mTangents[i].y, paiMesh->mTangents[i].z);
+    if (mesh_->HasTangentsAndBitangents()) {
+      pTangent = scm::math::vec3(mesh_->mTangents[i].x, mesh_->mTangents[i].y, mesh_->mTangents[i].z);
 
-      pBitangent = scm::math::vec3(paiMesh->mBitangents[i].x, paiMesh->mBitangents[i].y, paiMesh->mBitangents[i].z);
+      pBitangent = scm::math::vec3(mesh_->mBitangents[i].x, mesh_->mBitangents[i].y, mesh_->mBitangents[i].z);
     }
 
     Positions.push_back(pPos);
@@ -173,20 +166,24 @@ void SkeletalAnimationRessource::InitMesh(uint MeshIndex,
     TexCoords.push_back(scm::math::vec2(pTexCoord[0], pTexCoord[1]));
   }
   
-  LoadBones(MeshIndex, paiMesh, Bones);
+  LoadBones(Bones);
   
   // Populate the index buffer
-  for (uint i = 0 ; i < paiMesh->mNumFaces ; i++) {
-    const aiFace& Face = paiMesh->mFaces[i];
+  for (uint i = 0 ; i < mesh_->mNumFaces ; i++) {
+    const aiFace& Face = mesh_->mFaces[i];
 
     if(Face.mNumIndices != 3) {
       Logger::LOG_ERROR << "InitMesh - face doesnt have 3 vertices" << std::endl;
       assert(false);
     }
 
-    Indices.push_back(Face.mIndices[0] + entries_[MeshIndex].BaseVertex);
+    /*Indices.push_back(Face.mIndices[0] + entries_[MeshIndex].BaseVertex);
     Indices.push_back(Face.mIndices[1] + entries_[MeshIndex].BaseVertex);
-    Indices.push_back(Face.mIndices[2] + entries_[MeshIndex].BaseVertex);
+    Indices.push_back(Face.mIndices[2] + entries_[MeshIndex].BaseVertex);*/
+
+    Indices.push_back(Face.mIndices[0]);
+    Indices.push_back(Face.mIndices[1]);
+    Indices.push_back(Face.mIndices[2]);
   }
 }
 
@@ -196,7 +193,6 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
 
   if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
 
-    entries_.resize(scene_->mNumMeshes);
 
     std::vector<scm::math::vec3> Positions;
     std::vector<scm::math::vec3> Normals;
@@ -206,37 +202,22 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     std::vector<VertexBoneData> Bones;
     std::vector<uint> Indices;
        
-    uint NumVertices = 0;
-    uint NumIndices = 0;
-    
-    // Count the number of vertices and indices
-    for (uint i = 0 ; i < entries_.size() ; i++) {
-        entries_[i].MaterialIndex = scene_->mMeshes[i]->mMaterialIndex;        
-        entries_[i].NumIndices    = scene_->mMeshes[i]->mNumFaces * 3;
-        entries_[i].BaseVertex    = NumVertices;
-        entries_[i].BaseIndex     = NumIndices;
-        
-        NumVertices += scene_->mMeshes[i]->mNumVertices;
-        NumIndices  += entries_[i].NumIndices;
-    }
+    uint NumIndices = mesh_-> mNumFaces * 3;
 
     num_faces_ = NumIndices/3;
-    num_vertices_ = NumVertices;
+    num_vertices_ = mesh_-> mNumVertices;;
     
     // Reserve space in the vectors for the vertex attributes and indices
-    Positions.reserve(NumVertices);
-    Normals.reserve(NumVertices);
-    TexCoords.reserve(NumVertices);
-    Tangents.reserve(NumVertices);
-    Bitangents.reserve(NumVertices);
-    Bones.resize(NumVertices);
+    Positions.reserve(num_vertices_);
+    Normals.reserve(num_vertices_);
+    TexCoords.reserve(num_vertices_);
+    Tangents.reserve(num_vertices_);
+    Bitangents.reserve(num_vertices_);
+    Bones.resize(num_vertices_);
     Indices.reserve(NumIndices);
-        
-    // Initialize the meshes in the scene one by one
-    for (uint i = 0 ; i < entries_.size() ; i++) {
-      const aiMesh* paiMesh = scene_->mMeshes[i];
-      InitMesh(i, paiMesh, Positions, Normals, TexCoords, Tangents, Bitangents, Bones, Indices);
-    }
+    
+    InitMesh(Positions, Normals, TexCoords, Tangents, Bitangents, Bones, Indices);
+
 
     std::unique_lock<std::mutex> lock(upload_mutex_);
 
@@ -291,8 +272,6 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
             0, 6, scm::gl::TYPE_VEC4I, sizeof(Vertex)),
         {vertices_[ctx.id]});
 
-    //TODO one transform block per context
-    bone_transforms_block_ = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
     
     ctx.render_context->apply();
   }
@@ -305,8 +284,6 @@ void SkeletalAnimationRessource::draw(RenderContext const& ctx) /*const*/ {
 
   // upload to GPU if neccessary
   upload_to(ctx);
-
-  updateBoneTransforms(ctx);
 
   ctx.render_context->bind_vertex_array(vertex_array_[ctx.id]);
   ctx.render_context->bind_index_buffer(indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
@@ -353,15 +330,5 @@ std::vector<unsigned int> SkeletalAnimationRessource::get_face(unsigned int i) c
   return std::vector<unsigned int>();
 }
 
-void SkeletalAnimationRessource::updateBoneTransforms(RenderContext const& ctx)
-{
-  std::vector<scm::math::mat4f> Transforms;
-
-  animation_director_->BoneTransform(timer_.get_elapsed(), Transforms);
-
-  bone_transforms_block_->update(ctx.render_context, Transforms);
-  ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
-
-}
 ////////////////////////////////////////////////////////////////////////////////
 }

@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/node/GeometryNode.hpp>
+#include <gua/renderer/SkeletalAnimationDirector.hpp>
 
 namespace gua {
 
@@ -45,9 +46,10 @@ public : // typedef/enums/friends
 
 private : // c'tor / d'tor
 
-  SkeletalAnimationNode(std::string const& node_name = "",
-              std::string const& geometry_description = "gua_default_geometry",
-              Material const& material = Material(),
+  SkeletalAnimationNode(std::string const& node_name,
+              std::vector<std::string> const& geometry_description,
+              std::vector<Material> const& materials,
+              std::shared_ptr<SkeletalAnimationDirector> animation_director = nullptr,
               math::mat4 const& transform = math::mat4::identity());
 
 public : // methods
@@ -55,20 +57,25 @@ public : // methods
   /**
   * Get the string referring to an entry in guacamole's GeometryDatabase.
   */
-  std::string const& get_geometry_description() const;
+  //TODO
+  //std::string const& get_geometry_description() const;
 
   /**
   * Set the string referring to an entry in guacamole's GeometryDatabase.
   */
-  void set_geometry_description(std::string const& geometry_description);
+  //TODO
+  //void set_geometry_description(std::string const& geometry_description);
 
   /**
   * A string referring to an entry in guacamole's MaterialShaderDatabase.
   */
-  Material const& get_material() const;
-  Material&       get_material();
+  //TODO
+  //Material const& get_material() const;
+  //TODO
+  std::vector<Material>&       get_materials();
 
-  void            set_material(Material const& material);
+  //TODO
+  //void            set_material(Material const& material);
 
   /**
   * Implements ray picking for a triangular mesh
@@ -85,7 +92,11 @@ public : // methods
 
   void update_cache() override;
 
-  std::shared_ptr<SkeletalAnimationRessource> const& get_geometry() const;
+  std::vector<std::shared_ptr<SkeletalAnimationRessource>> const& get_geometries() const;
+  
+  std::shared_ptr<SkeletalAnimationDirector> const& get_director() const;
+
+
 
   /**
    * Accepts a visitor and calls concrete visit method.
@@ -102,12 +113,20 @@ public : // methods
 
  private:  // attributes e.g. special attributes for drawing
 
-  std::shared_ptr<SkeletalAnimationRessource> geometry_;
-  std::string                       geometry_description_;
+
+  //std::shared_ptr<SkeletalAnimationRessource> geometry_;
+  //std::string                       geometry_description_;
+  std::vector<std::shared_ptr<SkeletalAnimationRessource>> geometries_;
+  std::vector<std::string>          geometry_descriptions_;
   bool                              geometry_changed_;
 
-  Material                          material_;
+  //Material                          material_;
+  std::vector<Material>             materials_;
   bool                              material_changed_;
+
+  std::shared_ptr<SkeletalAnimationDirector> animation_director_;
+
+
 };
 
 } // namespace node {

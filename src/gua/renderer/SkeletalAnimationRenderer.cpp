@@ -63,9 +63,11 @@ namespace gua {
 
     if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
 
-      std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
+      //TODO!!!!!
+      /*std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
         return reinterpret_cast<node::SkeletalAnimationNode*>(a)->get_material().get_shader() < reinterpret_cast<node::SkeletalAnimationNode*>(b)->get_material().get_shader();
-      });
+      });*/
+
 
       RenderContext const& ctx(pipe.get_context());
 
@@ -75,53 +77,77 @@ namespace gua {
 
       int view_id(pipe.get_camera().config.get_view_id());
 
+
       MaterialShader* current_material(nullptr);
       ShaderProgram*  current_shader(nullptr);
 
+
       // loop through all objects, sorted by material ----------------------------
       for (auto const& object : sorted_objects->second) {
+        
+        auto skel_anim_node(reinterpret_cast<node::SkeletalAnimationNode*>(object));
 
-        auto tri_mesh_node(reinterpret_cast<node::SkeletalAnimationNode*>(object));
+        auto materials = skel_anim_node->get_materials();
+        auto geometries = skel_anim_node->get_geometries();
 
-        if (current_material != tri_mesh_node->get_material().get_shader()) {
-          current_material = tri_mesh_node->get_material().get_shader();
-          if (current_material) {
 
-            auto shader_iterator = programs_.find(current_material);
-            if (shader_iterator != programs_.end())
-            {
-              current_shader = shader_iterator->second;
+        // loop through all resources in animation node
+        for(uint i(0);i<materials.size();++i){
+
+          if (current_material != materials[i].get_shader()) {
+            current_material = materials[i].get_shader();
+            if (current_material) {
+
+              auto shader_iterator = programs_.find(current_material);
+              if (shader_iterator != programs_.end())
+              {
+                current_shader = shader_iterator->second;
+              }
+              else {
+                auto shader = current_material->get_shader(program_description_);
+                programs_[current_material] = shader;
+                current_shader = shader;
+              }           
             }
             else {
-              auto shader = current_material->get_shader(program_description_);
-              programs_[current_material] = shader;
-              current_shader = shader;
-            }           
+              Logger::LOG_WARNING << "SkeletalAnimationPass::process(): Cannot find material: " << materials[i].get_shader_name() << std::endl;
+            }
+
+            if (current_shader) {
+              current_shader->use(ctx);
+              ctx.render_context->apply();
+            }
+
+
           }
-          else {
-            Logger::LOG_WARNING << "SkeletalAnimationPass::process(): Cannot find material: " << tri_mesh_node->get_material().get_shader_name() << std::endl;
+
+          if (current_shader && geometries[i]) {
+
+
+            UniformValue model_mat(skel_anim_node->get_cached_world_transform());
+            UniformValue normal_mat(scm::math::transpose(scm::math::inverse(skel_anim_node->get_cached_world_transform())));
+
+            current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
+            current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
+
+            for (auto const& overwrite : materials[i].get_uniforms()) {
+              current_shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
+            }
+
+
+            ctx.render_context->apply_program();
+
+            skel_anim_node->get_director()->updateBoneTransforms(ctx);
+            geometries[i]->draw(ctx);
+
           }
-          if (current_shader) {
-            current_shader->use(ctx);
-            ctx.render_context->apply();
-          }
+
+
         }
 
-        if (current_shader && tri_mesh_node->get_geometry()) {
-          UniformValue model_mat(tri_mesh_node->get_cached_world_transform());
-          UniformValue normal_mat(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform())));
 
-          current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
-          current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
-          for (auto const& overwrite : tri_mesh_node->get_material().get_uniforms()) {
-            current_shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
-          }
-
-          ctx.render_context->apply_program();
-
-          tri_mesh_node->get_geometry()->draw(ctx);
-        }
       }
 
       pipe.get_gbuffer().unbind(ctx);

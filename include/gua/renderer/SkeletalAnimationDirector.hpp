@@ -24,7 +24,9 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-//#include <gua/renderer/BoneTransformUniformBlock.hpp>
+ #include <gua/renderer/RenderContext.hpp>
+#include <gua/renderer/BoneTransformUniformBlock.hpp>
+#include <gua/utils/Timer.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -43,7 +45,7 @@ class SkeletalAnimationDirector{
   inline ~SkeletalAnimationDirector(){};
 
  uint getBoneID(std::string const& name);
- void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
+ void updateBoneTransforms(RenderContext const& ctx);
  
  private:
 
@@ -68,6 +70,8 @@ class SkeletalAnimationDirector{
 
   void LoadBones();
 
+  void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
+
   void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const scm::math::mat4f& ParentTransform);
   void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
   void CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
@@ -81,10 +85,11 @@ class SkeletalAnimationDirector{
   uint num_bones_;
   std::vector<BoneInfo> bone_info_;
 
-  //std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
-  /////////////////////////////////
+  std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
 
   aiScene const* scene_;
+
+  Timer timer_;
 };
 
 }

@@ -26,8 +26,6 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/utils/KDTree.hpp>
-#include <gua/renderer/BoneTransformUniformBlock.hpp>
-#include <gua/utils/Timer.hpp>
 #include <gua/renderer/SkeletalAnimationDirector.hpp>
 
 // external headers
@@ -39,7 +37,7 @@
 
 #define ZERO_MEM(a) memset(a, 0, sizeof(a))
 #include <vector>
-#include <assimp/scene.h>       // Output data structure
+//#include <assimp/scene.h>       // Output data structure
 
 
 namespace Assimp { class Importer; }
@@ -73,7 +71,7 @@ class SkeletalAnimationRessource : public GeometryResource {
    *
    * \param mesh             The Assimp mesh to load the data from.
    */
-   SkeletalAnimationRessource(aiScene const* scene, std::shared_ptr<Assimp::Importer> const& importer, bool build_kd_tree);
+   SkeletalAnimationRessource(aiMesh const* mesh, std::shared_ptr<SkeletalAnimationDirector> animation_director, std::shared_ptr<Assimp::Importer> const& importer, bool build_kd_tree);
 
   /**
    * Draws the Mesh.
@@ -132,11 +130,9 @@ class SkeletalAnimationRessource : public GeometryResource {
       void AddBoneData(uint BoneID, float Weight);
   };
 
-  void LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones);
+  void LoadBones(std::vector<VertexBoneData>& Bones);
 
-  void InitMesh(uint MeshIndex,
-                    const aiMesh* paiMesh,
-                    std::vector<scm::math::vec3>& Positions,
+  void InitMesh(    std::vector<scm::math::vec3>& Positions,
                     std::vector<scm::math::vec3>& Normals,
                     std::vector<scm::math::vec2>& TexCoords,
                     std::vector<scm::math::vec3>& Tangents,
@@ -162,7 +158,7 @@ class SkeletalAnimationRessource : public GeometryResource {
   mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
   mutable std::mutex upload_mutex_;
 
-  // intermediate mesh meta data
+  /*// intermediate mesh meta data
   #define INVALID_MATERIAL 0xFFFFFFFF // TODO
   struct MeshEntry {
         MeshEntry()
@@ -177,25 +173,24 @@ class SkeletalAnimationRessource : public GeometryResource {
         unsigned int BaseVertex;
         unsigned int BaseIndex;
         unsigned int MaterialIndex;
-    };
+    };*/
     
-    std::vector<MeshEntry> entries_;
+    //std::vector<MeshEntry> entries_;
 
-    std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
+    
 
     unsigned int num_vertices_;
     unsigned int num_faces_;
 
     std::shared_ptr<SkeletalAnimationDirector> animation_director_;
 
-    Timer timer_;
     /////////////////////////////////
 
  public:
 
   KDTree kd_tree_;
 
-  aiScene const* scene_;
+  aiMesh const* mesh_;
   std::shared_ptr<Assimp::Importer> importer_;
 };
 

@@ -36,51 +36,61 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   SkeletalAnimationNode::SkeletalAnimationNode(std::string const& name,
-                           std::string const& geometry_description,
-                           Material const& material,
+                           std::vector<std::string> const& geometry_descriptions,
+                           std::vector<Material> const& materials,
+                           std::shared_ptr<SkeletalAnimationDirector> animation_director,
                            math::mat4 const& transform)
     : GeometryNode(name, transform),
-      geometry_(nullptr),
-      geometry_description_(geometry_description),
+      geometries_(),
+      geometry_descriptions_(geometry_descriptions),
       geometry_changed_(true),
-      material_(material),
-      material_changed_(true)
-  {}
-
-
-  ////////////////////////////////////////////////////////////////////////////////
-  std::string const& SkeletalAnimationNode::get_geometry_description() const {
-    return geometry_description_;
+      materials_(materials),
+      material_changed_(true),
+      animation_director_(animation_director)
+  {
+    geometries_.resize(geometry_descriptions_.size());
   }
 
+
   ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_geometry_description(std::string const& v) {
+  //TODO
+  /*std::string const& SkeletalAnimationNode::get_geometry_description() const {
+    return geometry_description_;
+  }*/
+
+  ////////////////////////////////////////////////////////////////////////////////
+  //TODO
+  /*void SkeletalAnimationNode::set_geometry_description(std::string const& v) {
     geometry_description_ = v;
     geometry_changed_ = self_dirty_ = true;
-  }
+  }*/
 
   ////////////////////////////////////////////////////////////////////////////////
-  Material const& SkeletalAnimationNode::get_material() const {
+  //TODO
+  /*Material const& SkeletalAnimationNode::get_material() const {
     return material_;
+  }*/
+
+  ////////////////////////////////////////////////////////////////////////////////
+  std::vector<Material>& SkeletalAnimationNode::get_materials() {
+    return materials_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  Material& SkeletalAnimationNode::get_material() {
-    return material_;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_material(Material const& material) {
+  //TODO
+  /*void SkeletalAnimationNode::set_material(Material const& material) {
     material_ = material;
     material_changed_ = self_dirty_ = true;
-  }
+  }*/
 
   ////////////////////////////////////////////////////////////////////////////////
 
   void SkeletalAnimationNode::ray_test_impl(Ray const& ray, int options,
     Mask const& mask, std::set<PickResult>& hits) {
 
-    // first of all, check bbox
+    //TODO
+
+    /*// first of all, check bbox
     auto box_hits(::gua::intersect(ray, bounding_box_));
 
     // ray did not intersect bbox -- therefore it wont intersect
@@ -203,7 +213,7 @@ namespace node {
     for (auto child : get_children()) {
       // test for intersection with each child
       child->ray_test_impl(ray, options, mask, hits);
-    }
+    }*/
 
   }
 
@@ -216,25 +226,29 @@ namespace node {
 
     if (geometry_changed_)
     {
-      if (geometry_description_ != "")
-      {
-        if (!GeometryDatabase::instance()->contains(geometry_description_))
+      for(uint i(0);i<geometry_descriptions_.size();++i){
+
+        if (geometry_descriptions_[i] != "")
         {
-          GeometryDescription desc(geometry_description_);
-          try {
-            gua::SkeletalAnimationLoader loader;
-            loader.create_geometry_from_file(get_name(), desc.filepath(), get_material(), desc.flags());
+          if (!GeometryDatabase::instance()->contains(geometry_descriptions_[i]))
+          {
+            GeometryDescription desc(geometry_descriptions_[i]);
+            try {
+              gua::SkeletalAnimationLoader loader;
+              loader.create_geometry_from_file(get_name(), desc.filepath(), materials_[i], desc.flags());
+            }
+            catch ( std::exception& e ) {
+              Logger::LOG_WARNING << "SkeletalAnimationNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
+            }
           }
-          catch ( std::exception& e ) {
-            Logger::LOG_WARNING << "SkeletalAnimationNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
+
+          geometries_[i] = std::dynamic_pointer_cast<SkeletalAnimationRessource>(GeometryDatabase::instance()->lookup(geometry_descriptions_[i]));
+
+          if (!geometries_[i]) {
+            Logger::LOG_WARNING << "Failed to get SkeletalAnimationRessource for " << geometry_descriptions_[i] << ": The data base entry is of wrong type!" << std::endl;
           }
         }
 
-        geometry_ = std::dynamic_pointer_cast<SkeletalAnimationRessource>(GeometryDatabase::instance()->lookup(geometry_description_));
-
-        if (!geometry_) {
-          Logger::LOG_WARNING << "Failed to get SkeletalAnimationRessource for " << geometry_description_ << ": The data base entry is of wrong type!" << std::endl;
-        }
       }
 
       geometry_changed_ = false;
@@ -245,7 +259,7 @@ namespace node {
     //
     // data/materials/Stones.gmd
 
-    if (material_changed_)
+    /*if (material_changed_)
     {
       if (material_.get_shader_name() != "")
       {
@@ -256,14 +270,19 @@ namespace node {
       }
 
       material_changed_ = false;
-    }
+    }*/ // is not doing anything???????
 
     GeometryNode::update_cache();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  std::shared_ptr<SkeletalAnimationRessource> const& SkeletalAnimationNode::get_geometry() const {
-    return geometry_;
+  std::vector<std::shared_ptr<SkeletalAnimationRessource>> const& SkeletalAnimationNode::get_geometries() const {
+    return geometries_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  std::shared_ptr<SkeletalAnimationDirector> const& SkeletalAnimationNode::get_director() const {
+    return animation_director_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -274,9 +293,15 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::update_bounding_box() const {
 
-    if (geometry_) {
-      auto geometry_bbox(geometry_->get_bounding_box());
+    if (geometries_.size()>0) {
+
+      auto geometry_bbox(geometries_[0]->get_bounding_box());
+      for(uint i(1);i<geometries_.size();++i){
+        geometry_bbox.expandBy(geometries_[i]->get_bounding_box());
+      }
+
       bounding_box_ = transform(geometry_bbox, world_transform_);
+
 
       for (auto child : get_children()) {
         bounding_box_.expandBy(child->get_bounding_box());
@@ -288,9 +313,9 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   std::shared_ptr<Node> SkeletalAnimationNode::copy() const {
-    std::shared_ptr<SkeletalAnimationNode> result(new SkeletalAnimationNode(get_name(), geometry_description_, material_, get_transform()));
+    std::shared_ptr<SkeletalAnimationNode> result(new SkeletalAnimationNode(get_name(), geometry_descriptions_, materials_, get_director(),get_transform()));
     result->shadow_mode_ = shadow_mode_;
-    result->geometry_ = geometry_;
+    result->geometries_ = geometries_;
     return result;
   }
 }
