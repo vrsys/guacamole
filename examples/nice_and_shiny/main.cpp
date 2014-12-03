@@ -25,6 +25,7 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
+#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -153,6 +154,7 @@ int main(int argc, char** argv) {
   pbrPipe.add_pass<gua::TriMeshPassDescription>();
   pbrPipe.add_pass<gua::EmissivePassDescription>();
   pbrPipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
+  pbrPipe.add_pass<gua::ToneMappingPassDescription>();
 #if 0
   pbrPipe.add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
