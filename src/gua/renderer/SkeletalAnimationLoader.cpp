@@ -153,7 +153,7 @@ namespace gua {
           file_name,
           aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
               aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-              aiProcess_PreTransformVertices);
+              aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals);
 
     }
     else if (flags & SkeletalAnimationLoader::OPTIMIZE_GEOMETRY) {
@@ -164,12 +164,12 @@ namespace gua {
           file_name,
           aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
               aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-              aiProcess_PreTransformVertices);
+              aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals);
     } else {
 
       importer->ReadFile(
           file_name,
-          aiProcessPreset_TargetRealtime_Quality | aiProcess_GenNormals);
+          aiProcessPreset_TargetRealtime_Quality | aiProcess_GenSmoothNormals);
 
     }
 

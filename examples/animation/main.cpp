@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
   gua::SkeletalAnimationLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file("bob", "data/objects/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  auto teapot(loader.create_geometry_from_file("bob", "data/objects/pinky.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
   teapot->set_draw_bounding_box(true);
 
