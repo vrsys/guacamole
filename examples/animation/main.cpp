@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 #include <functional>
+#include <memory>
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/SkeletalAnimationLoader.hpp>
@@ -67,8 +68,11 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto teapot(loader.create_geometry_from_file("bob", "data/objects/pinky.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  loader.load_animation("data/objects/idle1.md5anim", 0);
- graph.add_node("/transform", teapot);
+  
+  std::shared_ptr<gua::node::SkeletalAnimationNode> node = std::dynamic_pointer_cast<gua::node::SkeletalAnimationNode, gua::node::Node>(teapot);
+  node->get_director()->LoadAnimations(loader.load_animation("data/objects/idle1.md5anim", 0));
+
+  graph.add_node("/transform", teapot);
   teapot->set_draw_bounding_box(true);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");

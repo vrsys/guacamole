@@ -156,7 +156,7 @@ namespace gua {
         aiScene const* scene(importer->GetScene());
 
         if(!scene->HasAnimations()) {
-          Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animatins!" << std::endl;
+          Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;
         }
 
         return scene;
