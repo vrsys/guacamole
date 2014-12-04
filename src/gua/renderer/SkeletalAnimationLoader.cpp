@@ -144,6 +144,8 @@ namespace gua {
 
     importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
                                   aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+    //prevent md5loader from loading animation with same name as mesh
+    importer->SetPropertyBool(AI_CONFIG_IMPORT_MD5_NO_ANIM_AUTOLOAD, true);
 
     if ((flags & SkeletalAnimationLoader::OPTIMIZE_GEOMETRY) &&
         (flags & SkeletalAnimationLoader::LOAD_MATERIALS)) {
