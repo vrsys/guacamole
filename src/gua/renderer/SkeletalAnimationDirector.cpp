@@ -35,9 +35,11 @@ namespace gua
 SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene)
     :num_bones_(0),
     bone_transforms_block_(nullptr),
+    scene_{scene},
+    hasAnims_{scene_->HasAnimations()},
+    firstRun_{true},
     timer_(){
   timer_.start();
-  scene_ = scene;
   LoadBones();
 }
 
@@ -60,7 +62,6 @@ void SkeletalAnimationDirector::LoadBones(){
       }
 
     }
-
 
   }
 
@@ -155,30 +156,32 @@ void SkeletalAnimationDirector::ReadNodeHierarchyStatic(const aiNode* pNode, con
 
 void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
 {
+  if(!hasAnims_ && !firstRun_) return;
 
-  if(!bone_transforms_block_){
+  if(!bone_transforms_block_) {
     //TODO one transform block per context
     bone_transforms_block_ = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
   }
   //reserve vector for transforms
   std::vector<scm::math::mat4f> Transforms{num_bones_, scm::math::mat4f::identity()};
-  if(scene_->HasAnimations()) {
+
+  if(hasAnims_) {
     BoneTransform(timer_.get_elapsed(), Transforms);
   }
-  else
-  {
+  else {        //this will be only called once, transformations dont need to be updated without anims
     ReadNodeHierarchyStatic(scene_->mRootNode, scm::math::mat4f::identity());
 
     for (uint i = 0 ; i < num_bones_ ; i++) {
         Transforms[i] = bone_info_[i].FinalTransformation;
     }
+
+    firstRun_ = false;
   }
 
   bone_transforms_block_->update(ctx.render_context, Transforms);
   ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

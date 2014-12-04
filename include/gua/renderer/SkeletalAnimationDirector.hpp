@@ -89,6 +89,9 @@ class SkeletalAnimationDirector{
 
   aiScene const* scene_;
 
+  bool firstRun_;
+  bool hasAnims_;
+  
   Timer timer_;
 };
 
