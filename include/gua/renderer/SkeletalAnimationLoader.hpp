@@ -24,7 +24,8 @@
 
 // guacamole headers
 #include <gua/renderer/SkeletalAnimationRessource.hpp>
-
+#include <gua/node/SkeletalAnimationNode.hpp>
+ 
 #include <gua/renderer/Material.hpp>
 
 // external headers

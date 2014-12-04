@@ -47,6 +47,8 @@ class SkeletalAnimationDirector{
  uint getBoneID(std::string const& name);
  void updateBoneTransforms(RenderContext const& ctx);
  
+ void LoadAnimations(aiScene const*);
+ 
  private:
 
   struct BoneInfo
@@ -68,7 +70,6 @@ class SkeletalAnimationDirector{
   //void LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones);
 
   void LoadBones();
-  void LoadAnimations();
 
   void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
 
@@ -90,7 +91,7 @@ class SkeletalAnimationDirector{
 
   aiScene const* scene_;
 
-  std::vector<aiAnimation> animations_;
+  std::vector<std::shared_ptr<aiAnimation>> animations_;
 
   bool firstRun_;
   bool hasAnims_;

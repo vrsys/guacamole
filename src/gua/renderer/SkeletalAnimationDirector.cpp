@@ -68,19 +68,25 @@ void SkeletalAnimationDirector::LoadBones(){
 
 }
 
-void SkeletalAnimationDirector::LoadAnimations() {
-  for (uint i = 0 ; i < scene_->mNumAnimations ; i++) {
-    // animations_.push_back(*scene_->mAnimations[i]);
-  }
+void SkeletalAnimationDirector::LoadAnimations(aiScene const* scene) {
+  if(!scene->HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
+  // std::cout << scene->mNumAnimations << std::endl;
+  // std::cout << scene->mAnimations[0] << std::endl;
+  // aiAnimation anim = *(scene->mAnimations[0]);
+    //animations_.push_back(std::make_shared<aiAnimation>(*scene->mAnimations[0]));
+  // for(uint i = 0; i < scene->mNumAnimations; ++i) {
+  //   animations_.push_back(std::make_shared<aiAnimation>(*scene->mAnimations[i]));
+
+  //   std::cout << animations_.size() << std::endl;
+  // }
+  //if(animations_.size() > 0) hasAnims_ = true;
 }
 
-uint SkeletalAnimationDirector::getBoneID(std::string const& name)
-{
+uint SkeletalAnimationDirector::getBoneID(std::string const& name) {
   return bone_mapping_.at(name);
 }
 
-void SkeletalAnimationDirector::BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms)
-{
+void SkeletalAnimationDirector::BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms) {
   scm::math::mat4f Identity = scm::math::mat4f::identity();
   
   //if no frame frequency is given, set to 25
