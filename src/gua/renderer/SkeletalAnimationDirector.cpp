@@ -87,8 +87,6 @@ void SkeletalAnimationDirector::BoneTransform(float TimeInSeconds, std::vector<s
 
   ReadNodeHierarchy(AnimationTime, scene_->mRootNode, Identity);
 
-  Transforms.resize(num_bones_);
-
   for (uint i = 0 ; i < num_bones_ ; i++) {
       Transforms[i] = bone_info_[i].FinalTransformation;
   }
@@ -145,9 +143,9 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
     //TODO one transform block per context
     bone_transforms_block_ = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
   }
-
-  std::vector<scm::math::mat4f> Transforms;
-
+  //reserve vector for transforms
+  std::vector<scm::math::mat4f> Transforms{num_bones_, scm::math::mat4f::identity()};
+  if(scene_->HasAnimations())
   BoneTransform(timer_.get_elapsed(), Transforms);
 
   bone_transforms_block_->update(ctx.render_context, Transforms);
