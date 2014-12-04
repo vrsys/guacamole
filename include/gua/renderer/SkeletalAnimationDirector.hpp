@@ -65,7 +65,6 @@ class SkeletalAnimationDirector{
   
   };
   
-
   //void LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones);
 
   void LoadBones();
@@ -73,6 +72,7 @@ class SkeletalAnimationDirector{
   void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
 
   void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const scm::math::mat4f& ParentTransform);
+  void ReadNodeHierarchyStatic(const aiNode* pNode, const scm::math::mat4f& ParentTransform);
   void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
   void CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
   void CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);    

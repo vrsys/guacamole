@@ -134,6 +134,23 @@ void SkeletalAnimationDirector::ReadNodeHierarchy(float AnimationTime, const aiN
     ReadNodeHierarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
   }
 }
+
+void SkeletalAnimationDirector::ReadNodeHierarchyStatic(const aiNode* pNode, const scm::math::mat4f& ParentTransform)
+{    
+  std::string NodeName(pNode->mName.data);
+     
+  scm::math::mat4f GlobalTransformation = ParentTransform * to_gua(pNode->mTransformation);
+  
+  if (bone_mapping_.find(NodeName) != bone_mapping_.end()) {
+    uint BoneIndex = bone_mapping_[NodeName];
+    //bone_info_[BoneIndex].FinalTransformation = m_GlobalInverseTransform * GlobalTransformation * bone_info_[BoneIndex].BoneOffset;
+    bone_info_[BoneIndex].FinalTransformation = GlobalTransformation * bone_info_[BoneIndex].BoneOffset;
+  }
+  
+  for (uint i = 0 ; i < pNode->mNumChildren ; i++) {
+    ReadNodeHierarchyStatic(pNode->mChildren[i], GlobalTransformation);
+  }
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
@@ -145,8 +162,17 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
   }
   //reserve vector for transforms
   std::vector<scm::math::mat4f> Transforms{num_bones_, scm::math::mat4f::identity()};
-  if(scene_->HasAnimations())
-  BoneTransform(timer_.get_elapsed(), Transforms);
+  if(scene_->HasAnimations()) {
+    BoneTransform(timer_.get_elapsed(), Transforms);
+  }
+  else
+  {
+    ReadNodeHierarchyStatic(scene_->mRootNode, scm::math::mat4f::identity());
+
+    for (uint i = 0 ; i < num_bones_ ; i++) {
+        Transforms[i] = bone_info_[i].FinalTransformation;
+    }
+  }
 
   bone_transforms_block_->update(ctx.render_context, Transforms);
   ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
