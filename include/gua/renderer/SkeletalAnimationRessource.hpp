@@ -142,17 +142,6 @@ class SkeletalAnimationRessource : public GeometryResource {
 
   void upload_to(RenderContext const& context) /*const*/;
 
-  void updateBoneTransforms(RenderContext const& ctx);
-  void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
-  void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const scm::math::mat4f& ParentTransform);
-  void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
-  void CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
-  void CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);    
-  uint FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim);
-  uint FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim);
-  uint FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim);
-  const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName);
-
   mutable std::vector<scm::gl::buffer_ptr> vertices_;
   mutable std::vector<scm::gl::buffer_ptr> indices_;
   mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
