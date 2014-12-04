@@ -38,6 +38,7 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene)
     scene_{scene},
     hasAnims_{scene_->HasAnimations()},
     firstRun_{true},
+    animations_{},
     timer_(){
   timer_.start();
   LoadBones();
@@ -65,6 +66,12 @@ void SkeletalAnimationDirector::LoadBones(){
 
   }
 
+}
+
+void SkeletalAnimationDirector::LoadAnimations() {
+  for (uint i = 0 ; i < scene_->mNumAnimations ; i++) {
+    // animations_.push_back(*scene_->mAnimations[i]);
+  }
 }
 
 uint SkeletalAnimationDirector::getBoneID(std::string const& name)
