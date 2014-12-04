@@ -258,7 +258,7 @@ float GGX_V1(in float m2, in float nDotX)
 // normal, h is the half vector, l is the direction to the light source, and
 // specAlbedo is the RGB specular albedo
 // ===============================================================================
-vec3 GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l, vec3 specAlbedo)
+float GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l)
 {
   float nDotL = saturate(dot(n, l));
   if(nDotL <= 0.0f)
@@ -273,11 +273,8 @@ vec3 GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l, vec3 specAlbedo)
   float v1i = GGX_V1(m2, nDotL);
   float v1o = GGX_V1(m2, nDotV);
   float vis = v1i * v1o;
-  // Calculate the fresnel term
-  //float f = Fresnel(specAlbedo, h, l);
-  vec3 f = Fresnel(specAlbedo, h, l);
   // Put it all together
-  return d * f * vis;
+  return d * vis;
 }
 
 // ===============================================================================
@@ -369,8 +366,6 @@ vec3 fresnelSchlickWithRoughness(vec3 c_spec,vec3 E,vec3 N,float gloss)
   return c_spec + (max(vec3(gloss), c_spec) - c_spec) * pow(1 - saturate(dot(E, N)), 5);
 }
 
-
-
 // main ------------------------------------------------------------------------
 void main() {
   vec3 N = gua_get_normal();
@@ -398,7 +393,8 @@ void main() {
 
   vec3 Cl = gua_light_radiance;
 
-  vec3 brdf = ( 1.0 - Fresnel(cspec, H, L) ) * cdiff + GGX_Specular(roughness, N, H, Vn, L, cspec);
+  vec3 f = Fresnel(cspec, H, L);
+  vec3 brdf = ( 1.0 - f ) * cdiff + f*GGX_Specular(roughness, N, H, Vn, L);
   vec3 col = Cl * brdf * NdotL;
 
   gua_out_color = col;
