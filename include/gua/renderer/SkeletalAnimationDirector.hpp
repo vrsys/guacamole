@@ -68,6 +68,7 @@ class SkeletalAnimationDirector{
   //void LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones);
 
   void LoadBones();
+  void LoadAnimations();
 
   void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
 
@@ -89,9 +90,11 @@ class SkeletalAnimationDirector{
 
   aiScene const* scene_;
 
+  std::vector<aiAnimation> animations_;
+
   bool firstRun_;
   bool hasAnims_;
-  
+
   Timer timer_;
 };
 

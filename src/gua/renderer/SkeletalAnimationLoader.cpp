@@ -107,10 +107,72 @@ namespace gua {
     return cached_node;
   }
 
+  aiScene const* SkeletalAnimationLoader::load_animation(std::string const& file_name, unsigned flags)
+  {
+    bool fileload_succeed = false;
+
+    if (is_supported(file_name))
+    {
+      TextFile file(file_name);
+
+      // MESSAGE("Loading mesh file %s", file_name.c_str());
+
+      if (file.is_valid()) {
+        auto importer = std::make_shared<Assimp::Importer>();
+
+        importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
+                                      aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+        //prevent md5loader from loading animation with same name as mesh
+        importer->SetPropertyBool(AI_CONFIG_IMPORT_MD5_NO_ANIM_AUTOLOAD, true);
+
+        if ((flags & SkeletalAnimationLoader::OPTIMIZE_GEOMETRY) &&
+            (flags & SkeletalAnimationLoader::LOAD_MATERIALS)) {
+
+          importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS);
+          importer->ReadFile(
+              file_name,
+              aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
+                  aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
+                  aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals);
+
+        }
+        else if (flags & SkeletalAnimationLoader::OPTIMIZE_GEOMETRY) {
+
+          importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS,
+                                        aiComponent_COLORS | aiComponent_MATERIALS);
+          importer->ReadFile(
+              file_name,
+              aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
+                  aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
+                  aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals);
+        } else {
+
+          importer->ReadFile(
+              file_name,
+              aiProcessPreset_TargetRealtime_Quality | aiProcess_GenSmoothNormals);
+
+        }
+
+        aiScene const* scene(importer->GetScene());
+        
+        if(!scene->HasAnimations()) {
+          Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animatins!" << std::endl;
+        }
+
+        return scene;
+
+      } else {
+        Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": File does not exist!" << std::endl;
+      }
+    }
+
+    Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
+
+    return nullptr;
+  }
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<node::Node> SkeletalAnimationLoader::create_geometry_from_file
-    (std::string const& node_name,
+  std::shared_ptr<node::Node> SkeletalAnimationLoader::create_geometry_from_file(std::string const& node_name,
     std::string const& file_name,
     Material const& fallback_material,
     unsigned flags)

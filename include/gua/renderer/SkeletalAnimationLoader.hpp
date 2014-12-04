@@ -79,6 +79,11 @@ public:
    */
    std::shared_ptr<node::Node> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS);
 
+  /**
+   *
+   */
+   aiScene const* load_animation(std::string const& file_name, unsigned flags);
+
    /**
    *
    */
