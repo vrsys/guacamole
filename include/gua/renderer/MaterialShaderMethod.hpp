@@ -37,6 +37,10 @@ class MaterialShaderMethod {
   MaterialShaderMethod(std::string const& name = "");
 
   MaterialShaderMethod& load_from_file(std::string const& file_name);
+  std::string const& get_file_name() const {
+    return file_name_;
+  }
+
   MaterialShaderMethod& load_from_json(std::string const& json_string);
 
   MaterialShaderMethod& set_name(std::string const& name);
@@ -58,6 +62,7 @@ class MaterialShaderMethod {
   std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
 
  private:
+  std::string file_name_;
   std::string name_;
   std::string source_;
   std::map<std::string, ViewDependentUniform> uniforms_;
