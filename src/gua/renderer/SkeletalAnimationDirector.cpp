@@ -35,7 +35,7 @@ void SkeletalAnimationDirector::LoadBones(){
         BoneInfo bi;      
 
         bone_info_.push_back(bi);
-        bone_info_[BoneIndex].BoneOffset = ai_to_gua(scene_->mMeshes[i]->mBones[b]->mOffsetMatrix);    
+        bone_info_[BoneIndex].BoneOffset = ai_to_gua(scene_->mMeshes[i]->mBones[b]->mOffsetMatrix);   
         bone_mapping_[BoneName] = BoneIndex;
       }
 
@@ -47,16 +47,38 @@ void SkeletalAnimationDirector::LoadBones(){
 
 void SkeletalAnimationDirector::LoadAnimations(aiScene const* scene) {
   if(!scene->HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
-  // std::cout << scene->mNumAnimations << std::endl;
-  // std::cout << scene->mAnimations[0] << std::endl;
-  // aiAnimation anim = *(scene->mAnimations[0]);
-    //animations_.push_back(std::make_shared<aiAnimation>(*scene->mAnimations[0]));
-  // for(uint i = 0; i < scene->mNumAnimations; ++i) {
-  //   animations_.push_back(std::make_shared<aiAnimation>(*scene->mAnimations[i]));
+  std::cout << scene->mNumAnimations << std::endl;
+  std::cout << scene->mAnimations[0] << std::endl;
+ 
+  for(uint i = 0; i < scene->mNumAnimations; ++i) {
+    animations_.push_back(std::make_shared<SkeletalAnimation>(scene->mAnimations[i]));
 
-  //   std::cout << animations_.size() << std::endl;
-  // }
-  //if(animations_.size() > 0) hasAnims_ = true;
+    std::cout << animations_.size() << std::endl;
+  }
+
+  if(animations_.size() > 0) hasAnims_ = true;
+
+  std::cout << scene->mRootNode->mName.data << std::endl;
+  if(scene->mRootNode->mName.data != scene_->mRootNode->mName.data) {
+
+    aiNode const* currNode = scene_->mRootNode;
+
+    for(unsigned i = 0; i < scene_->mRootNode->mNumChildren; ++i) {
+
+      if(scene_->mRootNode->mChildren[i]->mName == scene->mRootNode->mName) {
+        rootNode_ = scene_->mRootNode->mChildren[i]->mChildren[0];
+        return;
+      }
+      else {
+        std::cout << scene_->mRootNode->mChildren[i]->mName.data << " does not match "<<std::endl;
+      }
+    }
+    Logger::LOG_ERROR << "No matching root node in mesh hierarchy found" << std::endl;
+    assert(false);
+  }
+  else {
+    rootNode_ = scene_->mRootNode;
+  }
 }
 
 uint SkeletalAnimationDirector::getBoneID(std::string const& name) {
@@ -68,15 +90,15 @@ void SkeletalAnimationDirector::BoneTransform(float TimeInSeconds, std::vector<s
   
   //if no frame frequency is given, set to 25
   float TicksPerSecond = 25.0f;
-  if(scene_->mAnimations[0]->mTicksPerSecond != 0)
+  if(animations_[0]->keysPerSecond != 0)
   {
-    TicksPerSecond = scene_->mAnimations[0]->mTicksPerSecond;
+    TicksPerSecond = animations_[0]->keysPerSecond;
   } 
 
   float TimeInTicks = TimeInSeconds * TicksPerSecond;
-  float AnimationTime = fmod(TimeInTicks, (float)scene_->mAnimations[0]->mDuration);
+  float AnimationTime = fmod(TimeInTicks, (float)animations_[0]->duration);
 
-  ReadNodeHierarchy(AnimationTime, scene_->mRootNode, Identity);
+  ReadNodeHierarchy(AnimationTime, rootNode_, Identity);
 
   for (uint i = 0 ; i < num_bones_ ; i++) {
       Transforms[i] = bone_info_[i].FinalTransformation;
@@ -87,31 +109,29 @@ void SkeletalAnimationDirector::ReadNodeHierarchy(float AnimationTime, const aiN
 {    
   std::string NodeName(pNode->mName.data);
   
-  const aiAnimation* pAnimation = scene_->mAnimations[0];
+  std::shared_ptr<SkeletalAnimation> const& pAnimation = animations_[0];
       
-  scm::math::mat4f NodeTransformation(ai_to_gua(pNode->mTransformation));
+  scm::math::mat4f NodeTransformation{ai_to_gua(pNode->mTransformation)};
    
-  const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
+  BoneAnimation const& nodeAnim = FindNodeAnim(pAnimation, NodeName);
   
-  if (pNodeAnim) {
-    // Interpolate scaling and generate scaling transformation matrix
-    scm::math::vec3 Scaling;
-    CalcInterpolatedScaling(Scaling, AnimationTime, pNodeAnim);
-    scm::math::mat4f ScalingM = scm::math::make_scale(Scaling);
+  // Interpolate scaling and generate scaling transformation matrix
+  scm::math::vec3 Scaling;
+  CalcInterpolatedScaling(Scaling, AnimationTime, nodeAnim);
+  scm::math::mat4f ScalingM = scm::math::make_scale(Scaling);
 
-    // Interpolate rotation and generate rotation transformation matrix
-    scm::math::quatf RotationQ;
-    CalcInterpolatedRotation(RotationQ, AnimationTime, pNodeAnim); 
-    scm::math::mat4f RotationM = RotationQ.to_matrix();
+  // Interpolate rotation and generate rotation transformation matrix
+  scm::math::quatf RotationQ;
+  CalcInterpolatedRotation(RotationQ, AnimationTime, nodeAnim); 
+  scm::math::mat4f RotationM = RotationQ.to_matrix();
 
-    // Interpolate translation and generate translation transformation matrix
-    scm::math::vec3 Translation;
-    CalcInterpolatedPosition(Translation, AnimationTime, pNodeAnim);
-    scm::math::mat4f TranslationM = scm::math::make_translation(Translation);
-    
-    // Combine the above transformations
-    NodeTransformation = TranslationM * RotationM * ScalingM;
-  }
+  // Interpolate translation and generate translation transformation matrix
+  scm::math::vec3 Translation;
+  CalcInterpolatedPosition(Translation, AnimationTime, nodeAnim);
+  scm::math::mat4f TranslationM = scm::math::make_translation(Translation);
+  
+  // Combine the above transformations
+  NodeTransformation = TranslationM * RotationM * ScalingM;
      
   scm::math::mat4f GlobalTransformation = ParentTransform * NodeTransformation;
   
@@ -159,7 +179,7 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
     BoneTransform(timer_.get_elapsed(), Transforms);
   }
   else {        //this will be only called once, transformations dont need to be updated without anims
-    ReadNodeHierarchyStatic(scene_->mRootNode, scm::math::mat4f::identity());
+    ReadNodeHierarchyStatic(rootNode_, scm::math::mat4f::identity());
 
     for (uint i = 0 ; i < num_bones_ ; i++) {
         Transforms[i] = bone_info_[i].FinalTransformation;
@@ -174,31 +194,31 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-
-const aiNodeAnim* SkeletalAnimationDirector::FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName)
+SkeletalAnimationDirector::BoneAnimation const& SkeletalAnimationDirector::FindNodeAnim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName)
 {
-  for (uint i = 0 ; i < pAnimation->mNumChannels ; i++) {
-    const aiNodeAnim* pNodeAnim = pAnimation->mChannels[i];
+  for (uint i = 0 ; i < pAnimation->numBoneAnims ; i++) {
+    BoneAnimation const& nodeAnim = pAnimation->boneAnims[i];
     
-    if (std::string(pNodeAnim->mNodeName.data) == NodeName) {
-        return pNodeAnim;
+    //std::cout << nodeName << ", with " << nodeAnim.name << std::endl;
+    if (nodeAnim.name == nodeName) {
+        return nodeAnim;
     }
   }
-  
-  return NULL;
+
+  Logger::LOG_ERROR << "No matching bone in animation hierarchy found" << std::endl;
+  assert(false);
+  return BoneAnimation{};
 }
 
-uint SkeletalAnimationDirector::FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
+uint SkeletalAnimationDirector::FindPosition(float AnimationTime, BoneAnimation const& nodeAnim)
 {    
-  if(pNodeAnim->mNumPositionKeys < 1) {
+  if(nodeAnim.numTranslationKeys < 1) {
     Logger::LOG_ERROR << "FindPosition - no translation keys" << std::endl;
     assert(false);
   } 
 
-  for (uint i = 0 ; i < pNodeAnim->mNumPositionKeys - 1 ; i++) {
-    if (AnimationTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
+  for (uint i = 0 ; i < nodeAnim.numTranslationKeys - 1 ; i++) {
+    if (AnimationTime < (float)nodeAnim.translationKeys[i + 1].time) {
         return i;
     }
   }
@@ -210,15 +230,15 @@ uint SkeletalAnimationDirector::FindPosition(float AnimationTime, const aiNodeAn
 }
 
 
-uint SkeletalAnimationDirector::FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
+uint SkeletalAnimationDirector::FindRotation(float AnimationTime, BoneAnimation const& nodeAnim)
 {
-  if(pNodeAnim->mNumRotationKeys < 1) {
+  if(nodeAnim.numRotationKeys < 1) {
     Logger::LOG_ERROR << "FindRotation - no rotation keys" << std::endl;
     assert(false);
   }
 
-  for (uint i = 0 ; i < pNodeAnim->mNumRotationKeys - 1 ; i++) {
-    if (AnimationTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
+  for (uint i = 0 ; i < nodeAnim.numRotationKeys - 1 ; i++) {
+    if (AnimationTime < (float)nodeAnim.rotationKeys[i + 1].time) {
         return i;
     }
   }
@@ -230,15 +250,15 @@ uint SkeletalAnimationDirector::FindRotation(float AnimationTime, const aiNodeAn
 }
 
 
-uint SkeletalAnimationDirector::FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
+uint SkeletalAnimationDirector::FindScaling(float AnimationTime, BoneAnimation const& nodeAnim)
 {
-  if(pNodeAnim->mNumScalingKeys < 1) {
+  if(nodeAnim.numScalingKeys < 1) {
     Logger::LOG_ERROR << "FindScaling - no scaling keys" << std::endl;
     assert(false);
   }
   
-  for (uint i = 0 ; i < pNodeAnim->mNumScalingKeys - 1 ; i++) {
-    if (AnimationTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
+  for (uint i = 0 ; i < nodeAnim.numScalingKeys - 1 ; i++) {
+    if (AnimationTime < (float)nodeAnim.scalingKeys[i + 1].time) {
         return i;
     }
   }
@@ -249,80 +269,80 @@ uint SkeletalAnimationDirector::FindScaling(float AnimationTime, const aiNodeAni
 }
 
 
-void SkeletalAnimationDirector::CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
+void SkeletalAnimationDirector::CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim)
 {
-  if (pNodeAnim->mNumPositionKeys == 1) {
-      Out = ai_to_gua(pNodeAnim->mPositionKeys[0].mValue);
+  if (nodeAnim.numTranslationKeys == 1) {
+      Out = nodeAnim.translationKeys[0].value;
       return;
   }
           
-  uint PositionIndex = FindPosition(AnimationTime, pNodeAnim);
+  uint PositionIndex = FindPosition(AnimationTime, nodeAnim);
   uint NextPositionIndex = (PositionIndex + 1);
 
-  if(NextPositionIndex > pNodeAnim->mNumPositionKeys) {
+  if(NextPositionIndex > nodeAnim.numTranslationKeys) {
     Logger::LOG_ERROR << "CalcInterpolatedPosition - frame out of range" << std::endl;
     assert(false);
   }
 
-  float DeltaTime = (float)(pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime);
-  float Factor = (AnimationTime - (float)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
+  float DeltaTime = (float)(nodeAnim.translationKeys[NextPositionIndex].time - nodeAnim.translationKeys[PositionIndex].time);
+  float Factor = (AnimationTime - (float)nodeAnim.translationKeys[PositionIndex].time) / DeltaTime;
   //assert(Factor >= 0.0f && Factor <= 1.0f);
-  const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
-  const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
-  aiVector3D Delta = End - Start;
-  Out = ai_to_gua(Start + Factor * Delta);
+  scm::math::vec3 const& Start = nodeAnim.translationKeys[PositionIndex].value;
+  scm::math::vec3 const& End = nodeAnim.translationKeys[NextPositionIndex].value;
+  scm::math::vec3 Delta = End - Start;
+  Out = Start + Factor * Delta;
 }
 
 
-void SkeletalAnimationDirector::CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
+void SkeletalAnimationDirector::CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, BoneAnimation const& nodeAnim)
 {
   // we need at least two values to interpolate...
-  if (pNodeAnim->mNumRotationKeys == 1) {
-      Out = ai_to_gua(pNodeAnim->mRotationKeys[0].mValue);
+  if (nodeAnim.numRotationKeys == 1) {
+      Out = nodeAnim.rotationKeys[0].value;
       return;
   }
   
-  uint RotationIndex = FindRotation(AnimationTime, pNodeAnim);
+  uint RotationIndex = FindRotation(AnimationTime, nodeAnim);
   uint NextRotationIndex = (RotationIndex + 1);
 
-  if(NextRotationIndex > pNodeAnim->mNumRotationKeys) {
+  if(NextRotationIndex > nodeAnim.numRotationKeys) {
     Logger::LOG_ERROR << "CalcInterpolatedRotation - frame out of range" << std::endl;
     assert(false);
   }
 
-  float DeltaTime = (float)(pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime);
-  float Factor = (AnimationTime - (float)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
+  float DeltaTime = (float)(nodeAnim.rotationKeys[NextRotationIndex].time - nodeAnim.rotationKeys[RotationIndex].time);
+  float Factor = (AnimationTime - (float)nodeAnim.rotationKeys[RotationIndex].time) / DeltaTime;
   //assert(Factor >= 0.0f && Factor <= 1.0f);
-  const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
-  const aiQuaternion& EndRotationQ   = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;  
-  aiQuaternion temp;  
-  aiQuaternion::Interpolate(temp, StartRotationQ, EndRotationQ, Factor);
-  Out = ai_to_gua(temp.Normalize());
+  scm::math::quatf const& StartRotationQ = nodeAnim.rotationKeys[RotationIndex].value;
+  scm::math::quatf const& EndRotationQ   = nodeAnim.rotationKeys[NextRotationIndex].value;  
+  scm::math::quatf temp;  
+  temp = slerp(StartRotationQ, EndRotationQ, Factor);
+  Out = normalize(temp);
 }
 
 
-void SkeletalAnimationDirector::CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
+void SkeletalAnimationDirector::CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim)
 {
-  if (pNodeAnim->mNumScalingKeys == 1) {
-      Out = ai_to_gua(pNodeAnim->mScalingKeys[0].mValue);
+  if (nodeAnim.numScalingKeys == 1) {
+      Out = nodeAnim.scalingKeys[0].value;
       return;
   }
 
-  uint ScalingIndex = FindScaling(AnimationTime, pNodeAnim);
+  uint ScalingIndex = FindScaling(AnimationTime, nodeAnim);
   uint NextScalingIndex = (ScalingIndex + 1);
 
-  if(NextScalingIndex > pNodeAnim->mNumScalingKeys) {
+  if(NextScalingIndex > nodeAnim.numScalingKeys) {
     Logger::LOG_ERROR << "CalcInterpolatedScaling - frame out of range" << std::endl;
     assert(false);
   }
 
-  float DeltaTime = (float)(pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime);
-  float Factor = (AnimationTime - (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
+  float DeltaTime = (float)(nodeAnim.scalingKeys[NextScalingIndex].time - nodeAnim.scalingKeys[ScalingIndex].time);
+  float Factor = (AnimationTime - (float)nodeAnim.scalingKeys[ScalingIndex].time) / DeltaTime;
   //assert(Factor >= 0.0f && Factor <= 1.0f);
-  const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
-  const aiVector3D& End   = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
-  aiVector3D Delta = End - Start;
-  Out = ai_to_gua(Start + Factor * Delta);
+  scm::math::vec3 const& Start = nodeAnim.scalingKeys[ScalingIndex].value;
+  scm::math::vec3 const& End   = nodeAnim.scalingKeys[NextScalingIndex].value;
+  scm::math::vec3 Delta = End - Start;
+  Out = Start + Factor * Delta;
 }
 
 
