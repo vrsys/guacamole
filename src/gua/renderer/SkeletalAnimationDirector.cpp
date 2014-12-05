@@ -13,7 +13,8 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene)
     :num_bones_(0),
     bone_transforms_block_(nullptr),
     scene_{scene},
-    hasAnims_{scene_->HasAnimations()},
+    hasAnims_{scene->HasAnimations()},
+    rootNode_{scene->mRootNode},
     firstRun_{true},
     animations_{},
     timer_(){
@@ -47,13 +48,9 @@ void SkeletalAnimationDirector::LoadBones(){
 
 void SkeletalAnimationDirector::LoadAnimations(aiScene const* scene) {
   if(!scene->HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
-  std::cout << scene->mNumAnimations << std::endl;
-  std::cout << scene->mAnimations[0] << std::endl;
  
   for(uint i = 0; i < scene->mNumAnimations; ++i) {
     animations_.push_back(std::make_shared<SkeletalAnimation>(scene->mAnimations[i]));
-
-    std::cout << animations_.size() << std::endl;
   }
 
   if(animations_.size() > 0) hasAnims_ = true;
