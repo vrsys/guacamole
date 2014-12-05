@@ -7,29 +7,6 @@
 //external headers
 #include <iostream>
 
-namespace {
-
-scm::math::mat4f to_gua(aiMatrix4x4 const& m){
-  scm::math::mat4f res(m.a1,m.b1,m.c1,m.d1
-                      ,m.a2,m.b2,m.c2,m.d2
-                      ,m.a3,m.b3,m.c3,m.d3
-                      ,m.a4,m.b4,m.c4,m.d4);
-  return res;
-}
-
-scm::math::vec3 to_gua(aiVector3D const& v){
-  scm::math::vec3 res(v.x, v.y, v.z);
-  return res;
-}
-
-scm::math::quatf to_gua(aiQuaternion const& q){
-  scm::math::quatf res(q.w, q.x, q.y, q.z);
-  return res;
-}
-
-}
-
-
 namespace gua
 {
 SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene)
@@ -58,7 +35,7 @@ void SkeletalAnimationDirector::LoadBones(){
         BoneInfo bi;      
 
         bone_info_.push_back(bi);
-        bone_info_[BoneIndex].BoneOffset = to_gua(scene_->mMeshes[i]->mBones[b]->mOffsetMatrix);    
+        bone_info_[BoneIndex].BoneOffset = ai_to_gua(scene_->mMeshes[i]->mBones[b]->mOffsetMatrix);    
         bone_mapping_[BoneName] = BoneIndex;
       }
 
@@ -112,7 +89,7 @@ void SkeletalAnimationDirector::ReadNodeHierarchy(float AnimationTime, const aiN
   
   const aiAnimation* pAnimation = scene_->mAnimations[0];
       
-  scm::math::mat4f NodeTransformation(to_gua(pNode->mTransformation));
+  scm::math::mat4f NodeTransformation(ai_to_gua(pNode->mTransformation));
    
   const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
   
@@ -153,7 +130,7 @@ void SkeletalAnimationDirector::ReadNodeHierarchyStatic(const aiNode* pNode, con
 {    
   std::string NodeName(pNode->mName.data);
      
-  scm::math::mat4f GlobalTransformation = ParentTransform * to_gua(pNode->mTransformation);
+  scm::math::mat4f GlobalTransformation = ParentTransform * ai_to_gua(pNode->mTransformation);
   
   if (bone_mapping_.find(NodeName) != bone_mapping_.end()) {
     uint BoneIndex = bone_mapping_[NodeName];
@@ -275,7 +252,7 @@ uint SkeletalAnimationDirector::FindScaling(float AnimationTime, const aiNodeAni
 void SkeletalAnimationDirector::CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
   if (pNodeAnim->mNumPositionKeys == 1) {
-      Out = to_gua(pNodeAnim->mPositionKeys[0].mValue);
+      Out = ai_to_gua(pNodeAnim->mPositionKeys[0].mValue);
       return;
   }
           
@@ -293,7 +270,7 @@ void SkeletalAnimationDirector::CalcInterpolatedPosition(scm::math::vec3& Out, f
   const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
   const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
   aiVector3D Delta = End - Start;
-  Out = to_gua(Start + Factor * Delta);
+  Out = ai_to_gua(Start + Factor * Delta);
 }
 
 
@@ -301,7 +278,7 @@ void SkeletalAnimationDirector::CalcInterpolatedRotation(scm::math::quatf& Out, 
 {
   // we need at least two values to interpolate...
   if (pNodeAnim->mNumRotationKeys == 1) {
-      Out = to_gua(pNodeAnim->mRotationKeys[0].mValue);
+      Out = ai_to_gua(pNodeAnim->mRotationKeys[0].mValue);
       return;
   }
   
@@ -320,14 +297,14 @@ void SkeletalAnimationDirector::CalcInterpolatedRotation(scm::math::quatf& Out, 
   const aiQuaternion& EndRotationQ   = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;  
   aiQuaternion temp;  
   aiQuaternion::Interpolate(temp, StartRotationQ, EndRotationQ, Factor);
-  Out = to_gua(temp.Normalize());
+  Out = ai_to_gua(temp.Normalize());
 }
 
 
 void SkeletalAnimationDirector::CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
   if (pNodeAnim->mNumScalingKeys == 1) {
-      Out = to_gua(pNodeAnim->mScalingKeys[0].mValue);
+      Out = ai_to_gua(pNodeAnim->mScalingKeys[0].mValue);
       return;
   }
 
@@ -345,7 +322,7 @@ void SkeletalAnimationDirector::CalcInterpolatedScaling(scm::math::vec3& Out, fl
   const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
   const aiVector3D& End   = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
   aiVector3D Delta = End - Start;
-  Out = to_gua(Start + Factor * Delta);
+  Out = ai_to_gua(Start + Factor * Delta);
 }
 
 
