@@ -90,13 +90,14 @@ class SkeletalAnimationDirector{
   };
 
   struct Vec3Key {
-    
+
     Vec3Key(aiVectorKey key):
       time{key.mTime},
       value{ai_to_gua(key.mValue)}
     {}
 
-    ~Vec3Key();
+    ~Vec3Key(){};
+
     double time;
     scm::math::vec3 value;
   };
@@ -108,12 +109,24 @@ class SkeletalAnimationDirector{
       value{ai_to_gua(key.mValue)}
     {}
 
-    ~QuatKey();
+    ~QuatKey(){};
+
     double time;
     scm::math::quatf value;
   };
 
   struct BoneAnimation {
+
+
+    BoneAnimation():
+      name{"default"},
+      numScalingKeys{0},
+      numRotationKeys{0},
+      numTranslationKeys{0},
+      scalingKeys{},
+      rotationKeys{},
+      translationKeys{}
+    {}
 
     BoneAnimation(aiNodeAnim* anim):
       name{anim->mNodeName.C_Str()}
@@ -134,7 +147,7 @@ class SkeletalAnimationDirector{
       numTranslationKeys = translationKeys.size();
     }
 
-    ~BoneAnimation();
+    ~BoneAnimation(){};
 
     std::string name;
     unsigned numScalingKeys;
@@ -168,8 +181,7 @@ class SkeletalAnimationDirector{
       }
     }
 
-    ~SkeletalAnimation();
-
+    ~SkeletalAnimation(){};
 
     std::string name;
     double duration;
@@ -187,13 +199,13 @@ class SkeletalAnimationDirector{
 
   void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const scm::math::mat4f& ParentTransform);
   void ReadNodeHierarchyStatic(const aiNode* pNode, const scm::math::mat4f& ParentTransform);
-  void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
-  void CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);
-  void CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, const aiNodeAnim* pNodeAnim);    
-  uint FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim);
-  uint FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim);
-  uint FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim);
-  const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName);
+  void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);
+  void CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, BoneAnimation const& nodeAnim);
+  void CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);    
+  uint FindScaling(float AnimationTime, BoneAnimation const& nodeAnim);
+  uint FindRotation(float AnimationTime, BoneAnimation const& nodeAnim);
+  uint FindPosition(float AnimationTime, BoneAnimation const& nodeAnim);
+  BoneAnimation const& FindNodeAnim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);
 
   std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
   uint num_bones_;
@@ -203,7 +215,9 @@ class SkeletalAnimationDirector{
 
   aiScene const* scene_;
 
-  std::vector<std::shared_ptr<aiAnimation>> animations_;
+  std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
+
+  aiNode const* rootNode_;
 
   bool firstRun_;
   bool hasAnims_;
