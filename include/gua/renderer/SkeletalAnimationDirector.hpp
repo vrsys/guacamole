@@ -36,6 +36,28 @@
 #include <map>
 #include <assimp/scene.h>       // Output data structure
 
+namespace {
+
+scm::math::mat4f ai_to_gua(aiMatrix4x4 const& m){
+  scm::math::mat4f res(m.a1,m.b1,m.c1,m.d1
+                      ,m.a2,m.b2,m.c2,m.d2
+                      ,m.a3,m.b3,m.c3,m.d3
+                      ,m.a4,m.b4,m.c4,m.d4);
+  return res;
+}
+
+scm::math::vec3 ai_to_gua(aiVector3D const& v){
+  scm::math::vec3 res(v.x, v.y, v.z);
+  return res;
+}
+
+scm::math::quatf ai_to_gua(aiQuaternion const& q){
+  scm::math::quatf res(q.w, q.x, q.y, q.z);
+  return res;
+}
+
+}
+
 namespace gua {
 
 class SkeletalAnimationDirector{
@@ -66,7 +88,97 @@ class SkeletalAnimationDirector{
     }
   
   };
-  
+
+  struct Vec3Key {
+    
+    Vec3Key(aiVectorKey key):
+      time{key.mTime},
+      value{ai_to_gua(key.mValue)}
+    {}
+
+    ~Vec3Key();
+    double time;
+    scm::math::vec3 value;
+  };
+
+  struct QuatKey {
+
+    QuatKey(aiQuatKey key):
+      time{key.mTime},
+      value{ai_to_gua(key.mValue)}
+    {}
+
+    ~QuatKey();
+    double time;
+    scm::math::quatf value;
+  };
+
+  struct BoneAnimation {
+
+    BoneAnimation(aiNodeAnim* anim):
+      name{anim->mNodeName.C_Str()}
+     {
+
+      for(unsigned i = 0; i < anim->mNumScalingKeys; ++i) {
+        scalingKeys.push_back(Vec3Key{anim->mScalingKeys[i]});
+      }
+      for(unsigned i = 0; i < anim->mNumRotationKeys; ++i) {
+        rotationKeys.push_back(QuatKey{anim->mRotationKeys[i]});
+      }
+      for(unsigned i = 0; i < anim->mNumPositionKeys; ++i) {
+        translationKeys.push_back(Vec3Key{anim->mPositionKeys[i]});
+      }
+
+      numScalingKeys = scalingKeys.size();
+      numRotationKeys = rotationKeys.size();
+      numTranslationKeys = translationKeys.size();
+    }
+
+    ~BoneAnimation();
+
+    std::string name;
+    unsigned numScalingKeys;
+    unsigned numRotationKeys;
+    unsigned numTranslationKeys;
+
+    std::vector<Vec3Key> scalingKeys;
+    std::vector<QuatKey> rotationKeys;
+    std::vector<Vec3Key> translationKeys;
+  };
+
+  struct SkeletalAnimation {
+
+    SkeletalAnimation():
+      name{"default"},
+      duration{0},
+      keysPerSecond{0},
+      numBoneAnims{0},
+      boneAnims{}
+    {}
+
+    SkeletalAnimation(aiAnimation* anim):
+      name{anim->mName.C_Str()},
+      duration{anim->mDuration},
+      keysPerSecond{anim->mTicksPerSecond},
+      numBoneAnims{anim->mNumChannels},
+      boneAnims{}
+    {
+      for(unsigned i = 0; i < numBoneAnims; ++i) {
+        boneAnims.push_back(BoneAnimation{anim->mChannels[i]});
+      }
+    }
+
+    ~SkeletalAnimation();
+
+
+    std::string name;
+    double duration;
+    double keysPerSecond;
+    unsigned numBoneAnims;
+    std::vector<BoneAnimation> boneAnims;
+  };
+
+
   //void LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones);
 
   void LoadBones();
