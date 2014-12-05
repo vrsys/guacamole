@@ -205,7 +205,7 @@ class SkeletalAnimationDirector{
   uint FindScaling(float AnimationTime, BoneAnimation const& nodeAnim);
   uint FindRotation(float AnimationTime, BoneAnimation const& nodeAnim);
   uint FindPosition(float AnimationTime, BoneAnimation const& nodeAnim);
-  BoneAnimation const& FindNodeAnim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);
+  BoneAnimation const* FindNodeAnim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);
 
   std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
   uint num_bones_;
@@ -213,11 +213,11 @@ class SkeletalAnimationDirector{
 
   std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
 
+  std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
+  std::shared_ptr<SkeletalAnimation> currAnimation_;
+
   aiScene const* scene_;
 
-  std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
-
-  aiNode const* rootNode_;
 
   bool firstRun_;
   bool hasAnims_;

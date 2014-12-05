@@ -14,9 +14,9 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene)
     bone_transforms_block_(nullptr),
     scene_{scene},
     hasAnims_{scene->HasAnimations()},
-    rootNode_{scene->mRootNode},
     firstRun_{true},
     animations_{},
+    currAnimation_{},
     timer_(){
   timer_.start();
   LoadBones();
@@ -54,28 +54,7 @@ void SkeletalAnimationDirector::LoadAnimations(aiScene const* scene) {
   }
 
   if(animations_.size() > 0) hasAnims_ = true;
-
-  std::cout << scene->mRootNode->mName.data << std::endl;
-  if(scene->mRootNode->mName.data != scene_->mRootNode->mName.data) {
-
-    aiNode const* currNode = scene_->mRootNode;
-
-    for(unsigned i = 0; i < scene_->mRootNode->mNumChildren; ++i) {
-
-      if(scene_->mRootNode->mChildren[i]->mName == scene->mRootNode->mName) {
-        rootNode_ = scene_->mRootNode->mChildren[i]->mChildren[0];
-        return;
-      }
-      else {
-        std::cout << scene_->mRootNode->mChildren[i]->mName.data << " does not match "<<std::endl;
-      }
-    }
-    Logger::LOG_ERROR << "No matching root node in mesh hierarchy found" << std::endl;
-    assert(false);
-  }
-  else {
-    rootNode_ = scene_->mRootNode;
-  }
+  currAnimation_ = animations_[animations_.size()-1];
 }
 
 uint SkeletalAnimationDirector::getBoneID(std::string const& name) {
@@ -87,15 +66,15 @@ void SkeletalAnimationDirector::BoneTransform(float TimeInSeconds, std::vector<s
   
   //if no frame frequency is given, set to 25
   float TicksPerSecond = 25.0f;
-  if(animations_[0]->keysPerSecond != 0)
+  if(currAnimation_->keysPerSecond != 0)
   {
-    TicksPerSecond = animations_[0]->keysPerSecond;
+    TicksPerSecond = currAnimation_->keysPerSecond;
   } 
 
   float TimeInTicks = TimeInSeconds * TicksPerSecond;
-  float AnimationTime = fmod(TimeInTicks, (float)animations_[0]->duration);
+  float AnimationTime = fmod(TimeInTicks, (float)currAnimation_->duration);
 
-  ReadNodeHierarchy(AnimationTime, rootNode_, Identity);
+  ReadNodeHierarchy(AnimationTime, scene_->mRootNode, Identity);
 
   for (uint i = 0 ; i < num_bones_ ; i++) {
       Transforms[i] = bone_info_[i].FinalTransformation;
@@ -106,30 +85,35 @@ void SkeletalAnimationDirector::ReadNodeHierarchy(float AnimationTime, const aiN
 {    
   std::string NodeName(pNode->mName.data);
   
-  std::shared_ptr<SkeletalAnimation> const& pAnimation = animations_[0];
+  std::shared_ptr<SkeletalAnimation> const& pAnimation = currAnimation_;
       
   scm::math::mat4f NodeTransformation{ai_to_gua(pNode->mTransformation)};
    
-  BoneAnimation const& nodeAnim = FindNodeAnim(pAnimation, NodeName);
-  
-  // Interpolate scaling and generate scaling transformation matrix
-  scm::math::vec3 Scaling;
-  CalcInterpolatedScaling(Scaling, AnimationTime, nodeAnim);
-  scm::math::mat4f ScalingM = scm::math::make_scale(Scaling);
+  BoneAnimation const* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
 
-  // Interpolate rotation and generate rotation transformation matrix
-  scm::math::quatf RotationQ;
-  CalcInterpolatedRotation(RotationQ, AnimationTime, nodeAnim); 
-  scm::math::mat4f RotationM = RotationQ.to_matrix();
+  if(pNodeAnim) {
+    BoneAnimation const& nodeAnim = *pNodeAnim;
 
-  // Interpolate translation and generate translation transformation matrix
-  scm::math::vec3 Translation;
-  CalcInterpolatedPosition(Translation, AnimationTime, nodeAnim);
-  scm::math::mat4f TranslationM = scm::math::make_translation(Translation);
+    // Interpolate scaling and generate scaling transformation matrix
+    scm::math::vec3 Scaling;
+    CalcInterpolatedScaling(Scaling, AnimationTime, nodeAnim);
+    scm::math::mat4f ScalingM = scm::math::make_scale(Scaling);
+
+    // Interpolate rotation and generate rotation transformation matrix
+    scm::math::quatf RotationQ;
+    CalcInterpolatedRotation(RotationQ, AnimationTime, nodeAnim); 
+    scm::math::mat4f RotationM = RotationQ.to_matrix();
+
+    // Interpolate translation and generate translation transformation matrix
+    scm::math::vec3 Translation;
+    CalcInterpolatedPosition(Translation, AnimationTime, nodeAnim);
+    scm::math::mat4f TranslationM = scm::math::make_translation(Translation);
+    
+    // Combine the above transformations
+    NodeTransformation = TranslationM * RotationM * ScalingM;
+       
+  }
   
-  // Combine the above transformations
-  NodeTransformation = TranslationM * RotationM * ScalingM;
-     
   scm::math::mat4f GlobalTransformation = ParentTransform * NodeTransformation;
   
   if (bone_mapping_.find(NodeName) != bone_mapping_.end()) {
@@ -142,6 +126,23 @@ void SkeletalAnimationDirector::ReadNodeHierarchy(float AnimationTime, const aiN
     ReadNodeHierarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
   }
 }
+
+SkeletalAnimationDirector::BoneAnimation const* SkeletalAnimationDirector::FindNodeAnim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName)
+{
+  for (uint i = 0 ; i < pAnimation->numBoneAnims ; i++) {
+    BoneAnimation const& nodeAnim = pAnimation->boneAnims[i];
+    
+    //std::cout << nodeName << ", with " << nodeAnim.name << std::endl;
+    if (nodeAnim.name == nodeName) {
+        return &nodeAnim;
+    }
+  }
+
+  //Logger::LOG_ERROR << "No matching bone in animation hierarchy found" << std::endl;
+  //assert(false);
+  return NULL;
+}
+
 
 void SkeletalAnimationDirector::ReadNodeHierarchyStatic(const aiNode* pNode, const scm::math::mat4f& ParentTransform)
 {    
@@ -176,7 +177,7 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
     BoneTransform(timer_.get_elapsed(), Transforms);
   }
   else {        //this will be only called once, transformations dont need to be updated without anims
-    ReadNodeHierarchyStatic(rootNode_, scm::math::mat4f::identity());
+    ReadNodeHierarchyStatic(scene_->mRootNode, scm::math::mat4f::identity());
 
     for (uint i = 0 ; i < num_bones_ ; i++) {
         Transforms[i] = bone_info_[i].FinalTransformation;
@@ -191,21 +192,6 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-SkeletalAnimationDirector::BoneAnimation const& SkeletalAnimationDirector::FindNodeAnim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName)
-{
-  for (uint i = 0 ; i < pAnimation->numBoneAnims ; i++) {
-    BoneAnimation const& nodeAnim = pAnimation->boneAnims[i];
-    
-    //std::cout << nodeName << ", with " << nodeAnim.name << std::endl;
-    if (nodeAnim.name == nodeName) {
-        return nodeAnim;
-    }
-  }
-
-  Logger::LOG_ERROR << "No matching bone in animation hierarchy found" << std::endl;
-  assert(false);
-  return BoneAnimation{};
-}
 
 uint SkeletalAnimationDirector::FindPosition(float AnimationTime, BoneAnimation const& nodeAnim)
 {    
