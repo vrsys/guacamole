@@ -107,8 +107,12 @@ namespace gua {
     return cached_node;
   }
 
-  aiScene const* SkeletalAnimationLoader::load_animation(std::string const& file_name, unsigned flags)
+  void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, std::string const& file_name, unsigned flags)
   {
+    std::shared_ptr<node::SkeletalAnimationNode> skelNode = std::dynamic_pointer_cast<node::SkeletalAnimationNode, node::Node>(node);
+
+    if(!skelNode) Logger::LOG_ERROR << "Node is no SkeletalAnimationNode" << std::endl;
+
     bool fileload_succeed = false;
 
     if (is_supported(file_name))
@@ -122,44 +126,18 @@ namespace gua {
 
         importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
                                       aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-        //prevent md5loader from loading animation with same name as mesh
-        //importer->SetPropertyBool(AI_CONFIG_IMPORT_MD5_NO_ANIM_AUTOLOAD, true);
 
-        if ((flags & SkeletalAnimationLoader::OPTIMIZE_GEOMETRY) &&
-            (flags & SkeletalAnimationLoader::LOAD_MATERIALS)) {
-
-          importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS);
-          importer->ReadFile(
-              file_name,
-              aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
-                  aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-                  aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals);
-
-        }
-        else if (flags & SkeletalAnimationLoader::OPTIMIZE_GEOMETRY) {
-
-          importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS,
-                                        aiComponent_COLORS | aiComponent_MATERIALS);
-          importer->ReadFile(
-              file_name,
-              aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
-                  aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-                  aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals);
-        } else {
-
-          importer->ReadFile(
-              file_name,
-              aiProcessPreset_TargetRealtime_Quality | aiProcess_GenSmoothNormals);
-
-        }
+        importer->ReadFile(
+            file_name,
+            aiProcessPreset_TargetRealtime_Quality | aiProcess_GenSmoothNormals);
 
         aiScene const* scene(importer->GetOrphanedScene());
 
         if(!scene->HasAnimations()) {
           Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;
         }
-
-        return scene;
+        skelNode->get_director()->LoadAnimations(scene);
+        return;
 
       } else {
         Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": File does not exist!" << std::endl;
@@ -167,8 +145,6 @@ namespace gua {
     }
 
     Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
-
-    return nullptr;
   }
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -413,17 +389,16 @@ bool SkeletalAnimationLoader::is_supported(std::string const& file_name) const {
 void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
                                             std::shared_ptr<Material> const& fallback_material) const
 {
-auto g_node(std::dynamic_pointer_cast<node::SkeletalAnimationNode>(root));
+  auto g_node(std::dynamic_pointer_cast<node::SkeletalAnimationNode>(root));
 
-  if (g_node) {
-    g_node->set_fallback_materials(fallback_material);
-    g_node->update_cache();
+    if (g_node) {
+      g_node->set_fallback_materials(fallback_material);
+      g_node->update_cache();
+    }
+
+    /*for (auto& child : root->get_children()) {
+      apply_fallback_material(child, fallback_material);
+    }*/
+
   }
-
-  /*for (auto& child : root->get_children()) {
-    apply_fallback_material(child, fallback_material);
-  }*/
-
-}
-
 }

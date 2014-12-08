@@ -83,7 +83,7 @@ public:
   /**
    *
    */
-   aiScene const* load_animation(std::string const& file_name, unsigned flags);
+   void load_animation(std::shared_ptr<node::Node>& node, std::string const& file_name, unsigned flags);
 
    /**
    *
