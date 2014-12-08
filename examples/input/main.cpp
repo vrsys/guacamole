@@ -58,18 +58,22 @@ int main(int argc, char** argv) {
     desc.load_from_file(file);
     auto shader(std::make_shared<gua::MaterialShader>(file, desc));
     gua::MaterialShaderDatabase::instance()->add(shader);
-    return shader->get_default_material();
+    return shader->make_new_material();
   };
 
-  auto mat1(load_mat("data/materials/SimpleMaterial.gmd"));
+  auto mat(load_mat("data/materials/SimpleMaterial.gmd"));
+  mat->set_uniform("color", std::string("mytex"));
+
+  auto cube_map = std::make_shared<gua::TextureCube>("/opt/guacamole/resources/skymaps/sunrise.jpg");
+  gua::TextureDatabase::instance()->add("mytex", cube_map);
 
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  // auto teapot(loader.create_geometry_from_file("teapot","/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_GEOMETRY));
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  // auto teapot(loader.create_geometry_from_file("teapot","/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_GEOMETRY));
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
-  teapot->set_draw_bounding_box(true);
+  teapot->set_draw_bounding_box(true); 
 
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
   portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
