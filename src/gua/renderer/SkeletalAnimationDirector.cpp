@@ -20,9 +20,10 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene)
     timer_(){
   timer_.start();
   LoadBones();
+  LoadHierarchy();
 }
 
-void SkeletalAnimationDirector::LoadBones(){
+void SkeletalAnimationDirector::LoadBones() {
 
   for (uint i = 0 ; i < scene_->mNumMeshes ; i++) {
     for (uint b = 0; b < scene_->mMeshes[i]->mNumBones; ++b){
@@ -44,6 +45,9 @@ void SkeletalAnimationDirector::LoadBones(){
 
   }
 
+}
+void SkeletalAnimationDirector::LoadHierarchy() {
+  root_ = std::make_shared<Node>(scene_->mRootNode);
 }
 
 void SkeletalAnimationDirector::LoadAnimations(aiScene const* scene) {
@@ -74,20 +78,20 @@ void SkeletalAnimationDirector::BoneTransform(float TimeInSeconds, std::vector<s
   float TimeInTicks = TimeInSeconds * TicksPerSecond;
   float AnimationTime = fmod(TimeInTicks, (float)currAnimation_->duration);
 
-  ReadNodeHierarchy(AnimationTime, scene_->mRootNode, Identity);
+  ReadNodeHierarchy(AnimationTime, root_, Identity);
 
   for (uint i = 0 ; i < num_bones_ ; i++) {
       Transforms[i] = bone_info_[i].FinalTransformation;
   }
 }
 
-void SkeletalAnimationDirector::ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const scm::math::mat4f& ParentTransform)
+void SkeletalAnimationDirector::ReadNodeHierarchy(float AnimationTime, std::shared_ptr<Node> const& pNode, const scm::math::mat4f& ParentTransform)
 {    
-  std::string NodeName(pNode->mName.data);
+  std::string NodeName(pNode->name);
   
   std::shared_ptr<SkeletalAnimation> const& pAnimation = currAnimation_;
       
-  scm::math::mat4f NodeTransformation{ai_to_gua(pNode->mTransformation)};
+  scm::math::mat4f NodeTransformation{pNode->transformation};
    
   BoneAnimation const* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
 
@@ -122,8 +126,8 @@ void SkeletalAnimationDirector::ReadNodeHierarchy(float AnimationTime, const aiN
     bone_info_[BoneIndex].FinalTransformation = GlobalTransformation * bone_info_[BoneIndex].BoneOffset;
   }
   
-  for (uint i = 0 ; i < pNode->mNumChildren ; i++) {
-    ReadNodeHierarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
+  for (uint i = 0 ; i < pNode->numChildren ; i++) {
+    ReadNodeHierarchy(AnimationTime, pNode->children[i], GlobalTransformation);
   }
 }
 
@@ -144,11 +148,11 @@ SkeletalAnimationDirector::BoneAnimation const* SkeletalAnimationDirector::FindN
 }
 
 
-void SkeletalAnimationDirector::ReadNodeHierarchyStatic(const aiNode* pNode, const scm::math::mat4f& ParentTransform)
+void SkeletalAnimationDirector::ReadNodeHierarchyStatic(std::shared_ptr<Node> const& pNode, const scm::math::mat4f& ParentTransform)
 {    
-  std::string NodeName(pNode->mName.data);
+  std::string NodeName(pNode->name);
      
-  scm::math::mat4f GlobalTransformation = ParentTransform * ai_to_gua(pNode->mTransformation);
+  scm::math::mat4f GlobalTransformation = ParentTransform * pNode->transformation;
   
   if (bone_mapping_.find(NodeName) != bone_mapping_.end()) {
     uint BoneIndex = bone_mapping_[NodeName];
@@ -156,8 +160,8 @@ void SkeletalAnimationDirector::ReadNodeHierarchyStatic(const aiNode* pNode, con
     bone_info_[BoneIndex].FinalTransformation = GlobalTransformation * bone_info_[BoneIndex].BoneOffset;
   }
   
-  for (uint i = 0 ; i < pNode->mNumChildren ; i++) {
-    ReadNodeHierarchyStatic(pNode->mChildren[i], GlobalTransformation);
+  for (uint i = 0 ; i < pNode->numChildren ; i++) {
+    ReadNodeHierarchyStatic(pNode->children[i], GlobalTransformation);
   }
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +181,7 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
     BoneTransform(timer_.get_elapsed(), Transforms);
   }
   else {        //this will be only called once, transformations dont need to be updated without anims
-    ReadNodeHierarchyStatic(scene_->mRootNode, scm::math::mat4f::identity());
+    ReadNodeHierarchyStatic(root_, scm::math::mat4f::identity());
 
     for (uint i = 0 ; i < num_bones_ ; i++) {
         Transforms[i] = bone_info_[i].FinalTransformation;
