@@ -26,6 +26,7 @@
 #include <gua/renderer/Texture.hpp>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/Texture3D.hpp>
+#include <gua/renderer/TextureCube.hpp>
 #include <gua/databases/TextureDatabase.hpp>
 #include <gua/utils/Color3f.hpp>
 #include <gua/utils/Logger.hpp>
