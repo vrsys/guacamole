@@ -31,9 +31,9 @@ class AweDataSource : public Awesomium::DataSource {
 
     std::string html_str("<h1>Failed to load resource.</h1>");
 
-  	std::string absolute_path(Awesomium::ToString(path));
+    std::string absolute_path(Awesomium::ToString(path));
 
-  	// strip parameters
+    // strip parameters
     int index = absolute_path.find("?");
     if (index != std::string::npos) {
       absolute_path = absolute_path.substr(0, index);
@@ -44,13 +44,13 @@ class AweDataSource : public Awesomium::DataSource {
 
     std::string ext(Paths::instance()->get_extension(absolute_path));
 
-  	std::string mime("text/html");
-  	if      (ext == ".png")  mime = "image/png";
-  	else if (ext == ".jpg")  mime = "image/jpg";
-  	else if (ext == ".jpeg") mime = "image/jpg";
-  	else if (ext == ".js")   mime = "text/javascript";
-  	else if (ext == ".css")  mime = "text/css";
-  	else if (ext == ".woff") mime = "application/x-font-woff";
+    std::string mime("text/html");
+    if      (ext == ".png")  mime = "image/png";
+    else if (ext == ".jpg")  mime = "image/jpg";
+    else if (ext == ".jpeg") mime = "image/jpg";
+    else if (ext == ".js")   mime = "text/javascript";
+    else if (ext == ".css")  mime = "text/css";
+    else if (ext == ".woff") mime = "application/x-font-woff";
 
     TextFile file(absolute_path);
 
