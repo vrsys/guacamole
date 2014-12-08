@@ -53,23 +53,31 @@ namespace node {
 
 
   ////////////////////////////////////////////////////////////////////////////////
-  //TODO
-  /*std::string const& SkeletalAnimationNode::get_geometry_description() const {
-    return geometry_description_;
-  }*/
+  std::vector<std::string> const& SkeletalAnimationNode::get_geometry_descriptions() const {
+    return geometry_descriptions_;
+  }
 
   ////////////////////////////////////////////////////////////////////////////////
-  //TODO
-  /*void SkeletalAnimationNode::set_geometry_description(std::string const& v) {
-    geometry_description_ = v;
-    geometry_changed_ = self_dirty_ = true;
-  }*/
+  void SkeletalAnimationNode::set_geometry_description(std::string const& v,uint index) {
+    if(index < geometry_descriptions_.size()){
+      geometry_descriptions_[index] = v;
+      geometry_changed_ = self_dirty_ = true;
+    }
+    else{
+      Logger::LOG_WARNING << "Can't 'set_geometry_description()'! Index out of bounds! "<< std::endl;
+    }
+  }
 
   ////////////////////////////////////////////////////////////////////////////////
-  //TODO
-  /*Material const& SkeletalAnimationNode::get_material() const {
-    return material_;
-  }*/
+  Material const& SkeletalAnimationNode::get_material(uint index) const {
+    if(index < materials_.size()){
+      return materials_[index];
+    }
+    else{
+      Logger::LOG_ERROR << "Cant return material of invalid index!" << std::endl;
+      return materials_[0];
+    }
+  }
 
   ////////////////////////////////////////////////////////////////////////////////
   std::vector<Material>& SkeletalAnimationNode::get_materials() {
@@ -77,11 +85,15 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  //TODO
-  /*void SkeletalAnimationNode::set_material(Material const& material) {
-    material_ = material;
-    material_changed_ = self_dirty_ = true;
-  }*/
+  void SkeletalAnimationNode::set_material(Material const& material,uint index) {
+    if(index < materials_.size()){
+      materials_[index] = material;
+      material_changed_ = self_dirty_ = true;
+    }
+    else{
+      Logger::LOG_WARNING << "Cant set material of invalid index!"<< std::endl;
+    }
+  }
 
 
   ////////////////////////////////////////////////////////////////////////////////
