@@ -34,9 +34,12 @@ class GUA_DLL MaterialShaderDescription {
 
 
   void load_from_file(std::string const& file_name);
+
   std::string const& get_file_name() const {
     return file_name_;
   }
+
+  void load_from_buffer(std::string const& buffer);
 
   MaterialShaderDescription& add_vertex_method(MaterialShaderMethod const& method);
   MaterialShaderDescription& add_fragment_method(MaterialShaderMethod const& method);

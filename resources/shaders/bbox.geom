@@ -29,7 +29,7 @@ layout(line_strip, max_vertices = 16) out;
 in vec3 gua_min[];
 in vec3 gua_max[];
 
-// body
+// body 
 void main() { 
     mat4 mat = gua_projection_matrix * gua_view_matrix;
 

@@ -4,6 +4,6 @@ vec3  gua_tangent;
 vec3  gua_bitangent;
 vec2  gua_texcoords;
 vec3  gua_color;
-float gua_shinyness;
-float gua_specularity;
+float gua_roughness;
+float gua_metalness;
 float gua_emissivity;

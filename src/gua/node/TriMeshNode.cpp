@@ -37,7 +37,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   TriMeshNode::TriMeshNode(std::string const& name,
                            std::string const& geometry_description,
-                           Material const& material,
+                           std::shared_ptr<Material> const& material,
                            math::mat4 const& transform)
     : GeometryNode(name, transform),
       geometry_(nullptr),
@@ -60,17 +60,12 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  Material const& TriMeshNode::get_material() const {
+  std::shared_ptr<Material> const& TriMeshNode::get_material() const {
     return material_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  Material& TriMeshNode::get_material() {
-    return material_;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void TriMeshNode::set_material(Material const& material) {
+  void TriMeshNode::set_material(std::shared_ptr<Material> const& material) {
     material_ = material;
     material_changed_ = self_dirty_ = true;
   }
@@ -247,7 +242,7 @@ namespace node {
 
     if (material_changed_)
     {
-      if (material_.get_shader_name() != "")
+      if (material_ && material_->get_shader_name() != "")
       {
         // if (!MaterialShaderDatabase::instance()->contains(material_))
         // {

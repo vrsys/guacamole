@@ -66,10 +66,10 @@ public:
 
   std::shared_ptr<node::NURBSNode> load_geometry(std::string const& node_name,
                                                  std::string const& file_name,
-                                                 Material const& fallback_material,
+                                                 std::shared_ptr<Material> const& fallback_material,
                                                  unsigned flags = DEFAULTS);
 
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, Material const& fallback_material) const;
+  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
  
  private:
 
