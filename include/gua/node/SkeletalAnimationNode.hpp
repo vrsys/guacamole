@@ -48,7 +48,7 @@ private : // c'tor / d'tor
 
   SkeletalAnimationNode(std::string const& node_name,
               std::vector<std::string> const& geometry_description,
-              std::vector<Material> const& materials,
+              std::vector<std::shared_ptr<Material>> const& materials,
               std::shared_ptr<SkeletalAnimationDirector> animation_director = nullptr,
               math::mat4 const& transform = math::mat4::identity());
 
@@ -67,9 +67,8 @@ public : // methods
   /**
   * A string referring to an entry in guacamole's MaterialShaderDatabase.
   */
-  Material const& get_material(uint index) const;
 
-  std::vector<Material>&       get_materials();
+  std::vector<std::shared_ptr<Material>>&       get_materials();
 
   void            set_material(Material const& material, uint index);
   void            set_fallback_materials(Material const& material);
@@ -114,7 +113,8 @@ public : // methods
   std::vector<std::string>          geometry_descriptions_;
   bool                              geometry_changed_;
 
-  std::vector<Material>             materials_;
+  std::vector<std::shared_ptr<Material>>             materials_;
+
   bool                              material_changed_;
 
   std::shared_ptr<SkeletalAnimationDirector> animation_director_;

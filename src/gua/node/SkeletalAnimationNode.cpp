@@ -37,7 +37,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   SkeletalAnimationNode::SkeletalAnimationNode(std::string const& name,
                            std::vector<std::string> const& geometry_descriptions,
-                           std::vector<Material> const& materials,
+                           std::vector<std::shared_ptr<Material>> const& materials,
                            std::shared_ptr<SkeletalAnimationDirector> animation_director,
                            math::mat4 const& transform)
     : GeometryNode(name, transform),
@@ -80,7 +80,7 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  std::vector<Material>& SkeletalAnimationNode::get_materials() {
+  std::vector<std::shared_ptr<Material>>& SkeletalAnimationNode::get_materials() {
     return materials_;
   }
 
