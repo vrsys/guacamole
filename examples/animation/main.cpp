@@ -68,6 +68,7 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto teapot(loader.create_geometry_from_file("bob", "data/objects/pinky.md5mesh", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  //auto teapot(loader.create_geometry_from_file("bob", "data/objects/pinky.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   
   std::shared_ptr<gua::node::SkeletalAnimationNode> node = std::dynamic_pointer_cast<gua::node::SkeletalAnimationNode, gua::node::Node>(teapot);
   node->get_director()->LoadAnimations(loader.load_animation("data/objects/idle1.md5anim", 0));
@@ -116,7 +117,7 @@ int main(int argc, char** argv) {
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
   camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
     .radius(3)
-    .intensity(2);
+    .intensity(0.1);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
