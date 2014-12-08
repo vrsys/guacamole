@@ -19,40 +19,23 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MATERIAL_SHADER_DESCRIPTION_HPP
-#define GUA_MATERIAL_SHADER_DESCRIPTION_HPP
+// class header
+#include <gua/renderer/ToneMappingPass.hpp>
 
-#include <gua/renderer/MaterialShaderMethod.hpp>
-
-#include <list>
+#include <gua/renderer/Pipeline.hpp>
 
 namespace gua {
 
-class GUA_DLL MaterialShaderDescription {
- public:
-  MaterialShaderDescription() : file_name_("") {}
-
-
-  void load_from_file(std::string const& file_name);
-  std::string const& get_file_name() const {
-    return file_name_;
-  }
-
-  MaterialShaderDescription& add_vertex_method(MaterialShaderMethod const& method);
-  MaterialShaderDescription& add_fragment_method(MaterialShaderMethod const& method);
-
-  std::list<MaterialShaderMethod> const& get_vertex_methods() const;
-  std::list<MaterialShaderMethod> const& get_fragment_methods() const;
-
- private:
-  std::list<MaterialShaderMethod> vertex_methods_;
-  std::list<MaterialShaderMethod> fragment_methods_;
-
-  std::string file_name_;
-
-
-};
-
+ToneMappingPassDescription::ToneMappingPassDescription()
+  : PipelinePassDescription()
+{
+  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+  fragment_shader_ = "shaders/tone_mapping.frag";
+  needs_color_buffer_as_input_ = true;
+  writes_only_color_buffer_ = true;
+  rendermode_ = RenderMode::Quad;
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
 }
 
-#endif  // GUA_MATERIAL_SHADER_DESCRIPTION_HPP
+}

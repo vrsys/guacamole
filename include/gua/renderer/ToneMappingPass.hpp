@@ -19,40 +19,29 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MATERIAL_SHADER_DESCRIPTION_HPP
-#define GUA_MATERIAL_SHADER_DESCRIPTION_HPP
+#ifndef GUA_TONEMAPPING_PASS_HPP
+#define GUA_TONEMAPPING_PASS_HPP
 
-#include <gua/renderer/MaterialShaderMethod.hpp>
-
-#include <list>
+#include <gua/renderer/PipelinePass.hpp>
 
 namespace gua {
 
-class GUA_DLL MaterialShaderDescription {
+class Pipeline;
+
+class GUA_DLL ToneMappingPassDescription : public PipelinePassDescription {
  public:
-  MaterialShaderDescription() : file_name_("") {}
+  ToneMappingPassDescription();
 
-
-  void load_from_file(std::string const& file_name);
-  std::string const& get_file_name() const {
-    return file_name_;
+  PipelinePassDescription* make_copy() const override {
+    return new ToneMappingPassDescription(*this);
   }
-
-  MaterialShaderDescription& add_vertex_method(MaterialShaderMethod const& method);
-  MaterialShaderDescription& add_fragment_method(MaterialShaderMethod const& method);
-
-  std::list<MaterialShaderMethod> const& get_vertex_methods() const;
-  std::list<MaterialShaderMethod> const& get_fragment_methods() const;
-
- private:
-  std::list<MaterialShaderMethod> vertex_methods_;
-  std::list<MaterialShaderMethod> fragment_methods_;
-
-  std::string file_name_;
-
-
+  friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const& ctx) override {
+    return PipelinePass{*this, ctx};
+  }
 };
 
 }
 
-#endif  // GUA_MATERIAL_SHADER_DESCRIPTION_HPP
+#endif  // GUA_TONEMAPPING_PASS_HPP

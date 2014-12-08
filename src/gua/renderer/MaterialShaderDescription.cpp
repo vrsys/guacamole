@@ -43,8 +43,13 @@ void MaterialShaderDescription::load_from_file(std::string const& file_name) {
         return;
       }
 
+      file_name_ = file_name;
+      vertex_methods_.clear();
+      fragment_methods_.clear();
+
       if (value["vertex_methods"] != Json::Value::null
           && value["vertex_methods"].isArray()) {
+
 
         for (int i(0); i < value["vertex_methods"].size(); ++i) {
           auto method(value["vertex_methods"][i]);
@@ -66,6 +71,7 @@ void MaterialShaderDescription::load_from_file(std::string const& file_name) {
 
       if (value["fragment_methods"] != Json::Value::null
           && value["fragment_methods"].isArray()) {
+
 
         for (int i(0); i < value["fragment_methods"].size(); ++i) {
           auto method(value["fragment_methods"][i]);
