@@ -30,10 +30,12 @@
 namespace gua {
 
 class MaterialShader;
+class ShaderProgram;
 
 class GUA_DLL Material {
   public:
     Material(std::string const& shader_name = "");
+    Material(Material const& copy) = default;
 
     std::string const& get_shader_name() const {
       return shader_name_;
@@ -65,9 +67,9 @@ class GUA_DLL Material {
       return *this;
     }
 
-    // void unset_uniform(std::string const& name);
-
     std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
+
+    void apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const;
 
   private:
     friend class MaterialShader;

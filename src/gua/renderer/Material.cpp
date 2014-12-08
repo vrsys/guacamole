@@ -22,7 +22,8 @@
 #include <gua/renderer/Material.hpp>
 
 #include <gua/databases/MaterialShaderDatabase.hpp>
-
+#include <gua/renderer/ShaderProgram.hpp>
+ 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,5 +48,17 @@ MaterialShader* Material::get_shader() const {
 std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() const {
   return uniforms_;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Material::apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const {
+    // TODO: make this iterations thread-safe - it might work this way as the
+    // number of uniforms does not change, but maybe it can cause crashes...
+    for (auto const& uniform : uniforms_) {
+        uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

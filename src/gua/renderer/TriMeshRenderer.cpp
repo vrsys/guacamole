@@ -115,7 +115,7 @@ namespace gua {
           current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
           current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
-          tri_mesh_node->get_material()->get_shader()->apply_uniforms(ctx, current_shader, view_id, tri_mesh_node->get_material());
+          tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader, view_id);
 
           ctx.render_context->apply_program();
 

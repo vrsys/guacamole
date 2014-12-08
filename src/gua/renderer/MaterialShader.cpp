@@ -21,6 +21,7 @@
 
 #include <gua/renderer/MaterialShader.hpp>
 
+#include <gua/renderer/ShaderProgram.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/string_utils.hpp>
 
@@ -59,8 +60,8 @@ std::string const& MaterialShader::get_name() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Material> MaterialShader::get_new_material() const {
-  return std::make_shared<Material>(default_material_->get_shader_name());
+std::shared_ptr<Material> MaterialShader::make_new_material() const {
+  return std::make_shared<Material>(*default_material_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,23 +110,6 @@ ShaderProgram* MaterialShader::get_shader(std::map<scm::gl::shader_stage, std::s
     
   new_shader->set_shaders(final_program_description, interleaved_stream_capture, in_rasterization_discard);
   return new_shader;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-void MaterialShader::apply_uniforms(RenderContext const& ctx,
-                                    ShaderProgram* shader,
-                                    int view,
-                                    std::shared_ptr<Material> const& overwrite) const {
-
-  // TODO: make this iterations thread-safe
-  for (auto const& uniform : default_material_->get_uniforms()) {
-    uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
-  }
-
-  for (auto const& uniform : overwrite->get_uniforms()) {
-    uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

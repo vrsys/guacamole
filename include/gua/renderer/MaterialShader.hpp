@@ -25,7 +25,6 @@
 #include <gua/renderer/MaterialShaderDescription.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/renderer/GeometryResource.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/string_utils.hpp>
 
 #include <typeindex>
@@ -36,6 +35,8 @@
 
 namespace gua {
 
+class ShaderProgram;
+
 class GUA_DLL MaterialShader {
  public:
 
@@ -43,19 +44,13 @@ class GUA_DLL MaterialShader {
 
   MaterialShaderDescription const& get_description() const;
 
-  std::string const&  get_name()             const;
-  std::shared_ptr<Material>            get_new_material()     const;
+  std::string const&                   get_name()             const;
+  std::shared_ptr<Material>            make_new_material()    const;
   std::shared_ptr<Material> const&     get_default_material() const;
 
   ShaderProgram* get_shader(std::map<scm::gl::shader_stage, std::string> const& program_description,
                             std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
                             bool in_rasterization_discard = false);
-
-  void apply_uniforms(RenderContext const& ctx,
-                      ShaderProgram* shader,
-                      int view,
-                      std::shared_ptr<Material> const& overwrite) const;
-
 
   void print_shaders() const;
 

@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
   gua::math::vec4 cobalt(0.662, 0.655, 0.634, 1);
   gua::math::vec4 platinum(0.672, 0.637, 0.585, 1);
 
-  auto pbrMat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->get_new_material());
+  auto pbrMat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
   // pbrMat.set_uniform("Color", chromium);
   // pbrMat.set_uniform("Roughness", 0.2f);
   // pbrMat.set_uniform("Metalness", 1.0f);
