@@ -94,8 +94,8 @@ namespace gua {
         // loop through all resources in animation node
         for(uint i(0);i<materials.size();++i){
 
-          if (current_material != materials[i].get_shader()) {
-            current_material = materials[i].get_shader();
+          if (current_material != materials[i]->get_shader()) {
+            current_material = materials[i]->get_shader();
             if (current_material) {
 
               auto shader_iterator = programs_.find(current_material);
@@ -110,7 +110,7 @@ namespace gua {
               }           
             }
             else {
-              Logger::LOG_WARNING << "SkeletalAnimationPass::process(): Cannot find material: " << materials[i].get_shader_name() << std::endl;
+              Logger::LOG_WARNING << "SkeletalAnimationPass::process(): Cannot find material: " << materials[i]->get_shader_name() << std::endl;
             }
 
             if (current_shader) {
@@ -131,9 +131,9 @@ namespace gua {
             current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
 
-            for (auto const& overwrite : materials[i].get_uniforms()) {
-              current_shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
-            }
+
+            materials[i]->apply_uniforms(ctx, current_shader, view_id);
+
 
 
             ctx.render_context->apply_program();

@@ -174,7 +174,7 @@ namespace gua {
 
   std::shared_ptr<node::Node> SkeletalAnimationLoader::create_geometry_from_file(std::string const& node_name,
     std::string const& file_name,
-    Material const& fallback_material,
+    std::shared_ptr<Material> const& fallback_material,
     unsigned flags)
   {
     auto cached_node(load_geometry(file_name, flags));
@@ -274,7 +274,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_animation_node(std::
   auto animation_director = std::make_shared<SkeletalAnimationDirector>(ai_scene);
 
   std::vector<std::string> geometry_descriptions{};
-  std::vector<Material> materials{};
+  std::vector<std::shared_ptr<Material>> materials{};
 
   for(uint mesh_count(0);mesh_count<ai_scene->mNumMeshes;++mesh_count){
 
@@ -288,7 +288,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_animation_node(std::
                                                                                     , importer
                                                                                     , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
-    Material material;
+    std::shared_ptr<Material> material;
     //TODO : texture atlas since multiple meshes in one resource !!!
     unsigned material_index(ai_scene->mMeshes[mesh_count]->mMaterialIndex);
     //if (material_index != 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
@@ -411,7 +411,7 @@ bool SkeletalAnimationLoader::is_supported(std::string const& file_name) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
-                                            Material const& fallback_material) const
+                                            std::shared_ptr<Material> const& fallback_material) const
 {
 auto g_node(std::dynamic_pointer_cast<node::SkeletalAnimationNode>(root));
 
