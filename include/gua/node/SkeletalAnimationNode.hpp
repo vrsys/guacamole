@@ -55,27 +55,23 @@ private : // c'tor / d'tor
 public : // methods
 
   /**
-  * Get the string referring to an entry in guacamole's GeometryDatabase.
+  * Get the strings referring to an entry in guacamole's GeometryDatabase.
   */
-  //TODO
-  //std::string const& get_geometry_description() const;
+  std::vector<std::string> const& get_geometry_descriptions() const;
 
   /**
   * Set the string referring to an entry in guacamole's GeometryDatabase.
   */
-  //TODO
-  //void set_geometry_description(std::string const& geometry_description);
+  void set_geometry_description(std::string const& geometry_description, uint index);
 
   /**
   * A string referring to an entry in guacamole's MaterialShaderDatabase.
   */
-  //TODO
-  //Material const& get_material() const;
-  //TODO
+  Material const& get_material(uint index) const;
+
   std::vector<Material>&       get_materials();
 
-  //TODO
-  //void            set_material(Material const& material);
+  void            set_material(Material const& material, uint index);
   void            set_fallback_materials(Material const& material);
 
   /**
@@ -114,14 +110,10 @@ public : // methods
 
  private:  // attributes e.g. special attributes for drawing
 
-
-  //std::shared_ptr<SkeletalAnimationRessource> geometry_;
-  //std::string                       geometry_description_;
   std::vector<std::shared_ptr<SkeletalAnimationRessource>> geometries_;
   std::vector<std::string>          geometry_descriptions_;
   bool                              geometry_changed_;
 
-  //Material                          material_;
   std::vector<Material>             materials_;
   bool                              material_changed_;
 
