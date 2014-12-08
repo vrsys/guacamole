@@ -120,13 +120,6 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
       auto window(WindowDatabase::instance()->lookup(window_name));
 
       if (window) {
-        // FpsCounter fpsc(20);
-        // fpsc.start();
-        // while(true) {
-        //   auto c = cam->serialize();
-        //   c.rendering_pipeline->process(c, *sgs, 10, fpsc.fps);
-        //   fpsc.step();
-        // }
         auto p = spawnDoublebufferred<Item>();
         p.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
         render_clients_[window_name] = std::make_pair(p.first, std::thread(Renderer::renderclient, p.second));

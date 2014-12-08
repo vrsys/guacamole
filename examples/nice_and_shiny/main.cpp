@@ -137,10 +137,10 @@ int main(int argc, char** argv) {
   standardPipe.add_pass<gua::TriMeshPassDescription>();
   standardPipe.add_pass<gua::EmissivePassDescription>();
   standardPipe.add_pass<gua::LightingPassDescription>();
-  standardPipe.add_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    //.texture("/opt/guacamole/resources/skymaps/skymap.jpg")
-    ;
+  // standardPipe.add_pass<gua::BackgroundPassDescription>()
+    // .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+    // .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
+    // ;
 
   gua::PipelineDescription pbrPipe;
   pbrPipe.add_pass<gua::TriMeshPassDescription>();
