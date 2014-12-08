@@ -89,7 +89,6 @@ int main(int argc, char** argv) {
   rock->set_draw_bounding_box(true);
   graph.add_node("/transform2", rock);
   
-
   graph.add_node("/transform", teapot);
   graph.add_node("/transform2", teapot2);
   // graph.add_node("/transform2", teapot2);
