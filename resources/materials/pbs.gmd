@@ -1,0 +1,167 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "name" : "FragmentColor",
+      "source" : "
+        // color generation ----------------------------------------------------
+        void FragmentColor() {
+
+          vec4 color = vec4(0);
+
+          if (uvec2(0) != ColorMap) {
+            color = pow(texture(sampler2D(ColorMap), gua_texcoords), vec4(2.2));
+          } else {
+            color = Color;
+          }
+
+          if (color.a < 0.5) {
+            discard;
+          }
+
+          gua_color = color.rgb;
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "ColorMap",
+          "type" : "sampler2D",
+          "value" : "0"
+        },
+        {
+          "name" : "Color",
+          "type" : "vec4",
+          "value" : "(0.0 0.0 0.0 1.0)"
+        }
+      ]
+    },
+    {
+      "name" : "FragmentRoughness",
+      "source" : "
+        // roughness generation ------------------------------------------------
+        void FragmentRoughness() {
+          if (uvec2(0) != RoughnessMap) {
+            gua_roughness = texture(sampler2D(RoughnessMap), gua_texcoords).r;
+          } else {
+            gua_roughness = Roughness;
+          }
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "RoughnessMap",
+          "type" : "sampler2D",
+          "value" : "0"
+        },
+        {
+          "name" : "Roughness",
+          "type" : "float",
+          "value" : "0.1"
+        }
+      ]
+    },
+    {
+      "name" : "FragmentMetalness",
+      "source" : "
+        // metalness generation ------------------------------------------------
+        void FragmentMetalness() {
+          if (uvec2(0) != MetalnessMap) {
+            gua_metalness = texture(sampler2D(MetalnessMap), gua_texcoords).r;
+          } else {
+            gua_metalness = Metalness;
+          }
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "MetalnessMap",
+          "type" : "sampler2D",
+          "value" : "0"
+        },
+        {
+          "name" : "Metalness",
+          "type" : "float",
+          "value" : "0.01"
+        }
+      ]
+    },
+    {
+      "name" : "FragmentEmissivity",
+      "source" : "
+        // emissivity generation -----------------------------------------------
+        void FragmentEmissivity() {
+          if (uvec2(0) != EmissivityMap) {
+            gua_emissivity = texture(sampler2D(EmissivityMap), gua_texcoords).r;
+          } else {
+            gua_emissivity = Emissivity;
+          }
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "EmissivityMap",
+          "type" : "sampler2D",
+          "value" : "0"
+        },
+        {
+          "name" : "Emissivity",
+          "type" : "float",
+          "value" : "0.0"
+        }
+      ]
+    },
+    {
+      "name" : "FragmentOpacity",
+      "source" : "
+        // opacity mapping -----------------------------------------------------
+        void FragmentOpacity() {
+          if (uvec2(0) != OpacityMap) {
+            if (texture(sampler2D(OpacityMap), gua_texcoords).r < 0.5) {
+              discard;
+            }
+          }
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "OpacityMap",
+          "type" : "sampler2D",
+          "value" : "0"
+        }
+      ]
+    },
+    {
+      "name" : "FragmentNormal",
+      "source" : "
+        // normal mapping ------------------------------------------------------
+        void FragmentNormal() {
+          if (uvec2(0) != NormalMap) {
+            vec3 normalTS = normalize(texture(sampler2D(NormalMap), gua_texcoords).rgb*2.0-1.0);
+
+            // Green/Y channel is flipped in Cerberus NormalMap
+            normalTS.y *= -1.0;
+            gua_normal = normalize(gua_tangent*normalTS.x +
+                                   gua_bitangent*normalTS.y +
+                                   gua_normal*normalTS.z);
+          }
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "NormalMap",
+          "type" : "sampler2D",
+          "value" : "0"
+        }
+      ]
+    }
+  ]
+}

@@ -148,7 +148,7 @@ void gua_calculate_point_light(vec3 normal, vec3 position) {
   float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
 
   vec3 Cl = falloff * gua_light_color * gua_light_brightness;
-  gua_light_radiance = Cl;
+  gua_light_radiance = gua_light_color;
 }
 
 // base lighting calculations for spot lights ----------------------------------
@@ -380,23 +380,21 @@ void main() {
   compute_light(N, P);
 
   vec3 L = gua_light_direction;
-  vec3 cspec = vec3(0.06);
-  vec3 cdiff = gua_get_color();
 
   vec3 pbr = gua_get_pbr();
-
+  
   float emit      = pbr.r;
   float metalness = pbr.b;
   float roughness = max(pbr.g, 0.0001f);
 
-  cspec = 0.04 * (1 - metalness) + metalness * gua_get_color();
-  cdiff = gua_get_color() * (1 - metalness);
+  vec3 cspec = 0.04 * (1 - metalness) + metalness * gua_get_color();
+  vec3 cdiff = gua_get_color() * (1 - metalness);
 
   vec3 Vn = normalize( E - P );
   vec3 H = normalize(L + Vn);
   float NdotL = clamp(dot( N, L ), 0, 1);
 
-  vec3 Cl = gua_light_radiance;
+  vec3 Cl = gua_light_radiance * (1-emit);
 
   vec3 brdf = ( 1.0 - Fresnel(cspec, H, L) ) * cdiff + GGX_Specular(roughness, N, H, Vn, L, cspec);
   vec3 col = Cl * brdf * NdotL;

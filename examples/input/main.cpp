@@ -66,6 +66,7 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+  // auto teapot(loader.create_geometry_from_file("teapot","/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_GEOMETRY));
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
   teapot->set_draw_bounding_box(true);
@@ -76,14 +77,13 @@ int main(int argc, char** argv) {
   portal->translate(0.5f, 0.f, -0.2f);
   portal->rotate(-30, 0.f, 1.f, 0.f);
 
-  auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
-  light->data.set_enable_shadows(true);
-  light->scale(10.f);
-  light->rotate(-20, 0.f, 1.f, 0.f);
-  light->translate(-1.f, 0.f,  3.f);
+  //auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
+  //light->data.set_enable_shadows(true);
+  //light->scale(10.f);
+  //light->rotate(-20, 0.f, 1.f, 0.f);
+  //light->translate(-1.f, 0.f,  3.f);
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->data.color = gua::utils::Color3f(0.5f, 0.5f, 1.0f);
   light2->scale(10.f);
   light2->translate(-2.f, 3.f, 5.f);
 
@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
   gua::PipelineDescription portal_pipe;
   portal_pipe.add_pass<gua::TriMeshPassDescription>();
   portal_pipe.add_pass<gua::EmissivePassDescription>();
-  portal_pipe.add_pass<gua::LightingPassDescription>();
+  portal_pipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
   portal_pipe.add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
@@ -133,13 +133,10 @@ int main(int argc, char** argv) {
   camera->set_pre_render_cameras({portal_camera});
   camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
-    .enable_fog(true)
-    .fog_start(1)
-    .fog_end(10);
-  camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
-    .radius(3)
-    .intensity(2);
+    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  //camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
+  //  .radius(3)
+  //  .intensity(2);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);

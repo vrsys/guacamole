@@ -68,11 +68,6 @@ int main(int argc, char** argv) {
   light->scale(4.4f);
   light->translate(1.f, 0.f, 2.f);
 
-  // auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  // light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
-  // light2->scale(3.4f);
-  // light2->translate(-2.f, 1.f, 2.f);
-
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(0.001 * resolution.x, 0.001 * resolution.y));
   screen->translate(0, 0, 1.0);
@@ -113,7 +108,7 @@ int main(int argc, char** argv) {
       }
     }
 
-    std::cout << camera->get_rendering_fps() << std::endl;
+    std::cout << camera->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {

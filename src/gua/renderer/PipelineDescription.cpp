@@ -26,10 +26,13 @@
 #include <gua/renderer/TriMeshPass.hpp>
 #include <gua/renderer/EmissivePass.hpp>
 #include <gua/renderer/LightingPass.hpp>
+#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
+#include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
+#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 
 namespace gua {
@@ -40,12 +43,13 @@ PipelineDescription PipelineDescription::make_default() {
   PipelineDescription pipe;
   pipe.add_pass<TriMeshPassDescription>();
   pipe.add_pass<TexturedQuadPassDescription>();
-  pipe.add_pass<SSAOPassDescription>();
   pipe.add_pass<EmissivePassDescription>();
-  pipe.add_pass<LightingPassDescription>();
+  // pipe.add_pass<LightingPassDescription>();
+  pipe.add_pass<PhysicallyBasedShadingPassDescription>();
   pipe.add_pass<BBoxPassDescription>();
   pipe.add_pass<BackgroundPassDescription>();
   pipe.add_pass<TexturedScreenSpaceQuadPassDescription>();
+  // pipe.add_pass<ToneMappingPassDescription>();
 
   return pipe;
 }
