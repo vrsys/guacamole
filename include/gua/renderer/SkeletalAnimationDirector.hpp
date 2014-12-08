@@ -190,6 +190,25 @@ class SkeletalAnimationDirector{
     std::vector<BoneAnimation> boneAnims;
   };
 
+  struct Node {
+    Node(aiNode const* node):
+      name{node->mName.C_Str()},
+      numChildren{node->mNumChildren},
+      transformation{ai_to_gua(node->mTransformation)}
+    {
+      for(unsigned i = 0; i < node->mNumChildren; ++i) {
+        std::shared_ptr<Node> child = std::make_shared<Node>(node->mChildren[i]);
+        children.push_back(child);
+      }
+    }
+
+    ~Node(){};
+
+    std::string name;
+    unsigned numChildren;
+    std::vector<std::shared_ptr<Node>> children;
+    scm::math::mat4f transformation;
+  };
 
   //void LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones);
 
