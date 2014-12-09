@@ -18,7 +18,21 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     currAnimation_{},
     timer_{} {
   timer_.start();
+  add_hierarchy(scene);
+}
+
+void SkeletalAnimationDirector::add_hierarchy(aiScene const* scene) {
   root_ = load_hierarchy(scene);
+  collect_bone_indices(bone_mapping_, root_);
+  num_bones_ = bone_mapping_.size();
+}
+
+void SkeletalAnimationDirector::collect_bone_indices(std::map<std::string, uint>& ids, std::shared_ptr<Node> const& pNode) {
+  ids[pNode->name] = pNode->index;
+
+  for(std::shared_ptr<Node>& child : pNode->children) {
+    collect_bone_indices(ids, child);
+  }
 }
 
 std::shared_ptr<SkeletalAnimationDirector::Node> SkeletalAnimationDirector::load_hierarchy(aiScene const* scene) {
@@ -26,20 +40,19 @@ std::shared_ptr<SkeletalAnimationDirector::Node> SkeletalAnimationDirector::load
   std::shared_ptr<Node> root = std::make_shared<Node>(scene->mRootNode);
 
   std::map<std::string, std::pair<uint, scm::math::mat4f>> bone_info{};
-
+  unsigned num_bones = 0;
   for (uint i = 0 ; i < scene->mNumMeshes ; i++) {
     for (uint b = 0; b < scene->mMeshes[i]->mNumBones; ++b){
 
       std::string BoneName(scene->mMeshes[i]->mBones[b]->mName.data);  
-      if (bone_mapping_.find(BoneName) == bone_mapping_.end()) {
+      if (bone_info.find(BoneName) == bone_info.end()) {
          
-        bone_info[BoneName] = std::make_pair(num_bones_, ai_to_gua(scene->mMeshes[i]->mBones[b]->mOffsetMatrix));   
-        bone_mapping_[BoneName] = num_bones_;
-        ++num_bones_;
+        bone_info[BoneName] = std::make_pair(num_bones, ai_to_gua(scene->mMeshes[i]->mBones[b]->mOffsetMatrix));   
+        ++num_bones;
       }
     }
   }
-  SkeletalAnimationDirector::set_bone_properties(bone_info, root);
+ set_bone_properties(bone_info, root);
   return root;
 }
 
@@ -57,45 +70,55 @@ void SkeletalAnimationDirector::set_bone_properties(std::map<std::string, std::p
   }
 }
 
-void SkeletalAnimationDirector::LoadAnimations(aiScene const* scene) {
-  if(!scene->HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
- 
-  for(uint i = 0; i < scene->mNumAnimations; ++i) {
-    animations_.push_back(std::make_shared<SkeletalAnimation>(scene->mAnimations[i]));
-  }
+void SkeletalAnimationDirector::add_animations(aiScene const* scene) {
+  std::vector<std::shared_ptr<SkeletalAnimation>> newAnims{load_animations(scene)};
+
+  animations_.reserve(animations_.size() + newAnims.size());
+  std::move(newAnims.begin(), newAnims.end(), std::inserter(animations_, animations_.end()));
+  newAnims.clear();
 
   if(animations_.size() > 0) hasAnims_ = true;
   currAnimation_ = animations_[animations_.size()-1];
+}
+
+std::vector<std::shared_ptr<SkeletalAnimationDirector::SkeletalAnimation>> SkeletalAnimationDirector::load_animations(aiScene const* scene) {
+  std::vector<std::shared_ptr<SkeletalAnimation>> animations{};
+  if(!scene->HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
+ 
+  for(uint i = 0; i < scene->mNumAnimations; ++i) {
+    animations.push_back(std::make_shared<SkeletalAnimation>(scene->mAnimations[i]));
+  }
+
+  return animations;
 }
 
 uint SkeletalAnimationDirector::getBoneID(std::string const& name) {
   return bone_mapping_.at(name);
 }
 
-void SkeletalAnimationDirector::calculate_pose(float TimeInSeconds, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationDirector::calculate_pose(float TimeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
  
   //if no frame frequency is given, set to 25
   float TicksPerSecond = 25.0f;
   float AnimationTime = 0;
 
-  if(currAnimation_) {
-    if(currAnimation_->keysPerSecond != 0) {
-      TicksPerSecond = currAnimation_->keysPerSecond;
+  if(pAnim) {
+    if(pAnim->keysPerSecond != 0) {
+      TicksPerSecond = pAnim->keysPerSecond;
     } 
     float TimeInTicks = TimeInSeconds * TicksPerSecond;
-    AnimationTime = fmod(TimeInTicks, (float)currAnimation_->duration);
+    AnimationTime = fmod(TimeInTicks, (float)pAnim->duration);
   }
-
-  accumulate_transforms(transforms, AnimationTime, root_, scm::math::mat4f::identity());
+  scm::math::mat4f identity = scm::math::mat4f::identity();
+  accumulate_transforms(transforms, AnimationTime, root_, pAnim, identity );
 }
 
-void SkeletalAnimationDirector::accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float AnimationTime, std::shared_ptr<Node> const& pNode, const scm::math::mat4f& ParentTransform)
-{    
-  std::shared_ptr<SkeletalAnimation> const& pAnimation = currAnimation_;
+void SkeletalAnimationDirector::accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float AnimationTime, std::shared_ptr<Node> const& pNode, std::shared_ptr<SkeletalAnimation> const& pAnim, scm::math::mat4f& ParentTransform)
+{
       
   scm::math::mat4f NodeTransformation{pNode->transformation};
    
-  BoneAnimation const* pNodeAnim = SkeletalAnimationDirector::find_node_anim(pAnimation, pNode->name);
+  BoneAnimation const* pNodeAnim = SkeletalAnimationDirector::find_node_anim(pAnim, pNode->name);
 
   if(pNodeAnim) {
     BoneAnimation const& nodeAnim = *pNodeAnim;
@@ -127,7 +150,7 @@ void SkeletalAnimationDirector::accumulate_transforms(std::vector<scm::math::mat
   }
   
   for (uint i = 0 ; i < pNode->numChildren ; i++) {
-    accumulate_transforms(transforms, AnimationTime, pNode->children[i], GlobalTransformation);
+    accumulate_transforms(transforms, AnimationTime, pNode->children[i], pAnim, GlobalTransformation);
   }
 }
 
@@ -159,11 +182,11 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
     bone_transforms_block_ = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
   }
   //reserve vector for transforms
-  std::vector<scm::math::mat4f> Transforms{num_bones_, scm::math::mat4f::identity()};
+  std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
 
-  calculate_pose(timer_.get_elapsed(), Transforms);
+  calculate_pose(timer_.get_elapsed(), currAnimation_, transforms);
 
-  bone_transforms_block_->update(ctx.render_context, Transforms);
+  bone_transforms_block_->update(ctx.render_context, transforms);
   ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
 
 }
@@ -237,7 +260,7 @@ void SkeletalAnimationDirector::interpolate_position(scm::math::vec3& Out, float
       return;
   }
           
-  uint PositionIndex = SkeletalAnimationDirector::find_position(AnimationTime, nodeAnim);
+  uint PositionIndex = find_position(AnimationTime, nodeAnim);
   uint NextPositionIndex = (PositionIndex + 1);
 
   if(NextPositionIndex > nodeAnim.numTranslationKeys) {
@@ -263,7 +286,7 @@ void SkeletalAnimationDirector::interpolate_rotation(scm::math::quatf& Out, floa
       return;
   }
   
-  uint RotationIndex = SkeletalAnimationDirector::find_rotation(AnimationTime, nodeAnim);
+  uint RotationIndex = find_rotation(AnimationTime, nodeAnim);
   uint NextRotationIndex = (RotationIndex + 1);
 
   if(NextRotationIndex > nodeAnim.numRotationKeys) {
@@ -289,7 +312,7 @@ void SkeletalAnimationDirector::interpolate_scaling(scm::math::vec3& Out, float 
       return;
   }
 
-  uint ScalingIndex = SkeletalAnimationDirector::find_scaling(AnimationTime, nodeAnim);
+  uint ScalingIndex = find_scaling(AnimationTime, nodeAnim);
   uint NextScalingIndex = (ScalingIndex + 1);
 
   if(NextScalingIndex > nodeAnim.numScalingKeys) {

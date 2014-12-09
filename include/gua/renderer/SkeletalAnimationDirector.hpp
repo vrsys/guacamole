@@ -63,26 +63,6 @@ namespace gua {
 class SkeletalAnimationDirector{
  public:
 
-  SkeletalAnimationDirector(aiScene const*);
-  inline ~SkeletalAnimationDirector(){};
-
- uint getBoneID(std::string const& name);
- void updateBoneTransforms(RenderContext const& ctx);
- 
- void LoadAnimations(aiScene const*);
- 
-
-
-  struct BoneInfo
-  {
-    scm::math::mat4f BoneOffset;      
-
-    BoneInfo()
-    {
-      BoneOffset = scm::math::mat4f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);           
-    }
-  };
-
   struct Vec3Key {
 
     Vec3Key(aiVectorKey key):
@@ -209,7 +189,19 @@ class SkeletalAnimationDirector{
     int index;
   };
 
-  std::shared_ptr<Node> load_hierarchy(aiScene const* scene);
+
+  SkeletalAnimationDirector(aiScene const*);
+  inline ~SkeletalAnimationDirector(){};
+
+  uint getBoneID(std::string const& name);
+  void updateBoneTransforms(RenderContext const& ctx);
+
+  void add_animations(aiScene const* scene);
+  static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(aiScene const*);
+
+  void add_hierarchy(aiScene const* scene);
+  static void collect_bone_indices(std::map<std::string, uint>& ids, std::shared_ptr<Node> const& pNode);
+  static std::shared_ptr<Node> load_hierarchy(aiScene const* scene);
   
   static void interpolate_scaling(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);
   static void interpolate_rotation(scm::math::quatf& Out, float AnimationTime, BoneAnimation const& nodeAnim);
@@ -222,13 +214,12 @@ class SkeletalAnimationDirector{
 private:
   static void set_bone_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& info, std::shared_ptr<Node>& currNode);
 
-  void calculate_pose(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
+  void calculate_pose(float TimeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& Transforms);
 
-  void accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float AnimationTime, std::shared_ptr<Node> const& node, const scm::math::mat4f& ParentTransform);
+  static void accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float AnimationTime, std::shared_ptr<Node> const& node, std::shared_ptr<SkeletalAnimation> const& anim, scm::math::mat4f& ParentTransform);
 
   std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
   uint num_bones_;
-  std::vector<BoneInfo> bone_info_;
 
   std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
 
