@@ -37,7 +37,7 @@
 
 namespace {
 
-scm::math::mat4f ai_to_gua(aiMatrix4x4 const& m){
+scm::math::mat4f ai_to_gua(aiMatrix4x4 const& m) {
   scm::math::mat4f res(m.a1,m.b1,m.c1,m.d1
                       ,m.a2,m.b2,m.c2,m.d2
                       ,m.a3,m.b3,m.c3,m.d3
@@ -45,12 +45,12 @@ scm::math::mat4f ai_to_gua(aiMatrix4x4 const& m){
   return res;
 }
 
-scm::math::vec3 ai_to_gua(aiVector3D const& v){
+scm::math::vec3 ai_to_gua(aiVector3D const& v) {
   scm::math::vec3 res(v.x, v.y, v.z);
   return res;
 }
 
-scm::math::quatf ai_to_gua(aiQuaternion const& q){
+scm::math::quatf ai_to_gua(aiQuaternion const& q) {
   scm::math::quatf res(q.w, q.x, q.y, q.z);
   return res;
 }
@@ -143,8 +143,8 @@ struct SkeletalAnimation {
   SkeletalAnimation(aiAnimation* anim):
     name{anim->mName.C_Str()},
     numFrames{unsigned(anim->mDuration)},
-    numFPS{anim->mTicksPerSecond},
-    duration{double(numFrames) / double(numFPS)},
+    numFPS{anim->mTicksPerSecond > 0 ? anim->mTicksPerSecond : 25},
+    duration{double(numFrames) / numFPS},
     numBoneAnims{anim->mNumChannels},
     boneAnims{}
   {
@@ -189,7 +189,7 @@ struct Node {
   int index;
 };
 
-class SkeletalAnimationUtils{
+class SkeletalAnimationUtils {
  public:
 
   static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(aiScene const*);

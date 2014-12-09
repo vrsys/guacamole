@@ -8,7 +8,7 @@
 //external headers
 #include <iostream>
 
-namespace gua
+namespace gua 
 {
 SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     num_bones_{0},
@@ -44,8 +44,6 @@ uint SkeletalAnimationDirector::getBoneID(std::string const& name) {
   return bone_mapping_.at(name);
 }
 
-
-
 void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
 {
   if(!hasAnims_ && !firstRun_) return;
@@ -65,7 +63,7 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
   //reserve vector for transforms
   std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
 
-  SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), root_, currAnimation_, transforms);
+  SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), root_->children[1]->children[0]->children[0], currAnimation_, transforms);
 
   bone_transforms_block_->update(ctx.render_context, transforms);
   ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
