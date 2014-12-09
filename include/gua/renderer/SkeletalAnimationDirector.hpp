@@ -218,13 +218,12 @@ class SkeletalAnimationDirector{
   void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
 
   void ReadNodeHierarchy(float AnimationTime, std::shared_ptr<Node> const& node, const scm::math::mat4f& ParentTransform);
-  void ReadNodeHierarchyStatic(std::shared_ptr<Node> const& pNode, const scm::math::mat4f& ParentTransform);
   void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);
   void CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, BoneAnimation const& nodeAnim);
   void CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);    
-  uint FindScaling(float AnimationTime, BoneAnimation const& nodeAnim);
-  uint FindRotation(float AnimationTime, BoneAnimation const& nodeAnim);
-  uint FindPosition(float AnimationTime, BoneAnimation const& nodeAnim);
+  static uint FindScaling(float AnimationTime, BoneAnimation const& nodeAnim);
+  static uint FindRotation(float AnimationTime, BoneAnimation const& nodeAnim);
+  static uint FindPosition(float AnimationTime, BoneAnimation const& nodeAnim);
   BoneAnimation const* FindNodeAnim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);
 
   std::map<std::string,uint> bone_mapping_; // maps a bone name to its index

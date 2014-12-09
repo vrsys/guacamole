@@ -70,13 +70,15 @@ void SkeletalAnimationDirector::BoneTransform(float TimeInSeconds, std::vector<s
   
   //if no frame frequency is given, set to 25
   float TicksPerSecond = 25.0f;
-  if(currAnimation_->keysPerSecond != 0)
-  {
-    TicksPerSecond = currAnimation_->keysPerSecond;
-  } 
+  float AnimationTime = 0;
 
-  float TimeInTicks = TimeInSeconds * TicksPerSecond;
-  float AnimationTime = fmod(TimeInTicks, (float)currAnimation_->duration);
+  if(currAnimation_) {
+    if(currAnimation_->keysPerSecond != 0) {
+      TicksPerSecond = currAnimation_->keysPerSecond;
+    } 
+    float TimeInTicks = TimeInSeconds * TicksPerSecond;
+    AnimationTime = fmod(TimeInTicks, (float)currAnimation_->duration);
+  }
 
   ReadNodeHierarchy(AnimationTime, root_, Identity);
 
@@ -147,28 +149,12 @@ SkeletalAnimationDirector::BoneAnimation const* SkeletalAnimationDirector::FindN
   return NULL;
 }
 
-
-void SkeletalAnimationDirector::ReadNodeHierarchyStatic(std::shared_ptr<Node> const& pNode, const scm::math::mat4f& ParentTransform)
-{    
-  std::string NodeName(pNode->name);
-     
-  scm::math::mat4f GlobalTransformation = ParentTransform * pNode->transformation;
-  
-  if (bone_mapping_.find(NodeName) != bone_mapping_.end()) {
-    uint BoneIndex = bone_mapping_[NodeName];
-    //bone_info_[BoneIndex].FinalTransformation = m_GlobalInverseTransform * GlobalTransformation * bone_info_[BoneIndex].BoneOffset;
-    bone_info_[BoneIndex].FinalTransformation = GlobalTransformation * bone_info_[BoneIndex].BoneOffset;
-  }
-  
-  for (uint i = 0 ; i < pNode->numChildren ; i++) {
-    ReadNodeHierarchyStatic(pNode->children[i], GlobalTransformation);
-  }
-}
 ////////////////////////////////////////////////////////////////////////////////
 
 void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
 {
   if(!hasAnims_ && !firstRun_) return;
+  if(!hasAnims_) firstRun_ = false;
 
   if(!bone_transforms_block_) {
     //TODO one transform block per context
@@ -177,18 +163,7 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
   //reserve vector for transforms
   std::vector<scm::math::mat4f> Transforms{num_bones_, scm::math::mat4f::identity()};
 
-  if(hasAnims_) {
-    BoneTransform(timer_.get_elapsed(), Transforms);
-  }
-  else {        //this will be only called once, transformations dont need to be updated without anims
-    ReadNodeHierarchyStatic(root_, scm::math::mat4f::identity());
-
-    for (uint i = 0 ; i < num_bones_ ; i++) {
-        Transforms[i] = bone_info_[i].FinalTransformation;
-    }
-
-    firstRun_ = false;
-  }
+  BoneTransform(timer_.get_elapsed(), Transforms);
 
   bone_transforms_block_->update(ctx.render_context, Transforms);
   ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
@@ -263,7 +238,7 @@ void SkeletalAnimationDirector::CalcInterpolatedPosition(scm::math::vec3& Out, f
       return;
   }
           
-  uint PositionIndex = FindPosition(AnimationTime, nodeAnim);
+  uint PositionIndex = SkeletalAnimationDirector::FindPosition(AnimationTime, nodeAnim);
   uint NextPositionIndex = (PositionIndex + 1);
 
   if(NextPositionIndex > nodeAnim.numTranslationKeys) {
@@ -289,7 +264,7 @@ void SkeletalAnimationDirector::CalcInterpolatedRotation(scm::math::quatf& Out, 
       return;
   }
   
-  uint RotationIndex = FindRotation(AnimationTime, nodeAnim);
+  uint RotationIndex = SkeletalAnimationDirector::FindRotation(AnimationTime, nodeAnim);
   uint NextRotationIndex = (RotationIndex + 1);
 
   if(NextRotationIndex > nodeAnim.numRotationKeys) {
@@ -315,7 +290,7 @@ void SkeletalAnimationDirector::CalcInterpolatedScaling(scm::math::vec3& Out, fl
       return;
   }
 
-  uint ScalingIndex = FindScaling(AnimationTime, nodeAnim);
+  uint ScalingIndex = SkeletalAnimationDirector::FindScaling(AnimationTime, nodeAnim);
   uint NextScalingIndex = (ScalingIndex + 1);
 
   if(NextScalingIndex > nodeAnim.numScalingKeys) {
