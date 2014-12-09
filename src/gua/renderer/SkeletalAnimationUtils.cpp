@@ -76,10 +76,10 @@ void SkeletalAnimationUtils::calculate_pose(float timeInSeconds, std::shared_ptr
   scm::math::mat4f identity = scm::math::mat4f::identity();
 
   std::map<std::string, Transformation> transformStructs{calculate_transforms(animationTime, pAnim)};
-  accumulate_transforms(transforms, animationTime, root, transformStructs, identity);
+  accumulate_transforms(transforms, root, transformStructs, identity);
 }
 
-void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, float animationTime, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transformStructs, scm::math::mat4f& parentTransform) {
+void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transformStructs, scm::math::mat4f& parentTransform) {
   
   scm::math::mat4f nodeTransformation{pNode->transformation};
 
@@ -95,7 +95,7 @@ void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>
   }
   
   for (uint i = 0 ; i < pNode->numChildren ; i++) {
-    accumulate_transforms(transformMat4s, animationTime, pNode->children[i], transformStructs, GlobalTransformation);
+    accumulate_transforms(transformMat4s, pNode->children[i], transformStructs, GlobalTransformation);
   }
 }
 

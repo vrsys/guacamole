@@ -48,11 +48,11 @@ class SkeletalAnimationDirector {
   void add_hierarchy(aiScene const* scene);
 
   uint getBoneID(std::string const& name);
-  
+
   void updateBoneTransforms(RenderContext const& ctx);
 
 private:
-
+void calculate_pose(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms);
   std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
   uint num_bones_;
 

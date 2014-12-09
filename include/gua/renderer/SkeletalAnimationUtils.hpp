@@ -205,12 +205,18 @@ struct Transformation {
     return scm::math::make_translation(translation) * rotation.to_matrix() * scm::math::make_scale(scaling);
   }
 
+  Transformation blend(Transformation const& t, float const factor) const {
+    return Transformation{scaling * (1 - factor) + t.scaling * factor, slerp(rotation, t.rotation, factor), translation * (1 - factor) + t.translation * factor};
+  }
+
   ~Transformation(){};
 
   scm::math::vec3 scaling;
   scm::math::quatf rotation;
   scm::math::vec3 translation;
 };
+
+
 
 class SkeletalAnimationUtils {
  public:
@@ -223,6 +229,8 @@ class SkeletalAnimationUtils {
   
   static void calculate_pose(float TimeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& Transforms);
 
+  static void accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transforms, scm::math::mat4f& ParentTransform);
+  static std::map<std::string, Transformation> calculate_transforms(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim);
  private:
 
   static scm::math::vec3 interpolate_scaling(float AnimationTime, BoneAnimation const& nodeAnim);
@@ -236,8 +244,6 @@ class SkeletalAnimationUtils {
   static BoneAnimation const* find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);
   
   static void accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float AnimationTime, std::shared_ptr<Node> const& node, std::shared_ptr<SkeletalAnimation> const& anim, scm::math::mat4f& ParentTransform);
-  static void accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, float animationTime, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transforms, scm::math::mat4f& ParentTransform);
-  static std::map<std::string, Transformation> calculate_transforms(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim);
   
   inline SkeletalAnimationUtils(){};
   inline ~SkeletalAnimationUtils(){};
