@@ -45,7 +45,7 @@ public : // typedef/enums/friends
 
   TriMeshNode(std::string const& node_name = "",
               std::string const& geometry_description = "gua_default_geometry",
-              std::shared_ptr<Material> const& material = std::make_shared<Material>(),
+              std::shared_ptr<Material> const& material = nullptr,
               math::mat4 const& transform = math::mat4::identity());
 
 public : // methods
