@@ -28,6 +28,8 @@
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
+#include <scm/gl_core/render_device/opengl/gl_core.h>
+
 // external headers
 #include <sstream>
 #include <iostream>
@@ -133,6 +135,9 @@ void WindowBase::init_context() {
                                                         scm::gl::FUNC_ONE,
                                                         scm::gl::FUNC_ONE,
                                                         scm::gl::FUNC_ONE);
+
+  ctx_.render_device->opengl_api().glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
   if (config.get_debug()) {
     ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
   }

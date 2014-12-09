@@ -2,10 +2,11 @@
   "name" : "FragmentColor",
   "source" : "
     void FragmentColor() {
-      gua_color = texture(samplerCube(color), gua_normal).rgb;
+      vec3 reflection_dir = reflect(gua_camera_position - gua_position, gua_normal);
+      gua_color = texture(samplerCube(color), reflection_dir).rgb;
       gua_roughness = 0.05;
       gua_metalness = 0.2;
-      gua_emissivity = 0;
+      gua_emissivity = 0.5;
     }
   ",
   "uniforms" :

@@ -97,7 +97,12 @@ namespace gua {
    * \param file             The file which contains the texture data.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  TextureCube(std::string const& file,
+  TextureCube(std::string const& file_px,
+            std::string const& file_nx,
+            std::string const& file_py,
+            std::string const& file_ny,
+            std::string const& file_pz,
+            std::string const& file_nz,
             bool generate_mipmaps = false,
             scm::gl::sampler_state_desc const& state_descripton =
                 scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
@@ -124,6 +129,13 @@ namespace gua {
 
   mutable unsigned width_;
   mutable unsigned height_;
+
+  std::string file_px_;
+  std::string file_nx_;
+  std::string file_py_;
+  std::string file_ny_;
+  std::string file_pz_;
+  std::string file_nz_;
 
  private:
 

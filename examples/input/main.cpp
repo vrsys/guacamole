@@ -64,7 +64,12 @@ int main(int argc, char** argv) {
   auto mat(load_mat("data/materials/SimpleMaterial.gmd"));
   mat->set_uniform("color", std::string("mytex"));
 
-  auto cube_map = std::make_shared<gua::TextureCube>("/home/rufu1194/Desktop/ivy_diffuse.jpg");
+  auto cube_map = std::make_shared<gua::TextureCube>("/home/rufu1194/Desktop/skybox_px.png", 
+                                                     "/home/rufu1194/Desktop/skybox_nx.png",
+                                                     "/home/rufu1194/Desktop/skybox_py.png",
+                                                     "/home/rufu1194/Desktop/skybox_ny.png",
+                                                     "/home/rufu1194/Desktop/skybox_pz.png",
+                                                     "/home/rufu1194/Desktop/skybox_nz.png");
   gua::TextureDatabase::instance()->add("mytex", cube_map);
 
   gua::TriMeshLoader loader;
@@ -72,7 +77,7 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   // auto teapot(loader.create_geometry_from_file("teapot","/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_GEOMETRY));
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform", teapot);
+  graph.add_node("/", teapot);
   teapot->set_draw_bounding_box(true); 
 
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
@@ -91,53 +96,28 @@ int main(int argc, char** argv) {
   light2->scale(10.f);
   light2->translate(-2.f, 3.f, 5.f);
 
-  auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
+  auto screen = graph.add_node<gua::node::ScreenNode>("/transform", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  screen->translate(0, 0, 1.0);
-
-  //gua::VolumeLoader vloader;
-  //auto volume(vloader.create_volume_from_file("volume", "/opt/gua_vrgeo_2013/data/objects/head_w256_h256_d225_c1_b8.raw", 0));
-  //graph.add_node("/transform", volume);
-
-  auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
-  portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
+  screen->translate(0, 0, 0.5);
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
-  
-  auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0, 0, 2.0);
-  portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
-  portal_camera->config.set_screen_path("/portal_screen");
-  portal_camera->config.set_scene_graph_name("main_scenegraph");
-  portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(false);
 
-  gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
+  gua::TextureDatabase::instance()->load("/home/rufu1194/Desktop/skymap.jpg");
 
-  gua::PipelineDescription portal_pipe;
-  portal_pipe.add_pass<gua::TriMeshPassDescription>();
-  portal_pipe.add_pass<gua::EmissivePassDescription>();
-  portal_pipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  portal_pipe.add_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
-  portal_camera->config.set_pipeline_description(portal_pipe);
-
-  auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 2.0);
+  auto camera = graph.add_node<gua::node::CameraNode>("/transform/screen", "cam");
+  camera->translate(0, 0, 1.0);
   camera->config.set_resolution(resolution);
-  camera->config.set_screen_path("/screen");
+  camera->config.set_screen_path("/transform/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-  camera->set_pre_render_cameras({portal_camera});
   camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+    .mode(gua::BackgroundPassDescription::SKYMAP_TEXTURE)
+    .texture("/home/rufu1194/Desktop/skymap.jpg");
   //camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
   //  .radius(3)
   //  .intensity(2);
@@ -154,7 +134,7 @@ int main(int argc, char** argv) {
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    trackball.motion(pos.x, pos.y);
+    trackball.motion(-pos.x, -pos.y);
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
@@ -169,7 +149,7 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
+    auto modelmatrix = trackball.rotation() * scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance());
     transform->set_transform(modelmatrix);
 
     window->process_events();
