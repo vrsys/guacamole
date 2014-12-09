@@ -74,44 +74,51 @@ void SkeletalAnimationUtils::calculate_pose(float timeInSeconds, std::shared_ptr
   }
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
-  accumulate_transforms(transforms, animationTime, root, pAnim, identity);
+
+  std::map<std::string, Transformation> transformStructs{calculate_transforms(animationTime, pAnim)};
+  accumulate_transforms(transforms, animationTime, root, transformStructs, identity);
 }
 
-void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float animationTime, std::shared_ptr<Node> const& pNode, std::shared_ptr<SkeletalAnimation> const& pAnim, scm::math::mat4f& ParentTransform) {
+void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, float animationTime, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transformStructs, scm::math::mat4f& parentTransform) {
   
-  scm::math::mat4f NodeTransformation{pNode->transformation};
-   
-  BoneAnimation const* pNodeAnim = find_node_anim(pAnim, pNode->name);
+  scm::math::mat4f nodeTransformation{pNode->transformation};
 
-  if(pNodeAnim) {
-    BoneAnimation const& nodeAnim = *pNodeAnim;
-
-    // Interpolate scaling and generate scaling transformation matrix
-    scm::math::vec3 Scaling = interpolate_scaling(animationTime, nodeAnim);
-    scm::math::mat4f ScalingM = scm::math::make_scale(Scaling);
-
-    // Interpolate rotation and generate rotation transformation matrix
-    scm::math::quatf RotationQ = interpolate_rotation(animationTime, nodeAnim); 
-    scm::math::mat4f RotationM = RotationQ.to_matrix();
-
-    // Interpolate translation and generate translation transformation matrix
-    scm::math::vec3 Translation = interpolate_position(animationTime, nodeAnim);
-    scm::math::mat4f TranslationM = scm::math::make_translation(Translation);
-    
-    // Combine the above transformations
-    NodeTransformation = TranslationM * RotationM * ScalingM;  
+  if(transformStructs.find(pNode->name) != transformStructs.end()) { 
+    nodeTransformation = transformStructs.at(pNode->name).to_matrix();  
   }
   
-  scm::math::mat4f GlobalTransformation = ParentTransform * NodeTransformation;
+  scm::math::mat4f GlobalTransformation = parentTransform * nodeTransformation;
   
   //update transform if bone is mapped
   if (pNode->index >= 0) {
-    transforms[pNode->index] = GlobalTransformation * pNode->offsetMatrix;
+    transformMat4s[pNode->index] = GlobalTransformation * pNode->offsetMatrix;
   }
   
   for (uint i = 0 ; i < pNode->numChildren ; i++) {
-    accumulate_transforms(transforms, animationTime, pNode->children[i], pAnim, GlobalTransformation);
+    accumulate_transforms(transformMat4s, animationTime, pNode->children[i], transformStructs, GlobalTransformation);
   }
+}
+
+std::map<std::string, Transformation> SkeletalAnimationUtils::calculate_transforms(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim) {
+  
+  std::map<std::string, Transformation> transforms{};
+   
+  for(BoneAnimation const& boneAnim : pAnim->boneAnims) {
+    Transformation boneTransform{};
+
+    // Interpolate scaling and generate scaling transformation matrix
+    boneTransform.scaling = interpolate_scaling(animationTime, boneAnim);
+
+    // Interpolate rotation and generate rotation transformation matrix
+    boneTransform.rotation = interpolate_rotation(animationTime, boneAnim); 
+
+    // Interpolate translation and generate translation transformation matrix
+    boneTransform.translation = interpolate_position(animationTime, boneAnim);
+
+    transforms[boneAnim.name] = boneTransform;
+  }  
+
+  return transforms;
 }
 
 BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName) {
@@ -126,7 +133,6 @@ BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<Skel
 
   return NULL;
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 
 uint SkeletalAnimationUtils::find_position(float animationTime, BoneAnimation const& nodeAnim) {    
