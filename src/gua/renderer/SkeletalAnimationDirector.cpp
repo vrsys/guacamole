@@ -17,6 +17,7 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     firstRun_{true},
     animations_{},
     currAnimation_{},
+    animNum{0},
     timer_{} {
   timer_.start();
   add_hierarchy(scene);
@@ -43,22 +44,7 @@ uint SkeletalAnimationDirector::getBoneID(std::string const& name) {
   return bone_mapping_.at(name);
 }
 
-void SkeletalAnimationDirector::calculate_pose(float TimeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
- 
-  //if no frame frequency is given, set to 25
-  float TicksPerSecond = 25.0f;
-  float AnimationTime = 0;
 
-  if(pAnim) {
-    if(pAnim->keysPerSecond != 0) {
-      TicksPerSecond = pAnim->keysPerSecond;
-    } 
-    float TimeInTicks = TimeInSeconds * TicksPerSecond;
-    AnimationTime = fmod(TimeInTicks, (float)pAnim->duration);
-  }
-  scm::math::mat4f identity = scm::math::mat4f::identity();
-  SkeletalAnimationUtils::accumulate_transforms(transforms, AnimationTime, root_, pAnim, identity );
-}
 
 void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
 {
@@ -69,14 +55,20 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
     //TODO one transform block per context
     bone_transforms_block_ = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
   }
+
+  if(timer_.get_elapsed() > currAnimation_->duration) {
+    timer_.reset();
+    currAnimation_ = animations_[animNum % animations_.size()];
+    ++animNum;
+  }
+
   //reserve vector for transforms
   std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
 
-  calculate_pose(timer_.get_elapsed(), currAnimation_, transforms);
+  SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), root_, currAnimation_, transforms);
 
   bone_transforms_block_->update(ctx.render_context, transforms);
   ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
-
 }
 
 } // namespace gua
