@@ -38,18 +38,18 @@
 
 namespace gua {
 
-class SkeletalAnimationDirector{
+class SkeletalAnimationDirector {
  public:
 
   SkeletalAnimationDirector(aiScene const*);
   inline ~SkeletalAnimationDirector(){};
 
-  uint getBoneID(std::string const& name);
-  void updateBoneTransforms(RenderContext const& ctx);
-
   void add_animations(aiScene const* scene);
-
   void add_hierarchy(aiScene const* scene);
+
+  uint getBoneID(std::string const& name);
+  
+  void updateBoneTransforms(RenderContext const& ctx);
 
 private:
 

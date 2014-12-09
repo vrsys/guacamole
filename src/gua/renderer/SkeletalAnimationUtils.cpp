@@ -7,8 +7,7 @@
 //external headers
 #include <iostream>
 
-namespace gua
-{
+namespace gua {
 
 void SkeletalAnimationUtils::collect_bone_indices(std::map<std::string, uint>& ids, std::shared_ptr<Node> const& pNode) {
   ids[pNode->name] = pNode->index;
@@ -65,46 +64,41 @@ std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_ani
   return animations;
 }
 
-void SkeletalAnimationUtils::calculate_pose(float TimeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationUtils::calculate_pose(float timeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
  
-  //if no frame frequency is given, set to 25
-  float TicksPerSecond = 25.0f;
-  float AnimationTime = 0;
+  float animationTime = 0;
 
   if(pAnim) {
-    if(pAnim->numFPS != 0) {
-      TicksPerSecond = pAnim->numFPS;
-    } 
-    float TimeInTicks = TimeInSeconds * TicksPerSecond;
-    AnimationTime = fmod(TimeInTicks, (float)pAnim->numFrames);
+    float timeInFrames = timeInSeconds * pAnim->numFPS;
+    animationTime = fmod(timeInFrames, (float)pAnim->numFrames);
   }
+
   scm::math::mat4f identity = scm::math::mat4f::identity();
-  accumulate_transforms(transforms, AnimationTime, root, pAnim, identity);
+  accumulate_transforms(transforms, animationTime, root, pAnim, identity);
 }
 
-void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float AnimationTime, std::shared_ptr<Node> const& pNode, std::shared_ptr<SkeletalAnimation> const& pAnim, scm::math::mat4f& ParentTransform)
-{
-      
+void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float animationTime, std::shared_ptr<Node> const& pNode, std::shared_ptr<SkeletalAnimation> const& pAnim, scm::math::mat4f& ParentTransform) {
+  
   scm::math::mat4f NodeTransformation{pNode->transformation};
    
-  BoneAnimation const* pNodeAnim = SkeletalAnimationUtils::find_node_anim(pAnim, pNode->name);
+  BoneAnimation const* pNodeAnim = find_node_anim(pAnim, pNode->name);
 
   if(pNodeAnim) {
     BoneAnimation const& nodeAnim = *pNodeAnim;
 
     // Interpolate scaling and generate scaling transformation matrix
     scm::math::vec3 Scaling;
-    SkeletalAnimationUtils::interpolate_scaling(Scaling, AnimationTime, nodeAnim);
+    interpolate_scaling(Scaling, animationTime, nodeAnim);
     scm::math::mat4f ScalingM = scm::math::make_scale(Scaling);
 
     // Interpolate rotation and generate rotation transformation matrix
     scm::math::quatf RotationQ;
-    SkeletalAnimationUtils::interpolate_rotation(RotationQ, AnimationTime, nodeAnim); 
+    interpolate_rotation(RotationQ, animationTime, nodeAnim); 
     scm::math::mat4f RotationM = RotationQ.to_matrix();
 
     // Interpolate translation and generate translation transformation matrix
     scm::math::vec3 Translation;
-    SkeletalAnimationUtils::interpolate_position(Translation, AnimationTime, nodeAnim);
+    interpolate_position(Translation, animationTime, nodeAnim);
     scm::math::mat4f TranslationM = scm::math::make_translation(Translation);
     
     // Combine the above transformations
@@ -119,12 +113,11 @@ void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>
   }
   
   for (uint i = 0 ; i < pNode->numChildren ; i++) {
-    accumulate_transforms(transforms, AnimationTime, pNode->children[i], pAnim, GlobalTransformation);
+    accumulate_transforms(transforms, animationTime, pNode->children[i], pAnim, GlobalTransformation);
   }
 }
 
-BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName)
-{
+BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName) {
   for (uint i = 0 ; i < pAnimation->numBoneAnims ; i++) {
     BoneAnimation const& nodeAnim = pAnimation->boneAnims[i];
     
@@ -141,15 +134,14 @@ BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<Skel
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint SkeletalAnimationUtils::find_position(float AnimationTime, BoneAnimation const& nodeAnim)
-{    
+uint SkeletalAnimationUtils::find_position(float animationTime, BoneAnimation const& nodeAnim) {    
   if(nodeAnim.numTranslationKeys < 1) {
     Logger::LOG_ERROR << "no keys" << std::endl;
     assert(false);
   } 
 
   for (uint i = 0 ; i < nodeAnim.numTranslationKeys - 1 ; i++) {
-    if (AnimationTime < (float)nodeAnim.translationKeys[i + 1].time) {
+    if (animationTime < (float)nodeAnim.translationKeys[i + 1].time) {
         return i;
     }
   }
@@ -161,15 +153,14 @@ uint SkeletalAnimationUtils::find_position(float AnimationTime, BoneAnimation co
 }
 
 
-uint SkeletalAnimationUtils::find_rotation(float AnimationTime, BoneAnimation const& nodeAnim)
-{
+uint SkeletalAnimationUtils::find_rotation(float animationTime, BoneAnimation const& nodeAnim) {
   if(nodeAnim.numRotationKeys < 1) {
     Logger::LOG_ERROR << "no keys" << std::endl;
     assert(false);
   }
 
   for (uint i = 0 ; i < nodeAnim.numRotationKeys - 1 ; i++) {
-    if (AnimationTime < (float)nodeAnim.rotationKeys[i + 1].time) {
+    if (animationTime < (float)nodeAnim.rotationKeys[i + 1].time) {
         return i;
     }
   }
@@ -181,15 +172,14 @@ uint SkeletalAnimationUtils::find_rotation(float AnimationTime, BoneAnimation co
 }
 
 
-uint SkeletalAnimationUtils::find_scaling(float AnimationTime, BoneAnimation const& nodeAnim)
-{
+uint SkeletalAnimationUtils::find_scaling(float animationTime, BoneAnimation const& nodeAnim) {
   if(nodeAnim.numScalingKeys < 1) {
     Logger::LOG_ERROR << "no keys" << std::endl;
     assert(false);
   }
   
   for (uint i = 0 ; i < nodeAnim.numScalingKeys - 1 ; i++) {
-    if (AnimationTime < (float)nodeAnim.scalingKeys[i + 1].time) {
+    if (animationTime < (float)nodeAnim.scalingKeys[i + 1].time) {
         return i;
     }
   }
@@ -201,14 +191,13 @@ uint SkeletalAnimationUtils::find_scaling(float AnimationTime, BoneAnimation con
 }
 
 
-void SkeletalAnimationUtils::interpolate_position(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim)
-{
+void SkeletalAnimationUtils::interpolate_position(scm::math::vec3& Out, float animationTime, BoneAnimation const& nodeAnim) {
   if (nodeAnim.numTranslationKeys == 1) {
       Out = nodeAnim.translationKeys[0].value;
       return;
   }
           
-  uint PositionIndex = find_position(AnimationTime, nodeAnim);
+  uint PositionIndex = find_position(animationTime, nodeAnim);
   uint NextPositionIndex = (PositionIndex + 1);
 
   if(NextPositionIndex > nodeAnim.numTranslationKeys) {
@@ -217,7 +206,7 @@ void SkeletalAnimationUtils::interpolate_position(scm::math::vec3& Out, float An
   }
 
   float DeltaTime = (float)(nodeAnim.translationKeys[NextPositionIndex].time - nodeAnim.translationKeys[PositionIndex].time);
-  float Factor = (AnimationTime - (float)nodeAnim.translationKeys[PositionIndex].time) / DeltaTime;
+  float Factor = (animationTime - (float)nodeAnim.translationKeys[PositionIndex].time) / DeltaTime;
   //assert(Factor >= 0.0f && Factor <= 1.0f);
   scm::math::vec3 const& Start = nodeAnim.translationKeys[PositionIndex].value;
   scm::math::vec3 const& End = nodeAnim.translationKeys[NextPositionIndex].value;
@@ -226,15 +215,14 @@ void SkeletalAnimationUtils::interpolate_position(scm::math::vec3& Out, float An
 }
 
 
-void SkeletalAnimationUtils::interpolate_rotation(scm::math::quatf& Out, float AnimationTime, BoneAnimation const& nodeAnim)
-{
+void SkeletalAnimationUtils::interpolate_rotation(scm::math::quatf& Out, float animationTime, BoneAnimation const& nodeAnim) {
   // we need at least two values to interpolate...
   if (nodeAnim.numRotationKeys == 1) {
       Out = nodeAnim.rotationKeys[0].value;
       return;
   }
   
-  uint RotationIndex = find_rotation(AnimationTime, nodeAnim);
+  uint RotationIndex = find_rotation(animationTime, nodeAnim);
   uint NextRotationIndex = (RotationIndex + 1);
 
   if(NextRotationIndex > nodeAnim.numRotationKeys) {
@@ -243,7 +231,7 @@ void SkeletalAnimationUtils::interpolate_rotation(scm::math::quatf& Out, float A
   }
 
   float DeltaTime = (float)(nodeAnim.rotationKeys[NextRotationIndex].time - nodeAnim.rotationKeys[RotationIndex].time);
-  float Factor = (AnimationTime - (float)nodeAnim.rotationKeys[RotationIndex].time) / DeltaTime;
+  float Factor = (animationTime - (float)nodeAnim.rotationKeys[RotationIndex].time) / DeltaTime;
   //assert(Factor >= 0.0f && Factor <= 1.0f);
   scm::math::quatf const& StartRotationQ = nodeAnim.rotationKeys[RotationIndex].value;
   scm::math::quatf const& EndRotationQ   = nodeAnim.rotationKeys[NextRotationIndex].value;  
@@ -253,14 +241,13 @@ void SkeletalAnimationUtils::interpolate_rotation(scm::math::quatf& Out, float A
 }
 
 
-void SkeletalAnimationUtils::interpolate_scaling(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim)
-{
+void SkeletalAnimationUtils::interpolate_scaling(scm::math::vec3& Out, float animationTime, BoneAnimation const& nodeAnim) {
   if (nodeAnim.numScalingKeys == 1) {
       Out = nodeAnim.scalingKeys[0].value;
       return;
   }
 
-  uint ScalingIndex = find_scaling(AnimationTime, nodeAnim);
+  uint ScalingIndex = find_scaling(animationTime, nodeAnim);
   uint NextScalingIndex = (ScalingIndex + 1);
 
   if(NextScalingIndex > nodeAnim.numScalingKeys) {
@@ -269,13 +256,12 @@ void SkeletalAnimationUtils::interpolate_scaling(scm::math::vec3& Out, float Ani
   }
 
   float DeltaTime = (float)(nodeAnim.scalingKeys[NextScalingIndex].time - nodeAnim.scalingKeys[ScalingIndex].time);
-  float Factor = (AnimationTime - (float)nodeAnim.scalingKeys[ScalingIndex].time) / DeltaTime;
+  float Factor = (animationTime - (float)nodeAnim.scalingKeys[ScalingIndex].time) / DeltaTime;
   //assert(Factor >= 0.0f && Factor <= 1.0f);
   scm::math::vec3 const& Start = nodeAnim.scalingKeys[ScalingIndex].value;
   scm::math::vec3 const& End   = nodeAnim.scalingKeys[NextScalingIndex].value;
   scm::math::vec3 Delta = End - Start;
   Out = Start + Factor * Delta;
 }
-
 
 } // namespace gua
