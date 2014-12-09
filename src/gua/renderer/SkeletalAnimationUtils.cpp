@@ -87,18 +87,15 @@ void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>
     BoneAnimation const& nodeAnim = *pNodeAnim;
 
     // Interpolate scaling and generate scaling transformation matrix
-    scm::math::vec3 Scaling;
-    interpolate_scaling(Scaling, animationTime, nodeAnim);
+    scm::math::vec3 Scaling = interpolate_scaling(animationTime, nodeAnim);
     scm::math::mat4f ScalingM = scm::math::make_scale(Scaling);
 
     // Interpolate rotation and generate rotation transformation matrix
-    scm::math::quatf RotationQ;
-    interpolate_rotation(RotationQ, animationTime, nodeAnim); 
+    scm::math::quatf RotationQ = interpolate_rotation(animationTime, nodeAnim); 
     scm::math::mat4f RotationM = RotationQ.to_matrix();
 
     // Interpolate translation and generate translation transformation matrix
-    scm::math::vec3 Translation;
-    interpolate_position(Translation, animationTime, nodeAnim);
+    scm::math::vec3 Translation = interpolate_position(animationTime, nodeAnim);
     scm::math::mat4f TranslationM = scm::math::make_translation(Translation);
     
     // Combine the above transformations
@@ -127,8 +124,6 @@ BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<Skel
     }
   }
 
-  //Logger::LOG_ERROR << "No matching bone in animation hierarchy found" << std::endl;
-  //assert(false);
   return NULL;
 }
 
@@ -152,7 +147,6 @@ uint SkeletalAnimationUtils::find_position(float animationTime, BoneAnimation co
   return 0;
 }
 
-
 uint SkeletalAnimationUtils::find_rotation(float animationTime, BoneAnimation const& nodeAnim) {
   if(nodeAnim.numRotationKeys < 1) {
     Logger::LOG_ERROR << "no keys" << std::endl;
@@ -170,7 +164,6 @@ uint SkeletalAnimationUtils::find_rotation(float animationTime, BoneAnimation co
 
   return 0;
 }
-
 
 uint SkeletalAnimationUtils::find_scaling(float animationTime, BoneAnimation const& nodeAnim) {
   if(nodeAnim.numScalingKeys < 1) {
@@ -190,11 +183,9 @@ uint SkeletalAnimationUtils::find_scaling(float animationTime, BoneAnimation con
   return 0;
 }
 
-
-void SkeletalAnimationUtils::interpolate_position(scm::math::vec3& Out, float animationTime, BoneAnimation const& nodeAnim) {
+scm::math::vec3 SkeletalAnimationUtils::interpolate_position(float animationTime, BoneAnimation const& nodeAnim) {
   if (nodeAnim.numTranslationKeys == 1) {
-      Out = nodeAnim.translationKeys[0].value;
-      return;
+      return nodeAnim.translationKeys[0].value;
   }
           
   uint PositionIndex = find_position(animationTime, nodeAnim);
@@ -211,15 +202,15 @@ void SkeletalAnimationUtils::interpolate_position(scm::math::vec3& Out, float an
   scm::math::vec3 const& Start = nodeAnim.translationKeys[PositionIndex].value;
   scm::math::vec3 const& End = nodeAnim.translationKeys[NextPositionIndex].value;
   scm::math::vec3 Delta = End - Start;
-  Out = Start + Factor * Delta;
+
+  return Start + Factor * Delta;
 }
 
-
-void SkeletalAnimationUtils::interpolate_rotation(scm::math::quatf& Out, float animationTime, BoneAnimation const& nodeAnim) {
+scm::math::quatf SkeletalAnimationUtils::interpolate_rotation(float animationTime, BoneAnimation const& nodeAnim) {
   // we need at least two values to interpolate...
   if (nodeAnim.numRotationKeys == 1) {
-      Out = nodeAnim.rotationKeys[0].value;
-      return;
+      return nodeAnim.rotationKeys[0].value;
+
   }
   
   uint RotationIndex = find_rotation(animationTime, nodeAnim);
@@ -237,14 +228,13 @@ void SkeletalAnimationUtils::interpolate_rotation(scm::math::quatf& Out, float a
   scm::math::quatf const& EndRotationQ   = nodeAnim.rotationKeys[NextRotationIndex].value;  
   scm::math::quatf temp;  
   temp = slerp(StartRotationQ, EndRotationQ, Factor);
-  Out = normalize(temp);
+
+  return normalize(temp);
 }
 
-
-void SkeletalAnimationUtils::interpolate_scaling(scm::math::vec3& Out, float animationTime, BoneAnimation const& nodeAnim) {
+scm::math::vec3 SkeletalAnimationUtils::interpolate_scaling(float animationTime, BoneAnimation const& nodeAnim) {
   if (nodeAnim.numScalingKeys == 1) {
-      Out = nodeAnim.scalingKeys[0].value;
-      return;
+     return nodeAnim.scalingKeys[0].value;
   }
 
   uint ScalingIndex = find_scaling(animationTime, nodeAnim);
@@ -261,7 +251,8 @@ void SkeletalAnimationUtils::interpolate_scaling(scm::math::vec3& Out, float ani
   scm::math::vec3 const& Start = nodeAnim.scalingKeys[ScalingIndex].value;
   scm::math::vec3 const& End   = nodeAnim.scalingKeys[NextScalingIndex].value;
   scm::math::vec3 Delta = End - Start;
-  Out = Start + Factor * Delta;
+
+  return Start + Factor * Delta;
 }
 
 } // namespace gua
