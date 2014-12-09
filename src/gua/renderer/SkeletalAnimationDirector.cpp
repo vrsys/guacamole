@@ -12,23 +12,22 @@ namespace gua
 SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene)
     :num_bones_(0),
     bone_transforms_block_(nullptr),
-    scene_{scene},
     hasAnims_{scene->HasAnimations()},
     firstRun_{true},
     animations_{},
     currAnimation_{},
     timer_(){
   timer_.start();
-  LoadBones();
-  LoadHierarchy();
+  LoadBones(scene);
+  root_ = SkeletalAnimationDirector::LoadHierarchy(scene);
 }
 
-void SkeletalAnimationDirector::LoadBones() {
+void SkeletalAnimationDirector::LoadBones(aiScene const* scene) {
 
-  for (uint i = 0 ; i < scene_->mNumMeshes ; i++) {
-    for (uint b = 0; b < scene_->mMeshes[i]->mNumBones; ++b){
+  for (uint i = 0 ; i < scene->mNumMeshes ; i++) {
+    for (uint b = 0; b < scene->mMeshes[i]->mNumBones; ++b){
 
-      std::string BoneName(scene_->mMeshes[i]->mBones[b]->mName.data);  
+      std::string BoneName(scene->mMeshes[i]->mBones[b]->mName.data);  
       if (bone_mapping_.find(BoneName) == bone_mapping_.end()) {
 
         // Allocate an index for a new bone
@@ -37,17 +36,15 @@ void SkeletalAnimationDirector::LoadBones() {
         BoneInfo bi;      
 
         bone_info_.push_back(bi);
-        bone_info_[BoneIndex].BoneOffset = ai_to_gua(scene_->mMeshes[i]->mBones[b]->mOffsetMatrix);   
+        bone_info_[BoneIndex].BoneOffset = ai_to_gua(scene->mMeshes[i]->mBones[b]->mOffsetMatrix);   
         bone_mapping_[BoneName] = BoneIndex;
       }
-
     }
-
   }
-
 }
-void SkeletalAnimationDirector::LoadHierarchy() {
-  root_ = std::make_shared<Node>(scene_->mRootNode);
+
+std::shared_ptr<SkeletalAnimationDirector::Node> SkeletalAnimationDirector::LoadHierarchy(aiScene const* scene) {
+  return std::make_shared<Node>(scene->mRootNode);
 }
 
 void SkeletalAnimationDirector::LoadAnimations(aiScene const* scene) {
@@ -95,24 +92,24 @@ void SkeletalAnimationDirector::ReadNodeHierarchy(float AnimationTime, std::shar
       
   scm::math::mat4f NodeTransformation{pNode->transformation};
    
-  BoneAnimation const* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
+  BoneAnimation const* pNodeAnim = SkeletalAnimationDirector::FindNodeAnim(pAnimation, NodeName);
 
   if(pNodeAnim) {
     BoneAnimation const& nodeAnim = *pNodeAnim;
 
     // Interpolate scaling and generate scaling transformation matrix
     scm::math::vec3 Scaling;
-    CalcInterpolatedScaling(Scaling, AnimationTime, nodeAnim);
+    SkeletalAnimationDirector::CalcInterpolatedScaling(Scaling, AnimationTime, nodeAnim);
     scm::math::mat4f ScalingM = scm::math::make_scale(Scaling);
 
     // Interpolate rotation and generate rotation transformation matrix
     scm::math::quatf RotationQ;
-    CalcInterpolatedRotation(RotationQ, AnimationTime, nodeAnim); 
+    SkeletalAnimationDirector::CalcInterpolatedRotation(RotationQ, AnimationTime, nodeAnim); 
     scm::math::mat4f RotationM = RotationQ.to_matrix();
 
     // Interpolate translation and generate translation transformation matrix
     scm::math::vec3 Translation;
-    CalcInterpolatedPosition(Translation, AnimationTime, nodeAnim);
+    SkeletalAnimationDirector::CalcInterpolatedPosition(Translation, AnimationTime, nodeAnim);
     scm::math::mat4f TranslationM = scm::math::make_translation(Translation);
     
     // Combine the above transformations
