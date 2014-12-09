@@ -135,7 +135,7 @@ void NURBSLoader::apply_fallback_material(std::shared_ptr<node::Node> const& roo
 {
   auto g_node(std::dynamic_pointer_cast<node::NURBSNode>(root));
 
-  if (g_node && g_node->get_material().get_shader_name() == "") {
+  if (g_node && !g_node->get_material()) {
     g_node->set_material(fallback_material);
     g_node->update_cache();
   }
