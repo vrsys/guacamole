@@ -95,7 +95,8 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   if (uniform_color_map != "") {
     new_mat->set_uniform("ColorMap", assets + uniform_color_map);
   } else if (uniform_color != "") {
-    new_mat->set_uniform("Color", string_utils::from_string<math::vec3>(uniform_color));
+    auto c(string_utils::from_string<math::vec3>(uniform_color));
+    new_mat->set_uniform("Color", math::vec4(c.x, c.y, c.z, 1.f));
   }
 
   if (uniform_roughness_map != "") {
@@ -123,18 +124,18 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   }
 
   if (uniform_opacity_map != "") {
-    new_mat->set_uniform("OpacityMap", assets + uniform_opacity_map);
+    Logger::LOG_WARNING << "Material not fully supported: guacamole does not support opacity maps. Please use the alpha channel of your diffuse map!" << std::endl;
   }
   
-  // if (uniform_reflection_map != "")
-  // new_mat.set_uniform("uniform_reflection_map"),
-  // assets + uniform_reflection_map;
+  if (uniform_reflection_map != "") {
+    Logger::LOG_WARNING << "Material not fully supported: guacamole does not support reflection maps." << std::endl;
+  }
 
-  // if (ambient_map != "") {
-  //   new_mat.set_uniform("ambient_map", assets + ambient_map);
-  // } else if (ambient_color != "") {
-  //   new_mat.set_uniform("ambient_color", string_utils::from_string<math::vec3>(ambient_color));
-  // }
+  if (ambient_map != "") {
+    Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
+  } else if (ambient_color != "") {
+    Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient colors." << std::endl;
+  }
 
   return new_mat;
 }
