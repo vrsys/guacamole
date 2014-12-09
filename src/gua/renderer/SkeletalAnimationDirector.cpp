@@ -44,6 +44,31 @@ uint SkeletalAnimationDirector::getBoneID(std::string const& name) {
   return bone_mapping_.at(name);
 }
 
+void SkeletalAnimationDirector::calculate_pose(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
+ 
+  float animationTime1 = 0;
+  float animationTime2 = 0;
+
+  float timeInFrames = timeInSeconds * pAnim1->numFPS;
+  animationTime1 = fmod(timeInFrames, (float)pAnim1->numFrames);
+
+  timeInFrames = timeInSeconds * pAnim2->numFPS;
+  animationTime2 = fmod(timeInFrames, (float)pAnim2->numFrames);
+
+  scm::math::mat4f identity = scm::math::mat4f::identity();
+  float blendFactor = 0.3;
+
+  std::map<std::string, Transformation> transformStructs1{SkeletalAnimationUtils::calculate_transforms(animationTime1, pAnim1)};
+  std::map<std::string, Transformation> transformStructs2{SkeletalAnimationUtils::calculate_transforms(animationTime2, pAnim2)};
+  
+  auto iter = transformStructs2.begin();
+  for_each(transformStructs1.begin(), transformStructs1.end(), [&transformStructs2, &blendFactor, &iter](std::pair<std::string, Transformation> p) {
+    iter->second = p.second.blend(iter->second, blendFactor);
+    ++iter;
+  });
+  SkeletalAnimationUtils::accumulate_transforms(transforms, root_, transformStructs2, identity);
+}
+
 void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
 {
   if(!hasAnims_ && !firstRun_) return;
@@ -63,7 +88,8 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
   //reserve vector for transforms
   std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
 
-  SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), root_->children[1]->children[0]->children[0], currAnimation_, transforms);
+  //SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), root_->children[1]->children[0]->children[0], currAnimation_, transforms);
+  calculate_pose(timer_.get_elapsed(), animations_[0], animations_[1], transforms);
 
   bone_transforms_block_->update(ctx.render_context, transforms);
   ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
