@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
   auto mat(load_mat("data/materials/SimpleMaterial.gmd"));
   mat->set_uniform("color", std::string("mytex"));
 
-  auto cube_map = std::make_shared<gua::TextureCube>("/opt/guacamole/resources/skymaps/sunrise.jpg");
+  auto cube_map = std::make_shared<gua::TextureCube>("/home/rufu1194/Desktop/ivy_diffuse.jpg");
   gua::TextureDatabase::instance()->add("mytex", cube_map);
 
   gua::TriMeshLoader loader;
