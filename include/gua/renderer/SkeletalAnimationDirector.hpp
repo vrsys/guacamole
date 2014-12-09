@@ -75,18 +75,12 @@ class SkeletalAnimationDirector{
 
   struct BoneInfo
   {
-    scm::math::mat4f BoneOffset;
-    scm::math::mat4f FinalTransformation;        
+    scm::math::mat4f BoneOffset;      
 
     BoneInfo()
     {
-      //BoneOffset.SetZero();
-      //FinalTransformation.SetZero();
-
-      BoneOffset = scm::math::mat4f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-      FinalTransformation = scm::math::mat4f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);              
+      BoneOffset = scm::math::mat4f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);           
     }
-  
   };
 
   struct Vec3Key {
@@ -192,9 +186,11 @@ class SkeletalAnimationDirector{
 
   struct Node {
     Node(aiNode const* node):
+      index{-1},
       name{node->mName.C_Str()},
       numChildren{node->mNumChildren},
-      transformation{ai_to_gua(node->mTransformation)}
+      transformation{ai_to_gua(node->mTransformation)},
+      offsetMatrix{scm::math::mat4f::identity()}
     {
       for(unsigned i = 0; i < node->mNumChildren; ++i) {
         std::shared_ptr<Node> child = std::make_shared<Node>(node->mChildren[i]);
@@ -208,24 +204,27 @@ class SkeletalAnimationDirector{
     unsigned numChildren;
     std::vector<std::shared_ptr<Node>> children;
     scm::math::mat4f transformation;
+    //transforms to bone space
+    scm::math::mat4f offsetMatrix;
+    int index;
   };
 
-  static std::shared_ptr<Node> LoadHierarchy(aiScene const* scene);
+  std::shared_ptr<Node> load_hierarchy(aiScene const* scene);
   
-  static void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);
-  static void CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, BoneAnimation const& nodeAnim);
-  static void CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);    
-  static uint FindScaling(float AnimationTime, BoneAnimation const& nodeAnim);
-  static uint FindRotation(float AnimationTime, BoneAnimation const& nodeAnim);
-  static uint FindPosition(float AnimationTime, BoneAnimation const& nodeAnim);
-  static BoneAnimation const* FindNodeAnim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);
+  static void interpolate_scaling(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);
+  static void interpolate_rotation(scm::math::quatf& Out, float AnimationTime, BoneAnimation const& nodeAnim);
+  static void interpolate_position(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);    
+  static uint find_scaling(float AnimationTime, BoneAnimation const& nodeAnim);
+  static uint find_rotation(float AnimationTime, BoneAnimation const& nodeAnim);
+  static uint find_position(float AnimationTime, BoneAnimation const& nodeAnim);
+  static BoneAnimation const* find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);
  
 private:
-  void LoadBones(aiScene const* scene);
+  static void set_bone_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& info, std::shared_ptr<Node>& currNode);
 
-  void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
+  void calculate_pose(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
 
-  void ReadNodeHierarchy(float AnimationTime, std::shared_ptr<Node> const& node, const scm::math::mat4f& ParentTransform);
+  void accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float AnimationTime, std::shared_ptr<Node> const& node, const scm::math::mat4f& ParentTransform);
 
   std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
   uint num_bones_;
