@@ -152,6 +152,8 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
   }
   gua::string_utils::replace(source, "@material_method_calls", sstr.str());
 
+  // std::cout << string_utils::format_code(source) << std::endl;
+
   // indent and return code ----------------------------------------------------
   return string_utils::format_code(source);
 }
