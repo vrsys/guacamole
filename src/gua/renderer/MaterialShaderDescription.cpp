@@ -119,4 +119,16 @@ std::list<MaterialShaderMethod> const& MaterialShaderDescription::get_fragment_m
   return fragment_methods_;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+MaterialShaderDescription& MaterialShaderDescription::clear_vertex_methods() {
+  vertex_methods_.clear();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+MaterialShaderDescription& MaterialShaderDescription::clear_fragment_methods() {
+  fragment_methods_.clear();
+  return *this;
+}
+
 }
