@@ -44,8 +44,12 @@ class GUA_DLL MaterialShaderDescription {
   MaterialShaderDescription& add_vertex_method(MaterialShaderMethod const& method);
   MaterialShaderDescription& add_fragment_method(MaterialShaderMethod const& method);
 
+
   std::list<MaterialShaderMethod> const& get_vertex_methods() const;
   std::list<MaterialShaderMethod> const& get_fragment_methods() const;
+
+  MaterialShaderDescription& clear_vertex_methods();
+  MaterialShaderDescription& clear_fragment_methods();
 
  private:
   std::list<MaterialShaderMethod> vertex_methods_;
