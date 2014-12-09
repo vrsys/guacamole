@@ -151,7 +151,6 @@ struct SkeletalAnimation {
     for(unsigned i = 0; i < numBoneAnims; ++i) {
       boneAnims.push_back(BoneAnimation{anim->mChannels[i]});
     }
-    std::cout << "duration " << anim->mDuration << std::endl;
   }
 
   ~SkeletalAnimation(){};
@@ -197,13 +196,14 @@ class SkeletalAnimationUtils {
 
   static void set_bone_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& info, std::shared_ptr<Node>& currNode);
   static void collect_bone_indices(std::map<std::string, uint>& ids, std::shared_ptr<Node> const& pNode);
+  
   static void calculate_pose(float TimeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& Transforms);
 
  private:
 
-  static void interpolate_scaling(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);
-  static void interpolate_rotation(scm::math::quatf& Out, float AnimationTime, BoneAnimation const& nodeAnim);
-  static void interpolate_position(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);    
+  static scm::math::vec3 interpolate_scaling(float AnimationTime, BoneAnimation const& nodeAnim);
+  static scm::math::quatf interpolate_rotation(float AnimationTime, BoneAnimation const& nodeAnim);
+  static scm::math::vec3 interpolate_position(float AnimationTime, BoneAnimation const& nodeAnim);    
   static uint find_scaling(float AnimationTime, BoneAnimation const& nodeAnim);
   static uint find_rotation(float AnimationTime, BoneAnimation const& nodeAnim);
   static uint find_position(float AnimationTime, BoneAnimation const& nodeAnim);
