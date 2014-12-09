@@ -53,14 +53,14 @@ class SkeletalAnimationDirector{
 
 private:
 
-  void calculate_pose(float TimeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& Transforms);
-
   std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
   uint num_bones_;
 
   std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
 
   std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
+
+  unsigned animNum;
   std::shared_ptr<SkeletalAnimation> currAnimation_;
 
   std::shared_ptr<Node> root_;

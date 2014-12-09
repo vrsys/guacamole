@@ -65,6 +65,23 @@ std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_ani
   return animations;
 }
 
+void SkeletalAnimationUtils::calculate_pose(float TimeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
+ 
+  //if no frame frequency is given, set to 25
+  float TicksPerSecond = 25.0f;
+  float AnimationTime = 0;
+
+  if(pAnim) {
+    if(pAnim->numFPS != 0) {
+      TicksPerSecond = pAnim->numFPS;
+    } 
+    float TimeInTicks = TimeInSeconds * TicksPerSecond;
+    AnimationTime = fmod(TimeInTicks, (float)pAnim->numFrames);
+  }
+  scm::math::mat4f identity = scm::math::mat4f::identity();
+  accumulate_transforms(transforms, AnimationTime, root, pAnim, identity);
+}
+
 void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float AnimationTime, std::shared_ptr<Node> const& pNode, std::shared_ptr<SkeletalAnimation> const& pAnim, scm::math::mat4f& ParentTransform)
 {
       
