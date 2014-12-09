@@ -136,7 +136,7 @@ namespace gua {
         if(!scene->HasAnimations()) {
           Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;
         }
-        skelNode->get_director()->LoadAnimations(scene);
+        skelNode->get_director()->add_animations(scene);
         return;
 
       } else {
