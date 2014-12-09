@@ -71,7 +71,7 @@ class SkeletalAnimationDirector{
  
  void LoadAnimations(aiScene const*);
  
- private:
+
 
   struct BoneInfo
   {
@@ -210,21 +210,22 @@ class SkeletalAnimationDirector{
     scm::math::mat4f transformation;
   };
 
-  //void LoadBones(uint MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones);
-
-  void LoadBones();
-  void LoadHierarchy();
+  static std::shared_ptr<Node> LoadHierarchy(aiScene const* scene);
+  
+  static void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);
+  static void CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, BoneAnimation const& nodeAnim);
+  static void CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);    
+  static uint FindScaling(float AnimationTime, BoneAnimation const& nodeAnim);
+  static uint FindRotation(float AnimationTime, BoneAnimation const& nodeAnim);
+  static uint FindPosition(float AnimationTime, BoneAnimation const& nodeAnim);
+  static BoneAnimation const* FindNodeAnim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);
+ 
+private:
+  void LoadBones(aiScene const* scene);
 
   void BoneTransform(float TimeInSeconds, std::vector<scm::math::mat4f>& Transforms);
 
   void ReadNodeHierarchy(float AnimationTime, std::shared_ptr<Node> const& node, const scm::math::mat4f& ParentTransform);
-  void CalcInterpolatedScaling(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);
-  void CalcInterpolatedRotation(scm::math::quatf& Out, float AnimationTime, BoneAnimation const& nodeAnim);
-  void CalcInterpolatedPosition(scm::math::vec3& Out, float AnimationTime, BoneAnimation const& nodeAnim);    
-  static uint FindScaling(float AnimationTime, BoneAnimation const& nodeAnim);
-  static uint FindRotation(float AnimationTime, BoneAnimation const& nodeAnim);
-  static uint FindPosition(float AnimationTime, BoneAnimation const& nodeAnim);
-  BoneAnimation const* FindNodeAnim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);
 
   std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
   uint num_bones_;
@@ -234,8 +235,6 @@ class SkeletalAnimationDirector{
 
   std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
   std::shared_ptr<SkeletalAnimation> currAnimation_;
-
-  aiScene const* scene_;
 
   std::shared_ptr<Node> root_;
 
