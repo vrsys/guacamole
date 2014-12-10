@@ -216,8 +216,6 @@ struct Transformation {
   scm::math::vec3 translation;
 };
 
-
-
 class SkeletalAnimationUtils {
  public:
 
@@ -231,6 +229,9 @@ class SkeletalAnimationUtils {
 
   static void accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transforms, scm::math::mat4f& ParentTransform);
   static std::map<std::string, Transformation> calculate_transforms(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim);
+
+  static void blend(std::map<std::string, Transformation>& transforms1, std::map<std::string, Transformation> const& transforms2, float blendFactor);
+ 
  private:
 
   static scm::math::vec3 interpolate_scaling(float AnimationTime, BoneAnimation const& nodeAnim);
@@ -245,6 +246,7 @@ class SkeletalAnimationUtils {
   
   static void accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float AnimationTime, std::shared_ptr<Node> const& node, std::shared_ptr<SkeletalAnimation> const& anim, scm::math::mat4f& ParentTransform);
   
+
   inline SkeletalAnimationUtils(){};
   inline ~SkeletalAnimationUtils(){};
 };
