@@ -26,6 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
+// #include <gua/renderer/SkeletalAnimationDirector.hpp>
 #include <gua/utils/Logger.hpp>
 
 // external headers
@@ -35,28 +36,7 @@
 #include <vector>
 #include <map>
 #include <assimp/scene.h>       // Output data structure
-
-namespace {
-
-scm::math::mat4f ai_to_gua(aiMatrix4x4 const& m) {
-  scm::math::mat4f res(m.a1,m.b1,m.c1,m.d1
-                      ,m.a2,m.b2,m.c2,m.d2
-                      ,m.a3,m.b3,m.c3,m.d3
-                      ,m.a4,m.b4,m.c4,m.d4);
-  return res;
-}
-
-scm::math::vec3 ai_to_gua(aiVector3D const& v) {
-  scm::math::vec3 res(v.x, v.y, v.z);
-  return res;
-}
-
-scm::math::quatf ai_to_gua(aiQuaternion const& q) {
-  scm::math::quatf res(q.w, q.x, q.y, q.z);
-  return res;
-}
-
-}
+#include <gua/fbx/Common.hpp>
 
 namespace gua {
 class Pose;
@@ -102,7 +82,9 @@ struct Key {
 
 class Node {
  public:
-  Node(aiNode const* node);
+  Node();
+  Node(aiNode const& node);
+  Node(aiScene const& scene);
 
   ~Node();
 
@@ -187,7 +169,7 @@ class SkeletalAnimation {
  public:
   SkeletalAnimation();
 
-  SkeletalAnimation(aiAnimation* anim);
+  SkeletalAnimation(aiAnimation const& anim);
 
   ~SkeletalAnimation();
 
@@ -212,11 +194,79 @@ namespace blend {
   float smoothstep(float x);
 };
 
+#define ZERO_MEM(a) memset(a, 0, sizeof(a))
+struct weight_map
+{        
+  uint IDs[4];
+  float weights[4];
+
+  weight_map()
+  {
+      Reset();
+  };
+  
+  void Reset()
+  {
+      ZERO_MEM(IDs);
+      ZERO_MEM(weights);        
+  }
+  
+  void AddBoneData(uint bone_ID, float weight)
+  {
+    uint num_weights = (sizeof(IDs)/sizeof(IDs[0]));
+    for (uint i = 0 ; i <  num_weights; i++) {
+        if (weights[i] == 0.0) {
+            IDs[i]     = bone_ID;
+            weights[i] = weight;
+            return;
+        }        
+    }
+    // should never get here - more bones than we have space for
+    Logger::LOG_WARNING << "Warning: Ignoring bone associated to vertex (more than " << num_weights << ")" << std::endl;
+    //assert(false);
+  }
+};
+
+
+struct Vertex {
+  scm::math::vec3 pos;
+  scm::math::vec2f tex;
+  scm::math::vec3 normal;
+  scm::math::vec3 tangent;
+  scm::math::vec3 bitangent;
+  scm::math::vec4f bone_weights;
+  scm::math::vec4i bone_ids;
+};
+
+struct Mesh {
+ public:
+  Mesh();
+
+  Mesh(aiMesh const& mesh, Node const& root);
+  Mesh(FbxMesh& mesh);
+
+  void copy_to_buffer(Vertex* vertex_buffer)  const;
+
+  // std::vector<Vertex> vertices;
+  std::vector<scm::math::vec3> positions;
+  std::vector<scm::math::vec3> normals;
+  std::vector<scm::math::vec2> texCoords;
+  std::vector<scm::math::vec3> tangents;
+  std::vector<scm::math::vec3> bitangents;
+  std::vector<weight_map> weights;
+  std::vector<uint> indices;
+
+  unsigned int num_vertices;
+  unsigned int num_triangles;
+
+ private:
+  void init_weights(aiMesh const& mesh, Node const& root);
+};
+
 class SkeletalAnimationUtils {
  public:
 
-  static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(aiScene const*);
-  static std::shared_ptr<Node> load_hierarchy(aiScene const* scene);
+  static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(aiScene const&);
 
   static void calculate_matrices(float TimeInSeconds, Node const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
   static void calculate_matrices(Node const& root, std::vector<scm::math::mat4f>& Transforms);

@@ -4,35 +4,45 @@
 //external headers
 #include <iostream>
 
-namespace gua {
+namespace to_gua{
 
-std::shared_ptr<Node> SkeletalAnimationUtils::load_hierarchy(aiScene const* scene) {
-  //construct hierarchy
-  std::shared_ptr<Node> root = std::make_shared<Node>(scene->mRootNode);
-
-  std::map<std::string, std::pair<uint, scm::math::mat4f>> bone_info{};
-  unsigned num_bones = 0;
-  for (uint i = 0 ; i < scene->mNumMeshes ; i++) {
-    for (uint b = 0; b < scene->mMeshes[i]->mNumBones; ++b){
-
-      std::string BoneName(scene->mMeshes[i]->mBones[b]->mName.data);  
-      if (bone_info.find(BoneName) == bone_info.end()) {
-         
-        bone_info[BoneName] = std::make_pair(num_bones, ai_to_gua(scene->mMeshes[i]->mBones[b]->mOffsetMatrix));   
-        ++num_bones;
-      }
-    }
-  }
-  root->set_properties(bone_info);
-  return root;
+scm::math::mat4f mat4(aiMatrix4x4 const& m) {
+  scm::math::mat4f res(m.a1,m.b1,m.c1,m.d1
+                      ,m.a2,m.b2,m.c2,m.d2
+                      ,m.a3,m.b3,m.c3,m.d3
+                      ,m.a4,m.b4,m.c4,m.d4);
+  return res;
 }
 
-std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_animations(aiScene const* scene) {
+scm::math::vec3 vec3(aiVector3D const& v) {
+  scm::math::vec3 res(v.x, v.y, v.z);
+  return res;
+}
+
+scm::math::vec4 vec4(FbxVector4 const& v) {
+  scm::math::vec4 res(v[0], v[1], v[2], v[3]);
+  return res;
+}
+scm::math::vec3 vec3(FbxVector4 const& v) {
+  scm::math::vec3 res(v[0], v[1], v[2]);
+  return res;
+}
+
+scm::math::quatf quat(aiQuaternion const& q) {
+  scm::math::quatf res(q.w, q.x, q.y, q.z);
+  return res;
+}
+
+}
+
+namespace gua {
+
+std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_animations(aiScene const& scene) {
   std::vector<std::shared_ptr<SkeletalAnimation>> animations{};
-  if(!scene->HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
+  if(!scene.HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
  
-  for(uint i = 0; i < scene->mNumAnimations; ++i) {
-    animations.push_back(std::make_shared<SkeletalAnimation>(scene->mAnimations[i]));
+  for(uint i = 0; i < scene.mNumAnimations; ++i) {
+    animations.push_back(std::make_shared<SkeletalAnimation>(*(scene.mAnimations[i])));
   }
 
   return animations;
@@ -87,18 +97,47 @@ float blend::swap(float x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Node::Node(aiNode const* node):
+Node::Node():
   index{-1},
-  name{node->mName.C_Str()},
-  parentName{node->mParent != NULL ? node->mParent->mName.C_Str() : "none"},
-  numChildren{node->mNumChildren},
-  transformation{ai_to_gua(node->mTransformation)},
+  name{"none"},
+  parentName{"none"},
+  numChildren{0},
+  transformation{},
+  offsetMatrix{scm::math::mat4f::identity()}
+{}
+
+Node::Node(aiNode const& node):
+  index{-1},
+  name{node.mName.C_Str()},
+  parentName{node.mParent != NULL ? node.mParent->mName.C_Str() : "none"},
+  numChildren{node.mNumChildren},
+  transformation{to_gua::mat4(node.mTransformation)},
   offsetMatrix{scm::math::mat4f::identity()}
 {
-  for(unsigned i = 0; i < node->mNumChildren; ++i) {
-    std::shared_ptr<Node> child = std::make_shared<Node>(node->mChildren[i]);
+  for(unsigned i = 0; i < node.mNumChildren; ++i) {
+    std::shared_ptr<Node> child = std::make_shared<Node>(*(node.mChildren[i]));
     children.push_back(child);
   }
+}
+
+Node::Node(aiScene const& scene) {
+  //construct hierarchy
+  *this = Node{*(scene.mRootNode)};
+
+  std::map<std::string, std::pair<uint, scm::math::mat4f>> bone_info{};
+  unsigned num_bones = 0;
+  for (uint i = 0 ; i < scene.mNumMeshes ; i++) {
+    for (uint b = 0; b < scene.mMeshes[i]->mNumBones; ++b){
+
+      std::string BoneName(scene.mMeshes[i]->mBones[b]->mName.data);  
+      if (bone_info.find(BoneName) == bone_info.end()) {
+         
+        bone_info[BoneName] = std::make_pair(num_bones, to_gua::mat4(scene.mMeshes[i]->mBones[b]->mOffsetMatrix));   
+        ++num_bones;
+      }
+    }
+  }
+  this->set_properties(bone_info);
 }
 
 Node::~Node()
@@ -151,6 +190,208 @@ void Node::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, Po
   
   for (std::shared_ptr<Node> const& child : children) {
      child->accumulate_matrices(transformMat4s, pose, finalTransformation);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Mesh::Mesh():
+ positions{},
+ normals{},
+ texCoords{},
+ tangents{},
+ bitangents{},
+ weights{},
+ indices{}
+{}
+
+Mesh::Mesh(FbxMesh& mesh) {
+  // if(!mesh.IsTriangleMesh()) {
+  //   Logger::LOG_ERROR << "Face doesnt have 3 vertices" << std::endl;
+  //   assert(false);
+  // }
+
+  num_vertices = mesh.GetControlPointsCount(); 
+  num_triangles = mesh.GetPolygonCount();
+  
+  // Reserve space in the vectors for the vertex attributes and indices
+  //for now resize and initialize with 0
+  positions.reserve(num_vertices);
+  normals.reserve(num_vertices);
+  texCoords.resize(num_vertices);
+  tangents.resize(num_vertices);
+  bitangents.resize(num_vertices);
+  weights.resize(num_vertices);
+  indices.reserve(num_triangles * 3);
+
+  FbxVector4* vertices = mesh.GetControlPoints();
+  for(unsigned i = 0; i < num_vertices; ++i) {
+    positions.push_back(to_gua::vec3(vertices[i]) * 0.2);
+  }
+
+  if(mesh.GetElementNormalCount() == 0) {
+    //dont override exiting normals and generate by control point, not vertex
+    mesh.GenerateNormals(false, true);
+  }
+
+  FbxGeometryElementNormal const* fbx_normals = mesh.GetElementNormal(0);
+
+  if(fbx_normals->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
+    if(fbx_normals->GetReferenceMode() == FbxGeometryElement::eDirect) {
+
+      for(unsigned i = 0; i < num_vertices; ++i) {
+        normals.push_back(to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
+      }
+    }
+    else if(fbx_normals->GetReferenceMode() == FbxGeometryElement::eIndexToDirect ) {
+      Logger::LOG_ERROR << "Normals mapping by index yet supported" << std::endl;
+    }
+    else {
+      Logger::LOG_ERROR << "Only normal mapping per vertex are supported" << std::endl;
+    }
+  }
+  else if(fbx_normals->GetMappingMode() == FbxGeometryElement::eByPolygonVertex) {
+    Logger::LOG_WARNING << "Normals per polygon vertex not supported, regenerating them" << std::endl;
+    //regenerate normals per control point
+    mesh.GenerateNormals(true, true);
+
+    for(unsigned i = 0; i < num_vertices; ++i) {
+        normals.push_back(to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
+    }
+  }
+  else {
+    Logger::LOG_ERROR << "Only normals per vertex are supported" << std::endl;
+    // assert(false);
+  }
+
+  if(mesh.GetPolygonCount() < 1) {
+    Logger::LOG_WARNING << "No indices in mesh, drawing will be inefficient" << std::endl;
+    for(unsigned i = 0; i < num_vertices; ++i) {
+      indices.push_back(num_vertices - i - 1);
+    }
+  }
+  else {
+    // FbxGeometryElementPolygonGroup const* fbx_polys = mesh.GetElementPolygonGroup(0);
+    // if(fbx_polys->GetMappingMode() == FbxGeometryElement::eByPolygon) {
+    //   if(fbx_polys->GetReferenceMode() == FbxGeometryElement::eIndex) {
+
+    //         std::cout << "vert num op poly " << std::endl;
+        for(unsigned i = 0; i < num_triangles; i++)
+        {
+          //triangulate face if necessary
+          for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
+          {
+            std::cout << "vert num " << j << "op poly " << i << std::endl;
+            indices.push_back(mesh.GetPolygonVertex(i, 0));
+            indices.push_back(mesh.GetPolygonVertex(i, j-1));
+            indices.push_back(mesh.GetPolygonVertex(i, j));
+          }
+        }
+    //   }
+    //   else {
+    //     Logger::LOG_ERROR << "Only poly mapping by index is supported" << std::endl;
+    //   }
+    // }
+    // else {
+    //   Logger::LOG_ERROR << "Only poly per poly is supported" << std::endl;
+    // }
+  }
+}
+
+Mesh::Mesh(aiMesh const& mesh, Node const& root) {   
+  num_triangles = mesh.mNumFaces;
+  num_vertices = mesh.mNumVertices; 
+  
+  // Reserve space in the vectors for the vertex attributes and indices
+  positions.reserve(num_vertices);
+  normals.reserve(num_vertices);
+  texCoords.reserve(num_vertices);
+  tangents.reserve(num_vertices);
+  bitangents.reserve(num_vertices);
+  weights.resize(num_vertices);
+  indices.reserve(num_triangles * 3);
+
+
+  // Populate the vertex attribute vectors
+  for (uint i = 0 ; i < mesh.mNumVertices ; i++) {
+    
+    scm::math::vec3 pPos = scm::math::vec3(0.0f);
+    if(mesh.HasPositions()) {
+      pPos = to_gua::vec3(mesh.mVertices[i]);
+    }
+
+    scm::math::vec3 pNormal = scm::math::vec3(0.0f);
+    if(mesh.HasNormals()) {
+      pNormal = to_gua::vec3(mesh.mNormals[i]);
+    }
+
+    scm::math::vec2 pTexCoord = scm::math::vec2(0.0f);
+    if(mesh.HasTextureCoords(0)) {
+      pTexCoord = scm::math::vec2(mesh.mTextureCoords[0][i].x, mesh.mTextureCoords[0][i].y);
+    }
+
+    scm::math::vec3 pTangent = scm::math::vec3(0.0f);
+    scm::math::vec3 pBitangent = scm::math::vec3(0.0f);
+    if (mesh.HasTangentsAndBitangents()) {
+      pTangent = to_gua::vec3(mesh.mTangents[i]);
+
+      pBitangent = to_gua::vec3(mesh.mBitangents[i]);
+    }
+
+    positions.push_back(pPos);
+    normals.push_back(pNormal);
+    bitangents.push_back(pBitangent);
+    tangents.push_back(pTangent);
+    texCoords.push_back(pTexCoord);
+  }
+
+  init_weights(mesh, root);
+  
+  // Populate the index buffer
+  for (uint i = 0 ; i < mesh.mNumFaces ; i++) {
+    const aiFace& Face = mesh.mFaces[i];
+
+    if(Face.mNumIndices != 3) {
+      Logger::LOG_ERROR << "InitMesh - face doesnt have 3 vertices" << std::endl;
+      assert(false);
+    }
+
+    indices.push_back(Face.mIndices[0]);
+    indices.push_back(Face.mIndices[1]);
+    indices.push_back(Face.mIndices[2]);
+  }
+}
+void Mesh::init_weights(aiMesh const& mesh, Node const& root) {
+  std::map<std::string, int> bone_mapping_; // maps a bone name to its index
+  root.collect_indices(bone_mapping_);
+
+  for (uint i = 0 ; i < mesh.mNumBones ; i++) {
+    std::string bone_name(mesh.mBones[i]->mName.data);      
+    uint BoneIndex = bone_mapping_.at(bone_name);        
+    
+    for (uint j = 0 ; j < mesh.mBones[i]->mNumWeights ; j++) {
+      uint VertexID = mesh.mBones[i]->mWeights[j].mVertexId;
+      float Weight  = mesh.mBones[i]->mWeights[j].mWeight;                   
+      weights[VertexID].AddBoneData(BoneIndex, Weight);
+    }
+  }
+}
+
+void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
+  for (unsigned v(0); v < num_vertices; ++v) {
+
+    vertex_buffer[v].pos = positions[v];
+
+    vertex_buffer[v].tex = texCoords[v];
+
+    vertex_buffer[v].normal = normals[v];
+
+    vertex_buffer[v].tangent = tangents[v];
+
+    vertex_buffer[v].bitangent = bitangents[v];
+
+    vertex_buffer[v].bone_weights = scm::math::vec4f(weights[v].weights[0],weights[v].weights[1],weights[v].weights[2],weights[v].weights[3]);
+    
+    vertex_buffer[v].bone_ids = scm::math::vec4i(weights[v].IDs[0],weights[v].IDs[1],weights[v].IDs[2],weights[v].IDs[3]);
   }
 }
 
@@ -210,13 +451,13 @@ BoneAnimation::BoneAnimation(aiNodeAnim* anim):
  {
 
   for(unsigned i = 0; i < anim->mNumScalingKeys; ++i) {
-    scalingKeys.push_back(Key<scm::math::vec3>{anim->mScalingKeys[i].mTime, ai_to_gua(anim->mScalingKeys[i].mValue)});
+    scalingKeys.push_back(Key<scm::math::vec3>{anim->mScalingKeys[i].mTime, to_gua::vec3(anim->mScalingKeys[i].mValue)});
   }
   for(unsigned i = 0; i < anim->mNumRotationKeys; ++i) {
-    rotationKeys.push_back(Key<scm::math::quatf>{anim->mRotationKeys[i].mTime, ai_to_gua(anim->mRotationKeys[i].mValue)});
+    rotationKeys.push_back(Key<scm::math::quatf>{anim->mRotationKeys[i].mTime, to_gua::quat(anim->mRotationKeys[i].mValue)});
   }
   for(unsigned i = 0; i < anim->mNumPositionKeys; ++i) {
-    translationKeys.push_back(Key<scm::math::vec3>{anim->mPositionKeys[i].mTime, ai_to_gua(anim->mPositionKeys[i].mValue)});
+    translationKeys.push_back(Key<scm::math::vec3>{anim->mPositionKeys[i].mTime, to_gua::vec3(anim->mPositionKeys[i].mValue)});
   }
 }
 
@@ -287,16 +528,16 @@ SkeletalAnimation::SkeletalAnimation():
   boneAnims{}
 {}
 
-SkeletalAnimation::SkeletalAnimation(aiAnimation* anim):
-  name{anim->mName.C_Str()},
-  numFrames{unsigned(anim->mDuration)},
-  numFPS{anim->mTicksPerSecond > 0 ? anim->mTicksPerSecond : 25},
+SkeletalAnimation::SkeletalAnimation(aiAnimation const& anim):
+  name{anim.mName.C_Str()},
+  numFrames{unsigned(anim.mDuration)},
+  numFPS{anim.mTicksPerSecond > 0 ? anim.mTicksPerSecond : 25},
   duration{double(numFrames) / numFPS},
-  numBoneAnims{anim->mNumChannels},
+  numBoneAnims{anim.mNumChannels},
   boneAnims{}
 {
   for(unsigned i = 0; i < numBoneAnims; ++i) {
-    boneAnims.push_back(BoneAnimation{anim->mChannels[i]});
+    boneAnims.push_back(BoneAnimation{anim.mChannels[i]});
   }
 }
 
