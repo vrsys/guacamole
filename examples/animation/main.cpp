@@ -62,13 +62,33 @@ int main(int argc, char** argv) {
     return shader->get_default_material();
   };
 
+<<<<<<< HEAD
   auto mat1(load_mat("data/materials/pinky.gmd"));*/
+=======
+  auto mat1(shader->make_new_material());
+  // mat1->set_uniform("ColorMap", std::string("data/textures/pinky_d.tga"));
+  // mat1->set_uniform("NormalMap", std::string("data/textures/pinky_local.tga"));
+>>>>>>> parial skeleton blending works with workarounds
 
   gua::SkeletalAnimationLoader loader;
   gua::SkeletalAnimationLoader loader2;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+<<<<<<< HEAD
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
+=======
+  // auto teapot(loader.create_geometry_from_file("bob", "data/objects/pinky.md5mesh", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/spplayer.md5mesh", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/player.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  
+  // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
+  loader.load_animation(teapot, "data/objects/marine/crouch.md5anim", 0);
+  loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
+  loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
+  // loader.load_animation(teapot, "data/objects/idle1.md5anim", 0);
+  // loader.load_animation(teapot, "data/objects/attack.md5anim", 0);
+  // loader.load_animation(teapot, "data/objects/run.md5anim", 0);
+>>>>>>> parial skeleton blending works with workarounds
 
   // auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader2.load_animation(teapot2, "data/objects/pinky/idle1.md5anim", 0);
