@@ -148,7 +148,8 @@ void gua_calculate_point_light(vec3 normal, vec3 position) {
   float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
 
   vec3 Cl = falloff * gua_light_color * gua_light_brightness;
-  gua_light_radiance = gua_light_color;
+  //gua_light_radiance = gua_light_color;
+  gua_light_radiance = Cl;
 }
 
 // base lighting calculations for spot lights ----------------------------------
