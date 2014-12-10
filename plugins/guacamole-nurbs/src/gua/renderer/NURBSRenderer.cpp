@@ -529,7 +529,7 @@ void NURBSRenderer::render(Pipeline& pipe)
   if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
 
     std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
-      return reinterpret_cast<node::NURBSNode*>(a)->get_material().get_shader() < reinterpret_cast<node::NURBSNode*>(b)->get_material().get_shader();
+      return reinterpret_cast<node::NURBSNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::NURBSNode*>(b)->get_material()->get_shader();
     });
 
     RenderContext const& ctx(pipe.get_context());
@@ -552,7 +552,7 @@ void NURBSRenderer::render(Pipeline& pipe)
     for (auto const& object : sorted_objects->second) 
     {
       auto nurbs_node(reinterpret_cast<node::NURBSNode*>(object));
-      current_material = nurbs_node->get_material().get_shader();
+      current_material = nurbs_node->get_material()->get_shader();
 
       auto shader_iterator = tesselation_programs_.find(current_material);
       if (shader_iterator == tesselation_programs_.end())
@@ -563,7 +563,7 @@ void NURBSRenderer::render(Pipeline& pipe)
           current_material_program->save_to_file(".", "final_tesselation");
         }
         catch (std::exception& e) {
-          Logger::LOG_WARNING << "NURBSPass::render(): Cannot create material program: " << nurbs_node->get_material().get_shader_name() << " : " << e.what() << std::endl;
+          Logger::LOG_WARNING << "NURBSPass::render(): Cannot create material program: " << nurbs_node->get_material()->get_shader_name() << " : " << e.what() << std::endl;
           return;
         }
       } else {
@@ -603,9 +603,7 @@ void NURBSRenderer::render(Pipeline& pipe)
 
         current_material_program->use(ctx);
         {
-          for (auto const& overwrite : nurbs_node->get_material().get_uniforms()) {
-            current_material_program->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
-          }
+          nurbs_node->get_material()->apply_uniforms(ctx, current_material_program, view_id);
 
           current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
           current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
