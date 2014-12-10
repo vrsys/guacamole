@@ -167,9 +167,11 @@ struct Node {
   Node(aiNode const* node):
     index{-1},
     name{node->mName.C_Str()},
+    parentName{node->mParent != NULL ? node->mParent->mName.C_Str() : "none"},
     numChildren{node->mNumChildren},
     transformation{ai_to_gua(node->mTransformation)},
-    offsetMatrix{scm::math::mat4f::identity()}
+    offsetMatrix{scm::math::mat4f::identity()},
+    currentTransformation{scm::math::mat4f::identity()}
   {
     for(unsigned i = 0; i < node->mNumChildren; ++i) {
       std::shared_ptr<Node> child = std::make_shared<Node>(node->mChildren[i]);
@@ -180,11 +182,13 @@ struct Node {
   ~Node(){};
 
   std::string name;
+  std::string parentName;
   unsigned numChildren;
   std::vector<std::shared_ptr<Node>> children;
   scm::math::mat4f transformation;
   //transforms to bone space
   scm::math::mat4f offsetMatrix;
+  scm::math::mat4f currentTransformation;
   int index;
 };
 
@@ -223,15 +227,16 @@ class SkeletalAnimationUtils {
   static std::shared_ptr<Node> load_hierarchy(aiScene const* scene);
 
   static void set_bone_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& info, std::shared_ptr<Node>& currNode);
-  static void collect_bone_indices(std::map<std::string, uint>& ids, std::shared_ptr<Node> const& pNode);
+  static void collect_bone_indices(std::map<std::string, int>& ids, std::shared_ptr<Node> const& pNode);
   
   static void calculate_pose(float TimeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& Transforms);
 
-  static void accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transforms, scm::math::mat4f& ParentTransform);
+  static void accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transforms, scm::math::mat4f ParentTransform);
   static std::map<std::string, Transformation> calculate_transforms(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim);
 
   static void blend(std::map<std::string, Transformation>& transforms1, std::map<std::string, Transformation> const& transforms2, float blendFactor);
- 
+  
+  static std::shared_ptr<Node> find_node(std::string const& name, std::shared_ptr<Node> const& root);
  private:
 
   static scm::math::vec3 interpolate_scaling(float AnimationTime, BoneAnimation const& nodeAnim);
@@ -242,10 +247,7 @@ class SkeletalAnimationUtils {
   static uint find_rotation(float AnimationTime, BoneAnimation const& nodeAnim);
   static uint find_position(float AnimationTime, BoneAnimation const& nodeAnim);
   
-  static BoneAnimation const* find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);
-  
-  static void accumulate_transforms(std::vector<scm::math::mat4f>& transforms, float AnimationTime, std::shared_ptr<Node> const& node, std::shared_ptr<SkeletalAnimation> const& anim, scm::math::mat4f& ParentTransform);
-  
+  static BoneAnimation const* find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);  
 
   inline SkeletalAnimationUtils(){};
   inline ~SkeletalAnimationUtils(){};
