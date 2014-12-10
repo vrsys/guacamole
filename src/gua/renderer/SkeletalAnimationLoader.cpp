@@ -113,38 +113,32 @@ namespace gua {
 
     if(!skelNode) Logger::LOG_ERROR << "Node is no SkeletalAnimationNode" << std::endl;
 
-    bool fileload_succeed = false;
-
-    if (is_supported(file_name))
-    {
-      TextFile file(file_name);
-
-      // MESSAGE("Loading mesh file %s", file_name.c_str());
-
-      if (file.is_valid()) {
-        auto importer = std::make_shared<Assimp::Importer>();
-
-        importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
-                                      aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-
-        importer->ReadFile(
-            file_name,
-            aiProcessPreset_TargetRealtime_Quality | aiProcess_GenSmoothNormals);
-
-        aiScene const* scene(importer->GetOrphanedScene());
-
-        if(!scene->HasAnimations()) {
-          Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;
-        }
-        skelNode->get_director()->add_animations(scene);
-        return;
-
-      } else {
-        Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": File does not exist!" << std::endl;
-      }
+    if (!is_supported(file_name)) {
+      Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
+      return;
     }
 
-    Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
+    TextFile file(file_name);
+
+    if (!file.is_valid()) {
+      Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": File does not exist!" << std::endl;
+      return;
+    }
+
+    auto importer = std::make_shared<Assimp::Importer>();
+
+    importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+
+    importer->ReadFile(file_name, aiProcessPreset_TargetRealtime_Quality);
+
+    aiScene const* scene(importer->GetOrphanedScene());
+
+    if(scene->HasAnimations()) {
+      skelNode->get_director()->add_animations(scene);
+    }
+    else {
+      Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;
+    }
   }
   ////////////////////////////////////////////////////////////////////////////////
 

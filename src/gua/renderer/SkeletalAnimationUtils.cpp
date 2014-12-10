@@ -64,18 +64,27 @@ std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_ani
   return animations;
 }
 
+void SkeletalAnimationUtils::blend(std::map<std::string, Transformation>& transforms1, std::map<std::string, Transformation> const& transforms2, float blendFactor) {
+  auto iter = transforms1.begin();
+  for_each(transforms2.begin(), transforms2.end(), [&transforms1, &blendFactor, &iter](std::pair<std::string, Transformation> p) {
+    iter->second = p.second.blend(iter->second, blendFactor);
+    ++iter;
+  });
+}
+
 void SkeletalAnimationUtils::calculate_pose(float timeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
  
   float animationTime = 0;
+  std::map<std::string, Transformation> transformStructs{};
 
   if(pAnim) {
     float timeInFrames = timeInSeconds * pAnim->numFPS;
     animationTime = fmod(timeInFrames, (float)pAnim->numFrames);
+
+    transformStructs = calculate_transforms(animationTime, pAnim);
   }
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
-
-  std::map<std::string, Transformation> transformStructs{calculate_transforms(animationTime, pAnim)};
   accumulate_transforms(transforms, root, transformStructs, identity);
 }
 
