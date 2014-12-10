@@ -9,7 +9,7 @@
 
 namespace gua {
 
-void SkeletalAnimationUtils::collect_bone_indices(std::map<std::string, uint>& ids, std::shared_ptr<Node> const& pNode) {
+void SkeletalAnimationUtils::collect_bone_indices(std::map<std::string, int>& ids, std::shared_ptr<Node> const& pNode) {
   ids[pNode->name] = pNode->index;
 
   for(std::shared_ptr<Node>& child : pNode->children) {
@@ -88,24 +88,25 @@ void SkeletalAnimationUtils::calculate_pose(float timeInSeconds, std::shared_ptr
   accumulate_transforms(transforms, root, transformStructs, identity);
 }
 
-void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transformStructs, scm::math::mat4f& parentTransform) {
-  
+void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transformStructs, scm::math::mat4f parentTransform) {
   scm::math::mat4f nodeTransformation{pNode->transformation};
 
   if(transformStructs.find(pNode->name) != transformStructs.end()) { 
     nodeTransformation = transformStructs.at(pNode->name).to_matrix();  
   }
   
-  scm::math::mat4f GlobalTransformation = parentTransform * nodeTransformation;
-  
+  scm::math::mat4f finalTransformation = parentTransform * nodeTransformation;
+  pNode->currentTransformation = finalTransformation;
   //update transform if bone is mapped
   if (pNode->index >= 0) {
-    transformMat4s[pNode->index] = GlobalTransformation * pNode->offsetMatrix;
+    transformMat4s[pNode->index] = finalTransformation * pNode->offsetMatrix;
   }
   
   for (uint i = 0 ; i < pNode->numChildren ; i++) {
-    accumulate_transforms(transformMat4s, pNode->children[i], transformStructs, GlobalTransformation);
+  // std::cout << "currnode " << pNode->name;
+    accumulate_transforms(transformMat4s, pNode->children[i], transformStructs, finalTransformation);
   }
+  // std::cout << " finished children" << std::endl;
 }
 
 std::map<std::string, Transformation> SkeletalAnimationUtils::calculate_transforms(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim) {
@@ -141,6 +142,18 @@ BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<Skel
   }
 
   return NULL;
+}
+
+std::shared_ptr<Node> SkeletalAnimationUtils::find_node(std::string const& name, std::shared_ptr<Node> const& root) {
+  if(root->name == name) return root;
+
+  for(std::shared_ptr<Node> const& child : root->children) {
+
+    std::shared_ptr<Node> found = find_node(name, child);
+    if (found) return found;
+  }
+
+  return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 

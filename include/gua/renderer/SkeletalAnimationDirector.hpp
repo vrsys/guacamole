@@ -47,23 +47,25 @@ class SkeletalAnimationDirector {
   void add_animations(aiScene const* scene);
   void add_hierarchy(aiScene const* scene);
 
-  uint getBoneID(std::string const& name);
+  int getBoneID(std::string const& name);
 
   void updateBoneTransforms(RenderContext const& ctx);
 
 private:
-void calculate_pose(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms);
-  std::map<std::string,uint> bone_mapping_; // maps a bone name to its index
-  uint num_bones_;
+  void calculate_pose(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms);
+  void partial_blend(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::shared_ptr<Node> const& start, std::vector<scm::math::mat4f>& transforms);
+
+  std::map<std::string, int> bone_mapping_; // maps a bone name to its index
+
+  std::shared_ptr<Node> root_;
+
+  std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
+  std::shared_ptr<SkeletalAnimation> currAnimation_;
 
   std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
 
-  std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
-
   unsigned animNum;
-  std::shared_ptr<SkeletalAnimation> currAnimation_;
-
-  std::shared_ptr<Node> root_;
+  uint num_bones_;
 
   bool firstRun_;
   bool hasAnims_;
