@@ -25,6 +25,7 @@
 #include <gua/config.hpp>
 #include <gua/renderer/ProgramFactory.hpp>
 #include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
@@ -133,6 +134,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
   } else {
     pipe.get_gbuffer().bind(ctx, writes_only_color_buffer_);
     pipe.get_gbuffer().set_viewport(ctx);
+    pipe.get_abuffer().bind(ctx);
     if (doClear_)
       pipe.get_gbuffer().clear_color(ctx);
     if (depth_stencil_state_)
@@ -153,6 +155,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
     } else { // RenderMode::Quad
       pipe.draw_quad();
     }
+    pipe.get_abuffer().unbind(ctx);
     pipe.get_gbuffer().unbind(ctx);
     ctx.render_context->reset_state_objects();
   }

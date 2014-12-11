@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/node/CameraNode.hpp>
 #include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/WindowBase.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/databases/WindowDatabase.hpp>
@@ -42,6 +43,7 @@ namespace gua {
 
 Pipeline::Pipeline() :
   gbuffer_(nullptr),
+  abuffer_(nullptr),
   camera_block_(nullptr),
   last_resolution_(0, 0),
   quad_(nullptr),
@@ -75,11 +77,13 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   current_camera_ = camera;
 
   bool reload_gbuffer(false);
+  bool reload_abuffer(false);
 
   // reload gbuffer if now rendering to another window (with a new context)
   if (context_ != ctx) {
     context_ = ctx;
     reload_gbuffer = true;
+    reload_abuffer = true;
   }
 
   // execute all prerender cameras
@@ -100,6 +104,14 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
     }
 
     gbuffer_ = new GBuffer(get_context(), camera.config.resolution());
+  }
+
+  if (reload_abuffer) {
+    if (abuffer_) {
+      delete abuffer_;
+    }
+
+    abuffer_ = new ABuffer(get_context(), 1000);
   }
 
   // recreate pipeline passes if pipeline description changed
@@ -150,8 +162,9 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   camera_block_->update(get_context().render_context, current_scene_.frustum);
   bind_camera_uniform_block(0);
 
-  // clear gbuffer
+  // clear gbuffer and abuffer
   gbuffer_->clear_all(get_context());
+  abuffer_->clear(get_context(), camera.config.resolution());
 
   // process all passes
   for (int i(0); i < passes_.size(); ++i) {
@@ -189,6 +202,12 @@ GBuffer& Pipeline::get_gbuffer() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+ABuffer& Pipeline::get_abuffer() const {
+  return *abuffer_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 node::SerializedCameraNode const& Pipeline::get_camera() const {
   return current_camera_;
 }
@@ -219,6 +238,8 @@ void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) 
 
   shader->set_uniform(ctx, 1.0f / gbuffer_->get_width(),  "gua_texel_width");
   shader->set_uniform(ctx, 1.0f / gbuffer_->get_height(), "gua_texel_height");
+
+  shader->set_uniform(ctx, math::vec2i(gbuffer_->get_width(), gbuffer_->get_height()),  "gua_resolution");
 
   shader->set_uniform(ctx, gbuffer_->get_current_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
   shader->set_uniform(ctx, gbuffer_->get_current_pbr_buffer()->get_handle(ctx),    "gua_gbuffer_pbr");

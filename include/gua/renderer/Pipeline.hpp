@@ -36,6 +36,7 @@
 namespace gua {
 
 class GBuffer;
+class ABuffer;
 class WindowBase;
 struct RenderContext;
 class ShaderProgram;
@@ -52,6 +53,7 @@ class GUA_DLL Pipeline {
 
   std::vector<PipelinePass>   const& get_passes()  const;
   GBuffer                          & get_gbuffer() const;
+  ABuffer                          & get_abuffer() const;
   SerializedScene                  & get_scene();
   SceneGraph                  const& get_graph()   const;
   RenderContext               const& get_context() const;
@@ -64,6 +66,7 @@ class GUA_DLL Pipeline {
  private:
 
   GBuffer*                           gbuffer_;
+  ABuffer*                           abuffer_;
   RenderContext*                     context_;
   CameraUniformBlock*                camera_block_;
 
