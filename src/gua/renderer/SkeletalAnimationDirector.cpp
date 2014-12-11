@@ -44,7 +44,7 @@ int SkeletalAnimationDirector::getBoneID(std::string const& name) {
   return bone_mapping_.at(name);
 }
 
-void SkeletalAnimationDirector::calculate_pose(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationDirector::blend_pose(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
  
   float animationTime1 = 0;
   float animationTime2 = 0;
@@ -56,7 +56,7 @@ void SkeletalAnimationDirector::calculate_pose(float timeInSeconds, std::shared_
   animationTime2 = fmod(timeInFrames, (float)pAnim2->numFrames);
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
-  float blendFactor = 0.3;
+  float blendFactor = 0.5;
 
   std::map<std::string, Transformation> transformStructs1{SkeletalAnimationUtils::calculate_transforms(animationTime1, pAnim1)};
   std::map<std::string, Transformation> transformStructs2{SkeletalAnimationUtils::calculate_transforms(animationTime2, pAnim2)};
@@ -77,17 +77,20 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_p
   timeInFrames = timeInSeconds * pAnim2->numFPS;
   animationTime2 = fmod(timeInFrames, (float)pAnim2->numFrames);
 
+  float animationTime3 = 0;
+  // timeInFrames = timeInSeconds * animations_[2]->numFPS;
+  // animationTime3 = fmod(timeInFrames, (float)animations_[2]->numFrames);
+
   scm::math::mat4f identity = scm::math::mat4f::identity();
 
-  std::map<std::string, Transformation> transformStructs1{SkeletalAnimationUtils::calculate_transforms(animationTime1, pAnim1)};
-  std::map<std::string, Transformation> transformStructs2{SkeletalAnimationUtils::calculate_transforms(animationTime2, pAnim2)};
+  std::map<std::string, Transformation> full_body{SkeletalAnimationUtils::calculate_transforms(animationTime1, pAnim1)};
+  std::map<std::string, Transformation> upper_body{SkeletalAnimationUtils::calculate_transforms(animationTime2, pAnim2)};
+  // std::map<std::string, Transformation> arms{SkeletalAnimationUtils::calculate_transforms(animationTime3, animations_[2])};
 
-  SkeletalAnimationUtils::accumulate_transforms(transforms, root_, transformStructs1, identity);
+  SkeletalAnimationUtils::partial_blend(full_body, upper_body, start);
+  // SkeletalAnimationUtils::partial_blend(full_body, arms, SkeletalAnimationUtils::find_node("Shoulders", root_->children[1]->children[0]->children[0]));
 
-  std::shared_ptr<Node> parentNode = SkeletalAnimationUtils::find_node(start->parentName, root_);
-  scm::math::mat4f parentTransform = parentNode->currentTransformation;
-  
-  SkeletalAnimationUtils::accumulate_transforms(transforms, start, transformStructs2, parentTransform);
+  SkeletalAnimationUtils::accumulate_transforms(transforms, root_, full_body, identity);
 }
 
 void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
@@ -116,7 +119,7 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
     Logger::LOG_WARNING << "node not found" << std::endl;
     SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), root_->children[1]->children[0]->children[0], currAnimation_, transforms);
   } 
-  // calculate_pose(timer_.get_elapsed(), animations_[0], animations_[1], transforms);
+  // blend_pose(timer_.get_elapsed(), animations_[0], animations_[1], transforms);
 
   bone_transforms_block_->update(ctx.render_context, transforms);
   ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );

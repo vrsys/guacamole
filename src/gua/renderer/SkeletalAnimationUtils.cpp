@@ -38,16 +38,16 @@ std::shared_ptr<Node> SkeletalAnimationUtils::load_hierarchy(aiScene const* scen
   return root;
 }
 
-void SkeletalAnimationUtils::set_bone_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& infos, std::shared_ptr<Node>& currNode) {
+void SkeletalAnimationUtils::set_bone_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& infos, std::shared_ptr<Node>& pNode) {
   try {
-    currNode->offsetMatrix = infos.at(currNode->name).second;
-    currNode->index = infos.at(currNode->name).first;
+    pNode->offsetMatrix = infos.at(pNode->name).second;
+    pNode->index = infos.at(pNode->name).first;
   }
   catch(std:: exception& e) {
-    Logger::LOG_WARNING <<  currNode->name << " has no vertices mapped to it" << std::endl;
+    Logger::LOG_WARNING <<  pNode->name << " has no vertices mapped to it" << std::endl;
   }
 
-  for(std::shared_ptr<Node>& child : currNode->children) {
+  for(std::shared_ptr<Node>& child : pNode->children) {
     set_bone_properties(infos, child);
   }
 }
@@ -71,6 +71,20 @@ void SkeletalAnimationUtils::blend(std::map<std::string, Transformation>& transf
     ++iter;
   });
 }
+void SkeletalAnimationUtils::partial_blend(std::map<std::string, Transformation>& transforms1, std::map<std::string, Transformation> const& transforms2, std::shared_ptr<Node> const& pNode) {
+  transforms1.at(pNode->name) = transforms2.at(pNode->name);
+  // try {
+  //   pNode->offsetMatrix = infos.at(pNode->name).second;
+  //   pNode->index = infos.at(pNode->name).first;
+  // }
+  // catch(std:: exception& e) {
+  //   Logger::LOG_WARNING <<  pNode->name << " has no vertices mapped to it" << std::endl;
+  // }
+
+  for(std::shared_ptr<Node>& child : pNode->children) {
+    partial_blend(transforms1, transforms2, child);
+  }
+}
 
 void SkeletalAnimationUtils::calculate_pose(float timeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
  
@@ -88,7 +102,7 @@ void SkeletalAnimationUtils::calculate_pose(float timeInSeconds, std::shared_ptr
   accumulate_transforms(transforms, root, transformStructs, identity);
 }
 
-void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transformStructs, scm::math::mat4f parentTransform) {
+void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transformStructs, scm::math::mat4f const& parentTransform) {
   scm::math::mat4f nodeTransformation{pNode->transformation};
 
   if(transformStructs.find(pNode->name) != transformStructs.end()) { 
