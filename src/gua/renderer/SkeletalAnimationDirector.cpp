@@ -12,8 +12,7 @@ namespace gua
 {
 SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     num_bones_{0},
-    bone_transforms_block_{nullptr},
-    hasAnims_{scene->HasAnimations()},
+    has_anims_{scene->HasAnimations()},
     firstRun_{true},
     animations_{},
     currAnimation_{},
@@ -36,12 +35,8 @@ void SkeletalAnimationDirector::add_animations(aiScene const* scene) {
   std::move(newAnims.begin(), newAnims.end(), std::inserter(animations_, animations_.end()));
   newAnims.clear();
 
-  if(animations_.size() > 0) hasAnims_ = true;
+  has_anims_ = animations_.size() > 0;
   currAnimation_ = animations_[animations_.size()-1];
-}
-
-int SkeletalAnimationDirector::getBoneID(std::string const& name) {
-  return bone_mapping_.at(name);
 }
 
 void SkeletalAnimationDirector::blend_pose(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
@@ -93,17 +88,9 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_p
   SkeletalAnimationUtils::accumulate_transforms(transforms, root_, full_body, identity);
 }
 
-void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
+std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
 {
-  if(!hasAnims_ && !firstRun_) return;
-  if(!hasAnims_) firstRun_ = false;
-
-  if(!bone_transforms_block_) {
-    //TODO one transform block per context
-    bone_transforms_block_ = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
-  }
-
-  if(hasAnims_ && timer_.get_elapsed() > currAnimation_->duration) {
+  if(has_anims_ && timer_.get_elapsed() > currAnimation_->duration) {
     timer_.reset();
     currAnimation_ = animations_[animNum % animations_.size()];
     ++animNum;
@@ -112,17 +99,23 @@ void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
   //reserve vector for transforms
   std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
 
-  std::shared_ptr<Node> start{};
-  start = SkeletalAnimationUtils::find_node("Waist", root_->children[1]->children[0]->children[0]);
-  if(start) partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], start, transforms);
-  else {
-    Logger::LOG_WARNING << "node not found" << std::endl;
+  // std::shared_ptr<Node> start{};
+  // start = SkeletalAnimationUtils::find_node("Waist", root_->children[1]->children[0]->children[0]);
+  // if(start) partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], start, transforms);
+  // else {
+  //   Logger::LOG_WARNING << "node not found" << std::endl;
+  // } 
     SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), root_->children[1]->children[0]->children[0], currAnimation_, transforms);
-  } 
   // blend_pose(timer_.get_elapsed(), animations_[0], animations_[1], transforms);
+  return transforms;
+}
 
-  bone_transforms_block_->update(ctx.render_context, transforms);
-  ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
+int SkeletalAnimationDirector::getBoneID(std::string const& name) {
+  return bone_mapping_.at(name);
+}
+
+bool SkeletalAnimationDirector::has_anims() const {
+  return has_anims_;
 }
 
 } // namespace gua

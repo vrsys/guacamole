@@ -46,7 +46,9 @@ namespace node {
       geometry_changed_(true),
       materials_(materials),
       material_changed_(true),
-      animation_director_(animation_director)
+      animation_director_(animation_director),
+      bone_transforms_block_{nullptr},
+      first_run_{true}
   {
     geometries_.resize(geometry_descriptions_.size());
   }
@@ -107,7 +109,20 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+  void SkeletalAnimationNode::update_bone_transforms(RenderContext const& ctx) {
+    if(!animation_director_->has_anims() && !first_run_) return;
+    if(!animation_director_->has_anims()) first_run_ = false;
 
+    if(!bone_transforms_block_) {
+      //TODO one transform block per context
+      bone_transforms_block_ = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
+    }
+
+    bone_transforms_block_->update(ctx.render_context, animation_director_->get_bone_transforms());
+    ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::ray_test_impl(Ray const& ray, int options,
     Mask const& mask, std::set<PickResult>& hits) {
 

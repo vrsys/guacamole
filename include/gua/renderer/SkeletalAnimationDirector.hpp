@@ -47,9 +47,10 @@ class SkeletalAnimationDirector {
   void add_animations(aiScene const* scene);
   void add_hierarchy(aiScene const* scene);
 
-  int getBoneID(std::string const& name);
+  std::vector<scm::math::mat4f> get_bone_transforms();
 
-  void updateBoneTransforms(RenderContext const& ctx);
+  int getBoneID(std::string const& name);
+  bool has_anims() const;
 
 private:
   void blend_pose(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms);
@@ -62,13 +63,11 @@ private:
   std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
   std::shared_ptr<SkeletalAnimation> currAnimation_;
 
-  std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
-
   unsigned animNum;
   uint num_bones_;
 
   bool firstRun_;
-  bool hasAnims_;
+  bool has_anims_;
 
   Timer timer_;
 };
