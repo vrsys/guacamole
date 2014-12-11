@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
   
   // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
   // loader.load_animation(teapot, "data/objects/marine/crouch.md5anim", 0);
-  // loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
+  loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
   loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
   // loader.load_animation(teapot, "data/objects/idle1.md5anim", 0);
   // loader.load_animation(teapot, "data/objects/attack.md5anim", 0);
