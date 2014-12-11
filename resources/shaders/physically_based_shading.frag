@@ -30,7 +30,7 @@ in float gua_lightinfo3;
 in mat4  gua_lightinfo4;
 in mat4  gua_lightinfo5;
 in mat4  gua_lightinfo6;
-in mat4  gua_lightinfo7; 
+in mat4  gua_lightinfo7;
 
 // uniforms
 @include "shaders/common/gua_camera_uniforms.glsl"
@@ -108,7 +108,7 @@ float gua_get_shadow(vec3 position, mat4 shadow_map_coords_matrix, vec2 lookup_o
 
   float sum = 0;
   int x, y;
- 
+
   for (y = -1; y <= 1; ++y) {
     for (x = -1; x <= 1; ++x) {
       sum += gua_get_shadow(smap_coords, ivec2(x, y), acne_offset);
@@ -143,8 +143,7 @@ void gua_calculate_point_light(vec3 normal, vec3 position) {
   gua_light_distance  = length(gua_light_direction);
   gua_light_direction /= gua_light_distance;
 
-  float lightRadius = gua_lightinfo3;
-  float x = clamp(1.0 - pow( (gua_light_distance / lightRadius) , 4), 0, 1);
+  float x = clamp(1.0 - pow( (gua_light_distance / light_radius) , 4), 0, 1);
   float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
 
   vec3 Cl = falloff * gua_light_color * gua_light_brightness;
@@ -233,37 +232,37 @@ float saturate(float x) { return clamp(x,0,1); }
 
 const float Pi = 3.1459265;
 const float INV_PI = 1.0f / Pi;
-// for microsoft BRDFs (microsurface normal m == h the half vector)
-// F_schlick(F0,l,h) = F0 + (1 - F0)*(1-dot(l,h))^5
+// // for microsoft BRDFs (microsurface normal m == h the half vector)
+// // F_schlick(F0,l,h) = F0 + (1 - F0)*(1-dot(l,h))^5
 
-// From s2013_pbs_rad_notes.pdf
-// ===============================================================================
-// Calculates the Fresnel factor using Schlick’s approximation
-// ===============================================================================
+// // From s2013_pbs_rad_notes.pdf
+// // ===============================================================================
+// // Calculates the Fresnel factor using Schlick’s approximation
+// // ===============================================================================
 vec3 Fresnel(vec3 specAlbedo, vec3 h, vec3 l)
 {
   float lDotH = saturate(dot(l, h));
   return specAlbedo + (1.0f - specAlbedo) * pow((1.0f - lDotH), 5.0f);
 }
-// ===============================================================================
-// Helper for computing the GGX visibility term
-// ===============================================================================
+// // ===============================================================================
+// // Helper for computing the GGX visibility term
+// // ===============================================================================
 float GGX_V1(in float m2, in float nDotX)
 {
   return 1.0f / (nDotX + sqrt(m2 + (1 - m2) * nDotX * nDotX));
 }
 
-// ===============================================================================
-// Computes the specular term using a GGX microfacet distribution, with a
-// matching geometry factor and visibility term. m is roughness, n is the surface
-// normal, h is the half vector, l is the direction to the light source, and
-// specAlbedo is the RGB specular albedo
-// ===============================================================================
+// // ===============================================================================
+// // Computes the specular term using a GGX microfacet distribution, with a
+// // matching geometry factor and visibility term. m is roughness, n is the surface
+// // normal, h is the half vector, l is the direction to the light source, and
+// // specAlbedo is the RGB specular albedo
+// // ===============================================================================
 float GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l)
 {
   float nDotL = saturate(dot(n, l));
   if(nDotL <= 0.0f)
-    return vec3(0.0f);
+    return 0.0f;
   float nDotH = saturate(dot(n, h));
   float nDotV = max(dot(n, v), 0.0001f);
   float nDotH2 = nDotH * nDotH;
@@ -278,94 +277,94 @@ float GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l)
   return d * vis;
 }
 
-// ===============================================================================
-// Helper for computing the Beckmann geometry term
-//
-// ===============================================================================
-float Beckmann_G1(float m, float nDotX)
-{
-  float nDotX2 = nDotX * nDotX;
-  float tanTheta = sqrt((1 - nDotX2) / nDotX2);
-  float a = 1.0f / (m * tanTheta);
-  float a2 = a * a;
-  float g = 1.0f;
-  if(a < 1.6f)
-    g *= (3.535f * a + 2.181f * a2) / (1.0f + 2.276f * a + 2.577f * a2);
-  return g;
-}
+// // ===============================================================================
+// // Helper for computing the Beckmann geometry term
+// //
+// // ===============================================================================
+// float Beckmann_G1(float m, float nDotX)
+// {
+//   float nDotX2 = nDotX * nDotX;
+//   float tanTheta = sqrt((1 - nDotX2) / nDotX2);
+//   float a = 1.0f / (m * tanTheta);
+//   float a2 = a * a;
+//   float g = 1.0f;
+//   if(a < 1.6f)
+//     g *= (3.535f * a + 2.181f * a2) / (1.0f + 2.276f * a + 2.577f * a2);
+//   return g;
+// }
 
-// ===============================================================================
-// Computes the specular term using a Beckmann microfacet distribution, with a
-// matching geometry factor and visibility term. m is roughness, n is the surface
-// normal, h is the half vector, l is the direction to the light source, and
-// specAlbedo is the RGB specular albedo
-// ===============================================================================
-// assumes that m != 0
-vec3 Beckmann_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l, vec3 specAlbedo)
-{
-  float nDotL = saturate(dot(n, l));
-  if(nDotL <= 0.0f)
-    return vec3(0.0f);
-  float nDotH = saturate(dot(n, h));
-  float nDotV = max(dot(n, v), 0.0001f);
-  float nDotH2 = nDotH * nDotH;
-  float nDotH4 = nDotH2 * nDotH2;
-  float m2 = m * m;
+// // ===============================================================================
+// // Computes the specular term using a Beckmann microfacet distribution, with a
+// // matching geometry factor and visibility term. m is roughness, n is the surface
+// // normal, h is the half vector, l is the direction to the light source, and
+// // specAlbedo is the RGB specular albedo
+// // ===============================================================================
+// // assumes that m != 0
+// vec3 Beckmann_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l, vec3 specAlbedo)
+// {
+//   float nDotL = saturate(dot(n, l));
+//   if(nDotL <= 0.0f)
+//     return vec3(0.0f);
+//   float nDotH = saturate(dot(n, h));
+//   float nDotV = max(dot(n, v), 0.0001f);
+//   float nDotH2 = nDotH * nDotH;
+//   float nDotH4 = nDotH2 * nDotH2;
+//   float m2 = m * m;
 
-  // Calculate the distribution term -- uses normal, halfvector h, and roughness
-  // warum nicht nDotH2 - 1 ?
-  float tanTheta2 = (1 - nDotH2) / nDotH2;
-  float expTerm = exp(-tanTheta2 / m2);
-  // warum nicht m^4 ?
-  float D = expTerm / (Pi * m2 * nDotH4);
-  // Calculate the matching geometric term
-  float g1i = Beckmann_G1(m, nDotL);
+//   // Calculate the distribution term -- uses normal, halfvector h, and roughness
+//   // warum nicht nDotH2 - 1 ?
+//   float tanTheta2 = (1 - nDotH2) / nDotH2;
+//   float expTerm = exp(-tanTheta2 / m2);
+//   // warum nicht m^4 ?
+//   float D = expTerm / (Pi * m2 * nDotH4);
+//   // Calculate the matching geometric term
+//   float g1i = Beckmann_G1(m, nDotL);
 
-  float g1o = Beckmann_G1(m, nDotV);
-  float G = g1i * g1o;
-  // Calculate the fresnel term
-  //float f = Fresnel(specAlbedo, h, l);
-  vec3 F = Fresnel(specAlbedo, h, l);
-  // Put it all together
-  return D * G * F * (1.0f / (4.0f * nDotL * nDotV));
-}
+//   float g1o = Beckmann_G1(m, nDotV);
+//   float G = g1i * g1o;
+//   // Calculate the fresnel term
+//   //float f = Fresnel(specAlbedo, h, l);
+//   vec3 F = Fresnel(specAlbedo, h, l);
+//   // Put it all together
+//   return D * G * F * (1.0f / (4.0f * nDotL * nDotV));
+// }
 
-// End - From s2013_pbs_rad_notes.pdf
+// // End - From s2013_pbs_rad_notes.pdf
 
-// http://renderwonk.com/publications/s2010-shading-course/hoffman/s2010_physically_based_shading_hoffman_a_notes.pdf
-// schlick , use h for n with microfacets
-// f0 - reflection coefficient for light incoming parallel to the normal
-vec3 F_schlick(vec3 f0, vec3 L, vec3 N)
-{
-  return f0 + (1.0 - f0) * pow(1.0 - saturate(dot(L, N))  , 5);
-}
+// // http://renderwonk.com/publications/s2010-shading-course/hoffman/s2010_physically_based_shading_hoffman_a_notes.pdf
+// // schlick , use h for n with microfacets
+// // f0 - reflection coefficient for light incoming parallel to the normal
+// vec3 F_schlick(vec3 f0, vec3 L, vec3 N)
+// {
+//   return f0 + (1.0 - f0) * pow(1.0 - saturate(dot(L, N))  , 5);
+// }
 
-float F_schlick( float LdotH )
-{
-  //float x  = clamp( 1 - LdotH, 0.0, 1.0 );
-  float x  = 1.0 - saturate(LdotH);
-  float x2 = x * x;
-  return ( x2 * x2 * x );
-}
+// float F_schlick( float LdotH )
+// {
+//   //float x  = clamp( 1 - LdotH, 0.0, 1.0 );
+//   float x  = 1.0 - saturate(LdotH);
+//   float x2 = x * x;
+//   return ( x2 * x2 * x );
+// }
 
-float F_schlick(vec3 L, vec3 N, float eta)
-{
-  float sqr_f0 = (1-eta)*(1+eta);
-  float f0 = sqr_f0 * sqr_f0;
-  return f0 + (1.0 - f0) * pow(1.0 - saturate(dot(L, N))  , 5);
-}
+// float F_schlick(vec3 L, vec3 N, float eta)
+// {
+//   float sqr_f0 = (1-eta)*(1+eta);
+//   float f0 = sqr_f0 * sqr_f0;
+//   return f0 + (1.0 - f0) * pow(1.0 - saturate(dot(L, N))  , 5);
+// }
 
-vec3 F_schlick(float n1, float n2, float costheta)
-{
-  float sqr_f0 = (n1 - n2)/(n1+n2);
-  float f0 = sqr_f0*sqr_f0;
-  return vec3(f0 + (1.0 - f0) * pow(1.0 - saturate(costheta)  , 5));
-}
+// vec3 F_schlick(float n1, float n2, float costheta)
+// {
+//   float sqr_f0 = (n1 - n2)/(n1+n2);
+//   float f0 = sqr_f0*sqr_f0;
+//   return vec3(f0 + (1.0 - f0) * pow(1.0 - saturate(costheta)  , 5));
+// }
 
-vec3 fresnelSchlickWithRoughness(vec3 c_spec,vec3 E,vec3 N,float gloss)
-{
-  return c_spec + (max(vec3(gloss), c_spec) - c_spec) * pow(1 - saturate(dot(E, N)), 5);
-}
+// vec3 fresnelSchlickWithRoughness(vec3 c_spec,vec3 E,vec3 N,float gloss)
+// {
+//   return c_spec + (max(vec3(gloss), c_spec) - c_spec) * pow(1 - saturate(dot(E, N)), 5);
+// }
 
 // main ------------------------------------------------------------------------
 void main() {
@@ -378,7 +377,7 @@ void main() {
   vec3 L = gua_light_direction;
 
   vec3 pbr = gua_get_pbr();
-  
+
   float emit      = pbr.r;
   float metalness = pbr.b;
   float roughness = max(pbr.g, 0.0001f);
@@ -397,5 +396,6 @@ void main() {
   vec3 col = Cl * brdf * NdotL;
 
   gua_out_color = col;
+  // gua_out_color = vec3(1.0);
   //gua_out_color = NdotL * vec3(1.0);
 }
