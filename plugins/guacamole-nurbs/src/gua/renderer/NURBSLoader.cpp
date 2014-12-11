@@ -87,7 +87,7 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
       nurbs_object = igsloader.load(filename);
       surface_converter.convert(nurbs_object, bezier_object);
 
-      // check and set rendering mode and create render resource
+      // check and set rendering mode and create render resources
       auto fill_mode = flags & WIREFRAME ? scm::gl::FILL_WIREFRAME : scm::gl::FILL_SOLID;
       auto raycasting_enabled = flags & RAYCASTING;
       auto ressource = std::make_shared<NURBSResource>(bezier_object, fill_mode, raycasting_enabled != 0);

@@ -3,7 +3,7 @@
 ################################################################
 
 PROJECT(GUACAMOLE CXX)
-ENABLE_LANGUAGE(C)
+#ENABLE_LANGUAGE(C)
 
 # version number
 set(GUACAMOLE_MAJOR 0)
