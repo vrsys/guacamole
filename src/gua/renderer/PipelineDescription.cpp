@@ -33,6 +33,7 @@
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
+#include <gua/renderer/ResolvePass.hpp>
 
 namespace gua {
 
@@ -40,12 +41,23 @@ namespace gua {
 
 std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
   auto pipe(std::make_shared<PipelineDescription>());
+  /*
   pipe->add_pass<TriMeshPassDescription>();
   pipe->add_pass<TexturedQuadPassDescription>();
   pipe->add_pass<EmissivePassDescription>();
   pipe->add_pass<PhysicallyBasedShadingPassDescription>();
   pipe->add_pass<BBoxPassDescription>();
   pipe->add_pass<BackgroundPassDescription>();
+  pipe->add_pass<TexturedScreenSpaceQuadPassDescription>();
+  pipe->add_pass<ToneMappingPassDescription>();
+  */
+  pipe->add_pass<TriMeshPassDescription>();
+  pipe->add_pass<TexturedQuadPassDescription>();
+  pipe->add_pass<EmissivePassDescription>();
+  pipe->add_pass<PhysicallyBasedShadingPassDescription>();
+  pipe->add_pass<BBoxPassDescription>();
+  //pipe->add_pass<BackgroundPassDescription>();
+  pipe->add_pass<ResolvePassDescription>();
   pipe->add_pass<TexturedScreenSpaceQuadPassDescription>();
   pipe->add_pass<ToneMappingPassDescription>();
 

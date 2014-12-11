@@ -28,6 +28,7 @@
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/ABuffer.hpp>
 
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
@@ -75,6 +76,7 @@ namespace gua {
       bool writes_only_color_buffer = false;
       pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
       pipe.get_gbuffer().set_viewport(ctx);
+      pipe.get_abuffer().bind(ctx);
 
       int view_id(pipe.get_camera().config.get_view_id());
 
@@ -108,6 +110,7 @@ namespace gua {
           }
           if (current_shader) {
             current_shader->use(ctx);
+            current_shader->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(), pipe.get_gbuffer().get_height()),  "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
           }
         }
 
@@ -127,6 +130,7 @@ namespace gua {
       }
 
       pipe.get_gbuffer().unbind(ctx);
+      pipe.get_abuffer().unbind(ctx);
     }
   }
 } // namespace gua

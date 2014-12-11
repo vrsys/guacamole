@@ -19,57 +19,54 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
-#include <gua/renderer/TriMeshPass.hpp>
+#ifndef GUA_RESOLVE_PASS_HPP
+#define GUA_RESOLVE_PASS_HPP
 
-#include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/renderer/TriMeshRenderer.hpp>
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/utils/Logger.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialShaderDatabase.hpp>
-#include <gua/databases/Resources.hpp>
-#include <gua/node/TriMeshNode.hpp>
+#include <gua/renderer/PipelinePass.hpp>
+
+#include <memory>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
+class Pipeline;
 
-TriMeshPassDescription::TriMeshPassDescription()
-  : PipelinePassDescription() {
-  vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
-  fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
+class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
+ public:
 
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  doClear_ = false;
-  //abuffer_readonly_ = false;
-  rendermode_ = RenderMode::Custom;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePassDescription* TriMeshPassDescription::make_copy() const {
-  return new TriMeshPassDescription(*this);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass TriMeshPassDescription::make_pass(RenderContext const& ctx)
-{
-  PipelinePass pass{*this, ctx};
-
-  auto renderer = std::make_shared<TriMeshRenderer>();
-
-  pass.process_ = [renderer](
-    PipelinePass&, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
+  enum BackgroundMode {
+    COLOR = 0,
+    SKYMAP_TEXTURE = 1,
+    QUAD_TEXTURE = 2,
   };
 
-  return pass;
-}
+  ResolvePassDescription();
+
+  ResolvePassDescription& color(utils::Color3f const& color);
+  utils::Color3f color() const;
+
+  ResolvePassDescription& texture(std::string const& texture);
+  std::string texture() const;
+
+  ResolvePassDescription& mode(BackgroundMode const& mode);
+  BackgroundMode mode() const;
+
+
+  ResolvePassDescription& enable_fog(bool enable_fog);
+  bool enable_fog() const;
+
+  ResolvePassDescription& fog_start(float fog_start);
+  float fog_start() const;
+
+  ResolvePassDescription& fog_end(float fog_end);
+  float fog_end() const;
+
+
+  PipelinePassDescription* make_copy() const override;
+  friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const&) override;
+};
 
 }
+
+#endif  // GUA_RESOLVE_PASS_HPP

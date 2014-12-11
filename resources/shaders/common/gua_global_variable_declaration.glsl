@@ -7,3 +7,4 @@ vec3  gua_color;
 float gua_roughness;
 float gua_metalness;
 float gua_emissivity;
+float gua_alpha;
