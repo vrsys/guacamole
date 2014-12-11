@@ -24,6 +24,7 @@
 
 #include <gua/platform.hpp>
 #include <gua/renderer/enums.hpp>
+#include <gua/utils/InstanceCollection.hpp>
 
 // external headers
 #include <scm/gl_core/config.h>
@@ -87,6 +88,11 @@ struct GUA_DLL RenderContext {
   unsigned framecount;
 
   gua::CameraMode mode;
+
+  /**
+  * Resources associated with this context
+  */
+  mutable InstanceCollection resources;
 };
 
 }
