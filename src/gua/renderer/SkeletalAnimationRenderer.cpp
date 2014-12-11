@@ -54,7 +54,6 @@ namespace gua {
     programs_.clear();
   }
 
-
   ////////////////////////////////////////////////////////////////////////////////
 
   void SkeletalAnimationRenderer::render(Pipeline& pipe)
@@ -68,7 +67,6 @@ namespace gua {
         return reinterpret_cast<node::SkeletalAnimationNode*>(a)->get_material().get_shader() < reinterpret_cast<node::SkeletalAnimationNode*>(b)->get_material().get_shader();
       });*/
 
-
       RenderContext const& ctx(pipe.get_context());
 
       bool writes_only_color_buffer = false;
@@ -77,10 +75,8 @@ namespace gua {
 
       int view_id(pipe.get_camera().config.get_view_id());
 
-
       MaterialShader* current_material(nullptr);
       ShaderProgram*  current_shader(nullptr);
-
 
       // loop through all objects, sorted by material ----------------------------
       for (auto const& object : sorted_objects->second) {
@@ -89,7 +85,6 @@ namespace gua {
 
         auto materials = skel_anim_node->get_materials();
         auto geometries = skel_anim_node->get_geometries();
-
 
         // loop through all resources in animation node
         for(uint i(0);i<materials.size();++i){
@@ -117,12 +112,9 @@ namespace gua {
               current_shader->use(ctx);
               ctx.render_context->apply();
             }
-
-
           }
 
           if (current_shader && geometries[i]) {
-
 
             UniformValue model_mat(skel_anim_node->get_cached_world_transform());
             UniformValue normal_mat(scm::math::transpose(scm::math::inverse(skel_anim_node->get_cached_world_transform())));
@@ -130,24 +122,15 @@ namespace gua {
             current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
             current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
-
-
             materials[i]->apply_uniforms(ctx, current_shader, view_id);
-
-
 
             ctx.render_context->apply_program();
 
-            skel_anim_node->get_director()->updateBoneTransforms(ctx);
+            skel_anim_node->update_bone_transforms(ctx);
             geometries[i]->draw(ctx);
 
           }
-
-
         }
-
-
-
       }
 
       pipe.get_gbuffer().unbind(ctx);

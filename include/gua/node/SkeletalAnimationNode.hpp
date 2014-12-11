@@ -86,6 +86,8 @@ public : // methods
   */
   void update_bounding_box() const override;
 
+  void update_bone_transforms(RenderContext const& ctx);
+
   void update_cache() override;
 
   std::vector<std::shared_ptr<SkeletalAnimationRessource>> const& get_geometries() const;
@@ -118,8 +120,9 @@ public : // methods
   bool                              material_changed_;
 
   std::shared_ptr<SkeletalAnimationDirector> animation_director_;
+  std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
 
-
+  bool first_run_;
 };
 
 } // namespace node {
