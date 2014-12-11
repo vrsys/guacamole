@@ -19,35 +19,35 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_PBR_LOADER_HPP
-#define GUA_PBR_LOADER_HPP
+// #ifndef GUA_PBR_LOADER_HPP
+// #define GUA_PBR_LOADER_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/databases/Database.hpp>
+// // guacamole headers
+// #include <gua/platform.hpp>
+// #include <gua/databases/Database.hpp>
 
-// external headers
-#include <string>
-#include <list>
-#include <memory>
+// // external headers
+// #include <string>
+// #include <list>
+// #include <memory>
 
-namespace gua{
+// namespace gua{
 
-namespace node {
-class Node;
-class InnerNode;
-class GeometryNode;
-}
+// namespace node {
+// class Node;
+// class InnerNode;
+// class GeometryNode;
+// }
 
-class PBRLoader {
- public:
+// class PBRLoader {
+//  public:
 
   /**
    * Default constructor.
    *
    * Constructs a new and empty PBRLoader.
    */
-   PBRLoader();
+   // PBRLoader();
 
   /**
    * Constructor from a file.
@@ -57,20 +57,20 @@ class PBRLoader {
    * \param file_name        The file to load the pointclouds data from.
    * \param material_name    The material name that was set to the parent node
    */
-  std::shared_ptr<::gua::node::Node> create_geometry_from_file(std::string const& nodename,
-                                                  std::string const& xyzfile);
+//   std::shared_ptr<::gua::node::Node> create_geometry_from_file(std::string const& nodename,
+//                                                   std::string const& xyzfile);
 
 
 
-  bool is_supported(std::string const& file_name) const override;
+//   bool is_supported(std::string const& file_name) const override;
 
- private:
-  unsigned node_counter_;
-  static unsigned model_counter_;
-  boost::unordered_set<std::string> _supported_file_extensions;
+//  private:
+//   unsigned node_counter_;
+//   static unsigned model_counter_;
+//   boost::unordered_set<std::string> _supported_file_extensions;
 
-};
+// };
 
-}
+// }
 
-#endif  // GUA_PBR_LOADER_HPP
+// #endif  // GUA_PBR_LOADER_HPP

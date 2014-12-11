@@ -39,7 +39,7 @@
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
-void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods) 
+void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
   gua::utils::Trackball::button_type button;
   gua::utils::Trackball::state_type state;
@@ -74,10 +74,10 @@ int main(int argc, char** argv) {
   gua::MaterialShaderDatabase::instance()->add(shader);
 
   gua::TriMeshLoader triloader;
-  gua::NURBSLoader loader; 
+  gua::NURBSLoader loader;
   //auto teapot_geometry(loader.load_geometry("teapot_geometry", "data/objects/teapot.igs", shader->get_default_material(), gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION | gua::NURBSLoader::WIREFRAME));
   auto teapot_geometry(triloader.create_geometry_from_file("pot", "data/objects/teapot.obj", shader->get_default_material(), gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION));
-  
+
   //auto teapot2_geometry(loader.load_geometry("teapot2_geometry", "data/objects/part3.igs", "data/materials/White.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION));
   //auto teapot3_geometry(loader.load_geometry("teapot3_geometry", "data/objects/part3.igs", "data/materials/Yellow.gmd", gua::NURBSLoader::NORMALIZE_SCALE | gua::NURBSLoader::NORMALIZE_POSITION | gua::NURBSLoader::RAYCASTING));
 
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
   //teapot_geometry->scale(model_size / scm::math::length(teapot_geometry->get_bounding_box().max - teapot_geometry->get_bounding_box().min));
   //teapot_geometry->translate(-teapot_geometry->get_bounding_box().center());
   teapot_geometry->translate(0, 0, 20);
-  
+
   //float const model2_size = 20.0f;
   //teapot2_geometry->translate(-teapot2_geometry->get_bounding_box().center());
   //teapot2_geometry->translate(8,0,0);
@@ -96,8 +96,8 @@ int main(int argc, char** argv) {
   //teapot3_geometry->translate(4, 0, 8);
   //teapot3_geometry->scale(model3_size / scm::math::length(teapot3_geometry->get_bounding_box().max - teapot3_geometry->get_bounding_box().min));
 
-  auto input = graph.add_node<gua::node::TransformNode>("/", "input"); 
-   
+  auto input = graph.add_node<gua::node::TransformNode>("/", "input");
+
   auto teapot = graph.add_node<gua::node::TransformNode>("/input", "teapot");
   graph.add_node("/input/teapot", teapot_geometry);
   //graph.add_node("/input/teapot", teapot2_geometry);
@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
       // don't do something on press event
     }
     else {
-      // execute only on release 
+      // execute only on release
       switch (key)
       {
       case 'p': teapot_geometry->max_pre_tesselation(teapot_geometry->max_pre_tesselation() - 1.0f);  break;
@@ -251,10 +251,10 @@ int main(int argc, char** argv) {
     auto rig(nurbs_loader.load_geometry(
       "rig",
       //"I:/models/Paris/Paris2010_0.obj",
-      "data/objects/part1.igs",
+      "data/objects/teapot.igs",
       shader->get_default_material(),
       gua::NURBSLoader::NORMALIZE_POSITION |
-      gua::NURBSLoader::NORMALIZE_SCALE | 
+      gua::NURBSLoader::NORMALIZE_SCALE |
       gua::NURBSLoader::WIREFRAME));
     t->add_child(rig);
   };
@@ -312,6 +312,8 @@ int main(int argc, char** argv) {
     camera->config.set_resolution(new_size);
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
+
+  window->open();
 
   gua::Renderer renderer;
 

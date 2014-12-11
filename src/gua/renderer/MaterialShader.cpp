@@ -21,6 +21,7 @@
 
 #include <gua/renderer/MaterialShader.hpp>
 
+#include <gua/renderer/ShaderProgram.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/string_utils.hpp>
 
@@ -29,7 +30,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 MaterialShader::MaterialShader(std::string const& name, MaterialShaderDescription const& desc)
   : desc_(desc),
-    default_material_(name),
+    default_material_(std::make_shared<Material>(name)),
     max_object_count_(0)
 {
   auto v_methods = desc_.get_vertex_methods();
@@ -37,13 +38,13 @@ MaterialShader::MaterialShader(std::string const& name, MaterialShaderDescriptio
 
   for (auto const& method : v_methods) {
     for (auto const& uniform : method.get_uniforms()) {
-      default_material_.set_uniform(uniform.first, uniform.second);
+      default_material_->set_uniform(uniform.first, uniform.second);
     }
   }
 
   for (auto const& method : f_methods) {
     for (auto const& uniform : method.get_uniforms()) {
-      default_material_.set_uniform(uniform.first, uniform.second);
+      default_material_->set_uniform(uniform.first, uniform.second);
     }
   }
 }
@@ -55,28 +56,23 @@ MaterialShaderDescription const& MaterialShader::get_description() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string const& MaterialShader::get_name() const {
-  return default_material_.get_shader_name();
+  return default_material_->get_shader_name();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Material const MaterialShader::get_new_material() const {
-  return Material(default_material_.get_shader_name());
+std::shared_ptr<Material> MaterialShader::make_new_material() const {
+  return std::make_shared<Material>(*default_material_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Material const& MaterialShader::get_default_material() const {
-  return default_material_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-Material& MaterialShader::get_default_material() {
+std::shared_ptr<Material> const& MaterialShader::get_default_material() const {
   return default_material_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ShaderProgram* MaterialShader::get_shader(std::map<scm::gl::shader_stage, std::string> const& program_description,
                                           std::list<std::string> const& interleaved_stream_capture,
-                                          bool in_rasterization_discard)  
+                                          bool in_rasterization_discard)
 {
   // std::type_index type_id(typeid(for_type));
   using namespace scm::gl;
@@ -111,20 +107,9 @@ ShaderProgram* MaterialShader::get_shader(std::map<scm::gl::shader_stage, std::s
       }
     }
   }
-    
+
   new_shader->set_shaders(final_program_description, interleaved_stream_capture, in_rasterization_discard);
   return new_shader;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-void MaterialShader::apply_uniforms(RenderContext const& ctx,
-                                    ShaderProgram* shader,
-                                    Material const& overwrite) const {
-
-  for (auto const& uniform : overwrite.get_uniforms()) {
-    shader->apply_uniform(ctx, uniform.first, uniform.second.get());
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,7 +127,7 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
   std::string source(shader_source);
   std::stringstream sstr;
 
-  for (auto const& uniform: get_default_material().get_uniforms()) {
+  for (auto const& uniform: get_default_material()->get_uniforms()) {
     sstr << "uniform " << uniform.second.get().get_glsl_type() << " "
          << uniform.first << ";" << std::endl;
   }
@@ -166,6 +151,8 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
     sstr << method.get_name() << "();" << std::endl;
   }
   gua::string_utils::replace(source, "@material_method_calls", sstr.str());
+
+  // std::cout << string_utils::format_code(source) << std::endl;
 
   // indent and return code ----------------------------------------------------
   return string_utils::format_code(source);

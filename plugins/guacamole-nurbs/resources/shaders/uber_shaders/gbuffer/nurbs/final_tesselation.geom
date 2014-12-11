@@ -29,8 +29,8 @@ flat out uint gIndex;
 // vec3  gua_bitangent;
 // vec2  gua_texcoords;
 // vec3  gua_color;
-// float gua_shinyness;
-// float gua_specularity;
+// float gua_roughness;
+// float gua_metalness;
 // float gua_emissivity;
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -74,8 +74,8 @@ void main()
     gua_tangent          = normalize ( gua_normal_matrix * vec4 (teTangent[i].xyz, 0.0) ).xyz;
     gua_bitangent        = normalize ( gua_normal_matrix * vec4 (teBitangent[i].xyz, 0.0) ).xyz;
     
-    gua_specularity      = 0;
-    gua_shinyness        = 50;
+    gua_metalness      = 0;
+    gua_roughness        = 50;
     gua_emissivity       = 0;
     ///////////////////////////////////////////////////////
                       

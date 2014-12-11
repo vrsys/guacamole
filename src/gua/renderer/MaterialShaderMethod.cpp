@@ -32,6 +32,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 MaterialShaderMethod::MaterialShaderMethod(std::string const& name) :
+  file_name_(""),
   name_(name) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,9 +41,10 @@ MaterialShaderMethod& MaterialShaderMethod::load_from_file(std::string const& fi
     TextFile file(file_name);
 
     if (file.is_valid()) {
+      file_name_ = file_name;
       load_from_json(file.get_content());
     } else {
-      Logger::LOG_WARNING << "Failed to load material pass\""
+      Logger::LOG_WARNING << "Failed to load material method \""
                           << file_name << "\": "
                           "File does not exist!" << std::endl;
     }
@@ -56,7 +58,7 @@ MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& js
   Json::Value value;
   Json::Reader reader;
   if (!reader.parse(json_string, value)) {
-    Logger::LOG_WARNING << "Failed to parse material description: "
+    Logger::LOG_WARNING << "Failed to parse material method description: "
                            "Invalid json String!" << std::endl;
     return *this;
   }
@@ -90,7 +92,7 @@ MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& js
 
     }
   } else {
-    Logger::LOG_WARNING << "Failed to load material pass: "
+    Logger::LOG_WARNING << "Failed to load material method: "
                            "Please provide name and source in the description!"
                         << std::endl;
   }

@@ -37,8 +37,8 @@ void main() {
     vec3 gua_color = color.rgb;
 
     float gua_emissivity = 1.0;
-    float gua_shinyness = 0.0;
-    float gua_specularity = 0.0;
+    float gua_roughness = 0.0;
+    float gua_metalness = 0.0;
 
     @include "shaders/common/gua_write_gbuffer.glsl"
 }

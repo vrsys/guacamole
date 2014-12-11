@@ -18,69 +18,24 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#ifndef GUA_NURBS_LOADER_HPP
-#define GUA_NURBS_LOADER_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/NURBS.hpp>
+// class header
+#include <gua/renderer/ToneMappingPass.hpp>
 
-// external headers
-#include <unordered_set>
-#include <memory>
+#include <gua/renderer/Pipeline.hpp>
 
 namespace gua {
 
-  class Material;
-
-namespace node {
-  class Node;
-  class NURBSNode;
+ToneMappingPassDescription::ToneMappingPassDescription()
+  : PipelinePassDescription()
+{
+  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+  fragment_shader_ = "shaders/tone_mapping.frag";
+  needs_color_buffer_as_input_ = true;
+  writes_only_color_buffer_ = true;
+  rendermode_ = RenderMode::Quad;
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
 }
 
-/**
- * Loads NURBS files and creates NURBS nodes.
- *
- * This class can load NURBS data from files and display them in multiple
- * contexts.
- */
-class GUA_NURBS_DLL NURBSLoader {
- public:
-
-   enum Flags {
-     DEFAULTS = 0,
-     MAKE_PICKABLE = 1 << 0,
-     NORMALIZE_POSITION = 1 << 1,
-     NORMALIZE_SCALE = 1 << 2,
-     WIREFRAME = 1 << 3,
-     RAYCASTING = 1 << 4
-   };
-
-
-  NURBSLoader();
-
-public:
-
-  std::shared_ptr<node::NURBSNode> load_geometry(std::string const& file_name,
-                                                 unsigned flags = DEFAULTS);
-
-  std::shared_ptr<node::NURBSNode> load_geometry(std::string const& node_name,
-                                                 std::string const& file_name,
-                                                 std::shared_ptr<Material> const& fallback_material,
-                                                 unsigned flags = DEFAULTS);
-
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
- 
- private:
-
-  bool is_supported(std::string const& file_name) const;
-
- private:
-
-  std::unordered_set<std::string> _supported_file_extensions;
-
-};
-
 }
-
-#endif  // GUA_NURBS_LOADER_HPP

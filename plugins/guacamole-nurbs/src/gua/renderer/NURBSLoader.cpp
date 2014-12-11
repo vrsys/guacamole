@@ -47,7 +47,7 @@ NURBSLoader::NURBSLoader() : _supported_file_extensions() {
 
 std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& nodename,
                                                             std::string const& filename, 
-                                                            Material const& fallback_material,
+                                                            std::shared_ptr<Material> const& fallback_material,
                                                             unsigned flags)
 {
   auto cached_node(load_geometry(filename, flags));
@@ -131,11 +131,11 @@ bool NURBSLoader::is_supported(std::string const& file_name) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void NURBSLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, Material const& fallback_material) const
+void NURBSLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const
 {
   auto g_node(std::dynamic_pointer_cast<node::NURBSNode>(root));
 
-  if (g_node && g_node->get_material().get_shader_name() == "") {
+  if (g_node && !g_node->get_material()) {
     g_node->set_material(fallback_material);
     g_node->update_cache();
   }

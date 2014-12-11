@@ -28,7 +28,6 @@ uniform float sampling_distance;
 uniform vec3  volume_bounds;
 
 uniform uvec2 gua_ray_entry_in;
-uniform mat4  gua_model_matrix;
 
 in vec2 gua_quad_coords;
 

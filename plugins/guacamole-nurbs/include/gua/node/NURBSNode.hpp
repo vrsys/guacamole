@@ -30,6 +30,7 @@
 namespace gua {
 
 class NURBSResource;
+class NURBSLoader;
 
 namespace node {
 
@@ -40,13 +41,13 @@ namespace node {
 */
 class GUA_NURBS_DLL NURBSNode : public GeometryNode
 {
-  friend class NURBSLoader;
+  friend class ::gua::NURBSLoader;
 
 private : // c'tor
 
   NURBSNode(std::string const& node_name,
             std::string const& geometry_description = "gua_default_geometry",
-            Material const& material = Material(),
+            std::shared_ptr<Material> const& material = nullptr,
             math::mat4  const& transform = math::mat4::identity());
 
 public: // methods
@@ -56,9 +57,8 @@ public: // methods
   std::string const&  get_geometry_description() const;
   void                set_geometry_description(std::string const& v);
 
-  Material const&     get_material() const;
-  Material&           get_material();
-  void                set_material(Material const& material);
+  std::shared_ptr<Material> const&     get_material() const;
+  void                                 set_material(std::shared_ptr<Material> const& material);
 
 public: // render configuration
 
@@ -91,10 +91,10 @@ private : // attributes e.g. special attributes for drawing
   std::string                     geometry_description_;
   bool                            geometry_changed_;
 
-  Material                        material_;
+  std::shared_ptr<Material>       material_;
   bool                            material_changed_;
 
-  float                           max_tess_level_pre_pass_; 
+  float                           max_tess_level_pre_pass_;
   float                           max_tess_level_final_pass_;
 
 };

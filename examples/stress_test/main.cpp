@@ -45,7 +45,8 @@ int main(int argc, char** argv) {
     auto rig(loader.create_geometry_from_file(
       "rig",
       //"I:/models/Paris/Paris2010_0.obj",
-      "I:/models/Batman/Batman.obj",
+      // "I:/models/Batman/Batman.obj",
+      "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
       shader->get_default_material(),
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE |
@@ -66,11 +67,6 @@ int main(int argc, char** argv) {
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(4.4f);
   light->translate(1.f, 0.f, 2.f);
-
-  auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
-  light2->scale(3.4f);
-  light2->translate(-2.f, 1.f, 2.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(0.001 * resolution.x, 0.001 * resolution.y));
@@ -111,6 +107,8 @@ int main(int argc, char** argv) {
         graph["/rig_" + std::to_string(x) + "_" + std::to_string(y) + "/rig"]->rotate(0.1, 0, 1, 0);
       }
     }
+
+    std::cout << camera->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {

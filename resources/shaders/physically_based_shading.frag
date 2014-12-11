@@ -148,6 +148,7 @@ void gua_calculate_point_light(vec3 normal, vec3 position) {
   float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
 
   vec3 Cl = falloff * gua_light_color * gua_light_brightness;
+  //gua_light_radiance = gua_light_color;
   gua_light_radiance = Cl;
 }
 
@@ -258,7 +259,7 @@ float GGX_V1(in float m2, in float nDotX)
 // normal, h is the half vector, l is the direction to the light source, and
 // specAlbedo is the RGB specular albedo
 // ===============================================================================
-vec3 GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l, vec3 specAlbedo)
+float GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l)
 {
   float nDotL = saturate(dot(n, l));
   if(nDotL <= 0.0f)
@@ -273,11 +274,8 @@ vec3 GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l, vec3 specAlbedo)
   float v1i = GGX_V1(m2, nDotL);
   float v1o = GGX_V1(m2, nDotV);
   float vis = v1i * v1o;
-  // Calculate the fresnel term
-  //float f = Fresnel(specAlbedo, h, l);
-  vec3 f = Fresnel(specAlbedo, h, l);
   // Put it all together
-  return d * f * vis;
+  return d * vis;
 }
 
 // ===============================================================================
@@ -369,8 +367,6 @@ vec3 fresnelSchlickWithRoughness(vec3 c_spec,vec3 E,vec3 N,float gloss)
   return c_spec + (max(vec3(gloss), c_spec) - c_spec) * pow(1 - saturate(dot(E, N)), 5);
 }
 
-
-
 // main ------------------------------------------------------------------------
 void main() {
   vec3 N = gua_get_normal();
@@ -380,25 +376,24 @@ void main() {
   compute_light(N, P);
 
   vec3 L = gua_light_direction;
-  vec3 cspec = vec3(0.06);
-  vec3 cdiff = gua_get_color();
 
   vec3 pbr = gua_get_pbr();
-
+  
   float emit      = pbr.r;
   float metalness = pbr.b;
   float roughness = max(pbr.g, 0.0001f);
 
-  cspec = 0.04 * (1 - metalness) + metalness * gua_get_color();
-  cdiff = gua_get_color() * (1 - metalness);
+  vec3 cspec = 0.04 * (1 - metalness) + metalness * gua_get_color();
+  vec3 cdiff = gua_get_color() * (1 - metalness);
 
   vec3 Vn = normalize( E - P );
   vec3 H = normalize(L + Vn);
   float NdotL = clamp(dot( N, L ), 0, 1);
 
-  vec3 Cl = gua_light_radiance;
+  vec3 Cl = gua_light_radiance * (1-emit);
 
-  vec3 brdf = ( 1.0 - Fresnel(cspec, H, L) ) * cdiff + GGX_Specular(roughness, N, H, Vn, L, cspec);
+  vec3 f = Fresnel(cspec, H, L);
+  vec3 brdf = ( 1.0 - f ) * cdiff + f*GGX_Specular(roughness, N, H, Vn, L);
   vec3 col = Cl * brdf * NdotL;
 
   gua_out_color = col;

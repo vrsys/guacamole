@@ -40,7 +40,7 @@
 
 namespace gua {
 
-struct GetGlslType : public boost::static_visitor<std::string> {
+struct GUA_DLL GetGlslType : public boost::static_visitor<std::string> {
   std::string operator()(int) const { return "int"; }
   std::string operator()(bool) const { return "int"; }
   std::string operator()(float) const { return "float"; }
@@ -58,7 +58,7 @@ struct GetGlslType : public boost::static_visitor<std::string> {
   std::string operator()(std::string) const { return "uvec2"; }
 };
 
-struct GetByteSize : public boost::static_visitor<unsigned> {
+struct GUA_DLL GetByteSize : public boost::static_visitor<unsigned> {
   unsigned operator()(int) const { return sizeof(int); }
   unsigned operator()(bool) const { return sizeof(int); }
   unsigned operator()(float) const { return sizeof(float); }

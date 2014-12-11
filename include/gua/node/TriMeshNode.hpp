@@ -43,11 +43,9 @@ public : // typedef/enums/friends
 
   friend class ::gua::TriMeshLoader;
 
-private : // c'tor / d'tor
-
   TriMeshNode(std::string const& node_name = "",
               std::string const& geometry_description = "gua_default_geometry",
-              Material const& material = Material(),
+              std::shared_ptr<Material> const& material = nullptr,
               math::mat4 const& transform = math::mat4::identity());
 
 public : // methods
@@ -65,10 +63,8 @@ public : // methods
   /**
   * A string referring to an entry in guacamole's MaterialShaderDatabase.
   */
-  Material const& get_material() const;
-  Material&       get_material();
-
-  void            set_material(Material const& material);
+  std::shared_ptr<Material> const& get_material() const;
+  void                      set_material(std::shared_ptr<Material> const& material);
 
   /**
   * Implements ray picking for a triangular mesh
@@ -106,7 +102,7 @@ public : // methods
   std::string                       geometry_description_;
   bool                              geometry_changed_;
 
-  Material                          material_;
+  std::shared_ptr<Material>         material_;
   bool                              material_changed_;
 };
 

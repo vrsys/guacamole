@@ -39,7 +39,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   NURBSNode::NURBSNode(std::string const& name,
                        std::string const& geometry_description,
-                       Material const& material,
+                       std::shared_ptr<Material> const& material,
                        math::mat4 const& transform)
     : GeometryNode(name, transform),
       geometry_description_(geometry_description),
@@ -68,23 +68,16 @@ namespace node {
 
 
   ////////////////////////////////////////////////////////////////////////////////
-  Material const& NURBSNode::get_material() const {
+  std::shared_ptr<Material> const& NURBSNode::get_material() const {
     return material_;
   }
 
-
   ////////////////////////////////////////////////////////////////////////////////
-  Material& NURBSNode::get_material() {
-    return material_;
-  }
-
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void NURBSNode::set_material(Material const& material) {
+  void NURBSNode::set_material(std::shared_ptr<Material> const& material) {
     material_ = material;
     material_changed_ = self_dirty_ = true;
   }
-  
+
 
   ////////////////////////////////////////////////////////////////////////////////
   float NURBSNode::max_pre_tesselation() const
@@ -174,7 +167,7 @@ namespace node {
 
     if (material_changed_)
     {
-      if (material_.get_shader_name() != "")
+      if (!material_)
       {
         // if (!MaterialShaderDatabase::instance()->contains(material_))
         // {
