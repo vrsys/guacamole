@@ -24,18 +24,41 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     next_transition_{0},
     timer_{} {
   timer_.start();
-  add_hierarchy(scene);
+  add_hierarchy(*scene);
+}
+SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Node> const& root):
+    num_bones_{0},
+    has_anims_{false},
+    firstRun_{true},
+    animations_{},
+    currAnimation_{},
+    animNum{0},
+    bone_mapping_{},
+    anim_start_node_{},
+    state_{Playback::crossfade},
+    blending_state_{Blending::linear},
+    next_transition_{0},
+    root_{root},
+    timer_{} {
+  timer_.start();
+
+    root_->collect_indices(bone_mapping_);
+    num_bones_ = bone_mapping_.size();
+
+  if(root_->children.size() > 0) {
+    anim_start_node_ = root_->children[1]->children[0]->children[0];
+  }
 }
 
-void SkeletalAnimationDirector::add_hierarchy(aiScene const* scene) {
-  root_ = anim_start_node_ = SkeletalAnimationUtils::load_hierarchy(scene);
+void SkeletalAnimationDirector::add_hierarchy(aiScene const& scene) {
+  root_ = anim_start_node_ = std::make_shared<Node>(scene);
   root_->collect_indices(bone_mapping_);
   num_bones_ = bone_mapping_.size();
 
   anim_start_node_ = root_->children[1]->children[0]->children[0];
 }
 
-void SkeletalAnimationDirector::add_animations(aiScene const* scene) {
+void SkeletalAnimationDirector::add_animations(aiScene const& scene) {
   std::vector<std::shared_ptr<SkeletalAnimation>> newAnims{SkeletalAnimationUtils::load_animations(scene)};
 
   animations_.reserve(animations_.size() + newAnims.size());
@@ -46,7 +69,6 @@ void SkeletalAnimationDirector::add_animations(aiScene const* scene) {
   currAnimation_ = animations_[animations_.size()-1];
 }
 
-<<<<<<< HEAD
 void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFactor, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
 
   float timeNormalized1 = timeInSeconds / pAnim1.get_duration();
@@ -63,10 +85,6 @@ void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFacto
   pose1.blend(pose2, blendFactor);
 
   anim_start_node_->accumulate_matrices(transforms, pose1, identity);
-=======
-int SkeletalAnimationDirector::getBoneID(std::string const& name) {
-  return bone_mapping_.at(name);
->>>>>>> parial skeleton blending works with workarounds
 }
 
 void SkeletalAnimationDirector::partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms) {
@@ -94,35 +112,7 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, SkeletalAnima
   anim_start_node_->accumulate_matrices(transforms, full_body, identity);
 }
 
-<<<<<<< HEAD
 std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
-=======
-void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::shared_ptr<Node> const& start, std::vector<scm::math::mat4f>& transforms) {
- 
-  float animationTime1 = 0;
-  float animationTime2 = 0;
-
-  float timeInFrames = timeInSeconds * pAnim1->numFPS;
-  animationTime1 = fmod(timeInFrames, (float)pAnim1->numFrames);
-
-  timeInFrames = timeInSeconds * pAnim2->numFPS;
-  animationTime2 = fmod(timeInFrames, (float)pAnim2->numFrames);
-
-  scm::math::mat4f identity = scm::math::mat4f::identity();
-
-  std::map<std::string, Transformation> transformStructs1{SkeletalAnimationUtils::calculate_transforms(animationTime1, pAnim1)};
-  std::map<std::string, Transformation> transformStructs2{SkeletalAnimationUtils::calculate_transforms(animationTime2, pAnim2)};
-
-  SkeletalAnimationUtils::accumulate_transforms(transforms, root_, transformStructs1, identity);
-
-  std::shared_ptr<Node> parentNode = SkeletalAnimationUtils::find_node(start->parentName, root_);
-  scm::math::mat4f parentTransform = parentNode->currentTransformation;
-  
-  SkeletalAnimationUtils::accumulate_transforms(transforms, start, transformStructs2, parentTransform);
-}
-
-void SkeletalAnimationDirector::updateBoneTransforms(RenderContext const& ctx)
->>>>>>> parial skeleton blending works with workarounds
 {
   //reserve vector for transforms
   std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
@@ -196,7 +186,6 @@ void SkeletalAnimationDirector::set_blending_mode(uint mode) {
   }
 }
 
-<<<<<<< HEAD
 uint SkeletalAnimationDirector::get_blending_mode() {
   return blending_state_;
 }
@@ -204,19 +193,13 @@ uint SkeletalAnimationDirector::get_blending_mode() {
 int SkeletalAnimationDirector::getBoneID(std::string const& name) {
   return bone_mapping_.at(name);
 }
-=======
-  std::shared_ptr<Node> start{};
-  start = SkeletalAnimationUtils::find_node("Waist", root_->children[1]->children[0]->children[0]);
-  if(start) partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], start, transforms);
-  else {
-    Logger::LOG_WARNING << "node not found" << std::endl;
-    SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), root_->children[1]->children[0]->children[0], currAnimation_, transforms);
-  } 
-  // calculate_pose(timer_.get_elapsed(), animations_[0], animations_[1], transforms);
->>>>>>> parial skeleton blending works with workarounds
 
 bool SkeletalAnimationDirector::has_anims() const {
   return has_anims_;
+}
+
+std::shared_ptr<Node> SkeletalAnimationDirector::get_root() {
+  return root_;
 }
 
 } // namespace gua

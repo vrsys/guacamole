@@ -66,6 +66,8 @@ int main(int argc, char** argv) {
   auto mat1(load_mat("data/materials/pinky.gmd"));*/
 =======
   auto mat1(shader->make_new_material());
+
+  mat1->set_uniform("Color", gua::math::vec4(0.5, 0.5, 0.5, 1));
   // mat1->set_uniform("ColorMap", std::string("data/textures/pinky_d.tga"));
   // mat1->set_uniform("NormalMap", std::string("data/textures/pinky_local.tga"));
 >>>>>>> parial skeleton blending works with workarounds
