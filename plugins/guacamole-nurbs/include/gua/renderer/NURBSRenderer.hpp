@@ -42,7 +42,7 @@ namespace gua {
     NURBSRenderer();
     ~NURBSRenderer();
 
-    void render(Pipeline& pipe);
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
     void reload_programs();
 

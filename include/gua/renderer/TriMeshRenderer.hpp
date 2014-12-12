@@ -34,6 +34,7 @@ namespace gua {
   class MaterialShader;
   class ShaderProgram;
   class Pipeline;
+  class PipelinePassDescription;
 
 class TriMeshRenderer {
 
@@ -42,7 +43,7 @@ class TriMeshRenderer {
    TriMeshRenderer();
    ~TriMeshRenderer();
   
-   void render(Pipeline& pipe);
+   void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
  private:
 

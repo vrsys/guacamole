@@ -64,8 +64,8 @@ PipelinePass TriMeshPassDescription::make_pass(RenderContext const& ctx)
   auto renderer = std::make_shared<TriMeshRenderer>();
 
   pass.process_ = [renderer](
-    PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
-    renderer->render(pipe);
+    PipelinePass&, PipelinePassDescription const& desc, Pipeline & pipe) {
+    renderer->render(pipe, desc);
   };
 
   return pass;

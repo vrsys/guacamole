@@ -44,8 +44,12 @@ class GUA_DLL PipelinePassDescription {
   friend class Pipeline;
   friend class PipelinePass;
 
+  void request_reinitialization(bool reinit) { reinitialization_requested_ = reinit; };
+  bool request_reinitialization() const { return reinitialization_requested_; };
+
  protected:
   virtual PipelinePass make_pass(RenderContext const& ctx) = 0;
+
   // shader names
   std::string vertex_shader_ = "";
   std::string fragment_shader_ = "";
@@ -54,6 +58,7 @@ class GUA_DLL PipelinePassDescription {
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
   bool doClear_ = false;
+  bool reinitialization_requested_ = false;
 
   RenderMode rendermode_ = RenderMode::Custom;
 

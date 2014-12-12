@@ -111,16 +111,16 @@ int main(int argc, char** argv) {
   portal_camera->config.set_scene_graph_name("main_scenegraph");
   portal_camera->config.set_output_texture_name("portal");
   portal_camera->config.set_enable_stereo(false);
-
-  gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
-
+  
+  gua::TextureDatabase::instance()->load("data/images/skymap.jpg");
+  
   gua::PipelineDescription portal_pipe;
   portal_pipe.add_pass<gua::TriMeshPassDescription>();
   portal_pipe.add_pass<gua::EmissivePassDescription>();
   portal_pipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
   portal_pipe.add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+    .texture("data/images/skymap.jpg");
   portal_camera->config.set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
   camera->set_pre_render_cameras({portal_camera});
   camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+    .texture("data/images/skymap.jpg");
   //camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
   //  .radius(3)
   //  .intensity(2);

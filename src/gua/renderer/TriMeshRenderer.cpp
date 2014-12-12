@@ -57,7 +57,7 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void TriMeshRenderer::render(Pipeline& pipe)
+  void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   {
     auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
 

@@ -522,8 +522,11 @@ std::string NURBSRenderer::_raycast_fragment_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void NURBSRenderer::render(Pipeline& pipe)
+void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
+  std::cout << desc.request_reinitialization() << std::endl;
+
+
   auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::NURBSNode))));
 
   if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
