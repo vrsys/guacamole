@@ -53,6 +53,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
           Resources::lookup_shader(d.vertex_shader_),
           Resources::lookup_shader(d.fragment_shader_));
     }
+
     shader_->upload_to(ctx);
   }
 
