@@ -44,13 +44,13 @@ public : // typedef/enums/friends
 
   friend class ::gua::SkeletalAnimationLoader;
 
-private : // c'tor / d'tor
-
-  SkeletalAnimationNode(std::string const& node_name,
-              std::vector<std::string> const& geometry_description,
-              std::vector<std::shared_ptr<Material>> const& materials,
+  SkeletalAnimationNode(std::string const& node_name = "",
+              std::vector<std::string> const& geometry_description = {},
+              std::vector<std::shared_ptr<Material>> const& materials = {},
               std::shared_ptr<SkeletalAnimationDirector> animation_director = nullptr,
               math::mat4 const& transform = math::mat4::identity());
+
+private : // c'tor / d'tor
 
 public : // methods
 
