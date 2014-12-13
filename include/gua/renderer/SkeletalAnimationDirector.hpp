@@ -42,10 +42,12 @@ class SkeletalAnimationDirector {
  public:
 
   SkeletalAnimationDirector(aiScene const*);
+  SkeletalAnimationDirector(std::shared_ptr<Node> const&);
+
   inline ~SkeletalAnimationDirector(){};
 
-  void add_animations(aiScene const* scene);
-  void add_hierarchy(aiScene const* scene);
+  void add_animations(aiScene const& scene);
+  void add_hierarchy(aiScene const& scene);
 
   std::vector<scm::math::mat4f> get_bone_transforms();
 
@@ -57,6 +59,8 @@ class SkeletalAnimationDirector {
   
   void set_blending_mode(uint mode);
   uint get_blending_mode();
+
+  std::shared_ptr<Node> get_root();
 
 private:
 
