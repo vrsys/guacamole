@@ -73,7 +73,7 @@ void SkeletalAnimationUtils::blend(std::map<std::string, Transformation>& transf
 }
 void SkeletalAnimationUtils::partial_blend(std::map<std::string, Transformation>& transforms1, std::map<std::string, Transformation> const& transforms2, std::shared_ptr<Node> const& pNode) {
   transforms1.at(pNode->name) = transforms2.at(pNode->name);
-  
+
   for(std::shared_ptr<Node>& child : pNode->children) {
     partial_blend(transforms1, transforms2, child);
   }
@@ -81,14 +81,14 @@ void SkeletalAnimationUtils::partial_blend(std::map<std::string, Transformation>
 
 void SkeletalAnimationUtils::calculate_pose(float timeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
  
-  float animationTime = 0;
+  float timeNormalized = 0;
   std::map<std::string, Transformation> transformStructs{};
 
   if(pAnim) {
-    float timeInFrames = timeInSeconds * pAnim->numFPS;
-    animationTime = fmod(timeInFrames, (float)pAnim->numFrames);
+    timeNormalized = timeInSeconds / pAnim->duration;
+    timeNormalized = scm::math::fract(timeNormalized);
 
-    transformStructs = calculate_transforms(animationTime, pAnim);
+    transformStructs = calculate_transforms(timeNormalized, pAnim);
   }
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
@@ -110,27 +110,27 @@ void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>
   }
   
   for (uint i = 0 ; i < pNode->numChildren ; i++) {
-  // std::cout << "currnode " << pNode->name;
     accumulate_transforms(transformMat4s, pNode->children[i], transformStructs, finalTransformation);
   }
-  // std::cout << " finished children" << std::endl;
 }
 
 std::map<std::string, Transformation> SkeletalAnimationUtils::calculate_transforms(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim) {
   
   std::map<std::string, Transformation> transforms{};
+
+  float currFrame = animationTime * float(pAnim->numFrames);
    
   for(BoneAnimation const& boneAnim : pAnim->boneAnims) {
     Transformation boneTransform{};
 
     // Interpolate scaling and generate scaling transformation matrix
-    boneTransform.scaling = interpolate_scaling(animationTime, boneAnim);
+    boneTransform.scaling = interpolate_scaling(currFrame, boneAnim);
 
     // Interpolate rotation and generate rotation transformation matrix
-    boneTransform.rotation = interpolate_rotation(animationTime, boneAnim); 
+    boneTransform.rotation = interpolate_rotation(currFrame, boneAnim); 
 
     // Interpolate translation and generate translation transformation matrix
-    boneTransform.translation = interpolate_position(animationTime, boneAnim);
+    boneTransform.translation = interpolate_position(currFrame, boneAnim);
 
     transforms[boneAnim.name] = boneTransform;
   }  
@@ -142,7 +142,6 @@ BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<Skel
   for (uint i = 0 ; i < pAnimation->numBoneAnims ; i++) {
     BoneAnimation const& nodeAnim = pAnimation->boneAnims[i];
     
-    //std::cout << nodeName << ", with " << nodeAnim.name << std::endl;
     if (nodeAnim.name == nodeName) {
         return &nodeAnim;
     }
