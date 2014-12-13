@@ -129,7 +129,7 @@ namespace gua {
 
     importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 
-    importer->ReadFile(file_name, aiProcessPreset_TargetRealtime_Quality);
+    importer->ReadFile(file_name, aiProcess_LimitBoneWeights);
 
     aiScene const* scene(importer->GetOrphanedScene());
 
@@ -266,6 +266,8 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_animation_node(std::
       MaterialLoader material_loader;
       aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
       material = material_loader.load_material(ai_material, file_name);
+      material->set_uniform("Roughness", 0.6f);
+
     }
 
     materials.push_back(material);

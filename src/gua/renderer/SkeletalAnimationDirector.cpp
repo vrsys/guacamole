@@ -17,15 +17,18 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     animations_{},
     currAnimation_{},
     animNum{0},
+    anim_start_node_{},
     timer_{} {
   timer_.start();
   add_hierarchy(scene);
 }
 
 void SkeletalAnimationDirector::add_hierarchy(aiScene const* scene) {
-  root_ = SkeletalAnimationUtils::load_hierarchy(scene);
+  root_ = anim_start_node_ = SkeletalAnimationUtils::load_hierarchy(scene);
   SkeletalAnimationUtils::collect_bone_indices(bone_mapping_, root_);
   num_bones_ = bone_mapping_.size();
+
+  // anim_start_node_ = root_->children[1]->children[0]->children[0];
 }
 
 void SkeletalAnimationDirector::add_animations(aiScene const* scene) {
@@ -58,7 +61,7 @@ void SkeletalAnimationDirector::blend_pose(float timeInSeconds, std::shared_ptr<
   
   SkeletalAnimationUtils::blend(transformStructs1, transformStructs2, blendFactor);
 
-  SkeletalAnimationUtils::accumulate_transforms(transforms, root_, transformStructs1, identity);
+  SkeletalAnimationUtils::accumulate_transforms(transforms, anim_start_node_, transformStructs1, identity);
 }
 
 void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms) {
@@ -92,7 +95,7 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_p
   SkeletalAnimationUtils::partial_blend(full_body, upper_body, start);
   // SkeletalAnimationUtils::partial_blend(full_body, arms, SkeletalAnimationUtils::find_node("Shoulders", root_->children[1]->children[0]->children[0]));
 
-  SkeletalAnimationUtils::accumulate_transforms(transforms, root_->children[1]->children[0]->children[0], full_body, identity);
+  SkeletalAnimationUtils::accumulate_transforms(transforms, anim_start_node_, full_body, identity);
 }
 
 std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
@@ -107,9 +110,9 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
   std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
 
   //blend two anims
-  partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], "Waist", transforms);
+  // partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], "Waist", transforms);
   //play all anims 
-  // SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), root_->children[1]->children[0]->children[0], currAnimation_, transforms);
+  SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), anim_start_node_, currAnimation_, transforms);
   //blend two anims
   // blend_pose(timer_.get_elapsed(), animations_[0], animations_[1], transforms);
   

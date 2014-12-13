@@ -73,14 +73,7 @@ void SkeletalAnimationUtils::blend(std::map<std::string, Transformation>& transf
 }
 void SkeletalAnimationUtils::partial_blend(std::map<std::string, Transformation>& transforms1, std::map<std::string, Transformation> const& transforms2, std::shared_ptr<Node> const& pNode) {
   transforms1.at(pNode->name) = transforms2.at(pNode->name);
-  // try {
-  //   pNode->offsetMatrix = infos.at(pNode->name).second;
-  //   pNode->index = infos.at(pNode->name).first;
-  // }
-  // catch(std:: exception& e) {
-  //   Logger::LOG_WARNING <<  pNode->name << " has no vertices mapped to it" << std::endl;
-  // }
-
+  
   for(std::shared_ptr<Node>& child : pNode->children) {
     partial_blend(transforms1, transforms2, child);
   }
@@ -110,7 +103,7 @@ void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>
   }
   
   scm::math::mat4f finalTransformation = parentTransform * nodeTransformation;
-  pNode->currentTransformation = finalTransformation;
+
   //update transform if bone is mapped
   if (pNode->index >= 0) {
     transformMat4s[pNode->index] = finalTransformation * pNode->offsetMatrix;
