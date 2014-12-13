@@ -53,7 +53,6 @@ namespace node {
     geometries_.resize(geometry_descriptions_.size());
   }
 
-
   ////////////////////////////////////////////////////////////////////////////////
   std::vector<std::string> const& SkeletalAnimationNode::get_geometry_descriptions() const {
     return geometry_descriptions_;
@@ -97,7 +96,6 @@ namespace node {
     }
   }
 
-
   ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::set_fallback_materials(Material const& material) {
     for(auto & mat: materials_){
@@ -106,6 +104,11 @@ namespace node {
         material_changed_= self_dirty_ = true;
       }
     }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void SkeletalAnimationNode::set_animation_mode(uint mode) {
+    animation_director_->set_playback_mode(mode);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
