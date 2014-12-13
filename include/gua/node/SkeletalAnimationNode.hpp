@@ -94,7 +94,7 @@ public : // methods
   
   std::shared_ptr<SkeletalAnimationDirector> const& get_director() const;
 
-
+  void set_animation_mode(uint mode);
 
   /**
    * Accepts a visitor and calls concrete visit method.

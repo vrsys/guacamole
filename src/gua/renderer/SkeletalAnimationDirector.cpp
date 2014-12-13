@@ -18,6 +18,7 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     currAnimation_{},
     animNum{0},
     anim_start_node_{},
+    state_{Playback::sequential},
     timer_{} {
   timer_.start();
   add_hierarchy(scene);
@@ -88,24 +89,42 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_p
 
 std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
 {
-  // if(has_anims_ && timer_.get_elapsed() > currAnimation_->duration) {
-  //   timer_.reset();
-  //   currAnimation_ = animations_[animNum % animations_.size()];
-  //   ++animNum;
-  // }
-
   //reserve vector for transforms
   std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
-
-  //blend two anims
-  partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], "Waist", transforms);
-  //play all anims 
-  // SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), anim_start_node_, currAnimation_, transforms);
-  //blend two anims
-  float blendFactor = (scm::math::sin(timer_.get_elapsed()) + 1) * 0.5f;
-  // blend_pose(timer_.get_elapsed(), blendFactor, animations_[0], animations_[1], transforms);
+  
+  switch(state_) {
+    //play all anims 
+    case Playback::sequential: {
+      if(has_anims_ && timer_.get_elapsed() > currAnimation_->duration) {
+        timer_.reset();
+        currAnimation_ = animations_[animNum % animations_.size()];
+        ++animNum;
+      }
+      SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), anim_start_node_, currAnimation_, transforms);  
+      break; 
+    }
+    //blend two anims
+    case Playback::crossfade: {
+      float blendFactor = (scm::math::sin(timer_.get_elapsed()) + 1) * 0.5f;
+      blend_pose(timer_.get_elapsed(), blendFactor, animations_[0], animations_[1], transforms);
+      break;
+    }
+    //blend two anims
+    case Playback::partial: {
+      partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], "Waist", transforms);
+      break;
+    }
+  }
   
   return transforms;
+}
+
+void SkeletalAnimationDirector::set_playback_mode(uint mode) {
+  switch(mode) {
+    case 0 : state_ = Playback::sequential; break;
+    case 1 : state_ = Playback::crossfade; break;
+    case 2 : state_ = Playback::partial; break;
+  }
 }
 
 int SkeletalAnimationDirector::getBoneID(std::string const& name) {
