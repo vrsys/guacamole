@@ -289,4 +289,24 @@ scm::math::vec3 SkeletalAnimationUtils::interpolate_scaling(float animationTime,
   return Start + Factor * Delta;
 }
 
+float Blend::sinus(float x) {
+
+  x = x * 2 * scm::math::pi_f;
+  return (scm::math::sin(x) + 1) * 0.5f;
+}
+
+float Blend::linear(float x) {
+  //values from 0 to 2 accepted
+  x = fmod(x, 2.0f);
+  x = 1 - scm::math::abs(x - 1);
+  return x;
+}
+
+float Blend::smoothstep(float x) {
+  x = fmod(x, 2.0f);
+  x = 1 - scm::math::abs(x - 1);
+  
+  return 3 * x * x - 2 * x * x * x;
+}
+
 } // namespace gua
