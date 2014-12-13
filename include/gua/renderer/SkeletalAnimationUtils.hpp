@@ -207,7 +207,7 @@ struct Transformation {
     return scm::math::make_translation(translation) * rotation.to_matrix() * scm::math::make_scale(scaling);
   }
 
-  Transformation blend(Transformation const& t, float const factor   ) const {
+  Transformation blend(Transformation const& t, float const factor) const {
     return Transformation{scaling * (1 - factor) + t.scaling * factor, slerp(rotation, t.rotation, factor), translation * (1 - factor) + t.translation * factor};
   }
 

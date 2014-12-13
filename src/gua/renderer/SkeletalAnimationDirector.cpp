@@ -19,6 +19,7 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     animNum{0},
     anim_start_node_{},
     state_{Playback::crossfade},
+    next_transition_{0},
     timer_{} {
   timer_.start();
   add_hierarchy(scene);
@@ -92,28 +93,42 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
   //reserve vector for transforms
   std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
   
+  float currentTime = timer_.get_elapsed();
+
   switch(state_) {
     //play all anims 
     case Playback::sequential: {
-      if(has_anims_ && timer_.get_elapsed() > currAnimation_->duration) {
+      if(has_anims_ && currentTime > currAnimation_->duration) {
         timer_.reset();
         currAnimation_ = animations_[animNum % animations_.size()];
         ++animNum;
       }
-      SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), anim_start_node_, currAnimation_, transforms);  
+      SkeletalAnimationUtils::calculate_pose(currentTime, anim_start_node_, currAnimation_, transforms);  
       break; 
     }
     //blend two anims
     case Playback::crossfade: {
-      float duration = 3;
-      float time = timer_.get_elapsed() / duration;
-      float blendFactor = Blend::smoothstep(time);
-      blend_pose(timer_.get_elapsed(), blendFactor, animations_[0], animations_[1], transforms);
+      float blendDuration = 2;
+      float playDuration = animations_[animNum]->duration;
+
+      if(currentTime < next_transition_) {
+        SkeletalAnimationUtils::calculate_pose(currentTime, anim_start_node_, animations_[animNum], transforms);  
+      }
+      else if(currentTime <= next_transition_ + blendDuration) {
+        float time = (currentTime - next_transition_) / blendDuration;
+        float blendFactor = Blend::linear(time);
+        blend_pose(currentTime, blendFactor, animations_[(animNum + 1) % animations_.size()], animations_[animNum], transforms);
+      }
+      else {
+        std::cout << animations_.size() << std::endl;
+        next_transition_ = currentTime + playDuration;
+        animNum = (animNum + 1) % animations_.size();
+      }
       break;
     }
     //blend two anims
     case Playback::partial: {
-      partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], "Waist", transforms);
+      partial_blend(currentTime, animations_[0], animations_[1], "Waist", transforms);
       break;
     }
     default: Logger::LOG_WARNING << "playback mode not found" << std::endl; break;
