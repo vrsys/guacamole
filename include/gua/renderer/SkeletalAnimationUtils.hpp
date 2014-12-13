@@ -170,8 +170,7 @@ struct Node {
     parentName{node->mParent != NULL ? node->mParent->mName.C_Str() : "none"},
     numChildren{node->mNumChildren},
     transformation{ai_to_gua(node->mTransformation)},
-    offsetMatrix{scm::math::mat4f::identity()},
-    currentTransformation{scm::math::mat4f::identity()}
+    offsetMatrix{scm::math::mat4f::identity()}
   {
     for(unsigned i = 0; i < node->mNumChildren; ++i) {
       std::shared_ptr<Node> child = std::make_shared<Node>(node->mChildren[i]);
@@ -188,7 +187,6 @@ struct Node {
   scm::math::mat4f transformation;
   //transforms to bone space
   scm::math::mat4f offsetMatrix;
-  scm::math::mat4f currentTransformation;
   int index;
 };
 
@@ -209,7 +207,7 @@ struct Transformation {
     return scm::math::make_translation(translation) * rotation.to_matrix() * scm::math::make_scale(scaling);
   }
 
-  Transformation blend(Transformation const& t, float const factor) const {
+  Transformation blend(Transformation const& t, float const factor   ) const {
     return Transformation{scaling * (1 - factor) + t.scaling * factor, slerp(rotation, t.rotation, factor), translation * (1 - factor) + t.translation * factor};
   }
 

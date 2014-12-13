@@ -59,6 +59,8 @@ private:
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
 
   std::shared_ptr<Node> root_;
+  std::shared_ptr<Node> anim_start_node_;
+
 
   std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
   std::shared_ptr<SkeletalAnimation> currAnimation_;
