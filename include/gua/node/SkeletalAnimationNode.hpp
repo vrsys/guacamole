@@ -100,6 +100,7 @@ public : // methods
   std::shared_ptr<SkeletalAnimationDirector> const& get_director() const;
 
   void set_animation_mode(uint mode);
+
   uint get_animation_mode();
   
   void set_blending_mode(uint mode);
