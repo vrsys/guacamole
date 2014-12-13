@@ -42,22 +42,18 @@ void SkeletalAnimationDirector::add_animations(aiScene const* scene) {
   currAnimation_ = animations_[animations_.size()-1];
 }
 
-void SkeletalAnimationDirector::blend_pose(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
- 
-  float animationTime1 = 0;
-  float animationTime2 = 0;
+void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFactor, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
 
-  float timeInFrames = timeInSeconds * pAnim1->numFPS;
-  animationTime1 = fmod(timeInFrames, (float)pAnim1->numFrames);
+  float timeNormalized1 = timeInSeconds / pAnim1->duration;
+  timeNormalized1 = scm::math::fract(timeNormalized1);
 
-  timeInFrames = timeInSeconds * pAnim2->numFPS;
-  animationTime2 = fmod(timeInFrames, (float)pAnim2->numFrames);
+  float timeNormalized2 = timeInSeconds / pAnim2->duration;
+  timeNormalized2 = scm::math::fract(timeNormalized2);
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
-  float blendFactor = 0.5;
 
-  std::map<std::string, Transformation> transformStructs1{SkeletalAnimationUtils::calculate_transforms(animationTime1, pAnim1)};
-  std::map<std::string, Transformation> transformStructs2{SkeletalAnimationUtils::calculate_transforms(animationTime2, pAnim2)};
+  std::map<std::string, Transformation> transformStructs1{SkeletalAnimationUtils::calculate_transforms(timeNormalized1, pAnim1)};
+  std::map<std::string, Transformation> transformStructs2{SkeletalAnimationUtils::calculate_transforms(timeNormalized2, pAnim2)};
   
   SkeletalAnimationUtils::blend(transformStructs1, transformStructs2, blendFactor);
 
@@ -74,47 +70,40 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_p
     return;
   }
 
-  float animationTime1 = 0;
-  float timeInFrames = timeInSeconds * pAnim1->numFPS;
-  animationTime1 = fmod(timeInFrames, (float)pAnim1->numFrames);
+  float timeNormalized1 = timeInSeconds / pAnim1->duration;
+  timeNormalized1 = scm::math::fract(timeNormalized1);
 
-  float animationTime2 = 0;
-  timeInFrames = timeInSeconds * pAnim2->numFPS;
-  animationTime2 = fmod(timeInFrames, (float)pAnim2->numFrames);
-
-  // float animationTime3 = 0;
-  // timeInFrames = timeInSeconds * animations_[2]->numFPS;
-  // animationTime3 = fmod(timeInFrames, (float)animations_[2]->numFrames);
+  float timeNormalized2 = timeInSeconds / pAnim2->duration;
+  timeNormalized2 = scm::math::fract(timeNormalized2);
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
 
-  std::map<std::string, Transformation> full_body{SkeletalAnimationUtils::calculate_transforms(animationTime1, pAnim1)};
-  std::map<std::string, Transformation> upper_body{SkeletalAnimationUtils::calculate_transforms(animationTime2, pAnim2)};
-  // std::map<std::string, Transformation> arms{SkeletalAnimationUtils::calculate_transforms(animationTime3, animations_[2])};
+  std::map<std::string, Transformation> full_body{SkeletalAnimationUtils::calculate_transforms(timeNormalized1, pAnim1)};
+  std::map<std::string, Transformation> upper_body{SkeletalAnimationUtils::calculate_transforms(timeNormalized2, pAnim2)};
 
   SkeletalAnimationUtils::partial_blend(full_body, upper_body, start);
-  // SkeletalAnimationUtils::partial_blend(full_body, arms, SkeletalAnimationUtils::find_node("Shoulders", root_->children[1]->children[0]->children[0]));
 
   SkeletalAnimationUtils::accumulate_transforms(transforms, anim_start_node_, full_body, identity);
 }
 
 std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
 {
-  if(has_anims_ && timer_.get_elapsed() > currAnimation_->duration) {
-    timer_.reset();
-    currAnimation_ = animations_[animNum % animations_.size()];
-    ++animNum;
-  }
+  // if(has_anims_ && timer_.get_elapsed() > currAnimation_->duration) {
+  //   timer_.reset();
+  //   currAnimation_ = animations_[animNum % animations_.size()];
+  //   ++animNum;
+  // }
 
   //reserve vector for transforms
   std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
 
   //blend two anims
-  // partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], "Waist", transforms);
+  partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], "Waist", transforms);
   //play all anims 
-  SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), anim_start_node_, currAnimation_, transforms);
+  // SkeletalAnimationUtils::calculate_pose(timer_.get_elapsed(), anim_start_node_, currAnimation_, transforms);
   //blend two anims
-  // blend_pose(timer_.get_elapsed(), animations_[0], animations_[1], transforms);
+  float blendFactor = (scm::math::sin(timer_.get_elapsed()) + 1) * 0.5f;
+  // blend_pose(timer_.get_elapsed(), blendFactor, animations_[0], animations_[1], transforms);
   
   return transforms;
 }
