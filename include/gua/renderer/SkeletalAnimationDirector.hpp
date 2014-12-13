@@ -75,6 +75,7 @@ private:
   bool firstRun_;
   bool has_anims_;
 
+  float next_transition_;
   Timer timer_;
 };
 

@@ -290,9 +290,8 @@ scm::math::vec3 SkeletalAnimationUtils::interpolate_scaling(float animationTime,
 }
 
 float Blend::sinus(float x) {
-
-  x = x * 2 * scm::math::pi_f;
-  return (scm::math::sin(x) + 1) * 0.5f;
+  x = x * scm::math::pi_f * 0.5f;
+  return 0.5f * (scm::math::sin(x) + 1);
 }
 
 float Blend::linear(float x) {
