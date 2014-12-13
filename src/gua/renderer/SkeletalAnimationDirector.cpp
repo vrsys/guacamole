@@ -28,7 +28,7 @@ void SkeletalAnimationDirector::add_hierarchy(aiScene const* scene) {
   SkeletalAnimationUtils::collect_bone_indices(bone_mapping_, root_);
   num_bones_ = bone_mapping_.size();
 
-  // anim_start_node_ = root_->children[1]->children[0]->children[0];
+  anim_start_node_ = root_->children[1]->children[0]->children[0];
 }
 
 void SkeletalAnimationDirector::add_animations(aiScene const* scene) {
