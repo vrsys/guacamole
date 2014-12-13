@@ -18,7 +18,7 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     currAnimation_{},
     animNum{0},
     anim_start_node_{},
-    state_{Playback::sequential},
+    state_{Playback::crossfade},
     timer_{} {
   timer_.start();
   add_hierarchy(scene);
@@ -105,7 +105,9 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
     }
     //blend two anims
     case Playback::crossfade: {
-      float blendFactor = (scm::math::sin(timer_.get_elapsed()) + 1) * 0.5f;
+      float duration = 3;
+      float time = timer_.get_elapsed() / duration;
+      float blendFactor = Blend::smoothstep(time);
       blend_pose(timer_.get_elapsed(), blendFactor, animations_[0], animations_[1], transforms);
       break;
     }
@@ -114,6 +116,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
       partial_blend(timer_.get_elapsed(), animations_[0], animations_[1], "Waist", transforms);
       break;
     }
+    default: Logger::LOG_WARNING << "playback mode not found" << std::endl; break;
   }
   
   return transforms;
