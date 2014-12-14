@@ -62,40 +62,20 @@ int main(int argc, char** argv) {
     return shader->get_default_material();
   };
 
-<<<<<<< HEAD
   auto mat1(load_mat("data/materials/pinky.gmd"));*/
-=======
-  auto mat1(shader->make_new_material());
 
-  mat1->set_uniform("Color", gua::math::vec4(0.5, 0.5, 0.5, 1));
-  // mat1->set_uniform("ColorMap", std::string("data/textures/pinky_d.tga"));
-  // mat1->set_uniform("NormalMap", std::string("data/textures/pinky_local.tga"));
->>>>>>> parial skeleton blending works with workarounds
+
 
   gua::SkeletalAnimationLoader loader;
   gua::SkeletalAnimationLoader loader2;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-<<<<<<< HEAD
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
-=======
-  // auto teapot(loader.create_geometry_from_file("bob", "data/objects/pinky.md5mesh", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/spplayer.md5mesh", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/player.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  
-  // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
-  loader.load_animation(teapot, "data/objects/marine/crouch.md5anim", 0);
-  loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
-  loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
-  // loader.load_animation(teapot, "data/objects/idle1.md5anim", 0);
-  // loader.load_animation(teapot, "data/objects/attack.md5anim", 0);
-  // loader.load_animation(teapot, "data/objects/run.md5anim", 0);
->>>>>>> parial skeleton blending works with workarounds
 
-  // auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // loader2.load_animation(teapot2, "data/objects/pinky/idle1.md5anim", 0);
-  // loader2.load_animation(teapot2, "data/objects/pinky/attack.md5anim", 0);
-  // loader2.load_animation(teapot2, "data/objects/pinky/run.md5anim", 0);
+  auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  loader2.load_animation(teapot2, "data/objects/pinky/idle1.md5anim", 0);
+  loader2.load_animation(teapot2, "data/objects/pinky/attack.md5anim", 0);
+  loader2.load_animation(teapot2, "data/objects/pinky/run.md5anim", 0);
   
   auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
@@ -104,13 +84,13 @@ int main(int argc, char** argv) {
   loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
   loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
 
+  //std::shared_ptr<gua::node::SkeletalAnimationNode> skel_node = std::dynamic_pointer_cast<gua::node::SkeletalAnimationNode>(teapot2);
+  //skel_node->set_animation_mode(0);
+  
   // auto teapot(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/bob/boblampclean.md5anim", 0);
   
-  auto rock(loader.create_geometry_from_file("fbx", "data/objects/fbx/barrel.fbx", mat1));
-  rock->set_draw_bounding_box(true);
-  graph.add_node("/transform2", rock);
-  
+
   graph.add_node("/transform", teapot);
   graph.add_node("/transform2", teapot2);
   // graph.add_node("/transform2", teapot2);
