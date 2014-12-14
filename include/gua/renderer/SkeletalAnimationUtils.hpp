@@ -220,7 +220,7 @@ struct Transformation {
 
 class Blend {
  public:
-  static float sinus(float x); 
+  static float cos(float x); 
   static float linear(float x);
   static float smoothstep(float x);
 

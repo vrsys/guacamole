@@ -109,18 +109,17 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
     //blend two anims
     case Playback::crossfade: {
       float blendDuration = 2;
-      float playDuration = animations_[animNum]->duration;
+      float playDuration = 3;
 
       if(currentTime < next_transition_) {
         SkeletalAnimationUtils::calculate_pose(currentTime, anim_start_node_, animations_[animNum], transforms);  
       }
       else if(currentTime <= next_transition_ + blendDuration) {
         float time = (currentTime - next_transition_) / blendDuration;
-        float blendFactor = Blend::linear(time);
+        float blendFactor = Blend::cos(time);
         blend_pose(currentTime, blendFactor, animations_[(animNum + 1) % animations_.size()], animations_[animNum], transforms);
       }
       else {
-        std::cout << animations_.size() << std::endl;
         next_transition_ = currentTime + playDuration;
         animNum = (animNum + 1) % animations_.size();
       }
