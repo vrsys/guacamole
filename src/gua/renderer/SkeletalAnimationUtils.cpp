@@ -39,12 +39,9 @@ std::shared_ptr<Node> SkeletalAnimationUtils::load_hierarchy(aiScene const* scen
 }
 
 void SkeletalAnimationUtils::set_bone_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& infos, std::shared_ptr<Node>& pNode) {
-  try {
+  if(infos.find(pNode->name) != infos.end()) {
     pNode->offsetMatrix = infos.at(pNode->name).second;
     pNode->index = infos.at(pNode->name).first;
-  }
-  catch(std:: exception& e) {
-    Logger::LOG_WARNING <<  pNode->name << " has no vertices mapped to it" << std::endl;
   }
 
   for(std::shared_ptr<Node>& child : pNode->children) {
@@ -289,9 +286,9 @@ scm::math::vec3 SkeletalAnimationUtils::interpolate_scaling(float animationTime,
   return Start + Factor * Delta;
 }
 
-float Blend::sinus(float x) {
-  x = x * scm::math::pi_f * 0.5f;
-  return 0.5f * (scm::math::sin(x) + 1);
+float Blend::cos(float x) {
+  x *= scm::math::pi_f;
+  return 0.5f * (1 - scm::math::cos(x));
 }
 
 float Blend::linear(float x) {
