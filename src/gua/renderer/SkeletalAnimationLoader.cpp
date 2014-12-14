@@ -185,9 +185,9 @@ namespace gua {
       importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS);
       importer->ReadFile(
           file_name,
-          aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
+          aiProcessPreset_TargetRealtime_MaxQuality |
               aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-              aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals);
+              aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals | aiProcess_LimitBoneWeights);
 
     }
     else if (flags & SkeletalAnimationLoader::OPTIMIZE_GEOMETRY) {
@@ -196,14 +196,14 @@ namespace gua {
                                     aiComponent_COLORS | aiComponent_MATERIALS);
       importer->ReadFile(
           file_name,
-          aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
+          aiProcessPreset_TargetRealtime_MaxQuality |
               aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-              aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals);
+              aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals | aiProcess_LimitBoneWeights);
     } else {
 
       importer->ReadFile(
           file_name,
-          aiProcessPreset_TargetRealtime_Quality | aiProcess_GenSmoothNormals);
+          aiProcessPreset_TargetRealtime_Quality | aiProcess_GenSmoothNormals | aiProcess_LimitBoneWeights);
 
     }
 
@@ -267,19 +267,11 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_animation_node(std::
       aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
       material = material_loader.load_material(ai_material, file_name);
       material->set_uniform("Roughness", 0.6f);
-
     }
-
     materials.push_back(material);
-
   }
 
-  // return std::make_shared<node::SkeletalAnimationNode>(mesh_name, mesh_name, material);
-  //return std::shared_ptr<node::SkeletalAnimationNode>(new node::SkeletalAnimationNode(mesh_name, mesh_name, material, animation_director));
-  return std::shared_ptr<node::SkeletalAnimationNode>(new node::SkeletalAnimationNode(file_name, geometry_descriptions, materials, animation_director));
-
-
-
+  return std::make_shared<node::SkeletalAnimationNode>(file_name, geometry_descriptions, materials, animation_director);
 }
 
 
