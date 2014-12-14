@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
   // loader.load_animation(teapot, "data/objects/pinky/attack.md5anim", 0);
   // loader.load_animation(teapot, "data/objects/pinky/run.md5anim", 0);
   
-  auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/spplayer.md5mesh", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh", mat1,  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
   loader.load_animation(teapot, "data/objects/marine/crouch.md5anim", 0);
   loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
   
 
   graph.add_node("/transform", teapot);
-  teapot->set_draw_bounding_box(true);
+  // teapot->set_draw_bounding_box(true);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
