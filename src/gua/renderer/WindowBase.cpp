@@ -149,22 +149,22 @@ void WindowBase::start_frame() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(std::shared_ptr<Texture2D> const& center_texture) {
+void WindowBase::display(std::shared_ptr<Texture> const& center_texture) {
 
-  display(center_texture, config.get_left_resolution(),
-          config.get_left_position(), WindowBase::FULL, true, true);
-
+  display(center_texture, true);
+  
+  if (config.get_stereo_mode() != StereoMode::MONO) {
+    display(center_texture, false);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(std::shared_ptr<Texture2D> const& texture,
+void WindowBase::display(std::shared_ptr<Texture> const& texture,
                          bool is_left) {
 
   switch (config.get_stereo_mode()) {
     case StereoMode::MONO:
-      display(texture);
-      break;
     case StereoMode::SIDE_BY_SIDE:
       display(texture,
               is_left ? config.get_left_resolution() : config.get_right_resolution(),
@@ -203,7 +203,7 @@ RenderContext* WindowBase::get_context() { return &ctx_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(std::shared_ptr<Texture2D> const& texture,
+void WindowBase::display(std::shared_ptr<Texture> const& texture,
                      math::vec2ui const& size,
                      math::vec2ui const& position,
                      TextureDisplayMode mode,
