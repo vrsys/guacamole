@@ -19,29 +19,44 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_FULLSCREEN_PASS_HPP
+#define GUA_FULLSCREEN_PASS_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/EmissivePass.hpp>
-#include <gua/renderer/LightingPass.hpp>
-#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/FullscreenPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
-#include <gua/renderer/Material.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+#include <gua/renderer/PipelinePass.hpp>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+#include <memory>
+
+namespace gua {
+
+class Pipeline;
+
+class GUA_DLL FullscreenPassDescription : public PipelinePassDescription {
+ public:
+  FullscreenPassDescription();
+
+  FullscreenPassDescription& source(std::string const& source);
+  std::string const& source() const;
+
+  FullscreenPassDescription& source_file(std::string const& source_file);
+  std::string const& source_file() const;
+
+  template<typename T>
+  FullscreenPassDescription& uniform(std::string const& name, T const& val) {
+    uniforms[name] = val;
+    return *this;
+  }
+
+  template<typename T>
+  T const& uniform(std::string const& name) {
+    return boost::get<T>(uniforms[name].data);
+  }
+
+  PipelinePassDescription* make_copy() const override;
+  friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const&) override;
+};
+
+}
+
+#endif  // GUA_FULLSCREEN_PASS_HPP

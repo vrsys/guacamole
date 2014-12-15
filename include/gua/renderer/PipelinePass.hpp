@@ -51,9 +51,15 @@ class GUA_DLL PipelinePassDescription {
   std::string fragment_shader_ = "";
   std::string geometry_shader_ = "";
 
+  bool vertex_shader_is_file_name_ = true;
+  bool fragment_shader_is_file_name_ = true;  
+  bool geometry_shader_is_file_name_ = true;
+
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
   bool doClear_ = false;
+
+  mutable bool recompile_shaders_ = true;
 
   RenderMode rendermode_ = RenderMode::Custom;
 

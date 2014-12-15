@@ -134,9 +134,6 @@ int main(int argc, char** argv) {
   camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
-  //camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
-  //  .radius(3)
-  //  .intensity(2);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
