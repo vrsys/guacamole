@@ -40,7 +40,7 @@
 namespace gua {
 
 class Geometry;
-class Texture2D;
+class Texture;
 
 /**
  * A base class for various windows.
@@ -160,9 +160,9 @@ class GUA_DLL WindowBase {
   /**
    *
    */
-  virtual void display(std::shared_ptr<Texture2D> const& center_texture);
+  virtual void display(std::shared_ptr<Texture> const& center_texture);
 
-  virtual void display(std::shared_ptr<Texture2D> const& center_texture,
+  virtual void display(std::shared_ptr<Texture> const& center_texture,
                        bool is_left);
 
   /**
@@ -192,7 +192,7 @@ protected:
   mutable RenderContext ctx_;
 
  private:
-  void display(std::shared_ptr<Texture2D> const& texture,
+  void display(std::shared_ptr<Texture> const& texture,
                math::vec2ui const& size,
                math::vec2ui const& position,
                TextureDisplayMode mode = FULL,

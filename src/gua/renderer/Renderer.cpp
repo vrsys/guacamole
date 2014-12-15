@@ -71,9 +71,40 @@ void Renderer::renderclient(Mailbox in) {
       if (window && window->get_is_open()) {
         window->set_active(true);
 
+        // display loading screen
+        if (window->get_context()->framecount == 0) {
+
+          auto loading_texture(TextureDatabase::instance()->lookup("gua_loading_texture"));
+          math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
+
+          auto tmp_left_resolution(window->config.left_resolution());
+          auto tmp_right_resolution(window->config.right_resolution());
+
+          auto tmp_left_position(window->config.left_position());
+          auto tmp_right_position(window->config.right_position());
+
+          window->config.set_left_resolution(loading_texture_size);
+          window->config.set_left_position(tmp_left_position + (tmp_left_resolution - loading_texture_size)/2);
+
+          window->config.set_right_resolution(loading_texture_size);
+          window->config.set_right_position(tmp_right_position + (tmp_right_resolution - loading_texture_size)/2);
+
+          window->display(loading_texture);
+          window->finish_frame();
+          ++(window->get_context()->framecount);
+
+          window->config.set_left_position(tmp_left_position);
+          window->config.set_left_resolution(tmp_left_resolution);
+
+          window->config.set_right_position(tmp_right_position);
+          window->config.set_right_resolution(tmp_right_resolution);
+        }
+
+        // process pipeline
         auto const& camera(*std::get<0>(x));
+
         auto process = [&](CameraMode mode) {
-          std::get<0>(x)->rendering_pipeline->process(
+          camera.rendering_pipeline->process(
             window->get_context(), mode, camera, *std::get<1>(x)
           );
         };
