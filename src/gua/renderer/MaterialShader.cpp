@@ -70,92 +70,16 @@ std::shared_ptr<Material> const& MaterialShader::get_default_material() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ShaderProgram* MaterialShader::get_shader(std::map<scm::gl::shader_stage, std::string> const& program_description,
-                                          std::list<std::string> const& interleaved_stream_capture,
-                                          bool in_rasterization_discard)
+std::list<MaterialShaderMethod> const& MaterialShader::get_vertex_methods() const
 {
-  // std::type_index type_id(typeid(for_type));
-  using namespace scm::gl;
-
-  std::vector<ShaderProgramStage> final_program_description;
-  auto new_shader = new ShaderProgram();
-
-  auto v_methods = desc_.get_vertex_methods();
-  auto f_methods = desc_.get_fragment_methods();
-
-  for (auto const& stage : program_description)
-  {
-    // insert material code in vertex and fragment shader
-    if (stage.first == STAGE_VERTEX_SHADER) {
-      auto v_shader(compile_description(v_methods, program_description.at(STAGE_VERTEX_SHADER)));
-      final_program_description.push_back(ShaderProgramStage(STAGE_VERTEX_SHADER, v_shader));
-    }
-    else {
-      if (stage.first == STAGE_GEOMETRY_SHADER) {
-        auto g_shader(compile_description(v_methods, program_description.at(STAGE_GEOMETRY_SHADER)));
-        final_program_description.push_back(ShaderProgramStage(STAGE_GEOMETRY_SHADER, g_shader));
-      }
-      else {
-        if (stage.first == STAGE_FRAGMENT_SHADER) {
-          auto f_shader(compile_description(f_methods, program_description.at(STAGE_FRAGMENT_SHADER)));
-          final_program_description.push_back(ShaderProgramStage(STAGE_FRAGMENT_SHADER, f_shader));
-        }
-        else {
-          // keep code for other shading stages
-          final_program_description.push_back(ShaderProgramStage(stage.first, stage.second));
-        }
-      }
-    }
-  }
-
-  new_shader->set_shaders(final_program_description, interleaved_stream_capture, in_rasterization_discard);
-  return new_shader;
+  return desc_.get_vertex_methods();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void MaterialShader::print_shaders() const {
-  // for (auto shader: shaders_) {
-  //   shader.second->print_shaders();
-  // }
+std::list<MaterialShaderMethod> const& MaterialShader::get_fragment_methods() const
+{
+  return desc_.get_fragment_methods();
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> const& methods,
-                                                std::string const& shader_source) const {
-  std::string source(shader_source);
-  std::stringstream sstr;
-
-  for (auto const& uniform: get_default_material()->get_uniforms()) {
-    sstr << "uniform " << uniform.second.get().get_glsl_type() << " "
-         << uniform.first << ";" << std::endl;
-  }
-  sstr << std::endl;
-
-  // insert uniforms
-  gua::string_utils::replace(source, "@material_uniforms", sstr.str());
-  gua::string_utils::replace(source, "@material_input", "");
-
-  sstr.str("");
-
-  // material methods ----------------------------------------------------------
-  for (auto& method: methods) {
-    sstr << method.get_source() << std::endl;
-  }
-  gua::string_utils::replace(source, "@material_method_declarations", sstr.str());
-  sstr.str("");
-
-  // material method calls -----------------------------------------------------
-  for (auto& method: methods) {
-    sstr << method.get_name() << "();" << std::endl;
-  }
-  gua::string_utils::replace(source, "@material_method_calls", sstr.str());
-
-  // std::cout << string_utils::format_code(source) << std::endl;
-
-  // indent and return code ----------------------------------------------------
-  return string_utils::format_code(source);
-}
 
 }

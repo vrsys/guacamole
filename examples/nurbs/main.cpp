@@ -57,7 +57,7 @@ void key_press(gua::PipelineDescription& pipe, int key, int scancode, int action
   case 'r' :
     auto& trimesh_desc = pipe.get_pass<gua::NURBSPassDescription>();
     std::cout << "setting dirty flag " << std::endl;
-    trimesh_desc.request_reinitialization(true);
+    trimesh_desc.touch();
     break;
   }
 }

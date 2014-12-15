@@ -23,6 +23,7 @@
 #define GUA_VOLUME_LOADER_HPP
 
 // guacamole headers
+#include <gua/volume/platform.hpp>
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
 
@@ -43,7 +44,7 @@ namespace gua {
   * This class can load mesh data from files and display them in multiple
   * contexts. A VolumeLoader object is made of several Mesh objects.
   */
-  class GUA_DLL VolumeLoader {
+  class GUA_VOLUME_DLL VolumeLoader {
   public:
 
     enum Flags {
@@ -92,7 +93,7 @@ namespace gua {
 
   private:
 
-    static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
+    //static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
 
     boost::unordered_set<std::string> _supported_file_extensions;
 

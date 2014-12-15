@@ -19,41 +19,55 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_VOLUME_RENDERER_HPP
-#define GUA_VOLUME_RENDERER_HPP
+#ifndef GUA_PROGRAM_FACTORY_HPP
+#define GUA_PROGRAM_FACTORY_HPP
 
-// guacamole headers
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/FrameBufferObject.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
+#include <vector>
+#include <map>
+#include <list>
+
+#include <scm/gl_core/shader_objects.h>
+
+#include <gua/platform.hpp>
 
 namespace gua {
 
-class GBuffer;
+struct RenderContext;
+class ShaderProgram;
+class MaterialShader;
+class MaterialShaderMethod;
 
-class VolumeRenderer {
+class GUA_DLL ProgramFactory {
+
  public:
 
-  VolumeRenderer();
-  ~VolumeRenderer();
+  ProgramFactory(std::vector<std::string> const& shader_search_directories = std::vector<std::string>());
 
-  void render(Pipeline& pipe);
+  ~ProgramFactory();
 
- private:
-  void init_resources(Pipeline& pipe);
+ public:
 
-  FrameBufferObject* volume_raygeneration_fbo_;
-  std::shared_ptr<Texture2D> volume_raygeneration_color_buffer_;
-  std::shared_ptr<Texture2D> volume_raygeneration_depth_buffer_;
+   void           add_search_path (std::string const& path);
 
-  ProgramFactory                 program_factory_;
-  std::shared_ptr<ShaderProgram> composite_shader_;
-  std::shared_ptr<ShaderProgram> ray_generation_shader_;
+  std::shared_ptr<ShaderProgram>  create_program (MaterialShader* material,
+                                                  std::map<scm::gl::shader_stage, std::string> const& program_description,
+                                                  std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
+                                                  bool in_rasterization_discard = false);
 
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::blend_state_ptr blend_state_;
+  std::string     read_shader_from_file (std::string const& file) const;
+
+  void            resolve_shader_includes (std::string& shader_source) const;
+
+  std::string     compile_description (MaterialShader* material,
+                                       std::list<MaterialShaderMethod> const& passes,
+                                       std::string const& shader_source) const;
+
+private:
+
+  std::vector<std::string> _search_paths;
+
 };
 
 }
 
-#endif  // GUA_VOLUME_RENDERER_HPP
+#endif  // GUA_PIPELINE_HPP

@@ -22,6 +22,21 @@ ADD_LIBRARY( guacamole-volume SHARED
     ${GUACAMOLE_VOLUME_SRC}
 )
 
+TARGET_LINK_LIBRARIES( guacamole-volume 
+                       guacamole
+                       general ${SCHISM_LIBRARIES} 
+                       general ${GL_LIBRARIES})
+
+IF (UNIX)
+    TARGET_LINK_LIBRARIES( guacamole general ${BOOST_LIBRARIES})
+    TARGET_LINK_LIBRARIES( guacamole general ${X11_LIBRARIES})
+ELSEIF (MSVC)
+    # use boost autolink feature
+    # not necessary to link GL on msvc
+ENDIF (UNIX)
+
+
+
 ADD_DEPENDENCIES(guacamole-volume guacamole)
 
 IF (MSVC)

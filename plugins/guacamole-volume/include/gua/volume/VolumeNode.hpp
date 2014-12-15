@@ -23,6 +23,7 @@
 #define GUA_VOLUME_NODE_HPP
 
 // guacamole headers
+#include <gua/volume/platform.hpp>
 #include <gua/node/SerializableNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/utils/Color3f.hpp>
@@ -39,7 +40,7 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL VolumeNode : public SerializableNode {
+class GUA_VOLUME_DLL VolumeNode : public SerializableNode {
 public:
   
   #define ALPHA_TRANSFER_TYPE scm::data::piecewise_function_1d<float, float>

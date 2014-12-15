@@ -23,7 +23,7 @@
 #define GUA_VOLUME_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
+#include <gua/volume/platform.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/Texture3D.hpp>
@@ -62,7 +62,7 @@ namespace gua {
   * Do not use this class directly, it is just used by the Geometry class to
   * store the individual meshes of a file.
   */
-  class Volume : public GeometryResource {
+  class GUA_VOLUME_DLL Volume : public GeometryResource {
   public:
 
     /**

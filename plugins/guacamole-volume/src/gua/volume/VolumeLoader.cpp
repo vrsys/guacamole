@@ -40,8 +40,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>
-  VolumeLoader::loaded_files_ =
+std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_ =
   std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>();
 
 ////////////////////////////////////////////////////////////////////////////////

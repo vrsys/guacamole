@@ -22,6 +22,7 @@
 // class header
 #include <gua/volume/VolumeRenderer.hpp>
 
+#include <gua/config.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/volume/Volume.hpp>
@@ -33,13 +34,15 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 VolumeRenderer::VolumeRenderer():
+  program_factory_(),
   volume_raygeneration_fbo_(nullptr),
   volume_raygeneration_color_buffer_(),
   volume_raygeneration_depth_buffer_(),
   composite_shader_(),
   ray_generation_shader_(),
   depth_stencil_state_(nullptr),
-  blend_state_(nullptr) {}
+  blend_state_(nullptr) 
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -141,15 +144,24 @@ void VolumeRenderer::init_resources(Pipeline& pipe) {
   volume_raygeneration_fbo_->attach_color_buffer(ctx, 0, volume_raygeneration_color_buffer_);
   volume_raygeneration_fbo_->attach_depth_stencil_buffer(ctx, volume_raygeneration_depth_buffer_);
 
-
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  std::string vertex_shader   = program_factory_.read_shader_from_file("shaders/common/fullscreen_quad.vert");
+  std::string fragment_shader = program_factory_.read_shader_from_file("shaders/volume_compose.frag");
+#else
   std::string vertex_shader (Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert));
   std::string fragment_shader(Resources::lookup_shader(Resources::shaders_volume_compose_frag));
+#endif
 
   composite_shader_ = std::make_shared<ShaderProgram>();
   composite_shader_->create_from_sources(vertex_shader, fragment_shader);
 
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  std::string ray_generation_vertex_shader = program_factory_.read_shader_from_file("shaders/volume_ray_generation.vert");
+  std::string ray_generation_fragment_shader = program_factory_.read_shader_from_file("shaders/volume_ray_generation.frag");
+#else
   std::string ray_generation_vertex_shader(Resources::lookup_shader(Resources::shaders_volume_ray_generation_vert));
   std::string ray_generation_fragment_shader(Resources::lookup_shader(Resources::shaders_volume_ray_generation_frag));
+#endif
 
   ray_generation_shader_ = std::make_shared<ShaderProgram>();
   ray_generation_shader_->create_from_sources(ray_generation_vertex_shader, ray_generation_fragment_shader);

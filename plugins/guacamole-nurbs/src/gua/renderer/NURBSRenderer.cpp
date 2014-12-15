@@ -26,6 +26,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/ProgramFactory.hpp>
 
 #include <gua/node/NURBSNode.hpp>
 
@@ -44,66 +45,6 @@
 #include <list>
 
 namespace gua {
-
-  namespace {
-
-    ///////////////////////////////////////////////////////////////////////////
-    std::string read_shader_file(std::string const& path, std::vector<std::string> const& root_dirs)
-    {
-      try {
-        std::string full_path(path);
-        std::ifstream ifstr(full_path.c_str(), std::ios::in);
-
-        if (ifstr.good()) {
-          return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
-        }
-
-        for (auto const& root : root_dirs)
-        {
-          std::string full_path(root + std::string("/") + path);
-          std::ifstream ifstr(full_path.c_str(), std::ios::in);
-
-          if (ifstr.good()) {
-            return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
-          }
-          ifstr.close();
-        }
-        throw std::runtime_error("File not found.");
-      }
-      catch (...) {
-        std::cerr << "Error reading file : " << path << std::endl;
-        return "";
-      }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    void resolve_includes(std::string& shader_source, std::vector<std::string> const& root_dirs)
-    {
-      std::size_t search_pos(0);
-
-      std::string search("@include");
-
-      while (search_pos != std::string::npos) 
-      {
-        search_pos = shader_source.find(search, search_pos);
-
-        if (search_pos != std::string::npos) {
-
-          std::size_t start(shader_source.find('\"', search_pos) + 1);
-          std::size_t end(shader_source.find('\"', start));
-
-          std::string file(shader_source.substr(start, end - start));
-
-          std::string include = read_shader_file(file, root_dirs);
-          shader_source.replace(search_pos, end - search_pos + 2, include);
-
-          // advance search pos
-          search_pos = search_pos + include.length();
-        }
-      }
-    }
-  }
-
 
 #if 0
 
@@ -194,338 +135,82 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
   NURBSRenderer::NURBSRenderer()
-    : shaders_loaded_(false),
-      pre_tesselation_program_(nullptr)
+    : pre_tesselation_program_(nullptr),
+      factory_()
   {
-    _load_shaders();
+    factory_.add_search_path(std::string(GPUCAST_INSTALL_DIR));
+    factory_.add_search_path(std::string(GPUCAST_INSTALL_DIR) + "/resources/");
   }
 
   ////////////////////////////////////////////////////////////////////////////////
   NURBSRenderer::~NURBSRenderer()
-  {
-    if (pre_tesselation_program_) {
-      delete pre_tesselation_program_;
-    }
-
-    for (auto prog : tesselation_programs_) {
-      if (prog.second) {
-        delete prog.second;
-      }
-    }
-
-    for (auto prog : raycasting_programs_) {
-      if (prog.second) {
-        delete prog.second;
-      }
-    }
-  }
+  {}
 
   ////////////////////////////////////////////////////////////////////////////////
   void NURBSRenderer::_load_shaders()
   {
-    // create stages only with one thread!
-    if (!shaders_loaded_)
-    {
-      pre_tesselation_shader_stages_.clear();
-      pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,_transform_feedback_vertex_shader()));
-      pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, _transform_feedback_tess_control_shader()));
-      pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, _transform_feedback_tess_evaluation_shader()));
-      pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, _transform_feedback_geometry_shader()));
+    pre_tesselation_shader_stages_.clear();
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.frag")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.tctrl")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.teval")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.geom")));
 
-      pre_tesselation_interleaved_stream_capture_.clear();
-      pre_tesselation_interleaved_stream_capture_.push_back("xfb_position");
-      pre_tesselation_interleaved_stream_capture_.push_back("xfb_index");
-      pre_tesselation_interleaved_stream_capture_.push_back("xfb_tesscoord");
+    pre_tesselation_interleaved_stream_capture_.clear();
+    pre_tesselation_interleaved_stream_capture_.push_back("xfb_position");
+    pre_tesselation_interleaved_stream_capture_.push_back("xfb_index");
+    pre_tesselation_interleaved_stream_capture_.push_back("xfb_tesscoord");
 
-      tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER] = _final_vertex_shader();
-      tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER] = _final_tess_control_shader();
-      tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = _final_tess_evaluation_shader();
-      tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER] = _final_geometry_shader();
-      tesselation_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER] = _final_fragment_shader();
+    tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]          = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.vert");
+    tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER]    = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.tctrl");
+    tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.teval");
+    tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER]        = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.geom");
+    tesselation_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]        = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.frag");
 
-      raycasting_shader_stages_[scm::gl::STAGE_VERTEX_SHADER] = _raycast_vertex_shader();
-      raycasting_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER] = _raycast_fragment_shader();
-
-      shaders_loaded_ = true;
-    }
+    raycasting_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]           = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.vert");
+    raycasting_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]         = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.frag");
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void NURBSRenderer::_initialize_pre_tesselation_program() {
-    std::lock_guard<std::mutex> lock(mutex_);
+  void NURBSRenderer::_initialize_pre_tesselation_program() 
+  {
     if (!pre_tesselation_program_)
     {
-      auto new_program = new ShaderProgram;
+      auto new_program = std::make_shared<ShaderProgram>();
       new_program->set_shaders(pre_tesselation_shader_stages_, pre_tesselation_interleaved_stream_capture_, true);
       pre_tesselation_program_ = new_program;
     }
     assert(pre_tesselation_program_);
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
   void NURBSRenderer::_initialize_tesselation_program(MaterialShader* material)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
     if (!tesselation_programs_.count(material))
     {
-      auto program = material->get_shader(tesselation_shader_stages_);
+      auto program = factory_.create_program(material, tesselation_shader_stages_);
       tesselation_programs_[material] = program;
     }
     assert(tesselation_programs_.count(material));
   }
 
-////////////////////////////////////////////////////////////////////////////////
-  std::string NURBSRenderer::_transform_feedback_vertex_shader() const
-{
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string vertex_shadercode = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.vert", root_dirs);
-  resolve_includes(vertex_shadercode, root_dirs);
-
-  return vertex_shadercode;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-  std::string NURBSRenderer::_transform_feedback_tess_control_shader() const
-{
-#if 0
-    std::stringstream tess_control;
-    tess_control << R"(
-                                                            
-        #version 420 core                                   
-        #extension GL_NV_gpu_shader5      : enable          
-                                                            
-        #define ID gl_InvocationID                          
-                                                            
-        layout(vertices = 4) out;                           
-                                                            
-        uniform samplerBuffer parameter_texture;            
-        uniform samplerBuffer attribute_texture;            
-                                                            
-        // uniforms                                         
-        layout (std140, binding=0) uniform cameraBlock      
-        {                                                   
-          mat4 gua_view_matrix;                             
-          mat4 gua_projection_matrix;                       
-          mat4 gua_inverse_projection_matrix;               
-          mat4 gua_inverse_projection_view_matrix;          
-          vec3 gua_camera_position;                         
-        };                                                  
-                                                            
-        uniform mat4 gua_model_matrix;                      
-        uniform mat4 gua_normal_matrix;                     
-                                                            
-        uniform float gua_texel_width;                      
-        uniform float gua_texel_height;                     
-        uniform float gua_tesselation_max_error;            
-        uniform float max_pre_tesselation;         
-                                                            
-        flat in vec3  vPosition[];                          
-        flat in uint  vIndex[];                             
-        flat in vec2  vTessCoord[];                         
-                                                            
-        flat out vec3 tcPosition[];                         
-        flat out uint tcIndex[];                            
-        flat out vec2 tcTessCoord[];                                                                             
-    )";
-
-    tess_control << NURBSShader::edge_length();
-    tess_control << NURBSShader::control_polygon_length();
-    tess_control << NURBSShader::edge_tess_level();
-    tess_control << NURBSShader::is_inside();
-    tess_control << NURBSShader::frustum_cull();
-
-    tess_control << R"(
-                                                                                         
-        void main()                                                                      
-        {                                                                                
-          tcPosition[ID]  = vPosition[ID];                                               
-          tcIndex[ID]     = vIndex[ID];                                                  
-          tcTessCoord[ID] = vTessCoord[ID];                                              
-                                                                                         
-          mat4 mvp_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix;  
-                                                                                         
-          // if ( frustum_cull ( mvp_matrix ) ) {                                        
-          if ( false )                                                                    
-          {                                                                              
-            const float max_tesselation_per_pass = 16.0f;                                
-                                                                                         
-            vec4 data = texelFetch(attribute_texture, int(vIndex[ID]) * 5);              
-                                                                                         
-            uint surface_index   = floatBitsToUint(data.x);                              
-            uint surface_order_u = floatBitsToUint(data.y);                              
-            uint surface_order_v = floatBitsToUint(data.z);                              
-                                                                                         
-            vec4 edgelen = control_polygon_length(parameter_texture,                     
-                                                  mvp_matrix,                            
-                                                  int(surface_index),                    
-                                                  int(surface_order_u),                  
-                                                  int(surface_order_v),                  
-                                                  int(1.0f/gua_texel_width),             
-                                                  int(1.0f/gua_texel_height));           
-                                                                                         
-            //      3                                                                    
-            //  3------2                                                                 
-            //  |      |                                                                 
-            //0 |      | 2                                                               
-            //  |      |                                                                 
-            //  0------1                                                                 
-            //      1                                                                    
-                                                                                         
-            const float max_error_pre_tesselation = max_tesselation_per_pass *           
-                                                    gua_tesselation_max_error;           
-                                                                                         
-            float edge0 = edge_tesslevel(edgelen[0], max_error_pre_tesselation );        
-            float edge1 = edge_tesslevel(edgelen[1], max_error_pre_tesselation );        
-            float edge2 = edge_tesslevel(edgelen[2], max_error_pre_tesselation );        
-            float edge3 = edge_tesslevel(edgelen[3], max_error_pre_tesselation );        
-                                                                                         
-            float pre_tess_level = max(max(edge0, edge1), max(edge2, edge3));            
-                                                                                         
-            //Following three must be same for Ist Pass                                  
-            gl_TessLevelInner[0] = pre_tess_level;                                       
-            gl_TessLevelOuter[1] = pre_tess_level;                                       
-            gl_TessLevelOuter[3] = pre_tess_level;                                       
-                                                                                         
-            //Following three must be same for Ist Pass                                  
-            gl_TessLevelInner[1] = pre_tess_level;                                       
-            gl_TessLevelOuter[0] = pre_tess_level;                                       
-            gl_TessLevelOuter[2] = pre_tess_level;                                       
-                                                                                         
-          } else {                                                                       
-            // constant tesselation -> debugging only                                    
-            const float fixed_pre_tesselation = 2.0f;                                    
-                                                                                         
-            gl_TessLevelInner[0] = max_pre_tesselation;                                
-            gl_TessLevelInner[1] = max_pre_tesselation;                                
-                                                                                         
-            gl_TessLevelOuter[0] = max_pre_tesselation;                                
-            gl_TessLevelOuter[1] = max_pre_tesselation;                                
-            gl_TessLevelOuter[2] = max_pre_tesselation;                                
-            gl_TessLevelOuter[3] = max_pre_tesselation;                                
-          }                                                                              
-        }                                                                                
-    )";
-
-    return tess_control.str();
-#else
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string tess_control_shadercode = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.tctrl", root_dirs);
-  resolve_includes(tess_control_shadercode, root_dirs);
-
-  return tess_control_shadercode;
-#endif
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-std::string NURBSRenderer::_transform_feedback_tess_evaluation_shader() const
-{
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string tess_eval_shadercode = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.teval", root_dirs);
-  resolve_includes(tess_eval_shadercode, root_dirs);
-
-  return tess_eval_shadercode;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-std::string NURBSRenderer::_transform_feedback_geometry_shader() const
-{
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string geometry_shadercode = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.geom", root_dirs);
-  resolve_includes(geometry_shadercode, root_dirs);
-
-  return geometry_shadercode;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-std::string NURBSRenderer::_final_vertex_shader() const
-{
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string final_vertex_shader_code = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.vert", root_dirs);
-  resolve_includes(final_vertex_shader_code, root_dirs);
-
-  return final_vertex_shader_code;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-std::string NURBSRenderer::_final_tess_control_shader() const
-{
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string final_tess_control_shader_code = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.tctrl", root_dirs);
-  resolve_includes(final_tess_control_shader_code, root_dirs);
-
-  return final_tess_control_shader_code;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-std::string NURBSRenderer::_final_tess_evaluation_shader() const
-{
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string final_tess_eval_shader_code = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.teval", root_dirs);
-  resolve_includes(final_tess_eval_shader_code, root_dirs);
-
-  return final_tess_eval_shader_code;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-std::string NURBSRenderer::_final_geometry_shader() const
-{
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string final_geom_shader_code = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.geom", root_dirs);
-  resolve_includes(final_geom_shader_code, root_dirs);
-
-  return final_geom_shader_code;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-std::string NURBSRenderer::_final_fragment_shader() const
-{
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string final_fragment_shader_code = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.frag", root_dirs);
-  resolve_includes(final_fragment_shader_code, root_dirs);
-
-  return final_fragment_shader_code;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-std::string NURBSRenderer::_raycast_vertex_shader() const
-{
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string raycast_vertex_shader_code = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.vert", root_dirs);
-  resolve_includes(raycast_vertex_shader_code, root_dirs);
-
-  return raycast_vertex_shader_code;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-std::string NURBSRenderer::_raycast_fragment_shader() const
-{
-  std::vector<std::string> root_dirs = { GUACAMOLE_INSTALL_DIR, GPUCAST_INSTALL_DIR };
-
-  std::string raycast_fragment_shader_code = read_shader_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.frag", root_dirs);
-  resolve_includes(raycast_fragment_shader_code, root_dirs);
-
-  return raycast_fragment_shader_code;
-}
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSRenderer::_reset()
+  {
+    pre_tesselation_program_.reset();
+    tesselation_programs_.clear();
+    raycasting_programs_.clear();
+  }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-  std::cout << desc.request_reinitialization() << std::endl;
-
+  // force re-initialization
+  if (desc.mod_count() != current_modcount_) {
+    _reset();
+    current_modcount_ = desc.mod_count();
+  }
 
   auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::NURBSNode))));
 
@@ -544,7 +229,7 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     int view_id(pipe.get_camera().config.get_view_id());
     
     MaterialShader* current_material(nullptr);
-    ShaderProgram*  current_material_program(nullptr);
+    std::shared_ptr<ShaderProgram> current_material_program;
 
     if (!pre_tesselation_program_) {
       _initialize_pre_tesselation_program();
@@ -606,7 +291,7 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
         current_material_program->use(ctx);
         {
-          nurbs_node->get_material()->apply_uniforms(ctx, current_material_program, view_id);
+          nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 
           current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
           current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);

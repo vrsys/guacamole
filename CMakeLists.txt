@@ -15,10 +15,9 @@ set(GUACAMOLE_HOMEPAGE "http://www.GUACAMOLE.org")
 set(GUACAMOLE_EXENAME "GUACAMOLE")
 set(GUACAMOLE_PACKAGENAME "GUACAMOLE")
 
-option (GUACAMOLE_PBR_SUPPORT "Set to enable PBR (point based rendering) support.")
-option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support.")
-option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." OFF)
-option (GUACAMOLE_RUNTIME_UBERSHADERS "Set to enable to runtime generation of ubershaders.")
+option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support." OFF)
+option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
+option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
 
 # We require at least version 2.8.0
 cmake_minimum_required(VERSION 2.8.0)
@@ -29,6 +28,11 @@ endif(UNIX)
 
 # Location where cmake first looks for modules.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
+
+IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Default install
+                 prefix" FORCE)
+ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT) 
 
 ###############################################################################
 # write Config.h
@@ -224,7 +228,7 @@ endif (GUACAMOLE_TESTS)
 # Examples
 ################################################################
 
-option (GUACAMOLE_EXAMPLES "Build examples." OFF)
+option (GUACAMOLE_EXAMPLES "Build examples." ON)
 
 if (GUACAMOLE_EXAMPLES)
   add_subdirectory(examples)

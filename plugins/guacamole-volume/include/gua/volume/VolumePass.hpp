@@ -22,6 +22,7 @@
 #ifndef GUA_VOLUME_PASS_HPP
 #define GUA_VOLUME_PASS_HPP
 
+#include <gua/volume/platform.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 
@@ -34,7 +35,7 @@
 
 namespace gua {
 
-class VolumePassDescription : public PipelinePassDescription {
+class GUA_VOLUME_DLL VolumePassDescription : public PipelinePassDescription {
  public:
   VolumePassDescription();
 

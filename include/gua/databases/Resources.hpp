@@ -26,19 +26,21 @@
 #include <vector>
 #include <string>
 
+#include <gua/platform.hpp>
+
 namespace gua {
 
 namespace Resources {
 
-  std::string                       lookup_string(std::string const& file);
-  std::string                       lookup_string(std::vector<unsigned char> const& resource);
+  GUA_DLL std::string                       lookup_string(std::string const& file);
+  GUA_DLL std::string                       lookup_string(std::vector<unsigned char> const& resource);
 
-  std::string                       lookup_shader(std::string const& file);
-  std::string                       lookup_shader(std::vector<unsigned char> const& resource);
+  GUA_DLL std::string                       lookup_shader(std::string const& file);
+  GUA_DLL std::string                       lookup_shader(std::vector<unsigned char> const& resource);
 
-  std::vector<unsigned char> const& lookup(std::string const& file);
+  GUA_DLL std::vector<unsigned char> const& lookup(std::string const& file);
 
-  void resolve_includes(std::string& shader_source);
+  GUA_DLL void resolve_includes(std::string& shader_source);
 
   // generated header
   #include <gua/generated/R.inl>
