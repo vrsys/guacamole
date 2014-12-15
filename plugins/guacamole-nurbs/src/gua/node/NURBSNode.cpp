@@ -167,7 +167,7 @@ namespace node {
 
     if (material_changed_)
     {
-      if (material_->get_shader_name() != "")
+      if (!material_)
       {
         // if (!MaterialShaderDatabase::instance()->contains(material_))
         // {

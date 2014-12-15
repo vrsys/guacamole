@@ -72,7 +72,7 @@ std::shared_ptr<Material> const& MaterialShader::get_default_material() const {
 ////////////////////////////////////////////////////////////////////////////////
 ShaderProgram* MaterialShader::get_shader(std::map<scm::gl::shader_stage, std::string> const& program_description,
                                           std::list<std::string> const& interleaved_stream_capture,
-                                          bool in_rasterization_discard)  
+                                          bool in_rasterization_discard)
 {
   // std::type_index type_id(typeid(for_type));
   using namespace scm::gl;
@@ -107,7 +107,7 @@ ShaderProgram* MaterialShader::get_shader(std::map<scm::gl::shader_stage, std::s
       }
     }
   }
-    
+
   new_shader->set_shaders(final_program_description, interleaved_stream_capture, in_rasterization_discard);
   return new_shader;
 }
@@ -151,6 +151,8 @@ std::string MaterialShader::compile_description(std::list<MaterialShaderMethod> 
     sstr << method.get_name() << "();" << std::endl;
   }
   gua::string_utils::replace(source, "@material_method_calls", sstr.str());
+
+  // std::cout << string_utils::format_code(source) << std::endl;
 
   // indent and return code ----------------------------------------------------
   return string_utils::format_code(source);

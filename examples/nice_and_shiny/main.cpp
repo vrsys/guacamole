@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
   pbrMat->set_uniform("ColorMap",     directory + "Cerberus_A.tga");
   pbrMat->set_uniform("MetalnessMap", directory + "Cerberus_M.tga");
   pbrMat->set_uniform("RoughnessMap", directory + "Cerberus_R.tga");
-  pbrMat->set_uniform("NormalMap",    directory + "Cerberus_N.tga");
+  pbrMat->set_uniform("NormalMap",    directory + "Cerberus_N.negated_green.tga");
 
   gua::TriMeshLoader loader;
 
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
         "Cerberus_A.tga",
         "Cerberus_M.tga",
         "Cerberus_R.tga",
-        "Cerberus_N.tga"
+        "Cerberus_N.negated_green.tga"
         }) {
     gua::TextureDatabase::instance()->load(directory + file);
   }

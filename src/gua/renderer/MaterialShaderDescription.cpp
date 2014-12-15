@@ -63,8 +63,6 @@ void MaterialShaderDescription::load_from_buffer(std::string const& buffer) {
       auto method(value["vertex_methods"][i]);
       MaterialShaderMethod vertex_method;
 
-      std::cout << "vertex method" << std::endl;
-      std::cout << method << std::endl;
       // load method from file if file name is set
       if (method["file_name"] != Json::Value::null) {
         vertex_method.load_from_file(method["file_name"].asString());
@@ -117,6 +115,18 @@ std::list<MaterialShaderMethod> const& MaterialShaderDescription::get_vertex_met
 ////////////////////////////////////////////////////////////////////////////////
 std::list<MaterialShaderMethod> const& MaterialShaderDescription::get_fragment_methods() const {
   return fragment_methods_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+MaterialShaderDescription& MaterialShaderDescription::clear_vertex_methods() {
+  vertex_methods_.clear();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+MaterialShaderDescription& MaterialShaderDescription::clear_fragment_methods() {
+  fragment_methods_.clear();
+  return *this;
 }
 
 }
