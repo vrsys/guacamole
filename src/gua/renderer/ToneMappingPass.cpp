@@ -36,6 +36,20 @@ ToneMappingPassDescription::ToneMappingPassDescription()
   rendermode_ = RenderMode::Quad;
   depth_stencil_state_ = boost::make_optional(
       scm::gl::depth_stencil_state_desc(false, false));
+  uniforms["exposure"] = 1.0f;
 }
+
+ToneMappingPassDescription& ToneMappingPassDescription::exposure(float e) {
+  uniforms["exposure"] = e;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float ToneMappingPassDescription::exposure() const {
+  auto uniform(uniforms.find("exposure"));
+  return boost::get<float>(uniform->second.data);
+}
+
 
 }

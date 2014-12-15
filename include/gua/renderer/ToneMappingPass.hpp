@@ -32,6 +32,9 @@ class GUA_DLL ToneMappingPassDescription : public PipelinePassDescription {
  public:
   ToneMappingPassDescription();
 
+  ToneMappingPassDescription& exposure(float);
+  float exposure() const;
+
   PipelinePassDescription* make_copy() const override {
     return new ToneMappingPassDescription(*this);
   }
