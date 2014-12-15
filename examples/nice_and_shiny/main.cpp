@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 
   auto pointLight = graph.add_node<gua::node::PointLightNode>("/", "pointLight");
   pointLight->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
-  pointLight->data.brightness = 50.0f; // lm
+  pointLight->data.brightness = 150.0f; // lm
   pointLight->scale(10.f);
   pointLight->translate(-2.f, 3.f, 5.f);
 
