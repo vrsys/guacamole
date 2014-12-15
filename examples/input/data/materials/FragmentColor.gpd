@@ -2,8 +2,7 @@
   "name" : "FragmentColor",
   "source" : "
     void FragmentColor() {
-      vec3 reflection_dir = reflect(gua_camera_position - gua_position, gua_normal);
-      gua_color = texture(samplerCube(color), reflection_dir).rgb;
+      gua_color = color;
       gua_roughness = 0.05;
       gua_metalness = 0.2;
       gua_emissivity = 0.5;
@@ -13,8 +12,8 @@
   [
     {
       "name" : "color",
-      "type" : "sampler2D",
-      "value" : "gua_default_texture"
+      "type" : "vec3",
+      "value" : "(0.5 0.5 0.5)"
     }
   ]
 }
