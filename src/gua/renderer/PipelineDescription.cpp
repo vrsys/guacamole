@@ -49,7 +49,7 @@ PipelineDescription PipelineDescription::make_default() {
   pipe.add_pass<BBoxPassDescription>();
   pipe.add_pass<BackgroundPassDescription>();
   pipe.add_pass<TexturedScreenSpaceQuadPassDescription>();
-  // pipe.add_pass<ToneMappingPassDescription>();
+  pipe.add_pass<ToneMappingPassDescription>();
 
   return pipe;
 }
