@@ -354,7 +354,7 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   std::shared_ptr<Node> SkeletalAnimationNode::copy() const {
-    std::shared_ptr<SkeletalAnimationNode> result(new SkeletalAnimationNode(get_name(), geometry_descriptions_, materials_, get_director(),get_transform()));
+    std::shared_ptr<SkeletalAnimationNode> result = std::make_shared<SkeletalAnimationNode>(get_name(), geometry_descriptions_, materials_, get_director(),get_transform());
     result->shadow_mode_ = shadow_mode_;
     result->geometries_ = geometries_;
     return result;
