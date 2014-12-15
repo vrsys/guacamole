@@ -37,10 +37,9 @@ TextureCube::TextureCube(unsigned width,
                  unsigned height,
                  scm::gl::data_format color_format,
                  scm::gl::data_format internal_format,
-                 std::vector<void*> const& data,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : Texture(color_format, internal_format, data, mipmap_layers, state_descripton),
+    : Texture(color_format, internal_format, mipmap_layers, state_descripton),
       width_(width),
       height_(height),
       file_px_(""),
@@ -95,14 +94,15 @@ void TextureCube::upload_to(RenderContext const& context) const {
 
   if (file_name_ == "") { 
 
-    if (data_.size() == 0)
+    // if (data_.size() == 0) {
       textures_[context.id] = context.render_device->create_texture_cube(
           math::vec2ui(width_, height_), color_format_, mipmap_layers_);
-    else
-      textures_[context.id] = context.render_device->create_texture_cube(
-          scm::gl::texture_cube_desc(
-              math::vec2ui(width_, height_), color_format_, mipmap_layers_
-          ), internal_format_, data_, data_, data_, data_, data_, data_);
+    // } else {
+    //   textures_[context.id] = context.render_device->create_texture_cube(
+    //       scm::gl::texture_cube_desc(
+    //           math::vec2ui(width_, height_), color_format_, mipmap_layers_
+    //       ), internal_format_, data_, data_, data_, data_, data_, data_);
+    // }
   } else {
     scm::gl::texture_loader loader;
     textures_[context.id] = loader.load_texture_cube(
@@ -122,10 +122,6 @@ void TextureCube::upload_to(RenderContext const& context) const {
 
     make_resident(context);
   }
-}
-
-std::vector<void*>& TextureCube::get_data() {
-  return data_;
 }
 
 }

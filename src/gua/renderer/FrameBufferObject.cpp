@@ -61,9 +61,10 @@ void FrameBufferObject::remove_attachments() {
 
 void FrameBufferObject::attach_color_buffer(RenderContext const& ctx,
                                             unsigned in_color_attachment,
-                                            std::shared_ptr<Texture2D> const& buffer,
+                                            std::shared_ptr<Texture> const& buffer,
                                             int mip_level,
-                                            int z_slice) {
+                                            int z_slice,
+                                            unsigned tex_target) {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
 
@@ -77,7 +78,7 @@ void FrameBufferObject::attach_color_buffer(RenderContext const& ctx,
     }
 
     fbos_[ctx.id]->attach_color_buffer(
-        in_color_attachment, buffer->get_buffer(ctx), mip_level, z_slice);
+        in_color_attachment, buffer->get_buffer(ctx), mip_level, z_slice, tex_target);
   }
 }
 
@@ -85,7 +86,7 @@ void FrameBufferObject::attach_color_buffer(RenderContext const& ctx,
 
 void FrameBufferObject::attach_depth_stencil_buffer(
     RenderContext const& ctx,
-    std::shared_ptr<Texture2D> const& buffer,
+    std::shared_ptr<Texture> const& buffer,
     int mip_level,
     int z_slice) {
 
@@ -180,7 +181,7 @@ void FrameBufferObject::set_viewport(RenderContext const& ctx) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool FrameBufferObject::set_size(std::shared_ptr<Texture2D> const& buffer) {
+bool FrameBufferObject::set_size(std::shared_ptr<Texture> const& buffer) {
 
   if (width_ == 0 && height_ == 0) {
     width_ = buffer->width();

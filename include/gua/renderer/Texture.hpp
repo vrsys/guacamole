@@ -56,7 +56,6 @@ class GUA_DLL Texture {
    */
   Texture(scm::gl::data_format color_format,
           scm::gl::data_format internal_format,
-          std::vector<void*> const& data,
           unsigned mipmap_layers = 1,
           scm::gl::sampler_state_desc const& state_descripton =
               scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
@@ -124,6 +123,9 @@ class GUA_DLL Texture {
   void make_non_resident(RenderContext const& context) const;
   void make_non_resident() const;
 
+  virtual unsigned width() const = 0;
+  virtual unsigned height() const = 0;
+
   virtual void upload_to(RenderContext const& context) const = 0;
 
  protected:
@@ -138,8 +140,6 @@ class GUA_DLL Texture {
   mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
   mutable std::mutex upload_mutex_;
 
-
-  mutable std::vector<void*> data_;
   std::string file_name_;
 
  private:

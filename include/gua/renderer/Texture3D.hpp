@@ -129,6 +129,8 @@ class GUA_DLL Texture3D : public Texture {
   mutable unsigned height_;
   mutable unsigned depth_;
 
+  mutable std::vector<void*> data_;
+
  private:
 
 };

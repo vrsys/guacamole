@@ -31,6 +31,8 @@
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 
+#include <scm/gl_core/render_device/opengl/gl_core.h>
+
 namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +45,6 @@ namespace gua {
     program_description_[scm::gl::shader_stage::STAGE_FRAGMENT_SHADER] = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
   }
 
-
   ////////////////////////////////////////////////////////////////////////////////
 
   TriMeshRenderer::~TriMeshRenderer()
@@ -53,7 +54,6 @@ namespace gua {
     }
     programs_.clear();
   }
-
 
   ////////////////////////////////////////////////////////////////////////////////
 

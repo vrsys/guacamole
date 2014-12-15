@@ -62,7 +62,6 @@ namespace gua {
             unsigned height,
             scm::gl::data_format color_format,
             scm::gl::data_format internal_format,
-            std::vector<void*> const& data,
             unsigned mipmap_layers = 1,
             scm::gl::sampler_state_desc const& state_descripton =
                 scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,

@@ -120,10 +120,10 @@ namespace gua {
   ///@}
 
  protected:
-  std::vector<void*>& get_data();
-
   mutable unsigned width_;
   mutable unsigned height_;
+  
+  mutable std::vector<void*> data_;
 
  private:
 

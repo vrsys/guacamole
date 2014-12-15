@@ -48,7 +48,6 @@ class TriMeshRenderer {
 
    std::map<scm::gl::shader_stage, std::string>         program_description_;
    std::unordered_map<MaterialShader*, ShaderProgram*>  programs_;
-  
 };
 
 }

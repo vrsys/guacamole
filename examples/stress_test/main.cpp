@@ -66,6 +66,7 @@ int main(int argc, char** argv) {
 
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->scale(4.4f);
+  light->data.set_brightness(10.f);
   light->translate(1.f, 0.f, 2.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");

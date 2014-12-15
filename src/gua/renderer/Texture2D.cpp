@@ -40,9 +40,10 @@ Texture2D::Texture2D(unsigned width,
                  std::vector<void*> const& data,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : Texture(color_format, internal_format, data, mipmap_layers, state_descripton),
+    : Texture(color_format, internal_format, mipmap_layers, state_descripton),
       width_(width),
-      height_(height) {}
+      height_(height),
+      data_(data) {}
 
 Texture2D::Texture2D(unsigned width,
                  unsigned height,
@@ -72,14 +73,15 @@ void Texture2D::upload_to(RenderContext const& context) const {
 
   if (file_name_ == "") {
 
-    if (data_.size() == 0)
+    if (data_.size() == 0) {
       textures_[context.id] = context.render_device->create_texture_2d(
           math::vec2ui(width_, height_), color_format_, mipmap_layers_);
-    else
+    } else {
       textures_[context.id] = context.render_device->create_texture_2d(
           scm::gl::texture_2d_desc(
               math::vec2ui(width_, height_), color_format_, mipmap_layers_
           ), internal_format_, data_);
+    }
   } else {
     scm::gl::texture_loader loader;
     textures_[context.id] = loader.load_texture_2d(
@@ -99,10 +101,6 @@ void Texture2D::upload_to(RenderContext const& context) const {
 
     make_resident(context);
   }
-}
-
-std::vector<void*>& Texture2D::get_data() {
-  return data_;
 }
 
 }
