@@ -129,6 +129,28 @@ namespace gua {
     return std::make_shared<node::TransformNode>(node_name);
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file
+    (std::string const& node_name,
+    std::string const& file_name,
+    unsigned flags)
+  {
+    auto cached_node(load_geometry(file_name, flags));
+
+    if (cached_node) {
+      auto copy(cached_node->deep_copy());
+
+      auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
+      apply_fallback_material(copy, shader->make_new_material());
+
+      copy->set_name(node_name);
+      return copy;
+    }
+
+    return std::make_shared<node::TransformNode>(node_name);
+  }
+
   /////////////////////////////////////////////////////////////////////////////
 
   std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,

@@ -87,6 +87,11 @@ public:
                                                    std::shared_ptr<Material> const& fallback_material,
                                                    unsigned flags = DEFAULTS);
 
+   std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
+                                                   std::string const& file_name,
+                                                   unsigned flags = DEFAULTS);
+
+
   /**
    * Constructor from a file.
    *
