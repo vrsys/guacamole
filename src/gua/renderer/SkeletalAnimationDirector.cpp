@@ -19,10 +19,12 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     animNum{0},
     anim_start_node_{},
     state_{Playback::crossfade},
+    blending_state_{Blending::linear},
     next_transition_{0},
     timer_{} {
   timer_.start();
   add_hierarchy(scene);
+  std::cout<<"SkeletalAnimationDirector ctor"<<std::endl;
 }
 
 void SkeletalAnimationDirector::add_hierarchy(aiScene const* scene) {
@@ -117,12 +119,20 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
       float playDuration = animations_[animNum]->duration;
 
       if(currentTime < next_transition_) {
-        SkeletalAnimationUtils::calculate_pose(currentTime, anim_start_node_, animations_[animNum], transforms);  
+        SkeletalAnimationUtils::calculate_pose(currentTime, anim_start_node_, animations_[animNum % animations_.size()], transforms);  
       }
       else if(currentTime <= next_transition_ + blendDuration) {
         float time = (currentTime - next_transition_) / blendDuration;
-        float blendFactor = Blend::cos(time);
-        blend_pose(currentTime, blendFactor, animations_[(animNum + 1) % animations_.size()], animations_[animNum], transforms);
+        
+        float blendFactor = 0.0;
+        switch(blending_state_){
+          case Blending::linear : blendFactor = Blend::linear(time);break;
+          case Blending::smoothstep : blendFactor = Blend::smoothstep(time);break;
+          case Blending::cosinus : blendFactor = Blend::cos(time);break;
+          default: blendFactor = Blend::linear(time);
+        }
+        
+        blend_pose(currentTime, blendFactor, animations_[(animNum + 1) % animations_.size()], animations_[animNum  % animations_.size()], transforms);
       }
       else {
         next_transition_ = currentTime + playDuration;
@@ -144,9 +154,27 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
 void SkeletalAnimationDirector::set_playback_mode(uint mode) {
   switch(mode) {
     case 0 : state_ = Playback::sequential; break;
-    case 1 : state_ = Playback::crossfade; break;
-    case 2 : state_ = Playback::partial; break;
+    case 1 : state_ = Playback::partial; break;
+    case 2 : state_ = Playback::crossfade; break;
+    default: state_ = Playback::sequential;;
   }
+}
+
+uint SkeletalAnimationDirector::get_playback_mode() {
+  return state_;
+}
+
+void SkeletalAnimationDirector::set_blending_mode(uint mode) {
+  switch(mode) {
+    case 0 : blending_state_ = Blending::linear; break;
+    case 1 : blending_state_ = Blending::smoothstep; break;
+    case 2 : blending_state_ = Blending::cosinus; break;
+    default: blending_state_ = Blending::linear;;
+  }
+}
+
+uint SkeletalAnimationDirector::get_blending_mode() {
+  return blending_state_;
 }
 
 int SkeletalAnimationDirector::getBoneID(std::string const& name) {

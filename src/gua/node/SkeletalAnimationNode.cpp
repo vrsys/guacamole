@@ -112,6 +112,21 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+  uint SkeletalAnimationNode::get_animation_mode() {
+    return animation_director_->get_playback_mode();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void SkeletalAnimationNode::set_blending_mode(uint mode) {
+    animation_director_->set_blending_mode(mode);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  uint SkeletalAnimationNode::get_blending_mode() {
+    return animation_director_->get_blending_mode();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::update_bone_transforms(RenderContext const& ctx) {
     if(!animation_director_->has_anims() && !first_run_) return;
     if(!animation_director_->has_anims()) first_run_ = false;

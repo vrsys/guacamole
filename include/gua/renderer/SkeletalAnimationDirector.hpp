@@ -53,6 +53,11 @@ class SkeletalAnimationDirector {
   bool has_anims() const;
 
   void set_playback_mode(uint mode);
+  uint get_playback_mode();
+  
+  void set_blending_mode(uint mode);
+  uint get_blending_mode();
+
 private:
 
   void blend_pose(float timeInSeconds, float blendFactor, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms);
@@ -66,8 +71,11 @@ private:
   std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
   std::shared_ptr<SkeletalAnimation> currAnimation_;
 
-  enum class Playback : uint {sequential, partial, crossfade};
+  enum  Playback {sequential = 0, partial = 1, crossfade = 2};
   Playback state_;
+
+  enum  Blending {linear = 0, smoothstep = 1, cosinus = 2};
+  Blending blending_state_;
 
   unsigned animNum;
   uint num_bones_;
