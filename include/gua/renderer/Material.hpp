@@ -43,8 +43,27 @@ class GUA_DLL Material {
 
     MaterialShader* get_shader() const;
 
-    Material& set_uniform(std::string const& name, ViewDependentUniform const& uniform) {
-      uniforms_[name] = uniform;
+    template <typename T>
+    Material& add_uniform(std::string const& name, T const& value) {
+      return add_uniform(name, ViewDependentUniform(UniformValue(value)));
+    }
+
+    Material& add_uniform(std::string const& name, ViewDependentUniform const& value) {
+      uniforms_[name] = value;
+      return *this;
+    }
+
+    Material& set_uniform(std::string const& name, ViewDependentUniform const& value) {
+      auto uniform(uniforms_.find(name));
+
+      if (uniform != uniforms_.end()) {
+        uniform->second = value;
+      } else {
+        Logger::LOG_WARNING << "Failed to set material uniform: "
+                            << "MaterialShader \"" << shader_name_ 
+                            << "\" has no uniform named \"" << name
+                            << "\"!" << std::endl;
+      }
       return *this;
     }
 
@@ -57,13 +76,14 @@ class GUA_DLL Material {
     Material& set_uniform(std::string const& name, T const& value, int view_id) {
       auto uniform(uniforms_.find(name));
 
-      if (uniform == uniforms_.end()) {
-        set_uniform(name, value);
-        set_uniform(name, value, view_id);
-      } else {
+      if (uniform != uniforms_.end()) {
         uniform->second.set(view_id, value);
+      } else {
+        Logger::LOG_WARNING << "Failed to set material uniform: "
+                            << "MaterialShader \"" << shader_name_ 
+                            << "\" has no uniform named \"" << name
+                            << "\"!" << std::endl;
       }
-
       return *this;
     }
 

@@ -38,13 +38,13 @@ MaterialShader::MaterialShader(std::string const& name, MaterialShaderDescriptio
 
   for (auto const& method : v_methods) {
     for (auto const& uniform : method.get_uniforms()) {
-      default_material_->set_uniform(uniform.first, uniform.second);
+      default_material_->add_uniform(uniform.first, uniform.second);
     }
   }
 
   for (auto const& method : f_methods) {
     for (auto const& uniform : method.get_uniforms()) {
-      default_material_->set_uniform(uniform.first, uniform.second);
+      default_material_->add_uniform(uniform.first, uniform.second);
     }
   }
 }
