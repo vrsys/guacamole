@@ -24,7 +24,6 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     timer_{} {
   timer_.start();
   add_hierarchy(scene);
-  std::cout<<"SkeletalAnimationDirector ctor"<<std::endl;
 }
 
 void SkeletalAnimationDirector::add_hierarchy(aiScene const* scene) {

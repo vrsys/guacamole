@@ -78,7 +78,7 @@ public:
    /**
    *
    */
-   std::shared_ptr<node::Node> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS);
+   std::shared_ptr<node::Node> load_geometry(std::string const& file_name, std::string const& node_name, unsigned flags = DEFAULTS);
 
   /**
    *
@@ -101,7 +101,7 @@ public:
    * \param file_name        The file to load the meshs data from.
    * \param material_name    The material name that was set to the parent node
    */
-  std::shared_ptr<node::Node> load(std::string const& file_name,
+  std::shared_ptr<node::Node> load(std::string const& file_name, std::string const& node_name,
                              unsigned flags);
 
   /**
@@ -133,6 +133,7 @@ public:
                                               aiScene const* ai_scene,
                                               /*aiNode* ai_root,*/
                                               std::string const& file_name,
+                                              std::string const& node_name,
                                               unsigned flags);
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
