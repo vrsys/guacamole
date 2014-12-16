@@ -48,16 +48,18 @@ class GUA_DLL TagList {
     void remove_tag(std::string const& tag);
     void remove_tags(std::vector<std::string> const& tags);
 
+    void clear_tags();
+
     std::vector<std::string> const get_strings() const;
     std::bitset<GUA_MAX_TAG_COUNT> const& get_bits() const;
 
- void set_user_data(void* data) {
-    user_data_ = data;
-  }
+    void set_user_data(void* data) {
+      user_data_ = data;
+    }
 
-  void* get_user_data() const {
-    return user_data_;
-  }
+    void* get_user_data() const {
+      return user_data_;
+    }
 
  private:
   void* user_data_ = nullptr;
