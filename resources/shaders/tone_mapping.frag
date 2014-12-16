@@ -27,10 +27,11 @@ in vec2 gua_quad_coords;
 @include "shaders/common/gua_camera_uniforms.glsl"
 @include "shaders/common/gua_gbuffer_input.glsl"
 
+uniform int   selected_operator = 0;
+uniform float exposure = 1.0f;
+
 // output
 layout(location=0) out vec3 gua_out_color;
-
-uniform float exposure = 1.0f;
 
 vec3 linearToGamma(vec3 linearColor)
 {
@@ -62,7 +63,7 @@ vec3 Uncharted2Tonemap(vec3 x)
 
 // includes pow(x,1/2.2)
 // optimized formula by Jim Hejl and Richard Burgess-Dawson.
-vec3 toneMapUnchartered2(vec3 linearColor)
+vec3 toneMapHejl(vec3 linearColor)
 {
   linearColor *= exposure; // 16; // Hardcoded exposure adjustment
   //from comment section at http://filmicgames.com/archives/75
@@ -83,6 +84,14 @@ vec3 toneMapLinear(vec3 linearColor)
 void main()
 {
   vec3 col = gua_get_color();
-  gua_out_color = toneMapUnchartered2(col);
-  //gua_out_color = toneMapLinear(col);
+  switch (selected_operator) {
+    case 0:
+      gua_out_color = toneMapLinear(col);
+      break;
+    case 1:
+      gua_out_color = toneMapHejl(col);
+      break;
+    default:
+      gua_out_color = toneMapLinear(col);
+  }
 }
