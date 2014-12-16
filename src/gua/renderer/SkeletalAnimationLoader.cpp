@@ -56,27 +56,29 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<node::Node> SkeletalAnimationLoader::load_geometry(std::string const& file_name, unsigned flags)
+  std::shared_ptr<node::Node> SkeletalAnimationLoader::load_geometry(std::string const& file_name, std::string const& node_name, unsigned flags)
   {
     std::shared_ptr<node::Node> cached_node;
-    std::string key(file_name + "_" + string_utils::to_string(flags));
-    auto searched(loaded_files_.find(key));
+    //std::string key(file_name + "_" + node_name + "_" + string_utils::to_string(flags));
+    //auto searched(loaded_files_.find(key));
 
-    if (searched != loaded_files_.end()) {
+    
+    // DO NOT CACHE NODE - can have different animations
+    /*if (searched != loaded_files_.end()) {
 
       cached_node = searched->second;
 
     }
-    else {
+    else {*/
 
       bool fileload_succeed = false;
 
       if (is_supported(file_name))
       {
-        cached_node = load(file_name, flags);
+        cached_node = load(file_name,node_name, flags);
         cached_node->update_cache();
 
-        loaded_files_.insert(std::make_pair(key, cached_node));
+        //loaded_files_.insert(std::make_pair(key, cached_node));
 
         // normalize mesh position and rotation
         if (flags & SkeletalAnimationLoader::NORMALIZE_POSITION || flags & SkeletalAnimationLoader::NORMALIZE_SCALE) {
@@ -102,7 +104,7 @@ namespace gua {
 
         Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
       }
-    }
+    //}
 
     return cached_node;
   }
@@ -147,15 +149,20 @@ namespace gua {
     std::shared_ptr<Material> const& fallback_material,
     unsigned flags)
   {
-    auto cached_node(load_geometry(file_name, flags));
+      
+    auto cached_node(load_geometry(file_name,node_name,flags));
 
     if (cached_node) {
-      auto copy(cached_node->deep_copy());
+      
+      //auto copy(cached_node->deep_copy());
 
-      apply_fallback_material(copy, fallback_material);
+      //apply_fallback_material(copy, fallback_material);
+      apply_fallback_material(cached_node, fallback_material);
 
-      copy->set_name(node_name);
-      return copy;
+      //copy->set_name(node_name);
+      cached_node->set_name(node_name);
+      //return copy;
+      return cached_node;
     }
 
     return std::make_shared<node::TransformNode>(node_name);
@@ -163,7 +170,7 @@ namespace gua {
 
   /////////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& file_name,
+  std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& file_name, std::string const& node_name,
                                        unsigned flags) {
 
   node_counter_ = 0;
@@ -212,12 +219,13 @@ namespace gua {
     std::shared_ptr<node::Node> new_node;
 
     if (scene->mRootNode) {
+
       // new_node = std::make_shared(new GeometryNode("unnamed",
       //                             GeometryNode::Configuration("", ""),
       //                             math::mat4::identity()));
       //unsigned count(0);
       //new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
-      new_node = create_animation_node(importer, scene, file_name, flags);
+      new_node = create_animation_node(importer, scene, file_name,node_name, flags);
 
 
     } else {
@@ -238,6 +246,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_animation_node(std::
                                               aiScene const* ai_scene,
                                               /*aiNode* ai_root,*/
                                               std::string const& file_name,
+                                              std::string const& node_name,
                                               unsigned flags) {
 
 
@@ -271,7 +280,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_animation_node(std::
     materials.push_back(material);
   }
 
-  return std::make_shared<node::SkeletalAnimationNode>(file_name, geometry_descriptions, materials, animation_director);
+  return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, animation_director);
 }
 
 
