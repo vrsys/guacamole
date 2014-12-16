@@ -108,7 +108,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
       if(has_anims_ && currentTime > currAnimation_->duration) {
         timer_.reset();
         currAnimation_ = animations_[animNum % animations_.size()];
-        ++animNum;
+        animNum = (animNum + 1) % animations_.size();
       }
       SkeletalAnimationUtils::calculate_pose(currentTime, anim_start_node_, currAnimation_, transforms);  
       break; 
@@ -119,7 +119,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
       float playDuration = animations_[animNum]->duration;
 
       if(currentTime < next_transition_) {
-        SkeletalAnimationUtils::calculate_pose(currentTime, anim_start_node_, animations_[animNum % animations_.size()], transforms);  
+        SkeletalAnimationUtils::calculate_pose(currentTime, anim_start_node_, animations_[animNum], transforms);  
       }
       else if(currentTime <= next_transition_ + blendDuration) {
         float time = (currentTime - next_transition_) / blendDuration;
@@ -132,7 +132,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
           default: blendFactor = Blend::linear(time);
         }
         
-        blend_pose(currentTime, blendFactor, animations_[(animNum + 1) % animations_.size()], animations_[animNum  % animations_.size()], transforms);
+        blend_pose(currentTime, blendFactor, animations_[(animNum + 1) % animations_.size()], animations_[animNum], transforms);
       }
       else {
         next_transition_ = currentTime + playDuration;
