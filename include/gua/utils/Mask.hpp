@@ -72,7 +72,6 @@ class GUA_DLL Mask {
   gua::utils::TagList whitelist;
   gua::utils::TagList blacklist;
 
-
 };
 
 }
