@@ -54,6 +54,9 @@ private : // c'tor / d'tor
 
 public : // methods
 
+
+  Node* get();
+
   /**
   * Get the strings referring to an entry in guacamole's GeometryDatabase.
   */

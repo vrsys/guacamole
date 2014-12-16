@@ -54,6 +54,12 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+  Node* SkeletalAnimationNode::get(){
+    Node* base = this;
+    return base;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
   std::vector<std::string> const& SkeletalAnimationNode::get_geometry_descriptions() const {
     return geometry_descriptions_;
   }

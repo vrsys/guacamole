@@ -67,7 +67,9 @@ namespace gua {
         return reinterpret_cast<node::SkeletalAnimationNode*>(a)->get_material().get_shader() < reinterpret_cast<node::SkeletalAnimationNode*>(b)->get_material().get_shader();
       });*/
 
-      RenderContext const& ctx(pipe.get_context());
+
+      RenderContext ctx(pipe.get_context());
+
 
       bool writes_only_color_buffer = false;
       pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
@@ -82,6 +84,7 @@ namespace gua {
       for (auto const& object : sorted_objects->second) {
         
         auto skel_anim_node(reinterpret_cast<node::SkeletalAnimationNode*>(object));
+
 
         auto materials = skel_anim_node->get_materials();
         auto geometries = skel_anim_node->get_geometries();
@@ -126,8 +129,33 @@ namespace gua {
 
             ctx.render_context->apply_program();
 
-            skel_anim_node->update_bone_transforms(ctx);
+            //OLD:
+            //skel_anim_node->update_bone_transforms(ctx);
+            
+            // bone_transforms_block = get_bone_block(ctx, skel_anim_node);
+
+            // search in std::unordered_map<gua::node::Node*, std::shared_ptr<BoneTransformUniformBlock>>
+            auto it = ctx.bone_transform_blocks.find(skel_anim_node->get());
+            if (it == ctx.bone_transform_blocks.end()) {
+              //nothing found, create and upload
+              auto bone_transforms_block = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
+            //  ctx.bone_transform_blocks[skel_anim_node->get()] = bone_transforms_block;
+
+              std::pair<gua::node::Node*,std::shared_ptr<BoneTransformUniformBlock>> new_pair(skel_anim_node->get(),bone_transforms_block);
+              ctx.bone_transform_blocks.insert(new_pair);
+              //ctx.bone_transform_blocks.insert(std::make_pair<gua::node::Node*,std::shared_ptr<BoneTransformUniformBlock>>(skel_anim_node->get(),bone_transforms_block));
+
+
+              bone_transforms_block->update(ctx.render_context, skel_anim_node->get_director()->get_bone_transforms());
+              ctx.render_context->bind_uniform_buffer( bone_transforms_block->block().block_buffer(), 1 );
+            } else {
+
+              auto bone_transforms_block = it->second;
+              bone_transforms_block->update(ctx.render_context, skel_anim_node->get_director()->get_bone_transforms());
+              ctx.render_context->bind_uniform_buffer( bone_transforms_block->block().block_buffer(), 1 );
+            }
             geometries[i]->draw(ctx);
+
 
           }
         }
