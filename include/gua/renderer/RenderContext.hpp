@@ -100,7 +100,7 @@ struct GUA_DLL RenderContext {
   */
   std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
 
-  /**
+ /**
   * Animated Bone Uniforms
   */
   std::unordered_map<node::Node*, std::shared_ptr<BoneTransformUniformBlock>> bone_transform_blocks;
