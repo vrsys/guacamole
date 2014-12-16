@@ -132,7 +132,6 @@ namespace node {
     return animation_director_->get_blending_mode();
   }
 
-
   ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::update_bone_transforms(RenderContext const& ctx) {
     if(!animation_director_->has_anims() && !first_run_) return;
