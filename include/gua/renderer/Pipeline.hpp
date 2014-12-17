@@ -26,7 +26,6 @@
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/SerializedScene.hpp>
-#include <gua/renderer/CameraUniformBlock.hpp>
 #include <gua/math.hpp>
 
 #include <scm/gl_util/primitives/quad.h>
@@ -40,6 +39,9 @@ class ABuffer;
 class WindowBase;
 struct RenderContext;
 class ShaderProgram;
+
+class CameraUniformBlock;
+class LightTable;
 
 class GUA_DLL Pipeline {
  public:
@@ -58,8 +60,10 @@ class GUA_DLL Pipeline {
   SceneGraph                  const& get_graph()   const;
   RenderContext               const& get_context() const;
   node::SerializedCameraNode  const& get_camera()  const;
+  LightTable                       & get_light_table();
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
+  void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_camera_uniform_block(unsigned location) const;
   void draw_quad();
 
@@ -69,6 +73,7 @@ class GUA_DLL Pipeline {
   ABuffer*                           abuffer_;
   RenderContext*                     context_;
   CameraUniformBlock*                camera_block_;
+  LightTable*                        light_table_;
 
   SceneGraph const*                  current_graph_;
   SerializedScene                    current_scene_;
