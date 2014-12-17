@@ -26,6 +26,7 @@
 #include <gua/renderer/ProgramFactory.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
+#include <gua/renderer/LightTable.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
@@ -150,6 +151,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
     }
 
     pipe.bind_gbuffer_input(shader_);
+    pipe.bind_light_table(shader_);
     if (RenderMode::Callback == rendermode_) {
       process_(*this, desc, pipe);
     } else { // RenderMode::Quad

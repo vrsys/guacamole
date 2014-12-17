@@ -1,6 +1,4 @@
-#ifdef GL_NV_shader_atomic_int64
-#extension GL_NV_shader_atomic_int64 : enable
-#endif
+
 
 void abuf_insert()
 {
@@ -9,8 +7,8 @@ void abuf_insert()
   uint ctr = atomicCounterIncrement(frag_counter);
 
   // write data
-  ABUF_FRAG(ctr, 0) = vec4(gua_color, gua_alpha);
-  ABUF_FRAG(ctr, 1) = vec4(gua_emissivity, gua_roughness, gua_metalness, 0);
+  ABUF_FRAG(ctr, 0) = vec4(gua_color, clamp(gua_alpha, 0.0, 1.0));
+  ABUF_FRAG(ctr, 1) = vec4(gua_emissivity, gua_roughness, gua_metalness, (gua_passthrough_shading)?1.0:-1.0);
   ABUF_FRAG(ctr, 2) = vec4(gua_normal*0.5+0.5, 0);
 
   // insert to the linked-list

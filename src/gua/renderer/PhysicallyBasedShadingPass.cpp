@@ -34,6 +34,8 @@
 
 namespace gua {
 
+namespace {
+
 void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pipe) {
   auto const& ctx(pipe.get_context());
   auto gl_program(ctx.render_context->current_program());
@@ -136,6 +138,8 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
     ctx.render_context->apply();
     light_cone->draw(ctx);
   }
+}
+
 }
 
 PhysicallyBasedShadingPassDescription::PhysicallyBasedShadingPassDescription()

@@ -29,8 +29,10 @@ in vec2 gua_quad_coords;
 
 // output
 layout(location=0) out vec3 gua_out_color;
+layout(location=1) out vec4 gua_out_pbr;
 
 void main() {
     gua_out_color = vec3(1, 1, 1);
+    gua_out_pbr = vec4(1.0, 0.0, 0.0, 1.0);
 }
 

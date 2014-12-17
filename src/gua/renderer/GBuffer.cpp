@@ -45,7 +45,7 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
 
   color_buffer_read_  = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_32F, 1, state);
   color_buffer_write_ = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_32F, 1, state);
-  pbr_buffer_         = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_8, 1, state);
+  pbr_buffer_         = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGBA_8, 1, state);
   normal_buffer_      = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_16, 1, state);
   depth_buffer_       = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_D24, 1, state);
 
