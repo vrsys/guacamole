@@ -33,6 +33,7 @@
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
+#include <gua/renderer/FullscreenPass.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/Window.hpp>
 #include <gua/renderer/MaterialShader.hpp>

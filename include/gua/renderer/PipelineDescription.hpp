@@ -36,7 +36,7 @@ class GUA_DLL PipelineDescription {
 
   PipelineDescription() {}
   PipelineDescription(PipelineDescription const& other);
-  
+
   virtual ~PipelineDescription();
 
   template<class T>
@@ -76,12 +76,21 @@ class GUA_DLL PipelineDescription {
     throw std::runtime_error("PipelineDescription::get_pass(): pass not valid");
   }
 
+  void set_user_data(void* data) {
+    user_data_ = data;
+  }
+
+  void* get_user_data() const {
+    return user_data_;
+  }
+
   bool operator==(PipelineDescription const& other) const;
   bool operator!=(PipelineDescription const& other) const;
   PipelineDescription& operator=(PipelineDescription const& other);
- 
+
  private:
   std::vector<PipelinePassDescription*> passes_;
+  void* user_data_ = nullptr;
 };
 
 }
