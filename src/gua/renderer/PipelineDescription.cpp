@@ -26,6 +26,7 @@
 #include <gua/renderer/TriMeshPass.hpp>
 #include <gua/renderer/EmissivePass.hpp>
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
+#include <gua/renderer/LightVisibilityPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
@@ -53,10 +54,8 @@ std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
   */
   pipe->add_pass<TriMeshPassDescription>();
   pipe->add_pass<TexturedQuadPassDescription>();
-  pipe->add_pass<EmissivePassDescription>();
-  pipe->add_pass<PhysicallyBasedShadingPassDescription>();
+  pipe->add_pass<LightVisibilityPassDescription>();
   pipe->add_pass<BBoxPassDescription>();
-  //pipe->add_pass<BackgroundPassDescription>();
   pipe->add_pass<ResolvePassDescription>();
   pipe->add_pass<TexturedScreenSpaceQuadPassDescription>();
   pipe->add_pass<ToneMappingPassDescription>();

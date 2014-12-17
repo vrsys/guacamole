@@ -7,8 +7,45 @@ in vec2 gua_quad_coords;
 @include "shaders/common/gua_camera_uniforms.glsl"
 @include "shaders/common/gua_gbuffer_input.glsl"
 
+
+@include "shaders/common/gua_shading.glsl"
+
 #define ABUF_MODE readonly
 @include "shaders/common/gua_abuffer.glsl"
+uint bitset[4];
+
+#define ABUF_SHADE_FUNC abuf_shade
+
+vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec4 pbr) {
+  // pass-through check
+  if (pbr.w > 0.0)
+    return color;
+
+  float emit = pbr.r;
+
+  vec3 frag_color = vec3(0.0);
+  for (int i = 0; i < gua_lights_num; ++i) {
+      if ((bitset[i>>5] & (1u << (i%32))) != 0) {
+        frag_color += gua_shade(i, color * (1.0 + emit), normal, position, pbr);
+      }
+  }
+  return frag_color;
+}
+
+vec4 abuf_shade(uint pos, float depth) {
+  vec4 color  = ABUF_FRAG(pos, 0);
+  vec4 pbr    = ABUF_FRAG(pos, 1);
+  vec4 normal = ABUF_FRAG(pos, 2);
+
+  vec4 screen_space_pos = vec4(gua_get_quad_coords() * 2.0 - 1.0, depth, 1.0);
+  vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
+  vec3 position = h.xyz / h.w;
+
+  vec3 frag_color = shade_for_all_lights(color.rgb, normal.xyz *2.0 - 1.0, position, pbr);
+  return vec4(frag_color, color.a);
+}
+
+
 @include "shaders/common/gua_abuffer_resolve.glsl"
 
 uniform int   background_mode;
@@ -54,6 +91,14 @@ vec3 gua_apply_fog(vec3 fog_color) {
 
 void main() {
 
+  ivec2 frag_pos = ivec2(gl_FragCoord.xy);
+
+  // init light bitset
+  int bitset_words = ((gua_lights_num - 1) >> 5) + 1;
+  for (int sl = 0; sl < bitset_words; ++sl)
+    bitset[sl] = texelFetch(usampler3D(gua_light_bitset), ivec3(frag_pos, sl), 0).r;
+
+
   vec4 final_color = vec4(0);
   vec3 bg_color = vec3(0);
 
@@ -61,38 +106,30 @@ void main() {
   bool res = abuf_blend(final_color, depth);
 
   if (res) {
+    vec3 background_color;
+    switch (background_mode) {
+      case 0: // color
+        background_color = gua_apply_background_color();
+        break;
+      case 1: // skymap texture
+        background_color = gua_apply_skymap_texture();
+        break;
+      default: // quad texture
+        background_color = gua_apply_background_texture();
+    }
+
     if (depth < 1) {
       if (enable_fog) {
-        vec3 fog_color;
-
-        switch (background_mode) {
-          case 0: // color
-            fog_color = gua_apply_background_color();
-            break;
-          case 1: // skymap texture
-            fog_color = gua_apply_skymap_texture();
-            break;
-          default: // quad texture
-            fog_color = gua_apply_background_texture();
-        }
-
-        bg_color = gua_apply_fog(fog_color);
-
+        bg_color = gua_apply_fog(background_color);
       } else {
-        bg_color = gua_get_color();
+        //bg_color = gua_get_color();
+        bg_color = shade_for_all_lights(gua_get_color(),
+                                        gua_get_normal(),
+                                        gua_get_position(),
+                                        gua_get_pbr());
       }
     } else {
-
-      switch (background_mode) {
-        case 0: // color
-          bg_color = gua_apply_background_color();
-          break;
-        case 1: // skymap texture
-          bg_color = gua_apply_skymap_texture();
-          break;
-        default: // quad texture
-          bg_color = gua_apply_background_texture();
-      }
+      bg_color = background_color;
     }
 
     abuf_mix_frag(vec4(bg_color, 1.0), final_color);
@@ -100,5 +137,13 @@ void main() {
   }
 
   gua_out_color = final_color.rgb;
+
+/*
+  for (int i = 0; i < gua_lights_num; ++i) {
+      if ((bitset[i>>5] & (1u << (i%32))) != 0) {
+        //gua_out_color += vec3(float(i)/3+0.2,0,0);// / 5.0;
+        gua_out_color += gua_lights[i].color.rgb;
+      }
+  }//*/
 }
 

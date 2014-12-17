@@ -35,7 +35,7 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
   geometry_shader_ = "shaders/bbox.geom";
   fragment_shader_ = "shaders/bbox.frag";
 
-  writes_only_color_buffer_ = true;
+  writes_only_color_buffer_ = false;
   rendermode_ = RenderMode::Callback;
   rasterizer_state_ = boost::make_optional(
       scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID,
