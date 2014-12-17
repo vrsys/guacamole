@@ -34,6 +34,9 @@
 #include <gua/node/CameraNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
+#include <gua/renderer/CameraUniformBlock.hpp>
+#include <gua/renderer/LightTable.hpp>
+
 // external headers
 #include <iostream>
 
@@ -45,6 +48,7 @@ Pipeline::Pipeline() :
   gbuffer_(nullptr),
   abuffer_(nullptr),
   camera_block_(nullptr),
+  light_table_(nullptr),
   last_resolution_(0, 0),
   quad_(nullptr),
   context_(nullptr) {}
@@ -52,8 +56,17 @@ Pipeline::Pipeline() :
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::~Pipeline() {
+  if (light_table_) {
+    delete light_table_;
+  }
   if (camera_block_) {
     delete camera_block_;
+  }
+  if (gbuffer_) {
+    delete gbuffer_;
+  }
+  if (abuffer_) {
+    delete abuffer_;
   }
 }
 
@@ -76,14 +89,13 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   // store the current camera data
   current_camera_ = camera;
 
+  bool context_changed(false);
   bool reload_gbuffer(false);
-  bool reload_abuffer(false);
 
   // reload gbuffer if now rendering to another window (with a new context)
   if (context_ != ctx) {
     context_ = ctx;
-    reload_gbuffer = true;
-    reload_abuffer = true;
+    context_changed = true;
   }
 
   // execute all prerender cameras
@@ -97,7 +109,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
     reload_gbuffer = true;
   }
 
-  if (reload_gbuffer) {
+  if (context_changed || reload_gbuffer) {
     if (gbuffer_) {
       gbuffer_->remove_buffers(get_context());
       delete gbuffer_;
@@ -106,7 +118,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
     gbuffer_ = new GBuffer(get_context(), camera.config.resolution());
   }
 
-  if (reload_abuffer) {
+  if (context_changed) {
     if (abuffer_) {
       delete abuffer_;
     }
@@ -115,7 +127,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   }
 
   // recreate pipeline passes if pipeline description changed
-  bool reload_passes(reload_gbuffer);
+  bool reload_passes(context_changed || reload_gbuffer);
 
   if (*camera.pipeline_description != last_description_) {
     reload_passes = true;
@@ -149,9 +161,20 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
     }
   }
 
-  // update camera uniform block
-  if (!camera_block_) {
+  if (context_changed) {
+
+    // update camera uniform block
+    if (camera_block_) {
+      delete camera_block_;
+    }
     camera_block_ = new CameraUniformBlock(get_context().render_device);
+
+    // update light table
+    if (light_table_) {
+      light_table_->remove_buffers(get_context());
+      delete light_table_;
+    }
+    light_table_ = new LightTable();
   }
 
   context_->mode = mode;
@@ -232,6 +255,12 @@ SceneGraph const& Pipeline::get_graph() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+LightTable& Pipeline::get_light_table() {
+  return *light_table_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const {
 
   auto& ctx(get_context());
@@ -245,6 +274,20 @@ void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) 
   shader->set_uniform(ctx, gbuffer_->get_current_pbr_buffer()->get_handle(ctx),    "gua_gbuffer_pbr");
   shader->set_uniform(ctx, gbuffer_->get_current_normal_buffer()->get_handle(ctx), "gua_gbuffer_normal");
   shader->set_uniform(ctx, gbuffer_->get_current_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const {
+
+  auto& ctx(get_context());
+
+  shader->set_uniform(ctx, int(light_table_->get_lights_num()), "gua_lights_num");
+  if (   light_table_->get_light_bitset()
+      && light_table_->get_lights_num() > 0) {
+    shader->set_uniform(ctx, light_table_->get_light_bitset()->get_handle(ctx), "gua_light_bitset");
+    ctx.render_context->bind_uniform_buffer(light_table_->light_uniform_block().block_buffer(), 1);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -31,6 +31,7 @@
 #include <gua/renderer/EmissivePass.hpp>
 #include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
+#include <gua/renderer/LightVisibilityPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
