@@ -374,6 +374,7 @@ void main() {
 
   compute_light(N, P);
 
+  // gua_light_direction is normalized by compute_light
   vec3 L = gua_light_direction;
 
   vec3 pbr = gua_get_pbr();
