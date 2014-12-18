@@ -13,6 +13,7 @@ in vec2 gua_quad_coords;
 #define ABUF_MODE readonly
 @include "shaders/common/gua_abuffer.glsl"
 uint bitset[4];
+const int tile_power = 2;
 
 #define ABUF_SHADE_FUNC abuf_shade
 
@@ -95,8 +96,9 @@ void main() {
 
   // init light bitset
   int bitset_words = ((gua_lights_num - 1) >> 5) + 1;
+  ivec2 tile = frag_pos >> tile_power;
   for (int sl = 0; sl < bitset_words; ++sl)
-    bitset[sl] = texelFetch(usampler3D(gua_light_bitset), ivec3(frag_pos, sl), 0).r;
+    bitset[sl] = texelFetch(usampler3D(gua_light_bitset), ivec3(tile, sl), 0).r;
 
 
   vec4 final_color = vec4(0);

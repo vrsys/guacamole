@@ -18,11 +18,24 @@ void LightTable::invalidate(RenderContext const& ctx,
     return;
   }
 
-  // create bitset if necessary
+  const int max_tex3d_size = ctx.render_device->capabilities()._max_texture_3d_size;
+  const int tile_power = 2;
+
+  float width  = std::ceil(resolution.x / std::pow(2, tile_power));
+  float height = std::ceil(resolution.y / std::pow(2, tile_power));
   unsigned light_bitset_words = ((lights_num_ - 1) / 32) + 1;
+
+  if (   width > max_tex3d_size
+      || height > max_tex3d_size
+      || light_bitset_words > max_tex3d_size) {
+    Logger::LOG_ERROR << "Dimensions of light table cannot be greater than "
+                      << max_tex3d_size << " in size" << std::endl;
+  }
+
+  // create bitset if necessary
   if (  !light_bitset_ 
-      || light_bitset_->width() != resolution.x 
-      || light_bitset_->height() != resolution.y
+      || light_bitset_->width() < width
+      || light_bitset_->height() < height
       || light_bitset_words > light_bitset_words_) {
     scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
                                       scm::gl::WRAP_MIRRORED_REPEAT,
@@ -32,8 +45,7 @@ void LightTable::invalidate(RenderContext const& ctx,
       light_bitset_->make_non_resident(ctx);
       light_bitset_.reset();
     }
-    // TODO: do something with it. Dims are limited to MAX_3D_TEXTURE_SIZE
-    light_bitset_ = std::make_shared<Texture3D>(resolution.x, resolution.y, light_bitset_words, 
+    light_bitset_ = std::make_shared<Texture3D>(width, height, light_bitset_words,
                                                 scm::gl::FORMAT_R_32UI, 1, state);
     light_bitset_words_ = light_bitset_words;
     Logger::LOG_DEBUG << "Light bitset allocation for " << light_bitset_words << " words" << std::endl;

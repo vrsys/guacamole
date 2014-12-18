@@ -99,7 +99,7 @@ LightVisibilityPassDescription::LightVisibilityPassDescription()
   vertex_shader_ = "shaders/light_visibility.vert";
   fragment_shader_ = "shaders/light_visibility.frag";
   needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
-  writes_only_color_buffer_ = true; // we write out a color
+  writes_only_color_buffer_ = false; // we don't write out a color
   doClear_ = false;
   rendermode_ = RenderMode::Callback;
 
