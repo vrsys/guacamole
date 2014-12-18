@@ -162,7 +162,6 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   }
 
   if (context_changed) {
-
     // update camera uniform block
     if (camera_block_) {
       delete camera_block_;
