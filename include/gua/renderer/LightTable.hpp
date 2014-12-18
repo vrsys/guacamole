@@ -14,7 +14,8 @@ class LightTable
 {
 public:
   struct LightBlock {
-    math::mat4  model_matrix;
+    math::vec4  position_and_radius; // xyz - position (or direction for sun light), w - radius
+    math::vec4  beam_direction_and_half_angle; //  xyz - direction, w - half angle
     math::vec4  color;
     float       falloff;
     float       brightness;
@@ -31,7 +32,8 @@ public:
     //math::vec2ui light_shadow_map;
 
     bool operator==(const LightBlock& rhs) const { 
-      return    model_matrix == rhs.model_matrix
+      return    position_and_radius == rhs.position_and_radius
+             && beam_direction_and_half_angle == rhs.beam_direction_and_half_angle
              && color == rhs.color
              && falloff == rhs.falloff
              && brightness == rhs.brightness

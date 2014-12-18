@@ -3,7 +3,8 @@ uniform uvec2 gua_light_bitset;
 uniform int gua_lights_num;
 
 struct LightSource {
-  mat4   model_matrix;
+  vec4   position_and_radius; // xyz - position (or direction for sun light), w - radius
+  vec4   beam_direction_and_half_angle; //  xyz - direction, w - half angle
   vec4   color;
   float  falloff;
   float  brightness;
@@ -29,20 +30,56 @@ void gua_calculate_light(int light_id,
                          out vec3  gua_light_radiance) {
   LightSource L = gua_lights[light_id];
 
-  vec3  light_position = (L.model_matrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-  float light_radius = length(light_position - (L.model_matrix * vec4(0.0, 0.0, 1.0, 1.0)).xyz);
+  // sun light
+  if (L.type == 3) {
+    gua_light_direction = L.position_and_radius.xyz;
+    gua_light_distance  = 0.0;
+    if (dot(normal, gua_light_direction) < 0) {
+      return;
+    }
+    gua_light_intensity = 1.0 /* shadow*/;
+    vec3 Cl = /*shadow */ L.color.rgb * L.brightness;
+    gua_light_radiance = Cl;
+    return;
+  }
 
-  // per frag:
-
-  gua_light_direction = light_position - position;
+  gua_light_direction = L.position_and_radius.xyz - position;
   gua_light_distance  = length(gua_light_direction);
   gua_light_direction /= gua_light_distance;
 
-  float x = clamp(1.0 - pow( (gua_light_distance / light_radius) , 4), 0, 1);
-  float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
+  // point lights
+  if (L.type == 0) {
+    float x = clamp(1.0 - pow( (gua_light_distance / L.position_and_radius.w) , 4), 0, 1);
+    float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
+    vec3 Cl = falloff * L.color.rgb * L.brightness;
+    gua_light_radiance = Cl;
+  }
+  // spot lights
+  else if (L.type == 1) {
+    vec3 beam_direction   = L.beam_direction_and_half_angle.xyz;
+    if (dot(-gua_light_direction, beam_direction) < 0) {
+      return;
+    }
+    float beam_length = length(beam_direction);
+    if (   gua_light_distance > beam_length
+        || dot(normal, gua_light_direction) < 0) {
+      return;
+    }
+    /*float shadow = gua_get_shadow(position, gua_lightinfo4, vec2(0), gua_shadow_offset);
+    if(shadow <= 0.0) {
+      return;
+    }*/
+    float to_light_angle = dot(-gua_light_direction, beam_direction/beam_length);
+    float radial_attenuation = (to_light_angle - 1.0) / (L.beam_direction_and_half_angle.w - 1.0);
+    if (radial_attenuation >= 1.0)
+      return;
 
-  vec3 Cl = falloff * L.color.rgb * L.brightness;
-  gua_light_radiance = Cl;
+    float length_attenuation = pow(1.0 - gua_light_distance/beam_length, L.falloff);
+    radial_attenuation = pow(1.0 - radial_attenuation, L.softness);
+    gua_light_intensity = radial_attenuation * length_attenuation /* shadow*/;
+    vec3 Cl = radial_attenuation * length_attenuation * L.color.rgb * L.brightness;
+    gua_light_radiance = Cl;
+  }
 }
 
 // shading helper functions
@@ -97,8 +134,6 @@ float GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l)
   return d * vis;
 }
 
-
-
 vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec4 pbr) {
 
   vec3 N = normal;
@@ -119,7 +154,6 @@ vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec4 pbr) {
                 gua_light_radiance);
 
   vec3 L = gua_light_direction;
-
 
   float emit      = pbr.r;
   float metalness = pbr.b;
