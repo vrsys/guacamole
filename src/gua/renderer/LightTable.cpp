@@ -32,6 +32,7 @@ void LightTable::invalidate(RenderContext const& ctx,
       light_bitset_->make_non_resident(ctx);
       light_bitset_.reset();
     }
+    // TODO: do something with it. Dims are limited to MAX_3D_TEXTURE_SIZE
     light_bitset_ = std::make_shared<Texture3D>(resolution.x, resolution.y, light_bitset_words, 
                                                 scm::gl::FORMAT_R_32UI, 1, state);
     light_bitset_words_ = light_bitset_words;
