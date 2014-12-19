@@ -31,8 +31,8 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
 
     auto model_mat = light->get_cached_world_transform();
 
-    math::vec3 light_position = model_mat * math::vec4(0.0, 0.0, 0.0, 1.0);
-    float light_radius = scm::math::length(light_position - math::vec3(model_mat * math::vec4(0.0, 0.0, 1.0, 1.0)));
+    math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
+    float light_radius = scm::math::length(light_position - math::vec3(model_mat * math::vec4(0.f, 0.f, 1.f, 1.f)));
 
     LightTable::LightBlock light_block {};
 
@@ -57,10 +57,9 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
 
     auto model_mat = light->get_cached_world_transform();
 
-    math::vec3 light_position = model_mat * math::vec4(0.0, 0.0, 0.0, 1.0);
-    float light_radius = scm::math::length(light_position - math::vec3(model_mat * math::vec4(0.0, 0.0, 1.0, 1.0)));
-    math::vec3 beam_direction = math::vec3(model_mat * math::vec4(0.0, 0.0, -1.0, 1.0)) - light_position;
-    float half_beam_angle = scm::math::dot(scm::math::normalize(math::vec3(model_mat * math::vec4(0.0, 0.5, -1.0, 0.0))),
+    math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
+    math::vec3 beam_direction = math::vec3(model_mat * math::vec4(0.f, 0.f, -1.f, 1.f)) - light_position;
+    float half_beam_angle = scm::math::dot(scm::math::normalize(math::vec3(model_mat * math::vec4(0.f, 0.5f, -1.f, 0.f))),
                                            scm::math::normalize(beam_direction));
 
     LightTable::LightBlock light_block {};
@@ -69,7 +68,7 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
       // not implemented yet
     }
 
-    light_block.position_and_radius = math::vec4(light_position, light_radius);
+    light_block.position_and_radius = math::vec4(light_position, 0.f);
     light_block.beam_direction_and_half_angle = math::vec4(beam_direction, half_beam_angle);
     light_block.color           = math::vec4(light->data.get_color().vec3(), 0.f);
     light_block.falloff         = light->data.get_falloff();

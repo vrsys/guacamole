@@ -21,49 +21,51 @@ layout(std140, binding=1) uniform lightBlock {
 };
 
 // light functions
-void gua_calculate_light(int light_id,
+bool gua_calculate_light(int light_id,
                          vec3 normal, 
                          vec3 position, 
-                         out vec3  gua_light_direction,
-                         out float gua_light_distance,
-                         out float gua_light_intensity,
-                         out vec3  gua_light_radiance) {
+                         out vec3 gua_light_direction,
+                         out vec3 gua_light_radiance) {
   LightSource L = gua_lights[light_id];
 
+  float gua_light_intensity = 0.0;
+
   // sun light
-  if (L.type == 3) {
+  if (L.type == 2) {
     gua_light_direction = L.position_and_radius.xyz;
-    gua_light_distance  = 0.0;
     if (dot(normal, gua_light_direction) < 0) {
-      return;
+      return false;
     }
     gua_light_intensity = 1.0 /* shadow*/;
     vec3 Cl = /*shadow */ L.color.rgb * L.brightness;
     gua_light_radiance = Cl;
-    return;
+    return true;
   }
 
   gua_light_direction = L.position_and_radius.xyz - position;
-  gua_light_distance  = length(gua_light_direction);
-  gua_light_direction /= gua_light_distance;
 
   // point lights
   if (L.type == 0) {
+    float gua_light_distance = length(gua_light_direction);
+    gua_light_direction /= gua_light_distance;
     float x = clamp(1.0 - pow( (gua_light_distance / L.position_and_radius.w) , 4), 0, 1);
     float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
     vec3 Cl = falloff * L.color.rgb * L.brightness;
+    gua_light_intensity = 0.0;
     gua_light_radiance = Cl;
   }
   // spot lights
   else if (L.type == 1) {
-    vec3 beam_direction   = L.beam_direction_and_half_angle.xyz;
+    vec3 beam_direction = L.beam_direction_and_half_angle.xyz;
     if (dot(-gua_light_direction, beam_direction) < 0) {
-      return;
+      return false;
     }
+    float gua_light_distance = length(gua_light_direction);
+    gua_light_direction /= gua_light_distance;
     float beam_length = length(beam_direction);
     if (   gua_light_distance > beam_length
         || dot(normal, gua_light_direction) < 0) {
-      return;
+      return false;
     }
     /*float shadow = gua_get_shadow(position, gua_lightinfo4, vec2(0), gua_shadow_offset);
     if(shadow <= 0.0) {
@@ -72,7 +74,7 @@ void gua_calculate_light(int light_id,
     float to_light_angle = dot(-gua_light_direction, beam_direction/beam_length);
     float radial_attenuation = (to_light_angle - 1.0) / (L.beam_direction_and_half_angle.w - 1.0);
     if (radial_attenuation >= 1.0)
-      return;
+      return false;
 
     float length_attenuation = pow(1.0 - gua_light_distance/beam_length, L.falloff);
     radial_attenuation = pow(1.0 - radial_attenuation, L.softness);
@@ -80,6 +82,7 @@ void gua_calculate_light(int light_id,
     vec3 Cl = radial_attenuation * length_attenuation * L.color.rgb * L.brightness;
     gua_light_radiance = Cl;
   }
+  return true;
 }
 
 // shading helper functions
@@ -139,21 +142,14 @@ vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec4 pbr) {
   vec3 N = normal;
   vec3 P = position;
   vec3 E = gua_camera_position;
+  vec3 L, R;
 
   // lighting
-  vec3  gua_light_direction = vec3(0.0);
-  float gua_light_distance = 0.0;
-  float gua_light_intensity = 0.0;
-  vec3  gua_light_radiance = vec3(0.0);
-  gua_calculate_light(light_id, 
-                N, 
-                P, 
-                gua_light_direction,
-                gua_light_distance,
-                gua_light_intensity,
-                gua_light_radiance);
-
-  vec3 L = gua_light_direction;
+  bool shaded = gua_calculate_light(light_id,
+                                    N, P, L, R);
+  if (!shaded) {
+    return vec3(0.0);
+  }
 
   float emit      = pbr.r;
   float metalness = pbr.b;
@@ -167,7 +163,7 @@ vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec4 pbr) {
   vec3 H = normalize(L + Vn);
   float NdotL = clamp(dot(N, L), 0.0, 1.0);
 
-  vec3 Cl = gua_light_radiance * (1.0-emit);
+  vec3 Cl = R /* (1.0-emit)*/;
 
   vec3 f = Fresnel(cspec, H, L);
   vec3 brdf = ( 1.0 - f ) * cdiff + f*GGX_Specular(roughness, N, H, Vn, L);

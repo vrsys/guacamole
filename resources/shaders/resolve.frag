@@ -27,7 +27,7 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec4 pbr) {
   vec3 frag_color = vec3(0.0);
   for (int i = 0; i < gua_lights_num; ++i) {
       if ((bitset[i>>5] & (1u << (i%32))) != 0) {
-        frag_color += gua_shade(i, color * (1.0 + emit), normal, position, pbr);
+        frag_color += gua_shade(i, color /* (1.0 + emit)*/, normal, position, pbr);
       }
   }
   return frag_color;
