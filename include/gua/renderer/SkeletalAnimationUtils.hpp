@@ -232,6 +232,17 @@ struct Transformation {
     return Transformation{scaling * (1 - factor) + t.scaling * factor, slerp(rotation, t.rotation, factor), translation * (1 - factor) + t.translation * factor};
   }
 
+  Transformation operator*(float const f) const {
+    return Transformation{scaling * f, scm::math::quatf{rotation.w * f, rotation.i * f, rotation.j * f, rotation.k * f}, translation * f};
+  }
+
+  Transformation& operator*=(float const f) {
+    scaling *= f;
+    rotation = scm::math::quatf{rotation.w * f, rotation.i * f, rotation.j * f, rotation.k * f};
+    translation *= f;
+    return *this;
+  }
+
   ~Transformation(){};
 
   scm::math::vec3 scaling;
