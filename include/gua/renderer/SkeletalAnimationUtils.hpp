@@ -24,8 +24,9 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
- #include <gua/renderer/RenderContext.hpp>
+#include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -79,7 +80,27 @@ struct QuatKey {
     value{ai_to_gua(key.mValue)}
   {}
 
+  QuatKey(double tm, scm::math::quatf const& quat):
+    time{tm},
+    value{quat}
+  {}
+
   ~QuatKey(){};
+
+  // QuatKey operator*(float f) const {
+  //   return QuatKey{time, scm::math::quatf{value.w * f, value.i * f, value.j * f, value.k * f}};
+  // }
+
+  // QuatKey& operator*=(float f) {
+  //   value =  scm::math::quatf{value.w * f, value.i * f, value.j * f, value.k * f};
+  //   return *this;
+  // }
+
+  // QuatKey operator*(QuatKey const& key) {
+  //   return QuatKey{value * key.value;
+  // }
+
+  // QuatKey& operator *=(QuatKey const& key)
 
   double time;
   scm::math::quatf value;
@@ -218,6 +239,72 @@ struct Transformation {
   scm::math::vec3 translation;
 };
 
+class Pose {
+ public:
+  Pose():
+    transforms{}
+  {}
+
+  ~Pose(){};
+
+  bool contains(std::string const& name ) const {
+    return transforms.find(name) != transforms.end();
+  }
+
+  Transformation const& get_transform(std::string const& name) const{
+    try {
+      return transforms.at(name);
+    }
+    catch(std::exception const& e) {
+      Logger::LOG_ERROR << "bone '" << name << "' not contained in pose" << std::endl;
+      return transforms.begin()->second;
+    }
+  }
+
+  void set_transform(std::string const& name, Transformation const& value) {
+    transforms[name] = value;
+  }
+
+  void blend(Pose const& pose2, float blendFactor) {
+    for_each(pose2.cbegin(), pose2.cend(), [this, &blendFactor](std::pair<std::string, Transformation> const& p) {
+      if(contains(p.first)) {
+        set_transform(p.first, get_transform(p.first).blend(p.second, blendFactor));
+      }
+      else {
+        set_transform(p.first, p.second);
+      }
+    });
+  }
+
+  void partial_replace(Pose const& pose2, std::shared_ptr<Node> const& pNode) {
+    if(pose2.contains(pNode->name)) {
+      set_transform(pNode->name, pose2.get_transform(pNode->name));
+    }
+
+    for(std::shared_ptr<Node>& child : pNode->children) {
+      partial_replace(pose2, child);
+    }
+  }
+
+  std::map<std::string, Transformation>::iterator begin() {
+    return transforms.begin();
+  }   
+
+  std::map<std::string, Transformation>::const_iterator cbegin() const {
+    return transforms.cbegin();
+  } 
+
+  std::map<std::string, Transformation>::iterator end() {
+    return transforms.end();
+  } 
+  std::map<std::string, Transformation>::const_iterator cend() const {
+    return transforms.cend();
+  } 
+ 
+ private:
+  std::map<std::string, Transformation> transforms;
+};
+
 class Blend {
  public:
   static float cos(float x); 
@@ -238,14 +325,13 @@ class SkeletalAnimationUtils {
   static void set_bone_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& info, std::shared_ptr<Node>& currNode);
   static void collect_bone_indices(std::map<std::string, int>& ids, std::shared_ptr<Node> const& pNode);
   
-  static void calculate_pose(float TimeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& Transforms);
+  static void calculate_matrices(float TimeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& Transforms);
 
-  static void accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transforms, scm::math::mat4f const& ParentTransform);
-  static std::map<std::string, Transformation> calculate_transforms(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim);
+  static void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, Pose const& pose, scm::math::mat4f const& ParentTransform);
+  static Pose calculate_pose(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim);
 
-  static void blend(std::map<std::string, Transformation>& transforms1, std::map<std::string, Transformation> const& transforms2, float blendFactor);
-  static void partial_blend(std::map<std::string, Transformation>& transforms1, std::map<std::string, Transformation> const& transforms2, std::shared_ptr<Node> const& start);
   static std::shared_ptr<Node> find_node(std::string const& name, std::shared_ptr<Node> const& root);
+
  private:
 
   static scm::math::vec3 interpolate_scaling(float AnimationTime, BoneAnimation const& nodeAnim);

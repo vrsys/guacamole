@@ -1,9 +1,6 @@
 // class header
 #include <gua/renderer/SkeletalAnimationUtils.hpp>
 
-// guacamole headers
-#include <gua/utils/Logger.hpp>
-
 //external headers
 #include <iostream>
 
@@ -49,7 +46,6 @@ void SkeletalAnimationUtils::set_bone_properties(std::map<std::string, std::pair
   }
 }
 
-
 std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_animations(aiScene const* scene) {
   std::vector<std::shared_ptr<SkeletalAnimation>> animations{};
   if(!scene->HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
@@ -61,42 +57,27 @@ std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_ani
   return animations;
 }
 
-void SkeletalAnimationUtils::blend(std::map<std::string, Transformation>& transforms1, std::map<std::string, Transformation> const& transforms2, float blendFactor) {
-  auto iter = transforms1.begin();
-  for_each(transforms2.begin(), transforms2.end(), [&transforms1, &blendFactor, &iter](std::pair<std::string, Transformation> p) {
-    iter->second = p.second.blend(iter->second, blendFactor);
-    ++iter;
-  });
-}
-void SkeletalAnimationUtils::partial_blend(std::map<std::string, Transformation>& transforms1, std::map<std::string, Transformation> const& transforms2, std::shared_ptr<Node> const& pNode) {
-  transforms1.at(pNode->name) = transforms2.at(pNode->name);
-
-  for(std::shared_ptr<Node>& child : pNode->children) {
-    partial_blend(transforms1, transforms2, child);
-  }
-}
-
-void SkeletalAnimationUtils::calculate_pose(float timeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationUtils::calculate_matrices(float timeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
  
   float timeNormalized = 0;
-  std::map<std::string, Transformation> transformStructs{};
+  Pose pose{};
 
   if(pAnim) {
     timeNormalized = timeInSeconds / pAnim->duration;
     timeNormalized = scm::math::fract(timeNormalized);
 
-    transformStructs = calculate_transforms(timeNormalized, pAnim);
+    pose = calculate_pose(timeNormalized, pAnim);
   }
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
-  accumulate_transforms(transforms, root, transformStructs, identity);
+  accumulate_matrices(transforms, root, pose, identity);
 }
 
-void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, std::map<std::string, Transformation> const& transformStructs, scm::math::mat4f const& parentTransform) {
+void SkeletalAnimationUtils::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, Pose const& pose, scm::math::mat4f const& parentTransform) {
   scm::math::mat4f nodeTransformation{pNode->transformation};
 
-  if(transformStructs.find(pNode->name) != transformStructs.end()) { 
-    nodeTransformation = transformStructs.at(pNode->name).to_matrix();  
+  if(pose.contains(pNode->name)) { 
+    nodeTransformation = pose.get_transform(pNode->name).to_matrix();  
   }
   
   scm::math::mat4f finalTransformation = parentTransform * nodeTransformation;
@@ -107,13 +88,13 @@ void SkeletalAnimationUtils::accumulate_transforms(std::vector<scm::math::mat4f>
   }
   
   for (uint i = 0 ; i < pNode->numChildren ; i++) {
-    accumulate_transforms(transformMat4s, pNode->children[i], transformStructs, finalTransformation);
+    accumulate_matrices(transformMat4s, pNode->children[i], pose, finalTransformation);
   }
 }
 
-std::map<std::string, Transformation> SkeletalAnimationUtils::calculate_transforms(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim) {
+Pose SkeletalAnimationUtils::calculate_pose(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim) {
   
-  std::map<std::string, Transformation> transforms{};
+  Pose pose{};
 
   float currFrame = animationTime * float(pAnim->numFrames);
    
@@ -129,10 +110,10 @@ std::map<std::string, Transformation> SkeletalAnimationUtils::calculate_transfor
     // Interpolate translation and generate translation transformation matrix
     boneTransform.translation = interpolate_position(currFrame, boneAnim);
 
-    transforms[boneAnim.name] = boneTransform;
+    pose.set_transform(boneAnim.name, boneTransform);
   }  
 
-  return transforms;
+  return pose;
 }
 
 BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName) {
