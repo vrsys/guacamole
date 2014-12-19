@@ -185,7 +185,6 @@ class GUA_DLL CameraNode : public Node {
 
   std::shared_ptr<Node> copy() const override;
 
-
   // access this member only from the rendering thread!
   std::shared_ptr<Pipeline> rendering_pipeline_;
 

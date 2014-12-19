@@ -30,8 +30,9 @@ flat in int  trimtype;
 layout (location = 0) out vec4  out_color;
 layout (depth_any)    out float gl_FragDepth;
 
-@include "resources/shaders/common/gua_fragment_shader_output.glsl"
 @include "resources/shaders/common/gua_global_variable_declaration.glsl"
+
+@include "resources/shaders/common/gua_fragment_shader_output.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
@@ -130,6 +131,7 @@ void main()
 
   @material_input
   @include "resources/shaders/common/gua_global_variable_assignment.glsl"
+
   @material_method_calls
   @include "resources/shaders/common/gua_write_gbuffer.glsl"
 

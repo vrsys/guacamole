@@ -22,6 +22,8 @@
 // class header
 #include <gua/renderer/PipelinePass.hpp>
 
+#include <gua/config.hpp>
+#include <gua/renderer/ProgramFactory.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
@@ -41,6 +43,36 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
   , rendermode_(d.rendermode_)
   , process_(d.process_)
 {
+  if (!d.vertex_shader_.empty() && !d.fragment_shader_.empty()) {
+    if (!d.geometry_shader_.empty()) {
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+      ProgramFactory factory;
+      shader_->create_from_sources(factory.read_shader_from_file(d.vertex_shader_), 
+                                   factory.read_shader_from_file(d.geometry_shader_),  
+                                   factory.read_shader_from_file(d.fragment_shader_));
+      //shader_->save_to_file("compiled_shaders", "shader");
+#else
+      shader_->create_from_sources(
+          Resources::lookup_shader(d.vertex_shader_),
+          Resources::lookup_shader(d.geometry_shader_),
+          Resources::lookup_shader(d.fragment_shader_));
+#endif
+    } else {
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+      ProgramFactory factory;
+      shader_->create_from_sources(factory.read_shader_from_file(d.vertex_shader_),
+                                   factory.read_shader_from_file(d.fragment_shader_));
+      //shader_->save_to_file("compiled_shaders", "shader");
+#else
+      shader_->create_from_sources(
+          Resources::lookup_shader(d.vertex_shader_),
+          Resources::lookup_shader(d.fragment_shader_));
+#endif
+    }
+
+    shader_->upload_to(ctx);
+  }
+
   if (d.depth_stencil_state_) {
     depth_stencil_state_ =
         ctx.render_device->create_depth_stencil_state(*d.depth_stencil_state_);

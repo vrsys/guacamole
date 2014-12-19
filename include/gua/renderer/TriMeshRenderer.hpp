@@ -26,6 +26,7 @@
 #include <unordered_map>
 
 #include <gua/platform.hpp>
+#include <gua/renderer/ProgramFactory.hpp>
 
 #include <scm/gl_core/shader_objects.h>
 
@@ -34,6 +35,7 @@ namespace gua {
   class MaterialShader;
   class ShaderProgram;
   class Pipeline;
+  class PipelinePassDescription;
 
 class TriMeshRenderer {
 
@@ -42,12 +44,13 @@ class TriMeshRenderer {
    TriMeshRenderer();
    ~TriMeshRenderer();
   
-   void render(Pipeline& pipe);
+   void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
  private:
-
-   std::map<scm::gl::shader_stage, std::string>         program_description_;
-   std::unordered_map<MaterialShader*, ShaderProgram*>  programs_;
+   
+   ProgramFactory                                                      program_factory_;
+   std::map<scm::gl::shader_stage, std::string>                        program_description_;
+   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
   
 };
 

@@ -19,48 +19,55 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_COLLISION_SHAPE_DATABASE_HPP
-#define GUA_COLLISION_SHAPE_DATABASE_HPP
+#ifndef GUA_PROGRAM_FACTORY_HPP
+#define GUA_PROGRAM_FACTORY_HPP
 
-// guacamole headers
+#include <vector>
+#include <map>
+#include <list>
+
+#include <scm/gl_core/shader_objects.h>
+
 #include <gua/platform.hpp>
-#include <gua/utils/Singleton.hpp>
-#include <gua/databases/Database.hpp>
-#include <gua/physics/CollisionShape.hpp>
 
-namespace gua { 
-namespace physics {
 
-/**
- * A data base for collision shapes.
- *
- * This Database stores collision shapes that can be shared among rigid bodies.
- * It can be accessed via string identifiers.
- *
- * \ingroup gua_databases
- */
-class GUA_DLL CollisionShapeDatabase : public Database<CollisionShape>,
-                                       public Singleton<CollisionShapeDatabase> {
+namespace gua {
+
+struct RenderContext;
+class ShaderProgram;
+class MaterialShader;
+class MaterialShaderMethod;
+
+class GUA_DLL ProgramFactory {
  public:
 
-  /**
-   * Adds a collision shape to the database.
-   *
-   * \param name  String identifier.
-   * \param shape A pointer to the collision shape.
-   */
-  static void add_shape(const std::string& name, CollisionShape* shape);
+  ProgramFactory(std::vector<std::string> const& shader_search_directories = std::vector<std::string>());
 
-  friend class Singleton<CollisionShapeDatabase>;
+  ~ProgramFactory();
 
- private:
-  CollisionShapeDatabase() {}
+ public:
 
-  ~CollisionShapeDatabase() {}
+   void           add_search_path (std::string const& path);
+
+  std::shared_ptr<ShaderProgram>  create_program (MaterialShader* material,
+                                                  std::map<scm::gl::shader_stage, std::string> const& program_description,
+                                                  std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
+                                                  bool in_rasterization_discard = false);
+
+  std::string     read_shader_from_file (std::string const& file) const;
+
+  void            resolve_shader_includes (std::string& shader_source) const;
+
+  std::string     compile_description (MaterialShader* material,
+                                       std::list<MaterialShaderMethod> const& passes,
+                                       std::string const& shader_source) const;
+
+private:
+
+  std::vector<std::string> _search_paths;
 
 };
 
 }
-}
 
-#endif  // GUA_COLLISION_SHAPE_DATABASE_HPP
+#endif  // GUA_PIPELINE_HPP

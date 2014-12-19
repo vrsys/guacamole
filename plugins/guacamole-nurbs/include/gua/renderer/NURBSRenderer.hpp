@@ -29,6 +29,7 @@
 // guacamole headers
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/NURBS.hpp>
+#include <gua/renderer/ProgramFactory.hpp>
 
 namespace gua {
 
@@ -42,15 +43,23 @@ namespace gua {
     NURBSRenderer();
     ~NURBSRenderer();
 
-    void render(Pipeline& pipe);
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
     void reload_programs();
 
   private:  // auxiliary methods
 
-    void           _load_shaders();
-    void           _initialize_pre_tesselation_program();
-    void           _initialize_tesselation_program(MaterialShader*);
+    void        _load_shaders();
+    void        _initialize_pre_tesselation_program();
+    void        _initialize_tesselation_program(MaterialShader*);
+    void        _initialize_raycasting_program(MaterialShader*);
+
+    std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
+                                                         std::shared_ptr<ShaderProgram> const& current_program,
+                                                         bool raycasting,
+                                                         bool& program_changed);
+
+    void        _reset();
 
     std::string _transform_feedback_vertex_shader() const;
     std::string _transform_feedback_geometry_shader() const;
@@ -68,19 +77,19 @@ namespace gua {
 
   private:  // attributes
 
-    std::mutex                                          mutex_;
-    bool                                                shaders_loaded_;
-                                                        
-    // CPU Ressources                                   
-    std::vector<ShaderProgramStage>                     pre_tesselation_shader_stages_;
-    std::list<std::string>                              pre_tesselation_interleaved_stream_capture_;
-    std::map<scm::gl::shader_stage, std::string>        tesselation_shader_stages_;                 
-    std::map<scm::gl::shader_stage, std::string>        raycasting_shader_stages_;
+    unsigned                                                            current_modcount_;
+    ProgramFactory                                                      factory_;
+                                                                        
+    // CPU Ressources                                                   
+    std::vector<ShaderProgramStage>                                     pre_tesselation_shader_stages_;
+    std::list<std::string>                                              pre_tesselation_interleaved_stream_capture_;
+    std::map<scm::gl::shader_stage, std::string>                        tesselation_shader_stages_;                 
+    std::map<scm::gl::shader_stage, std::string>                        raycasting_shader_stages_;
 
     // GPU Ressources
-    ShaderProgram*                                      pre_tesselation_program_;
-    std::unordered_map<MaterialShader*, ShaderProgram*> tesselation_programs_;
-    std::unordered_map<MaterialShader*, ShaderProgram*> raycasting_programs_;
+    std::shared_ptr<ShaderProgram>                                      pre_tesselation_program_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> tesselation_programs_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> raycasting_programs_;
 
   };
 

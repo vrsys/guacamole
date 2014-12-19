@@ -77,6 +77,7 @@ void main()
 
   @material_input
   @include "resources/shaders/common/gua_global_variable_assignment.glsl"
+
   @material_method_calls
   @include "resources/shaders/common/gua_write_gbuffer.glsl"
 }

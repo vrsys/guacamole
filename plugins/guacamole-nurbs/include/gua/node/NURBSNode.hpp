@@ -54,11 +54,11 @@ public: // methods
 
   std::shared_ptr<NURBSResource> const& get_geometry() const;
 
-  std::string const&  get_geometry_description() const;
-  void                set_geometry_description(std::string const& v);
+  std::string const&                    get_geometry_description() const;
+  void                                  set_geometry_description(std::string const& v);
 
-  std::shared_ptr<Material> const&     get_material() const;
-  void                                 set_material(std::shared_ptr<Material> const& material);
+  std::shared_ptr<Material> const&      get_material() const;
+  void                                  set_material(std::shared_ptr<Material> const& material);
 
 public: // render configuration
 
@@ -67,6 +67,9 @@ public: // render configuration
 
   float max_final_tesselation() const;
   void  max_final_tesselation(float t);
+
+  void rendermode_raycasting(bool);
+  bool rendermode_raycasting() const;
 
 public: // virtual/override methods
 
@@ -93,6 +96,7 @@ private : // attributes e.g. special attributes for drawing
 
   std::shared_ptr<Material>       material_;
   bool                            material_changed_;
+  bool                            enable_raycasting_;
 
   float                           max_tess_level_pre_pass_;
   float                           max_tess_level_final_pass_;

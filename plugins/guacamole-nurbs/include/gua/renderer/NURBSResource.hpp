@@ -67,9 +67,9 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
  public : // c'tor / d'tor
 
    NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
-                  scm::gl::fill_mode in_fill_mode = scm::gl::FILL_SOLID,
-                  //scm::gl::fill_mode in_fill_mode = scm::gl::FILL_WIREFRAME,
-                  bool enable_raycasting = false);
+                  scm::gl::fill_mode in_fill_mode = scm::gl::FILL_SOLID
+                  //scm::gl::fill_mode in_fill_mode = scm::gl::FILL_WIREFRAME
+                  );
 
    ~NURBSResource();
 
@@ -77,7 +77,7 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
 
   /*virtual*/ void predraw(RenderContext const& context) const;
 
-  /*virtual*/ void draw(RenderContext const& context) const;
+  /*virtual*/ void draw(RenderContext const& context, bool raycasting) const;
 
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits) {}
@@ -85,8 +85,6 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
   scm::gl::buffer_ptr const& vertex_buffer() const;
   scm::gl::buffer_ptr const& index_buffer() const;
   scm::gl::vertex_array_ptr const& vertex_array() const;
-
-  bool raycasting_enabled() const { return _raycasting; }
 
  private:
    
@@ -96,7 +94,6 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
   std::shared_ptr<NURBSData> _data;
 
   scm::gl::fill_mode         _fill_mode;
-  bool                       _raycasting;
   float                      _max_pre_tesselation;
   float                      _max_final_tesselation;
   

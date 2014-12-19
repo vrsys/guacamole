@@ -44,8 +44,14 @@ class GUA_DLL PipelinePassDescription {
   friend class Pipeline;
   friend class PipelinePass;
 
+  void touch() { ++mod_count_; }
+  unsigned mod_count() const { return mod_count_; }
+
  protected:
+
   virtual PipelinePass make_pass(RenderContext const& ctx) = 0;
+  friend bool operator!=(PipelinePassDescription const& lhs, PipelinePassDescription const& rhs) { return lhs.mod_count_ != rhs.mod_count_; };
+
   // shader names
   std::string vertex_shader_ = "";
   std::string fragment_shader_ = "";
@@ -58,6 +64,7 @@ class GUA_DLL PipelinePassDescription {
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
   bool doClear_ = false;
+  unsigned mod_count_ = 0; 
 
   mutable bool recompile_shaders_ = true;
 

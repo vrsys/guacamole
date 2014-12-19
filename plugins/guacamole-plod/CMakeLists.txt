@@ -2,7 +2,7 @@
 # additional dependencies
 ###############################################################################
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-include(FindPLOD)
+include(FindPBR)
 
 ###############################################################################
 # determine source files
@@ -30,7 +30,7 @@ LINK_DIRECTORIES(${LIB_PATHS})
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}
                      ${GUACAMOLE_PLOD_INCLUDE_DIR}
-                     ${PLOD_INCLUDE_DIR}
+                     ${PBR_INCLUDE_DIR}
 )
 
 ADD_LIBRARY( guacamole-PLOD SHARED
@@ -59,8 +59,10 @@ ELSEIF (MSVC)
 ENDIF(UNIX)
 
 IF (MSVC)
-  target_link_libraries( guacamole-PLOD guacamole optimized ${PLOD_LIBRARY_RELEASE})
-  target_link_libraries( guacamole-PLOD guacamole debug ${PLOD_LIBRARY_DEBUG})
+  target_link_libraries( guacamole-PLOD 
+                         guacamole optimized ${PBR_COMMON_LIBRARY} debug ${PBR_COMMON_LIBRARY}
+                         guacamole optimized ${PBR_PREPROCESSING_LIBRARY} debug ${PBR_PREPROCESSING_LIBRARY_DEBUG}
+                         guacamole optimized ${PBR_RENDERING_LIBRARY} debug ${PBR_RENDERING_LIBRARY_DEBUG})
 ELSEIF (UNIX)
   target_link_libraries( guacamole-PLOD guacamole ${PLOD_LIBRARY})
 ENDIF (MSVC)

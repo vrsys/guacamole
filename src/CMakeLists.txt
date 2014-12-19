@@ -238,6 +238,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../resources/ DESTINATION resource
         FILES_MATCHING 
         PATTERN "*.frag" 
         PATTERN "*.vert" 
+        PATTERN "*.geom"
         PATTERN "*.glsl" 
         PATTERN "*.gmd" 
         PATTERN "*.gsd")

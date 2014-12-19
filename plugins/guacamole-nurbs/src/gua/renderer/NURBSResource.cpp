@@ -39,11 +39,9 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 NURBSResource::NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
-             scm::gl::fill_mode in_fill_mode,
-             bool raycasting_enabled)
+             scm::gl::fill_mode in_fill_mode)
     : _data(std::make_shared<NURBSData>(object)),
       _fill_mode(in_fill_mode),
-      _raycasting(raycasting_enabled),
       _max_pre_tesselation(1.0)
 {
   bounding_box_ = math::BoundingBox<math::vec3>(
@@ -88,65 +86,60 @@ void NURBSResource::predraw(RenderContext const& context) const
     upload_to(context);
   }
 
-  // no predraw necessary for raycasting
-  if (_raycasting) {
-    return;
+  auto in_context = context.render_context;
+
+  scm::gl::context_vertex_input_guard cvg(in_context);
+  scm::gl::context_state_objects_guard csg(in_context);
+  scm::gl::context_image_units_guard cig(in_context);
+  scm::gl::context_texture_units_guard ctg(in_context);
+
+  context.render_context->set_rasterizer_state(_rstate_no_cull[context.id], 1.0f);
+
+  auto tfb = Singleton<TransformFeedbackBuffer>::instance();
+
+  //Transform Feedback Stage Begins
+  in_context->begin_transform_feedback(tfb->_transform_feedback[context.id],
+    scm::gl::PRIMITIVE_POINTS);
+  {
+    in_context->bind_vertex_array(_surface_tesselation_data.vertex_array[context.id]);
+    in_context->bind_index_buffer(
+      _surface_tesselation_data.index_buffer[context.id],
+      scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS,
+      scm::gl::TYPE_UINT);
+
+    in_context->bind_texture(
+      _surface_tesselation_data.parametric_texture_buffer[context.id], _sstate[context.id], 5);
+    in_context->bind_texture(
+      _surface_tesselation_data.attribute_texture_buffer[context.id], _sstate[context.id], 6);
+    in_context->bind_texture(
+      _contour_trimming_data.partition_texture_buffer[context.id], _sstate[context.id], 7);
+    in_context->bind_texture(
+      _contour_trimming_data.contourlist_texture_buffer[context.id], _sstate[context.id], 8);
+    in_context->bind_texture(
+      _contour_trimming_data.curvelist_texture_buffer[context.id], _sstate[context.id], 9);
+    in_context->bind_texture(
+      _contour_trimming_data.curvedata_texture_buffer[context.id], _sstate[context.id], 10);
+    in_context->bind_texture(
+      _contour_trimming_data.pointdata_texture_buffer[context.id], _sstate[context.id], 11);
+
+    in_context->current_program()->uniform_sampler("parameter_texture", 5);
+    in_context->current_program()->uniform_sampler("attribute_texture", 6);
+    in_context->current_program()->uniform_sampler("trim_partition", 7);
+    in_context->current_program()->uniform_sampler("trim_contourlist", 8);
+    in_context->current_program()->uniform_sampler("trim_curvelist", 9);
+    in_context->current_program()->uniform_sampler("trim_curvedata", 10);
+    in_context->current_program()->uniform_sampler("trim_pointdata", 11);
+
+    in_context->current_program()->uniform("max_pre_tesselation", _max_pre_tesselation);
+
+
+    in_context->apply();
+
+    in_context->draw_elements(_data->tess_index_data.size());
   }
-  else { // otherwise adaptively tesselate to transform feeedback buffer
-    auto in_context = context.render_context;
 
-    scm::gl::context_vertex_input_guard cvg(in_context);
-    scm::gl::context_state_objects_guard csg(in_context);
-    scm::gl::context_image_units_guard cig(in_context);
-    scm::gl::context_texture_units_guard ctg(in_context);
-
-    context.render_context->set_rasterizer_state(_rstate_no_cull[context.id], 1.0f);
-
-    auto tfb = Singleton<TransformFeedbackBuffer>::instance();
-
-    //Transform Feedback Stage Begins
-    in_context->begin_transform_feedback(tfb->_transform_feedback[context.id],
-      scm::gl::PRIMITIVE_POINTS);
-    {
-      in_context->bind_vertex_array(_surface_tesselation_data.vertex_array[context.id]);
-      in_context->bind_index_buffer(
-        _surface_tesselation_data.index_buffer[context.id],
-        scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS,
-        scm::gl::TYPE_UINT);
-
-      in_context->bind_texture(
-        _surface_tesselation_data.parametric_texture_buffer[context.id], _sstate[context.id], 5);
-      in_context->bind_texture(
-        _surface_tesselation_data.attribute_texture_buffer[context.id], _sstate[context.id], 6);
-      in_context->bind_texture(
-        _contour_trimming_data.partition_texture_buffer[context.id], _sstate[context.id], 7);
-      in_context->bind_texture(
-        _contour_trimming_data.contourlist_texture_buffer[context.id], _sstate[context.id], 8);
-      in_context->bind_texture(
-        _contour_trimming_data.curvelist_texture_buffer[context.id], _sstate[context.id], 9);
-      in_context->bind_texture(
-        _contour_trimming_data.curvedata_texture_buffer[context.id], _sstate[context.id], 10);
-      in_context->bind_texture(
-        _contour_trimming_data.pointdata_texture_buffer[context.id], _sstate[context.id], 11);
-
-      in_context->current_program()->uniform_sampler("parameter_texture", 5);
-      in_context->current_program()->uniform_sampler("attribute_texture", 6);
-      in_context->current_program()->uniform_sampler("trim_partition", 7);
-      in_context->current_program()->uniform_sampler("trim_contourlist", 8);
-      in_context->current_program()->uniform_sampler("trim_curvelist", 9);
-      in_context->current_program()->uniform_sampler("trim_curvedata", 10);
-      in_context->current_program()->uniform_sampler("trim_pointdata", 11);
-
-      in_context->current_program()->uniform("max_pre_tesselation", _max_pre_tesselation);
-
-
-      in_context->apply();
-
-      in_context->draw_elements(_data->tess_index_data.size());
-    }
-
-    in_context->end_transform_feedback();
-  }
+  in_context->end_transform_feedback();
+  
 #if 0
   struct vertex {
     scm::math::vec3f pos;
@@ -171,7 +164,7 @@ void NURBSResource::predraw(RenderContext const& context) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSResource::draw(RenderContext const& context) const
+void NURBSResource::draw(RenderContext const& context, bool raycasting) const
 {
   // upload to GPU if neccessary: todo: check if this is sufficient for thread-safety
   if (_surface_tesselation_data.vertex_array.size() <= context.id || _surface_tesselation_data.vertex_array[context.id] == nullptr) {
@@ -187,13 +180,16 @@ void NURBSResource::draw(RenderContext const& context) const
 
   context.render_context->set_rasterizer_state(_rstate_no_cull[context.id], 1.0f);
 
-  if (_raycasting)
+  if (raycasting)
   {
     in_context->bind_vertex_array(_surface_raycasting_data.vertex_array[context.id]);
 
+    in_context->bind_index_buffer(_surface_raycasting_data.index_buffer[context.id],
+                                  scm::gl::PRIMITIVE_TRIANGLE_LIST,
+                                  scm::gl::TYPE_UINT, 0);
+
     in_context->bind_texture(
       _surface_raycasting_data.controlpoints[context.id], _sstate[context.id], 5);
-
     in_context->bind_texture(
       _contour_trimming_data.partition_texture_buffer[context.id], _sstate[context.id], 7);
     in_context->bind_texture(
@@ -206,14 +202,16 @@ void NURBSResource::draw(RenderContext const& context) const
       _contour_trimming_data.pointdata_texture_buffer[context.id], _sstate[context.id], 11);
 
     in_context->current_program()->uniform_sampler("vertexdata", 5);
-
     in_context->current_program()->uniform_sampler("trim_partition", 7);
     in_context->current_program()->uniform_sampler("trim_contourlist", 8);
     in_context->current_program()->uniform_sampler("trim_curvelist", 9);
     in_context->current_program()->uniform_sampler("trim_curvedata", 10);
     in_context->current_program()->uniform_sampler("trim_pointdata", 11);
 
+    in_context->apply();
+
     in_context->draw_elements(_data->object->_indices.size());
+    //in_context->draw_elements(3);
 
   } else { // adaptive tesselation
     auto tfb = Singleton<TransformFeedbackBuffer>::instance();
@@ -420,6 +418,7 @@ void NURBSResource::initialize_vertex_data(RenderContext const& context) const
                                scm::gl::USAGE_STATIC_DRAW,
                                size_in_bytes(_data->tess_patch_data),
                                &_data->tess_patch_data[0]);
+
   _surface_tesselation_data.vertex_array[context.id] = in_device->create_vertex_array(
     v_fmt, boost::assign::list_of(_surface_tesselation_data.vertex_buffer[context.id]));
 
@@ -430,10 +429,29 @@ void NURBSResource::initialize_vertex_data(RenderContext const& context) const
                                &_data->tess_index_data[0]);
 
   // initialize ray casting setup
-  scm::gl::vertex_format v_fmt_rc = scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, 0); 
-  v_fmt_rc(0, 1, scm::gl::TYPE_VEC4F, 0);
-  v_fmt_rc(0, 2, scm::gl::TYPE_VEC4F, 0);
-  v_fmt_rc(0, 3, scm::gl::TYPE_VEC4F, 0);
+  scm::gl::vertex_format v_fmt_rc =
+    scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, 0, scm::gl::INT_PURE);
+                  v_fmt_rc(1, 1, scm::gl::TYPE_VEC4F, 0, scm::gl::INT_PURE);
+                  v_fmt_rc(2, 2, scm::gl::TYPE_VEC4F, 0, scm::gl::INT_PURE);
+                  v_fmt_rc(3, 3, scm::gl::TYPE_VEC4F, 0, scm::gl::INT_PURE);
+
+                  //auto a = _data->object->_indices[0];
+                  //auto b = _data->object->_indices[1];
+                  //auto c = _data->object->_indices[2];
+                  //
+                  //_data->object->_attrib0[a] = scm::math::vec3f(0.0, 3.0, 0.0);
+                  //_data->object->_attrib0[b] = scm::math::vec3f(2.0, 3.0, 0.0);
+                  //_data->object->_attrib0[c] = scm::math::vec3f(2.0, 0.0, 0.0);
+                  //
+                  //_data->object->_attrib1[a] = scm::math::vec4f(0.0, 1.0, 0.0, 0.0);
+                  //_data->object->_attrib1[b] = scm::math::vec4f(1.0, 1.0, 0.0, 0.0);
+                  //_data->object->_attrib1[c] = scm::math::vec4f(1.0, 0.0, 0.0, 0.0);
+                  //
+                  //std::cout << _data->object->_attrib1[a] << " , " <<
+                  //  _data->object->_attrib1[b] << " , " <<
+                  //  _data->object->_attrib1[c] << std::endl;
+
+
 
   _surface_raycasting_data.vertex_attrib0[context.id] =
     in_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
@@ -459,11 +477,12 @@ void NURBSResource::initialize_vertex_data(RenderContext const& context) const
     size_in_bytes(_data->object->_attrib3),
     &_data->object->_attrib3[0]);
 
+
   _surface_raycasting_data.vertex_array[context.id] = in_device->create_vertex_array(
-    v_fmt_rc, boost::assign::list_of(_surface_raycasting_data.vertex_attrib0[context.id])( 
-                                     _surface_raycasting_data.vertex_attrib1[context.id])(
-                                     _surface_raycasting_data.vertex_attrib2[context.id])(
-                                     _surface_raycasting_data.vertex_attrib3[context.id]));
+    v_fmt_rc, boost::assign::list_of(_surface_raycasting_data.vertex_attrib0[context.id])(
+    _surface_raycasting_data.vertex_attrib1[context.id])(
+    _surface_raycasting_data.vertex_attrib2[context.id])(
+    _surface_raycasting_data.vertex_attrib3[context.id]));
 
   _surface_raycasting_data.index_buffer[context.id] =
     in_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,

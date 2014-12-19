@@ -32,7 +32,7 @@ namespace gua {
 
 class Pipeline;
 
-class PhysicallyBasedShadingPassDescription : public PipelinePassDescription {
+class GUA_DLL PhysicallyBasedShadingPassDescription : public PipelinePassDescription {
  public:
   PhysicallyBasedShadingPassDescription();
   PipelinePassDescription* make_copy() const override;

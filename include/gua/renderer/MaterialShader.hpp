@@ -44,24 +44,18 @@ class GUA_DLL MaterialShader {
 
   MaterialShaderDescription const& get_description() const;
 
-  std::string const&                   get_name()             const;
-  std::shared_ptr<Material>            make_new_material()    const;
-  std::shared_ptr<Material> const&     get_default_material() const;
+  std::string const&                     get_name()             const;
+  std::shared_ptr<Material>              make_new_material()    const;
+  std::shared_ptr<Material> const&       get_default_material() const;
 
-  ShaderProgram* get_shader(std::map<scm::gl::shader_stage, std::string> const& program_description,
-                            std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
-                            bool in_rasterization_discard = false);
-
-  void print_shaders() const;
+  std::list<MaterialShaderMethod> const& get_vertex_methods() const;
+  std::list<MaterialShaderMethod> const& get_fragment_methods() const;
 
   unsigned max_object_count() const {
     return max_object_count_;
   }
 
  private:
-
-   std::string compile_description(std::list<MaterialShaderMethod> const& passes,
-                                   std::string const& shader_source) const;
 
   MaterialShaderDescription desc_;
 

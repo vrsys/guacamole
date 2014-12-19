@@ -22,6 +22,7 @@
 // class header
 #include <gua/renderer/TriMeshRenderer.hpp>
 
+#include <gua/config.hpp>
 #include <gua/node/TriMeshNode.hpp>
 
 #include <gua/renderer/TriMeshRessource.hpp>
@@ -36,29 +37,31 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
 
   TriMeshRenderer::TriMeshRenderer()
-    : program_description_(),
+    : program_factory_(),
+      program_description_(),
       programs_()
   {
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    program_description_[scm::gl::shader_stage::STAGE_VERTEX_SHADER]   = program_factory_.read_shader_from_file("resources/shaders/tri_mesh_shader.vert");
+    program_description_[scm::gl::shader_stage::STAGE_FRAGMENT_SHADER] = program_factory_.read_shader_from_file("resources/shaders/tri_mesh_shader.frag");
+#else
     program_description_[scm::gl::shader_stage::STAGE_VERTEX_SHADER] = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
     program_description_[scm::gl::shader_stage::STAGE_FRAGMENT_SHADER] = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
+#endif
   }
 
 
   ////////////////////////////////////////////////////////////////////////////////
 
   TriMeshRenderer::~TriMeshRenderer()
-  {
-    for (auto program : programs_) {
-      delete program.second;
-    }
-    programs_.clear();
-  }
+  {}
 
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void TriMeshRenderer::render(Pipeline& pipe)
+  void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   {
+
     auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
     if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
@@ -75,8 +78,8 @@ namespace gua {
 
       int view_id(pipe.get_camera().config.get_view_id());
 
-      MaterialShader* current_material(nullptr);
-      ShaderProgram*  current_shader(nullptr);
+      MaterialShader*                current_material(nullptr);
+      std::shared_ptr<ShaderProgram> current_shader;
 
       ctx.render_context->apply();
 
@@ -95,7 +98,7 @@ namespace gua {
               current_shader = shader_iterator->second;
             }
             else {
-              auto shader = current_material->get_shader(program_description_);
+              auto shader = program_factory_.create_program(current_material, program_description_);
               programs_[current_material] = shader;
               current_shader = shader;
             }           
@@ -115,7 +118,7 @@ namespace gua {
           current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
           current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
-          tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader, view_id);
+          tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
 
           ctx.render_context->apply_program();
 

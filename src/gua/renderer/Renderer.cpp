@@ -24,6 +24,8 @@
 
 // guacamole headers
 #include <memory>
+#include <tuple>
+
 #include <gua/platform.hpp>
 #include <gua/scenegraph.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -36,11 +38,15 @@
 
 namespace gua {
 
+////////////////////////////////////////////////////////////////////////////////
+
 template <class T>
 std::pair<std::shared_ptr<gua::concurrent::Doublebuffer<T> >, std::shared_ptr<gua::concurrent::Doublebuffer<T> > > spawnDoublebufferred() {
   auto db = std::make_shared<gua::concurrent::Doublebuffer<T> >();
   return {db, db};
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Renderer::ConstRenderVector> garbage_collected_copy(
     std::vector<SceneGraph const*> const& scene_graphs) {
@@ -51,11 +57,14 @@ std::shared_ptr<Renderer::ConstRenderVector> garbage_collected_copy(
   return sgs;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 Renderer::~Renderer() {
   for (auto& rc : render_clients_) { rc.second.first->close(); }
   for (auto& rc : render_clients_) { rc.second.second.join(); }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::renderclient(Mailbox in) {
   FpsCounter fpsc(20);
@@ -128,12 +137,16 @@ void Renderer::renderclient(Mailbox in) {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 Renderer::Renderer()
   : render_clients_(),
     application_fps_(20) {
 
   application_fps_.start();
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
                           std::vector<std::shared_ptr<node::CameraNode>> const& cameras) {
@@ -164,6 +177,8 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
   }
   application_fps_.step();
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::stop() {
   for (auto& rclient : render_clients_) {

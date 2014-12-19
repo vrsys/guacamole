@@ -67,8 +67,8 @@ PipelinePass NURBSPassDescription::make_pass(RenderContext const& ctx)
   auto renderer = std::make_shared<NURBSRenderer>();
 
   pass.process_ = [renderer](
-    PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
-    renderer->render(pipe);
+    PipelinePass&, PipelinePassDescription const& desc, Pipeline & pipe) {
+    renderer->render(pipe, desc);
   };
 
   return pass;
