@@ -55,12 +55,12 @@ void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFacto
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
 
-  std::map<std::string, Transformation> transformStructs1{SkeletalAnimationUtils::calculate_transforms(timeNormalized1, pAnim1)};
-  std::map<std::string, Transformation> transformStructs2{SkeletalAnimationUtils::calculate_transforms(timeNormalized2, pAnim2)};
+  Pose pose1{SkeletalAnimationUtils::calculate_pose(timeNormalized1, pAnim1)};
+  Pose pose2{SkeletalAnimationUtils::calculate_pose(timeNormalized2, pAnim2)};
   
-  SkeletalAnimationUtils::blend(transformStructs1, transformStructs2, blendFactor);
+  pose1.blend(pose2, blendFactor);
 
-  SkeletalAnimationUtils::accumulate_transforms(transforms, anim_start_node_, transformStructs1, identity);
+  SkeletalAnimationUtils::accumulate_matrices(transforms, anim_start_node_, pose1, identity);
 }
 
 void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms) {
@@ -81,12 +81,12 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_p
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
 
-  std::map<std::string, Transformation> full_body{SkeletalAnimationUtils::calculate_transforms(timeNormalized1, pAnim1)};
-  std::map<std::string, Transformation> upper_body{SkeletalAnimationUtils::calculate_transforms(timeNormalized2, pAnim2)};
+  Pose full_body{SkeletalAnimationUtils::calculate_pose(timeNormalized1, pAnim1)};
+  Pose upper_body{SkeletalAnimationUtils::calculate_pose(timeNormalized2, pAnim2)};
 
-  SkeletalAnimationUtils::partial_blend(full_body, upper_body, start);
+  full_body.partial_replace(upper_body, start);
 
-  SkeletalAnimationUtils::accumulate_transforms(transforms, anim_start_node_, full_body, identity);
+  SkeletalAnimationUtils::accumulate_matrices(transforms, anim_start_node_, full_body, identity);
 }
 
 std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
@@ -97,7 +97,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
   float currentTime = timer_.get_elapsed();
 
   if(!has_anims_) {
-    SkeletalAnimationUtils::calculate_pose(0, anim_start_node_, currAnimation_, transforms);
+    SkeletalAnimationUtils::calculate_matrices(0, anim_start_node_, currAnimation_, transforms);
     return transforms;  
   }
 
@@ -109,7 +109,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
         currAnimation_ = animations_[animNum % animations_.size()];
         animNum = (animNum + 1) % animations_.size();
       }
-      SkeletalAnimationUtils::calculate_pose(currentTime, anim_start_node_, currAnimation_, transforms);  
+      SkeletalAnimationUtils::calculate_matrices(currentTime, anim_start_node_, currAnimation_, transforms);  
       break; 
     }
     //blend two anims
@@ -118,7 +118,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
       float playDuration = animations_[animNum]->duration;
 
       if(currentTime < next_transition_) {
-        SkeletalAnimationUtils::calculate_pose(currentTime, anim_start_node_, animations_[animNum], transforms);  
+        SkeletalAnimationUtils::calculate_matrices(currentTime, anim_start_node_, animations_[animNum], transforms);  
       }
       else if(currentTime <= next_transition_ + blendDuration) {
         float time = (currentTime - next_transition_) / blendDuration;

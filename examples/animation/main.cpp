@@ -77,15 +77,9 @@ int main(int argc, char** argv) {
   auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh", mat1,  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
   loader.load_animation(teapot, "data/objects/marine/crouch.md5anim", 0);
-  //loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
-  //loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
-  //loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
-
-  auto teapot2(loader2.create_geometry_from_file("bob2", "data/objects/marine/mpplayer.md5mesh", mat2,  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  loader.load_animation(teapot2, "data/objects/marine/crouch.md5anim", 0);
-  loader.load_animation(teapot2, "data/objects/marine/fists_idle.md5anim", 0);
-  loader.load_animation(teapot2, "data/objects/marine/run.md5anim", 0);
-  loader.load_animation(teapot2, "data/objects/marine/fists_idle.md5anim", 0);
+  loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
+  loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
+  loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
 
   //std::shared_ptr<gua::node::SkeletalAnimationNode> skel_node = std::dynamic_pointer_cast<gua::node::SkeletalAnimationNode>(teapot2);
   //skel_node->set_animation_mode(0);
@@ -95,7 +89,7 @@ int main(int argc, char** argv) {
   
 
   graph.add_node("/transform", teapot);
-  graph.add_node("/transform2", teapot2);
+  // graph.add_node("/transform2", teapot2);
   // teapot->set_draw_bounding_box(true);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
