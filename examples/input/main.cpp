@@ -23,6 +23,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -84,8 +85,9 @@ int main(int argc, char** argv) {
   //light->translate(-1.f, 0.f,  3.f);
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->scale(10.f);
-  light2->translate(-2.f, 3.f, 5.f);
+  light2->data.brightness = 60.0f;
+  light2->scale(12.f);
+  light2->translate(-3.f, 5.f, 5.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -118,6 +120,10 @@ int main(int argc, char** argv) {
   portal_pipe.add_pass<gua::TriMeshPassDescription>();
   portal_pipe.add_pass<gua::EmissivePassDescription>();
   portal_pipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
+  portal_pipe.add_pass<gua::ToneMappingPassDescription>()
+    .exposure(1.0f)
+    .method(gua::ToneMappingPassDescription::Method::LINEAR)
+    ;
   portal_pipe.add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     .texture("data/images/skymap.jpg");
@@ -134,9 +140,6 @@ int main(int argc, char** argv) {
   camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     .texture("data/images/skymap.jpg");
-  //camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
-  //  .radius(3)
-  //  .intensity(2);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);

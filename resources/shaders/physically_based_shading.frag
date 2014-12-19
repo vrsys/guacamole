@@ -374,6 +374,7 @@ void main() {
 
   compute_light(N, P);
 
+  // gua_light_direction is normalized by compute_light
   vec3 L = gua_light_direction;
 
   vec3 pbr = gua_get_pbr();
@@ -382,8 +383,10 @@ void main() {
   float metalness = pbr.b;
   float roughness = max(pbr.g, 0.0001f);
 
-  vec3 cspec = 0.04 * (1 - metalness) + metalness * gua_get_color();
-  vec3 cdiff = gua_get_color() * (1 - metalness);
+  vec3 albedo = gua_get_color();
+  albedo = pow(albedo, vec3(2.2));
+  vec3 cspec = 0.04 * (1 - metalness) + metalness * albedo;
+  vec3 cdiff = albedo * (1 - metalness);
 
   vec3 Vn = normalize( E - P );
   vec3 H = normalize(L + Vn);
@@ -396,6 +399,4 @@ void main() {
   vec3 col = Cl * brdf * NdotL;
 
   gua_out_color = col;
-  // gua_out_color = vec3(1.0);
-  //gua_out_color = NdotL * vec3(1.0);
 }

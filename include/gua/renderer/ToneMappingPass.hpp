@@ -30,7 +30,17 @@ class Pipeline;
 
 class GUA_DLL ToneMappingPassDescription : public PipelinePassDescription {
  public:
+   enum class Method {
+     LINEAR = 0,
+     HEJL = 1
+   };
   ToneMappingPassDescription();
+
+  ToneMappingPassDescription& exposure(float);
+  float exposure() const;
+  ToneMappingPassDescription& method(Method);
+  ToneMappingPassDescription::Method method() const;
+
 
   PipelinePassDescription* make_copy() const override {
     return new ToneMappingPassDescription(*this);

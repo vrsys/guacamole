@@ -71,6 +71,12 @@ namespace utils {
 
   ////////////////////////////////////////////////////////////////////////////////
 
+  void TagList::clear_tags() {
+    tags_.reset();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
   std::vector<std::string> const TagList::get_strings() const {
     if (tags_.any()) {
       return gua::utils::TagRegister::instance()->get_tag_strings(tags_);

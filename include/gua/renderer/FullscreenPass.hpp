@@ -19,55 +19,44 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TAG_LIST_HPP
-#define GUA_TAG_LIST_HPP
+#ifndef GUA_FULLSCREEN_PASS_HPP
+#define GUA_FULLSCREEN_PASS_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/utils/TagRegister.hpp>
+#include <gua/renderer/PipelinePass.hpp>
 
-// external headers
-#include <string>
-#include <bitset>
-#include <vector>
+#include <memory>
 
 namespace gua {
-namespace utils {
 
-/**
- * A class for smooth value interpolation.
- */
-class GUA_DLL TagList {
-  public:
+class Pipeline;
 
-    TagList(std::vector<std::string> const& tags = std::vector<std::string>());
+class GUA_DLL FullscreenPassDescription : public PipelinePassDescription {
+ public:
+  FullscreenPassDescription();
 
-    void add_tag(std::string const& tag);
-    void add_tags(std::vector<std::string> const& tags);
+  FullscreenPassDescription& source(std::string const& source);
+  std::string const& source() const;
 
-    void remove_tag(std::string const& tag);
-    void remove_tags(std::vector<std::string> const& tags);
+  FullscreenPassDescription& source_file(std::string const& source_file);
+  std::string const& source_file() const;
 
-    void clear_tags();
+  template<typename T>
+  FullscreenPassDescription& uniform(std::string const& name, T const& val) {
+    uniforms[name] = val;
+    return *this;
+  }
 
-    std::vector<std::string> const get_strings() const;
-    std::bitset<GUA_MAX_TAG_COUNT> const& get_bits() const;
+  template<typename T>
+  T const& uniform(std::string const& name) {
+    return boost::get<T>(uniforms[name].data);
+  }
 
-    void set_user_data(void* data) {
-      user_data_ = data;
-    }
-
-    void* get_user_data() const {
-      return user_data_;
-    }
-
- private:
-  void* user_data_ = nullptr;
-  std::bitset<GUA_MAX_TAG_COUNT> tags_;
-
+  PipelinePassDescription* make_copy() const override;
+  friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const&) override;
 };
 
 }
-}
 
-#endif  //GUA_TAG_LIST_HPP
+#endif  // GUA_FULLSCREEN_PASS_HPP

@@ -184,7 +184,7 @@ namespace gua {
       if (search_pos != std::string::npos) {
 
         std::size_t start(shader_source.find('\"', search_pos) + 1);
-        std::size_t end(shader_source.find('\"', start));p
+        std::size_t end(shader_source.find('\"', start));
 
         std::string file(shader_source.substr(start, end - start));
 

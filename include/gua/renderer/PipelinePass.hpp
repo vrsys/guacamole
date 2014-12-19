@@ -57,10 +57,16 @@ class GUA_DLL PipelinePassDescription {
   std::string fragment_shader_ = "";
   std::string geometry_shader_ = "";
 
+  bool vertex_shader_is_file_name_ = true;
+  bool fragment_shader_is_file_name_ = true;  
+  bool geometry_shader_is_file_name_ = true;
+
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
   bool doClear_ = false;
   unsigned mod_count_ = 0; 
+
+  mutable bool recompile_shaders_ = true;
 
   RenderMode rendermode_ = RenderMode::Custom;
 
@@ -74,6 +80,17 @@ class GUA_DLL PipelinePassDescription {
     };
  public:
   std::map<std::string, UniformValue> uniforms;
+
+  void set_user_data(void* data) {
+    user_data_ = data;
+  }
+
+  void* get_user_data() const {
+    return user_data_;
+  }
+
+ private:
+  void* user_data_ = nullptr;
 };
 
 class GUA_DLL PipelinePass {

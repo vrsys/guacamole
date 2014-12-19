@@ -72,6 +72,16 @@ class GUA_DLL Mask {
   gua::utils::TagList whitelist;
   gua::utils::TagList blacklist;
 
+   void set_user_data(void* data) {
+    user_data_ = data;
+  }
+
+  void* get_user_data() const {
+    return user_data_;
+  }
+
+ private:
+  void* user_data_ = nullptr;
 
 };
 

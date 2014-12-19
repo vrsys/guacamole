@@ -19,67 +19,87 @@
  *                                                                            *
  ******************************************************************************/
 
-#include <gua/renderer/MaterialShader.hpp>
+// class header
+#include <gua/renderer/FullscreenPass.hpp>
 
-#include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
-#include <gua/utils/string_utils.hpp>
+#include <gua/utils/Logger.hpp>
+
+#include <boost/variant.hpp>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
-MaterialShader::MaterialShader(std::string const& name, MaterialShaderDescription const& desc)
-  : desc_(desc),
-    default_material_(std::make_shared<Material>(name)),
-    max_object_count_(0)
+FullscreenPassDescription::FullscreenPassDescription()
+  : PipelinePassDescription()
 {
-  auto v_methods = desc_.get_vertex_methods();
-  auto f_methods = desc_.get_fragment_methods();
-
-  for (auto const& method : v_methods) {
-    for (auto const& uniform : method.get_uniforms()) {
-      default_material_->add_uniform(uniform.first, uniform.second);
+  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+  fragment_shader_ = R"(
+    @include "shaders/common/header.glsl"
+    @include "shaders/common/gua_camera_uniforms.glsl"
+    @include "shaders/common/gua_gbuffer_input.glsl"
+    layout(location=0) out vec3 gua_out_color;
+    void main() { 
+      gua_out_color = gua_get_color();
     }
-  }
+  )";
 
-  for (auto const& method : f_methods) {
-    for (auto const& uniform : method.get_uniforms()) {
-      default_material_->add_uniform(uniform.first, uniform.second);
-    }
-  }
+  Resources::resolve_includes(fragment_shader_);
+
+  fragment_shader_is_file_name_ = false;
+  needs_color_buffer_as_input_ = true;
+  writes_only_color_buffer_ = true;
+
+  rendermode_ = RenderMode::Quad;
+
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderDescription const& MaterialShader::get_description() const {
-  return desc_;
+
+FullscreenPassDescription& FullscreenPassDescription::source(std::string const& source) {
+  fragment_shader_ = source;
+  fragment_shader_is_file_name_ = false;
+  Resources::resolve_includes(fragment_shader_);
+  recompile_shaders_ = true;
+  return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& MaterialShader::get_name() const {
-  return default_material_->get_shader_name();
+
+std::string const& FullscreenPassDescription::source() const {
+  return fragment_shader_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Material> MaterialShader::make_new_material() const {
-  return std::make_shared<Material>(*default_material_);
+
+FullscreenPassDescription& FullscreenPassDescription::source_file(std::string const& source_file) {
+  fragment_shader_ = source_file;
+  fragment_shader_is_file_name_ = true;
+  recompile_shaders_ = true;
+  return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Material> const& MaterialShader::get_default_material() const {
-  return default_material_;
+
+std::string const& FullscreenPassDescription::source_file() const {
+  return fragment_shader_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<MaterialShaderMethod> const& MaterialShader::get_vertex_methods() const
-{
-  return desc_.get_vertex_methods();
+
+PipelinePassDescription* FullscreenPassDescription::make_copy() const {
+  return new FullscreenPassDescription(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<MaterialShaderMethod> const& MaterialShader::get_fragment_methods() const
-{
-  return desc_.get_fragment_methods();
-}
 
+PipelinePass FullscreenPassDescription::make_pass(RenderContext const& ctx) {
+  PipelinePass pass{*this, ctx};
+  return pass;
+}
 
 }

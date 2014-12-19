@@ -14,7 +14,7 @@
 
           if (uvec2(0) != ColorMap) {
             //color = pow(texture(sampler2D(ColorMap), gua_texcoords), vec4(2.2));
-            color = texture(sampler2D(ColorMap), gua_texcoords) * Color;
+            color = texture(sampler2D(ColorMap), gua_texcoords);
           } else {
             color = Color;
           }

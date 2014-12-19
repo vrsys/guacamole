@@ -87,10 +87,33 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
 }
 
 void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) {
+
+  auto const& ctx(pipe.get_context());
+
+  if (desc.recompile_shaders_) {
+    if (!desc.vertex_shader_.empty() && !desc.fragment_shader_.empty()) {
+      if (!desc.geometry_shader_.empty()) {
+        shader_->create_from_sources(
+          desc.vertex_shader_is_file_name_ ? Resources::lookup_shader(desc.vertex_shader_) : desc.vertex_shader_,
+          desc.geometry_shader_is_file_name_ ? Resources::lookup_shader(desc.geometry_shader_) : desc.geometry_shader_,
+          desc.fragment_shader_is_file_name_ ? Resources::lookup_shader(desc.fragment_shader_) : desc.fragment_shader_
+        );
+      } else {
+        shader_->create_from_sources(
+          desc.vertex_shader_is_file_name_ ? Resources::lookup_shader(desc.vertex_shader_) : desc.vertex_shader_,
+          desc.fragment_shader_is_file_name_ ? Resources::lookup_shader(desc.fragment_shader_) : desc.fragment_shader_
+        );
+      }
+
+      shader_->upload_to(ctx);
+    }
+
+    desc.recompile_shaders_ = false;
+  }
+
   if (RenderMode::Custom == rendermode_) {
     process_(*this, desc, pipe);
   } else {
-    auto const& ctx(pipe.get_context());
     pipe.get_gbuffer().bind(ctx, writes_only_color_buffer_);
     pipe.get_gbuffer().set_viewport(ctx);
     if (doClear_)
