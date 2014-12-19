@@ -38,14 +38,15 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   NURBSNode::NURBSNode(std::string const& name,
-                       std::string const& geometry_description,
-                       std::shared_ptr<Material> const& material,
-                       math::mat4 const& transform)
+    std::string const& geometry_description,
+    std::shared_ptr<Material> const& material,
+    math::mat4 const& transform)
     : GeometryNode(name, transform),
-      geometry_description_(geometry_description),
-      material_(material),
-      max_tess_level_pre_pass_(1.0f),
-      max_tess_level_final_pass_(4.0f)
+    geometry_description_(geometry_description),
+    material_(material),
+    max_tess_level_pre_pass_(1.0f),
+    max_tess_level_final_pass_(4.0f),
+    enable_raycasting_(false)
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +104,17 @@ namespace node {
     max_tess_level_final_pass_ = std::max(1.0f, std::min(t, 64.0f));
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::rendermode_raycasting(bool b)
+  {
+    enable_raycasting_ = b;
+  }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  bool NURBSNode::rendermode_raycasting() const
+  {
+    return enable_raycasting_;
+  }
 
   ////////////////////////////////////////////////////////////////////////////////
   void NURBSNode::ray_test_impl(Ray const& ray,
@@ -196,6 +207,7 @@ namespace node {
     result->update_cache();
 
     result->shadow_mode_ = shadow_mode_;
+    result->enable_raycasting_ = enable_raycasting_;
 
     result->max_final_tesselation(this->max_final_tesselation());
     result->max_pre_tesselation(this->max_pre_tesselation());

@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////             
-layout (location = 0) in vec4 vertex;
+layout (location = 0) in vec3 vertex;
 layout (location = 1) in vec4 texcoord;
 layout (location = 2) in vec4 vattrib0;
 layout (location = 3) in vec4 vattrib1;
@@ -24,8 +24,7 @@ flat out vec4 uvrange;
 flat out int  trimtype;
 
 // built-in out
-out vec3      gua_position_varying;         
-out vec2      gua_texcoords;        
+out vec3      gua_position_varying;           
                                         
 out vec3      gua_world_normal;     
 out vec3      gua_world_position;   
@@ -38,19 +37,26 @@ out vec3      gua_object_tangent;
 out vec3      gua_object_bitangent; 
 
 // generic output
-@output_definition
+@include "resources/shaders/common/gua_global_variable_declaration.glsl"
+@include "resources/shaders/common/gua_vertex_shader_output.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
 ///////////////////////////////////////////////////////////////////////////////
 @include "resources/shaders/common/gua_camera_uniforms.glsl"   
 
+@material_uniforms
+
+@material_method_declarations
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 void main()                       
-{                                 
-  v_modelcoord   = vertex;
+{                  
+  @material_input
+               
+  v_modelcoord   = vec4(vertex, 1.0);
   frag_texcoord  = texcoord;
 
   trim_index_db  = int(floatBitsToUint(vattrib0[0]));
@@ -63,6 +69,10 @@ void main()
   trimtype       = int(floatBitsToUint(vattrib0[2]));
 
   // transform convex hull in modelview to generate fragments
-  gl_Position    = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vertex; 
-  gua_position_varying = (gua_model_matrix * vertex).xyz;
+  gl_Position    = gua_projection_matrix * gua_view_matrix * gua_model_matrix * v_modelcoord; 
+  gua_position_varying = (gua_model_matrix * v_modelcoord).xyz;
+
+  @material_method_calls
+
+  @include "resources/shaders/common/gua_varyings_assignment.glsl"
 }     

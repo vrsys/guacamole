@@ -25,6 +25,7 @@
 
 #include <gua/config.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/renderer/MaterialShader.hpp>
 
 
@@ -136,7 +137,8 @@ namespace gua {
   ///////////////////////////////////////////////////////////////////////////
   std::string ProgramFactory::read_shader_from_file(std::string const& path) const
   {
-    std::cout << "readng : " << path << std::endl;
+    
+
     try {
       std::string full_path(path);
       std::ifstream ifstr(full_path.c_str(), std::ios::in);
@@ -152,6 +154,9 @@ namespace gua {
 
         if (ifstr.good()) {
           auto source = std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
+
+          Logger::LOG_DEBUG << "Loading shader file : " << path << " ... succeed. " << std::endl;
+
           resolve_shader_includes(source);
           return source;
         }
@@ -159,8 +164,8 @@ namespace gua {
       }
       throw std::runtime_error("File not found.");
     }
-    catch (...) {
-      std::cerr << "Error reading file : " << path << std::endl;
+    catch ( std::exception& e) {
+      Logger::LOG_ERROR << "Trying to load shader file : " << path << " ... failed. " << e.what() << std::endl;
       return "";
     }
   }
@@ -170,24 +175,29 @@ namespace gua {
   {
     std::size_t search_pos(0);
 
-    std::string search("@include");
+    std::vector<std::string> include_strings = { "@include", "#include" };
+    auto include_pattern = include_strings.begin();
 
-    while (search_pos != std::string::npos)
+    while (include_pattern != include_strings.end())
     {
-      search_pos = shader_source.find(search, search_pos);
-
+      search_pos = shader_source.find(*include_pattern, search_pos);
       if (search_pos != std::string::npos) {
 
         std::size_t start(shader_source.find('\"', search_pos) + 1);
-        std::size_t end(shader_source.find('\"', start));
+        std::size_t end(shader_source.find('\"', start));p
 
         std::string file(shader_source.substr(start, end - start));
 
         std::string include = read_shader_from_file(file);
         shader_source.replace(search_pos, end - search_pos + 2, include);
 
-        // advance search pos
+        // advance search pos and reset include pattern
         search_pos = search_pos + include.length();
+        include_pattern = include_strings.begin();
+      } else {
+        // restart search with new pattern
+        search_pos = 0;
+        ++include_pattern;
       }
     }
   }

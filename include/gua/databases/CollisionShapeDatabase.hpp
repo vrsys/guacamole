@@ -28,7 +28,7 @@
 #include <gua/databases/Database.hpp>
 #include <gua/physics/CollisionShape.hpp>
 
-namespace gua {
+namespace gua { 
 namespace physics {
 
 /**

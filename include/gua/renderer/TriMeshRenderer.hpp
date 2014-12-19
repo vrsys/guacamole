@@ -47,7 +47,7 @@ class TriMeshRenderer {
    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
  private:
-
+   
    ProgramFactory                                                      program_factory_;
    std::map<scm::gl::shader_stage, std::string>                        program_description_;
    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;

@@ -140,6 +140,8 @@ namespace gua {
   {
     factory_.add_search_path(std::string(GPUCAST_INSTALL_DIR));
     factory_.add_search_path(std::string(GPUCAST_INSTALL_DIR) + "/resources/");
+
+    _load_shaders();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +152,7 @@ namespace gua {
   void NURBSRenderer::_load_shaders()
   {
     pre_tesselation_shader_stages_.clear();
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.frag")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.vert")));
     pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.tctrl")));
     pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.teval")));
     pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.geom")));
@@ -194,6 +196,76 @@ namespace gua {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+  void NURBSRenderer::_initialize_raycasting_program(MaterialShader* material)
+  {
+    if (!raycasting_programs_.count(material))
+    {
+      auto program = factory_.create_program(material, raycasting_shader_stages_);
+      program->save_to_file(".", "raycasting");
+      raycasting_programs_[material] = program;
+    }
+    assert(raycasting_programs_.count(material));
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  std::shared_ptr<ShaderProgram> NURBSRenderer::_get_material_program(MaterialShader* material,
+                                                                      std::shared_ptr<ShaderProgram> const& current_program,
+                                                                      bool raycasting,
+                                                                      bool& program_changed)
+  {
+    if (raycasting) {
+      auto shader_iterator = raycasting_programs_.find(material);
+      if (shader_iterator == raycasting_programs_.end())
+      {
+        try {
+          _initialize_raycasting_program(material);
+          program_changed = true;
+          return raycasting_programs_.at(material);
+        }
+        catch (std::exception& e) {
+          Logger::LOG_WARNING << "NURBSPass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
+          return std::shared_ptr<ShaderProgram>();
+        }
+      }
+      else {
+        if (current_program == shader_iterator->second)
+        {
+          program_changed = false;
+          return current_program;
+        }
+        else {
+          program_changed = true;
+          return shader_iterator->second;
+        }
+      }
+    } else {
+      auto shader_iterator = tesselation_programs_.find(material);
+      if (shader_iterator == tesselation_programs_.end())
+      {
+        try {
+          _initialize_tesselation_program(material);
+          program_changed = true;
+          return tesselation_programs_.at(material);
+        }
+        catch (std::exception& e) {
+          Logger::LOG_WARNING << "NURBSPass::_get_material_program(): Cannot create material for tesselation program: " << e.what() << std::endl;
+          return std::shared_ptr<ShaderProgram>();
+        }
+      } else {
+        if (current_program == shader_iterator->second)
+        {
+          program_changed = false;
+          return current_program;
+        }
+        else {
+          program_changed = true;
+          return shader_iterator->second;
+        }
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
   void NURBSRenderer::_reset()
   {
     pre_tesselation_program_.reset();
@@ -206,12 +278,6 @@ namespace gua {
 
 void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-  // force re-initialization
-  if (desc.mod_count() != current_modcount_) {
-    _reset();
-    current_modcount_ = desc.mod_count();
-  }
-
   auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::NURBSNode))));
 
   if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
@@ -233,8 +299,9 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
     if (!pre_tesselation_program_) {
       _initialize_pre_tesselation_program();
-      pre_tesselation_program_->save_to_file(".", "pre_tesselation");
+      //pre_tesselation_program_->save_to_file(".", "pre_tesselation");
     }
+    bool program_changed = false;
 
     // loop through all objects, sorted by material ----------------------------
     for (auto const& object : sorted_objects->second) 
@@ -242,64 +309,71 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
       auto nurbs_node(reinterpret_cast<node::NURBSNode*>(object));
       current_material = nurbs_node->get_material()->get_shader();
 
-      auto shader_iterator = tesselation_programs_.find(current_material);
-      if (shader_iterator == tesselation_programs_.end())
-      {
-        try {
-          _initialize_tesselation_program(current_material);
-          current_material_program = tesselation_programs_.at(current_material);
-          current_material_program->save_to_file(".", "final_tesselation");
-        }
-        catch (std::exception& e) {
-          Logger::LOG_WARNING << "NURBSPass::render(): Cannot create material program: " << nurbs_node->get_material()->get_shader_name() << " : " << e.what() << std::endl;
-          return;
-        }
-      } else {
-        current_material_program = shader_iterator->second;
-      }
+      current_material_program = _get_material_program(current_material, 
+                                                       current_material_program, 
+                                                       nurbs_node->rendermode_raycasting(), 
+                                                       program_changed);
 
       UniformValue model_mat(nurbs_node->get_cached_world_transform());
       UniformValue normal_mat(scm::math::transpose(scm::math::inverse(nurbs_node->get_cached_world_transform())));
 
       auto nurbs_ressource = nurbs_node->get_geometry();
 
+      std::cout << nurbs_node->rendermode_raycasting() << std::endl;
+
       if (nurbs_ressource && pre_tesselation_program_ && current_material_program) {
 
-#define DEBUG_XFB_OUTPUT 1
+        if (nurbs_node->rendermode_raycasting())
+        {
+          // render using raycasting
+          current_material_program->use(ctx);
+          {
+            current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
+            current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
+            nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+
+            nurbs_ressource->draw(ctx, true);
+          }
+          current_material_program->unuse(ctx);
+        } else {
+         
+#define DEBUG_XFB_OUTPUT 0
 #if DEBUG_XFB_OUTPUT
         scm::gl::transform_feedback_statistics_query_ptr q = ctx
           .render_device->create_transform_feedback_statistics_query(0);
         ctx.render_context->begin_query(q);
 #endif
+          // render using two-pass tesselation approach
+          pre_tesselation_program_->use(ctx);
+          {
+            pre_tesselation_program_->apply_uniform(ctx, "gua_model_matrix", model_mat);
+            pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
-        pre_tesselation_program_->use(ctx);
-        {
-          pre_tesselation_program_->apply_uniform(ctx, "gua_model_matrix", model_mat);
-          pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+            ctx.render_context->apply();
+            nurbs_ressource->predraw(ctx);
+          }
+          pre_tesselation_program_->unuse(ctx);
 
-          ctx.render_context->apply();
-          nurbs_ressource->predraw(ctx);
+  #if DEBUG_XFB_OUTPUT
+          ctx.render_context->end_query(q);
+          ctx.render_context->collect_query_results(q);
+          std::cout << q->result()._primitives_generated << " , "
+            << q->result()._primitives_written << std::endl;
+  #endif
+
+          current_material_program->use(ctx);
+          {
+            nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+
+            current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
+            current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
+            ctx.render_context->apply();
+            nurbs_ressource->draw(ctx, false);
+          }
+          current_material_program->unuse(ctx);
         }
-        pre_tesselation_program_->unuse(ctx);
-
-#if DEBUG_XFB_OUTPUT
-        ctx.render_context->end_query(q);
-        ctx.render_context->collect_query_results(q);
-        std::cout << q->result()._primitives_generated << " , "
-          << q->result()._primitives_written << std::endl;
-#endif
-
-        current_material_program->use(ctx);
-        {
-          nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
-
-          current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
-          current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-
-          ctx.render_context->apply();
-          nurbs_ressource->draw(ctx);
-        }
-        current_material_program->unuse(ctx);
       }
       else {
         Logger::LOG_WARNING << "NURBSPass::render(): Cannot find ressources for node: " << nurbs_node->get_name() << std::endl;

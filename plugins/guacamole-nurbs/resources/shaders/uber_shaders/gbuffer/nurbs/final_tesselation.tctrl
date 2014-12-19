@@ -80,10 +80,10 @@ void main()
     //  0------1                                                                                                          
     //     1                                                                                                              
                                                                                                                                 
-    float edge0 = edge_tesslevel(edgelen[0], max_final_tesselation);                                                  
-    float edge1 = edge_tesslevel(edgelen[1], max_final_tesselation);                                                  
-    float edge2 = edge_tesslevel(edgelen[2], max_final_tesselation);                                                 
-    float edge3 = edge_tesslevel(edgelen[3], max_final_tesselation);                                                  
+    float edge0 = edge_tesslevel(edgelen[0], 1.0f);                                                  
+    float edge1 = edge_tesslevel(edgelen[1], 1.0f);                                                  
+    float edge2 = edge_tesslevel(edgelen[2], 1.0f);                                                 
+    float edge3 = edge_tesslevel(edgelen[3], 1.0f);                                                  
                                                                                                                                
     //Following three must be same for Ist Pass                                                                         
     gl_TessLevelInner[0] = inner_tess_level(attribute_texture, int(vIndex[ID]) * 5,                                       

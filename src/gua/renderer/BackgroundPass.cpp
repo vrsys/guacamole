@@ -49,7 +49,7 @@ BackgroundPassDescription::BackgroundPassDescription()
   uniforms["enable_fog"]          = false;
   uniforms["fog_start"]           = 10.f;
   uniforms["fog_end"]             = 1000.f;
-}
+} 
 
 ////////////////////////////////////////////////////////////////////////////////
 
