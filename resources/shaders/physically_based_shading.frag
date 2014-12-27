@@ -395,7 +395,7 @@ void main() {
   vec3 Cl = gua_light_radiance * (1-emit);
 
   vec3 f = Fresnel(cspec, H, L);
-  vec3 brdf = ( 1.0 - f ) * cdiff + f*GGX_Specular(roughness, N, H, Vn, L);
+  vec3 brdf = ( 1.0 - f ) * cdiff * INV_PI + f*GGX_Specular(roughness, N, H, Vn, L);
   vec3 col = Cl * brdf * NdotL;
 
   gua_out_color = col;
