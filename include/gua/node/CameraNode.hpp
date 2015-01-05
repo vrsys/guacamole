@@ -52,9 +52,6 @@ class GUA_DLL CameraNode : public Node {
     // if set to false, this camera won't render anything
     GUA_ADD_PROPERTY(bool,            enabled,                true);
 
-    // based on this description the rendering is performed
-    GUA_ADD_PROPERTY(PipelineDescription, pipeline_description, PipelineDescription::make_default());
-
     // the camera renders a view into this scenegraph. The camera itself does
     // not neccessarily has to be in the very same scenegraph.
     GUA_ADD_PROPERTY(std::string,     scene_graph_name,       "unknown_scene_graph");
@@ -135,6 +132,7 @@ class GUA_DLL CameraNode : public Node {
    *                       with the xy-plane and facing in +z direction.
    */
   CameraNode(std::string const& name,
+             std::shared_ptr<PipelineDescription> const& description = PipelineDescription::make_default(),
              Configuration const& configuration = Configuration(),
              math::mat4 const& transform = math::mat4::identity());
 
@@ -148,6 +146,19 @@ class GUA_DLL CameraNode : public Node {
 
   void set_pre_render_cameras(std::vector<std::shared_ptr<CameraNode>> const& cams) {
     pre_render_cameras_ = cams;
+  }
+
+
+  std::shared_ptr<PipelineDescription> const& get_pipeline_description() const {
+    return pipeline_description_;
+  }
+
+  std::shared_ptr<PipelineDescription>& get_pipeline_description() {
+    return pipeline_description_;
+  }
+
+  void set_pipeline_description(std::shared_ptr<PipelineDescription> const& pipeline_description) {
+    pipeline_description_ = pipeline_description;
   }
 
 
@@ -185,18 +196,22 @@ class GUA_DLL CameraNode : public Node {
 
   std::shared_ptr<Node> copy() const override;
 
-  // access this member only from the rendering thread!
+  // based on this description the rendering is performed
+  std::shared_ptr<PipelineDescription> pipeline_description_;
+
+  // access this members only from the rendering thread!
   std::shared_ptr<Pipeline> rendering_pipeline_;
 
   std::vector<std::shared_ptr<CameraNode>> pre_render_cameras_;
 };
 
 struct GUA_DLL SerializedCameraNode {
-  CameraNode::Configuration config;
-  math::mat4                transform;
-  std::shared_ptr<Pipeline> rendering_pipeline;
+  CameraNode::Configuration             config;
+  math::mat4                            transform;
+  std::shared_ptr<Pipeline>             rendering_pipeline;
+  std::shared_ptr<PipelineDescription>  pipeline_description;
 
-  std::vector<SerializedCameraNode> pre_render_cameras;
+  std::vector<SerializedCameraNode>     pre_render_cameras;
 };
 
 

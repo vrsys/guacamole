@@ -114,14 +114,14 @@ int main(int argc, char** argv) {
   portal_camera->config.set_output_texture_name("portal");
   portal_camera->config.set_enable_stereo(false);
 
-  gua::PipelineDescription portal_pipe;
-  portal_pipe.add_pass<gua::TriMeshPassDescription>();
-  portal_pipe.add_pass<gua::EmissivePassDescription>();
-  portal_pipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  portal_pipe.add_pass<gua::BackgroundPassDescription>()
+  auto portal_pipe = std::make_shared<gua::PipelineDescription>();
+  portal_pipe->add_pass<gua::TriMeshPassDescription>();
+  portal_pipe->add_pass<gua::EmissivePassDescription>();
+  portal_pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
+  portal_pipe->add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     ;
-  portal_camera->config.set_pipeline_description(portal_pipe);
+  portal_camera->set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
   camera->set_pre_render_cameras({portal_camera});
-  camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
+  camera->get_pipeline_description()->get_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     ;
 

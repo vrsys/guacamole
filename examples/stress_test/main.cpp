@@ -79,6 +79,9 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_frustum_culling(false);
+  camera->config.set_enable_frustum_culling(false);
+  camera->get_pipeline_description()->get_pass<gua::ToneMappingPassDescription>()
+    .exposure(0.1f);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);

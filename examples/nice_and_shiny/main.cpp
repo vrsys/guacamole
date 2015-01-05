@@ -133,22 +133,22 @@ int main(int argc, char** argv) {
     gua::TextureDatabase::instance()->load(directory + file);
   }
 
-  gua::PipelineDescription standardPipe;
-  standardPipe.add_pass<gua::TriMeshPassDescription>();
-  standardPipe.add_pass<gua::EmissivePassDescription>();
-  standardPipe.add_pass<gua::LightingPassDescription>();
-  // standardPipe.add_pass<gua::BackgroundPassDescription>()
+  auto standardPipe(std::make_shared<gua::PipelineDescription>());
+  standardPipe->add_pass<gua::TriMeshPassDescription>();
+  standardPipe->add_pass<gua::EmissivePassDescription>();
+  standardPipe->add_pass<gua::LightingPassDescription>();
+  // standardPipe->add_pass<gua::BackgroundPassDescription>()
     // .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     // .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
     // ;
 
-  gua::PipelineDescription pbrPipe;
-  pbrPipe.add_pass<gua::TriMeshPassDescription>();
-  pbrPipe.add_pass<gua::EmissivePassDescription>();
-  pbrPipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  pbrPipe.add_pass<gua::ToneMappingPassDescription>();
+  auto pbrPipe(std::make_shared<gua::PipelineDescription>());
+  pbrPipe->add_pass<gua::TriMeshPassDescription>();
+  pbrPipe->add_pass<gua::EmissivePassDescription>();
+  pbrPipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
+  pbrPipe->add_pass<gua::ToneMappingPassDescription>();
 #if 0
-  pbrPipe.add_pass<gua::BackgroundPassDescription>()
+  pbrPipe->add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
     ;
@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-  camera->config.set_pipeline_description(pbrPipe);
+  camera->set_pipeline_description(pbrPipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -180,9 +180,9 @@ int main(int argc, char** argv) {
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
       if ('1' == key) {
-        camera->config.set_pipeline_description(pbrPipe);
+        camera->set_pipeline_description(pbrPipe);
       } else if ('2' == key) {
-        camera->config.set_pipeline_description(standardPipe);
+        camera->set_pipeline_description(standardPipe);
       }
     });
 

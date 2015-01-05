@@ -42,6 +42,7 @@ class SunLightNode;
 class RayNode;
 class SerializableNode;
 class TexturedQuadNode;
+class GeometryNode;
 }
 
 
@@ -92,7 +93,7 @@ class NodeVisitor {
    *
    * \param cam   Pointer to a TransformNode.
    */
-  // virtual void visit(node::TransformNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+  virtual void visit(node::TransformNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
    * Visits an LODNode.
@@ -112,8 +113,17 @@ class NodeVisitor {
    *
    * \param cam   Pointer to a GeometryNode.
    */
-  // virtual void visit(node::TriMeshNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+  virtual void visit(node::TriMeshNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
 
+  /**
+   * Visits a GeometryNode.
+   *
+   * This function provides the interface to visit a GeometryNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
+   *
+   * \param cam   Pointer to a GeometryNode.
+   */
+  virtual void visit(node::GeometryNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
 
   /**
   * Visits a Video3DNode
@@ -144,7 +154,7 @@ class NodeVisitor {
    *
    * \param cam   Pointer to a PointLightNode.
    */
-  // virtual void visit(node::PointLightNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+  virtual void visit(node::PointLightNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
 
   /**
    * Visits a SpotLightNode.
@@ -154,7 +164,7 @@ class NodeVisitor {
    *
    * \param cam   Pointer to a SpotLightNode.
    */
-  // virtual void visit(node::SpotLightNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+  virtual void visit(node::SpotLightNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
 
   /**
    * Visits a SunLightNode.
@@ -164,7 +174,7 @@ class NodeVisitor {
    *
    * \param cam   Pointer to a SunLightNode.
    */
-  // virtual void visit(node::SunLightNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+  virtual void visit(node::SunLightNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
 
   /**
    * Visits a SpotLightNode.
@@ -174,7 +184,7 @@ class NodeVisitor {
    *
    * \param cam   Pointer to a ScreenNode.
    */
-  // virtual void visit(node::ScreenNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+  virtual void visit(node::ScreenNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
 
   /**
    * Visits a RayNode.
@@ -188,7 +198,19 @@ class NodeVisitor {
   
   virtual void visit(node::SerializableNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
-#ifdef GUACAMOLE_ENABLE_PHYSICS
+  /**
+   * Visits a RayNode.
+   *
+   * This function provides the interface to visit a ScreenNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
+   *
+   * \param cam   Pointer to a ScreenNode.
+   */
+  // virtual void visit(node::RayNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+  
+  virtual void visit(node::RayNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+
+// #ifdef GUACAMOLE_ENABLE_PHYSICS
   /**
    * Visits a RigidBodyNode.
    *
@@ -208,7 +230,7 @@ class NodeVisitor {
    * \param cam   Pointer to a CollisionShapeNode.
    */
   virtual void visit(physics::CollisionShapeNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
-#endif
+// #endif
 
   /**
    * Visits a TexturedQuadNode.
@@ -218,7 +240,7 @@ class NodeVisitor {
    *
    * \param cam   Pointer to a TexturedQuadNode.
    */
-  // virtual void visit(node::TexturedQuadNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+  virtual void visit(node::TexturedQuadNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
 
  private:
 

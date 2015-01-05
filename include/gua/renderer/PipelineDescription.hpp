@@ -32,7 +32,7 @@ namespace gua {
 class GUA_DLL PipelineDescription {
  public:
 
-  static PipelineDescription make_default();
+  static std::shared_ptr<PipelineDescription> make_default();
 
   PipelineDescription() {}
   PipelineDescription(PipelineDescription const& other);
@@ -41,6 +41,8 @@ class GUA_DLL PipelineDescription {
 
   template<class T>
   T& add_pass() {
+    boost::upgrade_lock<boost::shared_mutex> lock(mutex_);
+    boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
     T* t = new T();
     passes_.push_back(t);
     return *t;
@@ -91,6 +93,7 @@ class GUA_DLL PipelineDescription {
  private:
   std::vector<PipelinePassDescription*> passes_;
   void* user_data_ = nullptr;
+  mutable boost::shared_mutex mutex_;
 };
 
 }

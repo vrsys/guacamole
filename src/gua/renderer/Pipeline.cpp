@@ -105,9 +105,15 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   // recreate pipeline passes if pipeline description changed
   bool reload_passes(reload_gbuffer);
 
-  if (camera.config.get_pipeline_description() != last_description_) {
-    last_description_ = camera.config.get_pipeline_description();
+  if (*camera.pipeline_description != last_description_) {
     reload_passes = true;
+    last_description_ = *camera.pipeline_description;
+  } else {
+
+    // if pipeline configuration is unchanged, update only uniforms of passes
+    for (int i(0); i < last_description_.get_all_passes().size(); ++i) {
+      last_description_.get_all_passes()[i]->uniforms = camera.pipeline_description->get_all_passes()[i]->uniforms;
+    }
   }
 
   if (reload_passes) {
@@ -117,7 +123,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
 
     passes_.clear();
 
-    for (auto pass: camera.config.get_pipeline_description().get_all_passes()) {
+    for (auto pass: last_description_.get_all_passes()) {
       passes_.push_back(pass->make_pass(*ctx));
     }
   }
@@ -154,7 +160,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
       gbuffer_->toggle_ping_pong();
     }
 
-    passes_[i].process(*camera.config.get_pipeline_description().get_all_passes()[i], *this);
+    passes_[i].process(*last_description_.get_all_passes()[i], *this);
   }
 
   gbuffer_->toggle_ping_pong();

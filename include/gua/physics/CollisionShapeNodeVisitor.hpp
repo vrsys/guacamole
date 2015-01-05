@@ -80,7 +80,7 @@ class CollisionShapeNodeVisitor : public NodeVisitor {
    *
    * \param node   Pointer to RigidBodyNode
    */
-  /* virtual */ void visit(RigidBodyNode* node);
+  /* virtual */ void visit(RigidBodyNode* node) override;
 
   /**
    * Visits a CollisionShapeNode
@@ -89,7 +89,7 @@ class CollisionShapeNodeVisitor : public NodeVisitor {
    *
    * \param node   Pointer to CollisionShapeNode
    */
-  /* virtual */ void visit(CollisionShapeNode* node);
+  /* virtual */ void visit(CollisionShapeNode* node) override;
 
   ///@{
   /**
@@ -100,19 +100,19 @@ class CollisionShapeNodeVisitor : public NodeVisitor {
    * \param node    Pointer to Node
    */
 
-  /* virtual */ void visit(node::TransformNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::TransformNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::GeometryNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::GeometryNode* node) override { generic_visit(node); }
   
-  /* virtual */ void visit(node::PointLightNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::PointLightNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::ScreenNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::ScreenNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::SpotLightNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::SpotLightNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::RayNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::RayNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::TexturedQuadNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::TexturedQuadNode* node) override { generic_visit(node); }
 
   ///@}
 

@@ -33,10 +33,12 @@ namespace node {
 ////////////////////////////////////////////////////////////////////////////////
 
 CameraNode::CameraNode(std::string const& name,
+                       std::shared_ptr<PipelineDescription> const& description,
                        Configuration const& configuration,
                        math::mat4 const& transform)
     : Node(name, transform), config(configuration)
     , rendering_pipeline_(std::make_shared<Pipeline>())
+    , pipeline_description_(description)
     , application_fps_(0.f)
     , rendering_fps_(0.f) {}
 
@@ -48,7 +50,7 @@ CameraNode::CameraNode(std::string const& name,
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Node> CameraNode::copy() const {
-    return std::make_shared<CameraNode>(get_name(), config, get_transform());
+    return std::make_shared<CameraNode>(get_name(), pipeline_description_, config, get_transform());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +61,8 @@ SerializedCameraNode CameraNode::serialize() const {
     for (auto const& cam: pre_render_cameras_) {
         s.pre_render_cameras.push_back(cam->serialize());
     }
+
+    s.pipeline_description = pipeline_description_;
 
     return s;
 }
