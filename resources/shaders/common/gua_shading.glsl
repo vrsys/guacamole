@@ -20,6 +20,11 @@ layout(std140, binding=1) uniform lightBlock {
   LightSource gua_lights[4*32];
 };
 
+const float Pi = 3.14159265;
+const float INV_PI = 1.0f / Pi;
+
+@include "shaders/brdf.glsl"
+
 // light functions
 bool gua_calculate_light(int light_id,
                          vec3 normal, 
@@ -85,56 +90,10 @@ bool gua_calculate_light(int light_id,
   return true;
 }
 
-// shading helper functions
-
-float saturate(float x) { return clamp(x, 0.0, 1.0); }
-
-const float Pi = 3.1459265;
-const float INV_PI = 1.0f / Pi;
-
-// // for microsoft BRDFs (microsurface normal m == h the half vector)
-// // F_schlick(F0,l,h) = F0 + (1 - F0)*(1-dot(l,h))^5
-
-// // From s2013_pbs_rad_notes.pdf
-// // ===============================================================================
-// // Calculates the Fresnel factor using Schlick’s approximation
-// // ===============================================================================
-vec3 Fresnel(vec3 specAlbedo, vec3 h, vec3 l)
+// convert from sRGB to linear
+vec3 sRGB_to_linear_simple(vec3 sRGB)
 {
-  float lDotH = saturate(dot(l, h));
-  return specAlbedo + (1.0 - specAlbedo) * pow((1.0 - lDotH), 5.0);
-}
-// // ===============================================================================
-// // Helper for computing the GGX visibility term
-// // ===============================================================================
-float GGX_V1(in float m2, in float nDotX)
-{
-  return 1.0 / (nDotX + sqrt(m2 + (1 - m2) * nDotX * nDotX));
-}
-
-// // ===============================================================================
-// // Computes the specular term using a GGX microfacet distribution, with a
-// // matching geometry factor and visibility term. m is roughness, n is the surface
-// // normal, h is the half vector, l is the direction to the light source, and
-// // specAlbedo is the RGB specular albedo
-// // ===============================================================================
-float GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l)
-{
-  float nDotL = saturate(dot(n, l));
-  if(nDotL <= 0.0)
-    return 0.0;
-  float nDotH = saturate(dot(n, h));
-  float nDotV = max(dot(n, v), 0.0001);
-  float nDotH2 = nDotH * nDotH;
-  float m2 = m * m;
-  // Calculate the distribution term
-  float d = m2 / (Pi * pow(nDotH * nDotH * (m2 - 1.0) + 1.0, 2.0));
-  // Calculate the matching visibility term
-  float v1i = GGX_V1(m2, nDotL);
-  float v1o = GGX_V1(m2, nDotV);
-  float vis = v1i * v1o;
-  // Put it all together
-  return d * vis;
+  return pow(sRGB, vec3(2.2));
 }
 
 vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec4 pbr) {
@@ -155,7 +114,7 @@ vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec4 pbr) {
   float metalness = pbr.b;
   float roughness = max(pbr.g, 0.0001);
 
-  vec3 albedo = pow(color, vec3(2.2));
+  vec3 albedo = sRGB_to_linear_simple(color);
   vec3 cspec = 0.04 * (1.0 - metalness) + metalness * albedo;
   vec3 cdiff = albedo * (1.0 - metalness);
 
@@ -166,7 +125,9 @@ vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec4 pbr) {
   vec3 Cl = R /* (1.0-emit)*/;
 
   vec3 f = Fresnel(cspec, H, L);
-  vec3 brdf = ( 1.0 - f ) * cdiff + f*GGX_Specular(roughness, N, H, Vn, L);
+  vec3 brdf = mix(lambert(cdiff),
+                  vec3(GGX_Specular(roughness, N, H, Vn, L)),
+                  f);
   vec3 col = Cl * brdf * NdotL;
 
   return col;
