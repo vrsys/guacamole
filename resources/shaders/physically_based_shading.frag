@@ -256,8 +256,8 @@ void main() {
   float roughness = max(pbr.g, 0.0001f);
 
   vec3 albedo = sRGB_to_linear_simple(gua_get_color());
-  vec3 cspec = 0.04 * (1 - metalness) + metalness * albedo;
-  vec3 cdiff = albedo * (1 - metalness);
+  vec3 cspec = mix(vec3(0.04), albedo, metalness);
+  vec3 cdiff = mix(albedo, vec3(0.0),  metalness);
 
   vec3 Vn = normalize( E - P );
   vec3 H = normalize(L + Vn);
@@ -265,11 +265,12 @@ void main() {
 
   vec3 Cl = gua_light_radiance * (1-emit);
 
-  vec3 f = Fresnel(cspec, H, L);
-  //vec3 brdf = ( 1.0 - f ) * lambert(cdiff) + f*GGX_Specular(roughness, N, H, Vn, L);
-  vec3 brdf = mix(lambert(cdiff),
-                  vec3(GGX_Specular(roughness, N, H, Vn, L)),
-                  f);
+  vec3 F = Fresnel(cspec, H, L);
+  vec3 diffuse = lambert(cdiff);
+  // specular = D*G*F / (4*nDotL*nDotV) = D * Vis * F
+  // where Vis = G/(4*nDotL*nDotV)
+  vec3 D_Vis = vec3(GGX_Specular(roughness, N, H, Vn, L));
+  vec3 brdf = mix(diffuse, D_Vis, F);
   vec3 col = Cl * brdf * NdotL;
 
   gua_out_color = col;
