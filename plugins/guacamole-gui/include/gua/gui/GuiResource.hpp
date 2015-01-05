@@ -58,10 +58,12 @@ class GuiResource {
      *
      * Creates a new and empty Mesh.
      */
-    GuiResource(std::string const& name,
-                std::string const& url = "",
-                math::vec2 const& size = math::vec2(1000.f, 1000.f));
+    GuiResource();
     ~GuiResource();
+
+    void init(std::string const& name,
+              std::string const& url = "",
+              math::vec2 const& size = math::vec2(1000.f, 1000.f));
 
     events::Signal<std::string, std::vector<std::string>> on_javascript_callback;
     events::Signal<>                                      on_loaded;
