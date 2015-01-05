@@ -18,6 +18,8 @@ vec3 Fresnel(vec3 specAlbedo, vec3 h, vec3 l)
 {
   float lDotH = saturate(dot(l, h));
   //return specAlbedo + (1.0f - specAlbedo) * pow((1.0f - lDotH), 5.0f);
+  // see http://seblagarde.wordpress.com/2012/06/03/spherical-gaussien-approximation-for-blinn-phong-phong-and-fresnel/
+  // pow(1-lDotH, 5) = exp2((-5.55473 * ldotH - 6.98316) * ldotH)
   return specAlbedo + ( saturate( 50.0 * specAlbedo.g ) - specAlbedo ) * exp2( (-5.55473 * lDotH - 6.98316) * lDotH );
 }
 
@@ -142,5 +144,3 @@ float GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l)
 // {
 //   return c_spec + (max(vec3(gloss), c_spec) - c_spec) * pow(1 - saturate(dot(E, N)), 5);
 // }
-
-
