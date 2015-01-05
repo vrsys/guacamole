@@ -366,6 +366,12 @@ float GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l)
 //   return c_spec + (max(vec3(gloss), c_spec) - c_spec) * pow(1 - saturate(dot(E, N)), 5);
 // }
 
+// convert from sRGB to linear
+vec3 sRGB_to_linear_simple(vec3 sRGB)
+{
+  return pow(sRGB, vec3(2.2));
+}
+
 // main ------------------------------------------------------------------------
 void main() {
   vec3 N = gua_get_normal();
@@ -383,8 +389,7 @@ void main() {
   float metalness = pbr.b;
   float roughness = max(pbr.g, 0.0001f);
 
-  vec3 albedo = gua_get_color();
-  albedo = pow(albedo, vec3(2.2));
+  vec3 albedo = sRGB_to_linear_simple(gua_get_color());
   vec3 cspec = 0.04 * (1 - metalness) + metalness * albedo;
   vec3 cdiff = albedo * (1 - metalness);
 
