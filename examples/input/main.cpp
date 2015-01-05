@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
   //light->translate(-1.f, 0.f,  3.f);
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->data.brightness = 60.0f;
+  light2->data.brightness = 100.0f;
   light2->scale(12.f);
   light2->translate(-3.f, 5.f, 5.f);
 
@@ -114,7 +114,6 @@ int main(int argc, char** argv) {
   portal_camera->config.set_output_texture_name("portal");
   portal_camera->config.set_enable_stereo(false);
   
-  gua::TextureDatabase::instance()->load("data/images/skymap.jpg");
   
   gua::PipelineDescription portal_pipe;
   portal_pipe.add_pass<gua::TriMeshPassDescription>();
@@ -126,7 +125,7 @@ int main(int argc, char** argv) {
     ;
   portal_pipe.add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("data/images/skymap.jpg");
+    ;
   portal_camera->config.set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
@@ -139,7 +138,7 @@ int main(int argc, char** argv) {
   camera->set_pre_render_cameras({portal_camera});
   camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("data/images/skymap.jpg");
+    ;
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
