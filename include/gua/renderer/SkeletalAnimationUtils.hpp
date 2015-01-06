@@ -61,44 +61,24 @@ scm::math::quatf ai_to_gua(aiQuaternion const& q) {
 namespace gua {
 
 struct Transformation {
-  Transformation():
-    scaling{1.0f},
-    rotation{scm::math::quatf::identity()},
-    translation{0.0f}
-  {}
+ public:
+  Transformation();
 
-  Transformation(scm::math::vec3 const& scale, scm::math::quatf const& rotate, scm::math::vec3 const& translate):
-    scaling{scale},
-    rotation{rotate},
-    translation{translate}
-  {}
+  Transformation(scm::math::vec3 const& scale, scm::math::quatf const& rotate, scm::math::vec3 const& translate);
 
-  scm::math::mat4f to_matrix() const {
-    return scm::math::make_translation(translation) * rotation.to_matrix() * scm::math::make_scale(scaling);
-  }
+  ~Transformation();
 
-  Transformation blend(Transformation const& t, float const factor) const {
-    return Transformation{scaling * (1 - factor) + t.scaling * factor, slerp(rotation, t.rotation, factor), translation * (1 - factor) + t.translation * factor};
-  }
+  scm::math::mat4f to_matrix() const;
 
-  Transformation operator+(Transformation const& t) const {
-    return Transformation{scaling + t.scaling, scm::math::normalize(t.rotation * rotation), translation + t.translation};
-  }
-  Transformation& operator+=(Transformation const& t) {
-    *this = *this + t;
-    return *this;
-  }
+  Transformation blend(Transformation const& t, float const factor) const;
 
-  Transformation operator*(float const factor) const {
-    return Transformation{scaling * factor, slerp(scm::math::quatf::identity(), rotation, factor), translation * factor};
-  }
-  Transformation& operator*=(float const f) {
-    *this = *this * f;
-    return *this;
-  }
+  Transformation operator+(Transformation const& t) const;
+  Transformation& operator+=(Transformation const& t);
 
-  ~Transformation(){};
+  Transformation operator*(float const factor) const;
+  Transformation& operator*=(float const f);
 
+ private:
   scm::math::vec3 scaling;
   scm::math::quatf rotation;
   scm::math::vec3 translation;
@@ -118,132 +98,6 @@ struct Key {
   T value;
 };
 
-class BoneAnimation {
- public:
-  BoneAnimation():
-    name{"default"},
-    scalingKeys{},
-    rotationKeys{},
-    translationKeys{}
-  {}
-
-  ~BoneAnimation(){};
-
-  BoneAnimation(aiNodeAnim* anim):
-    name{anim->mNodeName.C_Str()}
-   {
-
-    for(unsigned i = 0; i < anim->mNumScalingKeys; ++i) {
-      scalingKeys.push_back(Key<scm::math::vec3>{anim->mScalingKeys[i].mTime, ai_to_gua(anim->mScalingKeys[i].mValue)});
-    }
-    for(unsigned i = 0; i < anim->mNumRotationKeys; ++i) {
-      rotationKeys.push_back(Key<scm::math::quatf>{anim->mRotationKeys[i].mTime, ai_to_gua(anim->mRotationKeys[i].mValue)});
-    }
-    for(unsigned i = 0; i < anim->mNumPositionKeys; ++i) {
-      translationKeys.push_back(Key<scm::math::vec3>{anim->mPositionKeys[i].mTime, ai_to_gua(anim->mPositionKeys[i].mValue)});
-    }
-  }
-
-  Transformation calculate_transform(float time) const {
-    return Transformation{calculate_value(time, scalingKeys), calculate_value(time, rotationKeys), calculate_value(time, translationKeys)};
-  }
-
-  std::string const& get_name() const {
-    return name;
-  }
-
- private:
-
-  scm::math::vec3 interpolate(scm::math::vec3 val1, scm::math::vec3 val2, float factor) const {
-    return val1 * (1 - factor) + val2 * factor;
-  }
-
-  scm::math::quatf interpolate(scm::math::quatf val1, scm::math::quatf val2, float factor) const {
-    return normalize(slerp(val1, val2, factor));
-  }
-
-  template<class T> 
-  uint find_key(float animationTime, std::vector<T> keys) const {    
-    if(keys.size() < 1) {
-      Logger::LOG_ERROR << "no keys" << std::endl;
-      assert(false);
-    } 
-
-    for(uint i = 0 ; i < keys.size() - 1 ; i++) {
-      if(animationTime < (float)keys[i + 1].time) {
-        return i;
-      }
-    }
-
-    Logger::LOG_ERROR << "no key found" << std::endl;
-    assert(false);
-
-    return 0;
-  }
-
-  template<class T> 
-  T calculate_value(float time, std::vector<Key<T>> keys) const {
-    if(keys.size() == 1) {
-       return keys[0].value;
-    }
-
-    uint lastIndex = find_key(time, keys);
-    uint nextIndex = (lastIndex + 1);
-
-    if(nextIndex > keys.size()) {
-      Logger::LOG_ERROR << "frame out of range" << std::endl;
-      assert(false);
-    }
-
-    float deltaTime = (float)(keys[nextIndex].time - keys[lastIndex].time);
-    float factor = (time - (float)keys[lastIndex].time) / deltaTime;
-    //assert(factor >= 0.0f && factor <= 1.0f);
-    T const& key1 = keys[lastIndex].value;
-    T const& key2 = keys[nextIndex].value;
-
-    return interpolate(key1, key2, factor);
-  }
-
-  std::string name;
-
-  std::vector<Key<scm::math::vec3>> scalingKeys;
-  std::vector<Key<scm::math::quatf>> rotationKeys;
-  std::vector<Key<scm::math::vec3>> translationKeys;
-};
-
-struct SkeletalAnimation {
-
-  SkeletalAnimation():
-    name{"default"},
-    numFrames{0},
-    numFPS{0},
-    duration{0},
-    numBoneAnims{0},
-    boneAnims{}
-  {}
-
-  SkeletalAnimation(aiAnimation* anim):
-    name{anim->mName.C_Str()},
-    numFrames{unsigned(anim->mDuration)},
-    numFPS{anim->mTicksPerSecond > 0 ? anim->mTicksPerSecond : 25},
-    duration{double(numFrames) / numFPS},
-    numBoneAnims{anim->mNumChannels},
-    boneAnims{}
-  {
-    for(unsigned i = 0; i < numBoneAnims; ++i) {
-      boneAnims.push_back(BoneAnimation{anim->mChannels[i]});
-    }
-  }
-
-  ~SkeletalAnimation(){};
-
-  std::string name;
-  unsigned numFrames;
-  double numFPS;
-  double duration;
-  unsigned numBoneAnims;
-  std::vector<BoneAnimation> boneAnims;
-};
 
 struct Node {
   Node(aiNode const* node):
@@ -272,103 +126,89 @@ struct Node {
   int index;
 };
 
+class BoneAnimation {
+ public:
+  BoneAnimation();
+
+  ~BoneAnimation();
+
+  BoneAnimation(aiNodeAnim* anim);
+
+  Transformation calculate_transform(float time) const;
+
+  std::string const& get_name() const;
+
+ private:
+
+  scm::math::vec3 interpolate(scm::math::vec3 val1, scm::math::vec3 val2, float factor) const;
+
+  scm::math::quatf interpolate(scm::math::quatf val1, scm::math::quatf val2, float factor) const;
+
+  template<class T> 
+  uint find_key(float animationTime, std::vector<Key<T>> keys) const;
+
+  template<class T> 
+  T calculate_value(float time, std::vector<Key<T>> keys) const;
+
+  std::string name;
+
+  std::vector<Key<scm::math::vec3>> scalingKeys;
+  std::vector<Key<scm::math::quatf>> rotationKeys;
+  std::vector<Key<scm::math::vec3>> translationKeys;
+};
 
 class Pose {
  public:
-  Pose():
-    transforms{}
-  {}
+  Pose();
 
-  ~Pose(){};
+  ~Pose();
 
-  bool contains(std::string const& name ) const {
-    return transforms.find(name) != transforms.end();
-  }
+  bool contains(std::string const& name ) const;
 
-  Transformation const& get_transform(std::string const& name) const{
-    try {
-      return transforms.at(name);
-    }
-    catch(std::exception const& e) {
-      Logger::LOG_ERROR << "bone '" << name << "' not contained in pose" << std::endl;
-      return transforms.begin()->second;
-    }
-  }
+  Transformation const& get_transform(std::string const& name) const;
 
-  void set_transform(std::string const& name, Transformation const& value) {
-    transforms[name] = value;
-  }
+  void set_transform(std::string const& name, Transformation const& value);
 
-  void blend(Pose const& pose2, float blendFactor) {
-    for_each(pose2.cbegin(), pose2.cend(), [this, &blendFactor](std::pair<std::string, Transformation> const& p) {
-      if(contains(p.first)) {
-        set_transform(p.first, get_transform(p.first).blend(p.second, blendFactor));
-      }
-      else {
-        set_transform(p.first, p.second);
-      }
-    });
-    // *this = *this * (1 - blendFactor) + pose2 * blendFactor;
-  }
+  void blend(Pose const& pose2, float blendFactor);
 
-  Pose& operator+=(Pose const& pose2) {
-    for_each(pose2.cbegin(), pose2.cend(), [this](std::pair<std::string, Transformation> const& p) {
-      if(contains(p.first)) {
-        set_transform(p.first, get_transform(p.first) + p.second);
-      }
-      else {
-        set_transform(p.first, p.second);
-      }
-    });
-    return *this;
-  }
-  Pose operator+(Pose const& p2) const {
-    Pose temp{*this};
-    temp += p2;
-    return temp;
-  }
+  Pose& operator+=(Pose const& pose2);
+  Pose operator+(Pose const& p2) const;
 
-  Pose& operator*=(float const factor) {
-    for(auto& p : transforms)
-    {
-      p.second *=factor;
-    }
-    return *this;
-  }
-  Pose operator*(float const factor) const {
-    Pose temp{*this};
-    temp *= factor;
-    return temp;
-  }
+  Pose& operator*=(float const factor);
+  Pose operator*(float const factor) const;
 
 
-  void partial_replace(Pose const& pose2, std::shared_ptr<Node> const& pNode) {
-    if(pose2.contains(pNode->name)) {
-      set_transform(pNode->name, pose2.get_transform(pNode->name));
-    }
+  void partial_replace(Pose const& pose2, std::shared_ptr<Node> const& pNode);
+  inline std::map<std::string, Transformation>::iterator begin();   
+  inline std::map<std::string, Transformation>::const_iterator cbegin() const; 
 
-    for(std::shared_ptr<Node>& child : pNode->children) {
-      partial_replace(pose2, child);
-    }
-  }
-
-  inline std::map<std::string, Transformation>::iterator begin() {
-    return transforms.begin();
-  }   
-
-  inline std::map<std::string, Transformation>::const_iterator cbegin() const {
-    return transforms.cbegin();
-  } 
-
-  inline std::map<std::string, Transformation>::iterator end() {
-    return transforms.end();
-  } 
-  inline std::map<std::string, Transformation>::const_iterator cend() const {
-    return transforms.cend();
-  } 
+  inline std::map<std::string, Transformation>::iterator end(); 
+  inline std::map<std::string, Transformation>::const_iterator cend() const;
  
  private:
   std::map<std::string, Transformation> transforms;
+};
+
+class SkeletalAnimation {
+ public:
+  SkeletalAnimation();
+
+  SkeletalAnimation(aiAnimation* anim);
+
+  ~SkeletalAnimation();
+
+  Pose calculate_pose(float time) const;
+
+  double get_duration() const;
+
+ private:
+  std::string name;
+  unsigned numFrames;
+  double numFPS;
+  double duration;
+  unsigned numBoneAnims;
+
+  std::vector<BoneAnimation> boneAnims;
 };
 
 class Blend {
@@ -394,16 +234,11 @@ class SkeletalAnimationUtils {
   static void calculate_matrices(float TimeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& Transforms);
 
   static void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, Pose const& pose, scm::math::mat4f const& ParentTransform);
-  static Pose calculate_pose(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim);
 
   static std::shared_ptr<Node> find_node(std::string const& name, std::shared_ptr<Node> const& root);
 
  private:
-
-  static BoneAnimation const* find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);  
-
-  inline SkeletalAnimationUtils(){};
-  inline ~SkeletalAnimationUtils(){};
+  SkeletalAnimationUtils() = delete;
 };
 
 }

@@ -47,16 +47,16 @@ void SkeletalAnimationDirector::add_animations(aiScene const* scene) {
 
 void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFactor, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
 
-  float timeNormalized1 = timeInSeconds / pAnim1->duration;
+  float timeNormalized1 = timeInSeconds / pAnim1->get_duration();
   timeNormalized1 = scm::math::fract(timeNormalized1);
 
-  float timeNormalized2 = timeInSeconds / pAnim2->duration;
+  float timeNormalized2 = timeInSeconds / pAnim2->get_duration();
   timeNormalized2 = scm::math::fract(timeNormalized2);
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
 
-  Pose pose1{SkeletalAnimationUtils::calculate_pose(timeNormalized1, pAnim1)};
-  Pose pose2{SkeletalAnimationUtils::calculate_pose(timeNormalized2, pAnim2)};
+  Pose pose1{pAnim1->calculate_pose(timeNormalized1)};
+  Pose pose2{pAnim2->calculate_pose(timeNormalized2)};
   
   pose1.blend(pose2, blendFactor);
 
@@ -73,16 +73,16 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_p
     return;
   }
 
-  float timeNormalized1 = timeInSeconds / pAnim1->duration;
+  float timeNormalized1 = timeInSeconds / pAnim1->get_duration();
   timeNormalized1 = scm::math::fract(timeNormalized1);
 
-  float timeNormalized2 = timeInSeconds / pAnim2->duration;
+  float timeNormalized2 = timeInSeconds / pAnim2->get_duration();
   timeNormalized2 = scm::math::fract(timeNormalized2);
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
 
-  Pose full_body{SkeletalAnimationUtils::calculate_pose(timeNormalized1, pAnim1)};
-  Pose upper_body{SkeletalAnimationUtils::calculate_pose(timeNormalized2, pAnim2)};
+  Pose full_body{pAnim1->calculate_pose(timeNormalized1)};
+  Pose upper_body{pAnim2->calculate_pose(timeNormalized2)};
 
   full_body.partial_replace(upper_body, start);
 
@@ -105,7 +105,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
     //crossfade two anims
     case Playback::crossfade: {
       float blendDuration = 2;
-      float playDuration = animations_[animNum]->duration;
+      float playDuration = animations_[animNum]->get_duration();
 
       if(currentTime < next_transition_) {
         SkeletalAnimationUtils::calculate_matrices(currentTime, anim_start_node_, animations_[animNum], transforms);  
