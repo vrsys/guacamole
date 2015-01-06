@@ -68,8 +68,8 @@ namespace gua {
       });*/
 
 
-      RenderContext ctx(pipe.get_context());
-
+      //RenderContext ctx(pipe.get_context());
+      RenderContext & ctx(pipe.get_context());
 
       bool writes_only_color_buffer = false;
       pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
