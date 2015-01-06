@@ -63,10 +63,10 @@ void SkeletalAnimationUtils::calculate_matrices(float timeInSeconds, std::shared
   Pose pose{};
 
   if(pAnim) {
-    timeNormalized = timeInSeconds / pAnim->duration;
+    timeNormalized = timeInSeconds / pAnim->get_duration();
     timeNormalized = scm::math::fract(timeNormalized);
 
-    pose = calculate_pose(timeNormalized, pAnim);
+    pose = pAnim->calculate_pose(timeNormalized);
   }
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
@@ -90,33 +90,6 @@ void SkeletalAnimationUtils::accumulate_matrices(std::vector<scm::math::mat4f>& 
   for (uint i = 0 ; i < pNode->numChildren ; i++) {
     accumulate_matrices(transformMat4s, pNode->children[i], pose, finalTransformation);
   }
-}
-
-Pose SkeletalAnimationUtils::calculate_pose(float animationTime, std::shared_ptr<SkeletalAnimation> const& pAnim) {
-  
-  Pose pose{};
-
-  float currFrame = animationTime * float(pAnim->numFrames);
-   
-  for(BoneAnimation const& boneAnim : pAnim->boneAnims) {
-    Transformation boneTransform = boneAnim.calculate_transform(currFrame);
-
-    pose.set_transform(boneAnim.get_name(), boneTransform);
-  }  
-
-  return pose;
-}
-
-BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName) {
-  for (uint i = 0 ; i < pAnimation->numBoneAnims ; i++) {
-    BoneAnimation const& nodeAnim = pAnimation->boneAnims[i];
-    
-    if (nodeAnim.get_name() == nodeName) {
-        return &nodeAnim;
-    }
-  }
-
-  return NULL;
 }
 
 std::shared_ptr<Node> SkeletalAnimationUtils::find_node(std::string const& name, std::shared_ptr<Node> const& root) {
@@ -155,5 +128,265 @@ float Blend::swap(float x)
   x = fmod(x, 2.0f);
   return (x > 0.5) ? 1 : 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Transformation::Transformation():
+  scaling{1.0f},
+  rotation{scm::math::quatf::identity()},
+  translation{0.0f}
+{}
+
+Transformation::Transformation(scm::math::vec3 const& scale, scm::math::quatf const& rotate, scm::math::vec3 const& translate):
+  scaling{scale},
+  rotation{rotate},
+  translation{translate}
+{}
+
+Transformation::~Transformation()
+{};
+
+scm::math::mat4f Transformation::to_matrix() const {
+  return scm::math::make_translation(translation) * rotation.to_matrix() * scm::math::make_scale(scaling);
+}
+
+Transformation Transformation::blend(Transformation const& t, float const factor) const {
+  return Transformation{scaling * (1 - factor) + t.scaling * factor, slerp(rotation, t.rotation, factor), translation * (1 - factor) + t.translation * factor};
+}
+
+Transformation Transformation::operator+(Transformation const& t) const {
+  return Transformation{scaling + t.scaling, scm::math::normalize(t.rotation * rotation), translation + t.translation};
+}
+Transformation& Transformation::operator+=(Transformation const& t) {
+  *this = *this + t;
+  return *this;
+}
+
+Transformation Transformation::operator*(float const factor) const {
+  return Transformation{scaling * factor, slerp(scm::math::quatf::identity(), rotation, factor), translation * factor};
+}
+Transformation& Transformation::operator*=(float const f) {
+  *this = *this * f;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+BoneAnimation::BoneAnimation():
+  name{"default"},
+  scalingKeys{},
+  rotationKeys{},
+  translationKeys{}
+{}
+
+BoneAnimation::~BoneAnimation()
+{};
+
+BoneAnimation::BoneAnimation(aiNodeAnim* anim):
+  name{anim->mNodeName.C_Str()}
+ {
+
+  for(unsigned i = 0; i < anim->mNumScalingKeys; ++i) {
+    scalingKeys.push_back(Key<scm::math::vec3>{anim->mScalingKeys[i].mTime, ai_to_gua(anim->mScalingKeys[i].mValue)});
+  }
+  for(unsigned i = 0; i < anim->mNumRotationKeys; ++i) {
+    rotationKeys.push_back(Key<scm::math::quatf>{anim->mRotationKeys[i].mTime, ai_to_gua(anim->mRotationKeys[i].mValue)});
+  }
+  for(unsigned i = 0; i < anim->mNumPositionKeys; ++i) {
+    translationKeys.push_back(Key<scm::math::vec3>{anim->mPositionKeys[i].mTime, ai_to_gua(anim->mPositionKeys[i].mValue)});
+  }
+}
+
+Transformation BoneAnimation::calculate_transform(float time) const {
+  return Transformation{calculate_value(time, scalingKeys), calculate_value(time, rotationKeys), calculate_value(time, translationKeys)};
+}
+
+std::string const& BoneAnimation::get_name() const {
+  return name;
+}
+
+scm::math::vec3 BoneAnimation::interpolate(scm::math::vec3 val1, scm::math::vec3 val2, float factor) const {
+  return val1 * (1 - factor) + val2 * factor;
+}
+
+scm::math::quatf BoneAnimation::interpolate(scm::math::quatf val1, scm::math::quatf val2, float factor) const {
+  return normalize(slerp(val1, val2, factor));
+}
+
+template<class T> 
+uint BoneAnimation::find_key(float animationTime, std::vector<Key<T>> keys) const {    
+  if(keys.size() < 1) {
+    Logger::LOG_ERROR << "no keys" << std::endl;
+    assert(false);
+  } 
+
+  for(uint i = 0 ; i < keys.size() - 1 ; i++) {
+    if(animationTime < (float)keys[i + 1].time) {
+      return i;
+    }
+  }
+
+  Logger::LOG_ERROR << "no key found" << std::endl;
+  assert(false);
+
+  return 0;
+}
+
+template<class T> 
+T BoneAnimation::calculate_value(float time, std::vector<Key<T>> keys) const {
+  if(keys.size() == 1) {
+     return keys[0].value;
+  }
+
+  uint lastIndex = find_key(time, keys);
+  uint nextIndex = (lastIndex + 1);
+
+  if(nextIndex > keys.size()) {
+    Logger::LOG_ERROR << "frame out of range" << std::endl;
+    assert(false);
+  }
+
+  float deltaTime = (float)(keys[nextIndex].time - keys[lastIndex].time);
+  float factor = (time - (float)keys[lastIndex].time) / deltaTime;
+  //assert(factor >= 0.0f && factor <= 1.0f);
+  T const& key1 = keys[lastIndex].value;
+  T const& key2 = keys[nextIndex].value;
+
+  return interpolate(key1, key2, factor);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SkeletalAnimation::SkeletalAnimation():
+  name{"default"},
+  numFrames{0},
+  numFPS{0},
+  duration{0},
+  numBoneAnims{0},
+  boneAnims{}
+{}
+
+SkeletalAnimation::SkeletalAnimation(aiAnimation* anim):
+  name{anim->mName.C_Str()},
+  numFrames{unsigned(anim->mDuration)},
+  numFPS{anim->mTicksPerSecond > 0 ? anim->mTicksPerSecond : 25},
+  duration{double(numFrames) / numFPS},
+  numBoneAnims{anim->mNumChannels},
+  boneAnims{}
+{
+  for(unsigned i = 0; i < numBoneAnims; ++i) {
+    boneAnims.push_back(BoneAnimation{anim->mChannels[i]});
+  }
+}
+
+SkeletalAnimation::~SkeletalAnimation()
+{};
+
+Pose SkeletalAnimation::calculate_pose(float time) const { 
+  Pose pose{};
+
+  float currFrame = time * float(numFrames);
+   
+  for(BoneAnimation const& boneAnim : boneAnims) {
+    Transformation boneTransform = boneAnim.calculate_transform(currFrame);
+
+    pose.set_transform(boneAnim.get_name(), boneTransform);
+  }  
+
+  return pose;
+}
+
+double SkeletalAnimation::get_duration() const {
+  return duration;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Pose::Pose():
+  transforms{}
+{}
+
+Pose::~Pose()
+{};
+
+bool Pose::contains(std::string const& name ) const {
+  return transforms.find(name) != transforms.end();
+}
+
+Transformation const& Pose::get_transform(std::string const& name) const{
+  try {
+    return transforms.at(name);
+  }
+  catch(std::exception const& e) {
+    Logger::LOG_ERROR << "bone '" << name << "' not contained in pose" << std::endl;
+    return transforms.begin()->second;
+  }
+}
+
+void Pose::set_transform(std::string const& name, Transformation const& value) {
+  transforms[name] = value;
+}
+
+void Pose::blend(Pose const& pose2, float blendFactor) {
+  for_each(pose2.cbegin(), pose2.cend(), [this, &blendFactor](std::pair<std::string, Transformation> const& p) {
+    if(contains(p.first)) {
+      set_transform(p.first, get_transform(p.first).blend(p.second, blendFactor));
+    }
+    else {
+      set_transform(p.first, p.second);
+    }
+  });
+  // *this = *this * (1 - blendFactor) + pose2 * blendFactor;
+}
+
+Pose& Pose::operator+=(Pose const& pose2) {
+  for_each(pose2.cbegin(), pose2.cend(), [this](std::pair<std::string, Transformation> const& p) {
+    if(contains(p.first)) {
+      set_transform(p.first, get_transform(p.first) + p.second);
+    }
+    else {
+      set_transform(p.first, p.second);
+    }
+  });
+  return *this;
+}
+Pose Pose::operator+(Pose const& p2) const {
+  Pose temp{*this};
+  temp += p2;
+  return temp;
+}
+
+Pose& Pose::operator*=(float const factor) {
+  for(auto& p : transforms)
+  {
+    p.second *=factor;
+  }
+  return *this;
+}
+Pose Pose::operator*(float const factor) const {
+  Pose temp{*this};
+  temp *= factor;
+  return temp;
+}
+
+void Pose::partial_replace(Pose const& pose2, std::shared_ptr<Node> const& pNode) {
+  if(pose2.contains(pNode->name)) {
+    set_transform(pNode->name, pose2.get_transform(pNode->name));
+  }
+
+  for(std::shared_ptr<Node>& child : pNode->children) {
+    partial_replace(pose2, child);
+  }
+}
+
+inline std::map<std::string, Transformation>::iterator Pose::begin() {
+  return transforms.begin();
+}   
+
+inline std::map<std::string, Transformation>::const_iterator Pose::cbegin() const {
+  return transforms.cbegin();
+} 
+
+inline std::map<std::string, Transformation>::iterator Pose::end() {
+  return transforms.end();
+} 
+inline std::map<std::string, Transformation>::const_iterator Pose::cend() const {
+  return transforms.cend();
+} 
 
 } // namespace gua
