@@ -319,12 +319,12 @@ class Pose {
 class Blend {
  public:
   static float cos(float x); 
+  static float swap(float x); 
   static float linear(float x);
   static float smoothstep(float x);
 
  private:
-  inline Blend() {};
-  inline ~Blend() {};
+  Blend() = delete;
 };
 
 class SkeletalAnimationUtils {
