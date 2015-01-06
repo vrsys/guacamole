@@ -59,6 +59,7 @@ scm::math::quatf ai_to_gua(aiQuaternion const& q) {
 }
 
 namespace gua {
+class Pose;
 
 struct Transformation {
  public:
@@ -99,31 +100,30 @@ struct Key {
 };
 
 
-struct Node {
-  Node(aiNode const* node):
-    index{-1},
-    name{node->mName.C_Str()},
-    parentName{node->mParent != NULL ? node->mParent->mName.C_Str() : "none"},
-    numChildren{node->mNumChildren},
-    transformation{ai_to_gua(node->mTransformation)},
-    offsetMatrix{scm::math::mat4f::identity()}
-  {
-    for(unsigned i = 0; i < node->mNumChildren; ++i) {
-      std::shared_ptr<Node> child = std::make_shared<Node>(node->mChildren[i]);
-      children.push_back(child);
-    }
-  }
+class Node {
+ public:
+  Node(aiNode const* node);
 
-  ~Node(){};
+  ~Node();
+
+  void collect_indices(std::map<std::string, int>& ids) const;
+
+  void set_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& infos);
+
+  std::shared_ptr<Node> find(std::string const& name) const;
+
+  void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, Pose const& pose, scm::math::mat4f const& parentTransform) const;
 
   std::string name;
+  std::vector<std::shared_ptr<Node>> children;
+  
+ private:
+  int index;
   std::string parentName;
   unsigned numChildren;
-  std::vector<std::shared_ptr<Node>> children;
   scm::math::mat4f transformation;
   //transforms to bone space
   scm::math::mat4f offsetMatrix;
-  int index;
 };
 
 class BoneAnimation {
@@ -228,14 +228,7 @@ class SkeletalAnimationUtils {
   static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(aiScene const*);
   static std::shared_ptr<Node> load_hierarchy(aiScene const* scene);
 
-  static void set_bone_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& info, std::shared_ptr<Node>& currNode);
-  static void collect_bone_indices(std::map<std::string, int>& ids, std::shared_ptr<Node> const& pNode);
-  
   static void calculate_matrices(float TimeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& Transforms);
-
-  static void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, std::shared_ptr<Node> const& pNode, Pose const& pose, scm::math::mat4f const& ParentTransform);
-
-  static std::shared_ptr<Node> find_node(std::string const& name, std::shared_ptr<Node> const& root);
 
  private:
   SkeletalAnimationUtils() = delete;

@@ -17,6 +17,7 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     animations_{},
     currAnimation_{},
     animNum{0},
+    bone_mapping_{},
     anim_start_node_{},
     state_{Playback::crossfade},
     blending_state_{Blending::linear},
@@ -28,7 +29,7 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
 
 void SkeletalAnimationDirector::add_hierarchy(aiScene const* scene) {
   root_ = anim_start_node_ = SkeletalAnimationUtils::load_hierarchy(scene);
-  SkeletalAnimationUtils::collect_bone_indices(bone_mapping_, root_);
+  root_->collect_indices(bone_mapping_);
   num_bones_ = bone_mapping_.size();
 
   anim_start_node_ = root_->children[1]->children[0]->children[0];
@@ -60,13 +61,12 @@ void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFacto
   
   pose1.blend(pose2, blendFactor);
 
-  SkeletalAnimationUtils::accumulate_matrices(transforms, anim_start_node_, pose1, identity);
+  anim_start_node_->accumulate_matrices(transforms, pose1, identity);
 }
 
 void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms) {
   
-  std::shared_ptr<Node> start{};
-  start = SkeletalAnimationUtils::find_node(nodeName, root_->children[1]->children[0]->children[0]);
+  std::shared_ptr<Node> start{anim_start_node_->find(nodeName)};
   
   if(!start) {
     Logger::LOG_WARNING << "node '"<< nodeName << "' not found" << std::endl; 
@@ -86,7 +86,7 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_p
 
   full_body.partial_replace(upper_body, start);
 
-  SkeletalAnimationUtils::accumulate_matrices(transforms, anim_start_node_, full_body, identity);
+  anim_start_node_->accumulate_matrices(transforms, full_body, identity);
 }
 
 std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
