@@ -28,11 +28,16 @@ in vec2 gua_quad_coords;
 @include "shaders/common/gua_gbuffer_input.glsl"
 
 // output
-layout(location=0) out vec3 gua_out_color;
-layout(location=1) out vec4 gua_out_pbr;
+@include "shaders/common/gua_fragment_shader_output.glsl"
 
 void main() {
-    gua_out_color = vec3(1, 1, 1);
-    gua_out_pbr = vec4(1.0, 0.0, 0.0, 1.0);
+  vec3 gua_color = vec3(1, 1, 1);
+  float gua_emissivity = 1.0;
+  float gua_roughness = 0.0;
+  float gua_metalness = 0.0;
+  vec3 gua_normal = vec3(0.0);
+  bool gua_flags_passthrough = true;
+
+  @include "shaders/common/gua_write_gbuffer.glsl"
 }
 

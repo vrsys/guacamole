@@ -1,6 +1,7 @@
 uniform uvec2 gua_gbuffer_color;
 uniform uvec2 gua_gbuffer_pbr;
 uniform uvec2 gua_gbuffer_normal;
+uniform uvec2 gua_gbuffer_flags;
 uniform uvec2 gua_gbuffer_depth;
 
 uniform float gua_texel_width;
@@ -79,4 +80,13 @@ vec4 gua_get_pbr(vec2 frag_pos) {
 vec4 gua_get_pbr() {
     //return gua_get_pbr(gua_get_quad_coords());
     return texelFetch(sampler2D(gua_gbuffer_pbr), ivec2(gl_FragCoord.xy), 0);
+}
+
+// flags -----------------------------------------------------------------------
+uint gua_get_flags(vec2 frag_pos) {
+    return uint(texture2D(usampler2D(gua_gbuffer_flags), frag_pos).r);
+}
+
+uint gua_get_flags() {
+    return uint(texelFetch(usampler2D(gua_gbuffer_flags), ivec2(gl_FragCoord.xy), 0).r);
 }
