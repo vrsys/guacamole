@@ -147,56 +147,60 @@ ENDIF(UNIX)
 ################################################################
 # Create GuaRC
 ################################################################
-
-add_subdirectory(guarc)
+IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
+  add_subdirectory(guarc)
+ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 ################################################################
 # Generate RC data
 ################################################################
 
-# list resource files
-file(GLOB_RECURSE RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    resources/*
-)
+IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/)
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated)
-endif()
+  # list resource files
+  file(GLOB_RECURSE RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      resources/*
+  )
 
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/)
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated)
-endif()
+  if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/)
+      file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated)
+  endif()
+
+  if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/)
+      file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated)
+  endif()
 
 
-IF (UNIX)
-    ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/guarc/guarc
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-      DEPENDS ${RESOURCES} guarc
-    )
+  IF (UNIX)
+      ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/guarc/guarc
+          ${CMAKE_CURRENT_SOURCE_DIR}/resources
+          ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+        DEPENDS ${RESOURCES} guarc
+      )
 
-    ADD_CUSTOM_TARGET(CompileResources ALL
-       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-    )
+      ADD_CUSTOM_TARGET(CompileResources ALL
+         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+      )
 
-ELSEIF(MSVC)
-    ADD_CUSTOM_TARGET(CompileResources ALL
-       DEPENDS ${RESOURCES} guarc
-    )
+  ELSEIF(MSVC)
+      ADD_CUSTOM_TARGET(CompileResources ALL
+         DEPENDS ${RESOURCES} guarc
+      )
 
-    SET (_GUARC_EXECUTABLE "")
-    SET (_GUARC_EXECUTABLE "/guarc/$(Configuration)/guarc.exe")
+      SET (_GUARC_EXECUTABLE "")
+      SET (_GUARC_EXECUTABLE "/guarc/$(Configuration)/guarc.exe")
 
-    ADD_CUSTOM_COMMAND(TARGET CompileResources POST_BUILD
-    	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}${_GUARC_EXECUTABLE}
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-    )
-ENDIF(UNIX)
+      ADD_CUSTOM_COMMAND(TARGET CompileResources POST_BUILD
+    	  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}${_GUARC_EXECUTABLE}
+          ${CMAKE_CURRENT_SOURCE_DIR}/resources
+          ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+      )
+  ENDIF(UNIX)
 
+ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 ################################################################
 # Create libraries

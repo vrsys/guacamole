@@ -54,7 +54,7 @@ class GUA_DLL ProgramFactory {
                                                   std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
                                                   bool in_rasterization_discard = false);
 
-  std::string     read_shader_from_file (std::string const& file) const;
+  std::string     read_from_file(std::string const& file) const;
 
   void            resolve_shader_includes (std::string& shader_source) const;
 

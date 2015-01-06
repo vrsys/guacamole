@@ -145,8 +145,8 @@ void VolumeRenderer::init_resources(Pipeline& pipe) {
   volume_raygeneration_fbo_->attach_depth_stencil_buffer(ctx, volume_raygeneration_depth_buffer_);
 
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  std::string vertex_shader   = program_factory_.read_shader_from_file("resources/shaders/common/fullscreen_quad.vert");
-  std::string fragment_shader = program_factory_.read_shader_from_file("resources/shaders/volume_compose.frag");
+  std::string vertex_shader   = program_factory_.read_from_file("resources/shaders/common/fullscreen_quad.vert");
+  std::string fragment_shader = program_factory_.read_from_file("resources/shaders/volume_compose.frag");
 #else
   std::string vertex_shader (Resources::lookup_shader(Resources::shaders_common_fullscreen_quad_vert));
   std::string fragment_shader(Resources::lookup_shader(Resources::shaders_volume_compose_frag));
@@ -156,8 +156,8 @@ void VolumeRenderer::init_resources(Pipeline& pipe) {
   composite_shader_->create_from_sources(vertex_shader, fragment_shader);
 
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  std::string ray_generation_vertex_shader = program_factory_.read_shader_from_file("resources/shaders/volume_ray_generation.vert");
-  std::string ray_generation_fragment_shader = program_factory_.read_shader_from_file("resources/shaders/volume_ray_generation.frag");
+  std::string ray_generation_vertex_shader = program_factory_.read_from_file("resources/shaders/volume_ray_generation.vert");
+  std::string ray_generation_fragment_shader = program_factory_.read_from_file("resources/shaders/volume_ray_generation.frag");
 #else
   std::string ray_generation_vertex_shader(Resources::lookup_shader(Resources::shaders_volume_ray_generation_vert));
   std::string ray_generation_fragment_shader(Resources::lookup_shader(Resources::shaders_volume_ray_generation_frag));

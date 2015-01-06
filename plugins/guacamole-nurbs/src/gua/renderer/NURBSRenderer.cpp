@@ -152,24 +152,24 @@ namespace gua {
   void NURBSRenderer::_load_shaders()
   {
     pre_tesselation_shader_stages_.clear();
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.vert")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.tctrl")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.teval")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.geom")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.vert")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.tctrl")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.teval")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.geom")));
 
     pre_tesselation_interleaved_stream_capture_.clear();
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_position");
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_index");
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_tesscoord");
 
-    tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]          = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.vert");
-    tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER]    = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.tctrl");
-    tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.teval");
-    tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER]        = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.geom");
-    tesselation_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]        = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.frag");
+    tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]          = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.vert");
+    tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER]    = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.tctrl");
+    tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.teval");
+    tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER]        = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.geom");
+    tesselation_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]        = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.frag");
 
-    raycasting_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]           = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.vert");
-    raycasting_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]         = factory_.read_shader_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.frag");
+    raycasting_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]           = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.vert");
+    raycasting_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]         = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.frag");
   }
 
   ////////////////////////////////////////////////////////////////////////////////
