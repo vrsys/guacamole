@@ -122,7 +122,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
           default: blendFactor = Blend::linear(time);
         }
         
-        blend_pose(currentTime, blendFactor, animations_[(animNum + 1) % animations_.size()], animations_[animNum], transforms);
+        blend_pose(currentTime, blendFactor, animations_[animNum], animations_[(animNum + 1) % animations_.size()], transforms);
       }
       else {
         next_transition_ = currentTime + playDuration;

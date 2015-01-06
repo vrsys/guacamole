@@ -232,14 +232,19 @@ struct Transformation {
     return Transformation{scaling * (1 - factor) + t.scaling * factor, slerp(rotation, t.rotation, factor), translation * (1 - factor) + t.translation * factor};
   }
 
-  Transformation operator*(float const f) const {
-    return Transformation{scaling * f, scm::math::quatf{rotation.w * f, rotation.i * f, rotation.j * f, rotation.k * f}, translation * f};
+  Transformation operator+(Transformation const& t) const {
+    return Transformation{scaling + t.scaling, scm::math::normalize(t.rotation * rotation), translation + t.translation};
+  }
+  Transformation& operator+=(Transformation const& t) {
+    *this = *this + t;
+    return *this;
   }
 
+  Transformation operator*(float const factor) const {
+    return Transformation{scaling * factor, slerp(scm::math::quatf::identity(), rotation, factor), translation * factor};
+  }
   Transformation& operator*=(float const f) {
-    scaling *= f;
-    rotation = scm::math::quatf{rotation.w * f, rotation.i * f, rotation.j * f, rotation.k * f};
-    translation *= f;
+    *this = *this * f;
     return *this;
   }
 
@@ -285,7 +290,39 @@ class Pose {
         set_transform(p.first, p.second);
       }
     });
+    // *this = *this * (1 - blendFactor) + pose2 * blendFactor;
   }
+
+  Pose& operator+=(Pose const& pose2) {
+    for_each(pose2.cbegin(), pose2.cend(), [this](std::pair<std::string, Transformation> const& p) {
+      if(contains(p.first)) {
+        set_transform(p.first, get_transform(p.first) + p.second);
+      }
+      else {
+        set_transform(p.first, p.second);
+      }
+    });
+    return *this;
+  }
+  Pose operator+(Pose const& p2) const {
+    Pose temp{*this};
+    temp += p2;
+    return temp;
+  }
+
+  Pose& operator*=(float const factor) {
+    for(auto& p : transforms)
+    {
+      p.second *=factor;
+    }
+    return *this;
+  }
+  Pose operator*(float const factor) const {
+    Pose temp{*this};
+    temp *= factor;
+    return temp;
+  }
+
 
   void partial_replace(Pose const& pose2, std::shared_ptr<Node> const& pNode) {
     if(pose2.contains(pNode->name)) {
@@ -297,18 +334,18 @@ class Pose {
     }
   }
 
-  std::map<std::string, Transformation>::iterator begin() {
+  inline std::map<std::string, Transformation>::iterator begin() {
     return transforms.begin();
   }   
 
-  std::map<std::string, Transformation>::const_iterator cbegin() const {
+  inline std::map<std::string, Transformation>::const_iterator cbegin() const {
     return transforms.cbegin();
   } 
 
-  std::map<std::string, Transformation>::iterator end() {
+  inline std::map<std::string, Transformation>::iterator end() {
     return transforms.end();
   } 
-  std::map<std::string, Transformation>::const_iterator cend() const {
+  inline std::map<std::string, Transformation>::const_iterator cend() const {
     return transforms.cend();
   } 
  
