@@ -71,10 +71,10 @@ private:
   std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
   std::shared_ptr<SkeletalAnimation> currAnimation_;
 
-  enum  Playback {sequential = 0, partial = 1, crossfade = 2};
+  enum  Playback {partial = 0, crossfade = 1};
   Playback state_;
 
-  enum  Blending {linear = 0, smoothstep = 1, cosinus = 2};
+  enum  Blending {swap = 0, linear = 1, smoothstep = 2, cosinus = 3};
   Blending blending_state_;
 
   unsigned animNum;

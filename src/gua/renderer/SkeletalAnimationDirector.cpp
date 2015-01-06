@@ -102,17 +102,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
   }
 
   switch(state_) {
-    //play all anims 
-    case Playback::sequential: {
-      if(has_anims_ && currentTime > currAnimation_->duration) {
-        timer_.reset();
-        currAnimation_ = animations_[animNum % animations_.size()];
-        animNum = (animNum + 1) % animations_.size();
-      }
-      SkeletalAnimationUtils::calculate_matrices(currentTime, anim_start_node_, currAnimation_, transforms);  
-      break; 
-    }
-    //blend two anims
+    //crossfade two anims
     case Playback::crossfade: {
       float blendDuration = 2;
       float playDuration = animations_[animNum]->duration;
@@ -125,6 +115,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
         
         float blendFactor = 0.0;
         switch(blending_state_){
+          case Blending::swap : blendFactor = Blend::swap(time);break;
           case Blending::linear : blendFactor = Blend::linear(time);break;
           case Blending::smoothstep : blendFactor = Blend::smoothstep(time);break;
           case Blending::cosinus : blendFactor = Blend::cos(time);break;
@@ -152,10 +143,9 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
 
 void SkeletalAnimationDirector::set_playback_mode(uint mode) {
   switch(mode) {
-    case 0 : state_ = Playback::sequential; break;
-    case 1 : state_ = Playback::partial; break;
-    case 2 : state_ = Playback::crossfade; break;
-    default: state_ = Playback::sequential;;
+    case 0 : state_ = Playback::partial; break;
+    case 1 : state_ = Playback::crossfade; break;
+    default: state_ = Playback::partial;;
   }
 }
 
@@ -165,9 +155,10 @@ uint SkeletalAnimationDirector::get_playback_mode() {
 
 void SkeletalAnimationDirector::set_blending_mode(uint mode) {
   switch(mode) {
-    case 0 : blending_state_ = Blending::linear; break;
-    case 1 : blending_state_ = Blending::smoothstep; break;
-    case 2 : blending_state_ = Blending::cosinus; break;
+    case 0 : blending_state_ = Blending::swap; break;
+    case 1 : blending_state_ = Blending::linear; break;
+    case 2 : blending_state_ = Blending::smoothstep; break;
+    case 3 : blending_state_ = Blending::cosinus; break;
     default: blending_state_ = Blending::linear;;
   }
 }

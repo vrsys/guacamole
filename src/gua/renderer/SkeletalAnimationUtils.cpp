@@ -286,4 +286,10 @@ float Blend::smoothstep(float x) {
   return 3 * x * x - 2 * x * x * x;
 }
 
+float Blend::swap(float x)
+{
+  x = fmod(x, 2.0f);
+  return (x > 0.5) ? 1 : 0;
+}
+
 } // namespace gua
