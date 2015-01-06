@@ -115,8 +115,8 @@ vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec4 pbr) {
   float roughness = max(pbr.g, 0.0001);
 
   vec3 albedo = sRGB_to_linear_simple(color);
-  vec3 cspec = 0.04 * (1.0 - metalness) + metalness * albedo;
-  vec3 cdiff = albedo * (1.0 - metalness);
+  vec3 cspec = mix(vec3(0.04), albedo, metalness);
+  vec3 cdiff = mix(albedo, vec3(0.0),  metalness);
 
   vec3 Vn = normalize(E - P);
   vec3 H = normalize(L + Vn);
@@ -124,10 +124,10 @@ vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec4 pbr) {
 
   vec3 Cl = R /* (1.0-emit)*/;
 
-  vec3 f = Fresnel(cspec, H, L);
-  vec3 brdf = mix(lambert(cdiff),
-                  vec3(GGX_Specular(roughness, N, H, Vn, L)),
-                  f);
+  vec3 F = Fresnel(cspec, H, L);
+  vec3 diffuse = lambert(cdiff);
+  vec3 D_Vis = vec3(GGX_Specular(roughness, N, H, Vn, L));
+  vec3 brdf = mix(diffuse, D_Vis, F);
   vec3 col = Cl * brdf * NdotL;
 
   return col;
