@@ -17,9 +17,9 @@ const int tile_power = 2;
 
 #define ABUF_SHADE_FUNC abuf_shade
 
-vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec4 pbr) {
+vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec4 pbr, uint flags) {
   // pass-through check
-  if (pbr.w > 0.0)
+  if ((flags & 1u) != 0)
     return color;
 
   float emit = pbr.r;
@@ -42,7 +42,7 @@ vec4 abuf_shade(uint pos, float depth) {
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   vec3 position = h.xyz / h.w;
 
-  vec3 frag_color = shade_for_all_lights(color.rgb, normal.xyz *2.0 - 1.0, position, pbr);
+  vec3 frag_color = shade_for_all_lights(color.rgb, normal.xyz *2.0 - 1.0, position, pbr, floatBitsToUint(pbr.w));
   return vec4(frag_color, color.a);
 }
 
@@ -128,7 +128,8 @@ void main() {
         bg_color = shade_for_all_lights(gua_get_color(),
                                         gua_get_normal(),
                                         gua_get_position(),
-                                        gua_get_pbr());
+                                        gua_get_pbr(),
+                                        gua_get_flags());
       }
     } else {
       bg_color = background_color;

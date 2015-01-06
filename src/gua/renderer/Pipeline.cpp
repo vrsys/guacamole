@@ -272,6 +272,7 @@ void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) 
   shader->set_uniform(ctx, gbuffer_->get_current_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
   shader->set_uniform(ctx, gbuffer_->get_current_pbr_buffer()->get_handle(ctx),    "gua_gbuffer_pbr");
   shader->set_uniform(ctx, gbuffer_->get_current_normal_buffer()->get_handle(ctx), "gua_gbuffer_normal");
+  shader->set_uniform(ctx, gbuffer_->get_current_flags_buffer()->get_handle(ctx),    "gua_gbuffer_flags");
   shader->set_uniform(ctx, gbuffer_->get_current_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
 }
 

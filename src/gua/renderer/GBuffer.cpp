@@ -45,18 +45,21 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
 
   color_buffer_read_  = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_32F, 1, state);
   color_buffer_write_ = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_32F, 1, state);
-  pbr_buffer_         = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGBA_8, 1, state);
+  pbr_buffer_         = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_8, 1, state);
   normal_buffer_      = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_16, 1, state);
+  flags_buffer_       = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_R_8UI, 1, state);
   depth_buffer_       = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_D24, 1, state);
 
   fbo_read_->attach_color_buffer(ctx, 0, color_buffer_read_);
   fbo_read_->attach_color_buffer(ctx, 1, pbr_buffer_);
   fbo_read_->attach_color_buffer(ctx, 2, normal_buffer_);
+  fbo_read_->attach_color_buffer(ctx, 3, flags_buffer_);
   fbo_read_->attach_depth_stencil_buffer(ctx, depth_buffer_);
 
   fbo_write_->attach_color_buffer(ctx, 0, color_buffer_write_);
   fbo_write_->attach_color_buffer(ctx, 1, pbr_buffer_);
   fbo_write_->attach_color_buffer(ctx, 2, normal_buffer_);
+  fbo_write_->attach_color_buffer(ctx, 3, flags_buffer_);
   fbo_write_->attach_depth_stencil_buffer(ctx, depth_buffer_);
   
   fbo_read_only_color_->attach_color_buffer(ctx, 0, color_buffer_read_);
@@ -131,6 +134,9 @@ void GBuffer::remove_buffers(RenderContext const& ctx) {
   if (normal_buffer_) {
     normal_buffer_->make_non_resident(ctx);
   }
+  if (flags_buffer_) {
+    flags_buffer_->make_non_resident(ctx);
+  }
   if (depth_buffer_) {
     depth_buffer_->make_non_resident(ctx);
   }
@@ -152,6 +158,12 @@ std::shared_ptr<Texture2D> const& GBuffer::get_current_pbr_buffer() const {
 
 std::shared_ptr<Texture2D> const& GBuffer::get_current_normal_buffer() const {
   return normal_buffer_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Texture2D> const& GBuffer::get_current_flags_buffer() const {
+  return flags_buffer_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
