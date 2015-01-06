@@ -140,6 +140,25 @@ struct BoneAnimation {
 
   ~BoneAnimation(){};
 
+  template<class T> 
+  uint find_key(float animationTime, std::vector<T> keys) const {    
+    if(keys.size() < 1) {
+      Logger::LOG_ERROR << "no keys" << std::endl;
+      assert(false);
+    } 
+
+    for (uint i = 0 ; i < keys.size() - 1 ; i++) {
+      if (animationTime < (float)keys[i + 1].time) {
+          return i;
+      }
+    }
+
+    Logger::LOG_ERROR << "no key found" << std::endl;
+    assert(false);
+
+    return 0;
+  }
+
   std::string name;
   unsigned numScalingKeys;
   unsigned numRotationKeys;
@@ -385,10 +404,6 @@ class SkeletalAnimationUtils {
   static scm::math::vec3 interpolate_scaling(float AnimationTime, BoneAnimation const& nodeAnim);
   static scm::math::quatf interpolate_rotation(float AnimationTime, BoneAnimation const& nodeAnim);
   static scm::math::vec3 interpolate_position(float AnimationTime, BoneAnimation const& nodeAnim);    
-  
-  static uint find_scaling(float AnimationTime, BoneAnimation const& nodeAnim);
-  static uint find_rotation(float AnimationTime, BoneAnimation const& nodeAnim);
-  static uint find_position(float AnimationTime, BoneAnimation const& nodeAnim);
   
   static BoneAnimation const* find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);  
 

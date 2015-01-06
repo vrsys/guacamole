@@ -140,67 +140,12 @@ std::shared_ptr<Node> SkeletalAnimationUtils::find_node(std::string const& name,
   return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
-
-uint SkeletalAnimationUtils::find_position(float animationTime, BoneAnimation const& nodeAnim) {    
-  if(nodeAnim.numTranslationKeys < 1) {
-    Logger::LOG_ERROR << "no keys" << std::endl;
-    assert(false);
-  } 
-
-  for (uint i = 0 ; i < nodeAnim.numTranslationKeys - 1 ; i++) {
-    if (animationTime < (float)nodeAnim.translationKeys[i + 1].time) {
-        return i;
-    }
-  }
-
-  Logger::LOG_ERROR << "no key found" << std::endl;
-  assert(false);
-
-  return 0;
-}
-
-uint SkeletalAnimationUtils::find_rotation(float animationTime, BoneAnimation const& nodeAnim) {
-  if(nodeAnim.numRotationKeys < 1) {
-    Logger::LOG_ERROR << "no keys" << std::endl;
-    assert(false);
-  }
-
-  for (uint i = 0 ; i < nodeAnim.numRotationKeys - 1 ; i++) {
-    if (animationTime < (float)nodeAnim.rotationKeys[i + 1].time) {
-        return i;
-    }
-  }
-  
-  Logger::LOG_ERROR << "no key found" << std::endl;
-  assert(false);
-
-  return 0;
-}
-
-uint SkeletalAnimationUtils::find_scaling(float animationTime, BoneAnimation const& nodeAnim) {
-  if(nodeAnim.numScalingKeys < 1) {
-    Logger::LOG_ERROR << "no keys" << std::endl;
-    assert(false);
-  }
-  
-  for (uint i = 0 ; i < nodeAnim.numScalingKeys - 1 ; i++) {
-    if (animationTime < (float)nodeAnim.scalingKeys[i + 1].time) {
-        return i;
-    }
-  }
-  
-  Logger::LOG_ERROR << "no key found" << std::endl;
-  assert(false);
-
-  return 0;
-}
-
 scm::math::vec3 SkeletalAnimationUtils::interpolate_position(float animationTime, BoneAnimation const& nodeAnim) {
   if (nodeAnim.numTranslationKeys == 1) {
       return nodeAnim.translationKeys[0].value;
   }
           
-  uint PositionIndex = find_position(animationTime, nodeAnim);
+  uint PositionIndex = nodeAnim.find_key(animationTime, nodeAnim.translationKeys);
   uint NextPositionIndex = (PositionIndex + 1);
 
   if(NextPositionIndex > nodeAnim.numTranslationKeys) {
@@ -225,7 +170,7 @@ scm::math::quatf SkeletalAnimationUtils::interpolate_rotation(float animationTim
 
   }
   
-  uint RotationIndex = find_rotation(animationTime, nodeAnim);
+  uint RotationIndex = nodeAnim.find_key(animationTime, nodeAnim.rotationKeys);
   uint NextRotationIndex = (RotationIndex + 1);
 
   if(NextRotationIndex > nodeAnim.numRotationKeys) {
@@ -249,7 +194,7 @@ scm::math::vec3 SkeletalAnimationUtils::interpolate_scaling(float animationTime,
      return nodeAnim.scalingKeys[0].value;
   }
 
-  uint ScalingIndex = find_scaling(animationTime, nodeAnim);
+  uint ScalingIndex = nodeAnim.find_key(animationTime, nodeAnim.scalingKeys);
   uint NextScalingIndex = (ScalingIndex + 1);
 
   if(NextScalingIndex > nodeAnim.numScalingKeys) {
