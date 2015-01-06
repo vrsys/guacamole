@@ -105,7 +105,7 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiMesh const* mesh,std::s
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkeletalAnimationRessource::LoadBones(std::vector<VertexBoneData>& Bones)
+void SkeletalAnimationRessource::LoadBones(/*std::vector<VertexBoneData>& Bones*/)
 {
   for (uint i = 0 ; i < mesh_->mNumBones ; i++) {
 
@@ -116,19 +116,20 @@ void SkeletalAnimationRessource::LoadBones(std::vector<VertexBoneData>& Bones)
       //uint VertexID = entries_[MeshIndex].BaseVertex + mesh_->mBones[i]->mWeights[j].mVertexId;//no BaseVertex needed anymore???
       uint VertexID = mesh_->mBones[i]->mWeights[j].mVertexId;
       float Weight  = mesh_->mBones[i]->mWeights[j].mWeight;                   
-      Bones[VertexID].AddBoneData(BoneIndex, Weight);
+      //Bones[VertexID].AddBoneData(BoneIndex, Weight);
+      bones_[VertexID].AddBoneData(BoneIndex, Weight);
     }
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkeletalAnimationRessource::InitMesh(std::vector<scm::math::vec3>& Positions,
+void SkeletalAnimationRessource::InitMesh(/*std::vector<scm::math::vec3>& Positions,*/
                     std::vector<scm::math::vec3>& Normals,
                     std::vector<scm::math::vec2>& TexCoords,
                     std::vector<scm::math::vec3>& Tangents,
                     std::vector<scm::math::vec3>& Bitangents,
-                    std::vector<VertexBoneData>& Bones,
+                    /*std::vector<VertexBoneData>& Bones,*/
                     std::vector<uint>& Indices)
 {    
   const scm::math::vec3 Zero3D(0.0f, 0.0f, 0.0f);
@@ -160,14 +161,16 @@ void SkeletalAnimationRessource::InitMesh(std::vector<scm::math::vec3>& Position
       pBitangent = scm::math::vec3(mesh_->mBitangents[i].x, mesh_->mBitangents[i].y, mesh_->mBitangents[i].z);
     }
 
-    Positions.push_back(pPos);
+    //Positions.push_back(pPos);
+    positions_.push_back(pPos);
     Normals.push_back(pNormal);
     Bitangents.push_back(pBitangent);
     Tangents.push_back(pTangent);
     TexCoords.push_back(scm::math::vec2(pTexCoord[0], pTexCoord[1]));
   }
   
-  LoadBones(Bones);
+  //LoadBones(Bones);
+  LoadBones();
   
   // Populate the index buffer
   for (uint i = 0 ; i < mesh_->mNumFaces ; i++) {
@@ -194,15 +197,12 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
 
   if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
 
-    //overide old bbox, now with bones' influence
-    bounding_box_ = math::BoundingBox<math::vec3>();
-
-    std::vector<scm::math::vec3> Positions;
+    //std::vector<scm::math::vec3> Positions;
     std::vector<scm::math::vec3> Normals;
     std::vector<scm::math::vec2> TexCoords;
     std::vector<scm::math::vec3> Tangents;
     std::vector<scm::math::vec3> Bitangents;
-    std::vector<VertexBoneData> Bones;
+    //std::vector<VertexBoneData> Bones;
     std::vector<uint> Indices;
        
     uint NumIndices = mesh_-> mNumFaces * 3;
@@ -211,15 +211,18 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     num_vertices_ = mesh_-> mNumVertices;;
     
     // Reserve space in the vectors for the vertex attributes and indices
-    Positions.reserve(num_vertices_);
+    //Positions.reserve(num_vertices_);
+    positions_.reserve(num_vertices_);
     Normals.reserve(num_vertices_);
     TexCoords.reserve(num_vertices_);
     Tangents.reserve(num_vertices_);
     Bitangents.reserve(num_vertices_);
-    Bones.resize(num_vertices_);
+    //Bones.resize(num_vertices_);
+    bones_.resize(num_vertices_);
     Indices.reserve(NumIndices);
     
-    InitMesh(Positions, Normals, TexCoords, Tangents, Bitangents, Bones, Indices);
+    //InitMesh(Positions, Normals, TexCoords, Tangents, Bitangents, Bones, Indices);
+    InitMesh(Normals, TexCoords, Tangents, Bitangents, Indices);
 
 
     std::unique_lock<std::mutex> lock(upload_mutex_);
@@ -242,7 +245,8 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
 
     for (unsigned v(0); v < num_vertices_; ++v) {
 
-      data[v].pos = scm::math::vec3( Positions[v].x, Positions[v].y, Positions[v].z);
+      //data[v].pos = scm::math::vec3( Positions[v].x, Positions[v].y, Positions[v].z);
+      data[v].pos = scm::math::vec3( positions_[v].x, positions_[v].y, positions_[v].z);
 
       data[v].tex = scm::math::vec2(TexCoords[v].x, TexCoords[v].y);
 
@@ -252,23 +256,9 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
 
       data[v].bitangent = scm::math::vec3(Bitangents[v].x, Bitangents[v].y, Bitangents[v].z);
 
-      data[v].bone_weights = scm::math::vec4f(Bones[v].Weights[0],Bones[v].Weights[1],Bones[v].Weights[2],Bones[v].Weights[3]);
+      data[v].bone_weights = scm::math::vec4f(bones_[v].Weights[0],bones_[v].Weights[1],bones_[v].Weights[2],bones_[v].Weights[3]);
       
-      data[v].bone_ids = scm::math::vec4i(Bones[v].IDs[0],Bones[v].IDs[1],Bones[v].IDs[2],Bones[v].IDs[3]);
-    
-
-      //expand initial bbox with bones' influence
-      auto bone_transformation = animation_director_->get_bone_transforms();
-
-      scm::math::mat4 BoneTransform =  bone_transformation[Bones[v].IDs[0]] * Bones[v].Weights[0];
-         BoneTransform += bone_transformation[Bones[v].IDs[1]] * Bones[v].Weights[1];
-         BoneTransform += bone_transformation[Bones[v].IDs[2]] * Bones[v].Weights[2];
-         BoneTransform += bone_transformation[Bones[v].IDs[3]] * Bones[v].Weights[3];
-
-      auto final_pos  =  BoneTransform * scm::math::vec4(Positions[v].x, Positions[v].y, Positions[v].z, 1.0);
-
-      bounding_box_.expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
-
+      data[v].bone_ids = scm::math::vec4i(bones_[v].IDs[0],bones_[v].IDs[1],bones_[v].IDs[2],bones_[v].IDs[3]);
 
     }
 
@@ -291,7 +281,38 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
         {vertices_[ctx.id]});
 
     
+    update_bounding_box();
+
     ctx.render_context->apply();
+  }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void SkeletalAnimationRessource::update_bounding_box(){
+
+
+  if(positions_.size()>0 && bones_.size()>0){
+    //overide old bbox, now with bones' influence
+    bounding_box_ = math::BoundingBox<math::vec3>();
+
+    for (unsigned v(0); v < num_vertices_; ++v) {
+
+      //expand initial bbox with bones' influence
+      auto bone_transformation = animation_director_->get_bone_transforms();
+
+      scm::math::mat4 BoneTransform =  bone_transformation[bones_[v].IDs[0]] * bones_[v].Weights[0];
+         BoneTransform += bone_transformation[bones_[v].IDs[1]] * bones_[v].Weights[1];
+         BoneTransform += bone_transformation[bones_[v].IDs[2]] * bones_[v].Weights[2];
+         BoneTransform += bone_transformation[bones_[v].IDs[3]] * bones_[v].Weights[3];
+
+      //auto final_pos  =  BoneTransform * scm::math::vec4(Positions[v].x, Positions[v].y, Positions[v].z, 1.0);
+      auto final_pos  =  BoneTransform * scm::math::vec4(positions_[v].x, positions_[v].y, positions_[v].z, 1.0);
+
+      bounding_box_.expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
+    }
+
   }
 
 }
