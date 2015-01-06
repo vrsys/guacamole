@@ -359,6 +359,7 @@ namespace node {
 
       auto geometry_bbox(geometries_[0]->get_bounding_box());
       for(uint i(1);i<geometries_.size();++i){
+        geometries_[i]->update_bounding_box();
         geometry_bbox.expandBy(geometries_[i]->get_bounding_box());
       }
 
