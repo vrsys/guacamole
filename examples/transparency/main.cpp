@@ -52,13 +52,14 @@ int main(int argc, char** argv) {
     return shader->get_default_material();
   };
 
-  auto mat1(load_mat("data/materials/SimpleMaterial.gmd"));
-  mat1->set_uniform("diffuse_map", std::string("data/objects/gua.png"));
+  //auto mat1(load_mat("data/materials/SimpleMaterial.gmd"));
+  //mat1->set_uniform("diffuse_map", std::string("data/objects/gua.png"));
 
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
+  auto transform3 = graph.add_node<gua::node::TransformNode>("/", "transform3");
   /*auto teapot(loader.create_geometry_from_file("teapot","/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", mat_glass,
                                                gua::TriMeshLoader::NORMALIZE_POSITION 
                                                | gua::TriMeshLoader::NORMALIZE_SCALE 
@@ -100,6 +101,20 @@ int main(int argc, char** argv) {
   mat_platform->set_uniform("RoughnessMap", directory + "pool_tiles/Tileable_Blue_Mosaic_Pool_Tiles_Texture_ROUGHNESS.jpg");
   auto platform(loader.create_geometry_from_file("platform", "data/objects/platform.obj", mat_platform, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", platform);
+
+  // Load plane
+  auto mat_gr(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+  mat_gr->set_uniform("ColorMap", directory + "gradient.png");
+  auto gr(loader.create_geometry_from_file("platform", "data/objects/plane.obj", mat_gr, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  transform3->scale(0.3f);
+  transform3->translate(-1.2f, 0.1f, 0.f);
+  graph.add_node("/transform3", gr);
+
+  auto gr2(loader.create_geometry_from_file("platform", "data/objects/plane.obj", mat_gr, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  gr2->rotate(90.f, 0.f, 1.f, 0.f);
+  gr2->translate(0.f, 0.3f, 0.f);
+  graph.add_node("/transform3", gr2);
+
 
   transform2->scale(0.3f);
   transform2->translate(0.f, 0.1f, 0.f);
