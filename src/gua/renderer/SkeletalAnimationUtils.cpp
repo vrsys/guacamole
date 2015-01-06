@@ -99,18 +99,9 @@ Pose SkeletalAnimationUtils::calculate_pose(float animationTime, std::shared_ptr
   float currFrame = animationTime * float(pAnim->numFrames);
    
   for(BoneAnimation const& boneAnim : pAnim->boneAnims) {
-    Transformation boneTransform{};
+    Transformation boneTransform = boneAnim.calculate_transform(currFrame);
 
-    // Interpolate scaling and generate scaling transformation matrix
-    boneTransform.scaling = interpolate_scaling(currFrame, boneAnim);
-
-    // Interpolate rotation and generate rotation transformation matrix
-    boneTransform.rotation = interpolate_rotation(currFrame, boneAnim); 
-
-    // Interpolate translation and generate translation transformation matrix
-    boneTransform.translation = interpolate_position(currFrame, boneAnim);
-
-    pose.set_transform(boneAnim.name, boneTransform);
+    pose.set_transform(boneAnim.get_name(), boneTransform);
   }  
 
   return pose;
@@ -120,7 +111,7 @@ BoneAnimation const* SkeletalAnimationUtils::find_node_anim(std::shared_ptr<Skel
   for (uint i = 0 ; i < pAnimation->numBoneAnims ; i++) {
     BoneAnimation const& nodeAnim = pAnimation->boneAnims[i];
     
-    if (nodeAnim.name == nodeName) {
+    if (nodeAnim.get_name() == nodeName) {
         return &nodeAnim;
     }
   }
@@ -140,78 +131,6 @@ std::shared_ptr<Node> SkeletalAnimationUtils::find_node(std::string const& name,
   return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
-scm::math::vec3 SkeletalAnimationUtils::interpolate_position(float animationTime, BoneAnimation const& nodeAnim) {
-  if (nodeAnim.numTranslationKeys == 1) {
-      return nodeAnim.translationKeys[0].value;
-  }
-          
-  uint PositionIndex = nodeAnim.find_key(animationTime, nodeAnim.translationKeys);
-  uint NextPositionIndex = (PositionIndex + 1);
-
-  if(NextPositionIndex > nodeAnim.numTranslationKeys) {
-    Logger::LOG_ERROR << "frame out of range" << std::endl;
-    assert(false);
-  }
-
-  float DeltaTime = (float)(nodeAnim.translationKeys[NextPositionIndex].time - nodeAnim.translationKeys[PositionIndex].time);
-  float Factor = (animationTime - (float)nodeAnim.translationKeys[PositionIndex].time) / DeltaTime;
-  //assert(Factor >= 0.0f && Factor <= 1.0f);
-  scm::math::vec3 const& Start = nodeAnim.translationKeys[PositionIndex].value;
-  scm::math::vec3 const& End = nodeAnim.translationKeys[NextPositionIndex].value;
-  scm::math::vec3 Delta = End - Start;
-
-  return Start + Factor * Delta;
-}
-
-scm::math::quatf SkeletalAnimationUtils::interpolate_rotation(float animationTime, BoneAnimation const& nodeAnim) {
-  // we need at least two values to interpolate...
-  if (nodeAnim.numRotationKeys == 1) {
-      return nodeAnim.rotationKeys[0].value;
-
-  }
-  
-  uint RotationIndex = nodeAnim.find_key(animationTime, nodeAnim.rotationKeys);
-  uint NextRotationIndex = (RotationIndex + 1);
-
-  if(NextRotationIndex > nodeAnim.numRotationKeys) {
-    Logger::LOG_ERROR << "frame out of range" << std::endl;
-    assert(false);
-  }
-
-  float DeltaTime = (float)(nodeAnim.rotationKeys[NextRotationIndex].time - nodeAnim.rotationKeys[RotationIndex].time);
-  float Factor = (animationTime - (float)nodeAnim.rotationKeys[RotationIndex].time) / DeltaTime;
-  //assert(Factor >= 0.0f && Factor <= 1.0f);
-  scm::math::quatf const& StartRotationQ = nodeAnim.rotationKeys[RotationIndex].value;
-  scm::math::quatf const& EndRotationQ   = nodeAnim.rotationKeys[NextRotationIndex].value;  
-  scm::math::quatf temp;  
-  temp = slerp(StartRotationQ, EndRotationQ, Factor);
-
-  return normalize(temp);
-}
-
-scm::math::vec3 SkeletalAnimationUtils::interpolate_scaling(float animationTime, BoneAnimation const& nodeAnim) {
-  if (nodeAnim.numScalingKeys == 1) {
-     return nodeAnim.scalingKeys[0].value;
-  }
-
-  uint ScalingIndex = nodeAnim.find_key(animationTime, nodeAnim.scalingKeys);
-  uint NextScalingIndex = (ScalingIndex + 1);
-
-  if(NextScalingIndex > nodeAnim.numScalingKeys) {
-    Logger::LOG_ERROR << "frame out of range" << std::endl;
-    assert(false);
-  }
-
-  float DeltaTime = (float)(nodeAnim.scalingKeys[NextScalingIndex].time - nodeAnim.scalingKeys[ScalingIndex].time);
-  float Factor = (animationTime - (float)nodeAnim.scalingKeys[ScalingIndex].time) / DeltaTime;
-  //assert(Factor >= 0.0f && Factor <= 1.0f);
-  scm::math::vec3 const& Start = nodeAnim.scalingKeys[ScalingIndex].value;
-  scm::math::vec3 const& End   = nodeAnim.scalingKeys[NextScalingIndex].value;
-  scm::math::vec3 Delta = End - Start;
-
-  return Start + Factor * Delta;
-}
-
 float Blend::cos(float x) {
   x *= scm::math::pi_f;
   return 0.5f * (1 - scm::math::cos(x));

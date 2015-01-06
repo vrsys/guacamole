@@ -60,85 +60,107 @@ scm::math::quatf ai_to_gua(aiQuaternion const& q) {
 
 namespace gua {
 
-struct Vec3Key {
-
-  Vec3Key(aiVectorKey key):
-    time{key.mTime},
-    value{ai_to_gua(key.mValue)}
+struct Transformation {
+  Transformation():
+    scaling{1.0f},
+    rotation{scm::math::quatf::identity()},
+    translation{0.0f}
   {}
 
-  ~Vec3Key(){};
+  Transformation(scm::math::vec3 const& scale, scm::math::quatf const& rotate, scm::math::vec3 const& translate):
+    scaling{scale},
+    rotation{rotate},
+    translation{translate}
+  {}
 
-  double time;
-  scm::math::vec3 value;
+  scm::math::mat4f to_matrix() const {
+    return scm::math::make_translation(translation) * rotation.to_matrix() * scm::math::make_scale(scaling);
+  }
+
+  Transformation blend(Transformation const& t, float const factor) const {
+    return Transformation{scaling * (1 - factor) + t.scaling * factor, slerp(rotation, t.rotation, factor), translation * (1 - factor) + t.translation * factor};
+  }
+
+  Transformation operator+(Transformation const& t) const {
+    return Transformation{scaling + t.scaling, scm::math::normalize(t.rotation * rotation), translation + t.translation};
+  }
+  Transformation& operator+=(Transformation const& t) {
+    *this = *this + t;
+    return *this;
+  }
+
+  Transformation operator*(float const factor) const {
+    return Transformation{scaling * factor, slerp(scm::math::quatf::identity(), rotation, factor), translation * factor};
+  }
+  Transformation& operator*=(float const f) {
+    *this = *this * f;
+    return *this;
+  }
+
+  ~Transformation(){};
+
+  scm::math::vec3 scaling;
+  scm::math::quatf rotation;
+  scm::math::vec3 translation;
 };
 
-struct QuatKey {
+template<class T>
+struct Key {
 
-  QuatKey(aiQuatKey key):
-    time{key.mTime},
-    value{ai_to_gua(key.mValue)}
+  Key(double time, T const& value):
+    time{time},
+    value{value}
   {}
 
-  QuatKey(double tm, scm::math::quatf const& quat):
-    time{tm},
-    value{quat}
-  {}
-
-  ~QuatKey(){};
-
-  // QuatKey operator*(float f) const {
-  //   return QuatKey{time, scm::math::quatf{value.w * f, value.i * f, value.j * f, value.k * f}};
-  // }
-
-  // QuatKey& operator*=(float f) {
-  //   value =  scm::math::quatf{value.w * f, value.i * f, value.j * f, value.k * f};
-  //   return *this;
-  // }
-
-  // QuatKey operator*(QuatKey const& key) {
-  //   return QuatKey{value * key.value;
-  // }
-
-  // QuatKey& operator *=(QuatKey const& key)
+  ~Key(){};
 
   double time;
-  scm::math::quatf value;
+  T value;
 };
 
-struct BoneAnimation {
-
-
+class BoneAnimation {
+ public:
   BoneAnimation():
     name{"default"},
-    numScalingKeys{0},
-    numRotationKeys{0},
-    numTranslationKeys{0},
     scalingKeys{},
     rotationKeys{},
     translationKeys{}
   {}
+
+  ~BoneAnimation(){};
 
   BoneAnimation(aiNodeAnim* anim):
     name{anim->mNodeName.C_Str()}
    {
 
     for(unsigned i = 0; i < anim->mNumScalingKeys; ++i) {
-      scalingKeys.push_back(Vec3Key{anim->mScalingKeys[i]});
+      scalingKeys.push_back(Key<scm::math::vec3>{anim->mScalingKeys[i].mTime, ai_to_gua(anim->mScalingKeys[i].mValue)});
     }
     for(unsigned i = 0; i < anim->mNumRotationKeys; ++i) {
-      rotationKeys.push_back(QuatKey{anim->mRotationKeys[i]});
+      rotationKeys.push_back(Key<scm::math::quatf>{anim->mRotationKeys[i].mTime, ai_to_gua(anim->mRotationKeys[i].mValue)});
     }
     for(unsigned i = 0; i < anim->mNumPositionKeys; ++i) {
-      translationKeys.push_back(Vec3Key{anim->mPositionKeys[i]});
+      translationKeys.push_back(Key<scm::math::vec3>{anim->mPositionKeys[i].mTime, ai_to_gua(anim->mPositionKeys[i].mValue)});
     }
-
-    numScalingKeys = scalingKeys.size();
-    numRotationKeys = rotationKeys.size();
-    numTranslationKeys = translationKeys.size();
   }
 
-  ~BoneAnimation(){};
+  Transformation calculate_transform(float time) const {
+    return Transformation{calculate_value(time, scalingKeys), calculate_value(time, rotationKeys), calculate_value(time, translationKeys)};
+  }
+
+  std::string const& get_name() const {
+    return name;
+  }
+
+ private:
+
+  scm::math::vec3 interpolate(scm::math::vec3 val1, scm::math::vec3 val2, float factor) const {
+    return val1 * (1 - factor) + val2 * factor;
+  }
+
+  scm::math::quatf interpolate(scm::math::quatf val1, scm::math::quatf val2, float factor) const {
+    return normalize(slerp(val1, val2, factor));
+  }
 
   template<class T> 
   uint find_key(float animationTime, std::vector<T> keys) const {    
@@ -147,9 +169,9 @@ struct BoneAnimation {
       assert(false);
     } 
 
-    for (uint i = 0 ; i < keys.size() - 1 ; i++) {
-      if (animationTime < (float)keys[i + 1].time) {
-          return i;
+    for(uint i = 0 ; i < keys.size() - 1 ; i++) {
+      if(animationTime < (float)keys[i + 1].time) {
+        return i;
       }
     }
 
@@ -159,14 +181,34 @@ struct BoneAnimation {
     return 0;
   }
 
-  std::string name;
-  unsigned numScalingKeys;
-  unsigned numRotationKeys;
-  unsigned numTranslationKeys;
+  template<class T> 
+  T calculate_value(float time, std::vector<Key<T>> keys) const {
+    if(keys.size() == 1) {
+       return keys[0].value;
+    }
 
-  std::vector<Vec3Key> scalingKeys;
-  std::vector<QuatKey> rotationKeys;
-  std::vector<Vec3Key> translationKeys;
+    uint lastIndex = find_key(time, keys);
+    uint nextIndex = (lastIndex + 1);
+
+    if(nextIndex > keys.size()) {
+      Logger::LOG_ERROR << "frame out of range" << std::endl;
+      assert(false);
+    }
+
+    float deltaTime = (float)(keys[nextIndex].time - keys[lastIndex].time);
+    float factor = (time - (float)keys[lastIndex].time) / deltaTime;
+    //assert(factor >= 0.0f && factor <= 1.0f);
+    T const& key1 = keys[lastIndex].value;
+    T const& key2 = keys[nextIndex].value;
+
+    return interpolate(key1, key2, factor);
+  }
+
+  std::string name;
+
+  std::vector<Key<scm::math::vec3>> scalingKeys;
+  std::vector<Key<scm::math::quatf>> rotationKeys;
+  std::vector<Key<scm::math::vec3>> translationKeys;
 };
 
 struct SkeletalAnimation {
@@ -230,49 +272,6 @@ struct Node {
   int index;
 };
 
-struct Transformation {
-  Transformation():
-    scaling{1.0f},
-    rotation{scm::math::quatf::identity()},
-    translation{0.0f}
-  {}
-
-  Transformation(scm::math::vec3 const& scale, scm::math::quatf const& rotate, scm::math::vec3 const& translate):
-    scaling{scale},
-    rotation{rotate},
-    translation{translate}
-  {}
-
-  scm::math::mat4f to_matrix() const {
-    return scm::math::make_translation(translation) * rotation.to_matrix() * scm::math::make_scale(scaling);
-  }
-
-  Transformation blend(Transformation const& t, float const factor) const {
-    return Transformation{scaling * (1 - factor) + t.scaling * factor, slerp(rotation, t.rotation, factor), translation * (1 - factor) + t.translation * factor};
-  }
-
-  Transformation operator+(Transformation const& t) const {
-    return Transformation{scaling + t.scaling, scm::math::normalize(t.rotation * rotation), translation + t.translation};
-  }
-  Transformation& operator+=(Transformation const& t) {
-    *this = *this + t;
-    return *this;
-  }
-
-  Transformation operator*(float const factor) const {
-    return Transformation{scaling * factor, slerp(scm::math::quatf::identity(), rotation, factor), translation * factor};
-  }
-  Transformation& operator*=(float const f) {
-    *this = *this * f;
-    return *this;
-  }
-
-  ~Transformation(){};
-
-  scm::math::vec3 scaling;
-  scm::math::quatf rotation;
-  scm::math::vec3 translation;
-};
 
 class Pose {
  public:
@@ -401,10 +400,6 @@ class SkeletalAnimationUtils {
 
  private:
 
-  static scm::math::vec3 interpolate_scaling(float AnimationTime, BoneAnimation const& nodeAnim);
-  static scm::math::quatf interpolate_rotation(float AnimationTime, BoneAnimation const& nodeAnim);
-  static scm::math::vec3 interpolate_position(float AnimationTime, BoneAnimation const& nodeAnim);    
-  
   static BoneAnimation const* find_node_anim(std::shared_ptr<SkeletalAnimation> const& pAnimation, std::string const& nodeName);  
 
   inline SkeletalAnimationUtils(){};
