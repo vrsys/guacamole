@@ -88,6 +88,7 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiMesh const* mesh,std::s
   bounding_box_ = math::BoundingBox<math::vec3>();
 
 
+  // without bone influence
   for (unsigned v(0); v < mesh->mNumVertices; ++v) {
     bounding_box_.expandBy(scm::math::vec3(
         mesh->mVertices[v].x, mesh->mVertices[v].y, mesh->mVertices[v].z));
@@ -193,6 +194,8 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
 
   if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
 
+    //overide old bbox, now with bones' influence
+    bounding_box_ = math::BoundingBox<math::vec3>();
 
     std::vector<scm::math::vec3> Positions;
     std::vector<scm::math::vec3> Normals;
@@ -252,6 +255,21 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
       data[v].bone_weights = scm::math::vec4f(Bones[v].Weights[0],Bones[v].Weights[1],Bones[v].Weights[2],Bones[v].Weights[3]);
       
       data[v].bone_ids = scm::math::vec4i(Bones[v].IDs[0],Bones[v].IDs[1],Bones[v].IDs[2],Bones[v].IDs[3]);
+    
+
+      //expand initial bbox with bones' influence
+      auto bone_transformation = animation_director_->get_bone_transforms();
+
+      scm::math::mat4 BoneTransform =  bone_transformation[Bones[v].IDs[0]] * Bones[v].Weights[0];
+         BoneTransform += bone_transformation[Bones[v].IDs[1]] * Bones[v].Weights[1];
+         BoneTransform += bone_transformation[Bones[v].IDs[2]] * Bones[v].Weights[2];
+         BoneTransform += bone_transformation[Bones[v].IDs[3]] * Bones[v].Weights[3];
+
+      auto final_pos  =  BoneTransform * scm::math::vec4(Positions[v].x, Positions[v].y, Positions[v].z, 1.0);
+
+      bounding_box_.expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
+
+
     }
 
     ctx.render_context->unmap_buffer(vertices_[ctx.id]);
