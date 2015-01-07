@@ -135,10 +135,8 @@ namespace gua {
 
 
   ///////////////////////////////////////////////////////////////////////////
-  std::string ProgramFactory::read_shader_from_file(std::string const& path) const
+  std::string ProgramFactory::read_from_file(std::string const& path) const
   {
-    
-
     try {
       std::string full_path(path);
       std::ifstream ifstr(full_path.c_str(), std::ios::in);
@@ -159,7 +157,7 @@ namespace gua {
         if (ifstr.good()) {
           auto source = std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
 
-          Logger::LOG_DEBUG << "Loading shader file : " << path << " ... succeed. " << std::endl;
+          Logger::LOG_DEBUG << "Loading file : " << path << " ... succeed. " << std::endl;
 
           resolve_shader_includes(source);
           return source;
@@ -169,7 +167,7 @@ namespace gua {
       throw std::runtime_error("File not found.");
     }
     catch ( std::exception& e) {
-      Logger::LOG_ERROR << "Trying to load shader file : " << path << " ... failed. " << e.what() << std::endl;
+      Logger::LOG_ERROR << "Trying to load file : " << path << " ... failed. " << e.what() << std::endl;
       return "";
     }
   }
@@ -192,7 +190,7 @@ namespace gua {
 
         std::string file(shader_source.substr(start, end - start));
 
-        std::string include = read_shader_from_file(file);
+        std::string include = read_from_file(file);
         shader_source.replace(search_pos, end - search_pos + 2, include);
 
         // advance search pos and reset include pattern

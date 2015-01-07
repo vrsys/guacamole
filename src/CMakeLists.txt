@@ -202,7 +202,9 @@ IF (GUACAMOLE_ENABLE_PHYSICS)
 ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 
 # set dependencies
-ADD_DEPENDENCIES(guacamole guarc CompileResources)
+IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
+  ADD_DEPENDENCIES(guacamole guarc CompileResources)
+ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 ###############################################################################
 # install 
@@ -241,4 +243,5 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../resources/ DESTINATION resource
         PATTERN "*.geom"
         PATTERN "*.glsl" 
         PATTERN "*.gmd" 
-        PATTERN "*.gsd")
+        PATTERN "*.obj"
+        )

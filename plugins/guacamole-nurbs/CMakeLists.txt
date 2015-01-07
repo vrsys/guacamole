@@ -109,4 +109,6 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION resources
         PATTERN "*.geom"
         PATTERN "*.tctrl"
         PATTERN "*.teval"
+        PATTERN "*.obj"
+        PATTERN "*.gmd"
         )

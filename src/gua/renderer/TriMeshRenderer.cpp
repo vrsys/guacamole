@@ -42,8 +42,8 @@ namespace gua {
       programs_()
   {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-    program_description_[scm::gl::shader_stage::STAGE_VERTEX_SHADER]   = program_factory_.read_shader_from_file("resources/shaders/tri_mesh_shader.vert");
-    program_description_[scm::gl::shader_stage::STAGE_FRAGMENT_SHADER] = program_factory_.read_shader_from_file("resources/shaders/tri_mesh_shader.frag");
+    program_description_[scm::gl::shader_stage::STAGE_VERTEX_SHADER]   = program_factory_.read_from_file("resources/shaders/tri_mesh_shader.vert");
+    program_description_[scm::gl::shader_stage::STAGE_FRAGMENT_SHADER] = program_factory_.read_from_file("resources/shaders/tri_mesh_shader.frag");
 #else
     program_description_[scm::gl::shader_stage::STAGE_VERTEX_SHADER] = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
     program_description_[scm::gl::shader_stage::STAGE_FRAGMENT_SHADER] = Resources::lookup_shader("shaders/tri_mesh_shader.frag");

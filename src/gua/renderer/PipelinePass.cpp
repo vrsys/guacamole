@@ -47,9 +47,9 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
     if (!d.geometry_shader_.empty()) {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
       ProgramFactory factory;
-      shader_->create_from_sources(factory.read_shader_from_file(d.vertex_shader_), 
-                                   factory.read_shader_from_file(d.geometry_shader_),  
-                                   factory.read_shader_from_file(d.fragment_shader_));
+      shader_->create_from_sources(factory.read_from_file(d.vertex_shader_), 
+                                   factory.read_from_file(d.geometry_shader_),  
+                                   factory.read_from_file(d.fragment_shader_));
       //shader_->save_to_file("compiled_shaders", "shader");
 #else
       shader_->create_from_sources(
@@ -60,8 +60,8 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
     } else {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
       ProgramFactory factory;
-      shader_->create_from_sources(factory.read_shader_from_file(d.vertex_shader_),
-                                   factory.read_shader_from_file(d.fragment_shader_));
+      shader_->create_from_sources(factory.read_from_file(d.vertex_shader_),
+                                   factory.read_from_file(d.fragment_shader_));
       //shader_->save_to_file("compiled_shaders", "shader");
 #else
       shader_->create_from_sources(
