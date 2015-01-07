@@ -23,8 +23,10 @@
 #include <gua/renderer/WindowBase.hpp>
 
 // guacamole headers
+#include <gua/config.hpp>
 #include <gua/platform.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/ProgramFactory.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
@@ -82,9 +84,16 @@ WindowBase::WindowBase(Configuration const& configuration)
       config.get_warp_matrix_green_left() == "" ||
       config.get_warp_matrix_blue_left() == "") {
 
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    ProgramFactory factory;
+    fullscreen_shader_.create_from_sources(
+      factory.read_from_file("resources/shaders/display_shader.vert"),
+      factory.read_from_file("resources/shaders/display_shader.frag"));
+#else 
     fullscreen_shader_.create_from_sources(
       Resources::lookup_shader(Resources::shaders_display_shader_vert),
       Resources::lookup_shader(Resources::shaders_display_shader_frag));
+#endif
   } else {
     warpRR_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_red_right());
 
@@ -98,10 +107,19 @@ WindowBase::WindowBase(Configuration const& configuration)
 
     warpBL_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_blue_left());
 
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    ProgramFactory factory;
+    fullscreen_shader_.create_from_sources(
+      factory.read_from_file("resources/shaders/display_shader.vert"),
+      factory.read_from_file("resources/shaders/display_shader_warped.frag"));
+#else 
     fullscreen_shader_.create_from_sources(
       Resources::lookup_shader(Resources::shaders_display_shader_vert),
       Resources::lookup_shader(Resources::shaders_display_shader_warped_frag)
-    );
+      );
+#endif
+
+    
   }
 }
 

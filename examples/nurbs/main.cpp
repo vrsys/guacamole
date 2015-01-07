@@ -154,21 +154,20 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_frustum_culling(false);
 
-  gua::PipelineDescription pipe;
-  pipe.add_pass<gua::TriMeshPassDescription>();
-  pipe.add_pass<gua::NURBSPassDescription>();
-  pipe.add_pass<gua::TexturedQuadPassDescription>();
-  //pipe.add_pass<gua::SSAOPassDescription>();
-  pipe.add_pass<gua::EmissivePassDescription>();
-  //pipe.add_pass<gua::LightingPassDescription>();
-  pipe.add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  pipe.add_pass<gua::ToneMappingPassDescription>();
-  pipe.add_pass<gua::BBoxPassDescription>();
-  pipe.add_pass<gua::BackgroundPassDescription>();
-  pipe.add_pass<gua::TexturedScreenSpaceQuadPassDescription>();
+  auto pipe = std::make_shared<gua::PipelineDescription>();
+  pipe->add_pass<gua::TriMeshPassDescription>();
+  pipe->add_pass<gua::NURBSPassDescription>();
+  pipe->add_pass<gua::TexturedQuadPassDescription>();
+  //pipe->add_pass<gua::SSAOPassDescription>();
+  pipe->add_pass<gua::EmissivePassDescription>();
+  //pipe->add_pass<gua::LightingPassDescription>();
+  pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
+  pipe->add_pass<gua::ToneMappingPassDescription>();
+  pipe->add_pass<gua::BBoxPassDescription>();
+  pipe->add_pass<gua::BackgroundPassDescription>();
+  pipe->add_pass<gua::TexturedScreenSpaceQuadPassDescription>();
   
-
-  camera->config.set_pipeline_description(pipe);
+  camera->set_pipeline_description(pipe);
 
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
@@ -195,7 +194,7 @@ int main(int argc, char** argv) {
                                   std::placeholders::_3));
 
   window->on_key_press.connect(std::bind(key_press,
-                               std::ref(camera->config.pipeline_description()),
+                               std::ref(*(camera->get_pipeline_description())),
                                std::ref(graph),
                                std::placeholders::_1, 
                                std::placeholders::_2,

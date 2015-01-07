@@ -93,16 +93,33 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
   if (desc.recompile_shaders_) {
     if (!desc.vertex_shader_.empty() && !desc.fragment_shader_.empty()) {
       if (!desc.geometry_shader_.empty()) {
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+        ProgramFactory factory;
+        shader_->create_from_sources(
+          desc.vertex_shader_is_file_name_ ? factory.read_from_file(desc.vertex_shader_) : desc.vertex_shader_,
+          desc.geometry_shader_is_file_name_ ? factory.read_from_file(desc.geometry_shader_) : desc.geometry_shader_,
+          desc.fragment_shader_is_file_name_ ? factory.read_from_file(desc.fragment_shader_) : desc.fragment_shader_
+          );
+#else
         shader_->create_from_sources(
           desc.vertex_shader_is_file_name_ ? Resources::lookup_shader(desc.vertex_shader_) : desc.vertex_shader_,
           desc.geometry_shader_is_file_name_ ? Resources::lookup_shader(desc.geometry_shader_) : desc.geometry_shader_,
           desc.fragment_shader_is_file_name_ ? Resources::lookup_shader(desc.fragment_shader_) : desc.fragment_shader_
         );
+#endif
       } else {
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+        ProgramFactory factory;
+        shader_->create_from_sources(
+          desc.vertex_shader_is_file_name_ ? factory.read_from_file(desc.vertex_shader_) : desc.vertex_shader_,
+          desc.fragment_shader_is_file_name_ ? factory.read_from_file(desc.fragment_shader_) : desc.fragment_shader_
+          );
+#else
         shader_->create_from_sources(
           desc.vertex_shader_is_file_name_ ? Resources::lookup_shader(desc.vertex_shader_) : desc.vertex_shader_,
           desc.fragment_shader_is_file_name_ ? Resources::lookup_shader(desc.fragment_shader_) : desc.fragment_shader_
-        );
+          );
+#endif
       }
 
       shader_->upload_to(ctx);
