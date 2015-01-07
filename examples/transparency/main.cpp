@@ -31,12 +31,13 @@ int main(int argc, char** argv) {
   auto resolution = gua::math::vec2ui(1920, 1080);
 
   // navigation
-  scm::gl::trackball_manipulator trackball_manip_;
-  trackball_manip_.dolly(0.2f);
-  float dolly_sens_ = 1.5f;
+  scm::gl::trackball_manipulator trackball;
+  //trackball.transform_matrix(scm::math::make_translation(1.2f, -0.1f, 1.4f ));
+  trackball.dolly(0.2f);
+  float dolly_sens = 1.5f;
   gua::math::vec2 trackball_init_pos(0.f);
   gua::math::vec2 last_mouse_pos(0.f);
-  int button_state_ = -1;
+  int button_state = -1;
 
   // initialize guacamole
   gua::init(argc, argv);
@@ -51,9 +52,6 @@ int main(int argc, char** argv) {
     gua::MaterialShaderDatabase::instance()->add(shader);
     return shader->get_default_material();
   };
-
-  //auto mat1(load_mat("data/materials/SimpleMaterial.gmd"));
-  //mat1->set_uniform("diffuse_map", std::string("data/objects/gua.png"));
 
   gua::TriMeshLoader loader;
 
@@ -103,14 +101,15 @@ int main(int argc, char** argv) {
   graph.add_node("/transform", platform);
 
   // Load plane
-  auto mat_gr(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-  mat_gr->set_uniform("ColorMap", directory + "gradient.png");
-  auto gr(loader.create_geometry_from_file("platform", "data/objects/plane.obj", mat_gr, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto mat_simple(load_mat("data/materials/SimpleMaterial.gmd"));
+  mat_simple->set_uniform("diffuse_map", directory + "gradient2.png");
+  auto gr(loader.create_geometry_from_file("platform", "data/objects/plane.obj", mat_simple, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   transform3->scale(0.3f);
+  transform3->rotate(90.f, 1.f, 0.f, 0.f);
   transform3->translate(-1.2f, 0.1f, 0.f);
   graph.add_node("/transform3", gr);
 
-  auto gr2(loader.create_geometry_from_file("platform", "data/objects/plane.obj", mat_gr, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto gr2(loader.create_geometry_from_file("platform", "data/objects/plane.obj", mat_simple, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   gr2->rotate(90.f, 0.f, 1.f, 0.f);
   gr2->translate(0.f, 0.3f, 0.f);
   graph.add_node("/transform3", gr2);
@@ -130,17 +129,17 @@ int main(int argc, char** argv) {
 
   /*auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   //light->data.set_enable_shadows(true);
-  light->scale(5.f);
+  light->scale(3.f);
   light->rotate(-20, 0.f, 1.f, 0.f);
   light->translate(-2.f, 0.f,  3.f);
-  light->data.set_color(gua::utils::Color3f(1.0f, 1.0f, 1.0f)); */
+  light->data.set_color(gua::utils::Color3f(1.0f, 0.6f, 1.0f));*/
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->scale(14.f);
   light2->translate(-2.f, 3.f, 5.f);
 
   auto light3 = graph.add_node<gua::node::PointLightNode>("/", "light3");
-  light3->scale(13.f);
+  light3->scale(12.f);
   //light3->data.set_color(gua::utils::Color3f(0.6f, 1.f, 0.6f));
   light3->translate(2.f, 2.f, -5.f);
 
@@ -151,7 +150,7 @@ int main(int argc, char** argv) {
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  screen->translate(0, 0, 1.0);
+  //screen->translate(0, 0, 1.0);
 
   auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
   portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
@@ -168,6 +167,7 @@ int main(int argc, char** argv) {
   portal_camera->config.set_enable_stereo(false);
 
   gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
+  gua::TextureDatabase::instance()->load("data/checkerboard.png");
 
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass<gua::TriMeshPassDescription>();
@@ -187,7 +187,8 @@ int main(int argc, char** argv) {
   camera->set_pre_render_cameras({portal_camera});
   camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>()
     .mode(gua::ResolvePassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+    //.texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+    .texture("data/checkerboard.png");
 
   float alpha = 0.f;
   float alpha_d = 0.001f;
@@ -209,7 +210,7 @@ int main(int argc, char** argv) {
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
     float nx = 2.f * float(pos.x - (resolution.x/2))/float(resolution.x);
     float ny = -2.f * float(resolution.y - pos.y - (resolution.y/2))/float(resolution.y);
-    if (button_state_ != -1) {
+    if (button_state != -1) {
       if (drag_mode) {
         auto ssize = screen->data.get_size();
         gua::math::vec3 sm_translation = gua::math::vec3(ssize.x *(nx - last_mouse_pos.x), ssize.y * (ny - last_mouse_pos.y), 0.f);
@@ -217,15 +218,15 @@ int main(int argc, char** argv) {
         transform2->set_world_transform( screen->get_world_transform() * scm::math::make_translation(sm_translation) * object_transform_s);
       } 
       else {
-        if (button_state_ == 0) { // left
-          trackball_manip_.rotation(trackball_init_pos.x, trackball_init_pos.y, nx, ny);
+        if (button_state == 0) { // left
+          trackball.rotation(trackball_init_pos.x, trackball_init_pos.y, nx, ny);
         }
-        if (button_state_ == 1) { // right
-          trackball_manip_.dolly(dolly_sens_*0.5f * (ny - trackball_init_pos.y));
+        if (button_state == 1) { // right
+          trackball.dolly(dolly_sens*0.5f * (ny - trackball_init_pos.y));
         }
-        if (button_state_ == 2) { // middle
-          float f = dolly_sens_ < 1.0f ? 0.02f : 0.3f;
-          trackball_manip_.translation(f*(nx - trackball_init_pos.x), f*(ny - trackball_init_pos.y));
+        if (button_state == 2) { // middle
+          float f = dolly_sens < 1.0f ? 0.02f : 0.3f;
+          trackball.translation(f*(nx - trackball_init_pos.x), f*(ny - trackball_init_pos.y));
         }
         trackball_init_pos.x = nx;
         trackball_init_pos.y = ny;
@@ -239,9 +240,9 @@ int main(int argc, char** argv) {
     if (action == 1) {
       drag_mode = mods == 1;
       trackball_init_pos = last_mouse_pos;
-      button_state_ = mousebutton;
+      button_state = mousebutton;
     } else
-      button_state_ = -1;
+      button_state = -1;
   });
 
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
@@ -279,14 +280,13 @@ int main(int argc, char** argv) {
 
   ticker.on_tick.connect([&]() {
     
-    screen->set_transform(scm::math::inverse(trackball_manip_.transform_matrix()));
+    screen->set_transform(scm::math::inverse(trackball.transform_matrix()));
 
     if (alpha >= 1.f || alpha < 0.f) alpha_d = -alpha_d;
 
-    //mat1->set_uniform("alpha", alpha += alpha_d);
-
     if (ctr++ % 500 == 0)
-    std::cout << camera->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
+      std::cout << camera->get_rendering_fps() << " "
+                << camera->get_application_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {
