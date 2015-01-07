@@ -232,6 +232,21 @@ void gua_calculate_sun_light(vec3 normal, vec3 position) {
   gua_light_radiance = Cl;
 }
 
+float sRGB_to_linear(float c)
+{
+  if(c < 0.04045)
+    return (c < 0.0) ? 0.0: c * (1.0 / 12.92);
+  else
+    return pow((c + 0.055)*(1.0/1.055), 2.4);
+}
+
+vec3 sRGB_to_linear(vec3 sRGB)
+{
+  return vec3( sRGB_to_linear(sRGB.r),
+               sRGB_to_linear(sRGB.g),
+               sRGB_to_linear(sRGB.b));
+}
+
 // convert from sRGB to linear
 vec3 sRGB_to_linear_simple(vec3 sRGB)
 {
