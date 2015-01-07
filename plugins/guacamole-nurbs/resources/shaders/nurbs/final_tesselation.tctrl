@@ -36,13 +36,13 @@ uniform float gua_texel_height;
 ///////////////////////////////////////////////////////////////////////////////                        
 @include "resources/glsl/math/horner_surface.glsl.frag"
 
-@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/to_screen_space.glsl"
-@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/edge_length.glsl"
-@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/control_polygon_length.glsl"
-@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/edge_tess_level.glsl"
-@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/inner_tess_level.glsl"
-@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/is_inside.glsl"
-@include "resources/shaders/uber_shaders/gbuffer/nurbs/detail/frustum_cull.glsl"
+@include "resources/shaders/nurbs/detail/to_screen_space.glsl"
+@include "resources/shaders/nurbs/detail/edge_length.glsl"
+@include "resources/shaders/nurbs/detail/control_polygon_length.glsl"
+@include "resources/shaders/nurbs/detail/edge_tess_level.glsl"
+@include "resources/shaders/nurbs/detail/inner_tess_level.glsl"
+@include "resources/shaders/nurbs/detail/is_inside.glsl"
+@include "resources/shaders/nurbs/detail/frustum_cull.glsl"
            
 
 ///////////////////////////////////////////////////////////////////////////////

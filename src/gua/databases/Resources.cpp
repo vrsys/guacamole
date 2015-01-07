@@ -23,6 +23,7 @@
 #include <gua/databases/Resources.hpp>
 
 // guacamole headers
+#include <gua/config.hpp>
 #include <gua/utils/Logger.hpp>
 
 // external headers
@@ -32,14 +33,17 @@ namespace gua {
 
 namespace Resources {
 
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  namespace {
+    const std::unordered_map<std::string, std::vector<unsigned char> const*> data_;
+  }
+#else
   #include "../src/gua/generated/R.inl"
-
-  //////////////////////////////////////////////////////////////////////////////
-
   namespace {
     const std::unordered_map<std::string, std::vector<unsigned char> const*> data_(R_fill_map());
   }
-
+#endif
+  
   //////////////////////////////////////////////////////////////////////////////
 
   void resolve_includes(std::string& shader_source) {
