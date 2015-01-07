@@ -96,7 +96,7 @@ vec3 sRGB_to_linear_simple(vec3 sRGB)
   return pow(sRGB, vec3(2.2));
 }
 
-vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec4 pbr) {
+vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec3 pbr) {
 
   vec3 N = normal;
   vec3 P = position;
