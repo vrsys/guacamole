@@ -145,7 +145,7 @@ void main() {
   for (int i = 0; i < gua_lights_num; ++i) {
       if ((bitset[i>>5] & (1u << (i%32))) != 0) {
         //gua_out_color += vec3(float(i)/3+0.2,0,0);// / 5.0;
-        gua_out_color += gua_lights[i].color.rgb;
+        gua_out_color += gua_lights[i].color.rgb/2.0;
       }
   }//*/
 }

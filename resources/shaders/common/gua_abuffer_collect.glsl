@@ -8,7 +8,7 @@ void abuf_insert()
 
   // write data
   ABUF_FRAG(ctr, 0) = vec4(gua_color, clamp(gua_alpha, 0.0, 1.0));
-  ABUF_FRAG(ctr, 1) = vec4(gua_emissivity, gua_roughness, gua_metalness, uintBitsToFloat((gua_passthrough_shading)?1:0));
+  ABUF_FRAG(ctr, 1) = vec4(gua_emissivity, gua_roughness, gua_metalness, uintBitsToFloat((gua_flags_passthrough)?1:0));
   ABUF_FRAG(ctr, 2) = vec4(gua_normal*0.5+0.5, 0);
 
   // insert to the linked-list

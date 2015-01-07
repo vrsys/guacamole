@@ -12,7 +12,7 @@ layout(binding=0, r32ui) uniform coherent uimage3D light_bitset;
 void main()
 {
   ivec3 pos = ivec3(gl_FragCoord.xy, light_id >> 5);
-  pos.xy = pos.xy >> tile_power;
+  //pos.xy = pos.xy >> tile_power;
 
   uint bit = 1u << (light_id % 32);
 

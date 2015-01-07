@@ -19,7 +19,7 @@ void LightTable::invalidate(RenderContext const& ctx,
   }
 
   const int max_tex3d_size = ctx.render_device->capabilities()._max_texture_3d_size;
-  const int tile_power = 2;
+  const int tile_power = 2; // TODO: should be passed to shader
 
   float width  = std::ceil(resolution.x / std::pow(2, tile_power));
   float height = std::ceil(resolution.y / std::pow(2, tile_power));
@@ -59,8 +59,7 @@ void LightTable::invalidate(RenderContext const& ctx,
 
   // upload light UBO
   bool needs_update(false);
-  if (/*uniform_block_size_*/ uniform_block_.array_size() < lights_num_) {
-    //uniform_block_size_ = lights_num_;
+  if (uniform_block_.array_size() < lights_num_) {
     uniform_block_ = scm::gl::make_uniform_block_array<LightBlock>(ctx.render_device, 
                                                                    lights_num_);
     Logger::LOG_DEBUG << "Create light UBO for " << lights_num_ << " elements" << std::endl;
