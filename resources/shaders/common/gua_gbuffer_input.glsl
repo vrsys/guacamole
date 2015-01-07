@@ -73,13 +73,13 @@ vec3 gua_get_normal() {
 }
 
 // pbr -------------------------------------------------------------------------
-vec4 gua_get_pbr(vec2 frag_pos) {
-    return texture2D(sampler2D(gua_gbuffer_pbr), frag_pos);
+vec3 gua_get_pbr(vec2 frag_pos) {
+    return texture2D(sampler2D(gua_gbuffer_pbr), frag_pos).rgb;
 }
 
-vec4 gua_get_pbr() {
+vec3 gua_get_pbr() {
     //return gua_get_pbr(gua_get_quad_coords());
-    return texelFetch(sampler2D(gua_gbuffer_pbr), ivec2(gl_FragCoord.xy), 0);
+    return texelFetch(sampler2D(gua_gbuffer_pbr), ivec2(gl_FragCoord.xy), 0).rgb;
 }
 
 // flags -----------------------------------------------------------------------
