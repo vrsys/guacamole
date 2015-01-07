@@ -3,7 +3,9 @@
 ################################################################
 
 PROJECT(GUACAMOLE CXX)
-#ENABLE_LANGUAGE(C)
+
+# neccessary for try_compile_scripts under linux
+ENABLE_LANGUAGE(C)
 
 # version number
 set(GUACAMOLE_MAJOR 0)

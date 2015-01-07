@@ -142,7 +142,11 @@ namespace gua {
       std::ifstream ifstr(full_path.c_str(), std::ios::in);
 
       if (ifstr.good()) {
-        return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
+        Logger::LOG_DEBUG << "Loading shader file : " << path << " ... succeed. " << std::endl;
+
+        auto source = std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
+        resolve_shader_includes(source);
+        return source;
       }
 
       for (auto const& root : _search_paths)

@@ -71,13 +71,16 @@ int main(int argc, char** argv) {
   auto monkey(loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::MAKE_PICKABLE | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", monkey);
 
-  gua::math::vec2 gui_size(1024.f, 1024.f);  
+  gua::math::vec2 gui_size(1024.f, 1024.f);
 
-  auto gui = std::make_shared<gua::GuiResource>("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
+  auto gui = std::make_shared<gua::GuiResource>();
+  gui->init("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
 
   gua::math::vec2 fps_size(170.f, 55.f);
 
-  auto fps = std::make_shared<gua::GuiResource>("fps", "asset://gua/data/html/fps.html", fps_size);
+  auto fps = std::make_shared<gua::GuiResource>();
+  fps->init("fps", "asset://gua/data/html/fps.html", fps_size);
+
   auto fps_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("fps_quad");
   fps_quad->data.texture() = "fps";
   fps_quad->data.size() = fps_size;
@@ -87,7 +90,9 @@ int main(int argc, char** argv) {
 
   gua::math::vec2 address_bar_size(340.f, 55.f);
 
-  auto address_bar = std::make_shared<gua::GuiResource>("address_bar", "asset://gua/data/html/address_bar.html", address_bar_size);
+  auto address_bar = std::make_shared<gua::GuiResource>();
+  address_bar->init("address_bar", "asset://gua/data/html/address_bar.html", address_bar_size);
+
   auto address_bar_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("address_bar_quad");
   address_bar_quad->data.texture() = "address_bar";
   address_bar_quad->data.size() = address_bar_size;

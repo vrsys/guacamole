@@ -25,7 +25,6 @@
 // guacamole headers
 #include <gua/renderer/TriMeshPass.hpp>
 #include <gua/renderer/EmissivePass.hpp>
-#include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
@@ -39,17 +38,16 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelineDescription PipelineDescription::make_default() {
-  PipelineDescription pipe;
-  pipe.add_pass<TriMeshPassDescription>();
-  pipe.add_pass<TexturedQuadPassDescription>();
-  pipe.add_pass<EmissivePassDescription>();
-  // pipe.add_pass<LightingPassDescription>();
-  pipe.add_pass<PhysicallyBasedShadingPassDescription>();
-  pipe.add_pass<BBoxPassDescription>();
-  pipe.add_pass<BackgroundPassDescription>();
-  pipe.add_pass<TexturedScreenSpaceQuadPassDescription>();
-  pipe.add_pass<ToneMappingPassDescription>();
+std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
+  auto pipe(std::make_shared<PipelineDescription>());
+  pipe->add_pass<TriMeshPassDescription>();
+  pipe->add_pass<TexturedQuadPassDescription>();
+  pipe->add_pass<EmissivePassDescription>();
+  pipe->add_pass<PhysicallyBasedShadingPassDescription>();
+  pipe->add_pass<BBoxPassDescription>();
+  pipe->add_pass<BackgroundPassDescription>();
+  pipe->add_pass<TexturedScreenSpaceQuadPassDescription>();
+  pipe->add_pass<ToneMappingPassDescription>();
 
   return pipe;
 }
@@ -79,6 +77,8 @@ std::vector<PipelinePassDescription*> const& PipelineDescription::get_all_passes
 ////////////////////////////////////////////////////////////////////////////////
 
 bool PipelineDescription::operator==(PipelineDescription const& other) const {
+  boost::shared_lock<boost::shared_mutex> lock(mutex_);
+  
   if (passes_.size() != other.passes_.size()) {
     return false;
   }

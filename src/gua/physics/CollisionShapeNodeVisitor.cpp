@@ -91,7 +91,7 @@ void CollisionShapeNodeVisitor::check(RigidBodyNode* rigid_body) {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void CollisionShapeNodeVisitor::visit(CollisionShapeNode* node) {
-
+  
   pop_stack(node);
   math::mat4 curr_matrix(matrix_stack_.top() * node->get_transform());
 

@@ -48,15 +48,19 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GuiResource::GuiResource(std::string const& name, std::string const& url, math::vec2 const& size)
-  : name_(name)
+GuiResource::GuiResource()
+  : name_("")
   , url_("")
   , gui_texture_(nullptr)
   , view_(nullptr)
   , js_window_(nullptr)
   , interactive_(true)
-{
+{}
 
+void GuiResource::init(std::string const& name, std::string const& url,
+                       math::vec2 const& size) {
+
+  name_ = name;
   on_loaded.connect([this]() {
     js_window_ = new Awesomium::JSValue();
     *js_window_ = view_->ExecuteJavascriptWithResult(
