@@ -3,6 +3,7 @@
 
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/LightTable.hpp>
 #include <gua/renderer/ShadowMapBuffer.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
@@ -11,8 +12,8 @@
 #include <gua/node/SpotLightNode.hpp>
 #include <gua/utils/Logger.hpp>
 
-#include <gua/renderer/LightTable.hpp>
 #include <scm/gl_core/render_device/opengl/gl_core.h>
+
 namespace gua {
 
 namespace {

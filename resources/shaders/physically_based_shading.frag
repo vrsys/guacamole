@@ -264,7 +264,7 @@ void main() {
   // gua_light_direction is normalized by compute_light
   vec3 L = gua_light_direction;
 
-  vec4 pbr = gua_get_pbr();
+  vec3 pbr = gua_get_pbr();
 
   float emit      = pbr.r;
   float metalness = pbr.b;
