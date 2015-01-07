@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 
+#include <gua/config.hpp>
 #include <gua/platform.hpp>
 
 namespace gua {
@@ -43,7 +44,10 @@ namespace Resources {
   GUA_DLL void resolve_includes(std::string& shader_source);
 
   // generated header
-  #include <gua/generated/R.inl>
+  #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    #include <gua/generated/R.inl>
+  #endif
+  
 
 }
 }
