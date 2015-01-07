@@ -33,8 +33,8 @@ namespace gua {
 TexturedQuadPassDescription::TexturedQuadPassDescription()
   : PipelinePassDescription() {
 
-  vertex_shader_ = "shaders/common/quad.vert";
-  fragment_shader_ = "shaders/textured_quad.frag";
+  vertex_shader_ = "resources/shaders/common/quad.vert";
+  fragment_shader_ = "resources/shaders/textured_quad.frag";
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
