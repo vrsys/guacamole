@@ -69,7 +69,6 @@ public:
 
 private:
   uniform_array_type  uniform_block_;
-  //size_t              uniform_block_size_ = 0; // workaround. schism does not define uniform_block_array::array_size()
   unsigned            lights_num_ = 0;
 
   std::shared_ptr<Texture3D> light_bitset_;

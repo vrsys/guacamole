@@ -12,18 +12,14 @@
 #include <gua/utils/Logger.hpp>
 
 #include <gua/renderer/LightTable.hpp>
-
+#include <scm/gl_core/render_device/opengl/gl_core.h>
 namespace gua {
 
 namespace {
 
-void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pipe) {
-  auto const& ctx(pipe.get_context());
-  auto gl_program(ctx.render_context->current_program());
-
-  // collect lights
-  std::vector<math::mat4> transforms;
-  LightTable::array_type lights;
+void prepare_light_table(Pipeline& pipe,
+                         std::vector<math::mat4>& transforms,
+                         LightTable::array_type& lights) {
 
   // point lights
   for (auto const& l : pipe.get_scene().nodes[std::type_index(typeid(node::PointLightNode))]) {
@@ -82,6 +78,15 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
     lights.push_back(light_block);
     transforms.push_back(model_mat);
   }
+  pipe.get_light_table().invalidate(pipe.get_context(), pipe.get_camera().config.get_resolution(), lights);
+}
+
+void draw_lights(Pipeline& pipe,
+                 std::vector<math::mat4>& transforms,
+                 LightTable::array_type& lights) {
+
+  auto const& ctx(pipe.get_context());
+  auto gl_program(ctx.render_context->current_program());
 
   // proxy geometries
   auto light_sphere =
@@ -89,7 +94,6 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
   auto light_cone =
       std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_cone_proxy"));
 
-  pipe.get_light_table().invalidate(ctx, pipe.get_camera().config.get_resolution(), lights);
 
   // draw lights
   for (size_t i = 0; i < lights.size(); ++i) {
@@ -104,9 +108,46 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
     else if (lights[i].type == 1)
       light_cone->draw(ctx);
   }
+}
 
 }
 
+void lighting(PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {
+
+  auto const& ctx(pipe.get_context());
+  auto const& glapi = ctx.render_context->opengl_api();
+
+  std::vector<math::mat4> transforms;
+  LightTable::array_type lights;
+
+  prepare_light_table(pipe, transforms, lights);
+
+  ctx.render_context->set_default_frame_buffer();
+
+  //ctx.render_context->set_viewport(scm::gl::viewport(math::vec2ui(0, 0), pipe.get_camera().config.get_resolution()));
+  ctx.render_context->set_viewport(scm::gl::viewport(math::vec2ui(0, 0),
+                                                     math::vec2ui(pipe.get_light_table().get_light_bitset()->width(), 
+                                                                  pipe.get_light_table().get_light_bitset()->height())));
+
+  if (pass.depth_stencil_state_)
+    ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+  if (pass.rasterizer_state_)
+    ctx.render_context->set_rasterizer_state(pass.rasterizer_state_);
+
+  pass.shader_->use(ctx);
+  pipe.bind_light_table(pass.shader_);
+
+  if (glapi.extension_NV_conservative_raster) {
+    glapi.glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);
+  }
+
+  draw_lights(pipe, transforms, lights);
+
+  if (glapi.extension_NV_conservative_raster) {
+    glapi.glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);
+  }
+
+  ctx.render_context->reset_state_objects();
 }
 
 LightVisibilityPassDescription::LightVisibilityPassDescription()
@@ -116,7 +157,7 @@ LightVisibilityPassDescription::LightVisibilityPassDescription()
   needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
   writes_only_color_buffer_ = false; // we don't write out a color
   doClear_ = false;
-  rendermode_ = RenderMode::Callback;
+  rendermode_ = RenderMode::Custom;
 
   depth_stencil_state_ = boost::make_optional(
       scm::gl::depth_stencil_state_desc(false, false));
