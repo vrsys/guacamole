@@ -144,6 +144,11 @@ public:
                                               std::string const& file_name,
                                               std::string const& node_name,
                                               unsigned flags);
+  std::shared_ptr<node::Node> create_animation_node(
+                                              aiScene const* ai_scene,
+                                              std::string const& file_name,
+                                              std::string const& node_name,
+                                              unsigned flags);
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
 

@@ -92,7 +92,6 @@ int main(int argc, char** argv) {
   
 
   graph.add_node("/transform", teapot);
-<<<<<<< HEAD
   graph.add_node("/transform2", teapot2);
   // graph.add_node("/transform2", teapot2);
   teapot->set_draw_bounding_box(true);
@@ -103,21 +102,6 @@ int main(int argc, char** argv) {
   light->scale(10.f);
   light->rotate(-20, 0.f, 1.f, 0.f);
   light->translate(-1.f, 0.f,  3.f);*/
-=======
-  // graph.add_node("/transform2", teapot2);
-  // teapot->set_draw_bounding_box(true);
-
-  // auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
-  // light->data.set_enable_shadows(true);
-  // light->scale(10.f);
-  // light->rotate(-20, 0.f, 1.f, 0.f);
-  // light->translate(-1.f, 0.f,  3.f);
-  auto light = graph.add_node<gua::node::PointLightNode>("/", "light1");
-  light->data.color = gua::utils::Color3f(1.0f, 1.0f, 0.8f);
-  light->scale(40.f);
-  light->data.set_brightness(100.f);
-  light->translate(2.f, 3.f, -5.f);
->>>>>>> replaced string-transform map with pose class
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
