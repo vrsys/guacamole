@@ -19,16 +19,28 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_PLOD_RESSOURCE_HPP
-#define GUA_PLOD_RESSOURCE_HPP
+#ifndef GUA_PLOD_RESOURCE_HPP
+#define GUA_PLOD_RESOURCE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
-#include <gua/renderer/PLODUberShader.hpp>
+#include <gua/renderer/RenderContext.hpp>
+#include <gua/renderer/GeometryResource.hpp>
 #include <gua/utils/KDTree.hpp>
 
 // external headers
+#include <scm/core/math.h>
+
+#include <scm/gl_core/gl_core_fwd.h>
+#include <scm/gl_core/data_types.h>
+#include <scm/gl_core/state_objects.h>
+
+#include <scm/gl_util/primitives/primitives_fwd.h>
+#include <scm/gl_util/primitives/geometry.h>
+
+#include <scm/core/platform/platform.h>
+#include <scm/core/utilities/platform_warning_disable.h>
+
 #include <pbr/types.h>
 #include <pbr/ren/model_database.h>
 #include <pbr/ren/cut_database.h>
@@ -37,50 +49,51 @@
 
 namespace gua {
 
-struct RenderContext;
+  namespace node{
+    class PLODNode;
+  };
 
 /**
  * Stores a point cloud model with LOD.
  *
  * This class simply a wrapper for accessing models of PBR library
  */
-class PLODRessource : public GeometryRessource {
- public:
+class PLODResource : public GeometryResource {
+ 
+  public: // c'tor /d'tor
 
-  explicit PLODRessource(pbr::model_t model_id, bool is_pickable);
+    PLODResource(pbr::model_t model_id, bool is_pickable);
 
-  void draw(RenderContext const& ctx) const {}
+    ~PLODResource();
 
-  /**
-   * Draws the point cloud.
-   *
-   * Draws the point cloud to the given context.
-   *
-   * \param context  The RenderContext to draw onto.
-   */
-  void draw(RenderContext const& ctx,
-            pbr::context_t context_id,
-            pbr::view_t view_id,
-            pbr::model_t model_id,
-            scm::gl::vertex_array_ptr const& vertex_array,
-            std::vector<bool> const& frustum_culling_results) const;
+  public: // methods
+    
+    /*virtual*/ void draw(RenderContext const& context) const;
 
-  void ray_test(Ray const& ray,
-                PickResult::Options options,
-                node::Node* owner,
-                std::set<PickResult>& hits);
 
-  std::shared_ptr<GeometryUberShader> create_ubershader() const override {
-    return std::make_shared<PLODUberShader>();
-  }
+    /**
+     * Draws the point cloud.
+     *
+     * Draws the point cloud to the given context.
+     *
+     * \param context  The RenderContext to draw onto.
+     */
+    void draw(RenderContext const& ctx,
+              pbr::context_t context_id,
+              pbr::view_t view_id,
+              pbr::model_t model_id,
+              scm::gl::vertex_array_ptr const& vertex_array,
+              std::unordered_set<pbr::node_t> const& nodes_out_of_frustum) const;
+
+    void ray_test(Ray const& ray,
+                  int options,
+                  node::Node* owner,
+                  std::set<PickResult>& hits);
 
  private:
 
   bool is_pickable_;
-
-  // TODO: do we need it here?
   pbr::model_t model_id_;
-
 };
 
 }

@@ -2,7 +2,9 @@
 # additional dependencies
 ###############################################################################
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-include(FindPBR)
+
+set(PLOD_ROOT "/home/wabi7015/3d-pitoti/gualod/trunk/pbr" CACHE PATH "Set to your PLOD install path.")
+include(FindPLOD)
 
 ###############################################################################
 # determine source files
@@ -30,7 +32,9 @@ LINK_DIRECTORIES(${LIB_PATHS})
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}
                      ${GUACAMOLE_PLOD_INCLUDE_DIR}
-                     ${PBR_INCLUDE_DIR}
+                     ${PLOD_RENDERING_INCLUDE_DIR}
+                     ${PLOD_COMMON_INCLUDE_DIR}
+
 )
 
 ADD_LIBRARY( guacamole-PLOD SHARED
@@ -44,6 +48,20 @@ ADD_LIBRARY( guacamole-PLOD SHARED
 )
 
 ADD_DEPENDENCIES(guacamole-PLOD guacamole)
+
+LIST(APPEND LIB_PATHS ${PROTOBUF_LIBRARY_DIRS})
+LIST(APPEND INCLUDE_PATHS ${PROTOBUF_INCLUDE_DIRS})
+
+include(find_protobuf)
+#set(PLOD_ROOT "/opt/pbr/gualod/trunk/pbr" CACHE PATH "Set to your PLOD install path.")
+
+#find_package(PLOD REQUIRED)
+
+message(STATUS " protobuf:" )
+message(STATUS "   library: ${PROTOBUF_LIBRARIES}" )
+message(STATUS "   library path: ${PROTOBUF_LIBRARY_DIRS}" )
+message(STATUS "   include: ${PROTOBUF_INCLUDE_DIRS}" )
+message(STATUS "" )
 
 ###############################################################################
 # compiling and linking
@@ -59,12 +77,18 @@ ELSEIF (MSVC)
 ENDIF(UNIX)
 
 IF (MSVC)
-  target_link_libraries( guacamole-PLOD 
-                         guacamole optimized ${PBR_COMMON_LIBRARY} debug ${PBR_COMMON_LIBRARY}
-                         guacamole optimized ${PBR_PREPROCESSING_LIBRARY} debug ${PBR_PREPROCESSING_LIBRARY_DEBUG}
-                         guacamole optimized ${PBR_RENDERING_LIBRARY} debug ${PBR_RENDERING_LIBRARY_DEBUG})
+  target_link_libraries( guacamole-PLOD optimized ${PLOD_RENDERING_LIBRARY_RELEASE})
+  target_link_libraries( guacamole-PLOD optimized ${PLOD_COMMON_LIBRARY_RELEASE})
+  target_link_libraries( guacamole-PLOD debug ${PLOD_RENDERING_LIBRARY_DEBUG})
+  target_link_libraries( guacamole-PLOD debug ${PLOD_COMMON_LIBRARY_DEBUG})
 ELSEIF (UNIX)
-  target_link_libraries( guacamole-PLOD guacamole ${PLOD_LIBRARY})
+  target_link_libraries( guacamole-PLOD 
+                         guacamole 
+                         ${PLOD_RENDERING_LIBRARY}
+                         ${PLOD_COMMON_LIBRARY}
+                         ${PROTOBUF_LIBRARIES}
+                       )
+
 ENDIF (MSVC)
 
 ###############################################################################

@@ -88,12 +88,6 @@ endif (GUACAMOLE_GLFW3)
 
 find_package(Json REQUIRED)
 
-IF (GUACAMOLE_PBR_SUPPORT)
-  include(find_protobuf)
-  set(PBR_ROOT "/opt/pbr/gualod/trunk/pbr" CACHE PATH "Set to your PBR install path.")
-  find_package(PBR REQUIRED)
-endif (GUACAMOLE_PBR_SUPPORT)
-
 set(LIB_PATHS
     ${ASSIMP_LIBRARY_DIRS}
     ${JSON_LIBRARY_DIRS}
@@ -120,14 +114,6 @@ set(INCLUDE_PATHS
     ${ZMQ_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
 )
-
-IF (GUACAMOLE_PBR_SUPPORT)
-  LIST(APPEND LIB_PATHS ${PBR_LIBRARY_DIRS})
-  LIST(APPEND INCLUDE_PATHS ${PBR_INCLUDE_DIRS})
-
-  LIST(APPEND LIB_PATHS ${PROTOBUF_LIBRARY_DIRS})
-  LIST(APPEND INCLUDE_PATHS ${PROTOBUF_INCLUDE_DIRS})
-ENDIF (GUACAMOLE_PBR_SUPPORT)
 
 if (GUACAMOLE_GLFW3)
   LIST(APPEND INCLUDE_PATHS ${GLFW_INCLUDE_DIRS})
@@ -289,18 +275,6 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   message(STATUS "   include: ${BULLET_INCLUDE_DIRS}" )
   message(STATUS "" )
 endif (GUACAMOLE_ENABLE_PHYSICS)
-
-if (GUACAMOLE_PBR_SUPPORT)
-  message(STATUS " protobuf:" )
-  message(STATUS "   library: ${PROTOBUF_LIBRARIES}" )
-  message(STATUS "   library path: ${PROTOBUF_LIBRARY_DIRS}" )
-  message(STATUS "   include: ${PROTOBUF_INCLUDE_DIRS}" )
-  message(STATUS "" )
-  message(STATUS " PBR:" )
-  message(STATUS "   library: ${PBR_LIBRARIES}" )
-  message(STATUS "   library path: ${PBR_LIBRARY_DIRS}" )
-  message(STATUS "   include: ${PBR_INCLUDE_DIRS}" )
-endif (GUACAMOLE_PBR_SUPPORT)
 
 if (GUACAMOLE_GLFW3)
   message(STATUS " glfw:" )

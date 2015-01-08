@@ -18,39 +18,28 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
-#ifndef GUA_PBR_NODE_HPP
-#define GUA_PBR_NODE_HPP
+#ifndef GUA_PLOD_PASS_HPP
+#define GUA_PLOD_PASS_HPP
 
 // guacamole headers
-#include <gua/node/GeometryNode.hpp>
+#include <gua/renderer/PipelinePass.hpp>
 
 namespace gua {
-namespace node {
 
-/**
- * This class is used to represent pointcloud in the SceneGraph.
- *
- * \ingroup gua_scenegraph
- */
-class GUA_DLL PBRNode : public GeometryNode
-{
-public : // member
+  class PLODPassDescription : public PipelinePassDescription {
 
-  PBRNode(std::string const& name,
-          std::string const& filename = "gua_default_geometry",
-          std::string const& material = "gua_default_material",
-          math::mat4  const& transform = math::mat4::identity());
+  public : // typedefs, enums
 
-protected:
+   friend class Pipeline;
 
-  std::shared_ptr<Node> copy() const override;
+  public :
 
-private : // attributes e.g. special attributes for drawing
+    PLODPassDescription();
+    PipelinePassDescription* make_copy() const override;
+    PipelinePass make_pass(RenderContext const&) override;
 
 };
 
 }
-}
 
-#endif  // GUA_PBR_NODE_HPP
+#endif  // GUA_PLOD_PASS_HPP

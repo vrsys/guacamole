@@ -24,22 +24,28 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
-#include <gua/databases/Database.hpp>
 
 // external headers
-#include <string>
-#include <list>
+#include <unordered_set>
 #include <memory>
 
 namespace gua {
 
-class Node;
-class InnerNode;
-class GeometryNode;
-class PLODRessource;
+  class Material;
 
-class PLODLoader : public GeometryLoader {
+namespace node {
+  class Node;
+  class PLODNode;
+} 
+
+/**
+ * Loads *.kdn and *.lod files and creates PLOD nodes. 
+ *
+ * This class can load PLOD data from files and display them in multiple
+ * contexts.
+ */
+
+class PLODLoader {
  public:
 
   enum Flags {
@@ -48,41 +54,45 @@ class PLODLoader : public GeometryLoader {
     NORMALIZE_POSITION = 1 << 1,
     NORMALIZE_SCALE = 1 << 2
   };
+ 
 
-  /**
-   * Default constructor.
-   *
-   * Constructs a new and empty PLODLoader.
-   */
   PLODLoader();
 
+public:
+
+  std::shared_ptr<node::PLODNode> load_geometry(std::string const& file_name,
+                                                unsigned flags = DEFAULTS);
+
+  std::shared_ptr<node::PLODNode> load_geometry(std::string const& node_name, 
+                                                std::string const& file_name,
+                                                Material const& fallback_material,
+                                                unsigned flags =  DEFAULTS);
+
+  void apply_fallback_material(std::shared_ptr<node::Node> const& root, Material const& fallback_material) const;
+
   /**
-   * Constructor from a file.
-   *
-   * Creates a new PLODLoader from a given file.
-   *
-   * \param node_name  Name of the scenegraph node.
-   * \param file_name  The file to load the pointclouds data from.
-   * \param flags      Loading flags
+   * PLOD-lib specific configuration methods. Might be moved into a separate object later.
+   * 
    */
-  std::shared_ptr<gua::node::Node> create_geometry_from_file(
-      std::string const& node_name,
-      std::string const& file_name,
-      unsigned flags = DEFAULTS);
-
-  bool is_supported(std::string const& file_name) const override;
-
   size_t get_upload_budget_in_mb() const;
   size_t get_render_budget_in_mb() const;
   size_t get_out_of_core_budget_in_mb() const;
+  float  get_error_treshold() const;
+  float  get_importance(std::string const& file_name) const;
 
-  void   set_upload_budget_in_mb(const size_t upload_budget);
-  void   set_render_budget_in_mb(const size_t render_budget);
-  void   set_out_of_core_budget_in_mb(const size_t out_of_core_budget);
+  void   set_upload_budget_in_mb(size_t const upload_budget);
+  void   set_render_budget_in_mb(size_t const render_budget);
+  void   set_out_of_core_budget_in_mb(size_t const out_of_core_budget);
+  void   set_error_threshold(float const error_threshold);
+  void   set_importance(std::string const& file_name, float const importance);
 
- private:
+  private:
+  
+   bool is_supported(std::string const& file_name) const;
 
-  boost::unordered_set<std::string> _supported_file_extensions;
+  private:
+
+   std::unordered_set<std::string> _supported_file_extensions;
 
 };
 
