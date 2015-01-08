@@ -35,12 +35,28 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
+<<<<<<< HEAD
   SkeletalAnimationRenderer::SkeletalAnimationRenderer()
     : program_description_(),
       programs_()
   {
     program_description_[scm::gl::shader_stage::STAGE_VERTEX_SHADER] = Resources::lookup_shader("shaders/skeletal_animation_shader.vert");
     program_description_[scm::gl::shader_stage::STAGE_FRAGMENT_SHADER] = Resources::lookup_shader("shaders/skeletal_animation_shader.frag");
+=======
+  SkeletalAnimationRenderer::SkeletalAnimationRenderer(RenderContext const& ctx)
+    : program_factory_(),
+      program_description_(),
+      programs_(),
+      bones_block_(ctx.render_device)
+  {
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    program_description_[scm::gl::shader_stage::STAGE_VERTEX_SHADER]   = program_factory_.read_from_file("resources/shaders/skeletal_animation_shader.vert");
+    program_description_[scm::gl::shader_stage::STAGE_FRAGMENT_SHADER] = program_factory_.read_from_file("resources/shaders/skeletal_animation_shader.frag");
+#else
+    program_description_[scm::gl::shader_stage::STAGE_VERTEX_SHADER] = Resources::lookup_shader("shaders/skeletal_animation_shader.vert");
+    program_description_[scm::gl::shader_stage::STAGE_FRAGMENT_SHADER] = Resources::lookup_shader("shaders/skeletal_animation_shader.frag");
+#endif
+>>>>>>> Create one UBO.
   }
 
 
@@ -129,34 +145,10 @@ namespace gua {
 
             ctx.render_context->apply_program();
 
-            //OLD:
-            //skel_anim_node->update_bone_transforms(ctx);
-            
-            // bone_transforms_block = get_bone_block(ctx, skel_anim_node);
+            bones_block_.update(ctx.render_context, skel_anim_node->get_director()->get_bone_transforms());
 
-            // search in std::unordered_map<gua::node::Node*, std::shared_ptr<BoneTransformUniformBlock>>
-            auto it = ctx.bone_transform_blocks.find(skel_anim_node->get());
-            if (it == ctx.bone_transform_blocks.end()) {
-              //nothing found, create and upload
-              auto bone_transforms_block = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
-            //  ctx.bone_transform_blocks[skel_anim_node->get()] = bone_transforms_block;
-
-              std::pair<gua::node::Node*,std::shared_ptr<BoneTransformUniformBlock>> new_pair(skel_anim_node->get(),bone_transforms_block);
-              ctx.bone_transform_blocks.insert(new_pair);
-              //ctx.bone_transform_blocks.insert(std::make_pair<gua::node::Node*,std::shared_ptr<BoneTransformUniformBlock>>(skel_anim_node->get(),bone_transforms_block));
-
-
-              bone_transforms_block->update(ctx.render_context, skel_anim_node->get_director()->get_bone_transforms());
-              ctx.render_context->bind_uniform_buffer( bone_transforms_block->block().block_buffer(), 1 );
-            } else {
-
-              auto bone_transforms_block = it->second;
-              bone_transforms_block->update(ctx.render_context, skel_anim_node->get_director()->get_bone_transforms());
-              ctx.render_context->bind_uniform_buffer( bone_transforms_block->block().block_buffer(), 1 );
-            }
+            ctx.render_context->bind_uniform_buffer( bones_block_.block().block_buffer(), 1);
             geometries[i]->draw(ctx);
-
-
           }
         }
       }
