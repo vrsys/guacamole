@@ -13,7 +13,7 @@ class BoneTransformUniformBlock
 {
 public:
   struct BoneTransformBlock {
-    math::mat4 transforms[100]; 
+    math::mat4 transforms[100];
   };
 
   typedef scm::gl::uniform_block<BoneTransformBlock> block_type;
@@ -21,7 +21,7 @@ public:
   BoneTransformUniformBlock(scm::gl::render_device_ptr const& device);
   ~BoneTransformUniformBlock();
 
-  void update(scm::gl::render_context_ptr const& context, std::vector<math::mat4> new_transforms);
+  void update(scm::gl::render_context_ptr const& context, std::vector<math::mat4> const& new_transforms);
 
   inline const block_type&   block() const { return uniform_block_; }
 

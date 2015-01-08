@@ -2,25 +2,22 @@
 
 namespace gua {
 
-BoneTransformUniformBlock::BoneTransformUniformBlock(scm::gl::render_device_ptr const& device)
-{
+BoneTransformUniformBlock::BoneTransformUniformBlock(scm::gl::render_device_ptr const& device) {
   uniform_block_ = scm::gl::make_uniform_block<BoneTransformBlock>(device);
 }
 
-BoneTransformUniformBlock::~BoneTransformUniformBlock()
-{
+BoneTransformUniformBlock::~BoneTransformUniformBlock() {
   uniform_block_.reset();
 }
 
 void BoneTransformUniformBlock::update(const scm::gl::render_context_ptr& context,
-                           std::vector<math::mat4> new_transforms) {
+                           std::vector<math::mat4> const& new_transforms) {
 
 
   uniform_block_.begin_manipulation(context); {
 
-  for (unsigned i = 0; i<100 && i<new_transforms.size(); ++i)
-  {
-  	uniform_block_->transforms[i] = new_transforms[i];
+  for (unsigned i = 0; i<100 && i<new_transforms.size(); ++i) {
+    uniform_block_->transforms[i] = new_transforms[i];
   }
 
   } uniform_block_.end_manipulation();
