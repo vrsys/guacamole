@@ -22,187 +22,250 @@
 #include <gua/renderer/ProgramFactory.hpp>
 
 #include <fstream>
+#include <boost/regex.hpp>
 
 #include <gua/config.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/MaterialShader.hpp>
-
 
 namespace gua {
 
-  ///////////////////////////////////////////////////////////////////////////
-  ProgramFactory::ProgramFactory(std::vector<std::string> const& shader_root_directories)
+////////////////////////////////////////////////////////////////////////////////
+
+ProgramFactory::ProgramFactory(std::vector<std::string> const& shader_root_directories)
     : _search_paths(shader_root_directories)
+{
+  add_search_path(std::string(GUACAMOLE_INSTALL_DIR));
+  add_search_path(std::string(GUACAMOLE_INSTALL_DIR) + "/resources");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ProgramFactory::add_search_path(std::string const& path)
+{
+  _search_paths.push_back(path);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<ShaderProgram> ProgramFactory::create_program(MaterialShader* material,
+                                                              std::map<scm::gl::shader_stage, std::string> const& program_description,
+                                                              std::list<std::string> const& interleaved_stream_capture,
+                                                              bool in_rasterization_discard)
+{
+  // std::type_index type_id(typeid(for_type));
+  using namespace scm::gl;
+
+  std::vector<ShaderProgramStage> final_program_description;
+  auto new_shader = std::make_shared<ShaderProgram>();
+
+  auto v_methods = material->get_vertex_methods();
+  auto f_methods = material->get_fragment_methods();
+
+  for (auto const& stage : program_description)
   {
-    add_search_path(std::string(GUACAMOLE_INSTALL_DIR));
-    add_search_path(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/");
-  }
-
-  ///////////////////////////////////////////////////////////////////////////
-  ProgramFactory::~ProgramFactory()
-  {}
-
-  ///////////////////////////////////////////////////////////////////////////
-  void ProgramFactory::add_search_path(std::string const& path)
-  {
-    _search_paths.push_back(path);
-  }
-
-  ///////////////////////////////////////////////////////////////////////////
-  std::shared_ptr<ShaderProgram> ProgramFactory::create_program(MaterialShader* material,
-                                                                std::map<scm::gl::shader_stage, std::string> const& program_description,
-                                                                std::list<std::string> const& interleaved_stream_capture,
-                                                                bool in_rasterization_discard)
-  {
-    // std::type_index type_id(typeid(for_type));
-    using namespace scm::gl;
-
-    std::vector<ShaderProgramStage> final_program_description;
-    auto new_shader = std::make_shared<ShaderProgram>();
-
-    auto v_methods = material->get_vertex_methods();
-    auto f_methods = material->get_fragment_methods();
-
-    for (auto const& stage : program_description)
-    {
-      // insert material code in vertex and fragment shader
-      if (stage.first == STAGE_VERTEX_SHADER) {
-        auto v_shader(compile_description(material, v_methods, program_description.at(STAGE_VERTEX_SHADER)));
-        final_program_description.push_back(ShaderProgramStage(STAGE_VERTEX_SHADER, v_shader));
+    // insert material code in vertex and fragment shader
+    if (stage.first == STAGE_VERTEX_SHADER) {
+      auto v_shader(compile_description(material, v_methods, program_description.at(STAGE_VERTEX_SHADER)));
+      final_program_description.push_back(ShaderProgramStage(STAGE_VERTEX_SHADER, v_shader));
+    }
+    else {
+      if (stage.first == STAGE_GEOMETRY_SHADER) {
+        auto g_shader(compile_description(material, v_methods, program_description.at(STAGE_GEOMETRY_SHADER)));
+        final_program_description.push_back(ShaderProgramStage(STAGE_GEOMETRY_SHADER, g_shader));
       }
       else {
-        if (stage.first == STAGE_GEOMETRY_SHADER) {
-          auto g_shader(compile_description(material, v_methods, program_description.at(STAGE_GEOMETRY_SHADER)));
-          final_program_description.push_back(ShaderProgramStage(STAGE_GEOMETRY_SHADER, g_shader));
+        if (stage.first == STAGE_FRAGMENT_SHADER) {
+          auto f_shader(compile_description(material, f_methods, program_description.at(STAGE_FRAGMENT_SHADER)));
+          final_program_description.push_back(ShaderProgramStage(STAGE_FRAGMENT_SHADER, f_shader));
         }
         else {
-          if (stage.first == STAGE_FRAGMENT_SHADER) {
-            auto f_shader(compile_description(material, f_methods, program_description.at(STAGE_FRAGMENT_SHADER)));
-            final_program_description.push_back(ShaderProgramStage(STAGE_FRAGMENT_SHADER, f_shader));
-          }
-          else {
-            // keep code for other shading stages
-            final_program_description.push_back(ShaderProgramStage(stage.first, stage.second));
-          }
+          // keep code for other shading stages
+          final_program_description.push_back(ShaderProgramStage(stage.first, stage.second));
         }
       }
     }
-
-    new_shader->set_shaders(final_program_description, interleaved_stream_capture, in_rasterization_discard);
-    return new_shader;
   }
 
+  new_shader->set_shaders(final_program_description, interleaved_stream_capture, in_rasterization_discard);
+  return new_shader;
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  std::string ProgramFactory::compile_description(MaterialShader* material,
-                                                   std::list<MaterialShaderMethod> const& methods,
-                                                   std::string const& shader_source) const 
-  {
-    std::string source(shader_source);
-    std::stringstream sstr;
+////////////////////////////////////////////////////////////////////////////////
 
-    for (auto const& uniform : material->get_default_material()->get_uniforms()) {
-      sstr << "uniform " << uniform.second.get().get_glsl_type() << " "
-        << uniform.first << ";" << std::endl;
+std::string ProgramFactory::compile_description(MaterialShader* material,
+                                                std::list<MaterialShaderMethod> const& methods,
+                                                std::string const& shader_source) const
+{
+  SubstitutionMap smap;
+  std::stringstream sstr;
+
+  for (auto const& uniform : material->get_default_material()->get_uniforms()) {
+    sstr << "uniform " << uniform.second.get().get_glsl_type() << " "
+         << uniform.first << ";" << std::endl;
+  }
+  sstr << std::endl;
+
+  // insert uniforms
+  smap["material_uniforms"] = sstr.str();
+  smap["material_input"] = "";
+  sstr.str("");
+
+  // material methods ----------------------------------------------------------
+  for (auto& method : methods) {
+    sstr << method.get_source() << std::endl;
+  }
+  smap["material_method_declarations"] = sstr.str();
+  sstr.str("");
+
+  // material method calls -----------------------------------------------------
+  for (auto& method : methods) {
+    sstr << method.get_name() << "();" << std::endl;
+  }
+  smap["material_method_calls"] = sstr.str();
+
+  // indent and return code ----------------------------------------------------
+  return string_utils::format_code(resolve_substitutions(shader_source, smap));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string ProgramFactory::read_plain_file(std::string const& path) const
+{
+  namespace fs = boost::filesystem;
+  std::string out;
+  fs::path p;
+  if (!get_file_contents(fs::path(path), fs::current_path(), out, p))
+    throw std::runtime_error("Unable to read plain file");
+
+  return out;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string ProgramFactory::read_shader_file(std::string const& path) const
+{
+  namespace fs = boost::filesystem;
+
+  std::string out;
+  if (!resolve_includes(fs::path(path), fs::current_path(), out))
+    throw std::runtime_error("Unable to resolve shader includes");
+
+  return std::string(GUACAMOLE_GLSL_VERSION_STRING) + out;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string ProgramFactory::resolve_substitutions(std::string const& shader_source,
+                                                  SubstitutionMap const& smap) const
+{
+  //TODO: add support for the #line macro if multi-line substitutions are supplied.
+  boost::regex regex("\\@(\\w+)");
+  boost::smatch match;
+  std::string out, s = shader_source;
+
+  while (boost::regex_search(s, match, regex)) {
+    std::string subs;
+    auto search = smap.find(match[1]);
+    if (search != smap.end()) {
+      subs = search->second;
     }
-    sstr << std::endl;
-
-    // insert uniforms
-    gua::string_utils::replace(source, "@material_uniforms", sstr.str());
-    gua::string_utils::replace(source, "@material_input", "");
-
-    sstr.str("");
-
-    // material methods ----------------------------------------------------------
-    for (auto& method : methods) {
-      sstr << method.get_source() << std::endl;
+    else {
+      Logger::LOG_WARNING << "Option \"" << match[1]
+                          << "\" is unknown!" << std::endl;
+      subs = "";
     }
-    gua::string_utils::replace(source, "@material_method_declarations", sstr.str());
-    sstr.str("");
+    out += match.prefix().str() + subs;
+    s = match.suffix().str();
+  }
+  return out + s;
+}
 
-    // material method calls -----------------------------------------------------
-    for (auto& method : methods) {
-      sstr << method.get_name() << "();" << std::endl;
+////////////////////////////////////////////////////////////////////////////////
+
+bool ProgramFactory::get_file_contents(boost::filesystem::path const& filename,
+                                       boost::filesystem::path const& current_dir,
+                                       std::string& contents,
+                                       boost::filesystem::path& full_path) const
+{
+  namespace fs = boost::filesystem;
+  std::ifstream ifs;
+  std::stringstream error_info;
+
+  auto probe =[&](fs::path const& dir) -> bool {
+    full_path = fs::absolute(filename, dir);
+    ifs.open(full_path.native());
+    if (!ifs) {
+      error_info << "[" << dir.native() << "]: " << strerror(errno) << std::endl;
     }
-    gua::string_utils::replace(source, "@material_method_calls", sstr.str());
+    return ifs;
+  };
 
-    // std::cout << string_utils::format_code(source) << std::endl;
-
-    // indent and return code ----------------------------------------------------
-    return string_utils::format_code(source);
+  // probe files
+  if (!probe(current_dir)) {
+    for (auto const& path : _search_paths) {
+      if (probe(fs::path(path))) break;
+    }
   }
 
-
-  ///////////////////////////////////////////////////////////////////////////
-  std::string ProgramFactory::read_from_file(std::string const& path) const
-  {
-    try {
-      std::string full_path(path);
-      std::ifstream ifstr(full_path.c_str(), std::ios::in);
-
-      if (ifstr.good()) {
-        Logger::LOG_DEBUG << "Loading shader file : " << path << " ... succeed. " << std::endl;
-
-        auto source = std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
-        resolve_shader_includes(source);
-        return source;
-      }
-
-      for (auto const& root : _search_paths)
-      {
-        std::string full_path(root + std::string("/") + path);
-        std::ifstream ifstr(full_path.c_str(), std::ios::in);
-
-        if (ifstr.good()) {
-          auto source = std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
-
-          Logger::LOG_DEBUG << "Loading file : " << path << " ... succeed. " << std::endl;
-
-          resolve_shader_includes(source);
-          return source;
-        }
-        ifstr.close();
-      }
-      throw std::runtime_error("File not found.");
-    }
-    catch ( std::exception& e) {
-      Logger::LOG_ERROR << "Trying to load file : " << path << " ... failed. " << e.what() << std::endl;
-      return "";
-    }
+  // log error if failed to find file
+  if (!ifs) {
+    Logger::LOG_ERROR << "Failed to get file: \"" << filename.native()
+                      << "\" from any of the search paths:" << std::endl
+                      << error_info.str() << std::endl;
+    contents = "";
+    full_path = fs::path();
+    return false;
   }
 
-  ///////////////////////////////////////////////////////////////////////////
-  void ProgramFactory::resolve_shader_includes(std::string& shader_source) const
-  {
-    std::size_t search_pos(0);
+  contents.assign((std::istreambuf_iterator<char>(ifs)),
+                  (std::istreambuf_iterator<char>()));
+  full_path = fs::canonical(full_path);
+  return true;
+}
 
-    std::vector<std::string> include_strings = { "@include", "#include" };
-    auto include_pattern = include_strings.begin();
+////////////////////////////////////////////////////////////////////////////////
 
-    while (include_pattern != include_strings.end())
-    {
-      search_pos = shader_source.find(*include_pattern, search_pos);
-      if (search_pos != std::string::npos) {
+bool ProgramFactory::resolve_includes(boost::filesystem::path const& filename,
+                                      boost::filesystem::path const& current_dir,
+                                      std::string& contents) const
+{
+  namespace fs = boost::filesystem;
 
-        std::size_t start(shader_source.find('\"', search_pos) + 1);
-        std::size_t end(shader_source.find('\"', start));
-
-        std::string file(shader_source.substr(start, end - start));
-
-        std::string include = read_from_file(file);
-        shader_source.replace(search_pos, end - search_pos + 2, include);
-
-        // advance search pos and reset include pattern
-        search_pos = search_pos + include.length();
-        include_pattern = include_strings.begin();
-      } else {
-        // restart search with new pattern
-        search_pos = 0;
-        ++include_pattern;
-      }
-    }
+  // get contents
+  std::string s;
+  fs::path full_path;
+  if (!get_file_contents(filename, current_dir, s, full_path)) {
+    contents = "";
+    return false;
   }
 
-  
+  // substitute inclusions
+  s = "#line 1 \"" + full_path.native() + "\"\n" + s;
+  boost::regex regex("(\\@|\\#)\\s*include\\s*\"([^\"]+)\"");
+  boost::smatch match;
+  std::string out;
+  int line_ctr{};
+  while (boost::regex_search(s, match, regex)) {
+    std::string content;
+    if (!resolve_includes(fs::path(match[2]),
+                          full_path.parent_path(),
+                          content)) {
+      contents = "";
+      return false;
+    }
+    std::string prefix = match.prefix().str();
+    line_ctr += std::count(prefix.begin(), prefix.end(), '\n');
+    out += prefix + "\n" + content
+           + "\n#line " + std::to_string(line_ctr)
+           + " \"" + full_path.native() + "\"\n";
+    s = match.suffix().str();
+  }
+  contents = out + s;
+  return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 }

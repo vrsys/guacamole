@@ -24,11 +24,13 @@
 
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <list>
 
 #include <scm/gl_core/shader_objects.h>
 
 #include <gua/platform.hpp>
+#include <boost/filesystem.hpp>
 
 
 namespace gua {
@@ -41,28 +43,36 @@ class MaterialShaderMethod;
 class GUA_DLL ProgramFactory {
  public:
 
+  typedef std::unordered_map<std::string, std::string> SubstitutionMap;
+
   ProgramFactory(std::vector<std::string> const& search_directories = std::vector<std::string>());
 
-  ~ProgramFactory();
+  virtual ~ProgramFactory() {}
 
- public:
+  void         add_search_path(std::string const& path);
 
-   void           add_search_path (std::string const& path);
+  std::shared_ptr<ShaderProgram>  create_program(MaterialShader* material,
+                                                 std::map<scm::gl::shader_stage, std::string> const& program_description,
+                                                 std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
+                                                 bool in_rasterization_discard = false);
 
-  std::shared_ptr<ShaderProgram>  create_program (MaterialShader* material,
-                                                  std::map<scm::gl::shader_stage, std::string> const& program_description,
-                                                  std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
-                                                  bool in_rasterization_discard = false);
+  std::string  read_plain_file(std::string const& file) const;
+  std::string  read_shader_file(std::string const& file) const;
+  std::string  compile_description(MaterialShader* material,
+                                   std::list<MaterialShaderMethod> const& passes,
+                                   std::string const& shader_source) const;
+  std::string  resolve_substitutions(std::string const& shader_source,
+                                     SubstitutionMap const& smap) const;
 
-  std::string     read_from_file(std::string const& file) const;
+ private:
 
-  void            resolve_shader_includes (std::string& shader_source) const;
-
-  std::string     compile_description (MaterialShader* material,
-                                       std::list<MaterialShaderMethod> const& passes,
-                                       std::string const& shader_source) const;
-
-private:
+  bool         get_file_contents(boost::filesystem::path const& filename,
+                                 boost::filesystem::path const& current_dir,
+                                 std::string& contents,
+                                 boost::filesystem::path& full_path) const;
+  bool         resolve_includes(boost::filesystem::path const& filename,
+                                boost::filesystem::path const& current_dir,
+                                std::string& contents) const;
 
   std::vector<std::string> _search_paths;
 

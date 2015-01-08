@@ -23,7 +23,7 @@ layout(std140, binding=1) uniform lightBlock {
 const float Pi = 3.14159265;
 const float INV_PI = 1.0f / Pi;
 
-@include "shaders/brdf.glsl"
+@include "../brdf.glsl"
 
 // light functions
 bool gua_calculate_light(int light_id,
@@ -132,5 +132,3 @@ vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec3 pbr) {
 
   return col;
 }
-
-

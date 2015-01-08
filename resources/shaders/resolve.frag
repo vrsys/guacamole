@@ -1,17 +1,13 @@
-
-@include "shaders/common/header.glsl"
+@include "common/header.glsl"
 
 // varyings
 in vec2 gua_quad_coords;
 
-@include "shaders/common/gua_camera_uniforms.glsl"
-@include "shaders/common/gua_gbuffer_input.glsl"
-
-
-@include "shaders/common/gua_shading.glsl"
-
+@include "common/gua_camera_uniforms.glsl"
+@include "common/gua_gbuffer_input.glsl"
+@include "common/gua_shading.glsl"
 #define ABUF_MODE readonly
-@include "shaders/common/gua_abuffer.glsl"
+@include "common/gua_abuffer.glsl"
 uint bitset[4];
 const int tile_power = 2;
 
@@ -47,7 +43,7 @@ vec4 abuf_shade(uint pos, float depth) {
 }
 
 
-@include "shaders/common/gua_abuffer_resolve.glsl"
+@include "common/gua_abuffer_resolve.glsl"
 
 uniform int   background_mode;
 uniform vec3  background_color;

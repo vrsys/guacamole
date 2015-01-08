@@ -87,8 +87,8 @@ WindowBase::WindowBase(Configuration const& configuration)
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ProgramFactory factory;
     fullscreen_shader_.create_from_sources(
-      factory.read_from_file("resources/shaders/display_shader.vert"),
-      factory.read_from_file("resources/shaders/display_shader.frag"));
+      factory.read_shader_file("resources/shaders/display_shader.vert"),
+      factory.read_shader_file("resources/shaders/display_shader.frag"));
 #else 
     fullscreen_shader_.create_from_sources(
       Resources::lookup_shader(Resources::shaders_display_shader_vert),
@@ -110,8 +110,8 @@ WindowBase::WindowBase(Configuration const& configuration)
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ProgramFactory factory;
     fullscreen_shader_.create_from_sources(
-      factory.read_from_file("resources/shaders/display_shader.vert"),
-      factory.read_from_file("resources/shaders/display_shader_warped.frag"));
+      factory.read_shader_file("resources/shaders/display_shader.vert"),
+      factory.read_shader_file("resources/shaders/display_shader_warped.frag"));
 #else 
     fullscreen_shader_.create_from_sources(
       Resources::lookup_shader(Resources::shaders_display_shader_vert),

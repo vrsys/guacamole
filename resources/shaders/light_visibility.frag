@@ -1,7 +1,7 @@
-@include "shaders/common/header.glsl"
+@include "common/header.glsl"
 
 // uniforms
-@include "shaders/common/gua_camera_uniforms.glsl"
+@include "common/gua_camera_uniforms.glsl"
 uniform int light_id;
 
 const int tile_power = 2;

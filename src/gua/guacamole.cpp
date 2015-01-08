@@ -50,9 +50,9 @@ void init(int argc, char** argv) {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
   ProgramFactory factory;
 
-  auto light_sphere_obj = factory.read_from_file("resources/geometry/gua_light_sphere.obj");
-  auto light_cone_obj   = factory.read_from_file("resources/geometry/gua_light_cone.obj");
-  auto material_pbs     = factory.read_from_file("resources/materials/pbs.gmd");
+  auto light_sphere_obj = factory.read_plain_file("resources/geometry/gua_light_sphere.obj");
+  auto light_cone_obj   = factory.read_plain_file("resources/geometry/gua_light_cone.obj");
+  auto material_pbs     = factory.read_plain_file("resources/materials/pbs.gmd");
 
   GeometryDatabase::instance()->add(
     "gua_light_sphere_proxy",
