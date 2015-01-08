@@ -62,8 +62,11 @@ PipelinePass SkeletalAnimationPassDescription::make_pass(RenderContext const& ct
   PipelinePass pass{*this, ctx, substitution_map};
 
   auto renderer = std::make_shared<SkeletalAnimationRenderer>(ctx);
+<<<<<<< HEAD
   renderer->set_global_substitution_map(substitution_map);
   renderer->create_state_objects(ctx);
+=======
+>>>>>>> Create one UBO.
 
   pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {

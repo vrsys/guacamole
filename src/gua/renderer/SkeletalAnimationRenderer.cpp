@@ -67,14 +67,14 @@ namespace gua {
 
     if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
 
-      //TODO!!!!!
-      /*std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
-        return reinterpret_cast<node::SkeletalAnimationNode*>(a)->get_material().get_shader() < reinterpret_cast<node::SkeletalAnimationNode*>(b)->get_material().get_shader();
-      });*/
+      // TODO
+      /*std::sort(sorted_objects->second.begin(), sorted_objects->second.end(),
+                [](node::Node* a, node::Node* b) {
+                  return reinterpret_cast<node::SkeletalAnimationNode*>(a)->get_material()->get_shader()
+                       < reinterpret_cast<node::SkeletalAnimationNode*>(b)->get_material()->get_shader();
+                });*/
 
-
-      //RenderContext ctx(pipe.get_context());
-      RenderContext & ctx(pipe.get_context());
+      RenderContext const& ctx(pipe.get_context());
 
       bool writes_only_color_buffer = false;
       pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
