@@ -61,7 +61,7 @@ PipelinePass SkeletalAnimationPassDescription::make_pass(RenderContext const& ct
 {
   PipelinePass pass{*this, ctx};
 
-  auto renderer = std::make_shared<SkeletalAnimationRenderer>();
+  auto renderer = std::make_shared<SkeletalAnimationRenderer>(ctx);
 
   pass.process_ = [renderer](
     PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {

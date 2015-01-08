@@ -26,6 +26,8 @@
 #include <unordered_map>
 
 #include <gua/platform.hpp>
+#include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/BoneTransformUniformBlock.hpp>
 
 #include <scm/gl_core/shader_objects.h>
 
@@ -39,16 +41,18 @@ class SkeletalAnimationRenderer {
 
  public:
 
-   SkeletalAnimationRenderer();
+   SkeletalAnimationRenderer(RenderContext const& ctx);
    ~SkeletalAnimationRenderer();
   
    void render(Pipeline& pipe);
 
  private:
 
-   std::map<scm::gl::shader_stage, std::string>         program_description_;
-   std::unordered_map<MaterialShader*, ShaderProgram*>  programs_;
-  
+   ProgramFactory                                                       program_factory_;
+   std::map<scm::gl::shader_stage, std::string>                         program_description_;
+   //using ProgramsMap = std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>>;
+   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+   BoneTransformUniformBlock bones_block_;
 };
 
 }
