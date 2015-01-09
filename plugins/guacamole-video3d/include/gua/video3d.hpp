@@ -19,22 +19,11 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+#ifndef GUA_INCLUDE_VIDEO3D_HPP
+#define GUA_INCLUDE_VIDEO3D_HPP
 
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
+#include <gua/video3d/Video3DNode.hpp>
+#include <gua/video3d/Video3DPass.hpp>
+#include <gua/video3d/Video3DLoader.hpp>
 
-// node headers
-#include <gua/node/GeometryNode.hpp>
-#include <gua/node/TriMeshNode.hpp>
-#include <gua/node/TransformNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/node/ScreenNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
-#include <gua/node/CameraNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
-#include <gua/node/TexturedScreenSpaceQuadNode.hpp>
-
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+#endif  // GUA_INCLUDE_VIDEO3D_HPP

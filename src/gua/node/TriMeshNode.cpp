@@ -43,8 +43,8 @@ namespace node {
       geometry_(nullptr),
       geometry_description_(geometry_description),
       geometry_changed_(true),
-      material_(material),
-      material_changed_(true)
+      material_(material)
+      // material_changed_(true)
   {}
 
 
@@ -67,7 +67,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   void TriMeshNode::set_material(std::shared_ptr<Material> const& material) {
     material_ = material;
-    material_changed_ = self_dirty_ = true;
+    // material_changed_ = self_dirty_ = true;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -240,18 +240,18 @@ namespace node {
     //
     // data/materials/Stones.gmd
 
-    if (material_changed_)
-    {
-      if (material_ && material_->get_shader_name() != "")
-      {
+    // if (material_changed_)
+    // {
+    //   if (material_ && material_->get_shader_name() != "")
+    //   {
         // if (!MaterialShaderDatabase::instance()->contains(material_))
         // {
         //   MaterialShaderDatabase::instance()->load_material(material_);
         // }
-      }
+      // }
 
-      material_changed_ = false;
-    }
+      // material_changed_ = false;
+    // }
 
     GeometryNode::update_cache();
   }

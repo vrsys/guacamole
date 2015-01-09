@@ -42,6 +42,7 @@ examples/input/example-input
 examples/gui/example-gui
 examples/volume/example-volume
 examples/nurbs/example-nurbs
+examples/video3d/example-video3d
 examples/stress_test/stress_test
 examples/nice_and_shiny/nice_and_shiny
 

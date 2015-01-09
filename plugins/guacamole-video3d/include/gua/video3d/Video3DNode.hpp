@@ -19,22 +19,64 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+#ifndef GUA_VIDEO3D_NODE_HPP
+#define GUA_VIDEO3D_NODE_HPP
 
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
-
-// node headers
+// guacamole headers
+#include <gua/video3d/platform.hpp>
 #include <gua/node/GeometryNode.hpp>
-#include <gua/node/TriMeshNode.hpp>
-#include <gua/node/TransformNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/node/ScreenNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
-#include <gua/node/CameraNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
-#include <gua/node/TexturedScreenSpaceQuadNode.hpp>
 
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+// external headers
+#include <string>
+
+/**
+ * This class is used to represent kinect video in the SceneGraph.
+ *
+ */
+
+namespace gua {
+namespace node {
+
+class GUA_VIDEO3D_DLL Video3DNode : public GeometryNode {
+ public:
+
+  Video3DNode(std::string const& name,
+              std::string const& video_name = "gua_default_geometry",
+              std::shared_ptr<Material> const& material = nullptr,
+              math::mat4  const& transform = math::mat4::identity());
+
+  void ray_test_impl(Ray const& ray,
+                     int options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
+
+  void update_cache() override;
+
+  /**
+   * Accepts a visitor and calls concrete visit method.
+   *
+   * This method implements the visitor pattern for Nodes.
+   *
+   * \param visitor  A visitor to process the GeometryNode's data.
+   */
+  void accept(NodeVisitor& visitor) override;
+
+  std::string const& get_video_name() const {
+    return video_name_;
+  }
+
+  std::shared_ptr<Material> const& get_material() const;
+  void                      set_material(std::shared_ptr<Material> const& material);
+
+ protected:
+  std::shared_ptr<Node> copy() const override;
+
+ private:
+  std::string video_name_;
+  std::shared_ptr<Material> material_;
+};
+
+} // namespace node {
+} // namespace gua {
+
+#endif  // GUA_VIDEO3D_NODE_HPP

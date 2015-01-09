@@ -19,22 +19,32 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+#ifndef GUA_VIDEO3D_PASS_HPP
+#define GUA_VIDEO3D_PASS_HPP
 
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
+#include <gua/video3d/platform.hpp>
+#include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
-// node headers
-#include <gua/node/GeometryNode.hpp>
-#include <gua/node/TriMeshNode.hpp>
-#include <gua/node/TransformNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/node/ScreenNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
-#include <gua/node/CameraNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
-#include <gua/node/TexturedScreenSpaceQuadNode.hpp>
+// external headers
+#include <scm/gl_core/buffer_objects.h>
 
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+#include <typeindex>
+#include <memory>
+#include <unordered_map>
+
+namespace gua {
+
+class GUA_VIDEO3D_DLL Video3DPassDescription : public PipelinePassDescription {
+ public:
+  Video3DPassDescription();
+
+  PipelinePass make_pass(RenderContext const& ctx);
+
+  PipelinePassDescription* make_copy() const override;
+  friend class Pipeline;
+};
+
+}
+
+#endif  // GUA_VIDEO3D_PASS_HPP
