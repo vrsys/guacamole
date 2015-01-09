@@ -78,13 +78,10 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& fil
 
       GeometryDescription desc("PLOD", filename, 0, flags);
 
-      std::cout << "Calling 'AddModel' with parameters filename = '" << filename <<"' and key= '" << desc.unique_key() << "'\n";
       pbr::model_t model_id = database->AddModel(filename, desc.unique_key());
 
       auto resource = std::make_shared<PLODResource>(model_id, flags & PLODLoader::MAKE_PICKABLE);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
-
-      std::cout << "Filename in database: " << filename << "  Unique Key: " <<desc.unique_key()<<"\n";
 
       std::shared_ptr<node::PLODNode> node(new node::PLODNode(filename, desc.unique_key(), filename));
       node->update_cache();
