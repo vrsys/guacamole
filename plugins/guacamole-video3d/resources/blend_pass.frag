@@ -3,7 +3,7 @@
 @include "shaders/common/gua_camera_uniforms.glsl"
 @include "shaders/common/pack_vec3.glsl"
 
-@material_uniforms
+@material_uniforms@
 
 ///////////////////////////////////////////////////////////////////////////////
 // video3D uniforms
@@ -21,14 +21,14 @@ uniform sampler2DArray video_color_texture;
 @include "shaders/common/gua_fragment_shader_output.glsl"
 @include "shaders/common/gua_global_variable_declaration.glsl"
 
-@material_method_declarations
+@material_method_declarations_frag@
 
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
 
-  @material_input
+  @material_input@
 
   @include "shaders/common/gua_global_variable_assignment.glsl"
 
@@ -110,7 +110,7 @@ void main() {
 
   gl_FragDepth = output_depth;
 
-  @material_method_calls
+  @material_method_calls_frag@
 
   @include "shaders/common/gua_write_gbuffer.glsl"
 }

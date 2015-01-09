@@ -27,7 +27,10 @@
 #include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/memory.hpp>
+
+#include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/MaterialShader.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/WindowBase.hpp>
@@ -43,19 +46,25 @@ namespace gua {
 Video3DRenderer::Video3DRenderer()
   : initialized_(false)
 {
+  ResourceFactory factory;
 
   // create depth shader
   std::vector<ShaderProgramStage> warp_pass_stages;
-  warp_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_VERTEX_SHADER,   factory_.read_from_file("resources/warp_pass.vert")));
-  warp_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_from_file("resources/warp_pass.geom")));
-  warp_pass_stages.push_back( ShaderProgramStage( scm::gl::STAGE_FRAGMENT_SHADER, factory_.read_from_file("resources/warp_pass.frag")));
+  warp_pass_stages.push_back( ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,
+                                                 factory.read_shader_file("resources/warp_pass.vert")));
+  warp_pass_stages.push_back( ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER,
+                                                 factory.read_shader_file("resources/warp_pass.geom")));
+  warp_pass_stages.push_back( ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
+                                                 factory.read_shader_file("resources/warp_pass.frag")));
 
   warp_pass_program_ = std::make_shared<ShaderProgram>();
   warp_pass_program_->set_shaders(warp_pass_stages);
 
   // create final shader description
-  program_description_[scm::gl::STAGE_VERTEX_SHADER] =   factory_.read_from_file("resources/blend_pass.vert");
-  program_description_[scm::gl::STAGE_FRAGMENT_SHADER] = factory_.read_from_file("resources/blend_pass.frag");
+  program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,
+                                               factory.read_shader_file("resources/blend_pass.vert")));
+  program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
+                                               factory.read_shader_file("resources/blend_pass.frag")));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,9 +217,10 @@ void Video3DRenderer::render(Pipeline& pipe)
           current_shader = shader_iterator->second;
         }
         else {
-          auto shader = factory_.create_program(current_material, program_description_);
-          programs_[current_material] = shader;
-          current_shader = shader;
+          current_shader = std::make_shared<ShaderProgram>();
+          current_shader->set_shaders(program_stages_, std::list<std::string>(), false,
+                                      current_material->generate_substitution_map());
+          programs_[current_material] = current_shader;
         }           
       }
       else {

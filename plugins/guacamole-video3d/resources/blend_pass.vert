@@ -8,12 +8,12 @@ layout(location=2) in vec2 gua_in_texcoord;
 
 @include "shaders/common/gua_camera_uniforms.glsl"
 
-@material_uniforms
+@material_uniforms@
 
 @include "shaders/common/gua_vertex_shader_output.glsl"
 @include "shaders/common/gua_global_variable_declaration.glsl"
 
-@material_method_declarations
+@material_method_declarations_vert@
 
 ///////////////////////////////////////////////////////////////////////////////
 // main
@@ -29,7 +29,7 @@ void main() {
   gua_roughness  = 0.5;
   gua_emissivity = 1;
 
-  @material_method_calls
+  @material_method_calls_vert@
 
   @include "shaders/common/gua_varyings_assignment.glsl"
 

@@ -25,6 +25,7 @@
 #include <gua/renderer/MaterialShaderDescription.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/renderer/GeometryResource.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 #include <gua/utils/string_utils.hpp>
 
 #include <typeindex>
@@ -50,6 +51,8 @@ class GUA_DLL MaterialShader {
 
   std::list<MaterialShaderMethod> const& get_vertex_methods() const;
   std::list<MaterialShaderMethod> const& get_fragment_methods() const;
+
+  SubstitutionMap                        generate_substitution_map() const;
 
   unsigned max_object_count() const {
     return max_object_count_;

@@ -27,7 +27,7 @@
 // guacamole headers
 #include <gua/video3d/platform.hpp>
 #include <gua/utils.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
 #include <unordered_map>
 
@@ -36,6 +36,7 @@ namespace gua {
 class ShaderProgram;
 class FrameBufferObject;
 class Pipeline;
+class MaterialShader;
 
 class GUA_VIDEO3D_DLL Video3DRenderer {
  public:
@@ -62,8 +63,7 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
  private: // attributes
   bool initialized_;
 
-  ProgramFactory factory_;
-  std::map<scm::gl::shader_stage, std::string>                        program_description_;
+  std::vector<ShaderProgramStage>                                     program_stages_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
 
   std::shared_ptr<ShaderProgram> warp_pass_program_;

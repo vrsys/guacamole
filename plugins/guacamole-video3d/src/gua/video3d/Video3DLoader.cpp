@@ -53,8 +53,8 @@ namespace gua {
       result->update_cache();
 
       if (!gua::MaterialShaderDatabase::instance()->contains("gua_default_video3d_material")) {
-        ProgramFactory factory;
-        auto material = factory.read_from_file("resources/video3d.gmd");
+        ResourceFactory factory;
+        auto material = factory.read_plain_file("resources/video3d.gmd");
         gua::MaterialShaderDescription desc;
         desc.load_from_buffer(material.c_str());
         auto shader(std::make_shared<gua::MaterialShader>("gua_default_video3d_material", desc));

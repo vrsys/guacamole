@@ -47,8 +47,6 @@ class TriMeshRenderer {
 
  private:
 
-  std::shared_ptr<ShaderProgram> init_program(MaterialShader const* material) const;
-
   std::vector<ShaderProgramStage>                                     program_stages_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
 };

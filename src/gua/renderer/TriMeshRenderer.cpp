@@ -97,7 +97,9 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
             current_shader = shader_iterator->second;
           }
           else {
-            current_shader = init_program(current_material);
+            current_shader = std::make_shared<ShaderProgram>();
+            current_shader->set_shaders(program_stages_, std::list<std::string>(), false,
+                                        current_material->generate_substitution_map());
             programs_[current_material] = current_shader;
           }
         }
@@ -131,56 +133,6 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
     pipe.get_gbuffer().unbind(ctx);
     pipe.get_abuffer().unbind(ctx);
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<ShaderProgram> TriMeshRenderer::init_program(MaterialShader const* material) const
-{
-  SubstitutionMap smap;
-  std::stringstream sstr;
-
-  auto v_methods = material->get_vertex_methods();
-  auto f_methods = material->get_fragment_methods();
-
-  // uniform substitutions
-  for (auto const& uniform : material->get_default_material()->get_uniforms()) {
-    sstr << "uniform " << uniform.second.get().get_glsl_type() << " "
-        << uniform.first << ";" << std::endl;
-  }
-  sstr << std::endl;
-  smap["material_uniforms"] = sstr.str();
-  smap["material_input"] = "";
-  sstr.str("");
-
-  // material methods substitutions
-  for (auto const& method : v_methods) {
-    sstr << method.get_source() << std::endl;
-  }
-  smap["material_method_declarations_vert"] = sstr.str();
-  sstr.str("");
-
-  for (auto& method : f_methods) {
-    sstr << method.get_source() << std::endl;
-  }
-  smap["material_method_declarations_frag"] = sstr.str();
-  sstr.str("");
-
-  // material method calls substitutions
-  for (auto const& method : v_methods) {
-    sstr << method.get_name() << "();" << std::endl;
-  }
-  smap["material_method_calls_vert"] = sstr.str();
-  sstr.str("");
-
-  for (auto& method : f_methods) {
-    sstr << method.get_name() << "();" << std::endl;
-  }
-  smap["material_method_calls_frag"] = sstr.str();
-
-  auto shader_program = std::make_shared<ShaderProgram>();
-  shader_program->set_shaders(program_stages_, std::list<std::string>(), false, smap);
-  return shader_program;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

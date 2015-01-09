@@ -81,5 +81,50 @@ std::list<MaterialShaderMethod> const& MaterialShader::get_fragment_methods() co
   return desc_.get_fragment_methods();
 }
 
+SubstitutionMap MaterialShader::generate_substitution_map() const
+{
+  SubstitutionMap smap;
+  std::stringstream sstr;
+
+  const auto& v_methods = get_vertex_methods();
+  const auto& f_methods = get_fragment_methods();
+
+  // uniform substitutions
+  for (auto const& uniform : get_default_material()->get_uniforms()) {
+    sstr << "uniform " << uniform.second.get().get_glsl_type() << " "
+        << uniform.first << ";" << std::endl;
+  }
+  sstr << std::endl;
+  smap["material_uniforms"] = sstr.str();
+  smap["material_input"] = "";
+  sstr.str("");
+
+  // material methods substitutions
+  for (auto const& method : v_methods) {
+    sstr << method.get_source() << std::endl;
+  }
+  smap["material_method_declarations_vert"] = sstr.str();
+  sstr.str("");
+
+  for (auto& method : f_methods) {
+    sstr << method.get_source() << std::endl;
+  }
+  smap["material_method_declarations_frag"] = sstr.str();
+  sstr.str("");
+
+  // material method calls substitutions
+  for (auto const& method : v_methods) {
+    sstr << method.get_name() << "();" << std::endl;
+  }
+  smap["material_method_calls_vert"] = sstr.str();
+  sstr.str("");
+
+  for (auto& method : f_methods) {
+    sstr << method.get_name() << "();" << std::endl;
+  }
+  smap["material_method_calls_frag"] = sstr.str();
+
+  return smap;
+}
 
 }
