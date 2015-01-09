@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
+
   auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   loader2.load_animation(teapot2, "data/objects/pinky/idle1.md5anim", 0);
   loader2.load_animation(teapot2, "data/objects/pinky/attack.md5anim", 0);
@@ -92,6 +93,7 @@ int main(int argc, char** argv) {
   graph.add_node("/transform2", teapot2);
   // graph.add_node("/transform2", teapot2);
   teapot->set_draw_bounding_box(true);
+  teapot2->set_draw_bounding_box(true);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
@@ -162,8 +164,8 @@ int main(int argc, char** argv) {
 
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
-    transform->set_transform(modelmatrix);
-    transform2->set_transform(scm::math::make_translation(0.5f,0.0f,0.0f) * modelmatrix);
+    transform->set_transform(scm::math::make_translation(-0.75f,0.0f,0.0f) * modelmatrix);
+    transform2->set_transform(scm::math::make_translation(0.75f,0.0f,0.0f) * modelmatrix);
 
     window->process_events();
     if (window->should_close()) {
