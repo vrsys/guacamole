@@ -105,11 +105,6 @@ public : // methods
   void set_blending_mode(uint mode);
   uint get_blending_mode();
 
-  uint get_animation_mode();
-  
-  void set_blending_mode(uint mode);
-  uint get_blending_mode();
-
   std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
 
   /**

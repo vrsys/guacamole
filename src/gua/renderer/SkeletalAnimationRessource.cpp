@@ -61,6 +61,7 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(Mesh const& mesh, std::sh
         mesh_.positions[v].x, mesh_.positions[v].y, mesh_.positions[v].z));
   }
   std::cout << "box dims" << bounding_box_.corners().first << " and " << bounding_box_.corners().second << std::endl;
+
   bone_boxes_ = std::vector<math::BoundingBox<math::vec3>>(100,math::BoundingBox<math::vec3>());
 
     // TODO
