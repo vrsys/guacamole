@@ -41,7 +41,7 @@ class MaterialShaderMethod;
 class GUA_DLL ProgramFactory {
  public:
 
-  ProgramFactory(std::vector<std::string> const& shader_search_directories = std::vector<std::string>());
+  ProgramFactory(std::vector<std::string> const& search_directories = std::vector<std::string>());
 
   ~ProgramFactory();
 

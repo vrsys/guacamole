@@ -152,24 +152,24 @@ namespace gua {
   void NURBSRenderer::_load_shaders()
   {
     pre_tesselation_shader_stages_.clear();
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.vert")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.tctrl")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.teval")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/pre_tesselation.geom")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.vert")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.tctrl")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.teval")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.geom")));
 
     pre_tesselation_interleaved_stream_capture_.clear();
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_position");
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_index");
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_tesscoord");
 
-    tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]          = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.vert");
-    tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER]    = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.tctrl");
-    tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.teval");
-    tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER]        = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.geom");
-    tesselation_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]        = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/final_tesselation.frag");
+    tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]          = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.vert");
+    tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER]    = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.tctrl");
+    tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.teval");
+    tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER]        = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.geom");
+    tesselation_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]        = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.frag");
 
-    raycasting_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]           = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.vert");
-    raycasting_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]         = factory_.read_from_file("resources/shaders/uber_shaders/gbuffer/nurbs/ray_casting.frag");
+    raycasting_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]           = factory_.read_from_file("resources/shaders/nurbs/ray_casting.vert");
+    raycasting_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]         = factory_.read_from_file("resources/shaders/nurbs/ray_casting.frag");
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -319,8 +319,6 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
       auto nurbs_ressource = nurbs_node->get_geometry();
 
-      std::cout << nurbs_node->rendermode_raycasting() << std::endl;
-
       if (nurbs_ressource && pre_tesselation_program_ && current_material_program) {
 
         if (nurbs_node->rendermode_raycasting())
@@ -330,6 +328,8 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
           {
             current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
             current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+            current_material_program->apply_uniform(ctx, "nearplane", pipe.get_camera().config.get_near_clip());
+            current_material_program->apply_uniform(ctx, "farplane", pipe.get_camera().config.get_far_clip());
 
             nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 
