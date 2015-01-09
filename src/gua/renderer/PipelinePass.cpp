@@ -34,7 +34,9 @@
 
 namespace gua {
 
-PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const& ctx)
+PipelinePass::PipelinePass(PipelinePassDescription const& d,
+                           RenderContext const& ctx,
+                           SubstitutionMap const& substitution_map)
   : shader_(std::make_shared<ShaderProgram>())
   , rasterizer_state_(nullptr)
   , depth_stencil_state_(nullptr)
@@ -44,36 +46,9 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
   , doClear_(d.doClear_)
   , rendermode_(d.rendermode_)
   , process_(d.process_)
+  , substitution_map_(substitution_map)
 {
-  if (!d.vertex_shader_.empty() && !d.fragment_shader_.empty()) {
-    if (!d.geometry_shader_.empty()) {
-#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-      ResourceFactory factory;
-      shader_->create_from_sources(factory.read_shader_file(d.vertex_shader_),
-                                   factory.read_shader_file(d.geometry_shader_),
-                                   factory.read_shader_file(d.fragment_shader_));
-      //shader_->save_to_file("compiled_shaders", "shader");
-#else
-      shader_->create_from_sources(
-          Resources::lookup_shader(d.vertex_shader_),
-          Resources::lookup_shader(d.geometry_shader_),
-          Resources::lookup_shader(d.fragment_shader_));
-#endif
-    } else {
-#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-      ResourceFactory factory;
-      shader_->create_from_sources(factory.read_shader_file(d.vertex_shader_),
-                                   factory.read_shader_file(d.fragment_shader_));
-      //shader_->save_to_file("compiled_shaders", "shader");
-#else
-      shader_->create_from_sources(
-          Resources::lookup_shader(d.vertex_shader_),
-          Resources::lookup_shader(d.fragment_shader_));
-#endif
-    }
-
-    shader_->upload_to(ctx);
-  }
+  upload_program(d, ctx);
 
   if (d.depth_stencil_state_) {
     depth_stencil_state_ =
@@ -93,40 +68,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
   auto const& ctx(pipe.get_context());
 
   if (desc.recompile_shaders_) {
-    if (!desc.vertex_shader_.empty() && !desc.fragment_shader_.empty()) {
-      if (!desc.geometry_shader_.empty()) {
-#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-        ResourceFactory factory;
-        shader_->create_from_sources(
-          desc.vertex_shader_is_file_name_ ? factory.read_shader_file(desc.vertex_shader_) : desc.vertex_shader_,
-          desc.geometry_shader_is_file_name_ ? factory.read_shader_file(desc.geometry_shader_) : desc.geometry_shader_,
-          desc.fragment_shader_is_file_name_ ? factory.read_shader_file(desc.fragment_shader_) : desc.fragment_shader_
-          );
-#else
-        shader_->create_from_sources(
-          desc.vertex_shader_is_file_name_ ? Resources::lookup_shader(desc.vertex_shader_) : desc.vertex_shader_,
-          desc.geometry_shader_is_file_name_ ? Resources::lookup_shader(desc.geometry_shader_) : desc.geometry_shader_,
-          desc.fragment_shader_is_file_name_ ? Resources::lookup_shader(desc.fragment_shader_) : desc.fragment_shader_
-        );
-#endif
-      } else {
-#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-        ResourceFactory factory;
-        shader_->create_from_sources(
-          desc.vertex_shader_is_file_name_ ? factory.read_shader_file(desc.vertex_shader_) : desc.vertex_shader_,
-          desc.fragment_shader_is_file_name_ ? factory.read_shader_file(desc.fragment_shader_) : desc.fragment_shader_
-          );
-#else
-        shader_->create_from_sources(
-          desc.vertex_shader_is_file_name_ ? Resources::lookup_shader(desc.vertex_shader_) : desc.vertex_shader_,
-          desc.fragment_shader_is_file_name_ ? Resources::lookup_shader(desc.fragment_shader_) : desc.fragment_shader_
-          );
-#endif
-      }
-
-      shader_->upload_to(ctx);
-    }
-
+    upload_program(desc, ctx);
     desc.recompile_shaders_ = false;
   }
 
@@ -161,6 +103,41 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
     pipe.get_gbuffer().unbind(ctx);
     ctx.render_context->reset_state_objects();
   }
+}
+
+void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderContext const& ctx) {
+
+  if (!desc.vertex_shader_.empty() && !desc.fragment_shader_.empty()) {
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    ResourceFactory factory;
+    std::string v_shader = desc.vertex_shader_is_file_name_
+        ? factory.read_shader_file(desc.vertex_shader_) : desc.vertex_shader_;
+    std::string f_shader = desc.fragment_shader_is_file_name_
+        ? factory.read_shader_file(desc.fragment_shader_) : desc.fragment_shader_;
+#else
+    std::string v_shader = desc.vertex_shader_is_file_name_ 
+        ? Resources::lookup_shader(desc.vertex_shader_) : desc.vertex_shader_;
+    std::string f_shader = desc.fragment_shader_is_file_name_ 
+        ? Resources::lookup_shader(desc.fragment_shader_) : desc.fragment_shader_;
+#endif
+
+    if (!desc.geometry_shader_.empty()) {
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+      std::string g_shader = desc.geometry_shader_is_file_name_
+          ? factory.read_shader_file(desc.geometry_shader_) : desc.geometry_shader_;
+#else
+      std::string g_shader = desc.geometry_shader_is_file_name_ 
+          ? Resources::lookup_shader(desc.geometry_shader_) : desc.geometry_shader_;
+#endif
+      shader_->create_from_sources(v_shader, g_shader, f_shader, substitution_map_);
+    }
+    else {
+      shader_->create_from_sources(v_shader, f_shader, substitution_map_);
+    }
+
+    shader_->upload_to(ctx);
+  }
+
 }
 
 }

@@ -1,9 +1,13 @@
 
+@include "gua_abuffer.glsl"
+
 #ifndef ABUF_SHADE_FUNC
 #define ABUF_SHADE_FUNC abuf_get_color
 vec4 abuf_get_color(uint pos, float depth) {
   return ABUF_FRAG(pos, 0);
 }
+#else
+vec4 ABUF_SHADE_FUNC(uint pos, float depth);
 #endif
 
 void abuf_mix_frag(vec4 frag_color, inout vec4 color) {
@@ -33,10 +37,9 @@ bool abuf_blend(inout vec4 color, float opaque_depth) {
 
     ++frag_count;
 
-#if ABUF_CULL
-    if (color.a >= ABUF_CULL_THRES)
+    if (color.a >= @abuf_blending_termination_threshold@) {
       return false;
-#endif
+    }
   }
   return true;
 }

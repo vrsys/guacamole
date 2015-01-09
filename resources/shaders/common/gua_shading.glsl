@@ -17,7 +17,7 @@ struct LightSource {
 };
 
 layout(std140, binding=1) uniform lightBlock {
-  LightSource gua_lights[4*32];
+  LightSource gua_lights[@max_lights_num@];
 };
 
 const float Pi = 3.14159265;

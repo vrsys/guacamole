@@ -49,9 +49,9 @@ PipelinePassDescription* EmissivePassDescription::make_copy() const {
   return new EmissivePassDescription(*this);
 }
 
-PipelinePass EmissivePassDescription::make_pass(RenderContext const& ctx)
+PipelinePass EmissivePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map)
 {
-  PipelinePass pass{*this, ctx};
+  PipelinePass pass{*this, ctx, substitution_map};
   return pass;
 }
 

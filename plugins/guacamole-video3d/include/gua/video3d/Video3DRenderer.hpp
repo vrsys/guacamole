@@ -60,11 +60,14 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
   //                          Frustum const& frustum,
   //                          View const& view) const;
 
+  void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
+
  private: // attributes
   bool initialized_;
 
   std::vector<ShaderProgramStage>                                     program_stages_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+  SubstitutionMap                                                     global_substitution_map_;
 
   std::shared_ptr<ShaderProgram> warp_pass_program_;
 

@@ -109,9 +109,9 @@ PipelinePassDescription* SSAOPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx)
+PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map)
 {
-  PipelinePass pass{*this, ctx};
+  PipelinePass pass{*this, ctx, substitution_map};
   return pass;
 }
 

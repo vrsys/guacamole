@@ -97,9 +97,12 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
             current_shader = shader_iterator->second;
           }
           else {
+            auto smap = global_substitution_map_;
+            for (const auto& i: current_material->generate_substitution_map())
+              smap[i.first] = i.second;
+
             current_shader = std::make_shared<ShaderProgram>();
-            current_shader->set_shaders(program_stages_, std::list<std::string>(), false,
-                                        current_material->generate_substitution_map());
+            current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
             programs_[current_material] = current_shader;
           }
         }

@@ -6,12 +6,12 @@ in vec2 gua_quad_coords;
 @include "common/gua_camera_uniforms.glsl"
 @include "common/gua_gbuffer_input.glsl"
 @include "common/gua_shading.glsl"
-#define ABUF_MODE readonly
-@include "common/gua_abuffer.glsl"
-uint bitset[4];
-const int tile_power = 2;
 
+#define ABUF_MODE readonly
 #define ABUF_SHADE_FUNC abuf_shade
+@include "common/gua_abuffer_resolve.glsl"
+
+uint bitset[((@max_lights_num@ - 1) >> 5) + 1];
 
 vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags) {
   // pass-through check
@@ -41,9 +41,6 @@ vec4 abuf_shade(uint pos, float depth) {
   vec3 frag_color = shade_for_all_lights(color.rgb, normal.xyz *2.0 - 1.0, position, pbr.rgb, floatBitsToUint(pbr.w));
   return vec4(frag_color, color.a);
 }
-
-
-@include "common/gua_abuffer_resolve.glsl"
 
 uniform int   background_mode;
 uniform vec3  background_color;
@@ -92,7 +89,7 @@ void main() {
 
   // init light bitset
   int bitset_words = ((gua_lights_num - 1) >> 5) + 1;
-  ivec2 tile = frag_pos >> tile_power;
+  ivec2 tile = frag_pos >> @light_table_tile_power@;
   for (int sl = 0; sl < bitset_words; ++sl)
     bitset[sl] = texelFetch(usampler3D(gua_light_bitset), ivec3(tile, sl), 0).r;
 

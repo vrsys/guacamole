@@ -55,9 +55,9 @@ PipelinePassDescription* BBoxPassDescription::make_copy() const {
   return new BBoxPassDescription(*this);
 }
 
-PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx)
+PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map)
 {
-  PipelinePass pass{*this, ctx};
+  PipelinePass pass{*this, ctx, substitution_map};
 
   auto count = 1;
   scm::gl::buffer_ptr buffer_ = ctx.render_device->create_buffer(

@@ -39,7 +39,7 @@ class GUA_VIDEO3D_DLL Video3DPassDescription : public PipelinePassDescription {
  public:
   Video3DPassDescription();
 
-  PipelinePass make_pass(RenderContext const& ctx);
+  PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap const&);
 
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;

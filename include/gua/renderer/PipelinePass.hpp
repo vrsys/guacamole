@@ -49,7 +49,7 @@ class GUA_DLL PipelinePassDescription {
 
  protected:
 
-  virtual PipelinePass make_pass(RenderContext const& ctx) = 0;
+  virtual PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map) = 0;
   friend bool operator!=(PipelinePassDescription const& lhs, PipelinePassDescription const& rhs) { return lhs.mod_count_ != rhs.mod_count_; };
 
   // shader names
@@ -111,8 +111,10 @@ class GUA_DLL PipelinePass {
  protected:
  public:  // for refactoring purposes
   PipelinePass() {}
-  PipelinePass(PipelinePassDescription const&, RenderContext const&);
+  PipelinePass(PipelinePassDescription const&, RenderContext const&, SubstitutionMap const&);
   ~PipelinePass() {}
+
+  virtual void upload_program(PipelinePassDescription const& desc, RenderContext const& ctx);
 
   std::shared_ptr<ShaderProgram> shader_ = nullptr;
 
@@ -129,6 +131,9 @@ class GUA_DLL PipelinePass {
     process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) {
       return;
     };
+
+ private:
+  SubstitutionMap substitution_map_;
 };
 
 }

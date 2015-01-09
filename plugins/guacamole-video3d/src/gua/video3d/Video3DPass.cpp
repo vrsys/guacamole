@@ -40,11 +40,12 @@ Video3DPassDescription::Video3DPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass Video3DPassDescription::make_pass(RenderContext const& ctx) {
+PipelinePass Video3DPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map) {
 
-  PipelinePass pass{*this, ctx};
+  PipelinePass pass{*this, ctx, substitution_map};
 
   auto renderer(std::make_shared<Video3DRenderer>());
+  renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
       PipelinePass & pass, PipelinePassDescription const&, Pipeline& pipe) {

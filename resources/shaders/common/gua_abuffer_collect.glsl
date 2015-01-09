@@ -1,6 +1,7 @@
 
+@include "gua_abuffer.glsl"
 
-void abuf_insert()
+void abuf_insert(float depth)
 {
   const ivec2 frag_pos = ivec2(gl_FragCoord.xy);
 
@@ -16,13 +17,12 @@ void abuf_insert()
   frag_list[ctr] = 0ul;
   memoryBarrier();
 
-  float z = LIN_DEPTH(gl_FragCoord.z);
+  float z = LIN_DEPTH(depth);
   uint64_t old, record = packUint2x32(uvec2(ctr, PACK_DEPTH(z)));
 
   uint pos = gua_resolution.x * frag_pos.y + frag_pos.x; // start of the search
   int frag_ctr = 0;
   bool stop_flag = false;
-  float alpha = 0;
 
   uint64_t assumed;
 

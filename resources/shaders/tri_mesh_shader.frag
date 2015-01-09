@@ -7,7 +7,6 @@
 @include "common/gua_fragment_shader_output.glsl"
 @include "common/gua_global_variable_declaration.glsl"
 
-@include "common/gua_abuffer.glsl"
 @include "common/gua_abuffer_collect.glsl"
 
 @material_method_declarations_frag@
@@ -17,11 +16,11 @@ void main() {
   @include "common/gua_global_variable_assignment.glsl"
   @material_method_calls_frag@
 
-  if (gua_alpha > 0.999) {
+  if (gua_alpha > @abuf_insertion_threshold@) {
     @include "common/gua_write_gbuffer.glsl"
   }
   else {
-    abuf_insert();
+    abuf_insert(gl_FragCoord.z);
     discard;
   }
 }

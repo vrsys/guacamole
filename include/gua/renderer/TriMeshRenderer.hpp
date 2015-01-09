@@ -45,10 +45,12 @@ class TriMeshRenderer {
 
   void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
- private:
+  void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
+ private:
   std::vector<ShaderProgramStage>                                     program_stages_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+  SubstitutionMap                                                     global_substitution_map_;
 };
 
 }

@@ -81,6 +81,7 @@ class GUA_DLL Pipeline {
 
   math::vec2ui                       last_resolution_;
   PipelineDescription                last_description_;
+  SubstitutionMap                    global_substitution_map_;
 
   std::vector<PipelinePass>          passes_;
   scm::gl::quad_geometry_ptr         quad_;

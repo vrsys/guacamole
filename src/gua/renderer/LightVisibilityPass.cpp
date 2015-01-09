@@ -177,9 +177,9 @@ PipelinePassDescription* LightVisibilityPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass LightVisibilityPassDescription::make_pass(RenderContext const& ctx)
+PipelinePass LightVisibilityPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map)
 {
-  PipelinePass pass{*this, ctx};
+  PipelinePass pass{*this, ctx, substitution_map};
   return pass;
 }
 

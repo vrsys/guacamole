@@ -38,7 +38,7 @@ class GUA_DLL PhysicallyBasedShadingPassDescription : public PipelinePassDescrip
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
  protected:
-  PipelinePass make_pass(RenderContext const&) override;
+  PipelinePass make_pass(RenderContext const&, SubstitutionMap const&) override;
 };
 
 }
