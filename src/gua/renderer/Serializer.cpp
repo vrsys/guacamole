@@ -30,6 +30,7 @@
 #include <gua/node/Node.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/LODNode.hpp>
+#include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/node/SerializableNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
@@ -108,6 +109,25 @@ void Serializer::check(SerializedScene& output,
     if (child_index < node->get_children().size()) {
       node->get_children()[child_index]->accept(*this);
     }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* virtual */ void Serializer::visit(node::SkeletalAnimationNode* node) {
+  if (is_visible(node)) {
+    if (node->get_draw_bounding_box()) {
+      auto bone_boxes = node->get_bone_boxes();
+      for(uint b(0);b<bone_boxes.size();++b){
+        if(!bone_boxes[b].isEmpty()){
+          data_->bounding_boxes.push_back(bone_boxes[b]);
+        }
+      }
+    }
+
+    data_->nodes[std::type_index(typeid(*node))].push_back(node);
+
+    visit_children(node);
   }
 }
 
