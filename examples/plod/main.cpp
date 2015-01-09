@@ -70,7 +70,6 @@ int main(int argc, char** argv) {
     return shader->get_default_material();
   };
 
-  //auto mat1(load_mat("data/materials/SimpleMaterial.gmd"));
   auto pbrMat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
 
   gua::TriMeshLoader loader;
@@ -83,18 +82,9 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/graz_samples/processing/originals/AREA10A_scaled_rigid_t.kdn", mat1, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE) );
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/XYZ_ALL/new_pitoti_sampling/Area_4_hunter_with_bow.kdn", mat1, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE) );
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_14.kdn", mat1, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE) );
   auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-    //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/home/wabi7015/Downloads/Bowser_Retextured/bowser.kdn", mat1, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-//auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Adrian_BA/higher_res_generic_city.kdn", mat1, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/ssd_pitoti/Adrian_BA/VIANDEN.kdn", mat1, 0/*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/));
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/ssd_pitoti/seradina_new/sera_part_01.kdn", mat1, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
 
   plod_geometry->set_draw_bounding_box(true);
-
-  //plod_geometry->get_material().set_uniform("gua_specularity
 
   transform->add_child(plod_geometry);
 
@@ -120,9 +110,6 @@ int main(int argc, char** argv) {
   screen->data.set_size(gua::math::vec2(1.6f, 0.9f));
   screen->translate(0, 0, 1.0);
 
-  //gua::VolumeLoader vloader;
-  //auto volume(vloader.create_volume_from_file("volume", "/opt/gua_vrgeo_2013/data/objects/head_w256_h256_d225_c1_b8.raw", 0));
-  //graph.add_node("/transform", volume);
 
   auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
   portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
