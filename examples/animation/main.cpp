@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   graph.add_node("/transform", teapot);
   graph.add_node("/transform2", teapot2);
   // graph.add_node("/transform2", teapot2);
-  // teapot->set_draw_bounding_box(true);
+  teapot->set_draw_bounding_box(true);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);

@@ -91,7 +91,8 @@ class SkeletalAnimationRessource : public GeometryResource {
   scm::math::vec3 get_vertex(unsigned int i) const;
   std::vector<unsigned int> get_face(unsigned int i) const;
 
-  void update_bounding_box();
+
+  std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
 
   friend class SkeletalAnimationRenderer;
   friend class LightingPass;
@@ -177,6 +178,8 @@ class SkeletalAnimationRessource : public GeometryResource {
 
     std::vector<scm::math::vec3> positions_;
     std::vector<VertexBoneData> bones_;
+
+    std::vector<math::BoundingBox<math::vec3>> bone_boxes_;
 
     /////////////////////////////////
 
