@@ -66,7 +66,21 @@ std::string ResourceFactory::read_shader_file(std::string const& path) const
 
   std::string out;
   if (!resolve_includes(fs::path(path), fs::current_path(), out))
-    throw std::runtime_error("Unable to resolve shader includes");
+    throw std::runtime_error("Unable to read shader from file");
+
+  return std::string(GUACAMOLE_GLSL_VERSION_STRING) + out;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string ResourceFactory::prepare_shader(std::string const& shader_source,
+                                            std::string const& label) const
+{
+  namespace fs = boost::filesystem;
+
+  std::string out = shader_source;
+  if (!resolve_includes(fs::path(), fs::current_path(), out, label))
+    throw std::runtime_error("Unable to prepare shader");
 
   return std::string(GUACAMOLE_GLSL_VERSION_STRING) + out;
 }
@@ -74,7 +88,7 @@ std::string ResourceFactory::read_shader_file(std::string const& path) const
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string ResourceFactory::resolve_substitutions(std::string const& shader_source,
-                                                  SubstitutionMap const& smap) const
+                                                   SubstitutionMap const& smap) const
 {
   //TODO: add support for the #line macro if multi-line substitutions are supplied.
   boost::regex regex("\\@(\\w+)\\@");
@@ -101,9 +115,9 @@ std::string ResourceFactory::resolve_substitutions(std::string const& shader_sou
 ////////////////////////////////////////////////////////////////////////////////
 
 bool ResourceFactory::get_file_contents(boost::filesystem::path const& filename,
-                                       boost::filesystem::path const& current_dir,
-                                       std::string& contents,
-                                       boost::filesystem::path& full_path) const
+                                        boost::filesystem::path const& current_dir,
+                                        std::string& contents,
+                                        boost::filesystem::path& full_path) const
 {
   namespace fs = boost::filesystem;
   std::ifstream ifs;
@@ -144,38 +158,53 @@ bool ResourceFactory::get_file_contents(boost::filesystem::path const& filename,
 ////////////////////////////////////////////////////////////////////////////////
 
 bool ResourceFactory::resolve_includes(boost::filesystem::path const& filename,
-                                      boost::filesystem::path const& current_dir,
-                                      std::string& contents) const
+                                       boost::filesystem::path const& current_dir,
+                                       std::string& contents,
+                                       std::string const& custom_label) const
 {
   namespace fs = boost::filesystem;
 
+  // line macro for shader
+  auto gen_line = [](int line, std::string const& label) {
+    return std::string("#line " + std::to_string(line) + " \"" + label + "\"\n");
+  };
+
   // get contents
   std::string s;
-  fs::path full_path;
-  if (!get_file_contents(filename, current_dir, s, full_path)) {
-    contents = "";
-    return false;
+  std::string file_label;
+  fs::path    first_search_dir;
+  if (filename.empty()) {
+    // take shader code from 'contents' parameter and label from 'custom_label'
+    s = contents;
+    file_label = custom_label;
+    first_search_dir = current_dir;
+  }
+  else {
+    // load shader code from file
+    fs::path full_path;
+    if (!get_file_contents(filename, current_dir, s, full_path)) {
+      contents = "";
+      return false;
+    }
+    file_label = full_path.native();
+    first_search_dir = full_path.parent_path();
   }
 
   // substitute inclusions
-  s = "#line 1 \"" + full_path.native() + "\"\n" + s;
+  s = gen_line(1, file_label) + s;
   boost::regex regex("(\\@|\\#)\\s*include\\s*\"([^\"]+)\"");
   boost::smatch match;
   std::string out;
   int line_ctr{};
   while (boost::regex_search(s, match, regex)) {
-    std::string content;
-    if (!resolve_includes(fs::path(match[2]),
-                          full_path.parent_path(),
-                          content)) {
+    std::string shader_code;
+    if (!resolve_includes(fs::path(match[2]), first_search_dir, shader_code)) {
       contents = "";
       return false;
     }
     std::string prefix = match.prefix().str();
     line_ctr += std::count(prefix.begin(), prefix.end(), '\n');
-    out += prefix + "\n" + content
-           + "\n#line " + std::to_string(line_ctr)
-           + " \"" + full_path.native() + "\"\n";
+    out += prefix + "\n" + shader_code + "\n" + gen_line(line_ctr, file_label);
     s = match.suffix().str();
   }
   contents = out + s;

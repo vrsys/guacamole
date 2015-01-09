@@ -46,6 +46,8 @@ class GUA_DLL ResourceFactory {
 
   std::string  read_plain_file(std::string const& file) const;
   std::string  read_shader_file(std::string const& file) const;
+  std::string  prepare_shader(std::string const& shader_source,
+                              std::string const& label) const;
   std::string  resolve_substitutions(std::string const& shader_source,
                                      SubstitutionMap const& smap) const;
 
@@ -57,7 +59,8 @@ class GUA_DLL ResourceFactory {
                                  boost::filesystem::path& full_path) const;
   bool         resolve_includes(boost::filesystem::path const& filename,
                                 boost::filesystem::path const& current_dir,
-                                std::string& contents) const;
+                                std::string& contents,
+                                std::string const& custom_label = std::string()) const;
 
   std::vector<std::string> _search_paths;
 

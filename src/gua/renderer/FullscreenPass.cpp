@@ -22,8 +22,10 @@
 // class header
 #include <gua/renderer/FullscreenPass.hpp>
 
+#include <gua/config.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
@@ -46,7 +48,12 @@ FullscreenPassDescription::FullscreenPassDescription()
     }
   )";
 
+#ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  ResourceFactory factory;
+  fragment_shader_ = factory.prepare_shader(fragment_shader_, "FullscreenPass shader");
+#else
   Resources::resolve_includes(fragment_shader_);
+#endif
 
   fragment_shader_is_file_name_ = false;
   needs_color_buffer_as_input_ = true;
@@ -61,9 +68,15 @@ FullscreenPassDescription::FullscreenPassDescription()
 ////////////////////////////////////////////////////////////////////////////////
 
 FullscreenPassDescription& FullscreenPassDescription::source(std::string const& source) {
+
+#ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  ResourceFactory factory;
+  fragment_shader_ = factory.prepare_shader(source, "FullscreenPass shader");
+#else
   fragment_shader_ = source;
-  fragment_shader_is_file_name_ = false;
   Resources::resolve_includes(fragment_shader_);
+#endif
+  fragment_shader_is_file_name_ = false;
   recompile_shaders_ = true;
   return *this;
 }
