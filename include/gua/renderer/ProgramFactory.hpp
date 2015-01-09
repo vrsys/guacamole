@@ -26,24 +26,17 @@
 #include <map>
 #include <unordered_map>
 #include <list>
-
-#include <scm/gl_core/shader_objects.h>
+#include <boost/filesystem.hpp>
 
 #include <gua/platform.hpp>
-#include <boost/filesystem.hpp>
 
 
 namespace gua {
 
-struct RenderContext;
-class ShaderProgram;
-class MaterialShader;
-class MaterialShaderMethod;
+typedef std::unordered_map<std::string, std::string> SubstitutionMap;
 
 class GUA_DLL ProgramFactory {
  public:
-
-  typedef std::unordered_map<std::string, std::string> SubstitutionMap;
 
   ProgramFactory(std::vector<std::string> const& search_directories = std::vector<std::string>());
 
@@ -51,16 +44,8 @@ class GUA_DLL ProgramFactory {
 
   void         add_search_path(std::string const& path);
 
-  std::shared_ptr<ShaderProgram>  create_program(MaterialShader* material,
-                                                 std::map<scm::gl::shader_stage, std::string> const& program_description,
-                                                 std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
-                                                 bool in_rasterization_discard = false);
-
   std::string  read_plain_file(std::string const& file) const;
   std::string  read_shader_file(std::string const& file) const;
-  std::string  compile_description(MaterialShader* material,
-                                   std::list<MaterialShaderMethod> const& passes,
-                                   std::string const& shader_source) const;
   std::string  resolve_substitutions(std::string const& shader_source,
                                      SubstitutionMap const& smap) const;
 

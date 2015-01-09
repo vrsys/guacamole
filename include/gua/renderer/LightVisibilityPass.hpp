@@ -11,7 +11,7 @@ namespace gua {
 
 class Pipeline;
 
-class LightVisibilityPassDescription : public PipelinePassDescription {
+class GUA_DLL LightVisibilityPassDescription : public PipelinePassDescription {
  public:
   LightVisibilityPassDescription();
   PipelinePassDescription* make_copy() const override;

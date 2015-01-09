@@ -27,31 +27,32 @@
 
 #include <gua/platform.hpp>
 #include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
 #include <scm/gl_core/shader_objects.h>
 
 namespace gua {
 
-  class MaterialShader;
-  class ShaderProgram;
-  class Pipeline;
-  class PipelinePassDescription;
+class MaterialShader;
+class Pipeline;
+class PipelinePassDescription;
 
 class TriMeshRenderer {
 
  public:
 
-   TriMeshRenderer();
-   ~TriMeshRenderer();
-  
-   void render(Pipeline& pipe, PipelinePassDescription const& desc);
+  TriMeshRenderer();
+  virtual ~TriMeshRenderer() {}
+
+  void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
  private:
-   
-   ProgramFactory                                                      program_factory_;
-   std::map<scm::gl::shader_stage, std::string>                        program_description_;
-   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
-  
+
+  std::shared_ptr<ShaderProgram> init_program(MaterialShader const* material) const;
+
+  ProgramFactory                                                      program_factory_;
+  std::vector<ShaderProgramStage>                                     program_stages_;
+  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
 };
 
 }
