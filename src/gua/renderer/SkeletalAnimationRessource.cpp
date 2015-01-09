@@ -28,6 +28,7 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
 
 // external headers
@@ -94,6 +95,7 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(aiMesh const* mesh,std::s
         mesh->mVertices[v].x, mesh->mVertices[v].y, mesh->mVertices[v].z));
   }
 
+  bone_boxes_ = std::vector<math::BoundingBox<math::vec3>>(100,math::BoundingBox<math::vec3>());
 
     // TODO
     /*if (build_kd_tree) {
@@ -281,7 +283,16 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
         {vertices_[ctx.id]});
 
     
-    update_bounding_box();
+    
+    // init non transformated/animated bone boxes
+    // use every single vertex to be manipulated by a certain bone per bone box
+    for (unsigned v(0); v < num_vertices_; ++v) {
+      auto final_pos  = scm::math::vec4(positions_[v].x, positions_[v].y, positions_[v].z, 1.0);
+      for(unsigned i(0);i<4;++i){
+        bone_boxes_[bones_[v].IDs[i]].expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
+      }
+    }
+
 
     ctx.render_context->apply();
   }
@@ -290,32 +301,22 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkeletalAnimationRessource::update_bounding_box(){
+std::vector<math::BoundingBox<math::vec3>>
+SkeletalAnimationRessource::get_bone_boxes(){
+  
+  auto tmp_boxes = std::vector<math::BoundingBox<math::vec3>>(100,math::BoundingBox<math::vec3>());
 
+  auto bone_transformation = animation_director_->get_bone_transforms();
 
-  if(positions_.size()>0 && bones_.size()>0){
-    //overide old bbox, now with bones' influence
-    bounding_box_ = math::BoundingBox<math::vec3>();
+  for(uint b(0);b<bone_boxes_.size();++b){
 
-    for (unsigned v(0); v < num_vertices_; ++v) {
-
-      //expand initial bbox with bones' influence
-      auto bone_transformation = animation_director_->get_bone_transforms();
-
-      scm::math::mat4 BoneTransform =  bone_transformation[bones_[v].IDs[0]] * bones_[v].Weights[0];
-         BoneTransform += bone_transformation[bones_[v].IDs[1]] * bones_[v].Weights[1];
-         BoneTransform += bone_transformation[bones_[v].IDs[2]] * bones_[v].Weights[2];
-         BoneTransform += bone_transformation[bones_[v].IDs[3]] * bones_[v].Weights[3];
-
-      //auto final_pos  =  BoneTransform * scm::math::vec4(Positions[v].x, Positions[v].y, Positions[v].z, 1.0);
-      auto final_pos  =  BoneTransform * scm::math::vec4(positions_[v].x, positions_[v].y, positions_[v].z, 1.0);
-
-      bounding_box_.expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
+    if(!bone_boxes_[b].isEmpty()){
+      tmp_boxes[b] = transform(bone_boxes_[b], bone_transformation[b]);
     }
-
   }
-
+  return tmp_boxes;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

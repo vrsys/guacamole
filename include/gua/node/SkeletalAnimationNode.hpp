@@ -103,6 +103,8 @@ public : // methods
   void set_blending_mode(uint mode);
   uint get_blending_mode();
 
+  std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
+
   /**
    * Accepts a visitor and calls concrete visit method.
    *
