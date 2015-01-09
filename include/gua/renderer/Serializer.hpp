@@ -88,6 +88,15 @@ class Serializer : public NodeVisitor {
   void visit(node::LODNode* lod) override;
 
   /**
+   * Visits an SkeletalAnimationNode
+   *
+   * This function provides the interface to visit an SkeletalAnimationNode
+   *
+   * \param cam   Pointer to SkeletalAnimationNode
+   */
+  void visit(node::SkeletalAnimationNode* lod) override;
+
+  /**
    * Visits a GeometryNode
    *
    * This function provides the interface to visit a GeometryNode
