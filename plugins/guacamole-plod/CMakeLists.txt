@@ -3,7 +3,7 @@
 ###############################################################################
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-set(PLOD_ROOT "/home/wabi7015/3d-pitoti/gualod/trunk/pbr" CACHE PATH "Set to your PLOD install path.")
+set(PLOD_ROOT "/opt/pbr/inst_cb" CACHE PATH "Set to your PLOD install path.")
 include(FindPLOD)
 
 ###############################################################################
@@ -32,8 +32,9 @@ LINK_DIRECTORIES(${LIB_PATHS})
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}
                      ${GUACAMOLE_PLOD_INCLUDE_DIR}
-                     ${PLOD_RENDERING_INCLUDE_DIR}
-                     ${PLOD_COMMON_INCLUDE_DIR}
+                     ${PLOD_INCLUDE_DIR}
+                     #${PLOD_RENDERING_INCLUDE_DIR}
+                     #${PLOD_COMMON_INCLUDE_DIR}
 
 )
 
