@@ -90,6 +90,21 @@ bool gua_calculate_light(int light_id,
   return true;
 }
 
+float sRGB_to_linear(float c)
+{
+  if(c < 0.04045)
+    return (c < 0.0) ? 0.0: c * (1.0 / 12.92);
+  else
+    return pow((c + 0.055)*(1.0/1.055), 2.4);
+}
+
+vec3 sRGB_to_linear(vec3 sRGB)
+{
+  return vec3( sRGB_to_linear(sRGB.r),
+               sRGB_to_linear(sRGB.g),
+               sRGB_to_linear(sRGB.b));
+}
+
 // convert from sRGB to linear
 vec3 sRGB_to_linear_simple(vec3 sRGB)
 {
@@ -126,7 +141,8 @@ vec3 gua_shade(int light_id, vec3 color, vec3 normal, vec3 position, vec3 pbr) {
 
   vec3 F = Fresnel(cspec, H, L);
   vec3 diffuse = lambert(cdiff);
-  vec3 D_Vis = vec3(GGX_Specular(roughness, N, H, Vn, L));
+  //vec3 D_Vis = vec3(GGX_Specular(roughness, N, H, Vn, L));
+  vec3 D_Vis = vec3(D_and_Vis(roughness, N, H, Vn, L));
   vec3 brdf = mix(diffuse, D_Vis, F);
   vec3 col = Cl * brdf * NdotL;
 
