@@ -329,7 +329,7 @@ void main()
   vec3 gua_normal = texture2D( p02_normal_texture, coords.xy).rgb;
 
   float gua_emissivity = 1.0;
-  float gua_roughness = 1.0;
+  float gua_roughness = 0.0;
   float gua_metalness = 0.0;
 
  
