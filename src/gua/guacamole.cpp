@@ -21,7 +21,7 @@
 
 // header
 #include <gua/guacamole.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/BuiltInTextures.hpp>
 #include <gua/databases/Resources.hpp>
@@ -48,7 +48,7 @@ void init(int argc, char** argv) {
   TriMeshLoader mesh_loader;
 
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  ProgramFactory factory;
+  ResourceFactory factory;
 
   auto light_sphere_obj = factory.read_plain_file("resources/geometry/gua_light_sphere.obj");
   auto light_cone_obj   = factory.read_plain_file("resources/geometry/gua_light_cone.obj");

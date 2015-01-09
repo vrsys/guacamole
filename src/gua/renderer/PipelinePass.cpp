@@ -23,7 +23,7 @@
 #include <gua/renderer/PipelinePass.hpp>
 
 #include <gua/config.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/LightTable.hpp>
@@ -48,7 +48,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
   if (!d.vertex_shader_.empty() && !d.fragment_shader_.empty()) {
     if (!d.geometry_shader_.empty()) {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-      ProgramFactory factory;
+      ResourceFactory factory;
       shader_->create_from_sources(factory.read_shader_file(d.vertex_shader_),
                                    factory.read_shader_file(d.geometry_shader_),
                                    factory.read_shader_file(d.fragment_shader_));
@@ -61,7 +61,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
 #endif
     } else {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-      ProgramFactory factory;
+      ResourceFactory factory;
       shader_->create_from_sources(factory.read_shader_file(d.vertex_shader_),
                                    factory.read_shader_file(d.fragment_shader_));
       //shader_->save_to_file("compiled_shaders", "shader");
@@ -96,7 +96,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
     if (!desc.vertex_shader_.empty() && !desc.fragment_shader_.empty()) {
       if (!desc.geometry_shader_.empty()) {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-        ProgramFactory factory;
+        ResourceFactory factory;
         shader_->create_from_sources(
           desc.vertex_shader_is_file_name_ ? factory.read_shader_file(desc.vertex_shader_) : desc.vertex_shader_,
           desc.geometry_shader_is_file_name_ ? factory.read_shader_file(desc.geometry_shader_) : desc.geometry_shader_,
@@ -111,7 +111,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
 #endif
       } else {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-        ProgramFactory factory;
+        ResourceFactory factory;
         shader_->create_from_sources(
           desc.vertex_shader_is_file_name_ ? factory.read_shader_file(desc.vertex_shader_) : desc.vertex_shader_,
           desc.fragment_shader_is_file_name_ ? factory.read_shader_file(desc.fragment_shader_) : desc.fragment_shader_

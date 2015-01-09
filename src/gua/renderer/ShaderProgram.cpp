@@ -218,7 +218,7 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
     }
 
     std::list<scm::gl::shader_ptr> shaders;
-    ProgramFactory factory;
+    ResourceFactory factory;
     for (auto const& s : stages_) {
       auto source = factory.resolve_substitutions(s.source, substitutions_);
       shaders.push_back(context.render_device->create_shader(s.type, source));

@@ -35,12 +35,12 @@ namespace gua {
 
 typedef std::unordered_map<std::string, std::string> SubstitutionMap;
 
-class GUA_DLL ProgramFactory {
+class GUA_DLL ResourceFactory {
  public:
 
-  ProgramFactory(std::vector<std::string> const& search_directories = std::vector<std::string>());
+  ResourceFactory(std::vector<std::string> const& search_directories = std::vector<std::string>());
 
-  virtual ~ProgramFactory() {}
+  virtual ~ResourceFactory() {}
 
   void         add_search_path(std::string const& path);
 

@@ -26,7 +26,7 @@
 #include <gua/config.hpp>
 #include <gua/platform.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
@@ -85,7 +85,7 @@ WindowBase::WindowBase(Configuration const& configuration)
       config.get_warp_matrix_blue_left() == "") {
 
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-    ProgramFactory factory;
+    ResourceFactory factory;
     fullscreen_shader_.create_from_sources(
       factory.read_shader_file("resources/shaders/display_shader.vert"),
       factory.read_shader_file("resources/shaders/display_shader.frag"));
@@ -108,7 +108,7 @@ WindowBase::WindowBase(Configuration const& configuration)
     warpBL_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_blue_left());
 
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-    ProgramFactory factory;
+    ResourceFactory factory;
     fullscreen_shader_.create_from_sources(
       factory.read_shader_file("resources/shaders/display_shader.vert"),
       factory.read_shader_file("resources/shaders/display_shader_warped.frag"));

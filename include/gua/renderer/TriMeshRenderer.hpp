@@ -26,7 +26,6 @@
 #include <unordered_map>
 
 #include <gua/platform.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 
 #include <scm/gl_core/shader_objects.h>
@@ -50,7 +49,6 @@ class TriMeshRenderer {
 
   std::shared_ptr<ShaderProgram> init_program(MaterialShader const* material) const;
 
-  ProgramFactory                                                      program_factory_;
   std::vector<ShaderProgramStage>                                     program_stages_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
 };

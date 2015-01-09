@@ -19,7 +19,7 @@
  *                                                                            *
  ******************************************************************************/
 
-#include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 
 #include <fstream>
 #include <boost/regex.hpp>
@@ -31,7 +31,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ProgramFactory::ProgramFactory(std::vector<std::string> const& shader_root_directories)
+ResourceFactory::ResourceFactory(std::vector<std::string> const& shader_root_directories)
     : _search_paths(shader_root_directories)
 {
   add_search_path(std::string(GUACAMOLE_INSTALL_DIR));
@@ -40,14 +40,14 @@ ProgramFactory::ProgramFactory(std::vector<std::string> const& shader_root_direc
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ProgramFactory::add_search_path(std::string const& path)
+void ResourceFactory::add_search_path(std::string const& path)
 {
   _search_paths.push_back(path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string ProgramFactory::read_plain_file(std::string const& path) const
+std::string ResourceFactory::read_plain_file(std::string const& path) const
 {
   namespace fs = boost::filesystem;
   std::string out;
@@ -60,7 +60,7 @@ std::string ProgramFactory::read_plain_file(std::string const& path) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string ProgramFactory::read_shader_file(std::string const& path) const
+std::string ResourceFactory::read_shader_file(std::string const& path) const
 {
   namespace fs = boost::filesystem;
 
@@ -73,7 +73,7 @@ std::string ProgramFactory::read_shader_file(std::string const& path) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string ProgramFactory::resolve_substitutions(std::string const& shader_source,
+std::string ResourceFactory::resolve_substitutions(std::string const& shader_source,
                                                   SubstitutionMap const& smap) const
 {
   //TODO: add support for the #line macro if multi-line substitutions are supplied.
@@ -100,7 +100,7 @@ std::string ProgramFactory::resolve_substitutions(std::string const& shader_sour
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ProgramFactory::get_file_contents(boost::filesystem::path const& filename,
+bool ResourceFactory::get_file_contents(boost::filesystem::path const& filename,
                                        boost::filesystem::path const& current_dir,
                                        std::string& contents,
                                        boost::filesystem::path& full_path) const
@@ -143,7 +143,7 @@ bool ProgramFactory::get_file_contents(boost::filesystem::path const& filename,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ProgramFactory::resolve_includes(boost::filesystem::path const& filename,
+bool ResourceFactory::resolve_includes(boost::filesystem::path const& filename,
                                       boost::filesystem::path const& current_dir,
                                       std::string& contents) const
 {

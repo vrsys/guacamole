@@ -25,6 +25,7 @@
 #include <gua/config.hpp>
 #include <gua/node/TriMeshNode.hpp>
 
+#include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
@@ -40,8 +41,9 @@ namespace gua {
 TriMeshRenderer::TriMeshRenderer()
 {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  std::string v_shader = program_factory_.read_shader_file("resources/shaders/tri_mesh_shader.vert");
-  std::string f_shader = program_factory_.read_shader_file("resources/shaders/tri_mesh_shader.frag");
+  ResourceFactory factory;
+  std::string v_shader = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
+  std::string f_shader = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
 #else
   std::string v_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
   std::string f_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
