@@ -19,22 +19,48 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+// class header
+#include <gua/video3d/Video3DPass.hpp>
 
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
+#include <gua/video3d/Video3DNode.hpp>
+#include <gua/video3d/Video3DRenderer.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/databases/Resources.hpp>
 
-// node headers
-#include <gua/node/GeometryNode.hpp>
-#include <gua/node/TriMeshNode.hpp>
-#include <gua/node/TransformNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/node/ScreenNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
-#include <gua/node/CameraNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
-#include <gua/node/TexturedScreenSpaceQuadNode.hpp>
+namespace gua {
 
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+Video3DPassDescription::Video3DPassDescription()
+  : PipelinePassDescription() {
+
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = false;
+  doClear_ = false;
+  rendermode_ = RenderMode::Custom;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass Video3DPassDescription::make_pass(RenderContext const& ctx) {
+
+  PipelinePass pass{*this, ctx};
+
+  auto renderer(std::make_shared<Video3DRenderer>());
+
+  pass.process_ = [renderer](
+      PipelinePass & pass, PipelinePassDescription const&, Pipeline& pipe) {
+
+      renderer->render(pipe);
+  };
+
+  return pass;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePassDescription* Video3DPassDescription::make_copy() const {
+  return new Video3DPassDescription(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+}

@@ -1,0 +1,43 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "name" : "FragmentColor",
+      "source" : "
+        // color generation ----------------------------------------------------
+        void FragmentColor() {
+          gua_roughness = Roughness;
+          gua_metalness = Metalness;
+          gua_emissivity = Emissivity;
+          gua_color = mix(gua_color, Color.rgb, Color.a);
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "Color",
+          "type" : "vec4",
+          "value" : "(1.0 1.0 1.0 0.0)"
+        },
+        {
+          "name" : "Roughness",
+          "type" : "float",
+          "value" : "0.1"
+        },
+        {
+          "name" : "Metalness",
+          "type" : "float",
+          "value" : "0.01"
+        },
+        {
+          "name" : "Emissivity",
+          "type" : "float",
+          "value" : "0.3"
+        }
+      ]
+    }
+  ]
+}

@@ -55,6 +55,9 @@ IF (GUACAMOLE_EXAMPLES)
     IF (${PLUGIN_guacamole-volume})
       add_subdirectory(volume)
     ENDIF (${PLUGIN_guacamole-volume})
+    IF (${PLUGIN_guacamole-video3d})
+      add_subdirectory(video3d)
+    ENDIF (${PLUGIN_guacamole-video3d})
   ENDIF (${PLUGIN_guacamole-gui})
 
 
