@@ -54,6 +54,24 @@ class GUA_DLL FrameBufferObject {
   FrameBufferObject();
   virtual ~FrameBufferObject();
 
+  /**
+   * Initializes empty FrameBufferObject.
+   *
+   * This will initialize the framebuffer that has no attachments.
+   * Such empty framebuffer might be usefull for random access reads and writes
+   * to buffer and texture memory from shaders, rather than writing to a bound
+   * framebuffer.
+   *
+   * \param context              The RenderContext to bind to.
+   * \param width                Width of the framebuffer object.
+   * \param height               Height of the framebuffer object.
+   * \param sample_count         Sample count for multisample rasterization.
+   */
+  void initialize_with_no_attachments(RenderContext const& context,
+                                      unsigned width,
+                                      unsigned height,
+                                      unsigned sample_count = 0);
+
   void remove_attachments();
 
   /**
@@ -160,7 +178,7 @@ class GUA_DLL FrameBufferObject {
  private:
   bool set_size(std::shared_ptr<Texture2D> const& buffer);
 
-  unsigned width_, height_;
+  unsigned width_, height_, sample_count_;
   mutable std::vector<scm::gl::frame_buffer_ptr> fbos_;
   mutable std::mutex upload_mutex_;
 
