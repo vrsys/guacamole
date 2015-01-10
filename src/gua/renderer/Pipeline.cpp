@@ -53,10 +53,7 @@ Pipeline::Pipeline() :
   quad_(nullptr),
   context_(nullptr) {
 
-  global_substitution_map_["abuf_insertion_threshold"] = "0.9995";
-  global_substitution_map_["abuf_blending_termination_threshold"] = "0.9995";
-  global_substitution_map_["max_lights_num"] = "128";
-  global_substitution_map_["light_table_tile_power"] = "2";
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,6 +149,11 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
     }
 
     passes_.clear();
+    global_substitution_map_.clear();
+
+    global_substitution_map_["abuf_insertion_threshold"] = "0.9995";
+    global_substitution_map_["abuf_blending_termination_threshold"] = "0.9995";
+    global_substitution_map_["max_lights_num"] = "128";
 
     for (auto pass: last_description_.get_all_passes()) {
       passes_.push_back(pass->make_pass(*ctx, global_substitution_map_));

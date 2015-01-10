@@ -106,7 +106,7 @@ TexturedScreenSpaceQuadPassDescription::make_copy() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass TexturedScreenSpaceQuadPassDescription::make_pass(
-    RenderContext const& ctx, SubstitutionMap const& substitution_map) {
+    RenderContext const& ctx, SubstitutionMap& substitution_map) {
   return PipelinePass { *this, ctx, substitution_map };
 }
 

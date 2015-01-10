@@ -60,11 +60,18 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& fog_end(float fog_end);
   float fog_end() const;
 
+  ResolvePassDescription& debug_tiles(bool value) {
+    debug_tiles_ = value; return *this; }
+  bool debug_tiles() const { return debug_tiles_; }
 
   PipelinePassDescription* make_copy() const override;
   friend class Pipeline;
+
  protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap const&) override;
+  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+
+  bool debug_tiles_ = false;
+
 };
 
 }

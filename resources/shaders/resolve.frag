@@ -134,12 +134,17 @@ void main() {
 
   gua_out_color = final_color.rgb;
 
-/*
+#if @debug_tiles@
   for (int i = 0; i < gua_lights_num; ++i) {
-      if ((bitset[i>>5] & (1u << (i%32))) != 0) {
-        //gua_out_color += vec3(float(i)/3+0.2,0,0);// / 5.0;
-        gua_out_color += gua_lights[i].color.rgb/2.0;
-      }
-  }//*/
+    if ((bitset[i>>5] & (1u << (i%32))) != 0) {
+      gua_out_color = mix(gua_out_color, gua_lights[i].color.rgb, 0.2);
+      int ts = int(pow(2, @light_table_tile_power@));
+      if (@light_table_tile_power@ > 2 &&
+          (any(equal(frag_pos % ts, vec2(0))) ||
+           any(equal(frag_pos % ts, vec2(ts-1)))))
+        gua_out_color = vec3(i & 1, i & 2, i & 4);
+    }
+  }
+#endif
 }
 

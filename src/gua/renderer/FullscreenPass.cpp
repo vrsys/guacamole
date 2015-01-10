@@ -110,7 +110,7 @@ PipelinePassDescription* FullscreenPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass FullscreenPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map) {
+PipelinePass FullscreenPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
   PipelinePass pass{*this, ctx, substitution_map};
   return pass;
 }

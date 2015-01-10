@@ -8,23 +8,32 @@ void LightTable::remove_buffers(RenderContext const& ctx) {
   }
 }
 
-void LightTable::invalidate(RenderContext const& ctx,
-                            math::vec2ui const& resolution,
-                            LightTable::array_type const& lights) {
+math::vec2ui LightTable::invalidate(RenderContext const& ctx,
+                                    math::vec2ui const& resolution,
+                                    LightTable::array_type const& lights,
+                                    int tile_power) {
 
   lights_num_ = lights.size();
 
-  if (!lights_num_) {
-    return;
+  unsigned width{};
+  unsigned height{};
+
+  if (tile_power > 0) {
+    width  = std::ceil(float(resolution.x) / std::pow(2, tile_power));
+    height = std::ceil(float(resolution.y) / std::pow(2, tile_power));
+  }
+  else {
+    width  = resolution.x;
+    height = resolution.y;
   }
 
-  const int max_tex3d_size = ctx.render_device->capabilities()._max_texture_3d_size;
-  const int tile_power = 2; // TODO: should be passed to shader
+  if (!lights_num_) {
+    return math::vec2ui(width, height);
+  }
 
-  float width  = std::ceil(resolution.x / std::pow(2, tile_power));
-  float height = std::ceil(resolution.y / std::pow(2, tile_power));
   unsigned light_bitset_words = ((lights_num_ - 1) / 32) + 1;
 
+  const int max_tex3d_size = ctx.render_device->capabilities()._max_texture_3d_size;
   if (   width > max_tex3d_size
       || height > max_tex3d_size
       || light_bitset_words > max_tex3d_size) {
@@ -54,8 +63,10 @@ void LightTable::invalidate(RenderContext const& ctx,
 
 
   // clear bitset
-  ctx.render_context->clear_image_data(light_bitset_->get_buffer(ctx), 0, 
-                                       scm::gl::FORMAT_R_32UI, 0);
+  ctx.render_context->clear_image_sub_data(light_bitset_->get_buffer(ctx),
+                                           scm::gl::texture_region(math::vec3ui(0,0,0),
+                                                                   math::vec3ui(width, height, light_bitset_words_)), 0,
+                                           scm::gl::FORMAT_R_32UI, 0);
 
   // upload light UBO
   bool needs_update(false);
@@ -78,6 +89,7 @@ void LightTable::invalidate(RenderContext const& ctx,
     uniform_block_.end_manipulation();
     Logger::LOG_DEBUG << "Light data upload" << std::endl;
   }
+  return math::vec2ui(width, height);
 }
 
 } // namespace gua

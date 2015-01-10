@@ -55,7 +55,7 @@ PipelinePassDescription* BBoxPassDescription::make_copy() const {
   return new BBoxPassDescription(*this);
 }
 
-PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map)
+PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
   PipelinePass pass{*this, ctx, substitution_map};
 

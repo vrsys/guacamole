@@ -58,9 +58,10 @@ public:
   
   void remove_buffers(RenderContext const& ctx);
 
-  void invalidate(RenderContext const& ctx, 
-                  math::vec2ui const& resolution,
-                  array_type const& lights);
+  math::vec2ui invalidate(RenderContext const& ctx,
+                          math::vec2ui const& resolution,
+                          array_type const& lights,
+                          int tile_power);
 
   std::shared_ptr<Texture3D> const& get_light_bitset() const { return light_bitset_; }
   unsigned get_lights_num() const { return lights_num_; }

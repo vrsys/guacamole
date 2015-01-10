@@ -47,7 +47,7 @@ class GUA_DLL ToneMappingPassDescription : public PipelinePassDescription {
   }
   friend class Pipeline;
  protected:
-  PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map) override {
+  PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) override {
     return PipelinePass{*this, ctx, substitution_map};
   }
 };

@@ -144,8 +144,9 @@ PipelinePassDescription* ResolvePassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map)
+PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
+  substitution_map["debug_tiles"] = debug_tiles() ? "1" : "0";
   PipelinePass pass{*this, ctx, substitution_map};
   return pass;
 }

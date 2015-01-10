@@ -9,7 +9,10 @@ layout(binding=0, r32ui) uniform coherent uimage3D light_bitset;
 void main()
 {
   ivec3 pos = ivec3(gl_FragCoord.xy, light_id >> 5);
-  //pos.xy = pos.xy >> @light_table_tile_power@;
+
+#if @light_table_fallback_mode@
+  pos.xy = pos.xy >> @light_table_tile_power@;
+#endif
 
   uint bit = 1u << (light_id % 32);
 

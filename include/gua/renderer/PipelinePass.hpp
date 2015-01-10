@@ -49,7 +49,7 @@ class GUA_DLL PipelinePassDescription {
 
  protected:
 
-  virtual PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map) = 0;
+  virtual PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) = 0;
   friend bool operator!=(PipelinePassDescription const& lhs, PipelinePassDescription const& rhs) { return lhs.mod_count_ != rhs.mod_count_; };
 
   // shader names
