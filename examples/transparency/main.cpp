@@ -127,12 +127,12 @@ int main(int argc, char** argv) {
 
   // Lights
 
-  /*auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
+  auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   //light->data.set_enable_shadows(true);
   light->scale(3.f);
   light->rotate(-20, 0.f, 1.f, 0.f);
   light->translate(-2.f, 0.f,  3.f);
-  light->data.set_color(gua::utils::Color3f(1.0f, 0.6f, 1.0f));*/
+  light->data.set_color(gua::utils::Color3f(1.0f, 0.6f, 1.0f));//*/
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->scale(14.f);
@@ -247,19 +247,67 @@ int main(int argc, char** argv) {
 
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
       if (action != 0) {
-        std::cout << "key press " << key << " action: " << action <<"\n";
-        if (87 == key) { // forward
+        //std::cout << "key press " << char(key) << " action: " << action <<"\n";
+        auto& d = camera->get_pipeline_description()->get_pass<gua::LightVisibilityPassDescription>();
+
+        if ('W' == key) { // forward
           cardboard->rotate(-5.0, 1.f, 0.f, 0.f);
         }
-        if (83 == key) { // backward
+        if ('S' == key) { // backward
           cardboard->rotate(5.0, 1.f, 0.f, 0.f);
         }
-        if (65 == key) { // left
+
+        if ('1' == key) {
+          d.rasterization_mode(gua::LightVisibilityPassDescription::AUTO);
+          std::cout << "Rast mode: AUTO\n"; d.touch();
         }
-        if (68 == key) { // right
+        if ('2' == key) {
+          d.rasterization_mode(gua::LightVisibilityPassDescription::SIMPLE);
+          std::cout << "Rast mode: SIMPLE\n"; d.touch();
         }
-        if (49 == key || 50 == key) {
-          alpha += (49 == key) ? 0.05f : -0.05f;
+        if ('3' == key) {
+          d.rasterization_mode(gua::LightVisibilityPassDescription::CONSERVATIVE);
+          std::cout << "Rast mode: CONSERVATIVE\n"; d.touch();
+        }
+        if ('4' == key) {
+          d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_2);
+          std::cout << "Rast mode: MULTISAMPLED_2\n"; d.touch();
+        }
+        if ('5' == key) {
+          d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_4);
+          std::cout << "Rast mode: MULTISAMPLED_4\n"; d.touch();
+        }
+        if ('6' == key) {
+          d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_8);
+          std::cout << "Rast mode: MULTISAMPLED_8\n"; d.touch();
+        }
+        if ('7' == key) {
+          d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_16);
+          std::cout << "Rast mode: MULTISAMPLED_16\n"; d.touch();
+        }
+        if ('8' == key) {
+          d.rasterization_mode(gua::LightVisibilityPassDescription::FULLSCREEN_FALLBACK);
+          std::cout << "Rast mode: FULLSCREEN_FALLBACK\n"; d.touch();
+        }
+
+        if ('9' == key) {
+          d.tile_power(d.tile_power() + 1);
+          std::cout << "tile size: " << std::pow(2, d.tile_power()) <<"\n";
+          d.touch();
+        }
+        if ('0' == key) {
+          d.tile_power(d.tile_power() - 1);
+          std::cout << "tile size: " << std::pow(2, d.tile_power()) <<"\n";
+          d.touch();
+        }
+        if ('Q' == key) {
+          auto& d_r = camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>();
+          d_r.debug_tiles(!d_r.debug_tiles());
+          std::cout << "Debug tiles: " << d_r.debug_tiles() <<"\n";
+          d.touch();
+        }
+        if ('Z' == key || 'Y' == key) {
+          alpha += ('Z' == key) ? 0.05f : -0.05f;
           alpha = std::max(std::min(alpha, 1.f), 0.f);
           mat_glass->set_uniform("alpha", alpha);
 
