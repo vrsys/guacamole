@@ -40,16 +40,17 @@ class GUA_DLL ABuffer {
     size_t              frag_list_size = 0;
   };
 
-  ABuffer(RenderContext const& ctx, size_t buffer_size);
+  ABuffer() {}
   virtual ~ABuffer() {}
 
+  void allocate(RenderContext const& ctx, size_t buffer_size);
   void clear(RenderContext const& ctx, math::vec2ui const& resolution);
   void bind(RenderContext const& ctx);
   void unbind(RenderContext const& ctx);
 
  private:
 
-  std::shared_ptr<SharedResource> res_;
+  std::shared_ptr<SharedResource> res_ = nullptr;
 
 };
 

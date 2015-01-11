@@ -98,7 +98,13 @@ void main() {
   vec3 bg_color = vec3(0);
 
   float depth = gua_get_depth();
+  //gua_out_color=vec3(depth); return;
+
+#if @enable_abuffer@
   bool res = abuf_blend(final_color, depth);
+#else
+  bool res = true;
+#endif
 
   if (res) {
     vec3 background_color;

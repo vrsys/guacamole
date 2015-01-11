@@ -27,6 +27,7 @@ bool abuf_blend(inout vec4 color, float opaque_depth) {
     if (current == 0) {
       break;
     } 
+    ++frag_count;
 
     float z = UNLIN_DEPTH(UNPACK_DEPTH(frag.y)) * 2.0 - 1.0;
     if (z > opaque_depth) {
@@ -35,7 +36,6 @@ bool abuf_blend(inout vec4 color, float opaque_depth) {
     vec4 shaded_color = ABUF_SHADE_FUNC(current - abuf_list_offset, z);
     abuf_mix_frag(shaded_color, color);
 
-    ++frag_count;
 
     if (color.a >= @abuf_blending_termination_threshold@) {
       return false;

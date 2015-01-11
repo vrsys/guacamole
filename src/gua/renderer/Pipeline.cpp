@@ -25,7 +25,6 @@
 // guacamole headers
 #include <gua/node/CameraNode.hpp>
 #include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/WindowBase.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/databases/WindowDatabase.hpp>
@@ -46,7 +45,7 @@ namespace gua {
 
 Pipeline::Pipeline() :
   gbuffer_(nullptr),
-  abuffer_(nullptr),
+  abuffer_(),
   camera_block_(nullptr),
   light_table_(nullptr),
   last_resolution_(0, 0),
@@ -67,9 +66,6 @@ Pipeline::~Pipeline() {
   }
   if (gbuffer_) {
     delete gbuffer_;
-  }
-  if (abuffer_) {
-    delete abuffer_;
   }
 }
 
@@ -94,6 +90,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
 
   bool context_changed(false);
   bool reload_gbuffer(false);
+  bool reload_abuffer(false);
 
   // reload gbuffer if now rendering to another window (with a new context)
   if (context_ != ctx) {
@@ -121,19 +118,13 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
     gbuffer_ = new GBuffer(get_context(), camera.config.resolution());
   }
 
-  if (context_changed) {
-    if (abuffer_) {
-      delete abuffer_;
-    }
-
-    abuffer_ = new ABuffer(get_context(), 1000);
-  }
 
   // recreate pipeline passes if pipeline description changed
   bool reload_passes(context_changed || reload_gbuffer);
 
   if (*camera.pipeline_description != last_description_) {
     reload_passes = true;
+    reload_abuffer = true;
     last_description_ = *camera.pipeline_description;
   } else {
 
@@ -141,6 +132,12 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
     for (int i(0); i < last_description_.get_all_passes().size(); ++i) {
       last_description_.get_all_passes()[i]->uniforms = camera.pipeline_description->get_all_passes()[i]->uniforms;
     }
+  }
+
+  if (context_changed || reload_abuffer) {
+    abuffer_.allocate(get_context(),
+                      last_description_.get_enable_abuffer()
+                        ? last_description_.get_abuffer_size() : 0);
   }
 
   if (reload_passes) {
@@ -151,6 +148,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
     passes_.clear();
     global_substitution_map_.clear();
 
+    global_substitution_map_["enable_abuffer"] = last_description_.get_enable_abuffer() ? "1" : "0";
     global_substitution_map_["abuf_insertion_threshold"] = "0.9995";
     global_substitution_map_["abuf_blending_termination_threshold"] = "0.9995";
     global_substitution_map_["max_lights_num"] = "128";
@@ -194,7 +192,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
 
   // clear gbuffer and abuffer
   gbuffer_->clear_all(get_context());
-  abuffer_->clear(get_context(), camera.config.resolution());
+  abuffer_.clear(get_context(), camera.config.resolution());
 
   // process all passes
   for (int i(0); i < passes_.size(); ++i) {
@@ -232,8 +230,8 @@ GBuffer& Pipeline::get_gbuffer() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ABuffer& Pipeline::get_abuffer() const {
-  return *abuffer_;
+ABuffer& Pipeline::get_abuffer() {
+  return abuffer_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

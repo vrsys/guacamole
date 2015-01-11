@@ -60,6 +60,9 @@ std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
   pipe->add_pass<TexturedScreenSpaceQuadPassDescription>();
   pipe->add_pass<ToneMappingPassDescription>();
 
+  pipe->set_enable_abuffer(false);
+  pipe->set_abuffer_size(800); // in MiB
+
   return pipe;
 }
 
@@ -69,6 +72,8 @@ PipelineDescription::PipelineDescription(PipelineDescription const& other) {
   for (auto pass: other.passes_) {
     passes_.push_back(pass->make_copy());
   }
+  enable_abuffer_ = other.enable_abuffer_;
+  abuffer_size_   = other.abuffer_size_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +95,9 @@ std::vector<PipelinePassDescription*> const& PipelineDescription::get_all_passes
 bool PipelineDescription::operator==(PipelineDescription const& other) const {
   boost::shared_lock<boost::shared_mutex> lock(mutex_);
   
-  if (passes_.size() != other.passes_.size()) {
+  if (   enable_abuffer_ != other.enable_abuffer_
+      || abuffer_size_   != other.abuffer_size_
+      || passes_.size()  != other.passes_.size()) {
     return false;
   }
 
@@ -124,6 +131,9 @@ PipelineDescription& PipelineDescription::operator=(PipelineDescription const& o
   for (auto pass: other.passes_) {
     passes_.push_back(pass->make_copy());
   }
+
+  enable_abuffer_ = other.enable_abuffer_;
+  abuffer_size_   = other.abuffer_size_;
 
   return *this;
 }

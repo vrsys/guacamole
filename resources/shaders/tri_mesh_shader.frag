@@ -1,4 +1,7 @@
 @include "common/header.glsl"
+
+//layout (early_fragment_tests) in;
+
 @include "common/gua_fragment_shader_input.glsl"
 @include "common/gua_camera_uniforms.glsl"
 
@@ -16,11 +19,5 @@ void main() {
   @include "common/gua_global_variable_assignment.glsl"
   @material_method_calls_frag@
 
-  if (gua_alpha > @abuf_insertion_threshold@) {
-    @include "common/gua_write_gbuffer.glsl"
-  }
-  else {
-    abuf_insert(gl_FragCoord.z);
-    discard;
-  }
+  submit_fragment(gl_FragCoord.z);
 }

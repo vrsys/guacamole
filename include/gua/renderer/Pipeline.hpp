@@ -25,6 +25,7 @@
 #include <gua/node/CameraNode.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/SerializedScene.hpp>
 #include <gua/math.hpp>
 
@@ -35,7 +36,6 @@
 namespace gua {
 
 class GBuffer;
-class ABuffer;
 class WindowBase;
 struct RenderContext;
 class ShaderProgram;
@@ -55,7 +55,7 @@ class GUA_DLL Pipeline {
 
   std::vector<PipelinePass>   const& get_passes()  const;
   GBuffer                          & get_gbuffer() const;
-  ABuffer                          & get_abuffer() const;
+  ABuffer                          & get_abuffer();
   SerializedScene                  & get_scene();
   SceneGraph                  const& get_graph()   const;
   RenderContext               const& get_context() const;
@@ -70,7 +70,7 @@ class GUA_DLL Pipeline {
  private:
 
   GBuffer*                           gbuffer_;
-  ABuffer*                           abuffer_;
+  ABuffer                            abuffer_;
   RenderContext*                     context_;
   CameraUniformBlock*                camera_block_;
   LightTable*                        light_table_;

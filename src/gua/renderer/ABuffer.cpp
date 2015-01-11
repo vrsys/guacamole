@@ -29,7 +29,12 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ABuffer::ABuffer(RenderContext const& ctx, size_t buffer_size) {
+void ABuffer::allocate(RenderContext const& ctx, size_t buffer_size) {
+
+  if (!buffer_size) {
+    res_ = nullptr;
+    return;
+  }
 
   // get a per-context resource
   auto resource = ctx.resources.get<SharedResource>();
@@ -65,6 +70,10 @@ ABuffer::ABuffer(RenderContext const& ctx, size_t buffer_size) {
 
 void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution) {
 
+  if (!res_) {
+    return;
+  }
+
   unsigned* ctr = reinterpret_cast<unsigned*>(
       ctx.render_context->map_buffer(res_->counter,
                                      scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
@@ -83,6 +92,10 @@ void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void ABuffer::bind(RenderContext const& ctx) {
+
+  if (!res_) {
+    return;
+  }
 
   ctx.render_context->bind_atomic_counter_buffer(res_->counter, 0);
   ctx.render_context->bind_storage_buffer(res_->frag_list, 0);

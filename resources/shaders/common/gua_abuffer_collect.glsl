@@ -1,4 +1,7 @@
 
+#if @enable_abuffer@
+
+
 @include "gua_abuffer.glsl"
 
 void abuf_insert(float depth)
@@ -52,5 +55,22 @@ void abuf_insert(float depth)
     if (frag_ctr++ >= ABUF_MAX_FRAGMENTS) break; 
   }
 
+}
+
+#endif
+
+void submit_fragment(float depth)
+{
+#if @enable_abuffer@
+  if (gua_alpha > @abuf_insertion_threshold@) {
+    @include "gua_write_gbuffer.glsl"
+  }
+  else {
+    abuf_insert(depth);
+    discard;
+  }
+#else
+    @include "gua_write_gbuffer.glsl"
+#endif
 }
 

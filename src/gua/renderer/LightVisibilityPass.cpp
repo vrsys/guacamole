@@ -89,6 +89,8 @@ PipelinePass LightVisibilityPassDescription::make_pass(RenderContext const& ctx,
 
   pass.process_ = [renderer, tp, ms_sample_count, enable_conservative, enable_fullscreen_fallback](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+    pipe.get_context().render_context->set_rasterizer_state(pass.rasterizer_state_);
     renderer->render(pass, pipe, tp, ms_sample_count, enable_conservative, enable_fullscreen_fallback);
   };
 

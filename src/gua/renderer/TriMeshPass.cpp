@@ -65,7 +65,8 @@ PipelinePass TriMeshPassDescription::make_pass(RenderContext const& ctx, Substit
   renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
-    PipelinePass&, PipelinePassDescription const& desc, Pipeline & pipe) {
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+    //pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_);
     renderer->render(pipe, desc);
   };
 

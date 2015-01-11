@@ -78,6 +78,22 @@ class GUA_DLL PipelineDescription {
     throw std::runtime_error("PipelineDescription::get_pass(): pass not valid");
   }
 
+  void set_enable_abuffer(bool value) {
+    enable_abuffer_ = value;
+  }
+
+  bool get_enable_abuffer() const {
+    return enable_abuffer_;
+  }
+
+  void set_abuffer_size(size_t value) {
+    abuffer_size_ = value;
+  }
+
+  size_t get_abuffer_size() const {
+    return abuffer_size_;
+  }
+
   void set_user_data(void* data) {
     user_data_ = data;
   }
@@ -92,7 +108,9 @@ class GUA_DLL PipelineDescription {
 
  private:
   std::vector<PipelinePassDescription*> passes_;
-  void* user_data_ = nullptr;
+  void*  user_data_ = nullptr;
+  bool   enable_abuffer_ = false;
+  size_t abuffer_size_ = 0;
   mutable boost::shared_mutex mutex_;
 };
 
