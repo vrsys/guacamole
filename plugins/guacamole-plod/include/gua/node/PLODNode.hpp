@@ -23,9 +23,17 @@
 #define GUA_PLOD_NODE_HPP
 
 // guacamole headers
+#include <gua/renderer/Material.hpp>
+
 #include <gua/node/GeometryNode.hpp>
 
+#include <unordered_set>
+
 namespace gua {
+
+class PLODResource;
+class PLODLoader;
+
 namespace node {
 
 /**
@@ -33,27 +41,58 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL PLODNode : public GeometryNode {
- public:  // member
+class PLODNode : public GeometryNode 
+{
+  friend class ::gua::PLODLoader;
 
-  PLODNode(std::string const& name,
-           std::string const& filename = "gua_default_geometry",
-           std::string const& material = "gua_default_material",
+private: // c'tor
+  PLODNode(std::string const& node_name,
+           std::string const& geometry_description = "gua_default_geometry",
+           std::string const& geometry_file_path = "gua_no_path_specified",
+           Material const& material = Material(),
            math::mat4 const& transform = math::mat4::identity());
 
+public:  // methods
+
+  std::shared_ptr<PLODResource> const& get_geometry() const;
+
+  std::string const& get_geometry_description() const;
+  void               set_geometry_description(std::string const& v);
+
+  std::string const& get_geometry_file_path() const;
+
+  Material const&    get_material() const;
+  Material&          get_material();
+  void               set_material(Material const& material);
+
+public:
   /**
   * Implements ray picking for a point cloud
   */
   void ray_test_impl(Ray const& ray,
-                     PickResult::Options options,
+                     int options,
                      Mask const& mask,
                      std::set<PickResult>& hits) override;
 
- protected:
+  void update_bounding_box() const override;
 
+  void update_cache() override;
+
+  void accept(NodeVisitor& visitor) override;
+
+protected:
+  
   std::shared_ptr<Node> copy() const override;
 
- private:  // attributes e.g. special attributes for drawing
+private:  // attributes e.g. special attributes for drawing
+  
+  std::shared_ptr<PLODResource> geometry_;
+  std::string                   geometry_description_;
+  std::string                   geometry_file_path_;
+  bool                          geometry_changed_;
+
+  Material                      material_;
+  bool                          material_changed_;
 
 };
 

@@ -23,10 +23,12 @@
 #include <gua/renderer/PLODLoader.hpp>
 
 // guacamole headers
-#include <gua/guacamole.hpp>
-#include <gua/renderer/PLODRessource.hpp>
-#include <gua/node/PLODNode.hpp>
+#include <gua/utils.hpp>
 #include <gua/utils/Logger.hpp>
+
+#include <gua/node/PLODNode.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/renderer/PLODResource.hpp>
 
 // external headers
 #include <pbr/ren/lod_point_cloud.h>
@@ -36,57 +38,69 @@
 namespace gua {
 
 /////////////////////////////////////////////////////////////////////////////
-
-PLODLoader::PLODLoader() {
-
+PLODLoader::PLODLoader() : _supported_file_extensions() {
   _supported_file_extensions.insert("kdn");
+  _supported_file_extensions.insert("KDN");
+}
 
-  if (!MaterialDatabase::instance()->is_supported("gua_pbr")) {
-    create_resource_material("gua_pbr",
-                             Resources::materials_gua_pbr_gsd,
-                             Resources::materials_gua_pbr_gmd);
+/////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& nodename,
+                                                          std::string const& filename,
+                                                          Material const& fallback_material,
+                                                          unsigned flags)
+{
+  auto cached_node(load_geometry(filename, flags));
+
+  if (cached_node) {
+    auto copy = std::dynamic_pointer_cast<node::PLODNode>(cached_node->deep_copy());
+
+    if (copy) {
+      apply_fallback_material(copy, fallback_material);
+      copy->set_name(nodename);
+      return copy;
+    }
   }
+
+  Logger::LOG_WARNING << "PLODLoader::load_geometry() : unable to create PLOD Node" << std::endl;
+  return std::shared_ptr<node::PLODNode>(new node::PLODNode(nodename));
 }
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<gua::node::Node> PLODLoader::create_geometry_from_file(
-    std::string const& node_name,
-    std::string const& file_name,
-    unsigned flags) {
-
-  std::string key("type=file&file=" + file_name);
-
+std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& filename, unsigned flags)
+{
   try {
-    auto node(std::make_shared<gua::node::PLODNode>(node_name));
-    node->set_filename(key);
-    node->set_material("gua_pbr");
-
-    pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-
-    // load model
-    pbr::model_t model_id = database->AddModel(file_name, key);
-    auto resource = std::make_shared<PLODRessource>(
-        model_id, flags & PLODLoader::MAKE_PICKABLE);
-    GeometryDatabase::instance()->add(key, resource);
-
-    // normalize position
-    if (flags & PLODLoader::NORMALIZE_POSITION) {
-      node->translate(-resource->get_bounding_box().center());
+    if(!is_supported(filename)){
+      throw std::runtime_error(std::string("Unsupported filetype: ") + filename);
     }
-    // normalize scale
-    if (flags & PLODLoader::NORMALIZE_SCALE) {
-      auto size(resource->get_bounding_box().max -
-                resource->get_bounding_box().min);
-      auto max_size(std::max(std::max(size.x, size.y), size.z));
-      node->scale(1.f / max_size);
+    else {
+      pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
+
+      GeometryDescription desc("PLOD", filename, 0, flags);
+
+      pbr::model_t model_id = database->AddModel(filename, desc.unique_key());
+
+      auto resource = std::make_shared<PLODResource>(model_id, flags & PLODLoader::MAKE_PICKABLE);
+      GeometryDatabase::instance()->add(desc.unique_key(), resource);
+
+      std::shared_ptr<node::PLODNode> node(new node::PLODNode(filename, desc.unique_key(), filename));
+      node->update_cache();
+     
+
+      auto bbox = resource->get_bounding_box();
+
+      //normalize position?
+      auto normalize_position = flags & PLODLoader::NORMALIZE_POSITION;
+      node->translate(-bbox.center());
+
+      //normalize scale?
+      auto normalize_node = flags & PLODLoader::NORMALIZE_SCALE;
+      node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
+
+      return node;
     }
-    return node;
-  }
-  catch (std::exception & e) {
-    Logger::LOG_WARNING << "Warning: " << e.what()
-                        << " : Failed to load LOD Pointcloud object "
-                        << file_name.c_str() << std::endl;
+  } catch (std::exception & e) {
+    Logger::LOG_WARNING << "Failed to load PLOD object \"" << filename << "\": " << e.what() << std::endl;
     return nullptr;
   }
 }
@@ -95,9 +109,7 @@ std::shared_ptr<gua::node::Node> PLODLoader::create_geometry_from_file(
 
 bool PLODLoader::is_supported(std::string const& file_name) const {
 
-  std::vector<std::string> filename_decomposition =
-      gua::string_utils::split(file_name, '.');
-
+  std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
   return filename_decomposition.empty()
              ? false
              : _supported_file_extensions.count(filename_decomposition.back()) >
@@ -105,11 +117,25 @@ bool PLODLoader::is_supported(std::string const& file_name) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void PLODLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, Material const& fallback_material) const {
+  auto g_node(std::dynamic_pointer_cast<node::PLODNode>(root));
+
+  if(g_node && g_node->get_material().get_shader_name() == "") {
+    g_node->set_material(fallback_material);
+    g_node->update_cache();
+  }
+
+  for(auto& child : root->get_children()) {
+    apply_fallback_material(child, fallback_material);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void PLODLoader::set_upload_budget_in_mb(const size_t upload_budget) {
 
   pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
-  policy->set_upload_budget_in_mb(upload_budget);
+  policy->set_max_upload_budget_in_mb(upload_budget);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +155,7 @@ void PLODLoader::set_out_of_core_budget_in_mb(const size_t out_of_core_budget) {
 
 size_t PLODLoader::get_upload_budget_in_mb() const {
   pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
-  return policy->upload_budget_in_mb();
+  return policy->max_upload_budget_in_mb();
 }
 
 size_t PLODLoader::get_render_budget_in_mb() const {
@@ -144,5 +170,10 @@ size_t PLODLoader::get_out_of_core_budget_in_mb() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void PLODLoader::set_importance(std::string const& file_name, const float importance) {
+  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+  policy->SetImportance(file_name, importance);
+}
 
 }
