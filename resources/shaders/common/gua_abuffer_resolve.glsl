@@ -1,3 +1,9 @@
+void abuf_mix_frag(vec4 frag_color, inout vec4 color) {
+  frag_color.rgb *= frag_color.a;
+  color += frag_color * (1.0 - color.a);
+}
+
+#if @enable_abuffer@
 
 @include "gua_abuffer.glsl"
 
@@ -9,11 +15,6 @@ vec4 abuf_get_color(uint pos, float depth) {
 #else
 vec4 ABUF_SHADE_FUNC(uint pos, float depth);
 #endif
-
-void abuf_mix_frag(vec4 frag_color, inout vec4 color) {
-  frag_color.rgb *= frag_color.a;
-  color += frag_color * (1.0 - color.a);
-}
 
 bool abuf_blend(inout vec4 color, float opaque_depth) {
   const ivec2 frag_pos = ivec2(gl_FragCoord.xy);
@@ -43,3 +44,5 @@ bool abuf_blend(inout vec4 color, float opaque_depth) {
   }
   return true;
 }
+#endif
+

@@ -30,6 +30,7 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
   return toneMap(frag_color);
 }
 
+#if @enable_abuffer@
 vec4 abuf_shade(uint pos, float depth) {
   vec4 color  = ABUF_FRAG(pos, 0);
   vec4 pbr    = ABUF_FRAG(pos, 1);
@@ -42,8 +43,8 @@ vec4 abuf_shade(uint pos, float depth) {
   vec3 frag_color = shade_for_all_lights(color.rgb, fma(normal.xyz, vec3(2.0), vec3(-1.0)), position, pbr.rgb, floatBitsToUint(pbr.w));
   return vec4(frag_color, color.a);
 }
+#endif
 
-uniform int   background_mode;
 uniform vec3  background_color;
 uniform uvec2 background_texture;
 uniform bool  enable_fog;
@@ -84,6 +85,17 @@ vec3 gua_apply_fog(vec3 fog_color) {
   return mix(gua_get_color(), fog_color, fog_factor);
 }
 
+vec3 gua_get_background_color() {
+  switch (@background_mode@) {
+    case 0: // color
+      return gua_apply_background_color();
+    case 1: // skymap texture
+      return gua_apply_skymap_texture();
+  }
+  // quad texture
+  return gua_apply_background_texture();
+}
+
 void main() {
 
   ivec2 frag_pos = ivec2(gl_FragCoord.xy);
@@ -109,22 +121,11 @@ void main() {
 #endif
 
   if (res) {
-    vec3 background_color;
-    switch (background_mode) {
-      case 0: // color
-        background_color = gua_apply_background_color();
-        break;
-      case 1: // skymap texture
-        background_color = gua_apply_skymap_texture();
-        break;
-      default: // quad texture
-        background_color = gua_apply_background_texture();
-    }
-
     if (depth < 1) {
       if (enable_fog) {
-        bg_color = gua_apply_fog(background_color);
-      } else {
+        bg_color = gua_apply_fog(gua_get_background_color());
+      }
+      else {
         //bg_color = gua_get_color();
         bg_color = shade_for_all_lights(gua_get_color(),
                                         gua_get_normal(),
@@ -132,12 +133,12 @@ void main() {
                                         gua_get_pbr(),
                                         gua_get_flags());
       }
-    } else {
-      bg_color = background_color;
+    }
+    else {
+      bg_color = gua_get_background_color();
     }
 
     abuf_mix_frag(vec4(bg_color, 1.0), final_color);
-
   }
 
   gua_out_color = final_color.rgb;

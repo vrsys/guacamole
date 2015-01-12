@@ -33,7 +33,7 @@ class Pipeline;
 class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
  public:
 
-  enum BackgroundMode {
+  enum class BackgroundMode {
     COLOR = 0,
     SKYMAP_TEXTURE = 1,
     QUAD_TEXTURE = 2,
@@ -52,9 +52,9 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& texture(std::string const& texture);
   std::string texture() const;
 
-  ResolvePassDescription& mode(BackgroundMode const& mode);
-  BackgroundMode mode() const;
-
+  ResolvePassDescription& mode(BackgroundMode mode) {
+    background_mode_ = mode; return *this; }
+  BackgroundMode mode() const { return background_mode_; }
 
   ResolvePassDescription& enable_fog(bool enable_fog);
   bool enable_fog() const;
@@ -85,6 +85,7 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
 
   ToneMappingMethod tone_mapping_method_ = ToneMappingMethod::LINEAR;
   float tone_mapping_exposure_           = 1.f;
+  BackgroundMode background_mode_        = BackgroundMode::COLOR;
   bool debug_tiles_                      = false;
 };
 

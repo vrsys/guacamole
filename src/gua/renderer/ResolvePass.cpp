@@ -45,7 +45,6 @@ ResolvePassDescription::ResolvePassDescription()
       scm::gl::depth_stencil_state_desc(false, false));
 
   uniforms["background_color"]    = math::vec3(0.2f, 0.2f, 0.2f);
-  uniforms["background_mode"]     = (int)COLOR;
   uniforms["background_texture"]  = std::string("gua_default_texture");
   uniforms["enable_fog"]          = false;
   uniforms["fog_start"]           = 10.f;
@@ -78,20 +77,6 @@ ResolvePassDescription& ResolvePassDescription::texture(std::string const& textu
 std::string ResolvePassDescription::texture() const {
   auto uniform(uniforms.find("background_texture"));
   return boost::get<std::string>(uniform->second.data);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-ResolvePassDescription& ResolvePassDescription::mode(ResolvePassDescription::BackgroundMode const& mode) {
-  uniforms["background_mode"] = (int)mode;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-ResolvePassDescription::BackgroundMode ResolvePassDescription::mode() const {
-  auto uniform(uniforms.find("background_mode"));
-  return ResolvePassDescription::BackgroundMode(boost::get<int>(uniform->second.data));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,6 +134,8 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
   substitution_map["debug_tiles"] = debug_tiles() ? "1" : "0";
   substitution_map["tone_mapping_method"] = std::to_string(static_cast<int>(tone_mapping_method()));
   substitution_map["tone_mapping_exposure"] = std::to_string(tone_mapping_exposure());
+
+  substitution_map["background_mode"] = std::to_string(static_cast<int>(mode()));
 
   PipelinePass pass{*this, ctx, substitution_map};
   return pass;
