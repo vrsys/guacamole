@@ -20,12 +20,15 @@
  ******************************************************************************/
 
 // class header
-#include <gua/node/PLODNode.hpp>
+#include "gua/node/PLODNode.hpp"
 
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/node/RayNode.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/renderer/PLODLoader.hpp>
+#include <gua/renderer/PLODResource.hpp>
+#include <gua/renderer/Material.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
 // guacamole headers
 
@@ -34,15 +37,58 @@ namespace node {
 
 ////////////////////////////////////////////////////////////////////////////////
 PLODNode::PLODNode(std::string const& name,
-                   std::string const& filename,
-                   std::string const& material,
+                   std::string const& geometry_description,
+                   std::string const& geometry_file_path,
+                   Material const& material,
                    math::mat4 const& transform)
-    : GeometryNode(name, filename, material, transform) {}
+    : GeometryNode(name, transform),
+      geometry_(nullptr),
+      geometry_changed_(true),
+      geometry_description_(geometry_description),
+      geometry_file_path_(geometry_file_path),
+      material_(material)
+    {}
 
 ////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<PLODResource> const& PLODNode::get_geometry() const {
+  return geometry_;
+}
 
+////////////////////////////////////////////////////////////////////////////////
+std::string const& PLODNode::get_geometry_file_path() const {
+  return geometry_file_path_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::string const& PLODNode::get_geometry_description() const {
+  return geometry_description_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLODNode::set_geometry_description(std::string const& v) {
+  geometry_description_ = v;
+  geometry_changed_ = self_dirty_ = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+Material const& PLODNode::get_material() const {
+  return material_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+Material& PLODNode::get_material() {
+  return material_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLODNode::set_material(Material const& material) {
+  material_ = material;
+  material_changed_ = self_dirty_ = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void PLODNode::ray_test_impl(Ray const& ray,
-                             PickResult::Options options,
+                             int options,
                              Mask const& mask,
                              std::set<PickResult>& hits) {
 
@@ -64,9 +110,9 @@ void PLODNode::ray_test_impl(Ray const& ray,
   }
 
   // bbox is intersected, but check geometry only if mask tells us to check
-  if (get_filename() != "" && mask.check(get_groups())) {
+  if (get_geometry_description() != "" && mask.check(get_tags())) {
 
-    auto geometry(GeometryDatabase::instance()->lookup(get_filename()));
+    auto geometry(GeometryDatabase::instance()->lookup(get_geometry_description()));
 
     if (geometry) {
 
@@ -174,9 +220,74 @@ void PLODNode::ray_test_impl(Ray const& ray,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void PLODNode::update_bounding_box() const {
+  if (geometry_) {
+    auto geometry_bbox(geometry_->get_bounding_box());
+    bounding_box_ = transform(geometry_bbox, world_transform_);
+
+    for (auto child: get_children()) {
+      bounding_box_.expandBy(child->get_bounding_box());
+    }
+  }
+  else {
+    Node::update_bounding_box();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLODNode::update_cache() {
+  if(geometry_changed_) {
+    if(geometry_description_ != "") {
+      if(!GeometryDatabase::instance()->contains(geometry_description_)) {
+        GeometryDescription desc(geometry_description_);
+	try {
+	  gua::PLODLoader loader;
+	  loader.load_geometry(desc.filepath(), desc.flags());
+	}
+	catch (std::exception& e) {
+	  Logger::LOG_WARNING << "PLODNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
+	}
+      }
+      geometry_ = std::dynamic_pointer_cast<PLODResource>(GeometryDatabase::instance()->lookup(geometry_description_));
+
+      if(!geometry_) {
+        Logger::LOG_WARNING << "Failed to get PLODResource for " << geometry_description_ << ": The data base entry is of wrong type!" << std::endl;
+      }
+    }
+
+    geometry_changed_ = false;
+  }
+
+  // The code below auto-loads a material if it's not already supported by
+  // the MaterialShaderDatabase. It expects a material name like
+  // 
+  // data/materials/ShadelessPLOD.gmd
+
+  if(material_changed_) {
+    if (material_.get_shader_name() != "") {
+      //to fill
+    }
+
+    material_changed_ = false;
+  }
+
+  GeometryNode::update_cache();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/* virtual */ void PLODNode::accept(NodeVisitor& visitor) {
+  visitor.visit(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Node> PLODNode::copy() const {
-  return std::make_shared<PLODNode>(
-      get_name(), filename_, material_, get_transform());
+  std::shared_ptr<PLODNode> result(new PLODNode(get_name(), geometry_description_, geometry_file_path_, material_, get_transform()));
+
+  result->update_cache();
+
+  result->shadow_mode_ = shadow_mode_;
+
+  return result;
 }
 
 }

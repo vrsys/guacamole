@@ -20,17 +20,30 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/PLODUberShader.hpp>
+#include <gua/renderer/PLODRenderer.hpp>
 
 // guacamole headers
+#include <gua/renderer/PLODResource.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/GBuffer.hpp>
+
+#include <gua/node/PLODNode.hpp>
 #include <gua/platform.hpp>
 #include <gua/guacamole.hpp>
-#include <gua/renderer/UberShaderFactory.hpp>
-#include <gua/renderer/PLODRessource.hpp>
 #include <gua/renderer/View.hpp>
+
+#include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
 
+#include <gua/config.hpp>
+#include <scm/gl_core/shader_objects.h>
+
 // external headers
+#include <sstream>
+#include <fstream>
+#include <regex>
+#include <list>
 #include <pbr/ren/camera.h>
 #include <pbr/ren/policy.h>
 #include <pbr/ren/model_database.h>
@@ -41,320 +54,256 @@
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
-
-void PLODUberShader::create(std::set<std::string> const& material_names) {
-
-  UberShader::create(material_names);
-
-  // create depth pass shader
-  std::vector<ShaderProgramStage> depth_pass_stages;
-
-  depth_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,
-                                                 depth_pass_vertex_shader()));
-  depth_pass_stages.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
-                                                 depth_pass_fragment_shader()));
-
-  auto depth_pass_program = std::make_shared<ShaderProgram>();
-  depth_pass_program->set_shaders(depth_pass_stages);
-  add_program(depth_pass_program);
-
-  // create accumulation pass shader
-  std::vector<ShaderProgramStage> accumulation_pass_stages;
-
-  accumulation_pass_stages.push_back(ShaderProgramStage(
-      scm::gl::STAGE_VERTEX_SHADER, accumulation_pass_vertex_shader()));
-  accumulation_pass_stages.push_back(ShaderProgramStage(
-      scm::gl::STAGE_FRAGMENT_SHADER, accumulation_pass_fragment_shader()));
-
-  auto accumulation_pass_program = std::make_shared<ShaderProgram>();
-  accumulation_pass_program->set_shaders(accumulation_pass_stages);
-  add_program(accumulation_pass_program);
-
-  // create normalization pass shader
-  std::vector<ShaderProgramStage> normalization_pass_stages;
-
-  normalization_pass_stages.push_back(ShaderProgramStage(
-      scm::gl::STAGE_VERTEX_SHADER, normalization_pass_vertex_shader()));
-  normalization_pass_stages.push_back(ShaderProgramStage(
-      scm::gl::STAGE_FRAGMENT_SHADER, normalization_pass_fragment_shader()));
-
-  auto normalization_pass_program = std::make_shared<ShaderProgram>();
-  normalization_pass_program->set_shaders(normalization_pass_stages);
-  add_program(normalization_pass_program);
-
-  // create reconstruction pass shader
-  std::vector<ShaderProgramStage> reconstruction_pass_stages;
-
-  reconstruction_pass_stages.push_back(ShaderProgramStage(
-      scm::gl::STAGE_VERTEX_SHADER, reconstruction_pass_vertex_shader()));
-  reconstruction_pass_stages.push_back(ShaderProgramStage(
-      scm::gl::STAGE_FRAGMENT_SHADER, reconstruction_pass_fragment_shader()));
-
-  auto reconstruction_pass_program = std::make_shared<ShaderProgram>();
-  reconstruction_pass_program->set_shaders(reconstruction_pass_stages);
-  add_program(reconstruction_pass_program);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PLODUberShader::~PLODUberShader() {
-
-  Logger::LOG_DEBUG << "memory cleanup...(1)" << std::endl;
-  delete pbr::ren::Controller::GetInstance();
-
-  Logger::LOG_DEBUG << "deleted controller" << std::endl;
-  delete pbr::ren::ModelDatabase::GetInstance();
-
-  Logger::LOG_DEBUG << "deleted model database" << std::endl;
-  delete pbr::ren::Policy::GetInstance();
-
-  Logger::LOG_DEBUG << "deleted memory query" << std::endl;
-  delete pbr::ren::CutDatabase::GetInstance();
-
-  Logger::LOG_DEBUG << "deleted cut database" << std::endl;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string PLODUberShader::depth_pass_vertex_shader() const {
-
-  std::string vertex_shader(Resources::lookup_shader(
-      Resources::shaders_uber_shaders_gbuffer_pbr_p01_depth_vert));
-
-  return vertex_shader;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string PLODUberShader::depth_pass_fragment_shader() const {
-
-  std::string fragment_shader(Resources::lookup_shader(
-      Resources::shaders_uber_shaders_gbuffer_pbr_p01_depth_frag));
-
-  return fragment_shader;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string PLODUberShader::accumulation_pass_vertex_shader() const {
-
-  std::string vertex_shader(Resources::lookup_shader(
-      Resources::shaders_uber_shaders_gbuffer_pbr_p02_accumulation_vert));
-  return vertex_shader;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string PLODUberShader::accumulation_pass_fragment_shader() const {
-
-  std::string fragment_shader(Resources::lookup_shader(
-      Resources::shaders_uber_shaders_gbuffer_pbr_p02_accumulation_frag));
-
-  return fragment_shader;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string PLODUberShader::normalization_pass_vertex_shader() const {
-
-  std::string vertex_shader(Resources::lookup_shader(
-      Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_vert));
-
-  return vertex_shader;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-std::string PLODUberShader::normalization_pass_fragment_shader() const {
-  std::string fragment_shader(Resources::lookup_shader(
-      Resources::shaders_uber_shaders_gbuffer_pbr_p03_normalization_frag));
-
-  return fragment_shader;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string PLODUberShader::reconstruction_pass_vertex_shader() const {
-
-  std::string vertex_shader(Resources::lookup_shader(
-      Resources::shaders_uber_shaders_gbuffer_pbr_p04_reconstruction_vert));
-
-  // material specific uniforms
-
-  string_utils::replace(vertex_shader,
-                        "@uniform_definition",
-                        get_uniform_mapping()->get_uniform_definition());
-
-  // output
-
-  string_utils::replace(
-      vertex_shader,
-      "@output_definition",
-      vshader_factory_->get_output_mapping().get_gbuffer_output_definition(
-          false, true));
-
-  return vertex_shader;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string PLODUberShader::reconstruction_pass_fragment_shader() const {
-
-  std::string fragment_shader(Resources::lookup_shader(
-      Resources::shaders_uber_shaders_gbuffer_pbr_p04_reconstruction_frag));
-
-
-  std::string apply_pbr_color = fshader_factory_->get_output_mapping()
-      .get_output_string("gua_pbr", "gua_pbr_output_color");
-  apply_pbr_color += " = output_color;\n";
-
-
-  std::string apply_pbr_normal = fshader_factory_->get_output_mapping()
-      .get_output_string("gua_pbr", "gua_normal");
-
-  apply_pbr_normal += " = output_normal;\n";
-
-  string_utils::replace(fragment_shader, "@apply_pbr_color", apply_pbr_color);
-  string_utils::replace(fragment_shader, "@apply_pbr_normal", apply_pbr_normal);
-
-  // input from vertex shader
-  string_utils::replace(
-      fragment_shader,
-      "@input_definition",
-      vshader_factory_->get_output_mapping().get_gbuffer_output_definition(
-          true, true));
-
-  // material specific uniforms
-  string_utils::replace(fragment_shader,
-                        "@uniform_definition",
-                        get_uniform_mapping()->get_uniform_definition());
-
-  // outputs
-  string_utils::replace(
-      fragment_shader,
-      "@output_definition",
-      get_gbuffer_mapping()->get_gbuffer_output_definition(false, false));
-
-  return fragment_shader;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void PLODUberShader::update_textures(RenderContext const& context) const {
-
-  assert(context.render_window->config.get_stereo_mode() == StereoMode::MONO 
-         || left_resolution_ == right_resolution_);
-
-  render_window_dims_ = left_resolution_;
-
-  //initialize attachments for depth pass
-  depth_pass_linear_depth_result_ = context.render_device
-      ->create_texture_2d(render_window_dims_,
-                          scm::gl::FORMAT_D32F,
-                          1, 1, 1);
-
-  depth_pass_log_depth_result_ = context.render_device
-      ->create_texture_2d(render_window_dims_,
+  namespace {
+  //////////////////////////////////////////////////////////////////////////////
+  std::string read_shader_file(std::string const& path, std::vector<std::string> const& root_dirs) {
+    try {
+      std::string full_path(path);
+      std::ifstream ifstr(full_path.c_str(), std::ios::in);
+
+      if (ifstr.good()) {
+        return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
+      }
+
+      for (auto const& root : root_dirs) {
+        std::string full_path(root + std::string("/") + path);
+        std::ifstream ifstr(full_path.c_str(), std::ios::in);
+
+        if (ifstr.good()) {
+          return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>() );
+        }
+        ifstr.close();
+      }
+      throw std::runtime_error("File not found.");
+    }
+    catch(...) {
+      std::cerr << "Error reading file : " << path << std::endl;
+      return "";
+    }
+  }  
+
+    ///////////////////////////////////////////////////////////////////////////
+    void resolve_includes(std::string& shader_source, std::vector<std::string> const& root_dirs) {
+      std::size_t search_pos(0);
+
+      std::string search("@include");
+
+      while (search_pos != std::string::npos) {
+        search_pos = shader_source.find(search, search_pos);
+
+        if (search_pos != std::string::npos) {
+
+          std::size_t start(shader_source.find('\"', search_pos) + 1);
+          std::size_t end(shader_source.find('\"', start));
+
+          std::string file(shader_source.substr(start, end - start));
+
+          std::string include = read_shader_file(file, root_dirs);
+          shader_source.replace(search_pos, end - search_pos + 2, include);
+
+          // advance search pos
+          search_pos = search_pos + include.length();
+        }
+      }
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  PLODRenderer::PLODRenderer() : shaders_loaded_(false),
+                                 gpu_resources_already_created_(false),
+                                 depth_pass_program_(nullptr),
+                                 accumulation_pass_program_(nullptr),
+                                 normalization_pass_program_(nullptr),
+                                 reconstruction_pass_program_(nullptr),
+                                 current_rendertarget_width_(0),
+                                 current_rendertarget_height_(0)
+ {
+    _load_shaders();
+  }
+
+  PLODRenderer::~PLODRenderer() {
+    if(depth_pass_program_) {
+      delete depth_pass_program_;
+    }
+
+    if(accumulation_pass_program_) {
+      delete accumulation_pass_program_;
+    }
+
+    if(normalization_pass_program_) {
+      delete normalization_pass_program_;
+    }
+
+    if(reconstruction_pass_program_) {
+      delete reconstruction_pass_program_;
+    }
+//substitute this part later with shared ptr in pbr_lib
+/*
+    Logger::LOG_DEBUG << "memory cleanup...(1)" << std::endl;
+    delete pbr::ren::Controller::GetInstance();
+
+    Logger::LOG_DEBUG << "deleted controller" << std::endl;
+    delete pbr::ren::ModelDatabase::GetInstance();
+
+    Logger::LOG_DEBUG << "deleted model database" << std::endl;
+    delete pbr::ren::Policy::GetInstance();
+
+    Logger::LOG_DEBUG << "deleted memory query" << std::endl;
+    delete pbr::ren::CutDatabase::GetInstance();
+
+    Logger::LOG_DEBUG << "deleted cut database" << std::endl;
+*/
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  void PLODRenderer::_load_shaders() {
+    //create stages only with one thread!
+    if(!shaders_loaded_) {
+      depth_pass_shader_stages_.clear();
+      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, _depth_pass_vertex_shader()) );
+      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, _depth_pass_fragment_shader()));
+
+      accumulation_pass_shader_stages_.clear();
+      accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, _accumulation_pass_vertex_shader()));
+      accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, _accumulation_pass_fragment_shader()));
+
+      normalization_pass_shader_stages_.clear();
+      normalization_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, _normalization_pass_vertex_shader()));
+      normalization_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, _normalization_pass_fragment_shader()));
+
+      reconstruction_pass_shader_stages_.clear();
+      reconstruction_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, _reconstruction_pass_vertex_shader()));
+      reconstruction_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, _reconstruction_pass_fragment_shader()));
+      //reconstruction_pass_shader_stages_[scm::gl::STAGE_VERTEX_SHADER] = _reconstruction_pass_vertex_shader();
+      //reconstruction_pass_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER] = _reconstruction_pass_fragment_shader();
+
+      shaders_loaded_ = true;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  void PLODRenderer::_initialize_depth_pass_program() {
+    if(!depth_pass_program_) {
+      auto new_program = new ShaderProgram;
+      new_program->set_shaders(depth_pass_shader_stages_);
+      depth_pass_program_ = new_program;
+    }
+    assert(depth_pass_program_);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  void PLODRenderer::_initialize_accumulation_pass_program() {
+    if(!accumulation_pass_program_) {
+      auto new_program = new ShaderProgram;
+      new_program->set_shaders(accumulation_pass_shader_stages_);
+      accumulation_pass_program_ = new_program;
+    }
+    assert(accumulation_pass_program_);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  void PLODRenderer::_initialize_normalization_pass_program() {
+    if(!normalization_pass_program_) {
+      auto new_program = new ShaderProgram;
+      new_program->set_shaders(normalization_pass_shader_stages_);
+      normalization_pass_program_ = new_program;
+    }
+    assert(normalization_pass_program_);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+/*  void PLODRenderer::_initialize_reconstruction_pass_program(MaterialShader* material) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if(!reconstruction_pass_programs_.count(material)) {
+      auto program = material->get_shader(reconstruction_pass_shader_stages_);
+      reconstruction_pass_programs_[material] = program;
+    }
+    assert(reconstruction_pass_programs_.count(material));
+  }
+*/
+
+  void PLODRenderer::_initialize_reconstruction_pass_program() {
+    if(!reconstruction_pass_program_) {
+      auto new_program = new ShaderProgram;
+      new_program->set_shaders(reconstruction_pass_shader_stages_);
+      reconstruction_pass_program_ = new_program;
+    }
+    assert(reconstruction_pass_program_);
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////
+  void PLODRenderer::_create_gpu_resources(gua::RenderContext const& ctx,
+                                           scm::math::vec2ui const& render_target_dims,
+					   bool resize_resource_containers) {
+
+    depth_pass_log_depth_result_ = ctx.render_device
+      ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_R_32F,
                           1, 1, 1);
 
-  //initialize attachments for accumulation pass
-  accumulation_pass_color_result_ = context.render_device
-      ->create_texture_2d(render_window_dims_,
+    depth_pass_linear_depth_result_ = ctx.render_device
+      ->create_texture_2d(render_target_dims,
+                          scm::gl::FORMAT_D32F,
+                          1, 1, 1);
+          
+    accumulation_pass_color_result_ = ctx.render_device
+      ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_RGBA_32F,
                           1, 1, 1);
 
-  accumulation_pass_normal_result_ = context.render_device
-      ->create_texture_2d(render_window_dims_,
+    accumulation_pass_normal_result_ = ctx.render_device
+      ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_RGBA_32F,
                           1, 1, 1);
 
-  //initialize attachment for normalization pass
-  normalization_pass_color_result_ = context.render_device
-      ->create_texture_2d(render_window_dims_,
+    normalization_pass_color_result_ = ctx.render_device
+      ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_RGB_8,
                           1, 1, 1);
 
-  normalization_pass_normal_result_ = context.render_device
-      ->create_texture_2d(render_window_dims_,
+    normalization_pass_normal_result_ = ctx.render_device
+      ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_RGB_32F,
                           1, 1, 1);
 
-  //configure depth FBO
-  depth_pass_result_fbo_->clear_attachments();
-  depth_pass_result_fbo_->attach_depth_stencil_buffer(
-      depth_pass_linear_depth_result_);
-  depth_pass_result_fbo_->attach_color_buffer(0,
-                                              depth_pass_log_depth_result_);
+    depth_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
+    depth_pass_result_fbo_->clear_attachments();
+    depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
+    depth_pass_result_fbo_->attach_color_buffer(0,
+                                                depth_pass_log_depth_result_);
 
-  //configure accumulation FBO
-  accumulation_pass_result_fbo_->clear_attachments();
-  accumulation_pass_result_fbo_->attach_color_buffer(
-      0, accumulation_pass_color_result_);
-  accumulation_pass_result_fbo_->attach_color_buffer(
-      1, accumulation_pass_normal_result_);
+    accumulation_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
+    accumulation_pass_result_fbo_->clear_attachments();
+    accumulation_pass_result_fbo_->attach_color_buffer(0,
+                                                       accumulation_pass_color_result_);
+    accumulation_pass_result_fbo_->attach_color_buffer(1,
+                                                       accumulation_pass_normal_result_);
 
+    normalization_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
+    normalization_pass_result_fbo_->clear_attachments();
+    normalization_pass_result_fbo_->attach_color_buffer(0,
+                                                        normalization_pass_color_result_);
+    normalization_pass_result_fbo_->attach_color_buffer(1,
+                                                        normalization_pass_normal_result_);
+  
+    linear_sampler_state_ = ctx.render_device
+      ->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
 
-  //configure normalization FBO
-  normalization_pass_result_fbo_->clear_attachments();
-  normalization_pass_result_fbo_->attach_color_buffer(
-      0, normalization_pass_color_result_);
-  normalization_pass_result_fbo_->attach_color_buffer(
-      1, normalization_pass_normal_result_);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool PLODUberShader::upload_to(RenderContext const& context) const {
-
-  if (already_uploaded_) {
-    if (render_window_dims_ != left_resolution_)
-      update_textures(context);
-    return false;
-  } else {
-    already_uploaded_ = true;
-  }
-
-  bool upload_succeeded = UberShader::upload_to(context);
-
-  fullscreen_quad_.reset(new scm::gl::quad_geometry(
-      context.render_device, math::vec2(-1.0f, -1.0f), math::vec2(1.0f, 1.0f)));
-
-  ///////////////////////////////////////////////////////////////////////FBOs
-  ///Create FBOs
-
-  depth_pass_result_fbo_ = context.render_device->create_frame_buffer();
-  accumulation_pass_result_fbo_ = context.render_device->create_frame_buffer();
-  normalization_pass_result_fbo_ = context.render_device->create_frame_buffer();
-
-  update_textures(context);
-
-  ///////////////////////////////////////////////////////////////////////FBOs
-  ///END
-  //****
-  ///////////////////////////////////////////////////////////////////////STATES
-  ///BEGIN
-  linear_sampler_state_ = context.render_device->create_sampler_state(
-      scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
-
-  no_depth_test_depth_stencil_state_ = context.render_device
+    no_depth_test_depth_stencil_state_ = ctx.render_device
       ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_ALWAYS);
 
-  depth_test_without_writing_depth_stencil_state_ = context.render_device
+    depth_test_without_writing_depth_stencil_state_ = ctx.render_device
       ->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS);
 
-  color_accumulation_state_ =
-      context.render_device->create_blend_state(true,
-                                                scm::gl::FUNC_ONE,
-                                                scm::gl::FUNC_ONE,
-                                                scm::gl::FUNC_ONE,
-                                                scm::gl::FUNC_ONE,
-                                                scm::gl::EQ_FUNC_ADD,
-                                                scm::gl::EQ_FUNC_ADD);
+    color_accumulation_state_ = ctx.render_device->create_blend_state(true,
+                                                                      scm::gl::FUNC_ONE,
+                                                                      scm::gl::FUNC_ONE,
+                                                                      scm::gl::FUNC_ONE,
+                                                                      scm::gl::FUNC_ONE,
+                                                                      scm::gl::EQ_FUNC_ADD,
+                                                                      scm::gl::EQ_FUNC_ADD);
 
-  change_point_size_in_shader_state_ = context.render_device
+    change_point_size_in_shader_state_ = ctx.render_device
       ->create_rasterizer_state(scm::gl::FILL_SOLID,
                                 scm::gl::CULL_NONE,
                                 scm::gl::ORIENT_CCW,
@@ -364,741 +313,534 @@ bool PLODUberShader::upload_to(RenderContext const& context) const {
                                 false,
                                 false,
                                 scm::gl::point_raster_state(true));
-  ///////////////////////////////////////////////////////////////////////STATES
-  ///END
-  //****
-  ///////////////////////////////////////////////////////////////////////MISC
-  ///BEGIN
-  material_id_ = 0;
-  last_geometry_state_ = invalid_state;
-  ///////////////////////////////////////////////////////////////////////MISC_END
-  //****
-  ///////////////////////////////////////////////////////////////////////PBR
-  ///RELATED BEGIN
-  pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
 
-  size_t size_of_node_in_bytes =
-      database->size_of_surfel() * database->surfels_per_node();
 
-  size_t upload_budget_in_nodes =
-      (policy->upload_budget_in_mb() * 1024u * 1024u) / size_of_node_in_bytes;
+    fullscreen_quad_.reset(new scm::gl::quad_geometry(ctx.render_device, 
+                                                      scm::math::vec2(-1.0f, -1.0f), scm::math::vec2(1.0f, 1.0f )));
 
-  unsigned long long sizeOfNode =
-      database->surfels_per_node() * database->size_of_surfel();
-  unsigned long long sizeOfTempBuffers = upload_budget_in_nodes * sizeOfNode;
-
-  temp_buffer_A_ =
-      context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                           scm::gl::USAGE_DYNAMIC_COPY,
-                                           sizeOfTempBuffers,
-                                           NULL);
-  temp_buffer_B_ =
-      context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                           scm::gl::USAGE_DYNAMIC_COPY,
-                                           sizeOfTempBuffers,
-                                           NULL);
-
-  size_t render_budget_in_nodes =
-      (policy->render_budget_in_mb() * 1024u * 1024u) / size_of_node_in_bytes;
-
-  unsigned long long sizeOfRenderBuffer = render_budget_in_nodes * sizeOfNode;
-
-  render_buffer_ =
-      context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                           scm::gl::USAGE_DYNAMIC_COPY,
-                                           sizeOfRenderBuffer);
-
-  vertex_array_ = context.render_device->create_vertex_array(
-      scm::gl::vertex_format(0,
-                             0,
-                             scm::gl::TYPE_VEC3F,
-                             sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0,
-          1,
-          scm::gl::TYPE_UBYTE,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
-          scm::gl::INT_FLOAT_NORMALIZE)(
-          0,
-          2,
-          scm::gl::TYPE_UBYTE,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
-          scm::gl::INT_FLOAT_NORMALIZE)(
-          0,
-          3,
-          scm::gl::TYPE_UBYTE,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
-          scm::gl::INT_FLOAT_NORMALIZE)(
-          0,
-          4,
-          scm::gl::TYPE_UBYTE,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
-          scm::gl::INT_FLOAT_NORMALIZE)(
-          0,
-          5,
-          scm::gl::TYPE_FLOAT,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0,
-          6,
-          scm::gl::TYPE_VEC3F,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel)),
-      boost::assign::list_of(render_buffer_));
-
-  temp_buffer_A_is_mapped_ = false;
-  temp_buffer_B_is_mapped_ = false;
-  mapped_temp_buffer_A_ = nullptr;
-  mapped_temp_buffer_B_ = nullptr;
-
-  previous_framecount_ = -1;
-
-  return upload_succeeded;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-GeometryUberShader::stage_mask PLODUberShader::get_stage_mask() const {
-  return GeometryUberShader::PRE_FRAME_STAGE |
-         GeometryUberShader::PRE_DRAW_STAGE |
-         GeometryUberShader::POST_DRAW_STAGE |
-         GeometryUberShader::POST_FRAME_STAGE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void PLODUberShader::preframe(RenderContext const& ctx) const {
-
-  upload_to(ctx);
-
-  if (previous_framecount_ != ctx.framecount) {
-    previous_framecount_ = ctx.framecount;
-
-    pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-    pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
-    pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-
-    controller->ResetSystem();
-
-    pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-
-    if (controller->IsSystemResetSignaled(context_id)) {
-      reset(ctx);
-    }
-
-    if (!controller->TemporaryBuffersAvailable(context_id)) {
-      controller->StoreTemporaryBuffers(
-          context_id,
-          get_mapped_temp_buffer_ptr(
-              ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A),
-          get_mapped_temp_buffer_ptr(
-              ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B));
-    }
-
-    //swap cut database
-    cuts->AcceptFront(context_id);
-
-    //run cut update
-    controller->DispatchCutUpdate(context_id);
-
-    if (cuts->IsFrontModified(context_id)) {
-      //upload data to gpu
-
-      unmap_temp_buffer_ptr(ctx, cuts->GetBuffer(context_id));
-
-      copy_to_main_memory(ctx, cuts->GetBuffer(context_id));
-
-      cuts->SignalModificationComplete(context_id);
-
-      controller->StoreTemporaryBuffers(
-          context_id,
-          get_mapped_temp_buffer_ptr(
-              ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A),
-          get_mapped_temp_buffer_ptr(
-              ctx, pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B));
-    }
+    //invalidation before first write
+    previous_frame_count_ = UINT_MAX;
   }
 
-  last_geometry_state_ = pre_frame_state;
+  ///////////////////////////////////////////////////////////////////////////////
+  std::string PLODRenderer::_depth_pass_vertex_shader() const {
+    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
 
-  {
-    //clear depth FBOS depth attachments
-    ctx.render_context->clear_depth_stencil_buffer(depth_pass_result_fbo_);
-    ctx.render_context->clear_color_buffer(
-        depth_pass_result_fbo_, 0, scm::math::vec4f(1.0f, 1.0f, 1.0f, 1.0f));
+    std::string vertex_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p01_depth.vert", root_dirs);
+    resolve_includes(vertex_shadercode, root_dirs);
 
-    //clear_accumulation FBOS color attachment
-    ctx.render_context
-        ->clear_color_buffer(accumulation_pass_result_fbo_,
-                             0,
-                             scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-
-    ctx.render_context
-        ->clear_color_buffer(accumulation_pass_result_fbo_,
-                             1,
-                             scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-
-    //clear normalization FBOs color attachment
-    ctx.render_context
-        ->clear_color_buffer(normalization_pass_result_fbo_,
-                             0,
-                             scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-    ctx.render_context
-        ->clear_color_buffer(normalization_pass_result_fbo_,
-                             1,
-                             scm::math::vec3f(0.0f, 0.0f, 0.0f));
+    return vertex_shadercode;
   }
 
-  //clear cached frustum culling results for all models
-  model_frustum_culling_results_.clear();
-}
+  ///////////////////////////////////////////////////////////////////////////////
+  std::string PLODRenderer::_depth_pass_fragment_shader() const {
+    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
 
-////////////////////////////////////////////////////////////////////////////////
+    std::string fragment_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p01_depth.frag", root_dirs);
+    resolve_includes(fragment_shadercode, root_dirs);
 
-/*virtual*/ void PLODUberShader::predraw(RenderContext const& ctx,
-                                         std::string const& file_name,
-                                         std::string const& material_name,
-                                         scm::math::mat4 const& model_matrix,
-                                         scm::math::mat4 const& normal_matrix,
-                                         Frustum const& frustum,
-                                         View const& view) const {
+    return fragment_shadercode;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  std::string PLODRenderer::_accumulation_pass_vertex_shader() const {
+    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
 
-  //determine frustum parameters
-  std::vector<math::vec3> frustum_corner_values = frustum.get_corners();
-  float top_minus_bottom = scm::math::length((frustum_corner_values[2]) -
-                                             (frustum_corner_values[0]));
-  float height_divided_by_top_minus_bottom =
-      (render_window_dims_)[1] / top_minus_bottom;
-  float near_plane_value = frustum.get_clip_near();
-  float far_plane_value = frustum.get_clip_far();
+    std::string vertex_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p02_accumulation.vert", root_dirs);
+    resolve_includes(vertex_shadercode, root_dirs);
 
-  if (last_geometry_state_ != pre_draw_state) {
-    context_guard_ =
-        std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
-
-    //enable dynamic point size in shaders
-    ctx.render_context
-        ->set_rasterizer_state(change_point_size_in_shader_state_);
-
-    //bind fbo
-    ctx.render_context->set_frame_buffer(depth_pass_result_fbo_);
-
-    get_program(depth_pass)->set_uniform(ctx,
-                                         height_divided_by_top_minus_bottom,
-                                         "height_divided_by_top_minus_bottom");
-    get_program(depth_pass)->set_uniform(ctx, near_plane_value, "near_plane");
-    get_program(depth_pass)->set_uniform(
-        ctx, (far_plane_value - near_plane_value), "far_minus_near_plane");
-    last_geometry_state_ = pre_draw_state;
+    return vertex_shadercode;
   }
 
-  pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-  pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
+  ///////////////////////////////////////////////////////////////////////////////
+  std::string PLODRenderer::_accumulation_pass_fragment_shader() const {
+    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
 
-  pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-  pbr::view_t view_id = controller->DeduceViewId(context_id, view.id);
-  pbr::model_t model_id = controller->DeduceModelId(file_name);
 
-  //send camera and model_matrix to cut update
-  pbr::ren::Camera cut_update_cam(
-      view_id, near_plane_value, frustum.get_view(), frustum.get_projection());
+    std::string fragment_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p02_accumulation.frag", root_dirs);
+    resolve_includes(fragment_shadercode, root_dirs);
 
-  cuts->SendCamera(context_id, view_id, cut_update_cam);
-  cuts->SendHeightDividedByTopMinusBottom(
-      context_id, view_id, height_divided_by_top_minus_bottom);
-  cuts->SendTransform(context_id, model_id, model_matrix);
+    return fragment_shadercode;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  std::string PLODRenderer::_normalization_pass_vertex_shader() const {
+    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
 
-  pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
-  std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
+    std::string vertex_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p03_normalization.vert", root_dirs);
+    resolve_includes(vertex_shadercode, root_dirs);
 
-  //calculate frustum culling results
-  pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-
-  pbr::ren::KdnTree const* kdn_tree = database->GetModel(model_id)->kdn_tree();
-
-  scm::gl::frustum culling_frustum =
-      cut_update_cam.GetFrustumByModel(model_matrix);
-
-  std::vector<scm::gl::boxf> const& model_bounding_boxes =
-      kdn_tree->bounding_boxes();
-
-  model_frustum_culling_results_[model_id].clear();
-  model_frustum_culling_results_[model_id].resize(node_list.size());
-
-  unsigned int node_counter = 0;
-  for (const auto& n : node_list) {
-    ++node_counter;
-
-    //0 = completely in frustum, 1 = completely outside frustum, 2 = intersecting frustum
-    bool is_in_frustum = culling_frustum.classify(model_bounding_boxes[n.node_id_]) != 1;
-    model_frustum_culling_results_[model_id][node_counter] = is_in_frustum;
+    return vertex_shadercode;
   }
 
-  auto plod_ressource = std::static_pointer_cast<PLODRessource>(
-      GeometryDatabase::instance()->lookup(file_name));
-  auto material = MaterialDatabase::instance()->lookup(material_name);
+  ///////////////////////////////////////////////////////////////////////////////
+  std::string PLODRenderer::_normalization_pass_fragment_shader() const {
+    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
 
-  //////////////////////////////
-  //DEPTH PASS (first) BEGIN
-  /////////////////////////////
-  scm::math::vec4f x_unit_vec(1.0, 0.0, 0.0, 0.0);
-  float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
+    std::string fragment_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p03_normalization.frag", root_dirs);
+    resolve_includes(fragment_shadercode, root_dirs);
 
-  get_program(depth_pass)
-      ->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
-
-  get_program(depth_pass)
-      ->set_uniform(ctx,
-                    transpose(inverse(frustum.get_view() * model_matrix)),
-                    "gua_normal_matrix");
-  get_program(depth_pass)->set_uniform(ctx, model_matrix, "gua_model_matrix");
-
-  if (material && plod_ressource) {
-    get_program(depth_pass)->use(ctx);
-    plod_ressource->draw(ctx,
-                         context_id,
-                         view_id,
-                         model_id,
-                         vertex_array_,
-                         model_frustum_culling_results_[model_id]);
-    get_program(depth_pass)->unuse(ctx);
+    return fragment_shadercode;
   }
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void PLODUberShader::draw(RenderContext const& ctx,
-                          std::string const& file_name,
-                          std::string const& material_name,
-                          scm::math::mat4 const& model_matrix,
-                          scm::math::mat4 const& normal_matrix,
-                          Frustum const& frustum,
-                          View const& view) const {
-  throw std::runtime_error("PLODUberShader::draw(): not implemented");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void PLODUberShader::postdraw(RenderContext const& ctx,
-                              std::string const& file_name,
-                              std::string const& material_name,
-                              scm::math::mat4 const& model_matrix,
-                              scm::math::mat4 const& normal_matrix,
-                              Frustum const& frustum,
-                              View const& view) const {
-
-  auto plod_ressource = std::static_pointer_cast<PLODRessource>(
-      GeometryDatabase::instance()->lookup(file_name));
-  auto material = MaterialDatabase::instance()->lookup(material_name);
-
-  float near_plane_value = frustum.get_clip_near();
-  float far_plane_value = frustum.get_clip_far();
-
-  if (last_geometry_state_ != post_draw_state) {
-    (context_guard_).reset();
-    context_guard_ =
-        std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
-    //destroy old context guard and create new one
-
-    //enable dynamic point size in shaders
-    ctx.render_context
-        ->set_rasterizer_state(change_point_size_in_shader_state_);
-
-    //disable depth test
-    //ctx.render_context
-    //    ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
-
-    ctx.render_context
-        ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
-
-    //set blend state to accumulate
-    ctx.render_context->set_blend_state(color_accumulation_state_);
-
-    // bind accumulation FBO
-    ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
-
-    //attach linear depth buffer of depth past for early-z rejection
-    accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
-
-    std::vector<math::vec3> corner_values = frustum.get_corners();
-
-    float top_minus_bottom =
-        scm::math::length((corner_values[2]) - (corner_values[0]));
-
-    float height_divided_by_top_minus_bottom =
-        (render_window_dims_)[1] / top_minus_bottom;
-
-    get_program(accumulation_pass)
-        ->set_uniform(ctx,
-                      height_divided_by_top_minus_bottom,
-                      "height_divided_by_top_minus_bottom");
-    get_program(accumulation_pass)
-        ->set_uniform(ctx, near_plane_value, "near_plane");
-    get_program(accumulation_pass)->set_uniform(
-        ctx, (far_plane_value - near_plane_value), "far_minus_near_plane");
-
-    get_program(accumulation_pass)
-        ->set_uniform(ctx, math::vec2(render_window_dims_), "win_dims");
-
-    last_geometry_state_ = post_draw_state;
-
-  }
-
-  scm::math::vec4f x_unit_vec(1.0f, 0.f, 0.f, 0.f);
-
-  float radius_model_scaling = scm::math::length(model_matrix * x_unit_vec);
-
-  get_program(accumulation_pass)
-      ->set_uniform(ctx, radius_model_scaling, "radius_model_scaling");
-
-  ctx.render_context
-      ->bind_texture(depth_pass_linear_depth_result_, linear_sampler_state_, 0);
-  get_program(accumulation_pass)->get_program(ctx)
-      ->uniform_sampler("p01_depth_texture", 0);
-
-  get_program(accumulation_pass)
-      ->set_uniform(ctx,
-                    transpose(inverse(frustum.get_view() * model_matrix)),
-                    "gua_normal_matrix");
-  get_program(accumulation_pass)
-      ->set_uniform(ctx, model_matrix, "gua_model_matrix");
  
-  get_program(accumulation_pass)
-      ->set_uniform(ctx,
-                    transpose(inverse(model_matrix)),
-                    "transposed_inverse_model_matrix");
+  ///////////////////////////////////////////////////////////////////////////////
+  std::string PLODRenderer::_reconstruction_pass_vertex_shader() const {
+    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
 
-  if (material && plod_ressource) {
+    std::string vertex_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p04_reconstruction.vert", root_dirs);
+    resolve_includes(vertex_shadercode, root_dirs);
+
+    return vertex_shadercode;
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////
+  std::string PLODRenderer::_reconstruction_pass_fragment_shader() const {
+    
+    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
+
+    std::string fragment_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p04_reconstruction.frag", root_dirs);
+    resolve_includes(fragment_shadercode, root_dirs);
+
+    return fragment_shadercode;
+    
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////
+  pbr::context_t PLODRenderer::_register_context_in_cut_update(gua::RenderContext const& ctx) {
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-    pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-    pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-    pbr::model_t model_id = controller->DeduceModelId(file_name);
-    pbr::view_t view_id = controller->DeduceViewId(context_id, view.id);
 
-    material_id_ = material->get_id();
+    if( previous_frame_count_ != ctx.framecount ) {
+      previous_frame_count_ = ctx.framecount;
 
-    pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
-    pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
-    std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list =
-        cut.complete_set();
+      pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+      controller->ResetSystem();
+      pbr::context_t context_id = controller->DeduceContextId( (size_t)(&ctx) );
+      controller->Dispatch(context_id , ctx.render_device);
 
-    //calculate frustum culling results
-    pbr::ren::Camera cut_update_cam(view_id,
-                                    near_plane_value,
-                                    frustum.get_view(),
-                                    frustum.get_projection());
-
-    pbr::ren::KdnTree const* kdn_tree =
-        database->GetModel(model_id)->kdn_tree();
-
-    scm::gl::frustum culling_frustum =
-        cut_update_cam.GetFrustumByModel(model_matrix);
-
-    std::vector<scm::gl::boxf> const& model_bounding_boxes =
-        kdn_tree->bounding_boxes();
-
-    get_program(accumulation_pass)->use(ctx);
-    plod_ressource->draw(ctx,
-                         context_id,
-                         view_id,
-                         model_id,
-                         vertex_array_,
-                         model_frustum_culling_results_[model_id]);
-    get_program(accumulation_pass)->unuse(ctx);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*virtual*/ void PLODUberShader::postframe(RenderContext const& ctx) const {
-  (context_guard_).reset();
-
-  bool using_default_pbr_material = true;
-  {
-
-    {
-      scm::gl::context_all_guard guard(ctx.render_context);
-      // bind normalization FBO
-      ctx.render_context->set_frame_buffer(normalization_pass_result_fbo_);
-
-      get_program(normalization_pass)->use(ctx);
-
-      get_program(normalization_pass)->set_uniform(
-          ctx, using_default_pbr_material, "using_default_pbr_material");
-
-      //bind color outputs to be normalized for third pass
-      ctx.render_context->bind_texture(
-          accumulation_pass_color_result_, linear_sampler_state_, 0);
-      get_program(normalization_pass)->get_program(ctx)
-          ->uniform_sampler("p02_color_texture", 0);
-
-      ctx.render_context->bind_texture(
-          accumulation_pass_normal_result_, linear_sampler_state_, 1);
-      get_program(normalization_pass)->get_program(ctx)
-          ->uniform_sampler("p02_normal_texture", 1);
-
-      fullscreen_quad_->draw(ctx.render_context);
-      get_program(normalization_pass)->unuse(ctx);
-
+      return context_id;
     }
-
-    {
-      scm::gl::context_all_guard guard(ctx.render_context);
-
-      get_program(reconstruction_pass)->use(ctx);
-      get_program(reconstruction_pass)
-          ->set_uniform(ctx, material_id_, "gua_material_id");
-      get_program(reconstruction_pass)->set_uniform(
-          ctx, using_default_pbr_material, "using_default_pbr_material");
-      get_program(reconstruction_pass)
-          ->set_uniform(ctx, math::vec2(render_window_dims_), "win_dims");
-
-      //bind logarithmic depth texture for gbuffer
-      ctx.render_context->bind_texture(
-          depth_pass_log_depth_result_, linear_sampler_state_, 0);
-      get_program(reconstruction_pass)->get_program(ctx)
-          ->uniform_sampler("p01_depth_texture", 0);
-
-      //bind color output for gbuffer
-      ctx.render_context->bind_texture(
-          normalization_pass_color_result_, linear_sampler_state_, 1);
-      get_program(reconstruction_pass)->get_program(ctx)
-          ->uniform_sampler("p02_color_texture", 1);
-
-      //bind normal output for gbuffer
-      ctx.render_context->bind_texture(
-          normalization_pass_normal_result_, linear_sampler_state_, 2);
-      get_program(reconstruction_pass)->get_program(ctx)
-          ->uniform_sampler("p02_normal_texture", 2);
-
-      fullscreen_quad_->draw(ctx.render_context);
-      get_program(reconstruction_pass)->unuse(ctx);
-
+    else {
+      return controller->DeduceContextId( (size_t)(&ctx.id));
     }
   }
-}
 
-////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////
+  void PLODRenderer::render(gua::Pipeline& pipe) {
+    auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::PLODNode))));
 
-char* PLODUberShader::get_mapped_temp_buffer_ptr(
-    RenderContext const& ctx,
-    pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const {
-  switch (buffer) {
-    case pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A:
-      if (!temp_buffer_A_is_mapped_) {
-        mapped_temp_buffer_A_ = (char*)ctx.render_context
-            ->map_buffer(temp_buffer_A_, scm::gl::ACCESS_READ_WRITE);
-        temp_buffer_A_is_mapped_ = true;
+    if(sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
+      
+      std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
+        return reinterpret_cast<node::PLODNode*>(a)->get_material().get_shader() < reinterpret_cast<node::PLODNode*>(b)->get_material().get_shader();
+      });
+
+      RenderContext const& ctx(pipe.get_context());
+   
+
+      scm::math::vec2ui const& render_target_dims = pipe.get_camera().config.get_resolution();
+      //allocate GPU resources if necessary
+      {
+
+	bool resize_resource_containers = false;
+
+	if(gpu_resources_already_created_ == false || current_rendertarget_width_ != render_target_dims[0] || current_rendertarget_height_ != render_target_dims[1]) {
+          current_rendertarget_width_ = render_target_dims[0];
+          current_rendertarget_height_ = render_target_dims[1];
+          _create_gpu_resources(ctx, render_target_dims, resize_resource_containers);
+          gpu_resources_already_created_ = true;
+        }
+
+
       }
-      return mapped_temp_buffer_A_;
-      break;
 
-    case pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B:
-      if (!temp_buffer_B_is_mapped_) {
-        mapped_temp_buffer_B_ = (char*)ctx.render_context
-            ->map_buffer(temp_buffer_B_, scm::gl::ACCESS_READ_WRITE);
-        temp_buffer_B_is_mapped_ = true;
+      //register context for cut-update   
+       pbr::context_t context_id = _register_context_in_cut_update(ctx);
+   
+       scm::gl::frame_buffer_ptr active_depth_fbo;
+       scm::gl::frame_buffer_ptr active_accumulation_fbo;
+       scm::gl::frame_buffer_ptr active_normalization_fbo;
+
+       scm::gl::texture_2d_ptr active_depth_pass_linear_depth_result;
+       scm::gl::texture_2d_ptr active_depth_pass_log_depth_result;
+       scm::gl::texture_2d_ptr active_accumulation_pass_color_result;
+       scm::gl::texture_2d_ptr active_accumulation_pass_normal_result;
+       scm::gl::texture_2d_ptr active_normalization_pass_color_result;
+       scm::gl::texture_2d_ptr active_normalization_pass_normal_result;
+
+       //get handles to FBOs and textures thread safe
+       {
+	 
+	 active_depth_fbo = depth_pass_result_fbo_;
+	 active_accumulation_fbo = accumulation_pass_result_fbo_;
+	 active_normalization_fbo = normalization_pass_result_fbo_;
+
+         active_depth_pass_linear_depth_result = depth_pass_linear_depth_result_;
+         active_depth_pass_log_depth_result = depth_pass_log_depth_result_;
+         active_accumulation_pass_color_result = accumulation_pass_color_result_;
+         active_accumulation_pass_normal_result = accumulation_pass_normal_result_;
+         active_normalization_pass_color_result = normalization_pass_color_result_;
+         active_normalization_pass_normal_result = normalization_pass_normal_result_;
+       }
+
+       //clear render targets of active FBOs
+       ctx.render_context
+         ->clear_depth_stencil_buffer(active_depth_fbo);
+       ctx.render_context
+         ->clear_color_buffer(active_depth_fbo, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+       ctx.render_context
+         ->clear_color_buffer(active_accumulation_fbo,
+                              0,
+                              scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+       ctx.render_context
+         ->clear_color_buffer(active_accumulation_fbo,
+                              1,
+                              scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+
+       ctx.render_context
+         ->clear_color_buffer(active_normalization_fbo,
+                              0,
+                              scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0));
+ 
+       ctx.render_context
+         ->clear_color_buffer(active_normalization_fbo,
+                              1,
+                              scm::math::vec3f(0.0f, 0.0f, 0.0f));
+
+       
+     //determine frustum parameters
+     Frustum const& frustum = pipe.get_scene().frustum;
+     std::vector<math::vec3> frustum_corner_values = frustum.get_corners();
+     float top_minus_bottom = scm::math::length((frustum_corner_values[2]) - 
+                                                (frustum_corner_values[0]));
+
+     pipe.get_gbuffer().set_viewport(ctx);
+
+     float height_divided_by_top_minus_bottom =
+         pipe.get_gbuffer().get_height() / (top_minus_bottom);
+
+     float near_plane_value = frustum.get_clip_near();
+     float far_plane_value = frustum.get_clip_far();
+
+
+
+      if(!depth_pass_program_) {
+        _initialize_depth_pass_program();
+        depth_pass_program_->save_to_file(".", "depth_pass_debug");
       }
-      return mapped_temp_buffer_B_;
-      break;
 
-    default:
-      break;
-  }
+     //create pbr camera out of gua camera values
+     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+     pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
+     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
 
-  Logger::LOG_ERROR << "Failed to map temporary buffer." << std::endl;
+     pbr::view_t view_id = controller->DeduceViewId(context_id, (size_t)(&pipe));
 
-  return nullptr;
-}
+     pbr::ren::Camera cut_update_cam(
+       view_id, near_plane_value, frustum.get_view(), frustum.get_projection());
 
-////////////////////////////////////////////////////////////////////////////////
+     cuts->SendCamera(context_id, view_id, cut_update_cam);
+     cuts->SendHeightDividedByTopMinusBottom(context_id, view_id, height_divided_by_top_minus_bottom);
 
-void PLODUberShader::unmap_temp_buffer_ptr(
-    RenderContext const& ctx,
-    pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const {
-  switch (buffer) {
-    case pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A:
-      if (temp_buffer_A_is_mapped_) {
-        ctx.render_context->unmap_buffer(temp_buffer_A_);
-        temp_buffer_A_is_mapped_ = false;
-      }
-      break;
+      std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_out_of_frustum_per_model;
 
-    case pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B:
-      if (temp_buffer_B_is_mapped_) {
-        ctx.render_context->unmap_buffer(temp_buffer_B_);
-        temp_buffer_B_is_mapped_ = false;
-      }
-      break;
+     //depth pass 
+     {
+       std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
 
-    default:
-      break;
-  }
-}
+       ctx.render_context
+         ->set_rasterizer_state(change_point_size_in_shader_state_);
+ 
+       ctx.render_context
+         ->set_frame_buffer(active_depth_fbo);
+ 
+       if(!depth_pass_program_) {
+         std::cout << "Depth program not instanciated\n";
+       }
 
-////////////////////////////////////////////////////////////////////////////////
+       depth_pass_program_->use(ctx);
+       depth_pass_program_->apply_uniform(ctx,
+                                         "height_divided_by_top_minus_bottom",
+                                         height_divided_by_top_minus_bottom);
+       
+       depth_pass_program_->apply_uniform(ctx,
+                                          "near_plane", near_plane_value);
 
-void PLODUberShader::copy_to_main_memory(
-    RenderContext const& ctx,
-    pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const {
-  pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
+       depth_pass_program_->apply_uniform(ctx,
+                                          "far_minus_near_plane",
+                                           far_plane_value - near_plane_value);
 
-  size_t size_of_node_in_bytes =
-      database->surfels_per_node() * database->size_of_surfel();
 
-  pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
+      nodes_out_of_frustum_per_model.clear();
 
-  pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+      //loop through all models and render depth pass
+      for (auto const& object : sorted_objects->second) { 
 
-  pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+        auto plod_node(reinterpret_cast<node::PLODNode*>(object));
 
-  switch (buffer) {
-    case pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A: {
-      if (temp_buffer_A_is_mapped_) {
-        Logger::LOG_ERROR << "Failed to transfer nodes into main memory. "
-                          << "Temp Storage A was still mapped." << std::endl;
-        assert(false);
-      }
-      std::vector<pbr::ren::CutDatabaseRecord::SlotUpdateDescr>&
-          transfer_descr_list = cuts->GetUpdatedSet(context_id);
+        pbr::model_t model_id = controller->DeduceModelId( plod_node->get_geometry_description());
 
-      if (!transfer_descr_list.empty()) {
-        for (const auto& transfer_desc : transfer_descr_list) {
-          size_t offset_in_temp_VBO =
-              transfer_desc.src_ * size_of_node_in_bytes;
-          size_t offset_in_render_VBO =
-              transfer_desc.dst_ * size_of_node_in_bytes;
-          ctx.render_context->copy_buffer_data(render_buffer_,
-                                               temp_buffer_A_,
-                                               offset_in_render_VBO,
-                                               offset_in_temp_VBO,
-                                               size_of_node_in_bytes);
+        auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+        auto const& scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+ 
+
+        cuts->SendTransform(context_id, model_id, scm_model_matrix);
+        cuts->SendRendered(context_id, model_id);
+        cuts->SendImportance(context_id, model_id, database->GetModel(model_id)->importance());
+
+        pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
+        std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
+
+        //perform frustum culling 
+        pbr::ren::KdnTree const* kdn_tree = database->GetModel(model_id)->kdn_tree();       
+        scm::gl::frustum const& culling_frustum =
+          cut_update_cam.GetFrustumByModel(scm_model_matrix);
+
+        std::vector<scm::gl::boxf> const& model_bounding_boxes = kdn_tree->bounding_boxes();
+        
+        std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id]; 
+
+        for(const auto& n : node_list) {
+          if(culling_frustum.classify(model_bounding_boxes[n.node_id_]) == 1) {
+            nodes_out_of_frustum.insert(n.node_id_);
+          }
+        }
+
+
+	UniformValue model_mat(scm_model_matrix);
+	UniformValue normal_mat(scm_normal_matrix);
+
+        depth_pass_program_->apply_uniform(ctx,
+                                           "gua_model_matrix",
+                                           model_mat);
+
+        depth_pass_program_->apply_uniform(ctx,
+                                           "gua_normal_matrix",
+                                           normal_mat);
+
+        scm::math::vec4f x_unit_vec(1.0, 0.0, 0.0, 0.0);
+        float radius_model_scaling = scm::math::length(scm_model_matrix * x_unit_vec)
+                                     * database->GetModel(model_id)->importance();      
+   
+
+        depth_pass_program_->apply_uniform(ctx, 
+                                          "radius_model_scaling",
+                                           radius_model_scaling);
+        
+        ctx.render_context->apply();
+
+        auto plod_resource = plod_node->get_geometry();
+
+	if(plod_resource && depth_pass_program_) {
+
+          plod_resource->draw(ctx,
+                             context_id,
+                             view_id,
+                             model_id,
+                             controller->GetContextMemory(context_id, ctx.render_device),
+                             nodes_out_of_frustum);
+        }
+        else {
+          Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
         }
       }
-      break;
-    }
-
-    case pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B: {
-      if (temp_buffer_B_is_mapped_) {
-        Logger::LOG_ERROR << "Failed to transfer nodes into main memory. "
-                          << "Temp Storage B was still mapped." << std::endl;
-        assert(false);
+     
+       depth_pass_program_->use(ctx);
+     }
+     
+      if(!accumulation_pass_program_) {
+        _initialize_accumulation_pass_program();
+        accumulation_pass_program_->save_to_file(".", "accumulation_pass_debug");
       }
-      std::vector<pbr::ren::CutDatabaseRecord::SlotUpdateDescr>&
-          transfer_descr_list = cuts->GetUpdatedSet(context_id);
-      if (!transfer_descr_list.empty()) {
-        for (const auto& transfer_desc : transfer_descr_list) {
-          size_t offset_in_temp_VBO =
-              transfer_desc.src_ * size_of_node_in_bytes;
-          size_t offset_in_render_VBO =
-              transfer_desc.dst_ * size_of_node_in_bytes;
-          ctx.render_context->copy_buffer_data(render_buffer_,
-                                               temp_buffer_B_,
-                                               offset_in_render_VBO,
-                                               offset_in_temp_VBO,
-                                               size_of_node_in_bytes);
+
+     //accumulation pass 
+     {
+       std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
+
+       ctx.render_context
+         ->set_rasterizer_state(change_point_size_in_shader_state_);
+ 
+       ctx.render_context
+         ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
+
+       ctx.render_context->set_blend_state(color_accumulation_state_);
+
+       ctx.render_context
+         ->set_frame_buffer(active_accumulation_fbo);
+
+       active_accumulation_fbo->attach_depth_stencil_buffer(active_depth_pass_linear_depth_result);
+ 
+       if(!accumulation_pass_program_) {
+         std::cout << "Accumulation program not instanciated\n";
+       }
+
+       accumulation_pass_program_->use(ctx);
+       accumulation_pass_program_->apply_uniform(ctx,
+                                                 "height_divided_by_top_minus_bottom",
+                                                 height_divided_by_top_minus_bottom);
+       
+       accumulation_pass_program_->apply_uniform(ctx,
+                                                 "near_plane", near_plane_value);
+
+       accumulation_pass_program_->apply_uniform(ctx,
+                                                 "far_minus_near_plane",
+                                                 far_plane_value - near_plane_value);
+
+       accumulation_pass_program_->apply_uniform(ctx,
+                                                 "win_dims",
+                                                 render_target_dims);
+
+       ctx.render_context
+         ->bind_texture(active_depth_pass_linear_depth_result, linear_sampler_state_, 0);
+
+       accumulation_pass_program_->apply_uniform(ctx,
+                                                 "p01_depth_texture", 0);
+
+
+                                             
+
+      //loop through all models and render depth pass
+      for (auto const& object : sorted_objects->second) { 
+
+        auto plod_node(reinterpret_cast<node::PLODNode*>(object));
+
+        pbr::model_t model_id = controller->DeduceModelId( plod_node->get_geometry_description());
+        
+        auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+        auto const& scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+        
+        pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
+        std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
+
+	UniformValue model_mat(scm_model_matrix);
+	UniformValue normal_mat(scm_normal_matrix);
+
+        accumulation_pass_program_->apply_uniform(ctx,
+                                           "gua_model_matrix",
+                                           scm_model_matrix);
+
+        accumulation_pass_program_->apply_uniform(ctx,
+                                           "gua_normal_matrix",
+                                           normal_mat);
+
+        scm::math::vec4f x_unit_vec(1.0, 0.0, 0.0, 0.0);
+        float radius_model_scaling = scm::math::length(scm_model_matrix * x_unit_vec)
+                                     * database->GetModel(model_id)->importance();         
+
+        accumulation_pass_program_->apply_uniform(ctx, 
+                                          "radius_model_scaling",
+                                           radius_model_scaling);
+        
+        ctx.render_context->apply();
+
+        auto plod_resource = plod_node->get_geometry();
+       
+        //retrieve frustum culling results      
+        std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id]; 
+
+	if(plod_resource && depth_pass_program_) {
+
+          plod_resource->draw(ctx,
+                             context_id,
+                             view_id,
+                             model_id,
+                             controller->GetContextMemory(context_id, ctx.render_device),
+                             nodes_out_of_frustum);
+        }
+        else {
+          Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
         }
       }
-      break;
-    }
+     
+       accumulation_pass_program_->unuse(ctx);
+     }
 
-    default:
-      break;
+      if(!normalization_pass_program_) {
+        _initialize_normalization_pass_program();
+        normalization_pass_program_->save_to_file(".", "normalization_pass_debug");
+      }
+
+     //normalization pass 
+     {
+       std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
+
+       ctx.render_context
+         ->set_frame_buffer(active_normalization_fbo);
+ 
+       if(!normalization_pass_program_) {
+         std::cout << "Normalization program not instanciated\n";
+       }
+
+       normalization_pass_program_->use(ctx);
+
+       normalization_pass_program_->apply_uniform(ctx,
+                                                 "win_dims",
+                                                 render_target_dims);
+
+       ctx.render_context
+         ->bind_texture(active_accumulation_pass_color_result, linear_sampler_state_, 0);
+       normalization_pass_program_->apply_uniform(ctx,
+                                                 "p02_color_texture", 0);
+
+       ctx.render_context
+         ->bind_texture(active_accumulation_pass_normal_result, linear_sampler_state_, 1);
+       normalization_pass_program_->apply_uniform(ctx,
+                                                 "p02_normal_texture", 1);
+                                             
+
+       fullscreen_quad_->draw(ctx.render_context);
+       normalization_pass_program_->unuse(ctx);
+     }
+
+
+
+      if(!reconstruction_pass_program_) {
+        _initialize_reconstruction_pass_program();
+        reconstruction_pass_program_->save_to_file(".", "reconstruction_pass_debug");
+      }
+
+     //reconstruction pass 
+     {
+       std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
+
+ 
+       if(!reconstruction_pass_program_) {
+         std::cout << "Reconstruction program not instanciated\n";
+       }
+
+       bool writes_only_color_buffer = false;
+       pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
+
+       reconstruction_pass_program_->use(ctx);
+
+       reconstruction_pass_program_->apply_uniform(ctx,
+                                                   "win_dims",
+                                                   render_target_dims);
+
+       ctx.render_context
+         ->bind_texture(active_depth_pass_log_depth_result, linear_sampler_state_, 0);
+       reconstruction_pass_program_->apply_uniform(ctx,
+                                                 "p01_depth_texture", 0);
+
+       ctx.render_context
+         ->bind_texture(active_normalization_pass_color_result, linear_sampler_state_, 1);
+       reconstruction_pass_program_->apply_uniform(ctx,
+                                                 "p02_color_texture", 1);
+
+       ctx.render_context
+         ->bind_texture(active_normalization_pass_normal_result, linear_sampler_state_, 2);
+       reconstruction_pass_program_->apply_uniform(ctx,
+                                                 "p02_normal_texture", 2);
+                                             
+
+       fullscreen_quad_->draw(ctx.render_context);
+       reconstruction_pass_program_->unuse(ctx);
+     }
+
+   
+       pipe.get_gbuffer().unbind(ctx);
+    }
   }
 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void PLODUberShader::reset(RenderContext const& context) const {
- /* unmap_temp_buffer_ptr(context,
-                        pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A);
-  unmap_temp_buffer_ptr(context,
-                        pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_B);
-
-  temp_buffer_A_.reset();
-  temp_buffer_B_.reset();
-  render_buffer_.reset();
-  vertex_array_.reset();
-
-  pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
-
-  size_t size_of_node_in_bytes =
-      database->size_of_surfel() * database->surfels_per_node();
-
-  size_t upload_budget_in_nodes =
-      (policy->upload_budget_in_mb() * 1024u * 1024u) / size_of_node_in_bytes;
-
-  size_t render_budget_in_nodes =
-      (policy->render_budget_in_mb() * 1024u * 1024u) / size_of_node_in_bytes;
-
-  unsigned long long sizeOfTempBuffers =
-      upload_budget_in_nodes * size_of_node_in_bytes;
-  temp_buffer_A_ =
-      context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                           scm::gl::USAGE_DYNAMIC_COPY,
-                                           sizeOfTempBuffers,
-                                           NULL);
-  temp_buffer_B_ =
-      context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                           scm::gl::USAGE_DYNAMIC_COPY,
-                                           sizeOfTempBuffers,
-                                           NULL);
-
-  size_t stride_size = sizeof(unsigned int) + sizeof(float) + 6 * sizeof(float);
-
-  unsigned long long sizeOfRenderBuffer =
-      render_budget_in_nodes * size_of_node_in_bytes;
-  render_buffer_ =
-      context.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                           scm::gl::USAGE_DYNAMIC_COPY,
-                                           sizeOfRenderBuffer);
-
-  vertex_array_ = context.render_device->create_vertex_array(
-      scm::gl::vertex_format(0,
-                             0,
-                             scm::gl::TYPE_VEC3F,
-                             sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0,
-          1,
-          scm::gl::TYPE_UBYTE,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
-          scm::gl::INT_FLOAT_NORMALIZE)(
-          0,
-          2,
-          scm::gl::TYPE_UBYTE,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
-          scm::gl::INT_FLOAT_NORMALIZE)(
-          0,
-          3,
-          scm::gl::TYPE_UBYTE,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
-          scm::gl::INT_FLOAT_NORMALIZE)(
-          0,
-          4,
-          scm::gl::TYPE_UBYTE,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel),
-          scm::gl::INT_FLOAT_NORMALIZE)(
-          0,
-          5,
-          scm::gl::TYPE_FLOAT,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel))(
-          0,
-          6,
-          scm::gl::TYPE_VEC3F,
-          sizeof(pbr::ren::RawPointCloud::SerializedSurfel)),
-      boost::assign::list_of(render_buffer_));
-
-  temp_buffer_A_is_mapped_ = false;
-  temp_buffer_B_is_mapped_ = false;
-  mapped_temp_buffer_A_ = nullptr;
-  mapped_temp_buffer_B_ = nullptr;
-*/
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string PLODUberShader::default_plod_material_name() const {
-  return "gua_pbr";
-}
 
 }

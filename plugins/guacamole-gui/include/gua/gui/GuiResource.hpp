@@ -95,6 +95,10 @@ class GuiResource {
       call_javascript_impl(method, args);
     }
 
+    void call_javascript(std::string const& method, std::vector<std::string> const& args) const {
+      call_javascript_impl(method, args);
+    }
+
     void add_javascript_callback(std::string const& name);
     void add_javascript_getter(std::string const& name, std::function<std::string()> callback);
 

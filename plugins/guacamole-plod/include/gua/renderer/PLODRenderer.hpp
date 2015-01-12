@@ -19,174 +19,143 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_PLOD_UBER_SHADER_HPP
-#define GUA_PLOD_UBER_SHADER_HPP
+#ifndef GUA_PLOD_RENDERER_HPP
+#define GUA_PLOD_RENDERER_HPP
+
+#include <string>
+#include <map>
+#include <unordered_map>
 
 // guacamole headers
-#include <gua/renderer/GeometryUberShader.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/View.hpp>
+
+//external headers
 #include <pbr/ren/cut_database_record.h>
 
 namespace gua {
 
-class PLODUberShader : public GeometryUberShader {
+  class MaterialShader;
+  class ShaderProgram;
 
- public:
+  class PLODRenderer {
+ 
+  public:
 
-  enum pass {
-    depth_pass = 0,
-    accumulation_pass = 1,
-    normalization_pass = 2,
-    reconstruction_pass = 3
-  };
+    PLODRenderer();
+    ~PLODRenderer();
 
-  enum drawing_state {
-    pre_frame_state = 0,
-    pre_draw_state = 1,
-    draw_state = 2,
-    post_draw_state = 3,
-    post_frame_state = 4,
-    invalid_state = 99999
-  };
+    void render(Pipeline& pipe);
+  
+    void reload_programs();
 
- public:
+ private:  //shader related auxialiary methods
+  
+  void          _load_shaders();
+  void          _initialize_depth_pass_program();
+  void          _initialize_accumulation_pass_program();
+  void          _initialize_normalization_pass_program();
+  //void          _initialize_reconstruction_pass_program(MaterialShader*);
+  void          _initialize_reconstruction_pass_program();
 
-  PLODUberShader()
-      : GeometryUberShader(),
-        already_uploaded_(false) {}
+  void          _create_gpu_resources(gua::RenderContext const& ctx,
+                                    scm::math::vec2ui const& render_target_dims,
+				    bool resize_resource_containers); 
+  
+  std::string   _depth_pass_vertex_shader() const;
+  std::string   _depth_pass_fragment_shader() const;
 
-  ~PLODUberShader();
+  std::string   _accumulation_pass_vertex_shader() const;
+  std::string   _accumulation_pass_fragment_shader() const;
 
-  void create(std::set<std::string> const& material_names);
+  std::string   _normalization_pass_vertex_shader() const;
+  std::string   _normalization_pass_fragment_shader() const;
 
-  bool upload_to(RenderContext const& context) const;
+  std::string   _reconstruction_pass_vertex_shader() const;
+  std::string   _reconstruction_pass_fragment_shader() const;
 
-  /*virtual*/ stage_mask get_stage_mask() const override;
-
-  /*virtual*/ void preframe(RenderContext const& context) const;
-
-  /*virtual*/ void predraw(RenderContext const& ctx,
-                           std::string const& filename,
-                           std::string const& material_name,
-                           scm::math::mat4 const& model_matrix,
-                           scm::math::mat4 const& normal_matrix,
-                           Frustum const& frustum,
-                           View const& view) const;
-
-  /*virtual*/ void draw(RenderContext const& ctx,
-                        std::string const& filename,
-                        std::string const& material_name,
-                        scm::math::mat4 const& model_matrix,
-                        scm::math::mat4 const& normal_matrix,
-                        Frustum const& frustum,
-                        View const& view) const;
-
-  /*virtual*/ void postdraw(RenderContext const& ctx,
-                            std::string const& filename,
-                            std::string const& material_name,
-                            scm::math::mat4 const& model_matrix,
-                            scm::math::mat4 const& normal_matrix,
-                            Frustum const& frustum,
-                            View const& view) const;
-
-  /*virtual*/ void postframe(RenderContext const& context) const;
-
- private:  //auxialiary methods
-
-  //get shader strings
-  ///////////////////
-  std::string depth_pass_vertex_shader() const;
-  std::string depth_pass_fragment_shader() const;
-
-  std::string accumulation_pass_vertex_shader() const;
-  std::string accumulation_pass_fragment_shader() const;
-
-  std::string normalization_pass_vertex_shader() const;
-  std::string normalization_pass_fragment_shader() const;
-
-  std::string reconstruction_pass_vertex_shader() const;
-  std::string reconstruction_pass_fragment_shader() const;
-
-  std::string default_plod_material_name() const;
-
-  //buffer operations
-  char* get_mapped_temp_buffer_ptr(
-      RenderContext const& ctx,
-      pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const;
-  void unmap_temp_buffer_ptr(
-      RenderContext const& ctx,
-      pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const;
-  void copy_to_main_memory(
-      RenderContext const& ctx,
-      pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const;
-
-  //auxiliary
-  void reset(RenderContext const& context) const;
-  void update_textures(RenderContext const& context) const;
+ private:  //out-of-core related auxialiary methods
+  
+ pbr::context_t _register_context_in_cut_update(gua::RenderContext const& ctx);
 
  private:  //member variables
 
-  //FBOs:
-  //////////////////////////////////////////////////////////////////////////////////////
-  //depth pass FBO & attachments
-  mutable scm::gl::texture_2d_ptr depth_pass_log_depth_result_;
-  mutable scm::gl::texture_2d_ptr depth_pass_linear_depth_result_;
+    //FBOs:
+    //////////////////////////////////////////////////////////////////////////////////////
+    //depth pass FBO & attachments
+    scm::gl::texture_2d_ptr                      depth_pass_log_depth_result_;
+    scm::gl::texture_2d_ptr                      depth_pass_linear_depth_result_;
 
-  mutable scm::gl::frame_buffer_ptr depth_pass_result_fbo_;
+    scm::gl::frame_buffer_ptr                    depth_pass_result_fbo_;
 
-  //accumulation pass FBO & attachments
-  mutable scm::gl::texture_2d_ptr accumulation_pass_color_result_;
-  mutable scm::gl::texture_2d_ptr accumulation_pass_normal_result_;
-  mutable scm::gl::frame_buffer_ptr accumulation_pass_result_fbo_;
+    //accumulation pass FBO & attachments
+    scm::gl::texture_2d_ptr                      accumulation_pass_color_result_;
+    scm::gl::texture_2d_ptr                      accumulation_pass_normal_result_;
+    scm::gl::frame_buffer_ptr                    accumulation_pass_result_fbo_;
 
-  //normalization pass FBO & attachments
-  mutable scm::gl::texture_2d_ptr normalization_pass_color_result_;
-  mutable scm::gl::texture_2d_ptr normalization_pass_normal_result_;
-  mutable scm::gl::frame_buffer_ptr normalization_pass_result_fbo_;
+    //normalization pass FBO & attachments
+    scm::gl::texture_2d_ptr                      normalization_pass_color_result_;
+    scm::gl::texture_2d_ptr                      normalization_pass_normal_result_;
+    scm::gl::frame_buffer_ptr                    normalization_pass_result_fbo_;
 
-  //temp buffer front & back
-  //////////////////////////////////////////////////////////////////////////////////////
-  mutable scm::gl::buffer_ptr temp_buffer_A_;
-  mutable scm::gl::buffer_ptr temp_buffer_B_;
 
-  mutable scm::gl::buffer_ptr render_buffer_;
+    //schism-GL states:
+    //////////////////////////////////////////////////////////////////////////////////////
+    scm::gl::rasterizer_state_ptr                change_point_size_in_shader_state_;
 
-  mutable scm::gl::vertex_array_ptr vertex_array_;
+    scm::gl::sampler_state_ptr                   linear_sampler_state_;
+    scm::gl::sampler_state_ptr                   nearest_sampler_state_;
 
-  mutable bool temp_buffer_A_is_mapped_;
-  mutable bool temp_buffer_B_is_mapped_;
-  mutable char* mapped_temp_buffer_A_;
-  mutable char* mapped_temp_buffer_B_;
-  mutable int previous_framecount_;
+    scm::gl::depth_stencil_state_ptr             no_depth_test_depth_stencil_state_;
+    scm::gl::depth_stencil_state_ptr             depth_test_without_writing_depth_stencil_state_;
 
-  //schism-GL states:
-  //////////////////////////////////////////////////////////////////////////////////////
-  mutable scm::gl::rasterizer_state_ptr change_point_size_in_shader_state_;
+    scm::gl::blend_state_ptr                     color_accumulation_state_;
 
-  mutable scm::gl::sampler_state_ptr linear_sampler_state_;
-  mutable scm::gl::sampler_state_ptr nearest_sampler_state_;
+    //frustum dependent variables:
+    /////////////////////////////////////////////////////////////////////////////////////
+    std::vector<std::map<pbr::model_t, std::vector<bool> > >  model_frustum_culling_results_;
+    //misc:
+    ////////////////////////////////////////////////////////////////////////////////////
+    //unsigned int material_id_;  XXX still needed?
+    scm::gl::quad_geometry_ptr                   fullscreen_quad_;
 
-  mutable scm::gl::depth_stencil_state_ptr no_depth_test_depth_stencil_state_;
-  mutable scm::gl::depth_stencil_state_ptr depth_test_without_writing_depth_stencil_state_;
+    bool                                         gpu_resources_already_created_;
+    unsigned                                     previous_frame_count_;
 
-  mutable scm::gl::blend_state_ptr color_accumulation_state_;
+    //context guard
+    ////////////////////////////////////////////////////////////////////////////////////
+  
+    std::mutex                                   mutex_;
+    bool                                         shaders_loaded_;
 
-  //frustum dependent variables:
-  /////////////////////////////////////////////////////////////////////////////////////
-  mutable std::map<pbr::model_t, std::vector<bool> > model_frustum_culling_results_;
-  //misc:
-  ////////////////////////////////////////////////////////////////////////////////////
-  mutable unsigned int material_id_;
-  mutable scm::gl::quad_geometry_ptr fullscreen_quad_;
-  mutable math::vec2ui render_window_dims_;
+    /** PLOD rendering pipeline (4 passes):
+     *
+     *   I. prerender: depth pass          - renders to custom FBO
+     *  II. prerender: accumulation pass   - renders to custom FBO
+     * III. prerender: normalization pass  - renders to custom FBO
+     *  IV. final    : reconstruction pass - renders to GBuffer
+     */
 
-  mutable unsigned int last_geometry_state_;
+    //render target dependent resources
+    unsigned                                            current_rendertarget_width_;  
+    unsigned                                            current_rendertarget_height_;
 
-  mutable bool already_uploaded_;
+    //CPU resources
+    std::vector<ShaderProgramStage>                     depth_pass_shader_stages_;
+    std::vector<ShaderProgramStage>                     accumulation_pass_shader_stages_;
+    std::vector<ShaderProgramStage>                     normalization_pass_shader_stages_;
+    //std::map<scm::gl::shader_stage, std::string>        reconstruction_pass_shader_stages_;
+    std::vector<ShaderProgramStage>                     reconstruction_pass_shader_stages_;
+    
+    //additional GPU resources 
+    ShaderProgram*                                      depth_pass_program_;
+    ShaderProgram*                                      accumulation_pass_program_;
+    ShaderProgram*                                      normalization_pass_program_;
+    //std::unordered_map<MaterialShader*, ShaderProgram*> reconstruction_pass_programs_;
+    ShaderProgram*                                      reconstruction_pass_program_;
 
-  ////////////////////////////////////////////////////////////////////////////////////
-  mutable std::shared_ptr<scm::gl::context_all_guard> context_guard_;
-};
+  };
 
 }
 
-#endif  // GUA_PLOD_UBER_SHADER_HPP
+#endif  // GUA_PLOD_RENDERER_HPP
