@@ -10,11 +10,10 @@ file(GLOB_RECURSE GUACAMOLE_VOLUME_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 
 SET(GUACAMOLE_VOLUME_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-volume includes.")
 
-LINK_DIRECTORIES(${LIB_PATHS} ${AWESOMIUM_LIBRARY_DIRS})
+LINK_DIRECTORIES(${LIB_PATHS})
 
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}
-                     ${AWESOMIUM_INCLUDE_DIR}
                      ${GUACAMOLE_VOLUME_INCLUDE_DIR}
 )
 
@@ -26,16 +25,6 @@ TARGET_LINK_LIBRARIES( guacamole-volume
                        guacamole
                        general ${SCHISM_LIBRARIES} 
                        general ${GL_LIBRARIES})
-
-IF (UNIX)
-    TARGET_LINK_LIBRARIES( guacamole general ${BOOST_LIBRARIES})
-    TARGET_LINK_LIBRARIES( guacamole general ${X11_LIBRARIES})
-ELSEIF (MSVC)
-    # use boost autolink feature
-    # not necessary to link GL on msvc
-ENDIF (UNIX)
-
-
 
 ADD_DEPENDENCIES(guacamole-volume guacamole)
 

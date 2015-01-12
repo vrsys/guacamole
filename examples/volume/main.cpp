@@ -64,7 +64,8 @@ int main(int argc, char** argv) {
   auto vnode = std::dynamic_pointer_cast<gua::node::VolumeNode>(volume);
   vnode->data.alpha_transfer().add_stop(0.5f, 0.1f);
 
-  auto transfer_widget = std::make_shared<gua::GuiResource>("transfer_widget", "asset://gua/data/html/transfer_widget.html", gua::math::vec2(500, 300.f));
+  auto transfer_widget = std::make_shared<gua::GuiResource>();
+  transfer_widget->init("transfer_widget", "asset://gua/data/html/transfer_widget.html", gua::math::vec2(500, 300.f));
   auto transfer_widget_quad = graph.add_node<gua::node::TexturedScreenSpaceQuadNode>("/", "transfer_widget_quad");
   transfer_widget_quad->data.texture() = "transfer_widget";
   transfer_widget_quad->data.size() = gua::math::vec2(500, 300.f);
@@ -107,7 +108,7 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.pipeline_description().add_pass<gua::VolumePassDescription>();
+  camera->get_pipeline_description()->add_pass<gua::VolumePassDescription>();
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);

@@ -29,11 +29,6 @@ IF (MSVC)
 	set_target_properties(guacamole-gui PROPERTIES COMPILE_FLAGS "-D GUA_GUI_LIBRARY")
 ENDIF (MSVC)
 
-IF (UNIX)
-    LIST(APPEND LIBS guacamole ${AWESOMIUM_LIBRARY})
-ELSEIF (MSVC)
-    LIST(APPEND LIBS guacamole ${AWESOMIUM_LIBRARY})
-ENDIF(UNIX)
-
+LIST(APPEND LIBS guacamole ${AWESOMIUM_LIBRARY})
 
 target_link_libraries( guacamole-gui debug ${LIBS} optimized ${LIBS})
