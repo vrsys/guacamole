@@ -40,7 +40,7 @@ Video3DPassDescription::Video3DPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass Video3DPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap const& substitution_map) {
+PipelinePass Video3DPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
 
   PipelinePass pass{*this, ctx, substitution_map};
 

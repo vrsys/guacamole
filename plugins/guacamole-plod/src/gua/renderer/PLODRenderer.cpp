@@ -27,6 +27,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 
 #include <gua/node/PLODNode.hpp>
 #include <gua/platform.hpp>
@@ -53,60 +54,6 @@
 #include <boost/assign/list_of.hpp>
 
 namespace gua {
-
-  namespace {
-  //////////////////////////////////////////////////////////////////////////////
-  std::string read_shader_file(std::string const& path, std::vector<std::string> const& root_dirs) {
-    try {
-      std::string full_path(path);
-      std::ifstream ifstr(full_path.c_str(), std::ios::in);
-
-      if (ifstr.good()) {
-        return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
-      }
-
-      for (auto const& root : root_dirs) {
-        std::string full_path(root + std::string("/") + path);
-        std::ifstream ifstr(full_path.c_str(), std::ios::in);
-
-        if (ifstr.good()) {
-          return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>() );
-        }
-        ifstr.close();
-      }
-      throw std::runtime_error("File not found.");
-    }
-    catch(...) {
-      std::cerr << "Error reading file : " << path << std::endl;
-      return "";
-    }
-  }  
-
-    ///////////////////////////////////////////////////////////////////////////
-    void resolve_includes(std::string& shader_source, std::vector<std::string> const& root_dirs) {
-      std::size_t search_pos(0);
-
-      std::string search("@include");
-
-      while (search_pos != std::string::npos) {
-        search_pos = shader_source.find(search, search_pos);
-
-        if (search_pos != std::string::npos) {
-
-          std::size_t start(shader_source.find('\"', search_pos) + 1);
-          std::size_t end(shader_source.find('\"', start));
-
-          std::string file(shader_source.substr(start, end - start));
-
-          std::string include = read_shader_file(file, root_dirs);
-          shader_source.replace(search_pos, end - search_pos + 2, include);
-
-          // advance search pos
-          search_pos = search_pos + include.length();
-        }
-      }
-    }
-  }
 
   //////////////////////////////////////////////////////////////////////////////
   PLODRenderer::PLODRenderer() : shaders_loaded_(false),
@@ -159,21 +106,26 @@ namespace gua {
   void PLODRenderer::_load_shaders() {
     //create stages only with one thread!
     if(!shaders_loaded_) {
+
+#ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+#error "This works only with GUACAMOLE_RUNTIME_PROGRAM_COMPILATION enabled"
+#endif
+      ResourceFactory factory;
       depth_pass_shader_stages_.clear();
-      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, _depth_pass_vertex_shader()) );
-      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, _depth_pass_fragment_shader()));
+      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.vert")) );
+      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.frag")));
 
       accumulation_pass_shader_stages_.clear();
-      accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, _accumulation_pass_vertex_shader()));
-      accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, _accumulation_pass_fragment_shader()));
+      accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p02_accumulation.vert")));
+      accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p02_accumulation.frag")));
 
       normalization_pass_shader_stages_.clear();
-      normalization_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, _normalization_pass_vertex_shader()));
-      normalization_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, _normalization_pass_fragment_shader()));
+      normalization_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p03_normalization.vert")));
+      normalization_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p03_normalization.frag")));
 
       reconstruction_pass_shader_stages_.clear();
-      reconstruction_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, _reconstruction_pass_vertex_shader()));
-      reconstruction_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, _reconstruction_pass_fragment_shader()));
+      reconstruction_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p04_reconstruction.vert")));
+      reconstruction_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p04_reconstruction.frag")));
       //reconstruction_pass_shader_stages_[scm::gl::STAGE_VERTEX_SHADER] = _reconstruction_pass_vertex_shader();
       //reconstruction_pass_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER] = _reconstruction_pass_fragment_shader();
 
@@ -320,89 +272,6 @@ namespace gua {
 
     //invalidation before first write
     previous_frame_count_ = UINT_MAX;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////
-  std::string PLODRenderer::_depth_pass_vertex_shader() const {
-    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
-
-    std::string vertex_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p01_depth.vert", root_dirs);
-    resolve_includes(vertex_shadercode, root_dirs);
-
-    return vertex_shadercode;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////
-  std::string PLODRenderer::_depth_pass_fragment_shader() const {
-    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
-
-    std::string fragment_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p01_depth.frag", root_dirs);
-    resolve_includes(fragment_shadercode, root_dirs);
-
-    return fragment_shadercode;
-  }
-  
-  ///////////////////////////////////////////////////////////////////////////////
-  std::string PLODRenderer::_accumulation_pass_vertex_shader() const {
-    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
-
-    std::string vertex_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p02_accumulation.vert", root_dirs);
-    resolve_includes(vertex_shadercode, root_dirs);
-
-    return vertex_shadercode;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////
-  std::string PLODRenderer::_accumulation_pass_fragment_shader() const {
-    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
-
-
-    std::string fragment_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p02_accumulation.frag", root_dirs);
-    resolve_includes(fragment_shadercode, root_dirs);
-
-    return fragment_shadercode;
-  }
-  
-  ///////////////////////////////////////////////////////////////////////////////
-  std::string PLODRenderer::_normalization_pass_vertex_shader() const {
-    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
-
-    std::string vertex_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p03_normalization.vert", root_dirs);
-    resolve_includes(vertex_shadercode, root_dirs);
-
-    return vertex_shadercode;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////
-  std::string PLODRenderer::_normalization_pass_fragment_shader() const {
-    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
-
-    std::string fragment_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p03_normalization.frag", root_dirs);
-    resolve_includes(fragment_shadercode, root_dirs);
-
-    return fragment_shadercode;
-  }
- 
-  ///////////////////////////////////////////////////////////////////////////////
-  std::string PLODRenderer::_reconstruction_pass_vertex_shader() const {
-    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
-
-    std::string vertex_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p04_reconstruction.vert", root_dirs);
-    resolve_includes(vertex_shadercode, root_dirs);
-
-    return vertex_shadercode;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////
-  std::string PLODRenderer::_reconstruction_pass_fragment_shader() const {
-    
-    std::vector<std::string> root_dirs = {GUACAMOLE_INSTALL_DIR};
-
-    std::string fragment_shadercode = read_shader_file("resources/shaders/gbuffer/plod/p04_reconstruction.frag", root_dirs);
-    resolve_includes(fragment_shadercode, root_dirs);
-
-    return fragment_shadercode;
-    
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////

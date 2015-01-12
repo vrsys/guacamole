@@ -26,7 +26,7 @@
 
 namespace gua {
 
-  class PLODPassDescription : public PipelinePassDescription {
+  class GUA_DLL PLODPassDescription : public PipelinePassDescription {
 
   public : // typedefs, enums
 
@@ -36,7 +36,7 @@ namespace gua {
 
     PLODPassDescription();
     PipelinePassDescription* make_copy() const override;
-    PipelinePass make_pass(RenderContext const&) override;
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
 };
 

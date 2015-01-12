@@ -29,6 +29,7 @@
 // guacamole headers
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/View.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
 //external headers
 #include <pbr/ren/cut_database_record.h>
@@ -46,6 +47,7 @@ namespace gua {
     ~PLODRenderer();
 
     void render(Pipeline& pipe);
+    void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
   
     void reload_programs();
 
@@ -62,18 +64,6 @@ namespace gua {
                                     scm::math::vec2ui const& render_target_dims,
 				    bool resize_resource_containers); 
   
-  std::string   _depth_pass_vertex_shader() const;
-  std::string   _depth_pass_fragment_shader() const;
-
-  std::string   _accumulation_pass_vertex_shader() const;
-  std::string   _accumulation_pass_fragment_shader() const;
-
-  std::string   _normalization_pass_vertex_shader() const;
-  std::string   _normalization_pass_fragment_shader() const;
-
-  std::string   _reconstruction_pass_vertex_shader() const;
-  std::string   _reconstruction_pass_fragment_shader() const;
-
  private:  //out-of-core related auxialiary methods
   
  pbr::context_t _register_context_in_cut_update(gua::RenderContext const& ctx);
@@ -154,6 +144,7 @@ namespace gua {
     //std::unordered_map<MaterialShader*, ShaderProgram*> reconstruction_pass_programs_;
     ShaderProgram*                                      reconstruction_pass_program_;
 
+    SubstitutionMap                                     global_substitution_map_;
   };
 
 }

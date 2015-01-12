@@ -40,65 +40,6 @@
 
 namespace gua {
 
-  namespace {
-
-    ///////////////////////////////////////////////////////////////////////////
-    std::string read_shader_file(std::string const& path, std::vector<std::string> const& root_dirs)
-    {
-      try {
-        std::string full_path(path);
-        std::ifstream ifstr(full_path.c_str(), std::ios::in);
-
-        if (ifstr.good()) {
-          return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
-        }
-
-        for (auto const& root : root_dirs)
-        {
-          std::string full_path(root + std::string("/") + path);
-          std::ifstream ifstr(full_path.c_str(), std::ios::in);
-
-          if (ifstr.good()) {
-            return std::string(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
-          }
-          ifstr.close();
-        }
-        throw std::runtime_error("File not found.");
-      }
-      catch (...) {
-        std::cerr << "Error reading file : " << path << std::endl;
-        return "";
-      }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    void resolve_includes(std::string& shader_source, std::vector<std::string> const& root_dirs)
-    {
-      std::size_t search_pos(0);
-
-      std::string search("#include");
-
-      while (search_pos != std::string::npos) 
-      {
-        search_pos = shader_source.find(search, search_pos);
-
-        if (search_pos != std::string::npos) {
-
-          std::size_t start(shader_source.find('\"', search_pos) + 1);
-          std::size_t end(shader_source.find('\"', start));
-
-          std::string file(shader_source.substr(start, end - start));
-
-          std::string include = read_shader_file(file, root_dirs);
-          shader_source.replace(search_pos, end - search_pos + 2, include);
-
-          // advance search pos
-          search_pos = search_pos + include.length();
-        }
-      }
-    }
-  }
-
 ////////////////////////////////////////////////////////////////////////////////
 
 PLODPassDescription::PLODPassDescription()
@@ -118,11 +59,12 @@ PipelinePassDescription* PLODPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass PLODPassDescription::make_pass(RenderContext const& ctx)
+PipelinePass PLODPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  PipelinePass pass{ *this, ctx };
+  PipelinePass pass{ *this, ctx, substitution_map };
 
   auto renderer = std::make_shared<PLODRenderer>();
+  renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
     PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {

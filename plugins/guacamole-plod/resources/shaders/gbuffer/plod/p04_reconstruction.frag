@@ -331,6 +331,7 @@ void main()
   float gua_emissivity = 1.0;
   float gua_roughness = 0.0;
   float gua_metalness = 0.0;
+  bool gua_flags_passthrough = true;
 
  
 
