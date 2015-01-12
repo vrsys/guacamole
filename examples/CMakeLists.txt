@@ -37,6 +37,7 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(nice_and_shiny)
     add_subdirectory(stress_test)
     add_subdirectory(transparency)
+    add_subdirectory(tiled_shading_test)
   ENDIF (${GUACAMOLE_GLFW3})
 
   # nurbs example requires GLFW3 and nurbs-plugin

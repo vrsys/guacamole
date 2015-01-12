@@ -161,6 +161,7 @@ int main(int argc, char** argv) {
   auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
   portal_camera->translate(0, 0, 2.0);
   portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
+  //portal_camera->config.set_resolution(resolution);
   portal_camera->config.set_screen_path("/portal_screen");
   portal_camera->config.set_scene_graph_name("main_scenegraph");
   portal_camera->config.set_output_texture_name("portal");
@@ -173,8 +174,9 @@ int main(int argc, char** argv) {
   portal_pipe->add_pass<gua::TriMeshPassDescription>();
   portal_pipe->add_pass<gua::LightVisibilityPassDescription>();
   portal_pipe->add_pass<gua::ResolvePassDescription>()
-    .mode(gua::ResolvePassDescription::QUAD_TEXTURE)
+    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  portal_pipe->set_enable_abuffer(true);
   portal_camera->set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
@@ -186,9 +188,10 @@ int main(int argc, char** argv) {
   camera->config.set_enable_stereo(false);
   camera->set_pre_render_cameras({portal_camera});
   camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>()
-    .mode(gua::ResolvePassDescription::QUAD_TEXTURE)
+    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
     //.texture("/opt/guacamole/resources/skymaps/skymap.jpg");
     .texture("data/checkerboard.png");
+  camera->get_pipeline_description()->set_enable_abuffer(true);
 
   float alpha = 0.f;
   float alpha_d = 0.001f;
@@ -306,7 +309,13 @@ int main(int argc, char** argv) {
           std::cout << "Debug tiles: " << d_r.debug_tiles() <<"\n";
           d.touch();
         }
-        if ('Z' == key || 'Y' == key) {
+        if ('T' == key) {
+          auto& desc = camera->get_pipeline_description();
+          desc->set_enable_abuffer(!desc->get_enable_abuffer());
+          portal_pipe->set_enable_abuffer(!portal_pipe->get_enable_abuffer());
+          std::cout << "Enable A-Buffer: " << desc->get_enable_abuffer() <<"\n";
+        }
+        if ('Z' == key || 'X' == key) {
           alpha += ('Z' == key) ? 0.05f : -0.05f;
           alpha = std::max(std::min(alpha, 1.f), 0.f);
           mat_glass->set_uniform("alpha", alpha);
