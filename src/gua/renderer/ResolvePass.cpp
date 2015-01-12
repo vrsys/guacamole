@@ -147,6 +147,9 @@ PipelinePassDescription* ResolvePassDescription::make_copy() const {
 PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
   substitution_map["debug_tiles"] = debug_tiles() ? "1" : "0";
+  substitution_map["tone_mapping_method"] = std::to_string(static_cast<int>(tone_mapping_method()));
+  substitution_map["tone_mapping_exposure"] = std::to_string(tone_mapping_exposure());
+
   PipelinePass pass{*this, ctx, substitution_map};
   return pass;
 }

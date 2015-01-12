@@ -110,7 +110,7 @@ class GUA_DLL PipelineDescription {
   std::vector<PipelinePassDescription*> passes_;
   void*  user_data_ = nullptr;
   bool   enable_abuffer_ = false;
-  size_t abuffer_size_ = 0;
+  size_t abuffer_size_ = 800;
   mutable boost::shared_mutex mutex_;
 };
 

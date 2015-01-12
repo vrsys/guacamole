@@ -39,6 +39,11 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
     QUAD_TEXTURE = 2,
   };
 
+  enum class ToneMappingMethod {
+    LINEAR = 0,
+    HEJL = 1
+  };
+
   ResolvePassDescription();
 
   ResolvePassDescription& color(utils::Color3f const& color);
@@ -60,6 +65,14 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& fog_end(float fog_end);
   float fog_end() const;
 
+  ResolvePassDescription& tone_mapping_exposure(float value) {
+    tone_mapping_exposure_ = value; return *this; }
+  float tone_mapping_exposure() const { return tone_mapping_exposure_; }
+
+  ResolvePassDescription& tone_mapping_method(ToneMappingMethod value) {
+    tone_mapping_method_ = value; return *this; }
+  ToneMappingMethod tone_mapping_method() const { return tone_mapping_method_; }
+
   ResolvePassDescription& debug_tiles(bool value) {
     debug_tiles_ = value; return *this; }
   bool debug_tiles() const { return debug_tiles_; }
@@ -70,8 +83,9 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
-  bool debug_tiles_ = false;
-
+  ToneMappingMethod tone_mapping_method_ = ToneMappingMethod::LINEAR;
+  float tone_mapping_exposure_           = 1.f;
+  bool debug_tiles_                      = false;
 };
 
 }

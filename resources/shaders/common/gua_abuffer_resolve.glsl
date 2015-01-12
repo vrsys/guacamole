@@ -29,7 +29,7 @@ bool abuf_blend(inout vec4 color, float opaque_depth) {
     } 
     ++frag_count;
 
-    float z = UNLIN_DEPTH(UNPACK_DEPTH(frag.y)) * 2.0 - 1.0;
+    float z = fma(UNLIN_DEPTH(UNPACK_DEPTH(frag.y)), 2.0, -1.0);
     if (z > opaque_depth) {
       break;
     }

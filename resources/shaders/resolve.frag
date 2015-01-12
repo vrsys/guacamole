@@ -6,6 +6,7 @@ in vec2 gua_quad_coords;
 @include "common/gua_camera_uniforms.glsl"
 @include "common/gua_gbuffer_input.glsl"
 @include "common/gua_shading.glsl"
+@include "common/gua_tone_mapping.glsl"
 
 #define ABUF_MODE readonly
 #define ABUF_SHADE_FUNC abuf_shade
@@ -26,7 +27,7 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
         frag_color += gua_shade(i, color /* (1.0 + emit)*/, normal, position, pbr);
       }
   }
-  return frag_color;
+  return toneMap(frag_color);
 }
 
 vec4 abuf_shade(uint pos, float depth) {
@@ -38,7 +39,7 @@ vec4 abuf_shade(uint pos, float depth) {
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   vec3 position = h.xyz / h.w;
 
-  vec3 frag_color = shade_for_all_lights(color.rgb, normal.xyz *2.0 - 1.0, position, pbr.rgb, floatBitsToUint(pbr.w));
+  vec3 frag_color = shade_for_all_lights(color.rgb, fma(normal.xyz, vec3(2.0), vec3(-1.0)), position, pbr.rgb, floatBitsToUint(pbr.w));
   return vec4(frag_color, color.a);
 }
 
@@ -54,7 +55,7 @@ layout(location=0) out vec3 gua_out_color;
 
 // skymap
 float gua_my_atan2(float a, float b) {
-  return 2.0 * atan(a/(sqrt(b*b + a*a) + b));
+  return 2.0 * atan(fma(a, inversesqrt(b*b + a*a), b));
 }
 
 vec3 gua_apply_background_texture() {
@@ -102,6 +103,7 @@ void main() {
 
 #if @enable_abuffer@
   bool res = abuf_blend(final_color, depth);
+  //gua_out_color = final_color.rgb; return;
 #else
   bool res = true;
 #endif

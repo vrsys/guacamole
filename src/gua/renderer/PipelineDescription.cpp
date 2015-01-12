@@ -58,7 +58,6 @@ std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
   pipe->add_pass<BBoxPassDescription>();
   pipe->add_pass<ResolvePassDescription>();
   pipe->add_pass<TexturedScreenSpaceQuadPassDescription>();
-  pipe->add_pass<ToneMappingPassDescription>();
 
   pipe->set_enable_abuffer(false);
   pipe->set_abuffer_size(800); // in MiB
