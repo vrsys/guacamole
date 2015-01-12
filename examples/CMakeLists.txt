@@ -55,6 +55,10 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(plod)
   ENDIF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})
 
+  IF (${PLUGIN_guacamole-video3d})
+    add_subdirectory(video3d)
+  ENDIF (${PLUGIN_guacamole-video3d})
+
   # gui example requires gui-plugin
   IF (${PLUGIN_guacamole-gui})
     add_subdirectory(gui)
@@ -62,9 +66,6 @@ IF (GUACAMOLE_EXAMPLES)
     IF (${PLUGIN_guacamole-volume})
       add_subdirectory(volume)
     ENDIF (${PLUGIN_guacamole-volume})
-    IF (${PLUGIN_guacamole-video3d})
-      add_subdirectory(video3d)
-    ENDIF (${PLUGIN_guacamole-video3d})
   ENDIF (${PLUGIN_guacamole-gui})
 
 
