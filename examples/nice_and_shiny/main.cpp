@@ -154,6 +154,11 @@ int main(int argc, char** argv) {
     ;
 #endif
 
+  auto tiledPipe(std::make_shared<gua::PipelineDescription>());
+  tiledPipe->add_pass<gua::TriMeshPassDescription>();
+  tiledPipe->add_pass<gua::LightVisibilityPassDescription>();
+  tiledPipe->add_pass<gua::ResolvePassDescription>();
+
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
   camera->config.set_resolution(resolution);
@@ -179,10 +184,16 @@ int main(int argc, char** argv) {
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+      if (action != 0) return;
       if ('1' == key) {
         camera->set_pipeline_description(pbrPipe);
+        std::cout << "Pipeline: deferred PBR" << std::endl;
       } else if ('2' == key) {
         camera->set_pipeline_description(standardPipe);
+        std::cout << "Pipeline: deferred standard" << std::endl;
+      } else if ('3' == key) {
+        camera->set_pipeline_description(tiledPipe);
+        std::cout << "Pipeline: tiled PBR" << std::endl;
       }
     });
 
@@ -194,11 +205,16 @@ int main(int argc, char** argv) {
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0/500.0);
 
+  size_t ctr{};
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
+
+    if (ctr++ % 150 == 0)
+      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
+                << camera->get_rendering_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {

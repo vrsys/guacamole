@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 #include <gua/guacamole.hpp>
+#include <random>
 
 #define COUNT 5
 
@@ -63,10 +64,17 @@ int main(int argc, char** argv) {
   }
 
   auto resolution = gua::math::vec2ui(1920, 1080);
+  std::mt19937 gen(std::minstd_rand0{}());
 
-  auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
-  light->scale(4.4f);
-  light->translate(1.f, 0.f, 2.f);
+  std::uniform_real_distribution<> dst(-2, 2);
+  std::uniform_real_distribution<> dst_c(0.3, 1);
+
+  for (int i = 0; i < 100; ++i) {
+    auto light = graph.add_node<gua::node::PointLightNode>("/", "light_"+std::to_string(i));
+    light->data.set_color(gua::utils::Color3f(dst_c(gen), dst_c(gen), dst_c(gen)));
+    light->scale(1.4f);
+    light->translate(dst(gen), dst(gen), dst(gen));
+  }
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(0.001 * resolution.x, 0.001 * resolution.y));
@@ -92,8 +100,8 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  //camera->config.set_enable_frustum_culling(false);
-  //camera->config.set_enable_frustum_culling(false);
+  camera->config.set_enable_frustum_culling(false);
+  camera->config.set_enable_frustum_culling(false);
   camera->set_pipeline_description(pipe_deferred);
 
   auto window = std::make_shared<gua::GlfwWindow>();
@@ -129,7 +137,6 @@ int main(int argc, char** argv) {
   gua::events::Ticker ticker(loop, 1.0/500.0);
   size_t ctr{};
 
-
   ticker.on_tick.connect([&]() {
 
     for (int x(0); x<COUNT; ++x) {
@@ -139,7 +146,9 @@ int main(int argc, char** argv) {
     }
 
     if (ctr++ % 150 == 0)
-    std::cout << camera->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
+      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
+                << camera->get_rendering_fps() << ", app fps: "
+                << camera->get_application_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {

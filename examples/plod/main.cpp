@@ -134,11 +134,16 @@ int main(int argc, char** argv) {
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass<gua::TriMeshPassDescription>();
   portal_pipe->add_pass<gua::PLODPassDescription>();
-  portal_pipe->add_pass<gua::EmissivePassDescription>();
-  portal_pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  portal_pipe->add_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+  portal_pipe->add_pass<gua::LightVisibilityPassDescription>();
+  portal_pipe->add_pass<gua::ResolvePassDescription>()
+    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  //portal_pipe->add_pass<gua::EmissivePassDescription>();
+  //portal_pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
+  //portal_pipe->add_pass<gua::BackgroundPassDescription>()
+  //  .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+  //  .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+
   portal_camera->set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
@@ -155,12 +160,16 @@ int main(int argc, char** argv) {
   pipe->add_pass<gua::TriMeshPassDescription>();
   pipe->add_pass<gua::PLODPassDescription>();
   pipe->add_pass<gua::TexturedQuadPassDescription>();
-  pipe->add_pass<gua::EmissivePassDescription>();
-  pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  pipe->add_pass<gua::BBoxPassDescription>();
-  pipe->add_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+  pipe->add_pass<gua::LightVisibilityPassDescription>();
+  pipe->add_pass<gua::ResolvePassDescription>()
+    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  //pipe->add_pass<gua::EmissivePassDescription>();
+  //pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
+  //pipe->add_pass<gua::BBoxPassDescription>();
+  //pipe->add_pass<gua::BackgroundPassDescription>()
+  //  .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+  //  .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
 
 
 
@@ -168,12 +177,13 @@ int main(int argc, char** argv) {
 
 
   
-  camera->get_pipeline_description()->get_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
-    .enable_fog(true)
-    .fog_start(1)
-    .fog_end(10);
+  //camera->get_pipeline_description()->get_pass<gua::BackgroundPassDescription>()
+//  camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>()
+//    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
+ //   .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+    //.enable_fog(true)
+    //.fog_start(1)
+    //.fog_end(10);
   
   
    camera->set_pipeline_description(pipe);
