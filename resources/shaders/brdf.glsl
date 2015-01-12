@@ -34,8 +34,7 @@ float GGX_V1(in float m2, in float nDotX)
 // ===============================================================================
 // Computes the specular term using a GGX microfacet distribution, with a
 // matching geometry factor and visibility term. m is roughness, n is the surface
-// normal, h is the half vector, l is the direction to the light source, and
-// specAlbedo is the RGB specular albedo
+// normal, h is the half vector and l is the direction to the light source.
 // ===============================================================================
 float GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l)
 {
@@ -144,3 +143,32 @@ float GGX_Specular(float m, vec3 n, vec3 h, vec3 v, vec3 l)
 // {
 //   return c_spec + (max(vec3(gloss), c_spec) - c_spec) * pow(1 - saturate(dot(E, N)), 5);
 // }
+
+float D_GGX(float roughness, float nDotH)
+{
+  float m = roughness*roughness;
+  float m2 = m*m;
+  float denom = nDotH * (nDotH * m2 - nDotH) + 1.0f;
+  return m2 / (3.14159265 * denom * denom);
+  //return m2 / (denom * denom);
+}
+
+float visibility_schlick(float roughness, float nDotV, float nDotL)
+{
+  float k = roughness * roughness * 0.5f;
+  float g_v = nDotV * (1-k)+k;
+  float g_l = nDotL * (1-k)+k;
+  return 0.25f / (g_v * g_l);
+}
+
+float D_and_Vis(float roughness, vec3 N, vec3 H, vec3 V, vec3 L)
+{
+  float nDotL = saturate(dot(N,L));
+  float nDotH = saturate(dot(N,H));
+  float nDotV = max(dot(N,V), 0.0001f);
+  float lDotH = saturate(dot(L,H));
+
+  float D   = D_GGX(roughness, nDotH);
+  float Vis = visibility_schlick(roughness, nDotV, nDotL);
+  return D*Vis;
+}

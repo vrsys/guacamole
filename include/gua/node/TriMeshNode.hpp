@@ -60,9 +60,6 @@ public : // methods
   */
   void set_geometry_description(std::string const& geometry_description);
 
-  /**
-  * A string referring to an entry in guacamole's MaterialShaderDatabase.
-  */
   std::shared_ptr<Material> const& get_material() const;
   void                      set_material(std::shared_ptr<Material> const& material);
 
@@ -103,7 +100,7 @@ public : // methods
   bool                              geometry_changed_;
 
   std::shared_ptr<Material>         material_;
-  bool                              material_changed_;
+  // bool                              material_changed_;
 };
 
 } // namespace node {

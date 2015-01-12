@@ -284,7 +284,8 @@ void main() {
   vec3 diffuse = lambert(cdiff);
   // specular = D*G*F / (4*nDotL*nDotV) = D * Vis * F
   // where Vis = G/(4*nDotL*nDotV)
-  vec3 D_Vis = vec3(GGX_Specular(roughness, N, H, Vn, L));
+  //vec3 D_Vis = vec3(GGX_Specular(roughness, N, H, Vn, L));
+  vec3 D_Vis = vec3(D_and_Vis(roughness, N, H, Vn, L));
   vec3 brdf = mix(diffuse, D_Vis, F);
   vec3 col = Cl * brdf * NdotL;
 

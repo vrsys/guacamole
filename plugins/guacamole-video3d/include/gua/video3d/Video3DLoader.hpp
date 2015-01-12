@@ -19,22 +19,49 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+#ifndef GUA_VIDEO3D_LOADER_HPP
+#define GUA_VIDEO3D_LOADER_HPP
 
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
+// guacamole headers
+#include <gua/video3d/platform.hpp>
+#include <gua/databases/Database.hpp>
 
-// node headers
-#include <gua/node/GeometryNode.hpp>
-#include <gua/node/TriMeshNode.hpp>
-#include <gua/node/TransformNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/node/ScreenNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
-#include <gua/node/CameraNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
-#include <gua/node/TexturedScreenSpaceQuadNode.hpp>
+// external headers
+#include <string>
+#include <list>
+#include <memory>
 
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+
+namespace gua {
+
+namespace node {
+class Node;
+class InnerNode;
+class Video3DNode;
+}
+
+/**
+ * Loads and draws Video3D.
+ *
+ * This class can load Video3D data from files and display them in multiple
+ * contexts. A MeshLoader object is made of several Video3D objects.
+ */
+class GUA_VIDEO3D_DLL Video3DLoader {
+ public:
+
+  Video3DLoader();
+  ~Video3DLoader() = default;
+
+  std::shared_ptr<node::Video3DNode> create_geometry_from_file(std::string const& nodename,
+                                                  std::string const& ksfile);
+
+  bool is_supported(std::string const& file_name) const;
+
+ private:
+    boost::unordered_set<std::string> _supported_file_extensions;
+
+};
+
+}
+
+#endif  // GUA_VIDEO3D_LOADER_HPP

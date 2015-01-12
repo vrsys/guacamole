@@ -25,7 +25,6 @@
 #include <gua/platform.hpp>
 
 #include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/Video3DLoader.hpp>
 
 #include <thread>
 #include <chrono>

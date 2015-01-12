@@ -243,7 +243,9 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
 
         if (!programs_[context.id]) {
           Logger::LOG_WARNING << "Failed to create shaders!" << std::endl;
-
+          for (auto const& s : stages_) {
+            std::cout << "Source: " << s.source << std::endl;
+          }
           return false;
         }
     }
