@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/FrameBufferObject.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 
 namespace gua {
 
@@ -46,7 +46,7 @@ class VolumeRenderer {
   std::shared_ptr<Texture2D> volume_raygeneration_color_buffer_;
   std::shared_ptr<Texture2D> volume_raygeneration_depth_buffer_;
 
-  ProgramFactory                 program_factory_;
+  ResourceFactory                program_factory_;
   std::shared_ptr<ShaderProgram> composite_shader_;
   std::shared_ptr<ShaderProgram> ray_generation_shader_;
 

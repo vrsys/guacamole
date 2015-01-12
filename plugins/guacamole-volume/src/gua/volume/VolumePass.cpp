@@ -43,9 +43,10 @@ VolumePassDescription::VolumePassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx) {
+PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx,
+    SubstitutionMap& substitution_map) {
 
-  PipelinePass pass{*this, ctx};
+  PipelinePass pass{*this, ctx, substitution_map};
 
   auto renderer(std::make_shared<VolumeRenderer>());
 
