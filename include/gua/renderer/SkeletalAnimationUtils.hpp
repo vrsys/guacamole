@@ -177,15 +177,9 @@ class Pose {
   Pose& operator*=(float const factor);
   Pose operator*(float const factor) const;
 
-
   void partial_replace(Pose const& pose2, std::shared_ptr<Node> const& pNode);
-  inline std::map<std::string, Transformation>::iterator begin();   
-  inline std::map<std::string, Transformation>::const_iterator cbegin() const; 
 
-  inline std::map<std::string, Transformation>::iterator end(); 
-  inline std::map<std::string, Transformation>::const_iterator cend() const;
- 
- private:
+ private: 
   std::map<std::string, Transformation> transforms;
 };
 
