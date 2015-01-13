@@ -72,13 +72,93 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(Mesh const& mesh, std::sh
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void SkeletalAnimationRessource::InitMesh(Mesh& mesh)
+{    
+  const scm::math::vec3 Zero3D(0.0f, 0.0f, 0.0f);
+  
+  // Populate the vertex attribute vectors
+  for (uint i = 0 ; i < mesh_->mNumVertices ; i++) { // TODO catch: haspositions and hasnormals
+    
+    scm::math::vec3 pPos = scm::math::vec3(0.f, 0.f, 0.f);
+    if(mesh_->HasPositions()) {
+      pPos = scm::math::vec3(mesh_->mVertices[i].x,mesh_->mVertices[i].y,mesh_->mVertices[i].z);
+    }
+
+    scm::math::vec3 pNormal = scm::math::vec3(0.f, 0.f, 0.f);
+    if(mesh_->HasNormals()) {
+      pNormal = scm::math::vec3(mesh_->mNormals[i].x,mesh_->mNormals[i].y,mesh_->mNormals[i].z);
+    }
+
+    scm::math::vec3 pTexCoord = scm::math::vec3(0.0f,0.0f,0.0f);
+    if(mesh_->HasTextureCoords(0)) {}
+    {
+      pTexCoord = scm::math::vec3(mesh_->mTextureCoords[0][i].x,mesh_->mTextureCoords[0][i].y,mesh_->mTextureCoords[0][i].z);
+    }
+
+    scm::math::vec3 pTangent = scm::math::vec3(0.f, 0.f, 0.f);
+    scm::math::vec3 pBitangent = scm::math::vec3(0.f, 0.f, 0.f);
+    if (mesh_->HasTangentsAndBitangents()) {
+      pTangent = scm::math::vec3(mesh_->mTangents[i].x, mesh_->mTangents[i].y, mesh_->mTangents[i].z);
+
+      pBitangent = scm::math::vec3(mesh_->mBitangents[i].x, mesh_->mBitangents[i].y, mesh_->mBitangents[i].z);
+    }
+
+    mesh.positions.push_back(pPos);
+    mesh.normals.push_back(pNormal);
+    mesh.bitangents.push_back(pBitangent);
+    mesh.tangents.push_back(pTangent);
+    mesh.texCoords.push_back(scm::math::vec2(pTexCoord[0], pTexCoord[1]));
+  }
+
+  mesh.bones.resize(mesh.positions.size());
+  LoadBones(mesh.bones);
+  
+  // Populate the index buffer
+  for (uint i = 0 ; i < mesh_->mNumFaces ; i++) {
+    const aiFace& Face = mesh_->mFaces[i];
+
+    if(Face.mNumIndices != 3) {
+      Logger::LOG_ERROR << "InitMesh - face doesnt have 3 vertices" << std::endl;
+      assert(false);
+    }
+
+    mesh.indices.push_back(Face.mIndices[0]);
+    mesh.indices.push_back(Face.mIndices[1]);
+    mesh.indices.push_back(Face.mIndices[2]);
+  }
+
+  mesh.num_indices = mesh_->mNumFaces;
+  mesh.num_vertices = mesh_->mNumVertices;
+}
+////////////////////////////////////////////////////////////////////////////////
 
 void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
 
   if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
 
-    // mesh = Mesh{};
-    // InitMesh(mesh);
+    // std::vector<scm::math::vec3> Positions;
+    // std::vector<scm::math::vec3> Normals;
+    // std::vector<scm::math::vec2> TexCoords;
+    // std::vector<scm::math::vec3> Tangents;
+    // std::vector<scm::math::vec3> Bitangents;
+    // std::vector<uint> Indices;
+       
+    uint NumIndices = mesh_-> mNumFaces * 3;
+
+    num_faces_ = NumIndices/3;
+    num_vertices_ = mesh_-> mNumVertices;;
+    
+    // Reserve space in the vectors for the vertex attributes and indices
+    // Positions.reserve(num_vertices_);
+    // Normals.reserve(num_vertices_);
+    // TexCoords.reserve(num_vertices_);
+    // Tangents.reserve(num_vertices_);
+    // Bitangents.reserve(num_vertices_);
+    // Indices.reserve(NumIndices);
+    
+    // InitMesh(Positions, Normals, TexCoords, Tangents, Bitangents, Bones, Indices);
+    mesh = Mesh{};
+    InitMesh(mesh);
 
     std::unique_lock<std::mutex> lock(upload_mutex_);
 
@@ -98,15 +178,30 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
         vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
-    mesh_.copy_to_buffer(data);
+    for (unsigned v(0); v < num_vertices_; ++v) {
 
+      data[v].pos = scm::math::vec3(mesh.positions[v].x, mesh.positions[v].y, mesh.positions[v].z);
+
+      data[v].tex = scm::math::vec2(mesh.texCoords[v].x, mesh.texCoords[v].y);
+
+      data[v].normal = scm::math::vec3(mesh.normals[v].x, mesh.normals[v].y, mesh.normals[v].z);
+
+      data[v].tangent = scm::math::vec3(mesh.tangents[v].x, mesh.tangents[v].y, mesh.tangents[v].z);
+
+      data[v].bitangent = scm::math::vec3(mesh.bitangents[v].x, mesh.bitangents[v].y, mesh.bitangents[v].z);
+
+      data[v].bone_weights = scm::math::vec4f(mesh.bones[v].Weights[0],mesh.bones[v].Weights[1],mesh.bones[v].Weights[2],mesh.bones[v].Weights[3]);
+      
+      data[v].bone_ids = scm::math::vec4i(mesh.bones[v].IDs[0],mesh.bones[v].IDs[1],mesh.bones[v].IDs[2],mesh.bones[v].IDs[3]);
+
+    }
     ctx.render_context->unmap_buffer(vertices_[ctx.id]);
 
     indices_[ctx.id] =
         ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
                                          scm::gl::USAGE_STATIC_DRAW,
-                                         mesh_.num_triangles * 3 * sizeof(unsigned),
-                                         &mesh_.indices[0]);
+                                         num_faces_ * 3 * sizeof(unsigned),
+                                         &mesh.indices[0]);
 
     vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
         scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
@@ -120,10 +215,11 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     
     // init non transformated/animated bone boxes
     // use every single vertex to be manipulated by a certain bone per bone box
-    for (unsigned v(0); v < mesh_.num_vertices; ++v) {
-      auto final_pos  = scm::math::vec4(mesh_.positions[v].x, mesh_.positions[v].y, mesh_.positions[v].z, 1.0);
+    for (unsigned v(0); v < num_vertices_; ++v) {
+      auto final_pos  = scm::math::vec4(mesh.positions[v].x, mesh.positions[v].y, mesh.positions[v].z, 1.0);
       for(unsigned i(0); i<4; ++i){
-        bone_boxes_[mesh_.weights[v].IDs[i]].expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
+        std::cout << mesh.bones[v].IDs[i] << std::endl;
+        bone_boxes_[mesh.bones[v].IDs[i]].expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
       }
     }
 
