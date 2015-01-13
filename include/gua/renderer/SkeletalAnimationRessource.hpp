@@ -97,6 +97,10 @@ class SkeletalAnimationRessource : public GeometryResource {
 
  private:
 
+  void LoadBones(std::vector<VertexBoneData>& Bones);
+
+  void InitMesh(Mesh& mesh);
+
   void upload_to(RenderContext const& context) /*const*/;
 
   Mesh mesh_;

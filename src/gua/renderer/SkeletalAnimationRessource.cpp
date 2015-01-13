@@ -73,7 +73,19 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(Mesh const& mesh, std::sh
 
 ////////////////////////////////////////////////////////////////////////////////
 void SkeletalAnimationRessource::InitMesh(Mesh& mesh)
-{    
+{   
+  mesh.num_triangles = mesh_->mNumFaces;
+  mesh.num_vertices = mesh_->mNumVertices; 
+  
+    // Reserve space in the vectors for the vertex attributes and indices
+  mesh.positions.reserve(mesh.num_vertices);
+  mesh.normals.reserve(mesh.num_vertices);
+  mesh.texCoords.reserve(mesh.num_vertices);
+  mesh.tangents.reserve(mesh.num_vertices);
+  mesh.bitangents.reserve(mesh.num_vertices);
+  mesh.bones.resize(mesh.num_vertices);
+  mesh.indices.reserve(mesh.num_triangles);
+
   const scm::math::vec3 Zero3D(0.0f, 0.0f, 0.0f);
   
   // Populate the vertex attribute vectors
@@ -110,7 +122,6 @@ void SkeletalAnimationRessource::InitMesh(Mesh& mesh)
     mesh.texCoords.push_back(scm::math::vec2(pTexCoord[0], pTexCoord[1]));
   }
 
-  mesh.bones.resize(mesh.positions.size());
   LoadBones(mesh.bones);
   
   // Populate the index buffer
@@ -126,9 +137,6 @@ void SkeletalAnimationRessource::InitMesh(Mesh& mesh)
     mesh.indices.push_back(Face.mIndices[1]);
     mesh.indices.push_back(Face.mIndices[2]);
   }
-
-  mesh.num_indices = mesh_->mNumFaces;
-  mesh.num_vertices = mesh_->mNumVertices;
 }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -136,27 +144,6 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
 
   if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
 
-    // std::vector<scm::math::vec3> Positions;
-    // std::vector<scm::math::vec3> Normals;
-    // std::vector<scm::math::vec2> TexCoords;
-    // std::vector<scm::math::vec3> Tangents;
-    // std::vector<scm::math::vec3> Bitangents;
-    // std::vector<uint> Indices;
-       
-    uint NumIndices = mesh_-> mNumFaces * 3;
-
-    num_faces_ = NumIndices/3;
-    num_vertices_ = mesh_-> mNumVertices;;
-    
-    // Reserve space in the vectors for the vertex attributes and indices
-    // Positions.reserve(num_vertices_);
-    // Normals.reserve(num_vertices_);
-    // TexCoords.reserve(num_vertices_);
-    // Tangents.reserve(num_vertices_);
-    // Bitangents.reserve(num_vertices_);
-    // Indices.reserve(NumIndices);
-    
-    // InitMesh(Positions, Normals, TexCoords, Tangents, Bitangents, Bones, Indices);
     mesh = Mesh{};
     InitMesh(mesh);
 
@@ -178,29 +165,29 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
         vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
-    for (unsigned v(0); v < num_vertices_; ++v) {
+    for (unsigned v(0); v < mesh.num_vertices; ++v) {
 
-      data[v].pos = scm::math::vec3(mesh.positions[v].x, mesh.positions[v].y, mesh.positions[v].z);
+      data[v].pos = mesh.positions[v];
 
-      data[v].tex = scm::math::vec2(mesh.texCoords[v].x, mesh.texCoords[v].y);
+      data[v].tex = mesh.texCoords[v];
 
-      data[v].normal = scm::math::vec3(mesh.normals[v].x, mesh.normals[v].y, mesh.normals[v].z);
+      data[v].normal = mesh.normals[v];
 
-      data[v].tangent = scm::math::vec3(mesh.tangents[v].x, mesh.tangents[v].y, mesh.tangents[v].z);
+      data[v].tangent = mesh.tangents[v];
 
-      data[v].bitangent = scm::math::vec3(mesh.bitangents[v].x, mesh.bitangents[v].y, mesh.bitangents[v].z);
+      data[v].bitangent = mesh.bitangents[v];
 
       data[v].bone_weights = scm::math::vec4f(mesh.bones[v].Weights[0],mesh.bones[v].Weights[1],mesh.bones[v].Weights[2],mesh.bones[v].Weights[3]);
       
       data[v].bone_ids = scm::math::vec4i(mesh.bones[v].IDs[0],mesh.bones[v].IDs[1],mesh.bones[v].IDs[2],mesh.bones[v].IDs[3]);
-
     }
+
     ctx.render_context->unmap_buffer(vertices_[ctx.id]);
 
     indices_[ctx.id] =
         ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
                                          scm::gl::USAGE_STATIC_DRAW,
-                                         num_faces_ * 3 * sizeof(unsigned),
+                                         mesh.num_triangles * 3 * sizeof(unsigned),
                                          &mesh.indices[0]);
 
     vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
@@ -215,7 +202,7 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     
     // init non transformated/animated bone boxes
     // use every single vertex to be manipulated by a certain bone per bone box
-    for (unsigned v(0); v < num_vertices_; ++v) {
+    for (unsigned v(0); v < mesh.num_vertices; ++v) {
       auto final_pos  = scm::math::vec4(mesh.positions[v].x, mesh.positions[v].y, mesh.positions[v].z, 1.0);
       for(unsigned i(0); i<4; ++i){
         std::cout << mesh.bones[v].IDs[i] << std::endl;
