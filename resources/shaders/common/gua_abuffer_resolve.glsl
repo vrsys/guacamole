@@ -9,11 +9,11 @@ void abuf_mix_frag(vec4 frag_color, inout vec4 color) {
 
 #ifndef ABUF_SHADE_FUNC
 #define ABUF_SHADE_FUNC abuf_get_color
-vec4 abuf_get_color(uint pos, float depth) {
-  return ABUF_FRAG(pos, 0);
+vec3 abuf_get_color(uint pos, float depth) {
+  return ABUF_FRAG(pos, 0).rgb;
 }
 #else
-vec4 ABUF_SHADE_FUNC(uint pos, float depth);
+vec3 ABUF_SHADE_FUNC(uint pos, float depth);
 #endif
 
 bool abuf_blend(inout vec4 color, float opaque_depth) {
@@ -34,9 +34,10 @@ bool abuf_blend(inout vec4 color, float opaque_depth) {
     if (z > opaque_depth) {
       break;
     }
-    vec4 shaded_color = ABUF_SHADE_FUNC(current - abuf_list_offset, z);
-    abuf_mix_frag(shaded_color, color);
 
+    float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
+    vec4 shaded_color = vec4(ABUF_SHADE_FUNC(current - abuf_list_offset, z), frag_alpha);
+    abuf_mix_frag(shaded_color, color);
 
     if (color.a >= @abuf_blending_termination_threshold@) {
       return false;

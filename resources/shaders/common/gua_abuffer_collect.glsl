@@ -16,7 +16,7 @@ void abuf_insert(float depth)
 
   // pack depth and alpha
   uint z_ordered = bitfieldInsert(pack_depth24(depth),
-                                  uint(round(frag_alpha * 256.0)), 0, 8);
+                                  uint(round(frag_alpha * 255.0)), 0, 8);
 
   uint64_t old, record = packUint2x32(uvec2(record_location, z_ordered));
 
@@ -46,7 +46,7 @@ void abuf_insert(float depth)
         pos = LSB64(old);
         // early termination
         if (!success) {
-          float current_frag_alpha = float(bitfieldExtract(unpackUint2x32(old).y, 0, 8)) / 256.0;
+          float current_frag_alpha = float(bitfieldExtract(unpackUint2x32(old).y, 0, 8)) / 255.0;
           accum_alpha += mix(current_frag_alpha, 0.0, accum_alpha);
           if (accum_alpha >= @abuf_blending_termination_threshold@) {
             break;
@@ -64,10 +64,11 @@ void abuf_insert(float depth)
 
   if (success) {
     // write data
-    ABUF_FRAG(ctr, 0) = vec4(gua_color, frag_alpha);
-    ABUF_FRAG(ctr, 1) = vec4(gua_emissivity, gua_roughness, gua_metalness,
-                             uintBitsToFloat((gua_flags_passthrough)?1:0));
-    ABUF_FRAG(ctr, 2) = vec4(fma(gua_normal, vec3(0.5), vec3(0.5)), 0);
+    uint pbr = packUnorm4x8(vec4(gua_emissivity, gua_roughness, gua_metalness, 0.0));
+    pbr = bitfieldInsert(pbr, ((gua_flags_passthrough)?1u:0u), 24, 8);
+
+    ABUF_FRAG(ctr, 0) = vec4(gua_color, uintBitsToFloat(pbr));
+    ABUF_FRAG(ctr, 1) = vec4(fma(gua_normal, vec3(0.5), vec3(0.5)), 0);
   }
 }
 

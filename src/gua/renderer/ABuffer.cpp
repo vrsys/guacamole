@@ -40,7 +40,7 @@ void ABuffer::allocate(RenderContext const& ctx, size_t buffer_size) {
   auto resource = ctx.resources.get<SharedResource>();
 
   // compute memory allowance
-  const size_t data_chunk_size = 3;
+  const size_t data_chunk_size = 2;
   size_t frag_list_size = (buffer_size * 1024u * 1024u) / (data_chunk_size + 1);
   frag_list_size = (frag_list_size / (sizeof(unsigned) * 4)) * (sizeof(unsigned) * 4);
   size_t frag_data_size = frag_list_size * data_chunk_size;

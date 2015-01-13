@@ -5,7 +5,7 @@
 #define ABUF_MODE
 #endif
 
-#define ABUF_STORE_OFFSET 3
+#define ABUF_STORE_OFFSET 2
 #define ABUF_MAX_FRAGMENTS 300
 
 // If max for uint64_t is not available

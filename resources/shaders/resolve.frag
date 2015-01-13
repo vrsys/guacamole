@@ -31,17 +31,18 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
 }
 
 #if @enable_abuffer@
-vec4 abuf_shade(uint pos, float depth) {
+vec3 abuf_shade(uint pos, float depth) {
   vec4 color  = ABUF_FRAG(pos, 0);
-  vec4 pbr    = ABUF_FRAG(pos, 1);
-  vec4 normal = ABUF_FRAG(pos, 2);
+  vec4 normal = ABUF_FRAG(pos, 1);
+  vec4 pbr = unpackUnorm4x8(floatBitsToUint(color.w));
+  uint flags = bitfieldExtract(floatBitsToUint(color.w), 24, 8);
 
   vec4 screen_space_pos = vec4(gua_get_quad_coords() * 2.0 - 1.0, depth, 1.0);
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   vec3 position = h.xyz / h.w;
 
-  vec3 frag_color = shade_for_all_lights(color.rgb, fma(normal.xyz, vec3(2.0), vec3(-1.0)), position, pbr.rgb, floatBitsToUint(pbr.w));
-  return vec4(frag_color, color.a);
+  vec3 frag_color = shade_for_all_lights(color.rgb, fma(normal.xyz, vec3(2.0), vec3(-1.0)), position, pbr.rgb, flags);
+  return frag_color;
 }
 #endif
 
