@@ -132,14 +132,14 @@ class SkeletalAnimationRessource : public GeometryResource {
       void AddBoneData(uint BoneID, float Weight);
   };
 
-  void LoadBones(/*std::vector<VertexBoneData>& Bones*/);
+  void LoadBones(std::vector<VertexBoneData>& Bones);
 
-  void InitMesh(    //std::vector<scm::math::vec3>& Positions,
+  void InitMesh(    std::vector<scm::math::vec3>& Positions,
                     std::vector<scm::math::vec3>& Normals,
                     std::vector<scm::math::vec2>& TexCoords,
                     std::vector<scm::math::vec3>& Tangents,
                     std::vector<scm::math::vec3>& Bitangents,
-                    //std::vector<VertexBoneData>& Bones,
+                    std::vector<VertexBoneData>& Bones,
                     std::vector<uint>& Indices);
 
   void upload_to(RenderContext const& context) /*const*/;
@@ -175,9 +175,6 @@ class SkeletalAnimationRessource : public GeometryResource {
     unsigned int num_faces_;
 
     std::shared_ptr<SkeletalAnimationDirector> animation_director_;
-
-    std::vector<scm::math::vec3> positions_;
-    std::vector<VertexBoneData> bones_;
 
     std::vector<math::BoundingBox<math::vec3>> bone_boxes_;
 
