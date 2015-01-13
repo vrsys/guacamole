@@ -86,40 +86,38 @@ void SkeletalAnimationRessource::InitMesh(Mesh& mesh)
   mesh.bones.resize(mesh.num_vertices);
   mesh.indices.reserve(mesh.num_triangles);
 
-  const scm::math::vec3 Zero3D(0.0f, 0.0f, 0.0f);
-  
+
   // Populate the vertex attribute vectors
-  for (uint i = 0 ; i < mesh_->mNumVertices ; i++) { // TODO catch: haspositions and hasnormals
+  for (uint i = 0 ; i < mesh_->mNumVertices ; i++) {
     
-    scm::math::vec3 pPos = scm::math::vec3(0.f, 0.f, 0.f);
+    scm::math::vec3 pPos = scm::math::vec3(0.0f);
     if(mesh_->HasPositions()) {
-      pPos = scm::math::vec3(mesh_->mVertices[i].x,mesh_->mVertices[i].y,mesh_->mVertices[i].z);
+      pPos = ai_to_gua(mesh_->mVertices[i]);
     }
 
-    scm::math::vec3 pNormal = scm::math::vec3(0.f, 0.f, 0.f);
+    scm::math::vec3 pNormal = scm::math::vec3(0.0f);
     if(mesh_->HasNormals()) {
-      pNormal = scm::math::vec3(mesh_->mNormals[i].x,mesh_->mNormals[i].y,mesh_->mNormals[i].z);
+      pNormal = ai_to_gua(mesh_->mNormals[i]);
     }
 
-    scm::math::vec3 pTexCoord = scm::math::vec3(0.0f,0.0f,0.0f);
-    if(mesh_->HasTextureCoords(0)) {}
-    {
-      pTexCoord = scm::math::vec3(mesh_->mTextureCoords[0][i].x,mesh_->mTextureCoords[0][i].y,mesh_->mTextureCoords[0][i].z);
+    scm::math::vec2 pTexCoord = scm::math::vec2(0.0f);
+    if(mesh_->HasTextureCoords(0)) {
+      pTexCoord = scm::math::vec2(mesh_->mTextureCoords[0][i].x, mesh_->mTextureCoords[0][i].y);
     }
 
-    scm::math::vec3 pTangent = scm::math::vec3(0.f, 0.f, 0.f);
-    scm::math::vec3 pBitangent = scm::math::vec3(0.f, 0.f, 0.f);
+    scm::math::vec3 pTangent = scm::math::vec3(0.0f);
+    scm::math::vec3 pBitangent = scm::math::vec3(0.0f);
     if (mesh_->HasTangentsAndBitangents()) {
-      pTangent = scm::math::vec3(mesh_->mTangents[i].x, mesh_->mTangents[i].y, mesh_->mTangents[i].z);
+      pTangent = ai_to_gua(mesh_->mTangents[i]);
 
-      pBitangent = scm::math::vec3(mesh_->mBitangents[i].x, mesh_->mBitangents[i].y, mesh_->mBitangents[i].z);
+      pBitangent = ai_to_gua(mesh_->mBitangents[i]);
     }
 
     mesh.positions.push_back(pPos);
     mesh.normals.push_back(pNormal);
     mesh.bitangents.push_back(pBitangent);
     mesh.tangents.push_back(pTangent);
-    mesh.texCoords.push_back(scm::math::vec2(pTexCoord[0], pTexCoord[1]));
+    mesh.texCoords.push_back(pTexCoord);
   }
 
   LoadBones(mesh.bones);
