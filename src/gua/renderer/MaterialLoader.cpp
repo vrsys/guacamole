@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/utils/TextFile.hpp>
+#include <fstream>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/node/Node.hpp>
