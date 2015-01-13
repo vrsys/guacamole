@@ -211,15 +211,11 @@ class SkeletalAnimation {
   std::vector<BoneAnimation> boneAnims;
 };
 
-class Blend {
- public:
-  static float cos(float x); 
-  static float swap(float x); 
-  static float linear(float x);
-  static float smoothstep(float x);
-
- private:
-  Blend() = delete;
+namespace blend {
+  float cos(float x); 
+  float swap(float x); 
+  float linear(float x);
+  float smoothstep(float x);
 };
 
 class SkeletalAnimationUtils {
