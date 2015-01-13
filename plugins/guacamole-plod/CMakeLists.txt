@@ -78,15 +78,17 @@ ELSEIF (MSVC)
 ENDIF(UNIX)
 
 IF (MSVC)
-  target_link_libraries( guacamole-PLOD optimized ${PLOD_RENDERING_LIBRARY_RELEASE})
-  target_link_libraries( guacamole-PLOD optimized ${PLOD_COMMON_LIBRARY_RELEASE})
-  target_link_libraries( guacamole-PLOD debug ${PLOD_RENDERING_LIBRARY_DEBUG})
-  target_link_libraries( guacamole-PLOD debug ${PLOD_COMMON_LIBRARY_DEBUG})
+  target_link_libraries( guacamole-PLOD optimized ${PBR_RENDERING_LIBRARY}
+                                        optimized ${PBR_COMMON_LIBRARY}
+                                        debug ${PBR_RENDERING_LIBRARY_DEBUG}
+                                        debug ${PBR_COMMON_LIBRARY_DEBUG} 
+                                        general guacamole
+                       )
 ELSEIF (UNIX)
   target_link_libraries( guacamole-PLOD 
                          guacamole 
-                         ${PLOD_RENDERING_LIBRARY}
-                         ${PLOD_COMMON_LIBRARY}
+                         ${PBR_RENDERING_LIBRARY}
+                         ${PBR_COMMON_LIBRARY}
                          ${PROTOBUF_LIBRARIES}
                        )
 

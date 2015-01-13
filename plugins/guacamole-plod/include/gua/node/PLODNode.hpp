@@ -23,6 +23,7 @@
 #define GUA_PLOD_NODE_HPP
 
 // guacamole headers
+#include <gua/renderer/PLOD.hpp>
 #include <gua/renderer/Material.hpp>
 
 #include <gua/node/GeometryNode.hpp>
@@ -41,7 +42,7 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class PLODNode : public GeometryNode 
+class GUA_PLOD_DLL PLODNode : public GeometryNode 
 {
   friend class ::gua::PLODLoader;
 
