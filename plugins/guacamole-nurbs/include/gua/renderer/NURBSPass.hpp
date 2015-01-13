@@ -37,7 +37,7 @@ namespace gua {
 
     NURBSPassDescription();
     PipelinePassDescription* make_copy() const override;
-    PipelinePass make_pass(RenderContext const&) override;
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap& substitution_map) override;
 
 };
 

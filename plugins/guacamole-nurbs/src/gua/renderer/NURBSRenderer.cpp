@@ -26,7 +26,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 
 #include <gua/node/NURBSNode.hpp>
 
@@ -152,24 +152,24 @@ namespace gua {
   void NURBSRenderer::_load_shaders()
   {
     pre_tesselation_shader_stages_.clear();
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.vert")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.tctrl")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.teval")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.geom")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.vert")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.tctrl")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.teval")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.geom")));
 
     pre_tesselation_interleaved_stream_capture_.clear();
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_position");
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_index");
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_tesscoord");
 
-    tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]          = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.vert");
-    tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER]    = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.tctrl");
-    tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.teval");
-    tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER]        = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.geom");
-    tesselation_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]        = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.frag");
+    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.vert")));
+    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.tctrl")));
+    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.teval")));
+    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.geom")));
+    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.frag")));
 
-    raycasting_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]           = factory_.read_from_file("resources/shaders/nurbs/ray_casting.vert");
-    raycasting_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]         = factory_.read_from_file("resources/shaders/nurbs/ray_casting.frag");
+    raycasting_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/ray_casting.vert")));
+    raycasting_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory_.read_shader_file("resources/shaders/nurbs/ray_casting.frag")));
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +189,14 @@ namespace gua {
   {
     if (!tesselation_programs_.count(material))
     {
-      auto program = factory_.create_program(material, tesselation_shader_stages_);
+      auto program = std::make_shared<ShaderProgram>();
+
+      auto smap    = global_substitution_map_;
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+      }
+
+      program->set_shaders(tesselation_shader_stages_, std::list<std::string>(), false, smap);
       tesselation_programs_[material] = program;
     }
     assert(tesselation_programs_.count(material));
@@ -200,8 +207,14 @@ namespace gua {
   {
     if (!raycasting_programs_.count(material))
     {
-      auto program = factory_.create_program(material, raycasting_shader_stages_);
-      program->save_to_file(".", "raycasting");
+      auto program = std::make_shared<ShaderProgram>();
+
+      auto smap = global_substitution_map_;
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+      }
+
+      program->set_shaders(raycasting_shader_stages_, std::list<std::string>(), false, smap);
       raycasting_programs_[material] = program;
     }
     assert(raycasting_programs_.count(material));

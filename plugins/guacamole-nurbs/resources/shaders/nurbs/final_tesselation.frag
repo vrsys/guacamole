@@ -35,19 +35,20 @@ uniform samplerBuffer trim_pointdata;
 
 @include "resources/shaders/common/gua_camera_uniforms.glsl"
 
-@material_uniforms
+@material_uniforms@
 
 ///////////////////////////////////////////////////////////////////////////////
 // methods
 ///////////////////////////////////////////////////////////////////////////////    
 
-@material_method_declarations
+@material_method_declarations_frag@
 
 @include "resources/glsl/math/horner_curve.glsl.frag"
 @include "resources/glsl/trimmed_surface/binary_search.glsl.frag"
 @include "resources/glsl/trimmed_surface/bisect_curve.glsl.frag"
 @include "resources/glsl/trimmed_surface/trimming_contourmap_binary.glsl.frag"
 
+@include "common/gua_abuffer_collect.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -75,9 +76,9 @@ void main()
       discard;
   }
 
-  @material_input
+  @material_input@
   @include "resources/shaders/common/gua_global_variable_assignment.glsl"
+  @material_method_calls_frag@
 
-  @material_method_calls
-  @include "resources/shaders/common/gua_write_gbuffer.glsl"
+  submit_fragment(gl_FragCoord.z);
 }
