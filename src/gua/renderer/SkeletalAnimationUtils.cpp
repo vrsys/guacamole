@@ -342,7 +342,7 @@ void Pose::set_transform(std::string const& name, Transformation const& value) {
 }
 
 void Pose::blend(Pose const& pose2, float blendFactor) {
-  for_each(pose2.cbegin(), pose2.cend(), [this, &blendFactor](std::pair<std::string, Transformation> const& p) {
+  for_each(pose2.transforms.cbegin(), pose2.transforms.cend(), [this, &blendFactor](std::pair<std::string, Transformation> const& p) {
     if(contains(p.first)) {
       set_transform(p.first, get_transform(p.first).blend(p.second, blendFactor));
     }
@@ -354,7 +354,7 @@ void Pose::blend(Pose const& pose2, float blendFactor) {
 }
 
 Pose& Pose::operator+=(Pose const& pose2) {
-  for_each(pose2.cbegin(), pose2.cend(), [this](std::pair<std::string, Transformation> const& p) {
+  for_each(pose2.transforms.cbegin(), pose2.transforms.cend(), [this](std::pair<std::string, Transformation> const& p) {
     if(contains(p.first)) {
       set_transform(p.first, get_transform(p.first) + p.second);
     }
@@ -392,20 +392,5 @@ void Pose::partial_replace(Pose const& pose2, std::shared_ptr<Node> const& pNode
     partial_replace(pose2, child);
   }
 }
-
-inline std::map<std::string, Transformation>::iterator Pose::begin() {
-  return transforms.begin();
-}   
-
-inline std::map<std::string, Transformation>::const_iterator Pose::cbegin() const {
-  return transforms.cbegin();
-} 
-
-inline std::map<std::string, Transformation>::iterator Pose::end() {
-  return transforms.end();
-} 
-inline std::map<std::string, Transformation>::const_iterator Pose::cend() const {
-  return transforms.cend();
-} 
 
 } // namespace gua
