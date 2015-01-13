@@ -38,20 +38,26 @@ std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_ani
   return animations;
 }
 
-void SkeletalAnimationUtils::calculate_matrices(float timeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationUtils::calculate_matrices(float timeInSeconds, Node const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& transforms) {
  
   float timeNormalized = 0;
   Pose pose{};
 
-  if(pAnim) {
-    timeNormalized = timeInSeconds / pAnim->get_duration();
-    timeNormalized = scm::math::fract(timeNormalized);
+  timeNormalized = timeInSeconds / pAnim.get_duration();
+  timeNormalized = scm::math::fract(timeNormalized);
 
-    pose = pAnim->calculate_pose(timeNormalized);
-  }
+  pose = pAnim.calculate_pose(timeNormalized);
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
-  root->accumulate_matrices(transforms, pose, identity);
+  root.accumulate_matrices(transforms, pose, identity);
+}
+
+void SkeletalAnimationUtils::calculate_matrices(Node const& root, std::vector<scm::math::mat4f>& transforms) {
+
+  Pose pose{};
+
+  scm::math::mat4f identity = scm::math::mat4f::identity();
+  root.accumulate_matrices(transforms, pose, identity);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

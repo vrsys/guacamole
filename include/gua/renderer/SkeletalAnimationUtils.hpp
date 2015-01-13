@@ -218,7 +218,8 @@ class SkeletalAnimationUtils {
   static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(aiScene const*);
   static std::shared_ptr<Node> load_hierarchy(aiScene const* scene);
 
-  static void calculate_matrices(float TimeInSeconds, std::shared_ptr<Node> const& root, std::shared_ptr<SkeletalAnimation> const& pAnim, std::vector<scm::math::mat4f>& Transforms);
+  static void calculate_matrices(float TimeInSeconds, Node const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
+  static void calculate_matrices(Node const& root, std::vector<scm::math::mat4f>& Transforms);
 
  private:
   SkeletalAnimationUtils() = delete;
