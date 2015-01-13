@@ -46,25 +46,25 @@ void SkeletalAnimationDirector::add_animations(aiScene const* scene) {
   currAnimation_ = animations_[animations_.size()-1];
 }
 
-void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFactor, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFactor, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
 
-  float timeNormalized1 = timeInSeconds / pAnim1->get_duration();
+  float timeNormalized1 = timeInSeconds / pAnim1.get_duration();
   timeNormalized1 = scm::math::fract(timeNormalized1);
 
-  float timeNormalized2 = timeInSeconds / pAnim2->get_duration();
+  float timeNormalized2 = timeInSeconds / pAnim2.get_duration();
   timeNormalized2 = scm::math::fract(timeNormalized2);
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
 
-  Pose pose1{pAnim1->calculate_pose(timeNormalized1)};
-  Pose pose2{pAnim2->calculate_pose(timeNormalized2)};
+  Pose pose1{pAnim1.calculate_pose(timeNormalized1)};
+  Pose pose2{pAnim2.calculate_pose(timeNormalized2)};
   
   pose1.blend(pose2, blendFactor);
 
   anim_start_node_->accumulate_matrices(transforms, pose1, identity);
 }
 
-void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_ptr<SkeletalAnimation> const& pAnim1, std::shared_ptr<SkeletalAnimation> const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationDirector::partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms) {
   
   std::shared_ptr<Node> start{anim_start_node_->find(nodeName)};
   
@@ -73,16 +73,16 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, std::shared_p
     return;
   }
 
-  float timeNormalized1 = timeInSeconds / pAnim1->get_duration();
+  float timeNormalized1 = timeInSeconds / pAnim1.get_duration();
   timeNormalized1 = scm::math::fract(timeNormalized1);
 
-  float timeNormalized2 = timeInSeconds / pAnim2->get_duration();
+  float timeNormalized2 = timeInSeconds / pAnim2.get_duration();
   timeNormalized2 = scm::math::fract(timeNormalized2);
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
 
-  Pose full_body{pAnim1->calculate_pose(timeNormalized1)};
-  Pose upper_body{pAnim2->calculate_pose(timeNormalized2)};
+  Pose full_body{pAnim1.calculate_pose(timeNormalized1)};
+  Pose upper_body{pAnim2.calculate_pose(timeNormalized2)};
 
   full_body.partial_replace(upper_body, start);
 
@@ -97,7 +97,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
   float currentTime = timer_.get_elapsed();
 
   if(!has_anims_) {
-    SkeletalAnimationUtils::calculate_matrices(0, anim_start_node_, currAnimation_, transforms);
+    SkeletalAnimationUtils::calculate_matrices(*anim_start_node_, transforms);
     return transforms;  
   }
 
@@ -108,7 +108,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
       float playDuration = animations_[animNum]->get_duration();
 
       if(currentTime < next_transition_) {
-        SkeletalAnimationUtils::calculate_matrices(currentTime, anim_start_node_, animations_[animNum], transforms);  
+        SkeletalAnimationUtils::calculate_matrices(currentTime, *anim_start_node_, *animations_[animNum], transforms);  
       }
       else if(currentTime <= next_transition_ + blendDuration) {
         float time = (currentTime - next_transition_) / blendDuration;
@@ -122,7 +122,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
           default: blendFactor = blend::linear(time);
         }
         
-        blend_pose(currentTime, blendFactor, animations_[animNum], animations_[(animNum + 1) % animations_.size()], transforms);
+        blend_pose(currentTime, blendFactor, *animations_[animNum], *animations_[(animNum + 1) % animations_.size()], transforms);
       }
       else {
         next_transition_ = currentTime + playDuration;
@@ -132,7 +132,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
     }
     //blend two anims
     case Playback::partial: {
-      partial_blend(currentTime, animations_[0], animations_[1], "Waist", transforms);
+      partial_blend(currentTime, *animations_[0], *animations_[1], "Waist", transforms);
       break;
     }
     default: Logger::LOG_WARNING << "playback mode not found" << std::endl; break;
