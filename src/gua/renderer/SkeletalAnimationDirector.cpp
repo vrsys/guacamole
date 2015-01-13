@@ -115,11 +115,11 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
         
         float blendFactor = 0.0;
         switch(blending_state_){
-          case Blending::swap : blendFactor = Blend::swap(time);break;
-          case Blending::linear : blendFactor = Blend::linear(time);break;
-          case Blending::smoothstep : blendFactor = Blend::smoothstep(time);break;
-          case Blending::cosinus : blendFactor = Blend::cos(time);break;
-          default: blendFactor = Blend::linear(time);
+          case Blending::swap : blendFactor = blend::swap(time);break;
+          case Blending::linear : blendFactor = blend::linear(time);break;
+          case Blending::smoothstep : blendFactor = blend::smoothstep(time);break;
+          case Blending::cosinus : blendFactor = blend::cos(time);break;
+          default: blendFactor = blend::linear(time);
         }
         
         blend_pose(currentTime, blendFactor, animations_[animNum], animations_[(animNum + 1) % animations_.size()], transforms);
