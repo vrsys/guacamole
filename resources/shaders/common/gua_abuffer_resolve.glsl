@@ -1,6 +1,6 @@
 void abuf_mix_frag(vec4 frag_color, inout vec4 color) {
   frag_color.rgb *= frag_color.a;
-  color += frag_color * (1.0 - color.a);
+  color += mix(frag_color, vec4(0.0), color.a);
 }
 
 #if @enable_abuffer@
@@ -30,7 +30,7 @@ bool abuf_blend(inout vec4 color, float opaque_depth) {
     } 
     ++frag_count;
 
-    float z = fma(UNLIN_DEPTH(UNPACK_DEPTH(frag.y)), 2.0, -1.0);
+    float z = fma(unpack_depth24(frag.y), 2.0, -1.0);
     if (z > opaque_depth) {
       break;
     }
