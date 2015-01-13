@@ -37,3 +37,45 @@ ENDIF(UNIX)
 find_package (Threads)
 
 target_link_libraries( guacamole-oculus debug ${LIBS} ${CMAKE_THREAD_LIBS_INIT} optimized ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+
+###############################################################################
+# install 
+###############################################################################
+
+IF (MSVC)
+  install (TARGETS guacamole-oculus
+    CONFIGURATIONS Release
+    RUNTIME DESTINATION bin/Release
+    LIBRARY DESTINATION lib/Release
+    ARCHIVE DESTINATION lib/Release
+  )
+
+  install (TARGETS guacamole-oculus
+    CONFIGURATIONS Debug
+    RUNTIME DESTINATION bin/Debug
+    LIBRARY DESTINATION lib/Debug
+    ARCHIVE DESTINATION lib/Debug
+  )
+ELSEIF (UNIX)
+  install (TARGETS guacamole-oculus 
+    RUNTIME DESTINATION lib
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+  )
+ENDIF (MSVC)
+
+# header files 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/ DESTINATION include/gua FILES_MATCHING PATTERN "*.hpp")
+
+# shader and material resources
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION resources 
+        FILES_MATCHING 
+        PATTERN "*.frag" 
+        PATTERN "*.vert" 
+        PATTERN "*.glsl"
+        PATTERN "*.geom"
+        PATTERN "*.tctrl"
+        PATTERN "*.teval"
+        PATTERN "*.obj"
+        PATTERN "*.gmd"
+        )

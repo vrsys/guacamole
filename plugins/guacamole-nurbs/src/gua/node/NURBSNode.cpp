@@ -18,16 +18,18 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
 // class header
-#include <gua/node/NURBSNode.hpp>
+#include "gua/node/NURBSNode.hpp"
 
 #include <algorithm>
 
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
+#include <gua/renderer/NURBSResource.hpp>
+#include <gua/renderer/Material.hpp>
 
 // guacamole headers
 
@@ -36,91 +38,152 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   NURBSNode::NURBSNode(std::string const& name,
-                       std::string const& filename,
-                       std::string const& material,
-                       math::mat4 const& transform)
-    : GeometryNode(name, filename, material, transform),
-      max_tess_level_pre_pass(1.0f),
-      max_tess_level_final_pass(4.0f)
+    std::string const& geometry_description,
+    std::shared_ptr<Material> const& material,
+    math::mat4 const& transform)
+    : GeometryNode(name, transform),
+    geometry_description_(geometry_description),
+    material_(material),
+    max_tess_level_pre_pass_(1.0f),
+    max_tess_level_final_pass_(4.0f),
+    enable_raycasting_(false)
   {}
+
+  ////////////////////////////////////////////////////////////////////////////////
+  std::shared_ptr<NURBSResource> const& NURBSNode::get_geometry() const
+  {
+    return geometry_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  std::string const& NURBSNode::get_geometry_description() const {
+    return geometry_description_;
+  }
 
 
   ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::set_geometry_description(std::string const& v) {
+    geometry_description_ = v;
+    geometry_changed_ = self_dirty_ = true;
+  }
 
+
+  ////////////////////////////////////////////////////////////////////////////////
+  std::shared_ptr<Material> const& NURBSNode::get_material() const {
+    return material_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::set_material(std::shared_ptr<Material> const& material) {
+    material_ = material;
+    material_changed_ = self_dirty_ = true;
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  float NURBSNode::max_pre_tesselation() const
+  {
+    return max_tess_level_pre_pass_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::max_pre_tesselation(float t)
+  {
+    max_tess_level_pre_pass_ = std::max(1.0f, std::min(t, 64.0f));
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  float NURBSNode::max_final_tesselation() const
+  {
+    return max_tess_level_final_pass_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::max_final_tesselation(float t)
+  {
+    max_tess_level_final_pass_ = std::max(1.0f, std::min(t, 64.0f));
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::rendermode_raycasting(bool b)
+  {
+    enable_raycasting_ = b;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  bool NURBSNode::rendermode_raycasting() const
+  {
+    return enable_raycasting_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
   void NURBSNode::ray_test_impl(Ray const& ray,
-                                PickResult::Options options,
+                                int options,
                                 Mask const& mask,
                                 std::set<PickResult>& hits) {
     Logger::LOG_WARNING << "NURBSNode::ray_test_impl() : Ray test not implemented yet for NURBS" << std::endl;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::update_bounding_box() const
+  {
+    if (geometry_) {
+      auto geometry_bbox(geometry_->get_bounding_box());
+      bounding_box_ = transform(geometry_bbox, world_transform_);
 
+      for (auto child : get_children()) {
+        bounding_box_.expandBy(child->get_bounding_box());
+      }
+    }
+    else {
+      Node::update_bounding_box();
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
   void NURBSNode::update_cache() {
-
     // The code below auto-loads a geometry if it's not already supported by
-    // the GeometryDatabase. It expects a geometry name like
-    //
-    // "type='file'&file='data/objects/monkey.obj'&id=0&flags=0"
+    // the GeometryDatabase. Name is generated by GeometryDescription
 
-    if (filename_changed_)
+    if (geometry_changed_)
     {
-      if (filename_ != "")
+      if (geometry_description_ != "")
       {
-        if (!GeometryDatabase::instance()->is_supported(filename_))
+        if (!GeometryDatabase::instance()->contains(geometry_description_))
         {
-          auto params(string_utils::split(filename_, '&'));
-
-          if (params.size() == 4)
-          {
-            if (params[0] == "type=file")
-            {
-              auto tmp_filename(string_utils::split(params[1], '='));
-              auto tmp_flags(string_utils::split(params[2], '='));
-
-              if (tmp_filename.size() == 2 && tmp_flags.size() == 2)
-              {
-                std::string filename(tmp_filename[1]);
-                std::string flags_string(tmp_flags[1]);
-                unsigned flags(0);
-                std::stringstream sstr(flags_string);
-                sstr >> flags;
-
-                NURBSLoader loader;
-
-                // node is deleted directly after initialization, but ressources remain in database
-                loader.create_geometry_from_file("dummy", filename, material_, flags);
-              }
-              else {
-                Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": Failed to extract filename and/or loading flags!" << std::endl;
-              }
-            }
-            else {
-              Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": Type is not supported!" << std::endl;
-            }
+          GeometryDescription desc(geometry_description_);
+          try {
+            gua::NURBSLoader loader;
+            loader.load_geometry(desc.filepath(), desc.flags());
           }
-          else {
-            Logger::LOG_WARNING << "Failed to auto-load geometry " << filename_ << ": The name does not contain a type, file, id and flag parameter!" << std::endl;
+          catch (std::exception& e) {
+            Logger::LOG_WARNING << "TriMeshNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
           }
+        }
+
+        geometry_ = std::dynamic_pointer_cast<NURBSResource>(GeometryDatabase::instance()->lookup(geometry_description_));
+
+        if (!geometry_) {
+          Logger::LOG_WARNING << "Failed to get NURBSResource for " << geometry_description_ << ": The data base entry is of wrong type!" << std::endl;
         }
       }
 
-      filename_changed_ = false;
+      geometry_changed_ = false;
     }
 
     // The code below auto-loads a material if it's not already supported by
-    // the MaterialDatabase. It expects a material name like
+    // the MaterialShaderDatabase. It expects a material name like
     //
     // data/materials/Stones.gmd
 
     if (material_changed_)
     {
-      if (material_ != "")
+      if (!material_)
       {
-        if (!MaterialDatabase::instance()->is_supported(material_))
-        {
-          MaterialDatabase::instance()->load_material(material_);
-        }
+        // if (!MaterialShaderDatabase::instance()->contains(material_))
+        // {
+        //   MaterialShaderDatabase::instance()->load_material(material_);
+        // }
       }
 
       material_changed_ = false;
@@ -129,39 +192,27 @@ namespace node {
     GeometryNode::update_cache();
   }
 
+
   ////////////////////////////////////////////////////////////////////////////////
-  std::shared_ptr<Node> NURBSNode::copy() const {
-    auto result(std::make_shared<NURBSNode>(get_name(), filename_, material_, get_transform()));
+  /* virtual */ void NURBSNode::accept(NodeVisitor& visitor) {
+    visitor.visit(this);
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  std::shared_ptr<Node> NURBSNode::copy() const 
+  {
+    std::shared_ptr<NURBSNode> result(new NURBSNode(get_name(), geometry_description_, material_, get_transform()));
+
+    result->update_cache();
+
     result->shadow_mode_ = shadow_mode_;
+    result->enable_raycasting_ = enable_raycasting_;
 
     result->max_final_tesselation(this->max_final_tesselation());
     result->max_pre_tesselation(this->max_pre_tesselation());
 
     return result;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  float NURBSNode::max_pre_tesselation() const
-  {
-    return max_tess_level_pre_pass;
-  } 
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void NURBSNode::max_pre_tesselation(float t)
-  {
-    max_tess_level_pre_pass = std::max(1.0f, std::min(t, 64.0f));
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  float NURBSNode::max_final_tesselation() const
-  {
-    return max_tess_level_final_pass;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void NURBSNode::max_final_tesselation(float t)
-  {
-    max_tess_level_final_pass = std::max(1.0f, std::min(t, 64.0f));
   }
 
 }

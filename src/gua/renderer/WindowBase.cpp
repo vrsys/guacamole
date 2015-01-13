@@ -23,9 +23,10 @@
 #include <gua/renderer/WindowBase.hpp>
 
 // guacamole headers
+#include <gua/config.hpp>
 #include <gua/platform.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
@@ -74,7 +75,53 @@ WindowBase::WindowBase(Configuration const& configuration)
       warpBR_(nullptr),
       warpRL_(nullptr),
       warpGL_(nullptr),
-      warpBL_(nullptr) {}
+      warpBL_(nullptr) {
+
+  if (config.get_warp_matrix_red_right() == "" ||
+      config.get_warp_matrix_green_right() == "" ||
+      config.get_warp_matrix_blue_right() == "" ||
+      config.get_warp_matrix_red_left() == "" ||
+      config.get_warp_matrix_green_left() == "" ||
+      config.get_warp_matrix_blue_left() == "") {
+
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    ResourceFactory factory;
+    fullscreen_shader_.create_from_sources(
+      factory.read_shader_file("resources/shaders/display_shader.vert"),
+      factory.read_shader_file("resources/shaders/display_shader.frag"));
+#else 
+    fullscreen_shader_.create_from_sources(
+      Resources::lookup_shader(Resources::shaders_display_shader_vert),
+      Resources::lookup_shader(Resources::shaders_display_shader_frag));
+#endif
+  } else {
+    warpRR_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_red_right());
+
+    warpGR_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_green_right());
+
+    warpBR_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_blue_right());
+
+    warpRL_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_red_left());
+
+    warpGL_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_green_left());
+
+    warpBL_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_blue_left());
+
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    ResourceFactory factory;
+    fullscreen_shader_.create_from_sources(
+      factory.read_shader_file("resources/shaders/display_shader.vert"),
+      factory.read_shader_file("resources/shaders/display_shader_warped.frag"));
+#else 
+    fullscreen_shader_.create_from_sources(
+      Resources::lookup_shader(Resources::shaders_display_shader_vert),
+      Resources::lookup_shader(Resources::shaders_display_shader_warped_frag)
+      );
+#endif
+
+    
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,10 +129,8 @@ WindowBase::~WindowBase() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::open() {
-  set_active(true);
-
-  ctx_.render_device = scm::gl::render_device_ptr(new scm::gl::render_device());
+void WindowBase::init_context() {
+  ctx_.render_device  = scm::gl::render_device_ptr(new scm::gl::render_device());
   ctx_.render_context = ctx_.render_device->main_context();
 
   {
@@ -113,40 +158,6 @@ void WindowBase::open() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::create_shader() {
-
-  if (config.get_warp_matrix_red_right() == "" ||
-      config.get_warp_matrix_green_right() == "" ||
-      config.get_warp_matrix_blue_right() == "" ||
-      config.get_warp_matrix_red_left() == "" ||
-      config.get_warp_matrix_green_left() == "" ||
-      config.get_warp_matrix_blue_left() == "") {
-
-    fullscreen_shader_.create_from_sources(
-      Resources::lookup_shader(Resources::shaders_display_shader_vert),
-      Resources::lookup_shader(Resources::shaders_display_shader_frag));
-  } else {
-    warpRR_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_red_right());
-
-    warpGR_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_green_right());
-
-    warpBR_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_blue_right());
-
-    warpRL_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_red_left());
-
-    warpGL_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_green_left());
-
-    warpBL_ = std::make_shared<WarpMatrix>(config.get_warp_matrix_blue_left());
-
-    fullscreen_shader_.create_from_sources(
-      Resources::lookup_shader(Resources::shaders_display_shader_vert),
-      Resources::lookup_shader(Resources::shaders_display_shader_warped_frag)
-    );
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void WindowBase::start_frame() const {
   ctx_.render_context->clear_default_color_buffer(
       scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
@@ -156,49 +167,53 @@ void WindowBase::start_frame() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(std::shared_ptr<Texture2D> const& center_texture) {
+void WindowBase::display(std::shared_ptr<Texture> const& center_texture) {
 
-  display(center_texture, config.get_left_resolution(),
-          config.get_left_position(), WindowBase::FULL, true, true);
-
+  display(center_texture, true);
+  
+  if (config.get_stereo_mode() != StereoMode::MONO) {
+    display(center_texture, false);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(std::shared_ptr<Texture2D> const& left_texture,
-                     std::shared_ptr<Texture2D> const& right_texture) {
+void WindowBase::display(std::shared_ptr<Texture> const& texture,
+                         bool is_left) {
 
   switch (config.get_stereo_mode()) {
     case StereoMode::MONO:
-      display(left_texture);
-      break;
     case StereoMode::SIDE_BY_SIDE:
-      display(left_texture, config.get_left_resolution(),
-              config.get_left_position(), WindowBase::FULL, true, true);
-      display(right_texture, config.get_right_resolution(),
-              config.get_right_position(), WindowBase::FULL, false, true);
+      display(texture,
+              is_left ? config.get_left_resolution() : config.get_right_resolution(),
+              is_left ? config.get_left_position() : config.get_right_position(),
+              WindowBase::FULL, is_left, true);
       break;
     case StereoMode::ANAGLYPH_RED_CYAN:
-      display(left_texture, config.get_left_resolution(),
-              config.get_left_position(), WindowBase::RED, true, true);
-      display(right_texture, config.get_right_resolution(),
-              config.get_right_position(), WindowBase::CYAN, false, false);
+      display(texture,
+              is_left ? config.get_left_resolution() : config.get_right_resolution(),
+              is_left ? config.get_left_position() : config.get_right_position(),
+              is_left ? WindowBase::RED : WindowBase::CYAN,
+              is_left, is_left);
       break;
     case StereoMode::ANAGLYPH_RED_GREEN:
-      display(left_texture, config.get_left_resolution(),
-              config.get_left_position(), WindowBase::RED, true, true);
-      display(right_texture, config.get_right_resolution(),
-              config.get_right_position(), WindowBase::GREEN, false, false);
+      display(texture,
+              is_left ? config.get_left_resolution() : config.get_right_resolution(),
+              is_left ? config.get_left_position() : config.get_right_position(),
+              is_left ? WindowBase::RED : WindowBase::GREEN,
+              is_left, is_left);
       break;
     case StereoMode::CHECKERBOARD:
-      display(left_texture, config.get_left_resolution(),
-              config.get_left_position(), WindowBase::CHECKER_EVEN, true, true);
-      display(right_texture, config.get_right_resolution(),
-              config.get_right_position(), WindowBase::CHECKER_ODD, false, true);
+      display(texture,
+              is_left ? config.get_left_resolution() : config.get_right_resolution(),
+              is_left ? config.get_left_position() : config.get_right_position(),
+              is_left ? WindowBase::CHECKER_EVEN : WindowBase::CHECKER_ODD,
+              is_left, true);
       break;
   }
 
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -206,7 +221,7 @@ RenderContext* WindowBase::get_context() { return &ctx_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(std::shared_ptr<Texture2D> const& texture,
+void WindowBase::display(std::shared_ptr<Texture> const& texture,
                      math::vec2ui const& size,
                      math::vec2ui const& position,
                      TextureDisplayMode mode,
@@ -214,16 +229,16 @@ void WindowBase::display(std::shared_ptr<Texture2D> const& texture,
                      bool clear) {
 
   fullscreen_shader_.use(ctx_);
-  fullscreen_shader_.set_uniform(ctx_, texture, "sampler");
+  fullscreen_shader_.set_uniform(ctx_, texture->get_handle(ctx_), "sampler");
 
   if (is_left) {
-    if (warpRL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpRL_), "warpR");
-    if (warpGL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpGL_), "warpG");
-    if (warpBL_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpBL_), "warpB");
+    if (warpRL_) fullscreen_shader_.set_uniform(ctx_, warpRL_->get_handle(ctx_), "warpR");
+    if (warpGL_) fullscreen_shader_.set_uniform(ctx_, warpGL_->get_handle(ctx_), "warpG");
+    if (warpBL_) fullscreen_shader_.set_uniform(ctx_, warpBL_->get_handle(ctx_), "warpB");
   } else {
-    if (warpRR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpRR_), "warpR");
-    if (warpGR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpGR_), "warpG");
-    if (warpBR_) fullscreen_shader_.set_uniform(ctx_, std::dynamic_pointer_cast<Texture2D>(warpBR_), "warpB");
+    if (warpRR_) fullscreen_shader_.set_uniform(ctx_, warpRR_->get_handle(ctx_), "warpR");
+    if (warpGR_) fullscreen_shader_.set_uniform(ctx_, warpGR_->get_handle(ctx_), "warpG");
+    if (warpBR_) fullscreen_shader_.set_uniform(ctx_, warpBR_->get_handle(ctx_), "warpB");
   }
 
   std::string subroutine = subroutine_from_mode(mode);
@@ -234,8 +249,9 @@ void WindowBase::display(std::shared_ptr<Texture2D> const& texture,
   ctx_.render_context->set_viewport(scm::gl::viewport(position, size));
   ctx_.render_context->set_depth_stencil_state(depth_stencil_state_);
 
-  if (!clear)
+  if (!clear) {
     ctx_.render_context->set_blend_state(blend_state_);
+  }
 
   fullscreen_quad_->draw(ctx_.render_context);
 

@@ -34,6 +34,10 @@ IF (GUACAMOLE_EXAMPLES)
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
     add_subdirectory(input)
+    add_subdirectory(nice_and_shiny)
+    add_subdirectory(stress_test)
+    add_subdirectory(transparency)
+    add_subdirectory(tiled_shading_test)
   ENDIF (${GUACAMOLE_GLFW3})
 
   # nurbs example requires GLFW3 and nurbs-plugin
@@ -46,9 +50,28 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(oculus)
   ENDIF (${PLUGIN_guacamole-oculus})
 
+  # plod example requires plod-plugin
+  IF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})
+    add_subdirectory(plod)
+  ENDIF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})
+
+  IF (${PLUGIN_guacamole-video3d})
+    add_subdirectory(video3d)
+  ENDIF (${PLUGIN_guacamole-video3d})
+
+  # gui example requires gui-plugin
+  IF (${PLUGIN_guacamole-gui})
+    add_subdirectory(gui)
+    # volume example requires volume-plugin and gui-plugin
+    IF (${PLUGIN_guacamole-volume})
+      add_subdirectory(volume)
+    ENDIF (${PLUGIN_guacamole-volume})
+  ENDIF (${PLUGIN_guacamole-gui})
+
+
   # multicontext example requires nurbs-plugin
-  IF (${PLUGIN_guacamole-nurbs})
+  # IF (${PLUGIN_guacamole-nurbs})
     add_subdirectory(multicontext)
-  ENDIF (${PLUGIN_guacamole-nurbs})
+  # ENDIF (${PLUGIN_guacamole-nurbs})
 
 ENDIF (GUACAMOLE_EXAMPLES)

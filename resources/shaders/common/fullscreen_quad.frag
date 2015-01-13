@@ -28,9 +28,6 @@ in vec2 gua_quad_coords;
 // write outputs
 layout(location=0) out vec3 gua_out_color;
 
-@include "shaders/uber_shaders/common/get_sampler_casts.glsl"
-
-// God Rays
 void main() {
-    gua_out_color = texture2D( gua_get_float_sampler(gua_in_texture), gua_quad_coords).rgb;
+    gua_out_color = texture2D(sampler2D(gua_in_texture), gua_quad_coords).rgb;
 }

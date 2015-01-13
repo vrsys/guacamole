@@ -456,7 +456,7 @@ k\204\205ke\217\211p\\~Z\303\224{(s\224Jxs\256s\245\30{\204|vn\241\214s<\
 
 NoiseTexture::
 NoiseTexture()
-  : Texture2D(64, 64, scm::gl::FORMAT_RGB_8, {pixel_data})
+  : Texture2D(64, 64, scm::gl::FORMAT_RGB_8, scm::gl::FORMAT_RGB_8, {pixel_data})
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8198,7 +8198,7 @@ unsigned char LoadingTexture::pixel_data[128 * 39 * 3 + 1] =
 
 LoadingTexture::
 LoadingTexture()
-  : Texture2D(128, 39, scm::gl::FORMAT_RGB_8, {pixel_data})
+  : Texture2D(128, 39, scm::gl::FORMAT_RGB_8, scm::gl::FORMAT_RGB_8, {pixel_data})
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8206,9 +8206,9 @@ LoadingTexture()
 DefaultTexture::
 DefaultTexture()
 #if WIN32
-  : Texture2D(64, 64, scm::gl::FORMAT_RGB_8, {pixel_data})
+  : Texture2D(64, 64, scm::gl::FORMAT_RGB_8, scm::gl::FORMAT_RGB_8, {pixel_data})
 #else
-  : Texture2D(256, 256, scm::gl::FORMAT_RGB_8, {pixel_data})
+  : Texture2D(256, 256, scm::gl::FORMAT_RGB_8, scm::gl::FORMAT_RGB_8, {pixel_data})
 #endif
 {}
 

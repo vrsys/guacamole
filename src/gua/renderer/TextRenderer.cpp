@@ -23,7 +23,6 @@
 #include <gua/renderer/TextRenderer.hpp>
 
 // guacamole headers
-#include <gua/renderer/StereoBuffer.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/math/math.hpp>
 

@@ -22,6 +22,10 @@
 #ifndef GUA_RENDERCONTEXT_HPP
 #define GUA_RENDERCONTEXT_HPP
 
+#include <gua/platform.hpp>
+#include <gua/renderer/enums.hpp>
+#include <gua/utils/InstanceCollection.hpp>
+
 // external headers
 #include <scm/gl_core/config.h>
 #include <scm/gl_core/data_formats.h>
@@ -41,17 +45,12 @@ class WindowBase;
  *
  * Stores all relevant information on a OpenGL context.
  */
-struct RenderContext {
+struct GUA_DLL RenderContext {
 
   /**
   * c'tor
   */
   RenderContext();
-
-  /**
-  * d'tor
-  */
-  ~RenderContext();
 
    /**
    * The schism context of this RenderContext.
@@ -87,6 +86,13 @@ struct RenderContext {
   * framecounter for this context
   */
   unsigned framecount;
+
+  gua::CameraMode mode;
+
+  /**
+  * Resources associated with this context
+  */
+  mutable InstanceCollection resources;
 };
 
 }

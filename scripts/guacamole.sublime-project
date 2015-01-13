@@ -4,7 +4,7 @@
 		{
 			"follow_symlinks": true,
 			"path": "..",
-            "folder_exclude_patterns": ["doc", "build", "lib"],
+            "folder_exclude_patterns": ["doc", "build", "lib", "install"],
             "file_exclude_patterns": ["*.nfs*"]
 		}
 	],

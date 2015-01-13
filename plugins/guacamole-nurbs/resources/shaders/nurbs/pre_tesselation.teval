@@ -1,0 +1,60 @@
+@include "resources/shaders/common/header.glsl"           
+         
+///////////////////////////////////////////////////////////////////////////////                                         
+// input
+///////////////////////////////////////////////////////////////////////////////
+layout(quads, equal_spacing, ccw) in;               
+                                                            
+flat in vec3  tcPosition[];                         
+flat in uint  tcIndex[];                            
+flat in vec2  tcTessCoord[];                        
+        
+        
+///////////////////////////////////////////////////////////////////////////////
+// output
+///////////////////////////////////////////////////////////////////////////////                                                            
+flat out vec3 tePosition;                           
+flat out uint teIndex;                              
+flat out vec2 teTessCoord;                          
+         
+///////////////////////////////////////////////////////////////////////////////                                                   
+// uniforms                                         
+///////////////////////////////////////////////////////////////////////////////
+@include "resources/shaders/common/gua_camera_uniforms.glsl"                  
+                                                            
+uniform samplerBuffer parameter_texture;            
+uniform samplerBuffer attribute_texture;     
+
+
+///////////////////////////////////////////////////////////////////////////////
+// functions
+///////////////////////////////////////////////////////////////////////////////
+@include "resources/glsl/math/horner_surface.glsl.frag"
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void main()                                                            
+{                                                                      
+  vec2 p1 = mix(tcTessCoord[0].xy, tcTessCoord[1].xy, gl_TessCoord.x); 
+  vec2 p2 = mix(tcTessCoord[3].xy, tcTessCoord[2].xy, gl_TessCoord.x); 
+  vec2 uv = clamp(mix(p1, p2, gl_TessCoord.y), 0.0, 1.0);              
+                                                                               
+  vec4 data = texelFetch(attribute_texture, int(tcIndex[0]) * 5);      
+  uint surface_index   = floatBitsToUint(data.x);                      
+  uint surface_order_u = floatBitsToUint(data.y);                      
+  uint surface_order_v = floatBitsToUint(data.z);                      
+                                                                               
+  vec4 puv, du, dv;                                                    
+  evaluateSurface(parameter_texture,                                   
+                  int(surface_index),                                  
+                  int(surface_order_u),                                
+                  int(surface_order_v),                                
+                  uv,                                                  
+                  puv);                                                
+                                                                               
+  tePosition  = puv.xyz;                                               
+  teIndex     = tcIndex[0];                                            
+  teTessCoord = uv;                                                    
+}  

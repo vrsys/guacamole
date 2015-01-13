@@ -18,16 +18,16 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
 // class header
 #include <gua/renderer/NURBSLoader.hpp>
 
 // guacamole headers
 #include <gua/utils.hpp>
+#include <gua/utils/Logger.hpp>
 
 #include <gua/node/NURBSNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/renderer/NURBSRessource.hpp>
+#include <gua/renderer/NURBSResource.hpp>
 
 #include <gpucast/core/import/igs.hpp>
 #include <gpucast/core/surface_converter.hpp>
@@ -36,7 +36,7 @@
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-NURBSLoader::NURBSLoader() : GeometryLoader(), _supported_file_extensions() {
+NURBSLoader::NURBSLoader() : _supported_file_extensions() {
   _supported_file_extensions.insert("igs");
   _supported_file_extensions.insert("iges");
   _supported_file_extensions.insert("IGS");
@@ -45,10 +45,30 @@ NURBSLoader::NURBSLoader() : GeometryLoader(), _supported_file_extensions() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::NURBSNode> NURBSLoader::create_geometry_from_file(std::string const& nodename, 
-                                                                        std::string const& filename,
-                                                                        std::string const& material,
-                                                                        unsigned flags)
+std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& nodename,
+                                                            std::string const& filename, 
+                                                            std::shared_ptr<Material> const& fallback_material,
+                                                            unsigned flags)
+{
+  auto cached_node(load_geometry(filename, flags));
+
+  if (cached_node) {
+    auto copy = std::dynamic_pointer_cast<node::NURBSNode>(cached_node->deep_copy());
+
+    if (copy) {
+      apply_fallback_material(copy, fallback_material);
+      copy->set_name(nodename);
+      return copy;
+    }
+  }
+  
+  Logger::LOG_WARNING << "NURBSLoader::load_geometry() : unable to create NURBS Node" << std::endl;
+  return std::shared_ptr<node::NURBSNode>(new node::NURBSNode(nodename));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& filename, unsigned flags)
 {
   try {
     if (!is_supported(filename))
@@ -57,6 +77,7 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::create_geometry_from_file(std::str
     }
     else {
 
+      // import model
       gpucast::igs_loader igsloader;
       gpucast::surface_converter surface_converter;
 
@@ -66,15 +87,28 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::create_geometry_from_file(std::str
       nurbs_object = igsloader.load(filename);
       surface_converter.convert(nurbs_object, bezier_object);
 
+      // check and set rendering mode and create render resources
       auto fill_mode = flags & WIREFRAME ? scm::gl::FILL_WIREFRAME : scm::gl::FILL_SOLID;
-      auto raycasting_enabled = flags & RAYCASTING;
-      auto ressource = std::make_shared<NURBSRessource>(bezier_object, fill_mode, raycasting_enabled);
+      auto ressource = std::make_shared<NURBSResource>(bezier_object, fill_mode);
 
-      std::string ressource_name("type=file&file=" + filename + "&flags=" + string_utils::to_string(flags));
-      GeometryDatabase::instance()->add(ressource_name, ressource);
+      // add resource to database
+      GeometryDescription desc("NURBS", filename, 0, flags);
+      GeometryDatabase::instance()->add(desc.unique_key(), ressource);
 
-      auto node = std::make_shared<node::NURBSNode>(nodename, ressource_name, material);
+      std::shared_ptr<node::NURBSNode> node(new node::NURBSNode(filename, desc.unique_key()));
       node->update_cache();
+
+      auto bbox = ressource->get_bounding_box();
+
+      // normalize position? 
+      auto normalize_position = flags & NORMALIZE_POSITION;
+      node->translate(-bbox.center());
+
+      // normalize scale? 
+      auto normalize_node = flags & NORMALIZE_SCALE;
+      node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
+
+      node->rendermode_raycasting(flags & RAYCASTING);
 
       return node;
     }
@@ -86,14 +120,31 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::create_geometry_from_file(std::str
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */
-bool NURBSLoader::is_supported(std::string const& file_name) const 
+
+bool NURBSLoader::is_supported(std::string const& file_name) const
 {
   std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
   return filename_decomposition.empty()
              ? false
              : _supported_file_extensions.count(filename_decomposition.back()) >
                    0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void NURBSLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const
+{
+  auto g_node(std::dynamic_pointer_cast<node::NURBSNode>(root));
+
+  if (g_node && !g_node->get_material()) {
+    g_node->set_material(fallback_material);
+    g_node->update_cache();
+  }
+
+  for (auto& child : root->get_children()) {
+    apply_fallback_material(child, fallback_material);
+  }
+
 }
 
 }  // namespace gua

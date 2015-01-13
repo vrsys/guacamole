@@ -30,18 +30,56 @@
 
 // external headers
 #include <string>
+#include <scm/gl_core/render_device/opengl/gl_core.h>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
 FrameBufferObject::FrameBufferObject()
-    : fbos_(), upload_mutex_(), width_(0), height_(0) {}
+    : fbos_(), upload_mutex_(), width_(0), height_(0), sample_count_(0) {}
+
+////////////////////////////////////////////////////////////////////////////////
 
 FrameBufferObject::~FrameBufferObject() {
 
   remove_attachments();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void FrameBufferObject::initialize_with_no_attachments(RenderContext const& ctx,
+                                                       unsigned width,
+                                                       unsigned height,
+                                                       unsigned sample_count) {
+  std::unique_lock<std::mutex> lock(upload_mutex_);
+  auto const& glapi = ctx.render_context->opengl_api();
+
+  // create new fbo if there isn't any for this context
+  if (fbos_.size() <= ctx.id || fbos_[ctx.id] == nullptr) {
+    fbos_.resize(ctx.id + 1);
+    fbos_[ctx.id] = ctx.render_device->create_frame_buffer();
+  }
+
+  // TODO: ideally, these should be implemented in schism
+  if (width_ != width) {
+    width_ = width;
+    glapi.glNamedFramebufferParameteriEXT(fbos_[ctx.id]->object_id(),
+                                          GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
+  }
+  if (height_ != height) {
+    height_ = height;
+    glapi.glNamedFramebufferParameteriEXT(fbos_[ctx.id]->object_id(),
+                                          GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
+  }
+  if (sample_count_ != sample_count) {
+    sample_count_ = sample_count;
+    glapi.glNamedFramebufferParameteriEXT(fbos_[ctx.id]->object_id(),
+                                          GL_FRAMEBUFFER_DEFAULT_SAMPLES, sample_count);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void FrameBufferObject::remove_attachments() {
 
@@ -113,6 +151,17 @@ void FrameBufferObject::clear_color_buffers(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void FrameBufferObject::clear_color_buffer(RenderContext const& ctx,
+                                           unsigned which,
+                                           utils::Color3f const& color) {
+
+  if (ctx.id < fbos_.size())
+    ctx.render_context->clear_color_buffer(
+        fbos_[ctx.id], which, math::vec4(color.r(), color.g(), color.b(), 0.f));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void FrameBufferObject::clear_depth_stencil_buffer(RenderContext const& ctx) {
 
   if (ctx.id < fbos_.size())
@@ -160,7 +209,7 @@ void FrameBufferObject::copy_color_buffer(RenderContext const& ctx,
 void FrameBufferObject::set_viewport(RenderContext const& ctx) const {
 
   ctx.render_context->set_viewport(
-    scm::gl::viewport(math::vec2(0.0f, 0.0f), math::vec2(width(), height())));
+    scm::gl::viewport(math::vec2(0.0f, 0.0f), math::vec2(float(width()), float(height()))));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -3,6 +3,8 @@
 ################################################################
 
 PROJECT(GUACAMOLE CXX)
+
+# neccessary for try_compile_scripts under linux
 ENABLE_LANGUAGE(C)
 
 # version number
@@ -15,10 +17,9 @@ set(GUACAMOLE_HOMEPAGE "http://www.GUACAMOLE.org")
 set(GUACAMOLE_EXENAME "GUACAMOLE")
 set(GUACAMOLE_PACKAGENAME "GUACAMOLE")
 
-option (GUACAMOLE_PBR_SUPPORT "Set to enable PBR (point based rendering) support.")
-option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support.")
-option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." OFF)
-option (GUACAMOLE_RUNTIME_UBERSHADERS "Set to enable to runtime generation of ubershaders.")
+option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support." OFF)
+option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
+option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
 
 # We require at least version 2.8.0
 cmake_minimum_required(VERSION 2.8.0)
@@ -29,6 +30,11 @@ endif(UNIX)
 
 # Location where cmake first looks for modules.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
+
+IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Default install
+                 prefix" FORCE)
+ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT) 
 
 ###############################################################################
 # write Config.h
@@ -55,7 +61,6 @@ include(find_compiler)
 
 if (UNIX)
   pkg_check_modules(ASSIMP REQUIRED assimp)
-  pkg_check_modules(JSON REQUIRED jsoncpp)
   pkg_check_modules(GL REQUIRED gl)
   pkg_check_modules(GLEW REQUIRED glew)
   include(find_x11)
@@ -83,12 +88,6 @@ endif (GUACAMOLE_GLFW3)
 
 find_package(Json REQUIRED)
 
-IF (GUACAMOLE_PBR_SUPPORT)
-  include(find_protobuf)
-  set(PBR_ROOT "/opt/pbr/gualod/trunk/pbr" CACHE PATH "Set to your PBR install path.")
-  find_package(PBR REQUIRED)
-endif (GUACAMOLE_PBR_SUPPORT)
-
 set(LIB_PATHS
     ${ASSIMP_LIBRARY_DIRS}
     ${JSON_LIBRARY_DIRS}
@@ -104,6 +103,7 @@ set(LIB_PATHS
 set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/build
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
     ${SCHISM_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIR}
@@ -114,14 +114,6 @@ set(INCLUDE_PATHS
     ${ZMQ_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
 )
-
-IF (GUACAMOLE_PBR_SUPPORT)
-  LIST(APPEND LIB_PATHS ${PBR_LIBRARY_DIRS})
-  LIST(APPEND INCLUDE_PATHS ${PBR_INCLUDE_DIRS})
-
-  LIST(APPEND LIB_PATHS ${PROTOBUF_LIBRARY_DIRS})
-  LIST(APPEND INCLUDE_PATHS ${PROTOBUF_INCLUDE_DIRS})
-ENDIF (GUACAMOLE_PBR_SUPPORT)
 
 if (GUACAMOLE_GLFW3)
   LIST(APPEND INCLUDE_PATHS ${GLFW_INCLUDE_DIRS})
@@ -134,6 +126,7 @@ endif()
 IF (UNIX)
 
 	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11")
 	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
 ELSEIF(MSVC)
 	set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _USE_MATH_DEFINES -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
@@ -143,56 +136,60 @@ ENDIF(UNIX)
 ################################################################
 # Create GuaRC
 ################################################################
-
-add_subdirectory(guarc)
+IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
+  add_subdirectory(guarc)
+ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 ################################################################
 # Generate RC data
 ################################################################
 
-# list resource files
-file(GLOB_RECURSE RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    resources/*
-)
+IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/)
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated)
-endif()
+  # list resource files
+  file(GLOB_RECURSE RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      resources/*
+  )
 
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/)
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated)
-endif()
+  if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/)
+      file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated)
+  endif()
+
+  if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/)
+      file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated)
+  endif()
 
 
-IF (UNIX)
-    ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/guarc/guarc
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-      DEPENDS ${RESOURCES} guarc
-    )
+  IF (UNIX)
+      ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/guarc/guarc
+          ${CMAKE_CURRENT_SOURCE_DIR}/resources
+          ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+        DEPENDS ${RESOURCES} guarc
+      )
 
-    ADD_CUSTOM_TARGET(CompileResources ALL
-       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-    )
+      ADD_CUSTOM_TARGET(CompileResources ALL
+         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+      )
 
-ELSEIF(MSVC)
-    ADD_CUSTOM_TARGET(CompileResources ALL
-       DEPENDS ${RESOURCES} guarc
-    )
+  ELSEIF(MSVC)
+      ADD_CUSTOM_TARGET(CompileResources ALL
+         DEPENDS ${RESOURCES} guarc
+      )
 
-    SET (_GUARC_EXECUTABLE "")
-    SET (_GUARC_EXECUTABLE "/guarc/$(Configuration)/guarc.exe")
+      SET (_GUARC_EXECUTABLE "")
+      SET (_GUARC_EXECUTABLE "/guarc/$(Configuration)/guarc.exe")
 
-    ADD_CUSTOM_COMMAND(TARGET CompileResources POST_BUILD
-    	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}${_GUARC_EXECUTABLE}
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
-    )
-ENDIF(UNIX)
+      ADD_CUSTOM_COMMAND(TARGET CompileResources POST_BUILD
+    	  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}${_GUARC_EXECUTABLE}
+          ${CMAKE_CURRENT_SOURCE_DIR}/resources
+          ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/generated/R.inl
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/gua/generated/R.inl
+      )
+  ENDIF(UNIX)
 
+ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 ################################################################
 # Create libraries
@@ -224,7 +221,7 @@ endif (GUACAMOLE_TESTS)
 # Examples
 ################################################################
 
-option (GUACAMOLE_EXAMPLES "Build examples." OFF)
+option (GUACAMOLE_EXAMPLES "Build examples." ON)
 
 if (GUACAMOLE_EXAMPLES)
   add_subdirectory(examples)
@@ -279,18 +276,6 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   message(STATUS "   include: ${BULLET_INCLUDE_DIRS}" )
   message(STATUS "" )
 endif (GUACAMOLE_ENABLE_PHYSICS)
-
-if (GUACAMOLE_PBR_SUPPORT)
-  message(STATUS " protobuf:" )
-  message(STATUS "   library: ${PROTOBUF_LIBRARIES}" )
-  message(STATUS "   library path: ${PROTOBUF_LIBRARY_DIRS}" )
-  message(STATUS "   include: ${PROTOBUF_INCLUDE_DIRS}" )
-  message(STATUS "" )
-  message(STATUS " PBR:" )
-  message(STATUS "   library: ${PBR_LIBRARIES}" )
-  message(STATUS "   library path: ${PBR_LIBRARY_DIRS}" )
-  message(STATUS "   include: ${PBR_INCLUDE_DIRS}" )
-endif (GUACAMOLE_PBR_SUPPORT)
 
 if (GUACAMOLE_GLFW3)
   message(STATUS " glfw:" )

@@ -32,13 +32,10 @@
 
 namespace gua {
 
-struct Camera;
 class Serializer;
-class GBuffer;
+class ShadowMapBuffer;
 class Frustum;
 class Pipeline;
-class GeometryUberShader;
-
 
 class SceneGraph;
 
@@ -48,35 +45,28 @@ class SceneGraph;
 class ShadowMap {
  public:
 
-  /**
-   *
-   */
-  ShadowMap(Pipeline* pipeline);
-
+  ShadowMap();
   virtual ~ShadowMap();
 
-  void render(RenderContext const& ctx,
-              SceneGraph const& current_graph,
-              math::vec3 const& center_of_interest,
-              Camera const& scene_camera,
+  void render(Pipeline* pipe,
               math::mat4 const& transform,
               unsigned map_size);
 
-  void render_cascaded(RenderContext const& ctx,
-              SceneGraph const& scene_graph,
-              math::vec3 const& center_of_interest,
-              Frustum const& scene_frustum,
-              Camera const& scene_camera,
-              math::mat4 const& transform,
-              unsigned map_size,
-              float split_0,
-              float split_1,
-              float split_2,
-              float split_3,
-              float split_4,
-              float near_clipping_in_sun_direction);
+  // void render_cascaded(RenderContext const& ctx,
+  //             SceneGraph const& scene_graph,
+  //             math::vec3 const& center_of_interest,
+  //             Frustum const& scene_frustum,
+  //             Camera const& scene_camera,
+  //             math::mat4 const& transform,
+  //             unsigned map_size,
+  //             float split_0,
+  //             float split_1,
+  //             float split_2,
+  //             float split_3,
+  //             float split_4,
+  //             float near_clipping_in_sun_direction);
 
-  GBuffer*                       get_buffer() const {return buffer_;}
+  ShadowMapBuffer*               get_buffer() const {return buffer_;}
   std::vector<math::mat4> const& get_projection_view_matrices() const {return projection_view_matrices_;}
 
   virtual void cleanup(RenderContext const& context);
@@ -86,23 +76,19 @@ class ShadowMap {
  private:
 
   void update_members(RenderContext const& ctx, unsigned map_size);
-  void render_geometry(RenderContext const & ctx,
-                       SceneGraph const& scene_graph,
-                       math::vec3 const& center_of_interest,
-                       Frustum const& shadow_frustum,
-                       Camera const& scene_camera,
-                       unsigned cascade,
-                       unsigned map_size);
+  void render_geometry(
+    Pipeline* pipe, Frustum const& shadow_frustum,
+    unsigned cascade, unsigned map_size
+  );
 
   std::unique_ptr<Serializer> serializer_;
 
-  GBuffer* buffer_;
-  Pipeline* pipeline_;
+  ShadowMapBuffer* buffer_;
 
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::rasterizer_state_ptr rasterizer_state_;
-  std::vector<math::mat4> projection_view_matrices_;
-  std::shared_ptr<gua::CameraUniformBlock> camera_block_;
+  scm::gl::depth_stencil_state_ptr          depth_stencil_state_;
+  scm::gl::rasterizer_state_ptr             rasterizer_state_;
+  std::vector<math::mat4>                   projection_view_matrices_;
+  std::shared_ptr<gua::CameraUniformBlock>  camera_block_;
 };
 
 }

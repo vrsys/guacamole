@@ -1,0 +1,11 @@
+vec3  gua_position;
+vec3  gua_normal;
+vec3  gua_tangent;
+vec3  gua_bitangent;
+vec2  gua_texcoords;
+vec3  gua_color;
+float gua_roughness;
+float gua_metalness;
+float gua_emissivity;
+bool  gua_flags_passthrough;
+float gua_alpha;

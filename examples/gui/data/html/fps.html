@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+
+</head>
+<style type="text/css">
+  body {
+    background: rgba(0, 0, 0, 0);
+    margin: 0;
+    overflow: hidden;
+  }
+  #bg {
+    position: relative;
+    color: black;
+    background: rgba(255, 255, 255, 0.5);
+    font-family: sans-serif;
+    width: 150px;
+    height: 55px;
+    float: right;
+    border-radius: 0 0 0 5px;
+    padding: 15px 10px 5px 10px;
+    text-align: right;
+  }
+
+</style>
+
+<script type="text/javascript">
+function set_fps_text(text) {
+  div = document.getElementById('fps');
+  div.innerText = text;
+}
+</script>
+<body>
+<div id="bg"> 
+  <div id="fps">FPS:</div>
+</div>
+</body>
+</html>

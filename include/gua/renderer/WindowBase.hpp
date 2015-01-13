@@ -40,8 +40,7 @@
 namespace gua {
 
 class Geometry;
-class Texture2D;
-class StereoBuffer;
+class Texture;
 
 /**
  * A base class for various windows.
@@ -89,6 +88,25 @@ class GUA_DLL WindowBase {
     GUA_ADD_PROPERTY(std::string, warp_matrix_red_left, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_green_left, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_blue_left, "");
+
+    // convenience access to resolution
+    void set_resolution(math::vec2ui const& res) {
+      left_resolution() = right_resolution() = res;
+    }
+
+    math::vec2ui const& get_resolution() {
+      return get_left_resolution();
+    }
+
+    // convenience access to position
+    void set_position(math::vec2ui const& pos) {
+      left_position() = right_position() = pos;
+    }
+
+    math::vec2ui const& get_position() {
+      return get_left_position();
+    }
+
   } config;
 
   /**
@@ -108,12 +126,14 @@ class GUA_DLL WindowBase {
    */
   virtual ~WindowBase();
 
-  virtual void open();
+  virtual void open() = 0;
   virtual bool get_is_open() const = 0;
-
-  virtual void create_shader();
-
+  virtual bool should_close() const = 0;
   virtual void close() = 0;
+
+  virtual void process_events() = 0;
+
+  void init_context();
 
   /**
    * Activate the context of this window.
@@ -121,7 +141,7 @@ class GUA_DLL WindowBase {
    * Makes the RenderContext of this window current. All preceeding
    * OpenGL calls will be invoked on this window.
    */
-  virtual void set_active(bool active) const = 0;
+  virtual void set_active(bool active) = 0;
 
   /**
    * Starts the drawing of a new frame.
@@ -140,10 +160,10 @@ class GUA_DLL WindowBase {
   /**
    *
    */
-  virtual void display(std::shared_ptr<Texture2D> const& center_texture);
+  virtual void display(std::shared_ptr<Texture> const& center_texture);
 
-  virtual void display(std::shared_ptr<Texture2D> const& left_texture,
-                       std::shared_ptr<Texture2D> const& right_texture);
+  virtual void display(std::shared_ptr<Texture> const& center_texture,
+                       bool is_left);
 
   /**
    * Get the RenderContext of this window.
@@ -169,10 +189,10 @@ protected:
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::blend_state_ptr blend_state_;
-  RenderContext ctx_;
+  mutable RenderContext ctx_;
 
  private:
-  void display(std::shared_ptr<Texture2D> const& texture,
+  void display(std::shared_ptr<Texture> const& texture,
                math::vec2ui const& size,
                math::vec2ui const& position,
                TextureDisplayMode mode = FULL,

@@ -144,7 +144,7 @@ namespace utils {
     if (button_left_)
     {
       float angle_y = (mapping_rotate_ * float(x - mousepos_x_));
-      float angle_x = (mapping_rotate_ * float(y - mousepos_y_));
+      float angle_x = (mapping_rotate_ * float(-y - mousepos_y_));
 
       rotation_euler_ = scm::math::make_rotation(angle_x, scm::math::vec3(1, 0, 0)) * rotation_euler_;
       rotation_euler_ = scm::math::make_rotation(angle_y, scm::math::vec3(0, 1, 0)) * rotation_euler_;
@@ -152,16 +152,16 @@ namespace utils {
 
     if (button_right_)
     {
-      distance_ += mapping_zoom_ * float(y - mousepos_y_);
+      distance_ += mapping_zoom_ * float(-y - mousepos_y_);
     }
 
     if (button_middle_)
     {
       shiftx_ += mapping_shift_ * float(x - mousepos_x_);
-      shifty_ -= mapping_shift_ * float(y - mousepos_y_);
+      shifty_ -= mapping_shift_ * float(-y - mousepos_y_);
     }
 
-    mousepos_y_ = y;
+    mousepos_y_ = -y;
     mousepos_x_ = x;
   }
 

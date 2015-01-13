@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
+#include <gua/renderer/Material.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 
 // external headers
@@ -50,27 +51,8 @@ class GeometryNode;
 class GUA_DLL MaterialLoader {
  public:
 
-  enum ShadingCapabilities {
-    DIFFUSE_MAP = 1,
-    DIFFUSE_COLOR = 2,
-    SPECULAR_MAP = 4,
-    SPECULAR_COLOR = 8,
-    EMIT_MAP = 16,
-    EMIT_COLOR = 32,
-    AMBIENT_MAP = 64,
-    AMBIENT_COLOR = 128,
-    SHININESS_MAP = 256,
-    SHININESS_COLOR = 512,
-    NORMAL_MAP = 1024,
-    REFLECTION_MAP = 2048,
-    OPACITY_MAP = 4096
-  };
-
-  std::string load_material(aiMaterial const* material,
-                            std::string const& file_name) const;
-
- private:
-  std::string load_shading_model(unsigned capabilities) const;
+  std::shared_ptr<Material> load_material(aiMaterial const* material,
+                                std::string const& assets_directory) const;
 
 };
 

@@ -25,7 +25,6 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
@@ -69,21 +68,21 @@ void on_window_button_press(GLFWwindow* glfw_window, int button, int action, int
 
 void on_window_move_cursor(GLFWwindow* glfw_window, double x, double y) {
   auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
-  window->on_move_cursor.emit(math::vec2(x, y));
+  window->on_move_cursor.emit(math::vec2(float(x), float(window->config.get_size().y - y)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void on_window_scroll(GLFWwindow* glfw_window, double x, double y) {
   auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
-  window->on_scroll.emit(math::vec2(x, y));
+  window->on_scroll.emit(math::vec2(float(x), float(y)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void on_window_enter(GLFWwindow* glfw_window, int enter) {
   auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
-  window->on_enter.emit(enter);
+  window->on_enter.emit(enter != 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +99,6 @@ GlfwWindow::GlfwWindow(Configuration const& configuration)
 ////////////////////////////////////////////////////////////////////////////////
 
 GlfwWindow::~GlfwWindow() {
-
   close();
 }
 
@@ -124,7 +122,7 @@ void GlfwWindow::open() {
   }
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, config.get_debug());
 
@@ -149,14 +147,12 @@ void GlfwWindow::open() {
     glfwTerminate();
     return;
   }
-
-  WindowBase::open();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool GlfwWindow::get_is_open() const {
-  return glfw_window_;
+  return glfw_window_ != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,6 +166,7 @@ bool GlfwWindow::should_close() const {
 void GlfwWindow::close() {
   if (get_is_open()) {
     glfwDestroyWindow(glfw_window_);
+    glfw_window_ = nullptr;
   }
 }
 
@@ -181,23 +178,18 @@ void GlfwWindow::process_events() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GlfwWindow::set_active(bool active) const {
+void GlfwWindow::set_active(bool active) {
   glfwMakeContextCurrent(glfw_window_);
+  if (!ctx_.render_device) {
+    init_context();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GlfwWindow::finish_frame() const {
-
-  set_active(true);
-
   glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
   glfwSwapBuffers(glfw_window_);
-
-  // Workaround for Windows Window Handling
-  // Poll events from rendering thread and not application mainloop
-  // Otherwise application window is stalling 
-  glfwPollEvents();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

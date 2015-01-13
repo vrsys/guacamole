@@ -18,7 +18,6 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
 #ifndef GUA_SPHERE_SHAPE_HPP
 #define GUA_SPHERE_SHAPE_HPP
 

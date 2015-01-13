@@ -59,14 +59,15 @@ namespace gua {
    * \param state_descripton The sampler state for the loaded texture.
    */
   Texture2D(unsigned width,
-          unsigned height,
-          scm::gl::data_format color_format,
-          std::vector<void*> const& data,
-          unsigned mipmap_layers = 1,
-          scm::gl::sampler_state_desc const& state_descripton =
-              scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE));
+            unsigned height,
+            scm::gl::data_format color_format,
+            scm::gl::data_format internal_format,
+            std::vector<void*> const& data,
+            unsigned mipmap_layers = 1,
+            scm::gl::sampler_state_desc const& state_descripton =
+                scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE));
 
   /**
    * Constructor.
@@ -80,13 +81,13 @@ namespace gua {
    * \param state_descripton The sampler state for the loaded texture.
    */
   Texture2D(unsigned width,
-          unsigned height,
-          scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
-          unsigned mipmap_layers = 1,
-          scm::gl::sampler_state_desc const& state_descripton =
-              scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE,
-                                          scm::gl::WRAP_CLAMP_TO_EDGE));
+            unsigned height,
+            scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
+            unsigned mipmap_layers = 1,
+            scm::gl::sampler_state_desc const& state_descripton =
+                scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE));
 
   /**
    * Constructor.
@@ -97,11 +98,11 @@ namespace gua {
    * \param state_descripton The sampler state for the loaded texture.
    */
   Texture2D(std::string const& file,
-          bool generate_mipmaps = false,
-          scm::gl::sampler_state_desc const& state_descripton =
-              scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
-                                          scm::gl::WRAP_REPEAT,
-                                          scm::gl::WRAP_REPEAT));
+            bool generate_mipmaps = false,
+            scm::gl::sampler_state_desc const& state_descripton =
+                scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
+                                            scm::gl::WRAP_REPEAT,
+                                            scm::gl::WRAP_REPEAT));
 
   virtual ~Texture2D() {}
 
@@ -119,6 +120,8 @@ namespace gua {
   ///@}
 
  protected:
+  std::vector<void*>& get_data();
+
   mutable unsigned width_;
   mutable unsigned height_;
 

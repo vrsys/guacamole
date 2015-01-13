@@ -6,7 +6,7 @@ SET(GPUCAST_INCLUDE_SEARCH_DIRS
   ${GLOBAL_EXT_DIR}/inc/gpucast
   ${GPUCAST_INCLUDE_SEARCH_DIR}
   /usr/include
-  /opt/local
+  /opt/local/include
 )
 
 SET(GPUCAST_LIBRARY_SEARCH_DIRS
