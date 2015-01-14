@@ -60,7 +60,7 @@ class GUA_DLL Material {
         uniform->second = value;
       } else {
         Logger::LOG_WARNING << "Failed to set material uniform: "
-                            << "MaterialShader \"" << shader_name_ 
+                            << "MaterialShader \"" << shader_name_
                             << "\" has no uniform named \"" << name
                             << "\"!" << std::endl;
       }
@@ -80,7 +80,7 @@ class GUA_DLL Material {
         uniform->second.set(view_id, value);
       } else {
         Logger::LOG_WARNING << "Failed to set material uniform: "
-                            << "MaterialShader \"" << shader_name_ 
+                            << "MaterialShader \"" << shader_name_
                             << "\" has no uniform named \"" << name
                             << "\"!" << std::endl;
       }
@@ -91,6 +91,9 @@ class GUA_DLL Material {
 
     void apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const;
 
+    std::ostream& serialize_uniforms_to_stream(std::ostream& os) const;
+    void set_uniforms_from_serialized_string(std::string const& value);
+
   private:
     friend class MaterialShader;
 
@@ -99,6 +102,9 @@ class GUA_DLL Material {
     std::map<std::string, ViewDependentUniform> uniforms_;
 
 };
+
+//operators
+std::ostream& operator<<(std::ostream& os, Material const& val);
 
 }
 

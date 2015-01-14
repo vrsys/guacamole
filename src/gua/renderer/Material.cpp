@@ -23,7 +23,7 @@
 
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
- 
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,6 +57,39 @@ void Material::apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, i
     for (auto const& uniform : uniforms_) {
         uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& Material::serialize_uniforms_to_stream(std::ostream& os) const {
+
+  for (auto& uniform : uniforms_) {
+    os << uniform.first << "#";
+    uniform.second.serialize_to_stream(os);
+    os << ";";
+  }
+
+  return os;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Material::set_uniforms_from_serialized_string(std::string const& value) {
+
+  auto tokens(string_utils::split(value, ';'));
+
+  for (auto& token : tokens) {
+    auto parts(string_utils::split(token, '#'));
+    set_uniform(parts[0], ViewDependentUniform::create_from_serialized_string(parts[1]));
+
+  }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& operator<<(std::ostream& os, Material const& val) {
+  return val.serialize_uniforms_to_stream(os);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

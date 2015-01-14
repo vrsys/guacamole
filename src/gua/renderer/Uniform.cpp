@@ -116,6 +116,18 @@ UniformValue UniformValue::create_from_string_and_type(std::string const& value,
       return UniformValue(string_utils::from_string<math::vec3>(value));
     case UniformType::VEC4:
       return UniformValue(string_utils::from_string<math::vec4>(value));
+    case UniformType::VEC2I:
+      return UniformValue(string_utils::from_string<math::vec2i>(value));
+    case UniformType::VEC3I:
+      return UniformValue(string_utils::from_string<math::vec3i>(value));
+    case UniformType::VEC4I:
+      return UniformValue(string_utils::from_string<math::vec4i>(value));
+    case UniformType::VEC2UI:
+      return UniformValue(string_utils::from_string<math::vec2ui>(value));
+    case UniformType::VEC3UI:
+      return UniformValue(string_utils::from_string<math::vec3ui>(value));
+    case UniformType::VEC4UI:
+      return UniformValue(string_utils::from_string<math::vec4ui>(value));
     case UniformType::MAT3:
       return UniformValue(string_utils::from_string<math::mat3>(value));
     case UniformType::MAT4:
@@ -133,6 +145,123 @@ UniformValue UniformValue::create_from_strings(std::string const& value,
   return create_from_string_and_type(value,
                                      gua::enums::parse_uniform_type(ty).get());
 
+}
+
+UniformValue UniformValue::create_from_serialized_string(std::string const& value) {
+
+  auto tokens(string_utils::split(value, '|'));
+  return create_from_strings(tokens[1], tokens[0]);
+
+}
+
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<int>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::INT) << "|" << boost::get<int>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<bool>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::BOOL) << "|" << boost::get<bool>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<float>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::FLOAT) << "|" << boost::get<float>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::mat3>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::MAT3) << "|" << boost::get<math::mat3>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::mat4>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::MAT4) << "|" << boost::get<math::mat4>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec2>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::VEC2) << "|" << boost::get<math::vec2>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec3>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::VEC3) << "|" << boost::get<math::vec3>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec4>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::VEC4) << "|" << boost::get<math::vec4>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec2i>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::VEC2I) << "|" << boost::get<math::vec2i>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec3i>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::VEC3I) << "|" << boost::get<math::vec3i>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec4i>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::VEC4I) << "|" << boost::get<math::vec4i>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec2ui>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::VEC2UI) << "|" << boost::get<math::vec2ui>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec3ui>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::VEC3UI) << "|" << boost::get<math::vec3ui>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec4ui>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::VEC4UI) << "|" << boost::get<math::vec4ui>(self->data);
+}
+
+template <>
+std::ostream& UniformValue::serialize_to_stream_impl<std::string>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os) {
+  return os << enums::uniform_type_to_string(UniformType::SAMPLER2D) << "|" << boost::get<std::string>(self->data);
+}
+
+std::ostream& operator<<(std::ostream& os, UniformValue const& val) {
+  return val.serialize_to_stream(os);
 }
 
 }
