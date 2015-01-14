@@ -82,7 +82,10 @@ struct Key {
 
 class Node {
  public:
+<<<<<<< HEAD
   Node();
+=======
+>>>>>>> changed from const* to const& in createhierarchy arguments
   Node(aiNode const& node);
   Node(aiScene const& scene);
 
@@ -246,6 +249,19 @@ struct Mesh {
   Mesh(FbxMesh& mesh);
 
   void copy_to_buffer(Vertex* vertex_buffer)  const;
+
+  // void init_weights(aiMesh const* mesh, SkeletalAnimationDirector const&) {
+  //   for (uint i = 0 ; i < mesh->mNumBones ; i++) {
+  //     std::string BoneName(mesh->mBones[i]->mName.data);      
+  //     uint BoneIndex = animation_director_->getBoneID(BoneName);        
+      
+  //     for (uint j = 0 ; j < mesh->mBones[i]->mNumWeights ; j++) {
+  //       uint VertexID = mesh->mBones[i]->mWeights[j].mVertexId;
+  //       float Weight  = mesh->mBones[i]->mWeights[j].mWeight;                   
+  //       bones[VertexID].AddBoneData(BoneIndex, Weight);
+  //     }
+  //   }
+  // }
 
   // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3> positions;

@@ -47,6 +47,7 @@ class SkeletalAnimationDirector {
   inline ~SkeletalAnimationDirector(){};
 
   void add_animations(aiScene const& scene);
+
   void add_hierarchy(aiScene const& scene);
 
   std::vector<scm::math::mat4f> get_bone_transforms();
