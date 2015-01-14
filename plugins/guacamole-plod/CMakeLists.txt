@@ -3,7 +3,7 @@
 ###############################################################################
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-set(PLBR_ROOT "/opt/pbr/inst_cb" CACHE PATH "Set to your PLOD install path.")
+set(PBR_ROOT "/opt/pbr/inst_cb" CACHE PATH "Set to your PLOD install path.")
 include(FindPBR)
 
 ###############################################################################
