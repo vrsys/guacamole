@@ -30,7 +30,8 @@ namespace gua {
 
 Material::Material(std::string const& shader_name):
   shader_name_(shader_name),
-  shader_cache_(nullptr)
+  shader_cache_(nullptr),
+  show_back_faces_(false)
   {
     set_shader_name(shader_name_);
   }
@@ -40,7 +41,8 @@ Material::Material(std::string const& shader_name):
 Material::Material(Material const& copy):
   shader_name_(copy.shader_name_),
   shader_cache_(copy.shader_cache_),
-  uniforms_(copy.uniforms_)
+  uniforms_(copy.uniforms_),
+  show_back_faces_(copy.show_back_faces_)
   {}
 
 ////////////////////////////////////////////////////////////////////////////////
