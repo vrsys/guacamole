@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     desc.load_from_file(file);
     auto shader(std::make_shared<gua::MaterialShader>(file, desc));
     gua::MaterialShaderDatabase::instance()->add(shader);
-    return shader->get_default_material();
+    return shader->make_new_material();
   };
 
   gua::TriMeshLoader loader;

@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   auto shader(std::make_shared<gua::MaterialShader>("simple_mat", desc));
   gua::MaterialShaderDatabase::instance()->add(shader);
 
-  auto mat(shader->get_default_material());
+  auto mat(shader->make_new_material());
   //mat.set_uniform("color", gua::math::vec3(1, 0, 0));
   //mat.set_uniform("color", gua::math::vec3(0, 1, 1), 1);
   //mat.set_uniform("color", gua::math::vec3(1, 0, 1), 2);
