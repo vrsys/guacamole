@@ -247,6 +247,7 @@ struct Mesh {
 
   void copy_to_buffer(Vertex* vertex_buffer)  const;
 
+ private:
   // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3> positions;
   std::vector<scm::math::vec3> normals;
