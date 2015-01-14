@@ -24,7 +24,6 @@
 #include <fstream>
 #include <sstream>
 #include <locale>
-#include <codecvt>
 
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
@@ -286,11 +285,16 @@ bool ResourceFactory::resolve_includes(boost::filesystem::path const& filename,
     s = match.suffix().str();
   }
 
+#if WIN32
   typedef std::codecvt_utf8<wchar_t> convert_type;
+  
   std::wstring_convert<convert_type, wchar_t> converter;
   auto contents_native = out + s;
 
   contents = converter.to_bytes(contents_native);
+#else
+  contents = out + s;
+#endif
 
   return true;
 }
