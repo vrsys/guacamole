@@ -54,47 +54,10 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  auto ival = gua::UniformValue(5);
-  std::cout << ival << std::endl;
-
-  std::stringstream str;
-  ival.serialize_to_stream(str);
-  auto rival = gua::UniformValue::create_from_serialized_string(str.str());
-  std::cout << rival << std::endl;
-
-  auto fval = gua::UniformValue(5.f);
-  std::cout << fval << std::endl;
-
-  auto mval = gua::UniformValue(gua::math::mat4::identity());
-  std::cout << mval << std::endl;
-
-  std::stringstream str2;
-  mval.serialize_to_stream(str2);
-  auto rmval = gua::UniformValue::create_from_serialized_string(str2.str());
-  std::cout << rmval << std::endl;
-
-  auto sval = gua::UniformValue(std::string("huhu"));
-  std::cout << sval << std::endl;
-
-  auto dmval = gua::ViewDependentUniform(gua::UniformValue(std::string("huhu")));
-  dmval.set(1, gua::UniformValue(std::string("haha")));
-  dmval.set(3, gua::UniformValue(std::string("hihi")));
-  std::cout << dmval << std::endl;
-
-  std::stringstream str3;
-  dmval.serialize_to_stream(str3);
-  auto rdmval = gua::ViewDependentUniform::create_from_serialized_string(str3.str());
-  std::cout << rdmval << std::endl;
-
-  auto test_mat = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material();
-  test_mat->set_uniform(std::string("Color"), gua::math::vec4(), 0);
-  std::cout << *test_mat << std::endl;
-  test_mat->set_uniforms_from_serialized_string("Color#vec4|(1.000  1.000  0.000  1.000)|-1,vec4|(0.000  0.000  0.000  0.000)|1,;ColorMap#sampler2D|0|-1,;Emissivity#float|0|-1,;EmissivityMap#sampler2D|0|-1,;Metalness#float|0.01|-1,;MetalnessMap#sampler2D|0|-1,;NormalMap#sampler2D|0|-1,;Roughness#float|0.1|-1,;RoughnessMap#sampler2D|0|-1,;");
-
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", test_mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
   teapot->set_draw_bounding_box(true);
 
