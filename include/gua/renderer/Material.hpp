@@ -60,9 +60,10 @@ class GUA_DLL Material {
       if (uniform != uniforms_.end()) {
         uniform->second.set(view_id, value);
       } else {
-        ViewDependentUniform new_uniform(UniformValue(value));
-        new_uniform.set(view_id, value);
-        uniforms_[name] = new_uniform;
+        ViewDependentUniform tmp;
+        tmp.set(UniformValue(value));
+        tmp.set(view_id, UniformValue(value));
+        uniforms_[name] = tmp;
       }
       return *this;
     }

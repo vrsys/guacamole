@@ -56,18 +56,20 @@ void Material::set_shader_name(std::string const& name) {
   shader_name_ = name;
   shader_cache_ = nullptr;
 
-  auto shader(MaterialShaderDatabase::instance()->lookup(shader_name_).get());
-  auto new_uniforms(shader->get_default_uniforms());
+  auto shader(MaterialShaderDatabase::instance()->lookup(shader_name_));
 
-  for (auto const& old_uniform : uniforms_) {
-    auto it(new_uniforms.find(old_uniform.first));
-    if (it != new_uniforms.end()) {
-      it->second = old_uniform.second;
+  if (shader) {
+    auto new_uniforms(shader->get_default_uniforms());
+
+    for (auto const& old_uniform : uniforms_) {
+      auto it(new_uniforms.find(old_uniform.first));
+      if (it != new_uniforms.end()) {
+        it->second = old_uniform.second;
+      }
     }
+    
+    uniforms_ = new_uniforms;
   }
-  
-
-  uniforms_ = new_uniforms;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
