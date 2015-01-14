@@ -45,16 +45,16 @@ out vec3      gua_object_bitangent;
 ///////////////////////////////////////////////////////////////////////////////
 @include "resources/shaders/common/gua_camera_uniforms.glsl"   
 
-@material_uniforms
+@material_uniforms@
 
-@material_method_declarations
+@material_method_declarations_vert@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 void main()                       
 {                  
-  @material_input
+  @material_input@
                
   v_modelcoord   = vec4(vertex, 1.0);
   frag_texcoord  = texcoord;
@@ -72,7 +72,7 @@ void main()
   gl_Position    = gua_projection_matrix * gua_view_matrix * gua_model_matrix * v_modelcoord; 
   gua_position_varying = (gua_model_matrix * v_modelcoord).xyz;
 
-  @material_method_calls
+  @material_method_calls_vert@
 
   @include "resources/shaders/common/gua_varyings_assignment.glsl"
 }     

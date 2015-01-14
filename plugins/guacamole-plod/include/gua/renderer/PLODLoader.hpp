@@ -23,7 +23,7 @@
 #define GUA_PLOD_LOADER_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
+#include <gua/renderer/PLOD.hpp>
 
 // external headers
 #include <unordered_set>
@@ -45,7 +45,7 @@ namespace node {
  * contexts.
  */
 
-class PLODLoader {
+class GUA_PLOD_DLL PLODLoader {
  public:
 
   enum Flags {

@@ -22,11 +22,12 @@
 #define GUA_PLOD_PASS_HPP
 
 // guacamole headers
+#include <gua/renderer/PLOD.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
 namespace gua {
 
-  class GUA_DLL PLODPassDescription : public PipelinePassDescription {
+  class GUA_PLOD_DLL PLODPassDescription : public PipelinePassDescription {
 
   public : // typedefs, enums
 

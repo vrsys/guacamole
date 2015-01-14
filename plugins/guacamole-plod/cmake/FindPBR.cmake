@@ -2,6 +2,7 @@
 # search paths
 ##############################################################################
 SET(PBR_INCLUDE_SEARCH_DIRS
+  ${PBR_ROOT}/include
   ${GLOBAL_EXT_DIR}/inc/pbr
   ${PBR_INCLUDE_SEARCH_DIR}
   ${PBR_ROOT}/common/include
@@ -17,6 +18,7 @@ SET(PBR_INCLUDE_SEARCH_DIRS
 SET(PBR_LIBRARY_SEARCH_DIRS
   ${GLOBAL_EXT_DIR}/lib
   ${PBR_LIBRARY_SEARCH_DIR}
+  ${PBR_ROOT}/lib
   /usr/lib
   /usr/lib/x86_64-linux-gnu
   /opt/local/lib
