@@ -24,7 +24,7 @@
 
 #include <string>
 
-#include <gua/node/Node.hpp>
+#include <gua/node/SerializableNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
 namespace gua {
@@ -38,9 +38,19 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL TexturedQuadNode : public Node {
+class GUA_DLL TexturedQuadNode : public SerializableNode {
 
  public:
+
+  struct Configuration {
+    GUA_ADD_PROPERTY(std::string, texture,    "gua_default_texture");
+    GUA_ADD_PROPERTY(math::vec2,  size,       math::vec2(1.f, 1.f));
+    GUA_ADD_PROPERTY(bool,        flip_x,     false);
+    GUA_ADD_PROPERTY(bool,        flip_y,     false);
+  };
+
+  Configuration data;
+
   /**
    * Constructor.
    *
@@ -62,12 +72,8 @@ class GUA_DLL TexturedQuadNode : public Node {
    *                       aligned with the xy-plane and facing in +z direction.
    */
   TexturedQuadNode(std::string const& name,
-                   std::string const& texture = "",
-                   math::mat4 const& transform = math::mat4::identity(),
-                   math::vec2 const& size = math::vec2(1.0f, 1.0f),
-                   bool is_stereo = false,
-                   bool flip_x = false,
-                   bool flip_y = false);
+                   Configuration const& configuration = Configuration(),
+                   math::mat4 const& transform = math::mat4::identity());
 
   /**
    * Returns the TexturedQuadNode's transformation, considering the scaling
@@ -92,41 +98,22 @@ class GUA_DLL TexturedQuadNode : public Node {
    *
    * \param visitor  A visitor to process the TexturedQuadNode's data.
    */
-  void accept(NodeVisitor& visitor) override;
+  virtual void accept(NodeVisitor& visitor) override;
 
-  void update_bounding_box() const override;
+  // virtual void serialize(SerializedScene& scene, node::SerializedCameraNode const& camera) override;
 
-  void update_cache() override;
+  virtual void update_bounding_box() const override;
 
- public:  // get and set methods
+  virtual void update_cache() override;
 
-  std::string const& get_texture() const;
-  void set_texture(std::string const& name);
-
-  math::vec2 const& get_size() const;
-  void get_size(math::vec2 const& size);
-
-  bool is_stereo_texture() const;
-  void is_stereo_texture(bool enable);
-
-  bool flip_x() const;
-  void flip_x(bool enable);
-
-  bool flip_y() const;
-  void flip_y(bool enable);
+  void ray_test_impl(Ray const& ray,
+                     int options,
+                     Mask const& mask,
+                     std::set<PickResult>& hits) override;
 
  private:  // methods
 
   std::shared_ptr<Node> copy() const override;
-
- private:  // attributes
-
-  std::string texture_;
-  math::vec2 size_;
-
-  bool is_stereo_texture_;
-  bool flip_x_;
-  bool flip_y_;
 
 };
 

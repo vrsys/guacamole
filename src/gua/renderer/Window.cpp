@@ -25,7 +25,6 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
@@ -65,7 +64,7 @@ void Window::open() {
       scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_D24_S8, true, false);
 
   scm::gl::wm::context::attribute_desc context_attribs(
-      4, 3, false, config.get_debug(), false);
+      4, 4, false, config.get_debug(), false);
 
   ctx_.display =
       scm::gl::wm::display_ptr(new scm::gl::wm::display(config.get_display_name()));
@@ -82,14 +81,18 @@ void Window::open() {
       new scm::gl::wm::context(window_, context_attribs));
 
   window_->show();
-
-  WindowBase::open();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool Window::get_is_open() const {
   return window_ != nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool Window::should_close() const {
+  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,14 +105,16 @@ void Window::close() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::set_active(bool active) const {
+void Window::set_active(bool active) {
   ctx_.context->make_current(window_, active);
+  if (!ctx_.render_device) {
+    init_context();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void Window::finish_frame() const {
-  set_active(true);
   window_->swap_buffers(config.get_enable_vsync());
 }
 

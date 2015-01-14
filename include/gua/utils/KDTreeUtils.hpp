@@ -38,7 +38,7 @@ namespace gua {
  *
  * It has an origin, a direction and a length.
  */
-struct Ray {
+  struct GUA_DLL Ray {
 
   Ray();
   Ray(math::vec3 const& origin, math::vec3 const& direction, float t_max);
@@ -55,15 +55,14 @@ struct Ray {
   static const float END;
 };
 
-std::pair<float, float> intersect(Ray const& ray,
-      math::BoundingBox<math::vec3> const& box);
+GUA_DLL std::pair<float, float> intersect(Ray const& ray, math::BoundingBox<math::vec3> const& box);
 
 /**
  * This helper class represents a triangle.
  *
  * It has three vertices, a normal and a visited-flag for internal KDTree usage.
  */
-struct Triangle {
+struct GUA_DLL Triangle {
 
   Triangle();
   Triangle(unsigned face_id);

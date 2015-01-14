@@ -63,7 +63,7 @@ void KDTree::generate(aiMesh* mesh) {
   root_ = build(sorted_triangles, root_bounds);
 }
 
-void KDTree::ray_test(Ray const& ray, aiMesh* mesh, PickResult::Options const& options,
+void KDTree::ray_test(Ray const& ray, aiMesh* mesh, int options,
                       node::Node* owner, std::set<PickResult>& hits) const {
 
   if (root_) {
@@ -205,7 +205,7 @@ KDTree::KDNode* KDTree::build(
 bool KDTree::intersect_one(KDNode* node,
                            Ray const& ray,
                            aiMesh* mesh,
-                           PickResult::Options const& options,
+                           int options,
                            std::vector<Triangle> const& triangles,
                            std::set<PickResult>& hits) const {
 
@@ -324,7 +324,7 @@ bool KDTree::intersect_one(KDNode* node,
 void KDTree::intersect_all(KDNode* node,
                            Ray const& ray,
                            aiMesh* mesh,
-                           PickResult::Options const& options,
+                           int options,
                            std::vector<Triangle> const& triangles,
                            std::set<PickResult>& hits) const {
 

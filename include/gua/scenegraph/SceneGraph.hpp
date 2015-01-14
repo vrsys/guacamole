@@ -26,6 +26,8 @@
 #include <gua/node/Node.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/renderer/SerializedScene.hpp>
+#include <gua/renderer/enums.hpp>
 
 #include <memory>
 #include <string>
@@ -34,10 +36,11 @@
 namespace gua {
 
 class NodeVisitor;
-class Ray;
+struct Ray;
 
 namespace node {
 class RayNode;
+struct SerializedCameraNode;
 }
 
 /**
@@ -264,18 +267,20 @@ class GUA_DLL SceneGraph {
    */
   void accept(NodeVisitor& visitor) const;
 
+  SerializedScene serialize(node::SerializedCameraNode const& camera, CameraMode mode) const;
+
   /**
    * Intersects a SceneGraph with a given RayNode.
    *
    * Calls Node::ray_test() on the root Node.
    *
    * \param ray       The RayNode used to check for intersections.
-   * \param options   PickResult::Options to configure the intersection process.
+   * \param options   int to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   std::set<PickResult> const ray_test(node::RayNode const& ray,
-                                      PickResult::Options options = PickResult::PICK_ALL,
-                                      std::string const& mask = "");
+                                      int options = PickResult::PICK_ALL,
+                                      Mask const& mask = Mask());
 
   /**
    * Intersects a SceneGraph with a given Ray.
@@ -283,12 +288,12 @@ class GUA_DLL SceneGraph {
    * Calls Node::ray_test() on the root Node.
    *
    * \param ray       The Ray used to check for intersections.
-   * \param options   PickResult::Options to configure the intersection process.
+   * \param options   int to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   std::set<PickResult> const ray_test(Ray const& ray,
-                                      PickResult::Options options = PickResult::PICK_ALL,
-                                      std::string const& mask = "");
+                                      int options = PickResult::PICK_ALL,
+                                      Mask const& mask = Mask());
 
  private:
 

@@ -26,7 +26,6 @@
 
 // guacamole headers
 #include <gua/renderer/SerializedScene.hpp>
-#include <gua/renderer/Camera.hpp>
 #include <gua/renderer/Frustum.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/Mask.hpp>
@@ -35,6 +34,11 @@
 namespace gua {
 
 class SceneGraph;
+
+namespace node {
+  class SerializableNode;
+}
+
 
 /**
  * This class is used to convert the scengraph to a (opimized) sequence.
@@ -61,9 +65,7 @@ class Serializer : public NodeVisitor {
    */
   void check(SerializedScene& output,
              SceneGraph const& scene_graph,
-             std::string const& render_mask,
-             bool draw_bounding_boxes,
-             bool draw_rays,
+             Mask const& mask,
              bool enable_frustum_culling);
 
   /**
@@ -91,93 +93,21 @@ class Serializer : public NodeVisitor {
    *
    * \param geometry   Pointer to GeometryNode
    */
-  void visit(node::GeometryNode* geometry) override;
+  void visit(node::SerializableNode* geometry) override;
 
-  /**
-  * Visits a VolumeNode
-  *
-  * This function provides the interface to visit a VolumeNode
-  *
-  * \param volume   Pointer to VolumeNode
-  */
-  void visit(node::VolumeNode* volume) override;
-
-  /**
-   * Visits a PointLightNode
-   *
-   * This function provides the interface to visit a PointLightNode
-   *
-   * \param pointlight   Pointer to PointLightNode
-   */
-  void visit(node::PointLightNode* pointlight) override;
-
-  /**
-   * Visits a SpotLightNode
-   *
-   * This function provides the interface to visit a SpotLightNode
-   *
-   * \param spot   Pointer to SpotLightNode
-   */
-  void visit(node::SpotLightNode* spot) override;
-
-   /**
-   * Visits a SunLightNode
-   *
-   * This function provides the interface to visit a SunLightNode
-   *
-   * \param spot   Pointer to SunLightNode
-   */
-  void visit(node::SunLightNode* sun) override;
-
-  /**
-   * Visits a RayNode
-   *
-   * This function provides the interface to visit a RayNode
-   *
-   * \param spot   Pointer to RayNode
-   */
-  void visit(node::RayNode* ray) override;
-
-  /**
-   * Visits a RigidBodyNode
-   *
-   * This function provides the interface to visit a RigidBodyNode
-   *
-   * \param cam   Pointer to RigidBodyNode
-   */
-  /* virtual */ void visit(physics::RigidBodyNode* node) {}
-
-  /**
-   * Visits a CollisionShapeNode
-   *
-   * This function provides the interface to visit a CollisionShapeNode
-   *
-   * \param cam   Pointer to CollisionShapeNode
-   */
-  /* virtual */ void visit(physics::CollisionShapeNode*) {}
-
-  /**
-   * Visits a TexturedQuadNode
-   *
-   * This function provides the interface to visit a TexturedQuadNode
-   *
-   * \param node  Pointer to TexturedQuadNode
-   */
-  void visit(node::TexturedQuadNode* node) override;
+  
 
  private:
 
   bool is_visible(node::Node* node) const;
-  void add_bbox(node::Node* node) const;
   void visit_children(node::Node* node);
 
   Frustum current_frustum_;
-  Mask current_render_mask_;
   math::vec3 current_center_of_interest_;
 
+  Mask current_render_mask_;
+
   SerializedScene* data_;
-  bool draw_bounding_boxes_;
-  bool draw_rays_;
   bool enable_frustum_culling_;
 
 };

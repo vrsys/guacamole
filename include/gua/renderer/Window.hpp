@@ -54,7 +54,10 @@ class GUA_DLL Window : public WindowBase {
 
   virtual void open();
   virtual bool get_is_open() const;
+  virtual bool should_close() const;
   virtual void close();
+
+  virtual void process_events() { }
 
   /**
    * Activate the context of this window.
@@ -62,7 +65,7 @@ class GUA_DLL Window : public WindowBase {
    * Makes the RenderContext of this window current. All preceeding
    * OpenGL calls will be invoked on this window.
    */
-  virtual void set_active(bool active) const;
+  virtual void set_active(bool active);
 
   /**
    * Ends the drawing of a new frame.

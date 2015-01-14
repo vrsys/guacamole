@@ -1,0 +1,16 @@
+{
+  "name" : "FragmentColor",
+  "source" : "
+    void FragmentColor() {
+      gua_color = color;
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "color",
+      "type" : "vec3",
+      "value" : "(1.0 1.0 1.0)"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+@include "resources/shaders/common/header.glsl"           
+                                                            
+#define ID gl_InvocationID                          
+        
+///////////////////////////////////////////////////////////////////////////////                                         
+// input
+///////////////////////////////////////////////////////////////////////////////                                                    
+flat in vec3  vPosition[];                          
+flat in uint  vIndex[];                             
+flat in vec2  vTessCoord[];                           
+            
+///////////////////////////////////////////////////////////////////////////////
+// output
+///////////////////////////////////////////////////////////////////////////////                                                            
+layout(vertices = 4) out; 
+
+flat out vec3 tcPosition[];                         
+flat out uint tcIndex[];                            
+flat out vec2 tcTessCoord[];   
+  
+///////////////////////////////////////////////////////////////////////////////
+// uniforms
+///////////////////////////////////////////////////////////////////////////////                                                                
+uniform samplerBuffer parameter_texture;            
+uniform samplerBuffer attribute_texture;            
+                                                            
+@include "resources/shaders/common/gua_camera_uniforms.glsl"    
+                                                            
+uniform float gua_texel_width;                      
+uniform float gua_texel_height;                     
+uniform float gua_tesselation_max_error;            
+uniform float max_pre_tesselation;         
+                                                            
+                                                                     
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void main() 
+{                                                                                
+  tcPosition[ID]  = vPosition[ID];                                               
+  tcIndex[ID]     = vIndex[ID];                                                  
+  tcTessCoord[ID] = vTessCoord[ID];                                              
+                                                                                         
+  mat4 mvp_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix;  
+                                                                                         
+  gl_TessLevelInner[0] = max_pre_tesselation;                                
+  gl_TessLevelInner[1] = max_pre_tesselation;                                
+                                                                                         
+  gl_TessLevelOuter[0] = max_pre_tesselation;                                
+  gl_TessLevelOuter[1] = max_pre_tesselation;                                
+  gl_TessLevelOuter[2] = max_pre_tesselation;                                
+  gl_TessLevelOuter[3] = max_pre_tesselation;             
+}

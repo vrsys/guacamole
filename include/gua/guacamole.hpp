@@ -109,7 +109,7 @@ namespace gua {
  *
  *     gua::GeometryDatabase::load_objects_from("data/objects/");
  *     gua::TextureDatabase::load_textures_from("data/textures/");
- *     gua::MaterialDatabase::load_materials_from("data/materials/");
+ *     gua::MaterialShaderDatabase::load_materials_from("data/materials/");
  *
  *     // setup scene
  *     gua::SceneGraph graph;

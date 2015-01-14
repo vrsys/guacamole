@@ -27,11 +27,14 @@
 
 // node headers
 #include <gua/node/GeometryNode.hpp>
-#include <gua/node/Video3DNode.hpp>
+#include <gua/node/TriMeshNode.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/PointLightNode.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/node/ScreenNode.hpp>
 #include <gua/node/SpotLightNode.hpp>
+#include <gua/node/CameraNode.hpp>
+#include <gua/node/TexturedQuadNode.hpp>
+#include <gua/node/TexturedScreenSpaceQuadNode.hpp>
 
 #endif  // GUA_INCLUDE_SCENEGRAPH_HPP

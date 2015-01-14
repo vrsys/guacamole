@@ -23,6 +23,7 @@
 #include <gua/databases/Resources.hpp>
 
 // guacamole headers
+#include <gua/config.hpp>
 #include <gua/utils/Logger.hpp>
 
 // external headers
@@ -32,42 +33,46 @@ namespace gua {
 
 namespace Resources {
 
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  namespace {
+    const std::unordered_map<std::string, std::vector<unsigned char> const*> data_;
+  }
+#else
   #include "../src/gua/generated/R.inl"
-
-  //////////////////////////////////////////////////////////////////////////////
-
   namespace {
     const std::unordered_map<std::string, std::vector<unsigned char> const*> data_(R_fill_map());
+  }
+#endif
+  
+  //////////////////////////////////////////////////////////////////////////////
 
-    void resolve_includes(std::string& shader_source) {
-      std::size_t search_pos(0);
+  void resolve_includes(std::string& shader_source) {
+    std::size_t search_pos(0);
 
-      std::string search("@include");
+    std::string search("@include");
 
-      while(search_pos != std::string::npos) {
-        // find incluse
-        search_pos = shader_source.find(search, search_pos);
+    while(search_pos != std::string::npos) {
+      // find incluse
+      search_pos = shader_source.find(search, search_pos);
 
-        if (search_pos != std::string::npos) {
+      if (search_pos != std::string::npos) {
 
-          // get file name
-          std::size_t start(shader_source.find('\"', search_pos)+1);
-          std::size_t end  (shader_source.find('\"', start));
+        // get file name
+        std::size_t start(shader_source.find('\"', search_pos)+1);
+        std::size_t end  (shader_source.find('\"', start));
 
-          std::string file(shader_source.substr(start, end-start));
+        std::string file(shader_source.substr(start, end-start));
 
-          // get included file
-          std::string include(lookup_shader(file));
+        // get included file
+        std::string include(lookup_shader(file));
 
-          // include it
-          shader_source.replace(search_pos, end-search_pos + 2, include);
+        // include it
+        shader_source.replace(search_pos, end-search_pos + 2, include);
 
-          // advance search pos
-          search_pos = search_pos + include.length();
-        }
+        // advance search pos
+        search_pos = search_pos + include.length();
       }
     }
-
   }
 
   //////////////////////////////////////////////////////////////////////////////

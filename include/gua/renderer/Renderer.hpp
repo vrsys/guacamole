@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <map>
 
 #include <gua/platform.hpp>
 #include <gua/utils/FpsCounter.hpp>
@@ -35,6 +36,11 @@ namespace gua {
 
 class SceneGraph;
 class Pipeline;
+
+namespace node {
+  class CameraNode;
+  struct SerializedCameraNode;
+}
 
 /**
  * Manages the rendering on multiple contexts.
@@ -55,7 +61,7 @@ class GUA_DLL Renderer {
    * \param pipelines        A vector of Pipelines to process. For each
    *                         pipeline a RenderClient is created.
    */
-  Renderer(std::vector<Pipeline*> const& pipelines);
+  Renderer();
   Renderer(Renderer const&) = delete;
   Renderer& operator=(Renderer const&) = delete;
 
@@ -71,21 +77,24 @@ class GUA_DLL Renderer {
    *
    * \param scene_graphs      The SceneGraphs to be processed.
    */
-  void queue_draw(std::vector<SceneGraph const*> const& scene_graphs);
+  void queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
+                  std::vector<std::shared_ptr<node::CameraNode>> const& cameras);
 
   void stop();
 
  private:
 
-  typedef std::pair<ConstRenderVectorPtr, float> Item;
+  typedef std::tuple<std::shared_ptr<node::SerializedCameraNode>, ConstRenderVectorPtr, std::shared_ptr<node::CameraNode>> Item;
   typedef std::shared_ptr<gua::concurrent::Doublebuffer<Item> > Mailbox;
   typedef std::pair<Mailbox, std::thread> Renderclient;
 
-  static void renderclient(Mailbox in, Pipeline* pipe);
+  static void renderclient(Mailbox in);
 
-  std::vector<Renderclient> render_clients_;
+  std::map<std::string, Renderclient> render_clients_;
+
   FpsCounter application_fps_;
   bool stop_requested_;
+
 };
 
 }

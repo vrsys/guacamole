@@ -22,101 +22,82 @@
 #ifndef GUA_MATERIAL_HPP
 #define GUA_MATERIAL_HPP
 
-// guacamole headers
-#include <gua/renderer/MaterialDescription.hpp>
-#include <gua/renderer/Uniform.hpp>
-#include <gua/platform.hpp>
+#include <gua/renderer/ViewDependentUniform.hpp>
 
-// external headers
-#include <memory>
+#include <string>
+#include <vector>
 
 namespace gua {
 
-struct RenderContext;
-class TextFile;
+class MaterialShader;
+class ShaderProgram;
 
-/**
- * Stores information on a Material.
- *
- * Materials are defined by a fragment and a vertex shader. Additionally
- * uniforms of this shaders may be set to specific values.
- */
-class Material {
- public:
+class GUA_DLL Material {
+  public:
+    Material(std::string const& shader_name = "");
+    Material(Material const& copy) = default;
 
-  /**
-   * Default constructor.
-   *
-   * Creates a new (invalid) material. It won't do anything until being
-   * initialized with the non-default constructor.
-   */
-  Material();
-
-  /**
-   * Default constructor.
-   *
-   * Creates a new (invalid) material. It won't do anything until being
-   * initialized with the non-default constructor.
-   */
-  Material(std::string const& name);
-
-  /**
-   * Constructor from a material description.
-   *
-   * Creates a new Material from a given material description.
-   *
-   * \param file_name        The file used to describe this material.
-   */
-  Material(std::string const& name, MaterialDescription const& description);
-
-  inline MaterialDescription const& get_description() const {
-    return description_;
-  }
-
-  inline std::string const& get_name() const { return name_; }
-
-  inline unsigned get_id() const { return id_; }
-
-  inline std::unordered_map<std::string,
-                            std::unique_ptr<UniformValueBase> > const&
-  get_uniform_values() const {
-    return uniform_values_;
-  }
-
-  void reload();
-
-  template <typename T>
-  void set_uniform(std::string const& name, T const& value) {
-
-    auto uniform(uniform_values_.find(name));
-
-    if (uniform == uniform_values_.end()) {
-      Logger::LOG_WARNING << "Failed to set uniform: Material " << name_ << " has no uniform called " << name << "!" << std::endl;
-      return;
+    std::string const& get_shader_name() const {
+      return shader_name_;
     }
 
-    uniform->second->set_value(value);
-  }
+    MaterialShader* get_shader() const;
 
- private:
-  void load_description();
+    template <typename T>
+    Material& add_uniform(std::string const& name, T const& value) {
+      return add_uniform(name, ViewDependentUniform(UniformValue(value)));
+    }
 
-  static unsigned global_id_count_;
+    Material& add_uniform(std::string const& name, ViewDependentUniform const& value) {
+      uniforms_[name] = value;
+      return *this;
+    }
 
-  std::string name_;
-  unsigned id_;
+    Material& set_uniform(std::string const& name, ViewDependentUniform const& value) {
+      auto uniform(uniforms_.find(name));
 
-  std::unordered_map<std::string, std::unique_ptr<UniformValueBase> >
-      uniform_values_;
-  MaterialDescription description_;
+      if (uniform != uniforms_.end()) {
+        uniform->second = value;
+      } else {
+        Logger::LOG_WARNING << "Failed to set material uniform: "
+                            << "MaterialShader \"" << shader_name_ 
+                            << "\" has no uniform named \"" << name
+                            << "\"!" << std::endl;
+      }
+      return *this;
+    }
 
-  //        scm::gl::blend_state_desc blend_state_desc_;
-  //        scm::gl::rasterizer_state_desc rasterizer_state_desc_;
-  //        scm::gl::depth_stencil_state_desc depth_stencil_state_desc_;
-  //
-  //        mutable scm::gl::blend_state_ptr blend_state_;
-  //        mutable scm::gl::rasterizer_state_ptr rasterizer_state_;
-  //        mutable scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+    template <typename T>
+    Material& set_uniform(std::string const& name, T const& value) {
+      return set_uniform(name, ViewDependentUniform(UniformValue(value)));
+    }
+
+    template <typename T>
+    Material& set_uniform(std::string const& name, T const& value, int view_id) {
+      auto uniform(uniforms_.find(name));
+
+      if (uniform != uniforms_.end()) {
+        uniform->second.set(view_id, value);
+      } else {
+        Logger::LOG_WARNING << "Failed to set material uniform: "
+                            << "MaterialShader \"" << shader_name_ 
+                            << "\" has no uniform named \"" << name
+                            << "\"!" << std::endl;
+      }
+      return *this;
+    }
+
+    std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
+
+    void apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const;
+
+  private:
+    friend class MaterialShader;
+
+    std::string shader_name_;
+    mutable MaterialShader* shader_cache_;
+    std::map<std::string, ViewDependentUniform> uniforms_;
+
 };
 
 }

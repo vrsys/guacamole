@@ -23,29 +23,17 @@
 #define GUA_SERIALIZED_SCENE_HPP
 
 // guacamole headers
-#include <gua/node/GeometryNode.hpp>
-#include <gua/node/Video3DNode.hpp>
-#include <gua/node/VolumeNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
-#include <gua/node/SunLightNode.hpp>
+#include <gua/node/Node.hpp>
 #include <gua/node/ScreenNode.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/renderer/Frustum.hpp>
 
 // external headers
 #include <vector>
-#include <string>
-#include <map>
-#include <set>
 #include <unordered_map>
 #include <typeindex>
 
 namespace gua {
-
-class UberShader;
 
 /**
  * Stores a serialized scene graph.
@@ -53,39 +41,17 @@ class UberShader;
  * When the optimizer traverses the scene graph, it produces an SerializedScene
  * which contains relevant nodes only.
  */
-struct SerializedScene {
+struct GUA_DLL SerializedScene {
 
   /**
   * All geometry nodes.
   */
-  std::unordered_map<std::type_index, std::vector<node::GeometryNode*>> geometrynodes_;
-
-  /**
-  * All Volume nodes.
-  */
-  std::vector<node::VolumeNode*> volumenodes_;
-
-  /**
-   * All point light nodes.
-   */
-  std::vector<node::PointLightNode*> point_lights_;
-
-  /**
-   * All spot light nodes.
-   */
-  std::vector<node::SpotLightNode*> spot_lights_;
-
-  /**
-   * All sun light nodes.
-   */
-  std::vector<node::SunLightNode*> sun_lights_;
+  std::unordered_map<std::type_index, std::vector<node::Node*>> nodes;
 
   /**
    * The frustum.
    */
   Frustum frustum;
-  bool enable_global_clipping_plane;
-  math::vec4 global_clipping_plane;
 
   /**
    * The center of interest.
@@ -93,24 +59,9 @@ struct SerializedScene {
   math::vec3 center_of_interest;
 
   /**
-   * All used materials.
-   */
-  std::set<std::string> materials_;
-
-  /**
    * All bounding boxes.
    */
-  std::vector<math::BoundingBox<math::vec3> > bounding_boxes_;
-
-  /**
-   * All bounding boxes.
-   */
-  std::vector<node::RayNode*> rays_;
-
-  /**
-   * All textured quads.
-   */
-  std::vector<node::TexturedQuadNode*> textured_quads_;
+  std::vector<math::BoundingBox<math::vec3> > bounding_boxes;
 };
 
 }

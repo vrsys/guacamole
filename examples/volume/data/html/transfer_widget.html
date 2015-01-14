@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <title>hey</title>
+    
+    <link href="./minicolor/jquery.minicolors.css" rel="stylesheet">
+    
+    <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+    <script src="http://ricostacruz.com/jquery.transit/jquery.transit.min.js"></script>
+    <script src="color/jquery.color-2.1.2.min.js"></script>
+    <script src="dragdrop/jquery.event.drag.js"></script>
+    <script src="minicolor/jquery.minicolors.min.js"></script>
+    
+    <script src="radass.js"></script>
+    
+    <script>
+      $(document).ready(function(){
+        $("#mygrad").on("change",function(e,obj,css){
+          if (gua) {
+	          var l = obj.color.length;
+	          var params = "";
+	          for (var i = 0; i < l; i++) {
+	            var color = jQuery.Color(obj.color[i].split(" ")[0]); // convert to rgba
+	          	var pos   = obj.color[i].split(" ")[1];
+	          	pos = pos.substring(0, pos.length - 1); // remove %
+	            params += parseInt(pos)*0.01 + " (" + color.red()/255 + " " + color.green()/255 + " " + color.blue()/255 + " " + color.alpha() + ") ";
+	          }
+	          gua.set_transfer_function(params);
+        	}
+        }).radass({
+          angle:0,
+          color:[
+            "rgba(0,0,0,0) 30%",
+            "rgba(255,130,221,0.4) 55%",
+            "rgba(255,255,255,1) 80%"
+          ]
+        });
+      });
+    </script>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding:0;
+      }
+      
+      body {
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+      }
+      
+      #mygrad {
+        position:absolute;
+        left:60px;
+        top:-50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mygrad">
+    </div>
+  </body>
+</html>

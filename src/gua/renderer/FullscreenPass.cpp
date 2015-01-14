@@ -22,68 +22,97 @@
 // class header
 #include <gua/renderer/FullscreenPass.hpp>
 
-// guacamole headers
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
-#include <gua/databases.hpp>
+#include <gua/config.hpp>
+#include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/utils.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/Resources.hpp>
+#include <gua/utils/Logger.hpp>
+
+#include <boost/variant.hpp>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
+FullscreenPassDescription::FullscreenPassDescription()
+  : PipelinePassDescription()
+{
+  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+  fragment_shader_ = R"(
+    @include "shaders/common/header.glsl"
+    @include "shaders/common/gua_camera_uniforms.glsl"
+    @include "shaders/common/gua_gbuffer_input.glsl"
+    layout(location=0) out vec3 gua_out_color;
+    void main() { 
+      gua_out_color = gua_get_color();
+    }
+  )";
 
-FullscreenPass::FullscreenPass(Pipeline* pipeline)
-    : Pass(pipeline), fullscreen_quad_(), depth_stencil_state_() {}
+#ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  ResourceFactory factory;
+  fragment_shader_ = factory.prepare_shader(fragment_shader_, "FullscreenPass shader");
+#else
+  Resources::resolve_includes(fragment_shader_);
+#endif
 
-////////////////////////////////////////////////////////////////////////////////
+  fragment_shader_is_file_name_ = false;
+  needs_color_buffer_as_input_ = true;
+  writes_only_color_buffer_ = true;
 
-FullscreenPass::~FullscreenPass() {}
+  rendermode_ = RenderMode::Quad;
 
-////////////////////////////////////////////////////////////////////////////////
-
-void FullscreenPass::render_scene(Camera const& camera,
-                                  SceneGraph const&,
-                                  RenderContext const& ctx,
-                                  std::size_t view) {
-
-  if (!depth_stencil_state_)
-    depth_stencil_state_ = ctx.render_device
-        ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
-
-  if (!fullscreen_quad_)
-    fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-        ctx.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
-  set_uniforms(pipeline_->get_current_scene(CameraMode::CENTER), ctx);
-
-  for (int i(0); i < gbuffer_->get_eye_buffers().size(); ++i) {
-    CameraMode eye(CameraMode::CENTER);
-
-    if (gbuffer_->get_eye_buffers().size() > 1 && i == 0)
-      eye = CameraMode::LEFT;
-    if (gbuffer_->get_eye_buffers().size() > 1 && i == 1)
-      eye = CameraMode::RIGHT;
-
-    pre_rendering(camera, pipeline_->get_current_scene(eye), eye, ctx);
-
-    FrameBufferObject* fbo(gbuffer_->get_eye_buffers()[i]);
-    fbo->bind(ctx);
-
-    ctx.render_context->set_viewport(scm::gl::viewport(
-        math::vec2(0, 0), math::vec2(float(fbo->width()), float(fbo->height()))));
-    ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-
-    rendering(camera, pipeline_->get_current_scene(eye), eye, ctx);
-
-    ctx.render_context->reset_state_objects();
-
-    fbo->unbind(ctx);
-
-    post_rendering(camera, pipeline_->get_current_scene(eye), eye, ctx);
-  }
-
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(false, false));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+FullscreenPassDescription& FullscreenPassDescription::source(std::string const& source) {
+
+#ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  ResourceFactory factory;
+  fragment_shader_ = factory.prepare_shader(source, "FullscreenPass shader");
+#else
+  fragment_shader_ = source;
+  Resources::resolve_includes(fragment_shader_);
+#endif
+  fragment_shader_is_file_name_ = false;
+  recompile_shaders_ = true;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string const& FullscreenPassDescription::source() const {
+  return fragment_shader_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+FullscreenPassDescription& FullscreenPassDescription::source_file(std::string const& source_file) {
+  fragment_shader_ = source_file;
+  fragment_shader_is_file_name_ = true;
+  recompile_shaders_ = true;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string const& FullscreenPassDescription::source_file() const {
+  return fragment_shader_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePassDescription* FullscreenPassDescription::make_copy() const {
+  return new FullscreenPassDescription(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass FullscreenPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
+  PipelinePass pass{*this, ctx, substitution_map};
+  return pass;
+}
 
 }

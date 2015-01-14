@@ -23,506 +23,299 @@
 #include <gua/renderer/Pipeline.hpp>
 
 // guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/TriMeshUberShader.hpp>
-#include <gua/renderer/LightingUberShader.hpp>
-#include <gua/renderer/FinalUberShader.hpp>
-#include <gua/renderer/StereoBuffer.hpp>
-#include <gua/renderer/GBufferPass.hpp>
-#include <gua/renderer/CompositePass.hpp>
-#include <gua/renderer/LightingPass.hpp>
-#include <gua/renderer/FinalPass.hpp>
-#include <gua/renderer/PostFXPass.hpp>
-#include <gua/renderer/Serializer.hpp>
-#include <gua/scenegraph.hpp>
-#include <gua/utils/Logger.hpp>
-#include <gua/databases.hpp>
+#include <gua/node/CameraNode.hpp>
+#include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/WindowBase.hpp>
+#include <gua/renderer/GeometryResource.hpp>
+#include <gua/databases/WindowDatabase.hpp>
+#include <gua/databases/TextureDatabase.hpp>
+#include <gua/renderer/Frustum.hpp>
+#include <gua/node/CameraNode.hpp>
+#include <gua/scenegraph/SceneGraph.hpp>
+
+#include <gua/renderer/CameraUniformBlock.hpp>
+#include <gua/renderer/LightTable.hpp>
 
 // external headers
 #include <iostream>
-
-
-namespace {
-
-gua::Frustum camera_frustum(gua::Camera::ProjectionMode const& mode,
-    gua::math::mat4 const& transf, gua::math::mat4 const& screen,
-    float near, float far) {
-  if (mode == gua::Camera::ProjectionMode::PERSPECTIVE) {
-    return gua::Frustum::perspective(transf, screen, near, far);
-  } else {
-    return gua::Frustum::orthographic(transf, screen, near, far);
-  }
-}
-
-}
-
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Pipeline::Pipeline()
-  : config(),
-    window_(nullptr),
-    context_(nullptr),
-    application_fps_(0),
-    rendering_fps_(0),
-    serializer_(new Serializer()),
-    current_scenes_(2),
-    passes_need_reload_(true),
-    buffers_need_reload_(true),
-    last_shading_model_revision_(0),
-    display_loading_screen_(true),
-    last_left_resolution_(0, 0),
-    last_right_resolution_(0, 0),
-    camera_block_left_(nullptr),
-    camera_block_right_(nullptr) {
+Pipeline::Pipeline() :
+  gbuffer_(nullptr),
+  abuffer_(),
+  camera_block_(nullptr),
+  light_table_(nullptr),
+  last_resolution_(0, 0),
+  quad_(nullptr),
+  context_(nullptr) {
 
-  create_passes();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::~Pipeline() {
-  if (serializer_)
-    delete serializer_;
-
-  if (window_)
-    delete window_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Pipeline::print_shaders(std::string const& directory) const {
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  int ctr(0);
-  for (const auto& pass : passes_) {
-    pass->print_shaders(directory, "/" + std::to_string(ctr++) + "_" +
-            string_utils::sanitize(
-                string_utils::demangle_type_name(typeid(*pass).name())));
+  if (light_table_) {
+    delete light_table_;
+  }
+  if (camera_block_) {
+    delete camera_block_;
+  }
+  if (gbuffer_) {
+    delete gbuffer_;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::set_window(WindowBase* window) {
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-  window_ = window;
+std::vector<PipelinePass> const& Pipeline::get_passes() const {
+  return passes_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::set_prerender_pipelines(std::vector<Pipeline*> const& pipes) {
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-  prerender_pipelines_ = pipes;
-}
+void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCameraNode const& camera,
+                       std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs) {
 
-////////////////////////////////////////////////////////////////////////////////
-
-SerializedScene const& Pipeline::get_current_scene(CameraMode mode) const {
-  if (mode == CameraMode::RIGHT && current_scenes_.size() > 1) {
-    return current_scenes_[1];
+  // return if pipeline is disabled
+  if (!camera.config.get_enabled()) {
+    return;
   }
-  return current_scenes_[0];
-}
 
-////////////////////////////////////////////////////////////////////////////////
+  // store the current camera data
+  current_camera_ = camera;
 
-void Pipeline::loading_screen() {
-  display_loading_screen_ = false;
+  bool context_changed(false);
+  bool reload_gbuffer(false);
+  bool reload_abuffer(false);
 
-  if (window_) {
-    auto loading_texture(std::dynamic_pointer_cast<Texture2D>(TextureDatabase::instance()->lookup("gua_loading_texture")));
-    math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
+  // reload gbuffer if now rendering to another window (with a new context)
+  if (context_ != ctx) {
+    context_ = ctx;
+    context_changed = true;
+  }
 
-    if (config.get_enable_stereo()) {
+  // execute all prerender cameras
+  for (auto const& cam: camera.pre_render_cameras) {
+    cam.rendering_pipeline->process(ctx, mode, cam, scene_graphs);
+  }
 
-      auto tmp_left_resolution(window_->config.left_resolution());
-      auto tmp_right_resolution(window_->config.right_resolution());
+  // recreate gbuffer if resolution changed
+  if (last_resolution_ != camera.config.get_resolution()) {
+    last_resolution_ = camera.config.get_resolution();
+    reload_gbuffer = true;
+  }
 
-      auto tmp_left_position(window_->config.left_position());
-      auto tmp_right_position(window_->config.right_position());
-
-      window_->config.set_left_resolution(loading_texture_size);
-      window_->config.set_left_position(tmp_left_position + (tmp_left_resolution - loading_texture_size)/2);
-
-      window_->config.set_right_resolution(loading_texture_size);
-      window_->config.set_right_position(tmp_right_position + (tmp_right_resolution - loading_texture_size)/2);
-
-      window_->display(loading_texture, loading_texture);
-
-      window_->config.set_left_position(tmp_left_position);
-      window_->config.set_left_resolution(tmp_left_resolution);
-
-      window_->config.set_right_position(tmp_right_position);
-      window_->config.set_right_resolution(tmp_right_resolution);
-
-    } else {
-
-      auto tmp_left_resolution(window_->config.left_resolution());
-      auto tmp_left_position(window_->config.left_position());
-
-
-      window_->config.set_left_resolution(loading_texture_size);
-      window_->config.set_left_position(tmp_left_position + 0.5*(tmp_left_resolution - loading_texture_size));
-
-      window_->display(loading_texture);
-
-      window_->config.set_left_position(tmp_left_position);
-      window_->config.set_left_resolution(tmp_left_resolution);
-
+  if (context_changed || reload_gbuffer) {
+    if (gbuffer_) {
+      gbuffer_->remove_buffers(get_context());
+      delete gbuffer_;
     }
 
-    window_->finish_frame();
-  }
-}
-
-void Pipeline::serialize(const SceneGraph& scene_graph,
-                         std::string const& eye_name,
-                         std::string const& screen_name,
-                         SerializedScene& out) {
-  auto eye((scene_graph)[eye_name]);
-  if (!eye) {
-    Logger::LOG_WARNING << "Cannot render scene: No valid eye specified" << std::endl;
-    return;
+    gbuffer_ = new GBuffer(get_context(), camera.config.resolution());
   }
 
-  auto screen_it((scene_graph)[screen_name]);
-  auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
-  if (!screen) {
-    Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
-    return;
+
+  // recreate pipeline passes if pipeline description changed
+  bool reload_passes(context_changed || reload_gbuffer);
+
+  if (*camera.pipeline_description != last_description_) {
+    reload_passes = true;
+    reload_abuffer = true;
+    last_description_ = *camera.pipeline_description;
+  } else {
+
+    // if pipeline configuration is unchanged, update only uniforms of passes
+    for (int i(0); i < last_description_.get_all_passes().size(); ++i) {
+      last_description_.get_all_passes()[i]->uniforms = camera.pipeline_description->get_all_passes()[i]->uniforms;
+    }
   }
 
-  out.frustum = camera_frustum(config.camera().mode, eye->get_world_transform(),
-                                screen->get_scaled_world_transform(),
-                                config.near_clip(),
-                                config.far_clip());
-  out.center_of_interest = eye->get_world_position();
-  out.enable_global_clipping_plane = config.get_enable_global_clipping_plane();
-  out.global_clipping_plane = config.get_global_clipping_plane();
-
-  serializer_->check(out,
-                     scene_graph,
-                     config.camera().render_mask,
-                     config.enable_bbox_display(),
-                     config.enable_ray_display(),
-                     config.enable_frustum_culling());
-}
-
-
-void Pipeline::process(std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs,
-                       float application_fps,
-                       float rendering_fps) {
-
-  if (!config.get_enabled()) {
-    return;
+  if (context_changed || reload_abuffer) {
+    abuffer_.allocate(get_context(),
+                      last_description_.get_enable_abuffer()
+                        ? last_description_.get_abuffer_size() : 0);
   }
 
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  if (ShadingModel::current_revision != last_shading_model_revision_) {
-    passes_need_reload_ = true;
-    last_shading_model_revision_ = ShadingModel::current_revision;
-  }
-
-  if (config.left_resolution() != last_left_resolution_ ||
-      config.right_resolution() != last_right_resolution_) {
-
-    buffers_need_reload_ = true;
-
-    last_left_resolution_ = config.left_resolution();
-    last_right_resolution_ = config.right_resolution();
-  }
-
-  if (window_) {
-    if (!window_->get_is_open()) {
-      window_->open();
-      window_->create_shader();
+  if (reload_passes) {
+    for (auto & pass: passes_) {
+      pass.on_delete(this);
     }
 
-    set_context(window_->get_context());
-    window_->set_active(true);
+    passes_.clear();
+    global_substitution_map_.clear();
+
+    global_substitution_map_["enable_abuffer"] = last_description_.get_enable_abuffer() ? "1" : "0";
+    global_substitution_map_["abuf_insertion_threshold"] = "0.9995";
+    global_substitution_map_["abuf_blending_termination_threshold"] = "0.9995";
+    global_substitution_map_["max_lights_num"] = "128";
+
+    for (auto pass: last_description_.get_all_passes()) {
+      passes_.push_back(pass->make_pass(*ctx, global_substitution_map_));
+    }
   }
 
-  if (!camera_block_left_) {
-    camera_block_left_ = std::make_shared<CameraUniformBlock>(context_->render_device);
-    camera_block_right_ = std::make_shared<CameraUniformBlock>(context_->render_device);
-  }
-
-  for (auto pipe: prerender_pipelines_) {
-    pipe->process(scene_graphs, application_fps, rendering_fps);
-  }
-
-  SceneGraph const* current_graph = nullptr;
-
+  // get scenegraph which shall be rendered
+  current_graph_ = nullptr;
   for (auto& graph: scene_graphs) {
-    if (graph->get_name() == config.camera().scene_graph) {
-      current_graph = graph.get();
+    if (graph->get_name() == camera.config.get_scene_graph_name()) {
+      current_graph_ = graph.get();
       break;
     }
   }
 
-  if (!current_graph) {
-    Logger::LOG_WARNING << "Failed to display scenegraph \""
-                        << config.camera().scene_graph << "\": Graph not found!"
-                        << std::endl;
+  if (context_changed) {
+    // update camera uniform block
+    if (camera_block_) {
+      delete camera_block_;
+    }
+    camera_block_ = new CameraUniformBlock(get_context().render_device);
+
+    // update light table
+    if (light_table_) {
+      light_table_->remove_buffers(get_context());
+      delete light_table_;
+    }
+    light_table_ = new LightTable();
   }
 
-  rendering_fps_ = rendering_fps;
-  application_fps_ = application_fps;
+  context_->mode = mode;
 
-  if (!context_) {
-    Logger::LOG_WARNING << "Pipeline has no context: Please define a window!"
-                        << std::endl;
-    return;
+  // serialize this scenegraph
+  current_scene_ = current_graph_->serialize(camera, mode);
+
+  camera_block_->update(get_context().render_context, current_scene_.frustum);
+  bind_camera_uniform_block(0);
+
+  // clear gbuffer and abuffer
+  gbuffer_->clear_all(get_context());
+  abuffer_.clear(get_context(), camera.config.resolution());
+
+  // process all passes
+  for (int i(0); i < passes_.size(); ++i) {
+
+    if (passes_[i].needs_color_buffer_as_input()) {
+      gbuffer_->toggle_ping_pong();
+    }
+
+    passes_[i].process(*last_description_.get_all_passes()[i], *this);
   }
 
-  if (display_loading_screen_) {
-    loading_screen();
-  } else {
-    if (passes_need_reload_) {
-      create_passes();
-      camera_block_left_ = std::make_shared<CameraUniformBlock>(context_->render_device);
-      camera_block_right_ = std::make_shared<CameraUniformBlock>(context_->render_device);
-    }
+  gbuffer_->toggle_ping_pong();
 
-    if (buffers_need_reload_) {
-      create_buffers();
-    }
+  // add texture to texture database
+  auto const& tex(gbuffer_->get_current_color_buffer());
+  auto tex_name(camera.config.get_output_texture_name());
 
-    if (passes_need_reload_ || buffers_need_reload_) {
-      Logger::LOG_WARNING << "Pipeline::process() : Passes or buffers not created yet. Skipping frame." << std::endl;
-      return;
-    }
+  if (tex_name != "") {
+    TextureDatabase::instance()->add(tex_name, tex);
+  }
 
-    serialize(*current_graph, config.camera().eye_l, config.camera().screen_l,
-              current_scenes_[0]);
-
-    camera_block_left_->update(context_->render_context
-                              , current_scenes_[0].frustum);
-
-    if (config.get_enable_stereo()) {
-      serialize(*current_graph, config.camera().eye_r, config.camera().screen_r,
-              current_scenes_[1]);
-      camera_block_right_->update(context_->render_context
-                                , current_scenes_[1].frustum);
-    }
-
-    for (auto pass : passes_) {
-      pass->render_scene(config.camera(), *current_graph, *context_, uuid());
-    }
-
-    if (window_) {
-      if (config.get_enable_stereo()) {
-          window_->display(passes_[PipelineStage::postfx]
-                                  ->get_gbuffer()
-                                  ->get_eye_buffers()[0]
-                                  ->get_color_buffers(TYPE_FLOAT)[0],
-                           passes_[PipelineStage::postfx]
-                                  ->get_gbuffer()
-                                  ->get_eye_buffers()[1]
-                                  ->get_color_buffers(TYPE_FLOAT)[0]);
-      } else {
-        window_->display(passes_[PipelineStage::postfx]
-                                ->get_gbuffer()
-                                ->get_eye_buffers()[0]
-                                ->get_color_buffers(TYPE_FLOAT)[0],
-                         passes_[PipelineStage::postfx]
-                                ->get_gbuffer()
-                                ->get_eye_buffers()[0]
-                                ->get_color_buffers(TYPE_FLOAT)[0]);
-      }
-
-      window_->finish_frame();
-      ++(window_->get_context()->framecount);
+  if (camera.config.get_output_window_name() != "") {
+    auto window = WindowDatabase::instance()->lookup(camera.config.get_output_window_name());
+    if (window) {
+      window->display(tex, mode != CameraMode::RIGHT);
     }
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool Pipeline::validate_resolution() const
-{
-  // first, validate configuration
-  if (!config.get_enable_stereo()) // mono
-  {
-    if (!(config.get_left_resolution()[0] > 0 && config.get_left_resolution()[1] > 0))
-    {
-      gua::Logger::LOG_WARNING << "Pipeline::validate_resolution() : Invalid resolution for pipeline : " << config.get_left_resolution() << std::endl;
-      return false;
-    }
-  }
-  else { // stereo
-    if (!(config.get_left_resolution()[0] > 0 && config.get_left_resolution()[1] > 0 &&
-      config.get_right_resolution()[0] > 0 && config.get_right_resolution()[1] > 0))
-    {
-      gua::Logger::LOG_WARNING << "Pipeline::validate_resolution() : Invalid resolution for pipeline" << config.get_left_resolution() << " and " << config.get_right_resolution() << std::endl;
-      return false;
-    }
-  }
-  return true;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Pipeline::set_context(RenderContext* ctx) {
-  context_ = ctx;
-
-  for (auto pipe: prerender_pipelines_) {
-    pipe->set_context(ctx);
-  }
+GBuffer& Pipeline::get_gbuffer() const {
+  return *gbuffer_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::create_passes() {
+ABuffer& Pipeline::get_abuffer() {
+  return abuffer_;
+}
 
-  if (passes_need_reload_) {
+////////////////////////////////////////////////////////////////////////////////
 
-    if (!validate_resolution()) {
-      return;
-    }
+node::SerializedCameraNode const& Pipeline::get_camera() const {
+  return current_camera_;
+}
 
-    std::unique_lock<std::mutex> lock (MaterialDatabase::instance()->update_lock);
+////////////////////////////////////////////////////////////////////////////////
 
-    auto materials(MaterialDatabase::instance()->list_all());
+RenderContext const& Pipeline::get_context() const {
+  return *context_;
+}
 
-    auto pre_pass = new GBufferPass(this);
-    pre_pass->apply_material_mapping(materials);
+////////////////////////////////////////////////////////////////////////////////
 
-    std::vector<LayerMapping const*> layer_mapping;
-    layer_mapping.push_back(pre_pass->get_gbuffer_mapping());
+SerializedScene& Pipeline::get_scene() {
+  return current_scene_;
+}
 
-    auto light_pass = new LightingPass(this);
-    light_pass->apply_material_mapping(materials, layer_mapping);
+////////////////////////////////////////////////////////////////////////////////
 
-    layer_mapping.push_back(light_pass->get_gbuffer_mapping());
+SceneGraph const& Pipeline::get_graph() const {
+  return *current_graph_;
+}
 
-    auto final_pass = new FinalPass(this);
-    final_pass->apply_material_mapping(materials, layer_mapping);
+////////////////////////////////////////////////////////////////////////////////
 
-    auto composite_pass = new CompositePass(this);
+LightTable& Pipeline::get_light_table() {
+  return *light_table_;
+}
 
-    auto post_fx_pass = new PostFXPass(this);
+////////////////////////////////////////////////////////////////////////////////
 
-    bool compilation_succeeded = true;
+void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const {
 
-    passes_need_reload_ = false;
+  auto& ctx(get_context());
 
-    std::vector<Pass*> new_passes;
-    new_passes.push_back(pre_pass);
-    new_passes.push_back(light_pass);
-    new_passes.push_back(final_pass);
-    new_passes.push_back(composite_pass);
-    new_passes.push_back(post_fx_pass);
+  shader->set_uniform(ctx, 1.0f / gbuffer_->get_width(),  "gua_texel_width");
+  shader->set_uniform(ctx, 1.0f / gbuffer_->get_height(), "gua_texel_height");
 
-    // try compilation if context is already present
-    if (context_) {
-      for (auto pass : new_passes) {
-        if (!pass->pre_compile_shaders(*context_)) {
-          compilation_succeeded = false;
-          break;
-        }
-      }
-    }
+  shader->set_uniform(ctx, math::vec2i(gbuffer_->get_width(), gbuffer_->get_height()),  "gua_resolution");
 
-    if (compilation_succeeded) {
+  shader->set_uniform(ctx, gbuffer_->get_current_color_buffer()->get_handle(ctx),  "gua_gbuffer_color");
+  shader->set_uniform(ctx, gbuffer_->get_current_pbr_buffer()->get_handle(ctx),    "gua_gbuffer_pbr");
+  shader->set_uniform(ctx, gbuffer_->get_current_normal_buffer()->get_handle(ctx), "gua_gbuffer_normal");
+  shader->set_uniform(ctx, gbuffer_->get_current_flags_buffer()->get_handle(ctx),  "gua_gbuffer_flags");
+  shader->set_uniform(ctx, gbuffer_->get_current_depth_buffer()->get_handle(ctx),  "gua_gbuffer_depth");
+}
 
-      for (auto pass : passes_) {
-        if (context_) pass->cleanup(*context_);
-        delete pass;
-      }
+////////////////////////////////////////////////////////////////////////////////
 
-      passes_.clear();
+void Pipeline::bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const {
 
-      passes_.push_back(pre_pass);
-      passes_.push_back(light_pass);
-      passes_.push_back(final_pass);
-      passes_.push_back(composite_pass);
-      passes_.push_back(post_fx_pass);
+  auto& ctx(get_context());
 
-      buffers_need_reload_ = true;
-
-    } else {
-
-      Logger::LOG_WARNING << "Failed to recompile shaders!" << std::endl;
-
-      for (auto pass : new_passes) {
-        if (context_) {
-          pass->print_shaders("shader_compile_failed", "bla.txt");
-        }
-      }
-
-      for (auto pass : new_passes) {
-        if (context_) pass->cleanup(*context_);
-        delete pass;
-      }
-    }
+  shader->set_uniform(ctx, int(light_table_->get_lights_num()), "gua_lights_num");
+  if (   light_table_->get_light_bitset()
+      && light_table_->get_lights_num() > 0) {
+    shader->set_uniform(ctx, light_table_->get_light_bitset()->get_handle(ctx), "gua_light_bitset");
+    ctx.render_context->bind_uniform_buffer(light_table_->light_uniform_block().block_buffer(), 1);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::create_buffers() {
-
-  if (buffers_need_reload_) {
-
-    if (passes_need_reload_ || !validate_resolution()) {
-      return;
-    }
-
-    std::vector<std::shared_ptr<StereoBuffer>> stereobuffers;
-
-    passes_[PipelineStage::geometry]->create(*context_, passes_[PipelineStage::geometry]->get_gbuffer_mapping()->get_layers());
-    stereobuffers.push_back(passes_[PipelineStage::geometry]->get_gbuffer());
-
-    passes_[PipelineStage::lighting]->create(*context_, passes_[PipelineStage::lighting]->get_gbuffer_mapping()->get_layers());
-    passes_[PipelineStage::lighting]->set_inputs(stereobuffers);
-    stereobuffers.push_back(passes_[PipelineStage::lighting]->get_gbuffer());
-
-    passes_[PipelineStage::shading]->create(*context_, passes_[PipelineStage::shading]->get_gbuffer_mapping()->get_layers());
-    passes_[PipelineStage::shading]->set_inputs(stereobuffers);
-    stereobuffers.push_back(passes_[PipelineStage::shading]->get_gbuffer());
-
-    passes_[PipelineStage::compositing]->set_inputs(stereobuffers);
-    passes_[PipelineStage::compositing]->create(*context_, {} );
-    stereobuffers.push_back(passes_[PipelineStage::compositing]->get_gbuffer());
-
-    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
-                                      scm::gl::WRAP_MIRRORED_REPEAT,
-                                      scm::gl::WRAP_MIRRORED_REPEAT);
-
-    passes_[PipelineStage::postfx]->create(*context_, { { BufferComponent::F3, state } });
-    passes_[PipelineStage::postfx]->set_inputs(stereobuffers);
-
-    if (!config.get_enable_stereo()) {
-      TextureDatabase::instance()->add(config.output_texture_name(), passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]->get_color_buffers(TYPE_FLOAT)[0]);
-      TextureDatabase::instance()->add(config.output_texture_name() + "_depth", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[0]->get_depth_buffer());
-    } else {
-      TextureDatabase::instance()->add(config.output_texture_name() + "_left",  passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[0]->get_color_buffers(TYPE_FLOAT)[0]);
-      TextureDatabase::instance()->add(config.output_texture_name() + "_right", passes_[PipelineStage::postfx]->get_gbuffer()->get_eye_buffers()[1]->get_color_buffers(TYPE_FLOAT)[0]);
-      TextureDatabase::instance()->add(config.output_texture_name() + "_depth_left", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[0]->get_depth_buffer());
-      TextureDatabase::instance()->add(config.output_texture_name() + "_depth_right", passes_[PipelineStage::geometry]->get_gbuffer()->get_eye_buffers()[1]->get_depth_buffer());
-    }
-
-    buffers_need_reload_ = false;
-  }
+void Pipeline::bind_camera_uniform_block(unsigned location) const {
+  get_context().render_context->bind_uniform_buffer(
+    camera_block_->block().block_buffer(), location
+  );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GBufferPass::GeometryUberShaderMap const& Pipeline::get_geometry_ubershaders() const
-{
-  GBufferPass* gbuffpass = dynamic_cast<GBufferPass*>(passes_[geometry]);
-  if (gbuffpass) {
-    return gbuffpass->get_geometry_ubershaders();
+void Pipeline::draw_quad() {
+  if (!quad_) {
+    quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+      get_context().render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f))
+    );
   }
-  else {
-    throw std::runtime_error("Pipeline::get_geometry_ubershaders() : GBufferPass not created yet.");
-  }
+
+  quad_->draw(get_context().render_context);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 }
