@@ -3,8 +3,8 @@
 ###############################################################################
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-set(PLOD_ROOT "/opt/pbr/inst_cb" CACHE PATH "Set to your PLOD install path.")
-include(FindPLOD)
+set(PLBR_ROOT "/opt/pbr/inst_cb" CACHE PATH "Set to your PLOD install path.")
+include(FindPBR)
 
 ###############################################################################
 # determine source files
@@ -33,9 +33,6 @@ INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}
                      ${GUACAMOLE_PLOD_INCLUDE_DIR}
                      ${PLOD_INCLUDE_DIR}
-                     #${PLOD_RENDERING_INCLUDE_DIR}
-                     #${PLOD_COMMON_INCLUDE_DIR}
-
 )
 
 ADD_LIBRARY( guacamole-PLOD SHARED
