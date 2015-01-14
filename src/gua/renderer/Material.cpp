@@ -73,7 +73,7 @@ void Material::set_shader_name(std::string const& name) {
 ////////////////////////////////////////////////////////////////////////////////
 
 MaterialShader* Material::get_shader() const {
-  boost::unique_lock<boost::shared_mutex> lock(mutex_);
+  // boost::unique_lock<boost::shared_mutex> lock(mutex_);
   if (!shader_cache_) {
     shader_cache_ = MaterialShaderDatabase::instance()->lookup(shader_name_).get();
   }
