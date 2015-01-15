@@ -243,7 +243,7 @@ class Mesh {
   Mesh();
 
   Mesh(aiMesh const& mesh, Node const& root);
-  Mesh(FbxMesh& mesh);
+  Mesh(FbxMesh const& mesh);
 
   void copy_to_buffer(Vertex* vertex_buffer)  const;
 

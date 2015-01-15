@@ -90,6 +90,12 @@ int main(int argc, char** argv) {
   // auto teapot(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/bob/boblampclean.md5anim", 0);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  auto rock(loader.create_geometry_from_file("fbx", "data/objects/fbx/rock.fbx", mat1));
+  graph.add_node("/transform", rock);
+  
+>>>>>>> loading vertices from mesh works
 
   // auto rock(loader.create_geometry_from_file("bob", "data/objects/fbx/warrior.fbx", mat1));
 =======
