@@ -123,7 +123,6 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     for (unsigned v(0); v < mesh_.num_vertices(); ++v) {
       auto final_pos  = scm::math::vec4(mesh_.get_position(v).x, mesh_.get_position(v).y, mesh_.get_position(v).z, 1.0);
       for(unsigned i(0); i<4; ++i){
-        std::cout << mesh_.get_weight(v).IDs[i] << std::endl;
         bone_boxes_[mesh_.get_weight(v).IDs[i]].expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
       }
     }
