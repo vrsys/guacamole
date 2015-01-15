@@ -1,7 +1,6 @@
 @include "common/header.glsl"
 
 // uniforms
-@include "common/gua_camera_uniforms.glsl"
 uniform int light_id;
 
 layout(binding=0, r32ui) uniform coherent uimage3D light_bitset;
@@ -15,11 +14,6 @@ void main()
 #endif
 
   uint bit = 1u << (light_id % 32);
-
-  if ((imageLoad(light_bitset, pos).x & bit) == 0) {
-    imageAtomicOr(light_bitset, pos, bit);
-  }
-
-  discard;
+  imageAtomicOr(light_bitset, pos, bit);
 }
 
