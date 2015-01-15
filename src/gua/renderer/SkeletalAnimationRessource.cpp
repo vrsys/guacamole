@@ -60,33 +60,6 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(Mesh const& mesh, std::sh
     bounding_box_.expandBy(scm::math::vec3(
         mesh_.get_position(v).x, mesh_.get_position(v).y, mesh_.get_position(v).z));
   }
-
-  bone_boxes_ = std::vector<math::BoundingBox<math::vec3>>(100,math::BoundingBox<math::vec3>());
-
-    // TODO
-    /*if (build_kd_tree) {
-      kd_tree_.generate(mesh_);
-    }
-  //}*/
-}
-SkeletalAnimationRessource::SkeletalAnimationRessource(Mesh const& mesh, std::shared_ptr<SkeletalAnimationDirector> animation_director, bool build_kd_tree)
-: vertices_(),
-  indices_(),
-  vertex_array_(),
-  upload_mutex_(),
-  mesh_(mesh),
-  animation_director_(animation_director)
-{
-
-  //TODO generate BBox and KDTree
-  //if (mesh_->HasPositions()) {
-  bounding_box_ = math::BoundingBox<math::vec3>();
-
-  // without bone influence
-  for (unsigned v(0); v < mesh_.num_vertices(); ++v) {
-    bounding_box_.expandBy(scm::math::vec3(
-        mesh_.get_position(v).x, mesh_.get_position(v).y, mesh_.get_position(v).z));
-  }
   std::cout << "box dims" << bounding_box_.corners().first << " and " << bounding_box_.corners().second << std::endl;
 
   bone_boxes_ = std::vector<math::BoundingBox<math::vec3>>(100,math::BoundingBox<math::vec3>());
