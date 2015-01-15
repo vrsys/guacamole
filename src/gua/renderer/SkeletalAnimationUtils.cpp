@@ -394,6 +394,7 @@ void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
     vertex_buffer[v].bone_ids = scm::math::vec4i(weights[v].IDs[0],weights[v].IDs[1],weights[v].IDs[2],weights[v].IDs[3]);
   }
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Transformation::Transformation():
   scaling{1.0f},
