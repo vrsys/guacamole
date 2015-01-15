@@ -138,11 +138,6 @@ public:
   std::string const& node_name,
   unsigned flags);
 
-  std::shared_ptr<node::Node> create_animation_node(FbxScene const* fbx_scene,
-  std::string const& file_name,
-  std::string const& node_name,
-  unsigned flags);
-
   std::shared_ptr<node::Node> create_animation_node(std::shared_ptr<Assimp::Importer> const& importer,
                                               aiScene const* ai_scene,
                                               /*aiNode* ai_root,*/
