@@ -113,10 +113,12 @@ namespace gua {
       ResourceFactory factory;
       depth_pass_shader_stages_.clear();
       depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.vert")) );
+      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.geom")) );
       depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.frag")));
 
       accumulation_pass_shader_stages_.clear();
       accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p02_accumulation.vert")));
+      accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p02_accumulation.geom")));
       accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p02_accumulation.frag")));
 
       normalization_pass_shader_stages_.clear();
@@ -186,7 +188,7 @@ namespace gua {
   ///////////////////////////////////////////////////////////////////////////////
   void PLODRenderer::_create_gpu_resources(gua::RenderContext const& ctx,
                                            scm::math::vec2ui const& render_target_dims,
-					   bool resize_resource_containers) {
+             bool resize_resource_containers) {
 
     depth_pass_log_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
@@ -310,9 +312,9 @@ namespace gua {
       //allocate GPU resources if necessary
       {
 
-	bool resize_resource_containers = false;
+  bool resize_resource_containers = false;
 
-	if(gpu_resources_already_created_ == false || current_rendertarget_width_ != render_target_dims[0] || current_rendertarget_height_ != render_target_dims[1]) {
+  if(gpu_resources_already_created_ == false || current_rendertarget_width_ != render_target_dims[0] || current_rendertarget_height_ != render_target_dims[1]) {
           current_rendertarget_width_ = render_target_dims[0];
           current_rendertarget_height_ = render_target_dims[1];
           _create_gpu_resources(ctx, render_target_dims, resize_resource_containers);
@@ -338,10 +340,10 @@ namespace gua {
 
        //get handles to FBOs and textures thread safe
        {
-	 
-	 active_depth_fbo = depth_pass_result_fbo_;
-	 active_accumulation_fbo = accumulation_pass_result_fbo_;
-	 active_normalization_fbo = normalization_pass_result_fbo_;
+   
+   active_depth_fbo = depth_pass_result_fbo_;
+   active_accumulation_fbo = accumulation_pass_result_fbo_;
+   active_normalization_fbo = normalization_pass_result_fbo_;
 
          active_depth_pass_linear_depth_result = depth_pass_linear_depth_result_;
          active_depth_pass_log_depth_result = depth_pass_log_depth_result_;
@@ -379,8 +381,11 @@ namespace gua {
        
      //determine frustum parameters
      Frustum const& frustum = pipe.get_scene().frustum;
-     std::vector<math::vec3> frustum_corner_values = frustum.get_corners();
+     std::vector<math::vec3> frustum_corner_values = frustum.get_corners_vs();
      float top_minus_bottom = scm::math::length((frustum_corner_values[2]) - 
+                                                (frustum_corner_values[0]));
+
+     float right_minus_left = scm::math::length((frustum_corner_values[4]) -
                                                 (frustum_corner_values[0]));
 
      pipe.get_gbuffer().set_viewport(ctx);
@@ -430,10 +435,25 @@ namespace gua {
        depth_pass_program_->use(ctx);
        depth_pass_program_->apply_uniform(ctx,
                                          "height_divided_by_top_minus_bottom",
-                                         height_divided_by_top_minus_bottom);
+                                          height_divided_by_top_minus_bottom);
+       
+       depth_pass_program_->apply_uniform(ctx,
+                                          "top_minus_bottom", top_minus_bottom);
+
+       depth_pass_program_->apply_uniform(ctx,
+                                          "right_minus_left", right_minus_left);
+
+       depth_pass_program_->apply_uniform(ctx,
+                                          "render_target_width", (float) render_target_dims[0]);
+
+       depth_pass_program_->apply_uniform(ctx,
+                                          "render_target_height", (float) render_target_dims[1]);
        
        depth_pass_program_->apply_uniform(ctx,
                                           "near_plane", near_plane_value);
+
+       depth_pass_program_->apply_uniform(ctx,
+                                          "far_plane", far_plane_value);
 
        depth_pass_program_->apply_uniform(ctx,
                                           "far_minus_near_plane",
@@ -476,8 +496,8 @@ namespace gua {
         }
 
 
-	UniformValue model_mat(scm_model_matrix);
-	UniformValue normal_mat(scm_normal_matrix);
+  UniformValue model_mat(scm_model_matrix);
+  UniformValue normal_mat(scm_normal_matrix);
 
         depth_pass_program_->apply_uniform(ctx,
                                            "gua_model_matrix",
@@ -500,7 +520,7 @@ namespace gua {
 
         auto plod_resource = plod_node->get_geometry();
 
-	if(plod_resource && depth_pass_program_) {
+  if(plod_resource && depth_pass_program_) {
 
           plod_resource->draw(ctx,
                              context_id,
@@ -529,8 +549,10 @@ namespace gua {
        ctx.render_context
          ->set_rasterizer_state(change_point_size_in_shader_state_);
  
+       //ctx.render_context
+       //  ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
        ctx.render_context
-         ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
+           ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
 
        ctx.render_context->set_blend_state(color_accumulation_state_);
 
@@ -552,6 +574,9 @@ namespace gua {
                                                  "near_plane", near_plane_value);
 
        accumulation_pass_program_->apply_uniform(ctx,
+                                                 "far_plane", far_plane_value);
+
+       accumulation_pass_program_->apply_uniform(ctx,
                                                  "far_minus_near_plane",
                                                  far_plane_value - near_plane_value);
 
@@ -564,6 +589,18 @@ namespace gua {
 
        accumulation_pass_program_->apply_uniform(ctx,
                                                  "p01_depth_texture", 0);
+
+       accumulation_pass_program_->apply_uniform(ctx,
+                                          "top_minus_bottom", top_minus_bottom);
+
+       accumulation_pass_program_->apply_uniform(ctx,
+                                          "right_minus_left", right_minus_left);
+
+       accumulation_pass_program_->apply_uniform(ctx,
+                                          "render_target_width", (float) render_target_dims[0]);
+
+       accumulation_pass_program_->apply_uniform(ctx,
+                                          "render_target_height", (float) render_target_dims[1]);
 
 
                                              
@@ -581,8 +618,8 @@ namespace gua {
         pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
         std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
 
-	UniformValue model_mat(scm_model_matrix);
-	UniformValue normal_mat(scm_normal_matrix);
+  UniformValue model_mat(scm_model_matrix);
+  UniformValue normal_mat(scm_normal_matrix);
 
         accumulation_pass_program_->apply_uniform(ctx,
                                            "gua_model_matrix",
@@ -607,7 +644,7 @@ namespace gua {
         //retrieve frustum culling results      
         std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id]; 
 
-	if(plod_resource && depth_pass_program_) {
+  if(plod_resource && depth_pass_program_) {
 
           plod_resource->draw(ctx,
                              context_id,

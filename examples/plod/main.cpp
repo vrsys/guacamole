@@ -83,6 +83,8 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
   auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+  
+  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Adrian_BA/col_planes.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
 
   plod_geometry->set_draw_bounding_box(true);
 
@@ -130,7 +132,7 @@ int main(int argc, char** argv) {
   portal_camera->config.set_enable_stereo(false);
 
   gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
-
+/*
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass<gua::TriMeshPassDescription>();
   portal_pipe->add_pass<gua::PLODPassDescription>();
@@ -145,7 +147,7 @@ int main(int argc, char** argv) {
   //  .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
 
   portal_camera->set_pipeline_description(portal_pipe);
-
+*/
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
   camera->config.set_resolution(resolution);
@@ -153,7 +155,8 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-  camera->set_pre_render_cameras({portal_camera});
+  camera->config.set_near_clip(0.001);
+  //camera->set_pre_render_cameras({portal_camera});
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
 
@@ -220,6 +223,9 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
+    
+    //std::cout << "Frame time: " << 1000.0f / camera->get_rendering_fps()<<" ms, fps:" << camera->get_rendering_fps() << ", app fps: " << camera->get_application_fps() << std::endl;
+
     // apply trackball matrix to object
     window->process_events();
     if (window->should_close()) {
@@ -228,8 +234,8 @@ int main(int argc, char** argv) {
       loop.stop();
     } else { 
       renderer.queue_draw({&graph}, {camera});
-      //camera->translate(0.000003, 0, 0.0);
-      //plod_geometry->translate(-0.0000015, 0, 0.0);
+      //camera->translate(0.0003, 0, 0.0);
+      //plod_geometry->translate(-0.00015, 0, 0.0);
 
     }
   });

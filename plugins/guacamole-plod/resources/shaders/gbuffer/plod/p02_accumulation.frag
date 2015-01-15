@@ -10,11 +10,12 @@ const float gaussian[32] = float[](
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-in vec3 pass_point_color;
-in vec3 pass_normal;
-in float pass_mv_vert_depth;
-in float pass_scaled_radius;
-in float pass_screen_space_splat_size;
+in VertexData {
+  vec3 pass_point_color;
+  vec3 pass_normal;
+  vec2 pass_uv_coords;
+  float pass_es_linear_depth;
+} VertexIn;
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -29,93 +30,51 @@ layout (location = 1) out vec4 out_accumulated_normal;
 layout(binding=0) uniform sampler2D p01_depth_texture;
 
 ///////////////////////////////////////////////////////////////////////////////
-//Uniforms
-///////////////////////////////////////////////////////////////////////////////
-uniform float near_plane;
-uniform float far_minus_near_plane;
-uniform vec2 win_dims;
-uniform float radius_model_scaling;
-
-//uniform float win_dim_x;
-//uniform float win_dim_y;
-
-///////////////////////////////////////////////////////////////////////////////
 // splatting methods
 ///////////////////////////////////////////////////////////////////////////////
-
-float calc_depth_offset(vec2 mappedPointCoord,
-                        vec3 adjustedNormal) {
-
-  float xzRatio = (adjustedNormal.x/adjustedNormal.z);
-  float yzRatio = (adjustedNormal.y/adjustedNormal.z);
-
-	float zBound = 0.3; // max_deform_ratio;sampler2D
-	float normalZ = adjustedNormal.z;
-
-	if (normalZ > 0.0)
-		normalZ = max(zBound, normalZ);
-	else
-		normalZ = -max(zBound, -normalZ);
-
-	xzRatio = adjustedNormal.x/normalZ;
-	yzRatio = adjustedNormal.y/normalZ;
-
-	return -xzRatio * mappedPointCoord.x - yzRatio * mappedPointCoord.y;
-}
-
-float get_gaussianValue(float depth_offset,
-                        vec2 mappedPointCoord,
-                        vec3 newNormalVec) {
-
-  float radius;
-  radius = sqrt(mappedPointCoord.x * mappedPointCoord.x +
-                mappedPointCoord.y * mappedPointCoord.y +
-                depth_offset*depth_offset);
-
-  if (radius > 1.0)
-    discard;
-  else
-    return gaussian[(int)(round(radius * 31.0))];
-}
-
+uniform vec2 win_dims;
+uniform float far_plane;
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
 
-  vec3 adjustedNormal = pass_normal;
-  //adjustedNormal = vec3(0.0, 1.0, 0.0);
+  float pass_1_linear_depth = -far_plane*(texture2D(p01_depth_texture, gl_FragCoord.xy/win_dims).r);
+
+  //if( gl_FragCoord.z - gl_FragCoord.z > 0.001 ) {
+  //  discard;
+ // }
+
+  if(pass_1_linear_depth > -5.0)
+    discard;
+
+  vec2 uv_coords = VertexIn.pass_uv_coords;
+
+
+  //if( (uv_coords.x * uv_coords.x + uv_coords.y * uv_coords.y) > 1)
+  //  discard;
+ 
+
+  if(pass_1_linear_depth < 0.0)
+    discard;
 
   float normalAdjustmentFactor = 1.0;
 
-  if (pass_normal.z < 0.0) {
+  if (VertexIn.pass_normal.z < 0.0) {
     normalAdjustmentFactor = -1.0;
-    adjustedNormal *= -1.0;
   }
 
-  vec2 mappedPointCoord = gl_PointCoord * 2.0 + vec2(-1.0);
 
-  float depth_offset = calc_depth_offset(mappedPointCoord, adjustedNormal);
 
-  float depthValue = texture(p01_depth_texture, gl_FragCoord.xy / win_dims.xy).r;
+  float weight = gaussian[(int)(round(length(uv_coords) * 31.0))];
 
-  // depth value of depth pass texture
-  depthValue = -depthValue * far_minus_near_plane + near_plane;
-
-  float depth_to_compare = 0.0;
-  depth_to_compare = pass_mv_vert_depth + depth_offset * pass_scaled_radius /** pass_view_scaling*/;
-
-  float weight = 0.0;
-  weight = get_gaussianValue(depth_offset, mappedPointCoord, adjustedNormal) ;
-
-  //if ( abs(depthValue - depth_to_compare) <= 3.0 * pass_scaled_radius) {
-    out_accumulated_color = vec4(pass_point_color * weight, weight);
-    //out_accumulated_normal = normalAdjustmentFactor * vec4(pass_transposed_inverse_normal * weight, weight);
-    out_accumulated_normal = normalAdjustmentFactor * vec4(weight * pass_normal, weight);
- // }
- // else {
- //   discard;
-  //}
+   // if( !(render_target_width > 1900.0 && render_target_height > 1000.0 && render_target_width < 2000.0 && render_target_height < 1200) )
+      //out_accumulated_color = vec4(1.0, 0.0, 0.0, 1.0);
+   // else
+  out_accumulated_color = vec4(VertexIn.pass_point_color * weight, weight);
+    //out_accumulated_color = vec4(u, v, 0.0, 1.0);//vec4(pass_normal.xyz, 1.0);
+   // out_accumulated_color = vec4(-q_n, 1.0);
+  out_accumulated_normal = normalAdjustmentFactor * vec4(weight * VertexIn.pass_normal, weight);
 
 }
 
