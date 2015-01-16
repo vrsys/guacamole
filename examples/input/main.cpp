@@ -105,11 +105,9 @@ int main(int argc, char** argv) {
 
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass<gua::TriMeshPassDescription>();
-  portal_pipe->add_pass<gua::EmissivePassDescription>();
-  portal_pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  portal_pipe->add_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    ;
+  portal_pipe->add_pass<gua::LightVisibilityPassDescription>();
+  portal_pipe->add_pass<gua::ResolvePassDescription>().mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+
   portal_camera->set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");

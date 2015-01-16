@@ -26,7 +26,7 @@
 #include <locale>
 
 #if WIN32
-#include <codecvt>
+  #include <codecvt>
 #endif
 
 #include <boost/regex.hpp>

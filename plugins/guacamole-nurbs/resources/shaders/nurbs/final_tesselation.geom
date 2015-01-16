@@ -59,7 +59,28 @@ void main()
 {
   @material_input@
 
-  for ( int i = 0; i != 3; ++i )
+  // force vertex order to be face forward! 
+  mat4 modelview = gua_view_matrix * gua_model_matrix;
+
+  vec3 a_view_space = (modelview * tePosition[0]).xyz;
+  vec3 b_view_space = (modelview * tePosition[1]).xyz;
+  vec3 c_view_space = (modelview * tePosition[2]).xyz;
+
+  vec3 normal_view_space = cross(normalize(b_view_space - a_view_space), normalize(c_view_space - b_view_space));
+
+  int vertex_id_first = 0;
+  int vertex_id_last  = 3;
+  int increment       = 1;
+
+  bool invert_vertex_order = dot(normal_view_space, normalize(-a_view_space)) <= 0.0;
+
+  if (invert_vertex_order) {
+    vertex_id_first = 2;
+    vertex_id_last  = -1;
+    increment       = -1;
+  }
+
+  for ( int i = vertex_id_first; i != vertex_id_last; i = i + increment )
   {
     gIndex      = teIndex[i];
 

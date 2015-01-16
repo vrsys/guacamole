@@ -32,7 +32,7 @@ LINK_DIRECTORIES(${LIB_PATHS})
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}
                      ${GUACAMOLE_PLOD_INCLUDE_DIR}
-                     ${PLOD_INCLUDE_DIR}
+                     ${PBR_INCLUDE_DIRS}
 )
 
 ADD_LIBRARY( guacamole-PLOD SHARED
