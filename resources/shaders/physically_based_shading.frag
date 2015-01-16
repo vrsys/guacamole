@@ -237,7 +237,7 @@ float sRGB_to_linear(float c)
   if(c < 0.04045)
     return (c < 0.0) ? 0.0: c * (1.0 / 12.92);
   else
-    return pow((c + 0.055)*(1.0/1.055), 2.4);
+    return pow((c + 0.055)/1.055, 2.4);
 }
 
 vec3 sRGB_to_linear(vec3 sRGB)
@@ -270,7 +270,7 @@ void main() {
   float metalness = pbr.b;
   float roughness = max(pbr.g, 0.0001f);
 
-  vec3 albedo = sRGB_to_linear_simple(gua_get_color());
+  vec3 albedo = sRGB_to_linear(gua_get_color());
   vec3 cspec = mix(vec3(0.04), albedo, metalness);
   vec3 cdiff = mix(albedo, vec3(0.0),  metalness);
 
