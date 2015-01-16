@@ -6,8 +6,8 @@
     "source" : "
       void FragmentColor() {
         gua_color = color;
-        gua_roughness = 0.05;
-        gua_metalness = 0.4;
+        gua_roughness = 0.2;
+        gua_metalness = 0.2;
         gua_emissivity = 0;
 
         const float contrib = 0.5;
@@ -31,5 +31,5 @@
     ]
   }
   ]
-}5
+}
 
