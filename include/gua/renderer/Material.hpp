@@ -35,9 +35,9 @@ class ShaderProgram;
 
 class GUA_DLL Material {
   public:
-    Material(std::string const& shader_name = "");
+    Material(std::string const& shader_name = "gua_default_material");
     Material(Material const& copy);
-
+ 
     std::string const& get_shader_name() const;
     void set_shader_name(std::string const&);
 
@@ -72,6 +72,9 @@ class GUA_DLL Material {
 
     void apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const;
 
+    std::ostream& serialize_uniforms_to_stream(std::ostream& os) const;
+    void set_uniforms_from_serialized_string(std::string const& value);
+
   private:
     friend class MaterialShader;
 
@@ -81,6 +84,9 @@ class GUA_DLL Material {
 
     mutable boost::shared_mutex mutex_;
 };
+
+//operators
+std::ostream& operator<<(std::ostream& os, Material const& val);
 
 }
 

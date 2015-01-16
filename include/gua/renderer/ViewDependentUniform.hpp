@@ -42,12 +42,19 @@ class GUA_DLL ViewDependentUniform {
     void apply(RenderContext const& ctx, std::string const& name, int view,
                scm::gl::program_ptr const& prog, unsigned location = 0) const;
 
+    std::ostream& serialize_to_stream(std::ostream& os) const;
+
+    static ViewDependentUniform create_from_serialized_string(std::string const& value);
+
   private:
 
     UniformValue default_;
     std::map<int, UniformValue> uniforms_;
 
 };
+
+//operators
+std::ostream& operator<<(std::ostream& os, ViewDependentUniform const& val);
 
 }
 
