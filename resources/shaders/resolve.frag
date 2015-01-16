@@ -20,11 +20,13 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
     return color;
 
   float emit = pbr.r;
+  ShadingTerms T;
+  gua_prepare_shading(T, color/* (1.0 + emit)*/, normal, position, pbr);
 
   vec3 frag_color = vec3(0.0);
   for (int i = 0; i < gua_lights_num; ++i) {
       if ((bitset[i>>5] & (1u << (i%32))) != 0) {
-        frag_color += gua_shade(i, color /* (1.0 + emit)*/, normal, position, pbr);
+        frag_color += gua_shade(i, T);
       }
   }
   return toneMap(frag_color);
