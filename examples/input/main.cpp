@@ -154,7 +154,7 @@ int main(int argc, char** argv) {
       renderer.stop();
       window->close();
       loop.stop();
-    } else { 
+    } else {
       renderer.queue_draw({&graph}, {camera});
     }
   });

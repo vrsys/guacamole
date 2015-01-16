@@ -20,11 +20,13 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
     return color;
 
   float emit = pbr.r;
+  ShadingTerms T;
+  gua_prepare_shading(T, color/* (1.0 + emit)*/, normal, position, pbr);
 
   vec3 frag_color = vec3(0.0);
   for (int i = 0; i < gua_lights_num; ++i) {
       if ((bitset[i>>5] & (1u << (i%32))) != 0) {
-        frag_color += gua_shade(i, color /* (1.0 + emit)*/, normal, position, pbr);
+        frag_color += gua_shade(i, T);
       }
   }
   return toneMap(frag_color);
@@ -145,14 +147,23 @@ void main() {
   gua_out_color = final_color.rgb;
 
 #if @debug_tiles@
+  vec3 color_codes[] = {vec3(1,0,0), vec3(0,1,0), vec3(0,0,1), vec3(1,1,0), vec3(1,0,1), vec3(0,1,1)};
+
   for (int i = 0; i < gua_lights_num; ++i) {
     if ((bitset[i>>5] & (1u << (i%32))) != 0) {
       gua_out_color = mix(gua_out_color, gua_lights[i].color.rgb, 0.2);
       int ts = int(pow(2, @light_table_tile_power@));
-      if (@light_table_tile_power@ > 2 &&
-          (any(equal(frag_pos % ts, vec2(0))) ||
-           any(equal(frag_pos % ts, vec2(ts-1)))))
-        gua_out_color = vec3(i & 1, i & 2, i & 4);
+      if (@light_table_tile_power@ > 2) {
+        bool p1 = any(equal(frag_pos % ts, vec2(0)));
+        bool p2 = any(equal(frag_pos % ts, vec2(ts-1)));
+        if (p1 || p2) gua_out_color = vec3(0);
+        ivec2 tpos = (frag_pos >> @light_table_tile_power@) * ivec2(ts);
+
+        if (  all(greaterThanEqual(frag_pos, tpos + ivec2(2+i*4, 2)))
+            && all(lessThanEqual(frag_pos, tpos + ivec2(6+i*4, 6))))
+          gua_out_color = color_codes[i % color_codes.length()];
+
+      }
     }
   }
 #endif

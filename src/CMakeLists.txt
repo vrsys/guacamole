@@ -35,10 +35,8 @@ IF (NOT GUACAMOLE_PBR_SUPPORT)
 list (REMOVE_ITEM GUACAMOLE_RENDERER_INC
   ../include/gua/renderer/PLODLoader.hpp
   ../include/gua/renderer/PLODRessource.hpp
-  ../include/gua/renderer/PLODUberShader.hpp
   ../include/gua/renderer/PBRLoader.hpp
   ../include/gua/renderer/PBRRessource.hpp
-  ../include/gua/renderer/PBRUberShader.hpp
 )
 ENDIF (NOT GUACAMOLE_PBR_SUPPORT)
 IF (NOT GUACAMOLE_GLFW3)

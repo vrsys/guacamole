@@ -23,19 +23,61 @@
 
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
- 
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Material::Material(std::string const& shader_name):
   shader_name_(shader_name),
-  shader_cache_(nullptr)
+  shader_cache_(nullptr),
+  show_back_faces_(false)
+  {
+    set_shader_name(shader_name_);
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+
+Material::Material(Material const& copy):
+  shader_name_(copy.shader_name_),
+  shader_cache_(copy.shader_cache_),
+  uniforms_(copy.uniforms_),
+  show_back_faces_(copy.show_back_faces_)
   {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
+std::string const& Material::get_shader_name() const {
+  return shader_name_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Material::set_shader_name(std::string const& name) {
+  boost::unique_lock<boost::shared_mutex> lock(mutex_);
+  shader_name_ = name;
+  shader_cache_ = nullptr;
+
+  auto shader(MaterialShaderDatabase::instance()->lookup(shader_name_));
+
+  if (shader) {
+    auto new_uniforms(shader->get_default_uniforms());
+
+    for (auto const& old_uniform : uniforms_) {
+      auto it(new_uniforms.find(old_uniform.first));
+      if (it != new_uniforms.end()) {
+        it->second = old_uniform.second;
+      }
+    }
+    
+    uniforms_ = new_uniforms;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MaterialShader* Material::get_shader() const {
+  // boost::unique_lock<boost::shared_mutex> lock(mutex_);
   if (!shader_cache_) {
     shader_cache_ = MaterialShaderDatabase::instance()->lookup(shader_name_).get();
   }
@@ -52,11 +94,43 @@ std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() cons
 ////////////////////////////////////////////////////////////////////////////////
 
 void Material::apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const {
-    // TODO: make this iterations thread-safe - it might work this way as the
-    // number of uniforms does not change, but maybe it can cause crashes...
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& uniform : uniforms_) {
         uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& Material::serialize_uniforms_to_stream(std::ostream& os) const {
+
+  for (auto& uniform : uniforms_) {
+    os << uniform.first << "#";
+    uniform.second.serialize_to_stream(os);
+    os << ";";
+  }
+
+  return os;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Material::set_uniforms_from_serialized_string(std::string const& value) {
+
+  auto tokens(string_utils::split(value, ';'));
+
+  for (auto& token : tokens) {
+    auto parts(string_utils::split(token, '#'));
+    set_uniform(parts[0], ViewDependentUniform::create_from_serialized_string(parts[1]));
+
+  }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& operator<<(std::ostream& os, Material const& val) {
+  return val.serialize_uniforms_to_stream(os);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
