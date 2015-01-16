@@ -36,7 +36,7 @@ void MaterialShaderDescription::load_from_file(std::string const& file_name) {
     TextFile file(file_name);
 
     if (file.is_valid()) {
-      load_from_buffer(file.get_content());
+      load_from_json(file.get_content());
     } else {
       Logger::LOG_WARNING << "Failed to load material description\""
                           << file_name << "\": "
@@ -47,12 +47,12 @@ void MaterialShaderDescription::load_from_file(std::string const& file_name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MaterialShaderDescription::load_from_buffer(std::string const& buffer) {
+void MaterialShaderDescription::load_from_json(std::string const& json) {
 
   Json::Value value;
   Json::Reader reader;
-  if (!reader.parse(buffer, value)) {
-    Logger::LOG_WARNING << "Failed to parse material description: " << buffer << std::endl;
+  if (!reader.parse(json, value)) {
+    Logger::LOG_WARNING << "Failed to parse material description: " << json << std::endl;
     return;
   }
 

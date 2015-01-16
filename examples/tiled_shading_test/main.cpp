@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
       //"I:/models/Paris/Paris2010_0.obj",
       // "I:/models/Batman/Batman.obj",
       "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-      shader->get_default_material(),
+      shader->make_new_material(),
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE |
       gua::TriMeshLoader::LOAD_MATERIALS |
