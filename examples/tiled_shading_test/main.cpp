@@ -80,6 +80,8 @@ int main(int argc, char** argv) {
   std::uniform_real_distribution<> dstz(-6.f, 1.f);
   std::uniform_real_distribution<> dstc(0.2, 0.7);
 
+  int max_lights = 32;
+
   if (mode == 1 || mode == 2) {
     for (int i = 0; i < 256; ++i) {
       auto light = graph.add_node<gua::node::PointLightNode>("/", "light_"+std::to_string(i));
@@ -90,6 +92,7 @@ int main(int argc, char** argv) {
         light->scale(0.8);
       light->translate(dstx(gen), dsty(gen), dstz(gen));
     }
+    max_lights = 256;
   }
 
   if (mode == 3) {
@@ -118,6 +121,7 @@ int main(int argc, char** argv) {
   pipe_tiled->add_pass<gua::TriMeshPassDescription>();
   pipe_tiled->add_pass<gua::LightVisibilityPassDescription>().tile_power(3);
   pipe_tiled->add_pass<gua::ResolvePassDescription>().tone_mapping_exposure(0.1f).debug_tiles(false);
+  pipe_tiled->set_max_lights_count(max_lights);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);

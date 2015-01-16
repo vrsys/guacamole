@@ -73,6 +73,7 @@ PipelineDescription::PipelineDescription(PipelineDescription const& other) {
   enable_abuffer_ = other.enable_abuffer_;
   abuffer_size_   = other.abuffer_size_;
   blending_termination_threshold_ = other.blending_termination_threshold_;
+  max_lights_count_ = other.max_lights_count_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,6 +98,7 @@ bool PipelineDescription::operator==(PipelineDescription const& other) const {
   if (   enable_abuffer_ != other.enable_abuffer_
       || abuffer_size_   != other.abuffer_size_
       || blending_termination_threshold_ != other.blending_termination_threshold_
+      || max_lights_count_ != other.max_lights_count_
       || passes_.size()  != other.passes_.size()) {
     return false;
   }
@@ -135,6 +137,7 @@ PipelineDescription& PipelineDescription::operator=(PipelineDescription const& o
   enable_abuffer_ = other.enable_abuffer_;
   abuffer_size_   = other.abuffer_size_;
   blending_termination_threshold_ = other.blending_termination_threshold_;
+  max_lights_count_ = other.max_lights_count_;
 
   return *this;
 }

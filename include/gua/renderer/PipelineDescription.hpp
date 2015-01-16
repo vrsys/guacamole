@@ -102,6 +102,14 @@ class GUA_DLL PipelineDescription {
     return blending_termination_threshold_;
   }
 
+  void set_max_lights_count(int value) {
+    max_lights_count_ = value;
+  }
+
+  int get_max_lights_count() const {
+    return max_lights_count_;
+  }
+
   void set_user_data(void* data) {
     user_data_ = data;
   }
@@ -120,6 +128,7 @@ class GUA_DLL PipelineDescription {
   bool   enable_abuffer_ = false;
   size_t abuffer_size_ = 800; // in MiB
   float  blending_termination_threshold_ = 0.99;
+  int    max_lights_count_ = 128;
   mutable boost::shared_mutex mutex_;
 };
 
