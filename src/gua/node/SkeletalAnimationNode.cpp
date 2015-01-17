@@ -381,20 +381,20 @@ namespace node {
 
       auto geometry_bbox = math::BoundingBox<math::vec3>();
 
-      for(uint i(0);i<geometries_.size();++i){
-        auto bone_boxes = geometries_[i]->get_bone_boxes();
-        for(uint b(0);b<bone_boxes.size();++b){
-          if(!bone_boxes[b].isEmpty()){
-            bone_boxes[b] = transform(bone_boxes[b],world_transform_);
-            geometry_bbox.expandBy(bone_boxes[b]);
-          }
-        }
-      }
+      // for(uint i(0);i<geometries_.size();++i){
+      //   auto bone_boxes = geometries_[i]->get_bone_boxes();
+      //   for(uint b(0);b<bone_boxes.size();++b){
+      //     if(!bone_boxes[b].isEmpty()){
+      //       bone_boxes[b] = transform(bone_boxes[b],world_transform_);
+      //       geometry_bbox.expandBy(bone_boxes[b]);
+      //     }
+      //   }
+      // }
 
-      if(!geometry_bbox.isEmpty()){
-        bounding_box_ = geometry_bbox;
-      }
-      else{//bbox out of bone boxes could not be computed yet....use initial bbox
+      // if(!geometry_bbox.isEmpty()){
+      //   bounding_box_ = geometry_bbox;
+      // }
+      // else{//bbox out of bone boxes could not be computed yet....use initial bbox
         for(uint i(0);i<geometries_.size();++i){
           auto tmp_bbox = geometries_[i]->get_bounding_box();
           if(!tmp_bbox.isEmpty()){
@@ -402,7 +402,7 @@ namespace node {
           }
         }
         bounding_box_ = transform(geometry_bbox, world_transform_);
-      }
+      // }
 
 
       for (auto child : get_children()) {
