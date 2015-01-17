@@ -224,8 +224,13 @@ Mesh::Mesh(FbxMesh& mesh) {
   indices.reserve(num_triangles * 3);
 
   FbxVector4* vertices = mesh.GetControlPoints();
+<<<<<<< HEAD
   for(unsigned i = 0; i < num_vertices; ++i) {
     positions.push_back(to_gua::vec3(vertices[i]) * 0.2);
+=======
+  for(unsigned i = 0; i < num_vertices_; ++i) {
+    positions.push_back(to_gua::vec3(vertices[i]) * 10);
+>>>>>>> disabled realtime bounding boxes, fbx mesh still invisible
   }
 
   if(mesh.GetElementNormalCount() == 0) {
@@ -250,11 +255,19 @@ Mesh::Mesh(FbxMesh& mesh) {
     }
   }
   else if(fbx_normals->GetMappingMode() == FbxGeometryElement::eByPolygonVertex) {
+<<<<<<< HEAD
     Logger::LOG_WARNING << "Normals per polygon vertex not supported, regenerating them" << std::endl;
     //regenerate normals per control point
     mesh.GenerateNormals(true, true);
 
     for(unsigned i = 0; i < num_vertices; ++i) {
+=======
+    Logger::LOG_WARNING << "Normals per divided vertex not supported, regenerating them" << std::endl;
+    //regenerate normals per control point
+    mesh.GenerateNormals(true, true);
+
+    for(unsigned i = 0; i < num_vertices_; ++i) {
+>>>>>>> disabled realtime bounding boxes, fbx mesh still invisible
         normals.push_back(to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
     }
   }
@@ -263,10 +276,17 @@ Mesh::Mesh(FbxMesh& mesh) {
     // assert(false);
   }
 
+<<<<<<< HEAD
   if(mesh.GetPolygonCount() < 1) {
     Logger::LOG_WARNING << "No indices in mesh, drawing will be inefficient" << std::endl;
     for(unsigned i = 0; i < num_vertices; ++i) {
       indices.push_back(num_vertices - i - 1);
+=======
+  if(mesh.GetElementPolygonGroupCount() < 1) {
+    Logger::LOG_WARNING << "No indices in mesh, drawing will be inefficient" << std::endl;
+    for(unsigned i = 0; i < num_vertices_; ++i) {
+      indices.push_back(i);
+>>>>>>> disabled realtime bounding boxes, fbx mesh still invisible
     }
   }
   else {

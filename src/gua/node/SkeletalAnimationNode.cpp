@@ -360,15 +360,15 @@ namespace node {
 
     auto tmp_boxes = std::vector<math::BoundingBox<math::vec3>>(100,math::BoundingBox<math::vec3>());
 
-    for(uint i(0);i<geometries_.size();++i){
-      auto bone_boxes = geometries_[i]->get_bone_boxes();
-      for(uint b(0);b<bone_boxes.size();++b){
-        if(!bone_boxes[b].isEmpty()){
-          bone_boxes[b] = transform(bone_boxes[b], world_transform_);
-          tmp_boxes[b].expandBy(bone_boxes[b]);
-        }
-      }
-    }
+    // for(uint i(0);i<geometries_.size();++i){
+    //   auto bone_boxes = geometries_[i]->get_bone_boxes();
+    //   for(uint b(0);b<bone_boxes.size();++b){
+    //     if(!bone_boxes[b].isEmpty()){
+    //       bone_boxes[b] = transform(bone_boxes[b], world_transform_);
+    //       tmp_boxes[b].expandBy(bone_boxes[b]);
+    //     }
+    //   }
+    // }
 
     return tmp_boxes;
 
