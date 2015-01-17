@@ -192,12 +192,12 @@ namespace gua {
 
     depth_pass_log_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_R_32F,
+                          scm::gl::FORMAT_D32F,
                           1, 1, 1);
 
     depth_pass_linear_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_D32F,
+                          scm::gl::FORMAT_R_32F,
                           1, 1, 1);
           
     accumulation_pass_color_result_ = ctx.render_device
@@ -222,9 +222,9 @@ namespace gua {
 
     depth_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
     depth_pass_result_fbo_->clear_attachments();
-    depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
+    depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
     depth_pass_result_fbo_->attach_color_buffer(0,
-                                                depth_pass_log_depth_result_);
+                                                depth_pass_linear_depth_result_);
 
     accumulation_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
     accumulation_pass_result_fbo_->clear_attachments();
@@ -327,68 +327,53 @@ namespace gua {
       //register context for cut-update   
        pbr::context_t context_id = _register_context_in_cut_update(ctx);
    
-       scm::gl::frame_buffer_ptr active_depth_fbo;
-       scm::gl::frame_buffer_ptr active_accumulation_fbo;
-       scm::gl::frame_buffer_ptr active_normalization_fbo;
-
-       scm::gl::texture_2d_ptr active_depth_pass_linear_depth_result;
-       scm::gl::texture_2d_ptr active_depth_pass_log_depth_result;
-       scm::gl::texture_2d_ptr active_accumulation_pass_color_result;
-       scm::gl::texture_2d_ptr active_accumulation_pass_normal_result;
-       scm::gl::texture_2d_ptr active_normalization_pass_color_result;
-       scm::gl::texture_2d_ptr active_normalization_pass_normal_result;
-
        //get handles to FBOs and textures thread safe
        {
    
-   active_depth_fbo = depth_pass_result_fbo_;
-   active_accumulation_fbo = accumulation_pass_result_fbo_;
-   active_normalization_fbo = normalization_pass_result_fbo_;
+        depth_pass_result_fbo_;
+        accumulation_pass_result_fbo_;
+        normalization_pass_result_fbo_;
 
-         active_depth_pass_linear_depth_result = depth_pass_linear_depth_result_;
-         active_depth_pass_log_depth_result = depth_pass_log_depth_result_;
-         active_accumulation_pass_color_result = accumulation_pass_color_result_;
-         active_accumulation_pass_normal_result = accumulation_pass_normal_result_;
-         active_normalization_pass_color_result = normalization_pass_color_result_;
-         active_normalization_pass_normal_result = normalization_pass_normal_result_;
+        depth_pass_linear_depth_result_;
+        depth_pass_log_depth_result_;
+        accumulation_pass_color_result_;
+        accumulation_pass_normal_result_;
+        normalization_pass_color_result_;
+        normalization_pass_normal_result_;
        }
 
        //clear render targets of active FBOs
        ctx.render_context
-         ->clear_depth_stencil_buffer(active_depth_fbo);
+         ->clear_depth_stencil_buffer(depth_pass_result_fbo_);
        ctx.render_context
-         ->clear_color_buffer(active_depth_fbo, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+         ->clear_color_buffer(depth_pass_result_fbo_, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
        ctx.render_context
-         ->clear_color_buffer(active_accumulation_fbo,
+         ->clear_color_buffer(accumulation_pass_result_fbo_,
                               0,
                               scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
        ctx.render_context
-         ->clear_color_buffer(active_accumulation_fbo,
+         ->clear_color_buffer(accumulation_pass_result_fbo_,
                               1,
                               scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 
        ctx.render_context
-         ->clear_color_buffer(active_normalization_fbo,
+         ->clear_color_buffer(normalization_pass_result_fbo_,
                               0,
                               scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0));
  
        ctx.render_context
-         ->clear_color_buffer(active_normalization_fbo,
+         ->clear_color_buffer(normalization_pass_result_fbo_,
                               1,
                               scm::math::vec3f(0.0f, 0.0f, 0.0f));
 
-       
+     pipe.get_gbuffer().set_viewport(ctx);
+
      //determine frustum parameters
      Frustum const& frustum = pipe.get_scene().frustum;
      std::vector<math::vec3> frustum_corner_values = frustum.get_corners_vs();
      float top_minus_bottom = scm::math::length((frustum_corner_values[2]) - 
                                                 (frustum_corner_values[0]));
-
-     float right_minus_left = scm::math::length((frustum_corner_values[4]) -
-                                                (frustum_corner_values[0]));
-
-     pipe.get_gbuffer().set_viewport(ctx);
 
      float height_divided_by_top_minus_bottom =
          pipe.get_gbuffer().get_height() / (top_minus_bottom);
@@ -426,39 +411,13 @@ namespace gua {
          ->set_rasterizer_state(change_point_size_in_shader_state_);
  
        ctx.render_context
-         ->set_frame_buffer(active_depth_fbo);
+         ->set_frame_buffer(depth_pass_result_fbo_);
  
        if(!depth_pass_program_) {
          std::cout << "Depth program not instanciated\n";
        }
 
        depth_pass_program_->use(ctx);
-       depth_pass_program_->apply_uniform(ctx,
-                                         "height_divided_by_top_minus_bottom",
-                                          height_divided_by_top_minus_bottom);
-       
-       depth_pass_program_->apply_uniform(ctx,
-                                          "top_minus_bottom", top_minus_bottom);
-
-       depth_pass_program_->apply_uniform(ctx,
-                                          "right_minus_left", right_minus_left);
-
-       depth_pass_program_->apply_uniform(ctx,
-                                          "render_target_width", (float) render_target_dims[0]);
-
-       depth_pass_program_->apply_uniform(ctx,
-                                          "render_target_height", (float) render_target_dims[1]);
-       
-       depth_pass_program_->apply_uniform(ctx,
-                                          "near_plane", near_plane_value);
-
-       depth_pass_program_->apply_uniform(ctx,
-                                          "far_plane", far_plane_value);
-
-       depth_pass_program_->apply_uniform(ctx,
-                                          "far_minus_near_plane",
-                                           far_plane_value - near_plane_value);
-
 
       nodes_out_of_frustum_per_model.clear();
 
@@ -557,53 +516,24 @@ namespace gua {
        ctx.render_context->set_blend_state(color_accumulation_state_);
 
        ctx.render_context
-         ->set_frame_buffer(active_accumulation_fbo);
+         ->set_frame_buffer(accumulation_pass_result_fbo_);
 
-       active_accumulation_fbo->attach_depth_stencil_buffer(active_depth_pass_linear_depth_result);
+       accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
  
        if(!accumulation_pass_program_) {
          std::cout << "Accumulation program not instanciated\n";
        }
 
-       accumulation_pass_program_->use(ctx);
-       accumulation_pass_program_->apply_uniform(ctx,
-                                                 "height_divided_by_top_minus_bottom",
-                                                 height_divided_by_top_minus_bottom);
-       
-       accumulation_pass_program_->apply_uniform(ctx,
-                                                 "near_plane", near_plane_value);
-
-       accumulation_pass_program_->apply_uniform(ctx,
-                                                 "far_plane", far_plane_value);
-
-       accumulation_pass_program_->apply_uniform(ctx,
-                                                 "far_minus_near_plane",
-                                                 far_plane_value - near_plane_value);
 
        accumulation_pass_program_->apply_uniform(ctx,
                                                  "win_dims",
                                                  render_target_dims);
 
-       ctx.render_context
-         ->bind_texture(active_depth_pass_linear_depth_result, linear_sampler_state_, 0);
+        ctx.render_context
+          ->bind_texture(depth_pass_linear_depth_result_, linear_sampler_state_, 0);
 
        accumulation_pass_program_->apply_uniform(ctx,
-                                                 "p01_depth_texture", 0);
-
-       accumulation_pass_program_->apply_uniform(ctx,
-                                          "top_minus_bottom", top_minus_bottom);
-
-       accumulation_pass_program_->apply_uniform(ctx,
-                                          "right_minus_left", right_minus_left);
-
-       accumulation_pass_program_->apply_uniform(ctx,
-                                          "render_target_width", (float) render_target_dims[0]);
-
-       accumulation_pass_program_->apply_uniform(ctx,
-                                          "render_target_height", (float) render_target_dims[1]);
-
-
-                                             
+                                                 "p01_linear_depth_texture", 0);
 
       //loop through all models and render depth pass
       for (auto const& object : sorted_objects->second) { 
@@ -632,11 +562,7 @@ namespace gua {
         scm::math::vec4f x_unit_vec(1.0, 0.0, 0.0, 0.0);
         float radius_model_scaling = scm::math::length(scm_model_matrix * x_unit_vec)
                                      * database->GetModel(model_id)->importance();         
-
-        accumulation_pass_program_->apply_uniform(ctx, 
-                                          "radius_model_scaling",
-                                           radius_model_scaling);
-        
+   
         ctx.render_context->apply();
 
         auto plod_resource = plod_node->get_geometry();
@@ -671,7 +597,7 @@ namespace gua {
        std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
 
        ctx.render_context
-         ->set_frame_buffer(active_normalization_fbo);
+         ->set_frame_buffer(normalization_pass_result_fbo_);
  
        if(!normalization_pass_program_) {
          std::cout << "Normalization program not instanciated\n";
@@ -684,12 +610,12 @@ namespace gua {
                                                  render_target_dims);
 
        ctx.render_context
-         ->bind_texture(active_accumulation_pass_color_result, linear_sampler_state_, 0);
+         ->bind_texture(accumulation_pass_color_result_, linear_sampler_state_, 0);
        normalization_pass_program_->apply_uniform(ctx,
                                                  "p02_color_texture", 0);
 
        ctx.render_context
-         ->bind_texture(active_accumulation_pass_normal_result, linear_sampler_state_, 1);
+         ->bind_texture(accumulation_pass_normal_result_, linear_sampler_state_, 1);
        normalization_pass_program_->apply_uniform(ctx,
                                                  "p02_normal_texture", 1);
                                              
@@ -724,17 +650,17 @@ namespace gua {
                                                    render_target_dims);
 
        ctx.render_context
-         ->bind_texture(active_depth_pass_log_depth_result, linear_sampler_state_, 0);
+         ->bind_texture(depth_pass_log_depth_result_, linear_sampler_state_, 0);
        reconstruction_pass_program_->apply_uniform(ctx,
                                                  "p01_depth_texture", 0);
 
        ctx.render_context
-         ->bind_texture(active_normalization_pass_color_result, linear_sampler_state_, 1);
+         ->bind_texture(normalization_pass_color_result_, linear_sampler_state_, 1);
        reconstruction_pass_program_->apply_uniform(ctx,
                                                  "p02_color_texture", 1);
 
        ctx.render_context
-         ->bind_texture(active_normalization_pass_normal_result, linear_sampler_state_, 2);
+         ->bind_texture(normalization_pass_normal_result_, linear_sampler_state_, 2);
        reconstruction_pass_program_->apply_uniform(ctx,
                                                  "p02_normal_texture", 2);
                                              
