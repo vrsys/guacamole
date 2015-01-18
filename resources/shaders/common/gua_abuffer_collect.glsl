@@ -64,11 +64,15 @@ void abuf_insert(float depth)
 
   if (success) {
     // write data
+
     uint pbr = packUnorm4x8(vec4(gua_emissivity, gua_roughness, gua_metalness, 0.0));
     pbr = bitfieldInsert(pbr, ((gua_flags_passthrough)?1u:0u), 24, 8);
 
-    ABUF_FRAG(ctr, 0) = vec4(gua_color, uintBitsToFloat(pbr));
-    ABUF_FRAG(ctr, 1) = vec4(fma(gua_normal, vec3(0.5), vec3(0.5)), 0);
+    uint col_norm = bitfieldInsert(packUnorm2x16(gua_color.bb),
+                                   packSnorm2x16(gua_normal.xx), 16, 16);
+
+    ABUF_FRAG(ctr, 0) = uvec4(packUnorm2x16(gua_color.rg), col_norm,
+                              packSnorm2x16(gua_normal.yz), pbr);
   }
 }
 
