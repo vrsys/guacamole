@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  auto load_mat = [](std::string const& file){
+  /*auto load_mat = [](std::string const& file){
     gua::MaterialShaderDescription desc;
     desc.load_from_file(file);
     auto shader(std::make_shared<gua::MaterialShader>(file, desc));
@@ -62,7 +62,9 @@ int main(int argc, char** argv) {
     return shader->get_default_material();
   };
 
-  auto mat1(load_mat("data/materials/pinky.gmd"));
+  auto mat1(load_mat("data/materials/pinky.gmd"));*/
+
+
 
   gua::SkeletalAnimationLoader loader;
   gua::SkeletalAnimationLoader loader2;
@@ -70,12 +72,12 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
 
-  auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   loader2.load_animation(teapot2, "data/objects/pinky/idle1.md5anim", 0);
   loader2.load_animation(teapot2, "data/objects/pinky/attack.md5anim", 0);
   loader2.load_animation(teapot2, "data/objects/pinky/run.md5anim", 0);
   
-  auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh", mat1,  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
   loader.load_animation(teapot, "data/objects/marine/crouch.md5anim", 0);
   loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
@@ -95,14 +97,14 @@ int main(int argc, char** argv) {
   teapot->set_draw_bounding_box(true);
   teapot2->set_draw_bounding_box(true);
 
-  auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
+  /*auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
   light->scale(10.f);
   light->rotate(-20, 0.f, 1.f, 0.f);
-  light->translate(-1.f, 0.f,  3.f);
+  light->translate(-1.f, 0.f,  3.f);*/
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->data.color = gua::utils::Color3f(0.5f, 0.5f, 1.0f);
+  light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
   light2->scale(10.f);
   light2->translate(-2.f, 3.f, 5.f);
 
@@ -122,7 +124,7 @@ int main(int argc, char** argv) {
   
   gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
 
-  auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
+  /*auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
@@ -134,7 +136,15 @@ int main(int argc, char** argv) {
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
   camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
     .radius(3)
-    .intensity(0.1);
+    .intensity(0.1);*/
+
+  auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
+  camera->translate(0, 0, 2.0);
+  camera->config.set_resolution(resolution);
+  camera->config.set_screen_path("/screen");
+  camera->config.set_scene_graph_name("main_scenegraph");
+  camera->config.set_output_window_name("main_window");
+  camera->config.set_enable_stereo(false);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
