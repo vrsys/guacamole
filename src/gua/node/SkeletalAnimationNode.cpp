@@ -76,7 +76,7 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  Material const& SkeletalAnimationNode::get_material(uint index) const {
+  std::shared_ptr<Material> SkeletalAnimationNode::get_material(uint index) const {
     if(index < materials_.size()){
       return materials_[index];
     }
@@ -92,7 +92,7 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_material(Material const& material,uint index) {
+  void SkeletalAnimationNode::set_material(std::shared_ptr<Material> material,uint index) {
     if(index < materials_.size()){
       materials_[index] = material;
       material_changed_ = self_dirty_ = true;
@@ -103,9 +103,9 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_fallback_materials(Material const& material) {
+  void SkeletalAnimationNode::set_fallback_materials(std::shared_ptr<Material> material) {
     for(auto & mat: materials_){
-      if(mat.get_shader_name() == ""){
+      if(mat->get_shader_name() == ""){
         mat = material;
         material_changed_= self_dirty_ = true;
       }

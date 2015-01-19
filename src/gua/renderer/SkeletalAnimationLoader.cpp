@@ -168,6 +168,30 @@ namespace gua {
     return std::make_shared<node::TransformNode>(node_name);
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::shared_ptr<node::Node> SkeletalAnimationLoader::create_geometry_from_file(std::string const& node_name,
+    std::string const& file_name,
+    unsigned flags)
+  {
+    //auto cached_node(load_geometry(file_name, flags));
+    auto cached_node(load_geometry(file_name,node_name,flags));
+
+    if (cached_node) {
+      //auto copy(cached_node->deep_copy());
+
+      auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
+      //apply_fallback_material(copy, shader->make_new_material());
+      apply_fallback_material(cached_node, shader->make_new_material());
+
+      //copy->set_name(node_name);
+      cached_node->set_name(node_name);
+      return cached_node;
+    }
+
+    return std::make_shared<node::TransformNode>(node_name);
+  }
+
   /////////////////////////////////////////////////////////////////////////////
 
   std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& file_name, std::string const& node_name,

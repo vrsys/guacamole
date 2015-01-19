@@ -25,34 +25,41 @@
 #include <map>
 #include <unordered_map>
 
-#include <gua/platform.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
+
+#include <gua/platform.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
 #include <scm/gl_core/shader_objects.h>
 
 namespace gua {
 
   class MaterialShader;
-  class ShaderProgram;
   class Pipeline;
+  class PipelinePassDescription;
 
 class SkeletalAnimationRenderer {
 
  public:
 
    SkeletalAnimationRenderer(RenderContext const& ctx);
-   ~SkeletalAnimationRenderer();
-  
-   void render(Pipeline& pipe);
+
+   void render(Pipeline& pipe, PipelinePassDescription const& desc);
+
+   void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
+
+   void create_state_objects(RenderContext const& ctx);
 
  private:
 
-   ProgramFactory                                                       program_factory_;
-   std::map<scm::gl::shader_stage, std::string>                         program_description_;
-   //using ProgramsMap = std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>>;
-   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
-   BoneTransformUniformBlock bones_block_;
+  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
+  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
+
+  std::vector<ShaderProgramStage>                                     program_stages_;
+  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+  SubstitutionMap                                                     global_substitution_map_;
+
+  BoneTransformUniformBlock bones_block_;
 };
 
 }
