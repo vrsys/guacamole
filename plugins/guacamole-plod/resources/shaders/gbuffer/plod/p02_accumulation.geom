@@ -36,7 +36,7 @@ void main() {
 
 
   gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
-  //gl_Position.z = (gl_Position.z - 0.1 );
+  gl_Position.z = (gl_Position.z - 0.1 );
 
   gl_Position.z = 
   VertexOut.pass_uv_coords = vec2(1.0, 1.0);
@@ -45,40 +45,40 @@ void main() {
   VertexOut.pass_normal = VertexIn[0].pass_normal;
 
   VertexOut.pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0)).z;
-  VertexOut.pass_ms_rad = VertexIn[0].pass_es_radius;//length(VertexIn[0].pass_ms_u);
+  VertexOut.pass_ms_rad = length(VertexIn[0].pass_ms_u);
   EmitVertex();
 
   gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0);
-  //gl_Position.z = (gl_Position.z - 0.1 );
+  gl_Position.z = (gl_Position.z - 0.1 );
   VertexOut.pass_uv_coords = vec2(1.0, -1.0);
 
   VertexOut.pass_point_color = VertexIn[0].pass_point_color;
   VertexOut.pass_normal = VertexIn[0].pass_normal;
 
   VertexOut.pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0) ).z;
-  VertexOut.pass_ms_rad = VertexIn[0].pass_es_radius;//length(VertexIn[0].pass_ms_u);
+  VertexOut.pass_ms_rad = length(VertexIn[0].pass_ms_u);
   EmitVertex();
 
   gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0);
-  //gl_Position.z = (gl_Position.z - 0.1 );
+  gl_Position.z = (gl_Position.z - 0.1 );
   VertexOut.pass_uv_coords = vec2(-1.0, 1.0);
 
   VertexOut.pass_point_color = VertexIn[0].pass_point_color;
   VertexOut.pass_normal = VertexIn[0].pass_normal;
 
   VertexOut.pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0) ).z;
-  VertexOut.pass_ms_rad = VertexIn[0].pass_es_radius;//length(VertexIn[0].pass_ms_u);
+  VertexOut.pass_ms_rad = length(VertexIn[0].pass_ms_u);
   EmitVertex();
 
   gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u ) - VertexIn[0].pass_ms_v), 1.0);
-  //gl_Position.z = (gl_Position.z - 0.1 );
+  gl_Position.z = (gl_Position.z - 0.1 );
   VertexOut.pass_uv_coords = vec2(-1.0, -1.0);
 
   VertexOut.pass_point_color = VertexIn[0].pass_point_color;
   VertexOut.pass_normal = VertexIn[0].pass_normal;
 
   VertexOut.pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0) ).z;
-  VertexOut.pass_ms_rad = VertexIn[0].pass_es_radius;//length(VertexIn[0].pass_ms_u);
+  VertexOut.pass_ms_rad = length(VertexIn[0].pass_ms_u);
   EmitVertex();
 
 

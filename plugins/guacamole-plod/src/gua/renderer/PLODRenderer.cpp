@@ -61,7 +61,6 @@ namespace gua {
                                  depth_pass_program_(nullptr),
                                  accumulation_pass_program_(nullptr),
                                  normalization_pass_program_(nullptr),
-                                 reconstruction_pass_program_(nullptr),
                                  current_rendertarget_width_(0),
                                  current_rendertarget_height_(0)
  {
@@ -81,9 +80,6 @@ namespace gua {
       delete normalization_pass_program_;
     }
 
-    if(reconstruction_pass_program_) {
-      delete reconstruction_pass_program_;
-    }
 //substitute this part later with shared ptr in pbr_lib
 /*
     Logger::LOG_DEBUG << "memory cleanup...(1)" << std::endl;
@@ -125,12 +121,6 @@ namespace gua {
       normalization_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p03_normalization.vert")));
       normalization_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p03_normalization.frag")));
 
-      reconstruction_pass_shader_stages_.clear();
-      reconstruction_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p04_reconstruction.vert")));
-      reconstruction_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p04_reconstruction.frag")));
-      //reconstruction_pass_shader_stages_[scm::gl::STAGE_VERTEX_SHADER] = _reconstruction_pass_vertex_shader();
-      //reconstruction_pass_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER] = _reconstruction_pass_fragment_shader();
-
       shaders_loaded_ = true;
     }
   }
@@ -165,26 +155,6 @@ namespace gua {
     assert(normalization_pass_program_);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-/*  void PLODRenderer::_initialize_reconstruction_pass_program(MaterialShader* material) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if(!reconstruction_pass_programs_.count(material)) {
-      auto program = material->get_shader(reconstruction_pass_shader_stages_);
-      reconstruction_pass_programs_[material] = program;
-    }
-    assert(reconstruction_pass_programs_.count(material));
-  }
-*/
-
-  void PLODRenderer::_initialize_reconstruction_pass_program() {
-    if(!reconstruction_pass_program_) {
-      auto new_program = new ShaderProgram;
-      new_program->set_shaders(reconstruction_pass_shader_stages_);
-      reconstruction_pass_program_ = new_program;
-    }
-    assert(reconstruction_pass_program_);
-  }
-
   ///////////////////////////////////////////////////////////////////////////////
   void PLODRenderer::_create_gpu_resources(gua::RenderContext const& ctx,
                                            scm::math::vec2ui const& render_target_dims,
@@ -210,16 +180,6 @@ namespace gua {
                           scm::gl::FORMAT_RGBA_32F,
                           1, 1, 1);
 
-    normalization_pass_color_result_ = ctx.render_device
-      ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGB_32F,
-                          1, 1, 1);
-
-    normalization_pass_normal_result_ = ctx.render_device
-      ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGB_32F,
-                          1, 1, 1);
-
     depth_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
     depth_pass_result_fbo_->clear_attachments();
     depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
@@ -234,15 +194,9 @@ namespace gua {
                                                        accumulation_pass_normal_result_);
     accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
 
-    normalization_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
-    normalization_pass_result_fbo_->clear_attachments();
-    normalization_pass_result_fbo_->attach_color_buffer(0,
-                                                        normalization_pass_color_result_);
-    normalization_pass_result_fbo_->attach_color_buffer(1,
-                                                        normalization_pass_normal_result_);
   
     linear_sampler_state_ = ctx.render_device
-      ->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+      ->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
 
     no_depth_test_depth_stencil_state_ = ctx.render_device
       ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_ALWAYS);
@@ -258,7 +212,7 @@ namespace gua {
                                                                       scm::gl::EQ_FUNC_ADD,
                                                                       scm::gl::EQ_FUNC_ADD);
 
-    change_point_size_in_shader_state_ = ctx.render_device
+    no_backface_culling_rasterizer_state_ = ctx.render_device
       ->create_rasterizer_state(scm::gl::FILL_SOLID,
                                 scm::gl::CULL_NONE,
                                 scm::gl::ORIENT_CCW,
@@ -267,7 +221,7 @@ namespace gua {
                                 0.0,
                                 false,
                                 false,
-                                scm::gl::point_raster_state(true));
+                                scm::gl::point_raster_state(false));
 
 
     fullscreen_quad_.reset(new scm::gl::quad_geometry(ctx.render_device, 
@@ -328,21 +282,6 @@ namespace gua {
       //register context for cut-update   
        pbr::context_t context_id = _register_context_in_cut_update(ctx);
    
-       //get handles to FBOs and textures thread safe
-       {
-   
-        depth_pass_result_fbo_;
-        accumulation_pass_result_fbo_;
-        normalization_pass_result_fbo_;
-
-        depth_pass_linear_depth_result_;
-        depth_pass_log_depth_result_;
-        accumulation_pass_color_result_;
-        accumulation_pass_normal_result_;
-        normalization_pass_color_result_;
-        normalization_pass_normal_result_;
-       }
-
        //clear render targets of active FBOs
        ctx.render_context
          ->clear_depth_stencil_buffer(depth_pass_result_fbo_);
@@ -357,16 +296,6 @@ namespace gua {
          ->clear_color_buffer(accumulation_pass_result_fbo_,
                               1,
                               scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-
-       ctx.render_context
-         ->clear_color_buffer(normalization_pass_result_fbo_,
-                              0,
-                              scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0));
- 
-       ctx.render_context
-         ->clear_color_buffer(normalization_pass_result_fbo_,
-                              1,
-                              scm::math::vec3f(0.0f, 0.0f, 0.0f));
 
      pipe.get_gbuffer().set_viewport(ctx);
 
@@ -409,7 +338,7 @@ namespace gua {
        std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
 
        ctx.render_context
-         ->set_rasterizer_state(change_point_size_in_shader_state_);
+         ->set_rasterizer_state(no_backface_culling_rasterizer_state_);
  
        ctx.render_context
          ->set_frame_buffer(depth_pass_result_fbo_);
@@ -420,7 +349,7 @@ namespace gua {
 
        depth_pass_program_->use(ctx);
 
-      nodes_out_of_frustum_per_model.clear();
+       nodes_out_of_frustum_per_model.clear();
 
       //loop through all models and render depth pass
       for (auto const& object : sorted_objects->second) { 
@@ -508,12 +437,12 @@ namespace gua {
        std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
 
        ctx.render_context
-         ->set_rasterizer_state(change_point_size_in_shader_state_);
+         ->set_rasterizer_state(no_backface_culling_rasterizer_state_);
  
-       //ctx.render_context
-       //   ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
        ctx.render_context
-           ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
+          ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
+       //ctx.render_context
+       //    ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
 
        ctx.render_context->set_blend_state(color_accumulation_state_);
 
@@ -526,14 +455,7 @@ namespace gua {
          std::cout << "Accumulation program not instanciated\n";
        }
 
-       accumulation_pass_program_->use(ctx);
-
-       UniformValue uniform_win_dims(render_target_dims);
-
-       accumulation_pass_program_->apply_uniform(ctx,
-                                                 "win_dims",
-                                                 uniform_win_dims);
-
+        accumulation_pass_program_->use(ctx);
 
         ctx.render_context
           ->bind_texture(depth_pass_linear_depth_result_, linear_sampler_state_, 0);
@@ -554,8 +476,8 @@ namespace gua {
         pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
         std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
 
-  UniformValue model_mat(scm_model_matrix);
-  UniformValue normal_mat(scm_normal_matrix);
+        UniformValue model_mat(scm_model_matrix);
+        UniformValue normal_mat(scm_normal_matrix);
 
         accumulation_pass_program_->apply_uniform(ctx,
                                            "gua_model_matrix",
@@ -598,13 +520,14 @@ namespace gua {
         normalization_pass_program_->save_to_file(".", "normalization_pass_debug");
       }
 
+
+     bool writes_only_color_buffer = false;
+     pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
+
      //normalization pass 
      {
        std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
 
-       ctx.render_context
-         ->set_frame_buffer(normalization_pass_result_fbo_);
- 
        if(!normalization_pass_program_) {
          std::cout << "Normalization program not instanciated\n";
        }
@@ -612,71 +535,29 @@ namespace gua {
        normalization_pass_program_->use(ctx);
 
        ctx.render_context
-         ->bind_texture(accumulation_pass_color_result_, linear_sampler_state_, 0);
+         ->bind_texture(depth_pass_log_depth_result_, linear_sampler_state_, 0);
        normalization_pass_program_->apply_uniform(ctx,
-                                                 "p02_color_texture", 0);
+                                                 "p01_depth_texture", 0);
 
        ctx.render_context
-         ->bind_texture(accumulation_pass_normal_result_, linear_sampler_state_, 1);
+         ->bind_texture(accumulation_pass_color_result_, linear_sampler_state_, 1);
        normalization_pass_program_->apply_uniform(ctx,
-                                                 "p02_normal_texture", 1);
+                                                 "p02_color_texture", 1);
+
+       ctx.render_context
+         ->bind_texture(accumulation_pass_normal_result_, linear_sampler_state_, 2);
+       normalization_pass_program_->apply_uniform(ctx,
+                                                 "p02_normal_texture", 2);
                                              
 
        fullscreen_quad_->draw(ctx.render_context);
        normalization_pass_program_->unuse(ctx);
      }
-
-
-
-      if(!reconstruction_pass_program_) {
-        _initialize_reconstruction_pass_program();
-        reconstruction_pass_program_->save_to_file(".", "reconstruction_pass_debug");
-      }
-
-     //reconstruction pass 
-     {
-       std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
-
- 
-       if(!reconstruction_pass_program_) {
-         std::cout << "Reconstruction program not instanciated\n";
-       }
-
-       bool writes_only_color_buffer = false;
-       pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
-
-       reconstruction_pass_program_->use(ctx);
-
-
-       UniformValue uniform_win_dims(render_target_dims);
-       reconstruction_pass_program_->apply_uniform(ctx,
-                                                   "win_dims",
-                                                   uniform_win_dims);
-
-       ctx.render_context
-         ->bind_texture(depth_pass_log_depth_result_, linear_sampler_state_, 0);
-       reconstruction_pass_program_->apply_uniform(ctx,
-                                                 "p01_depth_texture", 0);
-
-       ctx.render_context
-         ->bind_texture(normalization_pass_color_result_, linear_sampler_state_, 1);
-       reconstruction_pass_program_->apply_uniform(ctx,
-                                                 "p02_color_texture", 1);
-
-       ctx.render_context
-         ->bind_texture(normalization_pass_normal_result_, linear_sampler_state_, 2);
-       reconstruction_pass_program_->apply_uniform(ctx,
-                                                 "p02_normal_texture", 2);
-                                             
-
-       fullscreen_quad_->draw(ctx.render_context);
-       reconstruction_pass_program_->unuse(ctx);
-     }
-
    
        pipe.get_gbuffer().unbind(ctx);
     }
   }
+
 
 
 }

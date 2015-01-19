@@ -55,6 +55,5 @@ void main() {
   VertexOut.pass_es_radius = length( (MV * vec4(in_position, 1.0)).xyz - (MV * vec4(in_position+ms_u, 1.0)).xyz ) ;
 
   gl_Position = vec4(in_position, 1.0);
-  
 }
 

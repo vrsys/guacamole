@@ -57,8 +57,6 @@ namespace gua {
   void          _initialize_depth_pass_program();
   void          _initialize_accumulation_pass_program();
   void          _initialize_normalization_pass_program();
-  //void          _initialize_reconstruction_pass_program(MaterialShader*);
-  void          _initialize_reconstruction_pass_program();
 
   void          _create_gpu_resources(gua::RenderContext const& ctx,
                                     scm::math::vec2ui const& render_target_dims,
@@ -91,7 +89,7 @@ namespace gua {
 
     //schism-GL states:
     //////////////////////////////////////////////////////////////////////////////////////
-    scm::gl::rasterizer_state_ptr                change_point_size_in_shader_state_;
+    scm::gl::rasterizer_state_ptr                no_backface_culling_rasterizer_state_;
 
     scm::gl::sampler_state_ptr                   linear_sampler_state_;
     scm::gl::sampler_state_ptr                   nearest_sampler_state_;
@@ -122,8 +120,7 @@ namespace gua {
      *
      *   I. prerender: depth pass          - renders to custom FBO
      *  II. prerender: accumulation pass   - renders to custom FBO
-     * III. prerender: normalization pass  - renders to custom FBO
-     *  IV. final    : reconstruction pass - renders to GBuffer
+     * III. final    : normalization pass  - renders to GBuffer
      */
 
     //render target dependent resources
@@ -134,15 +131,11 @@ namespace gua {
     std::vector<ShaderProgramStage>                     depth_pass_shader_stages_;
     std::vector<ShaderProgramStage>                     accumulation_pass_shader_stages_;
     std::vector<ShaderProgramStage>                     normalization_pass_shader_stages_;
-    //std::map<scm::gl::shader_stage, std::string>        reconstruction_pass_shader_stages_;
-    std::vector<ShaderProgramStage>                     reconstruction_pass_shader_stages_;
-    
+
     //additional GPU resources 
     ShaderProgram*                                      depth_pass_program_;
     ShaderProgram*                                      accumulation_pass_program_;
     ShaderProgram*                                      normalization_pass_program_;
-    //std::unordered_map<MaterialShader*, ShaderProgram*> reconstruction_pass_programs_;
-    ShaderProgram*                                      reconstruction_pass_program_;
 
     SubstitutionMap                                     global_substitution_map_;
   };
