@@ -13,7 +13,7 @@ in VertexData {
   //input from geometry shader
   vec3 pass_ms_u;
   vec3 pass_ms_v;
-  vec3 pass_ms_center;
+  //vec3 pass_ms_center;
 } VertexIn[];
 
 out VertexData {
@@ -26,34 +26,34 @@ out VertexData {
 void main() {
 
   mat4 MV = gua_view_matrix * gua_model_matrix;
-  mat4 MVP = gua_projection_matrix * MV;
+  mat4 MVP = gua_projection_matrix * gua_view_matrix * gua_model_matrix;
 
-  gl_Position = MVP * vec4( (VertexIn[0].pass_ms_center + VertexIn[0].pass_ms_u + VertexIn[0].pass_ms_v), 1.0);
+  gl_Position = MVP * vec4( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u + VertexIn[0].pass_ms_v), 1.0);
   VertexOut.pass_uv_coords = vec2(1.0, 1.0);
   VertexOut.pass_log_depth = (gl_Position.z/gl_Position.w)/2 + 0.5;
 
-  VertexOut.pass_es_linear_depth = (MV * vec4( ( (VertexIn[0].pass_ms_center + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0)).z;
+  VertexOut.pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0)).z;
   EmitVertex();
 
-  gl_Position = MVP * vec4( ( (VertexIn[0].pass_ms_center + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0);
+  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0);
   VertexOut.pass_uv_coords = vec2(1.0, -1.0);
   VertexOut.pass_log_depth = (gl_Position.z/gl_Position.w)/2 + 0.5;
 
-  VertexOut.pass_es_linear_depth = (MV * vec4( ( (VertexIn[0].pass_ms_center + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0) ).z;
+  VertexOut.pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0) ).z;
   EmitVertex();
 
-  gl_Position = MVP * vec4( ( (VertexIn[0].pass_ms_center + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0);
+  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0);
   VertexOut.pass_uv_coords = vec2(-1.0, 1.0);
   VertexOut.pass_log_depth = (gl_Position.z/gl_Position.w)/2 + 0.5;
 
-  VertexOut.pass_es_linear_depth = (MV * vec4( ( (VertexIn[0].pass_ms_center + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0) ).z;
+  VertexOut.pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0) ).z;
   EmitVertex();
 
-  gl_Position = MVP * vec4( ( (VertexIn[0].pass_ms_center - VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0);
+  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0);
   VertexOut.pass_uv_coords = vec2(-1.0, -1.0);
   VertexOut.pass_log_depth = (gl_Position.z/gl_Position.w)/2 + 0.5;
 
-  VertexOut.pass_es_linear_depth = (MV * vec4( ( (VertexIn[0].pass_ms_center - VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0) ).z;
+  VertexOut.pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0) ).z;
   EmitVertex();
 
 

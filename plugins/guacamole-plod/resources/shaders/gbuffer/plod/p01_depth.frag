@@ -1,5 +1,9 @@
 @include "resources/shaders/common/header.glsl"
 
+//layout(early_fragment_tests) in;
+
+@include "resources/shaders/common/gua_camera_uniforms.glsl"
+
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
@@ -14,25 +18,7 @@ in VertexData {
 ///////////////////////////////////////////////////////////////////////////////
 
 // No output other than depth texture
-layout (location = 0) out float out_logarithmic_depth;
-
-///////////////////////////////////////////////////////////////////////////////
-// uniforms
-///////////////////////////////////////////////////////////////////////////////
-uniform float near_plane;
-uniform float far_minus_near_plane;
-uniform float radius_model_scaling;
-uniform float far_plane;
-
-
-uniform float top_minus_bottom;
-uniform float right_minus_left;
-uniform float render_target_width;
-uniform float render_target_height;
-
-///////////////////////////////////////////////////////////////////////////////
-// splatting methods
-///////////////////////////////////////////////////////////////////////////////
+layout (location = 0) out float out_linear_depth;
 
 ///////////////////////////////////////////////////////////////////////////////
 // main
@@ -44,8 +30,13 @@ void main() {
   if( (uv_coords.x * uv_coords.x + uv_coords.y * uv_coords.y) > 1)
     discard;
 
-  out_logarithmic_depth = VertexIn.pass_log_depth;
+  //out_logarithmic_depth = VertexIn.pass_log_depth;
 
-  gl_FragDepth = -VertexIn.pass_es_linear_depth/far_plane;
+  //if(VertexIn.pass_es_linear_depth< -5.0)
+  //  discard;
+
+  
+  out_linear_depth = -VertexIn.pass_es_linear_depth;//-(-5.0) /gua_clip_far;
+  gl_FragDepth = 0.95;
 }
 
