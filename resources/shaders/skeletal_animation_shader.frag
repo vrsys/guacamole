@@ -1,22 +1,23 @@
-@include "shaders/common/header.glsl"
-@include "shaders/common/gua_fragment_shader_input.glsl"
-@include "shaders/common/gua_camera_uniforms.glsl"
+@include "common/header.glsl"
 
-@material_uniforms
+//layout (early_fragment_tests) in;
 
-@include "shaders/common/gua_fragment_shader_output.glsl"
-@include "shaders/common/gua_global_variable_declaration.glsl"
+@include "common/gua_fragment_shader_input.glsl"
+@include "common/gua_camera_uniforms.glsl"
 
-@material_method_declarations
+@material_uniforms@
+
+@include "common/gua_fragment_shader_output.glsl"
+@include "common/gua_global_variable_declaration.glsl"
+
+@include "common/gua_abuffer_collect.glsl"
+
+@material_method_declarations_frag@
 
 void main() {
-  // vec3 tmp = gua_varying_color;
-  
-  @material_input
-  @include "shaders/common/gua_global_variable_assignment.glsl"
-  @material_method_calls
+  @material_input@
+  @include "common/gua_global_variable_assignment.glsl"
+  @material_method_calls_frag@
 
-  // gua_color = tmp;
-  
-  @include "shaders/common/gua_write_gbuffer.glsl"
+  submit_fragment(gl_FragCoord.z);
 }

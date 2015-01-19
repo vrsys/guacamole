@@ -73,8 +73,10 @@ public : // methods
 
   std::vector<std::shared_ptr<Material>>&       get_materials();
 
-  void            set_material(Material const& material, uint index);
-  void            set_fallback_materials(Material const& material);
+  std::shared_ptr<Material>                     get_material(uint index) const;
+
+  void            set_material(std::shared_ptr<Material> material, uint index);
+  void            set_fallback_materials(std::shared_ptr<Material> material);
 
   /**
   * Implements ray picking for a triangular mesh

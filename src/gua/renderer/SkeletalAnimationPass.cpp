@@ -57,15 +57,18 @@ PipelinePassDescription* SkeletalAnimationPassDescription::make_copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass SkeletalAnimationPassDescription::make_pass(RenderContext const& ctx)
+PipelinePass SkeletalAnimationPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  PipelinePass pass{*this, ctx};
+  PipelinePass pass{*this, ctx, substitution_map};
 
   auto renderer = std::make_shared<SkeletalAnimationRenderer>(ctx);
+  renderer->set_global_substitution_map(substitution_map);
+  renderer->create_state_objects(ctx);
 
   pass.process_ = [renderer](
-    PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
-    renderer->render(pipe);
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+    //pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+    renderer->render(pipe, desc);
   };
 
   return pass;
