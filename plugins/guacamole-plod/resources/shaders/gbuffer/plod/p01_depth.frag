@@ -27,7 +27,7 @@ void main() {
 
   vec2 uv_coords = VertexIn.pass_uv_coords;
 
-  if( (uv_coords.x * uv_coords.x + uv_coords.y * uv_coords.y) > 1)
+  if( dot(uv_coords, uv_coords) > 1)
     discard;
 
   //out_logarithmic_depth = VertexIn.pass_log_depth;
@@ -35,8 +35,8 @@ void main() {
   //if(VertexIn.pass_es_linear_depth< -5.0)
   //  discard;
 
-  
-  out_linear_depth = -VertexIn.pass_es_linear_depth;//-(-5.0) /gua_clip_far;
-  gl_FragDepth = 0.95;
+
+  out_linear_depth.r = -VertexIn.pass_es_linear_depth;//-(-5.0) /gua_clip_far;
+  //out_linear_depth = 0;
 }
 

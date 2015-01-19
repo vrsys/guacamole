@@ -12,7 +12,6 @@ in vec2 gua_quad_coords;
 @include "resources/shaders/common/gua_camera_uniforms.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
-uniform int   using_default_pbr_material;
 layout(binding=0) uniform sampler2D p02_color_texture;
 layout(binding=1) uniform sampler2D p02_normal_texture;
 
@@ -27,7 +26,6 @@ layout (location=1) out vec3 out_normalized_normal;
 // main
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
-
   vec3  normalized_color  = vec3(1.0);
   float output_depth  = 1.0;
   vec3  output_normal = vec3(0.0);

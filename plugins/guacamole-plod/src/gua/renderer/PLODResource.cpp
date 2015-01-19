@@ -44,6 +44,7 @@
 
 // external headers
 #include <stack>
+#include <algorithm>
 
 namespace gua {
 
@@ -97,9 +98,12 @@ void PLODResource::draw(
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
                                       n.slot_id_ * surfels_per_node,
                                       surfels_per_node_of_model);
+                                      //1);
+      //break;
     }
     
   }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

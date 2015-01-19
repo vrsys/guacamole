@@ -1,6 +1,6 @@
 @include "resources/shaders/common/header.glsl"
 
-//layout(early_fragment_tests) in;
+layout(early_fragment_tests) in;
 
 @include "resources/shaders/common/gua_camera_uniforms.glsl"
 
@@ -44,23 +44,15 @@ uniform vec2 win_dims;
 void main() {
   vec2 uv_coords = VertexIn.pass_uv_coords;
 
-  if( (uv_coords.x * uv_coords.x + uv_coords.y * uv_coords.y) > 1)
+  if( dot(uv_coords, uv_coords) > 1) 
     discard;
-  //float pass_1_linear_depth = -gua_clip_far*(texture2D(p01_linear_depth_texture, gl_FragCoord.xy/win_dims).r);
-
-  //if( gl_FragCoord.z - gl_FragCoord.z > 0.001 ) {
-    //discard;
- //}
-  
-  //if(pass_1_linear_depth == 1.0)
-  //  discard;
-
-
-
 
  
-  float pass_1_linear_depth = texture(p01_linear_depth_texture, gl_FragCoord.xy/vec2(1920.0, 1080.0)).r;
-  //if( (-pass_1_linear_depth) - VertexIn.pass_es_linear_depth > 2*VertexIn.pass_ms_rad)
+  float neg_pass_1_linear_depth = -texelFetch(p01_linear_depth_texture, ivec2(gl_FragCoord.xy), 0).r;
+
+  float neg_pass_2_linear_depth = VertexIn.pass_es_linear_depth;
+
+  //if(  (neg_pass_1_linear_depth) - (neg_pass_2_linear_depth) >= 0.5*VertexIn.pass_ms_rad)//+ VertexIn.pass_es_linear_depth  > 0.000000001 ) 
   // discard;
 
 //  if(-pass_1_linear_depth > -3.0)
@@ -92,7 +84,7 @@ void main() {
   else
   {
 */
-    out_accumulated_color = normalAdjustmentFactor * vec4(weight * VertexIn.pass_point_color, weight);
+    out_accumulated_color = vec4(weight * VertexIn.pass_point_color, weight);
     //out_accumulated_color = vec4(0.0, 1.0 * weight, 0.0, weight);
     out_accumulated_normal = normalAdjustmentFactor * vec4(weight * VertexIn.pass_normal, weight);
 //  }

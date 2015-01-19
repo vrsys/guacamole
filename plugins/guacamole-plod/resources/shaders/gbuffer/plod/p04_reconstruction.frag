@@ -12,7 +12,7 @@ in vec2 gua_quad_coords;
 @include "resources/shaders/common/gua_camera_uniforms.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
-uniform vec2  win_dims;
+uniform vec2 win_dims;
 
 
 layout(binding=0) uniform sampler2D p01_depth_texture;
@@ -39,6 +39,7 @@ void main()
 
   vec3 coords = vec3(gua_quad_coords, 0.0);
 
+  
 
       
         output_color = texture2D( p02_color_texture, coords.xy).rgb;
@@ -46,6 +47,7 @@ void main()
 
         float depthValue = texture2D( p01_depth_texture, coords.xy).r;
 
+    /*
 	{
 
 		if(depthValue != 0.0f)
@@ -158,7 +160,7 @@ void main()
 		  }
 		  else
 		  {
-			output_color = vec3(1.0,0.0,0.0);
+			//output_color = vec3(1.0,0.0,0.0);
 			
 
 
@@ -318,7 +320,7 @@ void main()
   //gl_FragDepth = 0.5;
   //output_color = vec3(1.0,0.0,0.0);
   //output_color = texture2D( vec3(depthValue,depthValue,depthValue), coords.xy).rgb;
-
+  */
   if(depthValue == 1.0)
     discard;
   
@@ -328,10 +330,10 @@ void main()
 
   vec3 gua_normal = texture2D( p02_normal_texture, coords.xy).rgb;
 
-  float gua_emissivity = 1.0;
-  float gua_roughness = 0.0;
-  float gua_metalness = 0.0;
-  bool gua_flags_passthrough = true;
+  float gua_emissivity = 0.2;
+  float gua_roughness = 0.5;
+  float gua_metalness = 1.0;
+  bool gua_flags_passthrough = false;
 
  
 

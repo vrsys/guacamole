@@ -192,7 +192,7 @@ namespace gua {
 
     depth_pass_log_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_D32F,
+                          scm::gl::FORMAT_D24,
                           1, 1, 1);
 
     depth_pass_linear_depth_result_ = ctx.render_device
@@ -212,7 +212,7 @@ namespace gua {
 
     normalization_pass_color_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGB_8,
+                          scm::gl::FORMAT_RGB_32F,
                           1, 1, 1);
 
     normalization_pass_normal_result_ = ctx.render_device
@@ -232,6 +232,7 @@ namespace gua {
                                                        accumulation_pass_color_result_);
     accumulation_pass_result_fbo_->attach_color_buffer(1,
                                                        accumulation_pass_normal_result_);
+    accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
 
     normalization_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
     normalization_pass_result_fbo_->clear_attachments();
@@ -247,7 +248,7 @@ namespace gua {
       ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_ALWAYS);
 
     depth_test_without_writing_depth_stencil_state_ = ctx.render_device
-      ->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS);
+      ->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS_EQUAL);
 
     color_accumulation_state_ = ctx.render_device->create_blend_state(true,
                                                                       scm::gl::FUNC_ONE,
@@ -501,6 +502,7 @@ namespace gua {
         accumulation_pass_program_->save_to_file(".", "accumulation_pass_debug");
       }
 
+
      //accumulation pass 
      {
        std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
@@ -509,7 +511,7 @@ namespace gua {
          ->set_rasterizer_state(change_point_size_in_shader_state_);
  
        //ctx.render_context
-       //  ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
+       //   ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
        ctx.render_context
            ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
 
@@ -524,10 +526,14 @@ namespace gua {
          std::cout << "Accumulation program not instanciated\n";
        }
 
+       accumulation_pass_program_->use(ctx);
+
+       UniformValue uniform_win_dims(render_target_dims);
 
        accumulation_pass_program_->apply_uniform(ctx,
                                                  "win_dims",
-                                                 render_target_dims);
+                                                 uniform_win_dims);
+
 
         ctx.render_context
           ->bind_texture(depth_pass_linear_depth_result_, linear_sampler_state_, 0);
@@ -605,10 +611,6 @@ namespace gua {
 
        normalization_pass_program_->use(ctx);
 
-       normalization_pass_program_->apply_uniform(ctx,
-                                                 "win_dims",
-                                                 render_target_dims);
-
        ctx.render_context
          ->bind_texture(accumulation_pass_color_result_, linear_sampler_state_, 0);
        normalization_pass_program_->apply_uniform(ctx,
@@ -645,9 +647,11 @@ namespace gua {
 
        reconstruction_pass_program_->use(ctx);
 
+
+       UniformValue uniform_win_dims(render_target_dims);
        reconstruction_pass_program_->apply_uniform(ctx,
                                                    "win_dims",
-                                                   render_target_dims);
+                                                   uniform_win_dims);
 
        ctx.render_context
          ->bind_texture(depth_pass_log_depth_result_, linear_sampler_state_, 0);

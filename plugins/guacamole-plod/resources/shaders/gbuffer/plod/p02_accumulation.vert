@@ -23,6 +23,7 @@ out VertexData {
 
   vec3 pass_point_color;
   vec3 pass_normal;
+  float pass_es_radius;
 } VertexOut;
 
 
@@ -42,11 +43,16 @@ void main() {
     ms_u = vec3( (-ms_n.y -ms_n.z)/ms_n.x , 1, 1);
   }
 
-  VertexOut.pass_ms_u = normalize(ms_u) * in_radius;
-  VertexOut.pass_ms_v = normalize( cross(ms_n,ms_u) ) * in_radius;
+  
+  VertexOut.pass_ms_u = normalize(ms_u) * 1.0 * in_radius;
+  VertexOut.pass_ms_v = normalize( cross(ms_n,ms_u) ) * 1.0 * in_radius;
 
   VertexOut.pass_point_color = vec3(in_r, in_g, in_b);
   VertexOut.pass_normal = (gua_normal_matrix * vec4(ms_n, 0.0)).xyz;
+  
+  mat4 MV = gua_view_matrix * gua_model_matrix;
+
+  VertexOut.pass_es_radius = length( (MV * vec4(in_position, 1.0)).xyz - (MV * vec4(in_position+ms_u, 1.0)).xyz ) ;
 
   gl_Position = vec4(in_position, 1.0);
   

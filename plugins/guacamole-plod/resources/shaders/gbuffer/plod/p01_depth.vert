@@ -40,8 +40,8 @@ void main() {
     ms_u = vec3( (-ms_n.y -ms_n.z)/ms_n.x , 1, 1);
   }
 
-  VertexOut.pass_ms_u = normalize(ms_u) * in_radius;
-  VertexOut.pass_ms_v = normalize( cross(ms_n,ms_u) ) * in_radius;
+  VertexOut.pass_ms_u = normalize(ms_u) * 1.0 * in_radius;
+  VertexOut.pass_ms_v = normalize( cross(ms_n,ms_u) ) * 1.0 * in_radius;
 
   gl_Position = vec4(in_position, 1.0);
 }
