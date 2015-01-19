@@ -32,7 +32,6 @@
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/MaterialShader.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/WindowBase.hpp>
 #include <gua/video3d/Video3DResource.hpp>
 #include <gua/video3d/Video3DNode.hpp>

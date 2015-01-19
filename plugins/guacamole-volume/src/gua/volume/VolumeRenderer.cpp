@@ -41,21 +41,13 @@ VolumeRenderer::VolumeRenderer():
   composite_shader_(),
   ray_generation_shader_(),
   depth_stencil_state_(nullptr),
-  blend_state_(nullptr) 
+  blend_state_(nullptr)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-VolumeRenderer::~VolumeRenderer() {
-  if (volume_raygeneration_fbo_) delete volume_raygeneration_fbo_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void VolumeRenderer::render(Pipeline& pipe) {
-
   if (pipe.get_scene().nodes[std::type_index(typeid(node::VolumeNode))].size() > 0) {
-    
     if (!volume_raygeneration_fbo_) {
       init_resources(pipe);
     }
@@ -65,11 +57,15 @@ void VolumeRenderer::render(Pipeline& pipe) {
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
 
     // 1. render proxy geometry into fbo
-    volume_raygeneration_fbo_->bind(ctx);
+    ctx.render_context->set_frame_buffer(volume_raygeneration_fbo_);
     {
-      volume_raygeneration_fbo_->set_viewport(ctx);
-      volume_raygeneration_fbo_->clear_color_buffers(ctx, gua::utils::Color3f(0.0f, 0.0f, 0.0f));
-      volume_raygeneration_fbo_->clear_depth_stencil_buffer(ctx);
+      ctx.render_context->set_viewport(
+          scm::gl::viewport(math::vec2(0.0f, 0.0f),
+          math::vec2(float(pipe.get_gbuffer().get_width()),
+                     float(pipe.get_gbuffer().get_height()))));
+      ctx.render_context->clear_color_buffers(
+          volume_raygeneration_fbo_, math::vec4(0, 0, 0, 0.f));
+      ctx.render_context->clear_depth_stencil_buffer(volume_raygeneration_fbo_);
 
       for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::VolumeNode))]) {
 
@@ -85,10 +81,10 @@ void VolumeRenderer::render(Pipeline& pipe) {
         }
       }
     }
-    volume_raygeneration_fbo_->unbind(ctx);
+    ctx.render_context->reset_framebuffer();
 
     scm::gl::context_all_guard cug(ctx.render_context);
-    
+
     ctx.render_context->set_blend_state(blend_state_);
 
     // 2. render fullscreen quad for compositing and volume ray casting
@@ -140,9 +136,11 @@ void VolumeRenderer::init_resources(Pipeline& pipe) {
     scm::gl::FORMAT_D24, 1, state
   );
 
-  volume_raygeneration_fbo_ = new FrameBufferObject();
-  volume_raygeneration_fbo_->attach_color_buffer(ctx, 0, volume_raygeneration_color_buffer_);
-  volume_raygeneration_fbo_->attach_depth_stencil_buffer(ctx, volume_raygeneration_depth_buffer_);
+  volume_raygeneration_fbo_ = ctx.render_device->create_frame_buffer();
+  volume_raygeneration_fbo_->attach_color_buffer(0,
+      volume_raygeneration_color_buffer_->get_buffer(ctx), 0, 0);
+  volume_raygeneration_fbo_->attach_depth_stencil_buffer(
+      volume_raygeneration_depth_buffer_->get_buffer(ctx), 0, 0);
 
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
   std::string vertex_shader   = program_factory_.read_shader_file("resources/shaders/common/fullscreen_quad.vert");
