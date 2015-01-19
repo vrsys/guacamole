@@ -23,8 +23,10 @@
 #define GUA_SHADOW_MAP_BUFFER_HPP
 
 // guacamole headers
-#include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/enums.hpp>
+#include <gua/renderer/Texture2D.hpp>
+
+#include <memory>
 
 namespace gua {
 
@@ -47,7 +49,7 @@ class ShadowMapBuffer {
   unsigned get_height() const { return height_; }
 
  private:
-  std::shared_ptr<FrameBufferObject> fbo_;
+  //std::shared_ptr<FrameBufferObject> fbo_;
   std::shared_ptr<Texture2D> depth_buffer_;
 
   unsigned width_, height_;

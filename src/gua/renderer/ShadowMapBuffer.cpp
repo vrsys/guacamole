@@ -32,7 +32,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 ShadowMapBuffer::ShadowMapBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
-  fbo_(new FrameBufferObject()),
+  //fbo_(new FrameBufferObject()),
   width_(resolution.x),
   height_(resolution.y) {
 
@@ -41,38 +41,38 @@ ShadowMapBuffer::ShadowMapBuffer(RenderContext const& ctx, math::vec2ui const& r
     scm::gl::WRAP_MIRRORED_REPEAT);
 
   depth_buffer_ = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_D24, 1, state);
-  fbo_->attach_depth_stencil_buffer(ctx, depth_buffer_);
+  //fbo_->attach_depth_stencil_buffer(ctx, depth_buffer_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMapBuffer::clear(RenderContext const& ctx) {
-  fbo_->clear_depth_stencil_buffer(ctx);
+  //fbo_->clear_depth_stencil_buffer(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMapBuffer::set_viewport(RenderContext const& ctx) {
-  fbo_->set_viewport(ctx);
+  //fbo_->set_viewport(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMapBuffer::bind(RenderContext const& ctx) {
-  fbo_->bind(ctx);
+  //fbo_->bind(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMapBuffer::unbind(RenderContext const& ctx) {
-  fbo_->unbind(ctx);
+  //fbo_->unbind(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShadowMapBuffer::remove_buffers(RenderContext const& ctx) {
-  fbo_->unbind(ctx);
-  fbo_->remove_attachments();
+  //fbo_->unbind(ctx);
+  //fbo_->remove_attachments();
 
   if (depth_buffer_) {
     depth_buffer_->make_non_resident(ctx);
