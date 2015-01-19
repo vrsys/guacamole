@@ -120,9 +120,7 @@ void Material::set_uniforms_from_serialized_string(std::string const& value) {
   for (auto& token : tokens) {
     auto parts(string_utils::split(token, '#'));
     set_uniform(parts[0], ViewDependentUniform::create_from_serialized_string(parts[1]));
-
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

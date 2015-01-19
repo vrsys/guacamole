@@ -46,8 +46,8 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   auto load_mat = [](std::string const& file){
-    gua::MaterialShaderDescription desc;
-    desc.load_from_file(file);
+    auto desc(std::make_shared<gua::MaterialShaderDescription>());
+    desc->load_from_file(file);
     auto shader(std::make_shared<gua::MaterialShader>(file, desc));
     gua::MaterialShaderDatabase::instance()->add(shader);
     return shader->make_new_material();

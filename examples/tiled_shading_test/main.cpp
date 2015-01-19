@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  gua::MaterialShaderDescription desc;
-  desc.load_from_file("data/materials/SimpleMaterial.gmd");
+  auto desc(std::make_shared<gua::MaterialShaderDescription>());
+  desc->load_from_file("data/materials/SimpleMaterial.gmd");
 
   auto shader(std::make_shared<gua::MaterialShader>("simple_mat", desc));
   gua::MaterialShaderDatabase::instance()->add(shader);
