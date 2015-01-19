@@ -3,7 +3,6 @@
 
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/LightTable.hpp>
-#include <gua/renderer/FrameBufferObject.hpp>
 
 namespace gua {
 
@@ -33,7 +32,7 @@ class LightVisibilityRenderer {
                            std::vector<math::mat4>& transforms,
                            LightTable::array_type& lights) const;
 
-  FrameBufferObject empty_fbo_;
+  scm::gl::frame_buffer_ptr empty_fbo_ = nullptr;
 };
 
 }

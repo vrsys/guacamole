@@ -23,8 +23,11 @@
 #define GUA_GBUFFER_HPP
 
 // guacamole headers
-#include <gua/renderer/FrameBufferObject.hpp>
 #include <gua/renderer/enums.hpp>
+#include <gua/platform.hpp>
+#include <gua/renderer/Texture2D.hpp>
+
+#include <memory>
 
 namespace gua {
 
@@ -56,11 +59,11 @@ class GUA_DLL GBuffer {
   unsigned get_height() const { return height_; }
 
  private:
-  std::shared_ptr<FrameBufferObject> fbo_read_;
-  std::shared_ptr<FrameBufferObject> fbo_write_;
-  
-  std::shared_ptr<FrameBufferObject> fbo_read_only_color_;
-  std::shared_ptr<FrameBufferObject> fbo_write_only_color_;
+  scm::gl::frame_buffer_ptr fbo_read_;
+  scm::gl::frame_buffer_ptr fbo_write_;
+
+  scm::gl::frame_buffer_ptr fbo_read_only_color_;
+  scm::gl::frame_buffer_ptr fbo_write_only_color_;
 
   std::shared_ptr<Texture2D> color_buffer_read_;
   std::shared_ptr<Texture2D> color_buffer_write_;

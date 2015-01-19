@@ -22,12 +22,10 @@
 #include <gua/guacamole.hpp>
 #include <random>
 
-#define COUNT 5
-
 int main(int argc, char** argv) {
 
   // initialize guacamole
-  gua::init(argc, argv);
+  gua::init(0,0);
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
@@ -39,41 +37,71 @@ int main(int argc, char** argv) {
   gua::MaterialShaderDatabase::instance()->add(shader);
 
   gua::TriMeshLoader loader;
-  auto add_oilrig = [&](int x, int y) {
-    auto t = graph.add_node<gua::node::TransformNode>("/", "rig_" + std::to_string(x) + "_" + std::to_string(y));
-    t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/2, 0);
 
-    auto rig(loader.create_geometry_from_file(
-      "rig",
-      //"I:/models/Paris/Paris2010_0.obj",
-      // "I:/models/Batman/Batman.obj",
-      "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-      shader->make_new_material(),
-      gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE |
-      gua::TriMeshLoader::LOAD_MATERIALS |
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY
-    ));
-    t->add_child(rig);
+  int mode{1};
+  if (argc > 1) {
+    if      (argv[1][0] == '1') mode = 1;
+    else if (argv[1][0] == '2') mode = 2;
+    else if (argv[1][0] == '3') mode = 3;
+  }
+
+  auto add_oilrig = [&](float x, float y) {
+    auto oilrig(loader.create_geometry_from_file("oilrig_"+std::to_string(x)+std::to_string(y),
+                                                 "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+                                                 shader->make_new_material(),
+                                                 gua::TriMeshLoader::NORMALIZE_POSITION
+                                               | gua::TriMeshLoader::NORMALIZE_SCALE
+                                               | gua::TriMeshLoader::LOAD_MATERIALS
+                                               | gua::TriMeshLoader::OPTIMIZE_GEOMETRY));
+    oilrig->translate(x, y, 0.f);
+    return oilrig;
   };
 
-  for (int x(0); x<COUNT; ++x) {
-    for (int y(0); y<COUNT; ++y) {
-      add_oilrig(x, y);
-    }
-  }
+  auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+  graph.add_node("/transform", add_oilrig(0, 0));
+  graph.add_node("/transform", add_oilrig(0, 1));
+  graph.add_node("/transform", add_oilrig(-1,0));
+  graph.add_node("/transform", add_oilrig(-1,1));
+  graph.add_node("/transform", add_oilrig(-2,2));
+  graph.add_node("/transform", add_oilrig(-2,1));
+  graph.add_node("/transform", add_oilrig(-1,2));
+  graph.add_node("/transform", add_oilrig(-1,2));
+  transform->scale(2.1f);
+  transform->rotate(-90, 1, 0, 0);
+  transform->rotate(-40, 0, 1, 0);
+  transform->rotate(10, 1, 0, 0);
+  transform->translate(0.4f, 0.f, 0.f);
 
   auto resolution = gua::math::vec2ui(1920, 1080);
   std::mt19937 gen(std::minstd_rand0{}());
 
-  std::uniform_real_distribution<> dst(-2, 2);
-  std::uniform_real_distribution<> dst_c(0.3, 1);
+  std::uniform_real_distribution<> dstx(-2.f, 2.f);
+  std::uniform_real_distribution<> dsty(0.f, 2.f);
+  std::uniform_real_distribution<> dstz(-6.f, 1.f);
+  std::uniform_real_distribution<> dstc(0.2, 0.7);
 
-  for (int i = 0; i < 100; ++i) {
-    auto light = graph.add_node<gua::node::PointLightNode>("/", "light_"+std::to_string(i));
-    light->data.set_color(gua::utils::Color3f(dst_c(gen), dst_c(gen), dst_c(gen)));
-    light->scale(1.4f);
-    light->translate(dst(gen), dst(gen), dst(gen));
+  int max_lights = 32;
+
+  if (mode == 1 || mode == 2) {
+    for (int i = 0; i < 256; ++i) {
+      auto light = graph.add_node<gua::node::PointLightNode>("/", "light_"+std::to_string(i));
+      light->data.set_color(gua::utils::Color3f(dstc(gen), dstc(gen), dstc(gen)));
+      if (mode == 1)
+        light->scale(1.2);
+      else
+        light->scale(0.8);
+      light->translate(dstx(gen), dsty(gen), dstz(gen));
+    }
+    max_lights = 256;
+  }
+
+  if (mode == 3) {
+    auto light1 = graph.add_node<gua::node::PointLightNode>("/", "big_light1");
+    light1->scale(16.0);
+    light1->translate(0.f, 3.f, 2.f);
+    auto light2 = graph.add_node<gua::node::PointLightNode>("/", "big_light2");
+    light2->scale(18.0);
+    light2->translate(3.f, -3.f, 1.f);
   }
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
@@ -91,8 +119,9 @@ int main(int argc, char** argv) {
   // tiled shading pipeline with A-Buffer support
   auto pipe_tiled(std::make_shared<gua::PipelineDescription>());
   pipe_tiled->add_pass<gua::TriMeshPassDescription>();
-  pipe_tiled->add_pass<gua::LightVisibilityPassDescription>().tile_power(8);
-  pipe_tiled->add_pass<gua::ResolvePassDescription>().tone_mapping_exposure(0.1f);
+  pipe_tiled->add_pass<gua::LightVisibilityPassDescription>().tile_power(3);
+  pipe_tiled->add_pass<gua::ResolvePassDescription>().tone_mapping_exposure(0.1f).debug_tiles(false);
+  pipe_tiled->set_max_lights_count(max_lights);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -117,16 +146,57 @@ int main(int argc, char** argv) {
   });
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
       if (action != 0) return;
-      if ('1' == key) {
+      if ('Q' == key) {
         camera->set_pipeline_description(pipe_deferred);
         std::cout << "Pipeline: deferred" << std::endl;
-      } else if ('2' == key) {
+      } else if ('W' == key) {
         camera->set_pipeline_description(pipe_tiled);
         std::cout << "Pipeline: tiled" << std::endl;
       }
+
       if ('T' == key) {
         pipe_tiled->set_enable_abuffer(!pipe_tiled->get_enable_abuffer());
         std::cout << "Enable A-Buffer: " << pipe_tiled->get_enable_abuffer() << std::endl;
+      }
+
+      auto& d = pipe_tiled->get_pass<gua::LightVisibilityPassDescription>();
+      if ('1' == key) {
+        d.rasterization_mode(gua::LightVisibilityPassDescription::AUTO);
+        std::cout << "Rast mode: AUTO\n"; d.touch();
+      }
+      if ('2' == key) {
+        d.rasterization_mode(gua::LightVisibilityPassDescription::SIMPLE);
+        std::cout << "Rast mode: SIMPLE\n"; d.touch();
+      }
+      if ('3' == key) {
+        d.rasterization_mode(gua::LightVisibilityPassDescription::CONSERVATIVE);
+        std::cout << "Rast mode: CONSERVATIVE\n"; d.touch();
+      }
+      if ('4' == key) {
+        d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_2);
+        std::cout << "Rast mode: MULTISAMPLED_2\n"; d.touch();
+      }
+      if ('5' == key) {
+        d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_4);
+        std::cout << "Rast mode: MULTISAMPLED_4\n"; d.touch();
+      }
+      if ('6' == key) {
+        d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_8);
+        std::cout << "Rast mode: MULTISAMPLED_8\n"; d.touch();
+      }
+      if ('7' == key) {
+        d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_16);
+        std::cout << "Rast mode: MULTISAMPLED_16\n"; d.touch();
+      }
+      if ('8' == key) {
+        d.rasterization_mode(gua::LightVisibilityPassDescription::FULLSCREEN_FALLBACK);
+        std::cout << "Rast mode: FULLSCREEN_FALLBACK\n"; d.touch();
+      }
+
+      if ('9' == key || '0' == key) {
+        d.tile_power(d.tile_power() + ((key=='9')?1:-1));
+        std::cout << "Tile size: " << std::pow(2, d.tile_power()) <<"\n";
+        d.touch();
       }
     });  window->open();
 
@@ -138,12 +208,6 @@ int main(int argc, char** argv) {
   size_t ctr{};
 
   ticker.on_tick.connect([&]() {
-
-    for (int x(0); x<COUNT; ++x) {
-      for (int y(0); y<COUNT; ++y) {
-        //graph["/rig_" + std::to_string(x) + "_" + std::to_string(y) + "/rig"]->rotate(0.1, 0, 1, 0);
-      }
-    }
 
     if (ctr++ % 150 == 0)
       std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "

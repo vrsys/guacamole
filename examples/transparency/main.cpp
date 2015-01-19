@@ -27,12 +27,11 @@
 
 int main(int argc, char** argv) {
   
-  std::string directory("/home/zapa4360/Textures/");
   auto resolution = gua::math::vec2ui(1920, 1080);
 
   // navigation
   scm::gl::trackball_manipulator trackball;
-  //trackball.transform_matrix(scm::math::make_translation(1.2f, -0.1f, 1.4f ));
+  trackball.transform_matrix(scm::math::make_translation(0.f, -0.5f, 0.f));
   trackball.dolly(0.2f);
   float dolly_sens = 1.5f;
   gua::math::vec2 trackball_init_pos(0.f);
@@ -57,66 +56,39 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
-  auto transform3 = graph.add_node<gua::node::TransformNode>("/", "transform3");
-  /*auto teapot(loader.create_geometry_from_file("teapot","/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj", mat_glass,
-                                               gua::TriMeshLoader::NORMALIZE_POSITION 
-                                               | gua::TriMeshLoader::NORMALIZE_SCALE 
-                                               //| gua::TriMeshLoader::LOAD_MATERIALS 
-                                               | gua::TriMeshLoader::OPTIMIZE_GEOMETRY));*/
 
   // Load Monkey
   auto mat_glass(load_mat("data/materials/Glass.gmd"));
-  auto monkey(loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", mat_glass, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  mat_glass->set_uniform("color", gua::math::vec3(1.f, 0.f, 0.f)).set_show_back_faces(true);
+  auto monkey(loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", mat_glass,
+                                               gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   monkey->scale(0.3f);
   monkey->translate(0.3f, 0.15f, 0.f);
   monkey->set_draw_bounding_box(true);
   graph.add_node("/transform", monkey);
 
-  // Load AKS74
-  /*auto mat_ak(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-  mat_ak->set_uniform("ColorMap", directory + "aks74/albedo.jpg");
-  mat_ak->set_uniform("NormalMap", directory + "aks74/n.jpg");
-  mat_ak->set_uniform("MetalnessMap", directory + "aks74/metalness.jpg");
-  mat_ak->set_uniform("RoughnessMap", directory + "aks74/g.jpg");
-  auto ak(loader.create_geometry_from_file("ak", "/home/zapa4360/Textures/aks74/Low.obj", mat_ak, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  ak->scale(0.5f);
-  ak->translate(-0.3f, 0.15f, -0.2f);
-  graph.add_node("/transform", ak);*/
+  // Load bottle
+  auto mat_bottle(load_mat("data/materials/Bottle.gmd"));
+  mat_bottle->set_uniform("ColorMap",     std::string("data/objects/bottle/albedo.png"))
+             .set_uniform("RoughnessMap", std::string("data/objects/bottle/roughness.jpg"))
+             .set_show_back_faces(true);
 
-  // Load cardboard
-  auto mat_cb(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-  mat_cb->set_uniform("ColorMap", directory + "cardboard/albedo.png");
-  mat_cb->set_uniform("NormalMap", directory + "cardboard/normal.png");
-  mat_cb->set_uniform("MetalnessMap", directory + "cardboard/metalness.png");
-  mat_cb->set_uniform("RoughnessMap", directory + "cardboard/roughness.png");
-  auto cardboard(loader.create_geometry_from_file("cardboard", "/home/zapa4360/Textures/cardboard/cb.obj", mat_cb, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform2", cardboard);
+  // Original bottle model is taken from http://www.sweethome3d.com (Licensed under Free Art License)
+  auto bottle(loader.create_geometry_from_file("bottle", "data/objects/bottle/bottle.obj", mat_bottle,
+                                               gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  graph.add_node("/transform2", bottle);
 
-  // Load platform
-  auto mat_platform(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-  mat_platform->set_uniform("ColorMap", directory + "pool_tiles/Tileable_Blue_Mosaic_Pool_Tiles_Texture.jpg");
-  mat_platform->set_uniform("NormalMap", directory + "pool_tiles/Tileable_Blue_Mosaic_Pool_Tiles_Texture_NORMAL.jpg");
-  mat_platform->set_uniform("RoughnessMap", directory + "pool_tiles/Tileable_Blue_Mosaic_Pool_Tiles_Texture_ROUGHNESS.jpg");
-  auto platform(loader.create_geometry_from_file("platform", "data/objects/platform.obj", mat_platform, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform", platform);
-
-  // Load plane
-  auto mat_simple(load_mat("data/materials/SimpleMaterial.gmd"));
-  mat_simple->set_uniform("diffuse_map", directory + "gradient2.png");
-  auto gr(loader.create_geometry_from_file("platform", "data/objects/plane.obj", mat_simple, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  transform3->scale(0.3f);
-  transform3->rotate(90.f, 1.f, 0.f, 0.f);
-  transform3->translate(-1.2f, 0.1f, 0.f);
-  graph.add_node("/transform3", gr);
-
-  auto gr2(loader.create_geometry_from_file("platform", "data/objects/plane.obj", mat_simple, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  gr2->rotate(90.f, 0.f, 1.f, 0.f);
-  gr2->translate(0.f, 0.3f, 0.f);
-  graph.add_node("/transform3", gr2);
-
+  // Load box (texture originals are taken from http://texturise.blogspot.de/)
+  std::string directory("/home/zapa4360/Textures/");
+  auto mat_box(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+  mat_box->set_uniform("ColorMap",     directory + "parquet2/albedo.jpg")
+          .set_uniform("NormalMap",    directory + "parquet2/normal.jpg")
+          .set_uniform("RoughnessMap", directory + "parquet2/roughness.jpg");
+  auto box(loader.create_geometry_from_file("box", "data/objects/inverted_box.obj", mat_box, gua::TriMeshLoader::DEFAULTS));
+  graph.add_node("/transform", box);
 
   transform2->scale(0.3f);
-  transform2->translate(0.f, 0.1f, 0.f);
+  transform2->translate(0.f, 0.15f, 0.f);
 
   // Portal
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
@@ -126,56 +98,43 @@ int main(int argc, char** argv) {
   portal->rotate(-30, 0.f, 1.f, 0.f);
 
   // Lights
-
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
-  //light->data.set_enable_shadows(true);
-  light->scale(3.f);
-  light->rotate(-20, 0.f, 1.f, 0.f);
-  light->translate(-2.f, 0.f,  3.f);
-  light->data.set_color(gua::utils::Color3f(1.0f, 0.6f, 1.0f));//*/
+  light->data.set_brightness(10.0f);
+  light->scale(2.f);
+  light->rotate(-10, 0.f, 1.f, 0.f);
+  light->rotate(-10, 1.f, 0.f, 0.f);
+  light->translate(-0.2f, 0.5f,  1.f);
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->scale(14.f);
-  light2->translate(-2.f, 3.f, 5.f);
+  light2->data.set_brightness(10.0f);
+  light2->scale(1.2f);
+  light2->translate(0.4f, 0.7f, -0.4f);
 
   auto light3 = graph.add_node<gua::node::PointLightNode>("/", "light3");
-  light3->scale(12.f);
-  //light3->data.set_color(gua::utils::Color3f(0.6f, 1.f, 0.6f));
-  light3->translate(2.f, 2.f, -5.f);
-
-  /*auto light4 = graph.add_node<gua::node::PointLightNode>("/", "light4");
-  light4->scale(7.f);
-  light4->data.set_color(gua::utils::Color3f(1.f, 0.6f, 0.6f));
-  light4->translate(0.f, 5.f, 5.f);*/
+  light3->scale(6.f);
+  light3->translate(2.f, 1.f, -5.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  //screen->translate(0, 0, 1.0);
 
   auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
   portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
 
-
   // setup rendering pipeline and window
-  
   auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0, 0, 2.0);
+  portal_camera->translate(0.f, 0.8f, 2.f);
   portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
-  //portal_camera->config.set_resolution(resolution);
   portal_camera->config.set_screen_path("/portal_screen");
   portal_camera->config.set_scene_graph_name("main_scenegraph");
   portal_camera->config.set_output_texture_name("portal");
   portal_camera->config.set_enable_stereo(false);
 
-  gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
   gua::TextureDatabase::instance()->load("data/checkerboard.png");
 
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass<gua::TriMeshPassDescription>();
   portal_pipe->add_pass<gua::LightVisibilityPassDescription>();
-  portal_pipe->add_pass<gua::ResolvePassDescription>()
-    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  portal_pipe->add_pass<gua::ResolvePassDescription>();
   portal_pipe->set_enable_abuffer(true);
   portal_camera->set_pipeline_description(portal_pipe);
 
@@ -189,14 +148,8 @@ int main(int argc, char** argv) {
   camera->set_pre_render_cameras({portal_camera});
   camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>()
     .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
-    //.texture("/opt/guacamole/resources/skymaps/skymap.jpg");
     .texture("data/checkerboard.png");
   camera->get_pipeline_description()->set_enable_abuffer(true);
-
-  float alpha = 0.f;
-  float alpha_d = 0.001f;
-
-  bool drag_mode = false;
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -210,6 +163,8 @@ int main(int argc, char** argv) {
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
     resolution = new_size;
   });
+
+  bool drag_mode = false;
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
     float nx = 2.f * float(pos.x - (resolution.x/2))/float(resolution.x);
     float ny = -2.f * float(resolution.y - pos.y - (resolution.y/2))/float(resolution.y);
@@ -248,16 +203,19 @@ int main(int argc, char** argv) {
       button_state = -1;
   });
 
+
+  float blend_thres = 0.99f;
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
       if (action != 0) {
         //std::cout << "key press " << char(key) << " action: " << action <<"\n";
         auto& d = camera->get_pipeline_description()->get_pass<gua::LightVisibilityPassDescription>();
+        auto& d_r = camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>();
 
         if ('W' == key) { // forward
-          cardboard->rotate(-5.0, 1.f, 0.f, 0.f);
+          bottle->rotate(-5.0, 1.f, 0.f, 0.f);
         }
         if ('S' == key) { // backward
-          cardboard->rotate(5.0, 1.f, 0.f, 0.f);
+          bottle->rotate(5.0, 1.f, 0.f, 0.f);
         }
 
         if ('1' == key) {
@@ -293,21 +251,15 @@ int main(int argc, char** argv) {
           std::cout << "Rast mode: FULLSCREEN_FALLBACK\n"; d.touch();
         }
 
-        if ('9' == key) {
-          d.tile_power(d.tile_power() + 1);
-          std::cout << "tile size: " << std::pow(2, d.tile_power()) <<"\n";
-          d.touch();
-        }
-        if ('0' == key) {
-          d.tile_power(d.tile_power() - 1);
-          std::cout << "tile size: " << std::pow(2, d.tile_power()) <<"\n";
+        if ('9' == key || '0' == key) {
+          d.tile_power(d.tile_power() + ((key=='9')?1:-1));
+          std::cout << "Tile size: " << std::pow(2, d.tile_power()) <<"\n";
           d.touch();
         }
         if ('Q' == key) {
-          auto& d_r = camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>();
           d_r.debug_tiles(!d_r.debug_tiles());
           std::cout << "Debug tiles: " << d_r.debug_tiles() <<"\n";
-          d.touch();
+          d_r.touch();
         }
         if ('T' == key) {
           auto& desc = camera->get_pipeline_description();
@@ -316,11 +268,10 @@ int main(int argc, char** argv) {
           std::cout << "Enable A-Buffer: " << desc->get_enable_abuffer() <<"\n";
         }
         if ('Z' == key || 'X' == key) {
-          alpha += ('Z' == key) ? 0.05f : -0.05f;
-          alpha = std::max(std::min(alpha, 1.f), 0.f);
-          mat_glass->set_uniform("alpha", alpha);
-
-          std::cout << "alpha: " << alpha << std::endl;
+          blend_thres += ('Z' == key) ? 0.005f : -0.005f;
+          blend_thres = std::max(std::min(blend_thres, 1.f), 0.5f);
+          camera->get_pipeline_description()->set_blending_termination_threshold(blend_thres);
+          std::cout << "Early termination threshold: " << blend_thres << std::endl;
         }
       }
     });
@@ -334,16 +285,22 @@ int main(int argc, char** argv) {
   gua::events::Ticker ticker(loop, 1.0/500.0);
 
   size_t ctr{};
+  float alpha = 0.f;
+  float alpha_d = 0.01f;
 
   ticker.on_tick.connect([&]() {
     
     screen->set_transform(scm::math::inverse(trackball.transform_matrix()));
 
-    if (alpha >= 1.f || alpha < 0.f) alpha_d = -alpha_d;
-
     if (ctr++ % 500 == 0)
       std::cout << camera->get_rendering_fps() << " "
                 << camera->get_application_fps() << std::endl;
+
+    if (ctr % 25 == 0) {
+      alpha += alpha_d;
+      if (alpha > 1.f || alpha < 0.f) alpha_d = -alpha_d;
+      mat_glass->set_uniform("alpha", alpha);
+    }
 
     window->process_events();
     if (window->should_close()) {
