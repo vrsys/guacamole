@@ -58,6 +58,9 @@ class MaterialShaderMethod {
 
   std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
 
+  std::ostream& serialize_uniforms_to_stream(std::ostream& os) const;
+  void set_uniforms_from_serialized_string(std::string const& value);
+
  private:
   std::string name_;
   std::string source_;

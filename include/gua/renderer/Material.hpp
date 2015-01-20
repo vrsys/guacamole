@@ -68,6 +68,11 @@ class GUA_DLL Material {
       return *this;
     }
 
+    Material& reset_uniform(std::string const& name, int view_id) {
+      uniforms_[name].reset(view_id);
+      return *this;
+    }
+
     std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
 
     Material& set_show_back_faces(bool value) {

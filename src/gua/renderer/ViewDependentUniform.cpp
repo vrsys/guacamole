@@ -53,6 +53,11 @@ void ViewDependentUniform::set(int view, UniformValue const& value) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void ViewDependentUniform::reset(int view) {
+  uniforms_.erase(view);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void ViewDependentUniform::apply(RenderContext const& ctx,
                                  std::string const& name, int view,
                                  scm::gl::program_ptr const& prog,

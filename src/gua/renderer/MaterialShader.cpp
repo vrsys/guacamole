@@ -28,28 +28,28 @@
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShader::MaterialShader(std::string const& name, MaterialShaderDescription const& desc)
+MaterialShader::MaterialShader(std::string const& name, std::shared_ptr<MaterialShaderDescription> const& desc)
   : desc_(desc),
     name_(name)
 {
-  auto v_methods = desc_.get_vertex_methods();
-  auto f_methods = desc_.get_fragment_methods();
+  auto v_methods = desc_->get_vertex_methods();
+  auto f_methods = desc_->get_fragment_methods();
 
   for (auto const& method : v_methods) {
-    for (auto const& uniform : method.get_uniforms()) {
+    for (auto const& uniform : method->get_uniforms()) {
       default_uniforms_[uniform.first] = ViewDependentUniform(uniform.second);
     }
   }
 
   for (auto const& method : f_methods) {
-    for (auto const& uniform : method.get_uniforms()) {
+    for (auto const& uniform : method->get_uniforms()) {
       default_uniforms_[uniform.first] = ViewDependentUniform(uniform.second);
     }
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderDescription const& MaterialShader::get_description() const {
+std::shared_ptr<MaterialShaderDescription> const& MaterialShader::get_description() const {
   return desc_;
 }
 
@@ -69,15 +69,15 @@ std::map<std::string, ViewDependentUniform> const& MaterialShader::get_default_u
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<MaterialShaderMethod> const& MaterialShader::get_vertex_methods() const
+std::list<std::shared_ptr<MaterialShaderMethod>> const& MaterialShader::get_vertex_methods() const
 {
-  return desc_.get_vertex_methods();
+  return desc_->get_vertex_methods();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<MaterialShaderMethod> const& MaterialShader::get_fragment_methods() const
+std::list<std::shared_ptr<MaterialShaderMethod>> const& MaterialShader::get_fragment_methods() const
 {
-  return desc_.get_fragment_methods();
+  return desc_->get_fragment_methods();
 }
 
 SubstitutionMap MaterialShader::generate_substitution_map() const
@@ -100,26 +100,26 @@ SubstitutionMap MaterialShader::generate_substitution_map() const
 
   // material methods substitutions
   for (auto const& method : v_methods) {
-    sstr << method.get_source() << std::endl;
+    sstr << method->get_source() << std::endl;
   }
   smap["material_method_declarations_vert"] = sstr.str();
   sstr.str("");
 
   for (auto& method : f_methods) {
-    sstr << method.get_source() << std::endl;
+    sstr << method->get_source() << std::endl;
   }
   smap["material_method_declarations_frag"] = sstr.str();
   sstr.str("");
 
   // material method calls substitutions
   for (auto const& method : v_methods) {
-    sstr << method.get_name() << "();" << std::endl;
+    sstr << method->get_name() << "();" << std::endl;
   }
   smap["material_method_calls_vert"] = sstr.str();
   sstr.str("");
 
   for (auto& method : f_methods) {
-    sstr << method.get_name() << "();" << std::endl;
+    sstr << method->get_name() << "();" << std::endl;
   }
   smap["material_method_calls_frag"] = sstr.str();
 

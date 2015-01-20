@@ -39,6 +39,8 @@ class GUA_DLL ViewDependentUniform {
     void set(UniformValue const& value);
     void set(int view, UniformValue const& value);
 
+    void reset(int view);
+
     void apply(RenderContext const& ctx, std::string const& name, int view,
                scm::gl::program_ptr const& prog, unsigned location = 0) const;
 
