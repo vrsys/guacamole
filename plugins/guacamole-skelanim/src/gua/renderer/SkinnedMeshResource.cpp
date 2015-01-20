@@ -105,17 +105,46 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
                                          &mesh_.indices[0]);
 
     vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
-        mesh_.get_vertex_format(),
+        scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+            0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
+            0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+            0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+            0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+            0, 5, scm::gl::TYPE_UINT, sizeof(Vertex))(
+            0, 6, scm::gl::TYPE_UINT, sizeof(Vertex)),
         {vertices_[ctx.id]});
+
+    std::cout<<"here:\n";
+    std::cout<<mesh_.get_bone_ids().size()<<std::endl;
+
+    //new storage buffer 
+    bone_ids_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, 
+                                                           scm::gl::USAGE_STATIC_DRAW, 
+                                                           mesh_.get_bone_ids().size() * sizeof(uint),
+                                                           &mesh_.get_bone_ids()[0]);
+
+    std::cout<<"here2:\n";
+    std::cout<<mesh_.get_bone_ids().size()<<std::endl;
+
+
+    //new storage buffer 
+    bone_weights_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, 
+                                                           scm::gl::USAGE_STATIC_DRAW, 
+                                                           mesh_.get_bone_weights().size() * sizeof(float),
+                                                           &mesh_.get_bone_weights()[0]);
+
+    std::cout<<"here3:\n";
     
     // init non transformated/animated bone boxes
     // use every single vertex to be manipulated by a certain bone per bone box
     for (unsigned v(0); v < mesh_.num_vertices; ++v) {
       auto final_pos  = scm::math::vec4(mesh_.positions[v].x, mesh_.positions[v].y, mesh_.positions[v].z, 1.0);
-      for(unsigned i(0); i<4; ++i){
+      for(unsigned i(0); i<mesh_.weights[v].IDs.size(); ++i){
         bone_boxes_[mesh_.weights[v].IDs[i]].expandBy(math::vec3{final_pos.x,final_pos.y,final_pos.z});
-      }
+     }
     }
+
+    std::cout<<"here4:\n";
 
     ctx.render_context->apply();
   }
@@ -150,6 +179,9 @@ void SkinnedMeshResource::draw(RenderContext const& ctx) /*const*/ {
 
   ctx.render_context->bind_vertex_array(vertex_array_[ctx.id]);
   ctx.render_context->bind_index_buffer(indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
+  ctx.render_context->bind_storage_buffer(bone_ids_,2);
+  ctx.render_context->bind_storage_buffer(bone_weights_,3);
+  
   ctx.render_context->apply_vertex_input();
   ctx.render_context->draw_elements(mesh_.num_triangles * 3);
 }
