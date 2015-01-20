@@ -101,7 +101,7 @@ public:
    *
    * \param file_name        The file to load the meshs data from.
    * \param material_name    The material name that was set to the parent node
-   */
+ */
   std::shared_ptr<node::Node> load(std::string const& file_name,
                              unsigned flags);
 
