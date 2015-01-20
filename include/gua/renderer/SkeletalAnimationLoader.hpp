@@ -128,23 +128,19 @@ public:
 
  private: // methods
 
-  /*std::shared_ptr<node::Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
-                aiScene const* ai_scene,
-                aiNode* ai_root,
+  void get_meshes(FbxNode& node, std::vector<FbxMesh*>& fbx_meshes, std::string const& file_name, unsigned flags, unsigned& mesh_count);
+
+  std::shared_ptr<node::Node> get_node(FbxScene const* fbx_scene,
                 std::string const& file_name,
-                unsigned flags, unsigned& mesh_count);*/
+                std::string const& node_name,
+                unsigned flags);
 
-  std::shared_ptr<node::Node> create_animation_node(FbxScene const* fbx_scene,
-  std::string const& file_name,
-  std::string const& node_name,
-  unsigned flags);
-
-  std::shared_ptr<node::Node> create_animation_node(std::shared_ptr<Assimp::Importer> const& importer,
-                                              aiScene const* ai_scene,
-                                              /*aiNode* ai_root,*/
-                                              std::string const& file_name,
-                                              std::string const& node_name,
-                                              unsigned flags);
+  std::shared_ptr<node::Node> get_node(std::shared_ptr<Assimp::Importer> const& importer,
+                aiScene const* ai_scene,
+                /*aiNode* ai_root,*/
+                std::string const& file_name,
+                std::string const& node_name,
+                unsigned flags);
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
 
