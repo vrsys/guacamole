@@ -191,32 +191,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_geometry_from_file(s
   return std::make_shared<node::TransformNode>(node_name);
 }
 
-FbxMesh* SkeletalAnimationLoader::traverse(FbxNode* node) {
-  if(node != NULL) {
-
-    if(node->GetGeometry() != NULL) {
-      std::cout << " has geometry" << std::endl;
-      if(node->GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
-      std::cout << " is mesh" << std::endl;
-      return dynamic_cast<FbxMesh*>(node->GetGeometry());
-      }
-    }
-
-    std::cout << " children:" << std::endl;
-    for(unsigned i = 0; i < node->GetChildNameCount(); ++i) {
-      std::cout << node->GetChildName(i) << std::endl;
-    }
-
-    for(unsigned i = 0; i < node->GetChildCount(); ++i) {
-      if(node->GetChild(i) != NULL) {
-        return traverse(node->GetChild(i));
-      }
-    }
-  }
-  else std::cout << "node is null" << std::endl;
-  return NULL;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& file_name, std::string const& node_name,
@@ -328,12 +302,13 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_animation_node(FbxSc
   unsigned flags) {
 
   FbxNode* fbx_root = fbx_scene->GetRootNode();
-  FbxMesh* fbx_mesh = traverse(fbx_root);
+  std::vector<FbxMesh*> fbx_meshes{};
+  Mesh::from_fbx_scene(fbx_root, fbx_meshes);
 
   Mesh mesh{};
-  if(fbx_mesh) {
+  if(fbx_meshes[0]) {
     std::cout << "mesh loaded" << std::endl;
-    mesh = Mesh{*fbx_mesh};
+    mesh = Mesh{*fbx_meshes[0]};
   }
 
   std::shared_ptr<Node> root = std::shared_ptr<Node>{new Node()};

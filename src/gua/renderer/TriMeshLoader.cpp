@@ -158,63 +158,105 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
   // MESSAGE("Loading mesh file %s", file_name.c_str());
 
   if (file.is_valid()) {
-    auto importer = std::make_shared<Assimp::Importer>();
+    auto point_pos(file_name.find_last_of("."));
 
-    importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
-                                 aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+    if(file_name.substr(point_pos + 1) == "fbx") {
+      std::cout << "fbx" << std::endl;
 
-    if ((flags & TriMeshLoader::OPTIMIZE_GEOMETRY) &&
-        (flags & TriMeshLoader::LOAD_MATERIALS)) {
+      FbxManager* fbx_manager = NULL;
+      FbxScene* fbx_scene = NULL;
+      bool lResult;
 
-      importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS);
-      importer->ReadFile(
-          file_name,
-          aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
-              aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-              aiProcess_PreTransformVertices);
+      // Prepare the FBX SDK.
+      InitializeSdkObjects(fbx_manager, fbx_scene);
 
-    } else if (flags & TriMeshLoader::OPTIMIZE_GEOMETRY) {
+      FbxString lFilePath(file_name.c_str());
 
-      importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS,
-                                   aiComponent_COLORS | aiComponent_MATERIALS);
-      importer->ReadFile(
-          file_name,
-          aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
-              aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-              aiProcess_PreTransformVertices);
-    } else {
+      FBXSDK_printf("\n\nFile: %s\n\n", lFilePath.Buffer());
+      lResult = LoadScene(fbx_manager, fbx_scene, lFilePath.Buffer());
 
-      importer->ReadFile(
-          file_name,
-          aiProcessPreset_TargetRealtime_Quality | aiProcess_GenNormals);
+      if(lResult == false)
+      {
+        Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\"" << std::endl;
+      }
+
+      FbxNode* fbx_root = fbx_scene->GetRootNode();
+      std::vector<FbxMesh*> fbx_meshes{};
+      Mesh::from_fbx_scene(fbx_root, fbx_meshes);
+
+      Mesh mesh{};
+      if(fbx_meshes[0]) {
+        std::cout << "mesh loaded" << std::endl;
+        mesh = Mesh{*fbx_meshes[0]};
+      }
+
+      std::vector<std::string> geometry_descriptions{};
+      std::vector<std::shared_ptr<Material>> materials{};
+
+      GeometryDescription desc ("TriMesh", file_name, 1, flags);
+      GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(mesh));
+
+      std::shared_ptr<Material> material;
+      return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
 
     }
+    else {  
+      auto importer = std::make_shared<Assimp::Importer>();
 
-    aiScene const* scene(importer->GetScene());
+      importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
+                                    aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 
-    std::shared_ptr<node::Node> new_node;
+      if ((flags & TriMeshLoader::OPTIMIZE_GEOMETRY) &&
+          (flags & TriMeshLoader::LOAD_MATERIALS)) {
 
-    std::string error = importer->GetErrorString();
-    if (!error.empty()) {
-      Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, "
-                          << error << std::endl;
+        importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS);
+        importer->ReadFile(
+            file_name,
+            aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
+                aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
+                aiProcess_PreTransformVertices);
+
+      }
+      else if (flags & TriMeshLoader::OPTIMIZE_GEOMETRY) {
+
+        importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS,
+                                      aiComponent_COLORS | aiComponent_MATERIALS);
+        importer->ReadFile(
+            file_name,
+            aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
+                aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
+                aiProcess_PreTransformVertices);
+      } else {
+
+        importer->ReadFile(
+            file_name,
+            aiProcessPreset_TargetRealtime_Quality | aiProcess_GenNormals);
+
+      }
+
+      aiScene const* scene(importer->GetScene());
+
+      std::shared_ptr<node::Node> new_node;
+
+      std::string error = importer->GetErrorString();
+      if (!error.empty())
+      {
+        Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, " << error << std::endl;
+      }
+
+      if (scene->mRootNode) {
+        // new_node = std::make_shared(new GeometryNode("unnamed",
+        //                             GeometryNode::Configuration("", ""),
+        //                             math::mat4::identity()));
+        unsigned count(0);
+        new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
+
+      } else {
+        Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": No valid root node contained!" << std::endl;
+      }
+
+      return new_node;
     }
-
-    if (scene->mRootNode) {
-      // new_node = std::make_shared(new GeometryNode("unnamed",
-      //                             GeometryNode::Configuration("", ""),
-      //                             math::mat4::identity()));
-      unsigned count(0);
-      new_node =
-          get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
-
-    } else {
-      Logger::LOG_WARNING << "Failed to load object \"" << file_name
-                          << "\": No valid root node contained!" << std::endl;
-    }
-
-    return new_node;
-
   }
 
   Logger::LOG_WARNING << "Failed to load object \"" << file_name
@@ -256,6 +298,9 @@ bool TriMeshLoader::is_supported(std::string const& file_name) const {
 
   if (file_name.substr(point_pos + 1) == "raw") {
     return false;
+  }
+  else if (file_name.substr(point_pos + 1) == "fbx"){
+    return true;
   }
 
   return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
