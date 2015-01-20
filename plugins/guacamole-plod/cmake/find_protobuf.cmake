@@ -15,7 +15,6 @@ IF (NOT PROTOBUF_INCLUDE_DIRS)
     SET(_PROTOBUF_FOUND_INC_DIRS "")
 
     FOREACH(_SEARCH_DIR ${PROTOBUF_INCLUDE_SEARCH_DIRS})
-	MESSAGE(${_SEARCH_DIR})
         FIND_PATH(_CUR_SEARCH
                 NAMES google/protobuf/stubs/common.h
                 PATHS ${_SEARCH_DIR}
