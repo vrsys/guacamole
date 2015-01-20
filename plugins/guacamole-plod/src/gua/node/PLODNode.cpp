@@ -258,7 +258,7 @@ void PLODNode::update_cache() {
   // 
   // data/materials/ShadelessPLOD.gmd
 
-  if(material_changed_) {
+  if (material_changed_ && material_) {
     if (material_->get_shader_name() != "") {
       //to fill
     }

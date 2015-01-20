@@ -51,7 +51,7 @@ namespace gua {
   // serialize trim domain
   std::unordered_map<gpucast::trimdomain_serializer_contour_map_binary::curve_ptr, unsigned>       referenced_curves;
   std::unordered_map<gpucast::trimdomain_serializer_contour_map_binary::trimdomain_ptr, unsigned>  referenced_domains;
-  std::unordered_map<gpucast::math::contour_map_binary<double>::contour_segment_ptr, unsigned>      referenced_segments;
+  std::unordered_map<gpucast::math::domain::contour_map_binary<double>::contour_segment_ptr, unsigned>      referenced_segments;
 
   gpucast::trimdomain_serializer_contour_map_binary serializer;
 

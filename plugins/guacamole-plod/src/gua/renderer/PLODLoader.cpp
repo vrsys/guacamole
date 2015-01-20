@@ -124,9 +124,18 @@ bool PLODLoader::is_supported(std::string const& file_name) const {
 void PLODLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const {
   auto g_node(std::dynamic_pointer_cast<node::PLODNode>(root));
 
-  if(g_node && g_node->get_material()->get_shader_name() == "") {
-    g_node->set_material(fallback_material);
-    g_node->update_cache();
+  if(g_node) {
+    if (!g_node->get_material()) {
+      g_node->set_material(fallback_material);
+      g_node->update_cache();
+    }
+    else {
+      if (g_node->get_material()->get_shader_name() == "")
+      {
+        g_node->set_material(fallback_material);
+        g_node->update_cache();
+      }
+    }
   }
 
   for(auto& child : root->get_children()) {
