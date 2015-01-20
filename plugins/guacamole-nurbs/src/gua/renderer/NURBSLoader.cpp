@@ -89,7 +89,10 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
 
       // check and set rendering mode and create render resources
       auto fill_mode = flags & WIREFRAME ? scm::gl::FILL_WIREFRAME : scm::gl::FILL_SOLID;
-      auto ressource = std::make_shared<NURBSResource>(bezier_object, fill_mode);
+      auto pre_subdivision_u = flags | PRE_SUBDIVISION ? 1 : 0;
+      auto pre_subdivision_v = flags | PRE_SUBDIVISION ? 1 : 0;
+
+      auto ressource = std::make_shared<NURBSResource>(bezier_object, pre_subdivision_u, pre_subdivision_v, fill_mode);
 
       // add resource to database
       GeometryDescription desc("NURBS", filename, 0, flags);
@@ -102,13 +105,17 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
 
       // normalize position? 
       auto normalize_position = flags & NORMALIZE_POSITION;
-      node->translate(-bbox.center());
+      if (normalize_position) {
+        node->translate(-bbox.center());
+      }
 
       // normalize scale? 
-      auto normalize_node = flags & NORMALIZE_SCALE;
-      node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
+      auto normalize_size = flags & NORMALIZE_SCALE;
+      if (normalize_size) {
+        node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
+      }
 
-      node->rendermode_raycasting(flags & RAYCASTING);
+      node->raycasting(flags & RAYCASTING);
 
       return node;
     }

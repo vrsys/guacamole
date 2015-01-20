@@ -111,8 +111,6 @@ void main()
     discard;
   }
 
-  vec3 normal = normalize(cross(normalize(du.xyz), normalize(dv.xyz)));
-
   /*********************************************************************
    * Trimming process
    *********************************************************************/
@@ -134,13 +132,25 @@ void main()
   /*********************************************************************
    * depth correction
    *********************************************************************/
-  vec4 p_world = modelviewmatrix * vec4(p.xyz, 1.0);
-  float corrected_depth = compute_depth ( p_world, nearplane, farplane );
-  gl_FragDepth = corrected_depth;
-
   @material_input@
   @include "resources/shaders/common/gua_global_variable_assignment.glsl"
+
+  vec4 position_view_space = modelviewmatrix * vec4(p.xyz, 1.0);
+  float corrected_depth = compute_depth ( position_view_space, gua_clip_near, gua_clip_far );
+  gl_FragDepth = corrected_depth;
+
+  vec3 normal_object_space = normalize(cross(normalize(du.xyz), normalize(dv.xyz)));
+  vec3 normal_view_space   = normalize((gua_normal_matrix * vec4(normal_object_space.xyz, 0.0)).xyz);
+  
+  gua_normal = normal_view_space;
+  
+  if ( dot(normal_view_space, normalize(-position_view_space.xyz)) < 0.0 )
+  {
+    gua_normal = -gua_normal;
+  }
+
   @material_method_calls_frag@
 
-  submit_fragment(gl_FragCoord.z);
+  //submit_fragment(gl_FragCoord.z);
+  submit_fragment(corrected_depth);
 }

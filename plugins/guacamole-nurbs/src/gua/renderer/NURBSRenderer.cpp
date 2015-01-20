@@ -324,7 +324,7 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
       current_material_program = _get_material_program(current_material, 
                                                        current_material_program, 
-                                                       nurbs_node->rendermode_raycasting(), 
+                                                       nurbs_node->raycasting(), 
                                                        program_changed);
 
       UniformValue model_mat(nurbs_node->get_cached_world_transform());
@@ -334,19 +334,24 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
       if (nurbs_ressource && pre_tesselation_program_ && current_material_program) {
 
-        if (nurbs_node->rendermode_raycasting())
+        if (nurbs_node->raycasting())
         {
           // render using raycasting
           current_material_program->use(ctx);
           {
             current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
             current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
             current_material_program->apply_uniform(ctx, "nearplane", pipe.get_camera().config.get_near_clip());
             current_material_program->apply_uniform(ctx, "farplane", pipe.get_camera().config.get_far_clip());
 
+            current_material_program->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
+              pipe.get_gbuffer().get_height()),
+              "gua_resolution"); 
+
             nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 
-            nurbs_ressource->draw(ctx, true);
+            nurbs_ressource->draw(ctx, true, nurbs_node->render_backfaces());
           }
           current_material_program->unuse(ctx);
         } else {
@@ -364,7 +369,7 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
             pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
             ctx.render_context->apply();
-            nurbs_ressource->predraw(ctx);
+            nurbs_ressource->predraw(ctx, nurbs_node->render_backfaces());
           }
           pre_tesselation_program_->unuse(ctx);
 
@@ -382,8 +387,12 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
             current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
             current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
+            current_material_program->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
+              pipe.get_gbuffer().get_height()),
+              "gua_resolution");
+
             ctx.render_context->apply();
-            nurbs_ressource->draw(ctx, false);
+            nurbs_ressource->draw(ctx, false, nurbs_node->render_backfaces());
           }
           current_material_program->unuse(ctx);
         }
@@ -397,59 +406,5 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     pipe.get_gbuffer().unbind(ctx);
   }
 }
-
-#if 0
-  auto geometry = std::static_pointer_cast<NURBSResource>(GeometryDatabase::instance()->lookup(filename));
-  auto material = MaterialDatabase::instance()->lookup(material_name);
-
-  //set_uniform(ctx, 8, "gua_max_tesselation");
-  set_uniform(ctx, material->get_id(), "gua_material_id");
-  set_uniform(ctx, model_matrix, "gua_model_matrix");
-  set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-  
-
-  if ( geometry->raycasting_enabled() ) 
-  {
-    get_program(raycasting)->set_uniform(ctx, frustum.get_clip_near(), "nearplane");
-    get_program(raycasting)->set_uniform(ctx, frustum.get_clip_near(), "farplane");
-
-    get_program(raycasting)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->draw(ctx);
-    }
-    get_program(raycasting)->unuse(ctx);
-  } else {
-  #ifdef DEBUG_XFB_OUTPUT
-    scm::gl::transform_feedback_statistics_query_ptr q = ctx
-      .render_device->create_transform_feedback_statistics_query(0);
-    ctx.render_context->begin_query(q);
-#endif
-
-    // pre-tesselate if necessary
-    get_program(tesselation_pre_pass)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->predraw(ctx);
-    }
-    get_program(tesselation_pre_pass)->unuse(ctx);
-
-#ifdef DEBUG_XFB_OUTPUT
-    ctx.render_context->end_query(q);
-    ctx.render_context->collect_query_results(q);
-    std::cout << q->result()._primitives_generated << " , "
-      << q->result()._primitives_written << std::endl;
-#endif
-
-    // invoke tesselation/trim shader for adaptive nurbs rendering
-    get_program(tesselation_final_pass)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->draw(ctx);
-    }
-    get_program(tesselation_final_pass)->unuse(ctx);
-  }
-#endif
-
 
 } // namespace gua

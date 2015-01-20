@@ -54,7 +54,7 @@ struct NURBSData
  public:
 
   //Constructor and Destructor
-  NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o);
+   NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o, unsigned pre_subdivision_u, unsigned pre_subdivision_v);
 
   virtual ~NURBSData();
 

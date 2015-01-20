@@ -67,6 +67,8 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
  public : // c'tor / d'tor
 
    NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
+                  unsigned pre_subdivision_u, 
+                  unsigned pre_subdivision_v,
                   scm::gl::fill_mode in_fill_mode = scm::gl::FILL_SOLID
                   //scm::gl::fill_mode in_fill_mode = scm::gl::FILL_WIREFRAME
                   );
@@ -75,9 +77,9 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
 
  public : // methods
 
-  /*virtual*/ void predraw(RenderContext const& context) const;
+  /*virtual*/ void predraw(RenderContext const& context, bool cull_face) const;
 
-  /*virtual*/ void draw(RenderContext const& context, bool raycasting) const;
+  /*virtual*/ void draw(RenderContext const& context, bool raycasting, bool cull_face) const;
 
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits) {}
@@ -140,6 +142,7 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
 
   mutable std::vector<scm::gl::sampler_state_ptr>    _sstate;
   mutable std::vector<scm::gl::rasterizer_state_ptr> _rstate_no_cull;
+  mutable std::vector<scm::gl::rasterizer_state_ptr> _rstate_cull;
   mutable std::vector<scm::gl::rasterizer_state_ptr> _rstate_ms_point;
   mutable std::vector<scm::gl::blend_state_ptr>      _bstate_no_blend;
 

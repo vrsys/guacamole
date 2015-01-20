@@ -300,7 +300,7 @@ namespace gua {
     if(sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
       
       std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
-        return reinterpret_cast<node::PLODNode*>(a)->get_material().get_shader() < reinterpret_cast<node::PLODNode*>(b)->get_material().get_shader();
+        return reinterpret_cast<node::PLODNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::PLODNode*>(b)->get_material()->get_shader();
       });
 
       RenderContext const& ctx(pipe.get_context());
