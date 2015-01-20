@@ -24,6 +24,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/SkeletalAnimationLoader.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -66,6 +67,7 @@ int main(int argc, char** argv) {
 
   gua::SkeletalAnimationLoader loader;
   gua::SkeletalAnimationLoader loader2;
+  gua::TriMeshLoader tri_loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
@@ -89,7 +91,7 @@ int main(int argc, char** argv) {
   // auto teapot(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/bob/boblampclean.md5anim", 0);
 
-  auto rock(loader.create_geometry_from_file("fbx", "data/objects/fbx/barrel.fbx"));
+  auto rock(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/warrior.fbx"));
   rock->set_draw_bounding_box(true);
   
   graph.add_node("/transform2", rock);
