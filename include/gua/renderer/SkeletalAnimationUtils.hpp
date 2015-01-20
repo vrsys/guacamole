@@ -238,7 +238,7 @@ struct Vertex {
   scm::math::vec4i bone_ids;
 };
 
-class Mesh {
+struct Mesh {
  public:
   Mesh();
 
@@ -246,9 +246,6 @@ class Mesh {
   Mesh(FbxMesh& mesh);
 
   void copy_to_buffer(Vertex* vertex_buffer)  const;
-
- private:
-  void init_weights(aiMesh const& mesh, Node const& root);
 
   // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3> positions;
@@ -258,6 +255,7 @@ class Mesh {
   std::vector<scm::math::vec3> bitangents;
   std::vector<weight_map> weights;
   std::vector<uint> indices;
+
 
   unsigned int num_vertices;
   unsigned int num_triangles;

@@ -56,9 +56,9 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(Mesh const& mesh, std::sh
   bounding_box_ = math::BoundingBox<math::vec3>();
 
   // without bone influence
-  for (unsigned v(0); v < mesh_.num_vertices(); ++v) {
+  for (unsigned v(0); v < mesh_.num_vertices; ++v) {
     bounding_box_.expandBy(scm::math::vec3(
-        mesh_.get_position(v).x, mesh_.get_position(v).y, mesh_.get_position(v).z));
+        mesh_.positions[v].x, mesh_.positions[v].y, mesh_.positions[v].z));
   }
   std::cout << "box dims" << bounding_box_.corners().first << " and " << bounding_box_.corners().second << std::endl;
 
@@ -91,7 +91,7 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     vertices_[ctx.id] =
         ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
                                          scm::gl::USAGE_STATIC_DRAW,
-                                         mesh_.num_vertices() * sizeof(Vertex),
+                                         mesh_.num_vertices * sizeof(Vertex),
                                          0);
 
 
@@ -105,7 +105,7 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     indices_[ctx.id] =
         ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
                                          scm::gl::USAGE_STATIC_DRAW,
-                                         mesh_.num_triangles() * 3 * sizeof(unsigned),
+                                         mesh_.num_triangles * 3 * sizeof(unsigned),
                                          &mesh_.indices[0]);
 
     vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
@@ -120,10 +120,10 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     
     // init non transformated/animated bone boxes
     // use every single vertex to be manipulated by a certain bone per bone box
-    for (unsigned v(0); v < mesh_.num_vertices(); ++v) {
-      auto final_pos  = scm::math::vec4(mesh_.get_position(v).x, mesh_.get_position(v).y, mesh_.get_position(v).z, 1.0);
+    for (unsigned v(0); v < mesh_.num_vertices; ++v) {
+      auto final_pos  = scm::math::vec4(mesh_.positions[v].x, mesh_.positions[v].y, mesh_.positions[v].z, 1.0);
       for(unsigned i(0); i<4; ++i){
-        bone_boxes_[mesh_.get_weight(v).IDs[i]].expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
+        bone_boxes_[mesh_.weights[v].IDs[i]].expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
       }
     }
 
@@ -161,7 +161,7 @@ void SkeletalAnimationRessource::draw(RenderContext const& ctx) /*const*/ {
   ctx.render_context->bind_vertex_array(vertex_array_[ctx.id]);
   ctx.render_context->bind_index_buffer(indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
   ctx.render_context->apply_vertex_input();
-  ctx.render_context->draw_elements(mesh_.num_triangles() * 3);
+  ctx.render_context->draw_elements(mesh_.num_triangles * 3);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,11 +175,11 @@ void SkeletalAnimationRessource::ray_test(Ray const& ray, int options,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-unsigned int SkeletalAnimationRessource::num_vertices() const { return mesh_.num_vertices(); }
+unsigned int SkeletalAnimationRessource::num_vertices() const { return mesh_.num_vertices; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-unsigned int SkeletalAnimationRessource::num_faces() const { return mesh_.num_triangles(); }
+unsigned int SkeletalAnimationRessource::num_faces() const { return mesh_.num_triangles; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
