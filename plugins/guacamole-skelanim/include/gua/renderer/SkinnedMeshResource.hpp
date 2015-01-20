@@ -107,6 +107,9 @@ class SkinnedMeshResource : public GeometryResource {
   mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
   mutable std::mutex upload_mutex_;
 
+  mutable scm::gl::buffer_ptr bone_ids_;
+  mutable scm::gl::buffer_ptr bone_weights_;
+
   /*// intermediate mesh meta data
   #define INVALID_MATERIAL 0xFFFFFFFF // TODO
   struct MeshEntry {
