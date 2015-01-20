@@ -39,7 +39,7 @@ namespace node {
 PLODNode::PLODNode(std::string const& name,
                    std::string const& geometry_description,
                    std::string const& geometry_file_path,
-                   Material const& material,
+                   std::shared_ptr<Material> const& material,
                    math::mat4 const& transform)
     : GeometryNode(name, transform),
       geometry_(nullptr),
@@ -71,17 +71,12 @@ void PLODNode::set_geometry_description(std::string const& v) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Material const& PLODNode::get_material() const {
+std::shared_ptr<Material> const& PLODNode::get_material() const {
   return material_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Material& PLODNode::get_material() {
-  return material_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void PLODNode::set_material(Material const& material) {
+void PLODNode::set_material(std::shared_ptr<Material> const& material) {
   material_ = material;
   material_changed_ = self_dirty_ = true;
 }
@@ -264,7 +259,7 @@ void PLODNode::update_cache() {
   // data/materials/ShadelessPLOD.gmd
 
   if(material_changed_) {
-    if (material_.get_shader_name() != "") {
+    if (material_->get_shader_name() != "") {
       //to fill
     }
 

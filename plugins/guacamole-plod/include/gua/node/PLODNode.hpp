@@ -50,7 +50,7 @@ private: // c'tor
   PLODNode(std::string const& node_name,
            std::string const& geometry_description = "gua_default_geometry",
            std::string const& geometry_file_path = "gua_no_path_specified",
-           Material const& material = Material(),
+           std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
            math::mat4 const& transform = math::mat4::identity());
 
 public:  // methods
@@ -62,9 +62,8 @@ public:  // methods
 
   std::string const& get_geometry_file_path() const;
 
-  Material const&    get_material() const;
-  Material&          get_material();
-  void               set_material(Material const& material);
+  std::shared_ptr<Material> const& get_material() const;
+  void               set_material(std::shared_ptr<Material> const& material);
 
 public:
   /**
@@ -92,7 +91,7 @@ private:  // attributes e.g. special attributes for drawing
   std::string                   geometry_file_path_;
   bool                          geometry_changed_;
 
-  Material                      material_;
+  std::shared_ptr<Material>     material_;
   bool                          material_changed_;
 
 };

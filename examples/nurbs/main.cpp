@@ -160,8 +160,8 @@ int main(int argc, char** argv)
   gua::SceneGraph graph("main_scenegraph");
 
   // create simple untextured material shader
-  gua::MaterialShaderDescription desc;
-  desc.load_from_file("./data/materials/SimpleMaterial.gmd");
+  auto desc = std::make_shared<gua::MaterialShaderDescription>();
+  desc->load_from_file("./data/materials/SimpleMaterial.gmd");
   auto material_shader(std::make_shared<gua::MaterialShader>("simple_material", desc));
 
   // create new material configurations for material shader

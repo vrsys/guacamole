@@ -63,11 +63,11 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   auto load_mat = [](std::string const& file){
-    gua::MaterialShaderDescription desc;
-    desc.load_from_file(file);
+    auto desc = std::make_shared<gua::MaterialShaderDescription>();
+    desc->load_from_file(file);
     auto shader(std::make_shared<gua::MaterialShader>(file, desc));
     gua::MaterialShaderDatabase::instance()->add(shader);
-    return shader->get_default_material();
+    return shader->make_new_material();
   };
 
   auto pbrMat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
 
   plod_geometry->set_draw_bounding_box(true);
 

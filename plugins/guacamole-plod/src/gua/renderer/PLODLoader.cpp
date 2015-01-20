@@ -46,7 +46,7 @@ PLODLoader::PLODLoader() : _supported_file_extensions() {
 /////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& nodename,
                                                           std::string const& filename,
-                                                          Material const& fallback_material,
+                                                          std::shared_ptr<Material> const& fallback_material,
                                                           unsigned flags)
 {
   auto cached_node(load_geometry(filename, flags));
@@ -91,11 +91,15 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& fil
 
       //normalize position?
       auto normalize_position = flags & PLODLoader::NORMALIZE_POSITION;
-      node->translate(-bbox.center());
+      if (normalize_position) {
+        node->translate(-bbox.center());
+      }
 
       //normalize scale?
       auto normalize_node = flags & PLODLoader::NORMALIZE_SCALE;
-      node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
+      if (normalize_node) {
+        node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
+      }
 
       return node;
     }
@@ -117,10 +121,10 @@ bool PLODLoader::is_supported(std::string const& file_name) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PLODLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, Material const& fallback_material) const {
+void PLODLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const {
   auto g_node(std::dynamic_pointer_cast<node::PLODNode>(root));
 
-  if(g_node && g_node->get_material().get_shader_name() == "") {
+  if(g_node && g_node->get_material()->get_shader_name() == "") {
     g_node->set_material(fallback_material);
     g_node->update_cache();
   }
