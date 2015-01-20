@@ -114,7 +114,6 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
             0, 6, scm::gl::TYPE_UINT, sizeof(Vertex)),
         {vertices_[ctx.id]});
 
-    std::cout<<"here:\n";
     std::cout<<mesh_.get_bone_ids().size()<<std::endl;
 
     //new storage buffer 
@@ -123,7 +122,6 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
                                                            mesh_.get_bone_ids().size() * sizeof(uint),
                                                            &mesh_.get_bone_ids()[0]);
 
-    std::cout<<"here2:\n";
     std::cout<<mesh_.get_bone_ids().size()<<std::endl;
 
 
@@ -132,8 +130,6 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
                                                            scm::gl::USAGE_STATIC_DRAW, 
                                                            mesh_.get_bone_weights().size() * sizeof(float),
                                                            &mesh_.get_bone_weights()[0]);
-
-    std::cout<<"here3:\n";
     
     // init non transformated/animated bone boxes
     // use every single vertex to be manipulated by a certain bone per bone box
@@ -143,8 +139,6 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
         bone_boxes_[mesh_.weights[v].IDs[i]].expandBy(math::vec3{final_pos.x,final_pos.y,final_pos.z});
      }
     }
-
-    std::cout<<"here4:\n";
 
     ctx.render_context->apply();
   }
