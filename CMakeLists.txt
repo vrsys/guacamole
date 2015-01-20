@@ -300,8 +300,7 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   message(STATUS "" )
 endif (GUACAMOLE_ENABLE_PHYSICS)
 
-<<<<<<< HEAD
-=======
+
 if (GUACAMOLE_FBX)
   message(STATUS " FBX SDK:" )
   message(STATUS "   library: ${FBX_LIBRARIES}" )
@@ -310,19 +309,6 @@ if (GUACAMOLE_FBX)
   message(STATUS "" )
 endif (GUACAMOLE_FBX)
 
-if (GUACAMOLE_PBR_SUPPORT)
-  message(STATUS " protobuf:" )
-  message(STATUS "   library: ${PROTOBUF_LIBRARIES}" )
-  message(STATUS "   library path: ${PROTOBUF_LIBRARY_DIRS}" )
-  message(STATUS "   include: ${PROTOBUF_INCLUDE_DIRS}" )
-  message(STATUS "" )
-  message(STATUS " PBR:" )
-  message(STATUS "   library: ${PBR_LIBRARIES}" )
-  message(STATUS "   library path: ${PBR_LIBRARY_DIRS}" )
-  message(STATUS "   include: ${PBR_INCLUDE_DIRS}" )
-endif (GUACAMOLE_PBR_SUPPORT)
-
->>>>>>> added fbxsdk librabry & updated cmakefiles
 if (GUACAMOLE_GLFW3)
   message(STATUS " glfw:" )
   message(STATUS "   library: ${GLFW_LIBRARIES}" )

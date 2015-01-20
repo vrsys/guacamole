@@ -129,8 +129,6 @@ class SkeletalAnimationRessource : public GeometryResource {
 
     std::vector<math::BoundingBox<math::vec3>> bone_boxes_;
 
-    std::vector<math::BoundingBox<math::vec3>> bone_boxes_;
-
     /////////////////////////////////
 
  public:
