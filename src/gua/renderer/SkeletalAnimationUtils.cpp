@@ -12,18 +12,21 @@ scm::math::mat4f mat4(aiMatrix4x4 const& m) {
                       ,m.a4,m.b4,m.c4,m.d4);
   return res;
 }
-
-scm::math::vec3 vec3(aiVector3D const& v) {
-  scm::math::vec3 res(v.x, v.y, v.z);
-  return res;
-}
-
-scm::math::vec4 vec4(FbxVector4 const& v) {
-  scm::math::vec4 res(v[0], v[1], v[2], v[3]);
-  return res;
-}
-scm::math::vec3 vec3(FbxVector4 const& v) {
+template<typename T>
+scm::math::vec3 vec3(T const& v) {
   scm::math::vec3 res(v[0], v[1], v[2]);
+  return res;
+}
+
+template<typename T>
+scm::math::vec2 vec2(T const& v) {
+  scm::math::vec2 res(v[0], v[1]);
+  return res;
+}
+
+template<typename T>
+scm::math::vec4 vec4(T const& v) {
+  scm::math::vec4 res(v[0], v[1], v[2], v[3]);
   return res;
 }
 
@@ -215,18 +218,19 @@ Mesh::Mesh(FbxMesh& mesh) {
   // Reserve space in the vectors for the vertex attributes and indices
   //for now resize and initialize with 0
   positions.reserve(num_vertices);
-  normals.reserve(num_vertices);
-  texCoords.resize(num_vertices);
+  normals.resize(num_vertices, scm::math::vec3(0.0f));
+  texCoords.resize(num_vertices, scm::math::vec2(0.0f));
   tangents.resize(num_vertices);
   bitangents.resize(num_vertices);
   weights.resize(num_vertices);
   indices.reserve(num_triangles * 3);
-
+//vertices
   FbxVector4* vertices = mesh.GetControlPoints();
   for(unsigned i = 0; i < num_vertices; ++i) {
     positions.push_back(to_gua::vec3(vertices[i]) * 0.2);
   }
 
+//normals
   if(mesh.GetElementNormalCount() == 0) {
     //dont override exiting normals and generate by control point, not vertex
     mesh.GenerateNormals(false, true);
@@ -235,33 +239,69 @@ Mesh::Mesh(FbxMesh& mesh) {
   FbxGeometryElementNormal const* fbx_normals = mesh.GetElementNormal(0);
 
   if(fbx_normals->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
+    //normals are mapped by order
     if(fbx_normals->GetReferenceMode() == FbxGeometryElement::eDirect) {
 
       for(unsigned i = 0; i < num_vertices; ++i) {
-        normals.push_back(to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
+        normals[i] = (to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
       }
     }
+    //normals are indexed
     else if(fbx_normals->GetReferenceMode() == FbxGeometryElement::eIndexToDirect ) {
-      Logger::LOG_ERROR << "Normals mapping by index yet supported" << std::endl;
+      for(unsigned i = 0; i < num_vertices; ++i) {
+        unsigned index = fbx_normals->GetIndexArray().GetAt(i); 
+        normals[i] = (to_gua::vec3(fbx_normals->GetDirectArray().GetAt(index)));
+      }
     }
+    //normals are mapped differently -> fill vector with blanks
     else {
       Logger::LOG_ERROR << "Only normal mapping per vertex are supported" << std::endl;
     }
   }
-  else if(fbx_normals->GetMappingMode() == FbxGeometryElement::eByPolygonVertex) {
-    Logger::LOG_WARNING << "Normals per polygon vertex not supported, regenerating them" << std::endl;
+  else{
+    Logger::LOG_WARNING << "Only Normals per vertex supported, regenerating them" << std::endl;
     //regenerate normals per control point
     mesh.GenerateNormals(true, true);
 
     for(unsigned i = 0; i < num_vertices; ++i) {
-        normals.push_back(to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
+        normals[i] = (to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
     }
   }
-  else {
-    Logger::LOG_ERROR << "Only normals per vertex are supported" << std::endl;
-    // assert(false);
-  }
 
+//UV coordinates
+  if(mesh.GetElementUVCount() == 0) {
+    Logger::LOG_WARNING << "Mesh has no UVs" << std::endl;
+  }
+  else {
+    if(mesh.GetElementUVCount() > 1) {
+      Logger::LOG_WARNING << "Mesh has multiple UV sets, only using first one" << std::endl;
+    }
+
+    FbxGeometryElementUV const* fbx_uvs = mesh.GetElementUV(0);
+    if(fbx_uvs->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
+      //normals are mapped by order
+      if(fbx_uvs->GetReferenceMode() == FbxGeometryElement::eDirect) {
+
+        for(unsigned i = 0; i < num_vertices; ++i) {
+          texCoords[i] = (to_gua::vec2(fbx_uvs->GetDirectArray().GetAt(i)));
+        }
+      }
+      //normals are indexed
+      else if(fbx_uvs->GetReferenceMode() == FbxGeometryElement::eIndexToDirect ) {
+        for(unsigned i = 0; i < num_vertices; ++i) {
+          unsigned index = fbx_uvs->GetIndexArray().GetAt(i); 
+          texCoords[i] = (to_gua::vec2(fbx_uvs->GetDirectArray().GetAt(index)));
+        }
+      }
+      else {
+        Logger::LOG_ERROR << "Only UVs mapping per vertex are supported" << std::endl;
+      }
+    }
+    else{
+      Logger::LOG_WARNING << "Only UVs per vertex supported" << std::endl;
+    }
+  }
+//polygons
   if(mesh.GetPolygonCount() < 1) {
     Logger::LOG_WARNING << "No indices in mesh, drawing will be inefficient" << std::endl;
     for(unsigned i = 0; i < num_vertices; ++i) {
