@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/renderer/SkeletalAnimationRessource.hpp>
 #include <gua/node/SkeletalAnimationNode.hpp>
- 
+#include <gua/renderer/SkeletalAnimationUtils.hpp>
 #include <gua/renderer/Material.hpp>
 
 // external headers
@@ -133,8 +133,6 @@ public:
                 aiNode* ai_root,
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);*/
-
-  FbxMesh* traverse(FbxNode*);
 
   std::shared_ptr<node::Node> create_animation_node(FbxScene const* fbx_scene,
   std::string const& file_name,

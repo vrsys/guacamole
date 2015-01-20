@@ -242,10 +242,11 @@ struct Mesh {
  public:
   Mesh();
 
-  Mesh(aiMesh const& mesh, Node const& root);
+  Mesh(aiMesh const& mesh, Node const& root = Node{});
   Mesh(FbxMesh& mesh);
 
   void copy_to_buffer(Vertex* vertex_buffer)  const;
+  void copy_to_buffer_static(Vertex* vertex_buffer)  const;
 
   // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3> positions;
@@ -254,11 +255,12 @@ struct Mesh {
   std::vector<scm::math::vec3> tangents;
   std::vector<scm::math::vec3> bitangents;
   std::vector<weight_map> weights;
-  std::vector<uint> indices;
-
+  std::vector<unsigned> indices;
 
   unsigned int num_vertices;
   unsigned int num_triangles;
+
+  static void from_fbx_scene(FbxNode* node, std::vector<FbxMesh*>& meshes);
 
  private:
   void init_weights(aiMesh const& mesh, Node const& root);

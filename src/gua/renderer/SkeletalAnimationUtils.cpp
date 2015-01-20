@@ -1,6 +1,5 @@
 // class header
 #include <gua/renderer/SkeletalAnimationUtils.hpp>
-
 //external headers
 #include <iostream>
 
@@ -280,7 +279,7 @@ Mesh::Mesh(FbxMesh& mesh) {
           //triangulate face if necessary
           for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
           {
-            std::cout << "vert num " << j << "op poly " << i << std::endl;
+            // std::cout << "triangle " << i << " from verts " << mesh.GetPolygonVertex(i, 0) << "," << mesh.GetPolygonVertex(i, j-1) << "," << mesh.GetPolygonVertex(i, j)<< std::endl;
             indices.push_back(mesh.GetPolygonVertex(i, 0));
             indices.push_back(mesh.GetPolygonVertex(i, j-1));
             indices.push_back(mesh.GetPolygonVertex(i, j));
@@ -360,6 +359,8 @@ Mesh::Mesh(aiMesh const& mesh, Node const& root) {
     indices.push_back(Face.mIndices[2]);
   }
 }
+
+
 void Mesh::init_weights(aiMesh const& mesh, Node const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
   root.collect_indices(bone_mapping_);
@@ -393,6 +394,44 @@ void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
     
     vertex_buffer[v].bone_ids = scm::math::vec4i(weights[v].IDs[0],weights[v].IDs[1],weights[v].IDs[2],weights[v].IDs[3]);
   }
+}
+void Mesh::copy_to_buffer_static(Vertex* vertex_buffer)  const {
+  for (unsigned v(0); v < num_vertices; ++v) {
+
+    vertex_buffer[v].pos = positions[v];
+
+    vertex_buffer[v].tex = texCoords[v];
+
+    vertex_buffer[v].normal = normals[v];
+
+    vertex_buffer[v].tangent = tangents[v];
+
+    vertex_buffer[v].bitangent = bitangents[v];
+  }
+}
+
+void Mesh::from_fbx_scene(FbxNode* node, std::vector<FbxMesh*>& meshes ) {
+  if(node != NULL) {
+    if(node->GetGeometry() != NULL) {
+      std::cout << " has geometry" << std::endl;
+      if(node->GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
+      std::cout << " is mesh" << std::endl;
+      meshes.push_back(dynamic_cast<FbxMesh*>(node->GetGeometry()));
+      }
+    }
+
+    // std::cout << " children:" << std::endl;
+    // for(unsigned i = 0; i < node->GetChildNameCount(); ++i) {
+    //   std::cout << node->GetChildName(i) << std::endl;
+    // }
+
+    for(unsigned i = 0; i < node->GetChildCount(); ++i) {
+      if(node->GetChild(i) != NULL) {
+        from_fbx_scene(node->GetChild(i), meshes);
+      }
+    }
+  }
+  else std::cout << "node is null" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

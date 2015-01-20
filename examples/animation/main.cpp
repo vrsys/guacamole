@@ -70,10 +70,11 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
 
-  auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  loader2.load_animation(teapot2, "data/objects/pinky/idle1.md5anim", 0);
-  loader2.load_animation(teapot2, "data/objects/pinky/attack.md5anim", 0);
-  loader2.load_animation(teapot2, "data/objects/pinky/run.md5anim", 0);
+  // auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // loader2.load_animation(teapot2, "data/objects/pinky/idle1.md5anim", 0);
+  // loader2.load_animation(teapot2, "data/objects/pinky/attack.md5anim", 0);
+  // loader2.load_animation(teapot2, "data/objects/pinky/run.md5anim", 0);
+  // teapot2->set_draw_bounding_box(true);
 
   auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
@@ -90,13 +91,12 @@ int main(int argc, char** argv) {
 
   auto rock(loader.create_geometry_from_file("fbx", "data/objects/fbx/barrel.fbx"));
   rock->set_draw_bounding_box(true);
+  
   graph.add_node("/transform2", rock);
-
   graph.add_node("/transform", teapot);
-  graph.add_node("/transform2", teapot2);
+  // graph.add_node("/transform2", teapot2);
   // graph.add_node("/transform2", teapot2);
   teapot->set_draw_bounding_box(true);
-  teapot2->set_draw_bounding_box(true);
 
   /*auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
