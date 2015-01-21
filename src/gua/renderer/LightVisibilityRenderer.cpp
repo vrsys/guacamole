@@ -37,12 +37,21 @@ void LightVisibilityRenderer::render(PipelinePass& pass,
   math::vec2ui rasterizer_resolution = (enable_fullscreen_fallback)
       ? pipe.get_camera().config.get_resolution() : effective_resolution;
   
-  empty_fbo_.initialize_with_no_attachments(ctx,
-                                            rasterizer_resolution.x,
-                                            rasterizer_resolution.y,
-                                            ms_sample_count);
-  empty_fbo_.bind(ctx);
-  empty_fbo_.set_viewport(ctx);
+  if (!empty_fbo_) {
+    empty_fbo_ = ctx.render_device->create_frame_buffer();
+
+    auto const& glapi = ctx.render_context->opengl_api();
+    // TODO: ideally, FBOs with no attachments should be implemented in schism
+    glapi.glNamedFramebufferParameteriEXT(empty_fbo_->object_id(),
+                                          GL_FRAMEBUFFER_DEFAULT_WIDTH,   rasterizer_resolution.x);
+    glapi.glNamedFramebufferParameteriEXT(empty_fbo_->object_id(),
+                                          GL_FRAMEBUFFER_DEFAULT_HEIGHT,  rasterizer_resolution.y);
+    glapi.glNamedFramebufferParameteriEXT(empty_fbo_->object_id(),
+                                          GL_FRAMEBUFFER_DEFAULT_SAMPLES, ms_sample_count);
+  }
+  ctx.render_context->set_frame_buffer(empty_fbo_);
+  ctx.render_context->set_viewport(scm::gl::viewport(math::vec2ui(0, 0),
+                                                     rasterizer_resolution));
 
   if (pass.depth_stencil_state_)
     ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);

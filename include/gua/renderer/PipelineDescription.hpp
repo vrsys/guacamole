@@ -94,6 +94,22 @@ class GUA_DLL PipelineDescription {
     return abuffer_size_;
   }
 
+  void set_blending_termination_threshold(float value) {
+    blending_termination_threshold_ = std::max(std::min(value, 1.f), .5f);
+  }
+
+  float get_blending_termination_threshold() const {
+    return blending_termination_threshold_;
+  }
+
+  void set_max_lights_count(int value) {
+    max_lights_count_ = value;
+  }
+
+  int get_max_lights_count() const {
+    return max_lights_count_;
+  }
+
   void set_user_data(void* data) {
     user_data_ = data;
   }
@@ -110,7 +126,9 @@ class GUA_DLL PipelineDescription {
   std::vector<PipelinePassDescription*> passes_;
   void*  user_data_ = nullptr;
   bool   enable_abuffer_ = false;
-  size_t abuffer_size_ = 800;
+  size_t abuffer_size_ = 800; // in MiB
+  float  blending_termination_threshold_ = 0.99;
+  int    max_lights_count_ = 128;
   mutable boost::shared_mutex mutex_;
 };
 

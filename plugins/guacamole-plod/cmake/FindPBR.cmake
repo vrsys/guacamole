@@ -2,6 +2,7 @@
 # search paths
 ##############################################################################
 SET(PBR_INCLUDE_SEARCH_DIRS
+  ${PBR_ROOT}/include
   ${GLOBAL_EXT_DIR}/inc/pbr
   ${PBR_INCLUDE_SEARCH_DIR}
   ${PBR_ROOT}/common/include
@@ -17,6 +18,7 @@ SET(PBR_INCLUDE_SEARCH_DIRS
 SET(PBR_LIBRARY_SEARCH_DIRS
   ${GLOBAL_EXT_DIR}/lib
   ${PBR_LIBRARY_SEARCH_DIR}
+  ${PBR_ROOT}/lib
   /usr/lib
   /usr/lib/x86_64-linux-gnu
   /opt/local/lib
@@ -47,9 +49,9 @@ ELSEIF (UNIX)
   find_library(PBR_PREPROCESSING_LIBRARY NAMES libpbr_preprocessing.so PATHS ${PBR_LIBRARY_SEARCH_DIRS})
   find_library(PBR_RENDERING_LIBRARY NAMES libpbr_rendering.so PATHS ${PBR_LIBRARY_SEARCH_DIRS})
 
-  find_library(PBR_COMMON_LIBRARY_DEBUG ${PBR_COMMON_LIBRARY})
-  find_library(PBR_PREPROCESSING_LIBRARY_DEBUG ${PBR_PREPROCESSING_LIBRARY})
-  find_library(PBR_RENDERING_LIBRARY_DEBUG ${PBR_RENDERING_LIBRARY})
+  set(PBR_COMMON_LIBRARY_DEBUG ${PBR_COMMON_LIBRARY})
+  set(PBR_PREPROCESSING_LIBRARY_DEBUG ${PBR_PREPROCESSING_LIBRARY})
+  set(PBR_RENDERING_LIBRARY_DEBUG ${PBR_RENDERING_LIBRARY})
 
 ENDIF (MSVC)
 

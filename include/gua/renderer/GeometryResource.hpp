@@ -51,11 +51,6 @@ class GUA_DLL GeometryResource {
  public:
 
   /**
-  * Interface which provides the appropriate UberShader for the ressource
-  */
-   // virtual std::shared_ptr<GeometryUberShader> create_ubershader() const = 0;
-
-  /**
    * Interface to intersect the geometry with a ray.
    *
    * \param ray               The Ray with whom the geometry is about to be

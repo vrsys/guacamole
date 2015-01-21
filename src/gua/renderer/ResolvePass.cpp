@@ -44,11 +44,12 @@ ResolvePassDescription::ResolvePassDescription()
   depth_stencil_state_ = boost::make_optional(
       scm::gl::depth_stencil_state_desc(false, false));
 
-  uniforms["background_color"]    = math::vec3(0.2f, 0.2f, 0.2f);
-  uniforms["background_texture"]  = std::string("gua_default_texture");
-  uniforms["enable_fog"]          = false;
-  uniforms["fog_start"]           = 10.f;
-  uniforms["fog_end"]             = 1000.f;
+  uniforms["gua_tone_mapping_exposure"] = 1.0f;
+  uniforms["background_color"] = math::vec3(0.2f, 0.2f, 0.2f);
+  uniforms["background_texture"] = std::string("gua_default_texture");
+  uniforms["enable_fog"] = false;
+  uniforms["fog_start"] = 10.f;
+  uniforms["fog_end"] = 1000.f;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +123,19 @@ float ResolvePassDescription::fog_end() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::tone_mapping_exposure(float value)
+{
+  uniforms["gua_tone_mapping_exposure"] = value;
+  return *this; 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::tone_mapping_exposure() const { 
+  auto uniform(uniforms.find("gua_tone_mapping_exposure"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 PipelinePassDescription* ResolvePassDescription::make_copy() const {
   return new ResolvePassDescription(*this);
@@ -133,8 +147,6 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
 {
   substitution_map["debug_tiles"] = debug_tiles() ? "1" : "0";
   substitution_map["tone_mapping_method"] = std::to_string(static_cast<int>(tone_mapping_method()));
-  substitution_map["tone_mapping_exposure"] = std::to_string(tone_mapping_exposure());
-
   substitution_map["background_mode"] = std::to_string(static_cast<int>(mode()));
 
   PipelinePass pass{*this, ctx, substitution_map};

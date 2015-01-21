@@ -47,7 +47,13 @@ class TriMeshRenderer {
 
   void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
+  void create_state_objects(RenderContext const& ctx);
+
  private:
+
+  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
+  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
+
   std::vector<ShaderProgramStage>                                     program_stages_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
   SubstitutionMap                                                     global_substitution_map_;

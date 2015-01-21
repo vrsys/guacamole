@@ -22,10 +22,32 @@
 #include <gua/renderer/ResourceFactory.hpp>
 
 #include <fstream>
+#include <sstream>
+#include <locale>
+
+#if WIN32
+  #include <codecvt>
+#endif
+
 #include <boost/regex.hpp>
+#include <boost/filesystem.hpp>
 
 #include <gua/config.hpp>
 #include <gua/utils/Logger.hpp>
+
+namespace {
+
+  std::string gen_line(std::size_t line, std::string const& label) {
+    return std::string("#line " + std::to_string(line) + " \"" + label + "\"\n");
+  };
+
+  std::wstring gen_line(std::size_t line, std::wstring const& label) {
+    std::wstring label_prepared = label;
+    std::replace(label_prepared.begin(), label_prepared.end(), '\\', '/');
+    return std::wstring(L"#line " + std::to_wstring(line) + L" \"" + label_prepared + L"\"\n");
+  };
+
+};
 
 namespace gua {
 
@@ -36,6 +58,7 @@ ResourceFactory::ResourceFactory(std::vector<std::string> const& shader_root_dir
 {
   add_search_path(std::string(GUACAMOLE_INSTALL_DIR));
   add_search_path(std::string(GUACAMOLE_INSTALL_DIR) + "/resources");
+  add_search_path(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/shaders");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,41 +142,89 @@ bool ResourceFactory::get_file_contents(boost::filesystem::path const& filename,
                                         std::string& contents,
                                         boost::filesystem::path& full_path) const
 {
-  namespace fs = boost::filesystem;
   std::ifstream ifs;
   std::stringstream error_info;
 
-  auto probe =[&](fs::path const& dir) -> bool {
-    full_path = fs::absolute(filename, dir);
+  auto probe = [&](boost::filesystem::path const& dir) -> bool {
+    full_path = boost::filesystem::absolute(filename, dir);
     ifs.open(full_path.native());
     if (!ifs) {
-      error_info << "[" << dir.native() << "]: " << strerror(errno) << std::endl;
+      //std::string directory_native = wstring_converter.to_bytes();
+      error_info << "[" << filename.string() << "]: " << strerror(errno) << std::endl;
+      return false;
+    } else {
+      return true;
     }
-    return ifs;
   };
 
   // probe files
   if (!probe(current_dir)) {
     for (auto const& path : _search_paths) {
-      if (probe(fs::path(path))) break;
+      if (probe(boost::filesystem::path(path))) break;
     }
   }
 
   // log error if failed to find file
   if (!ifs) {
-    Logger::LOG_ERROR << "Failed to get file: \"" << filename.native()
+    Logger::LOG_ERROR << "Failed to get file: \"" << filename.string()
                       << "\" from any of the search paths:" << std::endl
                       << error_info.str() << std::endl;
     contents = "";
-    full_path = fs::path();
+    full_path = boost::filesystem::path();
     return false;
   }
 
   contents.assign((std::istreambuf_iterator<char>(ifs)),
                   (std::istreambuf_iterator<char>()));
-  full_path = fs::canonical(full_path);
+  full_path = boost::filesystem::canonical(full_path);
   return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool ResourceFactory::get_file_contents(boost::filesystem::path const& filename,
+  boost::filesystem::path const& current_dir,
+  std::wstring& contents,
+  boost::filesystem::path& full_path) const
+{
+  std::ifstream ifs;
+  std::stringstream error_info;
+
+  auto probe = [&](boost::filesystem::path const& dir) -> bool {
+    full_path = boost::filesystem::absolute(filename, dir);
+    ifs.open(full_path.native());
+    if (!ifs) {
+      error_info << "[" << filename.string() << "]: " << strerror(errno) << std::endl;
+      return false;
+    }
+    else {
+      return true;
+    }
+  };
+
+  // probe files
+  if (!probe(current_dir)) {
+    for (auto const& path : _search_paths) {
+      if (probe(boost::filesystem::path(path))) break;
+    }
+  }
+
+  // log error if failed to find file
+  if (!ifs) {
+    Logger::LOG_ERROR << "Failed to get file: \"" << filename.string()
+      << "\" from any of the search paths:" << std::endl
+      << error_info.str() << std::endl;
+    contents = L"";
+    full_path = boost::filesystem::path();
+    return false;
+  }
+
+  contents.assign((std::istreambuf_iterator<char>(ifs)),
+                  (std::istreambuf_iterator<char>()));
+  full_path = boost::filesystem::canonical(full_path);
+  return true;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -162,55 +233,77 @@ bool ResourceFactory::resolve_includes(boost::filesystem::path const& filename,
                                        std::string& contents,
                                        std::string const& custom_label) const
 {
-  namespace fs = boost::filesystem;
-
-  // line macro for shader
-  auto gen_line = [](int line, std::string const& label) {
-    return std::string("#line " + std::to_string(line) + " \"" + label + "\"\n");
-  };
-
   // get contents
-  std::string s;
-  std::string file_label;
-  fs::path    first_search_dir;
+  typedef boost::filesystem::path::string_type string_type; 
+  typedef string_type::value_type char_type;
+
+  string_type s;
+  string_type file_label;
+
+  boost::filesystem::path    first_search_dir;
   if (filename.empty()) {
     // take shader code from 'contents' parameter and label from 'custom_label'
-    s = contents;
-    file_label = custom_label;
+    s = string_type(contents.begin(), contents.end());
+    file_label = string_type(custom_label.begin(), custom_label.end());
     first_search_dir = current_dir;
   }
   else {
     // load shader code from file
-    fs::path full_path;
+    boost::filesystem::path full_path;
     if (!get_file_contents(filename, current_dir, s, full_path)) {
       contents = "";
       return false;
     }
+
     file_label = full_path.native();
     first_search_dir = full_path.parent_path();
   }
 
   // substitute inclusions
   s = gen_line(1, file_label) + s;
-  boost::regex regex("(\\@|\\#)\\s*include\\s*\"([^\"]+)\"");
-  boost::smatch match;
-  std::string out;
-  int line_ctr{};
-  while (boost::regex_search(s, match, regex)) {
+
+  std::string regex_as_char_t = "(\\@|\\#)\\s*include\\s*\"([^\"]+)\"";
+  std::string newline_as_char_t = "\n";
+
+  boost::basic_regex<char_type> regex(regex_as_char_t.begin(), regex_as_char_t.end());
+  string_type newline(newline_as_char_t.begin(), newline_as_char_t.end());
+
+  boost::match_results<string_type::const_iterator> match;
+
+  string_type out;
+  std::size_t line_ctr{};
+
+  while (boost::regex_search(s, match, regex)) 
+  {
     std::string shader_code;
-    if (!resolve_includes(fs::path(match[2]), first_search_dir, shader_code)) {
+
+    if (!resolve_includes(match[2].str(), first_search_dir, shader_code)) {
       contents = "";
       return false;
     }
-    std::string prefix = match.prefix().str();
+    string_type prefix = match.prefix().str();
     line_ctr += std::count(prefix.begin(), prefix.end(), '\n');
-    out += prefix + "\n" + shader_code + "\n" + gen_line(line_ctr, file_label);
+
+    string_type shader_code_native(shader_code.begin(), shader_code.end());
+    out += prefix + newline + shader_code_native + newline + gen_line(line_ctr, file_label);
     s = match.suffix().str();
   }
+
+#if WIN32
+  typedef std::codecvt_utf8<wchar_t> convert_type;
+  
+  std::wstring_convert<convert_type, wchar_t> converter;
+  auto contents_native = out + s;
+
+  contents = converter.to_bytes(contents_native);
+#else
   contents = out + s;
+#endif
+
   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 }
+

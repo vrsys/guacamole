@@ -23,7 +23,7 @@
 #define GUA_PLOD_LOADER_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
+#include <gua/renderer/PLOD.hpp>
 
 // external headers
 #include <unordered_set>
@@ -45,7 +45,7 @@ namespace node {
  * contexts.
  */
 
-class PLODLoader {
+class GUA_PLOD_DLL PLODLoader {
  public:
 
   enum Flags {
@@ -65,10 +65,10 @@ public:
 
   std::shared_ptr<node::PLODNode> load_geometry(std::string const& node_name, 
                                                 std::string const& file_name,
-                                                Material const& fallback_material,
+                                                std::shared_ptr<Material> const& fallback_material,
                                                 unsigned flags =  DEFAULTS);
 
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, Material const& fallback_material) const;
+  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
 
   /**
    * PLOD-lib specific configuration methods. Might be moved into a separate object later.

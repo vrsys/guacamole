@@ -2,11 +2,17 @@
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # determine source and header files
-file(GLOB_RECURSE GUACAMOLE_VIDEO3D_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    src/*.cpp
-    include/*.h
-    include/*.hpp
-)
+file(GLOB GUA_VIDEO3D_INC RELATIVE                ${CMAKE_CURRENT_SOURCE_DIR} include/gua/video3d/*.hpp)
+file(GLOB GUA_VIDEO3D_SRC RELATIVE                ${CMAKE_CURRENT_SOURCE_DIR} src/gua/video3d/*.cpp)
+file(GLOB_RECURSE GUA_VIDEO3D_DETAIL_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} include/gua/video3d/video3d_geometry/*.hpp include/gua/video3d/video3d_geometry/*.h)
+file(GLOB_RECURSE GUA_VIDEO3D_DETAIL_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/gua/video3d/video3d_geometry/*.cpp)
+FILE(GLOB_RECURSE GUA_VIDEO3D_SHADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} resources/*)
+
+SOURCE_GROUP("renderer" FILES ${GUA_VIDEO3D_INC})
+SOURCE_GROUP("renderer" FILES ${GUA_VIDEO3D_SRC})
+SOURCE_GROUP("detail"   FILES ${GUA_VIDEO3D_DETAIL_INC})
+SOURCE_GROUP("detail"   FILES ${GUA_VIDEO3D_DETAIL_SRC})
+SOURCE_GROUP("resources" FILES ${GUA_VIDEO3D_SHADERS})
 
 SET(GUACAMOLE_VIDEO3D_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-video3d includes.")
 
@@ -18,19 +24,14 @@ INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
 )
 
 ADD_LIBRARY( guacamole-video3d SHARED
-    ${GUACAMOLE_VIDEO3D_SRC}
+    ${GUA_VIDEO3D_INC}
+    ${GUA_VIDEO3D_SRC}
+    ${GUA_VIDEO3D_DETAIL_INC}
+    ${GUA_VIDEO3D_DETAIL_SRC}
+    ${GUA_VIDEO3D_SHADERS}
 )
 
-ADD_DEPENDENCIES(guacamole-video3d guacamole)
-
-IF (UNIX)
-    target_link_libraries( guacamole-video3d guacamole)
-ELSEIF (MSVC)
-    # use boost autolink feature
-    # not necessary to link GL on msvc
-ENDIF (UNIX)
-
-
+target_link_libraries( guacamole-video3d guacamole)
 
 ADD_DEPENDENCIES(guacamole-video3d guacamole)
 

@@ -76,6 +76,7 @@ struct GUA_DLL GetByteSize : public boost::static_visitor<unsigned> {
   unsigned operator()(std::string) const { return sizeof(math::vec2ui); }
 };
 
+
 class GUA_DLL UniformValue {
 
   typedef boost::variant<int,
@@ -100,7 +101,9 @@ class GUA_DLL UniformValue {
   // -------------------------------------------------------------------------
   template <typename T>
   UniformValue(T const& val)
-      : apply_impl_(apply<T>), write_bytes_impl_(write_bytes_impl<T>) {
+      : apply_impl_(apply<T>)
+      , write_bytes_impl_(write_bytes_impl<T>)
+      , serialize_to_stream_impl_(serialize_to_stream_impl<T>) {
     set(val);
   }
 
@@ -116,6 +119,8 @@ class GUA_DLL UniformValue {
 
   static UniformValue create_from_strings(std::string const& value,
                                           std::string const& ty);
+
+  static UniformValue create_from_serialized_string(std::string const& value);
 
   // -------------------------------------------------------------------------
   void apply(RenderContext const& ctx,
@@ -133,6 +138,10 @@ class GUA_DLL UniformValue {
     return boost::apply_visitor(GetByteSize(), data);
   }
 
+  std::ostream& serialize_to_stream(std::ostream& os) const {
+    return serialize_to_stream_impl_(this, os);
+  }
+
   void write_bytes(RenderContext const& ctx, char* target) const {
     write_bytes_impl_(this, ctx, target);
   }
@@ -140,6 +149,7 @@ class GUA_DLL UniformValue {
   void operator=(UniformValue const& to_copy) {
     apply_impl_ = to_copy.apply_impl_;
     write_bytes_impl_ = to_copy.write_bytes_impl_;
+    serialize_to_stream_impl_ = to_copy.serialize_to_stream_impl_;
     data = to_copy.data;
   }
 
@@ -165,13 +175,23 @@ class GUA_DLL UniformValue {
     memcpy(target, &boost::get<T>(self->data), sizeof(T));
   }
 
+  template <typename T>
+  static std::ostream& serialize_to_stream_impl(UniformValue const* self,
+                                                std::ostream& os) {
+    return os;
+  }
+
   std::function<void(UniformValue const*,
                      RenderContext const&,
                      std::string const&,
                      scm::gl::program_ptr const&,
                      unsigned)> apply_impl_;
+
   std::function<void(UniformValue const*, RenderContext const&, char*)>
       write_bytes_impl_;
+
+  std::function<std::ostream& (UniformValue const*, std::ostream& os)>
+      serialize_to_stream_impl_;
 };
 
 // specializations
@@ -192,6 +212,85 @@ template <>
 GUA_DLL void UniformValue::write_bytes_impl<bool>(UniformValue const* self,
                                                   RenderContext const& ctx,
                                                   char* target);
+
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<int>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<bool>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<float>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::mat3>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::mat4>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec2>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec3>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec4>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec2i>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec3i>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec4i>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec2ui>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec3ui>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec4ui>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<std::string>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
+
+//operators
+std::ostream& operator<<(std::ostream& os, UniformValue const& val);
 
 }
 

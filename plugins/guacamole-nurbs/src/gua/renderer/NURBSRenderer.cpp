@@ -26,7 +26,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 
 #include <gua/node/NURBSNode.hpp>
 
@@ -152,24 +152,24 @@ namespace gua {
   void NURBSRenderer::_load_shaders()
   {
     pre_tesselation_shader_stages_.clear();
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.vert")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.tctrl")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.teval")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_from_file("resources/shaders/nurbs/pre_tesselation.geom")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.vert")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.tctrl")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.teval")));
+    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.geom")));
 
     pre_tesselation_interleaved_stream_capture_.clear();
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_position");
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_index");
     pre_tesselation_interleaved_stream_capture_.push_back("xfb_tesscoord");
 
-    tesselation_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]          = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.vert");
-    tesselation_shader_stages_[scm::gl::STAGE_TESS_CONTROL_SHADER]    = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.tctrl");
-    tesselation_shader_stages_[scm::gl::STAGE_TESS_EVALUATION_SHADER] = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.teval");
-    tesselation_shader_stages_[scm::gl::STAGE_GEOMETRY_SHADER]        = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.geom");
-    tesselation_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]        = factory_.read_from_file("resources/shaders/nurbs/final_tesselation.frag");
+    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.vert")));
+    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.tctrl")));
+    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.teval")));
+    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.geom")));
+    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.frag")));
 
-    raycasting_shader_stages_[scm::gl::STAGE_VERTEX_SHADER]           = factory_.read_from_file("resources/shaders/nurbs/ray_casting.vert");
-    raycasting_shader_stages_[scm::gl::STAGE_FRAGMENT_SHADER]         = factory_.read_from_file("resources/shaders/nurbs/ray_casting.frag");
+    raycasting_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/ray_casting.vert")));
+    raycasting_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory_.read_shader_file("resources/shaders/nurbs/ray_casting.frag")));
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +189,14 @@ namespace gua {
   {
     if (!tesselation_programs_.count(material))
     {
-      auto program = factory_.create_program(material, tesselation_shader_stages_);
+      auto program = std::make_shared<ShaderProgram>();
+
+      auto smap    = global_substitution_map_;
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+      }
+
+      program->set_shaders(tesselation_shader_stages_, std::list<std::string>(), false, smap);
       tesselation_programs_[material] = program;
     }
     assert(tesselation_programs_.count(material));
@@ -200,8 +207,14 @@ namespace gua {
   {
     if (!raycasting_programs_.count(material))
     {
-      auto program = factory_.create_program(material, raycasting_shader_stages_);
-      program->save_to_file(".", "raycasting");
+      auto program = std::make_shared<ShaderProgram>();
+
+      auto smap = global_substitution_map_;
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+      }
+
+      program->set_shaders(raycasting_shader_stages_, std::list<std::string>(), false, smap);
       raycasting_programs_[material] = program;
     }
     assert(raycasting_programs_.count(material));
@@ -311,7 +324,7 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
       current_material_program = _get_material_program(current_material, 
                                                        current_material_program, 
-                                                       nurbs_node->rendermode_raycasting(), 
+                                                       nurbs_node->raycasting(), 
                                                        program_changed);
 
       UniformValue model_mat(nurbs_node->get_cached_world_transform());
@@ -321,19 +334,24 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
       if (nurbs_ressource && pre_tesselation_program_ && current_material_program) {
 
-        if (nurbs_node->rendermode_raycasting())
+        if (nurbs_node->raycasting())
         {
           // render using raycasting
           current_material_program->use(ctx);
           {
             current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
             current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
             current_material_program->apply_uniform(ctx, "nearplane", pipe.get_camera().config.get_near_clip());
             current_material_program->apply_uniform(ctx, "farplane", pipe.get_camera().config.get_far_clip());
 
+            current_material_program->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
+              pipe.get_gbuffer().get_height()),
+              "gua_resolution"); 
+
             nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 
-            nurbs_ressource->draw(ctx, true);
+            nurbs_ressource->draw(ctx, true, nurbs_node->render_backfaces());
           }
           current_material_program->unuse(ctx);
         } else {
@@ -351,7 +369,7 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
             pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
             ctx.render_context->apply();
-            nurbs_ressource->predraw(ctx);
+            nurbs_ressource->predraw(ctx, nurbs_node->render_backfaces());
           }
           pre_tesselation_program_->unuse(ctx);
 
@@ -369,8 +387,12 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
             current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
             current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
+            current_material_program->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
+              pipe.get_gbuffer().get_height()),
+              "gua_resolution");
+
             ctx.render_context->apply();
-            nurbs_ressource->draw(ctx, false);
+            nurbs_ressource->draw(ctx, false, nurbs_node->render_backfaces());
           }
           current_material_program->unuse(ctx);
         }
@@ -384,59 +406,5 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     pipe.get_gbuffer().unbind(ctx);
   }
 }
-
-#if 0
-  auto geometry = std::static_pointer_cast<NURBSResource>(GeometryDatabase::instance()->lookup(filename));
-  auto material = MaterialDatabase::instance()->lookup(material_name);
-
-  //set_uniform(ctx, 8, "gua_max_tesselation");
-  set_uniform(ctx, material->get_id(), "gua_material_id");
-  set_uniform(ctx, model_matrix, "gua_model_matrix");
-  set_uniform(ctx, normal_matrix, "gua_normal_matrix");
-  
-
-  if ( geometry->raycasting_enabled() ) 
-  {
-    get_program(raycasting)->set_uniform(ctx, frustum.get_clip_near(), "nearplane");
-    get_program(raycasting)->set_uniform(ctx, frustum.get_clip_near(), "farplane");
-
-    get_program(raycasting)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->draw(ctx);
-    }
-    get_program(raycasting)->unuse(ctx);
-  } else {
-  #ifdef DEBUG_XFB_OUTPUT
-    scm::gl::transform_feedback_statistics_query_ptr q = ctx
-      .render_device->create_transform_feedback_statistics_query(0);
-    ctx.render_context->begin_query(q);
-#endif
-
-    // pre-tesselate if necessary
-    get_program(tesselation_pre_pass)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->predraw(ctx);
-    }
-    get_program(tesselation_pre_pass)->unuse(ctx);
-
-#ifdef DEBUG_XFB_OUTPUT
-    ctx.render_context->end_query(q);
-    ctx.render_context->collect_query_results(q);
-    std::cout << q->result()._primitives_generated << " , "
-      << q->result()._primitives_written << std::endl;
-#endif
-
-    // invoke tesselation/trim shader for adaptive nurbs rendering
-    get_program(tesselation_final_pass)->use(ctx);
-    {
-      ctx.render_context->apply();
-      geometry->draw(ctx);
-    }
-    get_program(tesselation_final_pass)->unuse(ctx);
-  }
-#endif
-
 
 } // namespace gua

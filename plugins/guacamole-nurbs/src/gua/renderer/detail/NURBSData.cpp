@@ -30,7 +30,7 @@
 
 namespace gua {
 
-NURBSData::NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o)
+  NURBSData::NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o, unsigned pre_subdivision_u, unsigned pre_subdivision_v)
     : object(o),
       tess_patch_data(),
       tess_index_data(),
@@ -43,7 +43,7 @@ NURBSData::NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o)
       trim_pointdata(1) 
 {
   if (!object->initialized()) {
-    object->init(0, 0);
+    object->init(pre_subdivision_u, pre_subdivision_v);
   }
 
   unsigned patch_id = tess_attribute_data.size();
@@ -51,7 +51,7 @@ NURBSData::NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o)
   // serialize trim domain
   std::unordered_map<gpucast::trimdomain_serializer_contour_map_binary::curve_ptr, unsigned>       referenced_curves;
   std::unordered_map<gpucast::trimdomain_serializer_contour_map_binary::trimdomain_ptr, unsigned>  referenced_domains;
-  std::unordered_map<gpucast::math::contour_map_binary<double>::contour_segment_ptr, unsigned>      referenced_segments;
+  std::unordered_map<gpucast::math::domain::contour_map_binary<double>::contour_segment_ptr, unsigned>      referenced_segments;
 
   gpucast::trimdomain_serializer_contour_map_binary serializer;
 

@@ -36,7 +36,7 @@ void MaterialShaderDescription::load_from_file(std::string const& file_name) {
     TextFile file(file_name);
 
     if (file.is_valid()) {
-      load_from_buffer(file.get_content());
+      load_from_json(file.get_content());
     } else {
       Logger::LOG_WARNING << "Failed to load material description\""
                           << file_name << "\": "
@@ -47,12 +47,12 @@ void MaterialShaderDescription::load_from_file(std::string const& file_name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MaterialShaderDescription::load_from_buffer(std::string const& buffer) {
+void MaterialShaderDescription::load_from_json(std::string const& json) {
 
   Json::Value value;
   Json::Reader reader;
-  if (!reader.parse(buffer, value)) {
-    Logger::LOG_WARNING << "Failed to parse material description: " << buffer << std::endl;
+  if (!reader.parse(json, value)) {
+    Logger::LOG_WARNING << "Failed to parse material description: " << json << std::endl;
     return;
   }
 
@@ -61,14 +61,14 @@ void MaterialShaderDescription::load_from_buffer(std::string const& buffer) {
 
     for (int i(0); i < value["vertex_methods"].size(); ++i) {
       auto method(value["vertex_methods"][i]);
-      MaterialShaderMethod vertex_method;
+      auto vertex_method(std::make_shared<MaterialShaderMethod>());
 
       // load method from file if file name is set
       if (method["file_name"] != Json::Value::null) {
-        vertex_method.load_from_file(method["file_name"].asString());
+        vertex_method->load_from_file(method["file_name"].asString());
       // else use name and source
       } else {
-        vertex_method.load_from_json(method.toStyledString());
+        vertex_method->load_from_json(method.toStyledString());
       }
 
       add_vertex_method(vertex_method);
@@ -80,14 +80,14 @@ void MaterialShaderDescription::load_from_buffer(std::string const& buffer) {
 
     for (int i(0); i < value["fragment_methods"].size(); ++i) {
       auto method(value["fragment_methods"][i]);
-      MaterialShaderMethod fragment_method;
+      auto fragment_method(std::make_shared<MaterialShaderMethod>());
 
       // load method from file if file name is set
       if (method["file_name"] != Json::Value::null) {
-        fragment_method.load_from_file(method["file_name"].asString());
+        fragment_method->load_from_file(method["file_name"].asString());
       // else use name and source
       } else {
-        fragment_method.load_from_json(method.toStyledString());
+        fragment_method->load_from_json(method.toStyledString());
       }
 
       add_fragment_method(fragment_method);
@@ -96,24 +96,24 @@ void MaterialShaderDescription::load_from_buffer(std::string const& buffer) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderDescription& MaterialShaderDescription::add_vertex_method(MaterialShaderMethod const& method) {
+MaterialShaderDescription& MaterialShaderDescription::add_vertex_method(std::shared_ptr<MaterialShaderMethod> const& method) {
   vertex_methods_.push_back(method);
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderDescription& MaterialShaderDescription::add_fragment_method(MaterialShaderMethod const& method) {
+MaterialShaderDescription& MaterialShaderDescription::add_fragment_method(std::shared_ptr<MaterialShaderMethod> const& method) {
   fragment_methods_.push_back(method);
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<MaterialShaderMethod> const& MaterialShaderDescription::get_vertex_methods() const {
+std::list<std::shared_ptr<MaterialShaderMethod>> const& MaterialShaderDescription::get_vertex_methods() const {
   return vertex_methods_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<MaterialShaderMethod> const& MaterialShaderDescription::get_fragment_methods() const {
+std::list<std::shared_ptr<MaterialShaderMethod>> const& MaterialShaderDescription::get_fragment_methods() const {
   return fragment_methods_;
 }
 

@@ -32,6 +32,50 @@
 #include <gua/utils/Trackball.hpp>
 #include <gua/node/NURBSNode.hpp>
 
+void toggle_raycasting(std::shared_ptr<gua::node::Node> const& node)
+{
+  auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
+  if (nurbs_node)
+    nurbs_node->raycasting(!nurbs_node->raycasting());
+
+  for (auto const& node : node->get_children()) {
+    toggle_raycasting(node);
+  }
+}
+
+
+void toggle_backface_culling(std::shared_ptr<gua::node::Node> const& node)
+{
+  auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
+  if (nurbs_node)
+    nurbs_node->render_backfaces(!nurbs_node->render_backfaces());
+
+  for (auto const& node : node->get_children()) {
+    toggle_backface_culling(node);
+  }
+}
+
+
+void toggle_trimming(std::shared_ptr<gua::node::Node> const& node)
+{
+  auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
+  if (nurbs_node) {
+    switch (nurbs_node->trimming_mode())
+    {
+    case gua::node::NURBSNode::classic :
+      nurbs_node->trimming_mode(gua::node::NURBSNode::double_binary_contours);
+      break;
+    case gua::node::NURBSNode::double_binary_contours:
+      nurbs_node->trimming_mode(gua::node::NURBSNode::classic);
+      break;
+    }
+  }
+
+  for (auto const& node : node->get_children()) {
+    toggle_trimming(node);
+  }
+}
+
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -54,24 +98,27 @@ void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action,
 
 void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods)
 {
-  char k = std::tolower(key);
-
-  auto& trimesh_desc = pipe.get_pass<gua::NURBSPassDescription>();
-  auto node = graph["/nurbs_transform/nurbs_object"];
-  auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
-
   if (action == 0) return;
 
-  switch (k)
+  auto& d_r = pipe.get_pass<gua::ResolvePassDescription>();
+
+  switch (std::tolower(key))
   {
   case 'r' :
-    trimesh_desc.touch();
+    pipe.get_pass<gua::NURBSPassDescription>().touch();
     break;
   case 't' : 
-    if (nurbs_node)
-    {
-      nurbs_node->rendermode_raycasting(!nurbs_node->rendermode_raycasting());
-    }
+    toggle_raycasting(graph.get_root());
+    break;
+  case 'b':
+    toggle_backface_culling(graph.get_root());
+    break;
+  case 'y':
+    toggle_trimming(graph.get_root());
+    break;
+  case 'q':
+    d_r.debug_tiles(!d_r.debug_tiles());
+    d_r.touch();
     break;
   default : 
     break;
@@ -79,19 +126,32 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// create node
+/////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<gua::node::Node> create_node_from_igs_file(std::string const& nodename, std::string const& filepath, std::shared_ptr<gua::Material> const& material)
+{
+  gua::NURBSLoader nurbs_loader;
+  return nurbs_loader.load_geometry(nodename, filepath, material, gua::NURBSLoader::DEFAULTS);
+}
 
-int main(int argc, char** argv) {
-
+/////////////////////////////////////////////////////////////////////////////
+// application
+/////////////////////////////////////////////////////////////////////////////
+int main(int argc, char** argv) 
+{
+  // some global constants
   gua::math::vec4 iron(0.560, 0.570, 0.580, 1);
   gua::math::vec4 silver(0.972, 0.960, 0.915, 1);
   gua::math::vec4 aluminium(0.913, 0.921, 0.925, 1);
-  gua::math::vec4 gold(1.000, 0.766, 0.336, 1);
+  gua::math::vec4 gold(1.0, 0.766, 0.336, 1);
   gua::math::vec4 copper(0.955, 0.637, 0.538, 1);
   gua::math::vec4 chromium(0.550, 0.556, 0.554, 1);
   gua::math::vec4 nickel(0.660, 0.609, 0.526, 1);
   gua::math::vec4 titanium(0.542, 0.497, 0.449, 1);
   gua::math::vec4 cobalt(0.662, 0.655, 0.634, 1);
   gua::math::vec4 platinum(0.672, 0.637, 0.585, 1);
+  gua::math::vec4 water(0.2, 0.2, 0.2, 1);
 
   // initialize guacamole
   gua::init(argc, argv);
@@ -99,77 +159,128 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  gua::MaterialShaderDescription desc;
-  desc.load_from_file("data/materials/SimpleMaterial.gmd");
+  // create simple untextured material shader
+  auto desc = std::make_shared<gua::MaterialShaderDescription>();
+  desc->load_from_file("./data/materials/SimpleMaterial.gmd");
+  auto material_shader(std::make_shared<gua::MaterialShader>("simple_material", desc));
 
-  auto shader(std::make_shared<gua::MaterialShader>("simple_mat", desc));
-  gua::MaterialShaderDatabase::instance()->add(shader);
+  // create new material configurations for material shader
+  gua::MaterialShaderDatabase::instance()->add(material_shader);
+  auto lack  = material_shader->make_new_material();
+  auto glass = material_shader->make_new_material();
+  auto gum   = material_shader->make_new_material();
 
-  gua::NURBSLoader nurbs_loader;
-  gua::TriMeshLoader loader;
+  // configure materials 
+  lack->set_uniform("Color", copper);
+  lack->set_uniform("Roughness", 0.5f);
+  lack->set_uniform("Metalness", 0.8f);
+  lack->set_uniform("Opacity", 1.0f);
 
+  glass->set_uniform("Color", water);
+  glass->set_uniform("Roughness", 0.3f);
+  glass->set_uniform("Metalness", 1.0f);
+  glass->set_uniform("Opacity", 0.1f);
+
+  gum->set_uniform("Color", gua::math::vec4(0.1, 0.1, 0.1, 1.0));
+  gum->set_uniform("Roughness", 1.0f);
+  gum->set_uniform("Metalness", 0.0f);
+  gum->set_uniform("Opacity", 1.0f);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // setup scene
+  /////////////////////////////////////////////////////////////////////////////
   auto input_transform = graph.add_node<gua::node::TransformNode>("/", "nurbs_transform");
+  auto count = 0;
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/deckel_vorn.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/schweller_links.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/schweller_rechts.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/seitenteil_hinten_links.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/seitenteil_hinten_rechts.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/seitenteil_hinten_links.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/seitenteil_hinten_rechts.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/kotfluegel_vorn_links.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/kotfluegel_vorn_rechts.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/stossfaenger_vorn.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/a_saeule_closed.igs", lack));
+                                                             
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/heckscheibe.igs", glass));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_links.igs", glass));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_links.igs", glass));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/windschutzscheibe.igs", glass));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_rechts.igs", glass));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_rechts.igs", glass));
+  
 
-  auto nurbs_object (nurbs_loader.load_geometry(
-    "nurbs_object",
-    //"I:/models/Paris/Paris2010_0.obj",
-    "data/objects/teapot.igs",
-    shader->get_default_material(),
-    gua::NURBSLoader::NORMALIZE_POSITION |
-    gua::NURBSLoader::NORMALIZE_SCALE //|
-    //gua::NURBSLoader::WIREFRAME
-    ));
-  input_transform->add_child(nurbs_object);
+  graph.update_cache();
+  auto bbox = input_transform->get_bounding_box();
+  input_transform->translate(-bbox.center());
+  graph.update_cache();
+  
+  auto scene_size = scm::math::length(bbox.max - bbox.min);
+  scene_size = std::max(scene_size, 1.0f);
 
-  auto pbrMat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+  unsigned const max_lights = 20;
+  unsigned const max_light_intensity = 10000.0f;
+  unsigned const min_light_intensity = 1000.0f;
+  float const light_scale = 10.0f;
 
-  pbrMat->set_uniform("Color", copper);
-  pbrMat->set_uniform("Roughness", 0.2f);
-  pbrMat->set_uniform("Metalness", 1.0f);
+  for (unsigned i = 0; i != max_lights; ++i)
+  {
+    // create random light
+    float relative_intensity = float(std::rand()) / float(RAND_MAX);
 
-  nurbs_object->set_material(pbrMat);
+    float x = float(std::rand() % unsigned(scene_size)) - scene_size/2;
+    float y = float(std::rand() % unsigned(scene_size)) - scene_size/2;
+    float z = float(std::rand() % unsigned(scene_size)) + scene_size;
 
-  auto resolution = gua::math::vec2ui(1920, 1080);
+    std::string lightname = std::string("light") + std::to_string(i);
+    auto light = graph.add_node<gua::node::PointLightNode>("/", lightname);
 
-  //auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
-  //light->scale(4.4f);
-  //light->translate(1.f, 0.f, 2.f);
+    light->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
+    //light->scale(light_scale * scene_size * relative_intensity);
+    light->scale(30000.0f);
+    light->data.brightness = min_light_intensity + relative_intensity * (max_light_intensity - min_light_intensity);
+    light->translate(x, y, z);
 
+    // add light proxy
+    gua::TriMeshLoader loader;
+    auto light_proxy(loader.create_geometry_from_file("light_proxy", "./data/objects/sphere.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+    light_proxy->scale(0.02f * (1.0f / light_scale));
+    light->add_child(light_proxy);
+  }
 
-  auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
-  light2->scale(3.4f);
-  light2->data.brightness = 30.0f;
-  light2->translate(-2.f, 1.f, 2.f);
-
+  auto resolution   = gua::math::vec2ui(1920, 1080);
+  auto aspect_ratio = float(resolution.x) / float(resolution.y);
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(0.001 * resolution.x, 0.001 * resolution.y));
-  screen->translate(0, 0, 1.0);
+  screen->data.set_size(gua::math::vec2(scene_size * aspect_ratio, scene_size));
+  screen->translate(0, 0, scene_size);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 2.0);
+  camera->translate(0, 0, 2 * scene_size);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_frustum_culling(false);
+  camera->config.set_near_clip(0.01f * scene_size);
+  camera->config.set_far_clip(10.0f * scene_size);
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass<gua::TriMeshPassDescription>();
   pipe->add_pass<gua::NURBSPassDescription>();
   pipe->add_pass<gua::TexturedQuadPassDescription>();
-  //pipe->add_pass<gua::SSAOPassDescription>();
-  pipe->add_pass<gua::EmissivePassDescription>();
-  //pipe->add_pass<gua::LightingPassDescription>();
-  pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  pipe->add_pass<gua::ToneMappingPassDescription>();
-  pipe->add_pass<gua::BBoxPassDescription>();
-  pipe->add_pass<gua::BackgroundPassDescription>();
-  pipe->add_pass<gua::TexturedScreenSpaceQuadPassDescription>();
+  pipe->add_pass<gua::LightVisibilityPassDescription>();
+  //pipe->add_pass<gua::BBoxPassDescription>();
+  pipe->add_pass<gua::ResolvePassDescription>().tone_mapping_exposure(64.0f);
+  //pipe->add_pass<gua::TexturedScreenSpaceQuadPassDescription>();
+
+  pipe->set_enable_abuffer(true);
   
   camera->set_pipeline_description(pipe);
+  //camera->get_pipeline_description()->get_pass<gua::LightVisibilityPassDescription>().rasterization_mode(gua::LightVisibilityPassDescription::CONSERVATIVE);
+  camera->get_pipeline_description()->get_pass<gua::LightVisibilityPassDescription>().rasterization_mode(gua::LightVisibilityPassDescription::FULLSCREEN_FALLBACK);
 
-  gua::utils::Trackball trackball(0.01, 0.002, 0.2);
+  gua::utils::Trackball trackball(0.01 * scene_size, 0.002 * scene_size, 0.2);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -180,7 +291,9 @@ int main(int argc, char** argv) {
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
-    screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+
+    auto new_aspect_ratio = float(new_size.x) / float(new_size.y);
+    screen->data.set_size(gua::math::vec2(scene_size * new_aspect_ratio, scene_size));
   });
 
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
@@ -208,11 +321,15 @@ int main(int argc, char** argv) {
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
+  std::size_t frame_counter = 0;
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     input_transform->set_transform(modelmatrix);
+
+    if (frame_counter++ % 500 == 0)
+      std::cout << camera->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {

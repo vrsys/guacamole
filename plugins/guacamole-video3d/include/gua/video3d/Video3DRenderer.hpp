@@ -34,7 +34,6 @@
 namespace gua {
 
 class ShaderProgram;
-class FrameBufferObject;
 class Pipeline;
 class MaterialShader;
 

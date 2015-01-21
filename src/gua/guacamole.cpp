@@ -64,8 +64,8 @@ void init(int argc, char** argv) {
     std::shared_ptr<GeometryResource>(
     static_cast<GeometryResource*>(mesh_loader.load_from_buffer(light_cone_obj.c_str(), light_cone_obj.size(), false)[0])));
 
-  gua::MaterialShaderDescription desc;
-  desc.load_from_buffer(material_pbs.c_str());
+  auto desc(std::make_shared<gua::MaterialShaderDescription>());
+  desc->load_from_json(material_pbs.c_str());
 #else
   GeometryDatabase::instance()->add(
       "gua_light_sphere_proxy",
@@ -81,8 +81,8 @@ void init(int argc, char** argv) {
               Resources::lookup_string(Resources::geometry_gua_light_cone_obj).c_str(),
               Resources::geometry_gua_light_cone_obj.size(), false)[0])));
 
-  gua::MaterialShaderDescription desc;
-  desc.load_from_buffer(Resources::lookup_string(Resources::materials_pbs_gmd).c_str());
+  auto desc(std::make_shared<gua::MaterialShaderDescription>());
+  desc->load_from_json(Resources::lookup_string(Resources::materials_pbs_gmd).c_str());
 #endif
 
   auto shader(std::make_shared<gua::MaterialShader>("gua_default_material", desc));

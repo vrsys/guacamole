@@ -59,8 +59,6 @@ struct ShaderProgramStage {
 class GUA_DLL ShaderProgram {
  public:
 
-  friend class NURBSUberShader;
-
  public:
   /**
    * Default constructor.

@@ -55,6 +55,14 @@ TriMeshRenderer::TriMeshRenderer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void TriMeshRenderer::create_state_objects(RenderContext const& ctx)
+{
+  rs_cull_back_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
+  rs_cull_none_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
 
@@ -79,7 +87,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
     MaterialShader*                current_material(nullptr);
     std::shared_ptr<ShaderProgram> current_shader;
-
+    auto current_rasterizer_state = rs_cull_back_;
     ctx.render_context->apply();
 
     // loop through all objects, sorted by material ----------------------------
@@ -127,7 +135,15 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
         tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
 
+        current_rasterizer_state = tri_mesh_node->get_material()->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
+
+        if (ctx.render_context->current_rasterizer_state() != current_rasterizer_state) {
+          ctx.render_context->set_rasterizer_state(current_rasterizer_state);
+          ctx.render_context->apply_state_objects();
+        }
+
         ctx.render_context->apply_program();
+
 
         tri_mesh_node->get_geometry()->draw(ctx);
       }
@@ -135,6 +151,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
     pipe.get_gbuffer().unbind(ctx);
     pipe.get_abuffer().unbind(ctx);
+    ctx.render_context->reset_state_objects();
   }
 }
 

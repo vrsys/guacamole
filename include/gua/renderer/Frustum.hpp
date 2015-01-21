@@ -31,7 +31,7 @@ namespace gua {
 /**
  *
  */
-class Frustum {
+class GUA_DLL Frustum {
 
  public:
 
