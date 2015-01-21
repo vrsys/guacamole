@@ -184,15 +184,14 @@ class GUA_DLL ShaderProgram {
 
   virtual bool upload_to(RenderContext const& context) const;
 
-  inline scm::gl::program_ptr const& get_program ( RenderContext const& ctx ) const { return programs_[ctx.id]; }
+  inline scm::gl::program_ptr const& get_program ( RenderContext const&) const { return program_; }
 
  protected:  // attributes
 
-  mutable std::vector<scm::gl::program_ptr> programs_;
+  mutable scm::gl::program_ptr program_;
 
  private:  // attributes
 
-  mutable std::mutex upload_mutex_;
   mutable bool dirty_ = false;
 
   std::vector<ShaderProgramStage> stages_;

@@ -33,7 +33,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 ShaderProgram::ShaderProgram()
-    : programs_(), upload_mutex_(), stages_(), interleaved_stream_capture_() {}
+    : program_(), stages_(), interleaved_stream_capture_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,12 +82,8 @@ void ShaderProgram::save_to_file(std::string const& directory,
 void ShaderProgram::create_from_sources(std::string const & v_source,
                                         std::string const & f_source,
                                         SubstitutionMap const& substitutions) {
+  program_.reset();
 
-  for (auto p : programs_) {
-    p.reset();
-  }
-
-  programs_.clear();
   interleaved_stream_capture_.clear();
   in_rasterization_discard_ = false;
   substitutions_ = substitutions;
@@ -103,13 +99,8 @@ void ShaderProgram::create_from_sources(std::string const & v_source,
                                         std::string const & g_source,
                                         std::string const & f_source,
                                         SubstitutionMap const& substitutions) {
+  program_.reset();
 
-  for (auto p : programs_) {
-    p.reset();
-
-  }
-
-  programs_.clear();
   interleaved_stream_capture_.clear();
   in_rasterization_discard_ = false;
   substitutions_ = substitutions;
@@ -126,12 +117,8 @@ void ShaderProgram::set_shaders(
     std::list<std::string> const & interleaved_stream_capture,
     bool in_rasterization_discard,
                            SubstitutionMap const& substitutions) {
+  program_.reset();
 
-  for (auto p : programs_) {
-    p.reset();
-  }
-
-  programs_.clear();
   interleaved_stream_capture_.clear();
 
   stages_ = shaders;
@@ -150,26 +137,12 @@ void ShaderProgram::set_substitutions(SubstitutionMap const& substitutions) {
   }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShaderProgram::use(RenderContext const & context) const {
-
   // upload to GPU if neccessary
   upload_to(context);
-
-  auto save = [](std::string const & content, std::string const & file) {
-    gua::TextFile text(file);
-    text.set_content(string_utils::format_code(content));
-    text.save();
-  };
-
-  //if ( !programs_.empty() )
-  //{
-  //  save(programs_[0]->info_log(), "program.log");
-  //}
-
-  context.render_context->bind_program(programs_[context.id]);
+  context.render_context->bind_program(program_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,11 +157,9 @@ void ShaderProgram::apply_uniform(RenderContext const & context,
                                   std::string const& name,
                                   UniformValue const& uniform,
                                   unsigned position) const {
-
   // upload to GPU if neccessary
   upload_to(context);
-
-  uniform.apply(context, name, programs_[context.id], position);
+  uniform.apply(context, name, program_, position);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,22 +172,14 @@ void ShaderProgram::set_subroutine(RenderContext const & context,
   // upload to GPU if neccessary
   upload_to(context);
 
-  programs_[context.id]
-      ->uniform_subroutine(stage, uniform_name, routine_name);
+  program_->uniform_subroutine(stage, uniform_name, routine_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool ShaderProgram::upload_to(RenderContext const & context) const {
 
-  if (   programs_.size() <= context.id
-      || !programs_[context.id]
-      || dirty_) {
-    std::unique_lock<std::mutex> lock(upload_mutex_);
-    if (programs_.size() <= context.id) {
-      programs_.resize(context.id + 1);
-    }
-
+  if ( !program_ || dirty_) {
     std::list<scm::gl::shader_ptr> shaders;
     ResourceFactory factory;
     for (auto const& s : stages_) {
@@ -225,8 +188,7 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
     }
 
     if (interleaved_stream_capture_.empty()) {
-      programs_[context.id] =
-          context.render_device->create_program(shaders);
+      program_ = context.render_device->create_program(shaders);
     } else {
       scm::gl::interleaved_stream_capture capture_array(
           interleaved_stream_capture_.front());
@@ -235,15 +197,14 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
         capture_array(*k);
       }
 
-      programs_[context.id] = context.render_device->create_program(
+      program_ = context.render_device->create_program(
           shaders, capture_array, in_rasterization_discard_);
     }
 
     dirty_ = false;
 
-    if (!programs_[context.id]) {
+    if (!program_) {
       Logger::LOG_WARNING << "Failed to create shaders!" << std::endl;
-
       return false;
     }
   }
