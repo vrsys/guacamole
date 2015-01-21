@@ -10,6 +10,7 @@ layout (std140, binding=0) uniform cameraBlock {
 };
 
 vec3 gua_camera_position = gua_camera_position_4.xyz;
+float gua_tone_mapping_exposure = 1.0;
 
 uniform mat4 gua_model_matrix;
 uniform mat4 gua_normal_matrix;
