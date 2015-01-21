@@ -51,17 +51,29 @@ int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
 
+  auto load_mat = [](std::string const& file){
+    gua::MaterialShaderDescription desc;
+    desc.load_from_file(file);
+    auto shader(std::make_shared<gua::MaterialShader>(file, desc));
+    gua::MaterialShaderDatabase::instance()->add(shader);
+    return shader->get_default_material();
+  };
+
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform", plane);
 
-  // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  // graph.add_node("/transform", teapot);
+  // load material and create monkey geometry 
+  auto projective_material(load_mat("data/materials/Projective_Texture_Material.gmd"));
+  projective_material->set_uniform("projective_texture", std::string("data/textures/smiley.jpg"));
+
+  auto monkey(loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", projective_material, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  monkey->scale(3);
+  monkey->translate(0.0, 0.0, -1.0);
+  graph.add_node("/transform", monkey);
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->data.brightness = 150.0f;
@@ -85,6 +97,23 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
+
+
+  // projector transform node, screen and transform node
+  auto projector_transform = graph.add_node<gua::node::TransformNode>("/", "projector_transform");
+  projector_transform->translate(0.7, 0.0, 0.7);
+  projector_transform->rotate(45.0, 0.0, 1.0, 0.0);
+  graph.add_node("/", projector_transform);
+  
+  auto projector_screen = graph.add_node<gua::node::ScreenNode>("/projector_transform", "projector_screen");
+  projector_screen->data.set_size(gua::math::vec2(0.5f, 0.5f));
+  projector_screen->translate(0.0, 0.0, -1.0);
+  graph.add_node("/projector_transform", projector_screen);
+
+  auto projector_geometry(loader.create_geometry_from_file("projector_geometry", "data/objects/projector.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::LOAD_MATERIALS));
+  projector_geometry->scale(0.1);
+  graph.add_node("/projector_transform", projector_geometry);
+
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -114,7 +143,20 @@ int main(int argc, char** argv) {
 
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
-    transform->set_transform(modelmatrix);
+    projector_transform->set_transform(modelmatrix);
+    
+
+    // use the guacamole frustum to calculate a view mat and projection mat for the projection
+    auto projection_frustum = gua::Frustum::perspective(projector_transform->get_world_transform(), 
+                                                   projector_screen->get_scaled_world_transform(),
+                                                   0.1f, 1000.0f);
+    
+    auto projection_mat = projection_frustum.get_projection();
+    auto view_mat = projection_frustum.get_view();
+
+    // set these matrices as uniforms for the projection material
+    projective_material->set_uniform("projective_texture_matrix", projection_mat * view_mat);
+    projective_material->set_uniform("view_texture_matrix", view_mat);
 
     window->process_events();
     if (window->should_close()) {
