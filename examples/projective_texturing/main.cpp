@@ -54,9 +54,9 @@ int main(int argc, char** argv) {
   auto load_mat = [](std::string const& file){
     gua::MaterialShaderDescription desc;
     desc.load_from_file(file);
-    auto shader(std::make_shared<gua::MaterialShader>(file, desc));
+    auto shader(std::make_shared<gua::MaterialShader>(file, std::make_shared<gua::MaterialShaderDescription>(desc)));
     gua::MaterialShaderDatabase::instance()->add(shader);
-    return shader->get_default_material();
+    return shader->make_new_material();
   };
 
   // setup scene
