@@ -84,7 +84,7 @@ class GUA_DLL ShaderProgram {
   /**
    * Constructor.
    *
-   * This method takes a vertex shader source, a geomtry shader source 
+   * This method takes a vertex shader source, a geomtry shader source
    * and a fragment shader source and combines them to a ShaderProgram.
    *
    * \param v_shader_source      The vertex shader source.
@@ -112,13 +112,6 @@ class GUA_DLL ShaderProgram {
    * \param substitutions        Shader compile-time substitution map.
    */
   void set_substitutions(SubstitutionMap const& substitutions);
-
-  /**
-   * Destructor
-   *
-   * Cleans all associated memory.
-   */
-  virtual ~ShaderProgram();
 
   /**
    *
