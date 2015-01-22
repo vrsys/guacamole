@@ -150,10 +150,8 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
     } else {
       scm::gl::interleaved_stream_capture capture_array(
           interleaved_stream_capture_.front());
-      auto k = interleaved_stream_capture_.begin();
-      while (++k != interleaved_stream_capture_.end()) {
-        capture_array(*k);
-      }
+      for (auto const& k : interleaved_stream_capture_)
+        capture_array(k);
 
       program_ = context.render_device->create_program(
           shaders, capture_array, in_rasterization_discard_);
