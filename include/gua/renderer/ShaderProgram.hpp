@@ -123,12 +123,6 @@ class GUA_DLL ShaderProgram {
   /**
    *
    */
-  void save_to_file(std::string const& directory,
-                    std::string const& name) const;
-
-  /**
-   *
-   */
   void save_log_to_file(std::string const& directory,
                         std::string const& name) const;
 
@@ -186,6 +180,10 @@ class GUA_DLL ShaderProgram {
 
   inline scm::gl::program_ptr const& get_program ( RenderContext const&) const { return program_; }
 
+  inline std::vector<ShaderProgramStage> const& get_program_stages() const {
+    return stages_;
+  }
+
  protected:  // attributes
 
   mutable scm::gl::program_ptr program_;
@@ -200,6 +198,14 @@ class GUA_DLL ShaderProgram {
   SubstitutionMap substitutions_;
 
 };
+
+/**
+ *
+ */
+void save_to_file(ShaderProgram const& p, std::string const& directory,
+                  std::string const& name);
+
+
 
 }
 

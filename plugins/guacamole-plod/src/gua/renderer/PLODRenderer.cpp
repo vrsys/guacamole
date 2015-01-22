@@ -395,7 +395,7 @@ namespace gua {
 
       if(!depth_pass_program_) {
         _initialize_depth_pass_program();
-        depth_pass_program_->save_to_file(".", "depth_pass_debug");
+        save_to_file(*depth_pass_program_, ".", "depth_pass_debug");
       }
 
      //create pbr camera out of gua camera values
@@ -519,7 +519,7 @@ namespace gua {
      
       if(!accumulation_pass_program_) {
         _initialize_accumulation_pass_program();
-        accumulation_pass_program_->save_to_file(".", "accumulation_pass_debug");
+        save_to_file(*accumulation_pass_program_,".", "accumulation_pass_debug");
       }
 
      //accumulation pass 
@@ -626,7 +626,7 @@ namespace gua {
 
       if(!normalization_pass_program_) {
         _initialize_normalization_pass_program();
-        normalization_pass_program_->save_to_file(".", "normalization_pass_debug");
+        save_to_file(*normalization_pass_program_,".", "normalization_pass_debug");
       }
 
      //normalization pass 
@@ -665,7 +665,7 @@ namespace gua {
 
       if(!reconstruction_pass_program_) {
         _initialize_reconstruction_pass_program();
-        reconstruction_pass_program_->save_to_file(".", "reconstruction_pass_debug");
+        save_to_file(*reconstruction_pass_program_,".", "reconstruction_pass_debug");
       }
 
      //reconstruction pass 

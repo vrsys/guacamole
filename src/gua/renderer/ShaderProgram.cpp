@@ -41,42 +41,6 @@ ShaderProgram::~ShaderProgram() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShaderProgram::save_to_file(std::string const& directory,
-                                 std::string const& name) const {
-
-  auto save = [](std::string const & content, std::string const & file) {
-    gua::TextFile text(file);
-    //text.set_content(string_utils::format_code(content));
-    text.set_content(content);
-    text.save(true);
-  };
-
-  for (auto const& s : stages_) {
-    std::string file_extension;
-    switch (s.type) {
-      case scm::gl::STAGE_VERTEX_SHADER:
-        file_extension = ".vert";
-        break;
-      case scm::gl::STAGE_GEOMETRY_SHADER:
-        file_extension = ".geom";
-        break;
-      case scm::gl::STAGE_FRAGMENT_SHADER:
-        file_extension = ".frag";
-        break;
-      case scm::gl::STAGE_TESS_EVALUATION_SHADER:
-        file_extension = ".teval";
-        break;
-      case scm::gl::STAGE_TESS_CONTROL_SHADER:
-        file_extension = ".tctrl";
-        break;
-      default:
-        Logger::LOG_WARNING << "Shader stage undefined or unsupported" << std::endl;
-    };
-
-    save(string_utils::format_code(s.source), directory + "/" + name + file_extension);
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShaderProgram::create_from_sources(std::string const & v_source,
@@ -213,5 +177,41 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void save_to_file(ShaderProgram const& p, std::string const& directory,
+                                 std::string const& name) {
+
+  auto save = [](std::string const & content, std::string const & file) {
+    gua::TextFile text(file);
+    //text.set_content(string_utils::format_code(content));
+    text.set_content(content);
+    text.save(true);
+  };
+
+  for (auto const& s : p.get_program_stages()) {
+    std::string file_extension;
+    switch (s.type) {
+      case scm::gl::STAGE_VERTEX_SHADER:
+        file_extension = ".vert";
+        break;
+      case scm::gl::STAGE_GEOMETRY_SHADER:
+        file_extension = ".geom";
+        break;
+      case scm::gl::STAGE_FRAGMENT_SHADER:
+        file_extension = ".frag";
+        break;
+      case scm::gl::STAGE_TESS_EVALUATION_SHADER:
+        file_extension = ".teval";
+        break;
+      case scm::gl::STAGE_TESS_CONTROL_SHADER:
+        file_extension = ".tctrl";
+        break;
+      default:
+        Logger::LOG_WARNING << "Shader stage undefined or unsupported" << std::endl;
+    };
+
+    save(string_utils::format_code(s.source), directory + "/" + name + file_extension);
+  }
+}
 
 }
