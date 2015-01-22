@@ -15,6 +15,7 @@ layout (location = 5) in float in_radius;
 layout (location = 6) in vec3 in_normal;
 
 uniform uint gua_material_id;
+uniform float radius_importance_scaling;
 
 out VertexData {
   //output to geometry shader
@@ -44,8 +45,8 @@ void main() {
   }
 
   
-  VertexOut.pass_ms_u = normalize(ms_u) * 1.0 * in_radius;
-  VertexOut.pass_ms_v = normalize( cross(ms_n,ms_u) ) * 1.0 * in_radius;
+  VertexOut.pass_ms_u = normalize(ms_u) * radius_importance_scaling * in_radius ;
+  VertexOut.pass_ms_v = normalize( cross(ms_n,ms_u) ) * radius_importance_scaling * in_radius;
 
   VertexOut.pass_point_color = vec3(in_r, in_g, in_b);
   VertexOut.pass_normal = (gua_normal_matrix * vec4(ms_n, 0.0)).xyz;
