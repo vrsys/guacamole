@@ -55,6 +55,29 @@
 
 namespace gua {
 
+
+  std::vector<math::vec3> PLODRenderer::_get_frustum_corners_vs(gua::Frustum const& frustum) const{
+    std::vector<math::vec4> tmp(8);
+    std::vector<math::vec3> result(8);
+
+    auto inverse_transform(scm::math::inverse(frustum.get_projection() ));
+
+    tmp[0] = inverse_transform * math::vec4(-1, -1, -1, 1);
+    tmp[1] = inverse_transform * math::vec4(-1, -1,  1, 1);
+    tmp[2] = inverse_transform * math::vec4(-1,  1, -1, 1);
+    tmp[3] = inverse_transform * math::vec4(-1,  1,  1, 1);
+    tmp[4] = inverse_transform * math::vec4( 1, -1, -1, 1);
+    tmp[5] = inverse_transform * math::vec4( 1, -1,  1, 1);
+    tmp[6] = inverse_transform * math::vec4( 1,  1, -1, 1);
+    tmp[7] = inverse_transform * math::vec4( 1,  1,  1, 1);
+
+    for (int i(0); i<8; ++i) {
+      result[i] = tmp[i]/tmp[i][3];
+    }
+
+    return result;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   PLODRenderer::PLODRenderer() : shaders_loaded_(false),
                                  gpu_resources_already_created_(false),
@@ -172,12 +195,12 @@ namespace gua {
           
     accumulation_pass_color_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGBA_32F,
+                          scm::gl::FORMAT_RGBA_16F,
                           1, 1, 1);
 
     accumulation_pass_normal_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGBA_32F,
+                          scm::gl::FORMAT_RGBA_16F,
                           1, 1, 1);
 
     depth_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
@@ -195,7 +218,7 @@ namespace gua {
     accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
 
   
-    linear_sampler_state_ = ctx.render_device
+    nearest_sampler_state_ = ctx.render_device
       ->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
 
     no_depth_test_depth_stencil_state_ = ctx.render_device
@@ -233,9 +256,9 @@ namespace gua {
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   pbr::context_t PLODRenderer::_register_context_in_cut_update(gua::RenderContext const& ctx) {
-    pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+    //pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
 
-    if( previous_frame_count_ != ctx.framecount ) {
+    //if( previous_frame_count_ != ctx.framecount ) {
       previous_frame_count_ = ctx.framecount;
 
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
@@ -244,14 +267,15 @@ namespace gua {
       controller->Dispatch(context_id , ctx.render_device);
 
       return context_id;
-    }
-    else {
-      return controller->DeduceContextId( (size_t)(&ctx.id));
-    }
+    //}
+    //else {
+    //  return controller->DeduceContextId( (size_t)(&ctx.id));
+    //}
   }
 
   ///////////////////////////////////////////////////////////////////////////////
-  void PLODRenderer::render(gua::Pipeline& pipe) {
+  void PLODRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
+
     auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::PLODNode))));
 
     if(sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
@@ -281,10 +305,10 @@ namespace gua {
 
       //register context for cut-update   
        pbr::context_t context_id = _register_context_in_cut_update(ctx);
-   
+       
        //clear render targets of active FBOs
-       ctx.render_context
-         ->clear_depth_stencil_buffer(depth_pass_result_fbo_);
+       //ctx.render_context
+       //  ->clear_depth_stencil_buffer(depth_pass_result_fbo_);
        ctx.render_context
          ->clear_color_buffer(depth_pass_result_fbo_, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
@@ -301,7 +325,7 @@ namespace gua {
 
      //determine frustum parameters
      Frustum const& frustum = pipe.get_scene().frustum;
-     std::vector<math::vec3> frustum_corner_values = frustum.get_corners_vs();
+     std::vector<math::vec3> frustum_corner_values = _get_frustum_corners_vs(frustum);
      float top_minus_bottom = scm::math::length((frustum_corner_values[2]) - 
                                                 (frustum_corner_values[0]));
 
@@ -310,7 +334,6 @@ namespace gua {
 
      float near_plane_value = frustum.get_clip_near();
      float far_plane_value = frustum.get_clip_far();
-
 
 
       if(!depth_pass_program_) {
@@ -333,6 +356,8 @@ namespace gua {
 
       std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_out_of_frustum_per_model;
 
+     auto& gua_depth_buffer = pipe.get_gbuffer().get_current_depth_buffer()->get_buffer(ctx);
+
      //depth pass 
      {
        std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
@@ -340,6 +365,8 @@ namespace gua {
        ctx.render_context
          ->set_rasterizer_state(no_backface_culling_rasterizer_state_);
  
+       depth_pass_result_fbo_->attach_depth_stencil_buffer( gua_depth_buffer );
+
        ctx.render_context
          ->set_frame_buffer(depth_pass_result_fbo_);
  
@@ -359,6 +386,7 @@ namespace gua {
         pbr::model_t model_id = controller->DeduceModelId( plod_node->get_geometry_description());
 
         auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+
         auto const& scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
  
 
@@ -446,7 +474,7 @@ namespace gua {
        ctx.render_context
          ->set_frame_buffer(accumulation_pass_result_fbo_);
 
-       accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
+       accumulation_pass_result_fbo_->attach_depth_stencil_buffer(gua_depth_buffer );
  
        if(!accumulation_pass_program_) {
          std::cout << "Accumulation program not instanciated\n";
@@ -455,7 +483,7 @@ namespace gua {
         accumulation_pass_program_->use(ctx);
 
         ctx.render_context
-          ->bind_texture(depth_pass_linear_depth_result_, linear_sampler_state_, 0);
+          ->bind_texture(depth_pass_linear_depth_result_, nearest_sampler_state_, 0);
 
        accumulation_pass_program_->apply_uniform(ctx,
                                                  "p01_linear_depth_texture", 0);
@@ -534,20 +562,24 @@ namespace gua {
        normalization_pass_program_->use(ctx);
 
        ctx.render_context
-         ->bind_texture(depth_pass_log_depth_result_, linear_sampler_state_, 0);
-       normalization_pass_program_->apply_uniform(ctx,
-                                                 "p01_depth_texture", 0);
+          ->set_depth_stencil_state( no_depth_test_depth_stencil_state_ );
+
+       //ctx.render_context
+       //  ->bind_texture(gua_depth_buffer, linear_sampler_state_, 0);
+       //normalization_pass_program_->apply_uniform(ctx,
+       //                                          "p01_depth_texture", 0);
 
        ctx.render_context
-         ->bind_texture(accumulation_pass_color_result_, linear_sampler_state_, 1);
+         ->bind_texture(accumulation_pass_color_result_, nearest_sampler_state_, 0);
        normalization_pass_program_->apply_uniform(ctx,
-                                                 "p02_color_texture", 1);
+                                                 "p02_color_texture", 0);
 
        ctx.render_context
-         ->bind_texture(accumulation_pass_normal_result_, linear_sampler_state_, 2);
+         ->bind_texture(accumulation_pass_normal_result_, nearest_sampler_state_, 1);
        normalization_pass_program_->apply_uniform(ctx,
-                                                 "p02_normal_texture", 2);
+                                                 "p02_normal_texture", 1);
                                              
+       ctx.render_context->apply();
 
        fullscreen_quad_->draw(ctx.render_context);
        normalization_pass_program_->unuse(ctx);
