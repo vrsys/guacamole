@@ -114,12 +114,6 @@ class GUA_DLL ShaderProgram {
   void set_substitutions(SubstitutionMap const& substitutions);
 
   /**
-   *
-   */
-  void save_log_to_file(std::string const& directory,
-                        std::string const& name) const;
-
-  /**
    * Applies this shader.
    *
    * All preceeding draw calls on the given context will be affected by
