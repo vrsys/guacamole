@@ -46,12 +46,12 @@ namespace gua {
     PLODRenderer();
     ~PLODRenderer();
 
-    void render(Pipeline& pipe);
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
     void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
   
     void reload_programs();
 
- private:  //shader related auxialiary methods
+ private:  //shader related auxiliary methods
   
   void          _load_shaders();
   void          _initialize_depth_pass_program();
@@ -62,10 +62,13 @@ namespace gua {
                                     scm::math::vec2ui const& render_target_dims,
 				    bool resize_resource_containers); 
   
- private:  //out-of-core related auxialiary methods
+ private:  //out-of-core related auxiliary methods
   
- pbr::context_t _register_context_in_cut_update(gua::RenderContext const& ctx);
+   pbr::context_t _register_context_in_cut_update(gua::RenderContext const& ctx);
 
+ private: //misc auxiliary methods
+   std::vector<math::vec3> _get_frustum_corners_vs(gua::Frustum const& frustum) const;
+   
  private:  //member variables
 
     //FBOs:
@@ -91,7 +94,6 @@ namespace gua {
     //////////////////////////////////////////////////////////////////////////////////////
     scm::gl::rasterizer_state_ptr                no_backface_culling_rasterizer_state_;
 
-    scm::gl::sampler_state_ptr                   linear_sampler_state_;
     scm::gl::sampler_state_ptr                   nearest_sampler_state_;
 
     scm::gl::depth_stencil_state_ptr             no_depth_test_depth_stencil_state_;
