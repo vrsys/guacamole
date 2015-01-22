@@ -396,14 +396,11 @@ namespace gua {
                                            "gua_normal_matrix",
                                            normal_mat);
 
-        scm::math::vec4f x_unit_vec(1.0, 0.0, 0.0, 0.0);
-        float radius_model_scaling = scm::math::length(scm_model_matrix * x_unit_vec)
-                                     * database->GetModel(model_id)->importance();      
+        float radius_importance_scaling = database->GetModel(model_id)->importance();      
    
-
         depth_pass_program_->apply_uniform(ctx, 
-                                          "radius_model_scaling",
-                                           radius_model_scaling);
+                                          "radius_importance_scaling",
+                                           radius_importance_scaling);
         
         ctx.render_context->apply();
 
@@ -487,10 +484,12 @@ namespace gua {
                                            "gua_normal_matrix",
                                            normal_mat);
 
-        scm::math::vec4f x_unit_vec(1.0, 0.0, 0.0, 0.0);
-        float radius_model_scaling = scm::math::length(scm_model_matrix * x_unit_vec)
-                                     * database->GetModel(model_id)->importance();         
+        float radius_importance_scaling = database->GetModel(model_id)->importance();               
    
+        accumulation_pass_program_->apply_uniform(ctx, 
+                                          "radius_importance_scaling",
+                                           radius_importance_scaling);
+
         ctx.render_context->apply();
 
         auto plod_resource = plod_node->get_geometry();
