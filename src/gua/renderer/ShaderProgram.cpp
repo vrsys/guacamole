@@ -41,11 +41,11 @@ void ShaderProgram::create_from_sources(std::string const & v_source,
                                         std::string const & f_source,
                                         SubstitutionMap const& substitutions) {
   program_.reset();
+  dirty_ = true;
 
   interleaved_stream_capture_.clear();
   in_rasterization_discard_ = false;
   substitutions_ = substitutions;
-  dirty_ = true;
 
   stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_source),
               ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_source) };
@@ -58,11 +58,11 @@ void ShaderProgram::create_from_sources(std::string const & v_source,
                                         std::string const & f_source,
                                         SubstitutionMap const& substitutions) {
   program_.reset();
+  dirty_ = true;
 
   interleaved_stream_capture_.clear();
   in_rasterization_discard_ = false;
   substitutions_ = substitutions;
-  dirty_ = true;
 
   stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_source),
               ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, g_source),
@@ -76,6 +76,7 @@ void ShaderProgram::set_shaders(
     bool in_rasterization_discard,
                            SubstitutionMap const& substitutions) {
   program_.reset();
+  dirty_ = true;
 
   interleaved_stream_capture_.clear();
 
@@ -83,7 +84,6 @@ void ShaderProgram::set_shaders(
   interleaved_stream_capture_ = interleaved_stream_capture;
   in_rasterization_discard_ = in_rasterization_discard;
   substitutions_ = substitutions;
-  dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +91,7 @@ void ShaderProgram::set_shaders(
 void ShaderProgram::set_substitutions(SubstitutionMap const& substitutions) {
   if (substitutions_ != substitutions) {
     substitutions_ = substitutions;
+    program_.reset();
     dirty_ = true;
   }
 }
