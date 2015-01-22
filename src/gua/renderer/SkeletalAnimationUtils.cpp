@@ -258,7 +258,16 @@ Mesh::Mesh(FbxMesh& mesh) {
       Logger::LOG_ERROR << "Only normal mapping per vertex are supported" << std::endl;
     }
   }
-  else{
+  else if(fbx_normals->GetMappingMode() == FbxGeometryElement::eByPolygonVertex) {
+    //regenerate normals per control point
+    mesh.GenerateNormals(true, true);
+
+    for(unsigned i = 0; i < num_vertices; ++i) {
+        normals[i] = (to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
+    }
+    Logger::LOG_WARNING << "Normals per vertex not yet supported" << std::endl;
+  }
+  else {
     Logger::LOG_WARNING << "Only Normals per vertex supported, regenerating them" << std::endl;
     //regenerate normals per control point
     mesh.GenerateNormals(true, true);
@@ -279,14 +288,14 @@ Mesh::Mesh(FbxMesh& mesh) {
 
     FbxGeometryElementUV const* fbx_uvs = mesh.GetElementUV(0);
     if(fbx_uvs->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
-      //normals are mapped by order
+      //UVs are mapped by order
       if(fbx_uvs->GetReferenceMode() == FbxGeometryElement::eDirect) {
 
         for(unsigned i = 0; i < num_vertices; ++i) {
           texCoords[i] = (to_gua::vec2(fbx_uvs->GetDirectArray().GetAt(i)));
         }
       }
-      //normals are indexed
+      //UVs are indexed
       else if(fbx_uvs->GetReferenceMode() == FbxGeometryElement::eIndexToDirect ) {
         for(unsigned i = 0; i < num_vertices; ++i) {
           unsigned index = fbx_uvs->GetIndexArray().GetAt(i); 
@@ -296,6 +305,9 @@ Mesh::Mesh(FbxMesh& mesh) {
       else {
         Logger::LOG_ERROR << "Only UVs mapping per vertex are supported" << std::endl;
       }
+    }
+    else if(fbx_uvs->GetMappingMode() == FbxGeometryElement::eByPolygonVertex) {
+      Logger::LOG_WARNING << "UVs per vertex not yet supported" << std::endl;
     }
     else{
       Logger::LOG_WARNING << "Only UVs per vertex supported" << std::endl;
