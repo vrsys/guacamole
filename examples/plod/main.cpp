@@ -85,6 +85,11 @@ int main(int argc, char** argv) {
   auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
   
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Adrian_BA/col_planes.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+ 
+  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/ssd_pitoti/Adrian_BA/VIANDEN.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/jagdszene_high.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+
+  plodLoader.set_importance(plod_geometry->get_geometry_description(), 0.56);
 
   plod_geometry->set_draw_bounding_box(true);
 
@@ -214,7 +219,7 @@ int main(int argc, char** argv) {
 
 
       //camera->translate(3.0, 0, 0.0);
-      //plod_geometry->translate(-1.5, 0, 0.0);
+  //plod_geometry->translate(0.0, 0.0, 2.0);
 
   // application loop
   gua::events::MainLoop loop;
@@ -224,7 +229,7 @@ int main(int argc, char** argv) {
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
     
-    //std::cout << "Frame time: " << 1000.0f / camera->get_rendering_fps()<<" ms, fps:" << camera->get_rendering_fps() << ", app fps: " << camera->get_application_fps() << std::endl;
+    std::cout << "Frame time: " << 1000.0f / camera->get_rendering_fps()<<" ms, fps:" << camera->get_rendering_fps() << ", app fps: " << camera->get_application_fps() << std::endl;
 
     // apply trackball matrix to object
     window->process_events();
