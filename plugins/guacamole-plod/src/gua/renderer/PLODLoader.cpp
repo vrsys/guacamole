@@ -91,12 +91,16 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& fil
 
       //normalize position?
       auto normalize_position = flags & PLODLoader::NORMALIZE_POSITION;
-      node->translate(-bbox.center());
+      if(normalize_position) {
+        node->translate(-bbox.center());
+      }
 
       //normalize scale?
-      auto normalize_node = flags & PLODLoader::NORMALIZE_SCALE;
-      node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
-
+      auto normalize_scale = flags & PLODLoader::NORMALIZE_SCALE;
+      if(normalize_scale) {
+        node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
+      }
+      
       return node;
     }
   } catch (std::exception & e) {
