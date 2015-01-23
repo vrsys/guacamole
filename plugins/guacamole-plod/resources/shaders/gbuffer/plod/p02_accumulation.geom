@@ -64,11 +64,10 @@ void main() {
   mat4 MV = gua_view_matrix * gua_model_matrix;
   mat4 MVP = gua_projection_matrix * gua_view_matrix * gua_model_matrix;
 
-
-
+  vec4 ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
   gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
-
-// gl_Position.z = 
+  gua_varying_position = ws_pos.xyz;
+  // gl_Position.z = 
   /*VertexOut.*/pass_uv_coords = vec2(1.0, 1.0);
 
   /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
@@ -81,7 +80,10 @@ void main() {
   gl_Position.z = offset_depth_value(gl_Position.z, /*VertexOut.*/pass_ms_rad);
   EmitVertex();
 
-  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0);
+  //gl_Position = VP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0);
+  ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
+  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v ), 1.0);
+  gua_varying_position = ws_pos.xyz;
   /*VertexOut.*/pass_uv_coords = vec2(1.0, -1.0);
 
   /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
@@ -94,7 +96,10 @@ void main() {
   gl_Position.z = offset_depth_value(gl_Position.z, /*VertexOut.*/pass_ms_rad );
   EmitVertex();
 
-  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0);
+  //gl_Position = VP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0);
+  ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
+  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u ), 1.0);
+  gua_varying_position = ws_pos.xyz;
   /*VertexOut.*/pass_uv_coords = vec2(-1.0, 1.0);
 
   /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
@@ -107,7 +112,10 @@ void main() {
   gl_Position.z = offset_depth_value(gl_Position.z, /*VertexOut.*/pass_ms_rad );
   EmitVertex();
 
-  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u ) - VertexIn[0].pass_ms_v), 1.0);
+  //gl_Position = VP * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u ) - VertexIn[0].pass_ms_v), 1.0);
+  ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
+  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v ), 1.0);
+  gua_varying_position = ws_pos.xyz;
   /*VertexOut.*/pass_uv_coords = vec2(-1.0, -1.0);
 
   /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
