@@ -207,10 +207,9 @@ Mesh::Mesh():
 {}
 
 Mesh::Mesh(FbxMesh& mesh) {
-  // if(!mesh.IsTriangleMesh()) {
-  //   Logger::LOG_ERROR << "Face doesnt have 3 vertices" << std::endl;
-  //   assert(false);
-  // }
+  if(!mesh.IsTriangleMesh()) {
+    Logger::LOG_WARNING << "Mesh is not triangulated" << std::endl;
+  }
 
   num_vertices = mesh.GetControlPointsCount(); 
   num_triangles = mesh.GetPolygonCount();
@@ -228,9 +227,11 @@ Mesh::Mesh(FbxMesh& mesh) {
   indices.reserve(num_triangles * 3);
 
   std::string UV_set;
+  bool has_uvs = true;
 //UV coordinates
   if(mesh.GetElementUVCount() == 0) {
-    Logger::LOG_WARNING << "Mesh has no UVs" << std::endl;
+    Logger::LOG_WARNING << "Mesh has no texture coordinates" << std::endl;
+    has_uvs = false;
   }
   else {
     if(mesh.GetElementUVCount() > 1) {
@@ -247,18 +248,14 @@ Mesh::Mesh(FbxMesh& mesh) {
 
 //polygons
   if(mesh.GetPolygonCount() < 1) {
-    Logger::LOG_WARNING << "No indices in mesh, drawing will be inefficient" << std::endl;
-    for(unsigned i = 0; i < num_vertices; ++i) {
-      indices.push_back(num_vertices - i - 1);
-    }
+    Logger::LOG_ERROR << "No indices in mesh, drawing will be inefficient" << std::endl;
+    assert(0);
+    // for(unsigned i = 0; i < num_vertices; ++i) {
+    //   indices.push_back(num_vertices - i - 1);
+    // }
   }
   else {
-    // FbxGeometryElementPolygonGroup const* fbx_polys = mesh.GetElementPolygonGroup(0);
-    // if(fbx_polys->GetMappingMode() == FbxGeometryElement::eByPolygon) {
-    //   if(fbx_polys->GetReferenceMode() == FbxGeometryElement::eIndex) {
-
-    //         std::cout << "vert num op poly " << std::endl;
-    int vertex_count = 0;
+    int vertex_count = -1;
     FbxVector4* control_points = mesh.GetControlPoints();
     int* poly_vertices = mesh.GetPolygonVertices();
     FbxArray<FbxVector4> poly_normals;
@@ -266,48 +263,45 @@ Mesh::Mesh(FbxMesh& mesh) {
     FbxArray<FbxVector2> poly_uvs;
     mesh.GetPolygonVertexUVs(UV_set.c_str(), poly_uvs);
 
-    for(unsigned i = 0; i < num_triangles; i++)
+    for(unsigned i = 0; i < num_triangles; ++i)
     {
       //triangulate face if necessary
-      for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
+      for(int j = 2; j < mesh.GetPolygonSize(i); ++j)
       {
-        // std::cout << "triangle " << i << " from verts " << mesh.GetPolygonVertex(i, 0) << "," << mesh.GetPolygonVertex(i, j-1) << "," << mesh.GetPolygonVertex(i, j)<< std::endl;
-        // indices.push_back(mesh.GetPolygonVertex(i, 0));
-        // indices.push_back(mesh.GetPolygonVertex(i, j-1));
-        // indices.push_back(mesh.GetPolygonVertex(i, j));
+        indices.push_back(++vertex_count);
+        indices.push_back(++vertex_count);
+        indices.push_back(++vertex_count);
 
-        indices.push_back(vertex_count);
-        indices.push_back(vertex_count + 1);
-        indices.push_back(vertex_count + 2);
-
-        std::vector<int> indices{poly_vertices[vertex_count], poly_vertices[vertex_count + j - 1], poly_vertices[vertex_count + j]}; 
+        int start_index = mesh.GetPolygonVertexIndex(i);
+        std::vector<int> indices{start_index, start_index + j - 1, start_index + j}; 
         
-        positions.push_back(to_gua::vec3(control_points[indices[0]]));
-        positions.push_back(to_gua::vec3(control_points[indices[1]]));
-        positions.push_back(to_gua::vec3(control_points[indices[2]]));
+        positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[0]]]));
+        positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[1]]]));
+        positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[2]]]));
 
-        normals.push_back(to_gua::vec3(poly_normals[vertex_count]));
-        normals.push_back(to_gua::vec3(poly_normals[vertex_count + j - 1]));
-        normals.push_back(to_gua::vec3(poly_normals[vertex_count + j]));
-
-        texCoords.push_back(to_gua::vec2(poly_uvs[vertex_count]));
-        texCoords.push_back(to_gua::vec2(poly_uvs[vertex_count + j - 1]));
-        texCoords.push_back(to_gua::vec2(poly_uvs[vertex_count + j]));
-
-        vertex_count += 3;
+        // std::cout << "normal " << to_gua::vec3(poly_normals[indices[0]]) << ", " << to_gua::vec3(poly_normals[indices[1]]) << ", " << to_gua::vec3(poly_normals[indices[2]]) << std::endl;
+        normals.push_back(to_gua::vec3(poly_normals[indices[0]]));
+        normals.push_back(to_gua::vec3(poly_normals[indices[1]]));
+        normals.push_back(to_gua::vec3(poly_normals[indices[2]]));
+        
+        if(has_uvs) {
+          // std::cout << "texcoord " << to_gua::vec2(poly_uvs[indices[0]]) << ", " << to_gua::vec2(poly_uvs[indices[1]]) << ", " << to_gua::vec2(poly_uvs[indices[2]]) << std::endl;
+          texCoords.push_back(to_gua::vec2(poly_uvs[indices[0]]));
+          texCoords.push_back(to_gua::vec2(poly_uvs[indices[1]]));
+          texCoords.push_back(to_gua::vec2(poly_uvs[indices[2]]));
+        }
       }
     }
-    //   }
-    //   else {
-    //     Logger::LOG_ERROR << "Only poly mapping by index is supported" << std::endl;
-    //   }
-    // }
-    // else {
-    //   Logger::LOG_ERROR << "Only poly per poly is supported" << std::endl;
-    // }
   }
 
-  num_vertices = positions.size(); 
+  num_vertices = positions.size();
+  num_triangles = indices.size() / 3;
+
+
+  if(!has_uvs) {
+    texCoords.resize(num_vertices, scm::math::vec2(0.0f));
+  }
+
 }
 
 Mesh::Mesh(aiMesh const& mesh, Node const& root) {   
