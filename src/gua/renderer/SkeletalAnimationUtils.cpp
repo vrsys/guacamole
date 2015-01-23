@@ -217,8 +217,6 @@ Mesh::Mesh(FbxMesh& mesh) {
   // Reserve space in the vectors for the vertex attributes and indices
   //for now resize and initialize with 0
   positions.reserve(num_vertices);
-  // normals.resize(num_vertices, scm::math::vec3(0.0f));
-  // texCoords.resize(num_vertices, scm::math::vec2(0.0f));
   normals.reserve(num_vertices);
   texCoords.reserve(num_vertices);
   tangents.resize(num_vertices);
@@ -248,11 +246,8 @@ Mesh::Mesh(FbxMesh& mesh) {
 
 //polygons
   if(mesh.GetPolygonCount() < 1) {
-    Logger::LOG_ERROR << "No indices in mesh, drawing will be inefficient" << std::endl;
+    Logger::LOG_ERROR << "No polygons in mesh" << std::endl;
     assert(0);
-    // for(unsigned i = 0; i < num_vertices; ++i) {
-    //   indices.push_back(num_vertices - i - 1);
-    // }
   }
   else {
     int vertex_count = -1;
@@ -279,13 +274,11 @@ Mesh::Mesh(FbxMesh& mesh) {
         positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[1]]]));
         positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[2]]]));
 
-        // std::cout << "normal " << to_gua::vec3(poly_normals[indices[0]]) << ", " << to_gua::vec3(poly_normals[indices[1]]) << ", " << to_gua::vec3(poly_normals[indices[2]]) << std::endl;
         normals.push_back(to_gua::vec3(poly_normals[indices[0]]));
         normals.push_back(to_gua::vec3(poly_normals[indices[1]]));
         normals.push_back(to_gua::vec3(poly_normals[indices[2]]));
         
         if(has_uvs) {
-          // std::cout << "texcoord " << to_gua::vec2(poly_uvs[indices[0]]) << ", " << to_gua::vec2(poly_uvs[indices[1]]) << ", " << to_gua::vec2(poly_uvs[indices[2]]) << std::endl;
           texCoords.push_back(to_gua::vec2(poly_uvs[indices[0]]));
           texCoords.push_back(to_gua::vec2(poly_uvs[indices[1]]));
           texCoords.push_back(to_gua::vec2(poly_uvs[indices[2]]));
@@ -293,10 +286,9 @@ Mesh::Mesh(FbxMesh& mesh) {
       }
     }
   }
-
+  //correct values
   num_vertices = positions.size();
   num_triangles = indices.size() / 3;
-
 
   if(!has_uvs) {
     texCoords.resize(num_vertices, scm::math::vec2(0.0f));

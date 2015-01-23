@@ -302,7 +302,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
   // creates a geometry node and returns it
   auto load_geometry = [&](FbxNode& node) 
   {
-    FbxMesh* fbx_mesh = dynamic_cast<FbxMesh*>(node.GetGeometry());
+    FbxMesh* fbx_mesh = node.GetMesh();
 
     GeometryDescription desc ("TriMesh", file_name, mesh_count++, flags);
     GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(*fbx_mesh));
