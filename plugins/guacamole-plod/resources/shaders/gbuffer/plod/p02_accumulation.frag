@@ -1,8 +1,10 @@
-@include "resources/shaders/common/header.glsl"
+@include "common/header.glsl"
 
 layout(early_fragment_tests) in;
 
-@include "resources/shaders/common/gua_camera_uniforms.glsl"
+
+
+@include "common/gua_camera_uniforms.glsl"
 
 const float gaussian[32] = float[](
   1.000000, 1.000000, 0.988235, 0.968627, 0.956862, 0.917647, 0.894117, 0.870588, 0.915686, 0.788235,
@@ -14,13 +16,13 @@ const float gaussian[32] = float[](
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-in VertexData {
-  vec3 pass_point_color;
-  vec3 pass_normal;
-  vec2 pass_uv_coords;
-  float pass_es_linear_depth;
-  float pass_ms_rad;
-} VertexIn;
+in vec3 pass_point_color;
+in vec3 pass_normal;
+in vec2 pass_uv_coords;
+in float pass_es_linear_depth;
+in float pass_ms_rad;
+
+@include "common/gua_fragment_shader_input.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -44,6 +46,8 @@ uniform vec2 win_dims;
 
 @material_uniforms@
 
+@include "common/gua_global_variable_declaration.glsl"
+
 float weight = 0;
 
 @material_method_declarations_frag@
@@ -53,7 +57,7 @@ float weight = 0;
 // main
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
-  vec2 uv_coords = VertexIn.pass_uv_coords;
+  vec2 uv_coords = pass_uv_coords;
 
   if( dot(uv_coords, uv_coords) > 1) 
     discard;
@@ -61,45 +65,27 @@ void main() {
  
   float neg_pass_1_linear_depth = -texelFetch(p01_linear_depth_texture, ivec2(gl_FragCoord.xy), 0).r;
 
-  float neg_pass_2_linear_depth = VertexIn.pass_es_linear_depth;
+  float neg_pass_2_linear_depth = pass_es_linear_depth;
 
-  if(  (neg_pass_1_linear_depth) - (neg_pass_2_linear_depth) >= 0.02*VertexIn.pass_ms_rad)//+ VertexIn.pass_es_linear_depth  > 0.000000001 ) 
+  if(  (neg_pass_1_linear_depth) - (neg_pass_2_linear_depth) >= 0.02 * pass_ms_rad)
    discard;
-
-//  if(-pass_1_linear_depth > -3.0)
-//    discard;
 
   float normalAdjustmentFactor = 1.0;
 
-  if (VertexIn.pass_normal.z < 0.0) {
+  //turn normal to viewer
+  if (pass_normal.z < 0.0) {
     normalAdjustmentFactor = -1.0;
   }
 
-
-
   weight = gaussian[(int)(round(length(uv_coords) * 31.0))];
 
-  //float weight = 1.0;
+  @include "common/gua_global_variable_assignment.glsl"
 
-   // if( !(render_target_width > 1900.0 && render_target_height > 1000.0 && render_target_width < 2000.0 && render_target_height < 1200) )
-      //out_accumulated_color = vec4(1.0, 0.0, 0.0, 1.0);
-   // else
-  //out_accumulated_color = vec4(VertexIn.pass_point_color * weight, weight);
-/*
-  if(pass_1_linear_depth > 490.0)
-  {
-    out_accumulated_color = vec4(1.0 * weight, 0.0, 0.0, weight);
-    //out_accumulated_color = vec4(0.0, pass_1_linear_depth, 0.0, 1.0);
-    out_accumulated_normal = normalAdjustmentFactor * vec4(weight * VertexIn.pass_normal, weight);
-  }
-  else
-  {
-*/
-    out_accumulated_color = vec4(weight * VertexIn.pass_point_color, weight);
-    //out_accumulated_color = vec4(0.0, 1.0 * weight, 0.0, weight);
-    out_accumulated_normal = normalAdjustmentFactor * vec4(weight * VertexIn.pass_normal, weight);
+  out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);
 
-//  }
+  out_accumulated_normal = normalAdjustmentFactor * vec4(weight * /*VertexIn.*/pass_normal, weight);
+
+
   @material_input@
   @material_method_calls_frag@
 }

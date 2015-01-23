@@ -1,9 +1,9 @@
-@include "resources/shaders/common/header.glsl"
+@include "common/header.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // general uniforms
 ///////////////////////////////////////////////////////////////////////////////
-@include "resources/shaders/common/gua_camera_uniforms.glsl"
+@include "common/gua_camera_uniforms.glsl"
 
 
 layout (points) in;

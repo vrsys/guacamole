@@ -1,8 +1,8 @@
-@include "resources/shaders/common/header.glsl"
+@include "common/header.glsl"
 
 //layout(early_fragment_tests) in;
 
-@include "resources/shaders/common/gua_camera_uniforms.glsl"
+@include "common/gua_camera_uniforms.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // input
@@ -24,20 +24,11 @@ layout (location = 0) out float out_linear_depth;
 // main
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
-
   vec2 uv_coords = VertexIn.pass_uv_coords;
 
   if( dot(uv_coords, uv_coords) > 1)
     discard;
 
-  //out_logarithmic_depth = VertexIn.pass_log_depth;
-
-  //if(VertexIn.pass_es_linear_depth< -5.0)
-  //  discard;
-
-
-  out_linear_depth.r = -VertexIn.pass_es_linear_depth;//-(-5.0) /gua_clip_far;
-  //out_linear_depth = 0;
-  //gl_FragDepth = 0.1;
+  out_linear_depth.r = -VertexIn.pass_es_linear_depth;
 }
 

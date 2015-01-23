@@ -1,9 +1,9 @@
-@include "resources/shaders/common/header.glsl"
+@include "common/header.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // general uniforms
 ///////////////////////////////////////////////////////////////////////////////
-@include "resources/shaders/common/gua_camera_uniforms.glsl"
+@include "common/gua_camera_uniforms.glsl"
 
 // input attributes
 layout (location = 0) in vec3  in_position;
@@ -30,23 +30,9 @@ out VertexData {
 
 void main() {
 
-  vec3 ms_n = normalize(in_normal.xyz);
- 
-  vec3 ms_u;
-  //compute u and v vectors
-  if(ms_n.z != 0.0) {
-    ms_u = vec3(1, 1, (-ms_n.x -ms_n.y)/ms_n.z);
-  }
-  else if(ms_n.y != 0.0) {
-    ms_u = vec3(1, (-ms_n.x -ms_n.z)/ms_n.y, 1);
-  }
-  else {
-    ms_u = vec3( (-ms_n.y -ms_n.z)/ms_n.x , 1, 1);
-  }
+@include "common_PLOD/PLOD_calculate_tangents.glsl"
 
-  
-  VertexOut.pass_ms_u = normalize(ms_u) * radius_importance_scaling * in_radius ;
-  VertexOut.pass_ms_v = normalize( cross(ms_n,ms_u) ) * radius_importance_scaling * in_radius;
+@include "common_PLOD/PLOD_assign_tangents.glsl"
 
   VertexOut.pass_point_color = vec3(in_r, in_g, in_b);
   VertexOut.pass_normal = (gua_normal_matrix * vec4(ms_n, 0.0)).xyz;
