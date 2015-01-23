@@ -29,7 +29,7 @@
 // guacamole headers
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/NURBS.hpp>
-#include <gua/renderer/ProgramFactory.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 
 namespace gua {
 
@@ -45,7 +45,7 @@ namespace gua {
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
-    void reload_programs();
+    void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
   private:  // auxiliary methods
 
@@ -78,13 +78,14 @@ namespace gua {
   private:  // attributes
 
     unsigned                                                            current_modcount_;
-    ProgramFactory                                                      factory_;
-                                                                        
+    SubstitutionMap                                                     global_substitution_map_;
+    ResourceFactory                                                     factory_;
+
     // CPU Ressources                                                   
     std::vector<ShaderProgramStage>                                     pre_tesselation_shader_stages_;
     std::list<std::string>                                              pre_tesselation_interleaved_stream_capture_;
-    std::map<scm::gl::shader_stage, std::string>                        tesselation_shader_stages_;                 
-    std::map<scm::gl::shader_stage, std::string>                        raycasting_shader_stages_;
+    std::vector<ShaderProgramStage>                                     tesselation_shader_stages_;
+    std::vector<ShaderProgramStage>                                     raycasting_shader_stages_;
 
     // GPU Ressources
     std::shared_ptr<ShaderProgram>                                      pre_tesselation_program_;

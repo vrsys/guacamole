@@ -53,7 +53,8 @@ class GUA_NURBS_DLL NURBSLoader {
      NORMALIZE_POSITION = 1 << 1,
      NORMALIZE_SCALE = 1 << 2,
      WIREFRAME = 1 << 3,
-     RAYCASTING = 1 << 4
+     RAYCASTING = 1 << 4,
+     PRE_SUBDIVISION = 1 << 5
    };
 
 

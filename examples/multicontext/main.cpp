@@ -48,13 +48,13 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  gua::MaterialShaderDescription desc;
-  desc.load_from_file("data/materials/SimpleMaterial.gmd");
+  auto desc(std::make_shared<gua::MaterialShaderDescription>());
+  desc->load_from_file("data/materials/SimpleMaterial.gmd");
 
   auto shader(std::make_shared<gua::MaterialShader>("simple_mat", desc));
   gua::MaterialShaderDatabase::instance()->add(shader);
 
-  auto mat(shader->get_default_material());
+  auto mat(shader->make_new_material());
   //mat.set_uniform("color", gua::math::vec3(1, 0, 0));
   //mat.set_uniform("color", gua::math::vec3(0, 1, 1), 1);
   //mat.set_uniform("color", gua::math::vec3(1, 0, 1), 2);

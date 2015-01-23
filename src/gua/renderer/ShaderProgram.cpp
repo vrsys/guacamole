@@ -33,16 +33,146 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 ShaderProgram::ShaderProgram()
-    : programs_(), upload_mutex_(), stages_(), interleaved_stream_capture_() {}
+    : program_(), stages_(), interleaved_stream_capture_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ShaderProgram::~ShaderProgram() {}
+void ShaderProgram::create_from_sources(std::string const & v_source,
+                                        std::string const & f_source,
+                                        SubstitutionMap const& substitutions) {
+  program_.reset();
+  dirty_ = true;
+
+  interleaved_stream_capture_.clear();
+  in_rasterization_discard_ = false;
+  substitutions_ = substitutions;
+
+  stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_source),
+              ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_source) };
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShaderProgram::save_to_file(std::string const& directory,
-                                 std::string const& name) const {
+void ShaderProgram::create_from_sources(std::string const & v_source,
+                                        std::string const & g_source,
+                                        std::string const & f_source,
+                                        SubstitutionMap const& substitutions) {
+  program_.reset();
+  dirty_ = true;
+
+  interleaved_stream_capture_.clear();
+  in_rasterization_discard_ = false;
+  substitutions_ = substitutions;
+
+  stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_source),
+              ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, g_source),
+              ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_source) };
+}
+
+////////////////////////////////////////////////////////////////////////
+void ShaderProgram::set_shaders(
+    std::vector<ShaderProgramStage> const & shaders,
+    std::list<std::string> const & interleaved_stream_capture,
+    bool in_rasterization_discard,
+                           SubstitutionMap const& substitutions) {
+  program_.reset();
+  dirty_ = true;
+
+  interleaved_stream_capture_.clear();
+
+  stages_ = shaders;
+  interleaved_stream_capture_ = interleaved_stream_capture;
+  in_rasterization_discard_ = in_rasterization_discard;
+  substitutions_ = substitutions;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShaderProgram::set_substitutions(SubstitutionMap const& substitutions) {
+  if (substitutions_ != substitutions) {
+    substitutions_ = substitutions;
+    program_.reset();
+    dirty_ = true;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShaderProgram::use(RenderContext const & context) const {
+  // upload to GPU if neccessary
+  upload_to(context);
+  context.render_context->bind_program(program_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShaderProgram::unuse(RenderContext const & context) const {
+  context.render_context->reset_program();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShaderProgram::apply_uniform(RenderContext const & context,
+                                  std::string const& name,
+                                  UniformValue const& uniform,
+                                  unsigned position) const {
+  // upload to GPU if neccessary
+  upload_to(context);
+  uniform.apply(context, name, program_, position);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShaderProgram::set_subroutine(RenderContext const & context,
+                                   scm::gl::shader_stage stage,
+                                   std::string const & uniform_name,
+                                   std::string const & routine_name) const {
+
+  // upload to GPU if neccessary
+  upload_to(context);
+
+  program_->uniform_subroutine(stage, uniform_name, routine_name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool ShaderProgram::upload_to(RenderContext const & context) const {
+
+  if ( !program_ || dirty_) {
+    std::list<scm::gl::shader_ptr> shaders;
+    ResourceFactory factory;
+    for (auto const& s : stages_) {
+      auto source = factory.resolve_substitutions(s.source, substitutions_);
+      shaders.push_back(context.render_device->create_shader(s.type, source));
+    }
+
+    if (interleaved_stream_capture_.empty()) {
+      program_ = context.render_device->create_program(shaders);
+    } else {
+      scm::gl::interleaved_stream_capture capture_array(
+          interleaved_stream_capture_.front());
+      for (auto const& k : interleaved_stream_capture_)
+        capture_array(k);
+
+      program_ = context.render_device->create_program(
+          shaders, capture_array, in_rasterization_discard_);
+    }
+
+    dirty_ = false;
+
+    if (!program_) {
+      Logger::LOG_WARNING << "Failed to create shaders!" << std::endl;
+      return false;
+    }
+  }
+
+  return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void save_to_file(ShaderProgram const& p, std::string const& directory,
+                                 std::string const& name) {
 
   auto save = [](std::string const & content, std::string const & file) {
     gua::TextFile text(file);
@@ -51,7 +181,7 @@ void ShaderProgram::save_to_file(std::string const& directory,
     text.save(true);
   };
 
-  for (auto const& s : stages_) {
+  for (auto const& s : p.get_program_stages()) {
     std::string file_extension;
     switch (s.type) {
       case scm::gl::STAGE_VERTEX_SHADER:
@@ -76,181 +206,5 @@ void ShaderProgram::save_to_file(std::string const& directory,
     save(string_utils::format_code(s.source), directory + "/" + name + file_extension);
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShaderProgram::create_from_sources(std::string const & v_source,
-                                        std::string const & f_source,
-                                        SubstitutionMap const& substitutions) {
-
-  for (auto p : programs_) {
-    p.reset();
-  }
-
-  programs_.clear();
-  interleaved_stream_capture_.clear();
-  in_rasterization_discard_ = false;
-  substitutions_ = substitutions;
-  dirty_ = true;
-
-  stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_source),
-              ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_source) };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShaderProgram::create_from_sources(std::string const & v_source,
-                                        std::string const & g_source,
-                                        std::string const & f_source,
-                                        SubstitutionMap const& substitutions) {
-
-  for (auto p : programs_) {
-    p.reset();
-
-  }
-
-  programs_.clear();
-  interleaved_stream_capture_.clear();
-  in_rasterization_discard_ = false;
-  substitutions_ = substitutions;
-  dirty_ = true;
-
-  stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_source),
-              ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, g_source),
-              ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_source) };
-}
-
-////////////////////////////////////////////////////////////////////////
-void ShaderProgram::set_shaders(
-    std::vector<ShaderProgramStage> const & shaders,
-    std::list<std::string> const & interleaved_stream_capture,
-    bool in_rasterization_discard,
-                           SubstitutionMap const& substitutions) {
-
-  for (auto p : programs_) {
-    p.reset();
-  }
-
-  programs_.clear();
-  interleaved_stream_capture_.clear();
-
-  stages_ = shaders;
-  interleaved_stream_capture_ = interleaved_stream_capture;
-  in_rasterization_discard_ = in_rasterization_discard;
-  substitutions_ = substitutions;
-  dirty_ = true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShaderProgram::set_substitutions(SubstitutionMap const& substitutions) {
-  if (substitutions_ != substitutions) {
-    substitutions_ = substitutions;
-    dirty_ = true;
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShaderProgram::use(RenderContext const & context) const {
-
-  // upload to GPU if neccessary
-  upload_to(context);
-
-  auto save = [](std::string const & content, std::string const & file) {
-    gua::TextFile text(file);
-    text.set_content(string_utils::format_code(content));
-    text.save();
-  };
-
-  //if ( !programs_.empty() )
-  //{
-  //  save(programs_[0]->info_log(), "program.log");
-  //}
-
-  context.render_context->bind_program(programs_[context.id]);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShaderProgram::unuse(RenderContext const & context) const {
-  context.render_context->reset_program();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShaderProgram::apply_uniform(RenderContext const & context,
-                                  std::string const& name,
-                                  UniformValue const& uniform,
-                                  unsigned position) const {
-
-  // upload to GPU if neccessary
-  upload_to(context);
-
-  uniform.apply(context, name, programs_[context.id], position);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShaderProgram::set_subroutine(RenderContext const & context,
-                                   scm::gl::shader_stage stage,
-                                   std::string const & uniform_name,
-                                   std::string const & routine_name) const {
-
-  // upload to GPU if neccessary
-  upload_to(context);
-
-  programs_[context.id]
-      ->uniform_subroutine(stage, uniform_name, routine_name);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool ShaderProgram::upload_to(RenderContext const & context) const {
-
-  if (   programs_.size() <= context.id
-      || !programs_[context.id]
-      || dirty_) {
-    std::unique_lock<std::mutex> lock(upload_mutex_);
-    if (programs_.size() <= context.id) {
-      programs_.resize(context.id + 1);
-    }
-
-    std::list<scm::gl::shader_ptr> shaders;
-    ResourceFactory factory;
-    for (auto const& s : stages_) {
-      auto source = factory.resolve_substitutions(s.source, substitutions_);
-      shaders.push_back(context.render_device->create_shader(s.type, source));
-    }
-
-    if (interleaved_stream_capture_.empty()) {
-      programs_[context.id] =
-          context.render_device->create_program(shaders);
-    } else {
-      scm::gl::interleaved_stream_capture capture_array(
-          interleaved_stream_capture_.front());
-      auto k = interleaved_stream_capture_.begin();
-      while (++k != interleaved_stream_capture_.end()) {
-        capture_array(*k);
-      }
-
-      programs_[context.id] = context.render_device->create_program(
-          shaders, capture_array, in_rasterization_discard_);
-    }
-
-    dirty_ = false;
-
-    if (!programs_[context.id]) {
-      Logger::LOG_WARNING << "Failed to create shaders!" << std::endl;
-
-      return false;
-    }
-  }
-
-  return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 }

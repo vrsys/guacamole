@@ -43,10 +43,13 @@ namespace node {
     math::mat4 const& transform)
     : GeometryNode(name, transform),
     geometry_description_(geometry_description),
+    geometry_changed_(true),
     material_(material),
     max_tess_level_pre_pass_(1.0f),
     max_tess_level_final_pass_(4.0f),
-    enable_raycasting_(false)
+    enable_raycasting_(false),
+    enable_backfaces_(false),
+    trimming_mode_(trimming_mode_t::classic)
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -105,15 +108,39 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void NURBSNode::rendermode_raycasting(bool b)
+  void NURBSNode::raycasting(bool b)
   {
     enable_raycasting_ = b;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  bool NURBSNode::rendermode_raycasting() const
+  bool NURBSNode::raycasting() const
   {
     return enable_raycasting_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::render_backfaces(bool bf)
+  {
+    enable_backfaces_ = bf;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  bool NURBSNode::render_backfaces() const
+  {
+    return enable_backfaces_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void NURBSNode::trimming_mode(trimming_mode_t t)
+  {
+    trimming_mode_ = t;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  NURBSNode::trimming_mode_t NURBSNode::trimming_mode() const
+  {
+    return trimming_mode_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -206,8 +233,11 @@ namespace node {
 
     result->update_cache();
 
-    result->shadow_mode_ = shadow_mode_;
+    result->shadow_mode_       = shadow_mode_;
     result->enable_raycasting_ = enable_raycasting_;
+    result->trimming_mode_     = trimming_mode_;
+    result->enable_backfaces_  = enable_backfaces_;
+
 
     result->max_final_tesselation(this->max_final_tesselation());
     result->max_pre_tesselation(this->max_pre_tesselation());

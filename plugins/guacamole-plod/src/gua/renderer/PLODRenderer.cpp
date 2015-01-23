@@ -281,7 +281,7 @@ namespace gua {
     if(sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
       
       std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
-        return reinterpret_cast<node::PLODNode*>(a)->get_material().get_shader() < reinterpret_cast<node::PLODNode*>(b)->get_material().get_shader();
+        return reinterpret_cast<node::PLODNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::PLODNode*>(b)->get_material()->get_shader();
       });
 
       RenderContext const& ctx(pipe.get_context());
@@ -338,7 +338,7 @@ namespace gua {
 
       if(!depth_pass_program_) {
         _initialize_depth_pass_program();
-        depth_pass_program_->save_to_file(".", "depth_pass_debug");
+        save_to_file(*depth_pass_program_, ".", "depth_pass_debug");
       }
 
      //create pbr camera out of gua camera values
@@ -453,7 +453,7 @@ namespace gua {
      
       if(!accumulation_pass_program_) {
         _initialize_accumulation_pass_program();
-        accumulation_pass_program_->save_to_file(".", "accumulation_pass_debug");
+        save_to_file(*accumulation_pass_program_,".", "accumulation_pass_debug");
       }
 
 
@@ -544,7 +544,7 @@ namespace gua {
 
       if(!normalization_pass_program_) {
         _initialize_normalization_pass_program();
-        normalization_pass_program_->save_to_file(".", "normalization_pass_debug");
+        save_to_file(*normalization_pass_program_,".", "normalization_pass_debug");
       }
 
 
@@ -584,6 +584,7 @@ namespace gua {
        fullscreen_quad_->draw(ctx.render_context);
        normalization_pass_program_->unuse(ctx);
      }
+
    
        pipe.get_gbuffer().unbind(ctx);
     }

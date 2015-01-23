@@ -22,9 +22,9 @@ vec3 toneMap(vec3 col)
 {
   switch (@tone_mapping_method@) {
     case 0:
-      return toneMapLinear(col, @tone_mapping_exposure@);
+      return toneMapLinear(col, gua_tone_mapping_exposure);
     case 1:
-      return toneMapHejl(col, @tone_mapping_exposure@);
+      return toneMapHejl(col, gua_tone_mapping_exposure);
   }
-  return toneMapLinear(col, @tone_mapping_exposure@);
+  return toneMapLinear(col, gua_tone_mapping_exposure);
 }

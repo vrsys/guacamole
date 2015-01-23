@@ -41,29 +41,25 @@ class ShaderProgram;
 class GUA_DLL MaterialShader {
  public:
 
-  MaterialShader(std::string const& name, MaterialShaderDescription const& desc);
+  MaterialShader(std::string const& name, std::shared_ptr<MaterialShaderDescription> const& desc);
 
-  MaterialShaderDescription const& get_description() const;
+  std::shared_ptr<MaterialShaderDescription> const& get_description() const;
 
   std::string const&                     get_name()             const;
   std::shared_ptr<Material>              make_new_material()    const;
-  std::shared_ptr<Material> const&       get_default_material() const;
+  std::map<std::string, ViewDependentUniform> const&       get_default_uniforms() const;
 
-  std::list<MaterialShaderMethod> const& get_vertex_methods() const;
-  std::list<MaterialShaderMethod> const& get_fragment_methods() const;
+  std::list<std::shared_ptr<MaterialShaderMethod>> const& get_vertex_methods() const;
+  std::list<std::shared_ptr<MaterialShaderMethod>> const& get_fragment_methods() const;
 
   SubstitutionMap                        generate_substitution_map() const;
 
-  unsigned max_object_count() const {
-    return max_object_count_;
-  }
-
  private:
 
-  MaterialShaderDescription desc_;
+  std::shared_ptr<MaterialShaderDescription> desc_;
 
-  std::shared_ptr<Material> default_material_;
-  mutable unsigned max_object_count_;
+  std::map<std::string, ViewDependentUniform> default_uniforms_;
+  std::string name_;
 };
 
 }

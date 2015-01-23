@@ -57,6 +57,12 @@ class GUA_DLL ResourceFactory {
                                  boost::filesystem::path const& current_dir,
                                  std::string& contents,
                                  boost::filesystem::path& full_path) const;
+
+  bool         get_file_contents(boost::filesystem::path const& filename,
+                                 boost::filesystem::path const& current_dir,
+                                 std::wstring& contents,
+                                 boost::filesystem::path& full_path) const;
+
   bool         resolve_includes(boost::filesystem::path const& filename,
                                 boost::filesystem::path const& current_dir,
                                 std::string& contents,

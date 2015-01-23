@@ -19,11 +19,7 @@ folders=(
 ignored=(
     "../src/gua/renderer/pipeline/PostFXPass.cpp"
     "../src/gua/renderer/assets/NoiseTexture.cpp"
-    "../src/gua/renderer/shaders/FinalUberShader.cpp"
-    "../src/gua/renderer/shaders/GBufferMeshUberShader.cpp"
-    "../src/gua/renderer/shaders/GBufferNURBSUberShader.cpp"
     "../src/gua/renderer/shaders/GuaMethodsFactory.cpp"
-    "../src/gua/renderer/shaders/LightingUberShader.cpp"
     "../src/gua/renderer/shaders/NURBSShader.cpp"
     "../src/gua/renderer/shaders/ShadowMapMeshShader.cpp"
     "../include/gua/renderer/shaders/BoundingBoxGeometry.hpp"

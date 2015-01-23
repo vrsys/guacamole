@@ -39,8 +39,10 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 NURBSResource::NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
+             unsigned pre_subdivision_u, 
+             unsigned pre_subdivision_v,
              scm::gl::fill_mode in_fill_mode)
-    : _data(std::make_shared<NURBSData>(object)),
+             : _data(std::make_shared<NURBSData>(object, pre_subdivision_u, pre_subdivision_v)),
       _fill_mode(in_fill_mode),
       _max_pre_tesselation(1.0)
 {
@@ -79,7 +81,7 @@ NURBSResource::~NURBSResource()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSResource::predraw(RenderContext const& context) const
+void NURBSResource::predraw(RenderContext const& context, bool cull_face) const
 {
   // upload to GPU if neccessary
   if (_surface_tesselation_data.vertex_array.size() <= context.id || _surface_tesselation_data.vertex_array[context.id] == nullptr) {
@@ -93,7 +95,11 @@ void NURBSResource::predraw(RenderContext const& context) const
   scm::gl::context_image_units_guard cig(in_context);
   scm::gl::context_texture_units_guard ctg(in_context);
 
-  context.render_context->set_rasterizer_state(_rstate_no_cull[context.id], 1.0f);
+  if (cull_face) {
+    context.render_context->set_rasterizer_state(_rstate_cull[context.id], 1.0f);
+  } else {
+    context.render_context->set_rasterizer_state(_rstate_no_cull[context.id], 1.0f);
+  }
 
   auto tfb = Singleton<TransformFeedbackBuffer>::instance();
 
@@ -164,7 +170,7 @@ void NURBSResource::predraw(RenderContext const& context) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSResource::draw(RenderContext const& context, bool raycasting) const
+void NURBSResource::draw(RenderContext const& context, bool raycasting, bool cull_face) const
 {
   // upload to GPU if neccessary: todo: check if this is sufficient for thread-safety
   if (_surface_tesselation_data.vertex_array.size() <= context.id || _surface_tesselation_data.vertex_array[context.id] == nullptr) {
@@ -178,7 +184,11 @@ void NURBSResource::draw(RenderContext const& context, bool raycasting) const
   scm::gl::context_image_units_guard cig1(in_context);
   scm::gl::context_texture_units_guard ctg1(in_context);
 
-  context.render_context->set_rasterizer_state(_rstate_no_cull[context.id], 1.0f);
+  if (cull_face) {
+    context.render_context->set_rasterizer_state(_rstate_cull[context.id], 1.0f);
+  } else {
+    context.render_context->set_rasterizer_state(_rstate_no_cull[context.id], 1.0f);
+  }
 
   if (raycasting)
   {
@@ -211,7 +221,6 @@ void NURBSResource::draw(RenderContext const& context, bool raycasting) const
     in_context->apply();
 
     in_context->draw_elements(_data->object->_indices.size());
-    //in_context->draw_elements(3);
 
   } else { // adaptive tesselation
     auto tfb = Singleton<TransformFeedbackBuffer>::instance();
@@ -294,6 +303,7 @@ void NURBSResource::initialize_ressources(RenderContext const& context) const
     _surface_tesselation_data.index_buffer.resize(context.id + 1);
     _sstate.resize(context.id + 1);
     _rstate_no_cull.resize(context.id + 1);
+    _rstate_cull.resize(context.id + 1);
     _rstate_ms_point.resize(context.id + 1);
     _bstate_no_blend.resize(context.id + 1);
   }
@@ -309,6 +319,9 @@ void NURBSResource::initialize_states(RenderContext const& context) const
 
   _rstate_no_cull[context.id] = in_device->create_rasterizer_state(
     _fill_mode, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false);
+
+  _rstate_cull[context.id] = in_device->create_rasterizer_state(
+    _fill_mode, scm::gl::CULL_BACK, scm::gl::ORIENT_CCW, false);
 
   _rstate_ms_point[context.id] = in_device->create_rasterizer_state(
     scm::gl::FILL_POINT, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false);
@@ -434,24 +447,6 @@ void NURBSResource::initialize_vertex_data(RenderContext const& context) const
                   v_fmt_rc(1, 1, scm::gl::TYPE_VEC4F, 0, scm::gl::INT_PURE);
                   v_fmt_rc(2, 2, scm::gl::TYPE_VEC4F, 0, scm::gl::INT_PURE);
                   v_fmt_rc(3, 3, scm::gl::TYPE_VEC4F, 0, scm::gl::INT_PURE);
-
-                  //auto a = _data->object->_indices[0];
-                  //auto b = _data->object->_indices[1];
-                  //auto c = _data->object->_indices[2];
-                  //
-                  //_data->object->_attrib0[a] = scm::math::vec3f(0.0, 3.0, 0.0);
-                  //_data->object->_attrib0[b] = scm::math::vec3f(2.0, 3.0, 0.0);
-                  //_data->object->_attrib0[c] = scm::math::vec3f(2.0, 0.0, 0.0);
-                  //
-                  //_data->object->_attrib1[a] = scm::math::vec4f(0.0, 1.0, 0.0, 0.0);
-                  //_data->object->_attrib1[b] = scm::math::vec4f(1.0, 1.0, 0.0, 0.0);
-                  //_data->object->_attrib1[c] = scm::math::vec4f(1.0, 0.0, 0.0, 0.0);
-                  //
-                  //std::cout << _data->object->_attrib1[a] << " , " <<
-                  //  _data->object->_attrib1[b] << " , " <<
-                  //  _data->object->_attrib1[c] << std::endl;
-
-
 
   _surface_raycasting_data.vertex_attrib0[context.id] =
     in_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,

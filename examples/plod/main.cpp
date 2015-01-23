@@ -63,11 +63,11 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   auto load_mat = [](std::string const& file){
-    gua::MaterialShaderDescription desc;
-    desc.load_from_file(file);
+    auto desc = std::make_shared<gua::MaterialShaderDescription>();
+    desc->load_from_file(file);
     auto shader(std::make_shared<gua::MaterialShader>(file, desc));
     gua::MaterialShaderDatabase::instance()->add(shader);
-    return shader->get_default_material();
+    return shader->make_new_material();
   };
 
   auto pbrMat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
@@ -105,6 +105,7 @@ int main(int argc, char** argv) {
 //  plodLoader.set_importance(seradina_valley_2->get_geometry_description(), 0.75);
 //  plodLoader.set_importance(seradina_valley_3->get_geometry_description(), 0.75);
 //  plodLoader.set_importance(seradina_valley_4->get_geometry_description(), 0.75);
+
 
   plod_geometry->set_draw_bounding_box(true);
   //seradina_rock_geometry->set_draw_bounding_box(true);
@@ -164,15 +165,13 @@ int main(int argc, char** argv) {
   portal_camera->config.set_output_texture_name("portal");
   portal_camera->config.set_enable_stereo(false);
 
-  gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
-
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass<gua::TriMeshPassDescription>();
   portal_pipe->add_pass<gua::PLODPassDescription>();
   portal_pipe->add_pass<gua::LightVisibilityPassDescription>();
   portal_pipe->add_pass<gua::ResolvePassDescription>()
-    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE).mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+
   //portal_pipe->add_pass<gua::EmissivePassDescription>();
   //portal_pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
   //portal_pipe->add_pass<gua::BackgroundPassDescription>()
@@ -204,8 +203,7 @@ int main(int argc, char** argv) {
 
   pipe->add_pass<gua::LightVisibilityPassDescription>();
   pipe->add_pass<gua::ResolvePassDescription>()
-    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE).mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   //pipe->add_pass<gua::EmissivePassDescription>();
   //pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
   //pipe->add_pass<gua::BBoxPassDescription>();

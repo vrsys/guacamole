@@ -31,11 +31,12 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  gua::MaterialShaderDescription desc;
-  desc.load_from_file("data/materials/SimpleMaterial.gmd");
+  auto desc(std::make_shared<gua::MaterialShaderDescription>());
+  desc->load_from_file("data/materials/SimpleMaterial.gmd");
 
   auto shader(std::make_shared<gua::MaterialShader>("simple_mat", desc));
   gua::MaterialShaderDatabase::instance()->add(shader);
+  auto mat(shader->make_new_material());
 
   gua::TriMeshLoader loader;
   auto add_oilrig = [&](int x, int y) {
@@ -47,7 +48,7 @@ int main(int argc, char** argv) {
       //"I:/models/Paris/Paris2010_0.obj",
       // "I:/models/Batman/Batman.obj",
       "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-      shader->get_default_material(),
+      mat,
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE |
       gua::TriMeshLoader::LOAD_MATERIALS |

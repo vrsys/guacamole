@@ -32,7 +32,6 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 MaterialShaderMethod::MaterialShaderMethod(std::string const& name) :
-  file_name_(""),
   name_(name) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +40,6 @@ MaterialShaderMethod& MaterialShaderMethod::load_from_file(std::string const& fi
     TextFile file(file_name);
 
     if (file.is_valid()) {
-      file_name_ = file_name;
       load_from_json(file.get_content());
     } else {
       Logger::LOG_WARNING << "Failed to load material method \""
@@ -123,9 +121,35 @@ std::string const& MaterialShaderMethod::get_source() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 std::map<std::string, ViewDependentUniform> const&
 MaterialShaderMethod::get_uniforms() const {
   return uniforms_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& MaterialShaderMethod::serialize_uniforms_to_stream(std::ostream& os) const {
+
+  for (auto& uniform : uniforms_) {
+    os << uniform.first << "#";
+    uniform.second.serialize_to_stream(os);
+    os << ";";
+  }
+
+  return os;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MaterialShaderMethod::set_uniforms_from_serialized_string(std::string const& value) {
+
+  auto tokens(string_utils::split(value, ';'));
+
+  for (auto& token : tokens) {
+    auto parts(string_utils::split(token, '#'));
+    set_uniform(parts[0], ViewDependentUniform::create_from_serialized_string(parts[1]));
+  }
 }
 
 }

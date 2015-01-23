@@ -44,7 +44,6 @@ namespace video3d{
 
 namespace gua {
 
-class Video3DUberShader;
 struct RenderContext;
 
 /**

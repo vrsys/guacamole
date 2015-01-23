@@ -59,8 +59,6 @@ struct ShaderProgramStage {
 class GUA_DLL ShaderProgram {
  public:
 
-  friend class NURBSUberShader;
-
  public:
   /**
    * Default constructor.
@@ -86,7 +84,7 @@ class GUA_DLL ShaderProgram {
   /**
    * Constructor.
    *
-   * This method takes a vertex shader source, a geomtry shader source 
+   * This method takes a vertex shader source, a geomtry shader source
    * and a fragment shader source and combines them to a ShaderProgram.
    *
    * \param v_shader_source      The vertex shader source.
@@ -114,25 +112,6 @@ class GUA_DLL ShaderProgram {
    * \param substitutions        Shader compile-time substitution map.
    */
   void set_substitutions(SubstitutionMap const& substitutions);
-
-  /**
-   * Destructor
-   *
-   * Cleans all associated memory.
-   */
-  virtual ~ShaderProgram();
-
-  /**
-   *
-   */
-  void save_to_file(std::string const& directory,
-                    std::string const& name) const;
-
-  /**
-   *
-   */
-  void save_log_to_file(std::string const& directory,
-                        std::string const& name) const;
 
   /**
    * Applies this shader.
@@ -186,15 +165,18 @@ class GUA_DLL ShaderProgram {
 
   virtual bool upload_to(RenderContext const& context) const;
 
-  inline scm::gl::program_ptr const& get_program ( RenderContext const& ctx ) const { return programs_[ctx.id]; }
+  inline scm::gl::program_ptr const& get_program ( RenderContext const&) const { return program_; }
+
+  inline std::vector<ShaderProgramStage> const& get_program_stages() const {
+    return stages_;
+  }
 
  protected:  // attributes
 
-  mutable std::vector<scm::gl::program_ptr> programs_;
+  mutable scm::gl::program_ptr program_;
 
  private:  // attributes
 
-  mutable std::mutex upload_mutex_;
   mutable bool dirty_ = false;
 
   std::vector<ShaderProgramStage> stages_;
@@ -203,6 +185,14 @@ class GUA_DLL ShaderProgram {
   SubstitutionMap substitutions_;
 
 };
+
+/**
+ *
+ */
+void save_to_file(ShaderProgram const& p, std::string const& directory,
+                  std::string const& name);
+
+
 
 }
 

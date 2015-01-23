@@ -53,6 +53,11 @@ void ViewDependentUniform::set(int view, UniformValue const& value) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void ViewDependentUniform::reset(int view) {
+  uniforms_.erase(view);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void ViewDependentUniform::apply(RenderContext const& ctx,
                                  std::string const& name, int view,
                                  scm::gl::program_ptr const& prog,
@@ -65,4 +70,47 @@ void ViewDependentUniform::apply(RenderContext const& ctx,
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+std::ostream& ViewDependentUniform::serialize_to_stream(std::ostream& os) const {
+  //default value gets view id -1
+  default_.serialize_to_stream(os);
+  os << "|-1,";
+
+  for (auto& uniform : uniforms_) {
+    uniform.second.serialize_to_stream(os);
+    os << "|" << uniform.first << ",";
+  }
+
+  return os;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+ViewDependentUniform ViewDependentUniform::create_from_serialized_string(std::string const& value) {
+
+  ViewDependentUniform new_uniform;
+
+  auto tokens(string_utils::split(value, ','));
+  for (auto& token : tokens) {
+    auto parts(string_utils::split(token, '|'));
+    std::stringstream id_string(parts[2]);
+    int view;
+    id_string >> view;
+
+    if (view == -1) {
+      new_uniform.set(UniformValue::create_from_strings(parts[1], parts[0]));
+    } else {
+      new_uniform.set(view, UniformValue::create_from_strings(parts[1], parts[0]));
+    }
+  }
+
+  return new_uniform;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::ostream& operator<<(std::ostream& os, ViewDependentUniform const& val) {
+  return val.serialize_to_stream(os);
+}
+
+}
+

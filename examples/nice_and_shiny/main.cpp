@@ -213,7 +213,7 @@ int main(int argc, char** argv) {
     transform->set_transform(modelmatrix);
 
     if (ctr++ % 150 == 0)
-      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
+      gua::Logger::LOG_WARNING << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
                 << camera->get_rendering_fps() << std::endl;
 
     window->process_events();

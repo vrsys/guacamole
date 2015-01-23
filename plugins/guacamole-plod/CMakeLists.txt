@@ -3,8 +3,8 @@
 ###############################################################################
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-set(PLOD_ROOT "/opt/pbr/inst_cb" CACHE PATH "Set to your PLOD install path.")
-include(FindPLOD)
+set(PBR_ROOT "/opt/pbr/inst_cb" CACHE PATH "Set to your PLOD install path.")
+include(FindPBR)
 
 ###############################################################################
 # determine source files
@@ -32,10 +32,7 @@ LINK_DIRECTORIES(${LIB_PATHS})
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}
                      ${GUACAMOLE_PLOD_INCLUDE_DIR}
-                     ${PLOD_INCLUDE_DIR}
-                     #${PLOD_RENDERING_INCLUDE_DIR}
-                     #${PLOD_COMMON_INCLUDE_DIR}
-
+                     ${PBR_INCLUDE_DIRS}
 )
 
 ADD_LIBRARY( guacamole-PLOD SHARED
@@ -78,15 +75,17 @@ ELSEIF (MSVC)
 ENDIF(UNIX)
 
 IF (MSVC)
-  target_link_libraries( guacamole-PLOD optimized ${PLOD_RENDERING_LIBRARY_RELEASE})
-  target_link_libraries( guacamole-PLOD optimized ${PLOD_COMMON_LIBRARY_RELEASE})
-  target_link_libraries( guacamole-PLOD debug ${PLOD_RENDERING_LIBRARY_DEBUG})
-  target_link_libraries( guacamole-PLOD debug ${PLOD_COMMON_LIBRARY_DEBUG})
+  target_link_libraries( guacamole-PLOD optimized ${PBR_RENDERING_LIBRARY}
+                                        optimized ${PBR_COMMON_LIBRARY}
+                                        debug ${PBR_RENDERING_LIBRARY_DEBUG}
+                                        debug ${PBR_COMMON_LIBRARY_DEBUG} 
+                                        general guacamole
+                       )
 ELSEIF (UNIX)
   target_link_libraries( guacamole-PLOD 
                          guacamole 
-                         ${PLOD_RENDERING_LIBRARY}
-                         ${PLOD_COMMON_LIBRARY}
+                         ${PBR_RENDERING_LIBRARY}
+                         ${PBR_COMMON_LIBRARY}
                          ${PROTOBUF_LIBRARIES}
                        )
 
