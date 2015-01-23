@@ -181,20 +181,6 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
       }
 
       FbxNode* fbx_root = fbx_scene->GetRootNode();
-      // std::vector<FbxMesh*> fbx_meshes{};
-      // Mesh::from_fbx_scene(fbx_root, fbx_meshes);
-
-      // Mesh mesh{};
-      // if(fbx_meshes[0]) {
-      //   std::cout << "mesh loaded" << std::endl;
-      //   mesh = Mesh{*fbx_meshes[0]};
-      // }
-
-      // std::vector<std::string> geometry_descriptions{};
-      // std::vector<std::shared_ptr<Material>> materials{};
-
-      // GeometryDescription desc ("TriMesh", file_name, 1, flags);
-      // GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(mesh));
 
       unsigned count(0);
       std::shared_ptr<Material> material;

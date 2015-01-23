@@ -55,15 +55,15 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-/*  auto load_mat = [](std::string const& file){
+  auto load_mat = [](std::string const& file){
     gua::MaterialShaderDescription desc;
     desc.load_from_file(file);
     auto shader(std::make_shared<gua::MaterialShader>(file, desc));
     gua::MaterialShaderDatabase::instance()->add(shader);
-    return shader->get_default_material();
-  };*/
+    return shader->make_new_material();
+  };
 
-  // auto mat1(load_mat("data/materials/pinky.gmd"));
+  auto mat1(load_mat("data/materials/override.gmd"));
 
   gua::SkeletalAnimationLoader loader;
   gua::SkeletalAnimationLoader loader2;
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   // auto teapot(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/bob/boblampclean.md5anim", 0);
 
-  auto rock(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/warrior.fbx"));
+  auto rock(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/warrior.fbx", mat1));
   rock->set_draw_bounding_box(true);
   
   graph.add_node("/transform2", rock);
