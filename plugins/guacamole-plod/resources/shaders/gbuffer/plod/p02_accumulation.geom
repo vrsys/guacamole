@@ -38,7 +38,7 @@ float offset_depth_value(float in_gl_Pos_z, float vs_offset) {
   float log_z = in_gl_Pos_z;
   float lin_z = (2.0 * gua_clip_near * gua_clip_far) / (gua_clip_far + gua_clip_near - log_z * (gua_clip_far - gua_clip_near));
 
-  lin_z = lin_z - 0.04; /*+pos offset in vs somehow*/
+  lin_z = lin_z - 0.1; /*+pos offset in vs somehow*/
   //add some offset here
   //...
 

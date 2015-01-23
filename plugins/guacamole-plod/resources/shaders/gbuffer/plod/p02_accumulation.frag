@@ -52,8 +52,8 @@ void main() {
 
   float neg_pass_2_linear_depth = VertexIn.pass_es_linear_depth;
 
-  //if(  (neg_pass_1_linear_depth) - (neg_pass_2_linear_depth) >= 0.02*VertexIn.pass_ms_rad)//+ VertexIn.pass_es_linear_depth  > 0.000000001 ) 
-  // discard;
+  if(  (neg_pass_1_linear_depth) - (neg_pass_2_linear_depth) >= 0.02*VertexIn.pass_ms_rad)//+ VertexIn.pass_es_linear_depth  > 0.000000001 ) 
+   discard;
 
 //  if(-pass_1_linear_depth > -3.0)
 //    discard;
