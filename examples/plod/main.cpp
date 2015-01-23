@@ -82,24 +82,51 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+
   auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-  
+  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/lp/france/20121212/000/pointcloud/xyz/out_1.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION /*| gua::PLODLoader::NORMALIZE_SCALE*/));
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Adrian_BA/col_planes.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
  
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/ssd_pitoti/Adrian_BA/VIANDEN.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/jagdszene_high.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/jagdszene_high.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/0));
+  //auto seradina_rock_geometry(plodLoader.load_geometry("plod_sera_rock", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/seradina_high.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/0));
 
-  plodLoader.set_importance(plod_geometry->get_geometry_description(), 0.56);
+//  auto seradina_valley_1(plodLoader.load_geometry("sera_v_1", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_01.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/ 0));
+//  auto seradina_valley_2(plodLoader.load_geometry("sera_v_2", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_02.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/0));
+//  auto seradina_valley_3(plodLoader.load_geometry("sera_v_3", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_03.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/0));
+//  auto seradina_valley_4(plodLoader.load_geometry("sera_v_4", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_04.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/0));
+
+
+  //plodLoader.set_importance(plod_geometry->get_geometry_description(), 0.8);
+  //plodLoader.set_importance(seradina_rock_geometry->get_geometry_description(), 0.8);
+
+//  plodLoader.set_importance(seradina_valley_1->get_geometry_description(), 0.75);
+//  plodLoader.set_importance(seradina_valley_2->get_geometry_description(), 0.75);
+//  plodLoader.set_importance(seradina_valley_3->get_geometry_description(), 0.75);
+//  plodLoader.set_importance(seradina_valley_4->get_geometry_description(), 0.75);
 
   plod_geometry->set_draw_bounding_box(true);
+  //seradina_rock_geometry->set_draw_bounding_box(true);
 
-  transform->add_child(plod_geometry);
+  //seradina_rock_geometry->scale(5.0);
 
+  transform->add_child(plod_geometry);  
+  //transform->add_child(seradina_rock_geometry);
+  //transform->add_child(teapot);
+  
+  //transform->add_child(seradina_valley_1);
+  //transform->add_child(seradina_valley_2);
+  //transform->add_child(seradina_valley_3);
+  //transform->add_child(seradina_valley_4);
+  
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
   portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
   portal->data.set_texture("portal");
   portal->translate(0.5f, 0.f, -0.2f);
   portal->rotate(-30, 0.f, 1.f, 0.f);
+  portal->translate(0.0f, 0.f, -4.8f);
+  //portal->translate(0.0f, 0.0, 2.0f);
 
   auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
   light->data.set_enable_shadows(true);
@@ -114,7 +141,8 @@ int main(int argc, char** argv) {
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   //screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  screen->data.set_size(gua::math::vec2(1.6f, 0.9f));
+  //screen->data.set_size(gua::math::vec2(1.6f, 0.9f));
+  screen->data.set_size(gua::math::vec2(0.45f, 0.25f));
   screen->translate(0, 0, 1.0);
 
 
@@ -137,7 +165,7 @@ int main(int argc, char** argv) {
   portal_camera->config.set_enable_stereo(false);
 
   gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
-/*
+
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass<gua::TriMeshPassDescription>();
   portal_pipe->add_pass<gua::PLODPassDescription>();
@@ -152,22 +180,28 @@ int main(int argc, char** argv) {
   //  .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
 
   portal_camera->set_pipeline_description(portal_pipe);
-*/
+
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
+  camera->config.set_eye_dist(0.06);
+  camera->config.set_left_screen_path("/screen");
+  camera->config.set_right_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
+  //camera->config.set_enable_stereo(true);
   camera->config.set_enable_stereo(false);
-  camera->config.set_near_clip(0.001);
-  //camera->set_pre_render_cameras({portal_camera});
+  camera->config.set_near_clip(0.0001);
+  camera->set_pre_render_cameras({portal_camera});
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
 
   pipe->add_pass<gua::TriMeshPassDescription>();
-  pipe->add_pass<gua::PLODPassDescription>();
   pipe->add_pass<gua::TexturedQuadPassDescription>();
+  pipe->add_pass<gua::BBoxPassDescription>();
+  pipe->add_pass<gua::PLODPassDescription>();
+
   pipe->add_pass<gua::LightVisibilityPassDescription>();
   pipe->add_pass<gua::ResolvePassDescription>()
     .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
@@ -201,6 +235,7 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
+  //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
   window->config.set_stereo_mode(gua::StereoMode::MONO);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
