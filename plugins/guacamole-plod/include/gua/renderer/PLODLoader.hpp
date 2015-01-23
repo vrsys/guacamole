@@ -36,10 +36,10 @@ namespace gua {
 namespace node {
   class Node;
   class PLODNode;
-} 
+}
 
 /**
- * Loads *.kdn and *.lod files and creates PLOD nodes. 
+ * Loads *.kdn and *.lod files and creates PLOD nodes.
  *
  * This class can load PLOD data from files and display them in multiple
  * contexts.
@@ -54,7 +54,7 @@ class GUA_PLOD_DLL PLODLoader {
     NORMALIZE_POSITION = 1 << 1,
     NORMALIZE_SCALE = 1 << 2
   };
- 
+
 
   PLODLoader();
 
@@ -63,7 +63,7 @@ public:
   std::shared_ptr<node::PLODNode> load_geometry(std::string const& file_name,
                                                 unsigned flags = DEFAULTS);
 
-  std::shared_ptr<node::PLODNode> load_geometry(std::string const& node_name, 
+  std::shared_ptr<node::PLODNode> load_geometry(std::string const& node_name,
                                                 std::string const& file_name,
                                                 std::shared_ptr<Material> const& fallback_material,
                                                 unsigned flags =  DEFAULTS);
@@ -72,7 +72,7 @@ public:
 
   /**
    * PLOD-lib specific configuration methods. Might be moved into a separate object later.
-   * 
+   *
    */
   size_t get_upload_budget_in_mb() const;
   size_t get_render_budget_in_mb() const;
@@ -86,13 +86,11 @@ public:
   void   set_error_threshold(float const error_threshold);
   void   set_importance(std::string const& file_name, float const importance);
 
-  private:
-  
-   bool is_supported(std::string const& file_name) const;
+  bool is_supported(std::string const& file_name) const;
 
-  private:
+private:
 
-   std::unordered_set<std::string> _supported_file_extensions;
+  std::unordered_set<std::string> _supported_file_extensions;
 
 };
 
