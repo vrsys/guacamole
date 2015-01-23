@@ -237,7 +237,6 @@ Mesh::Mesh(FbxMesh& mesh) {
       Logger::LOG_WARNING << "Mesh has multiple UV sets, only using first one" << std::endl;
     }
     UV_set = mesh.GetElementUV(0)->GetName();
-    std::cout << "UVset name is " << UV_set << std::endl;
   }
 
 //normals
@@ -246,7 +245,7 @@ Mesh::Mesh(FbxMesh& mesh) {
     mesh.GenerateNormals(false, true);
   }
 
-  //polygons
+//polygons
   if(mesh.GetPolygonCount() < 1) {
     Logger::LOG_WARNING << "No indices in mesh, drawing will be inefficient" << std::endl;
     for(unsigned i = 0; i < num_vertices; ++i) {
@@ -309,59 +308,6 @@ Mesh::Mesh(FbxMesh& mesh) {
   }
 
   num_vertices = positions.size(); 
-
-
-// //vertices
-//   for(unsigned i = 0; i < num_vertices; ++i) {
-//     positions.push_back(to_gua::vec3(vertices[i]) * 0.2);
-//   }
-
-// //normals
-//   if(mesh.GetElementNormalCount() == 0) {
-//     //dont override exiting normals and generate by control point, not vertex
-//     mesh.GenerateNormals(false, true);
-//   }
-
-//   FbxGeometryElementNormal const* fbx_normals = mesh.GetElementNormal(0);
-
-//   if(fbx_normals->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
-//     //normals are mapped by order
-//     if(fbx_normals->GetReferenceMode() == FbxGeometryElement::eDirect) {
-
-//       for(unsigned i = 0; i < num_vertices; ++i) {
-//         normals[i] = (to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
-//       }
-//     }
-//     //normals are indexed
-//     else if(fbx_normals->GetReferenceMode() == FbxGeometryElement::eIndexToDirect ) {
-//       for(unsigned i = 0; i < num_vertices; ++i) {
-//         unsigned index = fbx_normals->GetIndexArray().GetAt(i); 
-//         normals[i] = (to_gua::vec3(fbx_normals->GetDirectArray().GetAt(index)));
-//       }
-//     }
-//     //normals are mapped differently -> fill vector with blanks
-//     else {
-//       Logger::LOG_ERROR << "Only normal mapping per vertex are supported" << std::endl;
-//     }
-//   }
-//   else if(fbx_normals->GetMappingMode() == FbxGeometryElement::eByPolygonVertex) {
-//     //regenerate normals per control point
-//     mesh.GenerateNormals(true, true);
-
-//     for(unsigned i = 0; i < num_vertices; ++i) {
-//         normals[i] = (to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
-//     }
-//     Logger::LOG_WARNING << "Normals per vertex not yet supported" << std::endl;
-//   }
-//   else {
-//     Logger::LOG_WARNING << "Only Normals per vertex supported, regenerating them" << std::endl;
-//     //regenerate normals per control point
-//     mesh.GenerateNormals(true, true);
-
-//     for(unsigned i = 0; i < num_vertices; ++i) {
-//         normals[i] = (to_gua::vec3(fbx_normals->GetDirectArray().GetAt(i)));
-//     }
-//   }
 }
 
 Mesh::Mesh(aiMesh const& mesh, Node const& root) {   

@@ -1,0 +1,77 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "name" : "FragmentColor",
+      "source" : "
+        // color generation ----------------------------------------------------
+        void FragmentColor() {
+
+          vec4 color = vec4(0);
+
+          color = texture(sampler2D(ColorMap), gua_texcoords);
+
+          if (color.a < 0.5) {
+            discard;
+          }
+
+          gua_color = color.rgb;
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "ColorMap",
+          "type" : "sampler2D",
+          "value" : "data/textures/pinky/pinky.tga"
+        }
+      ]
+    },
+    {
+      "name" : "FragmentRoughness",
+      "source" : "
+        // roughness generation ------------------------------------------------
+        void FragmentRoughness() {
+          //gua_roughness = texture(sampler2D(RoughnessMap), gua_texcoords).r;
+          //gua_metalness = 0;
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "RoughnessMap",
+          "type" : "sampler2D",
+          "value" : "data/textures/pinky/pinky_s.tga"
+        }
+      ]
+    },
+    {
+      "name" : "FragmentNormal",
+      "source" : "
+        // normal mapping ------------------------------------------------------
+        void FragmentNormal() {
+          if (uvec2(0) != NormalMap) {
+            vec3 normalTS = normalize(texture(sampler2D(NormalMap), gua_texcoords).rgb*2.0-1.0);
+
+            // Green/Y channel is flipped in Cerberus NormalMap
+            normalTS.y *= -1.0;
+            gua_normal = normalize(gua_tangent*normalTS.x +
+                                   gua_bitangent*normalTS.y +
+                                   gua_normal*normalTS.z);
+          }
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "NormalMap",
+          "type" : "sampler2D",
+          "value" : "data/textures/pinky/pinky_local.tga"
+        }
+      ]
+    }
+  ]
+}
