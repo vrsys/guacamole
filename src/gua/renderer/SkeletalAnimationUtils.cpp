@@ -207,10 +207,6 @@ Mesh::Mesh():
 {}
 
 Mesh::Mesh(FbxMesh& mesh) {
-  if(!mesh.IsTriangleMesh()) {
-    Logger::LOG_WARNING << "Mesh is not triangulated" << std::endl;
-  }
-
   num_vertices = mesh.GetControlPointsCount(); 
   num_triangles = mesh.GetPolygonCount();
   
@@ -249,40 +245,43 @@ Mesh::Mesh(FbxMesh& mesh) {
     Logger::LOG_ERROR << "No polygons in mesh" << std::endl;
     assert(0);
   }
-  else {
-    int vertex_count = -1;
-    FbxVector4* control_points = mesh.GetControlPoints();
-    int* poly_vertices = mesh.GetPolygonVertices();
-    FbxArray<FbxVector4> poly_normals;
-    mesh.GetPolygonVertexNormals(poly_normals);
-    FbxArray<FbxVector2> poly_uvs;
-    mesh.GetPolygonVertexUVs(UV_set.c_str(), poly_uvs);
 
-    for(unsigned i = 0; i < num_triangles; ++i)
+  if(!mesh.IsTriangleMesh()) {
+    Logger::LOG_DEBUG << "Triangulating mesh" << std::endl;
+  }
+  
+  int vertex_count = -1;
+  FbxVector4* control_points = mesh.GetControlPoints();
+  int* poly_vertices = mesh.GetPolygonVertices();
+  FbxArray<FbxVector4> poly_normals;
+  mesh.GetPolygonVertexNormals(poly_normals);
+  FbxArray<FbxVector2> poly_uvs;
+  mesh.GetPolygonVertexUVs(UV_set.c_str(), poly_uvs);
+
+  for(unsigned i = 0; i < num_triangles; ++i)
+  {
+    //triangulate face if necessary
+    for(int j = 2; j < mesh.GetPolygonSize(i); ++j)
     {
-      //triangulate face if necessary
-      for(int j = 2; j < mesh.GetPolygonSize(i); ++j)
-      {
-        indices.push_back(++vertex_count);
-        indices.push_back(++vertex_count);
-        indices.push_back(++vertex_count);
+      indices.push_back(++vertex_count);
+      indices.push_back(++vertex_count);
+      indices.push_back(++vertex_count);
 
-        int start_index = mesh.GetPolygonVertexIndex(i);
-        std::vector<int> indices{start_index, start_index + j - 1, start_index + j}; 
-        
-        positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[0]]]));
-        positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[1]]]));
-        positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[2]]]));
+      int start_index = mesh.GetPolygonVertexIndex(i);
+      std::vector<int> indices{start_index, start_index + j - 1, start_index + j}; 
+      
+      positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[0]]]));
+      positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[1]]]));
+      positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[2]]]));
 
-        normals.push_back(to_gua::vec3(poly_normals[indices[0]]));
-        normals.push_back(to_gua::vec3(poly_normals[indices[1]]));
-        normals.push_back(to_gua::vec3(poly_normals[indices[2]]));
-        
-        if(has_uvs) {
-          texCoords.push_back(to_gua::vec2(poly_uvs[indices[0]]));
-          texCoords.push_back(to_gua::vec2(poly_uvs[indices[1]]));
-          texCoords.push_back(to_gua::vec2(poly_uvs[indices[2]]));
-        }
+      normals.push_back(to_gua::vec3(poly_normals[indices[0]]));
+      normals.push_back(to_gua::vec3(poly_normals[indices[1]]));
+      normals.push_back(to_gua::vec3(poly_normals[indices[2]]));
+      
+      if(has_uvs) {
+        texCoords.push_back(to_gua::vec2(poly_uvs[indices[0]]));
+        texCoords.push_back(to_gua::vec2(poly_uvs[indices[1]]));
+        texCoords.push_back(to_gua::vec2(poly_uvs[indices[2]]));
       }
     }
   }
