@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/lp/france/20121212/000/pointcloud/xyz/out_1.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION /*| gua::PLODLoader::NORMALIZE_SCALE*/));
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Adrian_BA/col_planes.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
  
@@ -174,9 +174,9 @@ int main(int argc, char** argv) {
 
   //portal_pipe->add_pass<gua::EmissivePassDescription>();
   //portal_pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  //portal_pipe->add_pass<gua::BackgroundPassDescription>()
-  //  .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-  //  .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  portal_pipe->add_pass<gua::BackgroundPassDescription>()
+    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
 
   portal_camera->set_pipeline_description(portal_pipe);
 
@@ -189,8 +189,8 @@ int main(int argc, char** argv) {
   camera->config.set_right_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  //camera->config.set_enable_stereo(true);
-  camera->config.set_enable_stereo(false);
+  camera->config.set_enable_stereo(true);
+  //camera->config.set_enable_stereo(false);
   camera->config.set_near_clip(0.0001);
   camera->set_pre_render_cameras({portal_camera});
 
@@ -207,9 +207,9 @@ int main(int argc, char** argv) {
   //pipe->add_pass<gua::EmissivePassDescription>();
   //pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
   //pipe->add_pass<gua::BBoxPassDescription>();
-  //pipe->add_pass<gua::BackgroundPassDescription>()
-  //  .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-  //  .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  pipe->add_pass<gua::BackgroundPassDescription>()
+    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
 
 
 
@@ -233,8 +233,8 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
+  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+  //window->config.set_stereo_mode(gua::StereoMode::MONO);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
@@ -262,7 +262,7 @@ int main(int argc, char** argv) {
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
     
-    std::cout << "Frame time: " << 1000.0f / camera->get_rendering_fps()<<" ms, fps:" << camera->get_rendering_fps() << ", app fps: " << camera->get_application_fps() << std::endl;
+    //std::cout << "Frame time: " << 1000.0f / camera->get_rendering_fps()<<" ms, fps:" << camera->get_rendering_fps() << ", app fps: " << camera->get_application_fps() << std::endl;
 
     // apply trackball matrix to object
     window->process_events();
