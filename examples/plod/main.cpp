@@ -72,6 +72,18 @@ int main(int argc, char** argv) {
 
   auto pbrMat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
 
+  // create simple untextured material shader
+  auto desc = std::make_shared<gua::MaterialShaderDescription>();
+  desc->load_from_file("./data/materials/PLODGlossy.gmd");
+  
+  //use this material for models where shading does not make sense
+  //desc->load_from_file("./data/materials/PLODUnshaded.gmd");
+  auto material_shader(std::make_shared<gua::MaterialShader>("PLOD_unshaded_material", desc));
+
+  gua::MaterialShaderDatabase::instance()->add(material_shader);
+
+  auto PLOD_unshaded_mat  = material_shader->make_new_material();
+
   gua::TriMeshLoader loader;
   gua::PLODLoader plodLoader;
 
@@ -84,28 +96,7 @@ int main(int argc, char** argv) {
 
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/lp/france/20121212/000/pointcloud/xyz/out_1.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION /*| gua::PLODLoader::NORMALIZE_SCALE*/));
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Adrian_BA/col_planes.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
- 
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/ssd_pitoti/Adrian_BA/VIANDEN.kdn", *pbrMat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/jagdszene_high.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/0));
-  //auto seradina_rock_geometry(plodLoader.load_geometry("plod_sera_rock", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/seradina_high.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/0));
-
-//  auto seradina_valley_1(plodLoader.load_geometry("sera_v_1", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_01.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/ 0));
-//  auto seradina_valley_2(plodLoader.load_geometry("sera_v_2", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_02.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/0));
-//  auto seradina_valley_3(plodLoader.load_geometry("sera_v_3", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_03.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/0));
-//  auto seradina_valley_4(plodLoader.load_geometry("sera_v_4", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_04.kdn", *pbrMat, /*gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE*/0));
-
-
-  //plodLoader.set_importance(plod_geometry->get_geometry_description(), 0.8);
-  //plodLoader.set_importance(seradina_rock_geometry->get_geometry_description(), 0.8);
-
-//  plodLoader.set_importance(seradina_valley_1->get_geometry_description(), 0.75);
-//  plodLoader.set_importance(seradina_valley_2->get_geometry_description(), 0.75);
-//  plodLoader.set_importance(seradina_valley_3->get_geometry_description(), 0.75);
-//  plodLoader.set_importance(seradina_valley_4->get_geometry_description(), 0.75);
-
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
 
   plod_geometry->set_draw_bounding_box(true);
   //seradina_rock_geometry->set_draw_bounding_box(true);
@@ -113,13 +104,7 @@ int main(int argc, char** argv) {
   //seradina_rock_geometry->scale(5.0);
 
   transform->add_child(plod_geometry);  
-  //transform->add_child(seradina_rock_geometry);
-  //transform->add_child(teapot);
-  
-  //transform->add_child(seradina_valley_1);
-  //transform->add_child(seradina_valley_2);
-  //transform->add_child(seradina_valley_3);
-  //transform->add_child(seradina_valley_4);
+
   
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
   portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
@@ -129,7 +114,7 @@ int main(int argc, char** argv) {
   portal->translate(0.0f, 0.f, -4.8f);
   //portal->translate(0.0f, 0.0, 2.0f);
 
-  auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
+  auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->data.set_enable_shadows(true);
   light->scale(10.f);
   light->rotate(-20, 0.f, 1.f, 0.f);
@@ -189,8 +174,8 @@ int main(int argc, char** argv) {
   camera->config.set_right_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(true);
-  //camera->config.set_enable_stereo(false);
+  //camera->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
   camera->config.set_near_clip(0.0001);
   camera->set_pre_render_cameras({portal_camera});
 
@@ -233,8 +218,8 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
-  //window->config.set_stereo_mode(gua::StereoMode::MONO);
+  //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+  window->config.set_stereo_mode(gua::StereoMode::MONO);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
