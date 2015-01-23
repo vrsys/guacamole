@@ -82,7 +82,6 @@ namespace gua {
   PLODRenderer::PLODRenderer() : shaders_loaded_(false),
                                  gpu_resources_already_created_(false),
                                  depth_pass_program_(nullptr),
-                                 accumulation_pass_program_(nullptr),
                                  normalization_pass_program_(nullptr),
                                  current_rendertarget_width_(0),
                                  current_rendertarget_height_(0)
@@ -91,18 +90,6 @@ namespace gua {
   }
 
   PLODRenderer::~PLODRenderer() {
-    if(depth_pass_program_) {
-      delete depth_pass_program_;
-    }
-
-    if(accumulation_pass_program_) {
-      delete accumulation_pass_program_;
-    }
-
-    if(normalization_pass_program_) {
-      delete normalization_pass_program_;
-    }
-
 //substitute this part later with shared ptr in pbr_lib
 /*
     Logger::LOG_DEBUG << "memory cleanup...(1)" << std::endl;
@@ -151,7 +138,7 @@ namespace gua {
   //////////////////////////////////////////////////////////////////////////////
   void PLODRenderer::_initialize_depth_pass_program() {
     if(!depth_pass_program_) {
-      auto new_program = new ShaderProgram;
+      auto new_program = std::make_shared<ShaderProgram>();
       new_program->set_shaders(depth_pass_shader_stages_);
       depth_pass_program_ = new_program;
     }
@@ -159,19 +146,25 @@ namespace gua {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  void PLODRenderer::_initialize_accumulation_pass_program() {
-    if(!accumulation_pass_program_) {
-      auto new_program = new ShaderProgram;
-      new_program->set_shaders(accumulation_pass_shader_stages_);
-      accumulation_pass_program_ = new_program;
+  void PLODRenderer::_initialize_accumulation_pass_program(MaterialShader* material) {
+    if(!accumulation_pass_programs_.count(material)) {
+      auto program = std::make_shared<ShaderProgram>();
+
+      auto smap = global_substitution_map_;
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+      }
+
+      program->set_shaders(accumulation_pass_shader_stages_, std::list<std::string>(), false, smap);
+      accumulation_pass_programs_[material] = program;
     }
-    assert(accumulation_pass_program_);
+    assert(accumulation_pass_programs_.count(material));
   }
 
   //////////////////////////////////////////////////////////////////////////////
   void PLODRenderer::_initialize_normalization_pass_program() {
     if(!normalization_pass_program_) {
-      auto new_program = new ShaderProgram;
+      auto new_program = std::make_shared<ShaderProgram>();
       new_program->set_shaders(normalization_pass_shader_stages_);
       normalization_pass_program_ = new_program;
     }
@@ -203,6 +196,11 @@ namespace gua {
                           scm::gl::FORMAT_RGBA_16F,
                           1, 1, 1);
 
+    accumulation_pass_pbr_result_ = ctx.render_device
+      ->create_texture_2d(render_target_dims,
+                          scm::gl::FORMAT_RGB_32F,
+                          1, 1, 1);
+
     depth_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
     depth_pass_result_fbo_->clear_attachments();
     depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
@@ -215,6 +213,8 @@ namespace gua {
                                                        accumulation_pass_color_result_);
     accumulation_pass_result_fbo_->attach_color_buffer(1,
                                                        accumulation_pass_normal_result_);
+    accumulation_pass_result_fbo_->attach_color_buffer(2,
+                                                       accumulation_pass_pbr_result_);
     accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
 
   
@@ -273,6 +273,34 @@ namespace gua {
     //}
   }
 
+  std::shared_ptr<ShaderProgram> PLODRenderer::_get_material_program(MaterialShader* material,
+                                                                     std::shared_ptr<ShaderProgram> const& current_program,
+                                                                     bool& program_changed) {
+    auto shader_iterator = accumulation_pass_programs_.find(material);
+    if (shader_iterator == accumulation_pass_programs_.end()) {
+      try {
+        _initialize_accumulation_pass_program(material);
+        program_changed = true;
+        return accumulation_pass_programs_.at(material);
+      } 
+      catch (std::exception& e) {
+        Logger::LOG_WARNING << "PLODPass::_get_material_program(): Cannot create material for accumulation pass program: " << e.what() << std::endl;
+        return std::shared_ptr<ShaderProgram>();
+      }
+    }
+    else {
+      if (current_program == shader_iterator->second) {
+        program_changed = false;
+        return current_program;
+      }
+      else {
+        program_changed = true;
+        return shader_iterator->second;
+      }
+    }
+
+  }
+
   ///////////////////////////////////////////////////////////////////////////////
   void PLODRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
 
@@ -321,6 +349,11 @@ namespace gua {
                               1,
                               scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 
+       ctx.render_context
+         ->clear_color_buffer(accumulation_pass_result_fbo_,
+                              2,
+                              scm::math::vec4f(0.0f, 0.0f, 0.0f));
+
      pipe.get_gbuffer().set_viewport(ctx);
 
      //determine frustum parameters
@@ -357,6 +390,11 @@ namespace gua {
       std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_out_of_frustum_per_model;
 
      auto& gua_depth_buffer = pipe.get_gbuffer().get_current_depth_buffer()->get_buffer(ctx);
+
+
+     MaterialShader* current_material(nullptr);
+     std::shared_ptr<ShaderProgram> current_material_program;
+
 
      //depth pass 
      {
@@ -451,11 +489,11 @@ namespace gua {
        depth_pass_program_->use(ctx);
      }
      
-      if(!accumulation_pass_program_) {
+    /*  if(!accumulation_pass_programs_.count()) {
         _initialize_accumulation_pass_program();
         save_to_file(*accumulation_pass_program_,".", "accumulation_pass_debug");
       }
-
+    */
 
      //accumulation pass 
      {
@@ -476,47 +514,31 @@ namespace gua {
 
        accumulation_pass_result_fbo_->attach_depth_stencil_buffer(gua_depth_buffer );
  
-       if(!accumulation_pass_program_) {
+      /* if(!accumulation_pass_program_) {
          std::cout << "Accumulation program not instanciated\n";
        }
+      */
 
-        accumulation_pass_program_->use(ctx);
 
-        ctx.render_context
-          ->bind_texture(depth_pass_linear_depth_result_, nearest_sampler_state_, 0);
-
-       accumulation_pass_program_->apply_uniform(ctx,
-                                                 "p01_linear_depth_texture", 0);
-
-      //loop through all models and render depth pass
+      int view_id(pipe.get_camera().config.get_view_id());
+      bool program_changed = false;
+      //loop through all models and render accumulation pass
       for (auto const& object : sorted_objects->second) { 
 
         auto plod_node(reinterpret_cast<node::PLODNode*>(object));
 
         pbr::model_t model_id = controller->DeduceModelId( plod_node->get_geometry_description());
         
-        auto const& scm_model_matrix = plod_node->get_cached_world_transform();
-        auto const& scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+
         
         pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
         std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
 
-        UniformValue model_mat(scm_model_matrix);
-        UniformValue normal_mat(scm_normal_matrix);
+        current_material = plod_node->get_material()->get_shader();
 
-        accumulation_pass_program_->apply_uniform(ctx,
-                                           "gua_model_matrix",
-                                           scm_model_matrix);
-
-        accumulation_pass_program_->apply_uniform(ctx,
-                                           "gua_normal_matrix",
-                                           normal_mat);
-
-        float radius_importance_scaling = database->GetModel(model_id)->importance();               
-   
-        accumulation_pass_program_->apply_uniform(ctx, 
-                                          "radius_importance_scaling",
-                                           radius_importance_scaling);
+        current_material_program = _get_material_program(current_material, 
+                                                       current_material_program, 
+                                                       program_changed);
 
         ctx.render_context->apply();
 
@@ -525,7 +547,40 @@ namespace gua {
         //retrieve frustum culling results      
         std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id]; 
 
-  if(plod_resource && depth_pass_program_) {
+  if(plod_resource && current_material_program) {
+
+        if(program_changed) {
+          current_material_program->unuse(ctx);
+          current_material_program->use(ctx);
+
+          ctx.render_context
+            ->bind_texture(depth_pass_linear_depth_result_, nearest_sampler_state_, 0);
+
+          current_material_program->apply_uniform(ctx,
+                                                   "p01_linear_depth_texture", 0);
+        }
+
+        auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+        auto const& scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+
+        UniformValue model_mat(scm_model_matrix);
+        UniformValue normal_mat(scm_normal_matrix);
+
+        current_material_program->apply_uniform(ctx,
+                                           "gua_model_matrix",
+                                           scm_model_matrix);
+
+        current_material_program->apply_uniform(ctx,
+                                           "gua_normal_matrix",
+                                           normal_mat);
+
+        float radius_importance_scaling = database->GetModel(model_id)->importance();               
+   
+        current_material_program->apply_uniform(ctx, 
+                                          "radius_importance_scaling",
+                                           radius_importance_scaling);
+
+          plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 
           plod_resource->draw(ctx,
                              context_id,
@@ -533,13 +588,15 @@ namespace gua {
                              model_id,
                              controller->GetContextMemory(context_id, ctx.render_device),
                              nodes_out_of_frustum);
+
+          program_changed = false;
         }
         else {
           Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
         }
       }
      
-       accumulation_pass_program_->unuse(ctx);
+       current_material_program->unuse(ctx);
      }
 
       if(!normalization_pass_program_) {
@@ -578,6 +635,11 @@ namespace gua {
          ->bind_texture(accumulation_pass_normal_result_, nearest_sampler_state_, 1);
        normalization_pass_program_->apply_uniform(ctx,
                                                  "p02_normal_texture", 1);
+
+       ctx.render_context
+         ->bind_texture(accumulation_pass_pbr_result_, nearest_sampler_state_, 2);
+       normalization_pass_program_->apply_uniform(ctx,
+                                                 "p02_pbr_texture", 2);
                                              
        ctx.render_context->apply();
 

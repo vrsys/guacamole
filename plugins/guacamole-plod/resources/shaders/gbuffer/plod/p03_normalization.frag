@@ -15,12 +15,13 @@ in vec2 gua_quad_coords;
 //layout(binding=0) uniform sampler2D p01_depth_texture;
 layout(binding=0) uniform sampler2D p02_color_texture;
 layout(binding=1) uniform sampler2D p02_normal_texture;
-
+layout(binding=2) uniform sampler2D p02_pbr_texture;
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
 ///////////////////////////////////////////////////////////////////////////////
 @include "resources/shaders/common/gua_fragment_shader_output.glsl"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // main
@@ -49,15 +50,20 @@ void main() {
 
   vec3 gua_normal = normalized_normal;
 
-  float gua_emissivity = 0.2;
-  float gua_roughness = 0.5;
-  float gua_metalness = 1.0;
-  bool gua_flags_passthrough = false;
+  vec3 written_pbr_coeffs = (texture(p02_pbr_texture, coords.xy).rgb) / accumulated_weight;
 
- 
+  float gua_metalness  = written_pbr_coeffs.r;
+  float gua_roughness  = written_pbr_coeffs.g;
+  float gua_emissivity = written_pbr_coeffs.b;
+
+  bool gua_flags_passthrough = false;
+  if(gua_metalness == 0.0 && gua_roughness == 0.0 && gua_emissivity == 0.0)
+    gua_flags_passthrough = true;
+
 /////
   {
   @include "resources/shaders/common/gua_write_gbuffer.glsl"
+    //submit_fragment(gl_FragCoord.z);
   }
 }
 

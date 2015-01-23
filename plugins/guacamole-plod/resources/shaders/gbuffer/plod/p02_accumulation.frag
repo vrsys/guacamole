@@ -28,6 +28,7 @@ in VertexData {
 
 layout (location = 0) out vec4 out_accumulated_color;
 layout (location = 1) out vec4 out_accumulated_normal;
+layout (location = 2) out vec3 out_accumulated_pbr;
 
 ///////////////////////////////////////////////////////////////////////////////
 //sampler
@@ -38,6 +39,16 @@ layout(binding=0) uniform sampler2D p01_linear_depth_texture;
 // splatting methods
 ///////////////////////////////////////////////////////////////////////////////
 uniform vec2 win_dims;
+
+
+
+@material_uniforms@
+
+float weight = 0;
+
+@material_method_declarations_frag@
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,7 +77,7 @@ void main() {
 
 
 
-  float weight = gaussian[(int)(round(length(uv_coords) * 31.0))];
+  weight = gaussian[(int)(round(length(uv_coords) * 31.0))];
 
   //float weight = 1.0;
 
@@ -87,6 +98,9 @@ void main() {
     out_accumulated_color = vec4(weight * VertexIn.pass_point_color, weight);
     //out_accumulated_color = vec4(0.0, 1.0 * weight, 0.0, weight);
     out_accumulated_normal = normalAdjustmentFactor * vec4(weight * VertexIn.pass_normal, weight);
+
 //  }
+  @material_input@
+  @material_method_calls_frag@
 }
 

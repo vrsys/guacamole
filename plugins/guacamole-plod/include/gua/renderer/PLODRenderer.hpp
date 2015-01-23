@@ -30,6 +30,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/View.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 
 //external headers
 #include <pbr/ren/cut_database_record.h>
@@ -55,8 +56,12 @@ namespace gua {
   
   void          _load_shaders();
   void          _initialize_depth_pass_program();
-  void          _initialize_accumulation_pass_program();
+  void          _initialize_accumulation_pass_program(MaterialShader* material);
   void          _initialize_normalization_pass_program();
+
+  std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
+                                                       std::shared_ptr<ShaderProgram> const& current_program,
+                                                       bool& program_changed);
 
   void          _create_gpu_resources(gua::RenderContext const& ctx,
                                     scm::math::vec2ui const& render_target_dims,
@@ -82,6 +87,7 @@ namespace gua {
     //accumulation pass FBO & attachments
     scm::gl::texture_2d_ptr                      accumulation_pass_color_result_;
     scm::gl::texture_2d_ptr                      accumulation_pass_normal_result_;
+    scm::gl::texture_2d_ptr                      accumulation_pass_pbr_result_;
     scm::gl::frame_buffer_ptr                    accumulation_pass_result_fbo_;
 
     //normalization pass FBO & attachments
@@ -126,20 +132,21 @@ namespace gua {
      */
 
     //render target dependent resources
-    unsigned                                            current_rendertarget_width_;  
-    unsigned                                            current_rendertarget_height_;
+    unsigned                                                             current_rendertarget_width_;  
+    unsigned                                                             current_rendertarget_height_;
 
     //CPU resources
-    std::vector<ShaderProgramStage>                     depth_pass_shader_stages_;
-    std::vector<ShaderProgramStage>                     accumulation_pass_shader_stages_;
-    std::vector<ShaderProgramStage>                     normalization_pass_shader_stages_;
+    std::vector<ShaderProgramStage>                                      depth_pass_shader_stages_;
+    std::vector<ShaderProgramStage>                                      accumulation_pass_shader_stages_;
+    std::vector<ShaderProgramStage>                                      normalization_pass_shader_stages_;
 
     //additional GPU resources 
-    ShaderProgram*                                      depth_pass_program_;
-    ShaderProgram*                                      accumulation_pass_program_;
-    ShaderProgram*                                      normalization_pass_program_;
+    std::shared_ptr<ShaderProgram>                                       depth_pass_program_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > accumulation_pass_programs_;
+    std::shared_ptr<ShaderProgram>                                       normalization_pass_program_;
 
-    SubstitutionMap                                     global_substitution_map_;
+    SubstitutionMap                                                      global_substitution_map_;
+    ResourceFactory                                                      factory_;
   };
 
 }
