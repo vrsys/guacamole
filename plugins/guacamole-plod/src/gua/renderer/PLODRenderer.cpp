@@ -467,7 +467,7 @@ namespace gua {
        ctx.render_context
           ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
        //ctx.render_context
-       //    ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
+           //->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
 
        ctx.render_context->set_blend_state(color_accumulation_state_);
 

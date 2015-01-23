@@ -38,5 +38,6 @@ void main() {
 
   out_linear_depth.r = -VertexIn.pass_es_linear_depth;//-(-5.0) /gua_clip_far;
   //out_linear_depth = 0;
+  //gl_FragDepth = 0.1;
 }
 
