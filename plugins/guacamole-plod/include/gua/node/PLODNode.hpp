@@ -42,11 +42,12 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_PLOD_DLL PLODNode : public GeometryNode 
+class GUA_PLOD_DLL PLODNode : public GeometryNode
 {
+public:
   friend class ::gua::PLODLoader;
 
-private: // c'tor
+  // c'tor
   PLODNode(std::string const& node_name,
            std::string const& geometry_description = "gua_default_geometry",
            std::string const& geometry_file_path = "gua_no_path_specified",
@@ -81,11 +82,11 @@ public:
   void accept(NodeVisitor& visitor) override;
 
 protected:
-  
+
   std::shared_ptr<Node> copy() const override;
 
 private:  // attributes e.g. special attributes for drawing
-  
+
   std::shared_ptr<PLODResource> geometry_;
   std::string                   geometry_description_;
   std::string                   geometry_file_path_;
