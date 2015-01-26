@@ -17,8 +17,7 @@
       
       if ( (abs(proj_texcoord.x) < 1.0) && (abs(proj_texcoord.y) < 1.0) && (view_tex_space_pos.z < 0) )
       {
-        proj_texcoord = proj_texcoord + vec2(1.0, 1.0);
-        proj_texcoord = proj_texcoord / 2.0;
+        proj_texcoord = 0.5 * proj_texcoord + 0.5;
 
         c = texture(sampler2D(projective_texture), proj_texcoord.xy);
       }
