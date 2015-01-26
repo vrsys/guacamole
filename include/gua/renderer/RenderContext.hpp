@@ -92,7 +92,7 @@ struct GUA_DLL RenderContext {
   /**
   * Resources associated with this context
   */
-  mutable InstanceCollection resources;
+  InstanceCollection resources;
 };
 
 }

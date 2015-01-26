@@ -135,7 +135,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   }
 
   if (context_changed || reload_abuffer) {
-    abuffer_.allocate(get_context(),
+    abuffer_.allocate(*ctx,
                       last_description_.get_enable_abuffer()
                         ? last_description_.get_abuffer_size() : 0);
   }
