@@ -13,7 +13,7 @@ CameraUniformBlock::~CameraUniformBlock()
 }
 
 void CameraUniformBlock::update(const scm::gl::render_context_ptr& context,
-                           Frustum const& cam) {
+                           Frustum const& cam, int view_id) {
 
   auto camera_position(cam.get_camera_position());
   auto projection(cam.get_projection());
@@ -28,6 +28,7 @@ void CameraUniformBlock::update(const scm::gl::render_context_ptr& context,
       uniform_block_->position = math::vec4(camera_position, 1.0);
       uniform_block_->clip_near = cam.get_clip_near();
       uniform_block_->clip_far = cam.get_clip_far();
+      uniform_block_->view_id = view_id;
   } uniform_block_.end_manipulation();
 }
 

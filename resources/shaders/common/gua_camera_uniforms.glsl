@@ -5,6 +5,7 @@ layout (std140, binding=0) uniform cameraBlock {
   mat4  gua_inverse_projection_matrix;
   mat4  gua_inverse_projection_view_matrix;
   vec4  gua_camera_position_4;
+  int   gua_view_id;
   float gua_clip_near;
   float gua_clip_far;
 };
