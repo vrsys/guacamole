@@ -249,6 +249,20 @@ Mesh::Mesh(FbxMesh& mesh) {
   if(!mesh.IsTriangleMesh()) {
     Logger::LOG_DEBUG << "Triangulating mesh" << std::endl;
   }
+
+  struct temp_vert {
+    temp_vert():
+     uvs{},
+     normals{},
+     tris{}
+    {}
+    std::vector<int> uvs;
+    std::vector<int> normals;
+    std::vector<std::pair<int, int>> tris;
+  };
+  std::vector<temp_vert> verts{num_vertices, temp_vert{}};
+
+  std::vector<std::array<int,3>> triangles{};
   
   int vertex_count = -1;
   FbxVector4* control_points = mesh.GetControlPoints();
@@ -257,6 +271,18 @@ Mesh::Mesh(FbxMesh& mesh) {
   mesh.GetPolygonVertexNormals(poly_normals);
   FbxArray<FbxVector2> poly_uvs;
   mesh.GetPolygonVertexUVs(UV_set.c_str(), poly_uvs);
+
+  for(unsigned i = 0; i < num_triangles; ++i)
+  {
+    //triangulate face if necessary
+    for(int j = 2; j < mesh.GetPolygonSize(i); ++j)
+    {
+      int start_index = mesh.GetPolygonVertexIndex(i);
+      std::vector<int> indices{start_index, start_index + j - 1, start_index + j};
+
+      triangles.push_back(std::array<int, 3>{poly_vertices[indices[0],poly_vertices[indices[1],poly_vertices[indices[2]});
+    }
+  }
 
   for(unsigned i = 0; i < num_triangles; ++i)
   {
@@ -287,6 +313,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   }
   //correct values
   num_vertices = positions.size();
+  Logger::LOG_DEBUG << "Number of vertices is " << num_vertices << std::endl;
   num_triangles = indices.size() / 3;
 
   if(!has_uvs) {
