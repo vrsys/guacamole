@@ -260,18 +260,57 @@ Mesh::Mesh(FbxMesh& mesh) {
     std::vector<int> normals;
     std::vector<std::pair<int, int>> tris;
   };
+  struct temp_tri {
+    temp_tri():
+     verts{0,0,0},
+     uvs{0,0,0},
+     normals{0,0,0}
+    {}
+    std::array<int, 3> verts;
+    std::array<int, 3> uvs;
+    std::array<int, 3> normals;
+  };
+
   std::vector<temp_vert> verts{num_vertices, temp_vert{}};
 
-  std::vector<std::array<int,3>> triangles{};
+  std::vector<temp_tri> triangles{};
   
   int vertex_count = -1;
   FbxVector4* control_points = mesh.GetControlPoints();
   int* poly_vertices = mesh.GetPolygonVertices();
+  
+  int dupli_normals = 0;
   FbxArray<FbxVector4> poly_normals;
   mesh.GetPolygonVertexNormals(poly_normals);
+  //create normal index array without dependecy on fbxsdk
+  std::vector<int> normal_indices{};
+  for(int i = 0; i < poly_normals.Size(); ++i) {
+    int d = poly_normals.Find(poly_normals[i]);
+    if(d == i) {
+      normal_indices.push_back(i);
+    }
+    else {
+      normal_indices.push_back(d); 
+      ++dupli_normals;
+    }
+  } 
+  std::cout << dupli_normals << " normal duplications" << std::endl;
+
+  int dupli_uvs = 0;
   FbxArray<FbxVector2> poly_uvs;
   mesh.GetPolygonVertexUVs(UV_set.c_str(), poly_uvs);
-
+  std::vector<int> uv_indices{};
+  for(int i = 0; i < poly_uvs.Size(); ++i) {
+    int d = poly_uvs.Find(poly_uvs[i]);
+    if(d == i) {
+      uv_indices.push_back(i);
+    }
+    else {
+      uv_indices.push_back(d); 
+      ++dupli_uvs;
+    }
+  } 
+  std::cout << dupli_uvs << " UV duplications" << std::endl;
   for(unsigned i = 0; i < num_triangles; ++i)
   {
     //triangulate face if necessary
@@ -280,7 +319,27 @@ Mesh::Mesh(FbxMesh& mesh) {
       int start_index = mesh.GetPolygonVertexIndex(i);
       std::vector<int> indices{start_index, start_index + j - 1, start_index + j};
 
-      triangles.push_back(std::array<int, 3>{poly_vertices[indices[0],poly_vertices[indices[1],poly_vertices[indices[2]});
+      temp_tri tri{};
+      tri.verts = std::array<int, 3>{poly_vertices[indices[0]],poly_vertices[indices[1]],poly_vertices[indices[2]]};
+      
+      tri.normals = std::array<int, 3>{indices[0],indices[1],indices[2]};
+      if(has_uvs) {
+        tri.uvs = std::array<int, 3>{indices[0],indices[1],indices[2]};
+      }
+
+      triangles.push_back(tri);
+
+      verts[poly_vertices[indices[0]]].tris.push_back(std::make_pair(i, 0));
+      verts[poly_vertices[indices[1]]].tris.push_back(std::make_pair(i, 1));
+      verts[poly_vertices[indices[2]]].tris.push_back(std::make_pair(i, 2));
+
+      verts[poly_vertices[indices[0]]].normals.push_back(indices[0]);
+      verts[poly_vertices[indices[1]]].normals.push_back(indices[1]);
+      verts[poly_vertices[indices[2]]].normals.push_back(indices[2]);
+
+      verts[poly_vertices[indices[0]]].uvs.push_back(indices[0]);
+      verts[poly_vertices[indices[1]]].uvs.push_back(indices[1]);
+      verts[poly_vertices[indices[2]]].uvs.push_back(indices[2]);
     }
   }
 
@@ -300,14 +359,14 @@ Mesh::Mesh(FbxMesh& mesh) {
       positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[1]]]));
       positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[2]]]));
 
-      normals.push_back(to_gua::vec3(poly_normals[indices[0]]));
-      normals.push_back(to_gua::vec3(poly_normals[indices[1]]));
-      normals.push_back(to_gua::vec3(poly_normals[indices[2]]));
+      normals.push_back(to_gua::vec3(poly_normals[normal_indices[indices[0]]]));
+      normals.push_back(to_gua::vec3(poly_normals[normal_indices[indices[1]]]));
+      normals.push_back(to_gua::vec3(poly_normals[normal_indices[indices[2]]]));
       
       if(has_uvs) {
-        texCoords.push_back(to_gua::vec2(poly_uvs[indices[0]]));
-        texCoords.push_back(to_gua::vec2(poly_uvs[indices[1]]));
-        texCoords.push_back(to_gua::vec2(poly_uvs[indices[2]]));
+        texCoords.push_back(to_gua::vec2(poly_uvs[uv_indices[indices[0]]]));
+        texCoords.push_back(to_gua::vec2(poly_uvs[uv_indices[indices[1]]]));
+        texCoords.push_back(to_gua::vec2(poly_uvs[uv_indices[indices[2]]]));
       }
     }
   }
