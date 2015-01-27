@@ -251,12 +251,14 @@ Mesh::Mesh(FbxMesh& mesh) {
   }
 
   struct temp_vert {
-    temp_vert(int norm, int u, int tr, int ind):
+    temp_vert(int pt, int norm, int u, int tr, int ind):
+     point{pt},
      normal{norm},
      uv{u},
      tri{tr},
      index{ind}
     {}
+    int point;
     int normal;
     int uv;
     int tri; //tri to which vertex is attached
@@ -264,14 +266,10 @@ Mesh::Mesh(FbxMesh& mesh) {
   };
 
   struct temp_tri {
-    temp_tri():
-     verts{0,0,0},
-     uvs{0,0,0},
-     normals{0,0,0}
+    temp_tri(int a, int b, int c):
+     verts{a, b, c}
     {}
     std::array<int, 3> verts;
-    std::array<int, 3> uvs;
-    std::array<int, 3> normals;
   };
 
   std::vector<std::vector<temp_vert>> temp_verts{mesh.GetControlPointsCount(), std::vector<temp_vert>{}};
@@ -315,7 +313,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   } 
   std::cout << dupli_uvs << " UV duplications" << std::endl;
 
-  int curr_tri = 0; 
+  int curr_tri = -1; 
   for(unsigned i = 0; i < num_triangles; ++i)
   {
     //triangulate face if necessary
@@ -324,22 +322,16 @@ Mesh::Mesh(FbxMesh& mesh) {
       int start_index = mesh.GetPolygonVertexIndex(i);
       std::vector<int> indices{start_index, start_index + j - 1, start_index + j};
 
-      temp_tri tri{};
-      tri.verts = std::array<int, 3>{poly_vertices[indices[0]],poly_vertices[indices[1]],poly_vertices[indices[2]]};
-      
-      tri.normals = std::array<int, 3>{normal_indices[indices[0]],normal_indices[indices[1]],normal_indices[indices[2]]};
-      
-      if(has_uvs) {
-        tri.uvs = std::array<int, 3>{uv_indices[indices[0]],uv_indices[indices[1]],uv_indices[indices[2]]};
-      }
-      ++curr_tri;
+      temp_tri tri{poly_vertices[indices[0]],poly_vertices[indices[1]],poly_vertices[indices[2]]};
       temp_tris.push_back(tri);
+      ++curr_tri;
+
       //add vertices to to array
-      temp_verts[poly_vertices[indices[0]]].push_back(temp_vert{normal_indices[indices[0]], uv_indices[indices[0]], curr_tri, 0});
+      temp_verts[tri.verts[0]].push_back(temp_vert{tri.verts[0], normal_indices[indices[0]], uv_indices[indices[0]], curr_tri, 0});
       
-      temp_verts[poly_vertices[indices[1]]].push_back(temp_vert{normal_indices[indices[1]], uv_indices[indices[1]], curr_tri, 1});
+      temp_verts[tri.verts[1]].push_back(temp_vert{tri.verts[1], normal_indices[indices[1]], uv_indices[indices[1]], curr_tri, 1});
       
-      temp_verts[poly_vertices[indices[2]]].push_back(temp_vert{normal_indices[indices[2]], uv_indices[indices[2]], curr_tri, 2});
+      temp_verts[tri.verts[2]].push_back(temp_vert{tri.verts[2], normal_indices[indices[2]], uv_indices[indices[2]], curr_tri, 2});
     }
   }
 
@@ -348,7 +340,7 @@ Mesh::Mesh(FbxMesh& mesh) {
     for(auto iter = verts.begin(); iter != verts.end(); ++iter) {
       for(std::vector<temp_vert>::iterator iter2 = std::next(iter); iter2 != verts.end(); ++iter2) {
         //uv coordinate  and position matches ->merge vertices
-        if(iter2->uv == iter->uv && iter2->normal == iter->normal) {
+        if(iter2->point == iter->point && iter2->uv == iter->uv && iter2->normal == iter->normal) {
 
           temp_tris[iter2->tri].verts[iter2->index] = temp_tris[iter->tri].verts[iter->index];
 
@@ -362,33 +354,48 @@ Mesh::Mesh(FbxMesh& mesh) {
   std::cout << dupli_verts << " vertex duplications" << std::endl;
 
 
-  for(unsigned i = 0; i < num_triangles; ++i)
-  {
-    //triangulate face if necessary
-    for(int j = 2; j < mesh.GetPolygonSize(i); ++j)
-    {
-      indices.push_back(++vertex_count);
-      indices.push_back(++vertex_count);
-      indices.push_back(++vertex_count);
+  // for(unsigned i = 0; i < num_triangles; ++i)
+  // {
+  //   //triangulate face if necessary
+  //   for(int j = 2; j < mesh.GetPolygonSize(i); ++j)
+  //   {
+  //     indices.push_back(++vertex_count);
+  //     indices.push_back(++vertex_count);
+  //     indices.push_back(++vertex_count);
 
-      int start_index = mesh.GetPolygonVertexIndex(i);
-      std::vector<int> indices{start_index, start_index + j - 1, start_index + j}; 
+  //     int start_index = mesh.GetPolygonVertexIndex(i);
+  //     std::vector<int> indices{start_index, start_index + j - 1, start_index + j}; 
       
-      positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[0]]]));
-      positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[1]]]));
-      positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[2]]]));
+  //     positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[0]]]));
+  //     positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[1]]]));
+  //     positions.push_back(to_gua::vec3(control_points[poly_vertices[indices[2]]]));
 
-      normals.push_back(to_gua::vec3(poly_normals[normal_indices[indices[0]]]));
-      normals.push_back(to_gua::vec3(poly_normals[normal_indices[indices[1]]]));
-      normals.push_back(to_gua::vec3(poly_normals[normal_indices[indices[2]]]));
+  //     normals.push_back(to_gua::vec3(poly_normals[normal_indices[indices[0]]]));
+  //     normals.push_back(to_gua::vec3(poly_normals[normal_indices[indices[1]]]));
+  //     normals.push_back(to_gua::vec3(poly_normals[normal_indices[indices[2]]]));
       
-      if(has_uvs) {
-        texCoords.push_back(to_gua::vec2(poly_uvs[uv_indices[indices[0]]]));
-        texCoords.push_back(to_gua::vec2(poly_uvs[uv_indices[indices[1]]]));
-        texCoords.push_back(to_gua::vec2(poly_uvs[uv_indices[indices[2]]]));
-      }
+  //     if(has_uvs) {
+  //       texCoords.push_back(to_gua::vec2(poly_uvs[uv_indices[indices[0]]]));
+  //       texCoords.push_back(to_gua::vec2(poly_uvs[uv_indices[indices[1]]]));
+  //       texCoords.push_back(to_gua::vec2(poly_uvs[uv_indices[indices[2]]]));
+  //     }
+  //   }
+  // }
+  for(std::vector<temp_vert> const& verts : temp_verts) {
+    for(temp_vert const& vert : verts) {
+      positions.push_back(to_gua::vec3(control_points[vert.point]));
+      normals.push_back(to_gua::vec3(poly_normals[vert.normal]));
+      texCoords.push_back(to_gua::vec3(poly_uvs[vert.uv]));
     }
   }
+
+  for(temp_tri const& tri : temp_tris) {
+    indices.push_back(tri.verts[0]);
+    indices.push_back(tri.verts[1]);
+    indices.push_back(tri.verts[2]);
+  }
+
+
   //correct values
   num_vertices = positions.size();
   Logger::LOG_DEBUG << "Number of vertices is " << num_vertices << std::endl;
