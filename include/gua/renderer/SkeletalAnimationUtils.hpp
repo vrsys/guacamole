@@ -169,13 +169,19 @@ class SkeletalAnimation {
  public:
   SkeletalAnimation();
 
+<<<<<<< HEAD
   SkeletalAnimation(aiAnimation const& anim);
+=======
+  SkeletalAnimation(aiAnimation* anim, std::string const& file_name);
+>>>>>>> add animation name interface for animation control in avango
 
   ~SkeletalAnimation();
 
   Pose calculate_pose(float time) const;
 
   double get_duration() const;
+
+  std::string get_name() const;
 
  private:
   std::string name;
@@ -269,7 +275,12 @@ struct Mesh {
 class SkeletalAnimationUtils {
  public:
 
+<<<<<<< HEAD
   static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(aiScene const&);
+=======
+  static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(aiScene const*, std::string const& file_name);
+  static std::shared_ptr<Node> load_hierarchy(aiScene const* scene);
+>>>>>>> add animation name interface for animation control in avango
 
   static void calculate_matrices(float TimeInSeconds, Node const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
   static void calculate_matrices(Node const& root, std::vector<scm::math::mat4f>& Transforms);

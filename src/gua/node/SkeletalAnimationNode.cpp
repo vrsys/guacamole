@@ -132,6 +132,16 @@ namespace node {
     return animation_director_->get_blending_mode();
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  std::string SkeletalAnimationNode::get_animation() const {
+    return animation_director_->get_animation();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void SkeletalAnimationNode::set_animation(std::string animation_name) {
+    animation_director_->set_animation(animation_name);
+  }
+
 
   ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::update_bone_transforms(RenderContext const& ctx) {

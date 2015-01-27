@@ -30,6 +30,7 @@ scm::math::vec4 vec4(T const& v) {
   return res;
 }
 
+<<<<<<< HEAD
 scm::math::quatf quat(aiQuaternion const& q) {
   scm::math::quatf res(q.w, q.x, q.y, q.z);
   return res;
@@ -40,11 +41,19 @@ scm::math::quatf quat(aiQuaternion const& q) {
 namespace gua {
 
 std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_animations(aiScene const& scene) {
+=======
+std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_animations(aiScene const* scene, std::string const& file_name) {
+>>>>>>> add animation name interface for animation control in avango
   std::vector<std::shared_ptr<SkeletalAnimation>> animations{};
   if(!scene.HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
  
+<<<<<<< HEAD
   for(uint i = 0; i < scene.mNumAnimations; ++i) {
     animations.push_back(std::make_shared<SkeletalAnimation>(*(scene.mAnimations[i])));
+=======
+  for(uint i = 0; i < scene->mNumAnimations; ++i) {
+    animations.push_back(std::make_shared<SkeletalAnimation>(scene->mAnimations[i], file_name));
+>>>>>>> add animation name interface for animation control in avango
   }
 
   return animations;
@@ -700,10 +709,18 @@ SkeletalAnimation::SkeletalAnimation():
   boneAnims{}
 {}
 
+<<<<<<< HEAD
 SkeletalAnimation::SkeletalAnimation(aiAnimation const& anim):
   name{anim.mName.C_Str()},
   numFrames{unsigned(anim.mDuration)},
   numFPS{anim.mTicksPerSecond > 0 ? anim.mTicksPerSecond : 25},
+=======
+SkeletalAnimation::SkeletalAnimation(aiAnimation* anim, std::string const& file_name):
+  //name{anim->mName.C_Str()},
+  name{file_name},
+  numFrames{unsigned(anim->mDuration)},
+  numFPS{anim->mTicksPerSecond > 0 ? anim->mTicksPerSecond : 25},
+>>>>>>> add animation name interface for animation control in avango
   duration{double(numFrames) / numFPS},
   numBoneAnims{anim.mNumChannels},
   boneAnims{}
@@ -732,6 +749,10 @@ Pose SkeletalAnimation::calculate_pose(float time) const {
 
 double SkeletalAnimation::get_duration() const {
   return duration;
+}
+
+std::string SkeletalAnimation::get_name() const {
+  return name;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

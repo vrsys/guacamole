@@ -46,9 +46,14 @@ class SkeletalAnimationDirector {
 
   inline ~SkeletalAnimationDirector(){};
 
+<<<<<<< HEAD
   void add_animations(aiScene const& scene);
 
   void add_hierarchy(aiScene const& scene);
+=======
+  void add_animations(aiScene const* scene, std::string const& file_name);
+  void add_hierarchy(aiScene const* scene);
+>>>>>>> add animation name interface for animation control in avango
 
   std::vector<scm::math::mat4f> get_bone_transforms();
 
@@ -61,7 +66,12 @@ class SkeletalAnimationDirector {
   void set_blending_mode(uint mode);
   uint get_blending_mode();
 
+<<<<<<< HEAD
   std::shared_ptr<Node> get_root();
+=======
+  std::string get_animation()const;
+  void        set_animation(std::string);
+>>>>>>> add animation name interface for animation control in avango
 
 private:
 
@@ -82,7 +92,8 @@ private:
   enum  Blending {swap = 0, linear = 1, smoothstep = 2, cosinus = 3};
   Blending blending_state_;
 
-  unsigned animNum;
+  unsigned animNum_;
+  unsigned animNumLast_;
   uint num_bones_;
 
   bool firstRun_;
