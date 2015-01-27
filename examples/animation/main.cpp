@@ -92,6 +92,7 @@ int main(int argc, char** argv) {
   // loader.load_animation(teapot, "data/objects/bob/boblampclean.md5anim", 0);
 
   auto rock(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/barrel.fbx", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+
   rock->set_draw_bounding_box(true);
   
   graph.add_node("/transform2", rock);
