@@ -15,8 +15,9 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     has_anims_{scene->HasAnimations()},
     firstRun_{true},
     animations_{},
-    currAnimation_{},
-    animNum{0},
+    currAnimation_{nullptr},
+    animNum_{0},
+    animNumLast_{0},
     bone_mapping_{},
     anim_start_node_{},
     state_{Playback::crossfade},
@@ -58,15 +59,23 @@ void SkeletalAnimationDirector::add_hierarchy(aiScene const& scene) {
   anim_start_node_ = root_->children[1]->children[0]->children[0];
 }
 
+<<<<<<< HEAD
 void SkeletalAnimationDirector::add_animations(aiScene const& scene) {
   std::vector<std::shared_ptr<SkeletalAnimation>> newAnims{SkeletalAnimationUtils::load_animations(scene)};
+=======
+void SkeletalAnimationDirector::add_animations(aiScene const* scene, std::string const& file_name) {
+  std::vector<std::shared_ptr<SkeletalAnimation>> newAnims{SkeletalAnimationUtils::load_animations(scene,file_name)};
+>>>>>>> add animation name interface for animation control in avango
 
   animations_.reserve(animations_.size() + newAnims.size());
   std::move(newAnims.begin(), newAnims.end(), std::inserter(animations_, animations_.end()));
   newAnims.clear();
 
   has_anims_ = animations_.size() > 0;
-  currAnimation_ = animations_[animations_.size()-1];
+  //use first loaded animation as current animation
+  if (currAnimation_ == nullptr && animations_[0] != nullptr){
+    currAnimation_ = animations_[0];
+  }
 }
 
 void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFactor, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
@@ -128,12 +137,10 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
     //crossfade two anims
     case Playback::crossfade: {
       float blendDuration = 2;
-      float playDuration = animations_[animNum]->get_duration();
+      float playDuration = animations_[animNum_]->get_duration();
 
-      if(currentTime < next_transition_) {
-        SkeletalAnimationUtils::calculate_matrices(currentTime, *anim_start_node_, *animations_[animNum], transforms);  
-      }
-      else if(currentTime <= next_transition_ + blendDuration) {
+      //else if(currentTime <= next_transition_ + blendDuration) {
+      if(currentTime <= next_transition_ + blendDuration) {
         float time = (currentTime - next_transition_) / blendDuration;
         
         float blendFactor = 0.0;
@@ -145,12 +152,16 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
           default: blendFactor = blend::linear(time);
         }
         
-        blend_pose(currentTime, blendFactor, *animations_[animNum], *animations_[(animNum + 1) % animations_.size()], transforms);
+        blend_pose(currentTime, blendFactor, *animations_[animNumLast_], *animations_[animNum_], transforms);
       }
+      //if(currentTime < next_transition_) {
       else {
-        next_transition_ = currentTime + playDuration;
-        animNum = (animNum + 1) % animations_.size();
+        SkeletalAnimationUtils::calculate_matrices(currentTime, *anim_start_node_, *animations_[animNum_], transforms);  
       }
+      /*else {
+        next_transition_ = currentTime + playDuration;
+        animNum_ = (animNum_ + 1) % animations_.size();
+      }*///loop through all given animations
       break;
     }
     //blend two anims
@@ -168,7 +179,7 @@ void SkeletalAnimationDirector::set_playback_mode(uint mode) {
   switch(mode) {
     case 0 : state_ = Playback::partial; break;
     case 1 : state_ = Playback::crossfade; break;
-    default: state_ = Playback::partial;;
+    default: state_ = Playback::partial;
   }
 }
 
@@ -192,6 +203,31 @@ uint SkeletalAnimationDirector::get_blending_mode() {
 
 int SkeletalAnimationDirector::getBoneID(std::string const& name) {
   return bone_mapping_.at(name);
+}
+
+
+std::string SkeletalAnimationDirector::get_animation() const {
+  if(currAnimation_!=nullptr){
+    return currAnimation_->get_name();
+  }
+  else{
+    return "";
+  }
+}
+
+
+void SkeletalAnimationDirector::set_animation(std::string animation_name) {
+  for(uint i{0};i<animations_.size();++i){
+    if(animations_[i]->get_name()==animation_name){
+      animNumLast_ = animNum_;
+      animNum_ = i;
+      currAnimation_ = animations_[animNum_];
+      float currentTime = timer_.get_elapsed();
+      next_transition_ = currentTime + animations_[animNum_]->get_duration();
+      return;
+    }
+  }
+  gua::Logger::LOG_WARNING << "No matching animation with name: "<< animation_name<<" found!" << std::endl;
 }
 
 bool SkeletalAnimationDirector::has_anims() const {

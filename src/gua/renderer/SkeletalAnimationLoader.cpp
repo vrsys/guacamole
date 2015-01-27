@@ -116,9 +116,18 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
 
   if(!skelNode) Logger::LOG_ERROR << "Node is no SkeletalAnimationNode" << std::endl;
 
+<<<<<<< HEAD
   if (!is_supported(file_name)) {
     Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
     return;
+=======
+    if(scene->HasAnimations()) {
+      skelNode->get_director()->add_animations(scene,file_name);
+    }
+    else {
+      Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;
+    }
+>>>>>>> add animation name interface for animation control in avango
   }
 
   TextFile file(file_name);
