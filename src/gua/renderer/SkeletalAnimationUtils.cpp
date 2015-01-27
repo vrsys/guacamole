@@ -251,15 +251,18 @@ Mesh::Mesh(FbxMesh& mesh) {
   }
 
   struct temp_vert {
-    temp_vert():
-     uvs{},
-     normals{},
-     tris{}
+    temp_vert(int norm, int u, int tr, int ind):
+     normal{norm},
+     uv{u},
+     tri{tr},
+     index{ind}
     {}
-    std::vector<int> uvs;
-    std::vector<int> normals;
-    std::vector<std::pair<int, int>> tris;
+    int normal;
+    int uv;
+    int tri; //tri to which vertex is attached
+    int index; //index of vertex in tri
   };
+
   struct temp_tri {
     temp_tri():
      verts{0,0,0},
@@ -271,9 +274,9 @@ Mesh::Mesh(FbxMesh& mesh) {
     std::array<int, 3> normals;
   };
 
-  std::vector<temp_vert> verts{num_vertices, temp_vert{}};
+  std::vector<std::vector<temp_vert>> temp_verts{mesh.GetControlPointsCount(), std::vector<temp_vert>{}};
 
-  std::vector<temp_tri> triangles{};
+  std::vector<temp_tri> temp_tris{};
   
   int vertex_count = -1;
   FbxVector4* control_points = mesh.GetControlPoints();
@@ -282,7 +285,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   int dupli_normals = 0;
   FbxArray<FbxVector4> poly_normals;
   mesh.GetPolygonVertexNormals(poly_normals);
-  //create normal index array without dependecy on fbxsdk
+  //create index arrays without dependecy on fbxsdk
   std::vector<int> normal_indices{};
   for(int i = 0; i < poly_normals.Size(); ++i) {
     int d = poly_normals.Find(poly_normals[i]);
@@ -311,6 +314,8 @@ Mesh::Mesh(FbxMesh& mesh) {
     }
   } 
   std::cout << dupli_uvs << " UV duplications" << std::endl;
+
+  int curr_tri = 0; 
   for(unsigned i = 0; i < num_triangles; ++i)
   {
     //triangulate face if necessary
@@ -322,26 +327,40 @@ Mesh::Mesh(FbxMesh& mesh) {
       temp_tri tri{};
       tri.verts = std::array<int, 3>{poly_vertices[indices[0]],poly_vertices[indices[1]],poly_vertices[indices[2]]};
       
-      tri.normals = std::array<int, 3>{indices[0],indices[1],indices[2]};
+      tri.normals = std::array<int, 3>{normal_indices[indices[0]],normal_indices[indices[1]],normal_indices[indices[2]]};
+      
       if(has_uvs) {
-        tri.uvs = std::array<int, 3>{indices[0],indices[1],indices[2]};
+        tri.uvs = std::array<int, 3>{uv_indices[indices[0]],uv_indices[indices[1]],uv_indices[indices[2]]};
       }
-
-      triangles.push_back(tri);
-
-      verts[poly_vertices[indices[0]]].tris.push_back(std::make_pair(i, 0));
-      verts[poly_vertices[indices[1]]].tris.push_back(std::make_pair(i, 1));
-      verts[poly_vertices[indices[2]]].tris.push_back(std::make_pair(i, 2));
-
-      verts[poly_vertices[indices[0]]].normals.push_back(indices[0]);
-      verts[poly_vertices[indices[1]]].normals.push_back(indices[1]);
-      verts[poly_vertices[indices[2]]].normals.push_back(indices[2]);
-
-      verts[poly_vertices[indices[0]]].uvs.push_back(indices[0]);
-      verts[poly_vertices[indices[1]]].uvs.push_back(indices[1]);
-      verts[poly_vertices[indices[2]]].uvs.push_back(indices[2]);
+      ++curr_tri;
+      temp_tris.push_back(tri);
+      //add vertices to to array
+      temp_verts[poly_vertices[indices[0]]].push_back(temp_vert{normal_indices[indices[0]], uv_indices[indices[0]], curr_tri, 0});
+      
+      temp_verts[poly_vertices[indices[1]]].push_back(temp_vert{normal_indices[indices[1]], uv_indices[indices[1]], curr_tri, 1});
+      
+      temp_verts[poly_vertices[indices[2]]].push_back(temp_vert{normal_indices[indices[2]], uv_indices[indices[2]], curr_tri, 2});
     }
   }
+
+  int dupli_verts = 0;
+  for(std::vector<temp_vert>& verts : temp_verts) {
+    for(auto iter = verts.begin(); iter != verts.end(); ++iter) {
+      for(std::vector<temp_vert>::iterator iter2 = std::next(iter); iter2 != verts.end(); ++iter2) {
+        //uv coordinate  and position matches ->merge vertices
+        if(iter2->uv == iter->uv && iter2->normal == iter->normal) {
+
+          temp_tris[iter2->tri].verts[iter2->index] = temp_tris[iter->tri].verts[iter->index];
+
+          verts.erase(iter2);
+          ++dupli_verts;
+          break;
+        }
+      }
+    }
+  }
+  std::cout << dupli_verts << " vertex duplications" << std::endl;
+
 
   for(unsigned i = 0; i < num_triangles; ++i)
   {
