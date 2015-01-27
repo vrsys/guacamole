@@ -229,6 +229,12 @@ Mesh::Mesh(FbxMesh& mesh) {
     mesh.GenerateNormals(false, true);
   }
 
+//tangents
+  if(mesh.GetElementTangentCount() == 0 || mesh.GetElementBinormalCount() == 0) {
+    Logger::LOG_DEBUG << "Generating tangents" << std::endl;
+    mesh.GenerateTangentsData(UV_set.c_str(), true);
+  }
+
 //polygons
   if(mesh.GetPolygonCount() < 1) {
     Logger::LOG_ERROR << "No polygons in mesh" << std::endl;
@@ -301,6 +307,41 @@ Mesh::Mesh(FbxMesh& mesh) {
     }
   } 
   std::cout << dupl_uvs << " UV duplications" << std::endl;
+
+  //tangents
+  FbxGeometryElementTangent* tangent_info = mesh.GetElementTangent(0);
+  // FbxArray<FbxVector4> poly_tangents = tangent_info->GetDirectArray();
+  //tangents per position
+  if(tangent_info->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
+    if(tangent_info->GetReferenceMode() == FbxGeometryElement::eDirect) {
+      tangent_info->GetDirectArray().GetAt(0);
+
+    }
+    else if(tangent_info->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+      unsigned index = tangent_info->GetIndexArray().GetAt(0);
+      tangent_info->GetDirectArray().GetAt(index);
+    }
+    else {
+      Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
+    }
+  }
+  //tangents per vertex
+  else if(tangent_info->GetMappingMode() == FbxGeometryElement::eByPolygonVertex){
+    if(tangent_info->GetReferenceMode() == FbxGeometryElement::eDirect) {
+      tangent_info->GetDirectArray().GetAt(0);
+
+    }
+    else if(tangent_info->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+      unsigned index = tangent_info->GetIndexArray().GetAt(0);
+      tangent_info->GetDirectArray().GetAt(index);
+    }
+    else {
+      Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
+    }
+  }
+  else {
+    Logger::LOG_ERROR << "Type of mapping not supported" << std::endl;
+  }
 
   num_triangles = 0; 
   for(unsigned i = 0; i < mesh.GetPolygonCount(); ++i)
@@ -384,7 +425,7 @@ Mesh::Mesh(FbxMesh& mesh) {
     indices.push_back(tri.verts[2]);
   }
 
-  //correct size values
+  //output reduction info
   Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << std::endl;
 }
 
