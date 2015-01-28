@@ -38,6 +38,8 @@ int main(int argc, char** argv) {
   gua::math::vec2 last_mouse_pos(0.f);
   int button_state = -1;
 
+  const float car_glass_opacity = .3f;
+
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -52,20 +54,36 @@ int main(int argc, char** argv) {
     return shader->make_new_material();
   };
 
+  std::function<void(const std::shared_ptr<gua::node::Node>&, float opacity)> set_opacity
+      = [&](const std::shared_ptr<gua::node::Node>& nd, float opacity) {
+    auto tn = std::dynamic_pointer_cast<gua::node::TriMeshNode>(nd);
+    if (tn)
+      tn->get_material()->set_uniform("Opacity", opacity).set_show_back_faces(true);
+    for (auto& n: nd->get_children())
+      set_opacity(n, opacity);
+  };
+
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
 
-  // Load Monkey
-  auto mat_glass(load_mat("data/materials/Glass.gmd"));
-  mat_glass->set_uniform("color", gua::math::vec3(1.f, 0.f, 0.f)).set_show_back_faces(true);
-  auto monkey(loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", mat_glass,
-                                               gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  monkey->scale(0.3f);
-  monkey->translate(0.3f, 0.15f, 0.f);
-  monkey->set_draw_bounding_box(true);
-  graph.add_node("/transform", monkey);
+  // Load passat
+  auto mat_passat_glass(load_mat("data/materials/Glass.gmd"));
+  mat_passat_glass->
+      set_uniform("color", gua::math::vec3(0.9f, 0.9f, 0.9f))
+     .set_uniform("alpha", car_glass_opacity)
+     .set_show_back_faces(true);
+
+  auto passat(loader.create_geometry_from_file("passat", "/opt/3d_models/cars/passat/passat.obj",
+                                               mat_passat_glass,
+                                                 gua::TriMeshLoader::NORMALIZE_POSITION
+                                               | gua::TriMeshLoader::LOAD_MATERIALS
+                                               | gua::TriMeshLoader::NORMALIZE_SCALE));
+  passat->scale(0.7f);
+  passat->rotate(-90, 1.f, 0.f, 0.f);
+  passat->translate(0.0f, 0.134f, 0.f);
+  graph.add_node("/transform", passat);
 
   // Load bottle
   auto mat_bottle(load_mat("data/materials/Bottle.gmd"));
@@ -79,16 +97,15 @@ int main(int argc, char** argv) {
   graph.add_node("/transform2", bottle);
 
   // Load box (texture originals are taken from http://texturise.blogspot.de/)
-  std::string directory("/home/zapa4360/Textures/");
   auto mat_box(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-  mat_box->set_uniform("ColorMap",     directory + "parquet2/albedo.jpg")
-          .set_uniform("NormalMap",    directory + "parquet2/normal.jpg")
-          .set_uniform("RoughnessMap", directory + "parquet2/roughness.jpg");
+  mat_box->set_uniform("ColorMap",     std::string("/opt/3d_models/textures/parquet/albedo.jpg"))
+          .set_uniform("NormalMap",    std::string("/opt/3d_models/textures/parquet/normal.jpg"))
+          .set_uniform("RoughnessMap", std::string("/opt/3d_models/textures/parquet/roughness.jpg"));
   auto box(loader.create_geometry_from_file("box", "data/objects/inverted_box.obj", mat_box, gua::TriMeshLoader::DEFAULTS));
   graph.add_node("/transform", box);
 
   transform2->scale(0.3f);
-  transform2->translate(0.f, 0.15f, 0.f);
+  transform2->translate(0.4f, 0.15f, 0.f);
 
   // Portal
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
@@ -203,21 +220,35 @@ int main(int argc, char** argv) {
       button_state = -1;
   });
 
-
-  float blend_thres = 0.99f;
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
       if (action != 0) {
         //std::cout << "key press " << char(key) << " action: " << action <<"\n";
         auto& d = camera->get_pipeline_description()->get_pass<gua::LightVisibilityPassDescription>();
         auto& d_r = camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>();
 
-        if ('W' == key) { // forward
+        // bottle tilt
+        if ('W' == key) {
           bottle->rotate(-5.0, 1.f, 0.f, 0.f);
         }
-        if ('S' == key) { // backward
+        if ('S' == key) {
           bottle->rotate(5.0, 1.f, 0.f, 0.f);
         }
 
+        // car transparency manipulation
+        if ('V' == key) {
+          set_opacity(passat, 0.35f);
+          mat_passat_glass->set_uniform("alpha", car_glass_opacity);
+        }
+        if ('B' == key) {
+          set_opacity(passat, 1.0f);
+          mat_passat_glass->set_uniform("alpha", car_glass_opacity);
+        }
+        if ('N' == key) {
+          set_opacity(passat, 1.0f);
+          mat_passat_glass->set_uniform("alpha", 1.0f);
+        }
+
+        // tiled shading options
         if ('1' == key) {
           d.rasterization_mode(gua::LightVisibilityPassDescription::AUTO);
           std::cout << "Rast mode: AUTO\n"; d.touch();
@@ -250,7 +281,6 @@ int main(int argc, char** argv) {
           d.rasterization_mode(gua::LightVisibilityPassDescription::FULLSCREEN_FALLBACK);
           std::cout << "Rast mode: FULLSCREEN_FALLBACK\n"; d.touch();
         }
-
         if ('9' == key || '0' == key) {
           d.tile_power(d.tile_power() + ((key=='9')?1:-1));
           std::cout << "Tile size: " << std::pow(2, d.tile_power()) <<"\n";
@@ -261,17 +291,13 @@ int main(int argc, char** argv) {
           std::cout << "Debug tiles: " << d_r.debug_tiles() <<"\n";
           d_r.touch();
         }
+
+        // A-buffer
         if ('T' == key) {
           auto& desc = camera->get_pipeline_description();
           desc->set_enable_abuffer(!desc->get_enable_abuffer());
           portal_pipe->set_enable_abuffer(!portal_pipe->get_enable_abuffer());
           std::cout << "Enable A-Buffer: " << desc->get_enable_abuffer() <<"\n";
-        }
-        if ('Z' == key || 'X' == key) {
-          blend_thres += ('Z' == key) ? 0.005f : -0.005f;
-          blend_thres = std::max(std::min(blend_thres, 1.f), 0.5f);
-          camera->get_pipeline_description()->set_blending_termination_threshold(blend_thres);
-          std::cout << "Early termination threshold: " << blend_thres << std::endl;
         }
       }
     });
@@ -285,22 +311,15 @@ int main(int argc, char** argv) {
   gua::events::Ticker ticker(loop, 1.0/500.0);
 
   size_t ctr{};
-  float alpha = 0.f;
-  float alpha_d = 0.01f;
 
   ticker.on_tick.connect([&]() {
     
     screen->set_transform(scm::math::inverse(trackball.transform_matrix()));
 
-    if (ctr++ % 500 == 0)
-      std::cout << camera->get_rendering_fps() << " "
+    if (ctr++ % 150 == 0)
+      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
+                << camera->get_rendering_fps() << ", app fps: "
                 << camera->get_application_fps() << std::endl;
-
-    if (ctr % 25 == 0) {
-      alpha += alpha_d;
-      if (alpha > 1.f || alpha < 0.f) alpha_d = -alpha_d;
-      mat_glass->set_uniform("alpha", alpha);
-    }
 
     window->process_events();
     if (window->should_close()) {
