@@ -8,6 +8,7 @@
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/node/PointLightNode.hpp>
 #include <gua/node/SpotLightNode.hpp>
+#include <gua/node/SunLightNode.hpp>
 #include <gua/utils/Logger.hpp>
 
 #include <scm/gl_core/render_device/opengl/gl_core.h>
@@ -30,13 +31,13 @@ void LightVisibilityRenderer::render(PipelinePass& pass,
   LightTable::array_type lights;
 
   prepare_light_table(pipe, transforms, lights);
-  math::vec2ui effective_resolution = 
-      pipe.get_light_table().invalidate(ctx, pipe.get_camera().config.get_resolution(), 
+  math::vec2ui effective_resolution =
+      pipe.get_light_table().invalidate(ctx, pipe.get_camera().config.get_resolution(),
                                         lights, tile_power);
 
   math::vec2ui rasterizer_resolution = (enable_fullscreen_fallback)
       ? pipe.get_camera().config.get_resolution() : effective_resolution;
-  
+
   if (!empty_fbo_) {
     empty_fbo_ = ctx.render_device->create_frame_buffer();
 
@@ -143,6 +144,32 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
     lights.push_back(light_block);
     transforms.push_back(model_mat);
   }
+
+  // sun lights
+  for (auto const& l : pipe.get_scene().nodes[std::type_index(typeid(node::SunLightNode))]) {
+    auto light(reinterpret_cast<node::SunLightNode*>(l));
+
+    auto model_mat = light->get_cached_world_transform();
+
+    math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
+    float light_radius = scm::math::length(light_position - math::vec3(model_mat * math::vec4(0.f, 0.f, 1.f, 1.f)));
+
+    LightTable::LightBlock light_block {};
+
+    light_block.position_and_radius = math::vec4(light_position, light_radius);
+    light_block.beam_direction_and_half_angle = math::vec4(0.f, 0.f, 0.f, 0.f);
+    light_block.color           = math::vec4(light->data.get_color().vec3(), 0.f);
+    light_block.falloff         = 0.0f;
+    light_block.brightness      = light->data.get_brightness();
+    light_block.softness        = 0.0f;
+    light_block.type            = 2;
+    light_block.diffuse_enable  = light->data.get_enable_diffuse_shading();
+    light_block.specular_enable = light->data.get_enable_specular_shading();
+    light_block.casts_shadow    = light->data.get_enable_shadows();
+
+    lights.push_back(light_block);
+    transforms.push_back(model_mat);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,6 +200,8 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe,
       light_sphere->draw(ctx);
     else if (lights[i].type == 1)
       light_cone->draw(ctx);
+    else if (lights[i].type == 2)
+      pipe.draw_quad();
   }
 }
 
