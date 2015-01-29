@@ -47,12 +47,17 @@ class GUA_DLL SunLightNode : public SerializableNode {
      * The color of the light source.
      * It's possible to use negative values and values > 1.
      */
-    GUA_ADD_PROPERTY(utils::Color3f,      color,                                  utils::Color3f(1.f, 1.f, 1.f));
+    GUA_ADD_PROPERTY(utils::Color3f, color, utils::Color3f(1.f, 1.f, 1.f));
+
+    /**
+     * The intensity of the directional light.
+     */
+    GUA_ADD_PROPERTY(float, brightness, 20.0f);
 
     /**
      * Triggers whether the light casts shadows.
      */
-    GUA_ADD_PROPERTY(bool,                enable_shadows,                         false);
+    GUA_ADD_PROPERTY(bool, enable_shadows, false);
 
     /**
      * Triggers volumetric screen-space effects for the light source.
