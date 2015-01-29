@@ -264,11 +264,11 @@ Mesh::Mesh(FbxMesh& mesh) {
   }
 
   struct temp_vert {
-    temp_vert(unsigned oindex, unsigned pt, unsigned norm, unsigned u, unsigned tr, unsigned ind):
+    temp_vert(unsigned oindex, unsigned pt, unsigned norm, unsigned tr, unsigned ind):
      old_index{oindex},
      point{pt},
      normal{norm},
-     uv{u},
+     uv{0},
      tangent{0},
      bitangent{0},
      tris{}
@@ -333,16 +333,12 @@ Mesh::Mesh(FbxMesh& mesh) {
     } 
     std::cout << dupl_uvs << " UV duplications" << std::endl;
   }
-  else {
-    uv_indices.resize(normal_indices.size());
-  }
-  
+
   //this function gets a geometry layer and returns the function to access it depending on mapping & referencing
   auto get_access_function = [](FbxLayerElementTemplate<FbxVector4> const& layer) {
     std::function<unsigned(temp_vert const&)> access_function;
     //mapping to control point
     if(layer.GetMappingMode() == FbxGeometryElement::eByControlPoint) {
-      Logger::LOG_MESSAGE << "Layer mapped by control point" << std::endl;
       if(layer.GetReferenceMode() == FbxGeometryElement::eDirect) {
         access_function =[](temp_vert const& vert)->unsigned {
           return vert.point;
@@ -386,25 +382,57 @@ Mesh::Mesh(FbxMesh& mesh) {
 
   FbxArray<FbxVector4> poly_tangents;
   FbxArray<FbxVector4> poly_bitangents;
+
+  std::vector<unsigned> tangent_indices{};
+  std::vector<unsigned> bitangent_indices{};
   if(has_tangents){
-//tangents  
     FbxGeometryElementTangent* tangent_info = mesh.GetElementTangent(0);
     tangent_info->GetDirectArray().CopyTo(poly_tangents);
     get_tangent = get_access_function(*tangent_info);
+    
+    unsigned dupl_tangents = 0;
+    //index tangents, filter out duplicatest to allow vertex duplication testing by tangent
+    for(unsigned i = 0; i < poly_tangents.Size(); ++i) {
+      unsigned d = poly_tangents.Find(poly_tangents[i]);
+      if(d == i) {
+        tangent_indices.push_back(i);
+      }
+      else {
+        tangent_indices.push_back(d); 
+        ++dupl_tangents;
+      }
+    } 
+    std::cout << dupl_tangents << " tangent duplications" << std::endl;
 
-  //tangents  
     FbxGeometryElementBinormal* bitangent_info = mesh.GetElementBinormal(0);
     bitangent_info->GetDirectArray().CopyTo(poly_bitangents);
     get_bitangent = get_access_function(*bitangent_info);
+
+    unsigned dupl_bitangents = 0;
+    //index tangents, filter out duplicatest to allow vertex duplication testing by tangent
+    for(unsigned i = 0; i < poly_bitangents.Size(); ++i) {
+      unsigned d = poly_bitangents.Find(poly_bitangents[i]);
+      if(d == i) {
+        bitangent_indices.push_back(i);
+      }
+      else {
+        bitangent_indices.push_back(d); 
+        ++dupl_bitangents;
+      }
+    } 
+    std::cout << dupl_bitangents << " bitangent duplications" << std::endl;
   }
 
   num_triangles = 0; 
+  //starting index of the polygon in the index array
+  unsigned start_index = 0;
+  //how many tris the last polygon contained
+  unsigned tris_added = 0;
   for(unsigned i = 0; i < mesh.GetPolygonCount(); ++i)
   {
     //triangulate face if necessary
     for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
     {
-      unsigned start_index = mesh.GetPolygonVertexIndex(i);
       std::array<unsigned, 3> indices{start_index, start_index + j - 1, start_index + j};
 
       temp_tri tri{unsigned(poly_vertices[indices[0]]), unsigned(poly_vertices[indices[1]]), unsigned(poly_vertices[indices[2]])};
@@ -412,27 +440,36 @@ Mesh::Mesh(FbxMesh& mesh) {
 
       //add vertices to to array
       std::vector<temp_vert>& curr_point1 = temp_verts[tri.verts[0]];
-      curr_point1.push_back(temp_vert{indices[0], tri.verts[0], normal_indices[indices[0]], uv_indices[indices[0]], num_triangles, 0});
+      curr_point1.push_back(temp_vert{indices[0], tri.verts[0], normal_indices[indices[0]], num_triangles, 0});
       
       std::vector<temp_vert>& curr_point2 = temp_verts[tri.verts[1]];
-      curr_point2.push_back(temp_vert{indices[1], tri.verts[1], normal_indices[indices[1]], uv_indices[indices[1]], num_triangles, 1});
+      curr_point2.push_back(temp_vert{indices[1], tri.verts[1], normal_indices[indices[1]], num_triangles, 1});
       
       std::vector<temp_vert>& curr_point3 = temp_verts[tri.verts[2]];
-      curr_point3.push_back(temp_vert{indices[2], tri.verts[2], normal_indices[indices[2]], uv_indices[indices[2]], num_triangles, 2});
-      
-      if(has_tangents) {
-        curr_point1[curr_point1.size()-1].tangent = get_tangent(curr_point1[curr_point1.size()-1]);
-        curr_point1[curr_point1.size()-1].bitangent = get_bitangent(curr_point1[curr_point1.size()-1]);
+      curr_point3.push_back(temp_vert{indices[2], tri.verts[2], normal_indices[indices[2]], num_triangles, 2});
+      //set optional data
+      if(has_uvs) {
+        curr_point1[curr_point1.size()-1].uv = uv_indices[indices[0]];
         
-        curr_point2[curr_point2.size()-1].tangent = get_tangent(curr_point2[curr_point2.size()-1]);
-        curr_point2[curr_point2.size()-1].bitangent = get_bitangent(curr_point2[curr_point2.size()-1]);
+        curr_point2[curr_point2.size()-1].uv = uv_indices[indices[1]];
         
-        curr_point3[curr_point3.size()-1].tangent = get_tangent(curr_point3[curr_point3.size()-1]);
-        curr_point3[curr_point3.size()-1].bitangent = get_bitangent(curr_point3[curr_point3.size()-1]);
+        curr_point3[curr_point3.size()-1].uv = uv_indices[indices[2]]; 
       }
-      
+      if(has_tangents) {
+        curr_point1[curr_point1.size()-1].tangent = tangent_indices[get_tangent(curr_point1[curr_point1.size()-1])];
+        curr_point1[curr_point1.size()-1].bitangent = bitangent_indices[get_bitangent(curr_point1[curr_point1.size()-1])];
+        
+        curr_point2[curr_point2.size()-1].tangent = tangent_indices[get_tangent(curr_point2[curr_point2.size()-1])];
+        curr_point2[curr_point2.size()-1].bitangent = bitangent_indices[get_bitangent(curr_point2[curr_point2.size()-1])];
+        
+        curr_point3[curr_point3.size()-1].tangent = tangent_indices[get_tangent(curr_point3[curr_point3.size()-1])];
+        curr_point3[curr_point3.size()-1].bitangent = bitangent_indices[get_bitangent(curr_point3[curr_point3.size()-1])];
+      }
+      ++tris_added;
       ++num_triangles;
     }
+    start_index += 2 + tris_added;
+    tris_added = 0;
   }
   //filter out duplicate vertices
   num_vertices = 0;
@@ -443,7 +480,9 @@ Mesh::Mesh(FbxMesh& mesh) {
     for(auto iter = verts.begin(); iter != verts.end(); ++iter) {
       for(std::vector<temp_vert>::iterator iter2 = std::next(iter); iter2 != verts.end(); ++iter2) {
         //match by normals and if exisiting, uvs
-        bool duplicate = has_uvs ? (iter2->uv == iter->uv && iter2->normal == iter->normal) :  (iter2->normal == iter->normal); 
+        bool duplicate = iter2->normal == iter->normal;
+        duplicate = has_uvs ? (iter2->uv == iter->uv && duplicate) : duplicate; 
+        duplicate = has_tangents ? (iter2->tangent == iter->tangent && iter2->bitangent == iter->bitangent && duplicate) : duplicate; 
         //duplicate -> merge vertices
         if(duplicate) {
 
