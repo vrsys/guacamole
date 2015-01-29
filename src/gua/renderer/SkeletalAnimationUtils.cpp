@@ -336,124 +336,68 @@ Mesh::Mesh(FbxMesh& mesh) {
   else {
     uv_indices.resize(normal_indices.size());
   }
+  
+  //this function gets a geometry layer and returns the function to access it depending on mapping & referencing
+  auto get_access_function = [](FbxLayerElementTemplate<FbxVector4> const& layer) {
+    std::function<unsigned(temp_vert const&)> access_function;
+    //mapping to control point
+    if(layer.GetMappingMode() == FbxGeometryElement::eByControlPoint) {
+      Logger::LOG_MESSAGE << "Layer mapped by control point" << std::endl;
+      if(layer.GetReferenceMode() == FbxGeometryElement::eDirect) {
+        access_function =[](temp_vert const& vert)->unsigned {
+          return vert.point;
+        };
+      }
+      else if(layer.GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+        access_function = [&layer](temp_vert const& vert)->unsigned {
+          return layer.GetIndexArray().GetAt(vert.point);
+        };
+      }
+      else {
+        Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
+      }
+    }
+    //mapping to vertex
+    else if(layer.GetMappingMode() == FbxGeometryElement::eByPolygonVertex){
+      if(layer.GetReferenceMode() == FbxGeometryElement::eDirect) {
+        access_function =[](temp_vert const& vert)->unsigned {
+          return vert.old_index;
+        };
+      }
+      else if(layer.GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+        access_function = [&layer](temp_vert const& vert)->unsigned {
+          return layer.GetIndexArray().GetAt(vert.old_index);
+        };
+      }
+      else {
+        Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
+      }
+    }
+    else {
+      Logger::LOG_ERROR << "Type of mapping not supported" << std::endl;
+    }
+
+    return access_function;
+  };
 
   //define function to get tangent indices
   std::function<unsigned(temp_vert const&)> get_tangent;
   std::function<unsigned(temp_vert const&)> get_bitangent;
 
-  FbxLayerElementArrayTemplate<FbxVector4> poly_tangents{eFbxFloat};
-  FbxLayerElementArrayTemplate<FbxVector4> poly_bitangents{eFbxFloat};
+  FbxArray<FbxVector4> poly_tangents;
+  FbxArray<FbxVector4> poly_bitangents;
   if(has_tangents){
 //tangents  
     FbxGeometryElementTangent* tangent_info = mesh.GetElementTangent(0);
-    poly_tangents = tangent_info->GetDirectArray();
-    //index tangents, filter out duplicates
-    unsigned dupl_tangents = 0;
-    std::vector<unsigned> tangent_indices{};
-    for(unsigned i = 0; i < poly_tangents.GetCount(); ++i) {
-      unsigned d = poly_tangents.Find(poly_tangents[i]);
-      if(d == i) {
-        tangent_indices.push_back(i);
-      }
-      else {
-        tangent_indices.push_back(d); 
-        ++dupl_tangents;
-      }
-    } 
-    std::cout << dupl_tangents << " tangent duplications" << std::endl;
-
-    //tangents per position
-    if(tangent_info->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
-      Logger::LOG_MESSAGE << "Tangents mapped by control point" << std::endl;
-      if(tangent_info->GetReferenceMode() == FbxGeometryElement::eDirect) {
-        get_tangent = [&tangent_indices](temp_vert const& vert)->unsigned {
-          return vert.point;
-        };
-      }
-      else if(tangent_info->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
-        get_tangent = [&tangent_info, &tangent_indices](temp_vert const& vert)->unsigned {
-          return tangent_info->GetIndexArray().GetAt(vert.point);
-        };
-      }
-      else {
-        Logger::LOG_ERROR << "Type of tangent reference not supported" << std::endl;
-      }
-    }
-    //tangents per vertex
-    else if(tangent_info->GetMappingMode() == FbxGeometryElement::eByPolygonVertex){
-      if(tangent_info->GetReferenceMode() == FbxGeometryElement::eDirect) {
-        get_tangent = [&tangent_indices](temp_vert const& vert)->unsigned {
-          return vert.old_index;
-        };
-      }
-      else if(tangent_info->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
-        get_tangent = [&tangent_info, &tangent_indices](temp_vert const& vert)->unsigned {
-          return tangent_info->GetIndexArray().GetAt(vert.old_index);
-        };
-      }
-      else {
-        Logger::LOG_ERROR << "Type of tangent reference not supported" << std::endl;
-      }
-    }
-    else {
-      Logger::LOG_ERROR << "Type of tangent mapping not supported" << std::endl;
-    }
+    tangent_info->GetDirectArray().CopyTo(poly_tangents);
+    get_tangent = get_access_function(*tangent_info);
 
   //tangents  
     FbxGeometryElementBinormal* bitangent_info = mesh.GetElementBinormal(0);
-    poly_bitangents = bitangent_info->GetDirectArray();
-    //index bitangents, filter out duplicates
-    unsigned dupl_bitangents = 0;
-    std::vector<unsigned> bitangent_indices{};
-    for(unsigned i = 0; i < poly_bitangents.GetCount(); ++i) {
-      unsigned d = poly_bitangents.Find(poly_bitangents[i]);
-      if(d == i) {
-        bitangent_indices.push_back(i);
-      }
-      else {
-        bitangent_indices.push_back(d); 
-        ++dupl_bitangents;
-      }
-    } 
-    std::cout << dupl_bitangents << " bitangent duplications" << std::endl;
-
-    //bitangents per position
-    if(bitangent_info->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
-      Logger::LOG_MESSAGE << "Bitangents mapped by control point" << std::endl;
-      if(bitangent_info->GetReferenceMode() == FbxGeometryElement::eDirect) {
-        get_bitangent = [&bitangent_indices](temp_vert const& vert)->unsigned {
-          return vert.point;
-        };
-      }
-      else if(bitangent_info->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
-        get_bitangent = [&bitangent_info, &bitangent_indices](temp_vert const& vert)->unsigned {
-          return bitangent_info->GetIndexArray().GetAt(vert.point);
-        };
-      }
-      else {
-        Logger::LOG_ERROR << "Type of bitangent reference not supported" << std::endl;
-      }
-    }
-    //bitangents per vertex
-    else if(bitangent_info->GetMappingMode() == FbxGeometryElement::eByPolygonVertex){
-      if(bitangent_info->GetReferenceMode() == FbxGeometryElement::eDirect) {
-        get_bitangent = [&bitangent_indices](temp_vert const& vert)->unsigned {
-          return vert.old_index;
-        };
-      }
-      else if(bitangent_info->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
-        get_bitangent = [&bitangent_info, &bitangent_indices](temp_vert const& vert)->unsigned {
-          return bitangent_info->GetIndexArray().GetAt(vert.old_index);
-        };
-      }
-      else {
-        Logger::LOG_ERROR << "Type of bitangent reference not supported" << std::endl;
-      }
-    }
-    else {
-      Logger::LOG_ERROR << "Type of bitangent mapping not supported" << std::endl;
-    }
+    bitangent_info->GetDirectArray().CopyTo(poly_bitangents);
+    get_bitangent = get_access_function(*bitangent_info);
   }
+
   num_triangles = 0; 
   for(unsigned i = 0; i < mesh.GetPolygonCount(); ++i)
   {
@@ -475,11 +419,14 @@ Mesh::Mesh(FbxMesh& mesh) {
       
       std::vector<temp_vert>& curr_point3 = temp_verts[tri.verts[2]];
       curr_point3.push_back(temp_vert{indices[2], tri.verts[2], normal_indices[indices[2]], uv_indices[indices[2]], num_triangles, 2});
+      
       if(has_tangents) {
         curr_point1[curr_point1.size()-1].tangent = get_tangent(curr_point1[curr_point1.size()-1]);
         curr_point1[curr_point1.size()-1].bitangent = get_bitangent(curr_point1[curr_point1.size()-1]);
+        
         curr_point2[curr_point2.size()-1].tangent = get_tangent(curr_point2[curr_point2.size()-1]);
         curr_point2[curr_point2.size()-1].bitangent = get_bitangent(curr_point2[curr_point2.size()-1]);
+        
         curr_point3[curr_point3.size()-1].tangent = get_tangent(curr_point3[curr_point3.size()-1]);
         curr_point3[curr_point3.size()-1].bitangent = get_bitangent(curr_point3[curr_point3.size()-1]);
       }
