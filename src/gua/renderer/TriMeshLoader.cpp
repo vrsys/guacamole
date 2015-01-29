@@ -160,7 +160,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
   if (file.is_valid()) {
     auto point_pos(file_name.find_last_of("."));
 
-    if(file_name.substr(point_pos + 1) == "fbx") {
+    if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX" ) {
       std::cout << "fbx" << std::endl;
 
       FbxManager* fbx_manager = NULL;
@@ -286,7 +286,7 @@ bool TriMeshLoader::is_supported(std::string const& file_name) const {
   if (file_name.substr(point_pos + 1) == "raw") {
     return false;
   }
-  else if (file_name.substr(point_pos + 1) == "fbx"){
+  else if (file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX"){
     return true;
   }
 
