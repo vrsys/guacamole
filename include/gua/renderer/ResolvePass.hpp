@@ -41,7 +41,8 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
 
   enum class ToneMappingMethod {
     LINEAR = 0,
-    HEJL = 1
+    HEJL = 1,
+    REINHARD = 2
   };
 
   ResolvePassDescription();
