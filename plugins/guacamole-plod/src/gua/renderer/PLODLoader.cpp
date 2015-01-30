@@ -168,10 +168,14 @@ void PLODLoader::set_out_of_core_budget_in_mb(const size_t out_of_core_budget) {
   policy->set_out_of_core_budget_in_mb(out_of_core_budget);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 size_t PLODLoader::get_upload_budget_in_mb() const {
   pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
   return policy->max_upload_budget_in_mb();
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 size_t PLODLoader::get_render_budget_in_mb() const {
   pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
@@ -179,16 +183,11 @@ size_t PLODLoader::get_render_budget_in_mb() const {
   return policy->render_budget_in_mb();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 size_t PLODLoader::get_out_of_core_budget_in_mb() const {
   pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
   return policy->out_of_core_budget_in_mb();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void PLODLoader::set_importance(std::string const& file_name, const float importance) {
-  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
-  policy->SetImportance(file_name, importance);
 }
 
 }
