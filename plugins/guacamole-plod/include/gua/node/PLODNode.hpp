@@ -23,6 +23,7 @@
 #define GUA_PLOD_NODE_HPP
 
 // guacamole headers
+#include <exception>
 #include <gua/renderer/PLOD.hpp>
 #include <gua/renderer/Material.hpp>
 
@@ -66,6 +67,8 @@ public:  // methods
   std::shared_ptr<Material> const& get_material() const;
   void               set_material(std::shared_ptr<Material> const& material);
 
+  float get_importance() const { throw std::logic_error("PLODNode::get_importance: not implemented yet"); }
+  void  set_importance(float v) { throw std::logic_error("PLODNode::set_importance: not implemented yet"); }
 public:
   /**
   * Implements ray picking for a point cloud
