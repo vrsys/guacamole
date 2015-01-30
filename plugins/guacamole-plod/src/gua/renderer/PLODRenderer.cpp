@@ -430,7 +430,7 @@ namespace gua {
 
         cuts->SendTransform(context_id, model_id, scm_model_matrix);
         cuts->SendRendered(context_id, model_id);
-        cuts->SendImportance(context_id, model_id, database->GetModel(model_id)->importance());
+        cuts->SendImportance(context_id, model_id, plod_node->get_importance());
 
         pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
         std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
@@ -462,7 +462,7 @@ namespace gua {
                                            "gua_normal_matrix",
                                            normal_mat);
 
-        float radius_importance_scaling = database->GetModel(model_id)->importance();      
+        float radius_importance_scaling = plod_node->get_importance();      
    
         depth_pass_program_->apply_uniform(ctx, 
                                           "radius_importance_scaling",
@@ -574,7 +574,7 @@ namespace gua {
                                            "gua_normal_matrix",
                                            normal_mat);
 
-        float radius_importance_scaling = database->GetModel(model_id)->importance();               
+        float radius_importance_scaling = plod_node->get_importance();               
    
         current_material_program->apply_uniform(ctx, 
                                           "radius_importance_scaling",
