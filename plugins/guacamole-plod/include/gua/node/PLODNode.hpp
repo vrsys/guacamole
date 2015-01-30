@@ -52,7 +52,8 @@ public:
            std::string const& geometry_description = "gua_default_geometry",
            std::string const& geometry_file_path = "gua_no_path_specified",
            std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
-           math::mat4 const& transform = math::mat4::identity());
+           math::mat4 const& transform = math::mat4::identity(),
+           float const importance = 1.0f);
 
 public:  // methods
 
@@ -65,6 +66,9 @@ public:  // methods
 
   std::shared_ptr<Material> const& get_material() const;
   void               set_material(std::shared_ptr<Material> const& material);
+
+  float              get_importance();
+  void               set_importance(float const importance);
 
 public:
   /**
@@ -95,6 +99,7 @@ private:  // attributes e.g. special attributes for drawing
   std::shared_ptr<Material>     material_;
   bool                          material_changed_;
 
+  float                         importance_;
 };
 
 }  // namespace node {

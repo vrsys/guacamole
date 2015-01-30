@@ -30,6 +30,8 @@
 #include <gua/renderer/Material.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 
+#include <pbr/ren/policy.h>
+
 // guacamole headers
 
 namespace gua {
@@ -40,13 +42,15 @@ PLODNode::PLODNode(std::string const& name,
                    std::string const& geometry_description,
                    std::string const& geometry_file_path,
                    std::shared_ptr<Material> const& material,
-                   math::mat4 const& transform)
+                   math::mat4 const& transform,
+                   float const importance)
     : GeometryNode(name, transform),
       geometry_(nullptr),
       geometry_changed_(true),
       geometry_description_(geometry_description),
       geometry_file_path_(geometry_file_path),
-      material_(material)
+      material_(material),
+      importance_(importance)
     {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +84,22 @@ void PLODNode::set_material(std::shared_ptr<Material> const& material) {
   material_ = material;
   material_changed_ = self_dirty_ = true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+void PLODNode::set_importance(float const importance) {
+  importance_ = importance;
+  self_dirty_ = true;
+
+  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+  policy->SetImportance(get_geometry_description(), importance_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float PLODNode::get_importance() {
+  return importance_;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 void PLODNode::ray_test_impl(Ray const& ray,
@@ -281,6 +301,7 @@ std::shared_ptr<Node> PLODNode::copy() const {
   result->update_cache();
 
   result->shadow_mode_ = shadow_mode_;
+  result->importance_ = importance_;
 
   return result;
 }
