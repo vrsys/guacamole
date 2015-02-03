@@ -131,6 +131,32 @@ Node::Node(aiNode const& node):
   }
 }
 
+Node::Node(FbxNode& node):
+  index{-1},
+  name{node.GetName()},
+  parentName{node.GetParent() != NULL ? node.GetParent()->GetName() : "none"},
+  numChildren{unsigned(node.GetChildCount())},
+  transformation{scm::math::mat4f::identity()}, //fbxnodes dont store transformations
+  offsetMatrix{scm::math::mat4f::identity()}
+{
+  std::cout << "node " << name << " with children: ";
+  for(int i = 0; i < node.GetChildCount(); ++i) {
+    std::cout << node.GetChild(i)->GetName() << ", ";
+  }
+  std::cout << std::endl;
+
+  for(int i = 0; i < node.GetChildCount(); ++i) {
+    FbxSkeleton const* skelnode{node.GetChild(i)->GetSkeleton()};
+    if(skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector && node.GetChild(i)->GetChildCount() == 0) {
+      Logger::LOG_DEBUG << node.GetChild(i)->GetName() << " is effector, ignoring it" << std::endl;
+    }
+    else {
+      std::shared_ptr<Node> child = std::make_shared<Node>(*(node.GetChild(i)));
+      children.push_back(child);
+    }
+  }
+}
+
 Node::Node(aiScene const& scene) {
   //construct hierarchy
   *this = Node{*(scene.mRootNode)};
