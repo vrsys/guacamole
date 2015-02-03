@@ -193,17 +193,17 @@ namespace gua {
 
     depth_pass_log_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_R_32F,
+                          scm::gl::FORMAT_R_16F,
                           1, 1, 1);
 
     depth_pass_linear_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_D32F,
+                          scm::gl::FORMAT_D24,
                           1, 1, 1);
           
     accumulation_pass_color_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGBA_16F,
+                          scm::gl::FORMAT_RGBA_32F,
                           1, 1, 1);
 
     accumulation_pass_normal_result_ = ctx.render_device
@@ -535,6 +535,10 @@ namespace gua {
                                           "radius_importance_scaling",
                                            radius_importance_scaling);
         
+        depth_pass_program_->apply_uniform(ctx,
+                                           "enable_backface_culling",
+                                           plod_node->get_enable_backface_culling_by_normal());
+
         ctx.render_context->apply();
 
         auto plod_resource = plod_node->get_geometry();
@@ -620,11 +624,6 @@ namespace gua {
           current_material_program->unuse(ctx);
           current_material_program->use(ctx);
 
-          ctx.render_context
-            ->bind_texture(depth_pass_linear_depth_result_, nearest_sampler_state_, 0);
-
-          current_material_program->apply_uniform(ctx,
-                                                   "p01_linear_depth_texture", 0);
         }
 
         auto const& scm_model_matrix = plod_node->get_cached_world_transform();
@@ -646,6 +645,10 @@ namespace gua {
         current_material_program->apply_uniform(ctx, 
                                           "radius_importance_scaling",
                                            radius_importance_scaling);
+
+        current_material_program->apply_uniform(ctx,
+                                             "enable_backface_culling",
+                                             plod_node->get_enable_backface_culling_by_normal());
 
           plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 

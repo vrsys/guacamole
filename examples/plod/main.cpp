@@ -74,10 +74,10 @@ int main(int argc, char** argv) {
 
   // create simple untextured material shader
   auto desc = std::make_shared<gua::MaterialShaderDescription>();
-  //desc->load_from_file("./data/materials/PLODGlossy.gmd");
+  desc->load_from_file("./data/materials/PLODGlossy.gmd");
   
   //use this material for models where shading does not make sense
-  desc->load_from_file("./data/materials/PLODUnshaded.gmd");
+  //desc->load_from_file("./data/materials/PLODUnshaded.gmd");
   auto material_shader(std::make_shared<gua::MaterialShader>("PLOD_unshaded_material", desc));
 
   gua::MaterialShaderDatabase::instance()->add(material_shader);
@@ -115,13 +115,13 @@ int main(int argc, char** argv) {
   portal->rotate(-30, 0.f, 1.f, 0.f);
   portal->translate(0.0f, 0.f, -4.8f);
   //portal->translate(0.0f, 0.0, 2.0f);
-
+/*
   auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
   light->data.set_enable_shadows(true);
   light->scale(10.f);
   light->rotate(-20, 0.f, 1.f, 0.f);
   light->translate(-1.f, 0.f,  3.f);
-
+*/
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->data.color = gua::utils::Color3f(0.5f, 0.5f, 1.0f);
   light2->scale(10.f);
@@ -141,8 +141,8 @@ int main(int argc, char** argv) {
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(2560, 1440);
-  //auto resolution = gua::math::vec2ui(1920, 1080);
+  //auto resolution = gua::math::vec2ui(2560, 1440);
+  auto resolution = gua::math::vec2ui(1920, 1080);
   
   
   auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
@@ -179,8 +179,8 @@ int main(int argc, char** argv) {
   camera->config.set_right_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(true);
-  //camera->config.set_enable_stereo(false);
+  //camera->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
   camera->config.set_near_clip(0.0001);
   camera->set_pre_render_cameras({portal_camera});
 
@@ -240,7 +240,7 @@ int main(int argc, char** argv) {
   gua::Renderer renderer;
 
   plod_geometry->set_importance( 1.0f ); 
-
+  plod_geometry->set_enable_backface_culling_by_normal( true ); 
       //camera->translate(3.0, 0, 0.0);
   //plod_geometry->translate(0.0, 0.0, 2.0);
 

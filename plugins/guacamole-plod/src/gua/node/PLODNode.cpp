@@ -43,14 +43,16 @@ PLODNode::PLODNode(std::string const& name,
                    std::string const& geometry_file_path,
                    std::shared_ptr<Material> const& material,
                    math::mat4 const& transform,
-                   float const importance)
+                   float const importance,
+                   bool const enable_backface_culling_by_normal)
     : GeometryNode(name, transform),
       geometry_(nullptr),
       geometry_changed_(true),
       geometry_description_(geometry_description),
       geometry_file_path_(geometry_file_path),
       material_(material),
-      importance_(importance)
+      importance_(importance),
+      enable_backface_culling_by_normal_(enable_backface_culling_by_normal)
     {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,7 +101,16 @@ float PLODNode::get_importance() {
   return importance_;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+void PLODNode::set_enable_backface_culling_by_normal(bool const enable_backface_culling) {
+  enable_backface_culling_by_normal_ = enable_backface_culling;
+  self_dirty_ = true;
+}
 
+////////////////////////////////////////////////////////////////////////////////
+bool PLODNode::get_enable_backface_culling_by_normal() {
+  return enable_backface_culling_by_normal_;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void PLODNode::ray_test_impl(Ray const& ray,
@@ -302,6 +313,7 @@ std::shared_ptr<Node> PLODNode::copy() const {
 
   result->shadow_mode_ = shadow_mode_;
   result->importance_ = importance_;
+  result->enable_backface_culling_by_normal_ = enable_backface_culling_by_normal_;
 
   return result;
 }

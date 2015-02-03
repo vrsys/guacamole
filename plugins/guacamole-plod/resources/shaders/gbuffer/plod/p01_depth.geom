@@ -5,6 +5,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 @include "common/gua_camera_uniforms.glsl"
 
+uniform bool enable_backface_culling;
 
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
@@ -26,7 +27,7 @@ out VertexData {
  
 void main() {
 
-  if(VertexIn[0].pass_normal.z > 0.0) {
+  if(enable_backface_culling == false || VertexIn[0].pass_normal.z > 0.0) {
     mat4 MV = gua_view_matrix * gua_model_matrix;
     mat4 MVP = gua_projection_matrix * gua_view_matrix * gua_model_matrix;
 

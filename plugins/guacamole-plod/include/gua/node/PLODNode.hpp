@@ -53,7 +53,8 @@ public:
            std::string const& geometry_file_path = "gua_no_path_specified",
            std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
            math::mat4 const& transform = math::mat4::identity(),
-           float const importance = 1.0f);
+           float const importance = 1.0f,
+           bool const enable_backface_culling_by_normal = false);
 
 public:  // methods
 
@@ -69,6 +70,9 @@ public:  // methods
 
   float              get_importance();
   void               set_importance(float const importance);
+
+  bool               get_enable_backface_culling_by_normal();
+  void               set_enable_backface_culling_by_normal(bool const enable_backface_culling);
 
 public:
   /**
@@ -100,6 +104,7 @@ private:  // attributes e.g. special attributes for drawing
   bool                          material_changed_;
 
   float                         importance_;
+  bool                          enable_backface_culling_by_normal_;
 };
 
 }  // namespace node {

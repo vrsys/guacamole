@@ -33,11 +33,6 @@ layout (location = 1) out vec4 out_accumulated_normal;
 layout (location = 2) out vec3 out_accumulated_pbr;
 
 ///////////////////////////////////////////////////////////////////////////////
-//sampler
-///////////////////////////////////////////////////////////////////////////////
-layout(binding=0) uniform sampler2D p01_linear_depth_texture;
-
-///////////////////////////////////////////////////////////////////////////////
 // splatting methods
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +54,6 @@ void main() {
   vec2 uv_coords = pass_uv_coords;
 
 
-
   float normalAdjustmentFactor = 1.0;
 
   //turn normal to viewer
@@ -68,19 +62,13 @@ void main() {
   }
 
   if( dot(uv_coords, uv_coords) > 1) 
-    weight = 0;
+    discard;
   else
     weight = gaussian[(int)(round(length(uv_coords) * 31.0))];
 
   @include "common/gua_global_variable_assignment.glsl"
 
-  //if(pass_1_linear_depth_decoded - neg_pass_2_linear_depth < 0.001)
     out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);
-  //else
-  //  discard;
-  //  out_accumulated_color = vec4(vec3(1.0,0.0,0.0), weight);
-  //else
-  //  out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);
 
   out_accumulated_normal = normalAdjustmentFactor * vec4(weight * /*VertexIn.*/pass_normal, weight);
 
