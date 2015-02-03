@@ -29,46 +29,14 @@ out float pass_ms_rad;
 @include "common/gua_vertex_shader_output.glsl"
  
 
-float offset_depth_value(float in_gl_Pos_z, float vs_offset) {
-
-  //in_gl_Pos_z /= in_gl_Pos_w; //perspective division
-  //in_gl_Pos_z = (in_gl_Pos_z * 0.5) + 0.5; //[-1,1]^2 -> [0,1]^2
-
-  //linearize the log depth
-  float log_z = in_gl_Pos_z;
-  float lin_z = (2.0 * gua_clip_near * gua_clip_far) / (gua_clip_far + gua_clip_near - log_z * (gua_clip_far - gua_clip_near));
-
-  lin_z = lin_z - 0.1; /*+pos offset in vs somehow*/
-  //add some offset here
-  //...
-
-  float A = gua_projection_matrix[2].z;
-  float B = gua_projection_matrix[3].z;
-
-  //logarithmize the offset lin depth
-  //log_z = ( ((2.0 * gua_clip_near)/lin_z) - (gua_clip_far + gua_clip_far) ) / (gua_clip_far - gua_clip_near);
-
-  log_z = 0.5 * (-A * lin_z + B) / lin_z + 0.5;
-
-  //undo viewport transformation
-  log_z = (log_z - 0.5) * 2.0;
-  //log_z *= in_gl_Pos_w;
-
-  return log_z;
-
-}
-
-
 void main() {
 
-  //if(VertexIn[0].pass_normal.z > 0.0) {
+    if(VertexIn[0].pass_normal.z > 0.0) {
 
     mat4 MV = gua_view_matrix * gua_model_matrix;
     mat4 MVP = gua_projection_matrix * gua_view_matrix * gua_model_matrix;
 
-    vec4 center_es = MV * gl_in[0].gl_Position;
-    vec4 reference_es = MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
-    float es_rad = length(center_es - reference_es);
+    //float es_rad = 0.1;
 
     vec4 ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
     gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
@@ -82,6 +50,15 @@ void main() {
     /*VertexOut.*/pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0)).z;
     /*VertexOut.*/pass_ms_rad = length(VertexIn[0].pass_ms_u);
 
+    float es_rad = 0.1;
+/*
+     if(pass_es_linear_depth > -1) {
+       es_rad = 0.001;
+     }
+     else {
+      es_rad = 0.1;
+     }
+*/
     //gl_Position.z = ( ( -(pass_es_linear_depth+0.01) )/ gua_clip_far);
     gl_Position.z = ( ( -(pass_es_linear_depth+es_rad ) )/ gua_clip_far);
     gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
@@ -152,7 +129,7 @@ void main() {
 
     EndPrimitive();
 
-  //}
+  }
 
 }
 

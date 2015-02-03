@@ -292,10 +292,6 @@ namespace gua {
       controller->Dispatch(context_id , ctx.render_device);
 
       return context_id;
-    //}
-    //else {
-    //  return controller->DeduceContextId( (size_t)(&ctx.id));
-    //}
   }
 
   std::shared_ptr<ShaderProgram> PLODRenderer::_get_material_program(MaterialShader* material,
@@ -359,12 +355,7 @@ namespace gua {
       //register context for cut-update   
        pbr::context_t context_id = _register_context_in_cut_update(ctx);
        
-       //clear render targets of active FBOs
-       //ctx.render_context
-       //  ->clear_depth_stencil_buffer(depth_pass_result_fbo_);
 
-       //ctx.render_context
-       //  ->clear_color_buffer(log_to_lin_gua_depth_conversion_pass_fbo_, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
        ctx.render_context
          ->clear_color_buffer(depth_pass_result_fbo_, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -452,7 +443,17 @@ namespace gua {
        ctx.render_context
          ->bind_texture(gua_depth_buffer, nearest_sampler_state_, 0);
        log_to_lin_conversion_pass_program_->apply_uniform(ctx,
-                                                 "gua_log_depth_buffer", 0);
+                                          "gua_log_depth_buffer", 0);
+
+       float width = render_target_dims[0];
+       float height = render_target_dims[1];
+       log_to_lin_conversion_pass_program_->apply_uniform(ctx, 
+                                           "win_width",
+                                            (width) );
+
+       log_to_lin_conversion_pass_program_->apply_uniform(ctx, 
+                                           "win_height",
+                                            (height) );
 
        ctx.render_context->apply();
 
@@ -568,10 +569,10 @@ namespace gua {
        ctx.render_context
          ->set_rasterizer_state(no_backface_culling_rasterizer_state_);
  
-       //ctx.render_context
-        //  ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
        ctx.render_context
-           ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
+          ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
+       //ctx.render_context
+       //    ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
 
        ctx.render_context->set_blend_state(color_accumulation_state_);
 
