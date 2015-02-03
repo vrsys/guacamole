@@ -28,6 +28,14 @@ void main() {
 
 @include "common_PLOD/PLOD_assign_tangents.glsl"
 
-  gl_Position = vec4(in_position, 1.0);
+  vec3 temp_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
+
+
+  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  //if(temp_normal.z > 0.0)
+    gl_Position = vec4(in_position, 1.0);
+  //else 
+  //  gl_Position = vec4(1.0, 1.0, 1.0, 0.0) ;
+
 }
 

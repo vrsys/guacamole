@@ -59,8 +59,7 @@ float weight = 0;
 void main() {
   vec2 uv_coords = pass_uv_coords;
 
-  if( dot(uv_coords, uv_coords) > 1) 
-    discard;
+
 
   float normalAdjustmentFactor = 1.0;
 
@@ -69,7 +68,10 @@ void main() {
     normalAdjustmentFactor = -1.0;
   }
 
-  weight = gaussian[(int)(round(length(uv_coords) * 31.0))];
+  if( dot(uv_coords, uv_coords) > 1) 
+    weight = 0;
+  else
+    weight = gaussian[(int)(round(length(uv_coords) * 31.0))];
 
   @include "common/gua_global_variable_assignment.glsl"
 

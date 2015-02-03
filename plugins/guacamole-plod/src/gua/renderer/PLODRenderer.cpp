@@ -289,7 +289,6 @@ namespace gua {
       controller->ResetSystem();
       pbr::context_t context_id = controller->DeduceContextId( (size_t)(&ctx) );
 
-      std::cout << context_id << "         XXXXXXXXXXXXXXXx\n";
       controller->Dispatch(context_id , ctx.render_device);
 
       return context_id;

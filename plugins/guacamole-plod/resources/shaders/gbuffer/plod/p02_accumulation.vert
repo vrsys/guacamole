@@ -35,12 +35,16 @@ void main() {
 @include "common_PLOD/PLOD_assign_tangents.glsl"
 
   VertexOut.pass_point_color = vec3(in_r, in_g, in_b);
-  VertexOut.pass_normal = (gua_normal_matrix * vec4(ms_n, 0.0)).xyz;
+  VertexOut.pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
   
   mat4 MV = gua_view_matrix * gua_model_matrix;
 
   VertexOut.pass_es_radius = length( (MV * vec4(in_position, 1.0)).xyz - (MV * vec4(in_position+ms_u, 1.0)).xyz ) ;
 
+  //!!!!!!!!!!!!!!!!!
+  //if(VertexOut.pass_normal.z > 0.0)
   gl_Position = vec4(in_position, 1.0);
+  //else 
+  //  gl_Position = vec4(1.0, 1.0, 1.0, 0.0) ;
 }
 

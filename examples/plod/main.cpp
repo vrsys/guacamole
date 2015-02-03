@@ -177,8 +177,8 @@ int main(int argc, char** argv) {
   camera->config.set_right_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(true);
-  //camera->config.set_enable_stereo(false);
+  //camera->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
   camera->config.set_near_clip(0.0001);
   camera->set_pre_render_cameras({portal_camera});
 
@@ -221,8 +221,8 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
-  //window->config.set_stereo_mode(gua::StereoMode::MONO);
+  //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+  window->config.set_stereo_mode(gua::StereoMode::MONO);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
     
-   // std::cout << "Frame time: " << 1000.0f / camera->get_rendering_fps()<<" ms, fps:" << camera->get_rendering_fps() << ", app fps: " << camera->get_application_fps() << std::endl;
+    //std::cout << "Frame time: " << 1000.0f / camera->get_rendering_fps()<<" ms, fps:" << camera->get_rendering_fps() << ", app fps: " << camera->get_application_fps() << std::endl;
 
     // apply trackball matrix to object
     window->process_events();

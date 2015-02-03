@@ -61,89 +61,98 @@ float offset_depth_value(float in_gl_Pos_z, float vs_offset) {
 
 void main() {
 
-  mat4 MV = gua_view_matrix * gua_model_matrix;
-  mat4 MVP = gua_projection_matrix * gua_view_matrix * gua_model_matrix;
+  //if(VertexIn[0].pass_normal.z > 0.0) {
 
-  vec4 ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
-  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
-  gua_varying_position = ws_pos.xyz;
-  // gl_Position.z = 
-  /*VertexOut.*/pass_uv_coords = vec2(1.0, 1.0);
+    mat4 MV = gua_view_matrix * gua_model_matrix;
+    mat4 MVP = gua_projection_matrix * gua_view_matrix * gua_model_matrix;
 
-  /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
-  /*VertexOut.*/pass_normal = VertexIn[0].pass_normal;
+    vec4 center_es = MV * gl_in[0].gl_Position;
+    vec4 reference_es = MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
+    float es_rad = length(center_es - reference_es);
 
-  /*VertexOut.*/pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0)).z;
-  /*VertexOut.*/pass_ms_rad = length(VertexIn[0].pass_ms_u);
+    vec4 ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
+    gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
+    gua_varying_position = ws_pos.xyz;
+    // gl_Position.z = 
+    /*VertexOut.*/pass_uv_coords = vec2(1.0, 1.0);
 
-  gl_Position.z = ( ( -(pass_es_linear_depth+0.01) )/ gua_clip_far);
-  
-  gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
+    /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
+    /*VertexOut.*/pass_normal = VertexIn[0].pass_normal;
 
-  gl_Position.z *= gl_Position.w;
-  EmitVertex();
+    /*VertexOut.*/pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0)).z;
+    /*VertexOut.*/pass_ms_rad = length(VertexIn[0].pass_ms_u);
 
-  //gl_Position = VP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0);
-  ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
-  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v ), 1.0);
-  gua_varying_position = ws_pos.xyz;
-  /*VertexOut.*/pass_uv_coords = vec2(1.0, -1.0);
+    //gl_Position.z = ( ( -(pass_es_linear_depth+0.01) )/ gua_clip_far);
+    gl_Position.z = ( ( -(pass_es_linear_depth+es_rad ) )/ gua_clip_far);
+    gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
 
-  /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
-  /*VertexOut.*/pass_normal = VertexIn[0].pass_normal;
+    gl_Position.z *= gl_Position.w;
+    EmitVertex();
 
-  /*VertexOut.*/pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0) ).z;
-  /*VertexOut.*/pass_ms_rad = length(VertexIn[0].pass_ms_u);
+    //gl_Position = VP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0);
+    ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
+    gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v ), 1.0);
+    gua_varying_position = ws_pos.xyz;
+    /*VertexOut.*/pass_uv_coords = vec2(1.0, -1.0);
 
-  gl_Position.z = ( ( -(pass_es_linear_depth+0.01) )/ gua_clip_far);
-  
-  gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
+    /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
+    /*VertexOut.*/pass_normal = VertexIn[0].pass_normal;
 
-  gl_Position.z *= gl_Position.w;
-  EmitVertex();
+    /*VertexOut.*/pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0) ).z;
+    /*VertexOut.*/pass_ms_rad = length(VertexIn[0].pass_ms_u);
 
-  //gl_Position = VP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0);
-  ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
-  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u ), 1.0);
-  gua_varying_position = ws_pos.xyz;
-  /*VertexOut.*/pass_uv_coords = vec2(-1.0, 1.0);
+    //gl_Position.z = ( ( -(pass_es_linear_depth+0.01) )/ gua_clip_far);
+    gl_Position.z = ( ( -(pass_es_linear_depth+es_rad ) )/ gua_clip_far);
+    gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
 
-  /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
-  /*VertexOut.*/pass_normal = VertexIn[0].pass_normal;
+    gl_Position.z *= gl_Position.w;
+    EmitVertex();
 
-  /*VertexOut.*/pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0) ).z;
-  /*VertexOut.*/pass_ms_rad = length(VertexIn[0].pass_ms_u);
+    //gl_Position = VP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0);
+    ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
+    gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u ), 1.0);
+    gua_varying_position = ws_pos.xyz;
+    /*VertexOut.*/pass_uv_coords = vec2(-1.0, 1.0);
 
-  gl_Position.z = ( ( -(pass_es_linear_depth+0.01) )/ gua_clip_far);
-  
-  gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
+    /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
+    /*VertexOut.*/pass_normal = VertexIn[0].pass_normal;
 
-  gl_Position.z *= gl_Position.w;
-  EmitVertex();
+    /*VertexOut.*/pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) - VertexIn[0].pass_ms_u), 1.0) ).z;
+    /*VertexOut.*/pass_ms_rad = length(VertexIn[0].pass_ms_u);
 
-  //gl_Position = VP * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u ) - VertexIn[0].pass_ms_v), 1.0);
-  ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
-  gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v ), 1.0);
-  gua_varying_position = ws_pos.xyz;
-  /*VertexOut.*/pass_uv_coords = vec2(-1.0, -1.0);
+    //gl_Position.z = ( ( -(pass_es_linear_depth+0.01) )/ gua_clip_far);
+    gl_Position.z = ( ( -(pass_es_linear_depth+es_rad ) )/ gua_clip_far);
+    
+    gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
 
-  /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
-  /*VertexOut.*/pass_normal = VertexIn[0].pass_normal;
+    gl_Position.z *= gl_Position.w;
+    EmitVertex();
 
-  /*VertexOut.*/pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0) ).z;
-  /*VertexOut.*/pass_ms_rad = length(VertexIn[0].pass_ms_u);
+    //gl_Position = VP * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u ) - VertexIn[0].pass_ms_v), 1.0);
+    ws_pos = gua_model_matrix * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0);
+    gl_Position = MVP * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v ), 1.0);
+    gua_varying_position = ws_pos.xyz;
+    /*VertexOut.*/pass_uv_coords = vec2(-1.0, -1.0);
 
-  gl_Position.z = ( ( -(pass_es_linear_depth+0.01) )/ gua_clip_far);
-  
-  gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
+    /*VertexOut.*/pass_point_color = VertexIn[0].pass_point_color;
+    /*VertexOut.*/pass_normal = VertexIn[0].pass_normal;
 
-  gl_Position.z *= gl_Position.w;
-  EmitVertex();
+    /*VertexOut.*/pass_es_linear_depth = (MV * vec4( ( (gl_in[0].gl_Position.xyz - VertexIn[0].pass_ms_u) - VertexIn[0].pass_ms_v), 1.0) ).z;
+    /*VertexOut.*/pass_ms_rad = length(VertexIn[0].pass_ms_u);
+
+    //gl_Position.z = ( ( -(pass_es_linear_depth+0.01) )/ gua_clip_far);
+    gl_Position.z = ( ( -(pass_es_linear_depth+es_rad ) )/ gua_clip_far);
+    
+    gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
+
+    gl_Position.z *= gl_Position.w;
+    EmitVertex();
 
 
 
-  EndPrimitive();
+    EndPrimitive();
 
+  //}
 
 }
 
