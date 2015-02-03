@@ -84,6 +84,7 @@ class Node {
  public:
   Node();
   Node(aiNode const& node);
+  Node(FbxNode& node);
   Node(aiScene const& scene);
 
   ~Node();

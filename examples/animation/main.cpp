@@ -90,18 +90,8 @@ int main(int argc, char** argv) {
   
   // auto teapot(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/bob/boblampclean.md5anim", 0);
-  auto pbrMat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-  // pbrMat.set_uniform("Color", chromium);
-  // pbrMat.set_uniform("Roughness", 0.2f);
-  // pbrMat.set_uniform("Metalness", 1.0f);
 
-  std::string directory("/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/");
-  pbrMat->set_uniform("ColorMap",     directory + "Cerberus_A.tga");
-  pbrMat->set_uniform("MetalnessMap", directory + "Cerberus_M.tga");
-  pbrMat->set_uniform("RoughnessMap", directory + "Cerberus_R.tga");
-  pbrMat->set_uniform("NormalMap",    directory + "Cerberus_N.negated_green.tga");
-
-  auto rock(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/sphere.fbx", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto rock(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/warrior.fbx", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
   rock->set_draw_bounding_box(true);
   
