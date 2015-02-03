@@ -117,9 +117,14 @@ namespace gua {
 #error "This works only with GUACAMOLE_RUNTIME_PROGRAM_COMPILATION enabled"
 #endif
       ResourceFactory factory;
+
+      log_to_lin_conversion_shader_stages_.clear();
+      log_to_lin_conversion_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p00_log_to_lin_conversion.vert")));
+      log_to_lin_conversion_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p00_log_to_lin_conversion.frag")));
+
       depth_pass_shader_stages_.clear();
-      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.vert")) );
-      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.geom")) );
+      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.vert")));
+      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.geom")));
       depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.frag")));
 
       accumulation_pass_shader_stages_.clear();
@@ -133,6 +138,16 @@ namespace gua {
 
       shaders_loaded_ = true;
     }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  void PLODRenderer::_initialize_log_to_lin_conversion_pass_program() {
+    if(!log_to_lin_conversion_pass_program_) {
+      auto new_program = std::make_shared<ShaderProgram>();
+      new_program->set_shaders(log_to_lin_conversion_shader_stages_);
+      log_to_lin_conversion_pass_program_ = new_program;
+    }
+    assert(log_to_lin_conversion_pass_program_);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -178,12 +193,12 @@ namespace gua {
 
     depth_pass_log_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_D24,
+                          scm::gl::FORMAT_R_32F,
                           1, 1, 1);
 
     depth_pass_linear_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_R_32F,
+                          scm::gl::FORMAT_D32F,
                           1, 1, 1);
           
     accumulation_pass_color_result_ = ctx.render_device
@@ -198,14 +213,19 @@ namespace gua {
 
     accumulation_pass_pbr_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGB_32F,
+                          scm::gl::FORMAT_RGB_16F,
                           1, 1, 1);
+
+    log_to_lin_gua_depth_conversion_pass_fbo_ = ctx.render_device->create_frame_buffer();
+    /*log_to_lin_gua_depth_conversion_pass_fbo_->attach_color_buffer(0,
+                                                                   depth_pass_linear_depth_result_);*/
+    log_to_lin_gua_depth_conversion_pass_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
 
     depth_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
     depth_pass_result_fbo_->clear_attachments();
-    depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
+    depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
     depth_pass_result_fbo_->attach_color_buffer(0,
-                                                depth_pass_linear_depth_result_);
+                                                depth_pass_log_depth_result_);
 
     accumulation_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
     accumulation_pass_result_fbo_->clear_attachments();
@@ -215,7 +235,8 @@ namespace gua {
                                                        accumulation_pass_normal_result_);
     accumulation_pass_result_fbo_->attach_color_buffer(2,
                                                        accumulation_pass_pbr_result_);
-    accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
+    //accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
+    accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
 
   
     nearest_sampler_state_ = ctx.render_device
@@ -226,6 +247,9 @@ namespace gua {
 
     depth_test_without_writing_depth_stencil_state_ = ctx.render_device
       ->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS_EQUAL);
+
+    no_depth_test_with_writing_depth_stencil_state_ = ctx.render_device
+      ->create_depth_stencil_state(true, true, scm::gl::COMPARISON_ALWAYS);
 
     color_accumulation_state_ = ctx.render_device->create_blend_state(true,
                                                                       scm::gl::FUNC_ONE,
@@ -264,6 +288,8 @@ namespace gua {
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
       controller->ResetSystem();
       pbr::context_t context_id = controller->DeduceContextId( (size_t)(&ctx) );
+
+      std::cout << context_id << "         XXXXXXXXXXXXXXXx\n";
       controller->Dispatch(context_id , ctx.render_device);
 
       return context_id;
@@ -337,6 +363,10 @@ namespace gua {
        //clear render targets of active FBOs
        //ctx.render_context
        //  ->clear_depth_stencil_buffer(depth_pass_result_fbo_);
+
+       //ctx.render_context
+       //  ->clear_color_buffer(log_to_lin_gua_depth_conversion_pass_fbo_, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
        ctx.render_context
          ->clear_color_buffer(depth_pass_result_fbo_, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
@@ -358,7 +388,7 @@ namespace gua {
 
      //determine frustum parameters
      Frustum const& frustum = pipe.get_scene().frustum;
-     std::vector<math::vec3> frustum_corner_values = _get_frustum_corners_vs(frustum);
+     std::vector<math::vec3> frustum_corner_values = frustum.get_corners();
      float top_minus_bottom = scm::math::length((frustum_corner_values[2]) - 
                                                 (frustum_corner_values[0]));
 
@@ -368,6 +398,10 @@ namespace gua {
      float near_plane_value = frustum.get_clip_near();
      float far_plane_value = frustum.get_clip_far();
 
+      if(!log_to_lin_conversion_pass_program_) {
+        _initialize_log_to_lin_conversion_pass_program();
+        save_to_file(*log_to_lin_conversion_pass_program_, ".", "log_to_lin_conversion_pass_debug");
+      }
 
       if(!depth_pass_program_) {
         _initialize_depth_pass_program();
@@ -396,6 +430,39 @@ namespace gua {
      std::shared_ptr<ShaderProgram> current_material_program;
 
 
+     //fullscreen gbuffer depth_conversion_pass
+     {
+       std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
+
+       if(!log_to_lin_conversion_pass_program_) {
+         std::cout << "Log to lin pass program not instanciated\n";
+       }
+
+       log_to_lin_conversion_pass_program_->use(ctx);
+
+       ctx.render_context
+          ->set_depth_stencil_state( no_depth_test_with_writing_depth_stencil_state_ );
+
+       ctx.render_context
+         ->set_frame_buffer(log_to_lin_gua_depth_conversion_pass_fbo_);
+
+       ctx.render_context
+         ->clear_depth_stencil_buffer(log_to_lin_gua_depth_conversion_pass_fbo_);
+       
+
+       ctx.render_context
+         ->bind_texture(gua_depth_buffer, nearest_sampler_state_, 0);
+       log_to_lin_conversion_pass_program_->apply_uniform(ctx,
+                                                 "gua_log_depth_buffer", 0);
+
+       ctx.render_context->apply();
+
+       fullscreen_quad_->draw(ctx.render_context);
+       log_to_lin_conversion_pass_program_->unuse(ctx);
+     }
+
+     std::cout << "After conversion pass\n";
+
      //depth pass 
      {
        std::shared_ptr<scm::gl::context_all_guard> context_guard = std::make_shared<scm::gl::context_all_guard>(ctx.render_context);
@@ -403,7 +470,7 @@ namespace gua {
        ctx.render_context
          ->set_rasterizer_state(no_backface_culling_rasterizer_state_);
  
-       depth_pass_result_fbo_->attach_depth_stencil_buffer( gua_depth_buffer );
+       depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
 
        ctx.render_context
          ->set_frame_buffer(depth_pass_result_fbo_);
@@ -502,17 +569,17 @@ namespace gua {
        ctx.render_context
          ->set_rasterizer_state(no_backface_culling_rasterizer_state_);
  
-       ctx.render_context
-          ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
        //ctx.render_context
-           //->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
+        //  ->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
+       ctx.render_context
+           ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
 
        ctx.render_context->set_blend_state(color_accumulation_state_);
 
        ctx.render_context
          ->set_frame_buffer(accumulation_pass_result_fbo_);
 
-       accumulation_pass_result_fbo_->attach_depth_stencil_buffer(gua_depth_buffer );
+       accumulation_pass_result_fbo_->attach_depth_stencil_buffer( depth_pass_linear_depth_result_ );
  
       /* if(!accumulation_pass_program_) {
          std::cout << "Accumulation program not instanciated\n";
@@ -618,8 +685,8 @@ namespace gua {
 
        normalization_pass_program_->use(ctx);
 
-       ctx.render_context
-          ->set_depth_stencil_state( no_depth_test_depth_stencil_state_ );
+       //ctx.render_context
+       //  ->set_depth_stencil_state( no_depth_test_depth_stencil_state_ );
 
        //ctx.render_context
        //  ->bind_texture(gua_depth_buffer, linear_sampler_state_, 0);
@@ -640,6 +707,12 @@ namespace gua {
          ->bind_texture(accumulation_pass_pbr_result_, nearest_sampler_state_, 2);
        normalization_pass_program_->apply_uniform(ctx,
                                                  "p02_pbr_texture", 2);
+
+          ctx.render_context
+            ->bind_texture(depth_pass_log_depth_result_, nearest_sampler_state_, 3);
+
+          current_material_program->apply_uniform(ctx,
+                                                   "p01_log_depth_texture", 3);
                                              
        ctx.render_context->apply();
 

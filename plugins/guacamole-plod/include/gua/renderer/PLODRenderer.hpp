@@ -55,6 +55,7 @@ namespace gua {
  private:  //shader related auxiliary methods
   
   void          _load_shaders();
+  void          _initialize_log_to_lin_conversion_pass_program();
   void          _initialize_depth_pass_program();
   void          _initialize_accumulation_pass_program(MaterialShader* material);
   void          _initialize_normalization_pass_program();
@@ -78,6 +79,8 @@ namespace gua {
 
     //FBOs:
     //////////////////////////////////////////////////////////////////////////////////////
+    scm::gl::frame_buffer_ptr                    log_to_lin_gua_depth_conversion_pass_fbo_;
+
     //depth pass FBO & attachments
     scm::gl::texture_2d_ptr                      depth_pass_log_depth_result_;
     scm::gl::texture_2d_ptr                      depth_pass_linear_depth_result_;
@@ -104,6 +107,7 @@ namespace gua {
 
     scm::gl::depth_stencil_state_ptr             no_depth_test_depth_stencil_state_;
     scm::gl::depth_stencil_state_ptr             depth_test_without_writing_depth_stencil_state_;
+    scm::gl::depth_stencil_state_ptr             no_depth_test_with_writing_depth_stencil_state_;
 
     scm::gl::blend_state_ptr                     color_accumulation_state_;
 
@@ -125,7 +129,7 @@ namespace gua {
     bool                                         shaders_loaded_;
 
     /** PLOD rendering pipeline (4 passes):
-     *
+     *   0. prerender: log 2 lin conv pass - renders gua's depth buffer linearly into target
      *   I. prerender: depth pass          - renders to custom FBO
      *  II. prerender: accumulation pass   - renders to custom FBO
      * III. final    : normalization pass  - renders to GBuffer
@@ -136,11 +140,13 @@ namespace gua {
     unsigned                                                             current_rendertarget_height_;
 
     //CPU resources
+    std::vector<ShaderProgramStage>                                      log_to_lin_conversion_shader_stages_;
     std::vector<ShaderProgramStage>                                      depth_pass_shader_stages_;
     std::vector<ShaderProgramStage>                                      accumulation_pass_shader_stages_;
     std::vector<ShaderProgramStage>                                      normalization_pass_shader_stages_;
 
     //additional GPU resources 
+    std::shared_ptr<ShaderProgram>                                       log_to_lin_conversion_pass_program_;
     std::shared_ptr<ShaderProgram>                                       depth_pass_program_;
     std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > accumulation_pass_programs_;
     std::shared_ptr<ShaderProgram>                                       normalization_pass_program_;

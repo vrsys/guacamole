@@ -74,10 +74,10 @@ int main(int argc, char** argv) {
 
   // create simple untextured material shader
   auto desc = std::make_shared<gua::MaterialShaderDescription>();
-  desc->load_from_file("./data/materials/PLODGlossy.gmd");
+  //desc->load_from_file("./data/materials/PLODGlossy.gmd");
   
   //use this material for models where shading does not make sense
-  //desc->load_from_file("./data/materials/PLODUnshaded.gmd");
+  desc->load_from_file("./data/materials/PLODUnshaded.gmd");
   auto material_shader(std::make_shared<gua::MaterialShader>("PLOD_unshaded_material", desc));
 
   gua::MaterialShaderDatabase::instance()->add(material_shader);
@@ -88,15 +88,15 @@ int main(int argc, char** argv) {
   gua::PLODLoader plodLoader;
 
   plodLoader.set_upload_budget_in_mb(32);
-  plodLoader.set_render_budget_in_mb(1024);
-  plodLoader.set_out_of_core_budget_in_mb(2024);
+  plodLoader.set_render_budget_in_mb(4048);
+  plodLoader.set_out_of_core_budget_in_mb(4096);
 
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/XYZ_ALL/Pitoti_GT_Knn/Area-6_house_P01_knn.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
 
   plod_geometry->set_draw_bounding_box(true);
   //seradina_rock_geometry->set_draw_bounding_box(true);
@@ -104,7 +104,8 @@ int main(int argc, char** argv) {
   //seradina_rock_geometry->scale(5.0);
 
   transform->add_child(plod_geometry);  
-
+  //transform->add_child(sera_geometry);
+  //transform->add_child(teapot); 
   
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
   portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
@@ -141,6 +142,7 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
   
+  
   auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
   portal_camera->translate(0, 0, 2.0);
   portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
@@ -164,6 +166,7 @@ int main(int argc, char** argv) {
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
 
   portal_camera->set_pipeline_description(portal_pipe);
+  
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -174,8 +177,8 @@ int main(int argc, char** argv) {
   camera->config.set_right_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  //camera->config.set_enable_stereo(true);
-  camera->config.set_enable_stereo(false);
+  camera->config.set_enable_stereo(true);
+  //camera->config.set_enable_stereo(false);
   camera->config.set_near_clip(0.0001);
   camera->set_pre_render_cameras({portal_camera});
 
@@ -218,8 +221,8 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
+  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+  //window->config.set_stereo_mode(gua::StereoMode::MONO);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
@@ -234,7 +237,7 @@ int main(int argc, char** argv) {
 
   gua::Renderer renderer;
 
-
+  plod_geometry->set_importance( 1.0f ); 
 
       //camera->translate(3.0, 0, 0.0);
   //plod_geometry->translate(0.0, 0.0, 2.0);
@@ -247,7 +250,7 @@ int main(int argc, char** argv) {
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
     
-    //std::cout << "Frame time: " << 1000.0f / camera->get_rendering_fps()<<" ms, fps:" << camera->get_rendering_fps() << ", app fps: " << camera->get_application_fps() << std::endl;
+   // std::cout << "Frame time: " << 1000.0f / camera->get_rendering_fps()<<" ms, fps:" << camera->get_rendering_fps() << ", app fps: " << camera->get_application_fps() << std::endl;
 
     // apply trackball matrix to object
     window->process_events();

@@ -62,14 +62,6 @@ void main() {
   if( dot(uv_coords, uv_coords) > 1) 
     discard;
 
- 
-  float neg_pass_1_linear_depth = -texelFetch(p01_linear_depth_texture, ivec2(gl_FragCoord.xy), 0).r;
-
-  float neg_pass_2_linear_depth = pass_es_linear_depth;
-
-  if(  (neg_pass_1_linear_depth) - (neg_pass_2_linear_depth) >= 0.02 * pass_ms_rad)
-   discard;
-
   float normalAdjustmentFactor = 1.0;
 
   //turn normal to viewer
@@ -81,7 +73,13 @@ void main() {
 
   @include "common/gua_global_variable_assignment.glsl"
 
-  out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);
+  //if(pass_1_linear_depth_decoded - neg_pass_2_linear_depth < 0.001)
+    out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);
+  //else
+  //  discard;
+  //  out_accumulated_color = vec4(vec3(1.0,0.0,0.0), weight);
+  //else
+  //  out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);
 
   out_accumulated_normal = normalAdjustmentFactor * vec4(weight * /*VertexIn.*/pass_normal, weight);
 

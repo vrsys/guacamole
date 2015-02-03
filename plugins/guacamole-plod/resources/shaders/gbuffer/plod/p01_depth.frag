@@ -4,6 +4,8 @@
 
 @include "common/gua_camera_uniforms.glsl"
 
+layout (location = 0) out float out_log_depth_texture;
+
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,8 +19,6 @@ in VertexData {
 // output
 ///////////////////////////////////////////////////////////////////////////////
 
-// No output other than depth texture
-layout (location = 0) out float out_linear_depth;
 
 ///////////////////////////////////////////////////////////////////////////////
 // main
@@ -29,6 +29,8 @@ void main() {
   if( dot(uv_coords, uv_coords) > 1)
     discard;
 
-  out_linear_depth.r = -VertexIn.pass_es_linear_depth;
+  out_log_depth_texture = gl_FragCoord.z;
+  gl_FragDepth = VertexIn.pass_es_linear_depth;
+
 }
 

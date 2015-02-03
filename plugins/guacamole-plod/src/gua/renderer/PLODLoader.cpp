@@ -161,6 +161,16 @@ void PLODLoader::set_render_budget_in_mb(const size_t render_budget) {
   policy->set_render_budget_in_mb(render_budget);
 }
 
+void PLODLoader::set_error_threshold(float error_threshold){
+  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+  policy->set_error_threshold(error_threshold);
+}
+
+float PLODLoader::get_error_treshold() const {
+  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
+  policy->error_threshold();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void PLODLoader::set_out_of_core_budget_in_mb(const size_t out_of_core_budget) {

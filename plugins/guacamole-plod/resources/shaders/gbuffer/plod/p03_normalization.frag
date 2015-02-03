@@ -16,6 +16,7 @@ in vec2 gua_quad_coords;
 layout(binding=0) uniform sampler2D p02_color_texture;
 layout(binding=1) uniform sampler2D p02_normal_texture;
 layout(binding=2) uniform sampler2D p02_pbr_texture;
+layout(binding=3) uniform sampler2D p01_log_depth_texture;
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -63,6 +64,7 @@ void main() {
 /////
   {
   @include "common/gua_write_gbuffer.glsl"
+  gl_FragDepth = texture(p02_pbr_texture, coords.xy).r;
   }
 }
 
