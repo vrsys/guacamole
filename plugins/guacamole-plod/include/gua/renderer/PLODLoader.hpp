@@ -24,8 +24,9 @@
 
 // guacamole headers
 #include <gua/renderer/PLOD.hpp>
-
+#include <gua/scenegraph/PickResult.hpp>
 // external headers
+#include <set>
 #include <unordered_set>
 #include <memory>
 
@@ -70,6 +71,14 @@ public:
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
 
+  std::set<PickResult> pick_plod_interpolate(math::vec3 const& bundle_origin,
+                                             math::vec3 const& bundle_forward,
+                                             math::vec3 const& bundle_up,
+                                             float bundle_radius,
+                                             float max_distance,
+                                             unsigned int max_depth,
+                                             unsigned int surfel_skip) const;  
+  
   /**
    * PLOD-lib specific configuration methods. Might be moved into a separate object later.
    *
