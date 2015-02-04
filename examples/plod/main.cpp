@@ -96,8 +96,8 @@ int main(int argc, char** argv) {
 
   //auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/XYZ_ALL/Pitoti_GT_Knn/Area-6_house_P01_knn.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION  ));
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
+  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/XYZ_ALL/Pitoti_GT_Knn/Area-6_house_P01_knn.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION  ));
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_01.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
   //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/_seradina.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ) );
 
