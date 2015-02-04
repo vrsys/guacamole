@@ -44,6 +44,7 @@
 
 // external headers
 #include <stack>
+#include <algorithm>
 
 namespace gua {
 
@@ -88,17 +89,18 @@ void PLODResource::draw(
 
   ctx.render_context->bind_vertex_array(vertex_array);
   ctx.render_context->apply();
-
-
+  
   for (const auto& n : node_list) {
     //result inside vector means the node is out of frustum
     if (nodes_out_of_frustum.find(n.node_id_) == nodes_out_of_frustum.end()) {
+    
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
                                       n.slot_id_ * surfels_per_node,
                                       surfels_per_node_of_model);
     }
     
   }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

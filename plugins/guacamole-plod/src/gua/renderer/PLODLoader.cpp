@@ -34,6 +34,7 @@
 #include <pbr/ren/lod_point_cloud.h>
 #include <pbr/ren/model_database.h>
 #include <pbr/ren/policy.h>
+#include <pbr/ren/ray.h>
 
 namespace gua {
 
@@ -91,11 +92,13 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& fil
 
       //normalize position?
       auto normalize_position = flags & PLODLoader::NORMALIZE_POSITION;
+
       if (normalize_position) {
         node->translate(-bbox.center());
       }
 
       //normalize scale?
+
       auto normalize_node = flags & PLODLoader::NORMALIZE_SCALE;
       if (normalize_node) {
         node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
@@ -142,6 +145,40 @@ void PLODLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root
     apply_fallback_material(child, fallback_material);
   }
 }
+////////////////////////////////////////////////////////////////////////////////
+
+std::set<PickResult> PLODLoader::pick_plod_interpolate(math::vec3 const& bundle_origin,
+                                           math::vec3 const& bundle_forward,
+                                           math::vec3 const& bundle_up,
+                                           float bundle_radius,
+                                           float max_distance,
+                                           unsigned int max_depth,
+                                           unsigned int surfel_skip) const {
+
+  std::set<PickResult> results;
+
+
+  scm::math::vec3f ray_pos = scm::math::vec3f(bundle_origin.x, bundle_origin.y, bundle_origin.z);
+  scm::math::vec3f ray_fwd = scm::math::vec3f(bundle_forward.x, bundle_forward.y, bundle_origin.z);
+  scm::math::vec3f ray_up = scm::math::vec3f(bundle_up.x, bundle_up.y, bundle_up.z);
+
+  pbr::ren::Ray ray(ray_pos, ray_fwd, max_distance);
+  pbr::ren::Ray::Intersection intersection;
+
+  if (ray.Intersect(max_distance, ray_up, bundle_radius, max_depth, surfel_skip, intersection)) {
+    PickResult result(intersection.distance_, 
+                      nullptr, 
+                      math::vec3(), 
+                      intersection.position_, 
+                      math::vec3(), 
+                      intersection.normal_, 
+                      math::vec2());
+    results.insert(result);
+  }
+
+  return results;
+  
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -159,6 +196,7 @@ void PLODLoader::set_render_budget_in_mb(const size_t render_budget) {
   policy->set_render_budget_in_mb(render_budget);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void PLODLoader::set_out_of_core_budget_in_mb(const size_t out_of_core_budget) {
@@ -166,10 +204,14 @@ void PLODLoader::set_out_of_core_budget_in_mb(const size_t out_of_core_budget) {
   policy->set_out_of_core_budget_in_mb(out_of_core_budget);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 size_t PLODLoader::get_upload_budget_in_mb() const {
   pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
   return policy->max_upload_budget_in_mb();
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 size_t PLODLoader::get_render_budget_in_mb() const {
   pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
@@ -188,11 +230,6 @@ float PLODLoader::get_error_treshold() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void PLODLoader::set_importance(std::string const& file_name, const float importance) {
-  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
-  policy->SetImportance(file_name, importance);
-}
 
 void PLODLoader::set_error_threshold(const float error_threshold) {
   pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();

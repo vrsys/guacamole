@@ -1,4 +1,10 @@
-@include "resources/shaders/common/header.glsl"
+@include "common/header.glsl"
+
+layout(early_fragment_tests) in;
+
+
+
+@include "common/gua_camera_uniforms.glsl"
 
 const float gaussian[32] = float[](
   1.000000, 1.000000, 0.988235, 0.968627, 0.956862, 0.917647, 0.894117, 0.870588, 0.915686, 0.788235,
@@ -12,9 +18,9 @@ const float gaussian[32] = float[](
 ///////////////////////////////////////////////////////////////////////////////
 in vec3 pass_point_color;
 in vec3 pass_normal;
-in float pass_mv_vert_depth;
-in float pass_scaled_radius;
-in float pass_screen_space_splat_size;
+in vec2 pass_uv_coords;
+
+@include "common/gua_fragment_shader_input.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -22,100 +28,50 @@ in float pass_screen_space_splat_size;
 
 layout (location = 0) out vec4 out_accumulated_color;
 layout (location = 1) out vec4 out_accumulated_normal;
-
-///////////////////////////////////////////////////////////////////////////////
-//sampler
-///////////////////////////////////////////////////////////////////////////////
-layout(binding=0) uniform sampler2D p01_depth_texture;
-
-///////////////////////////////////////////////////////////////////////////////
-//Uniforms
-///////////////////////////////////////////////////////////////////////////////
-uniform float near_plane;
-uniform float far_minus_near_plane;
-uniform vec2 win_dims;
-uniform float radius_model_scaling;
-
-//uniform float win_dim_x;
-//uniform float win_dim_y;
+layout (location = 2) out vec3 out_accumulated_pbr;
 
 ///////////////////////////////////////////////////////////////////////////////
 // splatting methods
 ///////////////////////////////////////////////////////////////////////////////
 
-float calc_depth_offset(vec2 mappedPointCoord,
-                        vec3 adjustedNormal) {
 
-  float xzRatio = (adjustedNormal.x/adjustedNormal.z);
-  float yzRatio = (adjustedNormal.y/adjustedNormal.z);
 
-	float zBound = 0.3; // max_deform_ratio;sampler2D
-	float normalZ = adjustedNormal.z;
+@material_uniforms@
 
-	if (normalZ > 0.0)
-		normalZ = max(zBound, normalZ);
-	else
-		normalZ = -max(zBound, -normalZ);
+@include "common/gua_global_variable_declaration.glsl"
 
-	xzRatio = adjustedNormal.x/normalZ;
-	yzRatio = adjustedNormal.y/normalZ;
+float weight = 0;
 
-	return -xzRatio * mappedPointCoord.x - yzRatio * mappedPointCoord.y;
-}
+@material_method_declarations_frag@
 
-float get_gaussianValue(float depth_offset,
-                        vec2 mappedPointCoord,
-                        vec3 newNormalVec) {
-
-  float radius;
-  radius = sqrt(mappedPointCoord.x * mappedPointCoord.x +
-                mappedPointCoord.y * mappedPointCoord.y +
-                depth_offset*depth_offset);
-
-  if (radius > 1.0)
-    discard;
-  else
-    return gaussian[(int)(round(radius * 31.0))];
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
+  vec2 uv_coords = pass_uv_coords;
 
-  vec3 adjustedNormal = pass_normal;
-  //adjustedNormal = vec3(0.0, 1.0, 0.0);
 
   float normalAdjustmentFactor = 1.0;
 
+  //turn normal to viewer
   if (pass_normal.z < 0.0) {
     normalAdjustmentFactor = -1.0;
-    adjustedNormal *= -1.0;
   }
 
-  vec2 mappedPointCoord = gl_PointCoord * 2.0 + vec2(-1.0);
+  if( dot(uv_coords, uv_coords) > 1) 
+    discard;
+  else
+    weight = gaussian[(int)(round(length(uv_coords) * 31.0))];
 
-  float depth_offset = calc_depth_offset(mappedPointCoord, adjustedNormal);
+  @include "common/gua_global_variable_assignment.glsl"
 
-  float depthValue = texture(p01_depth_texture, gl_FragCoord.xy / win_dims.xy).r;
+  out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);
 
-  // depth value of depth pass texture
-  depthValue = -depthValue * far_minus_near_plane + near_plane;
+  out_accumulated_normal = normalAdjustmentFactor * vec4(weight * /*VertexIn.*/pass_normal, weight);
 
-  float depth_to_compare = 0.0;
-  depth_to_compare = pass_mv_vert_depth + depth_offset * pass_scaled_radius /** pass_view_scaling*/;
 
-  float weight = 0.0;
-  weight = get_gaussianValue(depth_offset, mappedPointCoord, adjustedNormal) ;
-
-  //if ( abs(depthValue - depth_to_compare) <= 3.0 * pass_scaled_radius) {
-    out_accumulated_color = vec4(pass_point_color * weight, weight);
-    //out_accumulated_normal = normalAdjustmentFactor * vec4(pass_transposed_inverse_normal * weight, weight);
-    out_accumulated_normal = normalAdjustmentFactor * vec4(weight * pass_normal, weight);
- // }
- // else {
- //   discard;
-  //}
-
+  @material_input@
+  @material_method_calls_frag@
 }
 
