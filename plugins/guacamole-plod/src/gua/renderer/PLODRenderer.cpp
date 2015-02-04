@@ -198,12 +198,12 @@ namespace gua {
 
     depth_pass_linear_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_D24,
+                          scm::gl::FORMAT_D16,
                           1, 1, 1);
           
     accumulation_pass_color_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGBA_32F,
+                          scm::gl::FORMAT_RGBA_16F,
                           1, 1, 1);
 
     accumulation_pass_normal_result_ = ctx.render_device
@@ -383,19 +383,19 @@ namespace gua {
                                                 (frustum_corner_values[0]));
 
      float height_divided_by_top_minus_bottom =
-         pipe.get_gbuffer().get_height() / (top_minus_bottom);
+         2*render_target_dims[1] / (top_minus_bottom);
 
      float near_plane_value = frustum.get_clip_near();
      float far_plane_value = frustum.get_clip_far();
 
       if(!log_to_lin_conversion_pass_program_) {
         _initialize_log_to_lin_conversion_pass_program();
-        save_to_file(*log_to_lin_conversion_pass_program_, ".", "log_to_lin_conversion_pass_debug");
+        //save_to_file(*log_to_lin_conversion_pass_program_, ".", "log_to_lin_conversion_pass_debug");
       }
 
       if(!depth_pass_program_) {
         _initialize_depth_pass_program();
-        save_to_file(*depth_pass_program_, ".", "depth_pass_debug");
+        //save_to_file(*depth_pass_program_, ".", "depth_pass_debug");
       }
 
      //create pbr camera out of gua camera values
@@ -460,8 +460,6 @@ namespace gua {
        fullscreen_quad_->draw(ctx.render_context);
        log_to_lin_conversion_pass_program_->unuse(ctx);
      }
-
-     std::cout << "After conversion pass\n";
 
      //depth pass 
      {
@@ -671,7 +669,7 @@ namespace gua {
 
       if(!normalization_pass_program_) {
         _initialize_normalization_pass_program();
-        save_to_file(*normalization_pass_program_,".", "normalization_pass_debug");
+        //save_to_file(*normalization_pass_program_,".", "normalization_pass_debug");
       }
 
 

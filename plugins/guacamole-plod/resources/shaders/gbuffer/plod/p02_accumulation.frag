@@ -19,8 +19,6 @@ const float gaussian[32] = float[](
 in vec3 pass_point_color;
 in vec3 pass_normal;
 in vec2 pass_uv_coords;
-in float pass_es_linear_depth;
-in float pass_ms_rad;
 
 @include "common/gua_fragment_shader_input.glsl"
 
@@ -68,7 +66,7 @@ void main() {
 
   @include "common/gua_global_variable_assignment.glsl"
 
-    out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);
+  out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);
 
   out_accumulated_normal = normalAdjustmentFactor * vec4(weight * /*VertexIn.*/pass_normal, weight);
 

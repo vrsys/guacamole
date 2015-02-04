@@ -37,7 +37,7 @@ void main() {
 
     float es_linear_depth= (MV * vec4( ( (gl_in[0].gl_Position.xyz + VertexIn[0].pass_ms_v) + VertexIn[0].pass_ms_u ), 1.0)).z;
 
-    float es_rad = 0.1 ;
+    float es_rad = 0.01 ;
 /*
      if(es_linear_depth < -1) {
        es_rad = 0.001;

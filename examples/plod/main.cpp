@@ -94,10 +94,12 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  //auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/XYZ_ALL/Pitoti_GT_Knn/Area-6_house_P01_knn.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/XYZ_ALL/Pitoti_GT_Knn/Area-6_house_P01_knn.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION  ));
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
+  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_01.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
+  //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/_seradina.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ) );
 
   plod_geometry->set_draw_bounding_box(true);
   //seradina_rock_geometry->set_draw_bounding_box(true);
@@ -105,8 +107,6 @@ int main(int argc, char** argv) {
   //seradina_rock_geometry->scale(5.0);
 
   transform->add_child(plod_geometry);  
-  //transform->add_child(sera_geometry);
-  //transform->add_child(teapot); 
   
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
   portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
   light->translate(-1.f, 0.f,  3.f);
 */
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->data.color = gua::utils::Color3f(0.5f, 0.5f, 1.0f);
+  light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
   light2->scale(10.f);
   light2->translate(-2.f, 3.f, 5.f);
 
@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
   //auto resolution = gua::math::vec2ui(2560, 1440);
   auto resolution = gua::math::vec2ui(1920, 1080);
   
-  
+  /*
   auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
   portal_camera->translate(0, 0, 2.0);
   portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
     .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
 
   portal_camera->set_pipeline_description(portal_pipe);
-  
+  */
   
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -181,8 +181,9 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   //camera->config.set_enable_stereo(true);
   camera->config.set_enable_stereo(false);
+  camera->config.set_far_clip(500.0);
   camera->config.set_near_clip(0.0001);
-  camera->set_pre_render_cameras({portal_camera});
+  //camera->set_pre_render_cameras({portal_camera});
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
 
@@ -240,7 +241,7 @@ int main(int argc, char** argv) {
   gua::Renderer renderer;
 
   plod_geometry->set_importance( 1.0f ); 
-  plod_geometry->set_enable_backface_culling_by_normal( true ); 
+  plod_geometry->set_enable_backface_culling_by_normal( false ); 
       //camera->translate(3.0, 0, 0.0);
   //plod_geometry->translate(0.0, 0.0, 2.0);
 

@@ -135,7 +135,7 @@ void PLODNode::ray_test_impl(Ray const& ray,
     return;
   }
 
-  // bbox is intersected, but check geometry only if mask tells us to check
+  // bbox is intersected, but check geometry only if mask tells us to checkdepth_pass_program_
   if (get_geometry_description() != "" && mask.check(get_tags())) {
 
     auto geometry(GeometryDatabase::instance()->lookup(get_geometry_description()));

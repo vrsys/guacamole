@@ -34,9 +34,9 @@ void main() {
 @include "common_PLOD/PLOD_assign_tangents.glsl"
 
   VertexOut.pass_point_color = vec3(in_r, in_g, in_b);
-  VertexOut.pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
   
-  mat4 MV = gua_view_matrix * gua_model_matrix;
+  VertexOut.pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
+
 
   gl_Position = vec4(in_position, 1.0);
 }
