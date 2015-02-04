@@ -33,6 +33,7 @@
 #include <gua/node/RayNode.hpp>
 #include <gua/node/ScreenNode.hpp>
 #include <gua/node/SpotLightNode.hpp>
+#include <gua/node/SunLightNode.hpp>
 #include <gua/node/CameraNode.hpp>
 #include <gua/node/TexturedQuadNode.hpp>
 #include <gua/node/TexturedScreenSpaceQuadNode.hpp>

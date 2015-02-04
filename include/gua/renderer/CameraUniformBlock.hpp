@@ -18,6 +18,7 @@ public:
     math::mat4  projection_inverse;
     math::mat4  projection_view_inverse;
     math::vec4  position;
+    int         view_id;
     float       clip_near;
     float       clip_far;
   };
@@ -27,7 +28,7 @@ public:
   CameraUniformBlock(scm::gl::render_device_ptr const& device);
   ~CameraUniformBlock();
 
-  void update(scm::gl::render_context_ptr const& context, Frustum const& cam);
+  void update(scm::gl::render_context_ptr const& context, Frustum const& cam, int view_id);
 
   inline const block_type&   block() const { return uniform_block_; }
 

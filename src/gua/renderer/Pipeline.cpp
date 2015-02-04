@@ -135,7 +135,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   }
 
   if (context_changed || reload_abuffer) {
-    abuffer_.allocate(get_context(),
+    abuffer_.allocate(*ctx,
                       last_description_.get_enable_abuffer()
                         ? last_description_.get_abuffer_size() : 0);
   }
@@ -188,7 +188,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   // serialize this scenegraph
   current_scene_ = current_graph_->serialize(camera, mode);
 
-  camera_block_->update(get_context().render_context, current_scene_.frustum);
+  camera_block_->update(get_context().render_context, current_scene_.frustum, camera.config.get_view_id());
   bind_camera_uniform_block(0);
 
   // clear gbuffer and abuffer

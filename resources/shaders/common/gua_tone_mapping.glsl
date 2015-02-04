@@ -18,6 +18,13 @@ vec3 toneMapLinear(vec3 linearColor, float exposure)
   return pow(linearColor, vec3(1.0/2.2));
 }
 
+vec3 toneMapReinhard(vec3 linearColor, float exposure)
+{
+  linearColor *= exposure; // 16.0; // Hardcoded exposure adjustment
+  linearColor = linearColor/(1.0 + linearColor);
+  return pow(linearColor, vec3(1.0/2.2));
+}
+
 vec3 toneMap(vec3 col)
 {
   switch (@tone_mapping_method@) {
@@ -25,6 +32,8 @@ vec3 toneMap(vec3 col)
       return toneMapLinear(col, gua_tone_mapping_exposure);
     case 1:
       return toneMapHejl(col, gua_tone_mapping_exposure);
+    case 2:
+      return toneMapReinhard(col, gua_tone_mapping_exposure);
   }
   return toneMapLinear(col, gua_tone_mapping_exposure);
 }

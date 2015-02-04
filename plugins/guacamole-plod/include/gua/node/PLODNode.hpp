@@ -23,6 +23,7 @@
 #define GUA_PLOD_NODE_HPP
 
 // guacamole headers
+#include <exception>
 #include <gua/renderer/PLOD.hpp>
 #include <gua/renderer/Material.hpp>
 

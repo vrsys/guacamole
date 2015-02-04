@@ -29,7 +29,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ABuffer::allocate(RenderContext const& ctx, size_t buffer_size) {
+void ABuffer::allocate(RenderContext& ctx, size_t buffer_size) {
 
   if (!buffer_size) {
     res_ = nullptr;
