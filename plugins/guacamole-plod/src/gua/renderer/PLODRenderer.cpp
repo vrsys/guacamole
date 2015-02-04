@@ -198,7 +198,7 @@ namespace gua {
 
     depth_pass_linear_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_D16,
+                          scm::gl::FORMAT_D32F,
                           1, 1, 1);
           
     accumulation_pass_color_result_ = ctx.render_device
