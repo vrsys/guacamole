@@ -64,7 +64,7 @@ void main() {
 /////
   {
   @include "common/gua_write_gbuffer.glsl"
-  gl_FragDepth = texture(p02_pbr_texture, coords.xy).r;
+  gl_FragDepth = texture(p01_log_depth_texture, coords.xy).r;
   }
 }
 
