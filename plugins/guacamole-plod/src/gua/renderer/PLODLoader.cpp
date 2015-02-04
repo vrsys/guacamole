@@ -34,6 +34,7 @@
 #include <pbr/ren/lod_point_cloud.h>
 #include <pbr/ren/model_database.h>
 #include <pbr/ren/policy.h>
+#include <pbr/ren/ray.h>
 
 namespace gua {
 
@@ -143,6 +144,40 @@ void PLODLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root
   for(auto& child : root->get_children()) {
     apply_fallback_material(child, fallback_material);
   }
+}
+////////////////////////////////////////////////////////////////////////////////
+
+std::set<PickResult> PLODLoader::pick_plod_interpolate(math::vec3 const& bundle_origin,
+                                           math::vec3 const& bundle_forward,
+                                           math::vec3 const& bundle_up,
+                                           float bundle_radius,
+                                           float max_distance,
+                                           unsigned int max_depth,
+                                           unsigned int surfel_skip) const {
+
+  std::set<PickResult> results;
+
+
+  scm::math::vec3f ray_pos = scm::math::vec3f(bundle_origin.x, bundle_origin.y, bundle_origin.z);
+  scm::math::vec3f ray_fwd = scm::math::vec3f(bundle_forward.x, bundle_forward.y, bundle_origin.z);
+  scm::math::vec3f ray_up = scm::math::vec3f(bundle_up.x, bundle_up.y, bundle_up.z);
+
+  pbr::ren::Ray ray(ray_pos, ray_fwd, max_distance);
+  pbr::ren::Ray::Intersection intersection;
+
+  if (ray.Intersect(max_distance, ray_up, bundle_radius, max_depth, surfel_skip, intersection)) {
+    PickResult result(intersection.distance_, 
+                      nullptr, 
+                      math::vec3(), 
+                      intersection.position_, 
+                      math::vec3(), 
+                      intersection.normal_, 
+                      math::vec2());
+    results.insert(result);
+  }
+
+  return results;
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
