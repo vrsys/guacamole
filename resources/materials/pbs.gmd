@@ -22,7 +22,7 @@
           if (color.a <= 0.0) {
             discard;
           }
-          gua_alpha = color.a;
+          gua_alpha = mix(0.0, Opacity, color.a);
 
           gua_color = color.rgb;
         }
@@ -38,6 +38,11 @@
           "name" : "Color",
           "type" : "vec4",
           "value" : "(1.0 1.0 1.0 1.0)"
+        },
+        {
+          "name" : "Opacity",
+          "type" : "float",
+          "value" : "1.0"
         }
       ]
     },

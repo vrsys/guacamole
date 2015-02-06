@@ -5,7 +5,7 @@
 #define ABUF_MODE
 #endif
 
-#define ABUF_STORE_OFFSET 2
+#define ABUF_STORE_OFFSET 1
 #define ABUF_MAX_FRAGMENTS 300
 
 // If max for uint64_t is not available
@@ -27,7 +27,7 @@ layout (std430, binding = 0) ABUF_MODE coherent buffer abuf_list {
 };
 
 layout (std430, binding = 1) ABUF_MODE coherent buffer abuf_data {
-  vec4 frag_data[];
+  uvec4 frag_data[];
 };
 
 // helper macros
