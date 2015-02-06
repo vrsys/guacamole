@@ -53,7 +53,9 @@ public:
            std::string const& geometry_description = "gua_default_geometry",
            std::string const& geometry_file_path = "gua_no_path_specified",
            std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
-           math::mat4 const& transform = math::mat4::identity());
+           math::mat4 const& transform = math::mat4::identity(),
+           float const importance = 1.0f,
+           bool const enable_backface_culling_by_normal = false);
 
 public:  // methods
 
@@ -67,8 +69,12 @@ public:  // methods
   std::shared_ptr<Material> const& get_material() const;
   void               set_material(std::shared_ptr<Material> const& material);
 
-  float get_importance() const { throw std::logic_error("PLODNode::get_importance: not implemented yet"); }
-  void  set_importance(float v) { throw std::logic_error("PLODNode::set_importance: not implemented yet"); }
+  float              get_importance();
+  void               set_importance(float const importance);
+
+  bool               get_enable_backface_culling_by_normal();
+  void               set_enable_backface_culling_by_normal(bool const enable_backface_culling);
+
 public:
   /**
   * Implements ray picking for a point cloud
@@ -98,6 +104,8 @@ private:  // attributes e.g. special attributes for drawing
   std::shared_ptr<Material>     material_;
   bool                          material_changed_;
 
+  float                         importance_;
+  bool                          enable_backface_culling_by_normal_;
 };
 
 }  // namespace node {

@@ -24,8 +24,9 @@
 
 // guacamole headers
 #include <gua/renderer/PLOD.hpp>
-
+#include <gua/scenegraph/PickResult.hpp>
 // external headers
+#include <set>
 #include <unordered_set>
 #include <memory>
 
@@ -70,6 +71,14 @@ public:
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
 
+  std::set<PickResult> pick_plod_interpolate(math::vec3 const& bundle_origin,
+                                             math::vec3 const& bundle_forward,
+                                             math::vec3 const& bundle_up,
+                                             float bundle_radius,
+                                             float max_distance,
+                                             unsigned int max_depth,
+                                             unsigned int surfel_skip) const;  
+  
   /**
    * PLOD-lib specific configuration methods. Might be moved into a separate object later.
    *
@@ -78,13 +87,11 @@ public:
   size_t get_render_budget_in_mb() const;
   size_t get_out_of_core_budget_in_mb() const;
   float  get_error_treshold() const;
-  float  get_importance(std::string const& file_name) const;
 
   void   set_upload_budget_in_mb(size_t const upload_budget);
   void   set_render_budget_in_mb(size_t const render_budget);
   void   set_out_of_core_budget_in_mb(size_t const out_of_core_budget);
   void   set_error_threshold(float const error_threshold);
-  void   set_importance(std::string const& file_name, float const importance);
 
   bool is_supported(std::string const& file_name) const;
 
