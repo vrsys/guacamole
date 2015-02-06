@@ -296,7 +296,6 @@ void PLODUberShader::update_textures(RenderContext const& context) const {
   accumulation_pass_result_fbo_->attach_color_buffer(
       1, accumulation_pass_normal_result_);
 
-
   //configure normalization FBO
   normalization_pass_result_fbo_->clear_attachments();
   normalization_pass_result_fbo_->attach_color_buffer(
@@ -478,7 +477,9 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
 
     controller->ResetSystem();
 
-    pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+    //pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+    //portal quickfix
+    pbr::context_t context_id = controller->DeduceContextId( (size_t)(this) );
 
     if (controller->IsSystemResetSignaled(context_id)) {
       reset(ctx);
@@ -593,7 +594,9 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
   pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
   pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
 
-  pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+  //pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+  //portal quickfix
+  pbr::context_t context_id = controller->DeduceContextId( (size_t)(this) );
   pbr::view_t view_id = controller->DeduceViewId(context_id, view.id);
   pbr::model_t model_id = controller->DeduceModelId(file_name);
 
@@ -605,6 +608,8 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
   cuts->SendHeightDividedByTopMinusBottom(
       context_id, view_id, height_divided_by_top_minus_bottom);
   cuts->SendTransform(context_id, model_id, model_matrix);
+  cuts->SendRendered(context_id, model_id);
+  cuts->SendImportance(context_id, model_id, 1.f);
 
   pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
   std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
@@ -620,16 +625,16 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
   std::vector<scm::gl::boxf> const& model_bounding_boxes =
       kdn_tree->bounding_boxes();
 
-  model_frustum_culling_results_[model_id].clear();
-  model_frustum_culling_results_[model_id].resize(node_list.size());
+  std::vector<bool>& frustum_culling_results = model_frustum_culling_results_[model_id];
+
+  frustum_culling_results.clear();
+  frustum_culling_results.resize(node_list.size());
 
   unsigned int node_counter = 0;
   for (const auto& n : node_list) {
+    frustum_culling_results[node_counter] =
+        (culling_frustum.classify(model_bounding_boxes[n.node_id_]) != 1);
     ++node_counter;
-
-    //0 = completely in frustum, 1 = completely outside frustum, 2 = intersecting frustum
-    bool is_in_frustum = culling_frustum.classify(model_bounding_boxes[n.node_id_]) != 1;
-    model_frustum_culling_results_[model_id][node_counter] = is_in_frustum;
   }
 
   auto plod_ressource = std::static_pointer_cast<PLODRessource>(
@@ -658,7 +663,7 @@ void PLODUberShader::preframe(RenderContext const& ctx) const {
                          view_id,
                          model_id,
                          vertex_array_,
-                         model_frustum_culling_results_[model_id]);
+                         frustum_culling_results);
     get_program(depth_pass)->unuse(ctx);
   }
 
@@ -716,7 +721,8 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
     // bind accumulation FBO
     ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
 
-    //attach linear depth buffer of depth past for early-z rejection
+
+    //attach linear depth buffer of depth pass for early depth rejection
     accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
 
     std::vector<math::vec3> corner_values = frustum.get_corners();
@@ -767,10 +773,17 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
                     transpose(inverse(model_matrix)),
                     "transposed_inverse_model_matrix");
 
+  get_program(accumulation_pass)
+      ->set_uniform(ctx,
+                    transpose(inverse(model_matrix)),
+                    "transposed_inverse_model_matrix");
+
   if (material && plod_ressource) {
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-    pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+    //pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+    //quick portal fix
+    pbr::context_t context_id = controller->DeduceContextId( (size_t)(this) );
     pbr::model_t model_id = controller->DeduceModelId(file_name);
     pbr::view_t view_id = controller->DeduceViewId(context_id, view.id);
 
@@ -941,7 +954,6 @@ void PLODUberShader::copy_to_main_memory(
     RenderContext const& ctx,
     pbr::ren::CutDatabaseRecord::TemporaryBuffer const& buffer) const {
   pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
-
   size_t size_of_node_in_bytes =
       database->surfels_per_node() * database->size_of_surfel();
 
@@ -949,7 +961,9 @@ void PLODUberShader::copy_to_main_memory(
 
   pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
 
-  pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+  //pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+  //quick portal fix
+  pbr::context_t context_id = controller->DeduceContextId( (size_t)(this) );
 
   switch (buffer) {
     case pbr::ren::CutDatabaseRecord::TemporaryBuffer::BUFFER_A: {
