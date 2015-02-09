@@ -28,6 +28,7 @@
 
 #include <gua/node/PLODNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/renderer/PLODResource.hpp>
 
 // external headers
@@ -85,6 +86,10 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& fil
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
       std::shared_ptr<node::PLODNode> node(new node::PLODNode(filename, desc.unique_key(), filename));
+
+      auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
+      apply_fallback_material(node, shader->make_new_material());
+
       node->update_cache();
      
 
@@ -92,15 +97,13 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& fil
 
       //normalize position?
       auto normalize_position = flags & PLODLoader::NORMALIZE_POSITION;
-
       if (normalize_position) {
         node->translate(-bbox.center());
       }
 
       //normalize scale?
-
-      auto normalize_node = flags & PLODLoader::NORMALIZE_SCALE;
-      if (normalize_node) {
+      auto normalize_scale = flags & PLODLoader::NORMALIZE_SCALE;
+      if (normalize_scale) {
         node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
       }
 
