@@ -33,19 +33,21 @@ void main() {
   vec3  output_normal = vec3(0.0);
   vec3 coords = vec3(gua_quad_coords, 0.0);
   vec4 accumulated_color = texture(p02_color_texture, coords.xy);
-  vec3 accumulated_normal = texture(p02_normal_texture, coords.xy).rgb;
+  
 
   float accumulated_weight = accumulated_color.a;
+  if(accumulated_weight == 0.0)
+    discard;
   normalized_color = accumulated_color.rgb / accumulated_weight ;
   //normalized_color = accumulated_color.rgb;
   normalized_color = pow(normalized_color, vec3(1.4));
  
+  vec3 accumulated_normal = texture(p02_normal_texture, coords.xy).rgb;
   vec3 normalized_normal = normalize(accumulated_normal.rgb / accumulated_weight);
 
   //float depthValue = texture2D( p01_depth_texture, coords.xy).r;
 
-  if(accumulated_weight == 0.0)
-    discard;
+
   
   vec3 gua_color = normalized_color.rgb;
 
