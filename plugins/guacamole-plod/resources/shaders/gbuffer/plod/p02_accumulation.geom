@@ -45,7 +45,7 @@ void main() {
 
       float es_linear_depth = (MV * vec4(s_pos_ms,1.0)).z;
       float es_shift = 0.0;
-      float es_shift_scale = 1.0;
+      float es_shift_scale = 1.5;
 
       // --------------------------- (-1.0,-1.0) -----------------------------------------
       pass_uv_coords = vec2(-1.0, -1.0);

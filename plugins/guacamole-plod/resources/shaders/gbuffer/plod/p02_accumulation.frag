@@ -51,7 +51,6 @@ float weight = 0;
 void main() {
   vec2 uv_coords = pass_uv_coords;
 
-
   float normalAdjustmentFactor = 1.0;
 
   //turn normal to viewer

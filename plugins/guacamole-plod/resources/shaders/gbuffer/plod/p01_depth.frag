@@ -29,8 +29,8 @@ void main() {
   if( dot(uv_coords, uv_coords) > 1)
     discard;
 
-  out_log_depth_texture = gl_FragCoord.z;
-  gl_FragDepth = VertexIn.pass_es_linear_depth;
+  out_log_depth_texture = VertexIn.pass_log_depth; // this goes to gua gbuffers depth texture
+  gl_FragDepth = VertexIn.pass_es_linear_depth; // this is used for depth testing/early z in accum pass
 
 }
 
