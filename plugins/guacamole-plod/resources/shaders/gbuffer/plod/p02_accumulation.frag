@@ -63,6 +63,7 @@ void main() {
   else
     weight = gaussian[(int)(round(length(uv_coords) * 31.0))];
 
+
   @include "common/gua_global_variable_assignment.glsl"
 
   out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);

@@ -50,6 +50,7 @@ void main() {
 
   
   vec3 gua_color = normalized_color.rgb;
+  //vec3 gua_color = vec3(1.0, 0.0, 0.0);
 
   vec3 gua_normal = normalized_normal;
 
