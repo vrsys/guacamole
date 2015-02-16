@@ -42,6 +42,9 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/node/Node.hpp>
 
+#include <pbr/ren/ray.h>
+#include <pbr/ren/controller.h>
+
 // external headers
 #include <stack>
 #include <algorithm>
@@ -113,6 +116,44 @@ void PLODResource::ray_test(Ray const& ray,
   if (!is_pickable_)
     return;
 
+  bool has_hit = false;
+  PickResult pick = PickResult(0.f,
+                	     owner,
+			     ray.origin_,
+			     math::vec3(0.f, 0.f, 0.f),
+			     math::vec3(0.f, 1.f, 0.f),
+			     math::vec3(0.f, 1.f, 0.f),
+			     math::vec2(0.f, 0.f));
+
+#if 0 
+
+  //TODO: debug, this does not work with valley models (for reasons unknown) 
+
+  const auto model_transform = owner->get_world_transform();
+  const auto world_origin = model_transform * ray.origin_;
+  const auto world_direction = model_transform * ray.direction_;
+  
+  pbr::ren::Ray plod_ray(world_origin, world_direction, 9999.0f);
+  pbr::ren::Ray::Intersection intersection;
+
+  auto plod_node = reinterpret_cast<node::PLODNode*>(owner);
+
+  float aabb_scale = 9.0f;
+  unsigned int max_depth = 6;
+  unsigned int surfel_skip = 16;
+ 
+  pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+  pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
+ 
+  if (plod_ray.IntersectModel(model_id, model_transform, aabb_scale, max_depth, surfel_skip, true, intersection)) {
+    has_hit = true;
+    pick.distance = intersection.distance_;
+    pick.position = intersection.position_;
+    //pick.normal_ = intersection.normal_;
+
+  }
+
+#else
   const auto* tree =
       pbr::ren::ModelDatabase::GetInstance()->GetModel(model_id_)->kdn_tree();
   const uint32_t num_nodes = tree->num_nodes();
@@ -121,16 +162,6 @@ void PLODResource::ray_test(Ray const& ray,
 
   const auto owner_transform = owner->get_world_transform();
   const auto world_origin = owner_transform * ray.origin_;
-
-  bool has_hit = false;
-  PickResult pick = PickResult(0.f,
-                               owner,
-                               ray.origin_,
-                               math::vec3(0.f, 0.f, 0.f),
-                               math::vec3(0.f, 1.f, 0.f),
-                               math::vec3(0.f, 1.f, 0.f),
-                               math::vec2(0.f, 0.f));
-
   std::stack<pbr::node_t> candidates;
 
   // there is always an intersection with root node
@@ -162,6 +193,8 @@ void PLODResource::ray_test(Ray const& ray,
       }
     }
   }
+#endif
+
   if (has_hit)
     hits.insert(pick);
 }
