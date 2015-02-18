@@ -98,8 +98,12 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& nod
 
 std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& filename, unsigned flags)
 {
-  auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
-  auto cached_node(load_geometry(filename, filename, shader->make_new_material(), flags));
+
+  auto desc = std::make_shared<gua::MaterialShaderDescription>();
+  auto material_shader(std::make_shared<gua::MaterialShader>("PLOD_unshaded_material", desc));
+  gua::MaterialShaderDatabase::instance()->add(material_shader);
+
+  auto cached_node(load_geometry(filename, filename, material_shader->make_new_material(), flags));
 
   if (cached_node) {
 #if 0
