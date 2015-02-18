@@ -66,12 +66,17 @@ void main() {
 
   @include "common/gua_global_variable_assignment.glsl"
 
-  out_accumulated_color = vec4(weight * /*VertexIn.*/pass_point_color, weight);
-
-  out_accumulated_normal = normalAdjustmentFactor * vec4(weight * /*VertexIn.*/pass_normal, weight);
-
+  gua_color = pass_point_color;
+  gua_normal = pass_normal;
 
   @material_input@
   @material_method_calls_frag@
+
+  out_accumulated_color = vec4(weight * gua_color, weight);
+  out_accumulated_normal = normalAdjustmentFactor * vec4(weight * gua_normal, gl_FragCoord.z);
+
+  out_accumulated_pbr = vec3(gua_metalness, gua_roughness, gua_emissivity) * weight;
+
+
 }
 
