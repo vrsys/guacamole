@@ -2,15 +2,28 @@
   "name" : "PLODAttributeAccumulation",
   "source" : "
     void PLODAttributeAccumulation() {
-      out_accumulated_pbr = vec3(MetRoughEm * weight);
+      gua_color = vec3(1.0,0.0,0.0) * gua_color;
+      gua_metalness = metalness; // bool yes or no
+      gua_roughness = roughness; 
+      gua_emissivity = emissivity; // bool yes or no, 1 means pass through
     }
   ",
   "uniforms" :
   [
     {
-      "name" : "MetRoughEm",
-      "type" : "vec3",
-      "value" : "(0.0 0.5 0.0)"
+      "name" : "metalness",
+      "type" : "float",
+      "value" : "0.0"
+    },
+    {
+      "name" : "roughness",
+      "type" : "float",
+      "value" : "0.2"
+    },
+    {
+      "name" : "emissivity",
+      "type" : "float",
+      "value" : "0.0"
     }
   ]
 }

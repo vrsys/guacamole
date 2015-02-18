@@ -10,7 +10,7 @@ in vec2 gua_quad_coords;
 // general uniforms
 ///////////////////////////////////////////////////////////////////////////////
 @include "common/gua_camera_uniforms.glsl"
-
+@include "common/gua_global_variable_declaration.glsl"
 ///////////////////////////////////////////////////////////////////////////////
 //layout(binding=0) uniform sampler2D p01_depth_texture;
 layout(binding=0) uniform sampler2D p02_color_texture;
@@ -43,31 +43,34 @@ void main() {
   normalized_color = pow(normalized_color, vec3(1.4));
  
   vec3 accumulated_normal = texture(p02_normal_texture, coords.xy).rgb;
+  float accumalted_depth =  texture(p02_normal_texture, coords.xy).a;
   vec3 normalized_normal = normalize(accumulated_normal.rgb / accumulated_weight);
 
-  //float depthValue = texture2D( p01_depth_texture, coords.xy).r;
+  float blended_depth = accumalted_depth / accumulated_weight;
+  float depth_visibility_pass = texture2D( p01_log_depth_texture, coords.xy).r;
 
 
   
-  vec3 gua_color = normalized_color.rgb;
-  //vec3 gua_color = vec3(1.0, 0.0, 0.0);
-
-  vec3 gua_normal = normalized_normal;
+  gua_color = normalized_color.rgb;
+  gua_normal = normalized_normal;
 
   vec3 written_pbr_coeffs = (texture(p02_pbr_texture, coords.xy).rgb) / accumulated_weight;
 
-  float gua_metalness  = written_pbr_coeffs.r;
-  float gua_roughness  = written_pbr_coeffs.g;
-  float gua_emissivity = written_pbr_coeffs.b;
+  gua_metalness  = written_pbr_coeffs.r;
+  gua_roughness  = written_pbr_coeffs.g;
+  gua_emissivity = written_pbr_coeffs.b;
+  gua_alpha      = 1.0;
+  gua_flags_passthrough = (gua_emissivity > 0.99999);
 
-  bool gua_flags_passthrough = false;
-  if(gua_metalness == 0.0 && gua_roughness == 0.0 && gua_emissivity == 0.0)
-    gua_flags_passthrough = true;
+
+  // calculate world position from blended depth
+  vec4 world_pos_h = gua_inverse_projection_view_matrix * vec4(gl_FragCoord.xy, blended_depth, 1.0);
+  gua_position = world_pos_h.xyz/world_pos_h.w;
 
 /////
   {
   @include "common/gua_write_gbuffer.glsl"
-  gl_FragDepth = texture(p01_log_depth_texture, coords.xy).r;
+  gl_FragDepth = depth_visibility_pass;
   }
 }
 
