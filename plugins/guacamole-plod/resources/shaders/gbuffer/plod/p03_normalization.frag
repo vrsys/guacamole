@@ -60,7 +60,7 @@ void main() {
   gua_roughness  = written_pbr_coeffs.g;
   gua_emissivity = written_pbr_coeffs.b;
   gua_alpha      = 1.0;
-  gua_flags_passthrough = (gua_emissivity > 0.99999);
+  gua_flags_passthrough = true;//(gua_emissivity > 0.99999);
 
 
   // calculate world position from blended depth

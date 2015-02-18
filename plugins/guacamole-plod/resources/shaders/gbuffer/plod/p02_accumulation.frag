@@ -68,6 +68,10 @@ void main() {
 
   gua_color = pass_point_color;
   gua_normal = pass_normal;
+  gua_metalness  = 0.0;
+  gua_roughness  = 1.0;
+  gua_emissivity = 1.0; // pass through if unshaded
+
 
   @material_input@
   @material_method_calls_frag@

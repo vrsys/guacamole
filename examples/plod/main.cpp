@@ -65,6 +65,7 @@ int main(int argc, char** argv) {
   // create simple untextured material shader
   auto desc = std::make_shared<gua::MaterialShaderDescription>();
   desc->load_from_file("./data/materials/PLODGlossy.gmd");
+  //desc->load_from_file("./data/materials/PLODPassthrough.gmd");
   
   //use this material for models where shading does not make sense
   //desc->load_from_file("./data/materials/PLODUnshaded.gmd");
@@ -86,7 +87,9 @@ int main(int argc, char** argv) {
 
   //auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION  ));
+  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION  ));
+  auto plod_geometry(plodLoader.load_geometry("data/objects/pig.kdn", gua::PLODLoader::NORMALIZE_POSITION  ));
+  //auto plod_geometry(plodLoader.load_geometry("/mnt/pitoti/XYZ_ALL/new_pitoti_sampling/Area_4_hunter_with_bow.kdn", gua::PLODLoader::NORMALIZE_POSITION  ));
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_01.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
   //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/_seradina.kdn", PLOD_unshaded_mat, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ) );
@@ -111,11 +114,13 @@ int main(int argc, char** argv) {
   light->scale(10.f);
   light->rotate(-20, 0.f, 1.f, 0.f);
   light->translate(-1.f, 0.f,  3.f);
-*/
+
+
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
   light2->scale(10.f);
   light2->translate(-2.f, 3.f, 5.f);
+*/
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   //screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -198,7 +203,7 @@ int main(int argc, char** argv) {
     //.fog_start(1)
     //.fog_end(10);
   
-  
+ 
    camera->set_pipeline_description(pipe);
   
   auto window = std::make_shared<gua::GlfwWindow>();
