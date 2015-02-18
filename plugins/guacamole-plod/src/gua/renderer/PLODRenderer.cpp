@@ -624,7 +624,7 @@ namespace gua {
         if(program_changed) {
           current_material_program->unuse(ctx);
           current_material_program->use(ctx);
-	  save_to_file(*current_material_program,"./","current_material_program");
+	  //save_to_file(*current_material_program,"./","current_material_program");
         }
 
         auto const& scm_model_matrix = plod_node->get_cached_world_transform();
