@@ -114,6 +114,8 @@ class GUA_DLL PipelineDescription {
     throw std::runtime_error("PipelinePassDescription::get_pass_by_type: No such pass in PipelineDescription");
   }
 
+  inline void clear() { passes_.clear(); }
+
  private:
   std::vector<std::shared_ptr<PipelinePassDescription>> passes_;
   void*  user_data_ = nullptr;

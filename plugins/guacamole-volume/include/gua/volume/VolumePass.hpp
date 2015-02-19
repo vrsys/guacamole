@@ -41,7 +41,7 @@ class GUA_VOLUME_DLL VolumePassDescription : public PipelinePassDescription {
 
   PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap&);
 
-  PipelinePassDescription* make_copy() const override;
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
 };
 
