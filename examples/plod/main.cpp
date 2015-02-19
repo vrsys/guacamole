@@ -31,6 +31,7 @@
 #include <gua/renderer/TriMeshPass.hpp>
 
 #include <gua/renderer/BBoxPass.hpp>
+#include <gua/renderer/DebugViewPass.hpp>
 
 #include <gua/renderer/TexturedQuadPass.hpp>
 
@@ -187,10 +188,10 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   pipe->get_resolve_pass()->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   pipe->get_resolve_pass()->texture("data/images/skymap.jpg");
-  
   
   //camera->get_pipeline_description()->get_pass<gua::BackgroundPassDescription>()
 //  camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>()

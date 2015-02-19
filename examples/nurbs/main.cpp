@@ -24,7 +24,7 @@
 #include <gua/renderer/NURBSPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
+#include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
 
@@ -277,6 +277,9 @@ int main(int argc, char** argv)
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   resolve_pass->tone_mapping_exposure(64.0f);
   pipe->add_pass(resolve_pass);
+
+  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+
   pipe->set_enable_abuffer(true);
   
   camera->set_pipeline_description(pipe);
