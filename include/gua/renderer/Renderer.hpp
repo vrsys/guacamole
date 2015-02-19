@@ -82,6 +82,8 @@ class GUA_DLL Renderer {
 
   void stop();
 
+  inline float get_application_fps() { return application_fps_.fps; }
+
  private:
 
   typedef std::tuple<std::shared_ptr<node::SerializedCameraNode>, ConstRenderVectorPtr, std::shared_ptr<node::CameraNode>> Item;
