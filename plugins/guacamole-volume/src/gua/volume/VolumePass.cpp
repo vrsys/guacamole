@@ -61,8 +61,8 @@ PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* VolumePassDescription::make_copy() const {
-  return new VolumePassDescription(*this);
+std::shared_ptr<PipelinePassDescription> VolumePassDescription::make_copy() const {
+  return std::make_shared<VolumePassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

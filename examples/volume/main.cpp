@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->get_pipeline_description()->add_pass<gua::VolumePassDescription>();
+  camera->get_pipeline_description()->add_pass(std::make_shared<gua::VolumePassDescription>());
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
