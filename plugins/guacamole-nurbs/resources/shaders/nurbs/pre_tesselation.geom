@@ -5,9 +5,9 @@
 ///////////////////////////////////////////////////////////////////////////////                                                              
 layout(triangles) in;                                 
 
-flat in vec3  tePosition[3];                          
-flat in uint  teIndex[3];                             
-flat in vec2  teTessCoord[3];         
+in vec3  eval_position[3];                          
+in uint  eval_index[3];                             
+in vec2  eval_tesscoord[3];         
                                                                                             
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -36,8 +36,8 @@ uniform samplerBuffer attribute_texture;
 ///////////////////////////////////////////////////////////////////////////////
 void main()                                                                          
 {                                                                                    
-    vec2 maxmax_tesscoord = max(max(teTessCoord[0], teTessCoord[1]), teTessCoord[2]);
-    vec2 minmin_tesscoord = min(min(teTessCoord[0], teTessCoord[1]), teTessCoord[2]);
+    vec2 maxmax_tesscoord = max(max(eval_tesscoord[0], eval_tesscoord[1]), eval_tesscoord[2]);
+    vec2 minmin_tesscoord = min(min(eval_tesscoord[0], eval_tesscoord[1]), eval_tesscoord[2]);
                                                                                              
     vec2 minmax_tesscoord = vec2(minmin_tesscoord.x, maxmax_tesscoord.y);            
     vec2 maxmin_tesscoord = vec2(maxmax_tesscoord.x, minmin_tesscoord.y);            
@@ -53,10 +53,10 @@ void main()
                                                                                              
     for ( i = 0; i <= 2; i++ )                                                       
     {                                                                                
-        bool minx = teTessCoord[i].x == minmin_tesscoord.x;                          
-        bool maxx = teTessCoord[i].x == maxmax_tesscoord.x;                          
-        bool miny = teTessCoord[i].y == minmin_tesscoord.y;                          
-        bool maxy = teTessCoord[i].y == maxmax_tesscoord.y;                          
+        bool minx = eval_tesscoord[i].x == minmin_tesscoord.x;                          
+        bool maxx = eval_tesscoord[i].x == maxmax_tesscoord.x;                          
+        bool miny = eval_tesscoord[i].y == minmin_tesscoord.y;                          
+        bool maxy = eval_tesscoord[i].y == maxmax_tesscoord.y;                          
                                                                                              
         int index = 2 * int(maxy) + int((minx && maxy) || (maxx && miny));           
                                                                                              
@@ -73,7 +73,7 @@ void main()
     vec4 new_puv;                                                                    
     vec4 new_du, new_dv;                                                             
                                                                                              
-    vec4 data = texelFetch(attribute_texture, int(teIndex[0]) * 5);                  
+    vec4 data = texelFetch(attribute_texture, int(eval_index[0]) * 5);                  
     uint surface_index   = floatBitsToUint(data.x);                                  
     uint surface_order_u = floatBitsToUint(data.y);                                  
     uint surface_order_v = floatBitsToUint(data.z);                                  
@@ -88,8 +88,8 @@ void main()
     for ( int i = 0; i != 4; ++i )                                                   
     {                                                                                
         index         = order[i];                                                    
-        xfb_position 	= order[i] == -1 ? new_puv.xyz : tePosition[index];            
-        xfb_index 	  = teIndex[0];                                                  
+        xfb_position 	= order[i] == -1 ? new_puv.xyz : eval_position[index];            
+        xfb_index 	  = eval_index[0];                                                  
         xfb_tesscoord = tesscoords[i];                                               
         EmitVertex();                                                                
     }                                                                                

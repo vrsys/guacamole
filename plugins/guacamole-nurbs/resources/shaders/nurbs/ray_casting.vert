@@ -13,6 +13,7 @@ layout (location = 3) in vec4 vattrib1;
 ///////////////////////////////////////////////////////////////////////////////
 out vec4 v_modelcoord;
 out vec4 frag_texcoord;
+out vec3 position_varying;
 
 flat out int  trim_index_db;
 flat out int  trim_index_cmb;
@@ -22,19 +23,6 @@ flat out int  order_v;
 
 flat out vec4 uvrange;
 flat out int  trimtype;
-
-// built-in out
-out vec3      gua_position_varying;           
-                                        
-out vec3      gua_world_normal;     
-out vec3      gua_world_position;   
-out vec3      gua_world_tangent;    
-out vec3      gua_world_bitangent;  
-                                        
-out vec3      gua_object_normal;    
-out vec3      gua_object_position;  
-out vec3      gua_object_tangent;   
-out vec3      gua_object_bitangent; 
 
 // generic output
 @include "resources/shaders/common/gua_global_variable_declaration.glsl"
@@ -70,7 +58,7 @@ void main()
 
   // transform convex hull in modelview to generate fragments
   gl_Position    = gua_projection_matrix * gua_view_matrix * gua_model_matrix * v_modelcoord; 
-  gua_position_varying = (gua_model_matrix * v_modelcoord).xyz;
+  position_varying = (gua_model_matrix * v_modelcoord).xyz;
 
   @material_method_calls_vert@
 

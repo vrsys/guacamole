@@ -10,7 +10,7 @@
 in vec4 v_modelcoord;
 in vec4 frag_texcoord;
 
-in vec3 gua_position_varying;     
+in vec3 position_varying;     
 
 flat in int trim_index_db;
 flat in int trim_index_cmb;
@@ -66,13 +66,13 @@ uniform samplerBuffer trim_pointdata;
 #include "resources/glsl/math/euclidian_space.glsl.frag"
 #include "resources/glsl/math/horner_surface.glsl.frag"
 #include "resources/glsl/math/horner_surface_derivatives.glsl.frag"
-#include "resources/glsl/math/horner_curve.glsl.frag"
+#include "resources/glsl/math/horner_curve.glsl"
 #include "resources/glsl/math/newton_surface.glsl.frag"
 #include "resources/glsl/math/raygeneration.glsl.frag" 
-#include "resources/glsl/trimmed_surface/binary_search.glsl.frag"
-#include "resources/glsl/trimmed_surface/bisect_curve.glsl.frag"           
-#include "resources/glsl/trimmed_surface/trimming_contourmap_binary.glsl.frag"
-#include "resources/glsl/trimmed_surface/trimming.glsl.frag"
+#include "resources/glsl/trimming/binary_search.glsl"
+#include "resources/glsl/trimming/bisect_curve.glsl"           
+#include "resources/glsl/trimming/trimming_contour_double_binary.glsl"
+#include "resources/glsl/trimming/trimming_double_binary.glsl"
 #include "resources/glsl/trimmed_surface/shade_phong_fresnel.glsl.frag"
 
 @include "common/gua_abuffer_collect.glsl"
@@ -118,13 +118,17 @@ void main()
   uv[0] = uvrange[0] + uv[0] * (uvrange[1] - uvrange[0]);
   uv[1] = uvrange[2] + uv[1] * (uvrange[3] - uvrange[2]);
 
-  bool trimmed      = trim (trim_partition,
-                            trim_contourlist,
-                            trim_curvelist,
-                            trim_curvedata,
-                            trim_pointdata,
-                            uv,
-                            int(trim_index_cmb), 1, iterations, 0.0001f, 16);
+  bool trimmed      = trimming_contour_double_binary (trim_partition,
+                                                      trim_contourlist,
+                                                      trim_curvelist,
+                                                      trim_curvedata,
+                                                      trim_pointdata,
+                                                      uv,
+                                                      int(trim_index_cmb), 
+                                                      1, 
+                                                      iterations, 
+                                                      0.0001f, 
+                                                      16);
   if ( trimmed ) {
     discard;
   }

@@ -180,6 +180,7 @@ namespace gua {
       auto new_program = std::make_shared<ShaderProgram>();
       new_program->set_shaders(pre_tesselation_shader_stages_, pre_tesselation_interleaved_stream_capture_, true);
       pre_tesselation_program_ = new_program;
+      save_to_file(*pre_tesselation_program_, ".", "pre_tesselation_program");
     }
     assert(pre_tesselation_program_);
   }
@@ -338,19 +339,20 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
         {
           // render using raycasting
           current_material_program->use(ctx);
+          save_to_file(*current_material_program, ".", "raycasting");
           {
             current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
             current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-
+          
             current_material_program->apply_uniform(ctx, "nearplane", pipe.get_camera().config.get_near_clip());
             current_material_program->apply_uniform(ctx, "farplane", pipe.get_camera().config.get_far_clip());
-
+          
             current_material_program->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
               pipe.get_gbuffer().get_height()),
               "gua_resolution"); 
-
+          
             nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
-
+          
             nurbs_ressource->draw(ctx, true, nurbs_node->render_backfaces());
           }
           current_material_program->unuse(ctx);
@@ -381,6 +383,7 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   #endif
 
           current_material_program->use(ctx);
+          save_to_file(*current_material_program, ".", "tesselation");
           {
             nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 

@@ -43,10 +43,10 @@ uniform samplerBuffer trim_pointdata;
 
 @material_method_declarations_frag@
 
-@include "resources/glsl/math/horner_curve.glsl.frag"
-@include "resources/glsl/trimmed_surface/binary_search.glsl.frag"
-@include "resources/glsl/trimmed_surface/bisect_curve.glsl.frag"
-@include "resources/glsl/trimmed_surface/trimming_contourmap_binary.glsl.frag"
+@include "resources/glsl/math/horner_curve.glsl"
+@include "resources/glsl/trimming/binary_search.glsl"
+@include "resources/glsl/trimming/bisect_curve.glsl"
+@include "resources/glsl/trimming/trimming_contour_double_binary.glsl"
 
 @include "common/gua_abuffer_collect.glsl"
 
@@ -65,13 +65,13 @@ void main()
   vec2 uv_nurbs     = gua_varying_texcoords.xy * domain_size + nurbs_domain.xy;
 
   int tmp = 0;
-  bool trimmed      = trim (trim_partition,
-                            trim_contourlist,
-                            trim_curvelist,
-                            trim_curvedata,
-                            trim_pointdata,
-                            uv_nurbs,
-                            int(trim_index), 1, tmp, 0.0001f, 16);
+  bool trimmed      = trimming_double_binary (trim_partition,
+                                              trim_contourlist,
+                                              trim_curvelist,
+                                              trim_curvedata,
+                                              trim_pointdata,
+                                              uv_nurbs,
+                                              int(trim_index), 1, tmp, 0.0001f, 16);
   if ( trimmed ) {
       discard;
   }

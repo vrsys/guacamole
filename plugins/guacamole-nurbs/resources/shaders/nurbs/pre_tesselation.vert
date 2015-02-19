@@ -3,16 +3,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-layout (location = 0) in vec3  position;   
-layout (location = 1) in uint  index;      
-layout (location = 2) in vec4  tesscoord;  
+layout (location = 0) in vec3  in_position;   
+layout (location = 1) in uint  in_index;      
+layout (location = 2) in vec4  in_tesscoord;  
 
 ///////////////////////////////////////////////////////////////////////////////                                         
 // output
 ///////////////////////////////////////////////////////////////////////////////                      
-flat out vec3  vPosition;                  
-flat out uint  vIndex;                    
-flat out vec2  vTessCoord;                 
+out vec3  varying_position;                  
+out uint  varying_index;                    
+out vec2  varying_tesscoord;                 
            
 ///////////////////////////////////////////////////////////////////////////////                                         
 // uniforms
@@ -24,7 +24,7 @@ flat out vec2  vTessCoord;
 ///////////////////////////////////////////////////////////////////////////////                                                   
 void main()                                
 {                                          
-  vPosition  = position;                   
-  vIndex     = index;                      
-  vTessCoord = tesscoord.xy;               
+  varying_position  = in_position;                   
+  varying_index     = in_index;                      
+  varying_tesscoord = in_tesscoord.xy;               
 } 
