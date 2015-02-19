@@ -48,28 +48,8 @@ PLODLoader::PLODLoader() : _supported_file_extensions() {
 /////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& nodename,
                                                           std::string const& filename,
-                                                          std::shared_ptr<Material> const& fallback_material,
+                                                          std::shared_ptr<Material> const& material,
                                                           unsigned flags)
-{
-  auto cached_node(load_geometry(filename, flags));
-
-  if (cached_node) {
-    auto copy = std::dynamic_pointer_cast<node::PLODNode>(cached_node->deep_copy());
-
-    if (copy) {
-      apply_fallback_material(copy, fallback_material);
-      copy->set_name(nodename);
-      return copy;
-    }
-  }
-
-  Logger::LOG_WARNING << "PLODLoader::load_geometry() : unable to create PLOD Node" << std::endl;
-  return std::shared_ptr<node::PLODNode>(new node::PLODNode(nodename));
-}
-
-/////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& filename, unsigned flags)
 {
   try {
     if(!is_supported(filename)){
@@ -85,11 +65,8 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& fil
       auto resource = std::make_shared<PLODResource>(model_id, flags & PLODLoader::MAKE_PICKABLE);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
-      std::shared_ptr<node::PLODNode> node(new node::PLODNode(filename, desc.unique_key(), filename));
-
-      auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
-      apply_fallback_material(node, shader->make_new_material());
-
+      std::shared_ptr<node::PLODNode> node(new node::PLODNode(filename, desc.unique_key(), filename, material));
+      
       node->update_cache();
      
 
@@ -113,6 +90,34 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& fil
     Logger::LOG_WARNING << "Failed to load PLOD object \"" << filename << "\": " << e.what() << std::endl;
     return nullptr;
   }
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& filename, unsigned flags)
+{
+
+  auto desc = std::make_shared<gua::MaterialShaderDescription>();
+  auto material_shader(std::make_shared<gua::MaterialShader>("PLOD_unshaded_material", desc));
+  gua::MaterialShaderDatabase::instance()->add(material_shader);
+
+  auto cached_node(load_geometry(filename, filename, material_shader->make_new_material(), flags));
+
+  if (cached_node) {
+#if 0
+    auto copy = std::dynamic_pointer_cast<node::PLODNode>(cached_node->deep_copy());
+    if (copy) {
+      return copy;
+    }
+#endif
+    return cached_node;
+  }
+
+  Logger::LOG_WARNING << "PLODLoader::load_geometry() : unable to create PLOD Node" << std::endl;
+  return std::shared_ptr<node::PLODNode>(new node::PLODNode(filename));
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

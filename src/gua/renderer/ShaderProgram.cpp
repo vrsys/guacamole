@@ -141,11 +141,12 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
   if ( !program_ || dirty_) {
     std::list<scm::gl::shader_ptr> shaders;
     ResourceFactory factory;
+
     for (auto const& s : stages_) {
       auto source = factory.resolve_substitutions(s.source, substitutions_);
       shaders.push_back(context.render_device->create_shader(s.type, source));
     }
-
+    
     if (interleaved_stream_capture_.empty()) {
       program_ = context.render_device->create_program(shaders);
     } else {
