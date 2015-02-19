@@ -189,8 +189,8 @@ class GUA_DLL ShaderProgram {
 /**
  *
  */
-void save_to_file(ShaderProgram const& p, std::string const& directory,
-                  std::string const& name);
+GUA_DLL void save_to_file(ShaderProgram const& p, std::string const& directory,
+                   std::string const& name);
 
 
 

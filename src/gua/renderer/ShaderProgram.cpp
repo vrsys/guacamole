@@ -149,8 +149,7 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
     if (interleaved_stream_capture_.empty()) {
       program_ = context.render_device->create_program(shaders);
     } else {
-      scm::gl::interleaved_stream_capture capture_array(
-          interleaved_stream_capture_.front());
+      scm::gl::interleaved_stream_capture capture_array (interleaved_stream_capture_.front());
       for (auto const& k : interleaved_stream_capture_)
         capture_array(k);
 

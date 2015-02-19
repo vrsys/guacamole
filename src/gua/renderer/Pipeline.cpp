@@ -188,7 +188,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   // serialize this scenegraph
   current_scene_ = current_graph_->serialize(camera, mode);
 
-  camera_block_->update(get_context().render_context, current_scene_.frustum, camera.config.get_view_id());
+  camera_block_->update(get_context().render_context, current_scene_.frustum, camera.config.get_view_id(), camera.config.get_resolution());
   bind_camera_uniform_block(0);
 
   // clear gbuffer and abuffer

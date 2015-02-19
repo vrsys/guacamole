@@ -18,8 +18,6 @@
 #define MIN64(x, y) min(uint64_t(x), uint64_t(y))
 #endif
 
-uniform ivec2 gua_resolution;
-
 // buffers
 layout (binding = 0) uniform atomic_uint frag_counter;
 layout (std430, binding = 0) ABUF_MODE coherent buffer abuf_list {
