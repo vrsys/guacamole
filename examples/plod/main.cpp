@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
 
   pipe->get_resolve_pass()->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  pipe->get_resolve_pass()->texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  pipe->get_resolve_pass()->texture("data/images/skymap.jpg");
   
   
   //camera->get_pipeline_description()->get_pass<gua::BackgroundPassDescription>()
