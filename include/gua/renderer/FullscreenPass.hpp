@@ -51,7 +51,7 @@ class GUA_DLL FullscreenPassDescription : public PipelinePassDescription {
     return boost::get<T>(uniforms[name].data);
   }
 
-  PipelinePassDescription* make_copy() const override;
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;

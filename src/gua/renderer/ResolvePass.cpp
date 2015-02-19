@@ -137,8 +137,8 @@ float ResolvePassDescription::tone_mapping_exposure() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* ResolvePassDescription::make_copy() const {
-  return new ResolvePassDescription(*this);
+std::shared_ptr<PipelinePassDescription> ResolvePassDescription::make_copy() const {
+  return std::make_shared<ResolvePassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

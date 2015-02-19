@@ -31,7 +31,7 @@ class Pipeline;
 class GUA_DLL LightingPassDescription : public PipelinePassDescription {
  public:
   LightingPassDescription();
-  PipelinePassDescription* make_copy() const override;
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;

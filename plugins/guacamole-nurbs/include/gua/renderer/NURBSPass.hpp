@@ -36,7 +36,7 @@ namespace gua {
   public :
 
     NURBSPassDescription();
-    PipelinePassDescription* make_copy() const override;
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
     PipelinePass make_pass(RenderContext const&, SubstitutionMap& substitution_map) override;
 
 };

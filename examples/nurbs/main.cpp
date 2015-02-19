@@ -100,12 +100,12 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 {
   if (action == 0) return;
 
-  auto& d_r = pipe.get_pass<gua::ResolvePassDescription>();
+  auto& d_r = pipe.get_resolve_pass();
 
   switch (std::tolower(key))
   {
   case 'r' :
-    pipe.get_pass<gua::NURBSPassDescription>().touch();
+    pipe.get_pass_by_type<gua::NURBSPassDescription>()->touch();
     break;
   case 't' : 
     toggle_raycasting(graph.get_root());
@@ -117,8 +117,8 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     toggle_trimming(graph.get_root());
     break;
   case 'q':
-    d_r.debug_tiles(!d_r.debug_tiles());
-    d_r.touch();
+    d_r->debug_tiles(!d_r->debug_tiles());
+    d_r->touch();
     break;
   default : 
     break;
@@ -219,10 +219,10 @@ int main(int argc, char** argv)
   auto scene_size = scm::math::length(bbox.max - bbox.min);
   scene_size = std::max(scene_size, 1.0f);
 
-  unsigned const max_lights = 20;
-  unsigned const max_light_intensity = 10000.0f;
-  unsigned const min_light_intensity = 1000.0f;
-  float const light_scale = 100.0f;
+  unsigned const max_lights = 50;
+  unsigned const max_light_intensity = 100000.0f;
+  unsigned const min_light_intensity = 10000.0f;
+  float const light_scale = 10.0f;
 
   for (unsigned i = 0; i != max_lights; ++i)
   {
@@ -238,7 +238,7 @@ int main(int argc, char** argv)
 
     light->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
     //light->scale(light_scale * scene_size * relative_intensity);
-    light->scale(30000.0f);
+    light->scale(3000.0f);
     light->data.brightness = min_light_intensity + relative_intensity * (max_light_intensity - min_light_intensity);
     light->translate(x, y, z);
 
@@ -266,19 +266,20 @@ int main(int argc, char** argv)
   camera->config.set_far_clip(10.0f * scene_size);
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
-  pipe->add_pass<gua::TriMeshPassDescription>();
-  pipe->add_pass<gua::NURBSPassDescription>();
-  pipe->add_pass<gua::TexturedQuadPassDescription>();
-  pipe->add_pass<gua::LightVisibilityPassDescription>();
-  //pipe->add_pass<gua::BBoxPassDescription>();
-  pipe->add_pass<gua::ResolvePassDescription>().tone_mapping_exposure(64.0f);
-  //pipe->add_pass<gua::TexturedScreenSpaceQuadPassDescription>();
+  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  pipe->add_pass(std::make_shared<gua::NURBSPassDescription>());
+  pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
 
+  auto light_visibility_pass = std::make_shared<gua::LightVisibilityPassDescription>();
+  light_visibility_pass->rasterization_mode(gua::LightVisibilityPassDescription::FULLSCREEN_FALLBACK);
+  pipe->add_pass(light_visibility_pass);
+  
+  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
+  resolve_pass->tone_mapping_exposure(64.0f);
+  pipe->add_pass(resolve_pass);
   pipe->set_enable_abuffer(true);
   
   camera->set_pipeline_description(pipe);
-  //camera->get_pipeline_description()->get_pass<gua::LightVisibilityPassDescription>().rasterization_mode(gua::LightVisibilityPassDescription::CONSERVATIVE);
-  camera->get_pipeline_description()->get_pass<gua::LightVisibilityPassDescription>().rasterization_mode(gua::LightVisibilityPassDescription::FULLSCREEN_FALLBACK);
 
   gua::utils::Trackball trackball(0.01 * scene_size, 0.002 * scene_size, 0.2);
 

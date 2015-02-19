@@ -104,8 +104,8 @@ std::string const& FullscreenPassDescription::source_file() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* FullscreenPassDescription::make_copy() const {
-  return new FullscreenPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> FullscreenPassDescription::make_copy() const {
+  return std::make_shared<FullscreenPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

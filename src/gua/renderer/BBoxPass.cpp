@@ -51,8 +51,8 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* BBoxPassDescription::make_copy() const {
-  return new BBoxPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> BBoxPassDescription::make_copy() const {
+  return std::make_shared<BBoxPassDescription>(*this);
 }
 
 PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)

@@ -129,8 +129,8 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
   } else {
 
     // if pipeline configuration is unchanged, update only uniforms of passes
-    for (int i(0); i < last_description_.get_all_passes().size(); ++i) {
-      last_description_.get_all_passes()[i]->uniforms = camera.pipeline_description->get_all_passes()[i]->uniforms;
+    for (int i(0); i < last_description_.get_passes().size(); ++i) {
+      last_description_.get_passes()[i]->uniforms = camera.pipeline_description->get_passes()[i]->uniforms;
     }
   }
 
@@ -154,7 +154,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
     global_substitution_map_["abuf_blending_termination_threshold"] = std::to_string(th);
     global_substitution_map_["max_lights_num"] = std::to_string(last_description_.get_max_lights_count());
 
-    for (auto pass: last_description_.get_all_passes()) {
+    for (auto pass: last_description_.get_passes()) {
       passes_.push_back(pass->make_pass(*ctx, global_substitution_map_));
     }
   }
@@ -202,7 +202,7 @@ void Pipeline::process(RenderContext* ctx, CameraMode mode, node::SerializedCame
       gbuffer_->toggle_ping_pong();
     }
 
-    passes_[i].process(*last_description_.get_all_passes()[i], *this);
+    passes_[i].process(*last_description_.get_passes()[i], *this);
   }
 
   gbuffer_->toggle_ping_pong();

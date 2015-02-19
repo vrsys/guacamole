@@ -38,7 +38,7 @@ enum class RenderMode {
 class GUA_DLL PipelinePassDescription {
  public:
 
-  virtual PipelinePassDescription* make_copy() const = 0;
+  virtual std::shared_ptr<PipelinePassDescription> make_copy() const = 0;
   virtual ~PipelinePassDescription() {}
 
   friend class Pipeline;

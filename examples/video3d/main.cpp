@@ -81,10 +81,10 @@ int main(int argc, char** argv) {
   auto resolution = gua::math::vec2ui(1920, 1080);
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
-  pipe->add_pass<gua::TriMeshPassDescription>();
-  pipe->add_pass<gua::Video3DPassDescription>();
-  pipe->add_pass<gua::EmissivePassDescription>();
-  pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
+  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  pipe->add_pass(std::make_shared<gua::Video3DPassDescription>());
+  pipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
+  pipe->add_pass(std::make_shared<gua::PhysicallyBasedShadingPassDescription>());
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);

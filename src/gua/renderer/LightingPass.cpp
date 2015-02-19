@@ -166,8 +166,8 @@ LightingPassDescription::LightingPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* LightingPassDescription::make_copy() const {
-  return new LightingPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> LightingPassDescription::make_copy() const {
+  return std::make_shared<LightingPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

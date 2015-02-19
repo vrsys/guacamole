@@ -36,6 +36,8 @@ namespace gua {
 
 namespace {
 
+////////////////////////////////////////////////////////////////////////////////
+
 void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pipe) {
   auto const& ctx(pipe.get_context());
   auto gl_program(ctx.render_context->current_program());
@@ -142,6 +144,8 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 PhysicallyBasedShadingPassDescription::PhysicallyBasedShadingPassDescription()
   : PipelinePassDescription() {
   // here we assume, that the emissive pass was run previously
@@ -169,8 +173,8 @@ PhysicallyBasedShadingPassDescription::PhysicallyBasedShadingPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* PhysicallyBasedShadingPassDescription::make_copy() const {
-  return new PhysicallyBasedShadingPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> PhysicallyBasedShadingPassDescription::make_copy() const {
+  return std::make_shared<PhysicallyBasedShadingPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

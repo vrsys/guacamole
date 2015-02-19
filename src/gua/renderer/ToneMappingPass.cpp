@@ -26,6 +26,8 @@
 
 namespace gua {
 
+////////////////////////////////////////////////////////////////////////////////
+
 ToneMappingPassDescription::ToneMappingPassDescription()
   : PipelinePassDescription()
 {
@@ -40,20 +42,32 @@ ToneMappingPassDescription::ToneMappingPassDescription()
   uniforms["selected_operator"] = static_cast<int>(Method::LINEAR);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 ToneMappingPassDescription& ToneMappingPassDescription::exposure(float e) {
   uniforms["exposure"] = e;
   return *this;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 float ToneMappingPassDescription::exposure() const {
   auto uniform(uniforms.find("exposure"));
   return boost::get<float>(uniform->second.data);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 ToneMappingPassDescription& ToneMappingPassDescription::method(
     ToneMappingPassDescription::Method m) {
   uniforms["selected_operator"] = static_cast<int>(m);
   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<PipelinePassDescription> ToneMappingPassDescription::make_copy() const {
+  return std::make_shared<ToneMappingPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

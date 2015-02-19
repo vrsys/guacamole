@@ -45,8 +45,8 @@ EmissivePassDescription::EmissivePassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* EmissivePassDescription::make_copy() const {
-  return new EmissivePassDescription(*this);
+std::shared_ptr<PipelinePassDescription> EmissivePassDescription::make_copy() const {
+  return std::make_shared<EmissivePassDescription>(*this);
 }
 
 PipelinePass EmissivePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)

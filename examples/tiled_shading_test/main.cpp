@@ -110,17 +110,27 @@ int main(int argc, char** argv) {
 
   // standard deferred shading pipeline
   auto pipe_deferred(std::make_shared<gua::PipelineDescription>());
-  pipe_deferred->add_pass<gua::TriMeshPassDescription>();
-  pipe_deferred->add_pass<gua::EmissivePassDescription>();
-  pipe_deferred->add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  pipe_deferred->add_pass<gua::ToneMappingPassDescription>().exposure(0.1f);;
-  pipe_deferred->add_pass<gua::BackgroundPassDescription>();
+  pipe_deferred->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  pipe_deferred->add_pass(std::make_shared<gua::EmissivePassDescription>());
+  pipe_deferred->add_pass(std::make_shared<gua::PhysicallyBasedShadingPassDescription>());
+  auto tone_mapping_pass = std::make_shared<gua::ToneMappingPassDescription>();
+  tone_mapping_pass->exposure(0.1f);
+  pipe_deferred->add_pass(tone_mapping_pass);
+  pipe_deferred->add_pass(std::make_shared<gua::BackgroundPassDescription>());
 
   // tiled shading pipeline with A-Buffer support
   auto pipe_tiled(std::make_shared<gua::PipelineDescription>());
-  pipe_tiled->add_pass<gua::TriMeshPassDescription>();
-  pipe_tiled->add_pass<gua::LightVisibilityPassDescription>().tile_power(3);
-  pipe_tiled->add_pass<gua::ResolvePassDescription>().tone_mapping_exposure(0.1f).debug_tiles(false);
+  pipe_tiled->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+
+  auto light_visibility_pass = std::make_shared<gua::LightVisibilityPassDescription>();
+  light_visibility_pass->tile_power(3);
+  pipe_tiled->add_pass(light_visibility_pass);
+  
+  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
+  resolve_pass->tone_mapping_exposure(0.1f);
+  resolve_pass->debug_tiles(false);
+  pipe_tiled->add_pass(resolve_pass);
+
   pipe_tiled->set_max_lights_count(max_lights);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
@@ -159,7 +169,7 @@ int main(int argc, char** argv) {
         std::cout << "Enable A-Buffer: " << pipe_tiled->get_enable_abuffer() << std::endl;
       }
 
-      auto& d = pipe_tiled->get_pass<gua::LightVisibilityPassDescription>();
+      auto& d = *(pipe_tiled->get_pass_by_type<gua::LightVisibilityPassDescription>());
       if ('1' == key) {
         d.rasterization_mode(gua::LightVisibilityPassDescription::AUTO);
         std::cout << "Rast mode: AUTO\n"; d.touch();

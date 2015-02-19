@@ -187,26 +187,16 @@ int main(int argc, char** argv) {
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
 
-  pipe->add_pass<gua::TriMeshPassDescription>();
-  pipe->add_pass<gua::TexturedQuadPassDescription>();
-  pipe->add_pass<gua::BBoxPassDescription>();
-  pipe->add_pass<gua::PLODPassDescription>();
+  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
+  pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
+  pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
+  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
 
-  pipe->add_pass<gua::LightVisibilityPassDescription>();
-  pipe->add_pass<gua::ResolvePassDescription>()
-    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE).mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  //pipe->add_pass<gua::EmissivePassDescription>();
-  //pipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
-  //pipe->add_pass<gua::BBoxPassDescription>();
-  pipe->add_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
-
-
-
-
-
-
+  pipe->get_resolve_pass()->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  pipe->get_resolve_pass()->texture("/opt/guacamole/resources/skymaps/skymap.jpg");
+  
   
   //camera->get_pipeline_description()->get_pass<gua::BackgroundPassDescription>()
 //  camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>()

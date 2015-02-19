@@ -29,7 +29,7 @@ namespace gua {
 class GUA_DLL TexturedQuadPassDescription : public PipelinePassDescription {
  public:
   TexturedQuadPassDescription();
-  PipelinePassDescription* make_copy() const override;
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;

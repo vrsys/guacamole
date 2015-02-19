@@ -53,8 +53,8 @@ PLODPassDescription::PLODPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* PLODPassDescription::make_copy() const {
-  return new PLODPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> PLODPassDescription::make_copy() const {
+  return std::make_shared<PLODPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

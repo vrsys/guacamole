@@ -104,11 +104,14 @@ int main(int argc, char** argv) {
   portal_camera->config.set_enable_stereo(false);
 
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
-  portal_pipe->add_pass<gua::TriMeshPassDescription>();
-  portal_pipe->add_pass<gua::LightVisibilityPassDescription>();
-  portal_pipe->add_pass<gua::ResolvePassDescription>().mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  portal_pipe->get_pass<gua::ResolvePassDescription>().tone_mapping_exposure(1.0f);
+  portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
 
+  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
+  resolve_pass->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  resolve_pass->tone_mapping_exposure(1.0f);
+
+  portal_pipe->add_pass(resolve_pass);
   portal_camera->set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
@@ -119,7 +122,7 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
   camera->set_pre_render_cameras({portal_camera});
-  camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>().tone_mapping_exposure(1.0f);
+  camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -138,6 +141,7 @@ int main(int argc, char** argv) {
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
   window->open();
+
 
   gua::Renderer renderer;
 

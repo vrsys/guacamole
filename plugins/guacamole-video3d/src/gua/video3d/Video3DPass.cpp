@@ -58,8 +58,8 @@ PipelinePass Video3DPassDescription::make_pass(RenderContext const& ctx, Substit
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* Video3DPassDescription::make_copy() const {
-  return new Video3DPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> Video3DPassDescription::make_copy() const {
+  return std::make_shared<Video3DPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

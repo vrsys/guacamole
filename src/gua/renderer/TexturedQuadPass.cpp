@@ -69,8 +69,8 @@ TexturedQuadPassDescription::TexturedQuadPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* TexturedQuadPassDescription::make_copy() const {
-  return new TexturedQuadPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> TexturedQuadPassDescription::make_copy() const {
+  return std::make_shared<TexturedQuadPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

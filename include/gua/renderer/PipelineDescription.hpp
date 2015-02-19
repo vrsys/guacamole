@@ -29,6 +29,13 @@
 
 namespace gua {
 
+  class TriMeshPassDescription;
+  class TexturedQuadPassDescription;
+  class LightVisibilityPassDescription;
+  class BBoxPassDescription;
+  class ResolvePassDescription;
+  class TexturedScreenSpaceQuadPassDescription;
+
 class GUA_DLL PipelineDescription {
  public:
 
@@ -39,44 +46,18 @@ class GUA_DLL PipelineDescription {
 
   virtual ~PipelineDescription();
 
-  template<class T>
-  T& add_pass() {
-    boost::upgrade_lock<boost::shared_mutex> lock(mutex_);
-    boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
-    T* t = new T();
-    passes_.push_back(t);
-    return *t;
-  }
+  void add_pass(std::shared_ptr<PipelinePassDescription> const& pass_desc);
 
-  std::vector<PipelinePassDescription*> const& get_all_passes() const;
+  std::vector<std::shared_ptr<PipelinePassDescription>> const& get_passes() const;
 
-  template<class T>
-  std::vector<T*> get_passes() const {
-    std::vector<T*> result;
+  std::shared_ptr<PipelinePassDescription> const& get_pass(std::size_t index) const;
 
-    for (auto pass: passes_) {
-      T* casted(dynamic_cast<T*>(pass));
-
-      if (casted) {
-        result.push_back(casted);
-      }
-    }
-
-    return result;
-  }
-
-  template<class T>
-  T& get_pass() const {
-
-    for (auto pass: passes_) {
-      T* casted(dynamic_cast<T*>(pass));
-
-      if (casted) {
-        return *casted;
-      }
-    }
-    throw std::runtime_error("PipelineDescription::get_pass(): pass not valid");
-  }
+  std::shared_ptr<TriMeshPassDescription> const& get_tri_mesh_pass() const;
+  std::shared_ptr<TexturedQuadPassDescription> const& get_textured_quad_pass() const;
+  std::shared_ptr<LightVisibilityPassDescription> const& get_light_visibility_pass() const;
+  std::shared_ptr<BBoxPassDescription> const& get_bbox_pass() const;
+  std::shared_ptr<ResolvePassDescription>const& get_resolve_pass() const;
+  std::shared_ptr<TexturedScreenSpaceQuadPassDescription>const& get_textured_screen_space_quad_pass() const;
 
   void set_enable_abuffer(bool value) {
     enable_abuffer_ = value;
@@ -122,8 +103,19 @@ class GUA_DLL PipelineDescription {
   bool operator!=(PipelineDescription const& other) const;
   PipelineDescription& operator=(PipelineDescription const& other);
 
+  template <typename T> 
+  std::shared_ptr<T> const& get_pass_by_type() const {
+    for (auto const& pass : passes_) {
+      auto casted_pass = std::dynamic_pointer_cast<T>(pass);
+      if (casted_pass) {
+        return casted_pass;
+      }
+    }
+    throw std::runtime_error("PipelinePassDescription::get_pass_by_type: No such pass in PipelineDescription");
+  }
+
  private:
-  std::vector<PipelinePassDescription*> passes_;
+  std::vector<std::shared_ptr<PipelinePassDescription>> passes_;
   void*  user_data_ = nullptr;
   bool   enable_abuffer_ = false;
   size_t abuffer_size_ = 800; // in MiB

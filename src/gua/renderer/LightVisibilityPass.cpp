@@ -29,8 +29,8 @@ LightVisibilityPassDescription::LightVisibilityPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* LightVisibilityPassDescription::make_copy() const {
-  return new LightVisibilityPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> LightVisibilityPassDescription::make_copy() const {
+  return std::make_shared<LightVisibilityPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

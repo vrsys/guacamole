@@ -77,7 +77,7 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
     debug_tiles_ = value; return *this; }
   bool debug_tiles() const { return debug_tiles_; }
 
-  PipelinePassDescription* make_copy() const override;
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
 
  protected:

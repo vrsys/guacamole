@@ -30,6 +30,8 @@
 
 namespace gua {
 
+////////////////////////////////////////////////////////////////////////////////
+
 void renderNode(PipelinePass& pass,
                 node::TexturedScreenSpaceQuadNode* quad_node,
                 Pipeline& pipe) {
@@ -73,6 +75,8 @@ void renderQuads(PipelinePass& pass,
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 TexturedScreenSpaceQuadPassDescription::TexturedScreenSpaceQuadPassDescription()
     : PipelinePassDescription() {
 
@@ -98,9 +102,9 @@ TexturedScreenSpaceQuadPassDescription::TexturedScreenSpaceQuadPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription*
+std::shared_ptr<PipelinePassDescription>
 TexturedScreenSpaceQuadPassDescription::make_copy() const {
-  return new TexturedScreenSpaceQuadPassDescription(*this);
+  return std::make_shared<TexturedScreenSpaceQuadPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

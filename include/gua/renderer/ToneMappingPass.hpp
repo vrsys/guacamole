@@ -37,14 +37,14 @@ class GUA_DLL ToneMappingPassDescription : public PipelinePassDescription {
   ToneMappingPassDescription();
 
   ToneMappingPassDescription& exposure(float);
+
   float exposure() const;
+
   ToneMappingPassDescription& method(Method);
   ToneMappingPassDescription::Method method() const;
 
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
 
-  PipelinePassDescription* make_copy() const override {
-    return new ToneMappingPassDescription(*this);
-  }
   friend class Pipeline;
  protected:
   PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) override {

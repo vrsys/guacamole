@@ -31,7 +31,6 @@
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
-#include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
@@ -41,23 +40,15 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
+
   auto pipe(std::make_shared<PipelineDescription>());
-  /*
-  pipe->add_pass<TriMeshPassDescription>();
-  pipe->add_pass<TexturedQuadPassDescription>();
-  pipe->add_pass<EmissivePassDescription>();
-  pipe->add_pass<PhysicallyBasedShadingPassDescription>();
-  pipe->add_pass<BBoxPassDescription>();
-  pipe->add_pass<BackgroundPassDescription>();
-  pipe->add_pass<TexturedScreenSpaceQuadPassDescription>();
-  pipe->add_pass<ToneMappingPassDescription>();
-  */
-  pipe->add_pass<TriMeshPassDescription>();
-  pipe->add_pass<TexturedQuadPassDescription>();
-  pipe->add_pass<LightVisibilityPassDescription>();
-  pipe->add_pass<BBoxPassDescription>();
-  pipe->add_pass<ResolvePassDescription>();
-  pipe->add_pass<TexturedScreenSpaceQuadPassDescription>();
+
+  pipe->add_pass(std::make_shared<TriMeshPassDescription>());
+  pipe->add_pass(std::make_shared<TexturedQuadPassDescription>());
+  pipe->add_pass(std::make_shared<LightVisibilityPassDescription>());
+  pipe->add_pass(std::make_shared<BBoxPassDescription>());
+  pipe->add_pass(std::make_shared<ResolvePassDescription>());
+  pipe->add_pass(std::make_shared<TexturedScreenSpaceQuadPassDescription>());
 
   pipe->set_enable_abuffer(false);
 
@@ -70,6 +61,7 @@ PipelineDescription::PipelineDescription(PipelineDescription const& other) {
   for (auto pass: other.passes_) {
     passes_.push_back(pass->make_copy());
   }
+
   enable_abuffer_ = other.enable_abuffer_;
   abuffer_size_   = other.abuffer_size_;
   blending_termination_threshold_ = other.blending_termination_threshold_;
@@ -78,16 +70,63 @@ PipelineDescription::PipelineDescription(PipelineDescription const& other) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelineDescription::~PipelineDescription() {
-  for (auto pass: passes_) {
-    delete pass;
-  }
+PipelineDescription::~PipelineDescription() {}
+
+////////////////////////////////////////////////////////////////////////////////
+void PipelineDescription::add_pass(std::shared_ptr<PipelinePassDescription> const& pass_desc)
+{
+  passes_.push_back(pass_desc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<PipelinePassDescription*> const& PipelineDescription::get_all_passes() const {
+std::vector<std::shared_ptr<PipelinePassDescription>> const& PipelineDescription::get_passes() const {
   return passes_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<PipelinePassDescription> const& PipelineDescription::get_pass(std::size_t index) const
+{
+  assert(index < passes_.size());
+  return passes_[index];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<TriMeshPassDescription> const& PipelineDescription::get_tri_mesh_pass() const
+{
+  return get_pass_by_type<TriMeshPassDescription>();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<TexturedQuadPassDescription> const& PipelineDescription::get_textured_quad_pass() const
+{
+  return get_pass_by_type<TexturedQuadPassDescription>();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<LightVisibilityPassDescription> const& PipelineDescription::get_light_visibility_pass() const
+{
+  return get_pass_by_type<LightVisibilityPassDescription>();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<BBoxPassDescription> const& PipelineDescription::get_bbox_pass() const
+{
+  return get_pass_by_type<BBoxPassDescription>();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<ResolvePassDescription>const& PipelineDescription::get_resolve_pass() const
+{
+  return get_pass_by_type<ResolvePassDescription>();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<TexturedScreenSpaceQuadPassDescription>const& PipelineDescription::get_textured_screen_space_quad_pass() const
+{
+  return get_pass_by_type<TexturedScreenSpaceQuadPassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,13 +163,10 @@ bool PipelineDescription::operator!=(PipelineDescription const& other) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelineDescription& PipelineDescription::operator=(PipelineDescription const& other) {
-  for (auto pass: passes_) {
-    delete pass;
-  }
 
   passes_.clear();
 
-  for (auto pass: other.passes_) {
+  for (auto const& pass : other.passes_) {
     passes_.push_back(pass->make_copy());
   }
 

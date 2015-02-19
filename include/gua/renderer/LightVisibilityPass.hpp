@@ -33,7 +33,7 @@ class GUA_DLL LightVisibilityPassDescription : public PipelinePassDescription {
     tile_power_ = std::max(std::min(power, 7), 0); return *this; }
   unsigned tile_power() const { return tile_power_; }
 
-  PipelinePassDescription* make_copy() const override;
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
 
  protected:

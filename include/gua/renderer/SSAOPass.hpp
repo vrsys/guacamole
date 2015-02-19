@@ -43,7 +43,7 @@ class GUA_DLL SSAOPassDescription : public PipelinePassDescription {
   SSAOPassDescription& falloff(float falloff);
   float falloff() const;
 
-  PipelinePassDescription* make_copy() const override;
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
 
   friend class Pipeline;
  protected:

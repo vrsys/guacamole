@@ -103,8 +103,8 @@ float SSAOPassDescription::falloff() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* SSAOPassDescription::make_copy() const {
-  return new SSAOPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> SSAOPassDescription::make_copy() const {
+  return std::make_shared<SSAOPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

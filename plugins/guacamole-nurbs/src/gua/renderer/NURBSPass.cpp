@@ -54,8 +54,8 @@ NURBSPassDescription::NURBSPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* NURBSPassDescription::make_copy() const {
-  return new NURBSPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> NURBSPassDescription::make_copy() const {
+  return std::make_shared<NURBSPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -50,8 +50,8 @@ TriMeshPassDescription::TriMeshPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* TriMeshPassDescription::make_copy() const {
-  return new TriMeshPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> TriMeshPassDescription::make_copy() const {
+  return std::make_shared<TriMeshPassDescription>(*this);
 }
 
 

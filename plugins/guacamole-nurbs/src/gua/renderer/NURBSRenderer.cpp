@@ -125,7 +125,7 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  PipelinePassDescription* TriMeshPassDescription::make_copy() const {
+  std::shared_ptr<PipelinePassDescription> TriMeshPassDescription::make_copy() const {
     return new TriMeshPassDescription(*this);
   }
 

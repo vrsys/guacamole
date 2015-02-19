@@ -137,8 +137,8 @@ float BackgroundPassDescription::fog_end() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* BackgroundPassDescription::make_copy() const {
-  return new BackgroundPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> BackgroundPassDescription::make_copy() const {
+  return std::make_shared<BackgroundPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

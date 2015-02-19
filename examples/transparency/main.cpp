@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
              .set_uniform("RoughnessMap", std::string("data/objects/bottle/roughness.jpg"))
              .set_show_back_faces(true);
 
-  // Original bottle model is taken from http://www.sweethome3d.com (Licensed under Free Art License)
+  // Original bottle model is taken from http://www.sweethome3d->com (Licensed under Free Art License)
   auto bottle(loader.create_geometry_from_file("bottle", "data/objects/bottle/bottle.obj", mat_bottle,
                                                gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform2", bottle);
@@ -146,12 +146,12 @@ int main(int argc, char** argv) {
   portal_camera->config.set_output_texture_name("portal");
   portal_camera->config.set_enable_stereo(false);
 
-  gua::TextureDatabase::instance()->load("data/checkerboard.png");
+  gua::TextureDatabase::instance()->load("data/checkerboard->png");
 
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
-  portal_pipe->add_pass<gua::TriMeshPassDescription>();
-  portal_pipe->add_pass<gua::LightVisibilityPassDescription>();
-  portal_pipe->add_pass<gua::ResolvePassDescription>();
+  portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  portal_pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
   portal_pipe->set_enable_abuffer(true);
   portal_camera->set_pipeline_description(portal_pipe);
 
@@ -163,9 +163,10 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
   camera->set_pre_render_cameras({portal_camera});
-  camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>()
-    .mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
-    .texture("data/checkerboard.png");
+
+  camera->get_pipeline_description()->get_resolve_pass()->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  camera->get_pipeline_description()->get_resolve_pass()->texture("data/checkerboard->png");
+
   camera->get_pipeline_description()->set_enable_abuffer(true);
 
   auto window = std::make_shared<gua::GlfwWindow>();
@@ -223,8 +224,8 @@ int main(int argc, char** argv) {
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
       if (action != 0) {
         //std::cout << "key press " << char(key) << " action: " << action <<"\n";
-        auto& d = camera->get_pipeline_description()->get_pass<gua::LightVisibilityPassDescription>();
-        auto& d_r = camera->get_pipeline_description()->get_pass<gua::ResolvePassDescription>();
+        auto& d = camera->get_pipeline_description()->get_pass_by_type<gua::LightVisibilityPassDescription>();
+        auto& d_r = camera->get_pipeline_description()->get_pass_by_type<gua::ResolvePassDescription>();
 
         // bottle tilt
         if ('W' == key) {
@@ -250,46 +251,46 @@ int main(int argc, char** argv) {
 
         // tiled shading options
         if ('1' == key) {
-          d.rasterization_mode(gua::LightVisibilityPassDescription::AUTO);
-          std::cout << "Rast mode: AUTO\n"; d.touch();
+          d->rasterization_mode(gua::LightVisibilityPassDescription::AUTO);
+          std::cout << "Rast mode: AUTO\n"; d->touch();
         }
         if ('2' == key) {
-          d.rasterization_mode(gua::LightVisibilityPassDescription::SIMPLE);
-          std::cout << "Rast mode: SIMPLE\n"; d.touch();
+          d->rasterization_mode(gua::LightVisibilityPassDescription::SIMPLE);
+          std::cout << "Rast mode: SIMPLE\n"; d->touch();
         }
         if ('3' == key) {
-          d.rasterization_mode(gua::LightVisibilityPassDescription::CONSERVATIVE);
-          std::cout << "Rast mode: CONSERVATIVE\n"; d.touch();
+          d->rasterization_mode(gua::LightVisibilityPassDescription::CONSERVATIVE);
+          std::cout << "Rast mode: CONSERVATIVE\n"; d->touch();
         }
         if ('4' == key) {
-          d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_2);
-          std::cout << "Rast mode: MULTISAMPLED_2\n"; d.touch();
+          d->rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_2);
+          std::cout << "Rast mode: MULTISAMPLED_2\n"; d->touch();
         }
         if ('5' == key) {
-          d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_4);
-          std::cout << "Rast mode: MULTISAMPLED_4\n"; d.touch();
+          d->rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_4);
+          std::cout << "Rast mode: MULTISAMPLED_4\n"; d->touch();
         }
         if ('6' == key) {
-          d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_8);
-          std::cout << "Rast mode: MULTISAMPLED_8\n"; d.touch();
+          d->rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_8);
+          std::cout << "Rast mode: MULTISAMPLED_8\n"; d->touch();
         }
         if ('7' == key) {
-          d.rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_16);
-          std::cout << "Rast mode: MULTISAMPLED_16\n"; d.touch();
+          d->rasterization_mode(gua::LightVisibilityPassDescription::MULTISAMPLED_16);
+          std::cout << "Rast mode: MULTISAMPLED_16\n"; d->touch();
         }
         if ('8' == key) {
-          d.rasterization_mode(gua::LightVisibilityPassDescription::FULLSCREEN_FALLBACK);
-          std::cout << "Rast mode: FULLSCREEN_FALLBACK\n"; d.touch();
+          d->rasterization_mode(gua::LightVisibilityPassDescription::FULLSCREEN_FALLBACK);
+          std::cout << "Rast mode: FULLSCREEN_FALLBACK\n"; d->touch();
         }
         if ('9' == key || '0' == key) {
-          d.tile_power(d.tile_power() + ((key=='9')?1:-1));
-          std::cout << "Tile size: " << std::pow(2, d.tile_power()) <<"\n";
-          d.touch();
+          d->tile_power(d->tile_power() + ((key=='9')?1:-1));
+          std::cout << "Tile size: " << std::pow(2, d->tile_power()) <<"\n";
+          d->touch();
         }
         if ('Q' == key) {
-          d_r.debug_tiles(!d_r.debug_tiles());
-          std::cout << "Debug tiles: " << d_r.debug_tiles() <<"\n";
-          d_r.touch();
+          d_r->debug_tiles(!d_r->debug_tiles());
+          std::cout << "Debug tiles: " << d_r->debug_tiles() <<"\n";
+          d_r->touch();
         }
 
         // A-buffer
