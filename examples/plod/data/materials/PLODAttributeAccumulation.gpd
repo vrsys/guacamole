@@ -2,7 +2,6 @@
   "name" : "PLODAttributeAccumulation",
   "source" : "
     void PLODAttributeAccumulation() {
-      gua_color = vec3(1.0,0.0,0.0) * gua_color;
       gua_metalness = metalness; // bool yes or no
       gua_roughness = roughness; 
       gua_emissivity = emissivity; // bool yes or no, 1 means pass through
@@ -13,7 +12,7 @@
     {
       "name" : "metalness",
       "type" : "float",
-      "value" : "0.0"
+      "value" : "1.0"
     },
     {
       "name" : "roughness",
@@ -23,7 +22,7 @@
     {
       "name" : "emissivity",
       "type" : "float",
-      "value" : "0.0"
+      "value" : "1.0"
     }
   ]
 }
