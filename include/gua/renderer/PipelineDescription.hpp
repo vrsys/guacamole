@@ -104,8 +104,8 @@ class GUA_DLL PipelineDescription {
   PipelineDescription& operator=(PipelineDescription const& other);
 
   template <typename T> 
-  std::shared_ptr<T> const& get_pass_by_type() const {
-    for (auto pass : passes_) {
+  std::shared_ptr<T> get_pass_by_type() const {
+    for (auto const& pass : passes_) {
       auto casted_pass = std::dynamic_pointer_cast<T>(pass);
       if (casted_pass) {
         return casted_pass;
