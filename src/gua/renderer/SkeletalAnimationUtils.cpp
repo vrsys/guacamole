@@ -12,6 +12,13 @@ scm::math::mat4f mat4(aiMatrix4x4 const& m) {
                       ,m.a4,m.b4,m.c4,m.d4);
   return res;
 }
+scm::math::mat4f mat4(FbxAMatrix const& m) {
+  scm::math::mat4f res(m[0][0],m[0][1],m[0][2],m[0][3],
+                      m[1][0],m[1][1],m[1][2],m[1][3],
+                      m[2][0],m[2][1],m[2][2],m[2][3],
+                      m[3][0],m[3][1],m[3][2],m[3][3]);
+  return res;
+}
 template<typename T>
 scm::math::vec3 vec3(T const& v) {
   scm::math::vec3 res(v[0], v[1], v[2]);
@@ -139,12 +146,6 @@ Node::Node(FbxNode& node):
   transformation{scm::math::mat4f::identity()}, //fbxnodes dont store transformations
   offsetMatrix{scm::math::mat4f::identity()}
 {
-  std::cout << "node " << name << " with children: ";
-  for(int i = 0; i < node.GetChildCount(); ++i) {
-    std::cout << node.GetChild(i)->GetName() << ", ";
-  }
-  std::cout << std::endl;
-
   for(int i = 0; i < node.GetChildCount(); ++i) {
     FbxSkeleton const* skelnode{node.GetChild(i)->GetSkeleton()};
     if(skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector && node.GetChild(i)->GetChildCount() == 0) {
@@ -241,7 +242,7 @@ Mesh::Mesh():
  indices{}
 {}
 
-Mesh::Mesh(FbxMesh& mesh) {
+Mesh::Mesh(FbxMesh& mesh, Node const& root) {
   num_vertices = mesh.GetControlPointsCount(); 
 
   std::string UV_set;
@@ -417,7 +418,7 @@ Mesh::Mesh(FbxMesh& mesh) {
     get_tangent = get_access_function(*tangent_info);
     
     unsigned dupl_tangents = 0;
-    //index tangents, filter out duplicatest to allow vertex duplication testing by tangent
+    //index tangents, filter out duplicates to allow vertex duplication testing by tangent
     for(unsigned i = 0; i < poly_tangents.Size(); ++i) {
       unsigned d = poly_tangents.Find(poly_tangents[i]);
       if(d == i) {
@@ -578,6 +579,8 @@ Mesh::Mesh(FbxMesh& mesh) {
 
   //output reduction info
   Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << std::endl;
+  
+  get_weights(mesh, root);
 }
 
 Mesh::Mesh(aiMesh const& mesh, Node const& root) {   
@@ -659,6 +662,74 @@ void Mesh::init_weights(aiMesh const& mesh, Node const& root) {
       weights[VertexID].AddBoneData(BoneIndex, Weight);
     }
   }
+}
+
+void Mesh::get_weights(FbxMesh const& mesh, Node const& root) {
+  std::map<std::string, int> bone_mapping_; // maps a bone name to its index
+  root.collect_indices(bone_mapping_);
+
+  //check for skinning
+  FbxSkin* skin;
+  for(unsigned i = 0; i < mesh.GetDeformerCount(); ++i) {
+    FbxDeformer* defPtr ={mesh.GetDeformer(i)};
+    if(defPtr->GetDeformerType() == FbxDeformer::eSkin) {
+      skin = static_cast<FbxSkin*>(defPtr);
+      break;
+    }
+  }
+
+  if(!skin) {
+    Logger::LOG_ERROR << "Mesh does not contain skin deformer" << std::endl;
+    assert(false);
+  }
+  Logger::LOG_DEBUG << "Weight processing starting" << std::endl;
+  //set up temporary weights, for control points not actual vertices
+  std::vector<weight_map> temp_weights{unsigned(mesh.GetControlPointsCount())};
+  
+  //one cluster corresponds to one bone
+  for(unsigned i = 0; i < skin->GetClusterCount(); ++i) {
+    FbxCluster* cluster = skin->GetCluster(i);
+    FbxNode* node = cluster->GetLink();
+
+    if(!node) {
+      Logger::LOG_ERROR << "associated node does not exist!" << std::endl;
+      assert(false);      
+    }
+    
+    std::string bone_name(node->GetName());
+    uint bone_index;
+    try {
+      bone_index = bone_mapping_.at(bone_name);
+    }      
+    catch(std::exception) {
+      Logger::LOG_ERROR << "Node with name '" << bone_name << "' does not exist!" << std::endl;
+      assert(false);            
+    }
+
+    std::shared_ptr<Node> bone = root.find(bone_name);
+    if(!bone) {      
+      Logger::LOG_ERROR << "Node does not exist!" << std::endl;
+      assert(false);      
+    }
+
+    FbxAMatrix world_transform, bind_transform;
+    //reference pose of mesh?
+    cluster->GetTransformMatrix(world_transform);
+    //reference pose of bone
+    cluster->GetTransformLinkMatrix(bind_transform);
+    //bone update doesnt matter, they are just local variables
+    // bone->offsetMatrix = to_gua::mat4(bind_transform.Inverse() * world_transform); 
+
+
+    int* indices = cluster->GetControlPointIndices();
+    double* weights = cluster->GetControlPointWeights();
+    for(unsigned i = 0; i < cluster->GetControlPointIndicesCount(); ++i) {
+      //update mapping info of current control point
+      temp_weights[indices[i]].AddBoneData(bone_index, weights[i]);
+    }
+  }
+
+  Logger::LOG_DEBUG << "Weight processing finished" << std::endl;
 }
 
 void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
