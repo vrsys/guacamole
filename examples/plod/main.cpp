@@ -158,12 +158,8 @@ int main(int argc, char** argv) {
   // create trimesh geometry
   gua::TriMeshLoader loader;
 
-  auto plane_geometry(loader.create_geometry_from_file("teapot", "data/objects/plane.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION));
   auto light_proxy_geometry(loader.create_geometry_from_file("light", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   light_proxy_geometry->scale(0.02);
-
-  plane_geometry->scale(0.2);
-  plane_geometry->translate(0.0, 0.0, 5.0);
 
   // connect scene graph
   transform->add_child(plod_geometry);  
