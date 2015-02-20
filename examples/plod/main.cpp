@@ -80,6 +80,8 @@ int main(int argc, char** argv) {
 
   gua::init(argc, argv);
 
+  gua::Logger::enable_debug = false;
+
   /////////////////////////////////////////////////////////////////////////////
   // create a set of materials
   /////////////////////////////////////////////////////////////////////////////
@@ -202,7 +204,8 @@ int main(int argc, char** argv) {
 
   auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
   portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal_screen->translate(0, 0, 25.0);
+  portal_screen->translate(0.0, 0, 25.0);
+  portal_screen->rotate(-90, 0.0, 1.0, 0.0);
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
@@ -216,7 +219,7 @@ int main(int argc, char** argv) {
   /////////////////////////////////////////////////////////////////////////////
 
   auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0, 0, 2.0);
+  portal_camera->translate(0, 0, 3.0);
   portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
   //portal_camera->config.set_resolution(resolution);
   portal_camera->config.set_screen_path("/portal_screen");
@@ -224,7 +227,7 @@ int main(int argc, char** argv) {
   portal_camera->config.set_output_texture_name("portal");
   portal_camera->config.set_enable_stereo(false);
   portal_camera->config.set_far_clip(200.0);
-  portal_camera->config.set_near_clip(0.01);
+  portal_camera->config.set_near_clip(0.1);
 
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
