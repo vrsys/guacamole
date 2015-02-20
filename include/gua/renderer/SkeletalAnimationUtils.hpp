@@ -250,7 +250,7 @@ struct Mesh {
   Mesh();
 
   Mesh(aiMesh const& mesh, Node const& root = Node{});
-  Mesh(FbxMesh& mesh);
+  Mesh(FbxMesh& mesh, Node const& root = Node{});
 
   void copy_to_buffer(Vertex* vertex_buffer)  const;
   void copy_to_buffer_static(Vertex* vertex_buffer)  const;
@@ -271,6 +271,7 @@ struct Mesh {
 
  private:
   void init_weights(aiMesh const& mesh, Node const& root);
+  void get_weights(FbxMesh const& mesh, Node const& root);
 };
 
 class SkeletalAnimationUtils {
