@@ -106,12 +106,6 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& fil
   auto cached_node(load_geometry(filename, filename, material_shader->make_new_material(), flags));
 
   if (cached_node) {
-#if 0
-    auto copy = std::dynamic_pointer_cast<node::PLODNode>(cached_node->deep_copy());
-    if (copy) {
-      return copy;
-    }
-#endif
     return cached_node;
   }
 
