@@ -117,21 +117,18 @@ void PLODResource::ray_test(Ray const& ray,
     return;
 
   bool has_hit = false;
-  PickResult pick = PickResult(0.f,
-                	     owner,
-			     ray.origin_,
-			     math::vec3(0.f, 0.f, 0.f),
-			     math::vec3(0.f, 1.f, 0.f),
-			     math::vec3(0.f, 1.f, 0.f),
-			     math::vec2(0.f, 0.f));
-
-#if 0 
-
-  //TODO: debug, this does not work with valley models (for reasons unknown) 
+  PickResult pick = PickResult(
+    0.f,
+    owner,
+    ray.origin_,
+    math::vec3(0.f, 0.f, 0.f),
+    math::vec3(0.f, 1.f, 0.f),
+    math::vec3(0.f, 1.f, 0.f),
+    math::vec2(0.f, 0.f));
 
   const auto model_transform = owner->get_world_transform();
-  const auto world_origin = model_transform * ray.origin_;
-  const auto world_direction = model_transform * ray.direction_;
+  const auto world_origin = ray.origin_;
+  const auto world_direction = scm::math::normalize(ray.direction_);
   
   pbr::ren::Ray plod_ray(world_origin, world_direction, 9999.0f);
   pbr::ren::Ray::Intersection intersection;
@@ -139,61 +136,19 @@ void PLODResource::ray_test(Ray const& ray,
   auto plod_node = reinterpret_cast<node::PLODNode*>(owner);
 
   float aabb_scale = 9.0f;
-  unsigned int max_depth = 6;
-  unsigned int surfel_skip = 16;
+  unsigned int max_depth = 255;
+  unsigned int surfel_skip = 1;
+  bool wysiwyg = true;
  
   pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
   pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
  
-  if (plod_ray.IntersectModel(model_id, model_transform, aabb_scale, max_depth, surfel_skip, true, intersection)) {
+  if (plod_ray.IntersectModel(model_id, model_transform, aabb_scale, max_depth, surfel_skip, wysiwyg, intersection)) {
     has_hit = true;
     pick.distance = intersection.distance_;
     pick.position = intersection.position_;
-    //pick.normal_ = intersection.normal_;
-
+    pick.normal = intersection.normal_;
   }
-
-#else
-  const auto* tree =
-      pbr::ren::ModelDatabase::GetInstance()->GetModel(model_id_)->kdn_tree();
-  const uint32_t num_nodes = tree->num_nodes();
-  const uint32_t fan_factor = tree->fan_factor();
-  const uint32_t first_leaf = num_nodes - pow(fan_factor, tree->depth());
-
-  const auto owner_transform = owner->get_world_transform();
-  const auto world_origin = owner_transform * ray.origin_;
-  std::stack<pbr::node_t> candidates;
-
-  // there is always an intersection with root node
-  candidates.push(0);
-
-  while (!candidates.empty()) {
-    pbr::node_t current = candidates.top();
-    candidates.pop();
-
-    for (pbr::node_t k = 0; k < fan_factor; ++k) {
-      pbr::node_t n = tree->GetChildId(current, k);
-      if (n >= num_nodes)
-        break;
-      Ray hit_ray(ray.intersection(tree->bounding_boxes()[n]));
-      if (hit_ray.t_max_ >= 0.f) {
-        if (n >= first_leaf) {
-          // leaf with intersecion, check if frontmost
-          float dist = scm::math::length(owner_transform * hit_ray.origin_ -
-                                         world_origin);
-          if (!has_hit || dist < pick.distance) {
-            pick.distance = dist;
-            pick.position = hit_ray.origin_;
-            has_hit = true;
-          }
-        } else {
-          // add to stack if not leaf
-          candidates.push(n);
-        }
-      }
-    }
-  }
-#endif
 
   if (has_hit)
     hits.insert(pick);

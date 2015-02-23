@@ -163,7 +163,7 @@ std::set<PickResult> PLODLoader::pick_plod_interpolate(math::vec3 const& bundle_
   scm::math::vec3f ray_pos = scm::math::vec3f(bundle_origin.x, bundle_origin.y, bundle_origin.z);
   scm::math::vec3f ray_fwd = scm::math::vec3f(bundle_forward.x, bundle_forward.y, bundle_forward.z);
   scm::math::vec3f ray_up = scm::math::vec3f(bundle_up.x, bundle_up.y, bundle_up.z);
-
+  
   pbr::ren::Ray ray(ray_pos, ray_fwd, max_distance);
   pbr::ren::Ray::Intersection intersection;
 
