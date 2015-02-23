@@ -52,11 +52,12 @@ float weight = 0;
 void main() {
   vec2 uv_coords = pass_uv_coords;
 
-  float normalAdjustmentFactor = 1.0;
-
   //turn normal to viewer
-  if (pass_normal.z < 0.0) {
-    normalAdjustmentFactor = -1.0;
+  vec4 view_normal = gua_view_matrix * vec4(pass_normal, 0.0);
+  vec3 face_forward_normal = pass_normal.xyz;
+
+  if (view_normal.z < 0.0) {
+    face_forward_normal = -face_forward_normal;
   }
 
   if( dot(uv_coords, uv_coords) > 1) 
@@ -77,7 +78,7 @@ void main() {
   @material_method_calls_frag@
 
   out_accumulated_color = vec4(weight * gua_color, weight);
-  out_accumulated_normal = normalAdjustmentFactor * vec4(weight * gua_normal, gl_FragCoord.z);
+  out_accumulated_normal = vec4(weight * face_forward_normal, gl_FragCoord.z);
   out_accumulated_pbr = vec3(gua_metalness, gua_roughness, gua_emissivity) * weight;
 
 

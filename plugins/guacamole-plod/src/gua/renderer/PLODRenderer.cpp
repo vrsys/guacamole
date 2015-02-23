@@ -635,7 +635,7 @@ namespace gua {
 
         current_material_program->apply_uniform(ctx,
                                            "gua_model_matrix",
-                                           scm_model_matrix);
+                                           model_mat);
 
         current_material_program->apply_uniform(ctx,
                                            "gua_normal_matrix",

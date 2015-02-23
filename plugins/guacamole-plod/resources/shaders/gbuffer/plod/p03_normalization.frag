@@ -3,8 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-in vec3 gua_position_varying;
-in vec2 gua_quad_coords;
+in vec2 plod_quad_coords;
 
 ///////////////////////////////////////////////////////////////////////////////
 // general uniforms
@@ -31,7 +30,7 @@ void main() {
   vec3  normalized_color  = vec3(1.0);
   float output_depth  = 1.0;
   vec3  output_normal = vec3(0.0);
-  vec3 coords = vec3(gua_quad_coords, 0.0);
+  vec3 coords = vec3(plod_quad_coords, 0.0);
   vec4 accumulated_color = texture(p02_color_texture, coords.xy);
  
   float accumulated_weight = accumulated_color.a;
