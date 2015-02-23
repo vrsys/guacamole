@@ -79,8 +79,8 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 /////////////////////////////////////////////////////////////////////////////
 // example configuration
 /////////////////////////////////////////////////////////////////////////////
-#define RENDER_SINGLE_PIG_MODEL 0
-#define RENDER_PITOTI_HUNTING_SCENE 1
+#define RENDER_SINGLE_PIG_MODEL 1
+#define RENDER_PITOTI_HUNTING_SCENE 0
 #define RENDER_ADDITIONAL_TRIMESH_MODEL 0
 
 int main(int argc, char** argv) {
@@ -151,7 +151,10 @@ int main(int argc, char** argv) {
 #if RENDER_PITOTI_HUNTING_SCENE  
   #if WIN32
     //auto plod_geometry(plodLoader.load_geometry("hunter", "\\GRANDMOTHER/pitoti/XYZ_ALL/new_pitoti_sampling/objects/Area_4_hunter_with_bow.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
-    auto plod_geometry(plodLoader.load_geometry("hunter", "data/objects/Area-2_Plowing-scene_P02-4_knn.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
+  auto plod_geometry2(plodLoader.load_geometry("hunter", "data/objects/Area-2_Plowing-scene_P02-3_knn.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
+  plod_geometry2->translate(2.0, 0.0, 0.0);
+  auto plod_geometry(plodLoader.load_geometry("hunter", "data/objects/Area-2_Plowing-scene_P02-4_knn.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+
   #else
     //auto plod_geometry(plodLoader.load_geometry("/mnt/pitoti/XYZ_ALL/new_pitoti_sampling/Area_4_hunter_with_bow.kdn", gua::PLODLoader::NORMALIZE_POSITION  ));
   #endif
@@ -182,11 +185,12 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto light_proxy_geometry(loader.create_geometry_from_file("light", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  auto camera_proxy_geometry(loader.create_geometry_from_file("camera_proxy", "data/objects/camera.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto camera_proxy_geometry(loader.create_geometry_from_file("camera_proxy", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   light_proxy_geometry->scale(0.02);
 
   // connect scene graph
   transform->add_child(plod_geometry);  
+  //transform->add_child(plod_geometry2);
 
 #if RENDER_ADDITIONAL_TRIMESH_MODEL
   auto teapot_geometry(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION));
@@ -318,14 +322,17 @@ int main(int argc, char** argv) {
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
   window->config.set_stereo_mode(gua::StereoMode::MONO);
+
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
+
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
     trackball.motion(pos.x, pos.y);
   });
+
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
   window->on_key_press.connect(std::bind(key_press, std::ref(*(camera->get_pipeline_description())), std::ref(graph), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
