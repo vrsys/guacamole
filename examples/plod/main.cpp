@@ -35,6 +35,8 @@
 
 #include <gua/renderer/TexturedQuadPass.hpp>
 
+bool rotate_light;
+
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -66,14 +68,22 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
   case 'r':
     pipe.get_resolve_pass()->touch();
     break;
+  case ' ':
+    rotate_light = !rotate_light;
+    break;
   default:
     break;
   }
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// example configuration
+/////////////////////////////////////////////////////////////////////////////
+#define RENDER_SINGLE_PIG_MODEL 0
+#define RENDER_PITOTI_HUNTING_SCENE 1
+#define RENDER_ADDITIONAL_TRIMESH_MODEL 0
 
 int main(int argc, char** argv) {
-
   /////////////////////////////////////////////////////////////////////////////
   // initialize guacamole
   /////////////////////////////////////////////////////////////////////////////
@@ -81,6 +91,7 @@ int main(int argc, char** argv) {
   gua::init(argc, argv);
 
   gua::Logger::enable_debug = false;
+  rotate_light = true;
 
   /////////////////////////////////////////////////////////////////////////////
   // create a set of materials
@@ -137,10 +148,25 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
+#if RENDER_PITOTI_HUNTING_SCENE  
+  #if WIN32
+    //auto plod_geometry(plodLoader.load_geometry("hunter", "\\GRANDMOTHER/pitoti/XYZ_ALL/new_pitoti_sampling/objects/Area_4_hunter_with_bow.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
+    auto plod_geometry(plodLoader.load_geometry("hunter", "data/objects/Area-2_Plowing-scene_P02-4_knn.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
+  #else
+    //auto plod_geometry(plodLoader.load_geometry("/mnt/pitoti/XYZ_ALL/new_pitoti_sampling/Area_4_hunter_with_bow.kdn", gua::PLODLoader::NORMALIZE_POSITION  ));
+  #endif
+#endif
+
+  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
+  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_01.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
+  //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/_seradina.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ) );
+
+#if RENDER_SINGLE_PIG_MODEL
   auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION));
   //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "data/objects/pig2.kdn", plod_glossy, gua::PLODLoader::NORMALIZE_POSITION));
   //auto plod_geometry3(plodLoader.load_geometry("plod_pig3", "data/objects/pig3.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
- 
+#endif
+
   auto setup_plod_node = [] ( std::shared_ptr<gua::node::PLODNode> const& node) {
     node->set_importance(1.0f);
     node->set_enable_backface_culling_by_normal(false);
@@ -152,19 +178,21 @@ int main(int argc, char** argv) {
   //setup_plod_node(plod_geometry2);
   //setup_plod_node(plod_geometry3);
 
-  //auto plod_geometry(plodLoader.load_geometry("/mnt/pitoti/XYZ_ALL/new_pitoti_sampling/Area_4_hunter_with_bow.kdn", gua::PLODLoader::NORMALIZE_POSITION  ));
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_01.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
-  //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/_seradina.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ) );
-
   // create trimesh geometry
   gua::TriMeshLoader loader;
 
   auto light_proxy_geometry(loader.create_geometry_from_file("light", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto camera_proxy_geometry(loader.create_geometry_from_file("camera_proxy", "data/objects/camera.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   light_proxy_geometry->scale(0.02);
 
   // connect scene graph
   transform->add_child(plod_geometry);  
+
+#if RENDER_ADDITIONAL_TRIMESH_MODEL
+  auto teapot_geometry(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION));
+  transform->add_child(teapot_geometry);
+#endif
+  
   //transform->add_child(plod_geometry2);
   //transform->add_child(plod_geometry3);
 
@@ -191,8 +219,8 @@ int main(int argc, char** argv) {
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
   portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
   portal->data.set_texture("portal");
-  portal->scale(3.0f);
-  portal->translate(0.5f, 0.f, -0.2f);
+  portal->scale(5.0f);
+  portal->translate(4.5f, 1.0, -0.2f);
   portal->rotate(-60, 0.f, 1.f, 0.f);
   portal->translate(0.0f, 0.f, 5.0f);
 
@@ -200,11 +228,11 @@ int main(int argc, char** argv) {
   //screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   //screen->data.set_size(gua::math::vec2(1.6f, 0.9f));
   screen->data.set_size(gua::math::vec2(0.45f, 0.25f));
-  screen->translate(0, 0, 20.0);
+  screen->translate(0, 0, 30.0);
 
   auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
   portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal_screen->translate(0.0, 0, 25.0);
+  portal_screen->translate(0.0, 0, 15.0);
   portal_screen->rotate(-90, 0.0, 1.0, 0.0);
 
   // add mouse interaction
@@ -219,7 +247,7 @@ int main(int argc, char** argv) {
   /////////////////////////////////////////////////////////////////////////////
 
   auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0, 0, 3.0);
+  portal_camera->translate(0.0, 0, 3.0);
   portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
   //portal_camera->config.set_resolution(resolution);
   portal_camera->config.set_screen_path("/portal_screen");
@@ -254,8 +282,10 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(true);
   camera->config.set_far_clip(200.0);
-  camera->config.set_near_clip(0.01);
+  camera->config.set_near_clip(0.1);
+  camera->add_child(camera_proxy_geometry);
   camera->set_pre_render_cameras({portal_camera});
+
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
 
@@ -313,8 +343,10 @@ int main(int argc, char** argv) {
     static unsigned framecounter = 0;
     ++framecounter;
 
-    // modify scene
-    light->rotate(0.1, 0.0, 1.0, 0.0);
+    if (rotate_light) {
+      // modify scene
+      light->rotate(0.1, 0.0, 1.0, 0.0);
+    }
 
     // apply trackball matrix to object
     window->process_events();

@@ -88,6 +88,8 @@ int main(int argc, char** argv) {
   //graph.add_node("/transform", volume);
 
   auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
+  portal_screen->translate(0.0, 0.0, 5.0);
+  portal_screen->rotate(90, 0.0, 1.0, 0.0);
   portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
 
   // add mouse interaction

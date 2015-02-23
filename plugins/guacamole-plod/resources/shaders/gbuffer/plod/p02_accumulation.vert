@@ -35,7 +35,9 @@ void main() {
 
   VertexOut.pass_point_color = vec3(in_r, in_g, in_b);
   
-  VertexOut.pass_normal = (gua_normal_matrix * vec4(in_normal, 0.0)).xyz;
+  vec4 world_normal = gua_normal_matrix * vec4(in_normal, 0.0);
+
+  VertexOut.pass_normal = normalize(world_normal.xyz);
 
 
   gl_Position = vec4(in_position, 1.0);
