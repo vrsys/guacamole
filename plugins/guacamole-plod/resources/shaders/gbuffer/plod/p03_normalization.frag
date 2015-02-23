@@ -3,8 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-in vec3 gua_position_varying;
-in vec2 gua_quad_coords;
+in vec2 plod_quad_coords;
 
 ///////////////////////////////////////////////////////////////////////////////
 // general uniforms
@@ -31,13 +30,15 @@ void main() {
   vec3  normalized_color  = vec3(1.0);
   float output_depth  = 1.0;
   vec3  output_normal = vec3(0.0);
-  vec3 coords = vec3(gua_quad_coords, 0.0);
+  vec3 coords = vec3(plod_quad_coords, 0.0);
   vec4 accumulated_color = texture(p02_color_texture, coords.xy);
-  
-
+ 
   float accumulated_weight = accumulated_color.a;
-  if(accumulated_weight == 0.0)
+
+  if(accumulated_weight == 0.0) {
     discard;
+  }
+
   normalized_color = accumulated_color.rgb / accumulated_weight ;
   //normalized_color = accumulated_color.rgb;
   normalized_color = pow(normalized_color, vec3(1.4));
@@ -49,8 +50,6 @@ void main() {
   float blended_depth = accumalted_depth / accumulated_weight;
   float depth_visibility_pass = texture2D( p01_log_depth_texture, coords.xy).r;
 
-
-  
   gua_color = normalized_color.rgb;
   gua_normal = normalized_normal;
 
@@ -62,15 +61,13 @@ void main() {
   gua_alpha      = 1.0;
   gua_flags_passthrough = (gua_emissivity > 0.99999);
 
-
   // calculate world position from blended depth
-  vec4 world_pos_h = gua_inverse_projection_view_matrix * vec4(gl_FragCoord.xy, blended_depth, 1.0);
+  vec4 world_pos_h = gua_inverse_projection_view_matrix * vec4(gl_FragCoord.xy, depth_visibility_pass, 1.0);
   gua_position = world_pos_h.xyz/world_pos_h.w;
 
-/////
-  {
+  // write correct depth instead of shifted depth
   @include "common/gua_write_gbuffer.glsl"
+
   gl_FragDepth = depth_visibility_pass;
-  }
 }
 
