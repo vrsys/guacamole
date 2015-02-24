@@ -268,8 +268,6 @@ struct Mesh {
   unsigned int num_vertices;
   unsigned int num_triangles;
 
-  static void from_fbx_scene(FbxNode* node, std::vector<FbxMesh*>& meshes);
-
  private:
   void init_weights(aiMesh const& mesh, Node const& root);
   std::vector<weight_map> get_weights(FbxMesh const& mesh, Node const& root);

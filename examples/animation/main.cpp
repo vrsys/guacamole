@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   // auto teapot(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/bob/boblampclean.md5anim", 0);
 
-  auto rock(loader2.create_geometry_from_file("fbx", "data/objects/fbx/warrior.fbx", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto rock(loader2.create_geometry_from_file("fbx", "data/objects/fbx/warrior.fbx", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
 
   rock->set_draw_bounding_box(true);
   

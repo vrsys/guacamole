@@ -46,7 +46,7 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Node> const
   root_->collect_indices(bone_mapping_);
   num_bones_ = bone_mapping_.size();
   //prevent doom models from moving during anim
-  if(root_->name == "<MD5Root>") {
+  if(root_->name == "<MD5_Root>") {
     anim_start_node_ = root_->children[1]->children[0]->children[0];
   }
   else {

@@ -103,9 +103,9 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_fallback_materials(std::shared_ptr<Material> material) {
+  void SkeletalAnimationNode::set_fallback_material(std::shared_ptr<Material> material) {
     for(auto & mat: materials_){
-      if(mat->get_shader_name() == ""){
+      if(!mat || mat->get_shader_name() == ""){
         mat = material;
         material_changed_= self_dirty_ = true;
       }
