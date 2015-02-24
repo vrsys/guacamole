@@ -44,6 +44,7 @@ PLODNode::PLODNode(std::string const& name,
                    std::shared_ptr<Material> const& material,
                    math::mat4 const& transform,
                    float const importance,
+                   float const threshold,
                    bool const enable_backface_culling_by_normal)
     : GeometryNode(name, transform),
       geometry_(nullptr),
@@ -52,6 +53,7 @@ PLODNode::PLODNode(std::string const& name,
       geometry_file_path_(geometry_file_path),
       material_(material),
       importance_(importance),
+      threshold_(threshold),
       enable_backface_culling_by_normal_(enable_backface_culling_by_normal)
     {}
 
@@ -91,14 +93,22 @@ void PLODNode::set_material(std::shared_ptr<Material> const& material) {
 void PLODNode::set_importance(float const importance) {
   importance_ = importance;
   self_dirty_ = true;
-
-  pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
-  policy->SetImportance(get_geometry_description(), importance_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 float PLODNode::get_importance() {
   return importance_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLODNode::set_threshold(float const threshold) {
+  threshold_ = threshold;
+  self_dirty_ = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float PLODNode::get_threshold() {
+  return threshold_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
