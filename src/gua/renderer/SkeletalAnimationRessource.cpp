@@ -75,9 +75,10 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(Mesh const& mesh, std::sh
 void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
 
   if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
-
-    // mesh = Mesh{};
-    // InitMesh(mesh);
+    if (!mesh_.num_vertices > 0) {
+      Logger::LOG_WARNING << "Unable to load Mesh! Has no vertex data." << std::endl;
+      return;
+    }
 
     std::unique_lock<std::mutex> lock(upload_mutex_);
 

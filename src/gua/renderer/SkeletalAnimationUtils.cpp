@@ -807,30 +807,6 @@ void Mesh::copy_to_buffer_static(Vertex* vertex_buffer)  const {
   }
 }
 
-void Mesh::from_fbx_scene(FbxNode* node, std::vector<FbxMesh*>& meshes ) {
-  if(node != NULL) {
-    if(node->GetGeometry() != NULL) {
-      std::cout << " has geometry" << std::endl;
-      if(node->GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
-      std::cout << " is mesh" << std::endl;
-      meshes.push_back(dynamic_cast<FbxMesh*>(node->GetGeometry()));
-      }
-    }
-
-    // std::cout << " children:" << std::endl;
-    // for(unsigned i = 0; i < node->GetChildNameCount(); ++i) {
-    //   std::cout << node->GetChildName(i) << std::endl;
-    // }
-
-    for(unsigned i = 0; i < node->GetChildCount(); ++i) {
-      if(node->GetChild(i) != NULL) {
-        from_fbx_scene(node->GetChild(i), meshes);
-      }
-    }
-  }
-  else std::cout << "node is null" << std::endl;
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Transformation::Transformation():
   scaling{1.0f},

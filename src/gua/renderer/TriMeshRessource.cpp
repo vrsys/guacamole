@@ -91,6 +91,8 @@ TriMeshRessource::TriMeshRessource(Mesh const& mesh)
     for (unsigned v(0); v < mesh_.num_vertices; ++v) {
       bounding_box_.expandBy(mesh_.positions[v]);
     }
+  std::cout << "box dims" << bounding_box_.corners().first << " and " << bounding_box_.corners().second << std::endl;
+    
   }
 }
 

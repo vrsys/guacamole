@@ -325,8 +325,8 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
           Mesh{*dynamic_cast<FbxMesh*>(geo), *root}
           , animation_director
           , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
-
-    //   std::shared_ptr<Material> material;
+      //there need to be as many materials as there are geometries or the geometries without material wont be drawn
+      std::shared_ptr<Material> material;
     //   unsigned material_index(ai_scene->mMeshes[mesh_count]->mMaterialIndex);
     //   //if (material_index != 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
     //   if (flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
@@ -335,7 +335,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
     //     material = material_loader.load_material(ai_material, file_name);
     //     material->set_uniform("Roughness", 0.6f);
     //   }
-    //   materials.push_back(material);
+      materials.push_back(material);
       ++mesh_count;
     }
   }
@@ -431,7 +431,7 @@ void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::Node
   auto g_node(std::dynamic_pointer_cast<node::SkeletalAnimationNode>(root));
 
   if (g_node) {
-    g_node->set_fallback_materials(fallback_material);
+    g_node->set_fallback_material(fallback_material);
     g_node->update_cache();
   }
 
