@@ -118,13 +118,13 @@ std::shared_ptr<BBoxPassDescription> const& PipelineDescription::get_bbox_pass()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<ResolvePassDescription>const& PipelineDescription::get_resolve_pass() const
+std::shared_ptr<ResolvePassDescription> const& PipelineDescription::get_resolve_pass() const
 {
   return get_pass_by_type<ResolvePassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<TexturedScreenSpaceQuadPassDescription>const& PipelineDescription::get_textured_screen_space_quad_pass() const
+std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const& PipelineDescription::get_textured_screen_space_quad_pass() const
 {
   return get_pass_by_type<TexturedScreenSpaceQuadPassDescription>();
 }

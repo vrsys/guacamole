@@ -53,29 +53,57 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
 
   ResolvePassDescription();
 
-  ResolvePassDescription& color(utils::Color3f const& color);
-  utils::Color3f color() const;
+  /////////////////////////////////////////////////////////////////////////////
+  // background
+  /////////////////////////////////////////////////////////////////////////////
+  ResolvePassDescription& background_mode(BackgroundMode mode);
+  BackgroundMode background_mode() const;
 
-  ResolvePassDescription& texture(std::string const& texture);
-  std::string texture() const;
+  ResolvePassDescription& background_color(utils::Color3f const& color);
+  utils::Color3f background_color() const;
 
-  ResolvePassDescription& environment_lighting (std::string const& spheremap_texture);
+  ResolvePassDescription& background_texture(std::string const& texture);
+  std::string background_texture() const;
 
-  ResolvePassDescription& environment_lighting (std::string const& cube_map_positive_x, 
-                                                std::string const& cube_map_negative_x, 
-                                                std::string const& cube_map_positive_y,
-                                                std::string const& cube_map_negative_y,
-                                                std::string const& cube_map_positive_z,
-                                                std::string const& cube_map_negative_z);
+  /////////////////////////////////////////////////////////////////////////////
+  // ambient lighting
+  /////////////////////////////////////////////////////////////////////////////
+  ResolvePassDescription& environment_lighting_spheremap (std::string const& spheremap_texture);
+  std::string const& environment_lighting_spheremap() const;
+
+  ResolvePassDescription& environment_lighting_cubemap (std::string const& cube_map_positive_x, 
+                                                        std::string const& cube_map_negative_x, 
+                                                        std::string const& cube_map_positive_y,
+                                                        std::string const& cube_map_negative_y,
+                                                        std::string const& cube_map_positive_z,
+                                                        std::string const& cube_map_negative_z);
 
   ResolvePassDescription& environment_lighting (utils::Color3f const& color);
 
-  ResolvePassDescription& environment_lighting_method (EnvironmentLightingMode mode);
-  EnvironmentLightingMode environment_lighting_method() const;
+  ResolvePassDescription& environment_lighting_mode (EnvironmentLightingMode mode);
+  EnvironmentLightingMode environment_lighting_mode() const;
 
-  ResolvePassDescription& mode(BackgroundMode mode);
-  BackgroundMode mode() const;
+  /////////////////////////////////////////////////////////////////////////////
+  // screen-space ambient occlusion
+  /////////////////////////////////////////////////////////////////////////////
+  ResolvePassDescription& ssao_enable(bool enable);
+  bool ssao_enable() const;
 
+  ResolvePassDescription& ssao_radius(float radius);
+  float ssao_radius() const;
+
+  ResolvePassDescription& ssao_intensity(float intensity);
+  float ssao_intensity() const;
+
+  ResolvePassDescription& ssao_falloff(float falloff);
+  float ssao_falloff() const;
+
+  ResolvePassDescription& ssao_noise_texture(std::string const& texture);
+  std::string const& ssao_noise_texture() const;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // fog
+  /////////////////////////////////////////////////////////////////////////////
   ResolvePassDescription& enable_fog(bool enable_fog);
   bool enable_fog() const;
 
@@ -85,12 +113,18 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& fog_end(float fog_end);
   float fog_end() const;
 
+  /////////////////////////////////////////////////////////////////////////////
+  // tone ampping and exposure
+  /////////////////////////////////////////////////////////////////////////////
   ResolvePassDescription& tone_mapping_exposure(float value);
   float tone_mapping_exposure() const;
 
   ResolvePassDescription& tone_mapping_method(ToneMappingMethod value);
   ToneMappingMethod tone_mapping_method() const;
 
+  /////////////////////////////////////////////////////////////////////////////
+  // debug view
+  /////////////////////////////////////////////////////////////////////////////
   ResolvePassDescription& debug_tiles(bool value);
   bool debug_tiles() const;
 
@@ -101,8 +135,6 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
   ToneMappingMethod tone_mapping_method_             = ToneMappingMethod::LINEAR;
-  BackgroundMode background_mode_                    = BackgroundMode::COLOR;
-  EnvironmentLightingMode environment_lighting_mode_ = EnvironmentLightingMode::AMBIENT_COLOR;
   bool debug_tiles_                                  = false;
 };  
 

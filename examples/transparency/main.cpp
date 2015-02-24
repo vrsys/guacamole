@@ -75,16 +75,16 @@ int main(int argc, char** argv) {
      .set_uniform("alpha", car_glass_opacity)
      .set_show_back_faces(true);
 
-  auto passat(loader.create_geometry_from_file("passat", "/opt/3d_models/cars/passat/passat.obj",
-                                               mat_passat_glass,
-                                                 gua::TriMeshLoader::NORMALIZE_POSITION
-                                               | gua::TriMeshLoader::LOAD_MATERIALS
-                                               | gua::TriMeshLoader::NORMALIZE_SCALE));
-  passat->scale(0.7f);
-  passat->rotate(-90, 1.f, 0.f, 0.f);
-  passat->translate(0.0f, 0.134f, 0.f);
-  graph.add_node("/transform", passat);
-
+  //auto passat(loader.create_geometry_from_file("passat", "/opt/3d_models/cars/passat/passat.obj",
+  //                                             mat_passat_glass,
+  //                                               gua::TriMeshLoader::NORMALIZE_POSITION
+  //                                             | gua::TriMeshLoader::LOAD_MATERIALS
+  //                                             | gua::TriMeshLoader::NORMALIZE_SCALE));
+  //passat->scale(0.7f);
+  //passat->rotate(-90, 1.f, 0.f, 0.f);
+  //passat->translate(0.0f, 0.134f, 0.f);
+  //graph.add_node("/transform", passat);
+  //
   // Load bottle
   auto mat_bottle(load_mat("data/materials/Bottle.gmd"));
   mat_bottle->set_uniform("ColorMap",     std::string("data/objects/bottle/albedo.png"))
@@ -98,9 +98,9 @@ int main(int argc, char** argv) {
 
   // Load box (texture originals are taken from http://texturise.blogspot.de/)
   auto mat_box(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-  mat_box->set_uniform("ColorMap",     std::string("/opt/3d_models/textures/parquet/albedo.jpg"))
-          .set_uniform("NormalMap",    std::string("/opt/3d_models/textures/parquet/normal.jpg"))
-          .set_uniform("RoughnessMap", std::string("/opt/3d_models/textures/parquet/roughness.jpg"));
+  mat_box->set_uniform("ColorMap", std::string("data/textures/parquet2/albedo.jpg"))
+    .set_uniform("NormalMap", std::string("data/textures/parquet2/normal.jpg"))
+    .set_uniform("RoughnessMap", std::string("data/textures/parquet2/roughness.jpg"));
   auto box(loader.create_geometry_from_file("box", "data/objects/inverted_box.obj", mat_box, gua::TriMeshLoader::DEFAULTS));
   graph.add_node("/transform", box);
 
@@ -164,8 +164,8 @@ int main(int argc, char** argv) {
   camera->config.set_enable_stereo(false);
   camera->set_pre_render_cameras({portal_camera});
 
-  camera->get_pipeline_description()->get_resolve_pass()->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  camera->get_pipeline_description()->get_resolve_pass()->texture("data/checkerboard->png");
+  camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/checkerboard.png");
 
   camera->get_pipeline_description()->set_enable_abuffer(true);
 
@@ -236,18 +236,18 @@ int main(int argc, char** argv) {
         }
 
         // car transparency manipulation
-        if ('V' == key) {
-          set_opacity(passat, 0.35f);
-          mat_passat_glass->set_uniform("alpha", car_glass_opacity);
-        }
-        if ('B' == key) {
-          set_opacity(passat, 1.0f);
-          mat_passat_glass->set_uniform("alpha", car_glass_opacity);
-        }
-        if ('N' == key) {
-          set_opacity(passat, 1.0f);
-          mat_passat_glass->set_uniform("alpha", 1.0f);
-        }
+        //if ('V' == key) {
+        //  set_opacity(passat, 0.35f);
+        //  mat_passat_glass->set_uniform("alpha", car_glass_opacity);
+        //}
+        //if ('B' == key) {
+        //  set_opacity(passat, 1.0f);
+        //  mat_passat_glass->set_uniform("alpha", car_glass_opacity);
+        //}
+        //if ('N' == key) {
+        //  set_opacity(passat, 1.0f);
+        //  mat_passat_glass->set_uniform("alpha", 1.0f);
+        //}
 
         // tiled shading options
         if ('1' == key) {

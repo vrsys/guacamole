@@ -206,7 +206,7 @@ int main(int argc, char** argv)
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/heckscheibe.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_links.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_links.igs", glass));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/windschutzscheibe.igs", glass));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/windschutzscheibe.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_rechts.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_rechts.igs", glass));
   
@@ -220,8 +220,8 @@ int main(int argc, char** argv)
   scene_size = std::max(scene_size, 1.0f);
 
   unsigned const max_lights = 50;
-  unsigned const max_light_intensity = 100000.0f;
-  unsigned const min_light_intensity = 10000.0f;
+  unsigned const max_light_intensity = 100.0f;
+  unsigned const min_light_intensity = 10.0f;
   float const light_scale = 10.0f;
 
   for (unsigned i = 0; i != max_lights; ++i)
@@ -231,21 +231,21 @@ int main(int argc, char** argv)
 
     float x = float(std::rand() % unsigned(scene_size)) - scene_size/2;
     float y = float(std::rand() % unsigned(scene_size)) - scene_size/2;
-    float z = float(std::rand() % unsigned(scene_size)) + scene_size;
+    float z = float(std::rand() % unsigned(scene_size)) - scene_size;
 
     std::string lightname = std::string("light") + std::to_string(i);
     auto light = graph.add_node<gua::node::PointLightNode>("/", lightname);
 
     light->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
     //light->scale(light_scale * scene_size * relative_intensity);
-    light->scale(3000.0f);
+    light->scale(1000.0f);
     light->data.brightness = min_light_intensity + relative_intensity * (max_light_intensity - min_light_intensity);
     light->translate(x, y, z);
 
     // add light proxy
     gua::TriMeshLoader loader;
     auto light_proxy(loader.create_geometry_from_file("light_proxy", "./data/objects/sphere.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-    light_proxy->scale(0.02f * (1.0f / light_scale));
+    light_proxy->scale(0.1f * (1.0f / light_scale));
     light->add_child(light_proxy);
   }
 

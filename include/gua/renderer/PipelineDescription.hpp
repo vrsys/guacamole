@@ -56,8 +56,8 @@ class GUA_DLL PipelineDescription {
   std::shared_ptr<TexturedQuadPassDescription> const& get_textured_quad_pass() const;
   std::shared_ptr<LightVisibilityPassDescription> const& get_light_visibility_pass() const;
   std::shared_ptr<BBoxPassDescription> const& get_bbox_pass() const;
-  std::shared_ptr<ResolvePassDescription>const& get_resolve_pass() const;
-  std::shared_ptr<TexturedScreenSpaceQuadPassDescription>const& get_textured_screen_space_quad_pass() const;
+  std::shared_ptr<ResolvePassDescription> const& get_resolve_pass() const;
+  std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const& get_textured_screen_space_quad_pass() const;
 
   void set_enable_abuffer(bool value) {
     enable_abuffer_ = value;
@@ -104,9 +104,9 @@ class GUA_DLL PipelineDescription {
   PipelineDescription& operator=(PipelineDescription const& other);
 
   template <typename T> 
-  std::shared_ptr<T> get_pass_by_type() const {
+  std::shared_ptr<T> const& get_pass_by_type() const {
     for (auto const& pass : passes_) {
-      auto casted_pass = std::dynamic_pointer_cast<T>(pass);
+      auto const& casted_pass = std::dynamic_pointer_cast<T>(pass);
       if (casted_pass) {
         return casted_pass;
       }
@@ -121,7 +121,7 @@ class GUA_DLL PipelineDescription {
   void*  user_data_ = nullptr;
   bool   enable_abuffer_ = false;
   size_t abuffer_size_ = 800; // in MiB
-  float  blending_termination_threshold_ = 0.99;
+  float  blending_termination_threshold_ = 0.99f;
   int    max_lights_count_ = 128;
   mutable boost::shared_mutex mutex_;
 };

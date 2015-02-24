@@ -27,7 +27,7 @@ vec3 toneMapReinhard(vec3 linearColor, float exposure)
 
 vec3 toneMap(vec3 col)
 {
-  switch (@tone_mapping_method@) {
+  switch (@gua_tone_mapping_method@) {
     case 0:
       return toneMapLinear(col, gua_tone_mapping_exposure);
     case 1:

@@ -266,8 +266,8 @@ int main(int argc, char** argv) {
   portal_pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-  portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->texture("data/images/skymap.jpg");
+  portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->background_texture("data/images/skymap.jpg");
   portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   portal_camera->set_pipeline_description(portal_pipe);
   
@@ -301,8 +301,8 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
   pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
-  pipe->get_resolve_pass()->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  pipe->get_resolve_pass()->texture("data/images/skymap.jpg");
+  pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  pipe->get_resolve_pass()->background_texture("data/images/skymap.jpg");
 
   // fog seems to work improperly
   //pipe->get_pass_by_type<gua::ResolvePassDescription>()->enable_fog(true);

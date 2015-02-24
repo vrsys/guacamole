@@ -38,21 +38,21 @@ ToneMappingPassDescription::ToneMappingPassDescription()
   rendermode_ = RenderMode::Quad;
   depth_stencil_state_ = boost::make_optional(
       scm::gl::depth_stencil_state_desc(false, false));
-  uniforms["exposure"] = 1.0f;
-  uniforms["selected_operator"] = static_cast<int>(Method::LINEAR);
+  uniforms["gua_tone_mapping_exposure"] = 1.0f;
+  uniforms["gua_tone_mapping_operator"] = static_cast<int>(Method::LINEAR);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 ToneMappingPassDescription& ToneMappingPassDescription::exposure(float e) {
-  uniforms["exposure"] = e;
+  uniforms["gua_tone_mapping_exposure"] = e;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 float ToneMappingPassDescription::exposure() const {
-  auto uniform(uniforms.find("exposure"));
+  auto uniform(uniforms.find("gua_tone_mapping_exposure"));
   return boost::get<float>(uniform->second.data);
 }
 
@@ -60,7 +60,7 @@ float ToneMappingPassDescription::exposure() const {
 
 ToneMappingPassDescription& ToneMappingPassDescription::method(
     ToneMappingPassDescription::Method m) {
-  uniforms["selected_operator"] = static_cast<int>(m);
+  uniforms["gua_tone_mapping_operator"] = static_cast<int>(m);
   return *this;
 }
 
@@ -73,7 +73,7 @@ std::shared_ptr<PipelinePassDescription> ToneMappingPassDescription::make_copy()
 ////////////////////////////////////////////////////////////////////////////////
 
 ToneMappingPassDescription::Method ToneMappingPassDescription::method() const {
-  auto uniform(uniforms.find("selected_operator"));
+  auto uniform(uniforms.find("gua_tone_mapping_operator"));
   return ToneMappingPassDescription::Method(
       boost::get<int>(uniform->second.data));
 }
