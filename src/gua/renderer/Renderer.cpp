@@ -76,6 +76,9 @@ void Renderer::renderclient(Mailbox in) {
     if (window_name != "") {
       auto window = WindowDatabase::instance()->lookup(window_name);
 
+      if (window && !window->get_is_open()) {
+        window->open();
+      }
       // update window if one is assigned
       if (window && window->get_is_open()) {
         window->set_active(true);
