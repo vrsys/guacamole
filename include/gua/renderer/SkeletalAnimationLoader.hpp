@@ -128,9 +128,7 @@ public:
 
  private: // methods
 
-  void get_meshes(FbxNode& node, std::vector<FbxMesh*>& fbx_meshes, std::string const& file_name, unsigned flags, unsigned& mesh_count);
-
-  std::shared_ptr<node::Node> get_node(FbxScene const* fbx_scene,
+  std::shared_ptr<node::Node> get_node(FbxScene* fbx_scene,
                 std::string const& file_name,
                 std::string const& node_name,
                 unsigned flags);
