@@ -129,11 +129,11 @@ void main() {
   if (res) {
     if (depth < 1) {
       if (enable_fog) {
-        bg_color = gua_apply_fog(gua_get_background_color());
+        bg_color += gua_apply_fog(gua_get_background_color());
       }
       else {
         //bg_color = gua_get_color();
-        bg_color = shade_for_all_lights(gua_get_color(),
+        bg_color += shade_for_all_lights(gua_get_color(),
                                         gua_get_normal(),
                                         gua_get_position(),
                                         gua_get_pbr(),
@@ -141,7 +141,7 @@ void main() {
       }
     }
     else {
-      bg_color = gua_get_background_color();
+      bg_color += gua_get_background_color();
     }
 
     abuf_mix_frag(vec4(bg_color, 1.0), final_color);

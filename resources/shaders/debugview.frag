@@ -5,6 +5,7 @@ in vec2 gua_quad_coords;
 
 @include "common/gua_camera_uniforms.glsl"
 @include "common/gua_gbuffer_input.glsl"
+@include "common/gua_shading.glsl"
 
 
 // output
@@ -20,9 +21,9 @@ void main() {
 
   if ( fragment_position.y / debug_window_height == 0)
   {
-    vec2 texcoord = vec2(float(mod(fragment_position.x, debug_window_width)) / debug_window_width, 
-                         float(mod(fragment_position.y, debug_window_height)) / debug_window_height);
-
+    vec2 texcoord  = vec2(float(mod(fragment_position.x, debug_window_width)) / debug_window_width, 
+                          float(mod(fragment_position.y, debug_window_height)) / debug_window_height);
+                           
     // output depth
     if ( fragment_position.x / debug_window_width == 0 ) {
       gua_out_color = vec3(texture2D(sampler2D(gua_gbuffer_depth), texcoord).x * 2.0 - 1.0);
@@ -48,6 +49,18 @@ void main() {
 
     if ( fragment_position.x / debug_window_width == 4 ) {
 
+      uint nlights = 0;
+      int bitset_words = ((gua_lights_num - 1) >> 5) + 1;
+
+      ivec2 tile = ivec2(mod(fragment_position.x, debug_window_width ), 
+                         mod(fragment_position.y, debug_window_height ));
+
+      tile = 5 * tile >> @light_table_tile_power@;
+                  
+      for (int sl = 0; sl < bitset_words; ++sl) {
+        nlights += bitCount(texelFetch(usampler3D(gua_light_bitset), ivec3(tile, sl), 0).r);
+      }
+      gua_out_color = vec3(float(nlights) / gua_lights_num);
     }
 
   } else {
