@@ -330,13 +330,13 @@ namespace gua {
     ///////////////////////////////////////////////////////////////////////////
     auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::PLODNode))));
 
-    std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
-      return reinterpret_cast<node::PLODNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::PLODNode*>(b)->get_material()->get_shader();
-    });
-
     if (sorted_objects == pipe.get_scene().nodes.end() || sorted_objects->second.empty()) {
       return; // return if no nodes in scene
     }
+
+    std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
+      return reinterpret_cast<node::PLODNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::PLODNode*>(b)->get_material()->get_shader();
+    });
 
     ///////////////////////////////////////////////////////////////////////////
     // resource initialization

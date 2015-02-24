@@ -45,6 +45,12 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
     REINHARD = 2
   };
 
+  enum class EnvironmentLightingMode {
+    SPHEREMAP = 0,
+    CUBEMAP = 1,
+    AMBIENT_COLOR = 2
+  };
+
   ResolvePassDescription();
 
   ResolvePassDescription& color(utils::Color3f const& color);
@@ -53,9 +59,22 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& texture(std::string const& texture);
   std::string texture() const;
 
-  ResolvePassDescription& mode(BackgroundMode mode) {
-    background_mode_ = mode; return *this; }
-  BackgroundMode mode() const { return background_mode_; }
+  ResolvePassDescription& environment_lighting (std::string const& spheremap_texture);
+
+  ResolvePassDescription& environment_lighting (std::string const& cube_map_positive_x, 
+                                                std::string const& cube_map_negative_x, 
+                                                std::string const& cube_map_positive_y,
+                                                std::string const& cube_map_negative_y,
+                                                std::string const& cube_map_positive_z,
+                                                std::string const& cube_map_negative_z);
+
+  ResolvePassDescription& environment_lighting (utils::Color3f const& color);
+
+  ResolvePassDescription& environment_lighting_method (EnvironmentLightingMode mode);
+  EnvironmentLightingMode environment_lighting_method() const;
+
+  ResolvePassDescription& mode(BackgroundMode mode);
+  BackgroundMode mode() const;
 
   ResolvePassDescription& enable_fog(bool enable_fog);
   bool enable_fog() const;
@@ -69,13 +88,11 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& tone_mapping_exposure(float value);
   float tone_mapping_exposure() const;
 
-  ResolvePassDescription& tone_mapping_method(ToneMappingMethod value) {
-    tone_mapping_method_ = value; return *this; }
-  ToneMappingMethod tone_mapping_method() const { return tone_mapping_method_; }
+  ResolvePassDescription& tone_mapping_method(ToneMappingMethod value);
+  ToneMappingMethod tone_mapping_method() const;
 
-  ResolvePassDescription& debug_tiles(bool value) {
-    debug_tiles_ = value; return *this; }
-  bool debug_tiles() const { return debug_tiles_; }
+  ResolvePassDescription& debug_tiles(bool value);
+  bool debug_tiles() const;
 
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
@@ -83,10 +100,11 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
-  ToneMappingMethod tone_mapping_method_ = ToneMappingMethod::LINEAR;
-  BackgroundMode background_mode_        = BackgroundMode::COLOR;
-  bool debug_tiles_                      = false;
-};
+  ToneMappingMethod tone_mapping_method_             = ToneMappingMethod::LINEAR;
+  BackgroundMode background_mode_                    = BackgroundMode::COLOR;
+  EnvironmentLightingMode environment_lighting_mode_ = EnvironmentLightingMode::AMBIENT_COLOR;
+  bool debug_tiles_                                  = false;
+};  
 
 }
 

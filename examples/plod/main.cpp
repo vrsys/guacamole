@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
 
   auto light = graph.add_node<gua::node::PointLightNode>("/light_center", "light");
   light->data.set_enable_shadows(true);
-  light->scale(10.f);
+  light->scale(3.f);
   light->translate(0.f, 0.f, 3.7f);
   light->add_child(light_proxy_geometry);
 
