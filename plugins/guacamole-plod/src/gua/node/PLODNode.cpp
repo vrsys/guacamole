@@ -227,6 +227,7 @@ std::shared_ptr<Node> PLODNode::copy() const {
 
   result->shadow_mode_ = shadow_mode_;
   result->importance_ = importance_;
+  result->threshold_ = threshold_;
   result->enable_backface_culling_by_normal_ = enable_backface_culling_by_normal_;
 
   return result;
