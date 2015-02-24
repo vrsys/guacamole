@@ -181,10 +181,10 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
       }
 
       FbxNode* fbx_root = fbx_scene->GetRootNode();
-      Node{*fbx_root};
+      Node hierarchy{*fbx_root};
       unsigned count(0);
       std::shared_ptr<Material> material;
-      return get_tree(*fbx_root, file_name, flags, count);
+      return get_tree(*fbx_root, hierarchy, file_name, flags, count);
 
     }
     else {  
@@ -298,14 +298,13 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     FbxNode& node,
     std::string const& file_name,
     unsigned flags, unsigned& mesh_count) {
-
   // creates a geometry node and returns it
-  auto load_geometry = [&](FbxNode& node) 
+  auto load_geometry = [&](FbxNode& fbx_node) 
   {
-    FbxMesh* fbx_mesh = node.GetMesh();
+    FbxMesh* fbx_mesh = fbx_node.GetMesh();
 
     GeometryDescription desc ("TriMesh", file_name, mesh_count++, flags);
-    GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(*fbx_mesh));
+    GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*fbx_mesh, hierarchy}));
 
     // load material
     std::shared_ptr<Material> material;
@@ -323,29 +322,29 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
 
   auto group(std::make_shared<node::TransformNode>());
 
-  if(node.GetGeometry() != NULL) {
+  if(fbx_node.GetGeometry() != NULL) {
     
-    if(node.GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
+    if(fbx_node.GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
 
       // no children ->just return this
-      if (node.GetChildCount() == 0) {
-        return load_geometry(node);
+      if (fbx_node.GetChildCount() == 0) {
+        return load_geometry(fbx_node);
       }
 
-      group->add_child(load_geometry(node));
+      group->add_child(load_geometry(fbx_node));
     }
   }
 
   // there is only one child -- skip it!
-  if (node.GetChildCount() == 1 && node.GetChild(0)->GetGeometry() != NULL) {
-    if(node.GetChild(0)->GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
-      return get_tree(*node.GetChild(0), file_name, flags, mesh_count);
+  if (fbx_node.GetChildCount() == 1 && fbx_node.GetChild(0)->GetGeometry() != NULL) {
+    if(fbx_node.GetChild(0)->GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
+      return get_tree(*fbx_node.GetChild(0), hierarchy, file_name, flags, mesh_count);
     }
   }
 
   // else: there are multiple children and meshes
-  for (unsigned i(0); i < node.GetChildCount(); ++i) {
-    group->add_child(get_tree(*node.GetChild(i), file_name, flags, mesh_count));
+  for (unsigned i(0); i < fbx_node.GetChildCount(); ++i) {
+    group->add_child(get_tree(*fbx_node.GetChild(i), hierarchy, file_name, flags, mesh_count));
   }
 
   return group;

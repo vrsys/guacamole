@@ -146,6 +146,7 @@ Node::Node(FbxNode& node):
   transformation{scm::math::mat4f::identity()}, //fbxnodes dont store transformations
   offsetMatrix{scm::math::mat4f::identity()}
 {
+  Logger::LOG_DEBUG <<  "adding " << node.GetName() << std::endl;
   for(int i = 0; i < node.GetChildCount(); ++i) {
     FbxSkeleton const* skelnode{node.GetChild(i)->GetSkeleton()};
     if(skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector && node.GetChild(i)->GetChildCount() == 0) {
@@ -695,13 +696,13 @@ void Mesh::get_weights(FbxMesh const& mesh, Node const& root) {
       Logger::LOG_ERROR << "associated node does not exist!" << std::endl;
       assert(false);      
     }
-    
+
     std::string bone_name(node->GetName());
     uint bone_index;
-    try {
+    if(bone_mapping_.find(bone_name) != bone_mapping_.end()) {
       bone_index = bone_mapping_.at(bone_name);
     }      
-    catch(std::exception) {
+    else {
       Logger::LOG_ERROR << "Node with name '" << bone_name << "' does not exist!" << std::endl;
       assert(false);            
     }

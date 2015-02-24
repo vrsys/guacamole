@@ -132,6 +132,7 @@ public:
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material, bool no_shared_materials) const;
 
   std::shared_ptr<node::Node> get_tree(FbxNode& node,
+                Node const& hierarchy,
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);
 
