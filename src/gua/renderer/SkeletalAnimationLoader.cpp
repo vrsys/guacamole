@@ -302,44 +302,42 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
 }
 
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene const* fbx_scene,
+std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
   std::string const& file_name,
   std::string const& node_name,
   unsigned flags) {
 
-  FbxNode* fbx_root = fbx_scene->GetRootNode();
-  std::vector<FbxMesh*> fbx_meshes;
-
-  unsigned count(0);
-  get_meshes(*fbx_root, fbx_meshes, file_name, flags, count);
-
-  std::shared_ptr<Node> root = std::shared_ptr<Node>{new Node()};
+  std::shared_ptr<gua::Node> root = std::make_shared<gua::Node>(*scene);
   auto animation_director = std::make_shared<SkeletalAnimationDirector>(root);
 
   std::vector<std::string> geometry_descriptions{};
   std::vector<std::shared_ptr<Material>> materials{};
+  uint mesh_count = 0;
+  for(uint i = 0 ; i < scene->GetGeometryCount(); ++i) {
+    FbxGeometry* geo = scene->GetGeometry(i);
+    if(geo->GetAttributeType() == FbxNodeAttribute::eMesh) {  
 
-  for(FbxMesh* mesh : fbx_meshes){
+      GeometryDescription desc("SkeletalAnimation", file_name, mesh_count,flags);
+      geometry_descriptions.push_back(desc.unique_key());
 
-    GeometryDescription desc("SkeletalAnimation", file_name, 1,flags);
-    geometry_descriptions.push_back(desc.unique_key());
+      GeometryDatabase::instance()->add(desc.unique_key() 
+        ,std::make_shared<SkeletalAnimationRessource>(
+          Mesh{*dynamic_cast<FbxMesh*>(geo), *root}
+          , animation_director
+          , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
-    GeometryDatabase::instance()->add(desc.unique_key() 
-      ,std::make_shared<SkeletalAnimationRessource>(
-        *mesh
-        , animation_director
-        , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
-
-  //   std::shared_ptr<Material> material;
-  //   unsigned material_index(ai_scene->mMeshes[mesh_count]->mMaterialIndex);
-  //   //if (material_index != 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
-  //   if (flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
-  //     MaterialLoader material_loader;
-  //     aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
-  //     material = material_loader.load_material(ai_material, file_name);
-  //     material->set_uniform("Roughness", 0.6f);
-  //   }
-  //   materials.push_back(material);
+    //   std::shared_ptr<Material> material;
+    //   unsigned material_index(ai_scene->mMeshes[mesh_count]->mMaterialIndex);
+    //   //if (material_index != 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
+    //   if (flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
+    //     MaterialLoader material_loader;
+    //     aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
+    //     material = material_loader.load_material(ai_material, file_name);
+    //     material->set_uniform("Roughness", 0.6f);
+    //   }
+    //   materials.push_back(material);
+      ++mesh_count;
+    }
   }
 
   return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, animation_director);
@@ -367,7 +365,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
 
     GeometryDatabase::instance()->add(desc.unique_key() 
       ,std::make_shared<SkeletalAnimationRessource>(
-        Mesh{*ai_scene->mMeshes[mesh_count], *animation_director->get_root()}
+        Mesh{*ai_scene->mMeshes[mesh_count], *root}
         , animation_director
         , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
@@ -385,22 +383,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
 
   return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, animation_director);
 }
-/////////////////////////////////////////////////////////////////////////////
-void SkeletalAnimationLoader::get_meshes(FbxNode& node, std::vector<FbxMesh*>& fbx_meshes, std::string const& file_name, unsigned flags, unsigned& mesh_count) {
 
-  auto group(std::make_shared<node::TransformNode>());
-
-  if(node.GetGeometry() != NULL) {
-    if(node.GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
-      fbx_meshes.push_back(dynamic_cast<FbxMesh*>(node.GetGeometry()));
-    }
-  }
-
-  for (unsigned i(0); i < node.GetChildCount(); ++i) {
-    get_meshes(*node.GetChild(i), fbx_meshes, file_name, flags, mesh_count);
-  }
-
-}
 ////////////////////////////////////////////////////////////////////////////////
 // TODO
 /*std::vector<SkeletalAnimationRessource*> const SkeletalAnimationLoader::load_from_buffer(char const* buffer_name,

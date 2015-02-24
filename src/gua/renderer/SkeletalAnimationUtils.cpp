@@ -120,7 +120,7 @@ Node::Node():
   name{"none"},
   parentName{"none"},
   numChildren{0},
-  transformation{},
+  transformation{scm::math::mat4f::identity()},
   offsetMatrix{scm::math::mat4f::identity()}
 {}
 
@@ -265,7 +265,6 @@ void Node::set_properties(std::map<std::string, std::pair<uint, scm::math::mat4f
 
 void Node::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, Pose const& pose, scm::math::mat4f const& parentTransform) const {
   scm::math::mat4f nodeTransformation{transformation};
-
   if(pose.contains(name)) { 
     nodeTransformation = pose.get_transform(name).to_matrix();  
   }
@@ -273,11 +272,11 @@ void Node::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, Po
   scm::math::mat4f finalTransformation = parentTransform * nodeTransformation;
 
   //update transform if bone is mapped
-  if (index >= 0) {
+  if(index >= 0) {
     transformMat4s[index] = finalTransformation * offsetMatrix;
   }
   
-  for (std::shared_ptr<Node> const& child : children) {
+  for(std::shared_ptr<Node> const& child : children) {
      child->accumulate_matrices(transformMat4s, pose, finalTransformation);
   }
 }
