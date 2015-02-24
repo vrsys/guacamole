@@ -86,6 +86,7 @@ class Node {
   Node(aiNode const& node);
   Node(FbxNode& node);
   Node(aiScene const& scene);
+  Node(FbxScene& scene);
 
   ~Node();
 
@@ -271,7 +272,7 @@ struct Mesh {
 
  private:
   void init_weights(aiMesh const& mesh, Node const& root);
-  void get_weights(FbxMesh const& mesh, Node const& root);
+  std::vector<weight_map> get_weights(FbxMesh const& mesh, Node const& root);
 };
 
 class SkeletalAnimationUtils {
