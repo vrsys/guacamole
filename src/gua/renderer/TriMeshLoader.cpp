@@ -181,7 +181,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
       }
 
       FbxNode* fbx_root = fbx_scene->GetRootNode();
-      Node hierarchy{*fbx_root};
+      Node hierarchy{*fbx_scene};
       unsigned count(0);
       std::shared_ptr<Material> material;
       return get_tree(*fbx_root, hierarchy, file_name, flags, count);

@@ -146,7 +146,6 @@ Node::Node(FbxNode& node):
   transformation{scm::math::mat4f::identity()}, //fbxnodes dont store transformations
   offsetMatrix{scm::math::mat4f::identity()}
 {
-  Logger::LOG_DEBUG <<  "adding " << node.GetName() << std::endl;
   for(int i = 0; i < node.GetChildCount(); ++i) {
     FbxSkeleton const* skelnode{node.GetChild(i)->GetSkeleton()};
     if(skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector && node.GetChild(i)->GetChildCount() == 0) {
@@ -177,6 +176,57 @@ Node::Node(aiScene const& scene) {
     }
   }
   this->set_properties(bone_info);
+}
+Node::Node(FbxScene& scene) {
+  //construct hierarchy
+  *this = Node{*(scene.GetRootNode())};
+
+  std::map<std::string, std::pair<uint, scm::math::mat4f>> bone_info{};
+  unsigned num_bones = 0;
+  for(uint i = 0 ; i < scene.GetGeometryCount() ; i++) {
+    FbxGeometry* geo = scene.GetGeometry(i);
+    if(geo->GetAttributeType() == FbxNodeAttribute::eMesh) {      
+
+      //check for skinning, use first skin deformer
+      FbxSkin* skin;
+      for(unsigned i = 0; i < geo->GetDeformerCount(); ++i) {
+        FbxDeformer* defPtr ={geo->GetDeformer(i)};
+        if(defPtr->GetDeformerType() == FbxDeformer::eSkin) {
+          skin = static_cast<FbxSkin*>(defPtr);
+          break;
+        }
+      }
+
+      if(!skin) {
+        Logger::LOG_ERROR << "Mesh does not contain skin deformer" << std::endl;
+        assert(false);
+      }
+      
+      //one cluster corresponds to one bone
+      for(unsigned i = 0; i < skin->GetClusterCount(); ++i) {
+        FbxCluster* cluster = skin->GetCluster(i);
+        FbxNode* node = cluster->GetLink();
+
+        if(!node) {
+          Logger::LOG_ERROR << "associated node does not exist!" << std::endl;
+          assert(false);      
+        }
+
+        std::string bone_name(node->GetName());  
+
+        FbxAMatrix bind_transform;
+        //reference pose of bone
+        cluster->GetTransformLinkMatrix(bind_transform);
+        //bone update doesnt matter, they are just local variables
+        bone_info[bone_name] = std::make_pair(num_bones, to_gua::mat4(bind_transform.Inverse()));   
+        ++num_bones;
+      }
+
+      Logger::LOG_DEBUG << "bone setup processing finished" << std::endl;
+      // traverse hierarchy and set accumulated values in the bone
+      this->set_properties(bone_info);
+    }
+  }
 }
 
 Node::~Node()
@@ -279,7 +329,6 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
     }
   }
 
-  bool has_weights = false;
 
 //polygons
   if(mesh.GetPolygonCount() < 1) {
@@ -526,8 +575,11 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
   }
   std::cout << dupl_verts << " vertex duplications" << std::endl;
 
+  //get weights of original control points
+  std::vector<weight_map> ctrlpt_weight{get_weights(mesh, root)};
+  bool has_weights = ctrlpt_weight.size() > 0;
+
   // Reserve space in the vectors for the vertex attributes and indices
-  //for now resize and initialize with 0
   positions.reserve(num_vertices);
   normals.reserve(num_vertices);
   if(has_uvs) {
@@ -566,6 +618,9 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
       if(has_uvs) {
         texCoords.push_back(to_gua::vec3(poly_uvs[vert.uv]));
       }
+      if(has_weights) {
+        weights.push_back(ctrlpt_weight[vert.point]);
+      }
       ++curr_vert;
     }
   }
@@ -580,8 +635,6 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
 
   //output reduction info
   Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << std::endl;
-  
-  get_weights(mesh, root);
 }
 
 Mesh::Mesh(aiMesh const& mesh, Node const& root) {   
@@ -665,7 +718,7 @@ void Mesh::init_weights(aiMesh const& mesh, Node const& root) {
   }
 }
 
-void Mesh::get_weights(FbxMesh const& mesh, Node const& root) {
+std::vector<weight_map> Mesh::get_weights(FbxMesh const& mesh, Node const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
   root.collect_indices(bone_mapping_);
 
@@ -680,10 +733,9 @@ void Mesh::get_weights(FbxMesh const& mesh, Node const& root) {
   }
 
   if(!skin) {
-    Logger::LOG_ERROR << "Mesh does not contain skin deformer" << std::endl;
-    assert(false);
+    Logger::LOG_ERROR << "Mesh does not contain skin deformer, ignoring weights" << std::endl;
+    return std::vector<weight_map>{};
   }
-  Logger::LOG_DEBUG << "Weight processing starting" << std::endl;
   //set up temporary weights, for control points not actual vertices
   std::vector<weight_map> temp_weights{unsigned(mesh.GetControlPointsCount())};
   
@@ -703,24 +755,13 @@ void Mesh::get_weights(FbxMesh const& mesh, Node const& root) {
       bone_index = bone_mapping_.at(bone_name);
     }      
     else {
-      Logger::LOG_ERROR << "Node with name '" << bone_name << "' does not exist!" << std::endl;
-      assert(false);            
+      Logger::LOG_ERROR << "Node with name '" << bone_name << "' does not exist!, ignoring weights" << std::endl;
+      return std::vector<weight_map>{};          
     }
 
-    std::shared_ptr<Node> bone = root.find(bone_name);
-    if(!bone) {      
-      Logger::LOG_ERROR << "Node does not exist!" << std::endl;
-      assert(false);      
-    }
-
-    FbxAMatrix world_transform, bind_transform;
-    //reference pose of mesh?
+    FbxAMatrix world_transform;
+    //reference pose of mes
     cluster->GetTransformMatrix(world_transform);
-    //reference pose of bone
-    cluster->GetTransformLinkMatrix(bind_transform);
-    //bone update doesnt matter, they are just local variables
-    // bone->offsetMatrix = to_gua::mat4(bind_transform.Inverse() * world_transform); 
-
 
     int* indices = cluster->GetControlPointIndices();
     double* weights = cluster->GetControlPointWeights();
@@ -731,6 +772,7 @@ void Mesh::get_weights(FbxMesh const& mesh, Node const& root) {
   }
 
   Logger::LOG_DEBUG << "Weight processing finished" << std::endl;
+  return temp_weights;
 }
 
 void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
