@@ -43,6 +43,10 @@ scm::math::quatf quat(aiQuaternion const& q) {
   scm::math::quatf res(q.w, q.x, q.y, q.z);
   return res;
 }
+scm::math::quatf quat(FbxQuaternion const& q) {
+  scm::math::quatf res(q[3], q[0], q[1], q[2]);
+  return res;
+}
 
 }
 
@@ -91,16 +95,12 @@ std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_ani
     node_stack.pop();
   }
 
-  for(FbxNode* node : nodes) {
-    std::cout << node->GetName() << std::endl;
-  }
-
   for(uint i = 0; i < num_anims; ++i) {
     animations.push_back(std::make_shared<SkeletalAnimation>(scene.GetSrcObject<FbxAnimStack>(i), nodes));
   }
 
-  // return animations;
-  return std::vector<std::shared_ptr<SkeletalAnimation>>{};
+  return animations;
+  // return std::vector<std::shared_ptr<SkeletalAnimation>>{};
 }
 
 void SkeletalAnimationUtils::calculate_matrices(float timeInSeconds, Node const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& transforms) {
@@ -260,7 +260,6 @@ Node::Node(FbxScene& scene) {
         ++num_bones;
       }
 
-      Logger::LOG_DEBUG << "bone setup processing finished" << std::endl;
       // traverse hierarchy and set accumulated values in the bone
       this->set_properties(bone_info);
     }
@@ -913,9 +912,14 @@ BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& node):
   FbxTime end = take.mLocalTimeSpan.GetStop();
 
   FbxTime time;
+  FbxQuaternion quat{};
   for(unsigned i = start.GetFrameCount(FbxTime::eFrames30); i <= end.GetFrameCount(FbxTime::eFrames30); ++i) {
     time.SetFrame(i, FbxTime::eFrames30);
-    translationKeys.push_back(Key<scm::math::vec3>{time.GetSecondDouble(), to_gua::vec3(node.EvaluateLocalTranslation(time))});
+    scalingKeys.push_back(Key<scm::math::vec3>{time.GetFrameCountPrecise(), to_gua::vec3(node.EvaluateLocalScaling(time))});
+    quat.ComposeSphericalXYZ(node.EvaluateLocalRotation(time));
+    rotationKeys.push_back(Key<scm::math::quatf>{time.GetFrameCountPrecise(), to_gua::quat(quat)});
+    translationKeys.push_back(Key<scm::math::vec3>{time.GetFrameCountPrecise(), to_gua::vec3(node.EvaluateLocalTranslation(time))});
+    // std::cout << "setting keys at " << time.GetSecondDouble() << std::endl;
   }
 }
 
@@ -934,6 +938,7 @@ BoneAnimation::BoneAnimation(aiNodeAnim* anim):
   }
   for(unsigned i = 0; i < anim->mNumRotationKeys; ++i) {
     rotationKeys.push_back(Key<scm::math::quatf>{anim->mRotationKeys[i].mTime, to_gua::quat(anim->mRotationKeys[i].mValue)});
+  // std::cout << "adding key at " <<  anim->mRotationKeys[i].mTime << std::endl;
   }
   for(unsigned i = 0; i < anim->mNumPositionKeys; ++i) {
     translationKeys.push_back(Key<scm::math::vec3>{anim->mPositionKeys[i].mTime, to_gua::vec3(anim->mPositionKeys[i].mValue)});
@@ -969,7 +974,7 @@ uint BoneAnimation::find_key(float animationTime, std::vector<Key<T>> keys) cons
     }
   }
 
-  Logger::LOG_ERROR << "no key found" << std::endl;
+  Logger::LOG_ERROR << "no key found at frame " << animationTime << std::endl;
   assert(false);
 
   return 0;
@@ -1038,11 +1043,9 @@ SkeletalAnimation::SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> c
   FbxScene* scene = anim->GetScene();
   scene->SetCurrentAnimationStack(anim);
   FbxTakeInfo* take = scene->GetTakeInfo(anim->GetName());
-  FbxTime start = take->mLocalTimeSpan.GetStart();
-  FbxTime end = take->mLocalTimeSpan.GetStop();
 
   numFPS = 30;
-  numFrames = end.GetFrameCount(FbxTime::eFrames30) - start.GetFrameCount(FbxTime::eFrames30) + 1;
+  numFrames = take->mLocalTimeSpan.GetDuration().GetFrameCount(FbxTime::eFrames30);
   duration = double(numFrames) / numFPS;
 
   for(FbxNode* const bone : bones) {

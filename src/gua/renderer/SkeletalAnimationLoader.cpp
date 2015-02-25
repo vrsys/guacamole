@@ -140,18 +140,57 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
   auto point_pos(file_name.find_last_of("."));
 
   if(file_name.substr(point_pos + 1) == "fbx") {
+
     FbxManager* sdk_manager = NULL;
     FbxScene* scene = NULL;
-    bool lResult;
-
+    
     // Prepare the FBX SDK.
     InitializeSdkObjects(sdk_manager, scene);
+    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_MATERIAL,        false);
+    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_TEXTURE,         false);
+    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_CHARACTER,        false);
+    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_CONSTRAINT,       false);
+    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_LINK,            false);
+    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_SHAPE,           false);
+    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_MODEL,           false);
+    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_GOBO,            false);
+    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_ANIMATION,       true);
+    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
 
-    // FbxString lFilePath(file_name.c_str());
-    lResult = LoadScene(sdk_manager, scene, file_name.c_str());
+    // Create an importer.
+    FbxImporter* lImporter = FbxImporter::Create(sdk_manager,"");
 
-    std::shared_ptr<node::Node> new_node;
-    if(lResult) {
+    int lFileMajor, lFileMinor, lFileRevision;
+    int lSDKMajor,  lSDKMinor,  lSDKRevision;
+    // Get the file version number generate by the FBX SDK.
+    FbxManager::GetFileFormatVersion(lSDKMajor, lSDKMinor, lSDKRevision);
+    lImporter->GetFileVersion(lFileMajor, lFileMinor, lFileRevision);
+
+    // Initialize the importer by providing a filename.
+    const bool lImportStatus = lImporter->Initialize(file_name.c_str(), -1, sdk_manager->GetIOSettings());
+    if(!lImportStatus)
+    {
+      FbxString error = lImporter->GetStatus().GetErrorString();
+      Logger::LOG_ERROR << "Call to FbxImporter::Initialize() failed." << std::endl;
+      Logger::LOG_ERROR << "Error returned: " << error.Buffer() << std::endl;
+
+      if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion)
+      {
+          Logger::LOG_ERROR <<"FBX file format version for this FBX SDK is " << lSDKMajor << "." << lSDKMinor << "." << lSDKRevision << std::endl;
+          Logger::LOG_ERROR <<"FBX file format version for file '" << file_name << "' is " << lFileMajor << "." << lFileMinor << "." << lFileRevision << " does not match" << std::endl;
+      }
+      assert(0);
+    }
+
+    bool result;
+    if(!lImporter->IsFBX())
+    {
+      Logger::LOG_ERROR << "File \"" << file_name << "\" is no fbx" << std::endl;
+      assert(0);
+    }
+    result = lImporter->Import(scene);
+
+    if(result) {
       skelNode->get_director()->add_animations(*scene);
     }
     else {
@@ -238,21 +277,59 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
 
       FbxManager* sdk_manager = NULL;
       FbxScene* scene = NULL;
-      bool lResult;
 
       // Prepare the FBX SDK.
       InitializeSdkObjects(sdk_manager, scene);
+      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_MATERIAL,        true);
+      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_TEXTURE,         true);
+      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_CHARACTER,        false);
+      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_CONSTRAINT,       false);
+      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_LINK,            true);
+      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_SHAPE,           false);
+      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_MODEL,           true);
+      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_GOBO,            false);
+      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_ANIMATION,       false);
+      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
 
-      // FbxString lFilePath(file_name.c_str());
-      lResult = LoadScene(sdk_manager, scene, file_name.c_str());
+      // Create an importer.
+      FbxImporter* lImporter = FbxImporter::Create(sdk_manager,"");
 
-      std::shared_ptr<node::Node> new_node;
-      if(lResult) {
-        new_node = get_node(scene, file_name, node_name, flags);
+      int lFileMajor, lFileMinor, lFileRevision;
+      int lSDKMajor,  lSDKMinor,  lSDKRevision;
+      // Get the file version number generate by the FBX SDK.
+      FbxManager::GetFileFormatVersion(lSDKMajor, lSDKMinor, lSDKRevision);
+      lImporter->GetFileVersion(lFileMajor, lFileMinor, lFileRevision);
+
+      // Initialize the importer by providing a filename.
+      const bool lImportStatus = lImporter->Initialize(file_name.c_str(), -1, sdk_manager->GetIOSettings());
+      if(!lImportStatus)
+      {
+        FbxString error = lImporter->GetStatus().GetErrorString();
+        Logger::LOG_ERROR << "Call to FbxImporter::Initialize() failed." << std::endl;
+        Logger::LOG_ERROR << "Error returned: " << error.Buffer() << std::endl;
+
+        if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion)
+        {
+            Logger::LOG_ERROR <<"FBX file format version for this FBX SDK is " << lSDKMajor << "." << lSDKMinor << "." << lSDKRevision << std::endl;
+            Logger::LOG_ERROR <<"FBX file format version for file '" << file_name << "' is " << lFileMajor << "." << lFileMinor << "." << lFileRevision << " does not match" << std::endl;
+        }
+        assert(0);
       }
-      else {
-        Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\"" << std::endl;
+
+      bool result;
+      if(!lImporter->IsFBX())
+      {
+        Logger::LOG_ERROR << "File \"" << file_name << "\" is no fbx" << std::endl;
+        assert(0);
+      }
+      result = lImporter->Import(scene);
+
+      if(!result) {
+        Logger::LOG_ERROR << "Failed to load object \"" << file_name << "\"" << std::endl;
+        assert(0);
       } 
+
+      std::shared_ptr<node::Node> new_node = get_node(scene, file_name, node_name, flags);
 
       return new_node;
     }
