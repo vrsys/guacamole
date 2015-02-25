@@ -117,7 +117,7 @@ vec3 gua_get_background_color() {
 
 ///////////////////////////////////////////////////////////////////////////////
 vec2 
-longigude_latitude(in vec3 normal) 
+longitude_latitude(in vec3 normal) 
 { 
   const float invpi = 1.0 / 3.14159265359;
 
@@ -135,8 +135,8 @@ vec3 environment_lighting (vec3 world_normal)
 
   switch (gua_environment_lighting_mode) {
     case 0 : // spheremap
-      vec2 texcoord = longigude_latitude(world_normal);
-      env_color = texture2D(sampler2D(gua_environment_lighting_spheremap), texcoord).rgb / 10.0;
+      vec2 texcoord = longitude_latitude(world_normal);
+      env_color = texture2D(sampler2D(gua_environment_lighting_spheremap), texcoord).rgb * 0.2;
       break;
     case 1 : // cubemap
       env_color = vec3(0.0); // not implemented yet!
