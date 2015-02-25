@@ -80,10 +80,10 @@ int main(int argc, char** argv) {
 
   auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
-  loader.load_animation(teapot, "data/objects/marine/crouch.md5anim", 0);
-  loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
-  loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
-  loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
+  // loader.load_animation(teapot, "data/objects/marine/crouch.md5anim", 0);
+  // loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
+  // loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
+  // loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
 
   //std::shared_ptr<gua::node::SkeletalAnimationNode> skel_node = std::dynamic_pointer_cast<gua::node::SkeletalAnimationNode>(teapot2);
   //skel_node->set_animation_mode(0);
@@ -93,7 +93,6 @@ int main(int argc, char** argv) {
 
   auto rock(loader2.create_geometry_from_file("fbx", "data/objects/fbx/zombie_axe.fbx", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   loader2.load_animation(rock, "data/objects/fbx/zombie_axe.fbx", 0);
-
   rock->set_draw_bounding_box(true);
   
   graph.add_node("/transform2", rock);
