@@ -2,6 +2,7 @@
 #include <gua/renderer/SkeletalAnimationUtils.hpp>
 //external headers
 #include <iostream>
+#include <queue>
 
 namespace to_gua{
 
@@ -64,6 +65,42 @@ std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_ani
   }
 
   return animations;
+}
+std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_animations(FbxScene const& scene) {
+  std::vector<std::shared_ptr<SkeletalAnimation>> animations{};
+  unsigned num_anims = scene.GetSrcObjectCount<FbxAnimStack>();
+  if(num_anims <= 0) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
+ 
+  std::vector<FbxNode*> nodes{};
+  // traverse hierarchy and collect pointers to all nodes
+  std::queue<FbxNode*> node_stack{};
+  node_stack.push(scene.GetRootNode());
+  while(!node_stack.empty()) {
+    FbxNode* curr_node = node_stack.front(); 
+    nodes.push_back(curr_node);
+
+    for(int i = 0; i < curr_node->GetChildCount(); ++i) {
+      FbxSkeleton const* skelnode{curr_node->GetChild(i)->GetSkeleton()};
+      if(skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector && curr_node->GetChild(i)->GetChildCount() == 0) {
+        Logger::LOG_DEBUG << curr_node->GetChild(i)->GetName() << " is effector, ignoring it" << std::endl;
+      }
+      else {
+        node_stack.push(curr_node->GetChild(i));
+      }
+    }
+    node_stack.pop();
+  }
+
+  for(FbxNode* node : nodes) {
+    std::cout << node->GetName() << std::endl;
+  }
+
+  for(uint i = 0; i < num_anims; ++i) {
+    animations.push_back(std::make_shared<SkeletalAnimation>(scene.GetSrcObject<FbxAnimStack>(i), nodes));
+  }
+
+  // return animations;
+  return std::vector<std::shared_ptr<SkeletalAnimation>>{};
 }
 
 void SkeletalAnimationUtils::calculate_matrices(float timeInSeconds, Node const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& transforms) {
@@ -143,7 +180,7 @@ Node::Node(FbxNode& node):
   name{node.GetName()},
   parentName{node.GetParent() != NULL ? node.GetParent()->GetName() : "none"},
   numChildren{unsigned(node.GetChildCount())},
-  transformation{scm::math::mat4f::identity()}, //fbxnodes dont store transformations
+  transformation{to_gua::mat4(node.EvaluateLocalTransform())},
   offsetMatrix{scm::math::mat4f::identity()}
 {
   for(int i = 0; i < node.GetChildCount(); ++i) {
@@ -218,6 +255,7 @@ Node::Node(FbxScene& scene) {
         //reference pose of bone
         cluster->GetTransformLinkMatrix(bind_transform);
         //bone update doesnt matter, they are just local variables
+        // bone_info[bone_name] = std::make_pair(num_bones, scm::math::mat4f::identity());   
         bone_info[bone_name] = std::make_pair(num_bones, to_gua::mat4(bind_transform.Inverse()));   
         ++num_bones;
       }
@@ -307,6 +345,17 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
       Logger::LOG_WARNING << "Mesh has multiple UV sets, only using first one" << std::endl;
     }
     UV_set = mesh.GetElementUV(0)->GetName();
+  }
+
+  FbxVector4 translation = mesh.GetNode()->GetGeometricTranslation(FbxNode::eSourcePivot);
+  FbxVector4 rotation = mesh.GetNode()->GetGeometricRotation(FbxNode::eSourcePivot);
+  FbxVector4 scaling = mesh.GetNode()->GetGeometricScaling(FbxNode::eSourcePivot);
+  FbxAMatrix geo_transform(translation, rotation, scaling);
+
+  FbxAMatrix identity = FbxAMatrix{};
+  identity.SetIdentity();
+  if(geo_transform != identity) {
+    Logger::LOG_WARNING << "Mesh has Geometric Transform, vertices will be skewed." << std::endl;
   }
 
 //normals
@@ -854,12 +903,30 @@ BoneAnimation::BoneAnimation():
   rotationKeys{},
   translationKeys{}
 {}
+BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& node):
+  name{node.GetName()},
+  scalingKeys{},
+  rotationKeys{},
+  translationKeys{}
+{
+  FbxTime start = take.mLocalTimeSpan.GetStart();
+  FbxTime end = take.mLocalTimeSpan.GetStop();
+
+  FbxTime time;
+  for(unsigned i = start.GetFrameCount(FbxTime::eFrames30); i <= end.GetFrameCount(FbxTime::eFrames30); ++i) {
+    time.SetFrame(i, FbxTime::eFrames30);
+    translationKeys.push_back(Key<scm::math::vec3>{time.GetSecondDouble(), to_gua::vec3(node.EvaluateLocalTranslation(time))});
+  }
+}
 
 BoneAnimation::~BoneAnimation()
 {}
 
 BoneAnimation::BoneAnimation(aiNodeAnim* anim):
-  name{anim->mNodeName.C_Str()}
+  name{anim->mNodeName.C_Str()},
+  scalingKeys{},
+  rotationKeys{},
+  translationKeys{}
  {
 
   for(unsigned i = 0; i < anim->mNumScalingKeys; ++i) {
@@ -958,6 +1025,28 @@ SkeletalAnimation::SkeletalAnimation(aiAnimation* anim, std::string const& file_
 {
   for(unsigned i = 0; i < numBoneAnims; ++i) {
     boneAnims.push_back(BoneAnimation{anim.mChannels[i]});
+  }
+}
+SkeletalAnimation::SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> const& bones):
+  name{anim->GetName()},
+  numFrames{0},
+  numFPS{0},
+  duration{0},
+  numBoneAnims{0},
+  boneAnims{}
+{
+  FbxScene* scene = anim->GetScene();
+  scene->SetCurrentAnimationStack(anim);
+  FbxTakeInfo* take = scene->GetTakeInfo(anim->GetName());
+  FbxTime start = take->mLocalTimeSpan.GetStart();
+  FbxTime end = take->mLocalTimeSpan.GetStop();
+
+  numFPS = 30;
+  numFrames = end.GetFrameCount(FbxTime::eFrames30) - start.GetFrameCount(FbxTime::eFrames30) + 1;
+  duration = double(numFrames) / numFPS;
+
+  for(FbxNode* const bone : bones) {
+    boneAnims.push_back(BoneAnimation{*take, *bone});
   }
 }
 

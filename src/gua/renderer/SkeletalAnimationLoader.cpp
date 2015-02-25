@@ -137,19 +137,42 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
     return;
   }
 
-  auto importer = std::make_shared<Assimp::Importer>();
+  auto point_pos(file_name.find_last_of("."));
 
-  importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+  if(file_name.substr(point_pos + 1) == "fbx") {
+    FbxManager* sdk_manager = NULL;
+    FbxScene* scene = NULL;
+    bool lResult;
 
-  importer->ReadFile(file_name, aiProcess_LimitBoneWeights);
+    // Prepare the FBX SDK.
+    InitializeSdkObjects(sdk_manager, scene);
 
-  aiScene const* scene(importer->GetOrphanedScene());
+    // FbxString lFilePath(file_name.c_str());
+    lResult = LoadScene(sdk_manager, scene, file_name.c_str());
 
-  if(scene->HasAnimations()) {
-    skelNode->get_director()->add_animations(*scene);
+    std::shared_ptr<node::Node> new_node;
+    if(lResult) {
+      skelNode->get_director()->add_animations(*scene);
+    }
+    else {
+      Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\"" << std::endl;
+    } 
   }
   else {
-    Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;
+    auto importer = std::make_shared<Assimp::Importer>();
+
+    importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+
+    importer->ReadFile(file_name, aiProcess_LimitBoneWeights);
+
+    aiScene const* scene(importer->GetOrphanedScene());
+
+    if(scene->HasAnimations()) {
+      skelNode->get_director()->add_animations(*scene);
+    }
+    else {
+      Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;
+    }
   }
 }
 /////////////////////////////////////////////////////////////////////////////
@@ -212,7 +235,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
     auto point_pos(file_name.find_last_of("."));
 
     if(file_name.substr(point_pos + 1) == "fbx") {
-      std::cout << "fbx" << std::endl;
 
       FbxManager* sdk_manager = NULL;
       FbxScene* scene = NULL;

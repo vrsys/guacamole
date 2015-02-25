@@ -117,6 +117,7 @@ class BoneAnimation {
   ~BoneAnimation();
 
   BoneAnimation(aiNodeAnim* anim);
+  BoneAnimation(FbxTakeInfo const& take, FbxNode& node);
 
   Transformation calculate_transform(float time) const;
 
@@ -173,9 +174,13 @@ class SkeletalAnimation {
 
 <<<<<<< HEAD
   SkeletalAnimation(aiAnimation const& anim);
+<<<<<<< HEAD
 =======
   SkeletalAnimation(aiAnimation* anim, std::string const& file_name);
 >>>>>>> add animation name interface for animation control in avango
+=======
+  SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> const& bones);
+>>>>>>> animation sampling theoretically works for translation
 
   ~SkeletalAnimation();
 
@@ -278,10 +283,14 @@ class SkeletalAnimationUtils {
 
 <<<<<<< HEAD
   static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(aiScene const&);
+<<<<<<< HEAD
 =======
   static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(aiScene const*, std::string const& file_name);
   static std::shared_ptr<Node> load_hierarchy(aiScene const* scene);
 >>>>>>> add animation name interface for animation control in avango
+=======
+  static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(FbxScene const&);
+>>>>>>> animation sampling theoretically works for translation
 
   static void calculate_matrices(float TimeInSeconds, Node const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
   static void calculate_matrices(Node const& root, std::vector<scm::math::mat4f>& Transforms);

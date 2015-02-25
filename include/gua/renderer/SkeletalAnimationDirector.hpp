@@ -48,6 +48,7 @@ class SkeletalAnimationDirector {
 
 <<<<<<< HEAD
   void add_animations(aiScene const& scene);
+  void add_animations(FbxScene& scene);
 
   void add_hierarchy(aiScene const& scene);
 =======
