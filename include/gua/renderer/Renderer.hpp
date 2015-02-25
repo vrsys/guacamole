@@ -95,8 +95,6 @@ class GUA_DLL Renderer {
   std::map<std::string, Renderclient> render_clients_;
 
   FpsCounter application_fps_;
-  bool stop_requested_;
-
 };
 
 }
