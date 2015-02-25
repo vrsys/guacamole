@@ -501,6 +501,7 @@ namespace gua {
          cuts->SendTransform(context_id, model_id, scm_model_matrix);
          cuts->SendRendered(context_id, model_id);
          cuts->SendImportance(context_id, model_id, plod_node->get_importance());
+         cuts->SendThreshold(context_id, model_id, plod_node->get_threshold());         
 
          // update current model matrix for PLODLibrary in order to make bundle pick work
          database->GetModel(model_id)->set_transform(scm_model_matrix);
