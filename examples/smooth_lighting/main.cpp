@@ -24,6 +24,7 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
+#include <gua/renderer/FXAAPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
@@ -142,6 +143,11 @@ int main(int argc, char** argv) {
   rough_white->set_uniform("metalness", 0.0f);
   rough_white->set_uniform("roughness", 1.0f);
   rough_white->set_uniform("emissivity", 0.0f); 
+
+  scm::gl::sampler_state_desc const& sampler_state_desc = scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT);
+  gua::TextureDatabase::instance()->add("data/textures/envlightmap.jpg", std::make_shared<gua::Texture2D>("data/textures/envlightmap.jpg", true, sampler_state_desc));
+
+
   rough_white->set_uniform("noise_texture", std::string("data/textures/noise.jpg"));
 
 
@@ -194,6 +200,8 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/textures/envmap.jpg");
 
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+
+  camera->get_pipeline_description()->add_pass(std::make_shared<gua::FXAAPassDescription>());
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
