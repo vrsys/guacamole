@@ -100,7 +100,6 @@ std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_ani
   }
 
   return animations;
-  // return std::vector<std::shared_ptr<SkeletalAnimation>>{};
 }
 
 void SkeletalAnimationUtils::calculate_matrices(float timeInSeconds, Node const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& transforms) {
@@ -770,7 +769,7 @@ std::vector<weight_map> Mesh::get_weights(FbxMesh const& mesh, Node const& root)
   root.collect_indices(bone_mapping_);
 
   //check for skinning
-  FbxSkin* skin;
+  FbxSkin* skin = NULL;
   for(unsigned i = 0; i < mesh.GetDeformerCount(); ++i) {
     FbxDeformer* defPtr ={mesh.GetDeformer(i)};
     if(defPtr->GetDeformerType() == FbxDeformer::eSkin) {
@@ -785,7 +784,8 @@ std::vector<weight_map> Mesh::get_weights(FbxMesh const& mesh, Node const& root)
   }
   //set up temporary weights, for control points not actual vertices
   std::vector<weight_map> temp_weights{unsigned(mesh.GetControlPointsCount())};
-  
+  std::cout << skin->GetClusterCount() << std::endl;
+  std::cout << "test2" << std::endl;
   //one cluster corresponds to one bone
   for(unsigned i = 0; i < skin->GetClusterCount(); ++i) {
     FbxCluster* cluster = skin->GetCluster(i);
@@ -912,13 +912,19 @@ BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& node):
 
   FbxTime time;
   FbxQuaternion quat{};
-  for(unsigned i = start.GetFrameCount(FbxTime::eFrames30); i <= end.GetFrameCount(FbxTime::eFrames30); ++i) {
+  unsigned start_frame = start.GetFrameCount(FbxTime::eFrames30);
+  for(unsigned i = start_frame; i <= end.GetFrameCount(FbxTime::eFrames30); ++i) {
     time.SetFrame(i, FbxTime::eFrames30);
-    scalingKeys.push_back(Key<scm::math::vec3>{time.GetFrameCountPrecise(), to_gua::vec3(node.EvaluateLocalScaling(time))});
+    scalingKeys.push_back(Key<scm::math::vec3>{double(i - start_frame), to_gua::vec3(node.EvaluateLocalScaling(time))});
     quat.ComposeSphericalXYZ(node.EvaluateLocalRotation(time));
-    rotationKeys.push_back(Key<scm::math::quatf>{time.GetFrameCountPrecise(), to_gua::quat(quat)});
-    translationKeys.push_back(Key<scm::math::vec3>{time.GetFrameCountPrecise(), to_gua::vec3(node.EvaluateLocalTranslation(time))});
-    // std::cout << "setting keys at " << time.GetSecondDouble() << std::endl;
+    rotationKeys.push_back(Key<scm::math::quatf>{double(i - start_frame), to_gua::quat(quat)});
+    translationKeys.push_back(Key<scm::math::vec3>{double(i - start_frame), to_gua::vec3(node.EvaluateLocalTranslation(time))});
+    // std::cout << "adding key nr. " << i << " at " << time.GetSecondDouble() << std::endl;
+    if(rotationKeys.size() > 1 && name == "Neck") {
+      if(rotationKeys[i-1].value == rotationKeys[i].value) {
+        std::cout << "keys " << i << " is same as before" << std::endl;
+      }
+    }
   }
 }
 
@@ -931,7 +937,7 @@ BoneAnimation::BoneAnimation(aiNodeAnim* anim):
   rotationKeys{},
   translationKeys{}
  {
-
+  //mTime is double but stored in frames
   for(unsigned i = 0; i < anim->mNumScalingKeys; ++i) {
     scalingKeys.push_back(Key<scm::math::vec3>{anim->mScalingKeys[i].mTime, to_gua::vec3(anim->mScalingKeys[i].mValue)});
   }
@@ -1039,14 +1045,16 @@ SkeletalAnimation::SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> c
   numBoneAnims{0},
   boneAnims{}
 {
+  //set animation for which bones will be evaluated 
   FbxScene* scene = anim->GetScene();
   scene->SetCurrentAnimationStack(anim);
-  FbxTakeInfo* take = scene->GetTakeInfo(anim->GetName());
 
+  FbxTakeInfo* take = scene->GetTakeInfo(anim->GetName());
+  std::cout << "anim from frame " << take->mLocalTimeSpan.GetStart().GetFrameCount(FbxTime::eFrames30) << " to " << take->mLocalTimeSpan.GetStop().GetFrameCount(FbxTime::eFrames30) << std::endl;
   numFPS = 30;
   numFrames = take->mLocalTimeSpan.GetDuration().GetFrameCount(FbxTime::eFrames30);
   duration = double(numFrames) / numFPS;
-
+  std::cout << "animation '" << name << "' has " << numFrames << " frames and duration " << duration << " seconds" << std::endl;
   for(FbxNode* const bone : bones) {
     boneAnims.push_back(BoneAnimation{*take, *bone});
   }
@@ -1073,8 +1081,13 @@ double SkeletalAnimation::get_duration() const {
   return duration;
 }
 
+<<<<<<< HEAD
 std::string SkeletalAnimation::get_name() const {
   return name;
+=======
+std::string const& SkeletalAnimation::get_name() const {
+  return name;  
+>>>>>>> fixed bug with uninitialized pointer to skin modifier
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
