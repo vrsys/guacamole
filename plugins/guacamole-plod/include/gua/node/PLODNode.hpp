@@ -55,6 +55,7 @@ public:
            std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
            math::mat4 const& transform = math::mat4::identity(),
            float const importance = 1.0f,
+           float const threshold = 2.5f,
            bool const enable_backface_culling_by_normal = false);
 
 public:  // methods
@@ -71,6 +72,9 @@ public:  // methods
 
   float              get_importance();
   void               set_importance(float const importance);
+
+  float              get_threshold();
+  void               set_threshold(float const threshold);
 
   bool               get_enable_backface_culling_by_normal();
   void               set_enable_backface_culling_by_normal(bool const enable_backface_culling);
@@ -105,6 +109,7 @@ private:  // attributes e.g. special attributes for drawing
   bool                          material_changed_;
 
   float                         importance_;
+  float                         threshold_;
   bool                          enable_backface_culling_by_normal_;
 };
 
