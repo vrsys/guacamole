@@ -141,61 +141,30 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
 
   if(file_name.substr(point_pos + 1) == "fbx") {
 
-    FbxManager* sdk_manager = NULL;
-    FbxScene* scene = NULL;
+    //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
+    FbxManager* sdk_manager = FbxManager::Create();
+    if(!sdk_manager) {
+        Logger::LOG_ERROR <<"Error: Unable to create FBX Manager!\n";
+        assert(0);
+    }
+
+    //Create an IOSettings object. This object holds all import/export settings.
+    FbxIOSettings* ios = FbxIOSettings::Create(sdk_manager, IOSROOT);
+    ios->SetBoolProp(IMP_FBX_MATERIAL,        false);
+    ios->SetBoolProp(IMP_FBX_TEXTURE,         false);
+    ios->SetBoolProp(IMP_FBX_CHARACTER,        false);
+    ios->SetBoolProp(IMP_FBX_CONSTRAINT,       false);
+    ios->SetBoolProp(IMP_FBX_LINK,            false);
+    ios->SetBoolProp(IMP_FBX_SHAPE,           false);
+    ios->SetBoolProp(IMP_FBX_MODEL,           false);
+    ios->SetBoolProp(IMP_FBX_GOBO,            false);
+    ios->SetBoolProp(IMP_FBX_ANIMATION,       true);
+    ios->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
+    sdk_manager->SetIOSettings(ios);
+
+    FbxScene* scene = load_fbx_file(sdk_manager, file_name);
     
-    // Prepare the FBX SDK.
-    InitializeSdkObjects(sdk_manager, scene);
-    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_MATERIAL,        false);
-    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_TEXTURE,         false);
-    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_CHARACTER,        false);
-    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_CONSTRAINT,       false);
-    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_LINK,            false);
-    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_SHAPE,           false);
-    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_MODEL,           false);
-    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_GOBO,            false);
-    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_ANIMATION,       true);
-    sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
-
-    // Create an importer.
-    FbxImporter* lImporter = FbxImporter::Create(sdk_manager,"");
-
-    int lFileMajor, lFileMinor, lFileRevision;
-    int lSDKMajor,  lSDKMinor,  lSDKRevision;
-    // Get the file version number generate by the FBX SDK.
-    FbxManager::GetFileFormatVersion(lSDKMajor, lSDKMinor, lSDKRevision);
-    lImporter->GetFileVersion(lFileMajor, lFileMinor, lFileRevision);
-
-    // Initialize the importer by providing a filename.
-    const bool lImportStatus = lImporter->Initialize(file_name.c_str(), -1, sdk_manager->GetIOSettings());
-    if(!lImportStatus)
-    {
-      FbxString error = lImporter->GetStatus().GetErrorString();
-      Logger::LOG_ERROR << "Call to FbxImporter::Initialize() failed." << std::endl;
-      Logger::LOG_ERROR << "Error returned: " << error.Buffer() << std::endl;
-
-      if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion)
-      {
-          Logger::LOG_ERROR <<"FBX file format version for this FBX SDK is " << lSDKMajor << "." << lSDKMinor << "." << lSDKRevision << std::endl;
-          Logger::LOG_ERROR <<"FBX file format version for file '" << file_name << "' is " << lFileMajor << "." << lFileMinor << "." << lFileRevision << " does not match" << std::endl;
-      }
-      assert(0);
-    }
-
-    bool result;
-    if(!lImporter->IsFBX())
-    {
-      Logger::LOG_ERROR << "File \"" << file_name << "\" is no fbx" << std::endl;
-      assert(0);
-    }
-    result = lImporter->Import(scene);
-
-    if(result) {
-      skelNode->get_director()->add_animations(*scene);
-    }
-    else {
-      Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\"" << std::endl;
-    } 
+    skelNode->get_director()->add_animations(*scene);
   }
   else {
     auto importer = std::make_shared<Assimp::Importer>();
@@ -275,59 +244,28 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
 
     if(file_name.substr(point_pos + 1) == "fbx") {
 
-      FbxManager* sdk_manager = NULL;
-      FbxScene* scene = NULL;
-
-      // Prepare the FBX SDK.
-      InitializeSdkObjects(sdk_manager, scene);
-      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_MATERIAL,        true);
-      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_TEXTURE,         true);
-      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_CHARACTER,        false);
-      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_CONSTRAINT,       false);
-      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_LINK,            true);
-      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_SHAPE,           false);
-      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_MODEL,           true);
-      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_GOBO,            false);
-      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_ANIMATION,       false);
-      sdk_manager->GetIOSettings()->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
-
-      // Create an importer.
-      FbxImporter* lImporter = FbxImporter::Create(sdk_manager,"");
-
-      int lFileMajor, lFileMinor, lFileRevision;
-      int lSDKMajor,  lSDKMinor,  lSDKRevision;
-      // Get the file version number generate by the FBX SDK.
-      FbxManager::GetFileFormatVersion(lSDKMajor, lSDKMinor, lSDKRevision);
-      lImporter->GetFileVersion(lFileMajor, lFileMinor, lFileRevision);
-
-      // Initialize the importer by providing a filename.
-      const bool lImportStatus = lImporter->Initialize(file_name.c_str(), -1, sdk_manager->GetIOSettings());
-      if(!lImportStatus)
-      {
-        FbxString error = lImporter->GetStatus().GetErrorString();
-        Logger::LOG_ERROR << "Call to FbxImporter::Initialize() failed." << std::endl;
-        Logger::LOG_ERROR << "Error returned: " << error.Buffer() << std::endl;
-
-        if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion)
-        {
-            Logger::LOG_ERROR <<"FBX file format version for this FBX SDK is " << lSDKMajor << "." << lSDKMinor << "." << lSDKRevision << std::endl;
-            Logger::LOG_ERROR <<"FBX file format version for file '" << file_name << "' is " << lFileMajor << "." << lFileMinor << "." << lFileRevision << " does not match" << std::endl;
-        }
-        assert(0);
+      //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
+      FbxManager* sdk_manager = FbxManager::Create();
+      if(!sdk_manager) {
+          Logger::LOG_ERROR <<"Error: Unable to create FBX Manager!\n";
+          assert(0);
       }
 
-      bool result;
-      if(!lImporter->IsFBX())
-      {
-        Logger::LOG_ERROR << "File \"" << file_name << "\" is no fbx" << std::endl;
-        assert(0);
-      }
-      result = lImporter->Import(scene);
+      //Create an IOSettings object. This object holds all import/export settings.
+      FbxIOSettings* ios = FbxIOSettings::Create(sdk_manager, IOSROOT);
+      ios->SetBoolProp(IMP_FBX_MATERIAL,        true);
+      ios->SetBoolProp(IMP_FBX_TEXTURE,         true);
+      ios->SetBoolProp(IMP_FBX_CHARACTER,        false);
+      ios->SetBoolProp(IMP_FBX_CONSTRAINT,       false);
+      ios->SetBoolProp(IMP_FBX_LINK,            true);
+      ios->SetBoolProp(IMP_FBX_SHAPE,           false);
+      ios->SetBoolProp(IMP_FBX_MODEL,           true);
+      ios->SetBoolProp(IMP_FBX_GOBO,            false);
+      ios->SetBoolProp(IMP_FBX_ANIMATION,       false);
+      ios->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
+      sdk_manager->SetIOSettings(ios);
 
-      if(!result) {
-        Logger::LOG_ERROR << "Failed to load object \"" << file_name << "\"" << std::endl;
-        assert(0);
-      } 
+      FbxScene* scene = load_fbx_file(sdk_manager, file_name);
 
       std::shared_ptr<node::Node> new_node = get_node(scene, file_name, node_name, flags);
 
@@ -539,4 +477,53 @@ apply_fallback_material(child, fallback_material);
 }*/
 
 }
+
+FbxScene* SkeletalAnimationLoader::load_fbx_file(FbxManager* manager, std::string const& file_name) {
+  // Create an importer.
+  FbxImporter* lImporter = FbxImporter::Create(manager,"");
+
+  int lFileMajor, lFileMinor, lFileRevision;
+  int lSDKMajor,  lSDKMinor,  lSDKRevision;
+  // Get the file version number generate by the FBX SDK.
+  FbxManager::GetFileFormatVersion(lSDKMajor, lSDKMinor, lSDKRevision);
+  lImporter->GetFileVersion(lFileMajor, lFileMinor, lFileRevision);
+
+  // Initialize the importer by providing a filename.
+  const bool lImportStatus = lImporter->Initialize(file_name.c_str(), -1, manager->GetIOSettings());
+  if(!lImportStatus)
+  {
+    FbxString error = lImporter->GetStatus().GetErrorString();
+    Logger::LOG_ERROR << "Call to FbxImporter::Initialize() failed." << std::endl;
+    Logger::LOG_ERROR << "Error returned: " << error.Buffer() << std::endl;
+
+    if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion)
+    {
+        Logger::LOG_ERROR <<"FBX file format version for this FBX SDK is " << lSDKMajor << "." << lSDKMinor << "." << lSDKRevision << std::endl;
+        Logger::LOG_ERROR <<"FBX file format version for file '" << file_name << "' is " << lFileMajor << "." << lFileMinor << "." << lFileRevision << " does not match" << std::endl;
+    }
+    assert(0);
+  }
+
+  if(!lImporter->IsFBX())
+  {
+    Logger::LOG_ERROR << "File \"" << file_name << "\" is no fbx" << std::endl;
+    assert(0);
+  }
+
+  //Create an FBX scene. This object holds most objects imported/exported from/to files.
+  FbxScene* scene = FbxScene::Create(manager, "My Scene");
+  if(!scene) {
+      Logger::LOG_ERROR <<"Error: Unable to create FBX scene!\n";
+      assert(0);
+  }
+
+  bool result = lImporter->Import(scene);
+  if(!result) {
+    Logger::LOG_ERROR << "Failed to load object \"" << file_name << "\"" << std::endl;
+    assert(0);
+  } 
+
+  return scene;
+}
+
 }

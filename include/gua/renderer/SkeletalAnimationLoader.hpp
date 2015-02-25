@@ -142,6 +142,7 @@ public:
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
 
+  static FbxScene* load_fbx_file(FbxManager* manager, std::string const& file_path);
 private: // attributes
 
   std::string parent_material_name_;

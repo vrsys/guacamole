@@ -818,7 +818,6 @@ std::vector<weight_map> Mesh::get_weights(FbxMesh const& mesh, Node const& root)
     }
   }
 
-  Logger::LOG_DEBUG << "Weight processing finished" << std::endl;
   return temp_weights;
 }
 
