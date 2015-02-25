@@ -65,10 +65,25 @@ void SkeletalAnimationDirector::add_hierarchy(aiScene const& scene) {
 <<<<<<< HEAD
 void SkeletalAnimationDirector::add_animations(aiScene const& scene) {
   std::vector<std::shared_ptr<SkeletalAnimation>> newAnims{SkeletalAnimationUtils::load_animations(scene)};
+<<<<<<< HEAD
 =======
 void SkeletalAnimationDirector::add_animations(aiScene const* scene, std::string const& file_name) {
   std::vector<std::shared_ptr<SkeletalAnimation>> newAnims{SkeletalAnimationUtils::load_animations(scene,file_name)};
 >>>>>>> add animation name interface for animation control in avango
+=======
+  if(newAnims.empty()) return;
+
+  animations_.reserve(animations_.size() + newAnims.size());
+  std::move(newAnims.begin(), newAnims.end(), std::inserter(animations_, animations_.end()));
+  newAnims.clear();
+
+  has_anims_ = animations_.size() > 0;
+  currAnimation_ = animations_[animations_.size()-1];
+}
+void SkeletalAnimationDirector::add_animations(FbxScene& scene) {
+  std::vector<std::shared_ptr<SkeletalAnimation>> newAnims{SkeletalAnimationUtils::load_animations(scene)};
+  if(newAnims.empty()) return;
+>>>>>>> animation sampling theoretically works for translation
 
   animations_.reserve(animations_.size() + newAnims.size());
   std::move(newAnims.begin(), newAnims.end(), std::inserter(animations_, animations_.end()));
