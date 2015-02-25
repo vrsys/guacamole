@@ -212,6 +212,20 @@ namespace gua {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+  ResolvePassDescription& ResolvePassDescription::screen_space_shadows(bool enable)
+  {
+    uniforms["gua_screen_space_shadows"] = enable;
+    return *this;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  bool ResolvePassDescription::screen_space_shadows() const
+  {
+    auto uniform(uniforms.find("gua_screen_space_shadows"));
+    return boost::get<bool>(uniform->second.data);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
   ResolvePassDescription& ResolvePassDescription::enable_fog(bool enable_fog) {
     uniforms["gua_enable_fog"] = enable_fog;
     return *this;

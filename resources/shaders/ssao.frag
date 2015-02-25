@@ -13,6 +13,25 @@ float gua_ssao_giFF(in vec3 ddiff,in vec3 cnorm, in float c1, in float c2, in ve
 }
 
 
+vec3 object_space_random() {
+
+  const int A = 123417123;
+  const int B = 621;
+  const int C = 721191;
+
+  vec4 object_space = inverse(gua_model_matrix) * vec4(gua_get_position(), 1.0);
+
+  int x = int(object_space.x * float(A));
+  int y = int(object_space.y * float(A));
+  int z = int(object_space.z * float(A));
+
+  int random_x = (A * (( x % B ) * C * A)%B) % B;
+  int random_y = (A * (( y % B ) * C * A)%B) % B;
+  int random_z = (A * (( z % B ) * C * A)%B) % B;
+
+  return vec3(float(random_x)/float(B), float(random_y)/float(B), float(random_z)/float(B));
+}
+
 float compute_ssao () 
 {
   vec2 texcoords = gua_get_quad_coords();
@@ -22,7 +41,9 @@ float compute_ssao ()
 
   //randomization texture
   vec2 fres = vec2(1.0/(64.0*gua_texel_width)*5,1.0/(64.0*gua_texel_height)*5);
-  vec3 random = texture2D(sampler2D(gua_noise_tex), texcoords.st*fres.xy).xyz;
+  //vec3 random = texture2D(sampler2D(gua_noise_tex), texcoords.st*fres.xy).xyz;
+  vec3 random = object_space_random();
+
   random = (random-vec3(0.5)) * gua_ssao_radius;
 
   //initialize variables

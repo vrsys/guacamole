@@ -94,17 +94,24 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     break;
 
   case '1': 
-    pipe.get_resolve_pass()->ssao_intensity(std::min(10.0, 1.1 * pipe.get_resolve_pass()->ssao_intensity()));
+    pipe.get_resolve_pass()->ssao_intensity(std::min(5.0, 1.1 * pipe.get_resolve_pass()->ssao_intensity()));
     break;
   case '2':
     pipe.get_resolve_pass()->ssao_intensity(std::max(0.02, 0.9 * pipe.get_resolve_pass()->ssao_intensity()));
     break;
 
   case '3':
-    pipe.get_resolve_pass()->ssao_radius(std::min(256.0, 1.1 * pipe.get_resolve_pass()->ssao_radius()));
+    pipe.get_resolve_pass()->ssao_radius(std::min(64.0, 1.1 * pipe.get_resolve_pass()->ssao_radius()));
     break;
   case '4':
     pipe.get_resolve_pass()->ssao_radius(std::max(1.0, 0.9 * pipe.get_resolve_pass()->ssao_radius()));
+    break;
+
+  case '5':
+    pipe.get_resolve_pass()->ssao_falloff(std::min(256.0, 1.1 * pipe.get_resolve_pass()->ssao_falloff()));
+    break;
+  case '6':
+    pipe.get_resolve_pass()->ssao_falloff(std::max(0.1, 0.9 * pipe.get_resolve_pass()->ssao_falloff()));
     break;
 
   case 't':
@@ -125,13 +132,26 @@ int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
 
+  // create material
+  auto uniform_color_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/uniform_color.gmd");
+  auto uniform_color_shader (std::make_shared<gua::MaterialShader>("overwrite_color", uniform_color_desc));
+  gua::MaterialShaderDatabase::instance()->add(uniform_color_shader);
+  auto rough_white = uniform_color_shader->make_new_material();
+
+  rough_white->set_uniform("color", gua::math::vec3(1.0f, 1.0f, 1.0f));
+  rough_white->set_uniform("metalness", 0.0f);
+  rough_white->set_uniform("roughness", 1.0f);
+  rough_white->set_uniform("emissivity", 0.0f); 
+  rough_white->set_uniform("noise_texture", std::string("data/textures/noise.jpg"));
+
+
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto monkey(loader.create_geometry_from_file("teapot", "data/objects/Shrek.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
+  auto monkey(loader.create_geometry_from_file("teapot", "data/objects/city.3ds", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", monkey);
   monkey->set_draw_bounding_box(true);
 
@@ -162,11 +182,12 @@ int main(int argc, char** argv) {
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
-  camera->get_pipeline_description()->get_resolve_pass()->ssao_intensity(2.0);
+  camera->get_pipeline_description()->get_resolve_pass()->ssao_intensity(1.0);
   camera->get_pipeline_description()->get_resolve_pass()->ssao_enable(true);
-  camera->get_pipeline_description()->get_resolve_pass()->ssao_radius(16.0);
+  camera->get_pipeline_description()->get_resolve_pass()->ssao_falloff(1.0);
+  camera->get_pipeline_description()->get_resolve_pass()->ssao_radius(4.0);
 
-  camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP);
+  camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
   camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_spheremap("data/textures/envlightmap.jpg");
 
   camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
