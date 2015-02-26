@@ -44,7 +44,7 @@ namespace gua {
   Ray(math::vec3 const& origin, math::vec3 const& direction, float t_max);
 
   Ray const intersection(math::BoundingBox<math::vec3> const& box) const;
-  Ray const intersection(scm::gl::boxf const& box) const {
+  Ray const intersection(scm::gl::box_impl<gua::math::float_t> const& box) const {
     return intersection(math::BoundingBox<math::vec3>(box.min_vertex(), box.max_vertex()));
   }
 

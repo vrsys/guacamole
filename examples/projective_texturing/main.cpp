@@ -142,10 +142,12 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
+    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
+      gua::math::float_t(trackball.shifty()),
+      gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
+
     projector_transform->set_transform(modelmatrix);
     
-
     // use the guacamole frustum to calculate a view mat and projection mat for the projection
     auto projection_frustum = gua::Frustum::perspective(projector_transform->get_world_transform(), 
                                                    projector_screen->get_scaled_world_transform(),
@@ -155,8 +157,8 @@ int main(int argc, char** argv) {
     auto view_mat = projection_frustum.get_view();
 
     // set these matrices as uniforms for the projection material
-    projective_material->set_uniform("projective_texture_matrix", projection_mat * view_mat);
-    projective_material->set_uniform("view_texture_matrix", view_mat);
+    projective_material->set_uniform("projective_texture_matrix", gua::math::mat4f(projection_mat * view_mat));
+    projective_material->set_uniform("view_texture_matrix", gua::math::mat4f(view_mat));
 
     window->process_events();
     if (window->should_close()) {

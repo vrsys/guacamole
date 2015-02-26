@@ -39,9 +39,16 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
   width_(resolution.x),
   height_(resolution.y) {
 
+#if 0
   scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
     scm::gl::WRAP_MIRRORED_REPEAT,
     scm::gl::WRAP_MIRRORED_REPEAT);
+#else
+  // linear filtering, only necessary for SSAA 3.11
+  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
+    scm::gl::WRAP_MIRRORED_REPEAT,
+    scm::gl::WRAP_MIRRORED_REPEAT);
+#endif
 
   color_buffer_read_  = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_32F, 1, state);
   color_buffer_write_ = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_32F, 1, state);
@@ -77,7 +84,7 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
 
 void GBuffer::clear_all(RenderContext const& ctx) {
   ctx.render_context->clear_color_buffers(
-      fbo_write_, math::vec4(0, 0, 0, 0.f));
+      fbo_write_, scm::math::vec4f(0,0,0,0));
   ctx.render_context->clear_depth_stencil_buffer(fbo_write_);
 }
 
@@ -86,7 +93,7 @@ void GBuffer::clear_all(RenderContext const& ctx) {
 void GBuffer::clear_color(RenderContext const& ctx) {
   if (ctx.render_context && fbo_write_)
     ctx.render_context->clear_color_buffer(
-        fbo_write_, 0, math::vec4(0, 0, 0, 0.f));
+    fbo_write_, 0, scm::math::vec4f(0, 0, 0, 0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,8 +101,8 @@ void GBuffer::clear_color(RenderContext const& ctx) {
 void GBuffer::set_viewport(RenderContext const& ctx) {
   if (ctx.render_context)
     ctx.render_context->set_viewport(
-        scm::gl::viewport(math::vec2(0.0f, 0.0f),
-        math::vec2(float(width_), float(height_))));
+    scm::gl::viewport(scm::math::vec2f(0, 0),
+    scm::math::vec2f(float(width_), float(height_))));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

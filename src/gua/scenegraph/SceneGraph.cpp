@@ -206,9 +206,9 @@ SerializedScene SceneGraph::serialize(node::SerializedCameraNode const& camera, 
 
     if (camera.config.get_enable_stereo()) {
         if (mode != CameraMode::RIGHT) {
-            eye_transform *= scm::math::make_translation(camera.config.eye_offset() - 0.5f * camera.config.eye_dist(), 0.f, 0.f);
+          eye_transform *= scm::math::make_translation(math::float_t(camera.config.eye_offset() - 0.5 * camera.config.eye_dist()), math::float_t(0), math::float_t(0));
         } else {
-            eye_transform *= scm::math::make_translation(camera.config.eye_offset() + 0.5f * camera.config.eye_dist(), 0.f, 0.f);
+          eye_transform *= scm::math::make_translation(math::float_t(camera.config.eye_offset() + 0.5 * camera.config.eye_dist()), math::float_t(0), math::float_t(0));
         }
     }
     camera.config.eye_dist(), camera.config.eye_offset();

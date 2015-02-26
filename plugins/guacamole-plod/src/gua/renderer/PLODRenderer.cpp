@@ -280,18 +280,26 @@ namespace gua {
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   pbr::context_t PLODRenderer::_register_context_in_cut_update(gua::RenderContext const& ctx) {
+    
     //pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
 
-    //if( previous_frame_count_ != ctx.framecount ) {
+    if (previous_frame_count_ != ctx.framecount) {
+
       previous_frame_count_ = ctx.framecount;
 
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
       controller->ResetSystem();
-      pbr::context_t context_id = controller->DeduceContextId( (size_t)(&ctx) );
 
-      controller->Dispatch(context_id , ctx.render_device);
+      pbr::context_t context_id = controller->DeduceContextId((size_t)(&ctx));
+      controller->Dispatch(context_id, ctx.render_device);
 
       return context_id;
+    }
+    else {
+      pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+      return controller->DeduceContextId((size_t)(&ctx));
+    }
+      
   }
 
   std::shared_ptr<ShaderProgram> PLODRenderer::_get_material_program(MaterialShader* material,
@@ -330,13 +338,13 @@ namespace gua {
     ///////////////////////////////////////////////////////////////////////////
     auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::PLODNode))));
 
-    std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
-      return reinterpret_cast<node::PLODNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::PLODNode*>(b)->get_material()->get_shader();
-    });
-
     if (sorted_objects == pipe.get_scene().nodes.end() || sorted_objects->second.empty()) {
       return; // return if no nodes in scene
     }
+
+    std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
+      return reinterpret_cast<node::PLODNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::PLODNode*>(b)->get_material()->get_shader();
+    });
 
     ///////////////////////////////////////////////////////////////////////////
     // resource initialization
@@ -397,11 +405,7 @@ namespace gua {
        gua::Logger::LOG_ERROR << "Error: PLODRenderer::render() : Failed to create programs. " << e.what() << std::endl;
      }
 
-
      pipe.get_gbuffer().set_viewport(ctx);
-
-
-
 
      ///////////////////////////////////////////////////////////////////////////
      // prepare PBR-cut update
@@ -423,7 +427,7 @@ namespace gua {
 
      pbr::view_t pbr_view_id = controller->DeduceViewId(context_id, (size_t)(&pipe));
 
-     pbr::ren::Camera cut_update_cam(pbr_view_id, frustum.get_clip_near(), frustum.get_view(), frustum.get_projection());
+     pbr::ren::Camera cut_update_cam(pbr_view_id, frustum.get_clip_near(), math::mat4f(frustum.get_view()), math::mat4f(frustum.get_projection()));
 
      cuts->SendCamera(context_id, pbr_view_id, cut_update_cam);
      cuts->SendHeightDividedByTopMinusBottom(context_id, pbr_view_id, height_divided_by_top_minus_bottom);
@@ -498,13 +502,13 @@ namespace gua {
          auto const& scm_model_matrix = plod_node->get_cached_world_transform();
          auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
-         cuts->SendTransform(context_id, model_id, scm_model_matrix);
+         cuts->SendTransform(context_id, model_id, math::mat4f(scm_model_matrix));
          cuts->SendRendered(context_id, model_id);
          cuts->SendImportance(context_id, model_id, plod_node->get_importance());
          cuts->SendThreshold(context_id, model_id, plod_node->get_threshold());         
 
          // update current model matrix for PLODLibrary in order to make bundle pick work
-         database->GetModel(model_id)->set_transform(scm_model_matrix);
+         database->GetModel(model_id)->set_transform(math::mat4f(scm_model_matrix));
 
          pbr::ren::Cut& cut = cuts->GetCut(context_id, pbr_view_id, model_id);
          cut_map.insert(std::make_pair(plod_node, &cut));
@@ -513,7 +517,7 @@ namespace gua {
 
          //perform frustum culling 
          pbr::ren::KdnTree const* kdn_tree = database->GetModel(model_id)->kdn_tree();
-         scm::gl::frustum const& culling_frustum = cut_update_cam.GetFrustumByModel(scm_model_matrix);
+         scm::gl::frustum const& culling_frustum = cut_update_cam.GetFrustumByModel(math::mat4f(scm_model_matrix));
 
          std::vector<scm::gl::boxf> const& model_bounding_boxes = kdn_tree->bounding_boxes();
 
@@ -525,11 +529,11 @@ namespace gua {
            }
          }
 
-         UniformValue model_mat(scm_model_matrix);
-         UniformValue normal_mat(scm_normal_matrix);
+         //UniformValue model_mat(scm_model_matrix);
+         //UniformValue normal_mat(scm_normal_matrix);
 
-         depth_pass_program_->apply_uniform(ctx, "gua_model_matrix", model_mat);
-         depth_pass_program_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+         depth_pass_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
+         depth_pass_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
          depth_pass_program_->apply_uniform(ctx, "radius_importance_scaling", plod_node->get_importance());
          depth_pass_program_->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
 
@@ -606,11 +610,11 @@ namespace gua {
           auto const& scm_model_matrix = plod_node->get_cached_world_transform();
           auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
-          UniformValue model_mat(scm_model_matrix);
-          UniformValue normal_mat(scm_normal_matrix);
+          //UniformValue model_mat(scm_model_matrix);
+          //UniformValue normal_mat(scm_normal_matrix);
 
-          current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
-          current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);   
+          current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
+          current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
           current_material_program->apply_uniform(ctx, "radius_importance_scaling", plod_node->get_importance());
           current_material_program->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
 

@@ -143,7 +143,7 @@ Color3f const Color3f::brightened() const {
   return brightened;
 }
 
-math::vec3 const Color3f::vec3() const { return math::vec3(r_, g_, b_); }
+scm::math::vec3f const Color3f::vec3() const { return scm::math::vec3f(r_, g_, b_); }
 
 Color3f const Color3f::random() {
 
