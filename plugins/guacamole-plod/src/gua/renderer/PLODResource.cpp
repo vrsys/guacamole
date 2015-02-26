@@ -130,7 +130,7 @@ void PLODResource::ray_test(Ray const& ray,
   const auto world_origin = ray.origin_;
   const auto world_direction = scm::math::normalize(ray.direction_);
   
-  pbr::ren::Ray plod_ray(world_origin, world_direction, 9999.0f);
+  pbr::ren::Ray plod_ray(math::vec3f(world_origin), math::vec3f(world_direction), 9999.0f);
   pbr::ren::Ray::Intersection intersection;
 
   auto plod_node = reinterpret_cast<node::PLODNode*>(owner);
@@ -143,7 +143,7 @@ void PLODResource::ray_test(Ray const& ray,
   pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
   pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
  
-  if (plod_ray.IntersectModel(model_id, model_transform, aabb_scale, max_depth, surfel_skip, wysiwyg, intersection)) {
+  if (plod_ray.IntersectModel(model_id, math::mat4f(model_transform), aabb_scale, max_depth, surfel_skip, wysiwyg, intersection)) {
     has_hit = true;
     pick.distance = intersection.distance_;
     pick.position = intersection.position_;

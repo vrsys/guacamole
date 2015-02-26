@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
   portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
 
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-  resolve_pass->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   resolve_pass->tone_mapping_exposure(1.0f);
 
   portal_pipe->add_pass(resolve_pass);
@@ -159,7 +159,10 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
+    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()), 
+                                                              gua::math::float_t(trackball.shifty()), 
+                                                              gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
+
     transform->set_transform(modelmatrix);
 
     window->process_events();

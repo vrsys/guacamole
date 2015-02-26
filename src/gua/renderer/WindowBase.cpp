@@ -138,7 +138,7 @@ void WindowBase::init_context() {
   ctx_.render_window = this;
 
   fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-      ctx_.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    ctx_.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f)));
 
   depth_stencil_state_ = ctx_.render_device
       ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);

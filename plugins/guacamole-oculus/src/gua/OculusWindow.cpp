@@ -146,11 +146,11 @@ void OculusWindow::display(std::shared_ptr<Texture2D> const& texture,
   fullscreen_shader_.use(*get_context());
   fullscreen_shader_.set_uniform(*get_context(), texture->get_handle(ctx_), "sampler");
 
-  if (left) fullscreen_shader_.set_uniform(*get_context(), math::vec2(0.6f, 0.5f), "lens_center");
-  else      fullscreen_shader_.set_uniform(*get_context(), math::vec2(0.4f, 0.5f), "lens_center");
+  if (left) fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.6f, 0.5f), "lens_center");
+  else      fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.4f, 0.5f), "lens_center");
 
-  fullscreen_shader_.set_uniform(*get_context(), math::vec2(0.4f, 0.4f), "scale");
-  fullscreen_shader_.set_uniform(*get_context(), distortion_, "hmd_warp_param");
+  fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.4f, 0.4f), "scale");
+  fullscreen_shader_.set_uniform(*get_context(), math::vec4f(distortion_), "hmd_warp_param");
 
   get_context()->render_context->set_viewport(scm::gl::viewport(position, size));
   get_context()->render_context->set_depth_stencil_state(depth_stencil_state_);

@@ -171,9 +171,9 @@ std::set<PickResult> PLODLoader::pick_plod_interpolate(math::vec3 const& bundle_
     PickResult result(intersection.distance_, 
                       nullptr, 
                       math::vec3(), 
-                      intersection.position_, 
+                      math::vec3(intersection.position_), 
                       math::vec3(), 
-                      intersection.normal_, 
+                      math::vec3(intersection.normal_),
                       math::vec2());
     results.insert(result);
   }

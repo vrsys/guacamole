@@ -312,7 +312,7 @@ void Pipeline::bind_camera_uniform_block(unsigned location) const {
 void Pipeline::draw_quad() {
   if (!quad_) {
     quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-      get_context().render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f))
+      get_context().render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f))
     );
   }
 

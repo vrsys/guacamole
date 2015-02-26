@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
   plod_passthrough->set_uniform("emissivity", 1.0f);
 
   auto rough_white = pbr_overwrite_color_shader->make_new_material();
-  rough_white->set_uniform("color", gua::math::vec3(1.0, 1.0, 1.0));
+  rough_white->set_uniform("color", gua::math::vec3f(1.0f, 1.0f, 1.0f));
   rough_white->set_uniform("metalness", 0.0f);
   rough_white->set_uniform("roughness", 0.8f);
   rough_white->set_uniform("emissivity", 0.0f);
@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
 
   auto light = graph.add_node<gua::node::PointLightNode>("/light_center", "light");
   light->data.set_enable_shadows(true);
-  light->scale(10.f);
+  light->scale(3.f);
   light->translate(0.f, 0.f, 3.7f);
   light->add_child(light_proxy_geometry);
 
@@ -266,8 +266,8 @@ int main(int argc, char** argv) {
   portal_pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-  portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->texture("data/images/skymap.jpg");
+  portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->background_texture("data/images/skymap.jpg");
   portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   portal_camera->set_pipeline_description(portal_pipe);
   
@@ -301,8 +301,8 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
   pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
-  pipe->get_resolve_pass()->mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  pipe->get_resolve_pass()->texture("data/images/skymap.jpg");
+  pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  pipe->get_resolve_pass()->background_texture("data/images/skymap.jpg");
 
   // fog seems to work improperly
   //pipe->get_pass_by_type<gua::ResolvePassDescription>()->enable_fog(true);
@@ -321,7 +321,7 @@ int main(int argc, char** argv) {
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
+  //window->config.set_stereo_mode(gua::StereoMode::MONO);
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
@@ -345,7 +345,9 @@ int main(int argc, char** argv) {
   gua::events::Ticker ticker(loop, 1.0/500.0);
 
   ticker.on_tick.connect([&]() {
-    auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
+    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()), 
+                                                              gua::math::float_t(trackball.shifty()), 
+                                                              gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
     transform->set_transform(modelmatrix);
     static unsigned framecounter = 0;
     ++framecounter;

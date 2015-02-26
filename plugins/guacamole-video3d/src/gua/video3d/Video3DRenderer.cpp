@@ -135,8 +135,8 @@ void Video3DRenderer::render(Pipeline& pipe)
       // update stream data
       video3d_ressource->update_buffers(ctx);
 
-      UniformValue model_matrix(video_node->get_cached_world_transform());
-      UniformValue normal_matrix(scm::math::transpose(scm::math::inverse(video_node->get_cached_world_transform())));
+      auto model_matrix(video_node->get_cached_world_transform());
+      auto normal_matrix(scm::math::transpose(scm::math::inverse(video_node->get_cached_world_transform())));
 
       {
         // single texture only
@@ -149,13 +149,13 @@ void Video3DRenderer::render(Pipeline& pipe)
         ctx.render_context->bind_texture(video3d_ressource->depth_array(ctx), nearest_sampler_state_, 0);
         warp_pass_program_->get_program(ctx)->uniform_sampler("depth_video3d_texture", 0);
 
-        warp_pass_program_->apply_uniform(ctx, "gua_normal_matrix", normal_matrix);
-        warp_pass_program_->apply_uniform(ctx, "gua_model_matrix", model_matrix);
+        warp_pass_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
+        warp_pass_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_matrix));
         warp_pass_program_->set_uniform(ctx, int(1), "bbxclip");
 
         auto bbox(video3d_ressource->get_bounding_box());
-        warp_pass_program_->set_uniform(ctx, bbox.min, "bbx_min");
-        warp_pass_program_->set_uniform(ctx, bbox.max, "bbx_max");
+        warp_pass_program_->set_uniform(ctx, math::vec3f(bbox.min), "bbx_min");
+        warp_pass_program_->set_uniform(ctx, math::vec3f(bbox.max), "bbx_max");
 
         // pre passes
         for (unsigned layer = 0; layer != video3d_ressource->number_of_cameras(); ++layer)
@@ -244,8 +244,8 @@ void Video3DRenderer::render(Pipeline& pipe)
         {
           if (video3d_ressource)
           {
-            current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_matrix);
-            current_shader->apply_uniform(ctx, "gua_model_matrix", model_matrix);
+            current_shader->apply_uniform(ctx, "gua_normal_matrix", gua::math::mat4f(normal_matrix));
+            current_shader->apply_uniform(ctx, "gua_model_matrix", gua::math::mat4f(model_matrix));
 
             // needs to be multiplied with scene scaling
             current_shader->set_uniform(ctx, 0.075f, "epsilon");

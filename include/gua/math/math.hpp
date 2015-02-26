@@ -39,12 +39,18 @@ namespace math {
 /**
  * Some basic math types, typedef'ed from schism.
  */
-typedef scm::math::mat<float, 4, 4> mat4;
-typedef scm::math::mat<float, 3, 3> mat3;
 
-typedef scm::math::vec<float, 4> vec4;
-typedef scm::math::vec<float, 3> vec3;
-typedef scm::math::vec<float, 2> vec2;
+typedef double float_t;
+
+// cpu types
+typedef scm::math::mat<float_t, 4, 4> mat4;
+typedef scm::math::mat<float_t, 3, 3> mat3;
+
+typedef scm::math::vec<float_t, 4> vec4;
+typedef scm::math::vec<float_t, 3> vec3;
+typedef scm::math::vec<float_t, 2> vec2;
+
+typedef scm::math::quat<float_t> quat;
 
 typedef scm::math::vec<int, 4> vec4i;
 typedef scm::math::vec<int, 3> vec3i;
@@ -54,7 +60,17 @@ typedef scm::math::vec<unsigned, 4> vec4ui;
 typedef scm::math::vec<unsigned, 3> vec3ui;
 typedef scm::math::vec<unsigned, 2> vec2ui;
 
-typedef scm::math::quat<float> quat;
+
+// float types for gpu use
+typedef scm::math::mat<float, 4, 4> mat4f;
+typedef scm::math::mat<float, 3, 3> mat3f;
+
+typedef scm::math::vec<float, 4> vec4f;
+typedef scm::math::vec<float, 3> vec3f;
+typedef scm::math::vec<float, 2> vec2f;
+
+typedef scm::math::quat<float> quatf;
+
 ///@}
 
 /**
@@ -69,13 +85,13 @@ typedef scm::math::quat<float> quat;
  */
 math::mat4 GUA_DLL compute_perspective_frustum(math::vec4 const& eye_position,
                                  math::mat4 const& screen_transform,
-                                 float near_plane,
-                                 float far_plane);
+                                 float_t near_plane,
+                                 float_t far_plane);
 
 math::mat4 GUA_DLL compute_orthographic_frustum(math::vec4 const& eye_position,
                                  math::mat4 const& screen_transform,
-                                 float near_plane,
-                                 float far_plane);
+                                 float_t near_plane,
+                                 float_t far_plane);
 
 /**
  * Converts an assimp matrix to a schism matrix.
@@ -103,14 +119,14 @@ inline math::vec3 get_translation(math::mat4 const& m) {
 }
 
 inline math::mat4 get_rotation(math::mat4 const& m) {
-  math::quat q = ::scm::math::quat<float>::from_matrix(m);
+  math::quat q = ::scm::math::quat<float_t>::from_matrix(m);
   return q.to_matrix();
 }
 
-std::tuple<float, float, float> GUA_DLL barycentric(math::vec3 const& a,
-                                                    math::vec3 const& b,
-                                                    math::vec3 const& c,
-                                                    math::vec3 const& p);
+std::tuple<float_t, float_t, float_t> GUA_DLL barycentric(math::vec3 const& a,
+                                                          math::vec3 const& b,
+                                                          math::vec3 const& c,
+                                                          math::vec3 const& p);
 
 template <typename ValueType>
 ValueType interpolate(math::vec3 const& position,
@@ -129,15 +145,15 @@ namespace gua {
 namespace traits {
 
 template <> struct scalar<math::vec2> {
-  typedef float type;
+  typedef gua::math::float_t type;
 };
 
 template <> struct scalar<math::vec3> {
-  typedef float type;
+  typedef gua::math::float_t type;
 };
 
 template <> struct scalar<math::vec4> {
-  typedef float type;
+  typedef gua::math::float_t type;
 };
 
 template <> struct dimension<math::vec2> {

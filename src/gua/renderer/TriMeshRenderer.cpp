@@ -34,6 +34,8 @@
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 
+#include <scm/core/math/math.h>
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,9 +130,10 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         }
       }
 
-      if (current_shader && tri_mesh_node->get_geometry()) {
-        UniformValue model_mat(tri_mesh_node->get_cached_world_transform());
-        UniformValue normal_mat(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform())));
+      if (current_shader && tri_mesh_node->get_geometry()) 
+      {
+        UniformValue model_mat (::scm::math::mat4f(tri_mesh_node->get_cached_world_transform()));
+        UniformValue normal_mat (::scm::math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));
 
         current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
         current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
