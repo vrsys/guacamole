@@ -79,8 +79,8 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 /////////////////////////////////////////////////////////////////////////////
 // example configuration
 /////////////////////////////////////////////////////////////////////////////
-#define RENDER_SINGLE_PIG_MODEL 0
-#define RENDER_PITOTI_HUNTING_SCENE 1
+#define RENDER_SINGLE_PIG_MODEL 1
+#define RENDER_PITOTI_HUNTING_SCENE 0
 #define RENDER_ADDITIONAL_TRIMESH_MODEL 0
 
 int main(int argc, char** argv) {
