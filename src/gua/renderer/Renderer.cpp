@@ -39,9 +39,10 @@
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
+template <class T> using DB = std::shared_ptr<gua::concurrent::Doublebuffer<T>>;
 
 template <class T>
-std::pair<std::shared_ptr<gua::concurrent::Doublebuffer<T> >, std::shared_ptr<gua::concurrent::Doublebuffer<T> > > spawnDoublebufferred() {
+std::pair<DB<T>, DB<T>> spawnDoublebufferred() {
   auto db = std::make_shared<gua::concurrent::Doublebuffer<T> >();
   return {db, db};
 }

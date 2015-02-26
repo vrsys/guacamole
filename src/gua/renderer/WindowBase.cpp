@@ -75,8 +75,15 @@ WindowBase::WindowBase(Configuration const& configuration)
       warpBR_(nullptr),
       warpRL_(nullptr),
       warpGL_(nullptr),
-      warpBL_(nullptr) {
+      warpBL_(nullptr) {}
 
+////////////////////////////////////////////////////////////////////////////////
+
+WindowBase::~WindowBase() {}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WindowBase::init_context() {
   if (config.get_warp_matrix_red_right() == "" ||
       config.get_warp_matrix_green_right() == "" ||
       config.get_warp_matrix_blue_right() == "" ||
@@ -118,18 +125,8 @@ WindowBase::WindowBase(Configuration const& configuration)
       Resources::lookup_shader(Resources::shaders_display_shader_warped_frag)
       );
 #endif
-
-    
   }
-}
 
-////////////////////////////////////////////////////////////////////////////////
-
-WindowBase::~WindowBase() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void WindowBase::init_context() {
   ctx_.render_device  = scm::gl::render_device_ptr(new scm::gl::render_device());
   ctx_.render_context = ctx_.render_device->main_context();
 

@@ -33,7 +33,7 @@ namespace gua {
     : buffer_(width * height * 4)
     , width_(width)
     , height_(height)
-    , needs_update_(false) {}
+    , needs_update_() {}
 
 
   // ------------------------------------------------------------ public methods
@@ -42,9 +42,13 @@ namespace gua {
 
   bool GLSurface::bind(RenderContext const& ctx, const GuiTexture* gui_texture) {
 
-    if (needs_update_) {
+    while (needs_update_.size() <= ctx.id) {
+      needs_update_.push_back(true);
+    }
+
+    if (needs_update_[ctx.id]) {
       std::unique_lock<std::mutex> lock(mutex_);
-      needs_update_ = false;
+      needs_update_[ctx.id] = false;
       gui_texture->update_sub_data(
         ctx,
         scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width_, height_, 1)),
@@ -70,7 +74,9 @@ namespace gua {
              dest_rect.width * 4);
     }
 
-    needs_update_ = true;
+    for (int i(0); i < needs_update_.size(); ++i) {
+      needs_update_[i] = true;
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -124,7 +130,9 @@ namespace gua {
       }
     }
 
-    needs_update_ = true;
+    for (int i(0); i < needs_update_.size(); ++i) {
+      needs_update_[i] = true;
+    }
   }
 
 }
