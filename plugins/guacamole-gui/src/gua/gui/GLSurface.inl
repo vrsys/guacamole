@@ -69,7 +69,7 @@ class GLSurface : public Awesomium::Surface {
   unsigned   width_;
   unsigned   height_;
   std::mutex mutex_;
-  bool       needs_update_;
+  std::vector<bool> needs_update_;
 };
 
 }
