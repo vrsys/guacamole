@@ -33,7 +33,8 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
 
   vec3 frag_color = vec3(0.0);
   for (int i = 0; i < gua_lights_num; ++i) {
-      if ((bitset[i>>5] & (1u << (i%32))) != 0) {
+      // is it either a visible spot/point light or a sun light ?
+      if ( ((bitset[i>>5] & (1u << (i%32))) != 0) || i >= gua_lights_num - gua_sun_lights_num ) {
         frag_color += gua_shade(i, T);
       }
   }

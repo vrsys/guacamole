@@ -290,6 +290,8 @@ void Pipeline::bind_light_table(std::shared_ptr<ShaderProgram> const& shader) co
   auto& ctx(get_context());
 
   shader->set_uniform(ctx, int(light_table_->get_lights_num()), "gua_lights_num");
+  shader->set_uniform(ctx, int(light_table_->get_sun_lights_num()), "gua_sun_lights_num");
+
   if (   light_table_->get_light_bitset()
       && light_table_->get_lights_num() > 0) {
     shader->set_uniform(ctx, light_table_->get_light_bitset()->get_handle(ctx), "gua_light_bitset");
