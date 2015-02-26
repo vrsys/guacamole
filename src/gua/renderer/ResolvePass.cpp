@@ -111,7 +111,6 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
   ResolvePassDescription& ResolvePassDescription::environment_lighting_spheremap(std::string const& spheremap_texture) {
     uniforms["gua_environment_lighting_spheremap"] = spheremap_texture;
-    std::cout << "uniforms[\"gua_environment_lighting_spheremap\"] = " << spheremap_texture << std::endl;
     return *this;
   }
 

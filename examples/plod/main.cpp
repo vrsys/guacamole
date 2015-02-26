@@ -79,8 +79,8 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 /////////////////////////////////////////////////////////////////////////////
 // example configuration
 /////////////////////////////////////////////////////////////////////////////
-#define RENDER_SINGLE_PIG_MODEL 1
-#define RENDER_PITOTI_HUNTING_SCENE 0
+#define RENDER_SINGLE_PIG_MODEL 0
+#define RENDER_PITOTI_HUNTING_SCENE 1
 #define RENDER_ADDITIONAL_TRIMESH_MODEL 0
 
 int main(int argc, char** argv) {
@@ -321,7 +321,7 @@ int main(int argc, char** argv) {
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
+  //window->config.set_stereo_mode(gua::StereoMode::MONO);
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);

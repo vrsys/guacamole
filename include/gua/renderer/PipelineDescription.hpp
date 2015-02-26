@@ -35,6 +35,8 @@ namespace gua {
   class BBoxPassDescription;
   class ResolvePassDescription;
   class TexturedScreenSpaceQuadPassDescription;
+  class DebugViewPassDescription;
+  class SSAAPassDescription;
 
 class GUA_DLL PipelineDescription {
  public:
@@ -58,6 +60,8 @@ class GUA_DLL PipelineDescription {
   std::shared_ptr<BBoxPassDescription> const& get_bbox_pass() const;
   std::shared_ptr<ResolvePassDescription> const& get_resolve_pass() const;
   std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const& get_textured_screen_space_quad_pass() const;
+  std::shared_ptr<DebugViewPassDescription> const& get_debug_view_pass() const;
+  std::shared_ptr<SSAAPassDescription> const& get_ssaa_pass() const;
 
   void set_enable_abuffer(bool value) {
     enable_abuffer_ = value;

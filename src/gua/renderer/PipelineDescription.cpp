@@ -34,6 +34,8 @@
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
+#include <gua/renderer/DebugViewPass.hpp>
+#include <gua/renderer/SSAAPass.hpp>
 
 namespace gua {
 
@@ -127,6 +129,16 @@ std::shared_ptr<ResolvePassDescription> const& PipelineDescription::get_resolve_
 std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const& PipelineDescription::get_textured_screen_space_quad_pass() const
 {
   return get_pass_by_type<TexturedScreenSpaceQuadPassDescription>();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<DebugViewPassDescription> const& PipelineDescription::get_debug_view_pass() const {
+  return get_pass_by_type<DebugViewPassDescription>();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<SSAAPassDescription> const& PipelineDescription::get_ssaa_pass() const {
+  return get_pass_by_type<SSAAPassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

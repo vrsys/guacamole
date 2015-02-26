@@ -280,18 +280,26 @@ namespace gua {
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   pbr::context_t PLODRenderer::_register_context_in_cut_update(gua::RenderContext const& ctx) {
+    
     //pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
 
-    //if( previous_frame_count_ != ctx.framecount ) {
+    if (previous_frame_count_ != ctx.framecount) {
+
       previous_frame_count_ = ctx.framecount;
 
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
       controller->ResetSystem();
-      pbr::context_t context_id = controller->DeduceContextId( (size_t)(&ctx) );
 
-      controller->Dispatch(context_id , ctx.render_device);
+      pbr::context_t context_id = controller->DeduceContextId((size_t)(&ctx));
+      controller->Dispatch(context_id, ctx.render_device);
 
       return context_id;
+    }
+    else {
+      pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+      return controller->DeduceContextId((size_t)(&ctx));
+    }
+      
   }
 
   std::shared_ptr<ShaderProgram> PLODRenderer::_get_material_program(MaterialShader* material,
@@ -397,11 +405,7 @@ namespace gua {
        gua::Logger::LOG_ERROR << "Error: PLODRenderer::render() : Failed to create programs. " << e.what() << std::endl;
      }
 
-
      pipe.get_gbuffer().set_viewport(ctx);
-
-
-
 
      ///////////////////////////////////////////////////////////////////////////
      // prepare PBR-cut update

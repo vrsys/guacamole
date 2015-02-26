@@ -39,9 +39,16 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
   width_(resolution.x),
   height_(resolution.y) {
 
+#if 0
   scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
     scm::gl::WRAP_MIRRORED_REPEAT,
     scm::gl::WRAP_MIRRORED_REPEAT);
+#else
+  // linear filtering, only necessary for SSAA 3.11
+  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
+    scm::gl::WRAP_MIRRORED_REPEAT,
+    scm::gl::WRAP_MIRRORED_REPEAT);
+#endif
 
   color_buffer_read_  = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_32F, 1, state);
   color_buffer_write_ = std::make_shared<Texture2D>(width_, height_, scm::gl::FORMAT_RGB_32F, 1, state);

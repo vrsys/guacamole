@@ -24,7 +24,7 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/FXAAPass.hpp>
+#include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
@@ -51,6 +51,8 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods)
 {
   if (action == 0) return;
+
+  float v = 0.0f;
 
   switch (std::tolower(key))
   {
@@ -95,24 +97,61 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     break;
 
   case '1': 
-    pipe.get_resolve_pass()->ssao_intensity(std::min(5.0, 1.1 * pipe.get_resolve_pass()->ssao_intensity()));
+    pipe.get_resolve_pass()->ssao_intensity(std::min(5.0f, 1.1f * pipe.get_resolve_pass()->ssao_intensity()));
     break;
   case '2':
-    pipe.get_resolve_pass()->ssao_intensity(std::max(0.02, 0.9 * pipe.get_resolve_pass()->ssao_intensity()));
+    pipe.get_resolve_pass()->ssao_intensity(std::max(0.02f, 0.9f * pipe.get_resolve_pass()->ssao_intensity()));
     break;
 
   case '3':
-    pipe.get_resolve_pass()->ssao_radius(std::min(64.0, 1.1 * pipe.get_resolve_pass()->ssao_radius()));
+    pipe.get_resolve_pass()->ssao_radius(std::min(64.0f, 1.1f * pipe.get_resolve_pass()->ssao_radius()));
     break;
   case '4':
-    pipe.get_resolve_pass()->ssao_radius(std::max(1.0, 0.9 * pipe.get_resolve_pass()->ssao_radius()));
+    pipe.get_resolve_pass()->ssao_radius(std::max(1.0f, 0.9f * pipe.get_resolve_pass()->ssao_radius()));
     break;
 
   case '5':
-    pipe.get_resolve_pass()->ssao_falloff(std::min(256.0, 1.1 * pipe.get_resolve_pass()->ssao_falloff()));
+    pipe.get_resolve_pass()->ssao_falloff(std::min(256.0f, 1.1f * pipe.get_resolve_pass()->ssao_falloff()));
     break;
   case '6':
-    pipe.get_resolve_pass()->ssao_falloff(std::max(0.1, 0.9 * pipe.get_resolve_pass()->ssao_falloff()));
+    pipe.get_resolve_pass()->ssao_falloff(std::max(0.1f, 0.9f * pipe.get_resolve_pass()->ssao_falloff()));
+    break;
+
+  case 'f':
+    if (pipe.get_ssaa_pass()->mode() == gua::SSAAPassDescription::SSAAMode::FXAA311) {
+      std::cout << "Switching to simple FAST_FXAA\n" << std::endl;
+      pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FAST_FXAA);
+    }
+    else if (pipe.get_ssaa_pass()->mode() == gua::SSAAPassDescription::SSAAMode::FAST_FXAA) {
+      std::cout << "Switching to No FXAA\n" << std::endl;
+      pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::DISABLED);
+    }
+    else {
+      std::cout << "Switching to FXAA 3.11\n" << std::endl;
+      pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FXAA311);
+    }
+    break;
+
+  case '7':
+    v = std::min(1.0f, 1.1f * pipe.get_ssaa_pass()->fxaa_quality_subpix());
+    std::cout << "Setting quality_subpix to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_quality_subpix(v);
+    break;
+  case '8':
+    v = std::max(0.2f, 0.9f * pipe.get_ssaa_pass()->fxaa_quality_subpix());
+    std::cout << "Setting quality_subpix to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_quality_subpix(v);
+    break;
+
+  case '9':
+    v = std::min(0.333f, 1.1f * pipe.get_ssaa_pass()->fxaa_edge_threshold());
+    std::cout << "Setting edge_threshold to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_edge_threshold(v);
+    break;
+  case '0':
+    v = std::max(0.063f, 0.9f * pipe.get_ssaa_pass()->fxaa_edge_threshold());
+    std::cout << "Setting edge_threshold to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_edge_threshold(v);
     break;
 
   case 't':
@@ -171,7 +210,7 @@ int main(int argc, char** argv) {
   screen->translate(0, 0, 1.0);
 
   // add mouse interaction
-  gua::utils::Trackball trackball(0.01, 0.002, 0.2);
+  gua::utils::Trackball trackball(0.01f, 0.002f, 0.2f);
 
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
@@ -201,7 +240,7 @@ int main(int argc, char** argv) {
 
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
-  camera->get_pipeline_description()->add_pass(std::make_shared<gua::FXAAPassDescription>());
+  camera->get_pipeline_description()->add_pass(std::make_shared<gua::SSAAPassDescription>());
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
