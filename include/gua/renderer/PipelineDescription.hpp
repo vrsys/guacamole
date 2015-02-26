@@ -123,7 +123,6 @@ class GUA_DLL PipelineDescription {
   size_t abuffer_size_ = 800; // in MiB
   float  blending_termination_threshold_ = 0.99;
   int    max_lights_count_ = 128;
-  mutable boost::shared_mutex mutex_;
 };
 
 }

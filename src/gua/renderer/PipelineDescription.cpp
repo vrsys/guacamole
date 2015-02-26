@@ -132,8 +132,6 @@ std::shared_ptr<TexturedScreenSpaceQuadPassDescription>const& PipelineDescriptio
 ////////////////////////////////////////////////////////////////////////////////
 
 bool PipelineDescription::operator==(PipelineDescription const& other) const {
-  boost::shared_lock<boost::shared_mutex> lock(mutex_);
-  
   if (   enable_abuffer_ != other.enable_abuffer_
       || abuffer_size_   != other.abuffer_size_
       || blending_termination_threshold_ != other.blending_termination_threshold_
