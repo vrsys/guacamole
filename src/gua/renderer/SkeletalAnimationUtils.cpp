@@ -621,9 +621,13 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
   }
   std::cout << dupl_verts << " vertex duplications" << std::endl;
 
+  bool has_weights = false;
+  std::vector<weight_map> ctrlpt_weight{};
   //get weights of original control points
-  std::vector<weight_map> ctrlpt_weight{get_weights(mesh, root)};
-  bool has_weights = ctrlpt_weight.size() > 0;
+  if(root.name != "none") {
+    ctrlpt_weight = get_weights(mesh, root);
+    has_weights = ctrlpt_weight.size() > 0;
+  }
 
   // Reserve space in the vectors for the vertex attributes and indices
   positions.reserve(num_vertices);
@@ -779,13 +783,11 @@ std::vector<weight_map> Mesh::get_weights(FbxMesh const& mesh, Node const& root)
   }
 
   if(!skin) {
-    Logger::LOG_ERROR << "Mesh does not contain skin deformer, ignoring weights" << std::endl;
+    Logger::LOG_WARNING << "Mesh does not contain skin deformer, ignoring weights" << std::endl;
     return std::vector<weight_map>{};
   }
   //set up temporary weights, for control points not actual vertices
   std::vector<weight_map> temp_weights{unsigned(mesh.GetControlPointsCount())};
-  std::cout << skin->GetClusterCount() << std::endl;
-  std::cout << "test2" << std::endl;
   //one cluster corresponds to one bone
   for(unsigned i = 0; i < skin->GetClusterCount(); ++i) {
     FbxCluster* cluster = skin->GetCluster(i);

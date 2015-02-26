@@ -139,7 +139,7 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
 
   auto point_pos(file_name.find_last_of("."));
 
-  if(file_name.substr(point_pos + 1) == "fbx") {
+  if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX") {
 
     //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
     FbxManager* sdk_manager = FbxManager::Create();
@@ -242,7 +242,8 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
   if (file.is_valid()) {
     auto point_pos(file_name.find_last_of("."));
 
-    if(file_name.substr(point_pos + 1) == "fbx") {
+    if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX") {
+      std::cout << "fbx test for " << file_name << std::endl;
 
       //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
       FbxManager* sdk_manager = FbxManager::Create();
@@ -264,7 +265,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
       ios->SetBoolProp(IMP_FBX_ANIMATION,       false);
       ios->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
       sdk_manager->SetIOSettings(ios);
-
       FbxScene* scene = load_fbx_file(sdk_manager, file_name);
 
       std::shared_ptr<node::Node> new_node = get_node(scene, file_name, node_name, flags);
@@ -362,16 +362,21 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
           Mesh{*dynamic_cast<FbxMesh*>(geo), *root}
           , animation_director
           , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
+
       //there need to be as many materials as there are geometries or the geometries without material wont be drawn
       std::shared_ptr<Material> material;
-    //   unsigned material_index(ai_scene->mMeshes[mesh_count]->mMaterialIndex);
-    //   //if (material_index != 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
-    //   if (flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
-    //     MaterialLoader material_loader;
-    //     aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
-    //     material = material_loader.load_material(ai_material, file_name);
-    //     material->set_uniform("Roughness", 0.6f);
-    //   }
+      
+      FbxNode* node = geo->GetNode();
+      if(node->GetMaterialCount() > 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
+        MaterialLoader material_loader;
+        if(node->GetMaterialCount() > 1) {
+          Logger::LOG_WARNING << "Mesh has more than one material, using only first one" << std::endl;
+        }
+        FbxSurfaceMaterial* mat = node->GetMaterial(0);
+        auto material = material_loader.load_material(*mat, file_name);
+      }
+      else std::cout << "not loading materials" << std::endl;
+
       materials.push_back(material);
       ++mesh_count;
     }
@@ -453,7 +458,7 @@ bool SkeletalAnimationLoader::is_supported(std::string const& file_name) const {
   if (file_name.substr(point_pos + 1) == "raw"){
     return false;
   }
-  else if (file_name.substr(point_pos + 1) == "fbx"){
+  else if (file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX"){
     return true;
   }
 
@@ -524,6 +529,7 @@ FbxScene* SkeletalAnimationLoader::load_fbx_file(FbxManager* manager, std::strin
   } 
 
   return scene;
+  // TODO: destruction of fbx helper objects
 }
 
 }

@@ -187,6 +187,7 @@ class SkeletalAnimation {
   Pose calculate_pose(float time) const;
 
   double get_duration() const;
+  std::string const& get_name() const;
 
   std::string get_name() const;
 

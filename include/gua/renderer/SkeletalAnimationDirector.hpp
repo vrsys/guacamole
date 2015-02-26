@@ -41,7 +41,6 @@ namespace gua {
 class SkeletalAnimationDirector {
  public:
 
-  SkeletalAnimationDirector(aiScene const*);
   SkeletalAnimationDirector(std::shared_ptr<Node> const&);
 
   inline ~SkeletalAnimationDirector(){};
