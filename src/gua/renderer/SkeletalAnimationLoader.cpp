@@ -243,7 +243,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
     auto point_pos(file_name.find_last_of("."));
 
     if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX") {
-      std::cout << "fbx test for " << file_name << std::endl;
 
       //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
       FbxManager* sdk_manager = FbxManager::Create();
