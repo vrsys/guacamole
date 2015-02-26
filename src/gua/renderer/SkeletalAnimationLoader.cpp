@@ -363,7 +363,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
           , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
       //there need to be as many materials as there are geometries or the geometries without material wont be drawn
-      std::shared_ptr<Material> material;
+      std::shared_ptr<Material> material{};
       
       FbxNode* node = geo->GetNode();
       if(node->GetMaterialCount() > 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
@@ -373,6 +373,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
         }
         FbxSurfaceMaterial* mat = node->GetMaterial(0);
         auto material = material_loader.load_material(*mat, file_name);
+        material->set_uniform("Roughness", 0.6f);
       }
       else std::cout << "not loading materials" << std::endl;
 
@@ -470,16 +471,15 @@ void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::Node
   std::shared_ptr<Material> const& fallback_material) const
 {
   auto g_node(std::dynamic_pointer_cast<node::SkeletalAnimationNode>(root));
-
-  if (g_node) {
-    g_node->set_fallback_material(fallback_material);
+  
+  if(g_node) {
+    auto& materials = g_node->get_materials();
+    for(auto& mat : materials) {
+      if(!mat) mat = fallback_material;
+    }
+    // g_node->set_fallback_material(fallback_material);
     g_node->update_cache();
   }
-
-/*for (auto& child : root->get_children()) {
-apply_fallback_material(child, fallback_material);
-}*/
-
 }
 
 FbxScene* SkeletalAnimationLoader::load_fbx_file(FbxManager* manager, std::string const& file_name) {
