@@ -23,77 +23,78 @@
 #define GUA_TRACKBALL_HPP
 
 #include <gua/platform.hpp>
+#include <gua/math.hpp>
 
 #include <scm/gl_core/math.h>
 
 namespace gua {
-  namespace utils {
+namespace utils {
 
-    class GUA_DLL Trackball
-    {
-    public:
+class GUA_DLL Trackball
+{
+public:
 
-      enum button_type {
-        left = 0x01,
-        middle = 0x02,
-        right = 0x03
-      };
+  enum button_type {
+    left = 0x01,
+    middle = 0x02,
+    right = 0x03
+  };
 
-      enum state_type {
-        pressed = 0x01,
-        released = 0x02
-      };
+  enum state_type {
+    pressed = 0x01,
+    released = 0x02
+  };
 
-      Trackball(float zoom_factor = 1.0f, float shift_factor = 0.5f, float rotation_factor = 0.25f);
+  Trackball(double zoom_factor = 1.0f, double shift_factor = 0.5f, double rotation_factor = 0.25f);
 
-      /* virtual */ ~Trackball();
+  /* virtual */ ~Trackball();
 
-    public:
+public:
 
-      scm::math::mat4     rotation() const;
+  math::mat4          rotation() const;
 
-      float               distance() const;
-      float               shiftx() const;
-      float               shifty() const;
+  double              distance() const;
+  double              shiftx() const;
+  double              shifty() const;
 
-      void                reset();
+  void                reset();
 
-      int                 posx() const;
-      int                 posy() const;
+  int                 posx() const;
+  int                 posy() const;
 
-      void                mouse(enum button_type button, enum state_type state, int x, int y);
-      void                motion(int x, int y);
+  void                mouse(enum button_type button, enum state_type state, int x, int y);
+  void                motion(int x, int y);
 
-    private: 
+private:
 
-      // trackball configuration
-      float mapping_zoom_;
-      float mapping_shift_;
-      float mapping_rotate_;
+  // trackball configuration
+  double mapping_zoom_;
+  double mapping_shift_;
+  double mapping_rotate_;
 
-    private: // temporary state
+private: // temporary state
 
-      // current button state
-      bool                    button_left_;
-      bool                    button_middle_;
-      bool                    button_right_;
+  // current button state
+  bool                    button_left_;
+  bool                    button_middle_;
+  bool                    button_right_;
 
-      // current pixel position
-      int                     mousepos_x_;
-      int                     mousepos_y_;
+  // current pixel position
+  int                     mousepos_x_;
+  int                     mousepos_y_;
 
-      // current rotation 
-      scm::math::mat4         rotation_euler_;
+  // current rotation
+  math::mat4              rotation_euler_;
 
-      // current distance
-      float                   distance_;
+  // current distance
+  double                   distance_;
 
-      // current shift
-      float                   shiftx_;
-      float                   shifty_;
-    };
+  // current shift
+  double                   shiftx_;
+  double                   shifty_;
+};
 
-  }
+}
 }
 
 #endif  // GUA_TRACKBALL_HPP
