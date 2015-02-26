@@ -43,33 +43,47 @@ namespace math {
 typedef double float_t;
 
 // cpu types
-typedef scm::math::mat<float_t, 4, 4> mat4;
-typedef scm::math::mat<float_t, 3, 3> mat3;
+template<typename T> using M44 = scm::math::mat<T, 4, 4>;
+template<typename T> using M33 = scm::math::mat<T, 3, 3>;
+template<typename T> using M22 = scm::math::mat<T, 2, 2>;
 
-typedef scm::math::vec<float_t, 4> vec4;
-typedef scm::math::vec<float_t, 3> vec3;
-typedef scm::math::vec<float_t, 2> vec2;
+template<typename T> using V4 = scm::math::vec<T, 4>;
+template<typename T> using V3 = scm::math::vec<T, 3>;
+template<typename T> using V2 = scm::math::vec<T, 2>;
+template<typename T> using V1 = T;
 
-typedef scm::math::quat<float_t> quat;
+using mat4   = M44<float_t>;
+using mat4d  = M44<double>;
+using mat4f  = M44<float>;
 
-typedef scm::math::vec<int, 4> vec4i;
-typedef scm::math::vec<int, 3> vec3i;
-typedef scm::math::vec<int, 2> vec2i;
+using mat3   = M33<float_t>;
+using mat3d  = M33<double>;
+using mat3f  = M33<float>;
 
-typedef scm::math::vec<unsigned, 4> vec4ui;
-typedef scm::math::vec<unsigned, 3> vec3ui;
-typedef scm::math::vec<unsigned, 2> vec2ui;
+using mat2   = M22<float_t>;
+using mat2d  = M22<double>;
+using mat2f  = M22<float>;
 
+using vec4   = V4<float_t>;
+using vec4d  = V4<double>;
+using vec4f  = V4<float>;
+using vec4i  = V4<int>;
+using vec4ui = V4<unsigned>;
 
-// float types for gpu use
-typedef scm::math::mat<float, 4, 4> mat4f;
-typedef scm::math::mat<float, 3, 3> mat3f;
+using vec3   = V3<float_t>;
+using vec3d  = V3<double>;
+using vec3f  = V3<float>;
+using vec3i  = V3<int>;
+using vec3ui = V3<unsigned>;
 
-typedef scm::math::vec<float, 4> vec4f;
-typedef scm::math::vec<float, 3> vec3f;
-typedef scm::math::vec<float, 2> vec2f;
+using vec2   = V2<float_t>;
+using vec2d  = V2<double>;
+using vec2f  = V2<float>;
+using vec2i  = V2<int>;
+using vec2ui = V2<unsigned>;
 
-typedef scm::math::quat<float> quatf;
+using quat = scm::math::quat<float_t>;
+using quatf = scm::math::quat<float>;
 
 ///@}
 
@@ -85,13 +99,13 @@ typedef scm::math::quat<float> quatf;
  */
 math::mat4 GUA_DLL compute_perspective_frustum(math::vec4 const& eye_position,
                                  math::mat4 const& screen_transform,
-                                 float_t near_plane,
-                                 float_t far_plane);
+                                 math::mat4::value_type near_plane,
+                                 math::mat4::value_type far_plane);
 
 math::mat4 GUA_DLL compute_orthographic_frustum(math::vec4 const& eye_position,
                                  math::mat4 const& screen_transform,
-                                 float_t near_plane,
-                                 float_t far_plane);
+                                 math::mat4::value_type near_plane,
+                                 math::mat4::value_type far_plane);
 
 /**
  * Converts an assimp matrix to a schism matrix.
