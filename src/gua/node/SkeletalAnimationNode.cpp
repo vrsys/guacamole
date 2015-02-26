@@ -95,20 +95,10 @@ namespace node {
   void SkeletalAnimationNode::set_material(std::shared_ptr<Material> material,uint index) {
     if(index < materials_.size()){
       materials_[index] = material;
-      material_changed_ = self_dirty_ = true;
+      // material_changed_ = self_dirty_ = true;
     }
     else{
       Logger::LOG_WARNING << "Cant set material of invalid index!"<< std::endl;
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_fallback_material(std::shared_ptr<Material> material) {
-    for(auto & mat: materials_){
-      if(!mat || mat->get_shader_name() == ""){
-        mat = material;
-        material_changed_= self_dirty_ = true;
-      }
     }
   }
 
