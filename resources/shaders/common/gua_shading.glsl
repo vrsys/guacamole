@@ -1,6 +1,7 @@
 // lights
 uniform uvec2 gua_light_bitset;
 uniform int gua_lights_num;
+uniform int gua_sun_lights_num;
 
 struct LightSource {
   vec4   position_and_radius; // xyz - position (or direction for sun light), w - radius

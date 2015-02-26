@@ -61,16 +61,19 @@ public:
   math::vec2ui invalidate(RenderContext const& ctx,
                           math::vec2ui const& resolution,
                           array_type const& lights,
-                          int tile_power);
+                          int tile_power,
+                          unsigned sun_lights_num);
 
   std::shared_ptr<Texture3D> const& get_light_bitset() const { return light_bitset_; }
   unsigned get_lights_num() const { return lights_num_; }
+  unsigned get_sun_lights_num() const { return sun_lights_num_; }
 
   inline const uniform_array_type&   light_uniform_block() const { return uniform_block_; }
 
 private:
   uniform_array_type  uniform_block_;
   unsigned            lights_num_ = 0;
+  unsigned            sun_lights_num_ = 0;
 
   std::shared_ptr<Texture3D> light_bitset_;
   unsigned light_bitset_words_ = 0;

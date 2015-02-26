@@ -31,9 +31,10 @@ void LightVisibilityRenderer::render(PipelinePass& pass,
   LightTable::array_type lights;
 
   prepare_light_table(pipe, transforms, lights);
+  unsigned sun_lights_num = pipe.get_scene().nodes[std::type_index(typeid(node::SunLightNode))].size();
   math::vec2ui effective_resolution =
       pipe.get_light_table().invalidate(ctx, pipe.get_camera().config.get_resolution(),
-                                        lights, tile_power);
+                                        lights, tile_power, sun_lights_num);
 
   math::vec2ui rasterizer_resolution = (enable_fullscreen_fallback)
       ? pipe.get_camera().config.get_resolution() : effective_resolution;
@@ -187,9 +188,10 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe,
   auto light_cone =
       std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_cone_proxy"));
 
-
   // draw lights
   for (size_t i = 0; i < lights.size(); ++i) {
+    if (lights[i].type == 2)
+      continue;
     gl_program->uniform("gua_model_matrix", 0, transforms[i]);
     gl_program->uniform("light_id", 0, int(i));
     ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), 
@@ -200,8 +202,6 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe,
       light_sphere->draw(ctx);
     else if (lights[i].type == 1)
       light_cone->draw(ctx);
-    else if (lights[i].type == 2)
-      pipe.draw_quad();
   }
 }
 
