@@ -292,6 +292,22 @@ GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<std::string>(
 //operators
 std::ostream& operator<<(std::ostream& os, UniformValue const& val);
 
+template<typename T> struct UniformCompatible { typedef T type; };
+
+template <> struct UniformCompatible<math::mat4>  { typedef math::mat4f type; };
+template <> struct UniformCompatible<math::mat3>  { typedef math::mat3f type; };
+
+template <> struct UniformCompatible<math::vec4>  { typedef math::vec4f type; };
+template <> struct UniformCompatible<math::vec3>  { typedef math::vec3f type; };
+template <> struct UniformCompatible<math::vec2>  { typedef math::vec2f type; };
+
+template<typename T>
+typename UniformCompatible<T>::type uniform_compatible_type(T value)
+{
+  typename UniformCompatible<T>::type x(value);
+  return x;
+}
+
 }
 
 #endif  // GUA_UNIFORM_HPP
