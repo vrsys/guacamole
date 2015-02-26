@@ -1,40 +1,3 @@
-/******************************************************************************
- * guacamole - delicious VR                                                   *
- *                                                                            *
- * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
- * Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
- *                                                                            *
- * This program is free software: you can redistribute it and/or modify it    *
- * under the terms of the GNU General Public License as published by the Free *
- * Software Foundation, either version 3 of the License, or (at your option)  *
- * any later version.                                                         *
- *                                                                            *
- * This program is distributed in the hope that it will be useful, but        *
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY *
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License   *
- * for more details.                                                          *
- *                                                                            *
- * You should have received a copy of the GNU General Public License along    *
- * with this program. If not, see <http://www.gnu.org/licenses/>.             *
- *                                                                            *
- ******************************************************************************/
-
-@include "shaders/common/header.glsl"
-
-// varyings
-in vec2 gua_quad_coords;
-
-@include "shaders/common/gua_camera_uniforms.glsl"
-@include "shaders/common/gua_gbuffer_input.glsl"
-
-uniform uvec2 gua_noise_tex;
-uniform float gua_ssao_radius;
-uniform float gua_ssao_intensity;
-uniform float gua_ssao_falloff;
-
-// output
-layout(location=0) out vec4 gua_out_color;
-
 
 float gua_ssao_aoFF(in vec3 ddiff,in vec3 cnorm, in float c1, in float c2, in vec2 texcoord) {
   float rd = length(ddiff);
@@ -50,7 +13,27 @@ float gua_ssao_giFF(in vec3 ddiff,in vec3 cnorm, in float c1, in float c2, in ve
 }
 
 
-void main() {
+vec3 object_space_random() {
+
+  const int A = 123417123;
+  const int B = 621;
+  const int C = 721191;
+
+  vec4 object_space = inverse(gua_model_matrix) * vec4(gua_get_position(), 1.0);
+
+  int x = int(object_space.x * float(A));
+  int y = int(object_space.y * float(A));
+  int z = int(object_space.z * float(A));
+
+  int random_x = (A * (( x % B ) * C * A)%B) % B;
+  int random_y = (A * (( y % B ) * C * A)%B) % B;
+  int random_z = (A * (( z % B ) * C * A)%B) % B;
+
+  return vec3(float(random_x)/float(B), float(random_y)/float(B), float(random_z)/float(B));
+}
+
+float compute_ssao () 
+{
   vec2 texcoords = gua_get_quad_coords();
 
   vec3 n = gua_get_normal();
@@ -58,7 +41,9 @@ void main() {
 
   //randomization texture
   vec2 fres = vec2(1.0/(64.0*gua_texel_width)*5,1.0/(64.0*gua_texel_height)*5);
-  vec3 random = texture2D(sampler2D(gua_noise_tex), texcoords.st*fres.xy).xyz;
+  //vec3 random = texture2D(sampler2D(gua_noise_tex), texcoords.st*fres.xy).xyz;
+  vec3 random = object_space_random();
+
   random = (random-vec3(0.5)) * gua_ssao_radius;
 
   //initialize variables
@@ -98,8 +83,5 @@ void main() {
 
   ao/=32.0;
 
-  gua_out_color = vec4(0.0, 0.0, 0.0, ao) * gua_ssao_intensity;
-  // gua_out_color = vec4(ao, ao, ao, 1.0) * gua_ssao_intensity;
-  // gua_out_color = gua_get_color() * max(0.0, 1.0 - ao*gua_ssao_intensity);
-  // gua_out_color = gua_get_color() * max(0.0, 1.0 - ao);//*gua_ssao_intensity);
+  return ao * gua_ssao_intensity;
 }

@@ -328,8 +328,8 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
                                                        nurbs_node->raycasting(), 
                                                        program_changed);
 
-      UniformValue model_mat(nurbs_node->get_cached_world_transform());
-      UniformValue normal_mat(scm::math::transpose(scm::math::inverse(nurbs_node->get_cached_world_transform())));
+      auto model_mat(nurbs_node->get_cached_world_transform());
+      auto normal_mat(scm::math::transpose(scm::math::inverse(nurbs_node->get_cached_world_transform())));
 
       auto nurbs_ressource = nurbs_node->get_geometry();
 
@@ -341,8 +341,8 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
           current_material_program->use(ctx);
           save_to_file(*current_material_program, ".", "raycasting");
           {
-            current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
-            current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+            current_material_program->apply_uniform(ctx, "gua_model_matrix",  math::mat4f(model_mat));
+            current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_mat));
           
             current_material_program->apply_uniform(ctx, "nearplane", pipe.get_camera().config.get_near_clip());
             current_material_program->apply_uniform(ctx, "farplane", pipe.get_camera().config.get_far_clip());
@@ -367,8 +367,8 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
           // render using two-pass tesselation approach
           pre_tesselation_program_->use(ctx);
           {
-            pre_tesselation_program_->apply_uniform(ctx, "gua_model_matrix", model_mat);
-            pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+            pre_tesselation_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_mat));
+            pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_mat));
 
             ctx.render_context->apply();
             nurbs_ressource->predraw(ctx, nurbs_node->render_backfaces());
@@ -387,8 +387,8 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
           {
             nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 
-            current_material_program->apply_uniform(ctx, "gua_model_matrix", model_mat);
-            current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+            current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_mat));
+            current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_mat));
 
             current_material_program->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
               pipe.get_gbuffer().get_height()),

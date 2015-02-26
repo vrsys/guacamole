@@ -50,10 +50,10 @@ TexturedQuadPassDescription::TexturedQuadPassDescription()
     for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
       auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
 
-      UniformValue model_mat(quad_node->get_scaled_world_transform());
-      UniformValue normal_mat(scm::math::transpose(scm::math::inverse(quad_node->get_scaled_world_transform())));
+      UniformValue model_mat(scm::math::mat4f(quad_node->get_scaled_world_transform()));
+      UniformValue normal_mat(scm::math::mat4f(scm::math::transpose(scm::math::inverse(quad_node->get_scaled_world_transform()))));
       UniformValue tex(quad_node->data.get_texture());
-      UniformValue flip(math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
+      UniformValue flip(scm::math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
 
       auto const& ctx(pipe.get_context());
 

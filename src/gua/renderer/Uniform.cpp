@@ -111,27 +111,27 @@ UniformValue UniformValue::create_from_string_and_type(std::string const& value,
     case UniformType::BOOL:
       return UniformValue(string_utils::from_string<bool>(value));
     case UniformType::VEC2:
-      return UniformValue(string_utils::from_string<math::vec2>(value));
+      return UniformValue(string_utils::from_string<scm::math::vec2>(value));
     case UniformType::VEC3:
-      return UniformValue(string_utils::from_string<math::vec3>(value));
+      return UniformValue(string_utils::from_string<scm::math::vec3>(value));
     case UniformType::VEC4:
-      return UniformValue(string_utils::from_string<math::vec4>(value));
+      return UniformValue(string_utils::from_string<scm::math::vec4>(value));
     case UniformType::VEC2I:
-      return UniformValue(string_utils::from_string<math::vec2i>(value));
+      return UniformValue(string_utils::from_string<scm::math::vec2i>(value));
     case UniformType::VEC3I:
-      return UniformValue(string_utils::from_string<math::vec3i>(value));
+      return UniformValue(string_utils::from_string<scm::math::vec3i>(value));
     case UniformType::VEC4I:
-      return UniformValue(string_utils::from_string<math::vec4i>(value));
+      return UniformValue(string_utils::from_string<scm::math::vec4i>(value));
     case UniformType::VEC2UI:
-      return UniformValue(string_utils::from_string<math::vec2ui>(value));
+      return UniformValue(string_utils::from_string<scm::math::vec2ui>(value));
     case UniformType::VEC3UI:
-      return UniformValue(string_utils::from_string<math::vec3ui>(value));
+      return UniformValue(string_utils::from_string<scm::math::vec3ui>(value));
     case UniformType::VEC4UI:
-      return UniformValue(string_utils::from_string<math::vec4ui>(value));
+      return UniformValue(string_utils::from_string<scm::math::vec4ui>(value));
     case UniformType::MAT3:
-      return UniformValue(string_utils::from_string<math::mat3>(value));
+      return UniformValue(string_utils::from_string<scm::math::mat3>(value));
     case UniformType::MAT4:
-      return UniformValue(string_utils::from_string<math::mat4>(value));
+      return UniformValue(string_utils::from_string<scm::math::mat4>(value));
     case UniformType::SAMPLER2D:
       return UniformValue(value);
   }

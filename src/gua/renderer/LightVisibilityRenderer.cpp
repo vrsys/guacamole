@@ -31,9 +31,10 @@ void LightVisibilityRenderer::render(PipelinePass& pass,
   LightTable::array_type lights;
 
   prepare_light_table(pipe, transforms, lights);
+  unsigned sun_lights_num = pipe.get_scene().nodes[std::type_index(typeid(node::SunLightNode))].size();
   math::vec2ui effective_resolution =
       pipe.get_light_table().invalidate(ctx, pipe.get_camera().config.get_resolution(),
-                                        lights, tile_power);
+                                        lights, tile_power, sun_lights_num);
 
   math::vec2ui rasterizer_resolution = (enable_fullscreen_fallback)
       ? pipe.get_camera().config.get_resolution() : effective_resolution;
@@ -98,9 +99,9 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
 
     LightTable::LightBlock light_block {};
 
-    light_block.position_and_radius = math::vec4(light_position, light_radius);
-    light_block.beam_direction_and_half_angle = math::vec4(0.f, 0.f, 0.f, 0.f);
-    light_block.color           = math::vec4(light->data.get_color().vec3(), 0.f);
+    light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, light_radius);
+    light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
+    light_block.color           = math::vec4f(light->data.get_color().vec3().r, light->data.get_color().vec3().g, light->data.get_color().vec3().b, 0.f);
     light_block.falloff         = light->data.get_falloff();
     light_block.brightness      = light->data.get_brightness();
     light_block.softness        = 0;
@@ -130,9 +131,9 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       // not implemented yet
     }
 
-    light_block.position_and_radius = math::vec4(light_position, 0.f);
-    light_block.beam_direction_and_half_angle = math::vec4(beam_direction, half_beam_angle);
-    light_block.color           = math::vec4(light->data.get_color().vec3(), 0.f);
+    light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, 0);
+    light_block.beam_direction_and_half_angle = math::vec4f(beam_direction.x, beam_direction.y, beam_direction.z, half_beam_angle);
+    light_block.color           = math::vec4f(light->data.get_color().vec3().r, light->data.get_color().vec3().g, light->data.get_color().vec3().b, 0.f);
     light_block.falloff         = light->data.get_falloff();
     light_block.brightness      = light->data.get_brightness();
     light_block.softness        = light->data.get_softness();
@@ -156,9 +157,9 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
 
     LightTable::LightBlock light_block {};
 
-    light_block.position_and_radius = math::vec4(light_position, light_radius);
-    light_block.beam_direction_and_half_angle = math::vec4(0.f, 0.f, 0.f, 0.f);
-    light_block.color           = math::vec4(light->data.get_color().vec3(), 0.f);
+    light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, light_radius);
+    light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
+    light_block.color           = math::vec4f(light->data.get_color().vec3().r, light->data.get_color().vec3().g, light->data.get_color().vec3().b, 0.f);
     light_block.falloff         = 0.0f;
     light_block.brightness      = light->data.get_brightness();
     light_block.softness        = 0.0f;
@@ -187,10 +188,13 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe,
   auto light_cone =
       std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_cone_proxy"));
 
-
   // draw lights
   for (size_t i = 0; i < lights.size(); ++i) {
-    gl_program->uniform("gua_model_matrix", 0, transforms[i]);
+    if (lights[i].type == 2)
+      continue;
+
+    math::mat4f light_transform(transforms[i]);
+    gl_program->uniform("gua_model_matrix", 0, light_transform);
     gl_program->uniform("light_id", 0, int(i));
     ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), 
                                    scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
@@ -200,8 +204,6 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe,
       light_sphere->draw(ctx);
     else if (lights[i].type == 1)
       light_cone->draw(ctx);
-    else if (lights[i].type == 2)
-      pipe.draw_quad();
   }
 }
 

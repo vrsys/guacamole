@@ -36,10 +36,12 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(input)
     add_subdirectory(projective_texturing)
     add_subdirectory(nice_and_shiny)
+	add_subdirectory(smooth_lighting)
     add_subdirectory(stress_test)
     add_subdirectory(transparency)
     add_subdirectory(tiled_shading_test)
   ENDIF (${GUACAMOLE_GLFW3})
+  add_subdirectory(screenshot)
 
   # nurbs example requires GLFW3 and nurbs-plugin
   IF (${PLUGIN_guacamole-nurbs} AND ${GUACAMOLE_GLFW3})

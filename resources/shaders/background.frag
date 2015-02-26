@@ -26,13 +26,7 @@ in vec2 gua_quad_coords;
 
 @include "shaders/common/gua_camera_uniforms.glsl"
 @include "shaders/common/gua_gbuffer_input.glsl"
-
-uniform int   background_mode;
-uniform vec3  background_color;
-uniform uvec2 background_texture;
-uniform bool  enable_fog;
-uniform float fog_start; 
-uniform float fog_end;
+@include "shaders/common/gua_resolve_pass_uniforms.glsl"
 
 // output
 layout(location=0) out vec3 gua_out_color;
@@ -43,7 +37,7 @@ float gua_my_atan2(float a, float b) {
 }
 
 vec3 gua_apply_background_texture() {
-  return texture2D(sampler2D(background_texture), gua_quad_coords).xyz;
+  return texture2D(sampler2D(gua_background_texture), gua_quad_coords).xyz;
 }
 
 vec3 gua_apply_skymap_texture() {
@@ -59,19 +53,19 @@ vec3 gua_apply_skymap_texture() {
 }
 
 vec3 gua_apply_background_color() {
-  return background_color;
+  return gua_background_color;
 }
 
 vec3 gua_apply_fog(vec3 fog_color) {
   float dist       = length(gua_camera_position - gua_get_position());
-  float fog_factor = clamp((dist - fog_start)/(fog_end - fog_start), 0.0, 1.0);
+  float fog_factor = clamp((dist - gua_fog_start)/(gua_fog_end - gua_fog_start), 0.0, 1.0);
   return mix(gua_get_color(), fog_color, fog_factor);
 }
 
 void main() {
   float depth = gua_get_depth();
   if (depth < 1) {
-    if (enable_fog) {
+    if (gua_enable_fog) {
       vec3 fog_color;
 
       switch (background_mode) {

@@ -11,8 +11,10 @@ void LightTable::remove_buffers(RenderContext const& ctx) {
 math::vec2ui LightTable::invalidate(RenderContext const& ctx,
                                     math::vec2ui const& resolution,
                                     LightTable::array_type const& lights,
-                                    int tile_power) {
+                                    int tile_power,
+                                    unsigned sun_lights_num) {
 
+  sun_lights_num_ = sun_lights_num;
   lights_num_ = lights.size();
 
   unsigned width{};

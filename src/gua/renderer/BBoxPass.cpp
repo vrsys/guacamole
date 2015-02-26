@@ -63,12 +63,12 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
   scm::gl::buffer_ptr buffer_ = ctx.render_device->create_buffer(
       scm::gl::BIND_VERTEX_BUFFER,
       scm::gl::USAGE_DYNAMIC_DRAW,
-      count * 2 * sizeof(math::vec3),
+      count * 2 * sizeof(math::vec3f),
       0);
   scm::gl::vertex_array_ptr vao_ = ctx.render_device->create_vertex_array(
       scm::gl::vertex_format(
-        0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3))(
-        0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3)), {buffer_});
+        0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3f))(
+        0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3f)), {buffer_});
 
   pass.process_ = [buffer_, vao_](
       PipelinePass &, PipelinePassDescription const&, Pipeline & pipe) {
@@ -80,10 +80,10 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
     // else
     RenderContext const& ctx(pipe.get_context());
 
-    ctx.render_device->resize_buffer(buffer_, count * 2 * sizeof(math::vec3));
+    ctx.render_device->resize_buffer(buffer_, count * 2 * sizeof(math::vec3f));
 
     {
-      auto data = static_cast<math::vec3*>(ctx.render_context->map_buffer(
+      auto data = static_cast<math::vec3f*>(ctx.render_context->map_buffer(
           buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
       for (int i(0); i < count; ++i) {

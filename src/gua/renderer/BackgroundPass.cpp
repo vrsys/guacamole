@@ -43,95 +43,95 @@ BackgroundPassDescription::BackgroundPassDescription()
   depth_stencil_state_ = boost::make_optional(
       scm::gl::depth_stencil_state_desc(false, false));
 
-  uniforms["background_color"]    = math::vec3(0.2f, 0.2f, 0.2f);
-  uniforms["background_mode"]     = (int)COLOR;
-  uniforms["background_texture"]  = std::string("gua_default_texture");
-  uniforms["enable_fog"]          = false;
-  uniforms["fog_start"]           = 10.f;
-  uniforms["fog_end"]             = 1000.f;
+  uniforms["gua_background_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);
+  uniforms["gua_background_mode"] = (int)COLOR;
+  uniforms["gua_background_texture"] = std::string("gua_default_texture");
+  uniforms["gua_enable_fog"] = false;
+  uniforms["gua_fog_start"] = 10.f;
+  uniforms["gua_fog_end"] = 1000.f;
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 BackgroundPassDescription& BackgroundPassDescription::color(utils::Color3f const& color) {
-  uniforms["background_color"] = color.vec3();
+  uniforms["gua_background_color"] = color.vec3();
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 utils::Color3f BackgroundPassDescription::color() const {
-  auto uniform(uniforms.find("background_color"));
+  auto uniform(uniforms.find("gua_background_color"));
   return utils::Color3f(boost::get<math::vec3>(uniform->second.data));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 BackgroundPassDescription& BackgroundPassDescription::texture(std::string const& texture) {
-  uniforms["background_texture"] = texture;
+  uniforms["gua_background_texture"] = texture;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string BackgroundPassDescription::texture() const {
-  auto uniform(uniforms.find("background_texture"));
+  auto uniform(uniforms.find("gua_background_texture"));
   return boost::get<std::string>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 BackgroundPassDescription& BackgroundPassDescription::mode(BackgroundPassDescription::BackgroundMode const& mode) {
-  uniforms["background_mode"] = (int)mode;
+  uniforms["gua_background_mode"] = (int)mode;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 BackgroundPassDescription::BackgroundMode BackgroundPassDescription::mode() const {
-  auto uniform(uniforms.find("background_mode"));
+  auto uniform(uniforms.find("gua_background_mode"));
   return BackgroundPassDescription::BackgroundMode(boost::get<int>(uniform->second.data));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 BackgroundPassDescription& BackgroundPassDescription::enable_fog(bool enable_fog) {
-  uniforms["enable_fog"] = enable_fog;
+  uniforms["gua_enable_fog"] = enable_fog;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool BackgroundPassDescription::enable_fog() const {
-  auto uniform(uniforms.find("enable_fog"));
+  auto uniform(uniforms.find("gua_enable_fog"));
   return boost::get<bool>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 BackgroundPassDescription& BackgroundPassDescription::fog_start(float fog_start) {
-  uniforms["fog_start"] = fog_start;
+  uniforms["gua_fog_start"] = fog_start;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 float BackgroundPassDescription::fog_start() const {
-  auto uniform(uniforms.find("fog_start"));
+  auto uniform(uniforms.find("gua_fog_start"));
   return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 BackgroundPassDescription& BackgroundPassDescription::fog_end(float fog_end) {
-  uniforms["fog_end"] = fog_end;
+  uniforms["gua_fog_end"] = fog_end;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 float BackgroundPassDescription::fog_end() const {
-  auto uniform(uniforms.find("fog_end"));
+  auto uniform(uniforms.find("gua_fog_end"));
   return boost::get<float>(uniform->second.data);
 }
 

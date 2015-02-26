@@ -181,13 +181,13 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::scale(float s) {
+  void Node::scale(math::float_t s) {
     scale(s, s, s);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::scale(float x, float y, float z) {
+  void Node::scale(math::float_t x, math::float_t y, math::float_t z) {
     transform_ = scm::math::make_scale(x, y, z) * transform_;
     set_dirty();
   }
@@ -200,20 +200,20 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::rotate(float angle, float x, float y, float z) {
+  void Node::rotate(math::float_t angle, math::float_t x, math::float_t y, math::float_t z) {
     transform_ = scm::math::make_rotation(angle, x, y, z) * transform_;
     set_dirty();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::rotate(float angle, math::vec3 const& axis) {
+  void Node::rotate(math::float_t angle, math::vec3 const& axis) {
     rotate(angle, axis.x, axis.y, axis.z);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Node::translate(float x, float y, float z) {
+  void Node::translate(math::float_t x, math::float_t y, math::float_t z) {
     transform_ = scm::math::make_translation(x, y, z) * transform_;
     set_dirty();
   }

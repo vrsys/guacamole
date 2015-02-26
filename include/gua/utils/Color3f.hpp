@@ -98,7 +98,7 @@ struct GUA_DLL Color3f {
    */
   Color3f const brightened() const;
 
-  math::vec3 const vec3() const;
+  scm::math::vec3f const vec3() const;
 
   /**
    * Returns a randomly generated Color.

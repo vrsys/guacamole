@@ -75,8 +75,15 @@ WindowBase::WindowBase(Configuration const& configuration)
       warpBR_(nullptr),
       warpRL_(nullptr),
       warpGL_(nullptr),
-      warpBL_(nullptr) {
+      warpBL_(nullptr) {}
 
+////////////////////////////////////////////////////////////////////////////////
+
+WindowBase::~WindowBase() {}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WindowBase::init_context() {
   if (config.get_warp_matrix_red_right() == "" ||
       config.get_warp_matrix_green_right() == "" ||
       config.get_warp_matrix_blue_right() == "" ||
@@ -118,18 +125,8 @@ WindowBase::WindowBase(Configuration const& configuration)
       Resources::lookup_shader(Resources::shaders_display_shader_warped_frag)
       );
 #endif
-
-    
   }
-}
 
-////////////////////////////////////////////////////////////////////////////////
-
-WindowBase::~WindowBase() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void WindowBase::init_context() {
   ctx_.render_device  = scm::gl::render_device_ptr(new scm::gl::render_device());
   ctx_.render_context = ctx_.render_device->main_context();
 
@@ -141,7 +138,7 @@ void WindowBase::init_context() {
   ctx_.render_window = this;
 
   fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-      ctx_.render_device, math::vec2(-1.f, -1.f), math::vec2(1.f, 1.f)));
+    ctx_.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f)));
 
   depth_stencil_state_ = ctx_.render_device
       ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);

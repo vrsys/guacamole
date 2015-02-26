@@ -36,18 +36,18 @@ void renderNode(PipelinePass& pass,
                 node::TexturedScreenSpaceQuadNode* quad_node,
                 Pipeline& pipe) {
   UniformValue tex(quad_node->data.get_texture());
-  UniformValue flip(math::vec2i(quad_node->data.get_flip_x() ? -1 : 1,
+  UniformValue flip(scm::math::vec2i(quad_node->data.get_flip_x() ? -1 : 1,
                                 quad_node->data.get_flip_y() ? -1 : 1));
   UniformValue opacity(quad_node->data.get_opacity());
 
   auto width(pipe.get_gbuffer().get_width());
   auto height(pipe.get_gbuffer().get_height());
 
-  UniformValue size(math::vec2(1.0 * quad_node->data.get_size().x / width,
-                               1.0 * quad_node->data.get_size().y / height));
+  UniformValue size(scm::math::vec2f(1.0 * quad_node->data.get_size().x / width,
+                                     1.0 * quad_node->data.get_size().y / height));
 
   UniformValue offset(
-      math::vec2((2.0 * quad_node->data.get_offset().x +
+      scm::math::vec2f((2.0 * quad_node->data.get_offset().x +
                   quad_node->data.get_anchor().x *
                       (width - quad_node->data.get_size().x)) / width,
                  (2.0 * quad_node->data.get_offset().y +

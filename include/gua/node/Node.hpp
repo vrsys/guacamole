@@ -218,7 +218,7 @@ class GUA_DLL Node {
    * \param y         The y value of the scaling.
    * \param z         The z value of the scaling.
    */
-  virtual void scale(float x, float y, float z);
+  virtual void scale(math::float_t x, math::float_t y, math::float_t z);
 
   /**
    * Applies a scaling on the Node's transformation.
@@ -232,7 +232,7 @@ class GUA_DLL Node {
    *
    * \param s         The scaling value for all axes.
    */
-  virtual void scale(float s);
+  virtual void scale(math::float_t s);
 
   /**
    * Applies a rotation on the Node's transformation.
@@ -242,7 +242,7 @@ class GUA_DLL Node {
    * \param y         The y factor of the rotation.
    * \param z         The z factor of the rotation.
    */
-  virtual void rotate(float angle, float x, float y, float z);
+  virtual void rotate(math::float_t angle, math::float_t x, math::float_t y, math::float_t z);
 
   /**
    * Applies a rotation on the Node's transformation.
@@ -250,7 +250,7 @@ class GUA_DLL Node {
    * \param angle     The angle of the rotation in degrees.
    * \param axis      A vector containing the rotation's axis values.
    */
-  virtual void rotate(float angle, math::vec3 const& axis);
+  virtual void rotate(math::float_t angle, math::vec3 const& axis);
 
   /**
    * Applies a translation on the Node's transformation.
@@ -259,7 +259,7 @@ class GUA_DLL Node {
    * \param y         The y value of the translation.
    * \param z         The z value of the translation.
    */
-  virtual void translate(float x, float y, float z);
+  virtual void translate(math::float_t x, math::float_t y, math::float_t z);
 
   /**
    * Applies a translation on the Node's transformation.
