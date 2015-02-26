@@ -309,11 +309,15 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     std::shared_ptr<Material> material;
     // unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]->mMaterialIndex);
 
-    // if (material_index != 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
-    //   MaterialLoader material_loader;
-    //   aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
-    //   material = material_loader.load_material(ai_material, file_name);
-    // }
+    if(fbx_node.GetMaterialCount() > 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
+      MaterialLoader material_loader;
+      if(fbx_node.GetMaterialCount() > 1) {
+        Logger::LOG_WARNING << "Trimesh has more than one material, using only first one" << std::endl;
+      }
+      FbxSurfaceMaterial* mat = fbx_node.GetMaterial(0);
+      material = material_loader.load_material(*mat, file_name);
+    }
+    else std::cout << "not loading materials" << std::endl;
 
     //return std::make_shared<node::TriMeshNode>("", desc.unique_key(), material); // not allowed -> private c'tor
     return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));

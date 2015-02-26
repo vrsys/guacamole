@@ -57,7 +57,6 @@ class GUA_DLL MaterialLoader {
 
   std::shared_ptr<Material> load_material(FbxSurfaceMaterial const* material,
                                 					std::string const& assets_directory) const;
-
 };
 
 }

@@ -10,6 +10,7 @@
 
 namespace gua 
 {
+<<<<<<< HEAD
 SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     num_bones_{0},
     has_anims_{scene->HasAnimations()},
@@ -27,6 +28,8 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
   timer_.start();
   add_hierarchy(*scene);
 }
+=======
+>>>>>>> texture loading from fbx works, but automatic path wrong
 SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Node> const& root):
     num_bones_{0},
     has_anims_{false},
@@ -174,7 +177,13 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
       }
       //if(currentTime < next_transition_) {
       else {
+<<<<<<< HEAD
         SkeletalAnimationUtils::calculate_matrices(currentTime, *anim_start_node_, *animations_[animNum_], transforms);  
+=======
+        next_transition_ = currentTime + playDuration;
+        animNum = (animNum + 1) % animations_.size();
+        std::cout << "switching to " << animations_[animNum]->get_name() << std::endl;
+>>>>>>> texture loading from fbx works, but automatic path wrong
       }
       /*else {
         next_transition_ = currentTime + playDuration;

@@ -193,5 +193,78 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const& fbx_material, std::string const& assets_directory) const {
+  PathParser path;
+  path.parse(assets_directory);
+  std::string assets(path.get_path(true));
+  
+  //method to check if texture is set for an attribute
+  auto get_sampler = [&](const char* attribute)->std::string {
+    FbxProperty property = fbx_material.FindProperty(attribute);
+    unsigned texture_count = property.GetSrcObjectCount<FbxTexture>();
+    if(texture_count > 0) {
+      if(texture_count > 1) {
+        Logger::LOG_WARNING << property.GetNameAsCStr() << " has more than one texture, only first one." << std::endl;
+      }
+      //texture could also be layered or procedural texture
+      FbxFileTexture* texture = property.GetSrcObject<FbxFileTexture>(0);
+      if(texture) {        
+        std::string file_name = texture->GetFileName();
+        //filter out possible path in front of filename
+        auto slash_pos(file_name.find_last_of("/"));
+        auto bslash_pos(file_name.find_last_of("\""));
+        auto path_end = slash_pos;
+        if(bslash_pos != std::string::npos && path_end < bslash_pos) {
+          path_end = bslash_pos;
+        }
+        if(path_end != std::string::npos) {
+          file_name = file_name.substr(path_end + 1);
+        }
+        // std::cout << file_name << std::endl;
+        return file_name;
+      }
+      else {
+        Logger::LOG_WARNING << "Texturetype of "<< property.GetNameAsCStr() << " not supported." << std::endl;
+      }
+    }
+    return "";
+  };
+
+  auto new_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+
+  std::string color_map{get_sampler(FbxSurfaceMaterial::sDiffuse)};
+  if(color_map != "") {
+    Logger::LOG_DEBUG << "Material has color texture: " << color_map << std::endl;
+    new_mat->set_uniform("ColorMap", assets + color_map);
+  } 
+
+  std::string normal_map{get_sampler(FbxSurfaceMaterial::sNormalMap)};
+  //check bump slot if no normalmap found
+  if(normal_map == "") {
+    normal_map = get_sampler(FbxSurfaceMaterial::sBump);
+  }
+  if(normal_map != "") {
+    Logger::LOG_DEBUG << "Material has normal texture: " << normal_map << std::endl;
+    new_mat->set_uniform("NormalMap", assets + normal_map);
+  }
+
+  std::string ambient_map{get_sampler(FbxSurfaceMaterial::sAmbient)};
+  if (ambient_map != "") {
+    Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
+  }
+
+  std::string emit_map{get_sampler(FbxSurfaceMaterial::sEmissive)};
+  if(emit_map != "") {
+    new_mat->set_uniform("EmissivityMap", assets + emit_map);
+  }
+
+  // FbxProperty property = fbx_material.GetFirstProperty();
+  // while(property.IsValid()) {
+  //   std::cout << property.GetNameAsCStr() << std::endl;
+  //   property = fbx_material.GetNextProperty(property);
+  // }
+
+  return new_mat;
+}
 
 }
