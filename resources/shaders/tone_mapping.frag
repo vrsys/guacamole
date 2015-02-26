@@ -63,7 +63,7 @@ vec3 Uncharted2Tonemap(vec3 x)
 // optimized formula by Jim Hejl and Richard Burgess-Dawson.
 vec3 toneMapHejl(vec3 linearColor)
 {
-  linearColor *= exposure; // 16; // Hardcoded exposure adjustment
+  linearColor *= gua_tone_mapping_exposure; // 16; // Hardcoded exposure adjustment
   //from comment section at http://filmicgames.com/archives/75
   //The 0.004 sets the value for the black point to give you a little more
   //contrast in the bottom end. The graph will look very close, you will see a
