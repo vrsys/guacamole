@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
   gua::MaterialShaderDatabase::instance()->add(uniform_color_shader);
   auto rough_white = uniform_color_shader->make_new_material();
 
-  rough_white->set_uniform("color", gua::math::vec3(1.0f, 1.0f, 1.0f));
+  rough_white->set_uniform("color", gua::math::vec3f(1.0f, 1.0f, 1.0f));
   rough_white->set_uniform("metalness", 0.0f);
   rough_white->set_uniform("roughness", 1.0f);
   rough_white->set_uniform("emissivity", 0.0f); 
@@ -280,7 +280,10 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
+    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
+      gua::math::float_t(trackball.shifty()),
+      gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
+
     transform->set_transform(modelmatrix);
 
     window->process_events();

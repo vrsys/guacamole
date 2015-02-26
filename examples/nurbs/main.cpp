@@ -141,17 +141,17 @@ std::shared_ptr<gua::node::Node> create_node_from_igs_file(std::string const& no
 int main(int argc, char** argv) 
 {
   // some global constants
-  gua::math::vec4 iron(0.560, 0.570, 0.580, 1);
-  gua::math::vec4 silver(0.972, 0.960, 0.915, 1);
-  gua::math::vec4 aluminium(0.913, 0.921, 0.925, 1);
-  gua::math::vec4 gold(1.0, 0.766, 0.336, 1);
-  gua::math::vec4 copper(0.955, 0.637, 0.538, 1);
-  gua::math::vec4 chromium(0.550, 0.556, 0.554, 1);
-  gua::math::vec4 nickel(0.660, 0.609, 0.526, 1);
-  gua::math::vec4 titanium(0.542, 0.497, 0.449, 1);
-  gua::math::vec4 cobalt(0.662, 0.655, 0.634, 1);
-  gua::math::vec4 platinum(0.672, 0.637, 0.585, 1);
-  gua::math::vec4 water(0.2, 0.2, 0.2, 1);
+  gua::math::vec4f iron(0.560, 0.570, 0.580, 1);
+  gua::math::vec4f silver(0.972, 0.960, 0.915, 1);
+  gua::math::vec4f aluminium(0.913, 0.921, 0.925, 1);
+  gua::math::vec4f gold(1.0, 0.766, 0.336, 1);
+  gua::math::vec4f copper(0.955, 0.637, 0.538, 1);
+  gua::math::vec4f chromium(0.550, 0.556, 0.554, 1);
+  gua::math::vec4f nickel(0.660, 0.609, 0.526, 1);
+  gua::math::vec4f titanium(0.542, 0.497, 0.449, 1);
+  gua::math::vec4f cobalt(0.662, 0.655, 0.634, 1);
+  gua::math::vec4f platinum(0.672, 0.637, 0.585, 1);
+  gua::math::vec4f water(0.2, 0.2, 0.2, 1);
 
   // initialize guacamole
   gua::init(argc, argv);
@@ -181,13 +181,13 @@ int main(int argc, char** argv)
   glass->set_uniform("Metalness", 1.0f);
   glass->set_uniform("Opacity", 0.1f);
 
-  gum->set_uniform("Color", gua::math::vec4(0.1, 0.1, 0.1, 1.0));
+  gum->set_uniform("Color", gua::math::vec4f(0.1, 0.1, 0.1, 1.0));
   gum->set_uniform("Roughness", 1.0f);
   gum->set_uniform("Metalness", 0.0f);
   gum->set_uniform("Opacity", 1.0f);
 
   /////////////////////////////////////////////////////////////////////////////
-  // setup scene
+  // setup scene 
   /////////////////////////////////////////////////////////////////////////////
   auto input_transform = graph.add_node<gua::node::TransformNode>("/", "nurbs_transform");
   auto count = 0;
@@ -216,7 +216,7 @@ int main(int argc, char** argv)
   input_transform->translate(-bbox.center());
   graph.update_cache();
   
-  auto scene_size = scm::math::length(bbox.max - bbox.min);
+  float scene_size = scm::math::length(bbox.max - bbox.min);
   scene_size = std::max(scene_size, 1.0f);
 
   unsigned const max_lights = 50;
@@ -329,7 +329,10 @@ int main(int argc, char** argv)
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
+    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
+      gua::math::float_t(trackball.shifty()),
+      gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
+
     input_transform->set_transform(modelmatrix);
 
     if (frame_counter++ % 500 == 0)

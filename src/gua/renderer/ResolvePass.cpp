@@ -47,12 +47,12 @@ namespace gua {
 
     // default background configuration
     uniforms["gua_background_mode"] = static_cast<int>(BackgroundMode::COLOR);
-    uniforms["gua_background_color"] = math::vec3(0.2f, 0.2f, 0.2f);
+    uniforms["gua_background_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);
     uniforms["gua_background_texture"] = std::string("gua_default_texture");
     
     // default ambient lighting
     uniforms["gua_environment_lighting_mode"] = static_cast<int>(EnvironmentLightingMode::AMBIENT_COLOR);
-    uniforms["gua_environment_lighting_color"] = math::vec3(0.2f, 0.2f, 0.2f);
+    uniforms["gua_environment_lighting_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);
     uniforms["gua_environment_lighting_spheremap"] = std::string("gua_default_texture");
     uniforms["gua_environment_lighting_cubemap"] = std::string("gua_default_texture");
 
@@ -134,7 +134,7 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
   ResolvePassDescription& ResolvePassDescription::environment_lighting(utils::Color3f const& color) {
-    uniforms["gua_environment_lighting_color"] = gua::math::vec3(color.r(), color.g(), color.b());
+    uniforms["gua_environment_lighting_color"] = scm::math::vec3f(color.r(), color.g(), color.b());
     return *this;
   }
 

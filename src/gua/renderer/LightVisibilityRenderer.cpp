@@ -98,9 +98,9 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
 
     LightTable::LightBlock light_block {};
 
-    light_block.position_and_radius = math::vec4(light_position, light_radius);
-    light_block.beam_direction_and_half_angle = math::vec4(0.f, 0.f, 0.f, 0.f);
-    light_block.color           = math::vec4(light->data.get_color().vec3(), 0.f);
+    light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, light_radius);
+    light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
+    light_block.color           = math::vec4f(light->data.get_color().vec3().r, light->data.get_color().vec3().g, light->data.get_color().vec3().b, 0.f);
     light_block.falloff         = light->data.get_falloff();
     light_block.brightness      = light->data.get_brightness();
     light_block.softness        = 0;
@@ -130,9 +130,9 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       // not implemented yet
     }
 
-    light_block.position_and_radius = math::vec4(light_position, 0.f);
-    light_block.beam_direction_and_half_angle = math::vec4(beam_direction, half_beam_angle);
-    light_block.color           = math::vec4(light->data.get_color().vec3(), 0.f);
+    light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, 0);
+    light_block.beam_direction_and_half_angle = math::vec4f(beam_direction.x, beam_direction.y, beam_direction.z, half_beam_angle);
+    light_block.color           = math::vec4f(light->data.get_color().vec3().r, light->data.get_color().vec3().g, light->data.get_color().vec3().b, 0.f);
     light_block.falloff         = light->data.get_falloff();
     light_block.brightness      = light->data.get_brightness();
     light_block.softness        = light->data.get_softness();
@@ -156,9 +156,9 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
 
     LightTable::LightBlock light_block {};
 
-    light_block.position_and_radius = math::vec4(light_position, light_radius);
-    light_block.beam_direction_and_half_angle = math::vec4(0.f, 0.f, 0.f, 0.f);
-    light_block.color           = math::vec4(light->data.get_color().vec3(), 0.f);
+    light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, light_radius);
+    light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
+    light_block.color           = math::vec4f(light->data.get_color().vec3().r, light->data.get_color().vec3().g, light->data.get_color().vec3().b, 0.f);
     light_block.falloff         = 0.0f;
     light_block.brightness      = light->data.get_brightness();
     light_block.softness        = 0.0f;
@@ -190,7 +190,8 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe,
 
   // draw lights
   for (size_t i = 0; i < lights.size(); ++i) {
-    gl_program->uniform("gua_model_matrix", 0, transforms[i]);
+    math::mat4f light_transform(transforms[i]);
+    gl_program->uniform("gua_model_matrix", 0, light_transform);
     gl_program->uniform("light_id", 0, int(i));
     ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), 
                                    scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);

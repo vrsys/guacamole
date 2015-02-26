@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
   plod_passthrough->set_uniform("emissivity", 1.0f);
 
   auto rough_white = pbr_overwrite_color_shader->make_new_material();
-  rough_white->set_uniform("color", gua::math::vec3(1.0, 1.0, 1.0));
+  rough_white->set_uniform("color", gua::math::vec3f(1.0f, 1.0f, 1.0f));
   rough_white->set_uniform("metalness", 0.0f);
   rough_white->set_uniform("roughness", 0.8f);
   rough_white->set_uniform("emissivity", 0.0f);
@@ -345,7 +345,9 @@ int main(int argc, char** argv) {
   gua::events::Ticker ticker(loop, 1.0/500.0);
 
   ticker.on_tick.connect([&]() {
-    auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
+    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()), 
+                                                              gua::math::float_t(trackball.shifty()), 
+                                                              gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
     transform->set_transform(modelmatrix);
     static unsigned framecounter = 0;
     ++framecounter;

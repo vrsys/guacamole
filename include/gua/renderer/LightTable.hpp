@@ -14,16 +14,16 @@ class LightTable
 {
 public:
   struct LightBlock {
-    math::vec4  position_and_radius; // xyz - position (or direction for sun light), w - radius
-    math::vec4  beam_direction_and_half_angle; //  xyz - direction, w - half angle
-    math::vec4  color;
-    float       falloff;
-    float       brightness;
-    float       softness;
-    unsigned    type;            // 0 - point, 1 - spot, 2 - sun
-    unsigned    diffuse_enable;  // bool
-    unsigned    specular_enable; // bool
-    unsigned    casts_shadow;    // bool
+    math::vec4f  position_and_radius; // xyz - position (or direction for sun light), w - radius
+    math::vec4f  beam_direction_and_half_angle; //  xyz - direction, w - half angle
+    math::vec4f  color;
+    float        falloff;
+    float        brightness;
+    float        softness;
+    unsigned     type;            // 0 - point, 1 - spot, 2 - sun
+    unsigned     diffuse_enable;  // bool
+    unsigned     specular_enable; // bool
+    unsigned     casts_shadow;    // bool
     //unsigned    pad;
 
     //math::vec2ui shadow_map;

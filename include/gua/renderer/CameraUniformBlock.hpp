@@ -13,15 +13,15 @@ class CameraUniformBlock
 {
 public:
   struct CameraBlock {
-    math::mat4  view;
-    math::mat4  projection;
-    math::mat4  projection_inverse;
-    math::mat4  projection_view_inverse;
-    math::vec4  position;
-    math::vec2i resolution;
-    int         view_id;
-    float       clip_near;
-    float       clip_far;
+    math::mat4f  view;
+    math::mat4f  projection;
+    math::mat4f  projection_inverse;
+    math::mat4f  projection_view_inverse;
+    math::vec4f  position;
+    math::vec2i  resolution;
+    int          view_id;
+    float        clip_near;
+    float        clip_far;
   };
 
   typedef scm::gl::uniform_block<CameraBlock> block_type;

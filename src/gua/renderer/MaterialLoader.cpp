@@ -96,7 +96,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     new_mat->set_uniform("ColorMap", assets + uniform_color_map);
   } else if (uniform_color != "") {
     auto c(string_utils::from_string<math::vec3>(uniform_color));
-    new_mat->set_uniform("Color", math::vec4(c.x, c.y, c.z, 1.f));
+    new_mat->set_uniform("Color", scm::math::vec4f(gua::math::float_t(c.x), gua::math::float_t(c.y), gua::math::float_t(c.z), 1.f));
   }
 
 #if 0
@@ -120,7 +120,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   if (uniform_emit_map != "") {
     new_mat->set_uniform("EmissivityMap", assets + uniform_emit_map);
   } else if (uniform_emit != "") {
-    new_mat->set_uniform("Emissivity", string_utils::from_string<math::vec3>(uniform_emit)[0]);
+    new_mat->set_uniform("Emissivity", string_utils::from_string<scm::math::vec3f>(uniform_emit)[0]);
   }
 
   if (uniform_normal_map != "") {

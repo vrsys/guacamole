@@ -263,12 +263,12 @@ void ShadowMap::render(Pipeline* pipe,
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
   ctx.render_context->set_rasterizer_state(rasterizer_state_);
   ctx.render_context->set_viewport(scm::gl::viewport(
-    math::vec2(0.f, 0.f),
-    math::vec2(map_size, map_size))
+    scm::math::vec2f(0.f, 0.f),
+    scm::math::vec2f(map_size, map_size))
   );
 
   // calculate light frustum
-  math::mat4 screen_transform(scm::math::make_translation(0.f, 0.f, -1.f));
+  math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
   screen_transform = transform * screen_transform;
 
   Frustum shadow_frustum = Frustum::perspective(

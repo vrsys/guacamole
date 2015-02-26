@@ -43,7 +43,7 @@ BackgroundPassDescription::BackgroundPassDescription()
   depth_stencil_state_ = boost::make_optional(
       scm::gl::depth_stencil_state_desc(false, false));
 
-  uniforms["gua_background_color"] = math::vec3(0.2f, 0.2f, 0.2f);
+  uniforms["gua_background_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);
   uniforms["gua_background_mode"] = (int)COLOR;
   uniforms["gua_background_texture"] = std::string("gua_default_texture");
   uniforms["gua_enable_fog"] = false;

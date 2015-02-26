@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
   // Load passat
   auto mat_passat_glass(load_mat("data/materials/Glass.gmd"));
   mat_passat_glass->
-      set_uniform("color", gua::math::vec3(0.9f, 0.9f, 0.9f))
+      set_uniform("color", gua::math::vec3f(0.9f, 0.9f, 0.9f))
      .set_uniform("alpha", car_glass_opacity)
      .set_show_back_faces(true);
 
@@ -315,7 +315,7 @@ int main(int argc, char** argv) {
 
   ticker.on_tick.connect([&]() {
     
-    screen->set_transform(scm::math::inverse(trackball.transform_matrix()));
+    screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
 
     if (ctr++ % 150 == 0)
       std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
