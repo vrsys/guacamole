@@ -220,7 +220,6 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
         if(path_end != std::string::npos) {
           file_name = file_name.substr(path_end + 1);
         }
-        // std::cout << file_name << std::endl;
         return file_name;
       }
       else {
@@ -230,12 +229,28 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
     return "";
   };
 
+  //check which shading model is used
+  std::string shading{fbx_material.ShadingModel.Get().Buffer()};
+  bool shading_supported = shading == "Phong" || shading == "Labert";
+  if(!shading_supported) {
+    Logger::LOG_DEBUG << "Shading Type '" << shading << "' not supported." << std::endl;
+  }
+  //cast to phong not necessary, only diffuse and emissive values needed
+  FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)&fbx_material;
+  if(!lambert) {
+    Logger::LOG_ERROR << "Casting Material to lambert failed." << std::endl;
+    assert(0);
+  } 
+
   auto new_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
 
   std::string color_map{get_sampler(FbxSurfaceMaterial::sDiffuse)};
   if(color_map != "") {
-    Logger::LOG_DEBUG << "Material has color texture: " << color_map << std::endl;
     new_mat->set_uniform("ColorMap", assets + color_map);
+  }
+  else {
+    FbxDouble3 color = lambert->Diffuse.Get();
+    new_mat->set_uniform("Color", math::vec4(color[0], color[1], color[2], 1.f));
   } 
 
   std::string normal_map{get_sampler(FbxSurfaceMaterial::sNormalMap)};
@@ -244,7 +259,6 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
     normal_map = get_sampler(FbxSurfaceMaterial::sBump);
   }
   if(normal_map != "") {
-    Logger::LOG_DEBUG << "Material has normal texture: " << normal_map << std::endl;
     new_mat->set_uniform("NormalMap", assets + normal_map);
   }
 
@@ -257,12 +271,10 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
   if(emit_map != "") {
     new_mat->set_uniform("EmissivityMap", assets + emit_map);
   }
-
-  // FbxProperty property = fbx_material.GetFirstProperty();
-  // while(property.IsValid()) {
-  //   std::cout << property.GetNameAsCStr() << std::endl;
-  //   property = fbx_material.GetNextProperty(property);
-  // }
+  else {
+    FbxDouble3 color = lambert->Diffuse.Get();
+    new_mat->set_uniform("Emissivity", math::vec4(color[0], color[1], color[2], 1.f));
+  }
 
   return new_mat;
 }
