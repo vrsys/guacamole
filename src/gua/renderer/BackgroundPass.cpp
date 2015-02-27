@@ -54,7 +54,7 @@ BackgroundPassDescription::BackgroundPassDescription()
 ////////////////////////////////////////////////////////////////////////////////
 
 BackgroundPassDescription& BackgroundPassDescription::color(utils::Color3f const& color) {
-  uniforms["gua_background_color"] = color.vec3();
+  uniforms["gua_background_color"] = color.vec3f();
   return *this;
 }
 
@@ -62,7 +62,7 @@ BackgroundPassDescription& BackgroundPassDescription::color(utils::Color3f const
 
 utils::Color3f BackgroundPassDescription::color() const {
   auto uniform(uniforms.find("gua_background_color"));
-  return utils::Color3f(boost::get<math::vec3>(uniform->second.data));
+  return utils::Color3f(boost::get<math::vec3f>(uniform->second.data));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -175,8 +175,6 @@ void main() {
   bool res = true;
 #endif
 
-  gbuffer_color = environment_lighting(gua_get_normal());
-  
   if (res) {
     if (depth < 1) {
       if (gua_enable_fog) {
@@ -196,10 +194,11 @@ void main() {
 
     float ambient_occlusion = 0.0;
     if (gua_ssao_enable) {
-      ambient_occlusion = compute_ssao();
+      ambient_occlusion = 1.0 - compute_ssao();
+      gbuffer_color += ambient_occlusion * environment_lighting(gua_get_normal());
     }
 
-    abuf_mix_frag(vec4(gbuffer_color, 1.0 - ambient_occlusion), abuffer_accumulation_color);
+    abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
   }
 
   gua_out_color = abuffer_accumulation_color.rgb;

@@ -62,7 +62,7 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
     gl_program->uniform("gua_light_specular_enable",
         0, light->data.get_enable_specular_shading());
     gl_program->uniform("gua_light_color",
-        0, light->data.get_color().vec3());
+        0, light->data.get_color().vec3f());
     gl_program->uniform("gua_light_falloff",
         0, light->data.get_falloff());
     gl_program->uniform("gua_light_brightness",
@@ -127,7 +127,7 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
     gl_program->uniform("gua_light_specular_enable",
         0, light->data.get_enable_specular_shading());
     gl_program->uniform("gua_light_color",
-        0, light->data.get_color().vec3());
+        0, light->data.get_color().vec3f());
     gl_program->uniform("gua_light_falloff",
         0, light->data.get_falloff());
     gl_program->uniform("gua_light_brightness",

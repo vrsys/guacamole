@@ -101,7 +101,7 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
 
     light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, light_radius);
     light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
-    light_block.color           = math::vec4f(light->data.get_color().vec3().r, light->data.get_color().vec3().g, light->data.get_color().vec3().b, 0.f);
+    light_block.color           = math::vec4f(light->data.get_color().vec3f().r, light->data.get_color().vec3f().g, light->data.get_color().vec3f().b, 0.f);
     light_block.falloff         = light->data.get_falloff();
     light_block.brightness      = light->data.get_brightness();
     light_block.softness        = 0;
@@ -133,7 +133,7 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
 
     light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, 0);
     light_block.beam_direction_and_half_angle = math::vec4f(beam_direction.x, beam_direction.y, beam_direction.z, half_beam_angle);
-    light_block.color           = math::vec4f(light->data.get_color().vec3().r, light->data.get_color().vec3().g, light->data.get_color().vec3().b, 0.f);
+    light_block.color           = math::vec4f(light->data.get_color().vec3f().r, light->data.get_color().vec3f().g, light->data.get_color().vec3f().b, 0.f);
     light_block.falloff         = light->data.get_falloff();
     light_block.brightness      = light->data.get_brightness();
     light_block.softness        = light->data.get_softness();
@@ -159,7 +159,7 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
 
     light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, light_radius);
     light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
-    light_block.color           = math::vec4f(light->data.get_color().vec3().r, light->data.get_color().vec3().g, light->data.get_color().vec3().b, 0.f);
+    light_block.color           = math::vec4f(light->data.get_color().vec3f().r, light->data.get_color().vec3f().g, light->data.get_color().vec3f().b, 0.f);
     light_block.falloff         = 0.0f;
     light_block.brightness      = light->data.get_brightness();
     light_block.softness        = 0.0f;
