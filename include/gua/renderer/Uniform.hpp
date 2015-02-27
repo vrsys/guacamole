@@ -230,27 +230,27 @@ GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<float>(
                                                        std::ostream& os);
 
 template <>
-GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::mat3>(
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::mat3f>(
                                                        UniformValue const* self,
                                                        std::ostream& os);
 
 template <>
-GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::mat4>(
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::mat4f>(
                                                        UniformValue const* self,
                                                        std::ostream& os);
 
 template <>
-GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec2>(
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec2f>(
                                                        UniformValue const* self,
                                                        std::ostream& os);
 
 template <>
-GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec3>(
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec3f>(
                                                        UniformValue const* self,
                                                        std::ostream& os);
 
 template <>
-GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec4>(
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec4f>(
                                                        UniformValue const* self,
                                                        std::ostream& os);
 
@@ -294,12 +294,12 @@ std::ostream& operator<<(std::ostream& os, UniformValue const& val);
 
 template<typename T> struct UniformCompatible { typedef T type; };
 
-template <> struct UniformCompatible<math::mat4>  { typedef math::mat4f type; };
-template <> struct UniformCompatible<math::mat3>  { typedef math::mat3f type; };
+template <> struct UniformCompatible<math::mat4d>  { typedef math::mat4f type; };
+template <> struct UniformCompatible<math::mat3d>  { typedef math::mat3f type; };
 
-template <> struct UniformCompatible<math::vec4>  { typedef math::vec4f type; };
-template <> struct UniformCompatible<math::vec3>  { typedef math::vec3f type; };
-template <> struct UniformCompatible<math::vec2>  { typedef math::vec2f type; };
+template <> struct UniformCompatible<math::vec4d>  { typedef math::vec4f type; };
+template <> struct UniformCompatible<math::vec3d>  { typedef math::vec3f type; };
+template <> struct UniformCompatible<math::vec2d>  { typedef math::vec2f type; };
 
 template<typename T>
 typename UniformCompatible<T>::type uniform_compatible_type(T value)
