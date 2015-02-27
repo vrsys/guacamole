@@ -48,7 +48,7 @@ class MaterialShaderMethod {
 
   template <typename T>
   MaterialShaderMethod& set_uniform(std::string const& name, T const& value) {
-    return set_uniform(name, ViewDependentUniform(UniformValue(value)));
+    return set_uniform(name, ViewDependentUniform(UniformValue(uniform_compatible_type(value))));
   }
 
   MaterialShaderMethod& set_uniform(std::string const& name, ViewDependentUniform const& uniform) {
