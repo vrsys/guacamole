@@ -83,6 +83,7 @@ using vec2i  = V2<int>;
 using vec2ui = V2<unsigned>;
 
 using quat = scm::math::quat<float_t>;
+using quatd = scm::math::quat<double>;
 using quatf = scm::math::quat<float>;
 
 ///@}
@@ -133,7 +134,7 @@ inline math::vec3 get_translation(math::mat4 const& m) {
 }
 
 inline math::mat4 get_rotation(math::mat4 const& m) {
-  math::quat q = ::scm::math::quat<float_t>::from_matrix(m);
+  auto q = ::scm::math::quat<math::mat4d::value_type>::from_matrix(m);
   return q.to_matrix();
 }
 
@@ -158,27 +159,27 @@ ValueType interpolate(math::vec3 const& position,
 namespace gua {
 namespace traits {
 
-template <> struct scalar<math::vec2> {
-  typedef gua::math::float_t type;
+template <> struct scalar<math::vec2d> {
+  typedef math::vec2d::value_type type;
 };
 
-template <> struct scalar<math::vec3> {
-  typedef gua::math::float_t type;
+template <> struct scalar<math::vec3d> {
+  typedef math::vec3d::value_type type;
 };
 
-template <> struct scalar<math::vec4> {
-  typedef gua::math::float_t type;
+template <> struct scalar<math::vec4d> {
+  typedef math::vec4d::value_type type;
 };
 
-template <> struct dimension<math::vec2> {
+template <> struct dimension<math::vec2d> {
   static const unsigned int value = 2;
 };
 
-template <> struct dimension<math::vec3> {
+template <> struct dimension<math::vec3d> {
   static const unsigned int value = 3;
 };
 
-template <> struct dimension<math::vec4> {
+template <> struct dimension<math::vec4d> {
   static const unsigned int value = 4;
 };
 

@@ -37,9 +37,9 @@ math::mat4 math::compute_perspective_frustum(math::vec4 const& eye_position,
                                        math::mat4::value_type near_plane,
                                        math::mat4::value_type far_plane) {
 
-  math::mat4 frustum(math::mat4::identity());
+  auto frustum(math::mat4::identity());
 
-  math::vec4 relative_eye_position(scm::math::inverse(screen_transform) *
+  auto relative_eye_position(scm::math::inverse(screen_transform) *
                                    eye_position);
 
   auto d(relative_eye_position[2]);
@@ -62,8 +62,8 @@ math::mat4 math::compute_perspective_frustum(math::vec4 const& eye_position,
 
 math::mat4 math::compute_orthographic_frustum(math::vec4 const& eye_position,
                                        math::mat4 const& screen_transform,
-                                       math::float_t near_plane,
-                                       math::float_t far_plane) {
+                                       math::mat4::value_type near_plane,
+                                       math::mat4::value_type far_plane) {
 
   auto frustum(math::mat4::identity());
 
@@ -107,10 +107,11 @@ math::mat4 math::mat_ai_to_scm(aiMatrix4x4 const& ai_mat) {
 }
 
 
-std::tuple<math::float_t, math::float_t, math::float_t> math::barycentric(math::vec3 const& a,
-                                                                          math::vec3 const& b,
-                                                                          math::vec3 const& c,
-                                                                          math::vec3 const& p) {
+std::tuple<math::vec3::value_type, math::vec3::value_type, math::vec3::value_type>
+math::barycentric(math::vec3 const& a,
+                  math::vec3 const& b,
+                  math::vec3 const& c,
+                  math::vec3 const& p) {
   auto pa = a-p;
   auto pb = b-p;
   auto pc = c-p;
