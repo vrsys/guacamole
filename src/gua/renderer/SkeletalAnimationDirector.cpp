@@ -23,7 +23,9 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(aiScene const* scene):
     anim_start_node_{},
     state_{Playback::crossfade},
     blending_state_{Blending::linear},
-    next_transition_{0},
+    blendFactor_{0.0},
+    //next_transition_{0},
+    next_blending_end_{0},
     timer_{} {
   timer_.start();
   add_hierarchy(*scene);
@@ -99,7 +101,7 @@ void SkeletalAnimationDirector::add_animations(FbxScene& scene) {
   }
 }
 
-void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFactor, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationDirector::blend_pose(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
 
   float timeNormalized1 = timeInSeconds / pAnim1.get_duration();
   timeNormalized1 = scm::math::fract(timeNormalized1);
@@ -112,7 +114,7 @@ void SkeletalAnimationDirector::blend_pose(float timeInSeconds, float blendFacto
   Pose pose1{pAnim1.calculate_pose(timeNormalized1)};
   Pose pose2{pAnim2.calculate_pose(timeNormalized2)};
   
-  pose1.blend(pose2, blendFactor);
+  pose1.blend(pose2, blendFactor_);
 
   anim_start_node_->accumulate_matrices(transforms, pose1, identity);
 }
@@ -157,27 +159,34 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
   switch(state_) {
     //crossfade two anims
     case Playback::crossfade: {
-      float blendDuration = 2;
-      float playDuration = animations_[animNum_]->get_duration();
+      //float blendDuration = 2;
+      //float playDuration = animations_[animNum_]->get_duration();
 
       //else if(currentTime <= next_transition_ + blendDuration) {
-      if(currentTime <= next_transition_ + blendDuration) {
-        float time = (currentTime - next_transition_) / blendDuration;
+      //if(currentTime <= next_transition_ + blendDuration) {
+      if(currentTime <= next_blending_end_) {
+        float time = 1.f-((next_blending_end_ - currentTime) / blendDuration_);
         
-        float blendFactor = 0.0;
+        blendFactor_ = 0.0;
         switch(blending_state_){
-          case Blending::swap : blendFactor = blend::swap(time);break;
-          case Blending::linear : blendFactor = blend::linear(time);break;
-          case Blending::smoothstep : blendFactor = blend::smoothstep(time);break;
-          case Blending::cosinus : blendFactor = blend::cos(time);break;
-          default: blendFactor = blend::linear(time);
+          case Blending::swap : blendFactor_ = blend::swap(time);break;
+          case Blending::linear : blendFactor_ = blend::linear(time);break;
+          case Blending::smoothstep : blendFactor_ = blend::smoothstep(time);break;
+          case Blending::cosinus : blendFactor_ = blend::cos(time);break;
+          default: blendFactor_ = blend::linear(time);
         }
         
-        blend_pose(currentTime, blendFactor, *animations_[animNumLast_], *animations_[animNum_], transforms);
+        blend_pose(currentTime, *animations_[animNumLast_], *animations_[animNum_], transforms);
       }
       //if(currentTime < next_transition_) {
       else {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+        if (blendFactor_ != 1.0){
+          blendFactor_ = 1.0;
+        }
+>>>>>>> add modification of blending factor
         SkeletalAnimationUtils::calculate_matrices(currentTime, *anim_start_node_, *animations_[animNum_], transforms);  
 =======
         next_transition_ = currentTime + playDuration;
@@ -242,7 +251,6 @@ std::string SkeletalAnimationDirector::get_animation() const {
   }
 }
 
-
 void SkeletalAnimationDirector::set_animation(std::string animation_name) {
   for(uint i{0};i<animations_.size();++i){
     if(animations_[i]->get_name()==animation_name){
@@ -250,11 +258,20 @@ void SkeletalAnimationDirector::set_animation(std::string animation_name) {
       animNum_ = i;
       currAnimation_ = animations_[animNum_];
       float currentTime = timer_.get_elapsed();
-      next_transition_ = currentTime + animations_[animNum_]->get_duration();
+      //next_transition_ = currentTime + animations_[animNum_]->get_duration();
+      next_blending_end_ = currentTime + blendDuration_;
       return;
     }
   }
   gua::Logger::LOG_WARNING << "No matching animation with name: "<< animation_name<<" found!" << std::endl;
+}
+
+float SkeletalAnimationDirector::get_blending_factor()const{
+  return blendFactor_;
+}
+
+void SkeletalAnimationDirector::set_blending_factor(float f){
+  blendFactor_ = f;
 }
 
 bool SkeletalAnimationDirector::has_anims() const {
