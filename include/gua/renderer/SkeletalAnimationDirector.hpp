@@ -73,9 +73,12 @@ class SkeletalAnimationDirector {
   void        set_animation(std::string);
 >>>>>>> add animation name interface for animation control in avango
 
+  float get_blending_factor()const;
+  void set_blending_factor(float f);
+
 private:
 
-  void blend_pose(float timeInSeconds, float blendFactor, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
+  void blend_pose(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
   void partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms);
 
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
@@ -91,6 +94,7 @@ private:
 
   enum  Blending {swap = 0, linear = 1, smoothstep = 2, cosinus = 3};
   Blending blending_state_;
+  float blendFactor_;
 
   unsigned animNum_;
   unsigned animNumLast_;
@@ -99,7 +103,8 @@ private:
   bool firstRun_;
   bool has_anims_;
 
-  float next_transition_;
+  float next_blending_end_;
+  float blendDuration_ = 0.5f;
   Timer timer_;
 };
 

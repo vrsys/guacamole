@@ -107,6 +107,9 @@ public : // methods
   std::string get_animation()const;
   void        set_animation(std::string);
 
+  float get_blending_factor()const;
+  void set_blending_factor(float f);
+
   std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
 
   /**

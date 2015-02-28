@@ -132,6 +132,16 @@ namespace node {
     animation_director_->set_animation(animation_name);
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  float SkeletalAnimationNode::get_blending_factor()const{
+    return animation_director_->get_blending_factor();
+  }
+  
+  ////////////////////////////////////////////////////////////////////////////////
+  void SkeletalAnimationNode::set_blending_factor(float f){
+    animation_director_->set_blending_factor(f);
+  }
+
 
   ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::update_bone_transforms(RenderContext const& ctx) {
