@@ -128,12 +128,14 @@ namespace gua {
               current_shader->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
                                                            pipe.get_gbuffer().get_height()),
                                           "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
+              current_shader->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_width(),  "gua_texel_width");
+              current_shader->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_height(), "gua_texel_height");
             }
           }
 
           if (current_shader && geometries[i]) {
-            UniformValue model_mat(skel_anim_node->get_cached_world_transform());
-            UniformValue normal_mat(scm::math::transpose(scm::math::inverse(skel_anim_node->get_cached_world_transform())));
+            UniformValue model_mat(::scm::math::mat4f(skel_anim_node->get_cached_world_transform()));
+            UniformValue normal_mat(::scm::math::mat4f(scm::math::transpose(scm::math::inverse(skel_anim_node->get_cached_world_transform()))));
 
             current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
             current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);

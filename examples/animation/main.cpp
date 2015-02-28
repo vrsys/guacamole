@@ -178,8 +178,8 @@ int main(int argc, char** argv) {
 
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
-    transform->set_transform(scm::math::make_translation(-0.75f,0.0f,0.0f) * modelmatrix);
-    transform2->set_transform(scm::math::make_translation(0.75f,0.0f,0.0f) * modelmatrix);
+    transform->set_transform(scm::math::make_translation(-0.75,0.0,0.0) * modelmatrix);
+    transform2->set_transform(scm::math::make_translation(0.75,0.0,0.0) * modelmatrix);
 
     window->process_events();
     if (window->should_close()) {

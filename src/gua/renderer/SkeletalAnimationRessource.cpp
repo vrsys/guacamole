@@ -35,6 +35,24 @@
 #include <assimp/postprocess.h>
 //#include <assimp/scene.h>
 
+<<<<<<< HEAD
+=======
+namespace {
+
+
+
+struct Vertex {
+  scm::math::vec3f pos;
+  scm::math::vec2f tex;
+  scm::math::vec3f normal;
+  scm::math::vec3f tangent;
+  scm::math::vec3f bitangent;
+  scm::math::vec4f bone_weights;
+  scm::math::vec4i bone_ids;
+};
+}
+
+>>>>>>> repair skel animation support with new guacamole using definite mat and vec types
 namespace gua {
 
 SkeletalAnimationRessource::SkeletalAnimationRessource()
@@ -56,8 +74,14 @@ SkeletalAnimationRessource::SkeletalAnimationRessource(Mesh const& mesh, std::sh
   bounding_box_ = math::BoundingBox<math::vec3>();
 
   // without bone influence
+<<<<<<< HEAD
   for (unsigned v(0); v < mesh_.num_vertices; ++v) {
     bounding_box_.expandBy(mesh_.positions[v]);
+=======
+  for (unsigned v(0); v < mesh->mNumVertices; ++v) {
+    bounding_box_.expandBy(scm::math::vec3d(
+        mesh->mVertices[v].x, mesh->mVertices[v].y, mesh->mVertices[v].z));
+>>>>>>> repair skel animation support with new guacamole using definite mat and vec types
   }
 
   bone_boxes_ = std::vector<math::BoundingBox<math::vec3>>(100,math::BoundingBox<math::vec3>());
@@ -119,10 +143,17 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     
     // init non transformated/animated bone boxes
     // use every single vertex to be manipulated by a certain bone per bone box
+<<<<<<< HEAD
     for (unsigned v(0); v < mesh_.num_vertices; ++v) {
       auto final_pos  = scm::math::vec4(mesh_.positions[v].x, mesh_.positions[v].y, mesh_.positions[v].z, 1.0);
       for(unsigned i(0); i<4; ++i){
         bone_boxes_[mesh_.weights[v].IDs[i]].expandBy(scm::math::vec3(final_pos.x,final_pos.y,final_pos.z));
+=======
+    for (unsigned v(0); v < num_vertices_; ++v) {
+      auto final_pos  = scm::math::vec4(Positions[v].x, Positions[v].y, Positions[v].z, 1.0);
+      for(unsigned i(0);i<4;++i){
+        bone_boxes_[Bones[v].IDs[i]].expandBy(scm::math::vec3d(final_pos.x,final_pos.y,final_pos.z));
+>>>>>>> repair skel animation support with new guacamole using definite mat and vec types
       }
     }
 
@@ -143,7 +174,7 @@ SkeletalAnimationRessource::get_bone_boxes(){
   for(uint b(0);b<bone_boxes_.size();++b){
 
     if(!bone_boxes_[b].isEmpty()){
-      tmp_boxes[b] = transform(bone_boxes_[b], bone_transformation[b]);
+      tmp_boxes[b] = transform(bone_boxes_[b], scm::math::mat4d(bone_transformation[b]));
     }
   }
   return tmp_boxes;
