@@ -50,8 +50,8 @@ SkeletalAnimationPassDescription::SkeletalAnimationPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePassDescription* SkeletalAnimationPassDescription::make_copy() const {
-  return new SkeletalAnimationPassDescription(*this);
+std::shared_ptr<PipelinePassDescription> SkeletalAnimationPassDescription::make_copy() const {
+  return std::make_shared<SkeletalAnimationPassDescription>(*this);
 }
 
 

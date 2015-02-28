@@ -11,7 +11,7 @@ BoneTransformUniformBlock::~BoneTransformUniformBlock() {
 }
 
 void BoneTransformUniformBlock::update(const scm::gl::render_context_ptr& context,
-                           std::vector<math::mat4> const& new_transforms) {
+                           std::vector<math::mat4f> const& new_transforms) {
 
 
   uniform_block_.begin_manipulation(context); {
