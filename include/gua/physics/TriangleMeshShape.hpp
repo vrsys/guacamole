@@ -165,7 +165,7 @@ class GUA_DLL TriangleMeshShape : public CollisionShape {
    * \param v      The vertex to search.
    */
   static long get_point_or_add(std::vector<HACD::Vec3<double> >& points,
-                               const scm::math::vec3& v);
+                               const math::vec3& v);
 
   /**
    * Performs HACD on the mesh. The function can optionally save
