@@ -194,9 +194,9 @@ unsigned int TriMeshRessource::num_faces() const { return mesh_->mNumFaces; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-scm::math::vec3 TriMeshRessource::get_vertex(unsigned int i) const {
+math::vec3 TriMeshRessource::get_vertex(unsigned int i) const {
 
-  return scm::math::vec3(
+  return math::vec3(
       mesh_->mVertices[i].x, mesh_->mVertices[i].y, mesh_->mVertices[i].z);
 }
 

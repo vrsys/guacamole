@@ -193,7 +193,7 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* static */ long TriangleMeshShape::get_point_or_add(
-    std::vector<HACD::Vec3<double> > & points, const scm::math::vec3 & v) {
+    std::vector<HACD::Vec3<double> > & points, const math::vec3 & v) {
     HACD::Vec3<HACD::Real> vertex(v.x, v.y, v.z);
     auto it = std::find_if(points.begin(),
                            points.end(),
