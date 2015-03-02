@@ -80,11 +80,14 @@ inline math::mat4 const math::btTransform_to_mat4(const btTransform& t) {
   return m;
 }
 
+inline btQuaternion const math::extract_quaternion(const math::mat4d& m) {
+  return math::extract_quaternion(math::mat4f(m));
+}
 // Based on OpenEXR's quaternion extraction implementation
 // https://github.com/openexr/openexr/blob/master/IlmBase/Imath/ImathMatrixAlgo.h
 // Copyright (c) 2002-2012, Industrial Light & Magic, a division of Lucas
 // Digital Ltd. LLC
-inline btQuaternion const math::extract_quaternion(const math::mat4& m) {
+inline btQuaternion const math::extract_quaternion(const math::mat4f& m) {
   float tr, s;
   float q[4];
   int i, j, k;
