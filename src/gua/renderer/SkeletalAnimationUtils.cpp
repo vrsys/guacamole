@@ -14,10 +14,12 @@ scm::math::mat4f mat4(aiMatrix4x4 const& m) {
   return res;
 }
 scm::math::mat4f mat4(FbxAMatrix const& m) {
-  scm::math::mat4f res(m[0][0],m[0][1],m[0][2],m[0][3],
-                      m[1][0],m[1][1],m[1][2],m[1][3],
-                      m[2][0],m[2][1],m[2][2],m[2][3],
-                      m[3][0],m[3][1],m[3][2],m[3][3]);
+  //TODO:: better correction of negative  zeros
+  auto correct = [](float const& f)->float {return f == -0.0f ? 0.0f : f;};
+  scm::math::mat4f res(correct(m[0][0]),correct(m[0][1]),correct(m[0][2]),correct(m[0][3]),
+                      correct(m[1][0]),correct(m[1][1]),correct(m[1][2]),correct(m[1][3]),
+                      correct(m[2][0]),correct(m[2][1]),correct(m[2][2]),correct(m[2][3]),
+                      correct(m[3][0]),correct(m[3][1]),correct(m[3][2]),correct(m[3][3]));
   return res;
 }
 template<typename T>
@@ -251,12 +253,19 @@ Node::Node(FbxScene& scene) {
         std::string bone_name(node->GetName());  
 
         FbxAMatrix bind_transform;
+        FbxAMatrix cluster_transform;
         //reference pose of bone
         cluster->GetTransformLinkMatrix(bind_transform);
-        //bone update doesnt matter, they are just local variables
-        // bone_info[bone_name] = std::make_pair(num_bones, scm::math::mat4f::identity());   
-        bone_info[bone_name] = std::make_pair(num_bones, to_gua::mat4(bind_transform.Inverse()));   
+        cluster->GetTransformMatrix(cluster_transform);
+        if(to_gua::mat4(cluster_transform) != scm::math::mat4f::identity()) {
+          // Logger::LOG_WARNING << "Weight clusters have tranformations, animations will be skewed." << std::endl;
+          Logger::LOG_WARNING << to_gua::mat4(cluster_transform) << " of bone " << bone_name << std::endl;
+        }
+        //add bone to list if it is not already included
+        if(bone_info.find(bone_name) == bone_info.end()) {
+        bone_info[bone_name] = std::make_pair(num_bones, to_gua::mat4(bind_transform.Inverse() * cluster_transform));   
         ++num_bones;
+        }           
       }
 
       // traverse hierarchy and set accumulated values in the bone
@@ -622,11 +631,11 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
   std::cout << dupl_verts << " vertex duplications" << std::endl;
 
   bool has_weights = false;
-  std::vector<weight_map> ctrlpt_weight{};
+  std::vector<weight_map> ctrlpt_weights{};
   //get weights of original control points
   if(root.name != "none") {
-    ctrlpt_weight = get_weights(mesh, root);
-    has_weights = ctrlpt_weight.size() > 0;
+    ctrlpt_weights = get_weights(mesh, root);
+    has_weights = ctrlpt_weights.size() > 0;
   }
 
   // Reserve space in the vectors for the vertex attributes and indices
@@ -669,7 +678,7 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
         texCoords.push_back(to_gua::vec3(poly_uvs[vert.uv]));
       }
       if(has_weights) {
-        weights.push_back(ctrlpt_weight[vert.point]);
+        weights.push_back(ctrlpt_weights[vert.point]);
       }
       ++curr_vert;
     }
@@ -913,20 +922,19 @@ BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& node):
   FbxTime end = take.mLocalTimeSpan.GetStop();
 
   FbxTime time;
-  FbxQuaternion quat{};
+  scm::math::mat4f transform_matrix;
   unsigned start_frame = start.GetFrameCount(FbxTime::eFrames30);
   for(unsigned i = start_frame; i <= end.GetFrameCount(FbxTime::eFrames30); ++i) {
     time.SetFrame(i, FbxTime::eFrames30);
+    //get complete transformation at current time
+    transform_matrix = to_gua::mat4(node.EvaluateLocalTransform(time));
+    
     scalingKeys.push_back(Key<scm::math::vec3>{double(i - start_frame), to_gua::vec3(node.EvaluateLocalScaling(time))});
-    quat.ComposeSphericalXYZ(node.EvaluateLocalRotation(time));
-    rotationKeys.push_back(Key<scm::math::quatf>{double(i - start_frame), to_gua::quat(quat)});
+    //get rotation from transformation matrix
+    rotationKeys.push_back(Key<scm::math::quatf>{double(i - start_frame), scm::math::quatf::from_matrix(transform_matrix)});
+
     translationKeys.push_back(Key<scm::math::vec3>{double(i - start_frame), to_gua::vec3(node.EvaluateLocalTranslation(time))});
     // std::cout << "adding key nr. " << i << " at " << time.GetSecondDouble() << std::endl;
-    if(rotationKeys.size() > 1 && name == "Neck") {
-      if(rotationKeys[i-1].value == rotationKeys[i].value) {
-        std::cout << "keys " << i << " is same as before" << std::endl;
-      }
-    }
   }
 }
 
