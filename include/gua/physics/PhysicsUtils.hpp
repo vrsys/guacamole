@@ -81,7 +81,8 @@ inline math::mat4 const math::btTransform_to_mat4(const btTransform& t) {
 }
 
 inline btQuaternion const math::extract_quaternion(const math::mat4d& m) {
-  return math::extract_quaternion(math::mat4f(m));
+  math::mat4f tmp(m);
+  return math::extract_quaternion(tmp);
 }
 // Based on OpenEXR's quaternion extraction implementation
 // https://github.com/openexr/openexr/blob/master/IlmBase/Imath/ImathMatrixAlgo.h
