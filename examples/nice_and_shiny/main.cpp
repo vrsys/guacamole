@@ -209,7 +209,10 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
+    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
+      gua::math::float_t(trackball.shifty()),
+      gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
+
     transform->set_transform(modelmatrix);
 
     if (ctr++ % 150 == 0)

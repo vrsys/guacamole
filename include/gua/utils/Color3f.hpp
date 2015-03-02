@@ -56,7 +56,7 @@ struct GUA_DLL Color3f {
    */
   Color3f(float red, float green, float blue);
 
-  Color3f(math::vec3 const& rgb);
+  Color3f(math::vec3f const& rgb);
 
   ///@{
   /**
@@ -98,7 +98,7 @@ struct GUA_DLL Color3f {
    */
   Color3f const brightened() const;
 
-  math::vec3 const vec3() const;
+  scm::math::vec3f const vec3f() const;
 
   /**
    * Returns a randomly generated Color.

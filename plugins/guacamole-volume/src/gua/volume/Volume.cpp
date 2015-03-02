@@ -137,7 +137,7 @@ void Volume::upload_to(RenderContext const& ctx) const {
 
   //box_volume_geometry
   _volume_boxes_ptr[ctx.id] =
-    scm::gl::box_volume_geometry_ptr(new scm::gl::box_volume_geometry(ctx.render_device, scm::math::vec3(0.0), _volume_dimensions_normalized));
+    scm::gl::box_volume_geometry_ptr(new scm::gl::box_volume_geometry(ctx.render_device, math::vec3f(0.0),  math::vec3f(_volume_dimensions_normalized)));
 
   _sstate[ctx.id] = ctx.render_device->create_sampler_state(
     scm::gl::FILTER_MIN_MAG_MIP_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
@@ -149,7 +149,7 @@ std::shared_ptr<Texture2D> Volume::create_color_map(RenderContext const& ctx,
   unsigned in_size,
   const scm::data::piecewise_function_1d<float, float>& in_alpha,
   const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const {
-  
+
   using namespace scm::gl;
   using namespace scm::math;
 
@@ -194,7 +194,7 @@ bool Volume::update_color_map(RenderContext const& ctx,
   Texture2D const& transfer_texture_ptr,
   const scm::data::piecewise_function_1d<float, float>& in_alpha,
   const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) const {
-  
+
   using namespace scm::gl;
   using namespace scm::math;
 
@@ -272,7 +272,7 @@ void Volume::set_uniforms(RenderContext const& ctx, ShaderProgram* cs) const {
   cs->set_uniform(ctx, _volume_texture_ptr[ctx.id]->get_handle(ctx),   "volume_texture");
   cs->set_uniform(ctx, _transfer_texture_ptr[ctx.id]->get_handle(ctx), "transfer_texture");
   cs->set_uniform(ctx, _step_size,                                     "sampling_distance");
-  cs->set_uniform(ctx, _volume_dimensions_normalized,                  "volume_bounds");
+  cs->set_uniform(ctx, math::vec3f(_volume_dimensions_normalized),                  "volume_bounds");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -301,7 +301,7 @@ template<typename T>
 bool piecewise_functions_equal(T const& func_a, T const& func_b){
   if (func_a.num_stops() != func_b.num_stops()) {
     return false;
-  } 
+  }
 
   auto a(func_a.stops_begin());
   auto b(func_b.stops_begin());
@@ -314,12 +314,12 @@ bool piecewise_functions_equal(T const& func_a, T const& func_b){
   if (b != func_b.stops_end()) {
     return false;
   }
-  
+
   return true;
 }
 
 void Volume::set_transfer_function(const scm::data::piecewise_function_1d<float, float>& in_alpha, const scm::data::piecewise_function_1d<float, scm::math::vec3f>& in_color) {
-  
+
   if (!piecewise_functions_equal(_alpha_transfer, in_alpha)) {
     _alpha_transfer = in_alpha;
     _update_transfer_function = true;

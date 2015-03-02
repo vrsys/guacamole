@@ -43,8 +43,8 @@ namespace node {
     data.alpha_transfer().add_stop(0.f, 0.f);
     data.alpha_transfer().add_stop(1.f, 1.f);
 
-    data.color_transfer().add_stop(0.f, math::vec3(0, 0, 0));
-    data.color_transfer().add_stop(1.f, math::vec3(1, 1, 1));
+    data.color_transfer().add_stop(0.f, math::vec3f(0, 0, 0));
+    data.color_transfer().add_stop(1.f, math::vec3f(1, 1, 1));
   }
 
   /////////////////////////////////////////////////////////////////////////////

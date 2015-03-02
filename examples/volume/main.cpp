@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     transfer_widget->add_javascript_callback("set_transfer_function");
   });
   transfer_widget->on_javascript_callback.connect([vnode](std::string const&, std::vector<std::string> const& params) {
-    
+
     vnode->data.alpha_transfer().clear();
     vnode->data.color_transfer().clear();
     std::stringstream sstr(params[0]);
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 
       sstr >> pos >> color;
       vnode->data.alpha_transfer().add_stop(pos, color.w);
-      vnode->data.color_transfer().add_stop(pos, gua::math::vec3(color.x, color.y, color.z));
+      vnode->data.color_transfer().add_stop(pos, gua::math::vec3f(color.x, color.y, color.z));
     }
   });
 

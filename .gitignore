@@ -49,6 +49,8 @@ examples/plod/example-plod
 examples/projective_texturing/example-projective_texturing
 examples/tiled_shading_test/tiled_shading_test
 examples/transparency/example-transparency
+examples/screenshot/example-screenshot
+examples/smooth_lighting/example-smooth_lighting
 
 
 install

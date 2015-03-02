@@ -141,17 +141,17 @@ std::shared_ptr<gua::node::Node> create_node_from_igs_file(std::string const& no
 int main(int argc, char** argv) 
 {
   // some global constants
-  gua::math::vec4 iron(0.560, 0.570, 0.580, 1);
-  gua::math::vec4 silver(0.972, 0.960, 0.915, 1);
-  gua::math::vec4 aluminium(0.913, 0.921, 0.925, 1);
-  gua::math::vec4 gold(1.0, 0.766, 0.336, 1);
-  gua::math::vec4 copper(0.955, 0.637, 0.538, 1);
-  gua::math::vec4 chromium(0.550, 0.556, 0.554, 1);
-  gua::math::vec4 nickel(0.660, 0.609, 0.526, 1);
-  gua::math::vec4 titanium(0.542, 0.497, 0.449, 1);
-  gua::math::vec4 cobalt(0.662, 0.655, 0.634, 1);
-  gua::math::vec4 platinum(0.672, 0.637, 0.585, 1);
-  gua::math::vec4 water(0.2, 0.2, 0.2, 1);
+  gua::math::vec4f iron(0.560, 0.570, 0.580, 1);
+  gua::math::vec4f silver(0.972, 0.960, 0.915, 1);
+  gua::math::vec4f aluminium(0.913, 0.921, 0.925, 1);
+  gua::math::vec4f gold(1.0, 0.766, 0.336, 1);
+  gua::math::vec4f copper(0.955, 0.637, 0.538, 1);
+  gua::math::vec4f chromium(0.550, 0.556, 0.554, 1);
+  gua::math::vec4f nickel(0.660, 0.609, 0.526, 1);
+  gua::math::vec4f titanium(0.542, 0.497, 0.449, 1);
+  gua::math::vec4f cobalt(0.662, 0.655, 0.634, 1);
+  gua::math::vec4f platinum(0.672, 0.637, 0.585, 1);
+  gua::math::vec4f water(0.2, 0.2, 0.2, 1);
 
   // initialize guacamole
   gua::init(argc, argv);
@@ -181,13 +181,13 @@ int main(int argc, char** argv)
   glass->set_uniform("Metalness", 1.0f);
   glass->set_uniform("Opacity", 0.1f);
 
-  gum->set_uniform("Color", gua::math::vec4(0.1, 0.1, 0.1, 1.0));
+  gum->set_uniform("Color", gua::math::vec4f(0.1, 0.1, 0.1, 1.0));
   gum->set_uniform("Roughness", 1.0f);
   gum->set_uniform("Metalness", 0.0f);
   gum->set_uniform("Opacity", 1.0f);
 
   /////////////////////////////////////////////////////////////////////////////
-  // setup scene
+  // setup scene 
   /////////////////////////////////////////////////////////////////////////////
   auto input_transform = graph.add_node<gua::node::TransformNode>("/", "nurbs_transform");
   auto count = 0;
@@ -206,7 +206,7 @@ int main(int argc, char** argv)
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/heckscheibe.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_links.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_links.igs", glass));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/windschutzscheibe.igs", glass));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/windschutzscheibe.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_rechts.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_rechts.igs", glass));
   
@@ -216,12 +216,12 @@ int main(int argc, char** argv)
   input_transform->translate(-bbox.center());
   graph.update_cache();
   
-  auto scene_size = scm::math::length(bbox.max - bbox.min);
+  float scene_size = scm::math::length(bbox.max - bbox.min);
   scene_size = std::max(scene_size, 1.0f);
 
   unsigned const max_lights = 50;
-  unsigned const max_light_intensity = 100000.0f;
-  unsigned const min_light_intensity = 10000.0f;
+  unsigned const max_light_intensity = 100.0f;
+  unsigned const min_light_intensity = 10.0f;
   float const light_scale = 10.0f;
 
   for (unsigned i = 0; i != max_lights; ++i)
@@ -231,21 +231,21 @@ int main(int argc, char** argv)
 
     float x = float(std::rand() % unsigned(scene_size)) - scene_size/2;
     float y = float(std::rand() % unsigned(scene_size)) - scene_size/2;
-    float z = float(std::rand() % unsigned(scene_size)) + scene_size;
+    float z = float(std::rand() % unsigned(scene_size)) - scene_size;
 
     std::string lightname = std::string("light") + std::to_string(i);
     auto light = graph.add_node<gua::node::PointLightNode>("/", lightname);
 
     light->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
     //light->scale(light_scale * scene_size * relative_intensity);
-    light->scale(3000.0f);
+    light->scale(1000.0f);
     light->data.brightness = min_light_intensity + relative_intensity * (max_light_intensity - min_light_intensity);
     light->translate(x, y, z);
 
     // add light proxy
     gua::TriMeshLoader loader;
     auto light_proxy(loader.create_geometry_from_file("light_proxy", "./data/objects/sphere.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-    light_proxy->scale(0.02f * (1.0f / light_scale));
+    light_proxy->scale(0.1f * (1.0f / light_scale));
     light->add_child(light_proxy);
   }
 
@@ -329,7 +329,10 @@ int main(int argc, char** argv)
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
+    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
+      gua::math::float_t(trackball.shifty()),
+      gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
+
     input_transform->set_transform(modelmatrix);
 
     if (frame_counter++ % 500 == 0)

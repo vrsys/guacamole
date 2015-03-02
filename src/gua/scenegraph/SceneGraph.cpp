@@ -194,7 +194,7 @@ std::set<PickResult> const SceneGraph::ray_test(Ray const& ray,
 ////////////////////////////////////////////////////////////////////////////////
 
 SerializedScene SceneGraph::serialize(node::SerializedCameraNode const& camera, CameraMode mode) const {
-
+    
     SerializedScene out;
     out.frustum = camera.get_frustum(*this, mode);
     out.center_of_interest = math::get_translation(camera.transform);

@@ -65,8 +65,7 @@ TriMeshRessource::TriMeshRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importe
     bounding_box_ = math::BoundingBox<math::vec3>();
 
     for (unsigned v(0); v < mesh_->mNumVertices; ++v) {
-      bounding_box_.expandBy(scm::math::vec3(
-          mesh_->mVertices[v].x, mesh_->mVertices[v].y, mesh_->mVertices[v].z));
+      bounding_box_.expandBy(math::vec3(mesh_->mVertices[v].x,mesh_->mVertices[v].y, mesh_->mVertices[v].z));
     }
 
     if (build_kd_tree) {
@@ -195,9 +194,9 @@ unsigned int TriMeshRessource::num_faces() const { return mesh_->mNumFaces; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-scm::math::vec3 TriMeshRessource::get_vertex(unsigned int i) const {
+math::vec3 TriMeshRessource::get_vertex(unsigned int i) const {
 
-  return scm::math::vec3(
+  return math::vec3(
       mesh_->mVertices[i].x, mesh_->mVertices[i].y, mesh_->mVertices[i].z);
 }
 

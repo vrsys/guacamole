@@ -59,12 +59,13 @@ void VolumeRenderer::render(Pipeline& pipe) {
     // 1. render proxy geometry into fbo
     ctx.render_context->set_frame_buffer(volume_raygeneration_fbo_);
     {
+
       ctx.render_context->set_viewport(
-          scm::gl::viewport(math::vec2(0.0f, 0.0f),
-          math::vec2(float(pipe.get_gbuffer().get_width()),
-                     float(pipe.get_gbuffer().get_height()))));
+          scm::gl::viewport(math::vec2f(0.0f, 0.0f),
+          math::vec2f(float(pipe.get_gbuffer().get_width()),
+                      float(pipe.get_gbuffer().get_height()))));
       ctx.render_context->clear_color_buffers(
-          volume_raygeneration_fbo_, math::vec4(0, 0, 0, 0.f));
+          volume_raygeneration_fbo_, math::vec4f(0, 0, 0, 0.f));
       ctx.render_context->clear_depth_stencil_buffer(volume_raygeneration_fbo_);
 
       for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::VolumeNode))]) {
@@ -73,8 +74,7 @@ void VolumeRenderer::render(Pipeline& pipe) {
         auto volume = std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(volume_node->data.get_volume()));
 
         if (volume) {
-          ray_generation_shader_->set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
-          ray_generation_shader_->set_uniform(ctx, 0, "volume_frag_id");
+          ray_generation_shader_->set_uniform(ctx, math::mat4f(node->get_world_transform()), "gua_model_matrix");
           ray_generation_shader_->use(ctx);
           volume->draw_proxy(ctx);
           ray_generation_shader_->unuse(ctx);
@@ -98,7 +98,7 @@ void VolumeRenderer::render(Pipeline& pipe) {
       auto volume = std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(volume_node->data.get_volume()));
 
       if (volume) {
-        composite_shader_->set_uniform(ctx, node->get_world_transform(), "gua_model_matrix");
+        composite_shader_->set_uniform(ctx, math::mat4f(node->get_world_transform()), "gua_model_matrix");
 
         volume->set_transfer_function(volume_node->data.alpha_transfer(), volume_node->data.color_transfer());
         volume->set_uniforms(ctx, composite_shader_.get());

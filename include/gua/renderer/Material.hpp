@@ -37,7 +37,7 @@ class GUA_DLL Material {
   public:
     Material(std::string const& shader_name = "gua_default_material");
     Material(Material const& copy);
- 
+
     std::string const& get_shader_name() const;
     void set_shader_name(std::string const&);
 
@@ -50,19 +50,20 @@ class GUA_DLL Material {
 
     template <typename T>
     Material& set_uniform(std::string const& name, T const& value) {
-      return set_uniform(name, ViewDependentUniform(UniformValue(value)));
+      return set_uniform(name, ViewDependentUniform(UniformValue(uniform_compatible_type(value))));
     }
 
     template <typename T>
     Material& set_uniform(std::string const& name, T const& value, int view_id) {
+      auto val = uniform_compatible_type(value);
       auto uniform(uniforms_.find(name));
 
       if (uniform != uniforms_.end()) {
-        uniform->second.set(view_id, value);
+        uniform->second.set(view_id, val);
       } else {
         ViewDependentUniform tmp;
-        tmp.set(UniformValue(value));
-        tmp.set(view_id, UniformValue(value));
+        tmp.set(UniformValue(val));
+        tmp.set(view_id, UniformValue(val));
         uniforms_[name] = tmp;
       }
       return *this;

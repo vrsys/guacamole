@@ -88,9 +88,9 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
 
     if (config.get_enable_stereo()) {
         if (mode != CameraMode::RIGHT) {
-            transform *= scm::math::make_translation(config.eye_offset() - 0.5f * config.eye_dist(), 0.f, 0.f);
+            transform *= scm::math::make_translation(math::float_t(config.eye_offset() - 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
         } else {
-            transform *= scm::math::make_translation(config.eye_offset() + 0.5f * config.eye_dist(), 0.f, 0.f);
+            transform *= scm::math::make_translation(math::float_t(config.eye_offset() + 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
         }
     }
 

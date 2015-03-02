@@ -157,14 +157,14 @@ void TexturedQuadNode::ray_test_impl(Ray const& ray, int options,
 ////////////////////////////////////////////////////////////////////////////////
 
 math::mat4 TexturedQuadNode::get_scaled_transform() const {
-  math::mat4 scale(scm::math::make_scale(data.size().x, data.size().y, 1.f));
+  math::mat4 scale(scm::math::make_scale(math::float_t(data.size().x), math::float_t(data.size().y), math::float_t(1)));
   return get_transform() * scale;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 math::mat4 TexturedQuadNode::get_scaled_world_transform() const {
-  math::mat4 scale(scm::math::make_scale(data.size().x, data.size().y, 1.f));
+  math::mat4 scale(scm::math::make_scale(math::float_t(data.size().x), math::float_t(data.size().y), math::float_t(1)));
   return get_world_transform() * scale;
 }
 

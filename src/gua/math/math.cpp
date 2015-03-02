@@ -34,17 +34,17 @@ namespace gua {
 
 math::mat4 math::compute_perspective_frustum(math::vec4 const& eye_position,
                                        math::mat4 const& screen_transform,
-                                       float near_plane,
-                                       float far_plane) {
+                                       math::mat4::value_type near_plane,
+                                       math::mat4::value_type far_plane) {
 
-  math::mat4 frustum(math::mat4::identity());
+  auto frustum(math::mat4::identity());
 
-  math::vec4 relative_eye_position(scm::math::inverse(screen_transform) *
+  auto relative_eye_position(scm::math::inverse(screen_transform) *
                                    eye_position);
 
-  float d(relative_eye_position[2]);
-  float ox(-relative_eye_position[0]);
-  float oy(-relative_eye_position[1]);
+  auto d(relative_eye_position[2]);
+  auto ox(-relative_eye_position[0]);
+  auto oy(-relative_eye_position[1]);
 
   frustum[0] = 2 * d;
   frustum[5] = 2 * d;
@@ -62,26 +62,26 @@ math::mat4 math::compute_perspective_frustum(math::vec4 const& eye_position,
 
 math::mat4 math::compute_orthographic_frustum(math::vec4 const& eye_position,
                                        math::mat4 const& screen_transform,
-                                 float near_plane,
-                                 float far_plane) {
+                                       math::mat4::value_type near_plane,
+                                       math::mat4::value_type far_plane) {
 
-  math::mat4 frustum(math::mat4::identity());
+  auto frustum(math::mat4::identity());
 
 
-  math::vec4 relative_eye_position(scm::math::inverse(screen_transform) *
+  auto relative_eye_position(scm::math::inverse(screen_transform) *
                                    eye_position);
 
   // float d(relative_eye_position[2]);
-  float ox(-relative_eye_position[0]);
-  float oy(-relative_eye_position[1]);
+  auto ox(-relative_eye_position[0]);
+  auto oy(-relative_eye_position[1]);
 
-  frustum[0] = 2.0f;
-  frustum[5] = 2.0f;
-  frustum[10] = 2.0f / (near_plane - far_plane);
-  frustum[12] = -2.0f * ox;
-  frustum[13] = -2.0f * oy;
+  frustum[0]  = 2.0;
+  frustum[5]  = 2.0;
+  frustum[10] = 2.0 / (near_plane - far_plane);
+  frustum[12] = -2.0 * ox;
+  frustum[13] = -2.0 * oy;
   frustum[14] = (far_plane + near_plane) / (near_plane - far_plane);
-  frustum[15] = 1.f;
+  frustum[15] = 1.0;
 
   return frustum;
 }
@@ -106,10 +106,12 @@ math::mat4 math::mat_ai_to_scm(aiMatrix4x4 const& ai_mat) {
   return scm_mat;
 }
 
-std::tuple<float,float,float> math::barycentric(math::vec3 const& a,
-                                                math::vec3 const& b,
-                                                math::vec3 const& c,
-                                                math::vec3 const& p) {
+
+std::tuple<math::vec3::value_type, math::vec3::value_type, math::vec3::value_type>
+math::barycentric(math::vec3 const& a,
+                  math::vec3 const& b,
+                  math::vec3 const& c,
+                  math::vec3 const& p) {
   auto pa = a-p;
   auto pb = b-p;
   auto pc = c-p;
