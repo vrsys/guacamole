@@ -500,6 +500,8 @@ namespace gua {
          pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
 
          auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+         auto scm_model_view_matrix = pipe.get_scene().frustum.get_view() * scm_model_matrix;
+         auto scm_model_view_projection_matrix = pipe.get_scene().frustum.get_projection() * scm_model_view_matrix;
          auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
          cuts->SendTransform(context_id, model_id, math::mat4f(scm_model_matrix));
@@ -529,11 +531,11 @@ namespace gua {
            }
          }
 
-         //UniformValue model_mat(scm_model_matrix);
-         //UniformValue normal_mat(scm_normal_matrix);
-
          depth_pass_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
+         depth_pass_program_->apply_uniform(ctx, "model_view_matrix", math::mat4f(scm_model_view_matrix));
+         depth_pass_program_->apply_uniform(ctx, "model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
          depth_pass_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
+
          depth_pass_program_->apply_uniform(ctx, "radius_importance_scaling", plod_node->get_importance());
          depth_pass_program_->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
 
@@ -608,12 +610,13 @@ namespace gua {
           }
 
           auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+          auto scm_model_view_matrix = pipe.get_scene().frustum.get_view() * scm_model_matrix;
+          auto scm_model_view_projection_matrix = pipe.get_scene().frustum.get_projection() * scm_model_view_matrix;
           auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
-          //UniformValue model_mat(scm_model_matrix);
-          //UniformValue normal_mat(scm_normal_matrix);
-
           current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
+          current_material_program->apply_uniform(ctx, "model_view_matrix", math::mat4f(scm_model_view_matrix));
+          current_material_program->apply_uniform(ctx, "model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
           current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
           current_material_program->apply_uniform(ctx, "radius_importance_scaling", plod_node->get_importance());
           current_material_program->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());

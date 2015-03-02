@@ -62,7 +62,7 @@ class PLODResource : public GeometryResource {
  
   public: // c'tor /d'tor
 
-    PLODResource(pbr::model_t model_id, bool is_pickable);
+    PLODResource(pbr::model_t model_id, bool is_pickable, math::mat4 const& local_transform);
 
     ~PLODResource();
 
@@ -85,6 +85,8 @@ class PLODResource : public GeometryResource {
               scm::gl::vertex_array_ptr const& vertex_array,
               std::unordered_set<pbr::node_t> const& nodes_out_of_frustum) const;
 
+    math::mat4 const& local_transform() const;
+
     void ray_test(Ray const& ray,
                   int options,
                   node::Node* owner,
@@ -92,8 +94,9 @@ class PLODResource : public GeometryResource {
 
  private:
 
-  bool is_pickable_;
-  pbr::model_t model_id_;
+  bool          is_pickable_;
+  pbr::model_t  model_id_;
+  math::mat4    local_transform_;
 };
 
 }

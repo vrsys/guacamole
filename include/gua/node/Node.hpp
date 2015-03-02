@@ -467,7 +467,6 @@ class GUA_DLL Node {
   gua::utils::TagList tags_;
   std::vector<void*> user_data_;
   std::string name_;
-  math::mat4 transform_; // invertible affine transformation
 
  protected:
   bool is_visible_in(SerializedScene const& scene, node::SerializedCameraNode const& camera) const;
@@ -483,6 +482,7 @@ class GUA_DLL Node {
   bool draw_bounding_box_;
 
   // down (cached) annotations
+  math::mat4 transform_; // invertible affine transformation
   mutable math::mat4 world_transform_;
 };
 

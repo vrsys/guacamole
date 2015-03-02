@@ -93,7 +93,11 @@ public:
 
   bool is_supported(std::string const& file_name) const;
 
-private:
+private: // methods
+
+  math::mat4 _load_local_transform (std::string const& filename) const;
+
+private: // member
 
   std::unordered_set<std::string> _supported_file_extensions;
 

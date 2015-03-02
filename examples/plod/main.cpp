@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
   //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/_seradina.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ) );
 
 #if RENDER_SINGLE_PIG_MODEL
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION));
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
   //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "data/objects/pig2.kdn", plod_glossy, gua::PLODLoader::NORMALIZE_POSITION));
   //auto plod_geometry3(plodLoader.load_geometry("plod_pig3", "data/objects/pig3.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
 #endif
@@ -321,7 +321,7 @@ int main(int argc, char** argv) {
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
-  //window->config.set_stereo_mode(gua::StereoMode::MONO);
+  window->config.set_stereo_mode(gua::StereoMode::MONO);
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
