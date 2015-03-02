@@ -32,6 +32,8 @@
 namespace gua {
 
 namespace math {
+
+
 vec3 const btVector3_to_vec3(const btVector3& vec);
 
 btVector3 const vec3_to_btVector3(const vec3& vec);
@@ -40,7 +42,8 @@ btTransform const mat4_to_btTransform(const mat4& m);
 
 mat4 const btTransform_to_mat4(const btTransform& t);
 
-btQuaternion const extract_quaternion(const mat4& m);
+btQuaternion const extract_quaternion(const mat4f& m);
+btQuaternion const extract_quaternion(const mat4d& m);
 }
 
 inline math::vec3 const math::btVector3_to_vec3(const btVector3& vec) {
@@ -80,11 +83,15 @@ inline math::mat4 const math::btTransform_to_mat4(const btTransform& t) {
   return m;
 }
 
+inline btQuaternion const math::extract_quaternion(const math::mat4d& m) {
+  math::mat4f tmp(m);
+  return math::extract_quaternion(tmp);
+}
 // Based on OpenEXR's quaternion extraction implementation
 // https://github.com/openexr/openexr/blob/master/IlmBase/Imath/ImathMatrixAlgo.h
 // Copyright (c) 2002-2012, Industrial Light & Magic, a division of Lucas
 // Digital Ltd. LLC
-inline btQuaternion const math::extract_quaternion(const math::mat4& m) {
+inline btQuaternion const math::extract_quaternion(const math::mat4f& m) {
   float tr, s;
   float q[4];
   int i, j, k;
