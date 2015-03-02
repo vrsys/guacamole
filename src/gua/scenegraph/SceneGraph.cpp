@@ -194,39 +194,9 @@ std::set<PickResult> const SceneGraph::ray_test(Ray const& ray,
 ////////////////////////////////////////////////////////////////////////////////
 
 SerializedScene SceneGraph::serialize(node::SerializedCameraNode const& camera, CameraMode mode) const {
-    std::string screen_name(mode != CameraMode::RIGHT ? camera.config.left_screen_path() : camera.config.right_screen_path());
-    auto screen_it(find_node(screen_name, "/"));
-    auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
-    if (!screen) {
-        Logger::LOG_WARNING << "Cannot render scene: No valid screen specified" << std::endl;
-        return SerializedScene();
-    }
-
-    auto eye_transform(camera.transform);
-
-    if (camera.config.get_enable_stereo()) {
-        if (mode != CameraMode::RIGHT) {
-            eye_transform *= scm::math::make_translation(camera.config.eye_offset() - 0.5f * camera.config.eye_dist(), 0.f, 0.f);
-        } else {
-            eye_transform *= scm::math::make_translation(camera.config.eye_offset() + 0.5f * camera.config.eye_dist(), 0.f, 0.f);
-        }
-    }
-    camera.config.eye_dist(), camera.config.eye_offset();
 
     SerializedScene out;
-
-    if (camera.config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
-        out.frustum = Frustum::perspective(
-            eye_transform, screen->get_scaled_world_transform(), 
-            camera.config.near_clip(), camera.config.far_clip()
-        );
-    } else {
-        out.frustum = Frustum::orthographic(
-            eye_transform, screen->get_scaled_world_transform(), 
-            camera.config.near_clip(), camera.config.far_clip()
-        );
-    }
-
+    out.frustum = camera.get_frustum(*this, mode);
     out.center_of_interest = math::get_translation(camera.transform);
 
     Serializer s;

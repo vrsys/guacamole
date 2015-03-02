@@ -86,11 +86,11 @@ std::pair<float, float> intersect(Ray const& ray,
       return std::make_pair(tmin, tmax);
 
     // there is only one intersection, the ray ends inside the box
-    else if (tmin > 0.0)
+    else if (tmin > 0.0 && tmin < ray.t_max_)
       return std::make_pair(tmin, Ray::END);
 
     // there is only one intersection, the ray starts inside the box
-    else
+    else if (tmax > 0.0 && tmax < ray.t_max_)
       return std::make_pair(Ray::END, tmax);
   }
 
