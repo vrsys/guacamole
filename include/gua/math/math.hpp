@@ -111,7 +111,7 @@ math::mat4 GUA_DLL compute_orthographic_frustum(math::vec4 const& eye_position,
 /**
  * Converts an assimp matrix to a schism matrix.
  *
- * \param ai_mat  A assimp matrix.
+ * \param ai_mat  An assimp matrix.
  *
  * \return        A schism matrix.
  */

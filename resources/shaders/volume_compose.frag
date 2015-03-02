@@ -65,18 +65,18 @@ vec4 get_raycast_color(vec3 gua_object_volume_position,
   mat4 gua_invers_model_matrix = inverse(gua_model_matrix);
   vec3 object_ray = normalize(gua_object_volume_position - (gua_invers_model_matrix * vec4(gua_camera_position, 1.0)).xyz);
   float d_step = abs(-1.0 * get_depth_linear(get_depth_z((gua_model_matrix * vec4(gua_object_volume_position + object_ray * sampling_distance, 1.0)).xyz)) - d_volume);
-  
+
   vec3 obj_to_tex         = vec3(1.0) / volume_bounds;
   vec3 ray_increment      = object_ray * sampling_distance;
   vec3 sampling_pos       = gua_object_volume_position + ray_increment; // test, increment just to be sure we are in the volume
-    
+
   bool inside_volume = inside_volume_bounds(sampling_pos);
-      
+
   vec4 color = vec4(0.0);
-    
+
   int d_steps = int(abs(d_volume - d_gbuffer) / d_step);
   int d_step_cur = 0;
-  
+
   while (inside_volume && (d_step_cur < d_steps)) {
     ++d_step_cur;
 
@@ -87,7 +87,7 @@ vec4 get_raycast_color(vec3 gua_object_volume_position,
     // increment ray
     sampling_pos  += ray_increment;
     inside_volume  = inside_volume_bounds(sampling_pos) && (color.a < 0.99f);
-    
+
     // compositing
     float omda_sa = (1.0f - color.a) * src.a;
     color.rgb += omda_sa * src.rgb;
@@ -109,11 +109,11 @@ void main() {
 
   d_gbuffer = -1.0 * get_depth_linear(d_gbuffer);
   d_volume = -1.0 * get_depth_linear(d_volume);
-  
-  // compose  
+
+  // compose
   if(d_gbuffer > d_volume &&
-    (gua_object_volume_position.x != 0.00 || 
-     gua_object_volume_position.y != 0.00 || 
+    (gua_object_volume_position.x != 0.00 ||
+     gua_object_volume_position.y != 0.00 ||
      gua_object_volume_position.z != 0.00)) {
 
     gua_out_color = get_raycast_color(gua_object_volume_position, d_gbuffer, d_volume);
