@@ -139,6 +139,12 @@ ResolvePassDescription& ResolvePassDescription::environment_lighting(utils::Colo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+utils::Color3f ResolvePassDescription::environment_lighting() const {
+  auto uniform(uniforms.find("gua_environment_lighting_color"));
+  return utils::Color3f(boost::get<math::vec3f>(uniform->second.data));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::environment_lighting_mode(EnvironmentLightingMode mode) {
   uniforms["gua_environment_lighting_mode"] = static_cast<int>(mode);
   return *this;
