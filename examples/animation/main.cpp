@@ -91,8 +91,13 @@ int main(int argc, char** argv) {
   // auto teapot(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(teapot, "data/objects/bob/boblampclean.md5anim", 0);
 
-  auto rock(loader2.create_geometry_from_file("fbx", "data/objects/fbx/zombie_axe.fbx", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  loader2.load_animation(rock, "data/objects/fbx/zombie_axe.fbx", 0);
+  auto rock(loader2.create_geometry_from_file("fbx", "data/objects/fbx/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // auto rock(loader2.create_geometry_from_file("fbx", "data/objects/fbx/zombie_axe.fbx", gua::SkeletalAnimationLoader::LOAD_MATERIALS | mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  loader2.load_animation(rock, "data/objects/fbx/Idle.FBX", 0);
+  // loader2.load_animation(rock, "data/objects/fbx/zombie_axe.fbx", 0);
+  loader2.load_animation(rock, "data/objects/fbx/Walk.FBX", 0);
+  loader2.load_animation(rock, "data/objects/fbx/Run.FBX", 0);
+  loader2.load_animation(rock, "data/objects/fbx/Walk.FBX", 0);
   rock->set_draw_bounding_box(true);
   
   graph.add_node("/transform2", rock);

@@ -192,11 +192,15 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
         next_transition_ = currentTime + playDuration;
         animNum = (animNum + 1) % animations_.size();
 <<<<<<< HEAD
+<<<<<<< HEAD
         std::cout << "switching to " << animations_[animNum]->get_name() << std::endl;
 >>>>>>> texture loading from fbx works, but automatic path wrong
 =======
         // std::cout << "switching to " << animations_[animNum]->get_name() << std::endl;
 >>>>>>> switched from cout to LOG_DEBUG
+=======
+        // std::cout << "switching to " << animations_[animNum]->get_name() << std::endl;
+>>>>>>> added unrealengine 4 test dummy with anims
       }
       /*else {
         next_transition_ = currentTime + playDuration;
