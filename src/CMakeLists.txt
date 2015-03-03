@@ -144,8 +144,8 @@ IF (MSVC)
     SET_TARGET_PROPERTIES(guacamole PROPERTIES COMPILE_FLAGS "-D GUA_LIBRARY -D _WIN32_WINNT=${WIN_VERSION}")
 ENDIF(MSVC)
 
-# link static libraries
-TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES} general ${GL_LIBRARIES})
+# link static libraries,
+TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES} general ${GL_LIBRARIES} -lpthread -ldl)
 IF (MSVC)
   TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})  
 ELSEIF (UNIX)
