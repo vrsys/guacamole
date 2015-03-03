@@ -253,8 +253,14 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
 
       //Create an IOSettings object. This object holds all import/export settings.
       FbxIOSettings* ios = FbxIOSettings::Create(sdk_manager, IOSROOT);
-      ios->SetBoolProp(IMP_FBX_MATERIAL,        true);
-      ios->SetBoolProp(IMP_FBX_TEXTURE,         true);
+      if(flags & SkeletalAnimationLoader::LOAD_MATERIALS){
+        ios->SetBoolProp(IMP_FBX_MATERIAL,        true);
+        ios->SetBoolProp(IMP_FBX_TEXTURE,         true);
+      } 
+      else {
+        ios->SetBoolProp(IMP_FBX_MATERIAL,        false);
+        ios->SetBoolProp(IMP_FBX_TEXTURE,         false);        
+      }
       ios->SetBoolProp(IMP_FBX_CHARACTER,        false);
       ios->SetBoolProp(IMP_FBX_CONSTRAINT,       false);
       ios->SetBoolProp(IMP_FBX_LINK,            true);
@@ -375,7 +381,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
         auto material = material_loader.load_material(*mat, file_name);
         material->set_uniform("Roughness", 0.6f);
       }
-      else std::cout << "not loading materials" << std::endl;
 
       materials.push_back(material);
       ++mesh_count;
