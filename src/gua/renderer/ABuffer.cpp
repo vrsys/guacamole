@@ -22,12 +22,7 @@
 // class header
 #include <gua/renderer/ABuffer.hpp>
 
-// guacamole headers
-#include <gua/utils/Logger.hpp>
-
 namespace gua {
-
-////////////////////////////////////////////////////////////////////////////////
 
 void ABuffer::allocate(RenderContext& ctx, size_t buffer_size) {
 
@@ -42,31 +37,30 @@ void ABuffer::allocate(RenderContext& ctx, size_t buffer_size) {
   // compute memory allowance
   const size_t data_chunk_size = 1;
   size_t frag_list_size = (buffer_size * 1024u * 1024u) / (data_chunk_size + 1);
-  frag_list_size = (frag_list_size / (sizeof(unsigned) * 4)) * (sizeof(unsigned) * 4);
+  frag_list_size =
+      (frag_list_size / (sizeof(unsigned) * 4)) * (sizeof(unsigned) * 4);
   size_t frag_data_size = frag_list_size * data_chunk_size;
 
   // init/reinit if necessary
-  if (!resource->counter 
-      && resource->frag_list_size < frag_list_size) {
+  if (!resource->counter && resource->frag_list_size < frag_list_size) {
 
-    Logger::LOG_MESSAGE << "Init ABuffer to hold " 
-                        << frag_list_size << " fragments" << std::endl;
     resource->frag_list_size = frag_list_size;
 
-    resource->counter   = ctx.render_device->create_buffer(scm::gl::BIND_ATOMIC_COUNTER_BUFFER, 
-                                                           scm::gl::USAGE_DYNAMIC_COPY, 
-                                                           sizeof(unsigned));
-    resource->frag_list = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, 
-                                                           scm::gl::USAGE_DYNAMIC_COPY, 
-                                                           frag_list_size);
-    resource->frag_data = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, 
-                                                           scm::gl::USAGE_DYNAMIC_COPY, 
-                                                           frag_data_size);
+    resource->counter =
+        ctx.render_device->create_buffer(scm::gl::BIND_ATOMIC_COUNTER_BUFFER,
+                                         scm::gl::USAGE_DYNAMIC_COPY,
+                                         sizeof(unsigned));
+    resource->frag_list =
+        ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
+                                         scm::gl::USAGE_DYNAMIC_COPY,
+                                         frag_list_size);
+    resource->frag_data =
+        ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
+                                         scm::gl::USAGE_DYNAMIC_COPY,
+                                         frag_data_size);
   }
   res_ = resource;
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution) {
 
@@ -74,22 +68,19 @@ void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution) {
     return;
   }
 
-  unsigned* ctr = reinterpret_cast<unsigned*>(
-      ctx.render_context->map_buffer(res_->counter,
-                                     scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
-  if (ctr) { 
+  unsigned* ctr = reinterpret_cast<unsigned*>(ctx.render_context->map_buffer(
+      res_->counter, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
+  if (ctr) {
     *ctr = 0;
   }
   ctx.render_context->unmap_buffer(res_->counter);
 
-  ctx.render_context->clear_buffer_sub_data(res_->frag_list, 
-                                            scm::gl::FORMAT_RG_32UI, 
-                                            0u, 
+  ctx.render_context->clear_buffer_sub_data(res_->frag_list,
+                                            scm::gl::FORMAT_RG_32UI,
+                                            0u,
                                             8u * resolution.x * resolution.y,
                                             0);
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 void ABuffer::bind(RenderContext const& ctx) {
 
@@ -102,12 +93,6 @@ void ABuffer::bind(RenderContext const& ctx) {
   ctx.render_context->bind_storage_buffer(res_->frag_data, 1);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void ABuffer::unbind(RenderContext const& ctx) {
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
+void ABuffer::unbind(RenderContext const& ctx) {}
 
 }
