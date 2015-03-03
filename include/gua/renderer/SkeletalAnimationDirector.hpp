@@ -49,12 +49,15 @@ class SkeletalAnimationDirector {
   void add_animations(aiScene const& scene);
   void add_animations(FbxScene& scene);
 
+<<<<<<< HEAD
   void add_hierarchy(aiScene const& scene);
 =======
   void add_animations(aiScene const* scene, std::string const& file_name);
   void add_hierarchy(aiScene const* scene);
 >>>>>>> add animation name interface for animation control in avango
 
+=======
+>>>>>>> removed unnecessary method from director, gitignore updated
   std::vector<scm::math::mat4f> get_bone_transforms();
 
   int getBoneID(std::string const& name);
@@ -67,9 +70,13 @@ class SkeletalAnimationDirector {
   uint get_blending_mode();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   std::shared_ptr<Node> get_root();
 =======
   std::string get_animation()const;
+=======
+  std::string const& get_animation()const;
+>>>>>>> removed unnecessary method from director, gitignore updated
   void        set_animation(std::string);
 >>>>>>> add animation name interface for animation control in avango
 

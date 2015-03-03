@@ -59,6 +59,7 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Node> const
   }
 }
 
+<<<<<<< HEAD
 void SkeletalAnimationDirector::add_hierarchy(aiScene const& scene) {
   root_ = anim_start_node_ = std::make_shared<Node>(scene);
   root_->collect_indices(bone_mapping_);
@@ -68,6 +69,8 @@ void SkeletalAnimationDirector::add_hierarchy(aiScene const& scene) {
 }
 
 <<<<<<< HEAD
+=======
+>>>>>>> removed unnecessary method from director, gitignore updated
 void SkeletalAnimationDirector::add_animations(aiScene const& scene) {
   std::vector<std::shared_ptr<SkeletalAnimation>> newAnims{SkeletalAnimationUtils::load_animations(scene)};
 <<<<<<< HEAD
@@ -250,7 +253,7 @@ int SkeletalAnimationDirector::getBoneID(std::string const& name) {
 }
 
 
-std::string SkeletalAnimationDirector::get_animation() const {
+std::string const& SkeletalAnimationDirector::get_animation() const {
   if(currAnimation_!=nullptr){
     return currAnimation_->get_name();
   }
