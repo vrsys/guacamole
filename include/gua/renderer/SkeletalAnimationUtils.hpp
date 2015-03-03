@@ -36,8 +36,8 @@
 #include <vector>
 #include <map>
 #include <assimp/scene.h>       // Output data structure
-#include <gua/fbx/Common.hpp>
-
+#include <fbxsdk.h>
+ 
 namespace gua {
 class Pose;
 

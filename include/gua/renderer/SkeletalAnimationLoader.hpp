@@ -36,7 +36,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <gua/fbx/Common.hpp>
+#include <fbxsdk.h>
 
 namespace Assimp { class Importer; }
 
@@ -142,13 +142,13 @@ public:
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
 
-  static FbxScene* load_fbx_file(FbxManager* manager, std::string const& file_path);
 private: // attributes
 
   std::string parent_material_name_;
 
   unsigned node_counter_;
 
+  static FbxScene* load_fbx_file(FbxManager* manager, std::string const& file_path);
   static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
   static unsigned mesh_counter_;
 };

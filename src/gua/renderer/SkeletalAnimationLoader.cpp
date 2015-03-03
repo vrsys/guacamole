@@ -482,6 +482,8 @@ void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::Node
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 FbxScene* SkeletalAnimationLoader::load_fbx_file(FbxManager* manager, std::string const& file_name) {
   // Create an importer.
   FbxImporter* lImporter = FbxImporter::Create(manager,"");
