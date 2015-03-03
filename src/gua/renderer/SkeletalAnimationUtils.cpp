@@ -251,15 +251,23 @@ Node::Node(FbxScene& scene) {
         }
 
         std::string bone_name(node->GetName());  
+        //helper to check for matrix magnitude
+        auto magnitude = [](scm::math::mat4f const& mat)->float{
+          float mag = 0.0f;
+          for(unsigned i = 0; i < 16; ++i) {
+            mag += mat[i] * mat[i];
+          }
+          return mag;
+        };
 
-        FbxAMatrix bind_transform;
-        FbxAMatrix cluster_transform;
         //reference pose of bone
+        FbxAMatrix bind_transform;
         cluster->GetTransformLinkMatrix(bind_transform);
+        //check if the clusters have an extra transformation
+        FbxAMatrix cluster_transform;
         cluster->GetTransformMatrix(cluster_transform);
-        if(to_gua::mat4(cluster_transform) != scm::math::mat4f::identity()) {
-          // Logger::LOG_WARNING << "Weight clusters have tranformations, animations will be skewed." << std::endl;
-          Logger::LOG_WARNING << to_gua::mat4(cluster_transform) << " of bone " << bone_name << std::endl;
+        if(magnitude(to_gua::mat4(cluster_transform) - scm::math::mat4f::identity())  > 0.000000001f) {
+          Logger::LOG_WARNING << "weight cluster of bone '" << bone_name << "' has transformation, animation will be skewed" << std::endl;
         }
         //add bone to list if it is not already included
         if(bone_info.find(bone_name) == bone_info.end()) {
@@ -932,9 +940,8 @@ BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& node):
     scalingKeys.push_back(Key<scm::math::vec3>{double(i - start_frame), to_gua::vec3(node.EvaluateLocalScaling(time))});
     //get rotation from transformation matrix
     rotationKeys.push_back(Key<scm::math::quatf>{double(i - start_frame), scm::math::quatf::from_matrix(transform_matrix)});
-
-    translationKeys.push_back(Key<scm::math::vec3>{double(i - start_frame), to_gua::vec3(node.EvaluateLocalTranslation(time))});
-    // std::cout << "adding key nr. " << i << " at " << time.GetSecondDouble() << std::endl;
+    //and translation
+    translationKeys.push_back(Key<scm::math::vec3>{double(i - start_frame), scm::math::vec3{transform_matrix[12], transform_matrix[13], transform_matrix[14]}});
   }
 }
 
@@ -1055,16 +1062,15 @@ SkeletalAnimation::SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> c
   numBoneAnims{0},
   boneAnims{}
 {
-  //set animation for which bones will be evaluated 
+  //set animation for which the bones will be evaluated 
   FbxScene* scene = anim->GetScene();
   scene->SetCurrentAnimationStack(anim);
 
   FbxTakeInfo* take = scene->GetTakeInfo(anim->GetName());
-  std::cout << "anim from frame " << take->mLocalTimeSpan.GetStart().GetFrameCount(FbxTime::eFrames30) << " to " << take->mLocalTimeSpan.GetStop().GetFrameCount(FbxTime::eFrames30) << std::endl;
   numFPS = 30;
   numFrames = take->mLocalTimeSpan.GetDuration().GetFrameCount(FbxTime::eFrames30);
   duration = double(numFrames) / numFPS;
-  std::cout << "animation '" << name << "' has " << numFrames << " frames and duration " << duration << " seconds" << std::endl;
+
   for(FbxNode* const bone : bones) {
     boneAnims.push_back(BoneAnimation{*take, *bone});
   }
