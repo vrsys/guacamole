@@ -171,8 +171,14 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
 
       //Create an IOSettings object. This object holds all import/export settings.
       FbxIOSettings* ios = FbxIOSettings::Create(sdk_manager, IOSROOT);
-      ios->SetBoolProp(IMP_FBX_MATERIAL,        true);
-      ios->SetBoolProp(IMP_FBX_TEXTURE,         true);
+      if(flags & TriMeshLoader::LOAD_MATERIALS){
+        ios->SetBoolProp(IMP_FBX_MATERIAL,        true);
+        ios->SetBoolProp(IMP_FBX_TEXTURE,         true);
+      } 
+      else {
+        ios->SetBoolProp(IMP_FBX_MATERIAL,        false);
+        ios->SetBoolProp(IMP_FBX_TEXTURE,         false);        
+      }
       ios->SetBoolProp(IMP_FBX_CHARACTER,        false);
       ios->SetBoolProp(IMP_FBX_CONSTRAINT,       false);
       ios->SetBoolProp(IMP_FBX_LINK,            false);
@@ -319,7 +325,6 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
       FbxSurfaceMaterial* mat = fbx_node.GetMaterial(0);
       material = material_loader.load_material(*mat, file_name);
     }
-    else std::cout << "not loading materials" << std::endl;
 
     //return std::make_shared<node::TriMeshNode>("", desc.unique_key(), material); // not allowed -> private c'tor
     return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));

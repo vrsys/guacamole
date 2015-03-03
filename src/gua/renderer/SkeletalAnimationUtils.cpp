@@ -453,7 +453,7 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
       ++dupl_normals;
     }
   } 
-  std::cout << dupl_normals << " normal duplications" << std::endl;
+  Logger::LOG_DEBUG << dupl_normals << " normal duplications" << std::endl;
 
   FbxArray<FbxVector2> poly_uvs{};
   std::vector<unsigned> uv_indices{};
@@ -471,7 +471,7 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
         ++dupl_uvs;
       }
     } 
-    std::cout << dupl_uvs << " UV duplications" << std::endl;
+    Logger::LOG_DEBUG << dupl_uvs << " UV duplications" << std::endl;
   }
 
   //this function gets a geometry layer and returns the function to access it depending on mapping & referencing
@@ -542,7 +542,7 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
         ++dupl_tangents;
       }
     } 
-    std::cout << dupl_tangents << " tangent duplications" << std::endl;
+    Logger::LOG_DEBUG << dupl_tangents << " tangent duplications" << std::endl;
 
     FbxGeometryElementBinormal* bitangent_info = mesh.GetElementBinormal(0);
     bitangent_info->GetDirectArray().CopyTo(poly_bitangents);
@@ -560,7 +560,7 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
         ++dupl_bitangents;
       }
     } 
-    std::cout << dupl_bitangents << " bitangent duplications" << std::endl;
+    Logger::LOG_DEBUG << dupl_bitangents << " bitangent duplications" << std::endl;
   }
 
   num_triangles = 0; 
@@ -636,7 +636,7 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
     }
     num_vertices += verts.size();
   }
-  std::cout << dupl_verts << " vertex duplications" << std::endl;
+  Logger::LOG_DEBUG << dupl_verts << " vertex duplications" << std::endl;
 
   bool has_weights = false;
   std::vector<weight_map> ctrlpt_weights{};
@@ -960,7 +960,6 @@ BoneAnimation::BoneAnimation(aiNodeAnim* anim):
   }
   for(unsigned i = 0; i < anim->mNumRotationKeys; ++i) {
     rotationKeys.push_back(Key<scm::math::quatf>{anim->mRotationKeys[i].mTime, to_gua::quat(anim->mRotationKeys[i].mValue)});
-  // std::cout << "adding key at " <<  anim->mRotationKeys[i].mTime << std::endl;
   }
   for(unsigned i = 0; i < anim->mNumPositionKeys; ++i) {
     translationKeys.push_back(Key<scm::math::vec3>{anim->mPositionKeys[i].mTime, to_gua::vec3(anim->mPositionKeys[i].mValue)});
