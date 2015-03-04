@@ -4,9 +4,11 @@
 
 // guacamole headers
 #include <gua/utils/Logger.hpp>
+#include <gua/utils/Blending.hpp>
 
 //external headers
 #include <iostream>
+#include <queue>
 
 namespace gua 
 {
@@ -41,23 +43,44 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Bone> const
 }
 
 void SkeletalAnimationDirector::add_animations(aiScene const& scene) {
-  std::vector<std::shared_ptr<SkeletalAnimation>> newAnims{SkeletalAnimationUtils::load_animations(scene)};
-  if(newAnims.empty()) return;
-
-  animations_.reserve(animations_.size() + newAnims.size());
-  std::move(newAnims.begin(), newAnims.end(), std::inserter(animations_, animations_.end()));
-  newAnims.clear();
+  if(!scene.HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
+ 
+  for(uint i = 0; i < scene.mNumAnimations; ++i) {
+    animations_.push_back(std::make_shared<SkeletalAnimation>(*(scene.mAnimations[i])));
+  }
 
   has_anims_ = animations_.size() > 0;
   currAnimation_ = animations_[animations_.size()-1];
 }
-void SkeletalAnimationDirector::add_animations(FbxScene& scene) {
-  std::vector<std::shared_ptr<SkeletalAnimation>> newAnims{SkeletalAnimationUtils::load_animations(scene)};
-  if(newAnims.empty()) return;
 
-  animations_.reserve(animations_.size() + newAnims.size());
-  std::move(newAnims.begin(), newAnims.end(), std::inserter(animations_, animations_.end()));
-  newAnims.clear();
+void SkeletalAnimationDirector::add_animations(FbxScene& scene) {
+  std::vector<std::shared_ptr<SkeletalAnimation>> animations{};
+  unsigned num_anims = scene.GetSrcObjectCount<FbxAnimStack>();
+  if(num_anims <= 0) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
+ 
+  std::vector<FbxNode*> nodes{};
+  // traverse hierarchy and collect pointers to all nodes
+  std::queue<FbxNode*> node_stack{};
+  node_stack.push(scene.GetRootNode());
+  while(!node_stack.empty()) {
+    FbxNode* curr_node = node_stack.front(); 
+    nodes.push_back(curr_node);
+
+    for(int i = 0; i < curr_node->GetChildCount(); ++i) {
+      FbxSkeleton const* skelnode{curr_node->GetChild(i)->GetSkeleton()};
+      if(skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector && curr_node->GetChild(i)->GetChildCount() == 0) {
+        Logger::LOG_DEBUG << curr_node->GetChild(i)->GetName() << " is effector, ignoring it" << std::endl;
+      }
+      else {
+        node_stack.push(curr_node->GetChild(i));
+      }
+    }
+    node_stack.pop();
+  }
+
+  for(uint i = 0; i < num_anims; ++i) {
+    animations_.push_back(std::make_shared<SkeletalAnimation>(scene.GetSrcObject<FbxAnimStack>(i), nodes));
+  }
 
   has_anims_ = animations_.size() > 0;
   currAnimation_ = animations_[animations_.size()-1];
@@ -114,7 +137,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
   float currentTime = timer_.get_elapsed();
 
   if(!has_anims_) {
-    SkeletalAnimationUtils::calculate_matrices(*anim_start_node_, transforms);
+    calculate_matrices( transforms);
     return transforms;  
   }
 
@@ -145,7 +168,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
         if (blendFactor_ != 1.0){
           blendFactor_ = 1.0;
         }
-        SkeletalAnimationUtils::calculate_matrices(currentTime, *anim_start_node_, *animations_[animNum_], transforms);  
+        calculate_matrices(currentTime, *animations_[animNum_], transforms);  
       }
       /*else {
         next_transition_ = currentTime + playDuration;
@@ -162,6 +185,28 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
   }
   
   return transforms;
+}
+
+void SkeletalAnimationDirector::calculate_matrices(float timeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& transforms) {
+ 
+  float timeNormalized = 0;
+  Pose pose{};
+
+  timeNormalized = timeInSeconds / pAnim.get_duration();
+  timeNormalized = scm::math::fract(timeNormalized);
+
+  pose = pAnim.calculate_pose(timeNormalized);
+
+  scm::math::mat4f identity = scm::math::mat4f::identity();
+  anim_start_node_->accumulate_matrices(transforms, pose, identity);
+}
+
+void SkeletalAnimationDirector::calculate_matrices(std::vector<scm::math::mat4f>& transforms) {
+
+  Pose pose{};
+
+  scm::math::mat4f identity = scm::math::mat4f::identity();
+  anim_start_node_->accumulate_matrices(transforms, pose, identity);
 }
 
 void SkeletalAnimationDirector::set_playback_mode(uint mode) {
