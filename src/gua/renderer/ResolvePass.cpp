@@ -49,12 +49,13 @@ ResolvePassDescription::ResolvePassDescription()
   uniforms["gua_background_mode"] = static_cast<int>(BackgroundMode::COLOR);
   uniforms["gua_background_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);
   uniforms["gua_background_texture"] = std::string("gua_default_texture");
-  
+
   // default ambient lighting
   uniforms["gua_environment_lighting_mode"] = static_cast<int>(EnvironmentLightingMode::AMBIENT_COLOR);
-  uniforms["gua_environment_lighting_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);
+  uniforms["gua_environment_lighting_color"] = scm::math::vec3f(0.05f, 0.05f, 0.05f);
   uniforms["gua_environment_lighting_spheremap"] = std::string("gua_default_texture");
   uniforms["gua_environment_lighting_cubemap"] = std::string("gua_default_texture");
+  uniforms["gua_horizon_fade"] = 1.3f;
 
   // default ssao
   uniforms["gua_ssao_enable"] = false;
@@ -62,7 +63,7 @@ ResolvePassDescription::ResolvePassDescription()
   uniforms["gua_ssao_intensity"] = 1.0f;
   uniforms["gua_ssao_falloff"] = 0.1f;
   uniforms["gua_noise_tex"] = std::string("gua_default_texture");
-  
+
   // default fog configuration
   uniforms["gua_enable_fog"] = false;
   uniforms["gua_fog_start"] = 10.f;
@@ -155,6 +156,19 @@ ResolvePassDescription::EnvironmentLightingMode ResolvePassDescription::environm
   auto uniform(uniforms.find("gua_environment_lighting_mode"));
   return static_cast<ResolvePassDescription::EnvironmentLightingMode>(boost::get<int>(uniform->second.data));
 }
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::horizon_fade(float radius) {
+  uniforms["gua_horizon_fade"] = radius;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::horizon_fade() const {
+  auto uniform(uniforms.find("gua_horizon_fade"));
+  return boost::get<float>(uniform->second.data);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::ssao_enable(bool enable) {
