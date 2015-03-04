@@ -24,7 +24,6 @@
 
 #include <gua/node/SkeletalAnimationNode.hpp>
 
-#include <gua/renderer/SkeletalAnimationRessource.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
 

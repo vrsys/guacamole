@@ -23,9 +23,7 @@
 #define GUA_SKELETAL_ANIMATION_LOADER_HPP
 
 // guacamole headers
-#include <gua/renderer/SkeletalAnimationRessource.hpp>
 #include <gua/node/SkeletalAnimationNode.hpp>
-#include <gua/renderer/SkeletalAnimationUtils.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/utils/SkinnedMesh.hpp>
 #include <gua/utils/Bone.hpp>

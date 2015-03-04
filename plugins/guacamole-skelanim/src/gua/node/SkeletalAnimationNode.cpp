@@ -26,7 +26,6 @@
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/renderer/SkeletalAnimationLoader.hpp>
-#include <gua/renderer/SkeletalAnimationRessource.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 // guacamole headers
@@ -315,10 +314,10 @@ namespace node {
             }
           }
 
-          geometries_[i] = std::dynamic_pointer_cast<SkeletalAnimationRessource>(GeometryDatabase::instance()->lookup(geometry_descriptions_[i]));
+          geometries_[i] = std::dynamic_pointer_cast<SkinnedMeshResource>(GeometryDatabase::instance()->lookup(geometry_descriptions_[i]));
 
           if (!geometries_[i]) {
-            Logger::LOG_WARNING << "Failed to get SkeletalAnimationRessource for " << geometry_descriptions_[i] << ": The data base entry is of wrong type!" << std::endl;
+            Logger::LOG_WARNING << "Failed to get SkinnedMeshResource for " << geometry_descriptions_[i] << ": The data base entry is of wrong type!" << std::endl;
           }
         }
 
@@ -349,7 +348,7 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  std::vector<std::shared_ptr<SkeletalAnimationRessource>> const& SkeletalAnimationNode::get_geometries() const {
+  std::vector<std::shared_ptr<SkinnedMeshResource>> const& SkeletalAnimationNode::get_geometries() const {
     return geometries_;
   }
 

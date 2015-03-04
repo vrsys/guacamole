@@ -20,7 +20,6 @@
  ******************************************************************************/
 
 // class header
-#include <fbxsdk.h>
 #include <gua/renderer/SkeletalAnimationLoader.hpp>
 
 // guacamole headers
@@ -30,7 +29,6 @@
 #include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
-#include <gua/renderer/SkeletalAnimationRessource.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
@@ -354,7 +352,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
       geometry_descriptions.push_back(desc.unique_key());
 
       GeometryDatabase::instance()->add(desc.unique_key() 
-        ,std::make_shared<SkeletalAnimationRessource>(
+        ,std::make_shared<SkinnedMeshResource>(
           SkinnedMesh{*dynamic_cast<FbxMesh*>(geo), *root}
           , animation_director
           , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
@@ -402,7 +400,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
     geometry_descriptions.push_back(desc.unique_key());
 
     GeometryDatabase::instance()->add(desc.unique_key() 
-      ,std::make_shared<SkeletalAnimationRessource>(
+      ,std::make_shared<SkinnedMeshResource>(
         SkinnedMesh{*ai_scene->mMeshes[mesh_count], *root}
         , animation_director
         , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
@@ -424,7 +422,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO
-/*std::vector<SkeletalAnimationRessource*> const SkeletalAnimationLoader::load_from_buffer(char const* buffer_name,
+/*std::vector<SkinnedMeshResource*> const SkeletalAnimationLoader::load_from_buffer(char const* buffer_name,
  unsigned buffer_size,
  bool build_kd_tree) {
 
@@ -435,10 +433,10 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
     buffer_size,
     aiProcessPreset_TargetRealtime_Quality | aiProcess_CalcTangentSpace));
 
-  std::vector<SkeletalAnimationRessource*> meshes;
+  std::vector<SkinnedMeshResource*> meshes;
 
   for (unsigned int n = 0; n < scene->mNumMeshes; ++n) {
-    meshes.push_back(new SkeletalAnimationRessource(scene->mMeshes[n], importer, build_kd_tree));
+    meshes.push_back(new SkinnedMeshResource(scene->mMeshes[n], importer, build_kd_tree));
   }
 
   return meshes;

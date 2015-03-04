@@ -23,7 +23,6 @@
 #include <gua/renderer/SkeletalAnimationPass.hpp>
 
 #include <gua/node/SkeletalAnimationNode.hpp>
-#include <gua/renderer/SkeletalAnimationRessource.hpp>
 #include <gua/renderer/SkeletalAnimationRenderer.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>

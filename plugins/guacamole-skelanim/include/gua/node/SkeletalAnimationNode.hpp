@@ -25,10 +25,11 @@
 // guacamole headers
 #include <gua/node/GeometryNode.hpp>
 #include <gua/renderer/SkeletalAnimationDirector.hpp>
+#include <gua/renderer/SkinnedMeshResource.hpp>
 
 namespace gua {
 
-class SkeletalAnimationRessource;
+// class SkinnedMeshResource;
 class SkeletalAnimationLoader;
 
 namespace node {
@@ -94,7 +95,7 @@ public : // methods
 
   void update_cache() override;
 
-  std::vector<std::shared_ptr<SkeletalAnimationRessource>> const& get_geometries() const;
+  std::vector<std::shared_ptr<SkinnedMeshResource>> const& get_geometries() const;
   
   std::shared_ptr<SkeletalAnimationDirector> const& get_director() const;
 
@@ -127,7 +128,7 @@ public : // methods
 
  private:  // attributes e.g. special attributes for drawing
 
-  std::vector<std::shared_ptr<SkeletalAnimationRessource>> geometries_;
+  std::vector<std::shared_ptr<SkinnedMeshResource>> geometries_;
   std::vector<std::string>          geometry_descriptions_;
   bool                              geometry_changed_;
 
