@@ -61,10 +61,6 @@ vec3 environment_lighting (in ShadingTerms T)
       break;
     case 2 : // single color
 
-      uint flags = gua_get_flags();
-      if ((flags & 1u) != 0)
-        return vec3(0.0);
-
       vec3 brdf_diff = T.diffuse;
 
       env_color = (brdf_diff + brdf_spec) * gua_environment_lighting_color;
@@ -76,13 +72,16 @@ vec3 environment_lighting (in ShadingTerms T)
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags) {
-  // pass-through check
-  if ((flags & 1u) != 0)
-    return color;
 
   float emit = pbr.r;
+
+  // pass-through check
+  if (emit == 1.0) {
+    return color;
+  }
+
   ShadingTerms T;
-  gua_prepare_shading(T, color/* (1.0 + emit)*/, normal, position, pbr);
+  gua_prepare_shading(T, color, normal, position, pbr);
 
   vec3 frag_color = vec3(0.0);
   for (int i = 0; i < gua_lights_num; ++i) {
@@ -100,12 +99,12 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
   }
   frag_color += (1.0 - ambient_occlusion) * environment_lighting(T);
 
-  return frag_color;
+  return mix(frag_color, color, emit);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 #if @enable_abuffer@
-vec3 abuf_shade(uint pos, float depth) {
+vec4 abuf_shade(uint pos, float depth) {
 
   uvec4 data = ABUF_FRAG(pos, 0);
 
@@ -118,8 +117,8 @@ vec3 abuf_shade(uint pos, float depth) {
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   vec3 position = h.xyz / h.w;
 
-  vec3 frag_color = shade_for_all_lights(color, normal, position, pbr, flags);
-  return frag_color;
+  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags), pbr.r);
+  return frag_color_emit;
 }
 #endif
 
@@ -191,12 +190,13 @@ void main() {
   }
 
   vec4 abuffer_accumulation_color = vec4(0);
+  float abuffer_accumulation_emissivity = 0.0;
   vec3 gbuffer_color = vec3(0);
 
   float depth = gua_get_depth();
 
 #if @enable_abuffer@
-  bool res = abuf_blend(abuffer_accumulation_color, depth);
+  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, depth);
 #else
   bool res = true;
 #endif
@@ -218,10 +218,11 @@ void main() {
       gbuffer_color += gua_get_background_color();
     }
 
+    abuffer_accumulation_emissivity += gua_get_pbr().r * (1-abuffer_accumulation_color.a);
     abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
   }
 
-  gua_out_color = toneMap(abuffer_accumulation_color.rgb);
+  gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
 
 #if @gua_debug_tiles@
   vec3 color_codes[] = {vec3(1,0,0), vec3(0,1,0), vec3(0,0,1), vec3(1,1,0), vec3(1,0,1), vec3(0,1,1)};
