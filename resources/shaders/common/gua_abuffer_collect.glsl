@@ -1,6 +1,8 @@
 
 #if @enable_abuffer@
 
+uniform uvec2 gua_gbuffer_depth;
+
 @include "gua_abuffer.glsl"
 
 void abuf_insert(float depth)
@@ -81,6 +83,9 @@ void abuf_insert(float depth)
 void submit_fragment(float depth)
 {
 #if @enable_abuffer@
+  float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
+  if (depth > z) discard;
+
   if (gua_alpha < 1.0 - @abuf_insertion_threshold@) {
     discard;
   }
