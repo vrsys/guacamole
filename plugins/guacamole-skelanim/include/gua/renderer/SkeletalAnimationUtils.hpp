@@ -28,6 +28,7 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Mesh.hpp>
 #include <gua/utils/Bone.hpp>
+#include <gua/utils/Transformation.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -41,6 +42,7 @@
 namespace gua {
 class Pose;
 
+<<<<<<< HEAD
 struct Transformation {
  public:
   Transformation();
@@ -65,6 +67,8 @@ struct Transformation {
   scm::math::vec3 translation;
 };
 
+=======
+>>>>>>> transformation class in seperate file
 template<class T>
 struct Key {
 
