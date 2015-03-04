@@ -24,9 +24,8 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/BoneTransformUniformBlock.hpp>
-#include <gua/renderer/SkeletalAnimationUtils.hpp>
+#include <gua/utils/SkeletalAnimation.hpp>
+#include <gua/utils/Bone.hpp>
 #include <gua/utils/Timer.hpp>
 
 // external headers
@@ -63,6 +62,9 @@ class SkeletalAnimationDirector {
 
 
 private:
+
+  void calculate_matrices(float TimeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
+  void calculate_matrices(std::vector<scm::math::mat4f>& Transforms);
 
   void blend_pose(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
   void partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms);
