@@ -27,6 +27,7 @@
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Mesh.hpp>
+#include <gua/utils/Bone.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -76,37 +77,6 @@ struct Key {
 
   double time;
   T value;
-};
-
-
-class Node {
- public:
-  Node();
-  Node(aiNode const& node);
-  Node(FbxNode& node);
-  Node(aiScene const& scene);
-  Node(FbxScene& scene);
-
-  ~Node();
-
-  void collect_indices(std::map<std::string, int>& ids) const;
-
-  void set_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& infos);
-
-  std::shared_ptr<Node> find(std::string const& name) const;
-
-  void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, Pose const& pose, scm::math::mat4f const& parentTransform) const;
-
-  std::string name;
-  std::vector<std::shared_ptr<Node>> children;
-  
- private:
-  int index;
-  std::string parentName;
-  unsigned numChildren;
-  scm::math::mat4f transformation;
-  //transforms to bone space
-  scm::math::mat4f offsetMatrix;
 };
 
 class BoneAnimation {
@@ -161,7 +131,7 @@ class Pose {
   Pose& operator*=(float const factor);
   Pose operator*(float const factor) const;
 
-  void partial_replace(Pose const& pose2, std::shared_ptr<Node> const& pNode);
+  void partial_replace(Pose const& pose2, std::shared_ptr<Bone> const& pNode);
 
  private: 
   std::map<std::string, Transformation> transforms;
@@ -207,6 +177,7 @@ namespace blend {
   float smoothstep(float x);
 };
 
+<<<<<<< HEAD
 #define ZERO_MEM(a) memset(a, 0, sizeof(a))
 struct weight_map
 {        
@@ -285,6 +256,8 @@ struct SkinnedMesh {
 
 =======
 >>>>>>> extra file for skinned mesh
+=======
+>>>>>>> Node renamed to Bone and moved to seperate file
 class SkeletalAnimationUtils {
  public:
 
@@ -299,8 +272,8 @@ class SkeletalAnimationUtils {
   static std::vector<std::shared_ptr<SkeletalAnimation>> load_animations(FbxScene const&);
 >>>>>>> animation sampling theoretically works for translation
 
-  static void calculate_matrices(float TimeInSeconds, Node const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
-  static void calculate_matrices(Node const& root, std::vector<scm::math::mat4f>& Transforms);
+  static void calculate_matrices(float TimeInSeconds, Bone const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
+  static void calculate_matrices(Bone const& root, std::vector<scm::math::mat4f>& Transforms);
 
  private:
   SkeletalAnimationUtils() = delete;

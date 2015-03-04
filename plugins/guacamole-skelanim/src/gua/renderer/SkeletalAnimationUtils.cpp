@@ -107,7 +107,7 @@ std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_ani
   return animations;
 }
 
-void SkeletalAnimationUtils::calculate_matrices(float timeInSeconds, Node const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationUtils::calculate_matrices(float timeInSeconds, Bone const& root, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& transforms) {
  
   float timeNormalized = 0;
   Pose pose{};
@@ -121,7 +121,7 @@ void SkeletalAnimationUtils::calculate_matrices(float timeInSeconds, Node const&
   root.accumulate_matrices(transforms, pose, identity);
 }
 
-void SkeletalAnimationUtils::calculate_matrices(Node const& root, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationUtils::calculate_matrices(Bone const& root, std::vector<scm::math::mat4f>& transforms) {
 
   Pose pose{};
 
@@ -156,6 +156,7 @@ float blend::swap(float x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+<<<<<<< HEAD
 Node::Node():
   index{-1},
   name{"none"},
@@ -866,6 +867,8 @@ void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer)  const {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 =======
 >>>>>>> extra file for skinned mesh
+=======
+>>>>>>> Node renamed to Bone and moved to seperate file
 Transformation::Transformation():
   scaling{1.0f},
   rotation{scm::math::quatf::identity()},
@@ -912,8 +915,8 @@ BoneAnimation::BoneAnimation():
   rotationKeys{},
   translationKeys{}
 {}
-BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& node):
-  name{node.GetName()},
+BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& Bone):
+  name{Bone.GetName()},
   scalingKeys{},
   rotationKeys{},
   translationKeys{}
@@ -927,9 +930,13 @@ BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& node):
   for(unsigned i = start_frame; i <= end.GetFrameCount(FbxTime::eFrames30); ++i) {
     time.SetFrame(i, FbxTime::eFrames30);
     //get complete transformation at current time
-    transform_matrix = to_gua::mat4(node.EvaluateLocalTransform(time));
+    transform_matrix = to_gua::mat4(Bone.EvaluateLocalTransform(time));
     
+<<<<<<< HEAD
     scalingKeys.push_back(Key<scm::math::vec3>{double(i - start_frame), to_gua::vec3(node.EvaluateLocalScaling(time))});
+=======
+    scalingKeys.push_back(Keyframe<scm::math::vec3f>{double(i - start_frame), to_gua::vec3(Bone.EvaluateLocalScaling(time))});
+>>>>>>> Node renamed to Bone and moved to seperate file
     //get rotation from transformation matrix
     rotationKeys.push_back(Key<scm::math::quatf>{double(i - start_frame), scm::math::quatf::from_matrix(transform_matrix)});
     //and translation
@@ -1165,12 +1172,12 @@ Pose Pose::operator*(float const factor) const {
   return temp;
 }
 
-void Pose::partial_replace(Pose const& pose2, std::shared_ptr<Node> const& pNode) {
+void Pose::partial_replace(Pose const& pose2, std::shared_ptr<Bone> const& pNode) {
   if(pose2.contains(pNode->name)) {
     set_transform(pNode->name, pose2.get_transform(pNode->name));
   }
 
-  for(std::shared_ptr<Node>& child : pNode->children) {
+  for(std::shared_ptr<Bone>& child : pNode->children) {
     partial_replace(pose2, child);
   }
 }

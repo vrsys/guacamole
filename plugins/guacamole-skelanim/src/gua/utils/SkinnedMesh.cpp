@@ -16,7 +16,7 @@ SkinnedMesh::SkinnedMesh():
  indices{}
 {}
 
-SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Node const& root) {
+SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
   num_vertices = mesh.GetControlPointsCount(); 
 
   std::string UV_set;
@@ -375,7 +375,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Node const& root) {
   Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << std::endl;
 }
 
-SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Node const& root) {   
+SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root) {   
   num_triangles = mesh.mNumFaces;
   num_vertices = mesh.mNumVertices; 
   
@@ -440,7 +440,7 @@ SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Node const& root) {
 }
 
 
-void SkinnedMesh::init_weights(aiMesh const& mesh, Node const& root) {
+void SkinnedMesh::init_weights(aiMesh const& mesh, Bone const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
   root.collect_indices(bone_mapping_);
 
@@ -456,7 +456,7 @@ void SkinnedMesh::init_weights(aiMesh const& mesh, Node const& root) {
   }
 }
 
-std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Node const& root) {
+std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Bone const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
   root.collect_indices(bone_mapping_);
 
@@ -492,7 +492,7 @@ std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Node const
       bone_index = bone_mapping_.at(bone_name);
     }      
     else {
-      Logger::LOG_ERROR << "Node with name '" << bone_name << "' does not exist!, ignoring weights" << std::endl;
+      Logger::LOG_ERROR << "Bone with name '" << bone_name << "' does not exist!, ignoring weights" << std::endl;
       return std::vector<weight_map>{};          
     }
 
