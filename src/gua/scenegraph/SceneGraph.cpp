@@ -195,6 +195,25 @@ void SceneGraph::remove_camera_node(node::CameraNode* camera) {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void SceneGraph::add_clipping_plane_node(node::ClippingPlaneNode* clipping_plane) {
+  auto pos(std::find(clipping_plane_nodes_.begin(), clipping_plane_nodes_.end(), clipping_plane));
+
+  if (pos == clipping_plane_nodes_.end()) {
+    clipping_plane_nodes_.push_back(clipping_plane);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void SceneGraph::remove_clipping_plane_node(node::ClippingPlaneNode* clipping_plane) {
+  auto pos(std::find(clipping_plane_nodes_.begin(), clipping_plane_nodes_.end(), clipping_plane));
+
+  if (pos != clipping_plane_nodes_.end()) {
+    clipping_plane_nodes_.erase(pos);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

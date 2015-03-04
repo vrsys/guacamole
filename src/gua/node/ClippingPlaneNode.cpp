@@ -19,24 +19,58 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+// class header
+#include <gua/node/ClippingPlaneNode.hpp>
 
-// scenegraph header
+// guacamole headers
+#include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
-// node headers
-#include <gua/node/GeometryNode.hpp>
-#include <gua/node/TriMeshNode.hpp>
-#include <gua/node/TransformNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/node/ScreenNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
-#include <gua/node/SunLightNode.hpp>
-#include <gua/node/CameraNode.hpp>
-#include <gua/node/ClippingPlaneNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
-#include <gua/node/TexturedScreenSpaceQuadNode.hpp>
+namespace gua {
+namespace node {
 
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+////////////////////////////////////////////////////////////////////////////////
+
+ClippingPlaneNode::ClippingPlaneNode(std::string const& name, math::mat4 const& transform)
+    : Node(name, transform) {}
+
+/* virtual */ void ClippingPlaneNode::accept(NodeVisitor& visitor) {
+
+  visitor.visit(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::vec4f ClippingPlaneNode::get_center() const {
+  return math::vec4f(get_cached_world_transform() * math::vec4(0, 0, 0, 1));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::vec4f ClippingPlaneNode::get_normal() const {
+  return math::vec4f(get_cached_world_transform() * math::vec4(0, 0, -1, 0));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Node> ClippingPlaneNode::copy() const {
+  return std::make_shared<ClippingPlaneNode>(get_name(), get_transform());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ClippingPlaneNode::set_scenegraph(SceneGraph* scenegraph) {
+  if (scenegraph_) {
+    scenegraph_->remove_clipping_plane_node(this);
+  }
+
+  Node::set_scenegraph(scenegraph);
+
+  if (scenegraph_) {
+    scenegraph_->add_clipping_plane_node(this);
+  }
+
+}
+
+}
+}

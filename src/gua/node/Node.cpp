@@ -56,6 +56,7 @@ namespace node {
   Node::~Node() {
     for (auto const& child : children_) {
       child->parent_ = nullptr;
+      child->set_scenegraph(nullptr);
     }
   }
 

@@ -131,6 +131,9 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
+  auto clip = graph.add_node<gua::node::ClippingPlaneNode>("/", "clip");
+  // auto clip2 = graph.add_node<gua::node::ClippingPlaneNode>("/", "clip");
+
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);

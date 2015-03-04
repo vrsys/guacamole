@@ -206,7 +206,7 @@ class GUA_DLL CameraNode : public Node {
 
   std::shared_ptr<Node> copy() const override;
 
-  /*virtual*/ void set_scenegraph(SceneGraph* scenegraph);
+  /*virtual*/ void set_scenegraph(SceneGraph* scenegraph) override;
 
   // based on this description the rendering is performed
   std::shared_ptr<PipelineDescription> pipeline_description_;

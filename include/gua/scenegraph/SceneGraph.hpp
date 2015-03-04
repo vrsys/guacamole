@@ -41,6 +41,7 @@ struct Ray;
 namespace node {
   class Node;
   class CameraNode;
+  class ClippingPlaneNode;
   class RayNode;
   struct SerializedCameraNode;
 }
@@ -301,8 +302,13 @@ class GUA_DLL SceneGraph {
     return camera_nodes_;
   }
 
+  std::vector<node::ClippingPlaneNode*> const& get_clipping_plane_nodes() const {
+    return clipping_plane_nodes_;
+  }
+
   friend class ::gua::node::Node;
   friend class ::gua::node::CameraNode;
+  friend class ::gua::node::ClippingPlaneNode;
 
  private:
 
@@ -314,11 +320,15 @@ class GUA_DLL SceneGraph {
   void add_camera_node(node::CameraNode* camera);
   void remove_camera_node(node::CameraNode* camera);
 
+  void add_clipping_plane_node(node::ClippingPlaneNode* clipping_plane);
+  void remove_clipping_plane_node(node::ClippingPlaneNode* clipping_plane);
+
 
   std::shared_ptr<node::Node> root_;
   std::string name_;
 
   std::vector<node::CameraNode*> camera_nodes_;
+  std::vector<node::ClippingPlaneNode*> clipping_plane_nodes_;
 };
 
 }
