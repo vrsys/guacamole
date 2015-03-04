@@ -105,13 +105,7 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
                                          &mesh_.indices[0]);
 
     vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
-        scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-            0, 1, scm::gl::TYPE_VEC2F, sizeof(SkinnedVertex))(
-            0, 2, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-            0, 3, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-            0, 4, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-            0, 5, scm::gl::TYPE_VEC4F, sizeof(SkinnedVertex))(
-            0, 6, scm::gl::TYPE_VEC4I, sizeof(SkinnedVertex)),
+        mesh_.get_vertex_format(),
         {vertices_[ctx.id]});
     
     // init non transformated/animated bone boxes

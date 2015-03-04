@@ -464,4 +464,13 @@ void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
   }
 }
 
+scm::gl::vertex_format Mesh::get_vertex_format() const {
+  return scm::gl::vertex_format(
+    0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
+    0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex));
+}
+
 } // namespace gua

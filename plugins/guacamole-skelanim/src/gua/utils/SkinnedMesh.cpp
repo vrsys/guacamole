@@ -530,4 +530,15 @@ void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer)  const {
   }
 }
 
+scm::gl::vertex_format SkinnedMesh::get_vertex_format() const {
+  return scm::gl::vertex_format(
+    0, 0, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+    0, 1, scm::gl::TYPE_VEC2F, sizeof(SkinnedVertex))(
+    0, 2, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+    0, 3, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+    0, 4, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+    0, 5, scm::gl::TYPE_VEC4F, sizeof(SkinnedVertex))(
+    0, 6, scm::gl::TYPE_VEC4I, sizeof(SkinnedVertex));
+}
+
 } // namespace gua
