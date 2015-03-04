@@ -34,7 +34,9 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
   vec3 frag_color = vec3(0.0);
   for (int i = 0; i < gua_lights_num; ++i) {
       // is it either a visible spot/point light or a sun light ?
-      if ( ((bitset[i>>5] & (1u << (i%32))) != 0) || i >= gua_lights_num - gua_sun_lights_num ) {
+      if ( ((bitset[i>>5] & (1u << (i%32))) != 0)
+         || i >= gua_lights_num - gua_sun_lights_num )
+      {
         frag_color += gua_shade(i, T);
       }
   }
@@ -117,17 +119,28 @@ vec3 gua_get_background_color() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec2 
-longitude_latitude(in vec3 normal) 
-{ 
+vec2
+longitude_latitude(in vec3 normal)
+{
   const float invpi = 1.0 / 3.14159265359;
 
-  vec2 a_xz = normalize(normal.xz); 
-  vec2 a_yz = normalize(normal.yz); 
- 
-  return vec2(0.5 * (1.0 + invpi * atan(a_xz.x, -a_xz.y)), 
-              acos(-normal.y) * invpi); 
-} 
+  vec2 a_xz = normalize(normal.xz);
+  vec2 a_yz = normalize(normal.yz);
+
+  return vec2(0.5 * (1.0 + invpi * atan(a_xz.x, -a_xz.y)),
+              acos(-normal.y) * invpi);
+}
+
+// https://www.unrealengine.com/blog/physically-based-shading-on-mobile
+vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV )
+{
+  const vec4 c0 = vec4(-1, -0.0275, -0.572, 0.022);
+  const vec4 c1 = vec4(1, 0.0425, 1.04, -0.04);
+  vec4 r = Roughness * c0 + c1;
+  float a004 = min( r.x * r.x, exp2( -9.28 * NoV ) ) * r.x + r.y;
+  vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;
+  return SpecularColor * AB.x + AB.y;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 environment_lighting (vec3 world_normal)
@@ -141,10 +154,26 @@ vec3 environment_lighting (vec3 world_normal)
       break;
     case 1 : // cubemap
       env_color = vec3(0.0); // not implemented yet!
-      break;  
+      break;
     case 2 : // single color
-      env_color = gua_environment_lighting_color;
-      break; 
+
+      vec3 cl = gua_get_color();
+      vec3 N = gua_get_normal();
+      vec3 P = gua_get_position();
+      vec3 pbr = gua_get_pbr();
+      uint flags = gua_get_flags();
+
+      if ((flags & 1u) != 0)
+        return vec3(0.0);
+
+      ShadingTerms T;
+      gua_prepare_shading(T, cl, N, P, pbr);
+
+      vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(N, T.Vn));
+      vec3 brdf_diff = T.diffuse * Pi;
+
+      env_color = (brdf_diff + brdf_spec) * gua_environment_lighting_color;
+      break;
   };
 
   return env_color;
@@ -192,10 +221,11 @@ void main() {
       gbuffer_color += gua_get_background_color();
     }
 
+    float ambient_occlusion = 0.0;
     if (gua_ssao_enable) {
-      float ambient_occlusion = compute_ssao();
-      gbuffer_color += (1.0 - ambient_occlusion) * environment_lighting(gua_get_normal());
+      ambient_occlusion = compute_ssao();
     }
+    gbuffer_color += (1.0 - ambient_occlusion) * environment_lighting(gua_get_normal());
 
     abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
   }
