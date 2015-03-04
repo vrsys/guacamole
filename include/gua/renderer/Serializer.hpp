@@ -32,7 +32,6 @@
 #include <gua/scenegraph/NodeVisitor.hpp>
 
 namespace gua {
-
 class SceneGraph;
 
 namespace node {
@@ -86,15 +85,6 @@ class Serializer : public NodeVisitor {
    * \param cam   Pointer to LODNode
    */
   void visit(node::LODNode* lod) override;
-
-  /**
-   * Visits an SkeletalAnimationNode
-   *
-   * This function provides the interface to visit an SkeletalAnimationNode
-   *
-   * \param cam   Pointer to SkeletalAnimationNode
-   */
-  void visit(node::SkeletalAnimationNode* lod) override;
 
   /**
    * Visits a GeometryNode

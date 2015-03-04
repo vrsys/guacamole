@@ -26,10 +26,8 @@
 #include <gua/config.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/SkeletalAnimationLoader.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/SkeletalAnimationPass.hpp>
 #include <gua/renderer/EmissivePass.hpp>
 #include <gua/renderer/LightingPass.hpp>
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
