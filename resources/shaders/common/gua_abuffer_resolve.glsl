@@ -8,10 +8,7 @@ void abuf_mix_frag(vec4 frag_color, inout vec4 color) {
 @include "gua_abuffer.glsl"
 
 #ifndef ABUF_SHADE_FUNC
-#define ABUF_SHADE_FUNC abuf_get_color
-vec4 abuf_get_color(uint pos, float depth) {
-  return vec4(ABUF_FRAG(pos, 0).rgb, 0);
-}
+#error "ABUF_SHADE_FUNC has not been defined!"
 #else
 vec4 ABUF_SHADE_FUNC(uint pos, float depth);
 #endif

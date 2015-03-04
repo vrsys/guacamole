@@ -71,8 +71,8 @@ void abuf_insert(float depth)
     uint col_norm = bitfieldInsert(packUnorm2x16(gua_color.bb),
                                    packSnorm2x16(gua_normal.xx), 16, 16);
 
-    ABUF_FRAG(ctr, 0) = uvec4(packUnorm2x16(gua_color.rg), col_norm,
-                              packSnorm2x16(gua_normal.yz), pbr);
+    frag_data[ctr] = uvec4(packUnorm2x16(gua_color.rg), col_norm,
+                           packSnorm2x16(gua_normal.yz), pbr);
   }
 }
 
