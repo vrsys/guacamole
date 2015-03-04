@@ -19,46 +19,47 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SKELETAL_ANIMATION_HPP
-#define GUA_SKELETAL_ANIMATION_HPP
+#ifndef GUA_POSE_HPP
+#define GUA_POSE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Mesh.hpp>
-#include <gua/utils/Pose.hpp>
-#include <gua/utils/BoneAnimation.hpp>
+#include <gua/utils/Transformation.hpp>
 
 #include <vector>
+#include <map>
 
 namespace gua {
-class Pose;
+class Bone;
 
-class SkeletalAnimation {
+class Pose {
  public:
-  SkeletalAnimation();
+  Pose();
 
-  SkeletalAnimation(aiAnimation const& anim);
-  SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> const& bones);
+  ~Pose();
 
-  ~SkeletalAnimation();
+  bool contains(std::string const& name ) const;
 
-  Pose calculate_pose(float time) const;
+  Transformation const& get_transform(std::string const& name) const;
 
-  double get_duration() const;
-  std::string const& get_name() const;
+  void set_transform(std::string const& name, Transformation const& value);
 
- private:
-  std::string name;
-  unsigned numFrames;
-  double numFPS;
-  double duration;
-  unsigned numBoneAnims;
+  void blend(Pose const& pose2, float blendFactor);
 
-  std::vector<BoneAnimation> boneAnims;
+  Pose& operator+=(Pose const& pose2);
+  Pose operator+(Pose const& p2) const;
+
+  Pose& operator*=(float const factor);
+  Pose operator*(float const factor) const;
+
+  void partial_replace(Pose const& pose2, std::shared_ptr<Bone> const& pNode);
+
+ private: 
+  std::map<std::string, Transformation> transforms;
 };
 
 }
 
-#endif //GUA_SKELETAL_ANIMATION_HPP
+#endif //GUA_POSE_HPP

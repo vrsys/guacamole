@@ -26,14 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Transformation.hpp>
-
-// external headers
-#include <scm/gl_core.h>
-#include <scm/core/math/quat.h>
-
-#include <vector>
-#include <assimp/scene.h>       // Output data structure
-#include <fbxsdk.h>
+#include <gua/utils/Mesh.hpp>
 
 namespace gua {
 

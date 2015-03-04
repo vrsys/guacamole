@@ -1,7 +1,5 @@
 // class header
 #include <gua/utils/SkeletalAnimation.hpp>
-#include <gua/utils/Transformation.hpp>
-#include <gua/renderer/SkeletalAnimationUtils.hpp>
 
 //external headers
 #include <iostream>

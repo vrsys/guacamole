@@ -155,6 +155,7 @@ float blend::swap(float x)
   return (x > 0.5) ? 1 : 0;
 }
 
+<<<<<<< HEAD
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1188,4 +1189,6 @@ void Pose::partial_replace(Pose const& pose2, std::shared_ptr<Bone> const& pNode
   }
 }
 
+=======
+>>>>>>> Pose class in seperate file
 } // namespace gua
