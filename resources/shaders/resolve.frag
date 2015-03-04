@@ -22,6 +22,59 @@ in vec2 gua_quad_coords;
 uint bitset[((@max_lights_num@ - 1) >> 5) + 1];
 
 ///////////////////////////////////////////////////////////////////////////////
+vec2
+longitude_latitude(in vec3 normal)
+{
+  const float invpi = 1.0 / 3.14159265359;
+
+  vec2 a_xz = normalize(normal.xz);
+  vec2 a_yz = normalize(normal.yz);
+
+  return vec2(0.5 * (1.0 + invpi * atan(a_xz.x, -a_xz.y)),
+              acos(-normal.y) * invpi);
+}
+
+// https://www.unrealengine.com/blog/physically-based-shading-on-mobile
+vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV )
+{
+  const vec4 c0 = vec4(-1, -0.0275, -0.572, 0.022);
+  const vec4 c1 = vec4(1, 0.0425, 1.04, -0.04);
+  vec4 r = Roughness * c0 + c1;
+  float a004 = min( r.x * r.x, exp2( -9.28 * NoV ) ) * r.x + r.y;
+  vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;
+  return SpecularColor * AB.x + AB.y;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+vec3 environment_lighting (in ShadingTerms T)
+{
+  vec3 env_color = vec3(0);
+
+  switch (gua_environment_lighting_mode) {
+    case 0 : // spheremap
+      vec2 texcoord = longitude_latitude(T.N);
+      env_color = texture2D(sampler2D(gua_environment_lighting_spheremap), texcoord).rgb * 0.2;
+      break;
+    case 1 : // cubemap
+      env_color = vec3(0.0); // not implemented yet!
+      break;
+    case 2 : // single color
+
+      uint flags = gua_get_flags();
+      if ((flags & 1u) != 0)
+        return vec3(0.0);
+
+      vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.Vn));
+      vec3 brdf_diff = T.diffuse;
+
+      env_color = (brdf_diff + brdf_spec) * gua_environment_lighting_color;
+      break;
+  };
+
+  return env_color;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags) {
   // pass-through check
   if ((flags & 1u) != 0)
@@ -34,10 +87,19 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
   vec3 frag_color = vec3(0.0);
   for (int i = 0; i < gua_lights_num; ++i) {
       // is it either a visible spot/point light or a sun light ?
-      if ( ((bitset[i>>5] & (1u << (i%32))) != 0) || i >= gua_lights_num - gua_sun_lights_num ) {
+      if ( ((bitset[i>>5] & (1u << (i%32))) != 0)
+         || i >= gua_lights_num - gua_sun_lights_num )
+      {
         frag_color += gua_shade(i, T);
       }
   }
+
+  float ambient_occlusion = 0.0;
+  if (gua_ssao_enable) {
+    ambient_occlusion = compute_ssao();
+  }
+  frag_color += (1.0 - ambient_occlusion) * environment_lighting(T);
+
   return toneMap(frag_color);
 }
 
@@ -117,42 +179,6 @@ vec3 gua_get_background_color() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec2 
-longitude_latitude(in vec3 normal) 
-{ 
-  const float invpi = 1.0 / 3.14159265359;
-
-  vec2 a_xz = normalize(normal.xz); 
-  vec2 a_yz = normalize(normal.yz); 
- 
-  return vec2(0.5 * (1.0 + invpi * atan(a_xz.x, -a_xz.y)), 
-              acos(-normal.y) * invpi); 
-} 
-
-///////////////////////////////////////////////////////////////////////////////
-vec3 environment_lighting (vec3 world_normal)
-{
-  vec3 env_color = vec3(0);
-
-  switch (gua_environment_lighting_mode) {
-    case 0 : // spheremap
-      vec2 texcoord = longitude_latitude(world_normal);
-      env_color = texture2D(sampler2D(gua_environment_lighting_spheremap), texcoord).rgb * 0.2;
-      break;
-    case 1 : // cubemap
-      env_color = vec3(0.0); // not implemented yet!
-      break;  
-    case 2 : // single color
-      env_color = gua_environment_lighting_color;
-      break; 
-  };
-
-  return env_color;
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////////
 void main() {
 
   ivec2 frag_pos = ivec2(gl_FragCoord.xy);
@@ -190,11 +216,6 @@ void main() {
     }
     else {
       gbuffer_color += gua_get_background_color();
-    }
-
-    if (gua_ssao_enable) {
-      float ambient_occlusion = compute_ssao();
-      gbuffer_color += (1.0 - ambient_occlusion) * environment_lighting(gua_get_normal());
     }
 
     abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
