@@ -135,8 +135,14 @@ layout(location=0) out vec3 gua_out_color;
 ///////////////////////////////////////////////////////////////////////////////
 
 // skymap
+
+// why does this not work properly?
+// float gua_my_atan2(float a, float b) {
+//   return 2.0 * atan(fma(a, inversesqrt(b*b + a*a), b));
+// }
+
 float gua_my_atan2(float a, float b) {
-  return 2.0 * atan(fma(a, inversesqrt(b*b + a*a), b));
+  return 2.0 * atan(a/(sqrt(b*b + a*a) + b));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
