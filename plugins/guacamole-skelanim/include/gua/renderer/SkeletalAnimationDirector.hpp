@@ -24,18 +24,13 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
- #include <gua/renderer/RenderContext.hpp>
+#include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
+#include <gua/renderer/SkeletalAnimationUtils.hpp>
 #include <gua/utils/Timer.hpp>
-#include <gua/utils/Bone.hpp>
 
 // external headers
-#include <scm/gl_core.h>
-#include <scm/core/math/quat.h>
-#include <gua/renderer/SkeletalAnimationUtils.hpp>
 #include <vector>
-#include <map>
-#include <assimp/scene.h>       // Output data structure
 
 namespace gua {
 
