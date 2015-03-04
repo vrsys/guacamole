@@ -27,6 +27,7 @@
  #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
 #include <gua/utils/Timer.hpp>
+#include <gua/utils/Bone.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -41,7 +42,7 @@ namespace gua {
 class SkeletalAnimationDirector {
  public:
 
-  SkeletalAnimationDirector(std::shared_ptr<Node> const&);
+  SkeletalAnimationDirector(std::shared_ptr<Bone> const&);
 
   inline ~SkeletalAnimationDirector(){};
 
@@ -73,8 +74,8 @@ private:
 
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
 
-  std::shared_ptr<Node> root_;
-  std::shared_ptr<Node> anim_start_node_;
+  std::shared_ptr<Bone> root_;
+  std::shared_ptr<Bone> anim_start_node_;
 
   std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
   std::shared_ptr<SkeletalAnimation> currAnimation_;

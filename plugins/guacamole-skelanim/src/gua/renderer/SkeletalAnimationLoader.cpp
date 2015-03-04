@@ -340,7 +340,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
   std::string const& node_name,
   unsigned flags) {
 
-  std::shared_ptr<gua::Node> root = std::make_shared<gua::Node>(*scene);
+  std::shared_ptr<Bone> root = std::make_shared<Bone>(*scene);
   auto animation_director = std::make_shared<SkeletalAnimationDirector>(root);
 
   std::vector<std::string> geometry_descriptions{};
@@ -389,7 +389,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
   std::string const& node_name,
   unsigned flags) {
 
-  auto root = std::make_shared<Node>(*ai_scene);
+  auto root = std::make_shared<Bone>(*ai_scene);
   auto animation_director = std::make_shared<SkeletalAnimationDirector>(root);
 
   std::vector<std::string> geometry_descriptions{};

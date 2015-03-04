@@ -27,6 +27,8 @@
 #include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/renderer/SkeletalAnimationUtils.hpp>
 #include <gua/renderer/Material.hpp>
+#include <gua/utils/SkinnedMesh.hpp>
+#include <gua/utils/Bone.hpp>
 
 // external headers
 #include <string>

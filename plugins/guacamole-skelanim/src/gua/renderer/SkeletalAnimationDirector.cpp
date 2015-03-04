@@ -10,7 +10,7 @@
 
 namespace gua 
 {
-SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Node> const& root):
+SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Bone> const& root):
     num_bones_{0},
     has_anims_{false},
     firstRun_{true},
@@ -83,7 +83,7 @@ void SkeletalAnimationDirector::blend_pose(float timeInSeconds, SkeletalAnimatio
 
 void SkeletalAnimationDirector::partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms) {
   
-  std::shared_ptr<Node> start{anim_start_node_->find(nodeName)};
+  std::shared_ptr<Bone> start{anim_start_node_->find(nodeName)};
   
   if(!start) {
     Logger::LOG_WARNING << "node '"<< nodeName << "' not found" << std::endl; 
