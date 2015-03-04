@@ -25,9 +25,8 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/BoneTransformUniformBlock.hpp>
-// #include <gua/renderer/SkeletalAnimationDirector.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/utils/Mesh.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -37,7 +36,7 @@
 #include <map>
 #include <assimp/scene.h>       // Output data structure
 #include <fbxsdk.h>
- 
+
 namespace gua {
 class Pose;
 
@@ -241,6 +240,7 @@ struct weight_map
   }
 };
 
+<<<<<<< HEAD
 
 <<<<<<< HEAD:include/gua/renderer/SkeletalAnimationUtils.hpp
 struct Vertex {
@@ -283,6 +283,8 @@ struct SkinnedMesh {
   std::vector<weight_map> get_weights(FbxMesh const& mesh, Node const& root);
 };
 
+=======
+>>>>>>> extra file for skinned mesh
 class SkeletalAnimationUtils {
  public:
 

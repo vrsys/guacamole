@@ -4,6 +4,7 @@
 #include <iostream>
 #include <queue>
 
+<<<<<<< HEAD
 namespace to_gua{
 
 scm::math::mat4f mat4(aiMatrix4x4 const& m) {
@@ -52,6 +53,8 @@ scm::math::quatf quat(FbxQuaternion const& q) {
 
 }
 
+=======
+>>>>>>> extra file for skinned mesh
 namespace gua {
 
 std::vector<std::shared_ptr<SkeletalAnimation>> SkeletalAnimationUtils::load_animations(aiScene const& scene) {
@@ -335,6 +338,7 @@ void Node::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, Po
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+<<<<<<< HEAD
 SkinnedMesh::SkinnedMesh():
  positions{},
  normals{},
@@ -860,6 +864,8 @@ void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer)  const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+=======
+>>>>>>> extra file for skinned mesh
 Transformation::Transformation():
   scaling{1.0f},
   rotation{scm::math::quatf::identity()},

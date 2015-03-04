@@ -1,51 +1,22 @@
 // class header
-#include <gua/utils/Mesh.hpp>
+#include <gua/utils/SkinnedMesh.hpp>
 //external headers
 #include <iostream>
 #include <queue>
 
-namespace to_gua{
+namespace gua{
 
-scm::math::mat4f mat4(aiMatrix4x4 const& m) {
-  scm::math::mat4f res(m.a1,m.b1,m.c1,m.d1
-                      ,m.a2,m.b2,m.c2,m.d2
-                      ,m.a3,m.b3,m.c3,m.d3
-                      ,m.a4,m.b4,m.c4,m.d4);
-  return res;
-}
-scm::math::mat4f mat4(FbxAMatrix const& m) {
-  //TODO:: better correction of negative  zeros
-  auto correct = [](float const& f)->float {return f == -0.0f ? 0.0f : f;};
-  scm::math::mat4f res(correct(m[0][0]),correct(m[0][1]),correct(m[0][2]),correct(m[0][3]),
-                      correct(m[1][0]),correct(m[1][1]),correct(m[1][2]),correct(m[1][3]),
-                      correct(m[2][0]),correct(m[2][1]),correct(m[2][2]),correct(m[2][3]),
-                      correct(m[3][0]),correct(m[3][1]),correct(m[3][2]),correct(m[3][3]));
-  return res;
-}
-
-scm::math::quatf quat(aiQuaternion const& q) {
-  scm::math::quatf res(q.w, q.x, q.y, q.z);
-  return res;
-}
-scm::math::quatf quat(FbxQuaternion const& q) {
-  scm::math::quatf res(q[3], q[0], q[1], q[2]);
-  return res;
-}
-
-}
-
-namespace gua {
-
-Mesh::Mesh():
+SkinnedMesh::SkinnedMesh():
  positions{},
  normals{},
  texCoords{},
  tangents{},
  bitangents{},
+ weights{},
  indices{}
 {}
 
-Mesh::Mesh(FbxMesh& mesh) {
+SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Node const& root) {
   num_vertices = mesh.GetControlPointsCount(); 
 
   std::string UV_set;
@@ -338,6 +309,14 @@ Mesh::Mesh(FbxMesh& mesh) {
   }
   Logger::LOG_DEBUG << dupl_verts << " vertex duplications" << std::endl;
 
+  bool has_weights = false;
+  std::vector<weight_map> ctrlpt_weights{};
+  //get weights of original control points
+  if(root.name != "none") {
+    ctrlpt_weights = get_weights(mesh, root);
+    has_weights = ctrlpt_weights.size() > 0;
+  }
+
   // Reserve space in the vectors for the vertex attributes and indices
   positions.reserve(num_vertices);
   normals.reserve(num_vertices);
@@ -353,6 +332,12 @@ Mesh::Mesh(FbxMesh& mesh) {
   else {
     tangents.resize(num_vertices, scm::math::vec3f(0.0f));
     bitangents.resize(num_vertices, scm::math::vec3f(0.0f));
+  }
+  if(has_weights) {
+    weights.reserve(num_vertices);  
+  }
+  else {
+    weights.resize(num_vertices);
   }
   //load reduced attributes
   unsigned curr_vert = 0;
@@ -371,6 +356,9 @@ Mesh::Mesh(FbxMesh& mesh) {
       if(has_uvs) {
         texCoords.push_back(to_gua::vec3(poly_uvs[vert.uv]));
       }
+      if(has_weights) {
+        weights.push_back(ctrlpt_weights[vert.point]);
+      }
       ++curr_vert;
     }
   }
@@ -387,7 +375,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << std::endl;
 }
 
-Mesh::Mesh(aiMesh const& mesh) {   
+SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Node const& root) {   
   num_triangles = mesh.mNumFaces;
   num_vertices = mesh.mNumVertices; 
   
@@ -397,6 +385,7 @@ Mesh::Mesh(aiMesh const& mesh) {
   texCoords.reserve(num_vertices);
   tangents.reserve(num_vertices);
   bitangents.reserve(num_vertices);
+  weights.resize(num_vertices);
   indices.reserve(num_triangles * 3);
 
 
@@ -432,6 +421,8 @@ Mesh::Mesh(aiMesh const& mesh) {
     tangents.push_back(pTangent);
     texCoords.push_back(pTexCoord);
   }
+
+  init_weights(mesh, root);
   
   // Populate the index buffer
   for (uint i = 0 ; i < mesh.mNumFaces ; i++) {
@@ -449,7 +440,78 @@ Mesh::Mesh(aiMesh const& mesh) {
 }
 
 
-void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
+void SkinnedMesh::init_weights(aiMesh const& mesh, Node const& root) {
+  std::map<std::string, int> bone_mapping_; // maps a bone name to its index
+  root.collect_indices(bone_mapping_);
+
+  for (uint i = 0 ; i < mesh.mNumBones ; i++) {
+    std::string bone_name(mesh.mBones[i]->mName.data);      
+    uint BoneIndex = bone_mapping_.at(bone_name);        
+    
+    for (uint j = 0 ; j < mesh.mBones[i]->mNumWeights ; j++) {
+      uint VertexID = mesh.mBones[i]->mWeights[j].mVertexId;
+      float Weight  = mesh.mBones[i]->mWeights[j].mWeight;                   
+      weights[VertexID].AddBoneData(BoneIndex, Weight);
+    }
+  }
+}
+
+std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Node const& root) {
+  std::map<std::string, int> bone_mapping_; // maps a bone name to its index
+  root.collect_indices(bone_mapping_);
+
+  //check for skinning
+  FbxSkin* skin = NULL;
+  for(unsigned i = 0; i < mesh.GetDeformerCount(); ++i) {
+    FbxDeformer* defPtr ={mesh.GetDeformer(i)};
+    if(defPtr->GetDeformerType() == FbxDeformer::eSkin) {
+      skin = static_cast<FbxSkin*>(defPtr);
+      break;
+    }
+  }
+
+  if(!skin) {
+    Logger::LOG_WARNING << "Mesh does not contain skin deformer, ignoring weights" << std::endl;
+    return std::vector<weight_map>{};
+  }
+  //set up temporary weights, for control points not actual vertices
+  std::vector<weight_map> temp_weights{unsigned(mesh.GetControlPointsCount())};
+  //one cluster corresponds to one bone
+  for(unsigned i = 0; i < skin->GetClusterCount(); ++i) {
+    FbxCluster* cluster = skin->GetCluster(i);
+    FbxNode* node = cluster->GetLink();
+
+    if(!node) {
+      Logger::LOG_ERROR << "associated node does not exist!" << std::endl;
+      assert(false);      
+    }
+
+    std::string bone_name(node->GetName());
+    uint bone_index;
+    if(bone_mapping_.find(bone_name) != bone_mapping_.end()) {
+      bone_index = bone_mapping_.at(bone_name);
+    }      
+    else {
+      Logger::LOG_ERROR << "Node with name '" << bone_name << "' does not exist!, ignoring weights" << std::endl;
+      return std::vector<weight_map>{};          
+    }
+
+    FbxAMatrix world_transform;
+    //reference pose of mes
+    cluster->GetTransformMatrix(world_transform);
+
+    int* indices = cluster->GetControlPointIndices();
+    double* weights = cluster->GetControlPointWeights();
+    for(unsigned i = 0; i < cluster->GetControlPointIndicesCount(); ++i) {
+      //update mapping info of current control point
+      temp_weights[indices[i]].AddBoneData(bone_index, weights[i]);
+    }
+  }
+
+  return temp_weights;
+}
+
+void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer)  const {
   for (unsigned v(0); v < num_vertices; ++v) {
 
     vertex_buffer[v].pos = positions[v];
@@ -461,6 +523,10 @@ void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
     vertex_buffer[v].tangent = tangents[v];
 
     vertex_buffer[v].bitangent = bitangents[v];
+
+    vertex_buffer[v].bone_weights = scm::math::vec4f(weights[v].weights[0],weights[v].weights[1],weights[v].weights[2],weights[v].weights[3]);
+    
+    vertex_buffer[v].bone_ids = scm::math::vec4i(weights[v].IDs[0],weights[v].IDs[1],weights[v].IDs[2],weights[v].IDs[3]);
   }
 }
 

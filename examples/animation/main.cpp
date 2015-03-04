@@ -94,6 +94,7 @@ int main(int argc, char** argv) {
   loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", 0);
 
 
+  // auto fbx(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/barrel.fbx", mat1, gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // auto fbx(loader2.create_geometry_from_file("fbx", "data/objects/fbx/zombie_axe.fbx", gua::SkeletalAnimationLoader::LOAD_MATERIALS | mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   fbx->set_draw_bounding_box(true);
