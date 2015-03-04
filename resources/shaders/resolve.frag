@@ -49,14 +49,15 @@ vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV )
 vec3 environment_lighting (in ShadingTerms T)
 {
   vec3 env_color = vec3(0);
+  vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.Vn));
 
   switch (gua_environment_lighting_mode) {
     case 0 : // spheremap
       vec2 texcoord = longitude_latitude(T.N);
-      env_color = texture2D(sampler2D(gua_environment_lighting_spheremap), texcoord).rgb * 0.2;
+      env_color = brdf_spec * texture2D(sampler2D(gua_environment_lighting_spheremap), texcoord).rgb;
       break;
     case 1 : // cubemap
-      env_color = vec3(0.0); // not implemented yet!
+      env_color = brdf_spec * vec3(0.0); // not implemented yet!
       break;
     case 2 : // single color
 
@@ -64,7 +65,6 @@ vec3 environment_lighting (in ShadingTerms T)
       if ((flags & 1u) != 0)
         return vec3(0.0);
 
-      vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.Vn));
       vec3 brdf_diff = T.diffuse;
 
       env_color = (brdf_diff + brdf_spec) * gua_environment_lighting_color;
@@ -100,7 +100,7 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
   }
   frag_color += (1.0 - ambient_occlusion) * environment_lighting(T);
 
-  return toneMap(frag_color);
+  return frag_color;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -221,7 +221,7 @@ void main() {
     abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
   }
 
-  gua_out_color = abuffer_accumulation_color.rgb;
+  gua_out_color = toneMap(abuffer_accumulation_color.rgb);
 
 #if @gua_debug_tiles@
   vec3 color_codes[] = {vec3(1,0,0), vec3(0,1,0), vec3(0,0,1), vec3(1,1,0), vec3(1,0,1), vec3(0,1,1)};
