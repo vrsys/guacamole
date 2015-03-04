@@ -40,11 +40,11 @@ namespace gua {
   {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ResourceFactory factory;
-    std::string v_shader = factory.read_shader_file("resources/shaders/skeletal_animation_shader.vert");
-    std::string f_shader = factory.read_shader_file("resources/shaders/skeletal_animation_shader.frag");
+    std::string v_shader = factory.read_shader_file("resources/shaders/skinned_mesh_shader.vert");
+    std::string f_shader = factory.read_shader_file("resources/shaders/skinned_mesh_shader.frag");
 #else
-    std::string v_shader = Resources::lookup_shader("shaders/skeletal_animation_shader.vert");
-    std::string f_shader = Resources::lookup_shader("shaders/skeletal_animation_shader.frag");
+    std::string v_shader = Resources::lookup_shader("shaders/skinned_mesh_shader.vert");
+    std::string f_shader = Resources::lookup_shader("shaders/skinned_mesh_shader.frag");
 #endif
 
     program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
