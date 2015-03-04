@@ -19,12 +19,14 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MESH_HPP
-#define GUA_MESH_HPP
+#ifndef GUA_SKINNED_MESH_HPP
+#define GUA_SKINNED_MESH_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
+#include <gua/renderer/SkeletalAnimationUtils.hpp>
+#include <gua/utils/Mesh.hpp>
 #include <gua/utils/Logger.hpp>
 
 // external headers
@@ -33,55 +35,29 @@
 
 #include <vector>
 #include <map>
-#include <assimp/scene.h>       // Output data structure
+#include <assimp/scene.h>
 #include <fbxsdk.h>
-
-namespace to_gua{
-
-scm::math::mat4f mat4(aiMatrix4x4 const& m);
-scm::math::mat4f mat4(FbxAMatrix const& m);
-
-template<typename T>
-scm::math::vec3f vec3(T const& v) {
-  scm::math::vec3f res(v[0], v[1], v[2]);
-  return res;
-}
-
-template<typename T>
-scm::math::vec2f vec2(T const& v) {
-  scm::math::vec2f res(v[0], v[1]);
-  return res;
-}
-
-template<typename T>
-scm::math::vec4f vec4(T const& v) {
-  scm::math::vec4 res(v[0], v[1], v[2], v[3]);
-  return res;
-}
-
-scm::math::quatf quat(aiQuaternion const& q);
-scm::math::quatf quat(FbxQuaternion const& q);
-
-}
-
+ 
 namespace gua {
 
-struct Vertex {
+struct SkinnedVertex {
   scm::math::vec3f pos;
   scm::math::vec2f tex;
   scm::math::vec3f normal;
   scm::math::vec3f tangent;
   scm::math::vec3f bitangent;
+  scm::math::vec4f bone_weights;
+  scm::math::vec4i bone_ids;
 };
 
-struct Mesh {
+struct SkinnedMesh {
  public:
-  Mesh();
+  SkinnedMesh();
 
-  Mesh(aiMesh const& mesh);
-  Mesh(FbxMesh& mesh);
+  SkinnedMesh(aiMesh const& mesh, Node const& root = Node{});
+  SkinnedMesh(FbxMesh& mesh, Node const& root = Node{});
 
-  void copy_to_buffer(Vertex* vertex_buffer)  const;
+  void copy_to_buffer(SkinnedVertex* vertex_buffer)  const;
 
   // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3f> positions;
@@ -89,15 +65,17 @@ struct Mesh {
   std::vector<scm::math::vec2f> texCoords;
   std::vector<scm::math::vec3f> tangents;
   std::vector<scm::math::vec3f> bitangents;
+  std::vector<weight_map> weights;
   std::vector<unsigned> indices;
 
   unsigned int num_vertices;
   unsigned int num_triangles;
 
  private:
+  void init_weights(aiMesh const& mesh, Node const& root);
+  std::vector<weight_map> get_weights(FbxMesh const& mesh, Node const& root);
 };
-
 
 }
 
-#endif //GUA_MESH_HPP
+#endif //GUA_SKINNED_MESH_HPP
