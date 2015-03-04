@@ -27,6 +27,10 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/utils/Trackball.hpp>
 
+#include <gua/renderer/BBoxPass.hpp>
+#include <gua/renderer/TexturedQuadPass.hpp>
+#include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
+
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -66,51 +70,40 @@ int main(int argc, char** argv) {
   auto mat1(load_mat("data/materials/override.gmd"));
 
   gua::SkeletalAnimationLoader loader;
-  gua::SkeletalAnimationLoader loader2;
   gua::TriMeshLoader tri_loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
 
-  // auto teapot2(loader2.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // loader2.load_animation(teapot2, "data/objects/pinky/idle1.md5anim", 0);
-  // loader2.load_animation(teapot2, "data/objects/pinky/attack.md5anim", 0);
-  // loader2.load_animation(teapot2, "data/objects/pinky/run.md5anim", 0);
-  // teapot2->set_draw_bounding_box(true);
+  // auto pinky(loader.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // graph.add_node("/transform2", pinky);
+  // loader.load_animation(pinky, "data/objects/pinky/idle1.md5anim", 0);
+  // loader.load_animation(pinky, "data/objects/pinky/attack.md5anim", 0);
+  // loader.load_animation(pinky, "data/objects/pinky/run.md5anim", 0);
+  // pinky->set_draw_bounding_box(true);
 
-  auto teapot(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // loader.load_animation(teapot, "data/objects/marine/jog.md5anim", 0);
-  // loader.load_animation(teapot, "data/objects/marine/crouch.md5anim", 0);
-  // loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
-  // loader.load_animation(teapot, "data/objects/marine/run.md5anim", 0);
-  // loader.load_animation(teapot, "data/objects/marine/fists_idle.md5anim", 0);
+  // auto bob(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // loader.load_animation(bob, "data/objects/bob/boblampclean.md5anim", 0);
+  auto bob(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  bob->set_draw_bounding_box(true);
+  graph.add_node("/transform", bob);
+  // loader.load_animation(bob, "data/objects/marine/jog.md5anim", 0);
+  loader.load_animation(bob, "data/objects/marine/crouch.md5anim", 0);
+  loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", 0);
+  loader.load_animation(bob, "data/objects/marine/run.md5anim", 0);
+  loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", 0);
 
-  //std::shared_ptr<gua::node::SkeletalAnimationNode> skel_node = std::dynamic_pointer_cast<gua::node::SkeletalAnimationNode>(teapot2);
-  //skel_node->set_animation_mode(0);
+
+  auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // auto fbx(loader2.create_geometry_from_file("fbx", "data/objects/fbx/zombie_axe.fbx", gua::SkeletalAnimationLoader::LOAD_MATERIALS | mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  fbx->set_draw_bounding_box(true);
+  graph.add_node("/transform2", fbx);
+  loader.load_animation(fbx, "data/objects/fbx/Idle.FBX", 0);
+  // loader.load_animation(fbx, "data/objects/fbx/zombie_axe.fbx", 0);
+  loader.load_animation(fbx, "data/objects/fbx/Walk.FBX", 0);
+  loader.load_animation(fbx, "data/objects/fbx/Run.FBX", 0);
+  loader.load_animation(fbx, "data/objects/fbx/Walk.FBX", 0);
   
-  // auto teapot(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // loader.load_animation(teapot, "data/objects/bob/boblampclean.md5anim", 0);
-
-  auto rock(loader2.create_geometry_from_file("fbx", "data/objects/fbx/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // auto rock(loader2.create_geometry_from_file("fbx", "data/objects/fbx/zombie_axe.fbx", gua::SkeletalAnimationLoader::LOAD_MATERIALS | mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  loader2.load_animation(rock, "data/objects/fbx/Idle.FBX", 0);
-  // loader2.load_animation(rock, "data/objects/fbx/zombie_axe.fbx", 0);
-  loader2.load_animation(rock, "data/objects/fbx/Walk.FBX", 0);
-  loader2.load_animation(rock, "data/objects/fbx/Run.FBX", 0);
-  loader2.load_animation(rock, "data/objects/fbx/Walk.FBX", 0);
-  rock->set_draw_bounding_box(true);
-  
-  graph.add_node("/transform2", rock);
-  graph.add_node("/transform", teapot);
-  // graph.add_node("/transform2", teapot2);
-  // graph.add_node("/transform2", teapot2);
-  teapot->set_draw_bounding_box(true);
-
-  /*auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
-  light->data.set_enable_shadows(true);
-  light->scale(10.f);
-  light->rotate(-20, 0.f, 1.f, 0.f);
-  light->translate(-1.f, 0.f,  3.f);*/
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
   light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
@@ -121,10 +114,6 @@ int main(int argc, char** argv) {
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
 
-  //gua::VolumeLoader vloader;
-  //auto volume(vloader.create_volume_from_file("volume", "/opt/gua_vrgeo_2013/data/objects/head_w256_h256_d225_c1_b8.raw", 0));
-  //graph.add_node("/transform", volume);
-
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
@@ -133,19 +122,6 @@ int main(int argc, char** argv) {
   
   gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
 
-  /*auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 2.0);
-  camera->config.set_resolution(resolution);
-  camera->config.set_screen_path("/screen");
-  camera->config.set_scene_graph_name("main_scenegraph");
-  camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(false);
-  camera->config.pipeline_description().get_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg");
-  camera->config.pipeline_description().get_pass<gua::SSAOPassDescription>()
-    .radius(3)
-    .intensity(0.1);*/
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -156,7 +132,13 @@ int main(int argc, char** argv) {
   camera->config.set_enable_stereo(false);
 
   auto pipe = gua::PipelineDescription::make_default();
+  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pipe->add_pass(std::make_shared<gua::SkeletalAnimationPassDescription>());
+  pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
+  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
+  pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+  pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   camera->set_pipeline_description(pipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
