@@ -26,6 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/utils/Pose.hpp>
 // #include <gua/renderer/SkeletalAnimationUtils.hpp>
 
 // external headers
@@ -38,8 +39,7 @@
 #include <fbxsdk.h>
 
 namespace gua {
-class Pose;
-
+  
 class Bone {
  public:
   Bone();

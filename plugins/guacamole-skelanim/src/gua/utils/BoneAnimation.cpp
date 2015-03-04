@@ -1,6 +1,5 @@
 // class header
 #include <gua/utils/BoneAnimation.hpp>
-#include <gua/utils/Mesh.hpp>
 //external headers
 #include <iostream>
 #include <queue>

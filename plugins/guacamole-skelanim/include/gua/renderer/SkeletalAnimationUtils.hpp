@@ -26,19 +26,8 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/utils/Mesh.hpp>
 #include <gua/utils/Bone.hpp>
 #include <gua/utils/SkeletalAnimation.hpp>
-#include <gua/utils/Transformation.hpp>
-
-// external headers
-#include <scm/gl_core.h>
-#include <scm/core/math/quat.h>
-
-#include <vector>
-#include <map>
-#include <assimp/scene.h>       // Output data structure
-#include <fbxsdk.h>
 
 namespace gua {
 <<<<<<< HEAD
@@ -119,6 +108,7 @@ class BoneAnimation {
 =======
 >>>>>>> BoneAnimation and SkeletalAnimation classes moved into seperate files
 
+<<<<<<< HEAD
 class Pose {
  public:
   Pose();
@@ -181,6 +171,8 @@ class SkeletalAnimation {
 
 =======
 >>>>>>> BoneAnimation and SkeletalAnimation classes moved into seperate files
+=======
+>>>>>>> Pose class in seperate file
 namespace blend {
   float cos(float x); 
   float swap(float x); 
