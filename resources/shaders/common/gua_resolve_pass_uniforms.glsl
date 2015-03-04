@@ -6,6 +6,7 @@ uniform int     gua_environment_lighting_mode;
 uniform uvec2   gua_environment_lighting_spheremap;
 uniform uvec2   gua_environment_lighting_cubemap;
 uniform vec3    gua_environment_lighting_color;
+uniform float   gua_horizon_fade;
 
 uniform bool    gua_ssao_enable;
 uniform float   gua_ssao_radius;
