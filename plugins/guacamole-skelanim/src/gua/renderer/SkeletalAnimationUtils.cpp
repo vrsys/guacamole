@@ -335,7 +335,7 @@ void Node::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, Po
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Mesh::Mesh():
+SkinnedMesh::SkinnedMesh():
  positions{},
  normals{},
  texCoords{},
@@ -345,7 +345,7 @@ Mesh::Mesh():
  indices{}
 {}
 
-Mesh::Mesh(FbxMesh& mesh, Node const& root) {
+SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Node const& root) {
   num_vertices = mesh.GetControlPointsCount(); 
 
   std::string UV_set;
@@ -704,7 +704,7 @@ Mesh::Mesh(FbxMesh& mesh, Node const& root) {
   Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << std::endl;
 }
 
-Mesh::Mesh(aiMesh const& mesh, Node const& root) {   
+SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Node const& root) {   
   num_triangles = mesh.mNumFaces;
   num_vertices = mesh.mNumVertices; 
   
@@ -769,7 +769,7 @@ Mesh::Mesh(aiMesh const& mesh, Node const& root) {
 }
 
 
-void Mesh::init_weights(aiMesh const& mesh, Node const& root) {
+void SkinnedMesh::init_weights(aiMesh const& mesh, Node const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
   root.collect_indices(bone_mapping_);
 
@@ -785,7 +785,7 @@ void Mesh::init_weights(aiMesh const& mesh, Node const& root) {
   }
 }
 
-std::vector<weight_map> Mesh::get_weights(FbxMesh const& mesh, Node const& root) {
+std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Node const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
   root.collect_indices(bone_mapping_);
 
@@ -840,7 +840,7 @@ std::vector<weight_map> Mesh::get_weights(FbxMesh const& mesh, Node const& root)
   return temp_weights;
 }
 
-void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
+void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer)  const {
   for (unsigned v(0); v < num_vertices; ++v) {
 
     vertex_buffer[v].pos = positions[v];
@@ -856,20 +856,6 @@ void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
     vertex_buffer[v].bone_weights = scm::math::vec4f(weights[v].weights[0],weights[v].weights[1],weights[v].weights[2],weights[v].weights[3]);
     
     vertex_buffer[v].bone_ids = scm::math::vec4i(weights[v].IDs[0],weights[v].IDs[1],weights[v].IDs[2],weights[v].IDs[3]);
-  }
-}
-void Mesh::copy_to_buffer_static(Vertex* vertex_buffer)  const {
-  for (unsigned v(0); v < num_vertices; ++v) {
-
-    vertex_buffer[v].pos = positions[v];
-
-    vertex_buffer[v].tex = texCoords[v];
-
-    vertex_buffer[v].normal = normals[v];
-
-    vertex_buffer[v].tangent = tangents[v];
-
-    vertex_buffer[v].bitangent = bitangents[v];
   }
 }
 

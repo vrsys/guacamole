@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/GeometryResource.hpp>
-#include <gua/renderer/SkeletalAnimationUtils.hpp>
+#include <gua/utils/Mesh.hpp>
 #include <gua/utils/KDTree.hpp>
 
 // external headers

@@ -30,7 +30,7 @@
 #include <gua/node/TransformNode.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/renderer/SkeletalAnimationUtils.hpp>
+#include <gua/utils/Mesh.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 namespace gua {

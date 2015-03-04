@@ -355,7 +355,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
 
       GeometryDatabase::instance()->add(desc.unique_key() 
         ,std::make_shared<SkeletalAnimationRessource>(
-          Mesh{*dynamic_cast<FbxMesh*>(geo), *root}
+          SkinnedMesh{*dynamic_cast<FbxMesh*>(geo), *root}
           , animation_director
           , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
@@ -403,7 +403,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
 
     GeometryDatabase::instance()->add(desc.unique_key() 
       ,std::make_shared<SkeletalAnimationRessource>(
-        Mesh{*ai_scene->mMeshes[mesh_count], *root}
+        SkinnedMesh{*ai_scene->mMeshes[mesh_count], *root}
         , animation_director
         , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
