@@ -28,6 +28,7 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Mesh.hpp>
 #include <gua/utils/Bone.hpp>
+#include <gua/utils/SkeletalAnimation.hpp>
 #include <gua/utils/Transformation.hpp>
 
 // external headers
@@ -40,6 +41,7 @@
 #include <fbxsdk.h>
 
 namespace gua {
+<<<<<<< HEAD
 class Pose;
 
 <<<<<<< HEAD
@@ -114,6 +116,8 @@ class BoneAnimation {
   std::vector<Key<scm::math::quatf>> rotationKeys;
   std::vector<Key<scm::math::vec3>> translationKeys;
 };
+=======
+>>>>>>> BoneAnimation and SkeletalAnimation classes moved into seperate files
 
 class Pose {
  public:
@@ -141,6 +145,7 @@ class Pose {
   std::map<std::string, Transformation> transforms;
 };
 
+<<<<<<< HEAD
 class SkeletalAnimation {
  public:
   SkeletalAnimation();
@@ -174,6 +179,8 @@ class SkeletalAnimation {
   std::vector<BoneAnimation> boneAnims;
 };
 
+=======
+>>>>>>> BoneAnimation and SkeletalAnimation classes moved into seperate files
 namespace blend {
   float cos(float x); 
   float swap(float x); 
