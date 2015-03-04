@@ -39,7 +39,7 @@ SkeletalAnimationRessource::SkeletalAnimationRessource()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SkeletalAnimationRessource::SkeletalAnimationRessource(Mesh const& mesh, std::shared_ptr<SkeletalAnimationDirector> animation_director, bool build_kd_tree)
+SkeletalAnimationRessource::SkeletalAnimationRessource(SkinnedMesh const& mesh, std::shared_ptr<SkeletalAnimationDirector> animation_director, bool build_kd_tree)
 : vertices_(),
   indices_(),
   vertex_array_(),
@@ -87,11 +87,11 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
     vertices_[ctx.id] =
         ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
                                          scm::gl::USAGE_STATIC_DRAW,
-                                         mesh_.num_vertices * sizeof(Vertex),
+                                         mesh_.num_vertices * sizeof(SkinnedVertex),
                                          0);
 
 
-    Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
+    SkinnedVertex* data(static_cast<SkinnedVertex*>(ctx.render_context->map_buffer(
         vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
     mesh_.copy_to_buffer(data);
@@ -105,13 +105,13 @@ void SkeletalAnimationRessource::upload_to(RenderContext const& ctx) /*const*/{
                                          &mesh_.indices[0]);
 
     vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
-        scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-            0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
-            0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-            0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-            0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-            0, 5, scm::gl::TYPE_VEC4F, sizeof(Vertex))(
-            0, 6, scm::gl::TYPE_VEC4I, sizeof(Vertex)),
+        scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+            0, 1, scm::gl::TYPE_VEC2F, sizeof(SkinnedVertex))(
+            0, 2, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+            0, 3, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+            0, 4, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+            0, 5, scm::gl::TYPE_VEC4F, sizeof(SkinnedVertex))(
+            0, 6, scm::gl::TYPE_VEC4I, sizeof(SkinnedVertex)),
         {vertices_[ctx.id]});
     
     // init non transformated/animated bone boxes

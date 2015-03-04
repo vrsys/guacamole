@@ -123,7 +123,7 @@ void TriMeshRessource::upload_to(RenderContext const& ctx) const {
     Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
         vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
-    mesh_.copy_to_buffer_static(data);
+    mesh_.copy_to_buffer(data);
 
     ctx.render_context->unmap_buffer(vertices_[ctx.id]);
 

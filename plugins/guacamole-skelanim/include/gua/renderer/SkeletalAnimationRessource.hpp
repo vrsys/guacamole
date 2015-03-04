@@ -69,7 +69,7 @@ class SkeletalAnimationRessource : public GeometryResource {
    *
    * \param mesh             The Assimp mesh to load the data from.
    */
-   SkeletalAnimationRessource(Mesh const& mesh, std::shared_ptr<SkeletalAnimationDirector> animation_director, bool build_kd_tree);
+   SkeletalAnimationRessource(SkinnedMesh const& mesh, std::shared_ptr<SkeletalAnimationDirector> animation_director, bool build_kd_tree);
 
   /**
    * Draws the Mesh.
@@ -99,7 +99,7 @@ class SkeletalAnimationRessource : public GeometryResource {
 
   void upload_to(RenderContext const& context) /*const*/;
 
-  Mesh mesh_;
+  SkinnedMesh mesh_;
 
   mutable std::vector<scm::gl::buffer_ptr> vertices_;
   mutable std::vector<scm::gl::buffer_ptr> indices_;

@@ -242,8 +242,13 @@ struct weight_map
 };
 
 
+<<<<<<< HEAD:include/gua/renderer/SkeletalAnimationUtils.hpp
 struct Vertex {
   scm::math::vec3 pos;
+=======
+struct SkinnedVertex {
+  scm::math::vec3f pos;
+>>>>>>> seperate file for Mesh class, moved to utils:plugins/guacamole-skelanim/include/gua/renderer/SkeletalAnimationUtils.hpp
   scm::math::vec2f tex;
   scm::math::vec3 normal;
   scm::math::vec3 tangent;
@@ -252,15 +257,14 @@ struct Vertex {
   scm::math::vec4i bone_ids;
 };
 
-struct Mesh {
+struct SkinnedMesh {
  public:
-  Mesh();
+  SkinnedMesh();
 
-  Mesh(aiMesh const& mesh, Node const& root = Node{});
-  Mesh(FbxMesh& mesh, Node const& root = Node{});
+  SkinnedMesh(aiMesh const& mesh, Node const& root = Node{});
+  SkinnedMesh(FbxMesh& mesh, Node const& root = Node{});
 
-  void copy_to_buffer(Vertex* vertex_buffer)  const;
-  void copy_to_buffer_static(Vertex* vertex_buffer)  const;
+  void copy_to_buffer(SkinnedVertex* vertex_buffer)  const;
 
   // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3> positions;
