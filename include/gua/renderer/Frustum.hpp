@@ -25,8 +25,17 @@
 // guacamole headers
 #include <gua/math/BoundingBox.hpp>
 #include <gua/math/math.hpp>
+#include <gua/scenegraph/PickResult.hpp>
+ 
+#include <set>
 
 namespace gua {
+
+struct Ray;
+
+namespace node {
+  class RayNode;
+}
 
 /**
  *
@@ -63,7 +72,14 @@ class GUA_DLL Frustum {
   inline float get_clip_near() const { return clip_near_; }
   inline float get_clip_far() const { return clip_far_; }
 
-  bool is_inside(math::BoundingBox<math::vec3> const& bbox) const;
+  bool intersects(math::BoundingBox<math::vec3> const& bbox) const;
+  bool contains(math::vec3 const& point) const;
+
+  std::set<PickResult> const ray_test(node::RayNode const& ray,
+                                      int options = PickResult::PICK_ALL);
+
+  std::set<PickResult> const ray_test(Ray const& ray,
+                                      int options = PickResult::PICK_ALL);
 
  private:
 

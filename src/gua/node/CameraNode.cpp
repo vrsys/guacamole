@@ -23,7 +23,7 @@
 #include <gua/node/CameraNode.hpp>
 
 // guacamole header
-#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/scenegraph.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
 
@@ -49,6 +49,12 @@ CameraNode::CameraNode(std::string const& name,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+Frustum CameraNode::get_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return make_frustum(graph, get_world_transform(), config, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<Node> CameraNode::copy() const {
     return std::make_shared<CameraNode>(get_name(), pipeline_description_, config, get_transform());
 }
@@ -65,6 +71,40 @@ SerializedCameraNode CameraNode::serialize() const {
     s.pipeline_description = pipeline_description_;
 
     return s;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& camera_transform, CameraNode::Configuration const& config, CameraMode mode) {
+    std::string screen_name(mode != CameraMode::RIGHT ? config.left_screen_path() : config.right_screen_path());
+    auto screen_it(graph[screen_name]);
+    auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
+    if (!screen) {
+        Logger::LOG_WARNING << "Cannot make Frustum: No valid screen specified" << std::endl;
+        return Frustum();
+    }
+
+    auto transform(camera_transform);
+
+    if (config.get_enable_stereo()) {
+        if (mode != CameraMode::RIGHT) {
+            transform *= scm::math::make_translation(math::float_t(config.eye_offset() - 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
+        } else {
+            transform *= scm::math::make_translation(math::float_t(config.eye_offset() + 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
+        }
+    }
+
+    if (config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
+        return Frustum::perspective(
+            transform, screen->get_scaled_world_transform(), 
+            config.near_clip(), config.far_clip()
+        );
+    } 
+
+    return Frustum::orthographic(
+        transform, screen->get_scaled_world_transform(), 
+        config.near_clip(), config.far_clip()
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
