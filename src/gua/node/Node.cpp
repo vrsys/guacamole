@@ -65,21 +65,16 @@ namespace node {
     if (self_dirty_)
     {
       math::mat4 old_world_trans(world_transform_);
-      if (is_root()) {
-          world_transform_ = get_transform();
-      } else {
-          world_transform_ = parent_->world_transform_ * get_transform();
-      }
 
       if (is_root()) {
-        world_transform_ = get_transform();
+        world_transform_ = transform_;
       }
       else {
-        world_transform_ = parent_->world_transform_ * get_transform();
+        world_transform_ = parent_->world_transform_ * transform_;
       }
 
       if (world_transform_ != old_world_trans) {
-          on_world_transform_changed.emit(world_transform_);
+        on_world_transform_changed.emit(world_transform_);
       }
 
       self_dirty_ = false;

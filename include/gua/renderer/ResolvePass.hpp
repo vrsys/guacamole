@@ -76,6 +76,7 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
       std::string const& cube_map_negative_z);
 
   ResolvePassDescription& environment_lighting(utils::Color3f const& color);
+  utils::Color3f environment_lighting() const;
 
   ResolvePassDescription& environment_lighting_mode(
       EnvironmentLightingMode mode);

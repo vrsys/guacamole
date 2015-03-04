@@ -176,6 +176,7 @@ void PLODNode::update_bounding_box() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 void PLODNode::update_cache() {
+
   if(geometry_changed_) {
     if(geometry_description_ != "") {
       if(!GeometryDatabase::instance()->contains(geometry_description_)) {
@@ -198,20 +199,35 @@ void PLODNode::update_cache() {
     geometry_changed_ = false;
   }
 
-  // The code below auto-loads a material if it's not already supported by
-  // the MaterialShaderDatabase. It expects a material name like
-  // 
-  // data/materials/ShadelessPLOD.gmd
+  // modified version of Node::upodate_cache -> add local transformation
+  if (self_dirty_)
+  {
+    math::mat4 old_world_trans(world_transform_);
 
-  if (material_changed_ && material_) {
-    if (material_->get_shader_name() != "") {
-      //to fill
+    if (is_root()) {
+      world_transform_ = get_transform();
+    }
+    else {
+      world_transform_ = get_parent()->get_world_transform() * transform_ * geometry_->local_transform();
     }
 
-    material_changed_ = false;
+    if (world_transform_ != old_world_trans) {
+      on_world_transform_changed.emit(world_transform_);
+    }
+
+    self_dirty_ = false;
   }
 
-  GeometryNode::update_cache();
+  if (child_dirty_) {
+    for (auto const& child : get_children()) {
+      child->update_cache();
+    }
+
+    update_bounding_box();
+
+    child_dirty_ = false;
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -58,6 +58,18 @@ public:
            float const threshold = 2.5f,
            bool const enable_backface_culling_by_normal = false);
 
+public:  // method override
+
+#if 1
+
+#else
+  void  set_world_transform(math::mat4 const& transform) override;
+  void  set_transform(math::mat4 const & transform) override;
+  void  scale(math::float_t x, math::float_t y, math::float_t z) override;
+  void  rotate(math::float_t angle, math::float_t x, math::float_t y, math::float_t z) override;
+  void  translate(math::float_t x, math::float_t y, math::float_t z) override;
+#endif
+
 public:  // methods
 
   std::shared_ptr<PLODResource> const& get_geometry() const;

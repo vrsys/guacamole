@@ -53,11 +53,13 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PLODResource::PLODResource(pbr::model_t model_id, bool is_pickable)
-    : model_id_(model_id), is_pickable_(is_pickable) {
+  PLODResource::PLODResource(pbr::model_t model_id, bool is_pickable, math::mat4 const& local_transform)
+    : model_id_(model_id), 
+      is_pickable_(is_pickable),
+      local_transform_(local_transform)
+  {
 
-  scm::gl::boxf bb = pbr::ren::ModelDatabase::GetInstance()->GetModel(model_id)
-      ->kdn_tree()->bounding_boxes()[0];
+  scm::gl::boxf bb = pbr::ren::ModelDatabase::GetInstance()->GetModel(model_id)->kdn_tree()->bounding_boxes()[0];
 
   bounding_box_.min = bb.min_vertex();
   bounding_box_.max = bb.max_vertex();
@@ -101,9 +103,15 @@ void PLODResource::draw(
                                       n.slot_id_ * surfels_per_node,
                                       surfels_per_node_of_model);
     }
-    
   }
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+math::mat4 const& PLODResource::local_transform() const
+{
+  return local_transform_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

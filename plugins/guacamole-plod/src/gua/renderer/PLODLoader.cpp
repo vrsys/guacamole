@@ -62,26 +62,29 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& nod
 
       pbr::model_t model_id = database->AddModel(filename, desc.unique_key());
 
-      auto resource = std::make_shared<PLODResource>(model_id, flags & PLODLoader::MAKE_PICKABLE);
+      math::mat4 local_transform = _load_local_transform(filename);
+
+      auto resource = std::make_shared<PLODResource>(model_id, flags & PLODLoader::MAKE_PICKABLE, local_transform);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
       std::shared_ptr<node::PLODNode> node(new node::PLODNode(filename, desc.unique_key(), filename, material));
       
       node->update_cache();
      
-
       auto bbox = resource->get_bounding_box();
 
       //normalize position?
       auto normalize_position = flags & PLODLoader::NORMALIZE_POSITION;
       if (normalize_position) {
-        node->translate(-bbox.center());
+        auto bbox_center_object_space = local_transform * math::vec4(bbox.center().x, bbox.center().y, bbox.center().z, 1.0);
+        node->translate(-bbox_center_object_space.x, -bbox_center_object_space.y, -bbox_center_object_space.z);
       }
 
       //normalize scale?
       auto normalize_scale = flags & PLODLoader::NORMALIZE_SCALE;
       if (normalize_scale) {
-        node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
+        auto scale = 1.0f / scm::math::length(bbox.max - bbox.min);
+        node->scale(scale, scale, scale);
       }
 
       return node;
@@ -221,9 +224,44 @@ size_t PLODLoader::get_render_budget_in_mb() const {
   return policy->render_budget_in_mb();
 }
 
+////////////////////////////////////////////////////////////////////////////////
 size_t PLODLoader::get_out_of_core_budget_in_mb() const {
   pbr::ren::Policy* policy = pbr::ren::Policy::GetInstance();
   return policy->out_of_core_budget_in_mb();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+math::mat4 PLODLoader::_load_local_transform(std::string const& filename) const {
+
+  auto tf_filename = boost::filesystem::change_extension(filename, "tf");
+
+  if (boost::filesystem::exists(tf_filename)) {
+    // try to load matrix
+    std::array<math::float_t, 16> input_mat;
+    bool load_matrix_success = false;
+
+    try {
+      std::ifstream fstr(tf_filename.c_str(), std::ios::in);
+      for (unsigned i = 0; i != input_mat.size(); ++i) {
+        fstr >> input_mat[i];
+      }
+      fstr.close();
+      load_matrix_success = true;
+    }
+    catch (...) {
+    }
+
+    if (load_matrix_success) {
+      return math::mat4(input_mat[0], input_mat[4], input_mat[8], input_mat[12],
+        input_mat[1], input_mat[5], input_mat[9], input_mat[13],
+        input_mat[2], input_mat[6], input_mat[10], input_mat[14],
+        input_mat[3], input_mat[7], input_mat[11], input_mat[15]);
+    }
+  }
+
+  // loading failed -> return identity
+  return math::mat4::identity();
 }
+
+}
+
