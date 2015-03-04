@@ -91,6 +91,7 @@ struct SkinnedMesh {
   SkinnedMesh(FbxMesh& mesh, Bone const& root = Bone{});
 
   void copy_to_buffer(SkinnedVertex* vertex_buffer)  const;
+  scm::gl::vertex_format get_vertex_format()  const;
 
   // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3f> positions;

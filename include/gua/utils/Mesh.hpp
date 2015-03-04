@@ -82,6 +82,7 @@ struct Mesh {
   Mesh(FbxMesh& mesh);
 
   void copy_to_buffer(Vertex* vertex_buffer)  const;
+  scm::gl::vertex_format get_vertex_format()  const;
 
   // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3f> positions;
