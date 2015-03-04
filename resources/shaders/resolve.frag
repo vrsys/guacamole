@@ -51,6 +51,12 @@ vec3 environment_lighting (in ShadingTerms T)
   vec3 env_color = vec3(0);
   vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.Vn));
 
+  // http://marmosetco.tumblr.com/post/81245981087
+  float gua_horizon_fade = 1.3;
+  vec3 R = reflect(-T.Vn, T.N);
+  float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
+  horizon *= horizon;
+
   switch (gua_environment_lighting_mode) {
     case 0 : // spheremap
       vec2 texcoord = longitude_latitude(T.N);
@@ -60,10 +66,8 @@ vec3 environment_lighting (in ShadingTerms T)
       env_color = brdf_spec * vec3(0.0); // not implemented yet!
       break;
     case 2 : // single color
-
       vec3 brdf_diff = T.diffuse;
-
-      env_color = (brdf_diff + brdf_spec) * gua_environment_lighting_color;
+      env_color = (brdf_diff + (horizon * brdf_spec)) * gua_horizon_fade * gua_environment_lighting_color;
       break;
   };
 
@@ -223,6 +227,9 @@ void main() {
   }
 
   gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
+  // toneMap
+  // color correction
+  // vignette
 
 #if @gua_debug_tiles@
   vec3 color_codes[] = {vec3(1,0,0), vec3(0,1,0), vec3(0,0,1), vec3(1,1,0), vec3(1,0,1), vec3(0,1,1)};
