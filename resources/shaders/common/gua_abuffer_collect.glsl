@@ -81,6 +81,10 @@ void abuf_insert(float depth)
 void submit_fragment(float depth)
 {
 #if @enable_abuffer@
+  if (gua_alpha < 1.0 - @abuf_insertion_threshold@) {
+    discard;
+  }
+
   if (gua_alpha > @abuf_insertion_threshold@) {
     @include "gua_write_gbuffer.glsl"
   }
@@ -89,7 +93,7 @@ void submit_fragment(float depth)
     discard;
   }
 #else
-    @include "gua_write_gbuffer.glsl"
+  @include "gua_write_gbuffer.glsl"
 #endif
 }
 
