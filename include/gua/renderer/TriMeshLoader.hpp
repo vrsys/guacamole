@@ -62,7 +62,8 @@ class GUA_DLL TriMeshLoader {
      OPTIMIZE_GEOMETRY = 1 << 1,
      MAKE_PICKABLE = 1 << 2,
      NORMALIZE_POSITION = 1 << 3,
-     NORMALIZE_SCALE = 1 << 4
+     NORMALIZE_SCALE = 1 << 4,
+     NO_SHARED_MATERIALS = 1 << 5
    };
 
 public:
@@ -127,7 +128,7 @@ public:
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);
 
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
+  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material, bool no_shared_materials) const;
 
 private: // attributes
 
