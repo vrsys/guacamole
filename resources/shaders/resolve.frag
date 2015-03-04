@@ -206,7 +206,7 @@ void main() {
   float depth = gua_get_depth();
 
 #if @enable_abuffer@
-  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, depth);
+  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
 #else
   bool res = true;
 #endif
