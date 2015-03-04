@@ -25,7 +25,6 @@
 // guacamole headers
 #include <gua/renderer/StencilPass.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/SkeletalAnimationPass.hpp>
 #include <gua/renderer/EmissivePass.hpp>
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
 #include <gua/renderer/LightVisibilityPass.hpp>
@@ -48,7 +47,7 @@ std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
   auto pipe(std::make_shared<PipelineDescription>());
 
   pipe->add_pass(std::make_shared<TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<SkeletalAnimationPassDescription>());
+  // pipe->add_pass(std::make_shared<SkeletalAnimationPassDescription>());
   pipe->add_pass(std::make_shared<TexturedQuadPassDescription>());
   pipe->add_pass(std::make_shared<LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<BBoxPassDescription>());
@@ -106,10 +105,10 @@ std::shared_ptr<TriMeshPassDescription> const& PipelineDescription::get_tri_mesh
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<SkeletalAnimationPassDescription> const& PipelineDescription::get_skel_anim_pass() const
-{
-  return get_pass_by_type<SkeletalAnimationPassDescription>();
-}
+// std::shared_ptr<SkeletalAnimationPassDescription> const& PipelineDescription::get_skel_anim_pass() const
+// {
+//   return get_pass_by_type<SkeletalAnimationPassDescription>();
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<TexturedQuadPassDescription> const& PipelineDescription::get_textured_quad_pass() const

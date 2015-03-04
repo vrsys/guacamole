@@ -30,7 +30,7 @@
 namespace gua {
 
   class TriMeshPassDescription;
-  class SkeletalAnimationPassDescription;
+  // class SkeletalAnimationPassDescription;
   class TexturedQuadPassDescription;
   class LightVisibilityPassDescription;
   class BBoxPassDescription;
@@ -56,7 +56,7 @@ class GUA_DLL PipelineDescription {
   std::shared_ptr<PipelinePassDescription> const& get_pass(std::size_t index) const;
 
   std::shared_ptr<TriMeshPassDescription> const& get_tri_mesh_pass() const;
-  std::shared_ptr<SkeletalAnimationPassDescription> const& get_skel_anim_pass() const;
+  // std::shared_ptr<SkeletalAnimationPassDescription> const& get_skel_anim_pass() const;
   std::shared_ptr<TexturedQuadPassDescription> const& get_textured_quad_pass() const;
   std::shared_ptr<LightVisibilityPassDescription> const& get_light_visibility_pass() const;
   std::shared_ptr<BBoxPassDescription> const& get_bbox_pass() const;
