@@ -33,6 +33,7 @@
 namespace gua {
 namespace node {
 
+class Node;
 struct SerializedCameraNode;
 
 /**
@@ -191,18 +192,21 @@ class GUA_DLL CameraNode : public Node {
    */
   void accept(NodeVisitor& visitor) override;
 
+  friend class  Node;
   friend struct SerializedCameraNode;
 
  private:
-  static Frustum make_frustum(SceneGraph const& graph, 
-                              math::mat4 const& camera_transform, 
-                              CameraNode::Configuration const& config, 
+  static Frustum make_frustum(SceneGraph const& graph,
+                              math::mat4 const& camera_transform,
+                              CameraNode::Configuration const& config,
                               CameraMode mode);
 
   float application_fps_;
   float rendering_fps_;
 
   std::shared_ptr<Node> copy() const override;
+
+  /*virtual*/ void set_scenegraph(SceneGraph* scenegraph);
 
   // based on this description the rendering is performed
   std::shared_ptr<PipelineDescription> pipeline_description_;

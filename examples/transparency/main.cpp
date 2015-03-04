@@ -26,7 +26,7 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 
 int main(int argc, char** argv) {
-  
+
   auto resolution = gua::math::vec2ui(1920, 1080);
 
   // navigation
@@ -192,7 +192,7 @@ int main(int argc, char** argv) {
         gua::math::vec3 sm_translation = gua::math::vec3(ssize.x *(nx - last_mouse_pos.x), ssize.y * (ny - last_mouse_pos.y), 0.f);
         auto object_transform_s = scm::math::inverse(screen->get_world_transform()) * transform2->get_world_transform();
         transform2->set_world_transform( screen->get_world_transform() * scm::math::make_translation(sm_translation) * object_transform_s);
-      } 
+      }
       else {
         if (button_state == 0) { // left
           trackball.rotation(trackball_init_pos.x, trackball_init_pos.y, nx, ny);
@@ -314,7 +314,7 @@ int main(int argc, char** argv) {
   size_t ctr{};
 
   ticker.on_tick.connect([&]() {
-    
+
     screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
 
     if (ctr++ % 150 == 0)
@@ -327,8 +327,8 @@ int main(int argc, char** argv) {
       renderer.stop();
       window->close();
       loop.stop();
-    } else { 
-      renderer.queue_draw({&graph}, {camera});
+    } else {
+      renderer.queue_draw({&graph});
     }
   });
 

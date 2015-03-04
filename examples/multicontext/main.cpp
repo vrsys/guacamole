@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
     plate->rotate(0.04f, 0, 1, 0);
     plate->translate(plate->get_bounding_box().center());
 
-    renderer.queue_draw({ &graph }, {cam1, cam2, cam3, cam4});
+    renderer.queue_draw({ &graph });
   }
 
   return 0;

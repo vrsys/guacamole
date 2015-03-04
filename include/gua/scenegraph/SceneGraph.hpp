@@ -39,8 +39,10 @@ class NodeVisitor;
 struct Ray;
 
 namespace node {
-class RayNode;
-struct SerializedCameraNode;
+  class Node;
+  class CameraNode;
+  class RayNode;
+  struct SerializedCameraNode;
 }
 
 /**
@@ -295,6 +297,13 @@ class GUA_DLL SceneGraph {
                                       int options = PickResult::PICK_ALL,
                                       Mask const& mask = Mask());
 
+  std::vector<node::CameraNode*> const& get_camera_nodes() const {
+    return camera_nodes_;
+  }
+
+  friend class ::gua::node::Node;
+  friend class ::gua::node::CameraNode;
+
  private:
 
   std::shared_ptr<node::Node> find_node(std::string const& path_to_node,
@@ -302,8 +311,14 @@ class GUA_DLL SceneGraph {
 
   bool has_child(std::shared_ptr<node::Node> const& parent, std::string const& child_name) const;
 
+  void add_camera_node(node::CameraNode* camera);
+  void remove_camera_node(node::CameraNode* camera);
+
+
   std::shared_ptr<node::Node> root_;
   std::string name_;
+
+  std::vector<node::CameraNode*> camera_nodes_;
 };
 
 }

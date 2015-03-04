@@ -77,8 +77,7 @@ class GUA_DLL Renderer {
    *
    * \param scene_graphs      The SceneGraphs to be processed.
    */
-  void queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
-                  std::vector<std::shared_ptr<node::CameraNode>> const& cameras);
+  void queue_draw(std::vector<SceneGraph const*> const& scene_graphs);
 
   void stop();
 
@@ -86,7 +85,7 @@ class GUA_DLL Renderer {
 
  private:
 
-  typedef std::tuple<std::shared_ptr<node::SerializedCameraNode>, ConstRenderVectorPtr, std::shared_ptr<node::CameraNode>> Item;
+  typedef std::tuple<std::shared_ptr<node::SerializedCameraNode>, ConstRenderVectorPtr, node::CameraNode*> Item;
   typedef std::shared_ptr<gua::concurrent::Doublebuffer<Item> > Mailbox;
   typedef std::pair<Mailbox, std::thread> Renderclient;
 

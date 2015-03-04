@@ -96,15 +96,30 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
 
     if (config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
         return Frustum::perspective(
-            transform, screen->get_scaled_world_transform(), 
+            transform, screen->get_scaled_world_transform(),
             config.near_clip(), config.far_clip()
         );
-    } 
+    }
 
     return Frustum::orthographic(
-        transform, screen->get_scaled_world_transform(), 
+        transform, screen->get_scaled_world_transform(),
         config.near_clip(), config.far_clip()
     );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void CameraNode::set_scenegraph(SceneGraph* scenegraph) {
+  if (scenegraph_) {
+    scenegraph_->remove_camera_node(this);
+  }
+
+  Node::set_scenegraph(scenegraph);
+
+  if (scenegraph_) {
+    scenegraph_->add_camera_node(this);
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

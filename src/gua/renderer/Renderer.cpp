@@ -152,30 +152,29 @@ Renderer::Renderer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
-                          std::vector<std::shared_ptr<node::CameraNode>> const& cameras) {
+void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
   for (auto graph : scene_graphs) {
     graph->update_cache();
   }
-  auto sgs = garbage_collected_copy(scene_graphs);
-  for (auto& cam : cameras) {
-    auto window_name(cam->config.get_output_window_name());
-    auto rclient(render_clients_.find(window_name));
-    cam->set_application_fps(application_fps_.fps);
-    if (rclient != render_clients_.end()) {
-      rclient->second.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
-    } else {
-      auto window(WindowDatabase::instance()->lookup(window_name));
 
-      if (window) {
-        auto p = spawnDoublebufferred<Item>();
-        p.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
-        render_clients_[window_name] = std::make_pair(p.first, std::thread(Renderer::renderclient, p.second));
+  auto sgs = garbage_collected_copy(scene_graphs);
+
+
+  for (auto graph : scene_graphs) {
+    for (auto& cam : graph->get_camera_nodes()) {
+      auto window_name(cam->config.get_output_window_name());
+      auto rclient(render_clients_.find(window_name));
+      cam->set_application_fps(application_fps_.fps);
+      if (rclient != render_clients_.end()) {
+        rclient->second.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
       } else {
-        Logger::LOG_WARNING << "Cannot render camera: window \""
-                            << window_name
-                            << "\" not registered in WindowDatabase!"
-                            << std::endl;
+        auto window(WindowDatabase::instance()->lookup(window_name));
+
+        if (window) {
+          auto p = spawnDoublebufferred<Item>();
+          p.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
+          render_clients_[window_name] = std::make_pair(p.first, std::thread(Renderer::renderclient, p.second));
+        }
       }
     }
   }

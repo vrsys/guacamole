@@ -41,13 +41,17 @@ namespace gua {
 
 SceneGraph::SceneGraph(std::string const& name)
     : root_(new node::TransformNode("/", math::mat4::identity())),
-      name_(name) {}
+      name_(name) {
+  root_->set_scenegraph(this);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 SceneGraph::SceneGraph(SceneGraph const& graph)
     : root_(graph.root_ ? graph.root_->deep_copy() : nullptr),
-      name_(graph.name_) {}
+      name_(graph.name_) {
+  root_->set_scenegraph(this);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -173,6 +177,27 @@ bool SceneGraph::has_child(std::shared_ptr<node::Node> const& parent,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void SceneGraph::add_camera_node(node::CameraNode* camera) {
+  auto pos(std::find(camera_nodes_.begin(), camera_nodes_.end(), camera));
+
+  if (pos == camera_nodes_.end()) {
+    camera_nodes_.push_back(camera);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void SceneGraph::remove_camera_node(node::CameraNode* camera) {
+  auto pos(std::find(camera_nodes_.begin(), camera_nodes_.end(), camera));
+
+  if (pos != camera_nodes_.end()) {
+    camera_nodes_.erase(pos);
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 void SceneGraph::accept(NodeVisitor & visitor) const { root_->accept(visitor); }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -194,7 +219,7 @@ std::set<PickResult> const SceneGraph::ray_test(Ray const& ray,
 ////////////////////////////////////////////////////////////////////////////////
 
 SerializedScene SceneGraph::serialize(node::SerializedCameraNode const& camera, CameraMode mode) const {
-    
+
     SerializedScene out;
     out.frustum = camera.get_frustum(*this, mode);
     out.center_of_interest = math::get_translation(camera.transform);
