@@ -120,7 +120,7 @@ namespace gua {
     if (cached_node) {
       auto copy(cached_node->deep_copy());
 
-      apply_fallback_material(copy, fallback_material);
+      apply_fallback_material(copy, fallback_material, flags & NO_SHARED_MATERIALS);
 
       copy->set_name(node_name);
       return copy;
@@ -142,7 +142,7 @@ namespace gua {
       auto copy(cached_node->deep_copy());
 
       auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
-      apply_fallback_material(copy, shader->make_new_material());
+      apply_fallback_material(copy, shader->make_new_material(), flags & NO_SHARED_MATERIALS);
 
       copy->set_name(node_name);
       return copy;
@@ -325,17 +325,20 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
 ////////////////////////////////////////////////////////////////////////////////
 
 void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
-                                            std::shared_ptr<Material> const& fallback_material) const
+                                            std::shared_ptr<Material> const& fallback_material,
+                                            bool no_shared_materials) const
 {
   auto g_node(std::dynamic_pointer_cast<node::TriMeshNode>(root));
 
   if (g_node && !g_node->get_material()) {
     g_node->set_material(fallback_material);
     g_node->update_cache();
+  } else if (g_node && no_shared_materials) {
+    g_node->set_material(std::make_shared<Material>(*g_node->get_material()));
   }
 
   for (auto& child : root->get_children()) {
-    apply_fallback_material(child, fallback_material);
+    apply_fallback_material(child, fallback_material, no_shared_materials);
   }
 
 }
