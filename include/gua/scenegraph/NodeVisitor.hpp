@@ -113,7 +113,7 @@ class NodeVisitor {
    *
    * \param cam   Pointer to a SkeletalAnimationNode.
    */
-  virtual void visit(node::SkeletalAnimationNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+  virtual void visit(node::SkeletalAnimationNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
 
   /**
    * Visits a GeometryNode.
