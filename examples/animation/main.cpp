@@ -23,7 +23,7 @@
 #include <memory>
 
 #include <gua/guacamole.hpp>
-#include <gua/renderer/SkeletalAnimationLoader.hpp>
+#include <gua/Skelanim.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/utils/Trackball.hpp>
 
@@ -154,6 +154,10 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
+
+  auto pipe = gua::PipelineDescription::make_default();
+  pipe->add_pass(std::make_shared<gua::SkeletalAnimationPassDescription>());
+  camera->set_pipeline_description(pipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);

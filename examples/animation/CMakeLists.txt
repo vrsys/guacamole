@@ -9,13 +9,15 @@ list(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
 
 link_directories(${LIB_PATHS})
 
-include_directories( ${INCLUDE_PATHS} ${PROJECT_SOURCE_DIR}/include)
+include_directories( ${INCLUDE_PATHS}
+					 ${PROJECT_SOURCE_DIR}/include
+					 ${GUACAMOLE_SKELANIM_INCLUDE_DIR})
 
 add_executable( ${_EXE_NAME} main.cpp)
 
-add_dependencies(${_EXE_NAME} guacamole)
+add_dependencies(${_EXE_NAME} guacamole-skelanim)
 
-list(APPEND LIBS guacamole)
+list(APPEND LIBS guacamole-skelanim)
 
 target_link_libraries( ${_EXE_NAME} debug ${LIBS} optimized ${LIBS})
 
