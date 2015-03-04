@@ -130,7 +130,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         }
       }
 
-      if (current_shader && tri_mesh_node->get_geometry()) 
+      if (current_shader && tri_mesh_node->get_geometry())
       {
         UniformValue model_mat (::scm::math::mat4f(tri_mesh_node->get_cached_world_transform()));
         UniformValue normal_mat (::scm::math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));

@@ -40,6 +40,7 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(stress_test)
     add_subdirectory(transparency)
     add_subdirectory(tiled_shading_test)
+    add_subdirectory(clipping)
   ENDIF (${GUACAMOLE_GLFW3})
   add_subdirectory(screenshot)
 

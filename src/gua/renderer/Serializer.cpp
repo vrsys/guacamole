@@ -154,35 +154,42 @@ bool Serializer::is_visible(node::Node* node) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 bool Serializer::check_clipping_planes(node::Node* node) const {
-  auto bbox(node->get_bounding_box());
-  std::vector<math::vec4f> corners(
-  {
-    math::vec4f(bbox.min.x, bbox.min.y, bbox.min.z, 1),
-    math::vec4f(bbox.max.x, bbox.min.y, bbox.min.z, 1),
-    math::vec4f(bbox.max.x, bbox.max.y, bbox.min.z, 1),
-    math::vec4f(bbox.min.x, bbox.max.y, bbox.min.z, 1),
-    math::vec4f(bbox.min.x, bbox.max.y, bbox.max.z, 1),
-    math::vec4f(bbox.min.x, bbox.min.y, bbox.max.z, 1),
-    math::vec4f(bbox.max.x, bbox.min.y, bbox.max.z, 1),
-    math::vec4f(bbox.max.x, bbox.max.y, bbox.max.z, 1),
-  }
-  );
+  if (!data_->clipping_plane_centers.empty()) {
+    auto bbox(node->get_bounding_box());
+    std::vector<math::vec4f> corners(
+    {
+      math::vec4f(bbox.min.x, bbox.min.y, bbox.min.z, 1),
+      math::vec4f(bbox.max.x, bbox.min.y, bbox.min.z, 1),
+      math::vec4f(bbox.max.x, bbox.max.y, bbox.min.z, 1),
+      math::vec4f(bbox.min.x, bbox.max.y, bbox.min.z, 1),
+      math::vec4f(bbox.min.x, bbox.max.y, bbox.max.z, 1),
+      math::vec4f(bbox.min.x, bbox.min.y, bbox.max.z, 1),
+      math::vec4f(bbox.max.x, bbox.min.y, bbox.max.z, 1),
+      math::vec4f(bbox.max.x, bbox.max.y, bbox.max.z, 1)
+    }
+    );
 
-  for (auto corner: corners) {
-    bool corner_visible(false);
+    for (auto corner: corners) {
+      bool corner_visible(true);
 
-    for (unsigned i(0); i < data_->clipping_plane_centers.size(); ++i) {
-      auto to_center(scm::math::normalize(corner - data_->clipping_plane_centers[i]));
+      for (unsigned i(0); i < data_->clipping_plane_centers.size(); ++i) {
+        auto to_center(scm::math::normalize(corner - data_->clipping_plane_centers[i]));
 
-      corner_visible = scm::math::dot(to_center, data_->clipping_plane_normals[i]) <= 0;
+        if (scm::math::dot(to_center, data_->clipping_plane_normals[i]) > 0) {
+          corner_visible = false;
+          break;
+        }
+      }
+
+      if (corner_visible) {
+        return true;
+      }
     }
 
-    if (corner_visible) {
-      return true;
-    }
+    return false;
   }
 
-  return false;
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

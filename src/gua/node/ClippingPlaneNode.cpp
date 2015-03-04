@@ -48,7 +48,7 @@ math::vec4f ClippingPlaneNode::get_center() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 math::vec4f ClippingPlaneNode::get_normal() const {
-  return math::vec4f(get_cached_world_transform() * math::vec4(0, 0, -1, 0));
+  return math::vec4f(scm::math::normalize(get_cached_world_transform() * math::vec4(0, 0, -1, 0)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
