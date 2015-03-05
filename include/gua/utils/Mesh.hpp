@@ -23,6 +23,7 @@
 #define GUA_MESH_HPP
 
 // guacamole headers
+#include <gua/config.hpp>
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
@@ -32,14 +33,15 @@
 #include <scm/core/math/quat.h>
 
 #include <vector>
-#include <map>
 #include <assimp/scene.h>       // Output data structure
-#include <fbxsdk.h>
+#ifdef GUACAMOLE_FBX
+  #include <fbxsdk.h>
+#endif // GUACAMOLE_FBX
 
 namespace to_gua{
 
 scm::math::mat4f mat4(aiMatrix4x4 const& m);
-scm::math::mat4f mat4(FbxAMatrix const& m);
+scm::math::quatf quat(aiQuaternion const& q);
 
 template<typename T>
 scm::math::vec3f vec3(T const& v) {
@@ -59,9 +61,10 @@ scm::math::vec4f vec4(T const& v) {
   return res;
 }
 
-scm::math::quatf quat(aiQuaternion const& q);
-scm::math::quatf quat(FbxQuaternion const& q);
-
+#ifdef GUACAMOLE_FBX
+  scm::math::mat4f mat4(FbxAMatrix const& m);
+  scm::math::quatf quat(FbxQuaternion const& q);
+#endif
 }
 
 namespace gua {
@@ -79,7 +82,9 @@ struct Mesh {
   Mesh();
 
   Mesh(aiMesh const& mesh);
+#ifdef GUACAMOLE_FBX
   Mesh(FbxMesh& mesh);
+#endif
 
   void copy_to_buffer(Vertex* vertex_buffer)  const;
   scm::gl::vertex_format get_vertex_format()  const;

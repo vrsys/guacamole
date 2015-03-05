@@ -24,8 +24,8 @@
 
 // guacamole headers
 #include <gua/renderer/TriMeshRessource.hpp>
-
 #include <gua/renderer/Material.hpp>
+#include <gua/utils/Mesh.hpp>
 
 // external headers
 #include <string>
@@ -35,7 +35,6 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <fbxsdk.h>
 
 namespace Assimp { class Importer; }
 
@@ -132,17 +131,21 @@ public:
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material, bool no_shared_materials) const;
 
+#ifdef GUACAMOLE_FBX
   std::shared_ptr<node::Node> get_tree(FbxNode& node,
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);
+#endif
 
 private: // attributes
 
   std::string parent_material_name_;
 
   unsigned node_counter_;
-  
+#ifdef GUACAMOLE_FBX
   static FbxScene* load_fbx_file(FbxManager* manager, std::string const& file_path);
+#endif // GUACAMOLE_FBX
+
   static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
   static unsigned mesh_counter_;
 };
