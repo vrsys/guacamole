@@ -13,25 +13,23 @@ scm::math::mat4f mat4(aiMatrix4x4 const& m) {
                       ,m.a4,m.b4,m.c4,m.d4);
   return res;
 }
-scm::math::mat4f mat4(FbxAMatrix const& m) {
-  //TODO:: better correction of negative  zeros
-  auto correct = [](float const& f)->float {return f == -0.0f ? 0.0f : f;};
-  scm::math::mat4f res(correct(m[0][0]),correct(m[0][1]),correct(m[0][2]),correct(m[0][3]),
-                      correct(m[1][0]),correct(m[1][1]),correct(m[1][2]),correct(m[1][3]),
-                      correct(m[2][0]),correct(m[2][1]),correct(m[2][2]),correct(m[2][3]),
-                      correct(m[3][0]),correct(m[3][1]),correct(m[3][2]),correct(m[3][3]));
-  return res;
-}
-
 scm::math::quatf quat(aiQuaternion const& q) {
   scm::math::quatf res(q.w, q.x, q.y, q.z);
+  return res;
+}
+#ifdef GUACAMOLE_FBX
+scm::math::mat4f mat4(FbxAMatrix const& m) {
+  scm::math::mat4f res(m[0][0],m[0][1],m[0][2],m[0][3],
+                      m[1][0],m[1][1],m[1][2],m[1][3],
+                      m[2][0],m[2][1],m[2][2],m[2][3],
+                      m[3][0],m[3][1],m[3][2],m[3][3]);
   return res;
 }
 scm::math::quatf quat(FbxQuaternion const& q) {
   scm::math::quatf res(q[3], q[0], q[1], q[2]);
   return res;
 }
-
+#endif
 }
 
 namespace gua {
@@ -44,7 +42,7 @@ Mesh::Mesh():
  bitangents{},
  indices{}
 {}
-
+#ifdef GUACAMOLE_FBX
 Mesh::Mesh(FbxMesh& mesh) {
   num_vertices = mesh.GetControlPointsCount(); 
 
@@ -386,6 +384,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   //output reduction info
   Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << std::endl;
 }
+#endif // GUACAMOLE_FBX
 
 Mesh::Mesh(aiMesh const& mesh) {   
   num_triangles = mesh.mNumFaces;

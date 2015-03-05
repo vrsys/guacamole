@@ -28,6 +28,7 @@
 #include <gua/utils/Transformation.hpp>
 #include <gua/utils/Mesh.hpp>
 
+#include <fbxsdk.h>
 namespace gua {
 
 template<class T>

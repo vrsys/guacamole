@@ -193,6 +193,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#ifdef GUACAMOLE_FBX
 std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const& fbx_material, std::string const& assets_directory) const {
   PathParser path;
   path.parse(assets_directory);
@@ -278,5 +279,5 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
 
   return new_mat;
 }
-
+#endif
 }

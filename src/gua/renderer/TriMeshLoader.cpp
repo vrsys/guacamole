@@ -30,7 +30,6 @@
 #include <gua/node/TransformNode.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/utils/Mesh.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 namespace gua {
@@ -158,8 +157,8 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
   // MESSAGE("Loading mesh file %s", file_name.c_str());
 
   if (file.is_valid()) {
+#ifdef GUACAMOLE_FBX
     auto point_pos(file_name.find_last_of("."));
-
     if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX" ) {
 
       //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
@@ -194,7 +193,9 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
       return get_tree(*scene->GetRootNode(), file_name, flags, count);
 
     }
-    else {  
+    else
+#endif
+    {  
       auto importer = std::make_shared<Assimp::Importer>();
 
       importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
@@ -293,10 +294,11 @@ bool TriMeshLoader::is_supported(std::string const& file_name) const {
   if (file_name.substr(point_pos + 1) == "raw") {
     return false;
   }
+#ifdef GUACAMOLE_FBX
   else if (file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX"){
     return true;
   }
-
+#endif
   return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
 }
 
@@ -359,7 +361,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
 
   return group;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     std::shared_ptr<Assimp::Importer> const& importer,
@@ -452,7 +454,7 @@ void TriMeshLoader::apply_fallback_material(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef GUACAMOLE_FBX
 FbxScene* TriMeshLoader::load_fbx_file(FbxManager* manager, std::string const& file_name) {
   // Create an importer.
   FbxImporter* lImporter = FbxImporter::Create(manager,"");
@@ -501,5 +503,5 @@ FbxScene* TriMeshLoader::load_fbx_file(FbxManager* manager, std::string const& f
   return scene;
   // TODO: destruction of fbx helper objects
 }
-
+#endif
 }
