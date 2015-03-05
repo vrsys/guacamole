@@ -447,17 +447,14 @@ SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root) {
   }
 
   // Populate the index buffer
-  for (uint i = 0 ; i < mesh.mNumFaces ; i++) {
-    const aiFace& Face = mesh.mFaces[i];
-
-    if(Face.mNumIndices != 3) {
-      Logger::LOG_ERROR << "InitMesh - face doesnt have 3 vertices" << std::endl;
-      assert(false);
+  for(uint i = 0 ; i < mesh.mNumFaces ; i++) {
+    const aiFace& face = mesh.mFaces[i];
+    // triangulate face if necessary
+    for(unsigned j = 2; j < face.mNumIndices; ++j) {
+      indices.push_back(face.mIndices[0]);
+      indices.push_back(face.mIndices[j - 1]);
+      indices.push_back(face.mIndices[j]);
     }
-
-    indices.push_back(Face.mIndices[0]);
-    indices.push_back(Face.mIndices[1]);
-    indices.push_back(Face.mIndices[2]);
   }
 }
 
