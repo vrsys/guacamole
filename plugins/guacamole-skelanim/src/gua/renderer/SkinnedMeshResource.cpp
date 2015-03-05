@@ -107,13 +107,13 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
                                          &mesh_.indices[0]);
 
     vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
-        scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-            0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
-            0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-            0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-            0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-            0, 5, scm::gl::TYPE_UINT, sizeof(Vertex))(
-            0, 6, scm::gl::TYPE_UINT, sizeof(Vertex)),
+        scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+            0, 1, scm::gl::TYPE_VEC2F, sizeof(SkinnedVertex))(
+            0, 2, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+            0, 3, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+            0, 4, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
+            0, 5, scm::gl::TYPE_UINT, sizeof(SkinnedVertex))(
+            0, 6, scm::gl::TYPE_UINT, sizeof(SkinnedVertex)),
         {vertices_[ctx.id]});
 
 
