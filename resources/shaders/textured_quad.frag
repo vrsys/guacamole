@@ -24,22 +24,22 @@
 uniform uvec2 gua_in_texture;
 uniform ivec2 flip;
 
-in vec2 gua_quad_coords;
-in vec3 gua_normal;
+in vec2 gua_varying_quad_coords;
+in vec3 gua_varying_normal;
 
-@include "shaders/common/gua_fragment_shader_output.glsl"
+@include "common/gua_camera_uniforms.glsl"
+@include "common/gua_fragment_shader_output.glsl"
+@include "common/gua_global_variable_declaration.glsl"
+@include "common/gua_abuffer_collect.glsl"
 
 void main() {
-    vec4 color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5);
+    vec4 color = texture2D(sampler2D(gua_in_texture), (gua_varying_quad_coords - 0.5)*flip + 0.5);
 
-    if (color.a <= 0.8) discard;
+    gua_alpha = color.a;
+    gua_color = color.rgb;
+    gua_emissivity = 1.0;
+    gua_roughness = 0.0;
+    gua_metalness = 0.0;
 
-    vec3 gua_color = color.rgb;
-
-    float gua_emissivity = 1.0;
-    float gua_roughness = 0.0;
-    float gua_metalness = 0.0;
-    bool gua_flags_passthrough = false;
-
-    @include "shaders/common/gua_write_gbuffer.glsl"
+    submit_fragment(gl_FragCoord.z);
 }
