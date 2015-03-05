@@ -12,7 +12,7 @@ SkinnedMesh::SkinnedMesh():
  texCoords{},
  tangents{},
  bitangents{},
- weights{},
+ // weights{},
  indices{}
 {}
 
@@ -316,6 +316,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     ctrlpt_weights = get_weights(mesh, root);
     has_weights = ctrlpt_weights.size() > 0;
   }
+  std::vector<weight_map> temp_weights{};
 
   // Reserve space in the vectors for the vertex attributes and indices
   positions.reserve(num_vertices);
@@ -333,12 +334,12 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     tangents.resize(num_vertices, scm::math::vec3f(0.0f));
     bitangents.resize(num_vertices, scm::math::vec3f(0.0f));
   }
-  if(has_weights) {
-    weights.reserve(num_vertices);  
-  }
-  else {
-    weights.resize(num_vertices);
-  }
+  // if(has_weights) {
+  //   weights.reserve(num_vertices);  
+  // }
+  // else {
+  //   weights.resize(num_vertices);
+  // }
   //load reduced attributes
   unsigned curr_vert = 0;
   for(std::vector<temp_vert> const& verts : temp_verts) {
@@ -357,11 +358,17 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
         texCoords.push_back(to_gua::vec3(poly_uvs[vert.uv]));
       }
       if(has_weights) {
-        weights.push_back(ctrlpt_weights[vert.point]);
+        // for(uint i(0);i<ctrlpt_weights[vert.point].weights.size();++i){
+        //   bone_ids.push_back(ctrlpt_weights[vert.point].IDs[i]);
+        //   bone_weights.push_back(ctrlpt_weights[vert.point].weights[i]);
+        // }
+        // bone_counts.push_back(ctrlpt_weights[vert.point].weights.size());
+        temp_weights.push_back(ctrlpt_weights[vert.point]);
       }
       ++curr_vert;
     }
   }
+
 
   //load reduced triangles
   indices.reserve(num_triangles * 3);
@@ -369,6 +376,14 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     indices.push_back(tri.verts[0]);
     indices.push_back(tri.verts[1]);
     indices.push_back(tri.verts[2]);
+  }
+
+  for(auto const& w : temp_weights){
+    for(uint i(0); i<w.weights.size(); ++i){
+      bone_ids.push_back(w.IDs[i]);
+      bone_weights.push_back(w.weights[i]);
+    }
+    bone_counts.push_back(w.weights.size());
   }
 
   //output reduction info
@@ -385,7 +400,7 @@ SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root) {
   texCoords.reserve(num_vertices);
   tangents.reserve(num_vertices);
   bitangents.reserve(num_vertices);
-  weights.resize(num_vertices);
+  // weights.resize(num_vertices);
   indices.reserve(num_triangles * 3);
 
 
@@ -422,8 +437,15 @@ SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root) {
     texCoords.push_back(pTexCoord);
   }
 
-  init_weights(mesh, root);
-  
+  auto temp_weights = get_weights(mesh, root);
+  for(auto const& w : temp_weights){
+    for(uint i(0); i < w.weights.size(); ++i){
+      bone_ids.push_back(w.IDs[i]);
+      bone_weights.push_back(w.weights[i]);
+    }
+    bone_counts.push_back(w.weights.size());
+  }
+
   // Populate the index buffer
   for (uint i = 0 ; i < mesh.mNumFaces ; i++) {
     const aiFace& Face = mesh.mFaces[i];
@@ -439,10 +461,11 @@ SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root) {
   }
 }
 
-
-void SkinnedMesh::init_weights(aiMesh const& mesh, Bone const& root) {
+std::vector<weight_map> SkinnedMesh::get_weights(aiMesh const& mesh, Bone const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
   root.collect_indices(bone_mapping_);
+  
+  std::vector<weight_map> temp_weights{mesh.mNumVertices};
 
   for (uint i = 0 ; i < mesh.mNumBones ; i++) {
     std::string bone_name(mesh.mBones[i]->mName.data);      
@@ -451,18 +474,12 @@ void SkinnedMesh::init_weights(aiMesh const& mesh, Bone const& root) {
     for (uint j = 0 ; j < mesh.mBones[i]->mNumWeights ; j++) {
       uint VertexID = mesh.mBones[i]->mWeights[j].mVertexId;
       float Weight  = mesh.mBones[i]->mWeights[j].mWeight;                   
-      weights[VertexID].AddBoneData(BoneIndex, Weight);
+      temp_weights[VertexID].AddBoneData(BoneIndex, Weight);
     }
   }
 
-  for(auto w : weights){
-    for(uint i(0);i<w.Weights.size();++i){
-      all_bone_ids.push_back(w.IDs[i]);
-      all_bone_weights.push_back(w.Weights[i]);
-    }
-  }
+  return temp_weights;
 }
-
 
 std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Bone const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
@@ -533,11 +550,11 @@ void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer, uint resource_off
 
     vertex_buffer[v].bitangent = bitangents[v];
 
-    vertex_buffer[v].bone_id_offset= bone_offset;
+    vertex_buffer[v].bone_id_offset = bone_offset;
 
-    bone_offset+=weights[v].Weights.size();
+    vertex_buffer[v].nr_of_bones = bone_counts[v];
     
-    vertex_buffer[v].nr_of_bones= weights[v].Weights.size();
+    bone_offset += bone_counts[v];
   }
 }
 
@@ -548,18 +565,18 @@ scm::gl::vertex_format SkinnedMesh::get_vertex_format() const {
     0, 2, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
     0, 3, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
     0, 4, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-    0, 5, scm::gl::TYPE_VEC4F, sizeof(SkinnedVertex))(
-    0, 6, scm::gl::TYPE_VEC4I, sizeof(SkinnedVertex));
+    0, 5, scm::gl::TYPE_UINT, sizeof(SkinnedVertex))(
+    0, 6, scm::gl::TYPE_UINT, sizeof(SkinnedVertex));
 }
 
 std::vector<uint> const& 
 SkinnedMesh::get_bone_ids()const{
-  return all_bone_ids;
+  return bone_ids;
 }
 
 std::vector<float> const& 
 SkinnedMesh::get_bone_weights()const{
-  return all_bone_weights;
+  return bone_weights;
 }
 
 } // namespace gua
