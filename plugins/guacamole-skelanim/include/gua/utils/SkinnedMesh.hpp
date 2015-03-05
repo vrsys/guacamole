@@ -97,6 +97,10 @@ struct SkinnedMesh {
  private:
   static std::vector<bone_influences> get_weights(aiMesh const& mesh, Bone const& root);
   static std::vector<bone_influences> get_weights(FbxMesh const& mesh, Bone const& root);
+
+  template<typename T>
+  static std::vector<unsigned> get_container_index(FbxArray<T> const& container);
+
 };
 
 }
