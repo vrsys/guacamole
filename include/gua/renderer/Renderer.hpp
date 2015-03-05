@@ -49,9 +49,7 @@ namespace node {
  */
 class GUA_DLL Renderer {
  public:
-  typedef std::vector<std::unique_ptr<const SceneGraph> > RenderVector;
-  typedef RenderVector const                              ConstRenderVector;
-  typedef std::shared_ptr<ConstRenderVector>              ConstRenderVectorPtr;
+  using SceneGraphs = std::vector<std::unique_ptr<const SceneGraph> >;
 
   /**
    * Constructor.
@@ -86,9 +84,14 @@ class GUA_DLL Renderer {
 
  private:
 
-  typedef std::tuple<std::shared_ptr<node::SerializedCameraNode>, ConstRenderVectorPtr, std::shared_ptr<node::CameraNode>> Item;
-  typedef std::shared_ptr<gua::concurrent::Doublebuffer<Item> > Mailbox;
-  typedef std::pair<Mailbox, std::thread> Renderclient;
+  struct Item {
+    std::shared_ptr<node::SerializedCameraNode> serialized_cam;
+    std::shared_ptr<const SceneGraphs>          scene_graphs;
+    std::shared_ptr<node::CameraNode>           camera_node;
+  };
+
+  using Mailbox = std::shared_ptr<gua::concurrent::Doublebuffer<Item> >;
+  using Renderclient = std::pair<Mailbox, std::thread>;
 
   static void renderclient(Mailbox in);
 
