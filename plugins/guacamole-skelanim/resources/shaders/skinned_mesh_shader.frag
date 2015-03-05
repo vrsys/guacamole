@@ -15,9 +15,14 @@
 @material_method_declarations_frag@
 
 void main() {
+
+  //vec3 tmp = gua_varying_color;
+  
   @material_input@
   @include "common/gua_global_variable_assignment.glsl"
   @material_method_calls_frag@
+
+  //gua_color = tmp;
 
   submit_fragment(gl_FragCoord.z);
 }

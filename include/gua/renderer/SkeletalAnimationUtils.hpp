@@ -231,7 +231,7 @@ struct Mesh {
   Mesh(aiMesh const& mesh, Node const& root = Node{});
   Mesh(FbxMesh& mesh);
 
-  void copy_to_buffer(Vertex* vertex_buffer)  const;
+  void copy_to_buffer(Vertex* vertex_buffer, uint resource_offset)  const;
   void copy_to_buffer_static(Vertex* vertex_buffer)  const;
 
   // std::vector<Vertex> vertices;

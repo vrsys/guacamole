@@ -384,8 +384,8 @@ void Mesh::init_weights(aiMesh const& mesh, Node const& root) {
   }
 }
 
-void Mesh::copy_to_buffer(Vertex* vertex_buffer)  const {
-  uint bone_offset{0};
+void Mesh::copy_to_buffer(Vertex* vertex_buffer, uint resource_offset)  const {
+  uint bone_offset{resource_offset};
   for (unsigned v(0); v < num_vertices; ++v) {
 
     vertex_buffer[v].pos = positions[v];

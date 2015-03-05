@@ -29,8 +29,7 @@
 #include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
-// external headers
-#include <assimp/postprocess.h>
+#include <scm/gl_core/buffer_objects/scoped_buffer_map.h>
 
 namespace gua {
 
@@ -94,7 +93,10 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
     SkinnedVertex* data(static_cast<SkinnedVertex*>(ctx.render_context->map_buffer(
         vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
-    mesh_.copy_to_buffer(data);
+    // get a per-context resource
+    auto resource = ctx.resources.get<SharedBoneResource>();
+
+    mesh_.copy_to_buffer(data,resource->offset);
 
     ctx.render_context->unmap_buffer(vertices_[ctx.id]);
 
@@ -114,22 +116,68 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
             0, 6, scm::gl::TYPE_UINT, sizeof(Vertex)),
         {vertices_[ctx.id]});
 
-    std::cout<<mesh_.get_bone_ids().size()<<std::endl;
 
-    //new storage buffer 
-    bone_ids_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, 
-                                                           scm::gl::USAGE_STATIC_DRAW, 
-                                                           mesh_.get_bone_ids().size() * sizeof(uint),
-                                                           &mesh_.get_bone_ids()[0]);
+    // init/reinit if necessary
+    if (resource->offset == 0) {
 
-    std::cout<<mesh_.get_bone_ids().size()<<std::endl;
+      //new storage buffer 
+      resource->bone_ids_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, 
+                                                             scm::gl::USAGE_STREAM_COPY, 
+                                                             mesh_.get_bone_ids().size() * sizeof(uint),
+                                                             &mesh_.get_bone_ids()[0]);
 
+      //new storage buffer 
+      resource->bone_weights_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, 
+                                                             scm::gl::USAGE_STREAM_COPY, 
+                                                             mesh_.get_bone_weights().size() * sizeof(float),
+                                                             &mesh_.get_bone_weights()[0]);
 
-    //new storage buffer 
-    bone_weights_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, 
-                                                           scm::gl::USAGE_STATIC_DRAW, 
-                                                           mesh_.get_bone_weights().size() * sizeof(float),
-                                                           &mesh_.get_bone_weights()[0]);
+      ctx.render_context->bind_storage_buffer(resource->bone_ids_,2);
+      ctx.render_context->bind_storage_buffer(resource->bone_weights_,3);
+
+    }
+    else{
+
+      //read old data
+      char* old_ids = new char[resource->offset * sizeof(uint)];
+      {
+        scm::gl::scoped_buffer_map read_ids_map(ctx.render_context, resource->bone_ids_, 0, resource->offset * sizeof(uint), scm::gl::ACCESS_READ_WRITE);
+        memcpy(old_ids, read_ids_map.data_ptr(), resource->offset * sizeof(uint));
+      }
+
+      //resize id buffer:
+      ctx.render_device->resize_buffer(resource->bone_ids_, (resource->offset+mesh_.get_bone_ids().size()) * sizeof(uint));
+      // write old and new data:
+      {
+        scm::gl::scoped_buffer_map write_ids_map(ctx.render_context, resource->bone_ids_,0, (resource->offset+mesh_.get_bone_ids().size()) * sizeof(uint), scm::gl::ACCESS_WRITE_ONLY);
+        memcpy(write_ids_map.data_ptr(), old_ids, resource->offset * sizeof(uint));
+        memcpy(write_ids_map.data_ptr()+resource->offset * sizeof(uint), &mesh_.get_bone_ids()[0], mesh_.get_bone_ids().size() * sizeof(uint));
+      }
+
+      //read old data:
+      char* old_weights = new char[resource->offset * sizeof(float)];
+      {
+        scm::gl::scoped_buffer_map read_weights_map(ctx.render_context, resource->bone_weights_, 0, resource->offset * sizeof(float), scm::gl::ACCESS_READ_WRITE);
+        memcpy(old_weights, read_weights_map.data_ptr(), resource->offset * sizeof(float));
+      }
+      //resize weight buffer:
+      ctx.render_device->resize_buffer(resource->bone_weights_, (resource->offset+mesh_.get_bone_weights().size()) * sizeof(float));
+      // write old and new data:
+      {
+        scm::gl::scoped_buffer_map write_weights_map(ctx.render_context, resource->bone_weights_,0, (resource->offset+mesh_.get_bone_weights().size()), scm::gl::ACCESS_WRITE_ONLY);
+        memcpy(write_weights_map.data_ptr(), old_weights, resource->offset * sizeof(float));
+        memcpy(write_weights_map.data_ptr()+resource->offset * sizeof(uint), &mesh_.get_bone_weights()[0], mesh_.get_bone_weights().size() * sizeof(float));
+      }
+
+      delete[] old_ids;
+      delete[] old_weights;
+
+    }
+
+    resource->offset += mesh_.get_bone_weights().size();
+    res_ = resource;
+
+    
     
     // init non transformated/animated bone boxes
     // use every single vertex to be manipulated by a certain bone per bone box
@@ -173,9 +221,6 @@ void SkinnedMeshResource::draw(RenderContext const& ctx) /*const*/ {
 
   ctx.render_context->bind_vertex_array(vertex_array_[ctx.id]);
   ctx.render_context->bind_index_buffer(indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
-  ctx.render_context->bind_storage_buffer(bone_ids_,2);
-  ctx.render_context->bind_storage_buffer(bone_weights_,3);
-  
   ctx.render_context->apply_vertex_input();
   ctx.render_context->draw_elements(mesh_.num_triangles * 3);
 }

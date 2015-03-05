@@ -56,6 +56,12 @@ struct RenderContext;
 class SkinnedMeshResource : public GeometryResource {
  public:
 
+  struct SharedBoneResource {
+    scm::gl::buffer_ptr bone_ids_;
+    scm::gl::buffer_ptr bone_weights_;
+    size_t              offset = 0;
+  };
+
   /**
    * Default constructor.
    *
@@ -107,8 +113,7 @@ class SkinnedMeshResource : public GeometryResource {
   mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
   mutable std::mutex upload_mutex_;
 
-  mutable scm::gl::buffer_ptr bone_ids_;
-  mutable scm::gl::buffer_ptr bone_weights_;
+  std::shared_ptr<SharedBoneResource> res_ = nullptr;
 
   /*// intermediate mesh meta data
   #define INVALID_MATERIAL 0xFFFFFFFF // TODO
