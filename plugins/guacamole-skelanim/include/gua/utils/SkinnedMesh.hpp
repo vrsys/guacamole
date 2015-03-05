@@ -40,36 +40,22 @@
  
 namespace gua {
 
-#define ZERO_MEM(a) memset(a, 0, sizeof(a))
 struct weight_map
 {        
-  uint IDs[4];
-  float weights[4];
+  std::vector<uint> IDs;
+  std::vector<float> Weights;
 
   weight_map()
   {
-      Reset();
+      IDs = std::vector<uint>();
+      Weights = std::vector<float>();
   };
   
-  void Reset()
-  {
-      ZERO_MEM(IDs);
-      ZERO_MEM(weights);        
-  }
   
   void AddBoneData(uint bone_ID, float weight)
   {
-    uint num_weights = (sizeof(IDs)/sizeof(IDs[0]));
-    for (uint i = 0 ; i <  num_weights; i++) {
-        if (weights[i] == 0.0) {
-            IDs[i]     = bone_ID;
-            weights[i] = weight;
-            return;
-        }        
-    }
-    // should never get here - more bones than we have space for
-    Logger::LOG_WARNING << "Warning: Ignoring bone associated to vertex (more than " << num_weights << ")" << std::endl;
-    //assert(false);
+    IDs.push_back(bone_ID);
+    Weights.push_back(weight);
   }
 };
 
@@ -79,8 +65,8 @@ struct SkinnedVertex {
   scm::math::vec3f normal;
   scm::math::vec3f tangent;
   scm::math::vec3f bitangent;
-  scm::math::vec4f bone_weights;
-  scm::math::vec4i bone_ids;
+  uint bone_id_offset;
+  uint nr_of_bones; 
 };
 
 struct SkinnedMesh {
@@ -90,7 +76,7 @@ struct SkinnedMesh {
   SkinnedMesh(aiMesh const& mesh, Bone const& root = Bone{});
   SkinnedMesh(FbxMesh& mesh, Bone const& root = Bone{});
 
-  void copy_to_buffer(SkinnedVertex* vertex_buffer)  const;
+  void copy_to_buffer(SkinnedVertex* vertex_buffer, uint resource_offset)  const;
   scm::gl::vertex_format get_vertex_format()  const;
 
   // std::vector<Vertex> vertices;
@@ -102,9 +88,15 @@ struct SkinnedMesh {
   std::vector<weight_map> weights;
   std::vector<unsigned> indices;
 
+  std::vector<uint>        all_bone_ids;
+  std::vector<float>       all_bone_weights;
+
   unsigned int num_vertices;
   unsigned int num_triangles;
 
+  std::vector<uint> const& get_bone_ids()const;
+  std::vector<float> const& get_bone_weights()const;
+  
  private:
   void init_weights(aiMesh const& mesh, Bone const& root);
   std::vector<weight_map> get_weights(FbxMesh const& mesh, Bone const& root);

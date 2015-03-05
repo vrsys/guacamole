@@ -454,7 +454,15 @@ void SkinnedMesh::init_weights(aiMesh const& mesh, Bone const& root) {
       weights[VertexID].AddBoneData(BoneIndex, Weight);
     }
   }
+
+  for(auto w : weights){
+    for(uint i(0);i<w.Weights.size();++i){
+      all_bone_ids.push_back(w.IDs[i]);
+      all_bone_weights.push_back(w.Weights[i]);
+    }
+  }
 }
+
 
 std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Bone const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
@@ -479,14 +487,14 @@ std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Bone const
   //one cluster corresponds to one bone
   for(unsigned i = 0; i < skin->GetClusterCount(); ++i) {
     FbxCluster* cluster = skin->GetCluster(i);
-    FbxNode* node = cluster->GetLink();
+    FbxNode* Bone = cluster->GetLink();
 
-    if(!node) {
-      Logger::LOG_ERROR << "associated node does not exist!" << std::endl;
+    if(!Bone) {
+      Logger::LOG_ERROR << "associated Bone does not exist!" << std::endl;
       assert(false);      
     }
 
-    std::string bone_name(node->GetName());
+    std::string bone_name(Bone->GetName());
     uint bone_index;
     if(bone_mapping_.find(bone_name) != bone_mapping_.end()) {
       bone_index = bone_mapping_.at(bone_name);
@@ -511,7 +519,8 @@ std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Bone const
   return temp_weights;
 }
 
-void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer)  const {
+void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer, uint resource_offset)  const {
+  uint bone_offset{resource_offset};
   for (unsigned v(0); v < num_vertices; ++v) {
 
     vertex_buffer[v].pos = positions[v];
@@ -524,9 +533,11 @@ void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer)  const {
 
     vertex_buffer[v].bitangent = bitangents[v];
 
-    vertex_buffer[v].bone_weights = scm::math::vec4f(weights[v].weights[0],weights[v].weights[1],weights[v].weights[2],weights[v].weights[3]);
+    vertex_buffer[v].bone_id_offset= bone_offset;
+
+    bone_offset+=weights[v].Weights.size();
     
-    vertex_buffer[v].bone_ids = scm::math::vec4i(weights[v].IDs[0],weights[v].IDs[1],weights[v].IDs[2],weights[v].IDs[3]);
+    vertex_buffer[v].nr_of_bones= weights[v].Weights.size();
   }
 }
 
@@ -539,6 +550,16 @@ scm::gl::vertex_format SkinnedMesh::get_vertex_format() const {
     0, 4, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
     0, 5, scm::gl::TYPE_VEC4F, sizeof(SkinnedVertex))(
     0, 6, scm::gl::TYPE_VEC4I, sizeof(SkinnedVertex));
+}
+
+std::vector<uint> const& 
+SkinnedMesh::get_bone_ids()const{
+  return all_bone_ids;
+}
+
+std::vector<float> const& 
+SkinnedMesh::get_bone_weights()const{
+  return all_bone_weights;
 }
 
 } // namespace gua
