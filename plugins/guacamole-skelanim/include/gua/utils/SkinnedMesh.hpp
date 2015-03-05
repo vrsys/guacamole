@@ -43,19 +43,17 @@ namespace gua {
 struct weight_map
 {        
   std::vector<uint> IDs;
-  std::vector<float> Weights;
+  std::vector<float> weights;
 
-  weight_map()
-  {
-      IDs = std::vector<uint>();
-      Weights = std::vector<float>();
-  };
-  
+  weight_map():
+   IDs{},
+   weights{}
+  {};
   
   void AddBoneData(uint bone_ID, float weight)
   {
     IDs.push_back(bone_ID);
-    Weights.push_back(weight);
+    weights.push_back(weight);
   }
 };
 
@@ -85,21 +83,21 @@ struct SkinnedMesh {
   std::vector<scm::math::vec2f> texCoords;
   std::vector<scm::math::vec3f> tangents;
   std::vector<scm::math::vec3f> bitangents;
-  std::vector<weight_map> weights;
+  std::vector<uint>             bone_ids;
+  std::vector<float>            bone_weights;
+  std::vector<unsigned>         bone_counts;
+  
   std::vector<unsigned> indices;
-
-  std::vector<uint>        all_bone_ids;
-  std::vector<float>       all_bone_weights;
 
   unsigned int num_vertices;
   unsigned int num_triangles;
 
-  std::vector<uint> const& get_bone_ids()const;
-  std::vector<float> const& get_bone_weights()const;
+  std::vector<uint> const& get_bone_ids() const;
+  std::vector<float> const& get_bone_weights() const;
   
  private:
-  void init_weights(aiMesh const& mesh, Bone const& root);
-  std::vector<weight_map> get_weights(FbxMesh const& mesh, Bone const& root);
+  static std::vector<weight_map> get_weights(aiMesh const& mesh, Bone const& root);
+  static std::vector<weight_map> get_weights(FbxMesh const& mesh, Bone const& root);
 };
 
 }

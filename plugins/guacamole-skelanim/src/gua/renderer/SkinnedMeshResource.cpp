@@ -107,13 +107,7 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
                                          &mesh_.indices[0]);
 
     vertex_array_[ctx.id] = ctx.render_device->create_vertex_array(
-        scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-            0, 1, scm::gl::TYPE_VEC2F, sizeof(SkinnedVertex))(
-            0, 2, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-            0, 3, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-            0, 4, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-            0, 5, scm::gl::TYPE_UINT, sizeof(SkinnedVertex))(
-            0, 6, scm::gl::TYPE_UINT, sizeof(SkinnedVertex)),
+        mesh_.get_vertex_format(),
         {vertices_[ctx.id]});
 
 
@@ -181,11 +175,14 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
     
     // init non transformated/animated bone boxes
     // use every single vertex to be manipulated by a certain bone per bone box
+    unsigned bone_offset = 0;
     for (unsigned v(0); v < mesh_.num_vertices; ++v) {
       auto final_pos  = scm::math::vec4(mesh_.positions[v].x, mesh_.positions[v].y, mesh_.positions[v].z, 1.0);
-      for(unsigned i(0); i<mesh_.weights[v].IDs.size(); ++i){
-        bone_boxes_[mesh_.weights[v].IDs[i]].expandBy(math::vec3{final_pos.x,final_pos.y,final_pos.z});
-     }
+      
+      for(unsigned i(0); i<mesh_.bone_counts[v]; ++i){
+        bone_boxes_[mesh_.bone_ids[bone_offset + i]].expandBy(math::vec3{final_pos.x,final_pos.y,final_pos.z});
+      }
+      bone_offset += mesh_.bone_counts[v];
     }
 
     ctx.render_context->apply();
