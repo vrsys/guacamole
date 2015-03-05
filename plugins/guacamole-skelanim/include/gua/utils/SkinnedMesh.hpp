@@ -40,17 +40,17 @@
  
 namespace gua {
 
-struct weight_map
+struct bone_influences
 {        
   std::vector<uint> IDs;
   std::vector<float> weights;
 
-  weight_map():
+  bone_influences():
    IDs{},
    weights{}
   {};
   
-  void AddBoneData(uint bone_ID, float weight)
+  void add_bone(uint bone_ID, float weight)
   {
     IDs.push_back(bone_ID);
     weights.push_back(weight);
@@ -77,7 +77,6 @@ struct SkinnedMesh {
   void copy_to_buffer(SkinnedVertex* vertex_buffer, uint resource_offset)  const;
   scm::gl::vertex_format get_vertex_format()  const;
 
-  // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3f> positions;
   std::vector<scm::math::vec3f> normals;
   std::vector<scm::math::vec2f> texCoords;
@@ -96,8 +95,8 @@ struct SkinnedMesh {
   std::vector<float> const& get_bone_weights() const;
   
  private:
-  static std::vector<weight_map> get_weights(aiMesh const& mesh, Bone const& root);
-  static std::vector<weight_map> get_weights(FbxMesh const& mesh, Bone const& root);
+  static std::vector<bone_influences> get_weights(aiMesh const& mesh, Bone const& root);
+  static std::vector<bone_influences> get_weights(FbxMesh const& mesh, Bone const& root);
 };
 
 }

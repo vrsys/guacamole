@@ -310,13 +310,13 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
   Logger::LOG_DEBUG << dupl_verts << " vertex duplications" << std::endl;
 
   bool has_weights = false;
-  std::vector<weight_map> ctrlpt_weights{};
+  std::vector<bone_influences> ctrlpt_weights{};
   //get weights of original control points
   if(root.name != "none") {
     ctrlpt_weights = get_weights(mesh, root);
     has_weights = ctrlpt_weights.size() > 0;
   }
-  std::vector<weight_map> temp_weights{};
+  std::vector<bone_influences> temp_weights{};
 
   // Reserve space in the vectors for the vertex attributes and indices
   positions.reserve(num_vertices);
@@ -437,6 +437,7 @@ SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root) {
     texCoords.push_back(pTexCoord);
   }
 
+  //get weights and write them to vectors
   auto temp_weights = get_weights(mesh, root);
   for(auto const& w : temp_weights){
     for(uint i(0); i < w.weights.size(); ++i){
@@ -458,11 +459,11 @@ SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root) {
   }
 }
 
-std::vector<weight_map> SkinnedMesh::get_weights(aiMesh const& mesh, Bone const& root) {
+std::vector<bone_influences> SkinnedMesh::get_weights(aiMesh const& mesh, Bone const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
   root.collect_indices(bone_mapping_);
   
-  std::vector<weight_map> temp_weights{mesh.mNumVertices};
+  std::vector<bone_influences> temp_weights{mesh.mNumVertices};
 
   for (uint i = 0 ; i < mesh.mNumBones ; i++) {
     std::string bone_name(mesh.mBones[i]->mName.data);      
@@ -471,14 +472,14 @@ std::vector<weight_map> SkinnedMesh::get_weights(aiMesh const& mesh, Bone const&
     for (uint j = 0 ; j < mesh.mBones[i]->mNumWeights ; j++) {
       uint VertexID = mesh.mBones[i]->mWeights[j].mVertexId;
       float Weight  = mesh.mBones[i]->mWeights[j].mWeight;                   
-      temp_weights[VertexID].AddBoneData(BoneIndex, Weight);
+      temp_weights[VertexID].add_bone(BoneIndex, Weight);
     }
   }
 
   return temp_weights;
 }
 
-std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Bone const& root) {
+std::vector<bone_influences> SkinnedMesh::get_weights(FbxMesh const& mesh, Bone const& root) {
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
   root.collect_indices(bone_mapping_);
 
@@ -494,10 +495,10 @@ std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Bone const
 
   if(!skin) {
     Logger::LOG_WARNING << "Mesh does not contain skin deformer, ignoring weights" << std::endl;
-    return std::vector<weight_map>{};
+    return std::vector<bone_influences>{};
   }
   //set up temporary weights, for control points not actual vertices
-  std::vector<weight_map> temp_weights{unsigned(mesh.GetControlPointsCount())};
+  std::vector<bone_influences> temp_weights{unsigned(mesh.GetControlPointsCount())};
   //one cluster corresponds to one bone
   for(unsigned i = 0; i < skin->GetClusterCount(); ++i) {
     FbxCluster* cluster = skin->GetCluster(i);
@@ -515,7 +516,7 @@ std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Bone const
     }      
     else {
       Logger::LOG_ERROR << "Bone with name '" << bone_name << "' does not exist!, ignoring weights" << std::endl;
-      return std::vector<weight_map>{};          
+      return std::vector<bone_influences>{};          
     }
 
     FbxAMatrix world_transform;
@@ -526,7 +527,7 @@ std::vector<weight_map> SkinnedMesh::get_weights(FbxMesh const& mesh, Bone const
     double* weights = cluster->GetControlPointWeights();
     for(unsigned i = 0; i < cluster->GetControlPointIndicesCount(); ++i) {
       //update mapping info of current control point
-      temp_weights[indices[i]].AddBoneData(bone_index, weights[i]);
+      temp_weights[indices[i]].add_bone(bone_index, weights[i]);
     }
   }
 
