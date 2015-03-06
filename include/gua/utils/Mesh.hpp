@@ -89,7 +89,6 @@ struct Mesh {
   void copy_to_buffer(Vertex* vertex_buffer) const;
   virtual scm::gl::vertex_format get_vertex_format() const;
 
-  // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3f> positions;
   std::vector<scm::math::vec3f> normals;
   std::vector<scm::math::vec2f> texCoords;
@@ -130,6 +129,8 @@ struct Mesh {
     {}
     std::array<unsigned, 3> verts;
   };
+
+  static std::tuple<std::vector<std::vector<temp_vert>>,std::vector<temp_tri>, unsigned> get_verts_and_tris(FbxMesh& mesh);
 
   template<typename T>
   static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);

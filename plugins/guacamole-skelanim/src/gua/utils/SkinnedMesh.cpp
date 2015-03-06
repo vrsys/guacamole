@@ -20,168 +20,17 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
  Timer timer{};
   timer.start();
 
-  num_vertices = mesh.GetControlPointsCount(); 
+  bool has_uvs = mesh.GetElementUVCount() > 0;
+  bool has_tangents = (mesh.GetElementTangentCount() == 0 || mesh.GetElementBinormalCount() == 0) && !has_uvs;
 
-//polygons
-  if(mesh.GetPolygonCount() < 1) {
-    Logger::LOG_ERROR << "No polygons in mesh" << std::endl;
-    assert(0);
-  }
+  //get the temporary elements, actual work is done in this function
+  auto verts_and_tris = get_verts_and_tris(mesh);
 
-//normals
-  if(mesh.GetElementNormalCount() == 0) {
-    //dont override exiting normals and generate by control point, not vertex
-    mesh.GenerateNormals(false, true);
-  }
-  
-//UV coordinates
-  bool has_uvs = true;
-  if(mesh.GetElementUVCount() == 0) {
-    Logger::LOG_WARNING << "Mesh has no texture coordinates" << std::endl;
-    has_uvs = false;
-  }
-  else {
-    if(mesh.GetElementUVCount() > 1) {
-      Logger::LOG_WARNING << "Mesh has multiple UV sets, only using first one" << std::endl;
-    }
-  }
+  std::vector<std::vector<temp_vert>>const& vert_positions = std::get<0>(verts_and_tris);
+  num_vertices = std::get<2>(verts_and_tris);
 
-//tangents
-  bool has_tangents = true;
-  if(mesh.GetElementTangentCount() == 0 || mesh.GetElementBinormalCount() == 0) {
-    if(has_uvs) { 
-      mesh.GenerateTangentsData(0, true);
-    }
-    else {
-      Logger::LOG_DEBUG << "No UVs, can't generate tangents" << std::endl;
-      has_tangents = false;
-    }
-  }
-
-  FbxVector4 translation = mesh.GetNode()->GetGeometricTranslation(FbxNode::eSourcePivot);
-  FbxVector4 rotation = mesh.GetNode()->GetGeometricRotation(FbxNode::eSourcePivot);
-  FbxVector4 scaling = mesh.GetNode()->GetGeometricScaling(FbxNode::eSourcePivot);
-  FbxAMatrix geo_transform(translation, rotation, scaling);
-
-  FbxAMatrix identity = FbxAMatrix{};
-  identity.SetIdentity();
-  if(geo_transform != identity) {
-    Logger::LOG_WARNING << "Mesh has Geometric Transform, vertices may be skewed." << std::endl;
-  }
-
-  //one vector of temp_vert represents one control point, every temp_vert in that vector is one vertex at that point
-  std::vector<std::vector<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::vector<temp_vert>{}};
-  std::vector<temp_tri> temp_tris{};
-  
-
-  FbxVector4* control_points = mesh.GetControlPoints();
-  //vertex indices of polygons
-  int* poly_vertices = mesh.GetPolygonVertices();
-
-  //define function to access vertex properties
-  std::function<unsigned(temp_vert const&)> get_normal = get_access_function(*mesh.GetElementNormal(0));
-  FbxLayerElementArrayTemplate<FbxVector4> const& poly_normals{mesh.GetElementNormal(0)->GetDirectArray()};
-
-  std::function<unsigned(temp_vert const&)> get_uv;
-  FbxLayerElementArrayTemplate<FbxVector2> const& poly_uvs{has_uvs ? mesh.GetElementUV(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector2>{EFbxType::eFbxDouble2}};
-  if(has_uvs) {
-    get_uv = get_access_function(*mesh.GetElementUV(0));
-  }
-
-  std::function<unsigned(temp_vert const&)> get_tangent;
-  std::function<unsigned(temp_vert const&)> get_bitangent;
-
-  FbxLayerElementArrayTemplate<FbxVector4> const& poly_tangents{has_tangents ? mesh.GetElementTangent(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector4>{EFbxType::eFbxDouble4}};
-  FbxLayerElementArrayTemplate<FbxVector4> const& poly_bitangents{has_tangents ? mesh.GetElementBinormal(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector4>{EFbxType::eFbxDouble4}};
-  if(has_tangents){
-    get_tangent = get_access_function(*mesh.GetElementTangent(0));
-    get_bitangent = get_access_function(*mesh.GetElementBinormal(0));
-  }
-
-  num_triangles = 0; 
-  //starting index of the polygon in the index array
-  unsigned start_index = 0;
-  //how many tris the last polygon contained
-  unsigned tris_added = 0;
-  //iterate over polygons
-  for(unsigned i = 0; i < mesh.GetPolygonCount(); ++i)
-  {
-    //triangulate face if necessary
-    for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
-    {
-      //get indices of vertices in attribute arrays
-      std::array<unsigned, 3> indices{start_index, start_index + j - 1, start_index + j};
-      //create triangle from vertex indices
-      temp_tri tri{unsigned(poly_vertices[indices[0]]), unsigned(poly_vertices[indices[1]]), unsigned(poly_vertices[indices[2]])};
-      temp_tris.push_back(tri);
-
-      //create new vertices that form triangle
-      temp_vert vert1{indices[0], tri.verts[0], num_triangles, 0};
-      temp_vert vert2{indices[1], tri.verts[1], num_triangles, 1};
-      temp_vert vert3{indices[2], tri.verts[2], num_triangles, 2};
-
-      vert1.normal = to_gua::vec3(poly_normals[get_normal(vert1)]);
-      vert2.normal = to_gua::vec3(poly_normals[get_normal(vert2)]);
-      vert3.normal = to_gua::vec3(poly_normals[get_normal(vert3)]);
-      
-      //set optional data
-      if(has_uvs) {
-        vert1.uv = to_gua::vec2(poly_uvs[get_uv(vert1)]);
-        vert2.uv = to_gua::vec2(poly_uvs[get_uv(vert2)]);
-        vert3.uv = to_gua::vec2(poly_uvs[get_uv(vert3)]); 
-      }
-      if(has_tangents) {
-        vert1.tangent = to_gua::vec3(poly_tangents[get_tangent(vert1)]);
-        vert2.tangent = to_gua::vec3(poly_tangents[get_tangent(vert2)]);
-        vert3.tangent = to_gua::vec3(poly_tangents[get_tangent(vert3)]);
-        
-        vert1.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert1)]);
-        vert2.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert2)]);
-        vert3.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert3)]);
-      }
-
-      //add new vertices to respective control points
-      vert_positions[tri.verts[0]].push_back(vert1);
-      vert_positions[tri.verts[1]].push_back(vert2);
-      vert_positions[tri.verts[2]].push_back(vert3);
-
-      ++tris_added;
-      ++num_triangles;
-    }
-    start_index += 2 + tris_added;
-    tris_added = 0;
-  }
-
-  //filter out duplicate vertices
-  num_vertices = 0;
-  unsigned old_num_vertices = 0;
-  unsigned dupl_verts = 0;
-  //iterate over control points
-  for(std::vector<temp_vert>& verts : vert_positions) {
-    old_num_vertices += verts.size();
-    //iterate over vertices at that point
-    for(auto iter = verts.begin(); iter != verts.end(); ++iter) {
-      //ierate over vertices behind current vertex
-      for(std::vector<temp_vert>::iterator iter2 = std::next(iter); iter2 != verts.end(); ++iter2) {
-        //match by normals and if exisiting, other attributes
-        bool duplicate = iter2->normal == iter->normal;
-        if(duplicate && has_uvs) duplicate = iter2->uv == iter->uv; 
-        if(duplicate && has_tangents) duplicate = iter2->tangent == iter->tangent && iter2->bitangent == iter->bitangent; 
-        //duplicate -> merge vertices
-        if(duplicate) {
-          //add triangle of duplicate vertex to current vertex
-          iter->tris.push_back(iter2->tris[0]);
-
-          verts.erase(iter2);
-          ++dupl_verts;
-          break;
-        }
-      }
-    }
-    //add number of filtered verts at current control point to total vertex number
-    num_vertices += verts.size();
-  }
-  Logger::LOG_DEBUG << dupl_verts << " vertex duplications" << std::endl;
+  std::vector<temp_tri>& temp_tris = std::get<1>(verts_and_tris);
+  num_triangles = temp_tris.size();
 
   bool has_weights = false;
   std::vector<bone_influences> ctrlpt_weights{};
@@ -218,7 +67,8 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     bone_ids.resize(num_vertices, 0);
     bone_weights.resize(num_vertices, 0.0f);
   }
-
+  
+  FbxVector4* control_points = mesh.GetControlPoints();
   //load reduced attributes
   unsigned curr_vert = 0;
   //iterate over control points
@@ -263,7 +113,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
   }
 
   //output reduction info
-  Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
+  // Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
 }
 
 SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root):
@@ -318,7 +168,7 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(FbxMesh const
     Logger::LOG_WARNING << "Mesh does not contain skin deformer, ignoring weights" << std::endl;
     return std::vector<bone_influences>{};
   }
-  //set up temporary weights, for control points not actual vertices
+  //set up temporary weights, for control points, not actual vertices
   std::vector<bone_influences> temp_weights{unsigned(mesh.GetControlPointsCount())};
   //one cluster corresponds to one bone
   for(unsigned i = 0; i < skin->GetClusterCount(); ++i) {
@@ -339,10 +189,6 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(FbxMesh const
       Logger::LOG_ERROR << "Bone with name '" << bone_name << "' does not exist!, ignoring weights" << std::endl;
       return std::vector<bone_influences>{};          
     }
-
-    FbxAMatrix world_transform;
-    //reference pose of mes
-    cluster->GetTransformMatrix(world_transform);
 
     int* indices = cluster->GetControlPointIndices();
     double* weights = cluster->GetControlPointWeights();

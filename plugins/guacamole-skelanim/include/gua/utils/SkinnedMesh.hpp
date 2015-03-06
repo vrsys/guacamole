@@ -60,15 +60,15 @@ struct SkinnedMesh : public Mesh {
   void copy_to_buffer(SkinnedVertex* vertex_buffer, uint resource_offset) const;
   scm::gl::vertex_format get_vertex_format() const override;
 
-  std::vector<uint>             bone_ids;
-  std::vector<float>            bone_weights;
-  std::vector<unsigned>         bone_counts;
+  std::vector<uint>     bone_ids;
+  std::vector<float>    bone_weights;
+  std::vector<unsigned> bone_counts;
 
   std::vector<uint> const& get_bone_ids() const;
   std::vector<float> const& get_bone_weights() const;
   
  private:
-
+  //struct to transfer temporary vertex to bone mapping info
   struct bone_influences
   {        
     std::vector<uint> IDs;
