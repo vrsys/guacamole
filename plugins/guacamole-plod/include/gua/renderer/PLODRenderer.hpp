@@ -45,7 +45,6 @@ namespace gua {
   public:
 
     PLODRenderer();
-    ~PLODRenderer();
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
     void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }

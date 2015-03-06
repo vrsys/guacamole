@@ -37,6 +37,8 @@ BackgroundPassDescription::BackgroundPassDescription()
 {
   vertex_shader_ = "shaders/common/fullscreen_quad.vert";
   fragment_shader_ = "shaders/background.frag";
+  name_ = "BackgroundPass";
+
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Quad;

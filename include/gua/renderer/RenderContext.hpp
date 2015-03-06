@@ -38,6 +38,7 @@
 
 namespace gua {
 
+class Pipeline;
 class WindowBase;
 
 /**
@@ -93,6 +94,11 @@ struct GUA_DLL RenderContext {
   * Resources associated with this context
   */
   InstanceCollection resources;
+
+  /**
+  * Resources associated with this context
+  */
+  std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
 };
 
 }

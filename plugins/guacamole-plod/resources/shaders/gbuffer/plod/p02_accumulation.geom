@@ -30,8 +30,6 @@ out vec2 pass_uv_coords;
 @include "common/gua_vertex_shader_output.glsl"
  
 
-float index_arr[8] = {-1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0};
-
 void main() {
 
     if(enable_backface_culling == false /*|| VertexIn[0].pass_normal.z > 0.0*/) {
@@ -48,6 +46,7 @@ void main() {
       float es_shift = 0.0;
       float es_shift_scale = 2.0;
 
+      const float index_arr[8] = {-1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0};
 
       // ---------------------------------------------------------------------------------
       for(int idx = 0; idx < 4; ++idx ) {

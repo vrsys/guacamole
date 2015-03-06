@@ -152,6 +152,8 @@ PhysicallyBasedShadingPassDescription::PhysicallyBasedShadingPassDescription()
   // so we don't swap and don't clear the colorbuffer
   vertex_shader_ = "shaders/physically_based_shading.vert";
   fragment_shader_ = "shaders/physically_based_shading.frag";
+  name_ = "PhysicallyBasedShadingPass";
+
   needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
   writes_only_color_buffer_ = true; // we write out a color
   doClear_ = false;

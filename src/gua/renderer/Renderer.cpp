@@ -114,8 +114,25 @@ void Renderer::renderclient(Mailbox in) {
         }
 
         // process pipeline
-        auto process = [&](CameraMode mode) {
-          cmd.serialized_cam->rendering_pipeline->process(
+        //auto process = [&](CameraMode mode) {
+        //  cmd.serialized_cam->rendering_pipeline->process(
+
+        // make sure pipeline was created
+        std::shared_ptr<Pipeline> pipe = nullptr;
+        auto pipe_iter = window->get_context()->render_pipelines.find(cmd.serialized_cam->uuid);
+
+        if (pipe_iter == window->get_context()->render_pipelines.end()) {
+          pipe = std::make_shared<Pipeline>();
+          window->get_context()->render_pipelines.insert(std::make_pair(cmd.serialized_cam->uuid, pipe));
+        }
+        else {
+          pipe = pipe_iter->second;
+        }
+
+        auto process = [pipe, &](CameraMode mode) {
+
+          //window->get_context()->render_pipelines.at(cmd.serialized_cam->uuid)->process(
+          pipe->process(
             window->get_context(), mode, *cmd.serialized_cam, *cmd.scene_graphs
           );
         };
@@ -126,6 +143,7 @@ void Renderer::renderclient(Mailbox in) {
           process(CameraMode::LEFT);
           process(CameraMode::RIGHT);
         } else {
+
           process(cmd.serialized_cam->config.get_mono_mode());
         }
 
@@ -155,8 +173,10 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
   for (auto graph : scene_graphs) {
     graph->update_cache();
   }
+
   auto sgs = garbage_collected_copy(scene_graphs);
   for (auto& cam : cameras) {
+
     auto window_name(cam->config.get_output_window_name());
     auto rclient(render_clients_.find(window_name));
     cam->set_application_fps(application_fps_.fps);

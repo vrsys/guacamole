@@ -58,7 +58,37 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// keyboard callback -> use 'r' to force shader recompilation
+void increase_importance_radius(std::shared_ptr<gua::node::Node> const& node) {
+  auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
+  if (plodnode) {
+    auto radius_scale = plodnode->get_importance();
+    plodnode->set_importance(std::min(2.0, 1.1 * radius_scale));
+    std::cout << "Setting radius scale to " << plodnode->get_importance() << std::endl;
+  }
+  for (auto const& c : node->get_children()) {
+    increase_importance_radius(c);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void decrease_importance_radius(std::shared_ptr<gua::node::Node> const& node) {
+  auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
+  if (plodnode) {
+    auto radius_scale = plodnode->get_importance();
+    plodnode->set_importance(std::max(0.1, 0.9 * radius_scale));
+    std::cout << "Setting radius scale to " << plodnode->get_importance() << std::endl;
+  }
+  for (auto const& c : node->get_children()) {
+    decrease_importance_radius(c);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// keyboard callback 
+//    -> use 'r' to force shader recompilation
+//    -> use 'u' to increase splat radius
+//    -> use 'j' to decrease splat radius
+
 void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods)
 {
   if (action == 0) return;
@@ -67,6 +97,12 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
   {
   case 'r':
     pipe.get_resolve_pass()->touch();
+    break;
+  case 'u':
+    increase_importance_radius(graph.get_root());
+    break;
+  case 'j':
+    decrease_importance_radius(graph.get_root());
     break;
   case ' ':
     rotate_light = !rotate_light;
@@ -79,8 +115,8 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 /////////////////////////////////////////////////////////////////////////////
 // example configuration
 /////////////////////////////////////////////////////////////////////////////
-#define RENDER_SINGLE_PIG_MODEL 1
-#define RENDER_PITOTI_HUNTING_SCENE 0
+#define RENDER_SINGLE_PIG_MODEL 0
+#define RENDER_PITOTI_HUNTING_SCENE 1
 #define RENDER_ADDITIONAL_TRIMESH_MODEL 0
 
 int main(int argc, char** argv) {
@@ -143,7 +179,7 @@ int main(int argc, char** argv) {
   gua::PLODLoader plodLoader;
 
   plodLoader.set_upload_budget_in_mb(32);
-  plodLoader.set_render_budget_in_mb(4048);
+  plodLoader.set_render_budget_in_mb(2048);
   plodLoader.set_out_of_core_budget_in_mb(4096);
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
@@ -151,10 +187,7 @@ int main(int argc, char** argv) {
 #if RENDER_PITOTI_HUNTING_SCENE  
   #if WIN32
     //auto plod_geometry(plodLoader.load_geometry("hunter", "\\GRANDMOTHER/pitoti/XYZ_ALL/new_pitoti_sampling/objects/Area_4_hunter_with_bow.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
-  auto plod_geometry2(plodLoader.load_geometry("hunter", "data/objects/Area-2_Plowing-scene_P02-3_knn.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
-  plod_geometry2->translate(2.0, 0.0, 0.0);
-  auto plod_geometry(plodLoader.load_geometry("hunter", "data/objects/Area-2_Plowing-scene_P02-4_knn.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION ));
   #else
     //auto plod_geometry(plodLoader.load_geometry("/mnt/pitoti/XYZ_ALL/new_pitoti_sampling/Area_4_hunter_with_bow.kdn", gua::PLODLoader::NORMALIZE_POSITION  ));
   #endif
@@ -165,7 +198,7 @@ int main(int argc, char** argv) {
   //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/_seradina.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ) );
 
 #if RENDER_SINGLE_PIG_MODEL
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
   //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "data/objects/pig2.kdn", plod_glossy, gua::PLODLoader::NORMALIZE_POSITION));
   //auto plod_geometry3(plodLoader.load_geometry("plod_pig3", "data/objects/pig3.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
 #endif
@@ -284,18 +317,17 @@ int main(int argc, char** argv) {
   camera->config.set_right_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
   camera->config.set_far_clip(200.0);
-  camera->config.set_near_clip(0.1);
+  camera->config.set_near_clip(0.01);
   camera->add_child(camera_proxy_geometry);
-  camera->set_pre_render_cameras({portal_camera});
-
+ //camera->set_pre_render_cameras({portal_camera});
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
 
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
-  pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
+  //pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
   pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
@@ -304,11 +336,10 @@ int main(int argc, char** argv) {
   pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   pipe->get_resolve_pass()->background_texture("data/images/skymap.jpg");
 
-  // fog seems to work improperly
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->enable_fog(true);
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->fog_start(1.0);
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->fog_end(100.0);
-  
+  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(true);
+  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_radius(16.0);
+  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(2.5);
+
   camera->set_pipeline_description(pipe);
   
   /////////////////////////////////////////////////////////////////////////////
@@ -320,7 +351,7 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+  //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
   window->config.set_stereo_mode(gua::StereoMode::MONO);
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
@@ -344,6 +375,8 @@ int main(int argc, char** argv) {
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0/500.0);
 
+  std::size_t ctr = 0;
+
   ticker.on_tick.connect([&]() {
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()), 
                                                               gua::math::float_t(trackball.shifty()), 
@@ -356,6 +389,11 @@ int main(int argc, char** argv) {
       // modify scene
       light->rotate(0.1, 0.0, 1.0, 0.0);
     }
+
+    if (ctr++ % 150 == 0)
+      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
+      << camera->get_rendering_fps() << ", app fps: "
+      << camera->get_application_fps() << std::endl;
 
     // apply trackball matrix to object
     window->process_events();

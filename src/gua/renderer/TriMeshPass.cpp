@@ -40,6 +40,7 @@ TriMeshPassDescription::TriMeshPassDescription()
   : PipelinePassDescription() {
   vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
   fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
+  name_ = "TriMeshPass";
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
