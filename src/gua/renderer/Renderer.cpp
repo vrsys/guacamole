@@ -129,9 +129,7 @@ void Renderer::renderclient(Mailbox in) {
           pipe = pipe_iter->second;
         }
 
-        auto process = [pipe, &](CameraMode mode) {
-
-          //window->get_context()->render_pipelines.at(cmd.serialized_cam->uuid)->process(
+        auto process = [&](CameraMode mode) {
           pipe->process(
             window->get_context(), mode, *cmd.serialized_cam, *cmd.scene_graphs
           );
