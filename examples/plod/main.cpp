@@ -189,6 +189,7 @@ int main(int argc, char** argv) {
     //auto plod_geometry(plodLoader.load_geometry("hunter", "\\GRANDMOTHER/pitoti/XYZ_ALL/new_pitoti_sampling/objects/Area_4_hunter_with_bow.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
   auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION ));
   #else
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/precision_tests/001/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION ));
     //auto plod_geometry(plodLoader.load_geometry("/mnt/pitoti/XYZ_ALL/new_pitoti_sampling/Area_4_hunter_with_bow.kdn", gua::PLODLoader::NORMALIZE_POSITION  ));
   #endif
 #endif
