@@ -33,6 +33,8 @@ ToneMappingPassDescription::ToneMappingPassDescription()
 {
   vertex_shader_ = "shaders/common/fullscreen_quad.vert";
   fragment_shader_ = "shaders/tone_mapping.frag";
+  name_ = "ToneMappingPass";
+
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Quad;

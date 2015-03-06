@@ -40,6 +40,8 @@ LightingPassDescription::LightingPassDescription()
   // so we don't swap and don't clear the colorbuffer
   vertex_shader_ = "shaders/lighting.vert";
   fragment_shader_ = "shaders/lighting.frag";
+  name_ = "LightingPass";
+
   needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
   writes_only_color_buffer_ = true; // we write out a color
   doClear_ = false;

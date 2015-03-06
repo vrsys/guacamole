@@ -34,6 +34,7 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
   vertex_shader_ = "shaders/bbox.vert";
   geometry_shader_ = "shaders/bbox.geom";
   fragment_shader_ = "shaders/bbox.frag";
+  name_ = "BBoxPass";
 
   writes_only_color_buffer_ = false;
   rendermode_ = RenderMode::Callback;
@@ -87,8 +88,8 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
           buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
       for (int i(0); i < count; ++i) {
-        data[2 * i] = pipe.get_scene().bounding_boxes[i].min;
-        data[2 * i + 1] = pipe.get_scene().bounding_boxes[i].max;
+        data[2 * i] = math::vec3f(pipe.get_scene().bounding_boxes[i].min);
+        data[2 * i + 1] = math::vec3f(pipe.get_scene().bounding_boxes[i].max);
       }
 
       ctx.render_context->unmap_buffer(buffer_);

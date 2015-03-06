@@ -36,11 +36,14 @@ CameraNode::CameraNode(std::string const& name,
                        std::shared_ptr<PipelineDescription> const& description,
                        Configuration const& configuration,
                        math::mat4 const& transform)
-    : Node(name, transform), config(configuration)
-    , rendering_pipeline_(std::make_shared<Pipeline>())
-    , pipeline_description_(description)
-    , application_fps_(0.f)
-    , rendering_fps_(0.f) {}
+  : Node(name, transform), 
+    config(configuration),
+    pipeline_description_(description),
+    application_fps_(0.f),
+    rendering_fps_(0.f) 
+{}
+
+////////////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void CameraNode::accept(NodeVisitor& visitor) {
 
@@ -55,16 +58,17 @@ std::shared_ptr<Node> CameraNode::copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SerializedCameraNode CameraNode::serialize() const {
-    SerializedCameraNode s = {config, get_world_transform(), rendering_pipeline_};
+SerializedCameraNode CameraNode::serialize() const 
+{
+  SerializedCameraNode s = { config, get_world_transform(), uuid() };
 
-    for (auto const& cam: pre_render_cameras_) {
-        s.pre_render_cameras.push_back(cam->serialize());
-    }
+  for (auto const& cam: pre_render_cameras_) {
+      s.pre_render_cameras.push_back(cam->serialize());
+  }
 
-    s.pipeline_description = pipeline_description_;
+  s.pipeline_description = pipeline_description_;
 
-    return s;
+  return s;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -38,6 +38,8 @@ DebugViewPassDescription::DebugViewPassDescription()
 {
   vertex_shader_ = "shaders/common/fullscreen_quad.vert";
   fragment_shader_ = "shaders/debugview.frag";
+  name_ = "DebugViewPass";
+
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Quad;

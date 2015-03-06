@@ -34,6 +34,22 @@
 
 namespace gua {
 
+  ////////////////////////////////////////////////////////////////////////////////
+  void PipelinePassDescription::touch() { 
+    ++mod_count_; 
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  std::string const& PipelinePassDescription::name() const { 
+    return name_; 
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  unsigned PipelinePassDescription::mod_count() const { 
+    return mod_count_; 
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
 PipelinePass::PipelinePass(PipelinePassDescription const& d,
                            RenderContext const& ctx,
                            SubstitutionMap const& substitution_map)
@@ -46,6 +62,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d,
   , doClear_(d.doClear_)
   , rendermode_(d.rendermode_)
   , process_(d.process_)
+  , name_(d.name_)
   , substitution_map_(substitution_map)
 {
   upload_program(d, ctx);
@@ -94,15 +111,24 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
 
     pipe.bind_gbuffer_input(shader_);
     pipe.bind_light_table(shader_);
+
+    std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / " + name_;
+    pipe.begin_gpu_query(ctx, gpu_query_name);
+
     if (RenderMode::Callback == rendermode_) {
       process_(*this, desc, pipe);
     } else { // RenderMode::Quad
       pipe.draw_quad();
     }
+
+    pipe.end_gpu_query(ctx, gpu_query_name);
+
     pipe.get_abuffer().unbind(ctx);
     pipe.get_gbuffer().unbind(ctx);
     ctx.render_context->reset_state_objects();
   }
+
+  
 }
 
 void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderContext const& ctx) {

@@ -116,8 +116,20 @@ void Renderer::renderclient(Mailbox in) {
         // process pipeline
         auto const& camera(*std::get<0>(x));
 
+        // make sure pipeline was created
+        std::shared_ptr<Pipeline> pipe = nullptr;
+        auto pipe_iter = window->get_context()->render_pipelines.find(camera.uuid);
+
+        if (pipe_iter == window->get_context()->render_pipelines.end()) {
+          pipe = std::make_shared<Pipeline>();
+          window->get_context()->render_pipelines.insert(std::make_pair(camera.uuid, pipe));
+        }
+        else {
+          pipe = pipe_iter->second;
+        }
+
         auto process = [&](CameraMode mode) {
-          camera.rendering_pipeline->process(
+          pipe->process(
             window->get_context(), mode, camera, *std::get<1>(x)
           );
         };
@@ -157,8 +169,10 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
   for (auto graph : scene_graphs) {
     graph->update_cache();
   }
+
   auto sgs = garbage_collected_copy(scene_graphs);
   for (auto& cam : cameras) {
+
     auto window_name(cam->config.get_output_window_name());
     auto rclient(render_clients_.find(window_name));
     cam->set_application_fps(application_fps_.fps);

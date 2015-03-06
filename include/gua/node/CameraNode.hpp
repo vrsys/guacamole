@@ -199,18 +199,15 @@ class GUA_DLL CameraNode : public Node {
   // based on this description the rendering is performed
   std::shared_ptr<PipelineDescription> pipeline_description_;
 
-  // access this members only from the rendering thread!
-  std::shared_ptr<Pipeline> rendering_pipeline_;
-
   std::vector<std::shared_ptr<CameraNode>> pre_render_cameras_;
 };
 
 struct GUA_DLL SerializedCameraNode {
   CameraNode::Configuration             config;
   math::mat4                            transform;
-  std::shared_ptr<Pipeline>             rendering_pipeline;
+  std::size_t                           uuid;
   std::shared_ptr<PipelineDescription>  pipeline_description;
-
+  
   std::vector<SerializedCameraNode>     pre_render_cameras;
 };
 
