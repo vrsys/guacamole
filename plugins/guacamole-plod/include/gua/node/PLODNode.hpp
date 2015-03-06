@@ -54,21 +54,11 @@ public:
            std::string const& geometry_file_path = "gua_no_path_specified",
            std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
            math::mat4 const& transform = math::mat4::identity(),
-           float const importance = 0.7f, // 1.0f seems too large
-           float const threshold = 2.5f,
+           float const radius_scale = 0.7f, // 1.0f seems too large
+           float const error_threshold = 2.5f,
            bool const enable_backface_culling_by_normal = false);
 
 public:  // method override
-
-#if 1
-
-#else
-  void  set_world_transform(math::mat4 const& transform) override;
-  void  set_transform(math::mat4 const & transform) override;
-  void  scale(math::float_t x, math::float_t y, math::float_t z) override;
-  void  rotate(math::float_t angle, math::float_t x, math::float_t y, math::float_t z) override;
-  void  translate(math::float_t x, math::float_t y, math::float_t z) override;
-#endif
 
 public:  // methods
 
@@ -82,11 +72,11 @@ public:  // methods
   std::shared_ptr<Material> const& get_material() const;
   void               set_material(std::shared_ptr<Material> const& material);
 
-  float              get_importance();
-  void               set_importance(float const importance);
+  float              get_radius_scale();
+  void               set_radius_scale(float const scale);
 
-  float              get_threshold();
-  void               set_threshold(float const threshold);
+  float              get_error_threshold();
+  void               set_error_threshold(float const threshold);
 
   bool               get_enable_backface_culling_by_normal();
   void               set_enable_backface_culling_by_normal(bool const enable_backface_culling);
@@ -120,8 +110,8 @@ private:  // attributes e.g. special attributes for drawing
   std::shared_ptr<Material>     material_;
   bool                          material_changed_;
 
-  float                         importance_;
-  float                         threshold_;
+  float                         radius_scale_;
+  float                         error_threshold_;
   bool                          enable_backface_culling_by_normal_;
 };
 

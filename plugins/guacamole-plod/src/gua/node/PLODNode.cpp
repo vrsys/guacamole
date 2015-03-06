@@ -52,8 +52,8 @@ PLODNode::PLODNode(std::string const& name,
       geometry_description_(geometry_description),
       geometry_file_path_(geometry_file_path),
       material_(material),
-      importance_(importance),
-      threshold_(threshold),
+      radius_scale_(importance),
+      error_threshold_(threshold),
       enable_backface_culling_by_normal_(enable_backface_culling_by_normal)
     {}
 
@@ -90,25 +90,25 @@ void PLODNode::set_material(std::shared_ptr<Material> const& material) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PLODNode::set_importance(float const importance) {
-  importance_ = importance;
+void PLODNode::set_radius_scale(float const scale) {
+  radius_scale_ = scale;
   self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float PLODNode::get_importance() {
-  return importance_;
+float PLODNode::get_radius_scale() {
+  return radius_scale_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PLODNode::set_threshold(float const threshold) {
-  threshold_ = threshold;
+void PLODNode::set_error_threshold(float const threshold) {
+  error_threshold_ = threshold;
   self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float PLODNode::get_threshold() {
-  return threshold_;
+float PLODNode::get_error_threshold() {
+  return error_threshold_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -242,8 +242,8 @@ std::shared_ptr<Node> PLODNode::copy() const {
   result->update_cache();
 
   result->shadow_mode_ = shadow_mode_;
-  result->importance_ = importance_;
-  result->threshold_ = threshold_;
+  result->radius_scale_ = radius_scale_;
+  result->error_threshold_ = error_threshold_;
   result->enable_backface_culling_by_normal_ = enable_backface_culling_by_normal_;
 
   return result;
