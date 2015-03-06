@@ -179,13 +179,13 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
     auto rclient(render_clients_.find(window_name));
     cam->set_application_fps(application_fps_.fps);
     if (rclient != render_clients_.end()) {
-      rclient->second.first->push_back(Item{std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam});
+      rclient->second.first->push_back(Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
     } else {
       auto window(WindowDatabase::instance()->lookup(window_name));
 
       if (window) {
         auto p = spawnDoublebufferred<Item>();
-        p.first->push_back(Item{std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam});
+        p.first->push_back(Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
         render_clients_[window_name] = std::make_pair(p.first, std::thread(Renderer::renderclient, p.second));
       } else {
         Logger::LOG_WARNING << "Cannot render camera: window \""
