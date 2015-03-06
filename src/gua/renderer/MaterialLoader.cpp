@@ -212,12 +212,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
       if(texture) {        
         std::string file_name = texture->GetFileName();
         //filter out possible path in front of filename
-        auto slash_pos(file_name.find_last_of("/"));
-        auto bslash_pos(file_name.find_last_of("\""));
-        auto path_end = slash_pos;
-        if(bslash_pos != std::string::npos && path_end < bslash_pos) {
-          path_end = bslash_pos;
-        }
+        auto path_end(file_name.find_last_of("/\\"));
         if(path_end != std::string::npos) {
           file_name = file_name.substr(path_end + 1);
         }
@@ -232,14 +227,14 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
 
   //check which shading model is used
   std::string shading{fbx_material.ShadingModel.Get().Buffer()};
-  bool shading_supported = shading == "Phong" || shading == "Labert";
+  bool shading_supported = shading == "Phong" || shading == "Lambert" || shading == "lambert" || shading == "phong"; 
   if(!shading_supported) {
     Logger::LOG_DEBUG << "Shading Type '" << shading << "' not supported." << std::endl;
   }
   //cast to phong not necessary, only diffuse and emissive values needed
   FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)&fbx_material;
   if(!lambert) {
-    Logger::LOG_ERROR << "Casting Material to lambert failed." << std::endl;
+    Logger::LOG_ERROR << "Casting Material to Lambert failed." << std::endl;
     assert(0);
   } 
 
