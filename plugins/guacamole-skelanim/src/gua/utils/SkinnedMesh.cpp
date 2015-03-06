@@ -74,10 +74,6 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     assert(0);
   }
 
-  if(!mesh.IsTriangleMesh()) {
-    Logger::LOG_DEBUG << "Triangulating mesh" << std::endl;
-  }
-
   //struct to save info about future vertex
   struct temp_vert {
     temp_vert(unsigned oindex, unsigned pt, scm::math::vec3f norm, unsigned tr, unsigned ind):
@@ -106,23 +102,10 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     {}
     std::array<unsigned, 3> verts;
   };
-  //one vector of temp_verts represents one control point, every temp_vert in that vector is one vertex at that point
-  std::vector<std::vector<temp_vert>> temp_verts{unsigned(mesh.GetControlPointsCount()), std::vector<temp_vert>{}};
+  //one vector of temp_vert represents one control point, every temp_vert in that vector is one vertex at that point
+  std::vector<std::vector<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::vector<temp_vert>{}};
   std::vector<temp_tri> temp_tris{};
   
-  FbxVector4* control_points = mesh.GetControlPoints();
-  //vertex indices of polygons
-  int* poly_vertices = mesh.GetPolygonVertices();
-
-  FbxArray<FbxVector4> poly_normals;
-  mesh.GetPolygonVertexNormals(poly_normals);
-
-  FbxArray<FbxVector2> poly_uvs{};
-  std::vector<unsigned> uv_indices{};
-  if(has_uvs) {
-    mesh.GetPolygonVertexUVs(UV_set.c_str(), poly_uvs);
-  }
-
   //this function gets a geometry layer and returns the function to access it depending on mapping & referencing
   auto get_access_function = [](FbxLayerElementTemplate<FbxVector4> const& layer) {
     std::function<unsigned(temp_vert const&)> access_function;
@@ -165,6 +148,19 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     return access_function;
   };
 
+
+  FbxVector4* control_points = mesh.GetControlPoints();
+  //vertex indices of polygons
+  int* poly_vertices = mesh.GetPolygonVertices();
+
+  FbxArray<FbxVector4> poly_normals;
+  mesh.GetPolygonVertexNormals(poly_normals);
+
+  FbxArray<FbxVector2> poly_uvs{};
+  if(has_uvs) {
+    mesh.GetPolygonVertexUVs(UV_set.c_str(), poly_uvs);
+  }
+
   //define function to access tangents and bitangents
   std::function<unsigned(temp_vert const&)> get_tangent;
   std::function<unsigned(temp_vert const&)> get_bitangent;
@@ -172,9 +168,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
   FbxArray<FbxVector4> poly_tangents;
   FbxArray<FbxVector4> poly_bitangents;
 
-  std::vector<unsigned> tangent_indices{};
-  std::vector<unsigned> bitangent_indices{};
-  if(has_tangents){
+ if(has_tangents){
     FbxGeometryElementTangent* tangent_info = mesh.GetElementTangent(0);
     tangent_info->GetDirectArray().CopyTo(poly_tangents);
     get_tangent = get_access_function(*tangent_info);
@@ -202,9 +196,9 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
       temp_tris.push_back(tri);
 
       //get references to the control points at which the vertices lie
-      std::vector<temp_vert>& curr_point1 = temp_verts[tri.verts[0]];
-      std::vector<temp_vert>& curr_point2 = temp_verts[tri.verts[1]];
-      std::vector<temp_vert>& curr_point3 = temp_verts[tri.verts[2]];
+      std::vector<temp_vert>& curr_point1 = vert_positions[tri.verts[0]];
+      std::vector<temp_vert>& curr_point2 = vert_positions[tri.verts[1]];
+      std::vector<temp_vert>& curr_point3 = vert_positions[tri.verts[2]];
       //add the new vertices to the control points
       curr_point1.push_back(temp_vert{indices[0], tri.verts[0], to_gua::vec3(poly_normals[indices[0]]), num_triangles, 0});
       curr_point2.push_back(temp_vert{indices[1], tri.verts[1], to_gua::vec3(poly_normals[indices[1]]), num_triangles, 1});
@@ -238,7 +232,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
   unsigned old_num_vertices = 0;
   unsigned dupl_verts = 0;
   //iterate over control points
-  for(std::vector<temp_vert>& verts : temp_verts) {
+  for(std::vector<temp_vert>& verts : vert_positions) {
     old_num_vertices += verts.size();
     //iterate over vertices at that point
     for(auto iter = verts.begin(); iter != verts.end(); ++iter) {
@@ -292,7 +286,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
   //load reduced attributes
   unsigned curr_vert = 0;
   //iterate over control points
-  for(std::vector<temp_vert> const& verts : temp_verts) {
+  for(std::vector<temp_vert> const& verts : vert_positions) {
     //iterate over vertices at that point
     for(temp_vert const& vert : verts) {
       //update containing triangles with actual index of this vertex in member vectors

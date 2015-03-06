@@ -101,6 +101,39 @@ struct Mesh {
   unsigned int num_triangles;
 
  private:
+
+  //struct to save info about future vertex
+  struct temp_vert {
+    temp_vert(unsigned oindex, unsigned pt, unsigned tr, unsigned ind):
+     old_index{oindex},
+     point{pt},
+     normal{},
+     uv{},
+     tangent{},
+     bitangent{},
+     tris{}
+    {
+      tris.push_back(std::make_pair(tr, ind));
+    }
+    unsigned old_index;
+    unsigned point;
+    scm::math::vec3f normal;
+    scm::math::vec3f tangent;
+    scm::math::vec3f bitangent;
+    scm::math::vec2f uv;
+    std::vector<std::pair<unsigned, unsigned>> tris; //tris which share vertex
+  };
+  //struct to save info about future triangle
+  struct temp_tri {
+    temp_tri(unsigned a, unsigned b, unsigned c):
+     verts{a, b, c}
+    {}
+    std::array<unsigned, 3> verts;
+  };
+
+  template<typename T>
+  static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);
+
 };
 
 
