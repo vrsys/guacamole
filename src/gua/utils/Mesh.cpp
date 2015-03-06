@@ -50,10 +50,15 @@ Mesh::Mesh(FbxMesh& mesh) {
   timer.start();
 
   num_vertices = mesh.GetControlPointsCount(); 
-  std::string UV_set;
-  bool has_uvs = true;
 
+//normals
+  if(mesh.GetElementNormalCount() == 0) {
+    //dont override exiting normals and generate by control point, not vertex
+    mesh.GenerateNormals(false, true);
+  }
+  
 //UV coordinates
+  bool has_uvs = true;
   if(mesh.GetElementUVCount() == 0) {
     Logger::LOG_WARNING << "Mesh has no texture coordinates" << std::endl;
     has_uvs = false;
@@ -62,32 +67,13 @@ Mesh::Mesh(FbxMesh& mesh) {
     if(mesh.GetElementUVCount() > 1) {
       Logger::LOG_WARNING << "Mesh has multiple UV sets, only using first one" << std::endl;
     }
-    UV_set = mesh.GetElementUV(0)->GetName();
-  }
-
-  FbxVector4 translation = mesh.GetNode()->GetGeometricTranslation(FbxNode::eSourcePivot);
-  FbxVector4 rotation = mesh.GetNode()->GetGeometricRotation(FbxNode::eSourcePivot);
-  FbxVector4 scaling = mesh.GetNode()->GetGeometricScaling(FbxNode::eSourcePivot);
-  FbxAMatrix geo_transform(translation, rotation, scaling);
-
-  FbxAMatrix identity = FbxAMatrix{};
-  identity.SetIdentity();
-  if(geo_transform != identity) {
-    Logger::LOG_WARNING << "Mesh has Geometric Transform, vertices will be skewed." << std::endl;
-  }
-
-//normals
-  if(mesh.GetElementNormalCount() == 0) {
-    //dont override exiting normals and generate by control point, not vertex
-    mesh.GenerateNormals(false, true);
   }
 
 //tangents
   bool has_tangents = true;
   if(mesh.GetElementTangentCount() == 0 || mesh.GetElementBinormalCount() == 0) {
     if(has_uvs) { 
-      Logger::LOG_DEBUG << "Generating tangents" << std::endl;
-      mesh.GenerateTangentsData(UV_set.c_str(), true);
+      mesh.GenerateTangentsData(0, true);
     }
     else {
       Logger::LOG_DEBUG << "No UVs, can't generate tangents" << std::endl;
@@ -101,114 +87,46 @@ Mesh::Mesh(FbxMesh& mesh) {
     assert(0);
   }
 
-  if(!mesh.IsTriangleMesh()) {
-    Logger::LOG_DEBUG << "Triangulating mesh" << std::endl;
+  FbxVector4 translation = mesh.GetNode()->GetGeometricTranslation(FbxNode::eSourcePivot);
+  FbxVector4 rotation = mesh.GetNode()->GetGeometricRotation(FbxNode::eSourcePivot);
+  FbxVector4 scaling = mesh.GetNode()->GetGeometricScaling(FbxNode::eSourcePivot);
+  FbxAMatrix geo_transform(translation, rotation, scaling);
+
+  FbxAMatrix identity = FbxAMatrix{};
+  identity.SetIdentity();
+  if(geo_transform != identity) {
+    Logger::LOG_WARNING << "Mesh has Geometric Transform, vertices will be skewed." << std::endl;
   }
 
-  //struct to save info about future vertex
-  struct temp_vert {
-    temp_vert(unsigned oindex, unsigned pt, scm::math::vec3f norm, unsigned tr, unsigned ind):
-     old_index{oindex},
-     point{pt},
-     normal{norm},
-     uv{},
-     tangent{},
-     bitangent{},
-     tris{}
-    {
-      tris.push_back(std::make_pair(tr, ind));
-    }
-    unsigned old_index;
-    unsigned point;
-    scm::math::vec3f normal;
-    scm::math::vec3f tangent;
-    scm::math::vec3f bitangent;
-    scm::math::vec2f uv;
-    std::vector<std::pair<unsigned, unsigned>> tris; //tris which share vertex
-  };
-  //struct to save info about future triangle
-  struct temp_tri {
-    temp_tri(unsigned a, unsigned b, unsigned c):
-     verts{a, b, c}
-    {}
-    std::array<unsigned, 3> verts;
-  };
-  //one vector of temp_verts represents one control point, every temp_vert in that vector is one vertex at that point
-  std::vector<std::vector<temp_vert>> temp_verts{unsigned(mesh.GetControlPointsCount()), std::vector<temp_vert>{}};
+  //one vector of temp_vert represents one control point, every temp_vert in that vector is one vertex at that point
+  std::vector<std::vector<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::vector<temp_vert>{}};
   std::vector<temp_tri> temp_tris{};
   
+
   FbxVector4* control_points = mesh.GetControlPoints();
   //vertex indices of polygons
   int* poly_vertices = mesh.GetPolygonVertices();
 
-  FbxArray<FbxVector4> poly_normals;
-  mesh.GetPolygonVertexNormals(poly_normals);
+  //define function to access tangents and bitangents
+  std::function<unsigned(temp_vert const&)> get_normal = get_access_function(*mesh.GetElementNormal(0));
+  FbxLayerElementArrayTemplate<FbxVector4> const& poly_normals{mesh.GetElementNormal(0)->GetDirectArray()};
 
-  FbxArray<FbxVector2> poly_uvs{};
-  std::vector<unsigned> uv_indices{};
+  std::function<unsigned(temp_vert const&)> get_uv;
+  FbxLayerElementArrayTemplate<FbxVector2> const& poly_uvs{has_uvs ? mesh.GetElementUV(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector2>{EFbxType::eFbxDouble2}};
   if(has_uvs) {
-    mesh.GetPolygonVertexUVs(UV_set.c_str(), poly_uvs);
+    get_uv = get_access_function(*mesh.GetElementUV(0));
   }
-
-  //this function gets a geometry layer and returns the function to access it depending on mapping & referencing
-  auto get_access_function = [](FbxLayerElementTemplate<FbxVector4> const& layer) {
-    std::function<unsigned(temp_vert const&)> access_function;
-    //mapping to control point
-    if(layer.GetMappingMode() == FbxGeometryElement::eByControlPoint) {
-      if(layer.GetReferenceMode() == FbxGeometryElement::eDirect) {
-        access_function =[](temp_vert const& vert)->unsigned {
-          return vert.point;
-        };
-      }
-      else if(layer.GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
-        access_function = [&layer](temp_vert const& vert)->unsigned {
-          return layer.GetIndexArray().GetAt(vert.point);
-        };
-      }
-      else {
-        Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
-      }
-    }
-    //mapping to vertex
-    else if(layer.GetMappingMode() == FbxGeometryElement::eByPolygonVertex){
-      if(layer.GetReferenceMode() == FbxGeometryElement::eDirect) {
-        access_function =[](temp_vert const& vert)->unsigned {
-          return vert.old_index;
-        };
-      }
-      else if(layer.GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
-        access_function = [&layer](temp_vert const& vert)->unsigned {
-          return layer.GetIndexArray().GetAt(vert.old_index);
-        };
-      }
-      else {
-        Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
-      }
-    }
-    else {
-      Logger::LOG_ERROR << "Type of mapping not supported" << std::endl;
-    }
-
-    return access_function;
-  };
 
   //define function to access tangents and bitangents
   std::function<unsigned(temp_vert const&)> get_tangent;
   std::function<unsigned(temp_vert const&)> get_bitangent;
 
-  FbxArray<FbxVector4> poly_tangents;
-  FbxArray<FbxVector4> poly_bitangents;
+  FbxLayerElementArrayTemplate<FbxVector4> const& poly_tangents{has_tangents ? mesh.GetElementTangent(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector4>{EFbxType::eFbxDouble4}};
+  FbxLayerElementArrayTemplate<FbxVector4> const& poly_bitangents{has_tangents ? mesh.GetElementBinormal(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector4>{EFbxType::eFbxDouble4}};
 
-  std::vector<unsigned> tangent_indices{};
-  std::vector<unsigned> bitangent_indices{};
-  if(has_tangents){
-    FbxGeometryElementTangent* tangent_info = mesh.GetElementTangent(0);
-    tangent_info->GetDirectArray().CopyTo(poly_tangents);
-    get_tangent = get_access_function(*tangent_info);
-    
-    FbxGeometryElementBinormal* bitangent_info = mesh.GetElementBinormal(0);
-    bitangent_info->GetDirectArray().CopyTo(poly_bitangents);
-    get_bitangent = get_access_function(*bitangent_info);
+ if(has_tangents){
+    get_tangent = get_access_function(*mesh.GetElementTangent(0));
+    get_bitangent = get_access_function(*mesh.GetElementBinormal(0));
   }
 
   num_triangles = 0; 
@@ -228,31 +146,36 @@ Mesh::Mesh(FbxMesh& mesh) {
       temp_tri tri{unsigned(poly_vertices[indices[0]]), unsigned(poly_vertices[indices[1]]), unsigned(poly_vertices[indices[2]])};
       temp_tris.push_back(tri);
 
-      //get references to the control points at which the vertices lie
-      std::vector<temp_vert>& curr_point1 = temp_verts[tri.verts[0]];
-      std::vector<temp_vert>& curr_point2 = temp_verts[tri.verts[1]];
-      std::vector<temp_vert>& curr_point3 = temp_verts[tri.verts[2]];
-      //add the new vertices to the control points
-      curr_point1.push_back(temp_vert{indices[0], tri.verts[0], to_gua::vec3(poly_normals[indices[0]]), num_triangles, 0});
-      curr_point2.push_back(temp_vert{indices[1], tri.verts[1], to_gua::vec3(poly_normals[indices[1]]), num_triangles, 1});
-      curr_point3.push_back(temp_vert{indices[2], tri.verts[2], to_gua::vec3(poly_normals[indices[2]]), num_triangles, 2});
+      //create new vertices that form triangle
+      temp_vert vert1{indices[0], tri.verts[0], num_triangles, 0};
+      temp_vert vert2{indices[1], tri.verts[1], num_triangles, 1};
+      temp_vert vert3{indices[2], tri.verts[2], num_triangles, 2};
+
+      vert1.normal = to_gua::vec3(poly_normals[get_normal(vert1)]);
+      vert2.normal = to_gua::vec3(poly_normals[get_normal(vert2)]);
+      vert3.normal = to_gua::vec3(poly_normals[get_normal(vert3)]);
       
       //set optional data
       if(has_uvs) {
-        curr_point1[curr_point1.size()-1].uv = to_gua::vec2(poly_uvs[indices[0]]);
-        curr_point2[curr_point2.size()-1].uv = to_gua::vec2(poly_uvs[indices[1]]);
-        curr_point3[curr_point3.size()-1].uv = to_gua::vec2(poly_uvs[indices[2]]); 
+        vert1.uv = to_gua::vec2(poly_uvs[get_uv(vert1)]);
+        vert2.uv = to_gua::vec2(poly_uvs[get_uv(vert2)]);
+        vert3.uv = to_gua::vec2(poly_uvs[get_uv(vert3)]); 
       }
       if(has_tangents) {
-        curr_point1[curr_point1.size()-1].tangent = to_gua::vec3(poly_tangents[get_tangent(curr_point1[curr_point1.size()-1])]);
-        curr_point1[curr_point1.size()-1].bitangent = to_gua::vec3(poly_bitangents[get_bitangent(curr_point1[curr_point1.size()-1])]);
+        vert1.tangent = to_gua::vec3(poly_tangents[get_tangent(vert1)]);
+        vert1.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert1)]);
         
-        curr_point2[curr_point2.size()-1].tangent = to_gua::vec3(poly_tangents[get_tangent(curr_point2[curr_point2.size()-1])]);
-        curr_point2[curr_point2.size()-1].bitangent = to_gua::vec3(poly_bitangents[get_bitangent(curr_point2[curr_point2.size()-1])]);
+        vert2.tangent = to_gua::vec3(poly_tangents[get_tangent(vert2)]);
+        vert2.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert2)]);
         
-        curr_point3[curr_point3.size()-1].tangent = to_gua::vec3(poly_tangents[get_tangent(curr_point3[curr_point3.size()-1])]);
-        curr_point3[curr_point3.size()-1].bitangent = to_gua::vec3(poly_bitangents[get_bitangent(curr_point3[curr_point3.size()-1])]);
+        vert3.tangent = to_gua::vec3(poly_tangents[get_tangent(vert3)]);
+        vert3.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert3)]);
       }
+      //add new vertices to respective control points
+      vert_positions[tri.verts[0]].push_back(vert1);
+      vert_positions[tri.verts[1]].push_back(vert2);
+      vert_positions[tri.verts[2]].push_back(vert3);
+
       ++tris_added;
       ++num_triangles;
     }
@@ -265,7 +188,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   unsigned old_num_vertices = 0;
   unsigned dupl_verts = 0;
   //iterate over control points
-  for(std::vector<temp_vert>& verts : temp_verts) {
+  for(std::vector<temp_vert>& verts : vert_positions) {
     old_num_vertices += verts.size();
     //iterate over vertices at that point
     for(auto iter = verts.begin(); iter != verts.end(); ++iter) {
@@ -311,7 +234,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   //load reduced attributes
   unsigned curr_vert = 0;
   //iterate over control points
-  for(std::vector<temp_vert> const& verts : temp_verts) {
+  for(std::vector<temp_vert> const& verts : vert_positions) {
     //iterate over vertices at that point
     for(temp_vert const& vert : verts) {
       //update containing triangles with actual index of this vertex in member vectors
@@ -344,6 +267,50 @@ Mesh::Mesh(FbxMesh& mesh) {
   //output reduction info
   Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
 }
+
+  //this function gets a geometry layer and returns the function to access it depending on mapping & referencing
+template<typename T>
+std::function<unsigned(Mesh::temp_vert const&)> Mesh::get_access_function(FbxLayerElementTemplate<T> const& layer) {
+  std::function<unsigned(temp_vert const&)> access_function;
+  //mapping to control point
+  if(layer.GetMappingMode() == FbxGeometryElement::eByControlPoint) {
+    if(layer.GetReferenceMode() == FbxGeometryElement::eDirect) {
+      access_function =[](temp_vert const& vert)->unsigned {
+        return vert.point;
+      };
+    }
+    else if(layer.GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+      access_function = [&layer](temp_vert const& vert)->unsigned {
+        return layer.GetIndexArray().GetAt(vert.point);
+      };
+    }
+    else {
+      Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
+    }
+  }
+  //mapping to vertex
+  else if(layer.GetMappingMode() == FbxGeometryElement::eByPolygonVertex){
+    if(layer.GetReferenceMode() == FbxGeometryElement::eDirect) {
+      access_function =[](temp_vert const& vert)->unsigned {
+        return vert.old_index;
+      };
+    }
+    else if(layer.GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+      access_function = [&layer](temp_vert const& vert)->unsigned {
+        return layer.GetIndexArray().GetAt(vert.old_index);
+      };
+    }
+    else {
+      Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
+    }
+  }
+  else {
+    Logger::LOG_ERROR << "Type of mapping not supported" << std::endl;
+  }
+
+  return access_function;
+};
+
 #endif // GUACAMOLE_FBX
 
 Mesh::Mesh(aiMesh const& mesh) {   
