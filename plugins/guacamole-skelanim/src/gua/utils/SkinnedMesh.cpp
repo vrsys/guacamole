@@ -5,6 +5,7 @@
 //external headers
 #include <iostream>
 #include <queue>
+#include <map>
 
 namespace gua{
 
@@ -79,23 +80,23 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
 
   //struct to save info about future vertex
   struct temp_vert {
-    temp_vert(unsigned oindex, unsigned pt, unsigned norm, unsigned tr, unsigned ind):
+    temp_vert(unsigned oindex, unsigned pt, scm::math::vec3f norm, unsigned tr, unsigned ind):
      old_index{oindex},
      point{pt},
      normal{norm},
-     uv{0},
-     tangent{0},
-     bitangent{0},
+     uv{},
+     tangent{},
+     bitangent{},
      tris{}
     {
       tris.push_back(std::make_pair(tr, ind));
     }
     unsigned old_index;
     unsigned point;
-    unsigned normal;
-    unsigned tangent;
-    unsigned bitangent;
-    unsigned uv;
+    scm::math::vec3f normal;
+    scm::math::vec3f tangent;
+    scm::math::vec3f bitangent;
+    scm::math::vec2f uv;
     std::vector<std::pair<unsigned, unsigned>> tris; //tris which share vertex
   };
   //struct to save info about future triangle
@@ -113,20 +114,13 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
   //vertex indices of polygons
   int* poly_vertices = mesh.GetPolygonVertices();
 
-
   FbxArray<FbxVector4> poly_normals;
   mesh.GetPolygonVertexNormals(poly_normals);
-  //index normals, filter out duplicates
-  Logger::LOG_DEBUG << "normal" << std::endl;
-  auto normal_indices = get_container_index(poly_normals);
 
   FbxArray<FbxVector2> poly_uvs{};
   std::vector<unsigned> uv_indices{};
   if(has_uvs) {
     mesh.GetPolygonVertexUVs(UV_set.c_str(), poly_uvs);
-    
-    Logger::LOG_DEBUG << "UV" << std::endl;
-    uv_indices = get_container_index(poly_uvs);
   }
 
   //this function gets a geometry layer and returns the function to access it depending on mapping & referencing
@@ -185,17 +179,9 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     tangent_info->GetDirectArray().CopyTo(poly_tangents);
     get_tangent = get_access_function(*tangent_info);
     
-    //index tangents, filter out duplicates to allow vertex duplication testing by tangent
-    Logger::LOG_DEBUG << "tangents" << std::endl;
-    tangent_indices = get_container_index(poly_tangents);
-    
     FbxGeometryElementBinormal* bitangent_info = mesh.GetElementBinormal(0);
     bitangent_info->GetDirectArray().CopyTo(poly_bitangents);
     get_bitangent = get_access_function(*bitangent_info);
-
-    //index bitangents, filter out duplicatest to allow vertex duplication testing by tangent
-    Logger::LOG_DEBUG << "bitangents" << std::endl;
-    bitangent_indices = get_container_index(poly_bitangents);
   }
 
   num_triangles = 0; 
@@ -215,30 +201,30 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
 
       //add vertices to to array
       std::vector<temp_vert>& curr_point1 = temp_verts[tri.verts[0]];
-      curr_point1.push_back(temp_vert{indices[0], tri.verts[0], normal_indices[indices[0]], num_triangles, 0});
+      curr_point1.push_back(temp_vert{indices[0], tri.verts[0], to_gua::vec3(poly_normals[indices[0]]), num_triangles, 0});
       
       std::vector<temp_vert>& curr_point2 = temp_verts[tri.verts[1]];
-      curr_point2.push_back(temp_vert{indices[1], tri.verts[1], normal_indices[indices[1]], num_triangles, 1});
+      curr_point2.push_back(temp_vert{indices[1], tri.verts[1], to_gua::vec3(poly_normals[indices[1]]), num_triangles, 1});
       
       std::vector<temp_vert>& curr_point3 = temp_verts[tri.verts[2]];
-      curr_point3.push_back(temp_vert{indices[2], tri.verts[2], normal_indices[indices[2]], num_triangles, 2});
+      curr_point3.push_back(temp_vert{indices[2], tri.verts[2], to_gua::vec3(poly_normals[indices[2]]), num_triangles, 2});
       //set optional data
       if(has_uvs) {
-        curr_point1[curr_point1.size()-1].uv = uv_indices[indices[0]];
+        curr_point1[curr_point1.size()-1].uv = to_gua::vec2(poly_uvs[indices[0]]);
         
-        curr_point2[curr_point2.size()-1].uv = uv_indices[indices[1]];
+        curr_point2[curr_point2.size()-1].uv = to_gua::vec2(poly_uvs[indices[1]]);
         
-        curr_point3[curr_point3.size()-1].uv = uv_indices[indices[2]]; 
+        curr_point3[curr_point3.size()-1].uv = to_gua::vec2(poly_uvs[indices[2]]); 
       }
       if(has_tangents) {
-        curr_point1[curr_point1.size()-1].tangent = tangent_indices[get_tangent(curr_point1[curr_point1.size()-1])];
-        curr_point1[curr_point1.size()-1].bitangent = bitangent_indices[get_bitangent(curr_point1[curr_point1.size()-1])];
+        curr_point1[curr_point1.size()-1].tangent = to_gua::vec3(poly_tangents[get_tangent(curr_point1[curr_point1.size()-1])]);
+        curr_point1[curr_point1.size()-1].bitangent = to_gua::vec3(poly_bitangents[get_bitangent(curr_point1[curr_point1.size()-1])]);
         
-        curr_point2[curr_point2.size()-1].tangent = tangent_indices[get_tangent(curr_point2[curr_point2.size()-1])];
-        curr_point2[curr_point2.size()-1].bitangent = bitangent_indices[get_bitangent(curr_point2[curr_point2.size()-1])];
+        curr_point2[curr_point2.size()-1].tangent = to_gua::vec3(poly_tangents[get_tangent(curr_point2[curr_point2.size()-1])]);
+        curr_point2[curr_point2.size()-1].bitangent = to_gua::vec3(poly_bitangents[get_bitangent(curr_point2[curr_point2.size()-1])]);
         
-        curr_point3[curr_point3.size()-1].tangent = tangent_indices[get_tangent(curr_point3[curr_point3.size()-1])];
-        curr_point3[curr_point3.size()-1].bitangent = bitangent_indices[get_bitangent(curr_point3[curr_point3.size()-1])];
+        curr_point3[curr_point3.size()-1].tangent = to_gua::vec3(poly_tangents[get_tangent(curr_point3[curr_point3.size()-1])]);
+        curr_point3[curr_point3.size()-1].bitangent = to_gua::vec3(poly_bitangents[get_bitangent(curr_point3[curr_point3.size()-1])]);
       }
       ++tris_added;
       ++num_triangles;
@@ -257,8 +243,8 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
       for(std::vector<temp_vert>::iterator iter2 = std::next(iter); iter2 != verts.end(); ++iter2) {
         //match by normals and if exisiting, uvs
         bool duplicate = iter2->normal == iter->normal;
-        duplicate = has_uvs ? (iter2->uv == iter->uv && duplicate) : duplicate; 
-        duplicate = has_tangents ? (iter2->tangent == iter->tangent && iter2->bitangent == iter->bitangent && duplicate) : duplicate; 
+        if(duplicate && has_uvs) duplicate = iter2->uv == iter->uv; 
+        if(duplicate && has_tangents) duplicate = iter2->tangent == iter->tangent && iter2->bitangent == iter->bitangent; 
         //duplicate -> merge vertices
         if(duplicate) {
 
@@ -310,14 +296,14 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
       }
 
       positions.push_back(to_gua::vec3(control_points[vert.point]));
-      normals.push_back(to_gua::vec3(poly_normals[vert.normal]));
+      normals.push_back(vert.normal);
 
       if(has_tangents) {
-        tangents.push_back(to_gua::vec3(poly_tangents[vert.tangent]));
-        bitangents.push_back(to_gua::vec3(poly_bitangents[vert.bitangent]));
+        tangents.push_back(vert.tangent);
+        bitangents.push_back(vert.bitangent);
       }
       if(has_uvs) {
-        texCoords.push_back(to_gua::vec3(poly_uvs[vert.uv]));
+        texCoords.push_back(vert.uv);
       }
       if(has_weights) {
         bone_influences const& curr_influence{ctrlpt_weights[vert.point]};
@@ -529,25 +515,6 @@ SkinnedMesh::get_bone_ids()const{
 std::vector<float> const& 
 SkinnedMesh::get_bone_weights()const{
   return bone_weights;
-}
-
-template<typename T>
-std::vector<unsigned> SkinnedMesh::get_container_index(FbxArray<T> const& container) {
-  std::vector<unsigned> indices{};
-  unsigned duplicates = 0;
-
-  for(unsigned i = 0; i < container.Size(); ++i) {
-    unsigned d = container.Find(container[i]);
-    if(d == i) {
-      indices.push_back(i);
-    }
-    else {
-      indices.push_back(d); 
-      ++duplicates;
-    }
-  } 
-  Logger::LOG_DEBUG << duplicates << " duplications" << std::endl;
-  return indices;
 }
 
 } // namespace gua
