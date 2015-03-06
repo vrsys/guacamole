@@ -86,8 +86,8 @@ struct Mesh {
   Mesh(FbxMesh& mesh);
 #endif
 
-  void copy_to_buffer(Vertex* vertex_buffer)  const;
-  scm::gl::vertex_format get_vertex_format()  const;
+  void copy_to_buffer(Vertex* vertex_buffer) const;
+  virtual scm::gl::vertex_format get_vertex_format() const;
 
   // std::vector<Vertex> vertices;
   std::vector<scm::math::vec3f> positions;
@@ -100,7 +100,7 @@ struct Mesh {
   unsigned int num_vertices;
   unsigned int num_triangles;
 
- private:
+ protected:
 
   //struct to save info about future vertex
   struct temp_vert {
@@ -133,7 +133,6 @@ struct Mesh {
 
   template<typename T>
   static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);
-
 };
 
 

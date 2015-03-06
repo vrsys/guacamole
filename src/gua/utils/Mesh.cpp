@@ -51,6 +51,12 @@ Mesh::Mesh(FbxMesh& mesh) {
 
   num_vertices = mesh.GetControlPointsCount(); 
 
+//polygons
+  if(mesh.GetPolygonCount() < 1) {
+    Logger::LOG_ERROR << "No polygons in mesh" << std::endl;
+    assert(0);
+  }
+
 //normals
   if(mesh.GetElementNormalCount() == 0) {
     //dont override exiting normals and generate by control point, not vertex
@@ -81,12 +87,6 @@ Mesh::Mesh(FbxMesh& mesh) {
     }
   }
 
-//polygons
-  if(mesh.GetPolygonCount() < 1) {
-    Logger::LOG_ERROR << "No polygons in mesh" << std::endl;
-    assert(0);
-  }
-
   FbxVector4 translation = mesh.GetNode()->GetGeometricTranslation(FbxNode::eSourcePivot);
   FbxVector4 rotation = mesh.GetNode()->GetGeometricRotation(FbxNode::eSourcePivot);
   FbxVector4 scaling = mesh.GetNode()->GetGeometricScaling(FbxNode::eSourcePivot);
@@ -95,7 +95,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   FbxAMatrix identity = FbxAMatrix{};
   identity.SetIdentity();
   if(geo_transform != identity) {
-    Logger::LOG_WARNING << "Mesh has Geometric Transform, vertices will be skewed." << std::endl;
+    Logger::LOG_WARNING << "Mesh has Geometric Transform, vertices may be skewed." << std::endl;
   }
 
   //one vector of temp_vert represents one control point, every temp_vert in that vector is one vertex at that point
@@ -107,7 +107,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   //vertex indices of polygons
   int* poly_vertices = mesh.GetPolygonVertices();
 
-  //define function to access tangents and bitangents
+  //define function to access vertex properties
   std::function<unsigned(temp_vert const&)> get_normal = get_access_function(*mesh.GetElementNormal(0));
   FbxLayerElementArrayTemplate<FbxVector4> const& poly_normals{mesh.GetElementNormal(0)->GetDirectArray()};
 
@@ -117,14 +117,12 @@ Mesh::Mesh(FbxMesh& mesh) {
     get_uv = get_access_function(*mesh.GetElementUV(0));
   }
 
-  //define function to access tangents and bitangents
   std::function<unsigned(temp_vert const&)> get_tangent;
   std::function<unsigned(temp_vert const&)> get_bitangent;
 
   FbxLayerElementArrayTemplate<FbxVector4> const& poly_tangents{has_tangents ? mesh.GetElementTangent(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector4>{EFbxType::eFbxDouble4}};
   FbxLayerElementArrayTemplate<FbxVector4> const& poly_bitangents{has_tangents ? mesh.GetElementBinormal(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector4>{EFbxType::eFbxDouble4}};
-
- if(has_tangents){
+  if(has_tangents){
     get_tangent = get_access_function(*mesh.GetElementTangent(0));
     get_bitangent = get_access_function(*mesh.GetElementBinormal(0));
   }
@@ -163,14 +161,14 @@ Mesh::Mesh(FbxMesh& mesh) {
       }
       if(has_tangents) {
         vert1.tangent = to_gua::vec3(poly_tangents[get_tangent(vert1)]);
-        vert1.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert1)]);
-        
         vert2.tangent = to_gua::vec3(poly_tangents[get_tangent(vert2)]);
-        vert2.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert2)]);
-        
         vert3.tangent = to_gua::vec3(poly_tangents[get_tangent(vert3)]);
+        
+        vert1.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert1)]);
+        vert2.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert2)]);
         vert3.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert3)]);
       }
+
       //add new vertices to respective control points
       vert_positions[tri.verts[0]].push_back(vert1);
       vert_positions[tri.verts[1]].push_back(vert2);

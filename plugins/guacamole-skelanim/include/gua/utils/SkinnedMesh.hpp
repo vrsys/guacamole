@@ -40,23 +40,6 @@
  
 namespace gua {
 
-struct bone_influences
-{        
-  std::vector<uint> IDs;
-  std::vector<float> weights;
-
-  bone_influences():
-   IDs{},
-   weights{}
-  {};
-  
-  void add_bone(uint bone_ID, float weight)
-  {
-    IDs.push_back(bone_ID);
-    weights.push_back(weight);
-  }
-};
-
 struct SkinnedVertex {
   scm::math::vec3f pos;
   scm::math::vec2f tex;
@@ -67,34 +50,42 @@ struct SkinnedVertex {
   uint nr_of_bones; 
 };
 
-struct SkinnedMesh {
+struct SkinnedMesh : public Mesh {
  public:
   SkinnedMesh();
 
   SkinnedMesh(aiMesh const& mesh, Bone const& root = Bone{});
   SkinnedMesh(FbxMesh& mesh, Bone const& root = Bone{});
 
-  void copy_to_buffer(SkinnedVertex* vertex_buffer, uint resource_offset)  const;
-  scm::gl::vertex_format get_vertex_format()  const;
+  void copy_to_buffer(SkinnedVertex* vertex_buffer, uint resource_offset) const;
+  scm::gl::vertex_format get_vertex_format() const override;
 
-  std::vector<scm::math::vec3f> positions;
-  std::vector<scm::math::vec3f> normals;
-  std::vector<scm::math::vec2f> texCoords;
-  std::vector<scm::math::vec3f> tangents;
-  std::vector<scm::math::vec3f> bitangents;
   std::vector<uint>             bone_ids;
   std::vector<float>            bone_weights;
   std::vector<unsigned>         bone_counts;
-  
-  std::vector<unsigned> indices;
-
-  unsigned int num_vertices;
-  unsigned int num_triangles;
 
   std::vector<uint> const& get_bone_ids() const;
   std::vector<float> const& get_bone_weights() const;
   
  private:
+
+  struct bone_influences
+  {        
+    std::vector<uint> IDs;
+    std::vector<float> weights;
+
+    bone_influences():
+     IDs{},
+     weights{}
+    {};
+    
+    void add_bone(uint bone_ID, float weight)
+    {
+      IDs.push_back(bone_ID);
+      weights.push_back(weight);
+    }
+  };
+
   static std::vector<bone_influences> get_weights(aiMesh const& mesh, Bone const& root);
   static std::vector<bone_influences> get_weights(FbxMesh const& mesh, Bone const& root);
 };
