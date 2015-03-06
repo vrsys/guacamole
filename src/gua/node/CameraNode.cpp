@@ -23,7 +23,7 @@
 #include <gua/node/CameraNode.hpp>
 
 // guacamole header
-#include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/scenegraph.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
 
@@ -52,6 +52,12 @@ CameraNode::CameraNode(std::string const& name,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+Frustum CameraNode::get_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return make_frustum(graph, get_world_transform(), config, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<Node> CameraNode::copy() const {
     return std::make_shared<CameraNode>(get_name(), pipeline_description_, config, get_transform());
 }
@@ -69,6 +75,67 @@ SerializedCameraNode CameraNode::serialize() const
   s.pipeline_description = pipeline_description_;
 
   return s;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& camera_transform, CameraNode::Configuration const& config, CameraMode mode) {
+    std::string screen_name(mode != CameraMode::RIGHT ? config.left_screen_path() : config.right_screen_path());
+    auto screen_it(graph[screen_name]);
+    auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
+    if (!screen) {
+        Logger::LOG_WARNING << "Cannot make Frustum: No valid screen specified" << std::endl;
+        return Frustum();
+    }
+
+    auto eye_transform(camera_transform);
+    auto screen_transform(screen->get_scaled_world_transform());
+
+    float clipping_offset(0.f);
+
+    if (config.get_enable_stereo()) {
+
+        // assure same clipping for left and right eye
+        math::vec4 eye_separation(camera_transform * math::vec4(config.eye_dist(), 0.f, 0.f, 0.f));
+        math::vec4 screen_direction(screen_transform * math::vec4(0.f, 0.f, -1.f, 0.f));
+
+        math::vec3 eye_separation_in_screen_direction(
+            scm::math::dot(eye_separation, screen_direction) / 
+            scm::math::length_sqr(screen_direction) * screen_direction
+        );
+
+        float eye_dist_in_screen_direction(scm::math::length(eye_separation_in_screen_direction));
+
+        // left eye is closer to screen than left eye
+        if (eye_separation.x*screen_direction.x + 
+            eye_separation.y*screen_direction.y + 
+            eye_separation.z*screen_direction.z > 0) {
+
+            // move left eye clipping towards screen
+            if (mode != CameraMode::RIGHT) clipping_offset = eye_dist_in_screen_direction;
+        } else {
+            // move right eye clipping towards screen
+            if (mode == CameraMode::RIGHT) clipping_offset = eye_dist_in_screen_direction;
+        }
+
+        if (mode != CameraMode::RIGHT) {
+            eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() - 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
+        } else {
+            eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() + 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
+        }
+    }
+
+    if (config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
+        return Frustum::perspective(
+            eye_transform, screen_transform, 
+            config.near_clip() + clipping_offset, config.far_clip() + clipping_offset
+        );
+    } 
+
+    return Frustum::orthographic(
+        eye_transform, screen_transform, 
+        config.near_clip() + clipping_offset, config.far_clip() + clipping_offset
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

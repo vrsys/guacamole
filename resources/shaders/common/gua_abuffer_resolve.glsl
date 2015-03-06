@@ -9,14 +9,14 @@ void abuf_mix_frag(vec4 frag_color, inout vec4 color) {
 
 #ifndef ABUF_SHADE_FUNC
 #define ABUF_SHADE_FUNC abuf_get_color
-vec3 abuf_get_color(uint pos, float depth) {
-  return ABUF_FRAG(pos, 0).rgb;
+vec4 abuf_get_color(uint pos, float depth) {
+  return vec4(ABUF_FRAG(pos, 0).rgb, 0);
 }
 #else
-vec3 ABUF_SHADE_FUNC(uint pos, float depth);
+vec4 ABUF_SHADE_FUNC(uint pos, float depth);
 #endif
 
-bool abuf_blend(inout vec4 color, float opaque_depth) {
+bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
   const ivec2 frag_pos = ivec2(gl_FragCoord.xy);
   uint current = gua_resolution.x * frag_pos.y + frag_pos.x;
   int frag_count = 0;
@@ -36,7 +36,10 @@ bool abuf_blend(inout vec4 color, float opaque_depth) {
     }
 
     float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
-    vec4 shaded_color = vec4(ABUF_SHADE_FUNC(current - abuf_list_offset, z), frag_alpha);
+    vec4 shaded_color_emit = ABUF_SHADE_FUNC(current - abuf_list_offset, z);
+    vec4 shaded_color = vec4(shaded_color_emit.rgb, frag_alpha);
+
+    emissivity = min(1.0, emissivity + (1-color.a)*shaded_color_emit.w*frag_alpha);
     abuf_mix_frag(shaded_color, color);
 
     if (color.a >= @abuf_blending_termination_threshold@) {

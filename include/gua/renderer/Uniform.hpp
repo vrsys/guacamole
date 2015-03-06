@@ -58,23 +58,23 @@ struct GUA_DLL GetGlslType : public boost::static_visitor<std::string> {
   std::string operator()(std::string) const { return "uvec2"; }
 };
 
-struct GUA_DLL GetByteSize : public boost::static_visitor<unsigned> {
-  unsigned operator()(int) const { return sizeof(int); }
-  unsigned operator()(bool) const { return sizeof(int); }
-  unsigned operator()(float) const { return sizeof(float); }
-  unsigned operator()(scm::math::mat3) const { return sizeof(math::mat3f); }
-  unsigned operator()(scm::math::mat4) const { return sizeof(math::mat4f); }
-  unsigned operator()(scm::math::vec2) const { return sizeof(math::vec2f); }
-  unsigned operator()(scm::math::vec3) const { return sizeof(math::vec3f); }
-  unsigned operator()(scm::math::vec4) const { return sizeof(math::vec4f); }
-  unsigned operator()(scm::math::vec2i) const { return sizeof(math::vec2i); }
-  unsigned operator()(scm::math::vec3i) const { return sizeof(math::vec3i); }
-  unsigned operator()(scm::math::vec4i) const { return sizeof(math::vec4i); }
-  unsigned operator()(scm::math::vec2ui) const { return sizeof(math::vec2ui); }
-  unsigned operator()(scm::math::vec3ui) const { return sizeof(math::vec3ui); }
-  unsigned operator()(scm::math::vec4ui) const { return sizeof(math::vec4ui); }
-  unsigned operator()(std::string) const { return sizeof(math::vec2ui); }
-};
+// struct GUA_DLL GetByteSize : public boost::static_visitor<unsigned> {
+//   unsigned operator()(int) const { return sizeof(int); }
+//   unsigned operator()(bool) const { return sizeof(int); }
+//   unsigned operator()(float) const { return sizeof(float); }
+//   unsigned operator()(scm::math::mat3) const { return sizeof(math::mat3f); }
+//   unsigned operator()(scm::math::mat4) const { return sizeof(math::mat4f); }
+//   unsigned operator()(scm::math::vec2) const { return sizeof(math::vec2f); }
+//   unsigned operator()(scm::math::vec3) const { return sizeof(math::vec3f); }
+//   unsigned operator()(scm::math::vec4) const { return sizeof(math::vec4f); }
+//   unsigned operator()(scm::math::vec2i) const { return sizeof(math::vec2i); }
+//   unsigned operator()(scm::math::vec3i) const { return sizeof(math::vec3i); }
+//   unsigned operator()(scm::math::vec4i) const { return sizeof(math::vec4i); }
+//   unsigned operator()(scm::math::vec2ui) const { return sizeof(math::vec2ui); }
+//   unsigned operator()(scm::math::vec3ui) const { return sizeof(math::vec3ui); }
+//   unsigned operator()(scm::math::vec4ui) const { return sizeof(math::vec4ui); }
+//   unsigned operator()(std::string) const { return sizeof(math::vec2ui); }
+// };
 
 
 class GUA_DLL UniformValue {
@@ -134,9 +134,9 @@ class GUA_DLL UniformValue {
     return boost::apply_visitor(GetGlslType(), data);
   }
 
-  unsigned get_byte_size() const {
-    return boost::apply_visitor(GetByteSize(), data);
-  }
+  // unsigned get_byte_size() const {
+  //   return boost::apply_visitor(GetByteSize(), data);
+  // }
 
   std::ostream& serialize_to_stream(std::ostream& os) const {
     return serialize_to_stream_impl_(this, os);

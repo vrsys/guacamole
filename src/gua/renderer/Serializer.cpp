@@ -119,7 +119,7 @@ bool Serializer::is_visible(node::Node* node) const {
   if (enable_frustum_culling_) {
     auto bbox(node->get_bounding_box());
     if (bbox != math::BoundingBox<math::vec3>()) {
-      is_visible = current_frustum_.is_inside(bbox);
+      is_visible = current_frustum_.intersects(bbox);
     }
   }
 

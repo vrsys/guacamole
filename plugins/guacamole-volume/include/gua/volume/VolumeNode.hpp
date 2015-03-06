@@ -42,9 +42,9 @@ namespace node {
  */
 class GUA_VOLUME_DLL VolumeNode : public SerializableNode {
 public:
-  
+
   #define ALPHA_TRANSFER_TYPE scm::data::piecewise_function_1d<float, float>
-  #define COLOR_TRANSFER_TYPE scm::data::piecewise_function_1d<float, math::vec3>
+  #define COLOR_TRANSFER_TYPE scm::data::piecewise_function_1d<float, math::vec3f>
 
   struct Configuration {
     /**

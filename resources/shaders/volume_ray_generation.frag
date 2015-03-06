@@ -21,10 +21,10 @@
 
 @include "shaders/common/header.glsl"
 
-// input 
+// input
 in vec3 gua_position_varying;
 
-// write outputs 
+// write outputs
 layout(location=0) out vec3 gua_out_color;
 
 // main ------------------------------------------------------------------------

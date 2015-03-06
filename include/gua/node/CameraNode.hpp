@@ -27,6 +27,7 @@
 #include <gua/renderer/PipelineDescription.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/Mask.hpp>
+#include <gua/renderer/Frustum.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
 namespace gua {
@@ -161,6 +162,7 @@ class GUA_DLL CameraNode : public Node {
     pipeline_description_ = pipeline_description;
   }
 
+  Frustum get_frustum(SceneGraph const& graph, CameraMode mode) const;
 
   float get_application_fps() const {
     return application_fps_;
@@ -189,7 +191,13 @@ class GUA_DLL CameraNode : public Node {
    */
   void accept(NodeVisitor& visitor) override;
 
+  friend struct SerializedCameraNode;
+
  private:
+  static Frustum make_frustum(SceneGraph const& graph, 
+                              math::mat4 const& camera_transform, 
+                              CameraNode::Configuration const& config, 
+                              CameraMode mode);
 
   float application_fps_;
   float rendering_fps_;
@@ -199,6 +207,7 @@ class GUA_DLL CameraNode : public Node {
   // based on this description the rendering is performed
   std::shared_ptr<PipelineDescription> pipeline_description_;
 
+
   std::vector<std::shared_ptr<CameraNode>> pre_render_cameras_;
 };
 
@@ -207,8 +216,10 @@ struct GUA_DLL SerializedCameraNode {
   math::mat4                            transform;
   std::size_t                           uuid;
   std::shared_ptr<PipelineDescription>  pipeline_description;
-  
   std::vector<SerializedCameraNode>     pre_render_cameras;
+  Frustum get_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return CameraNode::make_frustum(graph, transform, config, mode);
+  }
 };
 
 

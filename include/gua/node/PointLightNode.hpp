@@ -51,7 +51,7 @@ class GUA_DLL PointLightNode : public SerializableNode {
     /**
      * The intensity of the light source in Lumen (lm).
      */
-    GUA_ADD_PROPERTY(float,           brightness,              100.0f);
+    GUA_ADD_PROPERTY(float,           brightness,               10.0f);
 
     /**
      * The exponent of distance attenuation.

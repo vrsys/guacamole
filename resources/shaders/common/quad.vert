@@ -29,12 +29,12 @@ layout(location=2) in vec2 gua_in_texcoord;
 @include "shaders/common/gua_camera_uniforms.glsl"
 
 // output
-out vec2 gua_quad_coords;
-out vec3 gua_normal;
+out vec2 gua_varying_quad_coords;
+out vec3 gua_varying_normal;
 
 // body
 void main() {
-    gua_quad_coords = gua_in_texcoord;
-    gua_normal = (gua_normal_matrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz;
+    gua_varying_quad_coords = gua_in_texcoord;
+    gua_varying_normal = (gua_normal_matrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz;
     gl_Position = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(gua_in_position*0.5, 1.0);
 }

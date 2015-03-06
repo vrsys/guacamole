@@ -152,12 +152,11 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
 
     auto model_mat = light->get_cached_world_transform();
 
-    math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
-    float light_radius = scm::math::length(light_position - math::vec3(model_mat * math::vec4(0.f, 0.f, 1.f, 1.f)));
+    math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 1.f, 0.f);
 
     LightTable::LightBlock light_block {};
 
-    light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, light_radius);
+    light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, 0.f);
     light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
     light_block.color           = math::vec4f(light->data.get_color().vec3f().r, light->data.get_color().vec3f().g, light->data.get_color().vec3f().b, 0.f);
     light_block.falloff         = 0.0f;

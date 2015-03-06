@@ -35,10 +35,15 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   enum class BackgroundMode {
     COLOR = 0,
     SKYMAP_TEXTURE = 1,
-    QUAD_TEXTURE = 2,
+    QUAD_TEXTURE = 2
   };
 
-  enum class ToneMappingMethod { LINEAR = 0, HEJL = 1, REINHARD = 2 };
+  enum class ToneMappingMethod {
+    LINEAR = 0,
+    HEJL = 1,
+    REINHARD = 2 ,
+    UNCHARTED = 3
+  };
 
   enum class EnvironmentLightingMode {
     SPHEREMAP = 0,
@@ -76,10 +81,14 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
       std::string const& cube_map_negative_z);
 
   ResolvePassDescription& environment_lighting(utils::Color3f const& color);
+  utils::Color3f environment_lighting() const;
 
   ResolvePassDescription& environment_lighting_mode(
       EnvironmentLightingMode mode);
   EnvironmentLightingMode environment_lighting_mode() const;
+
+  ResolvePassDescription& horizon_fade(float value);
+  float horizon_fade() const;
 
   /////////////////////////////////////////////////////////////////////////////
   // screen-space ambient occlusion
