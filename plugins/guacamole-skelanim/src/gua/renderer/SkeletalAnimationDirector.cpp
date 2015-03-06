@@ -255,7 +255,6 @@ std::string const& SkeletalAnimationDirector::get_animation() const {
 
 void SkeletalAnimationDirector::set_animation(std::string animation_name) {
   for(uint i{0};i<animations_.size();++i){
-    std::cout<<animations_[i]->get_name()<<std::endl;
     if(animations_[i]->get_name()==animation_name){
       animNumLast_ = animNum_;
       animNum_ = i;
@@ -266,7 +265,6 @@ void SkeletalAnimationDirector::set_animation(std::string animation_name) {
       return;
     }
   }
-  std::cout<<"size of containing animations: "<<animations_.size()<<std::endl;
   gua::Logger::LOG_WARNING << "No matching animation with name: "<< animation_name<<" found!" << std::endl;
 }
 
