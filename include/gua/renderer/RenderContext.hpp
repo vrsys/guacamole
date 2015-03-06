@@ -53,6 +53,16 @@ struct GUA_DLL RenderContext {
   */
   RenderContext();
 
+  /**
+   * The schism render device associated with this context.
+   */
+  scm::gl::render_device_ptr render_device;
+
+  /**
+   * The schism render constext associated with this context.
+   */
+  scm::gl::render_context_ptr render_context;
+
    /**
    * The schism context of this RenderContext.
    */
@@ -62,16 +72,6 @@ struct GUA_DLL RenderContext {
    * The display where this context was opened.
    */
   scm::gl::wm::display_ptr display;
-
-  /**
-   * The schism render constext associated with this context.
-   */
-  scm::gl::render_context_ptr render_context;
-
-  /**
-   * The schism render device associated with this context.
-   */
-  scm::gl::render_device_ptr render_device;
 
   /**
    * The window which is rendered into.
