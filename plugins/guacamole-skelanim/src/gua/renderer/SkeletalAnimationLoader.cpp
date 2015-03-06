@@ -108,7 +108,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load_geometry(std::string c
 return cached_node;
 }
 
-void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, std::string const& file_name, unsigned flags)
+void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, std::string const& file_name, std::string const& animation_name, unsigned flags)
 {
   std::shared_ptr<node::SkeletalAnimationNode> skelNode = std::dynamic_pointer_cast<node::SkeletalAnimationNode, node::Node>(node);
 
@@ -153,7 +153,7 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
 
     FbxScene* scene = load_fbx_file(sdk_manager, file_name);
     
-    skelNode->get_director()->add_animations(*scene);
+    skelNode->get_director()->add_animations(*scene,animation_name);
   }
   else {
     auto importer = std::make_shared<Assimp::Importer>();
@@ -165,7 +165,7 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
     aiScene const* scene(importer->GetOrphanedScene());
 
     if(scene->HasAnimations()) {
-      skelNode->get_director()->add_animations(*scene);
+      skelNode->get_director()->add_animations(*scene,animation_name);
     }
     else {
       Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;

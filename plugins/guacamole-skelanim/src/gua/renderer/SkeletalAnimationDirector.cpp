@@ -42,18 +42,20 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Bone> const
   }
 }
 
-void SkeletalAnimationDirector::add_animations(aiScene const& scene) {
+void SkeletalAnimationDirector::add_animations(aiScene const& scene, std::string const& name) {
   if(!scene.HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
  
   for(uint i = 0; i < scene.mNumAnimations; ++i) {
-    animations_.push_back(std::make_shared<SkeletalAnimation>(*(scene.mAnimations[i])));
+    std::string new_name = "default_animation";
+    i == 0 ? new_name = name : new_name = name+std::to_string(i);
+    animations_.push_back(std::make_shared<SkeletalAnimation>(*(scene.mAnimations[i]),new_name));
   }
 
   has_anims_ = animations_.size() > 0;
   currAnimation_ = animations_[animations_.size()-1];
 }
 
-void SkeletalAnimationDirector::add_animations(FbxScene& scene) {
+void SkeletalAnimationDirector::add_animations(FbxScene& scene, std::string const& name) {
   std::vector<std::shared_ptr<SkeletalAnimation>> animations{};
   unsigned num_anims = scene.GetSrcObjectCount<FbxAnimStack>();
   if(num_anims <= 0) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
@@ -79,7 +81,9 @@ void SkeletalAnimationDirector::add_animations(FbxScene& scene) {
   }
 
   for(uint i = 0; i < num_anims; ++i) {
-    animations_.push_back(std::make_shared<SkeletalAnimation>(scene.GetSrcObject<FbxAnimStack>(i), nodes));
+    std::string new_name = "default_animation";
+    i == 0 ? new_name = name : new_name = name+std::to_string(i);
+    animations_.push_back(std::make_shared<SkeletalAnimation>(scene.GetSrcObject<FbxAnimStack>(i), nodes, new_name));
   }
 
   has_anims_ = animations_.size() > 0;
@@ -251,6 +255,7 @@ std::string const& SkeletalAnimationDirector::get_animation() const {
 
 void SkeletalAnimationDirector::set_animation(std::string animation_name) {
   for(uint i{0};i<animations_.size();++i){
+    std::cout<<animations_[i]->get_name()<<std::endl;
     if(animations_[i]->get_name()==animation_name){
       animNumLast_ = animNum_;
       animNum_ = i;
@@ -261,6 +266,7 @@ void SkeletalAnimationDirector::set_animation(std::string animation_name) {
       return;
     }
   }
+  std::cout<<"size of containing animations: "<<animations_.size()<<std::endl;
   gua::Logger::LOG_WARNING << "No matching animation with name: "<< animation_name<<" found!" << std::endl;
 }
 
@@ -272,8 +278,16 @@ void SkeletalAnimationDirector::set_blending_factor(float f){
   blendFactor_ = f;
 }
 
+float SkeletalAnimationDirector::get_blending_duration()const{
+  return blendFactor_;
+}
+
+void SkeletalAnimationDirector::set_blending_duration(float duration){
+  blendDuration_ = duration;
+}
+
 bool SkeletalAnimationDirector::has_anims() const {
-  return has_anims_;
+  return blendDuration_;
 }
 
 } // namespace gua

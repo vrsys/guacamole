@@ -39,8 +39,8 @@ class SkeletalAnimation {
  public:
   SkeletalAnimation();
 
-  SkeletalAnimation(aiAnimation const& anim);
-  SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> const& bones);
+  SkeletalAnimation(aiAnimation const& anim, std::string const& name = "");
+  SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> const& bones, std::string const& name = "");
 
   ~SkeletalAnimation();
 

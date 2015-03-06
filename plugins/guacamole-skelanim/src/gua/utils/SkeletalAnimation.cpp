@@ -16,8 +16,8 @@ SkeletalAnimation::SkeletalAnimation():
   boneAnims{}
 {}
 
-SkeletalAnimation::SkeletalAnimation(aiAnimation const& anim):
-  name{anim.mName.C_Str()},
+SkeletalAnimation::SkeletalAnimation(aiAnimation const& anim, std::string const& nm):
+  name{nm == "" ? anim.mName.C_Str() : nm},
   numFrames{unsigned(anim.mDuration)},
   numFPS{anim.mTicksPerSecond > 0 ? anim.mTicksPerSecond : 25},
   duration{double(numFrames) / numFPS},
@@ -28,8 +28,8 @@ SkeletalAnimation::SkeletalAnimation(aiAnimation const& anim):
     boneAnims.push_back(BoneAnimation{anim.mChannels[i]});
   }
 }
-SkeletalAnimation::SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> const& bones):
-  name{anim->GetName()},
+SkeletalAnimation::SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> const& bones, std::string const& nm):
+  name{nm == "" ? anim->GetName() : nm},
   numFrames{0},
   numFPS{0},
   duration{0},
