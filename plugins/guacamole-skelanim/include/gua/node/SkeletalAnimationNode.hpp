@@ -111,6 +111,9 @@ public : // methods
   float get_blending_factor()const;
   void set_blending_factor(float f);
 
+  float get_blending_duration()const;
+  void set_blending_duration(float duration);
+
   std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
 
   /**

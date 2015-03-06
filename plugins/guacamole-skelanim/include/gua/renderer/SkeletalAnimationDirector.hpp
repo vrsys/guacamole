@@ -40,8 +40,8 @@ class SkeletalAnimationDirector {
 
   inline ~SkeletalAnimationDirector(){};
 
-  void add_animations(aiScene const& scene);
-  void add_animations(FbxScene& scene);
+  void add_animations(aiScene const& scene, std::string const& name);
+  void add_animations(FbxScene& scene, std::string const& name);
 
   std::vector<scm::math::mat4f> get_bone_transforms();
 
@@ -59,6 +59,9 @@ class SkeletalAnimationDirector {
 
   float get_blending_factor()const;
   void set_blending_factor(float f);
+
+  float get_blending_duration()const;
+  void set_blending_duration(float duration);
 
 
 private:
