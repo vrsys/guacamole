@@ -58,28 +58,54 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void increase_importance_radius(std::shared_ptr<gua::node::Node> const& node) {
+void increase_radius(std::shared_ptr<gua::node::Node> const& node) {
   auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
   if (plodnode) {
-    auto radius_scale = plodnode->get_importance();
-    plodnode->set_importance(std::min(2.0, 1.1 * radius_scale));
-    std::cout << "Setting radius scale to " << plodnode->get_importance() << std::endl;
+    auto radius_scale = plodnode->get_radius_scale();
+    plodnode->set_radius_scale(std::min(2.0, 1.1 * radius_scale));
+    std::cout << "Setting radius scale to " << plodnode->get_radius_scale() << std::endl;
   }
   for (auto const& c : node->get_children()) {
-    increase_importance_radius(c);
+    increase_radius(c);
   }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void decrease_importance_radius(std::shared_ptr<gua::node::Node> const& node) {
+void decrease_radius(std::shared_ptr<gua::node::Node> const& node) {
   auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
   if (plodnode) {
-    auto radius_scale = plodnode->get_importance();
-    plodnode->set_importance(std::max(0.1, 0.9 * radius_scale));
-    std::cout << "Setting radius scale to " << plodnode->get_importance() << std::endl;
+    auto radius_scale = plodnode->get_radius_scale();
+    plodnode->set_radius_scale(std::max(0.1, 0.9 * radius_scale));
+    std::cout << "Setting radius scale to " << plodnode->get_radius_scale() << std::endl;
   }
   for (auto const& c : node->get_children()) {
-    decrease_importance_radius(c);
+    decrease_radius(c);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void increase_error_threshold(std::shared_ptr<gua::node::Node> const& node) {
+  auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
+  if (plodnode) {
+    auto radius_scale = plodnode->get_error_threshold();
+    plodnode->set_error_threshold(std::min(16.0, 1.1 * radius_scale));
+    std::cout << "Setting error threshold to " << plodnode->get_error_threshold() << std::endl;
+  }
+  for (auto const& c : node->get_children()) {
+    increase_error_threshold(c);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void decrease_error_threshold(std::shared_ptr<gua::node::Node> const& node) {
+  auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
+  if (plodnode) {
+    auto radius_scale = plodnode->get_error_threshold();
+    plodnode->set_error_threshold(std::max(1.0, 0.9 * radius_scale));
+    std::cout << "Setting  error threshold to " << plodnode->get_error_threshold() << std::endl;
+  }
+  for (auto const& c : node->get_children()) {
+    decrease_error_threshold(c);
   }
 }
 
@@ -99,11 +125,18 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     pipe.get_resolve_pass()->touch();
     break;
   case 'u':
-    increase_importance_radius(graph.get_root());
+    increase_radius(graph.get_root());
     break;
   case 'j':
-    decrease_importance_radius(graph.get_root());
+    decrease_radius(graph.get_root());
     break;
+  case 'i':
+    increase_error_threshold(graph.get_root());
+    break;
+  case 'k':
+    decrease_error_threshold(graph.get_root());
+    break;
+
   case ' ':
     rotate_light = !rotate_light;
     break;
@@ -204,7 +237,7 @@ int main(int argc, char** argv) {
 #endif
 
   auto setup_plod_node = [] ( std::shared_ptr<gua::node::PLODNode> const& node) {
-    node->set_importance(1.0f);
+    node->set_radius_scale(0.7f);
     node->set_enable_backface_culling_by_normal(false);
     node->set_draw_bounding_box(true);
   };
@@ -318,7 +351,7 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-  camera->config.set_far_clip(200.0);
+  camera->config.set_far_clip(100.0);
   camera->config.set_near_clip(0.01);
   camera->add_child(camera_proxy_geometry);
  //camera->set_pre_render_cameras({portal_camera});
