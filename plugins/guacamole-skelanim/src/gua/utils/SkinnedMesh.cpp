@@ -165,7 +165,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     return access_function;
   };
 
-  //define function to get tangent indices
+  //define function to access tangents and bitangents
   std::function<unsigned(temp_vert const&)> get_tangent;
   std::function<unsigned(temp_vert const&)> get_bitangent;
 
@@ -189,31 +189,31 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
   unsigned start_index = 0;
   //how many tris the last polygon contained
   unsigned tris_added = 0;
+  //iterate over polygons
   for(unsigned i = 0; i < mesh.GetPolygonCount(); ++i)
   {
     //triangulate face if necessary
     for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
     {
+      //get indices of vertices in attribute arrays
       std::array<unsigned, 3> indices{start_index, start_index + j - 1, start_index + j};
-
+      //create triangle from vertex indices
       temp_tri tri{unsigned(poly_vertices[indices[0]]), unsigned(poly_vertices[indices[1]]), unsigned(poly_vertices[indices[2]])};
       temp_tris.push_back(tri);
 
-      //add vertices to to array
+      //get references to the control points at which the vertices lie
       std::vector<temp_vert>& curr_point1 = temp_verts[tri.verts[0]];
-      curr_point1.push_back(temp_vert{indices[0], tri.verts[0], to_gua::vec3(poly_normals[indices[0]]), num_triangles, 0});
-      
       std::vector<temp_vert>& curr_point2 = temp_verts[tri.verts[1]];
-      curr_point2.push_back(temp_vert{indices[1], tri.verts[1], to_gua::vec3(poly_normals[indices[1]]), num_triangles, 1});
-      
       std::vector<temp_vert>& curr_point3 = temp_verts[tri.verts[2]];
+      //add the new vertices to the control points
+      curr_point1.push_back(temp_vert{indices[0], tri.verts[0], to_gua::vec3(poly_normals[indices[0]]), num_triangles, 0});
+      curr_point2.push_back(temp_vert{indices[1], tri.verts[1], to_gua::vec3(poly_normals[indices[1]]), num_triangles, 1});
       curr_point3.push_back(temp_vert{indices[2], tri.verts[2], to_gua::vec3(poly_normals[indices[2]]), num_triangles, 2});
+      
       //set optional data
       if(has_uvs) {
         curr_point1[curr_point1.size()-1].uv = to_gua::vec2(poly_uvs[indices[0]]);
-        
         curr_point2[curr_point2.size()-1].uv = to_gua::vec2(poly_uvs[indices[1]]);
-        
         curr_point3[curr_point3.size()-1].uv = to_gua::vec2(poly_uvs[indices[2]]); 
       }
       if(has_tangents) {
@@ -237,17 +237,20 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
   num_vertices = 0;
   unsigned old_num_vertices = 0;
   unsigned dupl_verts = 0;
+  //iterate over control points
   for(std::vector<temp_vert>& verts : temp_verts) {
     old_num_vertices += verts.size();
+    //iterate over vertices at that point
     for(auto iter = verts.begin(); iter != verts.end(); ++iter) {
+      //ierate over vertices behind current vertex
       for(std::vector<temp_vert>::iterator iter2 = std::next(iter); iter2 != verts.end(); ++iter2) {
-        //match by normals and if exisiting, uvs
+        //match by normals and if exisiting, other attributes
         bool duplicate = iter2->normal == iter->normal;
         if(duplicate && has_uvs) duplicate = iter2->uv == iter->uv; 
         if(duplicate && has_tangents) duplicate = iter2->tangent == iter->tangent && iter2->bitangent == iter->bitangent; 
         //duplicate -> merge vertices
         if(duplicate) {
-
+          //add triangle of duplicate vertex to current vertex
           iter->tris.push_back(iter2->tris[0]);
 
           verts.erase(iter2);
@@ -256,6 +259,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
         }
       }
     }
+    //add number of filtered verts at current control point to total vertex number
     num_vertices += verts.size();
   }
   Logger::LOG_DEBUG << dupl_verts << " vertex duplications" << std::endl;
@@ -267,7 +271,6 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     ctrlpt_weights = get_weights(mesh, root);
     has_weights = ctrlpt_weights.size() > 0;
   }
-  std::vector<bone_influences> temp_weights{};
 
   // Reserve space in the vectors for the vertex attributes and indices
   positions.reserve(num_vertices);
@@ -276,7 +279,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     texCoords.reserve(num_vertices);
   }
   else {
-    texCoords.resize(num_vertices, scm::math::vec2(0.0f));
+    texCoords.resize(num_vertices, scm::math::vec2f(0.0f));
   }
   if(has_tangents) {
     tangents.reserve(num_vertices);
@@ -288,13 +291,15 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
 
   //load reduced attributes
   unsigned curr_vert = 0;
+  //iterate over control points
   for(std::vector<temp_vert> const& verts : temp_verts) {
+    //iterate over vertices at that point
     for(temp_vert const& vert : verts) {
-      //update vert index of tris using this vertex
+      //update containing triangles with actual index of this vertex in member vectors
       for(auto const& tri : vert.tris) {
         temp_tris[tri.first].verts[tri.second] = curr_vert;
       }
-
+      //push properties to attribute vectors
       positions.push_back(to_gua::vec3(control_points[vert.point]));
       normals.push_back(vert.normal);
 
