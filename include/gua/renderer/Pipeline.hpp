@@ -92,10 +92,10 @@ public:
 
  private:
 
+  RenderContext&                        context_;
   std::unique_ptr<GBuffer>              gbuffer_;
   ABuffer                               abuffer_;
-  RenderContext&                        context_;
-  std::unique_ptr<CameraUniformBlock>   camera_block_;
+  CameraUniformBlock                    camera_block_;
   std::unique_ptr<LightTable>           light_table_;
 
   SceneGraph const*                     current_graph_;

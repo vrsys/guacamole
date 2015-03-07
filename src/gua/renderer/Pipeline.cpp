@@ -48,7 +48,7 @@ Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
     : context_(ctx),
       gbuffer_(new GBuffer(ctx, resolution)),
       abuffer_(),
-      camera_block_(new CameraUniformBlock(ctx.render_device)),
+      camera_block_(ctx.render_device),
       light_table_(new LightTable),
       current_graph_(nullptr),
       current_scene_(),
@@ -184,7 +184,7 @@ void Pipeline::process(
   // serialize this scenegraph
   current_scene_ = current_graph_->serialize(camera, mode);
 
-  camera_block_->update(context_.render_context,
+  camera_block_.update(context_.render_context,
                         current_scene_.frustum,
                         camera.config.get_view_id(),
                         camera.config.get_resolution());
@@ -330,7 +330,7 @@ void Pipeline::bind_light_table(
 
 void Pipeline::bind_camera_uniform_block(unsigned location) const {
   get_context().render_context->bind_uniform_buffer(
-      camera_block_->block().block_buffer(), location);
+      camera_block_.block().block_buffer(), location);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
