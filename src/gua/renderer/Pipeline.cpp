@@ -45,15 +45,22 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
-    : gbuffer_(new GBuffer(ctx, resolution))
+    : context_(ctx),
+      gbuffer_(new GBuffer(ctx, resolution)),
       abuffer_(),
-      camera_block_(new CameraUniformBlock(ctx.render_device))
+      camera_block_(new CameraUniformBlock(ctx.render_device)),
       light_table_(new LightTable),
+      current_graph_(nullptr),
+      current_scene_(),
+      current_camera_(),
       last_resolution_(0, 0),
-      quad_( new scm::gl::quad_geometry(ctx_.render_device,
+      last_description_(),
+      global_substitution_map_(),
+      passes_(),
+      quad_( new scm::gl::quad_geometry(ctx.render_device,
                                  scm::math::vec2f(-1.f, -1.f),
-                                 scm::math::vec2f(1.f, 1.f))),
-      context_(ctx) {
+                                 scm::math::vec2f(1.f, 1.f)))
+  {
   abuffer_.allocate(ctx,
                     last_description_.get_enable_abuffer()
                         ? last_description_.get_abuffer_size()
