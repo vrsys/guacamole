@@ -122,27 +122,21 @@ void Renderer::renderclient(Mailbox in) {
         auto pipe_iter = window->get_context()->render_pipelines.find(cmd.serialized_cam->uuid);
 
         if (pipe_iter == window->get_context()->render_pipelines.end()) {
-          pipe = std::make_shared<Pipeline>();
+          pipe = std::make_shared<Pipeline>(*window->get_context(), cmd.serialized_cam->config.get_resolution());
           window->get_context()->render_pipelines.insert(std::make_pair(cmd.serialized_cam->uuid, pipe));
         }
         else {
           pipe = pipe_iter->second;
         }
 
-        auto process = [&](CameraMode mode) {
-          pipe->process(
-            window->get_context(), mode, *cmd.serialized_cam, *cmd.scene_graphs
-          );
-        };
-
         cmd.camera_node->set_rendering_fps(fpsc.fps);
 
         if (cmd.serialized_cam->config.get_enable_stereo()) {
-          process(CameraMode::LEFT);
-          process(CameraMode::RIGHT);
+          pipe->process(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs);
+          pipe->process(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
         } else {
-
-          process(cmd.serialized_cam->config.get_mono_mode());
+          pipe->process(cmd.serialized_cam->config.get_mono_mode(),
+              *cmd.serialized_cam, *cmd.scene_graphs);
         }
 
         // swap buffers

@@ -44,14 +44,33 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Pipeline::Pipeline()
-    : gbuffer_(nullptr),
+Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
+    : gbuffer_(new GBuffer(ctx, resolution))
       abuffer_(),
-      camera_block_(nullptr),
-      light_table_(nullptr),
+      camera_block_(new CameraUniformBlock(ctx.render_device))
+      light_table_(new LightTable),
       last_resolution_(0, 0),
-      quad_(nullptr),
-      context_(nullptr) {
+      quad_( new scm::gl::quad_geometry(ctx_.render_device,
+                                 scm::math::vec2f(-1.f, -1.f),
+                                 scm::math::vec2f(1.f, 1.f))),
+      context_(ctx) {
+  abuffer_.allocate(ctx,
+                    last_description_.get_enable_abuffer()
+                        ? last_description_.get_abuffer_size()
+                        : 0);
+
+  const float th = last_description_.get_blending_termination_threshold();
+  global_substitution_map_["enable_abuffer"] =
+      last_description_.get_enable_abuffer() ? "1" : "0";
+  global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
+  global_substitution_map_["abuf_blending_termination_threshold"] =
+      std::to_string(th);
+  global_substitution_map_["max_lights_num"] =
+      std::to_string(last_description_.get_max_lights_count());
+
+  for (auto pass : last_description_.get_passes()) {
+    passes_.push_back(pass->make_pass(ctx, global_substitution_map_));
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +82,6 @@ std::vector<PipelinePass> const& Pipeline::get_passes() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::process(
-    RenderContext* ctx,
     CameraMode mode,
     node::SerializedCameraNode const& camera,
     std::vector<std::unique_ptr<const SceneGraph> > const& scene_graphs) {
@@ -75,23 +93,16 @@ void Pipeline::process(
   // store the current camera data
   current_camera_ = camera;
 
-  bool context_changed(false);
   bool reload_gbuffer(false);
   bool reload_abuffer(false);
 
-  // reload gbuffer if now rendering to another window (with a new context)
-  if (context_ != ctx) {
-    context_ = ctx;
-    context_changed = true;
-  }
-
   // execute all prerender cameras
   for (auto const& cam : camera.pre_render_cameras) {
-    if (!ctx->render_pipelines.count(cam.uuid)) {
-      ctx->render_pipelines.insert(
-          std::make_pair(cam.uuid, std::make_shared<Pipeline>()));
+    if (!context_.render_pipelines.count(cam.uuid)) {
+      context_.render_pipelines.insert(
+          std::make_pair(cam.uuid, std::make_shared<Pipeline>(context_, camera.config.get_resolution())));
     }
-    ctx->render_pipelines.at(cam.uuid)->process(ctx, mode, cam, scene_graphs);
+    context_.render_pipelines.at(cam.uuid)->process(mode, cam, scene_graphs);
   }
 
   // recreate gbuffer if resolution changed
@@ -100,16 +111,16 @@ void Pipeline::process(
     reload_gbuffer = true;
   }
 
-  if (context_changed || reload_gbuffer) {
+  if (reload_gbuffer) {
     if (gbuffer_) {
-      gbuffer_->remove_buffers(get_context());
+      gbuffer_->remove_buffers(context_);
     }
 
-    gbuffer_.reset(new GBuffer(get_context(), camera.config.resolution()));
+    gbuffer_.reset(new GBuffer(context_, camera.config.resolution()));
   }
 
   // recreate pipeline passes if pipeline description changed
-  bool reload_passes(context_changed || reload_gbuffer);
+  bool reload_passes(reload_gbuffer);
 
   if (*camera.pipeline_description != last_description_) {
     reload_passes = true;
@@ -123,8 +134,8 @@ void Pipeline::process(
     }
   }
 
-  if (context_changed || reload_abuffer) {
-    abuffer_.allocate(*ctx,
+  if (reload_abuffer) {
+    abuffer_.allocate(context_,
                       last_description_.get_enable_abuffer()
                           ? last_description_.get_abuffer_size()
                           : 0);
@@ -148,7 +159,7 @@ void Pipeline::process(
         std::to_string(last_description_.get_max_lights_count());
 
     for (auto pass : last_description_.get_passes()) {
-      passes_.push_back(pass->make_pass(*ctx, global_substitution_map_));
+      passes_.push_back(pass->make_pass(context_, global_substitution_map_));
     }
   }
 
@@ -161,31 +172,20 @@ void Pipeline::process(
     }
   }
 
-  if (context_changed) {
-    // update camera uniform block
-    camera_block_.reset(new CameraUniformBlock(get_context().render_device));
-
-    // update light table
-    if (light_table_) {
-      light_table_->remove_buffers(get_context());
-    }
-    light_table_.reset(new LightTable());
-  }
-
-  context_->mode = mode;
+  context_.mode = mode;
 
   // serialize this scenegraph
   current_scene_ = current_graph_->serialize(camera, mode);
 
-  camera_block_->update(get_context().render_context,
+  camera_block_->update(context_.render_context,
                         current_scene_.frustum,
                         camera.config.get_view_id(),
                         camera.config.get_resolution());
   bind_camera_uniform_block(0);
 
   // clear gbuffer and abuffer
-  gbuffer_->clear_all(get_context());
-  abuffer_.clear(get_context(), camera.config.resolution());
+  gbuffer_->clear_all(context_);
+  abuffer_.clear(context_, camera.config.resolution());
 
   // process all passes
   for (int i(0); i < passes_.size(); ++i) {
@@ -196,10 +196,10 @@ void Pipeline::process(
   }
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-  fetch_gpu_query_results(*ctx);
+  fetch_gpu_query_results(context_);
 
-  if (ctx->framecount % 60 == 0) {
-    std::cout << "===== Time Queries for Context: " << ctx->id
+  if (context_.framecount % 60 == 0) {
+    std::cout << "===== Time Queries for Context: " << context_.id
               << " ============================" << std::endl;
     for (auto const& t : queries_.results) {
       std::cout << t.first << " : " << t.second << " ms" << std::endl;
@@ -250,7 +250,7 @@ node::SerializedCameraNode const& Pipeline::get_camera() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 RenderContext const& Pipeline::get_context() const {
-  return *context_;
+  return context_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,30 +275,29 @@ LightTable& Pipeline::get_light_table() {
 
 void Pipeline::bind_gbuffer_input(
     std::shared_ptr<ShaderProgram> const& shader) const {
-  auto& ctx(get_context());
 
-  shader->set_uniform(ctx, 1.0f / gbuffer_->get_width(), "gua_texel_width");
-  shader->set_uniform(ctx, 1.0f / gbuffer_->get_height(), "gua_texel_height");
+  shader->set_uniform(context_, 1.0f / gbuffer_->get_width(), "gua_texel_width");
+  shader->set_uniform(context_, 1.0f / gbuffer_->get_height(), "gua_texel_height");
 
   shader->set_uniform(
-      ctx,
+      context_,
       math::vec2i(gbuffer_->get_width(), gbuffer_->get_height()),
       "gua_resolution");
 
-  shader->set_uniform(ctx,
-                      gbuffer_->get_current_color_buffer()->get_handle(ctx),
+  shader->set_uniform(context_,
+                      gbuffer_->get_current_color_buffer()->get_handle(context_),
                       "gua_gbuffer_color");
-  shader->set_uniform(ctx,
-                      gbuffer_->get_current_pbr_buffer()->get_handle(ctx),
+  shader->set_uniform(context_,
+                      gbuffer_->get_current_pbr_buffer()->get_handle(context_),
                       "gua_gbuffer_pbr");
-  shader->set_uniform(ctx,
-                      gbuffer_->get_current_normal_buffer()->get_handle(ctx),
+  shader->set_uniform(context_,
+                      gbuffer_->get_current_normal_buffer()->get_handle(context_),
                       "gua_gbuffer_normal");
-  shader->set_uniform(ctx,
-                      gbuffer_->get_current_flags_buffer()->get_handle(ctx),
+  shader->set_uniform(context_,
+                      gbuffer_->get_current_flags_buffer()->get_handle(context_),
                       "gua_gbuffer_flags");
-  shader->set_uniform(ctx,
-                      gbuffer_->get_current_depth_buffer()->get_handle(ctx),
+  shader->set_uniform(context_,
+                      gbuffer_->get_current_depth_buffer()->get_handle(context_),
                       "gua_gbuffer_depth");
 }
 
@@ -306,18 +305,16 @@ void Pipeline::bind_gbuffer_input(
 
 void Pipeline::bind_light_table(
     std::shared_ptr<ShaderProgram> const& shader) const {
-  auto& ctx(get_context());
-
   shader->set_uniform(
-      ctx, int(light_table_->get_lights_num()), "gua_lights_num");
+      context_, int(light_table_->get_lights_num()), "gua_lights_num");
   shader->set_uniform(
-      ctx, int(light_table_->get_sun_lights_num()), "gua_sun_lights_num");
+      context_, int(light_table_->get_sun_lights_num()), "gua_sun_lights_num");
 
   if (light_table_->get_light_bitset() && light_table_->get_lights_num() > 0) {
-    shader->set_uniform(ctx,
-                        light_table_->get_light_bitset()->get_handle(ctx),
+    shader->set_uniform(context_,
+                        light_table_->get_light_bitset()->get_handle(context_),
                         "gua_light_bitset");
-    ctx.render_context->bind_uniform_buffer(
+    context_.render_context->bind_uniform_buffer(
         light_table_->light_uniform_block().block_buffer(), 1);
   }
 }
@@ -332,14 +329,7 @@ void Pipeline::bind_camera_uniform_block(unsigned location) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::draw_quad() {
-  if (!quad_) {
-    quad_ = scm::gl::quad_geometry_ptr(
-        new scm::gl::quad_geometry(get_context().render_device,
-                                   scm::math::vec2f(-1.f, -1.f),
-                                   scm::math::vec2f(1.f, 1.f)));
-  }
-
-  quad_->draw(get_context().render_context);
+  quad_->draw(context_.render_context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

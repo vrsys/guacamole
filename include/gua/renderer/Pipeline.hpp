@@ -61,10 +61,10 @@ class GUA_DLL Pipeline {
    
 public: 
 
-  Pipeline();
+  Pipeline(RenderContext& ctx, math::vec2ui const& resolution);
   Pipeline(Pipeline const&) = delete;
 
-  void process(RenderContext* ctx, CameraMode mode, node::SerializedCameraNode const& camera,
+  void process(CameraMode mode, node::SerializedCameraNode const& camera,
                std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
   std::vector<PipelinePass>   const& get_passes()  const;
@@ -94,7 +94,7 @@ public:
 
   std::unique_ptr<GBuffer>              gbuffer_;
   ABuffer                               abuffer_;
-  RenderContext*                        context_;
+  RenderContext&                        context_;
   std::unique_ptr<CameraUniformBlock>   camera_block_;
   std::unique_ptr<LightTable>           light_table_;
 
