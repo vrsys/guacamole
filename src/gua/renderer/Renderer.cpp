@@ -61,8 +61,7 @@ std::shared_ptr<const Renderer::SceneGraphs> garbage_collected_copy(
 ////////////////////////////////////////////////////////////////////////////////
 
 Renderer::~Renderer() {
-  for (auto& rc : render_clients_) { rc.second.first->close(); }
-  for (auto& rc : render_clients_) { rc.second.second.join(); }
+  stop();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,9 +194,9 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
 ////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::stop() {
-  for (auto& rclient : render_clients_) {
-    rclient.second.first->close();
-  }
+  for (auto& rc : render_clients_) { rc.second.first->close(); }
+  for (auto& rc : render_clients_) { rc.second.second.join(); }
+  render_clients_.clear();
 }
 
 }
