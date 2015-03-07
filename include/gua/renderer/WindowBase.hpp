@@ -134,6 +134,7 @@ class GUA_DLL WindowBase {
   virtual void process_events() = 0;
 
   void init_context();
+  void destroy_context();
 
   /**
    * Activate the context of this window.

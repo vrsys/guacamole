@@ -80,6 +80,10 @@ WindowBase::WindowBase(Configuration const& configuration)
 ////////////////////////////////////////////////////////////////////////////////
 
 WindowBase::~WindowBase() {
+  destroy_context();
+}
+
+void WindowBase::destroy_context() {
   warpRR_ = nullptr;
   warpGR_ = nullptr;
   warpBR_ = nullptr;
@@ -94,6 +98,7 @@ WindowBase::~WindowBase() {
 
   ctx_.render_pipelines.clear();
   ctx_.render_context.reset();
+  //ctx_.display.reset();
   ctx_.render_device.reset();
 }
 
