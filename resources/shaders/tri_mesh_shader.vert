@@ -20,7 +20,7 @@ void main() {
 
   @material_input@
 
-  gua_position   = (gua_model_matrix  * vec4(gua_in_position, 1.0)).xyz;
+  gua_position   = (gua_model_view_matrix  * vec4(gua_in_position, 1.0)).xyz;
   gua_normal     = (gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz;
   gua_tangent    = (gua_normal_matrix * vec4(gua_in_tangent, 0.0)).xyz;
   gua_bitangent  = (gua_normal_matrix * vec4(gua_in_bitangent, 0.0)).xyz;
@@ -33,5 +33,5 @@ void main() {
 
   @include "common/gua_varyings_assignment.glsl"
 
-  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_position, 1.0);
+  gl_Position = gua_projection_matrix * vec4(gua_position, 1.0);
 }
