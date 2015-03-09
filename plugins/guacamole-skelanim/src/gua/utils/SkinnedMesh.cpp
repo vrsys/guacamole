@@ -40,8 +40,8 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root):
 
     unsigned ctrlpt_index = 0;
     //iterate over vertices
-    for(uint i = 0; i < num_vertices; i++) {
-      //if position changes its the next control point -> next weight
+    for(unsigned i = 0; i < num_vertices; ++i) {
+      //if position changes, its the next control point -> next weight
       if(i > 0 && positions[i] != positions[i - 1]) {
         ++ctrlpt_index;
       }
@@ -53,6 +53,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root):
         bone_weights.push_back(curr_influence.weights[j]);
       }
 
+      std::cout << ctrlpt_index << std::endl;
       bone_counts.push_back(curr_influence.weights.size());
     }
   }
@@ -79,13 +80,13 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(aiMesh const&
   std::vector<bone_influences> temp_weights{mesh.mNumVertices};
 
   for (uint i = 0 ; i < mesh.mNumBones ; i++) {
-    std::string bone_name(mesh.mBones[i]->mName.data);      
-    uint BoneIndex = bone_mapping_.at(bone_name);        
+    std::string bone_name{mesh.mBones[i]->mName.data};      
+    uint bone_index = bone_mapping_.at(bone_name);        
     
     for (uint j = 0 ; j < mesh.mBones[i]->mNumWeights ; j++) {
-      uint VertexID = mesh.mBones[i]->mWeights[j].mVertexId;
-      float Weight  = mesh.mBones[i]->mWeights[j].mWeight;                   
-      temp_weights[VertexID].add_bone(BoneIndex, Weight);
+      uint vertex_index = mesh.mBones[i]->mWeights[j].mVertexId;
+      float weight  = mesh.mBones[i]->mWeights[j].mWeight;                   
+      temp_weights[vertex_index].add_bone(bone_index, weight);
     }
   }
 
@@ -115,14 +116,14 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(FbxMesh const
   //one cluster corresponds to one bone
   for(unsigned i = 0; i < skin->GetClusterCount(); ++i) {
     FbxCluster* cluster = skin->GetCluster(i);
-    FbxNode* Bone = cluster->GetLink();
+    FbxNode* bone = cluster->GetLink();
 
-    if(!Bone) {
+    if(!bone) {
       Logger::LOG_ERROR << "associated Bone does not exist!" << std::endl;
       assert(false);      
     }
 
-    std::string bone_name(Bone->GetName());
+    std::string bone_name{bone->GetName()};
     uint bone_index;
     if(bone_mapping_.find(bone_name) != bone_mapping_.end()) {
       bone_index = bone_mapping_.at(bone_name);

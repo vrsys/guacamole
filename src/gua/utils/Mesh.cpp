@@ -102,8 +102,13 @@ Mesh::Mesh(FbxMesh& mesh) {
   std::vector<std::vector<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::vector<temp_vert>{}};
   std::vector<temp_tri> temp_tris{};
   
+  //get vertex positions and convert them, then one conversion per contol_point, not vertex necessary
+  std::vector<scm::math::vec3f> control_points{};
+  control_points.reserve(mesh.GetControlPointsCount());
+  for(unsigned i = 0; i < mesh.GetControlPointsCount(); ++i) {
+    control_points.push_back(to_gua::vec3(mesh.GetControlPointAt(i)));
+  }
 
-  FbxVector4* control_points = mesh.GetControlPoints();
   //vertex indices of polygons
   int* poly_vertices = mesh.GetPolygonVertices();
 
@@ -233,15 +238,15 @@ Mesh::Mesh(FbxMesh& mesh) {
   //load reduced attributes
   unsigned curr_vert = 0;
   //iterate over control points
-  for(std::vector<temp_vert> const& position : vert_positions) {
+  for(unsigned i = 0; i < vert_positions.size(); ++i) {
     //iterate over vertices at that point
-    for(temp_vert const& vert : position) {
+    for(temp_vert const& vert : vert_positions[i]) {
       //update containing triangles with actual index of this vertex in member vectors
       for(auto const& tri : vert.tris) {
         temp_tris[tri.first].verts[tri.second] = curr_vert;
       }
       //push properties to attribute vectors
-      positions.push_back(to_gua::vec3(control_points[vert.point]));
+      positions.push_back(control_points[i]);
       normals.push_back(vert.normal);
 
       if(has_tangents) {
@@ -264,7 +269,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   }
 
   //output reduction info
-  // Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
+  Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
 }
 
   //this function gets a geometry layer and returns the function to access it depending on mapping & referencing
