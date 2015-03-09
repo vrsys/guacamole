@@ -1,3 +1,4 @@
+@include "gua_check_clipping_planes.glsl"
 
 #if @enable_abuffer@
 
@@ -52,14 +53,14 @@ void abuf_insert(float depth)
             break;
           }
         }
-      } 
+      }
       else { // inserted
         pos = LSB64(record);
         record = old;
         success = true;
       }
     }
-    if (frag_ctr++ >= ABUF_MAX_FRAGMENTS) break; 
+    if (frag_ctr++ >= ABUF_MAX_FRAGMENTS) break;
   }
 
   if (success) {
@@ -80,6 +81,8 @@ void abuf_insert(float depth)
 
 void submit_fragment(float depth)
 {
+  check_clipping_planes();
+
 #if @enable_abuffer@
   if (gua_alpha > @abuf_insertion_threshold@) {
     @include "gua_write_gbuffer.glsl"

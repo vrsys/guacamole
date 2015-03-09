@@ -57,8 +57,7 @@ void Serializer::check(SerializedScene& output,
   data_ = &output;
   data_->nodes.clear();
   data_->bounding_boxes.clear();
-  data_->clipping_plane_centers.clear();
-  data_->clipping_plane_normals.clear();
+  data_->clipping_planes.clear();
 
   enable_frustum_culling_     = enable_frustum_culling;
   current_render_mask_        = mask;
@@ -66,8 +65,7 @@ void Serializer::check(SerializedScene& output,
   current_center_of_interest_ = output.center_of_interest;
 
   for (auto plane: scene_graph.get_clipping_plane_nodes()) {
-    data_->clipping_plane_centers.push_back(plane->get_center());
-    data_->clipping_plane_normals.push_back(plane->get_normal());
+    data_->clipping_planes.push_back(plane->get_component_vector());
   }
 
   scene_graph.accept(*this);
@@ -128,16 +126,9 @@ bool Serializer::is_visible(node::Node* node) const {
   if (enable_frustum_culling_) {
     auto bbox(node->get_bounding_box());
     if (bbox != math::BoundingBox<math::vec3>()) {
-      is_visible = current_frustum_.intersects(bbox);
+      is_visible = current_frustum_.intersects(bbox, data_->clipping_planes);
     }
   }
-
-  // check whether at least one point of the bounding box isn't beyond all
-  // clipping planes
-  if (is_visible) {
-    is_visible = check_clipping_planes(node);
-  }
-
 
   // check whether mask allows rendering
   if (is_visible) {
@@ -149,47 +140,6 @@ bool Serializer::is_visible(node::Node* node) const {
   }
 
   return is_visible;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool Serializer::check_clipping_planes(node::Node* node) const {
-  if (!data_->clipping_plane_centers.empty()) {
-    auto bbox(node->get_bounding_box());
-    std::vector<math::vec4f> corners(
-    {
-      math::vec4f(bbox.min.x, bbox.min.y, bbox.min.z, 1),
-      math::vec4f(bbox.max.x, bbox.min.y, bbox.min.z, 1),
-      math::vec4f(bbox.max.x, bbox.max.y, bbox.min.z, 1),
-      math::vec4f(bbox.min.x, bbox.max.y, bbox.min.z, 1),
-      math::vec4f(bbox.min.x, bbox.max.y, bbox.max.z, 1),
-      math::vec4f(bbox.min.x, bbox.min.y, bbox.max.z, 1),
-      math::vec4f(bbox.max.x, bbox.min.y, bbox.max.z, 1),
-      math::vec4f(bbox.max.x, bbox.max.y, bbox.max.z, 1)
-    }
-    );
-
-    for (auto corner: corners) {
-      bool corner_visible(true);
-
-      for (unsigned i(0); i < data_->clipping_plane_centers.size(); ++i) {
-        auto to_center(scm::math::normalize(corner - data_->clipping_plane_centers[i]));
-
-        if (scm::math::dot(to_center, data_->clipping_plane_normals[i]) > 0) {
-          corner_visible = false;
-          break;
-        }
-      }
-
-      if (corner_visible) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

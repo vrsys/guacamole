@@ -104,16 +104,16 @@ int main(int argc, char** argv) {
       "data/objects/plane.obj",
       gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE)
     );
-    plane->rotate(90, 1, 0, 0);
-    clipping_plane->add_child(plane);
+    plane->rotate(-90, 1, 0, 0);
+    // clipping_plane->add_child(plane);
   };
 
-  add_clipping_plane(gua::math::vec3(0, 0, -0.5), gua::math::vec4(0, 0, 0, 0));
-  // add_clipping_plane(gua::math::vec3(0, 0, 0.5), gua::math::vec4(180, 1, 0, 0));
-  add_clipping_plane(gua::math::vec3(0, 0.5, 0), gua::math::vec4(90, 1, 0, 0));
-  // add_clipping_plane(gua::math::vec3(0, 0.5, 0), gua::math::vec4(-90, 1, 0, 0));
-  add_clipping_plane(gua::math::vec3(-0.5, 0, 0), gua::math::vec4(90, 0, 1, 0));
-  // add_clipping_plane(gua::math::vec3(-0.5, 0, 0), gua::math::vec4(-90, 0, 1, 0));
+  add_clipping_plane(gua::math::vec3(0, 0, -0.5), gua::math::vec4(180, 1, 0, 0));
+  add_clipping_plane(gua::math::vec3(0, 0, 0.5), gua::math::vec4(0, 0, 0, 0));
+  add_clipping_plane(gua::math::vec3(0, 0.5, 0), gua::math::vec4(-90, 1, 0, 0));
+  add_clipping_plane(gua::math::vec3(0, -0.5, 0), gua::math::vec4(90, 1, 0, 0));
+  add_clipping_plane(gua::math::vec3(-0.5, 0, 0), gua::math::vec4(-90, 0, 1, 0));
+  add_clipping_plane(gua::math::vec3(0.5, 0, 0), gua::math::vec4(90, 0, 1, 0));
 
 
   // auto clipping_plane_2 = graph.add_node<gua::node::ClippingPlaneNode>("/plane_transform", "clipping_plane_2");

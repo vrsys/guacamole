@@ -41,14 +41,23 @@ ClippingPlaneNode::ClippingPlaneNode(std::string const& name, math::mat4 const& 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::vec4f ClippingPlaneNode::get_center() const {
-  return math::vec4f(get_cached_world_transform() * math::vec4(0, 0, 0, 1));
+math::vec3 ClippingPlaneNode::get_center() const {
+  return math::get_translation(get_cached_world_transform());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::vec4f ClippingPlaneNode::get_normal() const {
-  return math::vec4f(scm::math::normalize(get_cached_world_transform() * math::vec4(0, 0, -1, 0)));
+math::vec3 ClippingPlaneNode::get_normal() const {
+  return math::vec3(scm::math::normalize(get_cached_world_transform() * math::vec4(0, 0, -1, 0)));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::vec4f ClippingPlaneNode::get_component_vector() const {
+  auto normal(get_normal());
+  auto center(get_center());
+  auto dist(scm::math::dot(normal, -center));
+  return math::vec4f(normal.x, normal.y, normal.z, dist);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

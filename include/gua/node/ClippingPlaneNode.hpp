@@ -61,8 +61,9 @@ class GUA_DLL ClippingPlaneNode : public Node {
             math::mat4 const& transform = math::mat4::identity());
 
 
-  math::vec4f get_center() const;
-  math::vec4f get_normal() const;
+  math::vec3  get_center() const;
+  math::vec3  get_normal() const;
+  math::vec4f get_component_vector() const;
 
   /**
    * Accepts a visitor and calls concrete visit method.

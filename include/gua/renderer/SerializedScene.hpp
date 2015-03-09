@@ -62,8 +62,7 @@ struct GUA_DLL SerializedScene {
   /**
    * Clipping plane parameters.
    */
-  std::vector<math::vec4f> clipping_plane_centers;
-  std::vector<math::vec4f> clipping_plane_normals;
+  std::vector<math::vec4f> clipping_planes;
 
   /**
    * All bounding boxes.
