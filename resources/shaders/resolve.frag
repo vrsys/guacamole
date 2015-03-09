@@ -110,7 +110,7 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
 #if @enable_abuffer@
 vec4 abuf_shade(uint pos, float depth) {
 
-  uvec4 data = ABUF_FRAG(pos, 0);
+  uvec4 data = frag_data[pos];
 
   vec3 color = vec3(unpackUnorm2x16(data.x), unpackUnorm2x16(data.y).x);
   vec3 normal = vec3(unpackSnorm2x16(data.y).y, unpackSnorm2x16(data.z));
@@ -206,7 +206,7 @@ void main() {
   float depth = gua_get_depth();
 
 #if @enable_abuffer@
-  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, depth);
+  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
 #else
   bool res = true;
 #endif
