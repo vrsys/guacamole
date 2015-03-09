@@ -69,14 +69,6 @@ scm::math::vec4f vec4(T const& v) {
 
 namespace gua {
 
-struct Vertex {
-  scm::math::vec3f pos;
-  scm::math::vec2f tex;
-  scm::math::vec3f normal;
-  scm::math::vec3f tangent;
-  scm::math::vec3f bitangent;
-};
-
 struct Mesh {
  public:
   Mesh();
@@ -85,6 +77,14 @@ struct Mesh {
 #ifdef GUACAMOLE_FBX
   Mesh(FbxMesh& mesh);
 #endif
+  
+  struct Vertex {
+    scm::math::vec3f pos;
+    scm::math::vec2f tex;
+    scm::math::vec3f normal;
+    scm::math::vec3f tangent;
+    scm::math::vec3f bitangent;
+  };
 
   void copy_to_buffer(Vertex* vertex_buffer) const;
   virtual scm::gl::vertex_format get_vertex_format() const;
