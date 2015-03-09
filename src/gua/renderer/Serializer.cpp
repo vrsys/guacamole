@@ -57,11 +57,16 @@ void Serializer::check(SerializedScene& output,
   data_ = &output;
   data_->nodes.clear();
   data_->bounding_boxes.clear();
+  data_->clipping_planes.clear();
 
   enable_frustum_culling_     = enable_frustum_culling;
   current_render_mask_        = mask;
   current_frustum_            = output.frustum;
   current_center_of_interest_ = output.center_of_interest;
+
+  for (auto plane: scene_graph.get_clipping_plane_nodes()) {
+    data_->clipping_planes.push_back(plane->get_component_vector());
+  }
 
   scene_graph.accept(*this);
 }
@@ -116,14 +121,16 @@ void Serializer::check(SerializedScene& output,
 bool Serializer::is_visible(node::Node* node) const {
   bool is_visible(true);
 
+
+  // check whether bounding box is (partially) within frustum
   if (enable_frustum_culling_) {
     auto bbox(node->get_bounding_box());
     if (bbox != math::BoundingBox<math::vec3>()) {
-      is_visible = current_frustum_.intersects(bbox);
+      is_visible = current_frustum_.intersects(bbox, data_->clipping_planes);
     }
   }
 
-
+  // check whether mask allows rendering
   if (is_visible) {
     is_visible = current_render_mask_.check(node->get_tags());
   }
@@ -140,5 +147,7 @@ bool Serializer::is_visible(node::Node* node) const {
 void Serializer::visit_children(node::Node* node) {
   for (auto & c : node->children_) { c->accept(*this); }
 }
+
+
 
 }  // namespace gua

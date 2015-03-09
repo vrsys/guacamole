@@ -36,11 +36,11 @@ CameraNode::CameraNode(std::string const& name,
                        std::shared_ptr<PipelineDescription> const& description,
                        Configuration const& configuration,
                        math::mat4 const& transform)
-  : Node(name, transform), 
+  : Node(name, transform),
     config(configuration),
     pipeline_description_(description),
     application_fps_(0.f),
-    rendering_fps_(0.f) 
+    rendering_fps_(0.f)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ std::shared_ptr<Node> CameraNode::copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SerializedCameraNode CameraNode::serialize() const 
+SerializedCameraNode CameraNode::serialize() const
 {
   SerializedCameraNode s = { config, get_world_transform(), uuid() };
 
@@ -100,15 +100,15 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
         math::vec4 screen_direction(screen_transform * math::vec4(0.f, 0.f, -1.f, 0.f));
 
         math::vec3 eye_separation_in_screen_direction(
-            scm::math::dot(eye_separation, screen_direction) / 
+            scm::math::dot(eye_separation, screen_direction) /
             scm::math::length_sqr(screen_direction) * screen_direction
         );
 
         float eye_dist_in_screen_direction(scm::math::length(eye_separation_in_screen_direction));
 
         // left eye is closer to screen than left eye
-        if (eye_separation.x*screen_direction.x + 
-            eye_separation.y*screen_direction.y + 
+        if (eye_separation.x*screen_direction.x +
+            eye_separation.y*screen_direction.y +
             eye_separation.z*screen_direction.z > 0) {
 
             // move left eye clipping towards screen
@@ -127,15 +127,30 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
 
     if (config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
         return Frustum::perspective(
-            eye_transform, screen_transform, 
+            eye_transform, screen_transform,
             config.near_clip() + clipping_offset, config.far_clip() + clipping_offset
         );
-    } 
+    }
 
     return Frustum::orthographic(
-        eye_transform, screen_transform, 
+        eye_transform, screen_transform,
         config.near_clip() + clipping_offset, config.far_clip() + clipping_offset
     );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void CameraNode::set_scenegraph(SceneGraph* scenegraph) {
+  if (scenegraph_) {
+    scenegraph_->remove_camera_node(this);
+  }
+
+  Node::set_scenegraph(scenegraph);
+
+  if (scenegraph_) {
+    scenegraph_->add_camera_node(this);
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

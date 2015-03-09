@@ -39,8 +39,11 @@ class NodeVisitor;
 struct Ray;
 
 namespace node {
-class RayNode;
-struct SerializedCameraNode;
+  class Node;
+  class CameraNode;
+  class ClippingPlaneNode;
+  class RayNode;
+  struct SerializedCameraNode;
 }
 
 /**
@@ -295,6 +298,18 @@ class GUA_DLL SceneGraph {
                                       int options = PickResult::PICK_ALL,
                                       Mask const& mask = Mask());
 
+  std::vector<node::CameraNode*> const& get_camera_nodes() const {
+    return camera_nodes_;
+  }
+
+  std::vector<node::ClippingPlaneNode*> const& get_clipping_plane_nodes() const {
+    return clipping_plane_nodes_;
+  }
+
+  friend class ::gua::node::Node;
+  friend class ::gua::node::CameraNode;
+  friend class ::gua::node::ClippingPlaneNode;
+
  private:
 
   std::shared_ptr<node::Node> find_node(std::string const& path_to_node,
@@ -302,8 +317,18 @@ class GUA_DLL SceneGraph {
 
   bool has_child(std::shared_ptr<node::Node> const& parent, std::string const& child_name) const;
 
+  void add_camera_node(node::CameraNode* camera);
+  void remove_camera_node(node::CameraNode* camera);
+
+  void add_clipping_plane_node(node::ClippingPlaneNode* clipping_plane);
+  void remove_clipping_plane_node(node::ClippingPlaneNode* clipping_plane);
+
+
   std::shared_ptr<node::Node> root_;
   std::string name_;
+
+  std::vector<node::CameraNode*> camera_nodes_;
+  std::vector<node::ClippingPlaneNode*> clipping_plane_nodes_;
 };
 
 }

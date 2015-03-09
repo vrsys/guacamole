@@ -47,7 +47,8 @@ namespace node {
     draw_bounding_box_(false),
     child_dirty_(true),
     self_dirty_(true),
-    user_data_()
+    user_data_(),
+    scenegraph_(nullptr)
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -55,6 +56,7 @@ namespace node {
   Node::~Node() {
     for (auto const& child : children_) {
       child->parent_ = nullptr;
+      child->set_scenegraph(nullptr);
     }
   }
 
@@ -98,6 +100,7 @@ namespace node {
     if (children_.size() > 0) {
       for (auto const& child : children_) {
         child->parent_ = nullptr;
+        child->set_scenegraph(nullptr);
       }
 
       set_dirty();
@@ -115,6 +118,7 @@ namespace node {
         children_.erase(c);
         child->parent_ = nullptr;
         set_dirty();
+        child->set_scenegraph(nullptr);
 
         break;
       }
@@ -383,6 +387,16 @@ namespace node {
     child_dirty_ = true;
     for (auto const& child : children_) {
       child->set_children_dirty();
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void Node::set_scenegraph(SceneGraph* scenegraph) {
+    scenegraph_ = scenegraph;
+
+    for (auto const& child : children_) {
+      child->set_scenegraph(scenegraph);
     }
   }
 

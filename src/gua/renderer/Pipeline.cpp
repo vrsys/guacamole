@@ -186,6 +186,7 @@ void Pipeline::process(
 
   camera_block_.update(context_.render_context,
                         current_scene_.frustum,
+                        current_scene_.clipping_planes,
                         camera.config.get_view_id(),
                         camera.config.get_resolution());
   bind_camera_uniform_block(0);

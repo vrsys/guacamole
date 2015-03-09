@@ -43,6 +43,7 @@ class RayNode;
 class SerializableNode;
 class TexturedQuadNode;
 class GeometryNode;
+class ClippingPlaneNode;
 }
 
 
@@ -195,7 +196,7 @@ class NodeVisitor {
    * \param cam   Pointer to a ScreenNode.
    */
   // virtual void visit(node::RayNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
-  
+
   virtual void visit(node::SerializableNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
@@ -207,7 +208,7 @@ class NodeVisitor {
    * \param cam   Pointer to a ScreenNode.
    */
   // virtual void visit(node::RayNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
-  
+
   virtual void visit(node::RayNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
 // #ifdef GUACAMOLE_ENABLE_PHYSICS
@@ -241,6 +242,16 @@ class NodeVisitor {
    * \param cam   Pointer to a TexturedQuadNode.
    */
   virtual void visit(node::TexturedQuadNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
+
+  /**
+   * Visits a ClippingPlaneNode.
+   *
+   * This function provides the interface to visit a ClippingPlaneNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
+   *
+   * \param cam   Pointer to a ClippingPlaneNode.
+   */
+  virtual void visit(node::ClippingPlaneNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
  private:
 

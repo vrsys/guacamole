@@ -19,57 +19,71 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SERIALIZED_SCENE_HPP
-#define GUA_SERIALIZED_SCENE_HPP
+#ifndef GUA_CLIPPING_PLANE_NODE_HPP
+#define GUA_CLIPPING_PLANE_NODE_HPP
 
-// guacamole headers
+#include <gua/platform.hpp>
 #include <gua/node/Node.hpp>
-#include <gua/node/ScreenNode.hpp>
-#include <gua/node/ClippingPlaneNode.hpp>
-#include <gua/math/BoundingBox.hpp>
-#include <gua/renderer/Frustum.hpp>
-
-// external headers
-#include <vector>
-#include <unordered_map>
-#include <typeindex>
 
 namespace gua {
+namespace node {
 
 /**
- * Stores a serialized scene graph.
+ * This class is used to represent an transformation node in the SceneGraph.
  *
- * When the optimizer traverses the scene graph, it produces an SerializedScene
- * which contains relevant nodes only.
+ * Because any of guacamole's Nodes stores children and transformation, the
+ * TransformationNode only exists for the convenience of explicitly limiting a
+ * Node's purpose to the transformation of several children.
+ *
+ * \ingroup gua_scenegraph
  */
-struct GUA_DLL SerializedScene {
+class GUA_DLL ClippingPlaneNode : public Node {
+ public:
 
   /**
-  * All geometry nodes.
-  */
-  std::unordered_map<std::type_index, std::vector<node::Node*>> nodes;
-
-  /**
-   * The frustum.
+   * Constructor.
+   *
+   * This constructs an empty ClippingPlaneNode.
+   *
    */
-  Frustum frustum;
+  ClippingPlaneNode() {};
 
   /**
-   * The center of interest.
+   * Constructor.
+   *
+   * This constructs a ClippingPlaneNode with the given parameters.
+   *
+   * \param name           The name of the new ClippingPlaneNode.
+   * \param transform      A matrix to describe the ClippingPlaneNode's
+   *                       transformation.
    */
-  math::vec3 center_of_interest;
+  ClippingPlaneNode(std::string const& name,
+            math::mat4 const& transform = math::mat4::identity());
+
+
+  math::vec3  get_center() const;
+  math::vec3  get_normal() const;
+  math::vec4f get_component_vector() const;
 
   /**
-   * Clipping plane parameters.
+   * Accepts a visitor and calls concrete visit method.
+   *
+   * This method implements the visitor pattern for Nodes.
+   *
+   * \param visitor  A visitor to process the ClippingPlaneNode's data.
    */
-  std::vector<math::vec4f> clipping_planes;
+  void accept(NodeVisitor& visitor) override;
 
-  /**
-   * All bounding boxes.
-   */
-  std::vector<math::BoundingBox<math::vec3> > bounding_boxes;
+  friend class Node;
+
+ private:
+
+  std::shared_ptr<Node> copy() const override;
+
+  /*virtual*/ void set_scenegraph(SceneGraph* scenegraph) override;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
-#endif  // GUA_SERIALIZED_SCENE_HPP
+#endif  // GUA_CLIPPING_PLANE_NODE_HPP
