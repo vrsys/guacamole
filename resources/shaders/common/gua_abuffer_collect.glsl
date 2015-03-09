@@ -2,9 +2,11 @@
 
 #if @enable_abuffer@
 
+uniform uvec2 gua_gbuffer_depth;
+
 @include "gua_abuffer.glsl"
 
-void abuf_insert(float depth)
+bool abuf_insert(float depth)
 {
   const ivec2 frag_pos = ivec2(gl_FragCoord.xy);
 
@@ -49,7 +51,7 @@ void abuf_insert(float depth)
         if (!success) {
           float current_frag_alpha = float(bitfieldExtract(unpackUint2x32(old).y, 0, 8)) / 255.0;
           accum_alpha += mix(current_frag_alpha, 0.0, accum_alpha);
-          if (accum_alpha >= @abuf_blending_termination_threshold@) {
+          if (accum_alpha > @abuf_blending_termination_threshold@) {
             break;
           }
         }
@@ -72,9 +74,10 @@ void abuf_insert(float depth)
     uint col_norm = bitfieldInsert(packUnorm2x16(gua_color.bb),
                                    packSnorm2x16(gua_normal.xx), 16, 16);
 
-    ABUF_FRAG(ctr, 0) = uvec4(packUnorm2x16(gua_color.rg), col_norm,
-                              packSnorm2x16(gua_normal.yz), pbr);
+    frag_data[ctr] = uvec4(packUnorm2x16(gua_color.rg), col_norm,
+                           packSnorm2x16(gua_normal.yz), pbr);
   }
+  return success;
 }
 
 #endif
@@ -84,15 +87,22 @@ void submit_fragment(float depth)
   check_clipping_planes();
 
 #if @enable_abuffer@
+  float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
+  if (depth > z) discard;
+
+  if (gua_alpha < 1.0 - @abuf_insertion_threshold@) {
+    discard;
+  }
+
   if (gua_alpha > @abuf_insertion_threshold@) {
     @include "gua_write_gbuffer.glsl"
   }
   else {
-    abuf_insert(depth);
-    discard;
+    if (abuf_insert(depth))
+      discard;
   }
 #else
-    @include "gua_write_gbuffer.glsl"
+  @include "gua_write_gbuffer.glsl"
 #endif
 }
 

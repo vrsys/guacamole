@@ -37,7 +37,7 @@ class GUA_DLL ABuffer {
     scm::gl::buffer_ptr counter;
     scm::gl::buffer_ptr frag_list;
     scm::gl::buffer_ptr frag_data;
-    size_t              frag_list_size = 0;
+    size_t              frag_count = 0;
   };
 
   ABuffer() {}
@@ -49,6 +49,9 @@ class GUA_DLL ABuffer {
   void unbind(RenderContext const& ctx);
 
  private:
+
+  const size_t FRAG_LIST_WORD_SIZE = 8;
+  const size_t FRAG_DATA_WORD_SIZE = 16;
 
   std::shared_ptr<SharedResource> res_ = nullptr;
 

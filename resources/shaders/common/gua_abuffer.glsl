@@ -5,7 +5,6 @@
 #define ABUF_MODE
 #endif
 
-#define ABUF_STORE_OFFSET 1
 #define ABUF_MAX_FRAGMENTS 300
 
 // If max for uint64_t is not available
@@ -31,7 +30,6 @@ layout (std430, binding = 1) ABUF_MODE coherent buffer abuf_data {
 // helper macros
 #define UINT24_MAX           0xFFFFFF
 #define UINT_MAX             0xFFFFFFFF
-#define ABUF_FRAG(i,j)       (frag_data[(i)*ABUF_STORE_OFFSET+(j)])
 #define LSB64(a)             (uint32_t(a))
 
 const uint abuf_list_offset = gua_resolution.x * gua_resolution.y;
