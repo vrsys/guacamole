@@ -49,76 +49,8 @@ Mesh::Mesh(FbxMesh& mesh) {
   Timer timer{};
   timer.start();
 
-  bool has_uvs = mesh.GetElementUVCount() > 0;
-  bool has_tangents = (mesh.GetElementTangentCount() == 0 || mesh.GetElementBinormalCount() == 0) && !has_uvs;
+  num_vertices = mesh.GetControlPointsCount(); 
 
-  //get the temporary elements, actual work is done in this function
-  auto verts_and_tris = get_verts_and_tris(mesh);
-
-  std::vector<std::vector<temp_vert>>const& vert_positions = std::get<0>(verts_and_tris);
-  num_vertices = std::get<2>(verts_and_tris);
-
-  std::vector<temp_tri>& temp_tris = std::get<1>(verts_and_tris);
-  num_triangles = temp_tris.size();
-
-  // Reserve space in the vectors for the vertex attributes and indices
-  positions.reserve(num_vertices);
-  normals.reserve(num_vertices);
-
-  if(has_uvs) {
-    texCoords.reserve(num_vertices);
-  }
-  else {
-    texCoords.resize(num_vertices, scm::math::vec2f(0.0f));
-  }
-
-  if(has_tangents) {
-    tangents.reserve(num_vertices);
-  }
-  else {
-    tangents.resize(num_vertices, scm::math::vec3f(0.0f));
-    bitangents.resize(num_vertices, scm::math::vec3f(0.0f));
-  }
-
-  FbxVector4* control_points = mesh.GetControlPoints();
-  //load reduced attributes
-  unsigned curr_vert = 0;
-  //iterate over control points
-  for(std::vector<temp_vert> const& verts : vert_positions) {
-    //iterate over vertices at that point
-    for(temp_vert const& vert : verts) {
-      //update containing triangles with actual index of this vertex in member vectors
-      for(auto const& tri : vert.tris) {
-        temp_tris[tri.first].verts[tri.second] = curr_vert;
-      }
-      //push properties to attribute vectors
-      positions.push_back(to_gua::vec3(control_points[vert.point]));
-      normals.push_back(vert.normal);
-
-      if(has_tangents) {
-        tangents.push_back(vert.tangent);
-        bitangents.push_back(vert.bitangent);
-      }
-      if(has_uvs) {
-        texCoords.push_back(vert.uv);
-      }
-      ++curr_vert;
-    }
-  }
-
-  //load reduced triangles
-  indices.reserve(num_triangles * 3);
-  for(temp_tri const& tri : temp_tris) {
-    indices.push_back(tri.verts[0]);
-    indices.push_back(tri.verts[1]);
-    indices.push_back(tri.verts[2]);
-  }
-
-  //output reduction info
-  Logger::LOG_DEBUG <<  "time taken: " << timer.get_elapsed() << std::endl;
-}
-
-std::tuple<std::vector<std::vector<Mesh::temp_vert>>,std::vector<Mesh::temp_tri>, unsigned> Mesh::get_verts_and_tris(FbxMesh& mesh) {
 //polygons
   if(mesh.GetPolygonCount() < 1) {
     Logger::LOG_ERROR << "No polygons in mesh" << std::endl;
@@ -130,7 +62,7 @@ std::tuple<std::vector<std::vector<Mesh::temp_vert>>,std::vector<Mesh::temp_tri>
     //dont override exiting normals and generate by control point, not vertex
     mesh.GenerateNormals(false, true);
   }
-
+  
 //UV coordinates
   bool has_uvs = true;
   if(mesh.GetElementUVCount() == 0) {
@@ -169,7 +101,9 @@ std::tuple<std::vector<std::vector<Mesh::temp_vert>>,std::vector<Mesh::temp_tri>
   //one vector of temp_vert represents one control point, every temp_vert in that vector is one vertex at that point
   std::vector<std::vector<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::vector<temp_vert>{}};
   std::vector<temp_tri> temp_tris{};
+  
 
+  FbxVector4* control_points = mesh.GetControlPoints();
   //vertex indices of polygons
   int* poly_vertices = mesh.GetPolygonVertices();
 
@@ -193,7 +127,7 @@ std::tuple<std::vector<std::vector<Mesh::temp_vert>>,std::vector<Mesh::temp_tri>
     get_bitangent = get_access_function(*mesh.GetElementBinormal(0));
   }
 
-  unsigned num_triangles = 0; 
+  num_triangles = 0; 
   //starting index of the polygon in the index array
   unsigned start_index = 0;
   //how many tris the last polygon contained
@@ -248,7 +182,7 @@ std::tuple<std::vector<std::vector<Mesh::temp_vert>>,std::vector<Mesh::temp_tri>
   }
 
   //filter out duplicate vertices
-  unsigned num_vertices = 0;
+  num_vertices = 0;
   unsigned old_num_vertices = 0;
   unsigned dupl_verts = 0;
   //iterate over control points
@@ -277,13 +211,62 @@ std::tuple<std::vector<std::vector<Mesh::temp_vert>>,std::vector<Mesh::temp_tri>
     num_vertices += verts.size();
   }
   // Logger::LOG_DEBUG << dupl_verts << " vertex duplications" << std::endl;
-  Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << std::endl;
 
-  return std::make_tuple(vert_positions, temp_tris, num_vertices);
+  // Reserve space in the vectors for the vertex attributes and indices
+  positions.reserve(num_vertices);
+  normals.reserve(num_vertices);
+  if(has_uvs) {
+    texCoords.reserve(num_vertices);
+  }
+  else {
+    texCoords.resize(num_vertices, scm::math::vec2f(0.0f));
+  }
+  if(has_tangents) {
+    tangents.reserve(num_vertices);
+  }
+  else {
+    tangents.resize(num_vertices, scm::math::vec3f(0.0f));
+    bitangents.resize(num_vertices, scm::math::vec3f(0.0f));
+  }
+
+  //load reduced attributes
+  unsigned curr_vert = 0;
+  //iterate over control points
+  for(std::vector<temp_vert> const& verts : vert_positions) {
+    //iterate over vertices at that point
+    for(temp_vert const& vert : verts) {
+      //update containing triangles with actual index of this vertex in member vectors
+      for(auto const& tri : vert.tris) {
+        temp_tris[tri.first].verts[tri.second] = curr_vert;
+      }
+      //push properties to attribute vectors
+      positions.push_back(to_gua::vec3(control_points[vert.point]));
+      normals.push_back(vert.normal);
+
+      if(has_tangents) {
+        tangents.push_back(vert.tangent);
+        bitangents.push_back(vert.bitangent);
+      }
+      if(has_uvs) {
+        texCoords.push_back(vert.uv);
+      }
+      ++curr_vert;
+    }
+  }
+
+  //load reduced triangles
+  indices.reserve(num_triangles * 3);
+  for(temp_tri const& tri : temp_tris) {
+    indices.push_back(tri.verts[0]);
+    indices.push_back(tri.verts[1]);
+    indices.push_back(tri.verts[2]);
+  }
+
+  //output reduction info
+  // Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
 }
 
-
-//this function gets a geometry layer and returns the function to access it depending on mapping & referencing
+  //this function gets a geometry layer and returns the function to access it depending on mapping & referencing
 template<typename T>
 std::function<unsigned(Mesh::temp_vert const&)> Mesh::get_access_function(FbxLayerElementTemplate<T> const& layer) {
   std::function<unsigned(temp_vert const&)> access_function;
