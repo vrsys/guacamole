@@ -36,7 +36,11 @@
 #include <vector>
 #include <map>
 #include <assimp/scene.h>       // Output data structure
-#include <fbxsdk.h>
+
+namespace fbxsdk_2015_1{
+  class FbxNode;
+  class FbxScene;
+}
 
 namespace gua {
   
@@ -44,9 +48,9 @@ class Bone {
  public:
   Bone();
   Bone(aiNode const& node);
-  Bone(FbxNode& node);
+  Bone(fbxsdk_2015_1::FbxNode& node);
   Bone(aiScene const& scene);
-  Bone(FbxScene& scene);
+  Bone(fbxsdk_2015_1::FbxScene& scene);
 
   ~Bone();
 

@@ -36,7 +36,11 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <fbxsdk.h>
+
+namespace fbxsdk_2015_1{
+  class FbxScene;
+  class FbxManager;
+}
 
 namespace Assimp { class Importer; }
 
@@ -128,7 +132,7 @@ public:
 
  private: // methods
 
-  std::shared_ptr<node::Node> get_node(FbxScene* fbx_scene,
+  std::shared_ptr<node::Node> get_node(fbxsdk_2015_1::FbxScene* fbx_scene,
                 std::string const& file_name,
                 std::string const& node_name,
                 unsigned flags);
@@ -148,7 +152,7 @@ private: // attributes
 
   unsigned node_counter_;
 
-  static FbxScene* load_fbx_file(FbxManager* manager, std::string const& file_path);
+  static fbxsdk_2015_1::FbxScene* load_fbx_file(fbxsdk_2015_1::FbxManager* manager, std::string const& file_path);
   static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
   static unsigned mesh_counter_;
 };

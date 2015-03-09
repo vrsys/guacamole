@@ -28,7 +28,11 @@
 #include <gua/utils/Transformation.hpp>
 #include <gua/utils/Mesh.hpp>
 
-#include <fbxsdk.h>
+namespace fbxsdk_2015_1{
+  class FbxTakeInfo;
+  class FbxNode;
+}
+
 namespace gua {
 
 template<class T>
@@ -52,7 +56,7 @@ class BoneAnimation {
   ~BoneAnimation();
 
   BoneAnimation(aiNodeAnim* anim);
-  BoneAnimation(FbxTakeInfo const& take, FbxNode& node);
+  BoneAnimation(fbxsdk_2015_1::FbxTakeInfo const& take, fbxsdk_2015_1::FbxNode& node);
 
   Transformation calculate_transform(float time) const;
 

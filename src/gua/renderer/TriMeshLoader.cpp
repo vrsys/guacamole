@@ -32,6 +32,11 @@
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+
+#ifdef GUACAMOLE_FBX
+  #include <fbxsdk.h>
+#endif // GUACAMOLE_FBX
+
 namespace gua {
 
 /////////////////////////////////////////////////////////////////////////////
@@ -324,7 +329,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
       if(fbx_node.GetMaterialCount() > 1) {
         Logger::LOG_WARNING << "Trimesh has more than one material, using only first one" << std::endl;
       }
-      FbxSurfaceMaterial* mat = fbx_node.GetMaterial(0);
+      fbxsdk_2015_1::FbxSurfaceMaterial* mat = fbx_node.GetMaterial(0);
       material = material_loader.load_material(*mat, file_name);
     }
 
