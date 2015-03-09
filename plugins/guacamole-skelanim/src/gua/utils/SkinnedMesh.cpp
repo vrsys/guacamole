@@ -27,36 +27,34 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root):
     has_weights = ctrlpt_weights.size() > 0;
   }
 
-  if(has_weights) {
+  if(!has_weights) {
+    //just map to first bone, with no mapping or weight 0 triangles wouldnt be rendered
+    bone_counts.resize(num_vertices, 1);
+    bone_ids.resize(num_vertices, 0);
+    bone_weights.resize(num_vertices, 1.0f);
+  }
+  else {
     bone_counts.reserve(num_vertices);
     bone_ids.reserve(num_vertices);
     bone_weights.reserve(num_vertices);
-  }
-  else {
-    bone_counts.resize(num_vertices, 0);
-    bone_ids.resize(num_vertices, 0);
-    bone_weights.resize(num_vertices, 0.0f);
-  }
 
-  scm::math::vec3f last_pos{positions[0]};
-  unsigned weight_index = 0;
-  //iterate over vertices
-  for(auto const& pos : positions) {
-    //if position changes its the next control point -> next weight
-    if(pos != last_pos) {
-      ++weight_index;
-    }
-    if(has_weights) {
-      bone_influences const& curr_influence{ctrlpt_weights[weight_index]};
+    unsigned ctrlpt_index = 0;
+    //iterate over vertices
+    for(uint i = 0; i < num_vertices; i++) {
+      //if position changes its the next control point -> next weight
+      if(i > 0 && positions[i] != positions[i - 1]) {
+        ++ctrlpt_index;
+      }
+
+      bone_influences const& curr_influence{ctrlpt_weights[ctrlpt_index]};
       //push all bone influences for current vert
-      for(uint i(0); i < curr_influence.weights.size(); ++i){
-        bone_ids.push_back(curr_influence.IDs[i]);
-        bone_weights.push_back(curr_influence.weights[i]);
+      for(uint j = 0; j < curr_influence.weights.size(); ++j){
+        bone_ids.push_back(curr_influence.IDs[j]);
+        bone_weights.push_back(curr_influence.weights[j]);
       }
 
       bone_counts.push_back(curr_influence.weights.size());
     }
-    last_pos = pos;
   }
 }
 
@@ -145,7 +143,7 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(FbxMesh const
   return temp_weights;
 }
 
-void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer, uint resource_offset)  const {
+void SkinnedMesh::copy_to_buffer(Vertex* vertex_buffer, uint resource_offset)  const {
   uint bone_offset{resource_offset};
   for (unsigned v(0); v < num_vertices; ++v) {
 
@@ -169,13 +167,13 @@ void SkinnedMesh::copy_to_buffer(SkinnedVertex* vertex_buffer, uint resource_off
 
 scm::gl::vertex_format SkinnedMesh::get_vertex_format() const {
   return scm::gl::vertex_format(
-    0, 0, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-    0, 1, scm::gl::TYPE_VEC2F, sizeof(SkinnedVertex))(
-    0, 2, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-    0, 3, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-    0, 4, scm::gl::TYPE_VEC3F, sizeof(SkinnedVertex))(
-    0, 5, scm::gl::TYPE_UINT, sizeof(SkinnedVertex))(
-    0, 6, scm::gl::TYPE_UINT, sizeof(SkinnedVertex));
+    0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
+    0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 5, scm::gl::TYPE_UINT, sizeof(Vertex))(
+    0, 6, scm::gl::TYPE_UINT, sizeof(Vertex));
 }
 
 std::vector<uint> const& 

@@ -86,11 +86,11 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
     vertices_[ctx.id] =
         ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
                                          scm::gl::USAGE_STATIC_DRAW,
-                                         mesh_.num_vertices * sizeof(SkinnedVertex),
+                                         mesh_.num_vertices * sizeof(SkinnedMesh::Vertex),
                                          0);
 
 
-    SkinnedVertex* data(static_cast<SkinnedVertex*>(ctx.render_context->map_buffer(
+    SkinnedMesh::Vertex* data(static_cast<SkinnedMesh::Vertex*>(ctx.render_context->map_buffer(
         vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
     // get a per-context resource

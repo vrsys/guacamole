@@ -40,16 +40,6 @@
  
 namespace gua {
 
-struct SkinnedVertex {
-  scm::math::vec3f pos;
-  scm::math::vec2f tex;
-  scm::math::vec3f normal;
-  scm::math::vec3f tangent;
-  scm::math::vec3f bitangent;
-  uint bone_id_offset;
-  uint nr_of_bones; 
-};
-
 struct SkinnedMesh : public Mesh {
  public:
   SkinnedMesh();
@@ -57,7 +47,17 @@ struct SkinnedMesh : public Mesh {
   SkinnedMesh(aiMesh const& mesh, Bone const& root = Bone{});
   SkinnedMesh(FbxMesh& mesh, Bone const& root = Bone{});
 
-  void copy_to_buffer(SkinnedVertex* vertex_buffer, uint resource_offset) const;
+  struct Vertex {
+    scm::math::vec3f pos;
+    scm::math::vec2f tex;
+    scm::math::vec3f normal;
+    scm::math::vec3f tangent;
+    scm::math::vec3f bitangent;
+    uint bone_id_offset;
+    uint nr_of_bones; 
+  };
+  
+  void copy_to_buffer(Vertex* vertex_buffer, uint resource_offset) const;
   scm::gl::vertex_format get_vertex_format() const override;
 
   std::vector<uint>     bone_ids;
@@ -66,7 +66,7 @@ struct SkinnedMesh : public Mesh {
 
   std::vector<uint> const& get_bone_ids() const;
   std::vector<float> const& get_bone_weights() const;
-  
+
  private:
   //struct to transfer temporary vertex to bone mapping info
   struct bone_influences

@@ -115,12 +115,12 @@ void TriMeshRessource::upload_to(RenderContext const& ctx) const {
     vertices_[ctx.id] =
         ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
                                          scm::gl::USAGE_STATIC_DRAW,
-                                         mesh_.num_vertices * sizeof(Vertex),
+                                         mesh_.num_vertices * sizeof(Mesh::Vertex),
                                          0);
 
 
 
-    Vertex* data(static_cast<Vertex*>(ctx.render_context->map_buffer(
+    Mesh::Vertex* data(static_cast<Mesh::Vertex*>(ctx.render_context->map_buffer(
         vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
     mesh_.copy_to_buffer(data);

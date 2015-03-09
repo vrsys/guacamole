@@ -223,6 +223,7 @@ Mesh::Mesh(FbxMesh& mesh) {
   }
   if(has_tangents) {
     tangents.reserve(num_vertices);
+    bitangents.reserve(num_vertices);
   }
   else {
     tangents.resize(num_vertices, scm::math::vec3f(0.0f));
@@ -232,9 +233,9 @@ Mesh::Mesh(FbxMesh& mesh) {
   //load reduced attributes
   unsigned curr_vert = 0;
   //iterate over control points
-  for(std::vector<temp_vert> const& verts : vert_positions) {
+  for(std::vector<temp_vert> const& position : vert_positions) {
     //iterate over vertices at that point
-    for(temp_vert const& vert : verts) {
+    for(temp_vert const& vert : position) {
       //update containing triangles with actual index of this vertex in member vectors
       for(auto const& tri : vert.tris) {
         temp_tris[tri.first].verts[tri.second] = curr_vert;
