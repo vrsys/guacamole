@@ -3,6 +3,7 @@
 //external headers
 #include <iostream>
 #include <queue>
+#include <fbxsdk.h>
 
 namespace gua {
 

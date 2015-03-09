@@ -34,9 +34,11 @@
 
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#ifdef GUACAMOLE_FBX
-  #include <fbxsdk.h>
-#endif
+
+namespace fbxsdk_2015_1{
+  class FbxSurfaceMaterial;
+}
+
 namespace Assimp { class Importer; }
 
 namespace gua {
@@ -58,7 +60,7 @@ class GUA_DLL MaterialLoader {
                                           bool optimize_material) const;
 
 #ifdef GUACAMOLE_FBX
-  std::shared_ptr<Material> load_material(FbxSurfaceMaterial const& material,
+  std::shared_ptr<Material> load_material(fbxsdk_2015_1::FbxSurfaceMaterial const& material,
                                 std::string const& assets_directory) const;
 #endif
 };

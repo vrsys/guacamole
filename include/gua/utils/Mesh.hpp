@@ -34,9 +34,12 @@
 
 #include <vector>
 #include <assimp/scene.h>       // Output data structure
-#ifdef GUACAMOLE_FBX
-  #include <fbxsdk.h>
-#endif // GUACAMOLE_FBX
+
+namespace fbxsdk_2015_1{
+  class FbxAMatrix;
+  class FbxQuaternion;
+  class FbxMesh;
+}
 
 namespace to_gua{
 
@@ -62,8 +65,8 @@ scm::math::vec4f vec4(T const& v) {
 }
 
 #ifdef GUACAMOLE_FBX
-  scm::math::mat4f mat4(FbxAMatrix const& m);
-  scm::math::quatf quat(FbxQuaternion const& q);
+  scm::math::mat4f mat4(fbxsdk_2015_1::FbxAMatrix const& m);
+  scm::math::quatf quat(fbxsdk_2015_1::FbxQuaternion const& q);
 #endif
 }
 
@@ -75,7 +78,7 @@ struct Mesh {
 
   Mesh(aiMesh const& mesh);
 #ifdef GUACAMOLE_FBX
-  Mesh(FbxMesh& mesh);
+  Mesh(fbxsdk_2015_1::FbxMesh& mesh);
 #endif
   
   struct Vertex {

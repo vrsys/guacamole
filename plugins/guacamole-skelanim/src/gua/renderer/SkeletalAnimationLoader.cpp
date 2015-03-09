@@ -32,6 +32,8 @@
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
+#include <fbxsdk.h>
+
 namespace gua {
 
 /////////////////////////////////////////////////////////////////////////////

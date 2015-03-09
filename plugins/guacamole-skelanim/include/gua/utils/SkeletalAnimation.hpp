@@ -32,6 +32,11 @@
 
 #include <vector>
 
+namespace fbxsdk_2015_1{
+  class FbxNode;
+  class FbxAnimStack;
+}
+
 namespace gua {
 class Pose;
 
@@ -40,7 +45,7 @@ class SkeletalAnimation {
   SkeletalAnimation();
 
   SkeletalAnimation(aiAnimation const& anim, std::string const& name = "");
-  SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> const& bones, std::string const& name = "");
+  SkeletalAnimation(fbxsdk_2015_1::FbxAnimStack* anim, std::vector<fbxsdk_2015_1::FbxNode*> const& bones, std::string const& name = "");
 
   ~SkeletalAnimation();
 

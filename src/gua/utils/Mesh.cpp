@@ -6,6 +6,10 @@
 #include <iostream>
 #include <queue>
 
+#ifdef GUACAMOLE_FBX
+  #include <fbxsdk.h>
+#endif // GUACAMOLE_FBX
+
 namespace to_gua{
 
 scm::math::mat4f mat4(aiMatrix4x4 const& m) {

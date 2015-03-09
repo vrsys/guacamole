@@ -31,6 +31,10 @@
 // external headers
 #include <vector>
 
+namespace fbxsdk_2015_1{
+  class FbxScene;
+}
+
 namespace gua {
 
 class SkeletalAnimationDirector {
@@ -41,7 +45,7 @@ class SkeletalAnimationDirector {
   inline ~SkeletalAnimationDirector(){};
 
   void add_animations(aiScene const& scene, std::string const& name);
-  void add_animations(FbxScene& scene, std::string const& name);
+  void add_animations(fbxsdk_2015_1::FbxScene& scene, std::string const& name);
 
   std::vector<scm::math::mat4f> get_bone_transforms();
 
