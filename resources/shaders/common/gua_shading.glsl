@@ -147,7 +147,7 @@ vec3 gua_shade(int light_id, in ShadingTerms T)
 
     vec3 F = Fresnel(T.cspec, H, L);
     vec3 D_Vis = vec3(D_and_Vis(T.roughness, T.N, H, T.Vn, L));
-    vec3 brdf = mix(T.diffuse, D_Vis, F);
+    vec3 brdf = mix(T.diffuse * float(gua_lights[light_id].diffuse_enable), D_Vis * float(gua_lights[light_id].specular_enable), F);
     col = Cl * brdf * NdotL;
   }
   return col;
