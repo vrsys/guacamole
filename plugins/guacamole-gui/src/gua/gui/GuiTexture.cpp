@@ -38,7 +38,7 @@ math::vec2ui const GuiTexture::get_handle(RenderContext const& context) const {
   auto surface = static_cast<GLSurface*>(view_->surface());
 
   if (surface == nullptr) {
-    return math::vec2ui();
+    return math::vec2ui(0, 0);
   }
 
   surface->bind(context, this);
