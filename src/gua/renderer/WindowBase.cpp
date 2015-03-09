@@ -79,7 +79,28 @@ WindowBase::WindowBase(Configuration const& configuration)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WindowBase::~WindowBase() {}
+WindowBase::~WindowBase() {
+  destroy_context();
+}
+
+void WindowBase::destroy_context() {
+  warpRR_ = nullptr;
+  warpGR_ = nullptr;
+  warpBR_ = nullptr;
+  warpRL_ = nullptr;
+  warpGL_ = nullptr;
+  warpBL_ = nullptr;
+
+  blend_state_.reset();
+  depth_stencil_state_.reset();
+  fullscreen_quad_.reset();
+  fullscreen_shader_.program_.reset();
+
+  ctx_.render_pipelines.clear();
+  ctx_.render_context.reset();
+  //ctx_.display.reset();
+  ctx_.render_device.reset();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

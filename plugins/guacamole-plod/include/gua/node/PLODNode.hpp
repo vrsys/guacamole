@@ -54,7 +54,7 @@ public:
            std::string const& geometry_file_path = "gua_no_path_specified",
            std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
            math::mat4 const& transform = math::mat4::identity(),
-           float const importance = 1.0f,
+           float const importance = 0.7f, // 1.0f seems too large
            float const threshold = 2.5f,
            bool const enable_backface_culling_by_normal = false);
 

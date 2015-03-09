@@ -40,6 +40,7 @@ namespace gua {
     needs_color_buffer_as_input_ = true;
     writes_only_color_buffer_ = true;
     rendermode_ = RenderMode::Quad;
+    name_ = "SSAAPassDescription";
     depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 
     uniforms["gua_ssaa_mode"] = static_cast<int>(SSAAMode::FAST_FXAA);

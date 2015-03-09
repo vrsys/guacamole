@@ -36,11 +36,14 @@ CameraNode::CameraNode(std::string const& name,
                        std::shared_ptr<PipelineDescription> const& description,
                        Configuration const& configuration,
                        math::mat4 const& transform)
-    : Node(name, transform), config(configuration)
-    , rendering_pipeline_(std::make_shared<Pipeline>())
-    , pipeline_description_(description)
-    , application_fps_(0.f)
-    , rendering_fps_(0.f) {}
+  : Node(name, transform),
+    config(configuration),
+    pipeline_description_(description),
+    application_fps_(0.f),
+    rendering_fps_(0.f)
+{}
+
+////////////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void CameraNode::accept(NodeVisitor& visitor) {
 
@@ -61,16 +64,17 @@ std::shared_ptr<Node> CameraNode::copy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SerializedCameraNode CameraNode::serialize() const {
-    SerializedCameraNode s = {config, get_world_transform(), rendering_pipeline_};
+SerializedCameraNode CameraNode::serialize() const
+{
+  SerializedCameraNode s = { config, get_world_transform(), uuid() };
 
-    for (auto const& cam: pre_render_cameras_) {
-        s.pre_render_cameras.push_back(cam->serialize());
-    }
+  for (auto const& cam: pre_render_cameras_) {
+      s.pre_render_cameras.push_back(cam->serialize());
+  }
 
-    s.pipeline_description = pipeline_description_;
+  s.pipeline_description = pipeline_description_;
 
-    return s;
+  return s;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,26 +88,53 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
         return Frustum();
     }
 
-    auto transform(camera_transform);
+    auto eye_transform(camera_transform);
+    auto screen_transform(screen->get_scaled_world_transform());
+
+    float clipping_offset(0.f);
 
     if (config.get_enable_stereo()) {
-        if (mode != CameraMode::RIGHT) {
-            transform *= scm::math::make_translation(math::float_t(config.eye_offset() - 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
+
+        // assure same clipping for left and right eye
+        math::vec4 eye_separation(camera_transform * math::vec4(config.eye_dist(), 0.f, 0.f, 0.f));
+        math::vec4 screen_direction(screen_transform * math::vec4(0.f, 0.f, -1.f, 0.f));
+
+        math::vec3 eye_separation_in_screen_direction(
+            scm::math::dot(eye_separation, screen_direction) /
+            scm::math::length_sqr(screen_direction) * screen_direction
+        );
+
+        float eye_dist_in_screen_direction(scm::math::length(eye_separation_in_screen_direction));
+
+        // left eye is closer to screen than left eye
+        if (eye_separation.x*screen_direction.x +
+            eye_separation.y*screen_direction.y +
+            eye_separation.z*screen_direction.z > 0) {
+
+            // move left eye clipping towards screen
+            if (mode != CameraMode::RIGHT) clipping_offset = eye_dist_in_screen_direction;
         } else {
-            transform *= scm::math::make_translation(math::float_t(config.eye_offset() + 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
+            // move right eye clipping towards screen
+            if (mode == CameraMode::RIGHT) clipping_offset = eye_dist_in_screen_direction;
+        }
+
+        if (mode != CameraMode::RIGHT) {
+            eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() - 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
+        } else {
+            eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() + 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
         }
     }
 
     if (config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
         return Frustum::perspective(
-            transform, screen->get_scaled_world_transform(),
-            config.near_clip(), config.far_clip()
+            eye_transform, screen_transform,
+            config.near_clip() + clipping_offset, config.far_clip() + clipping_offset
         );
     }
 
     return Frustum::orthographic(
-        transform, screen->get_scaled_world_transform(),
-        config.near_clip(), config.far_clip()
+        eye_transform, screen_transform,
+        config.near_clip() + clipping_offset, config.far_clip() + clipping_offset
     );
 }
 

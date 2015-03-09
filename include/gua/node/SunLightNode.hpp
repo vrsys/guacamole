@@ -52,7 +52,7 @@ class GUA_DLL SunLightNode : public SerializableNode {
     /**
      * The intensity of the directional light.
      */
-    GUA_ADD_PROPERTY(float, brightness, 20.0f);
+    GUA_ADD_PROPERTY(float, brightness, 10.0f);
 
     /**
      * Triggers whether the light casts shadows.

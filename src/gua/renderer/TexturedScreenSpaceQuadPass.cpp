@@ -82,6 +82,7 @@ TexturedScreenSpaceQuadPassDescription::TexturedScreenSpaceQuadPassDescription()
 
   vertex_shader_ = "shaders/textured_screen_space_quad.vert";
   fragment_shader_ = "shaders/textured_screen_space_quad.frag";
+  name_ = "TexturedScreenSpaceQuadPass";
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = true;

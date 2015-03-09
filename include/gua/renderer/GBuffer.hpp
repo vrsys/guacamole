@@ -35,7 +35,6 @@ class GUA_DLL GBuffer {
  public:
 
   GBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
-  virtual ~GBuffer() {}
 
   void clear_all(RenderContext const& context);
   void clear_color(RenderContext const& context);

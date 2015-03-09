@@ -49,9 +49,9 @@ std::pair<DB<T>, DB<T>> spawnDoublebufferred() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Renderer::ConstRenderVector> garbage_collected_copy(
+std::shared_ptr<const Renderer::SceneGraphs> garbage_collected_copy(
     std::vector<SceneGraph const*> const& scene_graphs) {
-  auto sgs = std::make_shared<Renderer::RenderVector>();
+  auto sgs = std::make_shared<Renderer::SceneGraphs>();
   for (auto graph : scene_graphs) {
     sgs->push_back(gua::make_unique<SceneGraph>(*graph));
   }
@@ -61,8 +61,7 @@ std::shared_ptr<Renderer::ConstRenderVector> garbage_collected_copy(
 ////////////////////////////////////////////////////////////////////////////////
 
 Renderer::~Renderer() {
-  for (auto& rc : render_clients_) { rc.second.first->close(); }
-  for (auto& rc : render_clients_) { rc.second.second.join(); }
+  stop();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,8 +70,8 @@ void Renderer::renderclient(Mailbox in) {
   FpsCounter fpsc(20);
   fpsc.start();
 
-  for (auto& x : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
-    auto window_name(std::get<0>(x)->config.get_output_window_name());
+  for (auto& cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
+    auto window_name(cmd.serialized_cam->config.get_output_window_name());
 
     if (window_name != "") {
       auto window = WindowDatabase::instance()->lookup(window_name);
@@ -114,21 +113,29 @@ void Renderer::renderclient(Mailbox in) {
         }
 
         // process pipeline
-        auto const& camera(*std::get<0>(x));
+        //auto process = [&](CameraMode mode) {
+        //  cmd.serialized_cam->rendering_pipeline->process(
 
-        auto process = [&](CameraMode mode) {
-          camera.rendering_pipeline->process(
-            window->get_context(), mode, camera, *std::get<1>(x)
-          );
-        };
+        // make sure pipeline was created
+        std::shared_ptr<Pipeline> pipe = nullptr;
+        auto pipe_iter = window->get_context()->render_pipelines.find(cmd.serialized_cam->uuid);
 
-        std::get<2>(x)->set_rendering_fps(fpsc.fps);
+        if (pipe_iter == window->get_context()->render_pipelines.end()) {
+          pipe = std::make_shared<Pipeline>(*window->get_context(), cmd.serialized_cam->config.get_resolution());
+          window->get_context()->render_pipelines.insert(std::make_pair(cmd.serialized_cam->uuid, pipe));
+        }
+        else {
+          pipe = pipe_iter->second;
+        }
 
-        if (camera.config.get_enable_stereo()) {
-          process(CameraMode::LEFT);
-          process(CameraMode::RIGHT);
+        cmd.camera_node->set_rendering_fps(fpsc.fps);
+
+        if (cmd.serialized_cam->config.get_enable_stereo()) {
+          pipe->process(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs);
+          pipe->process(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
         } else {
-          process(camera.config.get_mono_mode());
+          pipe->process(cmd.serialized_cam->config.get_mono_mode(),
+              *cmd.serialized_cam, *cmd.scene_graphs);
         }
 
         // swap buffers
@@ -159,20 +166,20 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
 
   auto sgs = garbage_collected_copy(scene_graphs);
 
-
   for (auto graph : scene_graphs) {
     for (auto& cam : graph->get_camera_nodes()) {
       auto window_name(cam->config.get_output_window_name());
       auto rclient(render_clients_.find(window_name));
       cam->set_application_fps(application_fps_.fps);
       if (rclient != render_clients_.end()) {
-        rclient->second.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
+        rclient->second.first->push_back(Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
+
       } else {
         auto window(WindowDatabase::instance()->lookup(window_name));
 
         if (window) {
           auto p = spawnDoublebufferred<Item>();
-          p.first->push_back(std::make_tuple(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
+          p.first->push_back(Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
           render_clients_[window_name] = std::make_pair(p.first, std::thread(Renderer::renderclient, p.second));
         }
       }
@@ -184,9 +191,9 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::stop() {
-  for (auto& rclient : render_clients_) {
-    rclient.second.first->close();
-  }
+  for (auto& rc : render_clients_) { rc.second.first->close(); }
+  for (auto& rc : render_clients_) { rc.second.second.join(); }
+  render_clients_.clear();
 }
 
 }

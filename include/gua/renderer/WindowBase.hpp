@@ -134,6 +134,7 @@ class GUA_DLL WindowBase {
   virtual void process_events() = 0;
 
   void init_context();
+  void destroy_context();
 
   /**
    * Activate the context of this window.
@@ -177,6 +178,8 @@ class GUA_DLL WindowBase {
 
 protected:
 
+  std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
+
   struct DebugOutput : public scm::gl::render_context::debug_output {
     /*virtual*/ void operator()(scm::gl::debug_source source,
                                 scm::gl::debug_type type,
@@ -184,12 +187,12 @@ protected:
                                 const std::string& message) const;
   };
 
+  mutable RenderContext ctx_;
   ShaderProgram fullscreen_shader_;
   scm::gl::quad_geometry_ptr fullscreen_quad_;
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::blend_state_ptr blend_state_;
-  mutable RenderContext ctx_;
 
  private:
   void display(std::shared_ptr<Texture> const& texture,
@@ -204,7 +207,6 @@ protected:
 
   static std::mutex last_context_id_mutex_;
 
-  std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
 };
 
 }

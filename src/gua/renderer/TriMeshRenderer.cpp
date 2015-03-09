@@ -67,7 +67,6 @@ void TriMeshRenderer::create_state_objects(RenderContext const& ctx)
 
 void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-
   auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
   if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
@@ -79,6 +78,12 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
               });
 
     RenderContext const& ctx(pipe.get_context());
+
+    std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / TrimeshPass";
+    std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / TrimeshPass";
+
+    pipe.begin_gpu_query(ctx, gpu_query_name);
+    pipe.begin_cpu_query(cpu_query_name);
 
     bool writes_only_color_buffer = false;
     pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
@@ -149,15 +154,19 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
         ctx.render_context->apply_program();
 
-
         tri_mesh_node->get_geometry()->draw(ctx);
       }
     }
 
     pipe.get_gbuffer().unbind(ctx);
     pipe.get_abuffer().unbind(ctx);
+
+    pipe.end_gpu_query(ctx, gpu_query_name);
+    pipe.end_cpu_query(cpu_query_name);
+
     ctx.render_context->reset_state_objects();
   }
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
