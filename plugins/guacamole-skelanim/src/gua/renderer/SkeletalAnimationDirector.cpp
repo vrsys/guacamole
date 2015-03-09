@@ -12,6 +12,9 @@
 
 namespace gua 
 {
+
+const std::string SkeletalAnimationDirector::none_loaded{"none loaded"};
+
 SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Bone> const& root):
     num_bones_{0},
     has_anims_{false},
@@ -249,7 +252,7 @@ std::string const& SkeletalAnimationDirector::get_animation() const {
     return currAnimation_->get_name();
   }
   else{
-    return "";
+    return none_loaded;
   }
 }
 

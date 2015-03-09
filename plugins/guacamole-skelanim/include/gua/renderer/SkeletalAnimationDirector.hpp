@@ -97,6 +97,8 @@ private:
   float next_blending_end_;
   float blendDuration_ = 0.5f;
   Timer timer_;
+
+  const static std::string none_loaded;
 };
 
 }

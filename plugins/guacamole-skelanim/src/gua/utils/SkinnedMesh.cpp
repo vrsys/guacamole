@@ -16,45 +16,15 @@ SkinnedMesh::SkinnedMesh():
  bone_counts{}
 {}
 
-SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
- Timer timer{};
-  timer.start();
-
-  bool has_uvs = mesh.GetElementUVCount() > 0;
-  bool has_tangents = (mesh.GetElementTangentCount() == 0 || mesh.GetElementBinormalCount() == 0) && !has_uvs;
-
-  //get the temporary elements, actual work is done in this function
-  auto verts_and_tris = get_verts_and_tris(mesh);
-
-  std::vector<std::vector<temp_vert>>const& vert_positions = std::get<0>(verts_and_tris);
-  num_vertices = std::get<2>(verts_and_tris);
-
-  std::vector<temp_tri>& temp_tris = std::get<1>(verts_and_tris);
-  num_triangles = temp_tris.size();
-
+SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root):
+ Mesh{mesh}
+{
   bool has_weights = false;
   std::vector<bone_influences> ctrlpt_weights{};
   //get weights of original control points
   if(root.name != "none") {
     ctrlpt_weights = get_weights(mesh, root);
     has_weights = ctrlpt_weights.size() > 0;
-  }
-
-  // Reserve space in the vectors for the vertex attributes and indices
-  positions.reserve(num_vertices);
-  normals.reserve(num_vertices);
-  if(has_uvs) {
-    texCoords.reserve(num_vertices);
-  }
-  else {
-    texCoords.resize(num_vertices, scm::math::vec2f(0.0f));
-  }
-  if(has_tangents) {
-    tangents.reserve(num_vertices);
-  }
-  else {
-    tangents.resize(num_vertices, scm::math::vec3f(0.0f));
-    bitangents.resize(num_vertices, scm::math::vec3f(0.0f));
   }
 
   if(has_weights) {
@@ -67,53 +37,27 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root) {
     bone_ids.resize(num_vertices, 0);
     bone_weights.resize(num_vertices, 0.0f);
   }
-  
-  FbxVector4* control_points = mesh.GetControlPoints();
-  //load reduced attributes
-  unsigned curr_vert = 0;
-  //iterate over control points
-  for(std::vector<temp_vert> const& verts : vert_positions) {
-    //iterate over vertices at that point
-    for(temp_vert const& vert : verts) {
-      //update containing triangles with actual index of this vertex in member vectors
-      for(auto const& tri : vert.tris) {
-        temp_tris[tri.first].verts[tri.second] = curr_vert;
-      }
-      //push properties to attribute vectors
-      positions.push_back(to_gua::vec3(control_points[vert.point]));
-      normals.push_back(vert.normal);
 
-      if(has_tangents) {
-        tangents.push_back(vert.tangent);
-        bitangents.push_back(vert.bitangent);
-      }
-      if(has_uvs) {
-        texCoords.push_back(vert.uv);
-      }
-      if(has_weights) {
-        bone_influences const& curr_influence{ctrlpt_weights[vert.point]};
-        //push all bone influences for current vert
-        for(uint i(0); i < curr_influence.weights.size(); ++i){
-          bone_ids.push_back(curr_influence.IDs[i]);
-          bone_weights.push_back(curr_influence.weights[i]);
-        }
-
-        bone_counts.push_back(curr_influence.weights.size());
-      }
-      ++curr_vert;
+  scm::math::vec3f last_pos{positions[0]};
+  unsigned weight_index = 0;
+  //iterate over vertices
+  for(auto const& pos : positions) {
+    //if position changes its the next control point -> next weight
+    if(pos != last_pos) {
+      ++weight_index;
     }
-  }
+    if(has_weights) {
+      bone_influences const& curr_influence{ctrlpt_weights[weight_index]};
+      //push all bone influences for current vert
+      for(uint i(0); i < curr_influence.weights.size(); ++i){
+        bone_ids.push_back(curr_influence.IDs[i]);
+        bone_weights.push_back(curr_influence.weights[i]);
+      }
 
-  //load reduced triangles
-  indices.reserve(num_triangles * 3);
-  for(temp_tri const& tri : temp_tris) {
-    indices.push_back(tri.verts[0]);
-    indices.push_back(tri.verts[1]);
-    indices.push_back(tri.verts[2]);
+      bone_counts.push_back(curr_influence.weights.size());
+    }
+    last_pos = pos;
   }
-
-  //output reduction info
-  // Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
 }
 
 SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root):
