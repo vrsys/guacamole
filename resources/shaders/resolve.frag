@@ -67,7 +67,7 @@ vec3 environment_lighting (in ShadingTerms T)
       break;
     case 2 : // single color
       vec3 brdf_diff = T.diffuse;
-      env_color = (brdf_diff + (horizon * brdf_spec)) * gua_horizon_fade * gua_environment_lighting_color;
+      env_color = (Pi * brdf_diff + (horizon * brdf_spec)) * gua_horizon_fade * gua_environment_lighting_color;
       break;
   };
 

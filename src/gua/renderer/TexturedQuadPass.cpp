@@ -35,6 +35,7 @@ TexturedQuadPassDescription::TexturedQuadPassDescription()
 
   vertex_shader_ = "resources/shaders/common/quad.vert";
   fragment_shader_ = "resources/shaders/textured_quad.frag";
+  name_ = "TexturedQuadPass";
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;

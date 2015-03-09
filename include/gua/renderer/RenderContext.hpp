@@ -38,6 +38,7 @@
 
 namespace gua {
 
+class Pipeline;
 class WindowBase;
 
 /**
@@ -52,6 +53,16 @@ struct GUA_DLL RenderContext {
   */
   RenderContext();
 
+  /**
+   * The schism render device associated with this context.
+   */
+  scm::gl::render_device_ptr render_device;
+
+  /**
+   * The schism render constext associated with this context.
+   */
+  scm::gl::render_context_ptr render_context;
+
    /**
    * The schism context of this RenderContext.
    */
@@ -61,16 +72,6 @@ struct GUA_DLL RenderContext {
    * The display where this context was opened.
    */
   scm::gl::wm::display_ptr display;
-
-  /**
-   * The schism render constext associated with this context.
-   */
-  scm::gl::render_context_ptr render_context;
-
-  /**
-   * The schism render device associated with this context.
-   */
-  scm::gl::render_device_ptr render_device;
 
   /**
    * The window which is rendered into.
@@ -93,6 +94,11 @@ struct GUA_DLL RenderContext {
   * Resources associated with this context
   */
   InstanceCollection resources;
+
+  /**
+  * Resources associated with this context
+  */
+  std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
 };
 
 }

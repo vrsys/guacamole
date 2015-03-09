@@ -28,6 +28,8 @@ EmissivePassDescription::EmissivePassDescription()
   : PipelinePassDescription() {
   vertex_shader_ = "resources/shaders/lighting_emit.vert";
   fragment_shader_ = "resources/shaders/lighting_emit.frag";
+  name_ = "EmissivePass";
+
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
   doClear_ = true;

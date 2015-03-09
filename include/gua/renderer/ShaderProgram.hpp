@@ -173,6 +173,8 @@ class GUA_DLL ShaderProgram {
 
  protected:  // attributes
 
+  friend class WindowBase;
+
   mutable scm::gl::program_ptr program_;
 
  private:  // attributes
