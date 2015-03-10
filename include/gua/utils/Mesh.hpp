@@ -133,6 +133,8 @@ struct Mesh {
     std::array<unsigned, 3> verts;
   };
 
+  std::vector<unsigned> construct(FbxMesh& mesh);
+
   template<typename T>
   static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);
 };

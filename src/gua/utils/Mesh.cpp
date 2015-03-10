@@ -50,6 +50,10 @@ Mesh::Mesh():
 {}
 #ifdef GUACAMOLE_FBX
 Mesh::Mesh(FbxMesh& mesh) {
+  construct(mesh);
+}
+
+std::vector<unsigned> Mesh::construct(FbxMesh& mesh) {
   Timer timer{};
   timer.start();
 
@@ -106,13 +110,6 @@ Mesh::Mesh(FbxMesh& mesh) {
   std::vector<std::vector<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::vector<temp_vert>{}};
   std::vector<temp_tri> temp_tris{};
   
-  //get vertex positions and convert them, then one conversion per contol_point, not vertex necessary
-  std::vector<scm::math::vec3f> control_points{};
-  control_points.reserve(mesh.GetControlPointsCount());
-  for(unsigned i = 0; i < mesh.GetControlPointsCount(); ++i) {
-    control_points.push_back(to_gua::vec3(mesh.GetControlPointAt(i)));
-  }
-
   //vertex indices of polygons
   int* poly_vertices = mesh.GetPolygonVertices();
 
@@ -239,10 +236,18 @@ Mesh::Mesh(FbxMesh& mesh) {
     bitangents.resize(num_vertices, scm::math::vec3f(0.0f));
   }
 
+  //save which vertex lies on which controlpoint
+  std::vector<unsigned> point_indices{};
+
   //load reduced attributes
   unsigned curr_vert = 0;
+  scm::math::vec3f curr_position{};
   //iterate over control points
   for(unsigned i = 0; i < vert_positions.size(); ++i) {
+    
+    //get position once per point, all vertices at this control point have this position
+    curr_position = to_gua::vec3(mesh.GetControlPointAt(i));
+
     //iterate over vertices at that point
     for(temp_vert const& vert : vert_positions[i]) {
       //update containing triangles with actual index of this vertex in member vectors
@@ -250,7 +255,7 @@ Mesh::Mesh(FbxMesh& mesh) {
         temp_tris[tri.first].verts[tri.second] = curr_vert;
       }
       //push properties to attribute vectors
-      positions.push_back(control_points[i]);
+      positions.push_back(curr_position);
       normals.push_back(vert.normal);
 
       if(has_tangents) {
@@ -261,6 +266,8 @@ Mesh::Mesh(FbxMesh& mesh) {
         texCoords.push_back(vert.uv);
       }
       ++curr_vert;
+
+      point_indices.push_back(i);
     }
   }
 
@@ -274,6 +281,8 @@ Mesh::Mesh(FbxMesh& mesh) {
 
   //output reduction info
   Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
+
+  return point_indices;
 }
 
   //this function gets a geometry layer and returns the function to access it depending on mapping & referencing
