@@ -63,6 +63,9 @@ class GUA_DLL MaterialLoader {
   std::shared_ptr<Material> load_material(fbxsdk_2015_1::FbxSurfaceMaterial const& material,
                                 std::string const& assets_directory) const;
 #endif
+  static std::set<std::string> parse_unreal_material(std::string const& file);
+  static std::string get_file_name(std::string const& path);
+  inline static bool file_exists(std::string const& path);
 };
 
 }

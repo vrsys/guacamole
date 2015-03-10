@@ -350,31 +350,34 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
     FbxGeometry* geo = scene->GetGeometry(i);
     if(geo->GetAttributeType() == FbxNodeAttribute::eMesh) {  
 
-      GeometryDescription desc("SkeletalAnimation", file_name, mesh_count,flags);
-      geometry_descriptions.push_back(desc.unique_key());
-
-      GeometryDatabase::instance()->add(desc.unique_key() 
-        ,std::make_shared<SkinnedMeshResource>(
-          SkinnedMesh{*dynamic_cast<FbxMesh*>(geo), *root}
-          , animation_director
-          , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
-
-      //there need to be as many materials as there are geometries or the geometries without material wont be drawn
-      std::shared_ptr<Material> material{};
-      
       FbxNode* node = geo->GetNode();
-      if(node->GetMaterialCount() > 0 && flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
-        MaterialLoader material_loader;
-        if(node->GetMaterialCount() > 1) {
-          Logger::LOG_WARNING << "Mesh has more than one material, using only first one" << std::endl;
-        }
-        FbxSurfaceMaterial* mat = node->GetMaterial(0);
-        auto material = material_loader.load_material(*mat, file_name);
-        material->set_uniform("Roughness", 0.6f);
-      }
+      FbxMesh* mesh = dynamic_cast<FbxMesh*>(geo);
 
-      materials.push_back(material);
-      ++mesh_count;
+      for(unsigned j = 0; j < 1; ++j)
+      {
+        // std::cout << "material num " << j << " name " << node->GetMaterial(j)->GetName() << std::endl;
+        GeometryDescription desc("SkeletalAnimation", file_name, mesh_count,flags);
+        geometry_descriptions.push_back(desc.unique_key());
+
+        GeometryDatabase::instance()->add(desc.unique_key() 
+          ,std::make_shared<SkinnedMeshResource>(
+            SkinnedMesh{*mesh, *root, 0}
+            , animation_director
+            , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
+
+        //there need to be as many materials as there are geometries or the geometries without material wont be drawn
+        std::shared_ptr<Material> material{};
+        
+        if(flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
+          MaterialLoader material_loader;
+          FbxSurfaceMaterial* mat = node->GetMaterial(j);
+          material = material_loader.load_material(*mat, file_name);
+          material->set_uniform("Roughness", 0.6f);
+        }
+
+        materials.push_back(material);
+        ++mesh_count;
+      }
     }
   }
 

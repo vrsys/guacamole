@@ -216,7 +216,12 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
       if(texture) {        
         std::string file_name = texture->GetFileName();
         //filter out possible path in front of filename
-        auto path_end(file_name.find_last_of("/\\"));
+        auto slash_pos(file_name.find_last_of("/"));
+        auto bslash_pos(file_name.find_last_of("\""));
+        auto path_end = slash_pos;
+        if(bslash_pos != std::string::npos && path_end < bslash_pos) {
+          path_end = bslash_pos;
+        }
         if(path_end != std::string::npos) {
           file_name = file_name.substr(path_end + 1);
         }
@@ -231,18 +236,35 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
 
   //check which shading model is used
   std::string shading{fbx_material.ShadingModel.Get().Buffer()};
-  bool shading_supported = shading == "Phong" || shading == "Lambert" || shading == "lambert" || shading == "phong"; 
+  bool shading_supported = shading == "Phong" || shading == "Labert";
   if(!shading_supported) {
     Logger::LOG_DEBUG << "Shading Type '" << shading << "' not supported." << std::endl;
   }
   //cast to phong not necessary, only diffuse and emissive values needed
   FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)&fbx_material;
   if(!lambert) {
-    Logger::LOG_ERROR << "Casting Material to Lambert failed." << std::endl;
+    Logger::LOG_ERROR << "Casting Material to lambert failed." << std::endl;
     assert(0);
   } 
 
   auto new_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+  
+  // new_mat->set_shader_name(fbx_material.GetName());
+
+  std::set<std::string> textures{};
+  std::string mat_name = assets + fbx_material.GetName() + ".COPY";
+
+  if(file_exists(mat_name)) {
+    textures = parse_unreal_material(mat_name);
+  }
+  else {
+    Logger::LOG_WARNING << "Material " << mat_name << " not found."<< std::endl;
+  }
+  
+  for(auto const& tex : textures) {
+    std::cout << tex << std::endl;
+  }
+
 
   std::string color_map{get_sampler(FbxSurfaceMaterial::sDiffuse)};
   if(color_map != "") {
@@ -250,7 +272,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
   }
   else {
     FbxDouble3 color = lambert->Diffuse.Get();
-    new_mat->set_uniform("Color", math::vec4(color[0], color[1], color[2], 1.f));
+    new_mat->set_uniform("Color", math::vec4f(color[0], color[1], color[2], 1.f));
   } 
 
   std::string normal_map{get_sampler(FbxSurfaceMaterial::sNormalMap)};
@@ -273,10 +295,78 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
   }
   else {
     FbxDouble3 color = lambert->Diffuse.Get();
-    new_mat->set_uniform("Emissivity", math::vec4(color[0], color[1], color[2], 1.f));
+    new_mat->set_uniform("Emissivity", math::vec4f(color[0], color[1], color[2], 1.f));
   }
+
+  for(auto const& tex : textures) {
+      if(color_map == "" && tex.at(tex.size() - 1) == 'D') {
+        color_map = "bla";
+        new_mat->set_uniform("ColorMap", assets + tex + ".TGA");
+      }
+      else if(normal_map == "" && tex.at(tex.size() - 1) == 'N') {
+        new_mat->set_uniform("NormalMap", assets + tex + ".TGA");
+      }
+    }
 
   return new_mat;
 }
 #endif
+
+std::string MaterialLoader::get_file_name(std::string const& path) {
+  //filter out possible path in front of filename
+  std::string file_name{path};
+  auto path_end(path.find_last_of("/\\"));
+  if(path_end != std::string::npos) {
+    file_name = path.substr(path_end + 1);
+  }
+  return file_name;
+}
+
+inline bool MaterialLoader::file_exists(std::string const& path) {
+  std::ifstream file{path.c_str()};
+  return !file.fail();
+}
+
+std::set<std::string> MaterialLoader::parse_unreal_material(std::string const& file_name) {
+  std::set<std::string> textures{};
+
+  std::string line;
+  std::ifstream file{file_name};
+
+  if(file.is_open())
+  {
+    // std::cout << "Loading material file '" <<  file_name << "'" << std::endl;
+
+    while(getline(file, line))
+    {
+      std::string item;
+      std::stringstream ss(line);
+      ss >> item;
+      if(item.find("BaseColor") != std::string::npos)
+      {
+        // std::cout << item << std::endl;
+        // string name;
+        // ss >> name;
+      }
+      else if(item.find("Texture=") != std::string::npos) {
+        std::string value = get_file_name(item);
+        std::string name = value.substr(value.find(".") + 1, value.size() - value.find(".") - 2);
+        if(textures.find(name) == textures.end()) {
+          textures.insert(name);
+          // std::cout << name << std::endl;
+        } 
+      }
+    }
+    file.close();
+
+    // std::cout << "Loading file '" << file_name << "' finished" << std::endl;
+  }
+  else
+  {
+    std::cout << "File '" <<  file_name << "' could not be opened" << std::endl;
+  }
+
+  return textures;
+}
+
 }
