@@ -77,8 +77,9 @@ struct Mesh {
   Mesh();
 
   Mesh(aiMesh const& mesh);
+  
 #ifdef GUACAMOLE_FBX
-  Mesh(fbxsdk_2015_1::FbxMesh& mesh);
+  Mesh(FbxMesh& mesh, unsigned material_index = 0);
 #endif
   
   struct Vertex {
@@ -133,7 +134,7 @@ struct Mesh {
     std::array<unsigned, 3> verts;
   };
 
-  std::vector<unsigned> construct(FbxMesh& mesh);
+  std::vector<unsigned> construct(FbxMesh& mesh, unsigned material_index);
 
   template<typename T>
   static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);

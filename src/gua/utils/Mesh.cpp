@@ -49,16 +49,42 @@ Mesh::Mesh():
  indices{}
 {}
 #ifdef GUACAMOLE_FBX
-Mesh::Mesh(FbxMesh& mesh) {
-  construct(mesh);
+Mesh::Mesh(FbxMesh& mesh, unsigned material_index) {
+  construct(mesh, material_index);
 }
 
-std::vector<unsigned> Mesh::construct(FbxMesh& mesh) {
+std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
   Timer timer{};
   timer.start();
+  FbxGeometryElementMaterial const* material_layer = mesh.GetElementMaterial(material_index);
+  std::function<unsigned(unsigned polygon_index)> get_material;
 
-  num_vertices = mesh.GetControlPointsCount(); 
-
+  // Logger::LOG_DEBUG << "construct from " << mesh.GetName() << " index " << material_index << std::endl;
+  if(material_layer->GetMappingMode() == FbxGeometryElement::eByPolygon) {
+    if(material_layer->GetReferenceMode() == FbxGeometryElement::eDirect) {
+      get_material =[](unsigned polygon_index)->unsigned {
+        return polygon_index;
+      };
+    }
+    else if(material_layer->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+      get_material = [&material_layer](unsigned polygon_index)->unsigned {
+        // std::cout << "accessing " << polygon_index << std::endl; 
+        // std::cout << "value " << material_layer->GetIndexArray().GetAt(polygon_index) << std::endl; 
+        return material_layer->GetIndexArray().GetAt(0);
+      };
+    }
+    else {
+      Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
+    }
+  }
+  else if(material_layer->GetMappingMode() == FbxGeometryElement::eAllSame){
+    get_material =[&material_layer](unsigned polygon_index)->unsigned {
+      return material_layer->GetIndexArray().GetAt(0);
+    };
+  }
+  else {
+    Logger::LOG_ERROR << "Type of mapping not supported" << std::endl;
+  }
 //polygons
   if(mesh.GetPolygonCount() < 1) {
     Logger::LOG_ERROR << "No polygons in mesh" << std::endl;
@@ -117,6 +143,14 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh) {
   std::function<unsigned(temp_vert const&)> get_normal = get_access_function(*mesh.GetElementNormal(0));
   FbxLayerElementArrayTemplate<FbxVector4> const& poly_normals{mesh.GetElementNormal(0)->GetDirectArray()};
 
+  if(mesh.GetElementNormal(0)->GetDirectArray().IsWriteLocked()) {
+    std::cout << "normals write locked" << std::endl;
+  }
+  if(mesh.GetElementNormal(0)->GetDirectArray().GetReadLockCount() > 0) {
+    std::cout << "normals read locked" << std::endl;
+  }
+  mesh.GetElementNormal(0)->GetDirectArray().ClearStatus();
+
   std::function<unsigned(temp_vert const&)> get_uv;
   FbxLayerElementArrayTemplate<FbxVector2> const& poly_uvs{has_uvs ? mesh.GetElementUV(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector2>{EFbxType::eFbxDouble2}};
   if(has_uvs) {
@@ -141,51 +175,65 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh) {
   //iterate over polygons
   for(unsigned i = 0; i < mesh.GetPolygonCount(); ++i)
   {
-    //triangulate face if necessary
-    for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
-    {
-      //get indices of vertices in attribute arrays
-      std::array<unsigned, 3> indices{start_index, start_index + j - 1, start_index + j};
-      //create triangle from vertex indices
-      temp_tri tri{unsigned(poly_vertices[indices[0]]), unsigned(poly_vertices[indices[1]]), unsigned(poly_vertices[indices[2]])};
-      temp_tris.push_back(tri);
+    // std::cout << "getting material of " << i << std::endl;
+    if(get_material(i) == material_index) {
+    // std::cout << "is in mesh" << std::endl;
+      //triangulate face if necessary
+      for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
+      {
+        // std::cout << " vertex " << j << std::endl;
+        //get indices of vertices in attribute arrays
+        std::array<unsigned, 3> indices{start_index, start_index + j - 1, start_index + j};
+        //create triangle from vertex indices
+        temp_tri tri{unsigned(poly_vertices[indices[0]]), unsigned(poly_vertices[indices[1]]), unsigned(poly_vertices[indices[2]])};
+        temp_tris.push_back(tri);
 
-      //create new vertices that form triangle
-      temp_vert vert1{indices[0], tri.verts[0], num_triangles, 0};
-      temp_vert vert2{indices[1], tri.verts[1], num_triangles, 1};
-      temp_vert vert3{indices[2], tri.verts[2], num_triangles, 2};
+        // std::cout << "finished tri" << std::endl;
+        //create new vertices that form triangle
+        temp_vert vert1{indices[0], tri.verts[0], num_triangles, 0};
+        temp_vert vert2{indices[1], tri.verts[1], num_triangles, 1};
+        temp_vert vert3{indices[2], tri.verts[2], num_triangles, 2};
+        // std::cout << "created verts" << std::endl;
 
-      vert1.normal = to_gua::vec3(poly_normals[get_normal(vert1)]);
-      vert2.normal = to_gua::vec3(poly_normals[get_normal(vert2)]);
-      vert3.normal = to_gua::vec3(poly_normals[get_normal(vert3)]);
-      
-      //set optional data
-      if(has_uvs) {
-        vert1.uv = to_gua::vec2(poly_uvs[get_uv(vert1)]);
-        vert2.uv = to_gua::vec2(poly_uvs[get_uv(vert2)]);
-        vert3.uv = to_gua::vec2(poly_uvs[get_uv(vert3)]); 
-      }
-      if(has_tangents) {
-        vert1.tangent = to_gua::vec3(poly_tangents[get_tangent(vert1)]);
-        vert2.tangent = to_gua::vec3(poly_tangents[get_tangent(vert2)]);
-        vert3.tangent = to_gua::vec3(poly_tangents[get_tangent(vert3)]);
+        // std::cout << poly_normals.GetCount() << std::endl;
+        vert1.normal = to_gua::vec3(poly_normals[get_normal(vert1)]);
+        // std::cout << "normal 1" << std::endl;
+        vert2.normal = to_gua::vec3(poly_normals[get_normal(vert2)]);
+        // std::cout << "normal 2" << std::endl;
+        vert3.normal = to_gua::vec3(poly_normals[get_normal(vert3)]);
         
-        vert1.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert1)]);
-        vert2.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert2)]);
-        vert3.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert3)]);
+        // std::cout << "finished halfway" << std::endl;
+        //set optional data
+        if(has_uvs) {
+          vert1.uv = to_gua::vec2(poly_uvs[get_uv(vert1)]);
+          vert2.uv = to_gua::vec2(poly_uvs[get_uv(vert2)]);
+          vert3.uv = to_gua::vec2(poly_uvs[get_uv(vert3)]); 
+        }
+        if(has_tangents) {
+          vert1.tangent = to_gua::vec3(poly_tangents[get_tangent(vert1)]);
+          vert2.tangent = to_gua::vec3(poly_tangents[get_tangent(vert2)]);
+          vert3.tangent = to_gua::vec3(poly_tangents[get_tangent(vert3)]);
+          
+          vert1.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert1)]);
+          vert2.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert2)]);
+          vert3.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert3)]);
+        }
+
+        //add new vertices to respective control points
+        vert_positions[tri.verts[0]].push_back(vert1);
+        vert_positions[tri.verts[1]].push_back(vert2);
+        vert_positions[tri.verts[2]].push_back(vert3);
+
+        ++tris_added;
+        ++num_triangles;
+        // std::cout << "finished vertex" << std::endl;
       }
-
-      //add new vertices to respective control points
-      vert_positions[tri.verts[0]].push_back(vert1);
-      vert_positions[tri.verts[1]].push_back(vert2);
-      vert_positions[tri.verts[2]].push_back(vert3);
-
-      ++tris_added;
-      ++num_triangles;
+      start_index += 2 + tris_added;
+      tris_added = 0;
     }
-    start_index += 2 + tris_added;
-    tris_added = 0;
+    // std::cout << "finished material of " << i << std::endl;
   }
+  // Logger::LOG_DEBUG << "material access done" << std::endl;
 
   //filter out duplicate vertices
   num_vertices = 0;
@@ -244,7 +292,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh) {
   scm::math::vec3f curr_position{};
   //iterate over control points
   for(unsigned i = 0; i < vert_positions.size(); ++i) {
-    
+
     //get position once per point, all vertices at this control point have this position
     curr_position = to_gua::vec3(mesh.GetControlPointAt(i));
 
@@ -280,7 +328,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh) {
   }
 
   //output reduction info
-  Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
+  // Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
 
   return point_indices;
 }
@@ -293,6 +341,7 @@ std::function<unsigned(Mesh::temp_vert const&)> Mesh::get_access_function(FbxLay
   if(layer.GetMappingMode() == FbxGeometryElement::eByControlPoint) {
     if(layer.GetReferenceMode() == FbxGeometryElement::eDirect) {
       access_function =[](temp_vert const& vert)->unsigned {
+        // std::cout << "accessing " << vert.point << std::endl;
         return vert.point;
       };
     }

@@ -47,7 +47,8 @@ struct SkinnedMesh : public Mesh {
   SkinnedMesh();
 
   SkinnedMesh(aiMesh const& mesh, Bone const& root = Bone{});
-  SkinnedMesh(fbxsdk_2015_1::FbxMesh& mesh, Bone const& root = Bone{});
+
+  SkinnedMesh(FbxMesh& mesh, Bone const& root = Bone{}, unsigned material_index = 0);
 
   struct Vertex {
     scm::math::vec3f pos;
