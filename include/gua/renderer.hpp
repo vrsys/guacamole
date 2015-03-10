@@ -39,6 +39,7 @@
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/Window.hpp>
+#include <gua/renderer/HeadlessSurface.hpp>
 #include <gua/renderer/MaterialShader.hpp>
 #include <gua/renderer/MaterialShaderDescription.hpp>
 #include <gua/renderer/Material.hpp>
