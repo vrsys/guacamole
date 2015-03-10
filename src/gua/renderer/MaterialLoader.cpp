@@ -236,35 +236,20 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
 
   //check which shading model is used
   std::string shading{fbx_material.ShadingModel.Get().Buffer()};
-  bool shading_supported = shading == "Phong" || shading == "Labert";
+  bool shading_supported = shading == "Phong" || shading == "Lambert" ||shading == "phong" || shading == "lambert";
   if(!shading_supported) {
     Logger::LOG_DEBUG << "Shading Type '" << shading << "' not supported." << std::endl;
   }
   //cast to phong not necessary, only diffuse and emissive values needed
   FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)&fbx_material;
   if(!lambert) {
-    Logger::LOG_ERROR << "Casting Material to lambert failed." << std::endl;
+    Logger::LOG_ERROR << "Casting Material to Lambert failed." << std::endl;
     assert(0);
   } 
 
   auto new_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
   
   // new_mat->set_shader_name(fbx_material.GetName());
-
-  std::set<std::string> textures{};
-  std::string mat_name = assets + fbx_material.GetName() + ".COPY";
-
-  if(file_exists(mat_name)) {
-    textures = parse_unreal_material(mat_name);
-  }
-  else {
-    Logger::LOG_WARNING << "Material " << mat_name << " not found."<< std::endl;
-  }
-  
-  for(auto const& tex : textures) {
-    std::cout << tex << std::endl;
-  }
-
 
   std::string color_map{get_sampler(FbxSurfaceMaterial::sDiffuse)};
   if(color_map != "") {
@@ -298,15 +283,55 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
     new_mat->set_uniform("Emissivity", math::vec4f(color[0], color[1], color[2], 1.f));
   }
 
-  for(auto const& tex : textures) {
-      if(color_map == "" && tex.at(tex.size() - 1) == 'D') {
-        color_map = "bla";
-        new_mat->set_uniform("ColorMap", assets + tex + ".TGA");
-      }
-      else if(normal_map == "" && tex.at(tex.size() - 1) == 'N') {
-        new_mat->set_uniform("NormalMap", assets + tex + ".TGA");
+  auto ends_with = [](std::string const& name, std::string const& suffix) {
+    for(unsigned i = 0; i  < suffix.size(); ++i) {
+      if(name.at(name.size() - suffix.size() + i) != suffix.at(i)) {
+        return false;
       }
     }
+    return true;
+  };
+
+  //see if there is an unreal engine material file avaible
+  std::set<std::string> textures{};
+  std::string mat_name = assets + fbx_material.GetName() + ".COPY";
+
+  if(file_exists(mat_name)) {
+    textures = parse_unreal_material(mat_name);
+  }
+  else {
+    Logger::LOG_WARNING << "Material " << mat_name << " not found."<< std::endl;
+  }
+
+  for(auto const& tex : textures) {
+    if(color_map == "" && (ends_with(tex, "_D") || ends_with(tex, "diffuse") || ends_with(tex, "DF"))) {
+      std::string name{assets + tex};
+      if(file_exists(name + ".TGA")) {
+        new_mat->set_uniform("ColorMap", name + ".TGA");
+      }
+      else if(file_exists(name + ".tga")) {
+        new_mat->set_uniform("ColorMap", name + ".tga");
+      }
+    }
+    else if(normal_map == "" && (ends_with(tex, "_N") || ends_with(tex, "normal") || ends_with(tex, "NRM"))) {
+      std::string name{assets + tex};
+      if(file_exists(name + ".TGA")) {
+        new_mat->set_uniform("NormalMap", name + ".TGA");
+      }
+      else if(file_exists(name + ".tga")) {
+        new_mat->set_uniform("NormalMap", name + ".tga");
+      }
+    }
+    else if(emit_map == "" && (ends_with(tex, "Emissive") || ends_with(tex, "glow"))) {
+      std::string name{assets + tex};
+      if(file_exists(name + ".TGA")) {
+        new_mat->set_uniform("EmissivityMap", name + ".TGA");
+      }
+      else if(file_exists(name + ".tga")) {
+        new_mat->set_uniform("EmissivityMap", name + ".tga");
+      }
+    }
+  }
 
   return new_mat;
 }
