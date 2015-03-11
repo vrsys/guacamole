@@ -298,37 +298,34 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
 
   if(file_exists(mat_name)) {
     textures = parse_unreal_material(mat_name);
-  }
-  else {
-    Logger::LOG_WARNING << "Material " << mat_name << " not found."<< std::endl;
-  }
 
-  for(auto const& tex : textures) {
-    if(color_map == "" && (ends_with(tex, "_D") || ends_with(tex, "diffuse") || ends_with(tex, "DF"))) {
-      std::string name{assets + tex};
-      if(file_exists(name + ".TGA")) {
-        new_mat->set_uniform("ColorMap", name + ".TGA");
+    for(auto const& tex : textures) {
+      if(color_map == "" && (ends_with(tex, "_D") || ends_with(tex, "diffuse") || ends_with(tex, "DF"))) {
+        std::string name{assets + tex};
+        if(file_exists(name + ".TGA")) {
+          new_mat->set_uniform("ColorMap", name + ".TGA");
+        }
+        else if(file_exists(name + ".tga")) {
+          new_mat->set_uniform("ColorMap", name + ".tga");
+        }
       }
-      else if(file_exists(name + ".tga")) {
-        new_mat->set_uniform("ColorMap", name + ".tga");
+      else if(normal_map == "" && (ends_with(tex, "_N") || ends_with(tex, "normal") || ends_with(tex, "NRM"))) {
+        std::string name{assets + tex};
+        if(file_exists(name + ".TGA")) {
+          new_mat->set_uniform("NormalMap", name + ".TGA");
+        }
+        else if(file_exists(name + ".tga")) {
+          new_mat->set_uniform("NormalMap", name + ".tga");
+        }
       }
-    }
-    else if(normal_map == "" && (ends_with(tex, "_N") || ends_with(tex, "normal") || ends_with(tex, "NRM"))) {
-      std::string name{assets + tex};
-      if(file_exists(name + ".TGA")) {
-        new_mat->set_uniform("NormalMap", name + ".TGA");
-      }
-      else if(file_exists(name + ".tga")) {
-        new_mat->set_uniform("NormalMap", name + ".tga");
-      }
-    }
-    else if(emit_map == "" && (ends_with(tex, "Emissive") || ends_with(tex, "glow"))) {
-      std::string name{assets + tex};
-      if(file_exists(name + ".TGA")) {
-        new_mat->set_uniform("EmissivityMap", name + ".TGA");
-      }
-      else if(file_exists(name + ".tga")) {
-        new_mat->set_uniform("EmissivityMap", name + ".tga");
+      else if(emit_map == "" && (ends_with(tex, "Emissive") || ends_with(tex, "glow"))) {
+        std::string name{assets + tex};
+        if(file_exists(name + ".TGA")) {
+          new_mat->set_uniform("EmissivityMap", name + ".TGA");
+        }
+        else if(file_exists(name + ".tga")) {
+          new_mat->set_uniform("EmissivityMap", name + ".tga");
+        }
       }
     }
   }
