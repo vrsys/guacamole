@@ -353,7 +353,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
       FbxNode* node = geo->GetNode();
       FbxMesh* mesh = dynamic_cast<FbxMesh*>(geo);
 
-      for(unsigned j = 0; j < 1; ++j)
+      for(unsigned j = 0; j < node->GetMaterialCount(); ++j)
       {
         // std::cout << "material num " << j << " name " << node->GetMaterial(j)->GetName() << std::endl;
         GeometryDescription desc("SkeletalAnimation", file_name, mesh_count,flags);
@@ -361,7 +361,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
 
         GeometryDatabase::instance()->add(desc.unique_key() 
           ,std::make_shared<SkinnedMeshResource>(
-            SkinnedMesh{*mesh, *root, 0}
+            SkinnedMesh{*mesh, *root, j}
             , animation_director
             , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 

@@ -134,7 +134,7 @@ struct Mesh {
     std::array<unsigned, 3> verts;
   };
 
-  std::vector<unsigned> construct(FbxMesh& mesh, unsigned material_index);
+  std::vector<unsigned> construct(FbxMesh& mesh, unsigned const material_index);
 
   template<typename T>
   static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);
