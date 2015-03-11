@@ -133,7 +133,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
   }
 
   //one vector of temp_vert represents one control point, every temp_vert in that vector is one vertex at that point
-  std::vector<std::vector<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::vector<temp_vert>{}};
+  std::vector<std::list<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::list<temp_vert>{}};
   std::vector<temp_tri> temp_tris{};
   
   //vertex indices of polygons
@@ -240,12 +240,12 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
   unsigned old_num_vertices = 0;
   unsigned dupl_verts = 0;
   //iterate over control points
-  for(std::vector<temp_vert>& verts : vert_positions) {
+  for(std::list<temp_vert>& verts : vert_positions) {
     old_num_vertices += verts.size();
     //iterate over vertices at that point
     for(auto iter = verts.begin(); iter != verts.end(); ++iter) {
       //ierate over vertices behind current vertex
-      for(std::vector<temp_vert>::iterator iter2 = std::next(iter); iter2 != verts.end(); ++iter2) {
+      for(auto iter2 = std::next(iter); iter2 != verts.end(); ++iter2) {
         //match by normals and if exisiting, other attributes
         bool duplicate = iter2->normal == iter->normal;
         if(duplicate && has_uvs) duplicate = iter2->uv == iter->uv; 
