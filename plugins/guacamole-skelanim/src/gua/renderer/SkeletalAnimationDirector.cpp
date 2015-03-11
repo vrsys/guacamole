@@ -243,7 +243,7 @@ uint SkeletalAnimationDirector::get_blending_mode() const {
 }
 
 std::string const& SkeletalAnimationDirector::get_animation() const {
-  if(animations_[curr_anim_num_]){
+  if(curr_anim_num_< animations_.size()){
     return animations_[curr_anim_num_]->get_name();
   }
   else{
