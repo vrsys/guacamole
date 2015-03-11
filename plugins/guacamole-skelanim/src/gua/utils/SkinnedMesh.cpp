@@ -17,7 +17,7 @@ SkinnedMesh::SkinnedMesh():
  bone_counts{}
 {}
 
-SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root, unsigned material_index) {
+SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root, unsigned const material_index) {
   //weights are associated to controlpoints and there can be control points with same positions after another
   //so its not possible to get the controlpoint associations just from positions
   std::vector<unsigned> point_indices{construct(mesh, material_index)};

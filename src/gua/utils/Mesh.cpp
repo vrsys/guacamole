@@ -53,28 +53,24 @@ Mesh::Mesh(FbxMesh& mesh, unsigned material_index) {
   construct(mesh, material_index);
 }
 
-std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
+std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned const material_index) {
   Timer timer{};
   timer.start();
-  FbxGeometryElementMaterial const* material_layer = mesh.GetElementMaterial(material_index);
-  std::function<unsigned(unsigned polygon_index)> get_material;
 
-  // Logger::LOG_DEBUG << "construct from " << mesh.GetName() << " index " << material_index << std::endl;
+  FbxGeometryElementMaterial const* material_layer = mesh.GetElementMaterial(0);
+  // Logger::LOG_DEBUG << "num polys " << mesh.GetPolygonCount() << " num matlayer index " << material_layer->GetIndexArray().GetCount() << std::endl;
+  for(unsigned i = 0; i < material_layer->GetIndexArray().GetCount() ; ++i) {
+  }
+  std::function<unsigned(unsigned)> get_material;
+
   if(material_layer->GetMappingMode() == FbxGeometryElement::eByPolygon) {
-    if(material_layer->GetReferenceMode() == FbxGeometryElement::eDirect) {
-      get_material =[](unsigned polygon_index)->unsigned {
-        return polygon_index;
-      };
-    }
-    else if(material_layer->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+    if(material_layer->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
       get_material = [&material_layer](unsigned polygon_index)->unsigned {
-        // std::cout << "accessing " << polygon_index << std::endl; 
-        // std::cout << "value " << material_layer->GetIndexArray().GetAt(polygon_index) << std::endl; 
-        return material_layer->GetIndexArray().GetAt(0);
+        return material_layer->GetIndexArray().GetAt(polygon_index);
       };
     }
     else {
-      Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
+      Logger::LOG_ERROR << "Type of material reference not supported" << std::endl;
     }
   }
   else if(material_layer->GetMappingMode() == FbxGeometryElement::eAllSame){
@@ -83,8 +79,10 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
     };
   }
   else {
-    Logger::LOG_ERROR << "Type of mapping not supported" << std::endl;
+    Logger::LOG_ERROR << "Type of material mapping not supported" << std::endl;
   }
+
+
 //polygons
   if(mesh.GetPolygonCount() < 1) {
     Logger::LOG_ERROR << "No polygons in mesh" << std::endl;
@@ -133,7 +131,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
   }
 
   //one vector of temp_vert represents one control point, every temp_vert in that vector is one vertex at that point
-  std::vector<std::list<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::list<temp_vert>{}};
+  std::vector<std::vector<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::vector<temp_vert>{}};
   std::vector<temp_tri> temp_tris{};
   
   //vertex indices of polygons
@@ -141,28 +139,32 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
 
   //define function to access vertex properties
   std::function<unsigned(temp_vert const&)> get_normal = get_access_function(*mesh.GetElementNormal(0));
-  FbxLayerElementArrayTemplate<FbxVector4> const& poly_normals{mesh.GetElementNormal(0)->GetDirectArray()};
+  FbxArray<FbxVector4> poly_normals{};
+  mesh.GetElementNormal(0)->GetDirectArray().CopyTo(poly_normals);
+  // FbxLayerElementArrayTemplate<FbxVector4> poly_normals{mesh.GetElementNormal(0)->GetDirectArray()};
 
-  if(mesh.GetElementNormal(0)->GetDirectArray().IsWriteLocked()) {
-    std::cout << "normals write locked" << std::endl;
-  }
-  if(mesh.GetElementNormal(0)->GetDirectArray().GetReadLockCount() > 0) {
-    std::cout << "normals read locked" << std::endl;
-  }
-  mesh.GetElementNormal(0)->GetDirectArray().ClearStatus();
 
   std::function<unsigned(temp_vert const&)> get_uv;
-  FbxLayerElementArrayTemplate<FbxVector2> const& poly_uvs{has_uvs ? mesh.GetElementUV(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector2>{EFbxType::eFbxDouble2}};
+
+  FbxArray<FbxVector2> poly_uvs{};
+  // FbxLayerElementArrayTemplate<FbxVector2> const& poly_uvs{has_uvs ? mesh.GetElementUV(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector2>{EFbxType::eFbxDouble2}};
   if(has_uvs) {
+    mesh.GetElementUV(0)->GetDirectArray().CopyTo(poly_uvs);
     get_uv = get_access_function(*mesh.GetElementUV(0));
   }
 
   std::function<unsigned(temp_vert const&)> get_tangent;
   std::function<unsigned(temp_vert const&)> get_bitangent;
 
-  FbxLayerElementArrayTemplate<FbxVector4> const& poly_tangents{has_tangents ? mesh.GetElementTangent(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector4>{EFbxType::eFbxDouble4}};
-  FbxLayerElementArrayTemplate<FbxVector4> const& poly_bitangents{has_tangents ? mesh.GetElementBinormal(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector4>{EFbxType::eFbxDouble4}};
+  FbxArray<FbxVector4> poly_tangents{};
+  FbxArray<FbxVector4> poly_bitangents{};
+  // FbxLayerElementArrayTemplate<FbxVector4> const& poly_tangents{has_tangents ? mesh.GetElementTangent(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector4>{EFbxType::eFbxDouble4}};
+  // FbxLayerElementArrayTemplate<FbxVector4> const& poly_bitangents{has_tangents ? mesh.GetElementBinormal(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector4>{EFbxType::eFbxDouble4}};
+  
   if(has_tangents){
+    mesh.GetElementTangent(0)->GetDirectArray().CopyTo(poly_tangents);
+    mesh.GetElementBinormal(0)->GetDirectArray().CopyTo(poly_bitangents);
+
     get_tangent = get_access_function(*mesh.GetElementTangent(0));
     get_bitangent = get_access_function(*mesh.GetElementBinormal(0));
   }
@@ -175,34 +177,26 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
   //iterate over polygons
   for(unsigned i = 0; i < mesh.GetPolygonCount(); ++i)
   {
-    // std::cout << "getting material of " << i << std::endl;
     if(get_material(i) == material_index) {
-    // std::cout << "is in mesh" << std::endl;
+
       //triangulate face if necessary
       for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
       {
-        // std::cout << " vertex " << j << std::endl;
         //get indices of vertices in attribute arrays
         std::array<unsigned, 3> indices{start_index, start_index + j - 1, start_index + j};
         //create triangle from vertex indices
         temp_tri tri{unsigned(poly_vertices[indices[0]]), unsigned(poly_vertices[indices[1]]), unsigned(poly_vertices[indices[2]])};
         temp_tris.push_back(tri);
 
-        // std::cout << "finished tri" << std::endl;
         //create new vertices that form triangle
         temp_vert vert1{indices[0], tri.verts[0], num_triangles, 0};
         temp_vert vert2{indices[1], tri.verts[1], num_triangles, 1};
         temp_vert vert3{indices[2], tri.verts[2], num_triangles, 2};
-        // std::cout << "created verts" << std::endl;
 
-        // std::cout << poly_normals.GetCount() << std::endl;
         vert1.normal = to_gua::vec3(poly_normals[get_normal(vert1)]);
-        // std::cout << "normal 1" << std::endl;
         vert2.normal = to_gua::vec3(poly_normals[get_normal(vert2)]);
-        // std::cout << "normal 2" << std::endl;
         vert3.normal = to_gua::vec3(poly_normals[get_normal(vert3)]);
         
-        // std::cout << "finished halfway" << std::endl;
         //set optional data
         if(has_uvs) {
           vert1.uv = to_gua::vec2(poly_uvs[get_uv(vert1)]);
@@ -224,23 +218,18 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
         vert_positions[tri.verts[1]].push_back(vert2);
         vert_positions[tri.verts[2]].push_back(vert3);
 
-        ++tris_added;
         ++num_triangles;
-        // std::cout << "finished vertex" << std::endl;
       }
-      start_index += 2 + tris_added;
-      tris_added = 0;
     }
-    // std::cout << "finished material of " << i << std::endl;
+      start_index += mesh.GetPolygonSize(i);
   }
-  // Logger::LOG_DEBUG << "material access done" << std::endl;
 
   //filter out duplicate vertices
   num_vertices = 0;
   unsigned old_num_vertices = 0;
   unsigned dupl_verts = 0;
   //iterate over control points
-  for(std::list<temp_vert>& verts : vert_positions) {
+  for(std::vector<temp_vert>& verts : vert_positions) {
     old_num_vertices += verts.size();
     //iterate over vertices at that point
     for(auto iter = verts.begin(); iter != verts.end(); ++iter) {
@@ -264,7 +253,6 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
     //add number of filtered verts at current control point to total vertex number
     num_vertices += verts.size();
   }
-  // Logger::LOG_DEBUG << dupl_verts << " vertex duplications" << std::endl;
 
   // Reserve space in the vectors for the vertex attributes and indices
   positions.reserve(num_vertices);
@@ -318,6 +306,8 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned material_index) {
       point_indices.push_back(i);
     }
   }
+  //free memory
+  std::vector<std::vector<temp_vert>>{}.swap(vert_positions);
 
   //load reduced triangles
   indices.reserve(num_triangles * 3);
