@@ -49,22 +49,21 @@ class SkeletalAnimationDirector {
 
   std::vector<scm::math::mat4f> get_bone_transforms();
 
-  int getBoneID(std::string const& name);
   bool has_anims() const;
 
   void set_playback_mode(uint mode);
-  uint get_playback_mode();
+  uint get_playback_mode() const;
   
   void set_blending_mode(uint mode);
-  uint get_blending_mode();
+  uint get_blending_mode() const;
 
-  std::string const& get_animation()const;
-  void        set_animation(std::string);
+  std::string const& get_animation() const;
+  void set_animation(std::string const&);
 
-  float get_blending_factor()const;
+  float get_blending_factor() const;
   void set_blending_factor(float f);
 
-  float get_blending_duration()const;
+  float get_blending_duration() const;
   void set_blending_duration(float duration);
 
 
@@ -77,12 +76,12 @@ private:
   void partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms);
 
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
+  std::map<std::string, unsigned> animation_mapping_; // maps a bone name to its index
 
   std::shared_ptr<Bone> root_;
   std::shared_ptr<Bone> anim_start_node_;
 
   std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
-  std::shared_ptr<SkeletalAnimation> currAnimation_;
 
   enum  Playback {partial = 0, crossfade = 1};
   Playback state_;
@@ -91,8 +90,8 @@ private:
   Blending blending_state_;
   float blendFactor_;
 
-  unsigned animNum_;
-  unsigned animNumLast_;
+  unsigned curr_anim_num_;
+  unsigned last_anim_num_;
   uint num_bones_;
 
   bool firstRun_;

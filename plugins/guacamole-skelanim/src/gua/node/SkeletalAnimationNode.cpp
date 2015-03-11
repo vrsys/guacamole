@@ -107,7 +107,7 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  uint SkeletalAnimationNode::get_animation_mode() {
+  uint SkeletalAnimationNode::get_animation_mode() const {
     return animation_director_->get_playback_mode();
   }
 
@@ -117,17 +117,17 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  uint SkeletalAnimationNode::get_blending_mode() {
+  uint SkeletalAnimationNode::get_blending_mode() const {
     return animation_director_->get_blending_mode();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  std::string SkeletalAnimationNode::get_animation() const {
+  std::string const& SkeletalAnimationNode::get_animation() const {
     return animation_director_->get_animation();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_animation(std::string animation_name) {
+  void SkeletalAnimationNode::set_animation(std::string const& animation_name) {
     animation_director_->set_animation(animation_name);
   }
 
