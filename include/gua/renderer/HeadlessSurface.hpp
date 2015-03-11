@@ -74,31 +74,9 @@ class GUA_DLL HeadlessSurface : public WindowBase {
    */
   virtual void finish_frame() const;
 
-  struct Image {
-    int32_t width = 0;
-    int32_t height = 0;
-    uint32_t bpp = 0;
-    uint32_t gl_internal_format = 0;
-    uint32_t gl_base_format = 0;
-    uint32_t gl_type = 0;
-    std::vector<char> data = {};
-
-    size_t size_header() const {
-    return sizeof(width) + sizeof(height) + sizeof(bpp) +
-           sizeof(gl_internal_format) + sizeof(gl_base_format) +
-           sizeof(gl_type);
-    }
-    size_t size() const { return size_header() + data.size(); }
-  };
-
-  void set_image(Image);
-  Image get_image();
-
  private:
   scm::gl::wm::window_ptr window_ = nullptr;
   scm::gl::wm::headless_surface_ptr headless_surface_ = nullptr;
-  Image image_;
-  boost::shared_mutex mutex_;
 };
 
 }

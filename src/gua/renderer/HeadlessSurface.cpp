@@ -108,15 +108,4 @@ void HeadlessSurface::finish_frame() const {
   window_->swap_buffers(config.get_enable_vsync());
 }
 
-void HeadlessSurface::set_image(Image img) {
-  boost::upgrade_lock<boost::shared_mutex> lock(mutex_);
-  boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
-  image_ = img;
-}
-
-HeadlessSurface::Image HeadlessSurface::get_image() {
-  boost::shared_lock<boost::shared_mutex> lock(mutex_);
-  return image_;
-}
-
 }
