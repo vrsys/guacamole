@@ -100,18 +100,18 @@ public : // methods
   std::shared_ptr<SkeletalAnimationDirector> const& get_director() const;
 
   void set_animation_mode(uint mode);
-  uint get_animation_mode();
+  uint get_animation_mode() const;
   
   void set_blending_mode(uint mode);
-  uint get_blending_mode();
+  uint get_blending_mode() const;
 
-  std::string get_animation()const;
-  void        set_animation(std::string);
+  std::string const& get_animation() const;
+  void        set_animation(std::string const&);
 
-  float get_blending_factor()const;
+  float get_blending_factor() const;
   void set_blending_factor(float f);
 
-  float get_blending_duration()const;
+  float get_blending_duration() const;
   void set_blending_duration(float duration);
 
   std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
