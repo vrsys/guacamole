@@ -77,9 +77,9 @@ int main(int argc, char** argv) {
 
   // auto pinky(loader.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // graph.add_node("/transform2", pinky);
-  // loader.load_animation(pinky, "data/objects/pinky/idle1.md5anim", 0);
-  // loader.load_animation(pinky, "data/objects/pinky/attack.md5anim", 0);
-  // loader.load_animation(pinky, "data/objects/pinky/run.md5anim", 0);
+  // loader.load_animation(pinky, "data/objects/pinky/idle1.md5anim", "unterschiedlich", 0);
+  // loader.load_animation(pinky, "data/objects/pinky/attack.md5anim", "unterschiedlich", 0);
+  // loader.load_animation(pinky, "data/objects/pinky/run.md5anim", "unterschiedlich", 0);
   // pinky->set_draw_bounding_box(true);
 
   // auto bob(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
@@ -87,23 +87,25 @@ int main(int argc, char** argv) {
   auto bob(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   bob->set_draw_bounding_box(true);
   graph.add_node("/transform", bob);
-  // loader.load_animation(bob, "data/objects/marine/jog.md5anim", 0);
-  loader.load_animation(bob, "data/objects/marine/crouch.md5anim", 0);
-  loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", 0);
-  loader.load_animation(bob, "data/objects/marine/run.md5anim", 0);
-  loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", 0);
+  loader.load_animation(bob, "data/objects/marine/crouch.md5anim", "unterschiedlich", 0);
+  loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", "unterschiedlich", 0);
+  loader.load_animation(bob, "data/objects/marine/run.md5anim", "unterschiedlich", 0);
+  loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", "unterschiedlich", 0);
 
 
   // auto fbx(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/barrel.fbx", mat1, gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/zombie_axe.fbx", mat1,  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  
+  // auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/Necris/Necris_LP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // loader.load_animation(fbx, "data/objects/fbx/Necris/Idle_Ready_Pis.FBX", "unterschiedlich", 0);
+  // loader.load_animation(fbx, "data/objects/fbx/Necris/Taunt_NoNo.FBX", "unterschiedlich", 0);
+  auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/Maw/Maw_J_Laygo.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  loader.load_animation(fbx, "data/objects/fbx/Maw/Walk.FBX", "unterschiedlich", 0);
+  // auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // loader.load_animation(fbx, "data/objects/fbx/Idle.FBX", "unterschiedlich", 0);
+  // loader.load_animation(fbx, "data/objects/fbx/Walk.FBX", "unterschiedlich", 0);
+  // loader.load_animation(fbx, "data/objects/fbx/Run.FBX", "unterschiedlich", 0);
   fbx->set_draw_bounding_box(true);
   graph.add_node("/transform2", fbx);
-  loader.load_animation(fbx, "data/objects/fbx/Idle.FBX", 0);
-  // loader.load_animation(fbx, "data/objects/fbx/zombie_axe.fbx", 0);
-  loader.load_animation(fbx, "data/objects/fbx/Walk.FBX", 0);
-  loader.load_animation(fbx, "data/objects/fbx/Run.FBX", 0);
-  loader.load_animation(fbx, "data/objects/fbx/Walk.FBX", 0);
   
 
   auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
