@@ -65,7 +65,9 @@ void Serializer::check(SerializedScene& output,
   current_center_of_interest_ = output.center_of_interest;
 
   for (auto plane: scene_graph.get_clipping_plane_nodes()) {
-    data_->clipping_planes.push_back(plane->get_component_vector());
+    if (current_render_mask_.check(plane->get_tags())) {
+      data_->clipping_planes.push_back(plane->get_component_vector());
+    }
   }
 
   scene_graph.accept(*this);
