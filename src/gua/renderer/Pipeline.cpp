@@ -135,7 +135,7 @@ void Pipeline::process(
     last_description_ = *camera.pipeline_description;
   } else {
     // if pipeline configuration is unchanged, update only uniforms of passes
-    for (int i(0); i < last_description_.get_passes().size(); ++i) {
+    for (unsigned i(0); i < last_description_.get_passes().size(); ++i) {
       last_description_.get_passes()[i]->uniforms =
           camera.pipeline_description->get_passes()[i]->uniforms;
     }
@@ -196,7 +196,7 @@ void Pipeline::process(
   abuffer_.clear(context_, camera.config.resolution());
 
   // process all passes
-  for (int i(0); i < passes_.size(); ++i) {
+  for (unsigned i(0); i < passes_.size(); ++i) {
     if (passes_[i].needs_color_buffer_as_input()) {
       gbuffer_->toggle_ping_pong();
     }
