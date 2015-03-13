@@ -86,13 +86,11 @@ class GUA_DLL Renderer {
   struct Item {
     Item() = default;
     Item( std::shared_ptr<node::SerializedCameraNode> const& sc,
-          std::shared_ptr<const SceneGraphs> const& sgs,
-          node::CameraNode* const& c)
-        : serialized_cam(sc), scene_graphs(sgs), camera_node(c) {}
+          std::shared_ptr<const SceneGraphs> const& sgs)
+        : serialized_cam(sc), scene_graphs(sgs) {}
 
     std::shared_ptr<node::SerializedCameraNode> serialized_cam;
     std::shared_ptr<const SceneGraphs>          scene_graphs;
-    node::CameraNode*                           camera_node;
   };
 
   using Mailbox = std::shared_ptr<gua::concurrent::Doublebuffer<Item> >;
