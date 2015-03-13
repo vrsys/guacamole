@@ -69,10 +69,6 @@ void display_loading_screen(gua::WindowBase& window) {
   window.config.set_right_resolution(tmp_right_resolution);
 }
 
-}  // namespace
-
-namespace gua {
-
 template <class T>
 using DB = std::shared_ptr<gua::concurrent::Doublebuffer<T> >;
 
@@ -81,6 +77,10 @@ std::pair<DB<T>, DB<T> > spawnDoublebufferred() {
   auto db = std::make_shared<gua::concurrent::Doublebuffer<T> >();
   return {db, db};
 }
+
+}  // namespace
+
+namespace gua {
 
 std::shared_ptr<const Renderer::SceneGraphs> garbage_collected_copy(
     std::vector<SceneGraph const*> const& scene_graphs) {
