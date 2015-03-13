@@ -66,7 +66,7 @@ std::mutex WindowBase::last_context_id_mutex_{};
 ////////////////////////////////////////////////////////////////////////////////
 
 WindowBase::WindowBase(Configuration const& configuration)
-    : rendering_fps(0.0f),
+    : rendering_fps(1.0f),
       config(configuration),
       fullscreen_shader_(),
       fullscreen_quad_(),

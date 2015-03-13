@@ -220,8 +220,8 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     if (ctr++ % 150 == 0)
-      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
-                << camera->get_rendering_fps() << ", app fps: "
+      std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
+                << window->get_rendering_fps() << ", app fps: "
                 << camera->get_application_fps() << std::endl;
 
     window->process_events();

@@ -129,6 +129,7 @@ void Renderer::renderclient(Mailbox in) {
         }
 
         cmd.camera_node->set_rendering_fps(fpsc.fps);
+        window->rendering_fps = fpsc.fps;
 
         if (cmd.serialized_cam->config.get_enable_stereo()) {
           pipe->process(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs);
