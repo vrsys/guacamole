@@ -36,6 +36,38 @@
 #include <gua/concurrent/pull_items_iterator.hpp>
 #include <gua/memory.hpp>
 
+namespace {
+
+void display_loading_screen(gua::WindowBase& window)
+{
+  auto loading_texture(gua::TextureDatabase::instance()->lookup("gua_loading_texture"));
+  gua::math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
+
+  auto tmp_left_resolution(window.config.left_resolution());
+  auto tmp_right_resolution(window.config.right_resolution());
+
+  auto tmp_left_position(window.config.left_position());
+  auto tmp_right_position(window.config.right_position());
+
+  window.config.set_left_resolution(loading_texture_size);
+  window.config.set_left_position(tmp_left_position + (tmp_left_resolution - loading_texture_size)/2);
+
+  window.config.set_right_resolution(loading_texture_size);
+  window.config.set_right_position(tmp_right_position + (tmp_right_resolution - loading_texture_size)/2);
+
+  window.display(loading_texture);
+  window.finish_frame();
+  ++(window.get_context()->framecount);
+
+  window.config.set_left_position(tmp_left_position);
+  window.config.set_left_resolution(tmp_left_resolution);
+
+  window.config.set_right_position(tmp_right_position);
+  window.config.set_right_resolution(tmp_right_resolution);
+}
+
+} // namespace
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,38 +115,9 @@ void Renderer::renderclient(Mailbox in) {
       if (window && window->get_is_open()) {
         window->set_active(true);
 
-        // display loading screen
         if (window->get_context()->framecount == 0) {
-
-          auto loading_texture(TextureDatabase::instance()->lookup("gua_loading_texture"));
-          math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
-
-          auto tmp_left_resolution(window->config.left_resolution());
-          auto tmp_right_resolution(window->config.right_resolution());
-
-          auto tmp_left_position(window->config.left_position());
-          auto tmp_right_position(window->config.right_position());
-
-          window->config.set_left_resolution(loading_texture_size);
-          window->config.set_left_position(tmp_left_position + (tmp_left_resolution - loading_texture_size)/2);
-
-          window->config.set_right_resolution(loading_texture_size);
-          window->config.set_right_position(tmp_right_position + (tmp_right_resolution - loading_texture_size)/2);
-
-          window->display(loading_texture);
-          window->finish_frame();
-          ++(window->get_context()->framecount);
-
-          window->config.set_left_position(tmp_left_position);
-          window->config.set_left_resolution(tmp_left_resolution);
-
-          window->config.set_right_position(tmp_right_position);
-          window->config.set_right_resolution(tmp_right_resolution);
+          display_loading_screen(*window);
         }
-
-        // process pipeline
-        //auto process = [&](CameraMode mode) {
-        //  cmd.serialized_cam->rendering_pipeline->process(
 
         // make sure pipeline was created
         std::shared_ptr<Pipeline> pipe = nullptr;
