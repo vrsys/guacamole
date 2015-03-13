@@ -12,6 +12,12 @@ uniform bool    gua_ssao_enable;
 uniform float   gua_ssao_radius;
 uniform float   gua_ssao_intensity;
 uniform float   gua_ssao_falloff;
+
+uniform bool    gua_screen_space_shadows_enable = false;
+uniform float   gua_screen_space_shadows_radius = 1.0;
+uniform float   gua_screen_space_shadows_max_radius_px = 200.0;
+uniform float   gua_screen_space_shadows_intensity = 0.8;
+
 uniform uvec2   gua_noise_tex;
 
 uniform bool    gua_enable_fog = false;

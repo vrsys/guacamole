@@ -102,7 +102,8 @@ namespace gua {
         gbuffer_->remove_buffers(get_context());
       }
 
-      gbuffer_.reset(new GBuffer(get_context(), camera.config.resolution()));
+      math::vec2ui new_gbuf_size (std::max(1U, camera.config.resolution().x), std::max(1U, camera.config.resolution().y));
+      gbuffer_.reset(new GBuffer(get_context(), new_gbuf_size));
     }
 
 
@@ -344,23 +345,39 @@ namespace gua {
   void Pipeline::begin_gpu_query(RenderContext const& ctx, std::string const& name) {
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-    if (queries_.gpu_queries.count(name)) {
-      // delete existing query if too old
-      const unsigned max_wait_frames = 100;
-      if (queries_.gpu_queries.at(name).collect_attempts > max_wait_frames) {
-        queries_.gpu_queries.erase(queries_.gpu_queries.find(name));
+
+    if (ctx.framecount < 50) {
+      queries_.gpu_queries.clear();
+      return;
+    }
+
+    auto existing_query = queries_.gpu_queries.find(name);
+
+    if (existing_query != queries_.gpu_queries.end()) {
+      // delete existing query if it is too old
+      const unsigned max_wait_frames = 50;
+      if (existing_query->second.collect_attempts > max_wait_frames) {
+        queries_.gpu_queries.erase(existing_query);
       }
       else {
-        // existing query in process -> nothing to be done
+        // existing query in process -> nothing to be done!!! -> return!!
         return;
       }
     }
 
-    // create query
-    auto query = ctx.render_device->create_timer_query();
-    query_dispatch dispatch = { query, false, 0U };
-    queries_.gpu_queries.insert(std::make_pair(name, dispatch));
-    ctx.render_context->begin_query(query);
+
+    try {
+      // create query
+      auto query = ctx.render_device->create_timer_query();
+      query_dispatch dispatch = { query, false, 0U };
+
+      queries_.gpu_queries.insert(std::make_pair(name, dispatch));
+      ctx.render_context->begin_query(query);
+    }
+    catch ( ... ) {
+      // query dispatch failed
+    }
+
 #endif
   }
 
@@ -376,6 +393,10 @@ namespace gua {
         ctx.render_context->end_query(queries_.gpu_queries.at(name).query);
         queries_.gpu_queries.at(name).dispatched = true;
       }
+    }
+    else {
+      // no such query
+      return;
     }
 #endif
   }

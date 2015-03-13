@@ -36,7 +36,7 @@ void main() {
       pass_point_color = VertexIn[0].pass_point_color;
       pass_normal = VertexIn[0].pass_normal; 
 
-      vec3 s_pos_ms = gl_in[0].gl_Position.xyz; // poisition of surfel in model space
+      vec3 s_pos_ms = gl_in[0].gl_Position.xyz; // position of surfel in model space
       vec3 step_u   = VertexIn[0].pass_ms_u;
       vec3 step_v   = VertexIn[0].pass_ms_v;
 

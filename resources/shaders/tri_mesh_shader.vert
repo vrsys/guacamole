@@ -20,7 +20,7 @@ void main() {
 
   @material_input@
 
-  gua_position   = (gua_model_view_matrix  * vec4(gua_in_position, 1.0)).xyz;
+  gua_position   = (gua_model_view_matrix * vec4(gua_in_position, 1.0)).xyz;
   gua_normal     = (gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz;
   gua_tangent    = (gua_normal_matrix * vec4(gua_in_tangent, 0.0)).xyz;
   gua_bitangent  = (gua_normal_matrix * vec4(gua_in_bitangent, 0.0)).xyz;
