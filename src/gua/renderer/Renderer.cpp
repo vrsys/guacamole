@@ -38,10 +38,11 @@
 
 namespace {
 
-void display_loading_screen(gua::WindowBase& window)
-{
-  auto loading_texture(gua::TextureDatabase::instance()->lookup("gua_loading_texture"));
-  gua::math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
+void display_loading_screen(gua::WindowBase& window) {
+  auto loading_texture(
+      gua::TextureDatabase::instance()->lookup("gua_loading_texture"));
+  gua::math::vec2ui loading_texture_size(loading_texture->width(),
+                                         loading_texture->height());
 
   auto tmp_left_resolution(window.config.left_resolution());
   auto tmp_right_resolution(window.config.right_resolution());
@@ -50,10 +51,12 @@ void display_loading_screen(gua::WindowBase& window)
   auto tmp_right_position(window.config.right_position());
 
   window.config.set_left_resolution(loading_texture_size);
-  window.config.set_left_position(tmp_left_position + (tmp_left_resolution - loading_texture_size)/2);
+  window.config.set_left_position(
+      tmp_left_position + (tmp_left_resolution - loading_texture_size) / 2);
 
   window.config.set_right_resolution(loading_texture_size);
-  window.config.set_right_position(tmp_right_position + (tmp_right_resolution - loading_texture_size)/2);
+  window.config.set_right_position(
+      tmp_right_position + (tmp_right_resolution - loading_texture_size) / 2);
 
   window.display(loading_texture);
   window.finish_frame();
@@ -66,20 +69,18 @@ void display_loading_screen(gua::WindowBase& window)
   window.config.set_right_resolution(tmp_right_resolution);
 }
 
-} // namespace
+}  // namespace
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
-template <class T> using DB = std::shared_ptr<gua::concurrent::Doublebuffer<T>>;
+template <class T>
+using DB = std::shared_ptr<gua::concurrent::Doublebuffer<T> >;
 
 template <class T>
-std::pair<DB<T>, DB<T>> spawnDoublebufferred() {
+std::pair<DB<T>, DB<T> > spawnDoublebufferred() {
   auto db = std::make_shared<gua::concurrent::Doublebuffer<T> >();
   return {db, db};
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<const Renderer::SceneGraphs> garbage_collected_copy(
     std::vector<SceneGraph const*> const& scene_graphs) {
@@ -90,13 +91,9 @@ std::shared_ptr<const Renderer::SceneGraphs> garbage_collected_copy(
   return sgs;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 Renderer::~Renderer() {
   stop();
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::renderclient(Mailbox in) {
   FpsCounter fpsc(20);
@@ -121,24 +118,30 @@ void Renderer::renderclient(Mailbox in) {
 
         // make sure pipeline was created
         std::shared_ptr<Pipeline> pipe = nullptr;
-        auto pipe_iter = window->get_context()->render_pipelines.find(cmd.serialized_cam->uuid);
+        auto pipe_iter = window->get_context()->render_pipelines.find(
+            cmd.serialized_cam->uuid);
 
         if (pipe_iter == window->get_context()->render_pipelines.end()) {
-          pipe = std::make_shared<Pipeline>(*window->get_context(), cmd.serialized_cam->config.get_resolution());
-          window->get_context()->render_pipelines.insert(std::make_pair(cmd.serialized_cam->uuid, pipe));
-        }
-        else {
+          pipe = std::make_shared<Pipeline>(
+              *window->get_context(),
+              cmd.serialized_cam->config.get_resolution());
+          window->get_context()->render_pipelines.insert(
+              std::make_pair(cmd.serialized_cam->uuid, pipe));
+        } else {
           pipe = pipe_iter->second;
         }
 
         window->rendering_fps = fpsc.fps;
 
         if (cmd.serialized_cam->config.get_enable_stereo()) {
-          pipe->process(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs);
-          pipe->process(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
+          pipe->process(
+              CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs);
+          pipe->process(
+              CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
         } else {
           pipe->process(cmd.serialized_cam->config.get_mono_mode(),
-              *cmd.serialized_cam, *cmd.scene_graphs);
+                        *cmd.serialized_cam,
+                        *cmd.scene_graphs);
         }
 
         // swap buffers
@@ -151,16 +154,9 @@ void Renderer::renderclient(Mailbox in) {
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-Renderer::Renderer()
-  : render_clients_(),
-    application_fps_(20) {
-
+Renderer::Renderer() : render_clients_(), application_fps_(20) {
   application_fps_.start();
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
   for (auto graph : scene_graphs) {
@@ -175,15 +171,20 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
       auto rclient(render_clients_.find(window_name));
       cam->set_application_fps(application_fps_.fps);
       if (rclient != render_clients_.end()) {
-        rclient->second.first->push_back(Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs));
+        rclient->second.first->push_back(
+            Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()),
+                 sgs));
 
       } else {
         auto window(WindowDatabase::instance()->lookup(window_name));
 
         if (window) {
           auto p = spawnDoublebufferred<Item>();
-          p.first->push_back(Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs));
-          render_clients_[window_name] = std::make_pair(p.first, std::thread(Renderer::renderclient, p.second));
+          p.first->push_back(Item(
+              std::make_shared<node::SerializedCameraNode>(cam->serialize()),
+              sgs));
+          render_clients_[window_name] = std::make_pair(
+              p.first, std::thread(Renderer::renderclient, p.second));
         }
       }
     }
@@ -191,12 +192,13 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
   application_fps_.step();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 void Renderer::stop() {
-  for (auto& rc : render_clients_) { rc.second.first->close(); }
-  for (auto& rc : render_clients_) { rc.second.second.join(); }
+  for (auto& rc : render_clients_) {
+    rc.second.first->close();
+  }
+  for (auto& rc : render_clients_) {
+    rc.second.second.join();
+  }
   render_clients_.clear();
 }
-
 }
