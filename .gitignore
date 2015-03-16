@@ -51,6 +51,7 @@ examples/tiled_shading_test/tiled_shading_test
 examples/transparency/example-transparency
 examples/screenshot/example-screenshot
 examples/smooth_lighting/example-smooth_lighting
+examples/clipping/clipping
 
 
 install

@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/node/Node.hpp>
 #include <gua/node/ScreenNode.hpp>
+#include <gua/node/ClippingPlaneNode.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/renderer/Frustum.hpp>
 
@@ -57,6 +58,11 @@ struct GUA_DLL SerializedScene {
    * The center of interest.
    */
   math::vec3 center_of_interest;
+
+  /**
+   * Clipping plane parameters.
+   */
+  std::vector<math::vec4f> clipping_planes;
 
   /**
    * All bounding boxes.

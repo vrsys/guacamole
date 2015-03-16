@@ -133,8 +133,8 @@ int main(int argc, char** argv) {
       renderer.stop();
       window->close();
       loop.stop();
-    } else { 
-      renderer.queue_draw({&graph}, {camera});
+    } else {
+      renderer.queue_draw({&graph});
     }
   });
 

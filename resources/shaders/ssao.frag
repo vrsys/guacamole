@@ -83,5 +83,5 @@ float compute_ssao ()
 
   ao/=32.0;
 
-  return ao * gua_ssao_intensity;
+  return clamp(ao * gua_ssao_intensity, 0.0, 1.0);
 }

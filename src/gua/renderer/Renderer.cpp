@@ -36,18 +36,51 @@
 #include <gua/concurrent/pull_items_iterator.hpp>
 #include <gua/memory.hpp>
 
-namespace gua {
+namespace {
 
-////////////////////////////////////////////////////////////////////////////////
-template <class T> using DB = std::shared_ptr<gua::concurrent::Doublebuffer<T>>;
+void display_loading_screen(gua::WindowBase& window) {
+  auto loading_texture(
+      gua::TextureDatabase::instance()->lookup("gua_loading_texture"));
+  gua::math::vec2ui loading_texture_size(loading_texture->width(),
+                                         loading_texture->height());
+
+  auto tmp_left_resolution(window.config.left_resolution());
+  auto tmp_right_resolution(window.config.right_resolution());
+
+  auto tmp_left_position(window.config.left_position());
+  auto tmp_right_position(window.config.right_position());
+
+  window.config.set_left_resolution(loading_texture_size);
+  window.config.set_left_position(
+      tmp_left_position + (tmp_left_resolution - loading_texture_size) / 2);
+
+  window.config.set_right_resolution(loading_texture_size);
+  window.config.set_right_position(
+      tmp_right_position + (tmp_right_resolution - loading_texture_size) / 2);
+
+  window.display(loading_texture);
+  window.finish_frame();
+  ++(window.get_context()->framecount);
+
+  window.config.set_left_position(tmp_left_position);
+  window.config.set_left_resolution(tmp_left_resolution);
+
+  window.config.set_right_position(tmp_right_position);
+  window.config.set_right_resolution(tmp_right_resolution);
+}
 
 template <class T>
-std::pair<DB<T>, DB<T>> spawnDoublebufferred() {
+using DB = std::shared_ptr<gua::concurrent::Doublebuffer<T> >;
+
+template <class T>
+std::pair<DB<T>, DB<T> > spawnDoublebufferred() {
   auto db = std::make_shared<gua::concurrent::Doublebuffer<T> >();
   return {db, db};
 }
 
-////////////////////////////////////////////////////////////////////////////////
+}  // namespace
+
+namespace gua {
 
 std::shared_ptr<const Renderer::SceneGraphs> garbage_collected_copy(
     std::vector<SceneGraph const*> const& scene_graphs) {
@@ -58,14 +91,9 @@ std::shared_ptr<const Renderer::SceneGraphs> garbage_collected_copy(
   return sgs;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 Renderer::~Renderer() {
-  for (auto& rc : render_clients_) { rc.second.first->close(); }
-  for (auto& rc : render_clients_) { rc.second.second.join(); }
+  stop();
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 void Renderer::renderclient(Mailbox in) {
   FpsCounter fpsc(20);
@@ -84,65 +112,36 @@ void Renderer::renderclient(Mailbox in) {
       if (window && window->get_is_open()) {
         window->set_active(true);
 
-        // display loading screen
         if (window->get_context()->framecount == 0) {
-
-          auto loading_texture(TextureDatabase::instance()->lookup("gua_loading_texture"));
-          math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
-
-          auto tmp_left_resolution(window->config.left_resolution());
-          auto tmp_right_resolution(window->config.right_resolution());
-
-          auto tmp_left_position(window->config.left_position());
-          auto tmp_right_position(window->config.right_position());
-
-          window->config.set_left_resolution(loading_texture_size);
-          window->config.set_left_position(tmp_left_position + (tmp_left_resolution - loading_texture_size)/2);
-
-          window->config.set_right_resolution(loading_texture_size);
-          window->config.set_right_position(tmp_right_position + (tmp_right_resolution - loading_texture_size)/2);
-
-          window->display(loading_texture);
-          window->finish_frame();
-          ++(window->get_context()->framecount);
-
-          window->config.set_left_position(tmp_left_position);
-          window->config.set_left_resolution(tmp_left_resolution);
-
-          window->config.set_right_position(tmp_right_position);
-          window->config.set_right_resolution(tmp_right_resolution);
+          display_loading_screen(*window);
         }
-
-        // process pipeline
-        //auto process = [&](CameraMode mode) {
-        //  cmd.serialized_cam->rendering_pipeline->process(
 
         // make sure pipeline was created
         std::shared_ptr<Pipeline> pipe = nullptr;
-        auto pipe_iter = window->get_context()->render_pipelines.find(cmd.serialized_cam->uuid);
+        auto pipe_iter = window->get_context()->render_pipelines.find(
+            cmd.serialized_cam->uuid);
 
         if (pipe_iter == window->get_context()->render_pipelines.end()) {
-          pipe = std::make_shared<Pipeline>();
-          window->get_context()->render_pipelines.insert(std::make_pair(cmd.serialized_cam->uuid, pipe));
-        }
-        else {
+          pipe = std::make_shared<Pipeline>(
+              *window->get_context(),
+              cmd.serialized_cam->config.get_resolution());
+          window->get_context()->render_pipelines.insert(
+              std::make_pair(cmd.serialized_cam->uuid, pipe));
+        } else {
           pipe = pipe_iter->second;
         }
 
-        auto process = [&](CameraMode mode) {
-          pipe->process(
-            window->get_context(), mode, *cmd.serialized_cam, *cmd.scene_graphs
-          );
-        };
-
-        cmd.camera_node->set_rendering_fps(fpsc.fps);
+        window->rendering_fps = fpsc.fps;
 
         if (cmd.serialized_cam->config.get_enable_stereo()) {
-          process(CameraMode::LEFT);
-          process(CameraMode::RIGHT);
+          pipe->process(
+              CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs);
+          pipe->process(
+              CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
         } else {
-
-          process(cmd.serialized_cam->config.get_mono_mode());
+          pipe->process(cmd.serialized_cam->config.get_mono_mode(),
+                        *cmd.serialized_cam,
+                        *cmd.scene_graphs);
         }
 
         // swap buffers
@@ -155,55 +154,51 @@ void Renderer::renderclient(Mailbox in) {
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-Renderer::Renderer()
-  : render_clients_(),
-    application_fps_(20) {
-
+Renderer::Renderer() : render_clients_(), application_fps_(20) {
   application_fps_.start();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs,
-                          std::vector<std::shared_ptr<node::CameraNode>> const& cameras) {
+void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
   for (auto graph : scene_graphs) {
     graph->update_cache();
   }
 
   auto sgs = garbage_collected_copy(scene_graphs);
-  for (auto& cam : cameras) {
 
-    auto window_name(cam->config.get_output_window_name());
-    auto rclient(render_clients_.find(window_name));
-    cam->set_application_fps(application_fps_.fps);
-    if (rclient != render_clients_.end()) {
-      rclient->second.first->push_back(Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
-    } else {
-      auto window(WindowDatabase::instance()->lookup(window_name));
+  for (auto graph : scene_graphs) {
+    for (auto& cam : graph->get_camera_nodes()) {
+      auto window_name(cam->config.get_output_window_name());
+      auto rclient(render_clients_.find(window_name));
+      cam->set_application_fps(application_fps_.fps);
+      if (rclient != render_clients_.end()) {
+        rclient->second.first->push_back(
+            Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()),
+                 sgs));
 
-      if (window) {
-        auto p = spawnDoublebufferred<Item>();
-        p.first->push_back(Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()), sgs, cam));
-        render_clients_[window_name] = std::make_pair(p.first, std::thread(Renderer::renderclient, p.second));
       } else {
-        Logger::LOG_WARNING << "Cannot render camera: window \""
-                            << window_name
-                            << "\" not registered in WindowDatabase!"
-                            << std::endl;
+        auto window(WindowDatabase::instance()->lookup(window_name));
+
+        if (window) {
+          auto p = spawnDoublebufferred<Item>();
+          p.first->push_back(Item(
+              std::make_shared<node::SerializedCameraNode>(cam->serialize()),
+              sgs));
+          render_clients_[window_name] = std::make_pair(
+              p.first, std::thread(Renderer::renderclient, p.second));
+        }
       }
     }
   }
   application_fps_.step();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 void Renderer::stop() {
-  for (auto& rclient : render_clients_) {
-    rclient.second.first->close();
+  for (auto& rc : render_clients_) {
+    rc.second.first->close();
   }
+  for (auto& rc : render_clients_) {
+    rc.second.second.join();
+  }
+  render_clients_.clear();
 }
-
 }

@@ -132,10 +132,13 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                                       "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
           current_shader->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_width(),  "gua_texel_width");
           current_shader->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_height(), "gua_texel_height");
+          // hack
+          current_shader->set_uniform(ctx, pipe.get_gbuffer().get_current_depth_buffer()->get_handle(ctx),
+                                      "gua_gbuffer_depth");
         }
       }
 
-      if (current_shader && tri_mesh_node->get_geometry()) 
+      if (current_shader && tri_mesh_node->get_geometry())
       {
         auto model_view_mat = pipe.get_scene().frustum.get_view() * tri_mesh_node->get_cached_world_transform();
         UniformValue normal_mat (math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));

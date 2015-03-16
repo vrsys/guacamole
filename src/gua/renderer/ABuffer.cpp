@@ -35,16 +35,13 @@ void ABuffer::allocate(RenderContext& ctx, size_t buffer_size) {
   auto resource = ctx.resources.get<SharedResource>();
 
   // compute memory allowance
-  const size_t data_chunk_size = 1;
-  size_t frag_list_size = (buffer_size * 1024u * 1024u) / (data_chunk_size + 1);
-  frag_list_size =
-      (frag_list_size / (sizeof(unsigned) * 4)) * (sizeof(unsigned) * 4);
-  size_t frag_data_size = frag_list_size * data_chunk_size;
+  size_t frag_count = (buffer_size * 1024u * 1024u)
+                      / (FRAG_LIST_WORD_SIZE + FRAG_DATA_WORD_SIZE);
 
   // init/reinit if necessary
-  if (!resource->counter && resource->frag_list_size < frag_list_size) {
+  if (!resource->counter || resource->frag_count < frag_count) {
 
-    resource->frag_list_size = frag_list_size;
+    resource->frag_count = frag_count;
 
     resource->counter =
         ctx.render_device->create_buffer(scm::gl::BIND_ATOMIC_COUNTER_BUFFER,
@@ -53,11 +50,11 @@ void ABuffer::allocate(RenderContext& ctx, size_t buffer_size) {
     resource->frag_list =
         ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
                                          scm::gl::USAGE_DYNAMIC_COPY,
-                                         frag_list_size);
+                                         frag_count * FRAG_LIST_WORD_SIZE);
     resource->frag_data =
         ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
                                          scm::gl::USAGE_DYNAMIC_COPY,
-                                         frag_data_size);
+                                         frag_count * FRAG_DATA_WORD_SIZE);
   }
   res_ = resource;
 }
@@ -78,7 +75,8 @@ void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution) {
   ctx.render_context->clear_buffer_sub_data(res_->frag_list,
                                             scm::gl::FORMAT_RG_32UI,
                                             0u,
-                                            8u * resolution.x * resolution.y,
+                                            FRAG_LIST_WORD_SIZE * resolution.x
+                                                                * resolution.y,
                                             0);
 }
 

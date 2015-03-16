@@ -18,7 +18,9 @@ public:
     math::mat4f  projection_inverse;
     math::mat4f  projection_view_inverse;
     math::vec4f  position;
+    math::vec4f  clipping_planes[64];
     math::vec2i  resolution;
+    int          clipping_plane_count;
     int          view_id;
     float        clip_near;
     float        clip_far;
@@ -29,7 +31,9 @@ public:
   CameraUniformBlock(scm::gl::render_device_ptr const& device);
   ~CameraUniformBlock();
 
-  void update(scm::gl::render_context_ptr const& context, Frustum const& cam, int view_id, math::vec2ui const& screen_resolution);
+  void update(scm::gl::render_context_ptr const& context, Frustum const& cam,
+              std::vector<math::vec4f> const& clipping_planes,
+              int view_id, math::vec2ui const& screen_resolution);
 
   inline const block_type&   block() const { return uniform_block_; }
 

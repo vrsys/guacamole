@@ -59,7 +59,7 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
   switch (std::tolower(key))
   {
   case 'm': // toggle environment lighting mode
-    
+
     if (pipe.get_resolve_pass()->environment_lighting_mode() == gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR) {
       std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP" << std::endl;
       pipe.get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP);
@@ -119,7 +119,7 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     pipe.get_resolve_pass()->ssao_enable(!pipe.get_resolve_pass()->ssao_enable());
     break;
 
-  case '1': 
+  case '1':
     pipe.get_resolve_pass()->ssao_intensity(std::min(5.0f, 1.1f * pipe.get_resolve_pass()->ssao_intensity()));
     break;
   case '2':
@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
   rough_white->set_uniform("color", gua::math::vec3f(1.0f, 1.0f, 1.0f));
   rough_white->set_uniform("metalness", 0.0f);
   rough_white->set_uniform("roughness", 1.0f);
-  rough_white->set_uniform("emissivity", 0.0f); 
+  rough_white->set_uniform("emissivity", 0.0f);
 
   scm::gl::sampler_state_desc const& sampler_state_desc = scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT);
   gua::TextureDatabase::instance()->add("data/textures/envlightmap.jpg", std::make_shared<gua::Texture2D>("data/textures/envlightmap.jpg", true, sampler_state_desc));
@@ -326,7 +326,7 @@ int main(int argc, char** argv) {
     transform->set_transform(modelmatrix);
 
     if (animate_light) {
-      light->rotate(0.01, 0.0, 1.0, 0.0);
+      light->rotate(0.1, 0.0, 1.0, 0.0);
     }
 
     window->process_events();
@@ -335,7 +335,7 @@ int main(int argc, char** argv) {
       window->close();
       loop.stop();
     } else {
-      renderer.queue_draw({&graph}, {camera});
+      renderer.queue_draw({&graph});
     }
   });
 

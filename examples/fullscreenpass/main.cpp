@@ -134,19 +134,22 @@ int main(int argc, char** argv) {
   }
 
   auto standardPipe(std::make_shared<gua::PipelineDescription>());
-  standardPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  standardPipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
-  standardPipe->add_pass(std::make_shared<gua::LightingPassDescription>());
+  standardPipe->add_pass<gua::TriMeshPassDescription>();
+  standardPipe->add_pass<gua::EmissivePassDescription>();
+  standardPipe->add_pass<gua::LightingPassDescription>();
   // standardPipe->add_pass<gua::BackgroundPassDescription>()
     // .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
     // .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
     // ;
 
   auto pbrPipe(std::make_shared<gua::PipelineDescription>());
-  pbrPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  pbrPipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
-  pbrPipe->add_pass(std::make_shared<gua::PhysicallyBasedShadingPassDescription>());
-  pbrPipe->add_pass(std::make_shared<gua::ToneMappingPassDescription>());
+  pbrPipe->add_pass<gua::TriMeshPassDescription>();
+  pbrPipe->add_pass<gua::EmissivePassDescription>();
+  pbrPipe->add_pass<gua::PhysicallyBasedShadingPassDescription>();
+  pbrPipe->add_pass<gua::ToneMappingPassDescription>();
+  //pbrPipe->add_pass<gua::FullscreenPassDescription>();
+
+  //auto fs = pbrPipe->get_pass<gua::FullscreenPassDescription>();
 #if 0
   pbrPipe->add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
@@ -155,9 +158,9 @@ int main(int argc, char** argv) {
 #endif
 
   auto tiledPipe(std::make_shared<gua::PipelineDescription>());
-  tiledPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  tiledPipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-  tiledPipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+  tiledPipe->add_pass<gua::TriMeshPassDescription>();
+  tiledPipe->add_pass<gua::LightVisibilityPassDescription>();
+  tiledPipe->add_pass<gua::ResolvePassDescription>();
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -209,10 +212,7 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
-      gua::math::float_t(trackball.shifty()),
-      gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
-
+    auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
 
     if (ctr++ % 150 == 0)
@@ -225,7 +225,7 @@ int main(int argc, char** argv) {
       window->close();
       loop.stop();
     } else {
-      renderer.queue_draw({&graph});
+      renderer.queue_draw({&graph}, {camera});
     }
   });
 

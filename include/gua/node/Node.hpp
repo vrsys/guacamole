@@ -136,6 +136,8 @@ class GUA_DLL Node {
 
     set_dirty();
 
+    new_node->set_scenegraph(scenegraph_);
+
     return new_node;
   }
 
@@ -439,12 +441,17 @@ class GUA_DLL Node {
   */
   std::shared_ptr<Node> deep_copy() const;
 
+
+  SceneGraph* get_scenegraph() const {
+    return scenegraph_;
+  }
+
  protected:
 
   /**
    * Returns if the Node is Root
    *
-   * \return bool     Is root node of Scenegraph
+   * \return bool     Is root node of SceneGraph
    */
   inline bool is_root() const { return parent_ == nullptr; }
 
@@ -474,8 +481,12 @@ class GUA_DLL Node {
   void set_dirty() const;
   void set_parent_dirty() const;
   void set_children_dirty() const;
+
+  virtual void set_scenegraph(SceneGraph* scenegraph);
+
   mutable bool self_dirty_;
   mutable bool child_dirty_;
+
 
   // up (cached) annotations
   mutable math::BoundingBox<math::vec3> bounding_box_;
@@ -484,6 +495,8 @@ class GUA_DLL Node {
   // down (cached) annotations
   math::mat4 transform_; // invertible affine transformation
   mutable math::mat4 world_transform_;
+
+  SceneGraph* scenegraph_;
 };
 
 } // namespace node {

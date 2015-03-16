@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
       }
     }
 
-    std::cout << camera->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
+    std::cout << window->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {
@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
       window->close();
       loop.stop();
     } else {
-      renderer.queue_draw({&graph}, {camera});
+      renderer.queue_draw({&graph});
     }
   });
 

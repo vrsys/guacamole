@@ -350,7 +350,9 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
             current_material_program->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
               pipe.get_gbuffer().get_height()),
               "gua_resolution"); 
-          
+            // hack
+            current_material_program->set_uniform(ctx, pipe.get_gbuffer().get_current_depth_buffer()
+                                                  ->get_handle(ctx), "gua_gbuffer_depth");
             nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
           
             nurbs_ressource->draw(ctx, true, nurbs_node->render_backfaces());
@@ -393,7 +395,9 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
             current_material_program->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
               pipe.get_gbuffer().get_height()),
               "gua_resolution");
-
+            // hack
+            current_material_program->set_uniform(ctx, pipe.get_gbuffer().get_current_depth_buffer()
+                                                  ->get_handle(ctx), "gua_gbuffer_depth");
             ctx.render_context->apply();
             nurbs_ressource->draw(ctx, false, nurbs_node->render_backfaces());
           }

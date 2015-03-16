@@ -292,7 +292,7 @@ int main(int argc, char** argv) {
   // create simple untextured material shader
   auto pbr_keep_input_desc    = std::make_shared<gua::MaterialShaderDescription>("./data/materials/PBR_use_input_color.gmd");
   auto pbr_uniform_color_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/PBR_uniform_color.gmd");
-  
+
   //use this material for models where shading does not make sense
   auto pbr_keep_color_shader(std::make_shared<gua::MaterialShader>("PBR_pass_input_color", pbr_keep_input_desc));
   auto pbr_overwrite_color_shader(std::make_shared<gua::MaterialShader>("PBR_overwrite_input_color", pbr_uniform_color_desc));
@@ -340,11 +340,12 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
-#if RENDER_PITOTI_HUNTING_SCENE  
+#if RENDER_PITOTI_HUNTING_SCENE
   #if WIN32
     //auto plod_geometry(plodLoader.load_geometry("hunter", "\\GRANDMOTHER/pitoti/XYZ_ALL/new_pitoti_sampling/objects/Area_4_hunter_with_bow.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
   auto plod_geometry(plodLoader.load_geometry("hunter", "data/objects/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
   #else
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/precision_tests/001/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION ));
     //auto plod_geometry(plodLoader.load_geometry("/mnt/pitoti/XYZ_ALL/new_pitoti_sampling/Area_4_hunter_with_bow.kdn", gua::PLODLoader::NORMALIZE_POSITION  ));
   #endif
 #endif
@@ -367,7 +368,7 @@ int main(int argc, char** argv) {
     node->set_draw_bounding_box(true);
   };
 
-  
+
   setup_plod_node(plod_geometry);
   //setup_plod_node(plod_geometry2);
   //setup_plod_node(plod_geometry3);
@@ -387,13 +388,13 @@ int main(int argc, char** argv) {
   auto teapot_geometry(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION));
   transform->add_child(teapot_geometry);
 #endif
-  
+
   //transform->add_child(plod_geometry2);
   //transform->add_child(plod_geometry3);
 
   //plod_geometry2->translate(0.0, 2.5, 0.0);
   //plod_geometry3->translate(0.0, -2.5, 0.0);
-  
+
   /////////////////////////////////////////////////////////////////////////////
   // create lighting
   /////////////////////////////////////////////////////////////////////////////
@@ -433,7 +434,7 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   //auto resolution = gua::math::vec2ui(2560, 1440);
   auto resolution = gua::math::vec2ui(1920, 1080);
-  
+
   /////////////////////////////////////////////////////////////////////////////
   // create portal camera and pipeline
   /////////////////////////////////////////////////////////////////////////////
@@ -458,7 +459,7 @@ int main(int argc, char** argv) {
   portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->background_texture("data/images/skymap.jpg");
   portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   portal_camera->set_pipeline_description(portal_pipe);
-  
+
   /////////////////////////////////////////////////////////////////////////////
   // create scene camera and pipeline
   /////////////////////////////////////////////////////////////////////////////
@@ -501,7 +502,7 @@ int main(int argc, char** argv) {
   pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_intensity(0.9);
 
   camera->set_pipeline_description(pipe);
-  
+
   /////////////////////////////////////////////////////////////////////////////
   // create window and callback setup
   /////////////////////////////////////////////////////////////////////////////
@@ -538,8 +539,8 @@ int main(int argc, char** argv) {
   std::size_t ctr = 0;
 
   ticker.on_tick.connect([&]() {
-    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()), 
-                                                              gua::math::float_t(trackball.shifty()), 
+    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
+                                                              gua::math::float_t(trackball.shifty()),
                                                               gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
     transform->set_transform(modelmatrix);
     static unsigned framecounter = 0;
@@ -549,13 +550,13 @@ int main(int argc, char** argv) {
       // modify scene
       
       light->translate(-0.3, -0.7, -1.0);
-      light->rotate(0.05, 0.0, 0.0, 1.0);
+      light->rotate(0.5, 0.0, 0.0, 1.0);
       light->translate(0.3, 0.7, 1.0);
     }
 
     if (ctr++ % 150 == 0)
-      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
-      << camera->get_rendering_fps() << ", app fps: "
+      std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
+      << window->get_rendering_fps() << ", app fps: "
       << camera->get_application_fps() << std::endl;
 
     // apply trackball matrix to object
@@ -564,8 +565,8 @@ int main(int argc, char** argv) {
       renderer.stop();
       window->close();
       loop.stop();
-    } else { 
-      renderer.queue_draw({&graph}, {camera});
+    } else {
+      renderer.queue_draw({&graph});
     }
   });
 

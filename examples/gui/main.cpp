@@ -219,7 +219,7 @@ int main(int argc, char** argv) {
     sstr.precision(1);
     sstr.setf(std::ios::fixed, std::ios::floatfield);
     sstr << "FPS: " << camera->get_application_fps()
-         << " / " << camera->get_rendering_fps();
+         << " / " << window->get_rendering_fps();
     fps->call_javascript("set_fps_text", sstr.str());
 
     // ray->rotate(1, 0, 1, 0);
@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
       window->close();
       loop.stop();
     } else {
-      renderer.queue_draw({&graph}, {camera});
+      renderer.queue_draw({&graph});
     }
   });
 

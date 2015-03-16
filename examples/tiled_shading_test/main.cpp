@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
   auto light_visibility_pass = std::make_shared<gua::LightVisibilityPassDescription>();
   light_visibility_pass->tile_power(3);
   pipe_tiled->add_pass(light_visibility_pass);
-  
+
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   resolve_pass->tone_mapping_exposure(0.1f);
   resolve_pass->debug_tiles(false);
@@ -220,8 +220,8 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     if (ctr++ % 150 == 0)
-      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
-                << camera->get_rendering_fps() << ", app fps: "
+      std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
+                << window->get_rendering_fps() << ", app fps: "
                 << camera->get_application_fps() << std::endl;
 
     window->process_events();
@@ -230,7 +230,7 @@ int main(int argc, char** argv) {
       window->close();
       loop.stop();
     } else {
-      renderer.queue_draw({&graph}, {camera});
+      renderer.queue_draw({&graph});
     }
   });
 

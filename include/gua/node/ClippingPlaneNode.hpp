@@ -19,44 +19,71 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_ABUFFER_HPP
-#define GUA_ABUFFER_HPP
+#ifndef GUA_CLIPPING_PLANE_NODE_HPP
+#define GUA_CLIPPING_PLANE_NODE_HPP
 
-// guacamole headers
 #include <gua/platform.hpp>
-#include <gua/math/math.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/RenderContext.hpp>
+#include <gua/node/Node.hpp>
 
 namespace gua {
+namespace node {
 
-class GUA_DLL ABuffer {
+/**
+ * This class is used to represent an transformation node in the SceneGraph.
+ *
+ * Because any of guacamole's Nodes stores children and transformation, the
+ * TransformationNode only exists for the convenience of explicitly limiting a
+ * Node's purpose to the transformation of several children.
+ *
+ * \ingroup gua_scenegraph
+ */
+class GUA_DLL ClippingPlaneNode : public Node {
  public:
 
-  struct SharedResource {
-    scm::gl::buffer_ptr counter;
-    scm::gl::buffer_ptr frag_list;
-    scm::gl::buffer_ptr frag_data;
-    size_t              frag_count = 0;
-  };
+  /**
+   * Constructor.
+   *
+   * This constructs an empty ClippingPlaneNode.
+   *
+   */
+  ClippingPlaneNode() {};
 
-  ABuffer() {}
-  virtual ~ABuffer() {}
+  /**
+   * Constructor.
+   *
+   * This constructs a ClippingPlaneNode with the given parameters.
+   *
+   * \param name           The name of the new ClippingPlaneNode.
+   * \param transform      A matrix to describe the ClippingPlaneNode's
+   *                       transformation.
+   */
+  ClippingPlaneNode(std::string const& name,
+            math::mat4 const& transform = math::mat4::identity());
 
-  void allocate(RenderContext& ctx, size_t buffer_size);
-  void clear(RenderContext const& ctx, math::vec2ui const& resolution);
-  void bind(RenderContext const& ctx);
-  void unbind(RenderContext const& ctx);
+
+  math::vec3  get_center() const;
+  math::vec3  get_normal() const;
+  math::vec4f get_component_vector() const;
+
+  /**
+   * Accepts a visitor and calls concrete visit method.
+   *
+   * This method implements the visitor pattern for Nodes.
+   *
+   * \param visitor  A visitor to process the ClippingPlaneNode's data.
+   */
+  void accept(NodeVisitor& visitor) override;
+
+  friend class Node;
 
  private:
 
-  const size_t FRAG_LIST_WORD_SIZE = 8;
-  const size_t FRAG_DATA_WORD_SIZE = 16;
+  std::shared_ptr<Node> copy() const override;
 
-  std::shared_ptr<SharedResource> res_ = nullptr;
-
+  /*virtual*/ void set_scenegraph(SceneGraph* scenegraph) override;
 };
 
-}
+} // namespace node {
+} // namespace gua {
 
-#endif  // GUA_ABUFFER_HPP
+#endif  // GUA_CLIPPING_PLANE_NODE_HPP

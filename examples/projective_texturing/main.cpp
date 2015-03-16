@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
-  // load material and create monkey geometry 
+  // load material and create monkey geometry
   auto projective_material(load_mat("data/materials/Projective_Texture_Material.gmd"));
   projective_material->set_uniform("projective_texture", std::string("data/textures/smiley.jpg"));
 
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
   projector_transform->translate(0.7, 0.0, 0.7);
   projector_transform->rotate(45.0, 0.0, 1.0, 0.0);
   graph.add_node("/", projector_transform);
-  
+
   auto projector_screen = graph.add_node<gua::node::ScreenNode>("/projector_transform", "projector_screen");
   projector_screen->data.set_size(gua::math::vec2(0.5f, 0.5f));
   projector_screen->translate(0.0, 0.0, -1.0);
@@ -148,12 +148,12 @@ int main(int argc, char** argv) {
       gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
 
     projector_transform->set_transform(modelmatrix);
-    
+
     // use the guacamole frustum to calculate a view mat and projection mat for the projection
-    auto projection_frustum = gua::Frustum::perspective(projector_transform->get_world_transform(), 
+    auto projection_frustum = gua::Frustum::perspective(projector_transform->get_world_transform(),
                                                    projector_screen->get_scaled_world_transform(),
                                                    0.1f, 1000.0f);
-    
+
     auto projection_mat = projection_frustum.get_projection();
     auto view_mat = projection_frustum.get_view();
 
@@ -166,8 +166,8 @@ int main(int argc, char** argv) {
       renderer.stop();
       window->close();
       loop.stop();
-    } else { 
-      renderer.queue_draw({&graph}, {camera});
+    } else {
+      renderer.queue_draw({&graph});
     }
   });
 

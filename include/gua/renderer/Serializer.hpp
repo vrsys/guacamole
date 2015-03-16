@@ -95,11 +95,12 @@ class Serializer : public NodeVisitor {
    */
   void visit(node::SerializableNode* geometry) override;
 
-  
 
  private:
 
   bool is_visible(node::Node* node) const;
+  bool check_clipping_planes(node::Node* node) const;
+
   void visit_children(node::Node* node);
 
   Frustum current_frustum_;

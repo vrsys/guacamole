@@ -19,61 +19,66 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GBUFFER_HPP
-#define GUA_GBUFFER_HPP
+#ifndef GUA_HEADLESS_SURFACE_HPP
+#define GUA_HEADLESS_SURFACE_HPP
 
 // guacamole headers
-#include <gua/renderer/enums.hpp>
-#include <gua/platform.hpp>
-#include <gua/renderer/Texture2D.hpp>
-
-#include <memory>
+#include <gua/renderer/WindowBase.hpp>
 
 namespace gua {
 
-class GUA_DLL GBuffer {
+/**
+ * A window for displaying stuff.
+ *
+ * It's a window which can display OpenGL stuff.
+ */
+class GUA_DLL HeadlessSurface : public WindowBase {
  public:
 
-  GBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
+  /**
+   * Constructor.
+   *
+   * Creates a new HeadlessSurface. It owns a RenderContext where Geomtries
+   * can be drawn to.
+   *
+   * \param description   The description of the window.
+   */
+  HeadlessSurface(Configuration const& configuration = Configuration());
 
-  void clear_all(RenderContext const& context);
-  void clear_color(RenderContext const& context);
-  
-  void set_viewport(RenderContext const& context);
+  /**
+   * Destructor.
+   *
+   * Cleans all associated memory.
+   */
+  virtual ~HeadlessSurface();
 
-  void bind(RenderContext const& context, bool pass_writes_only_color_buffer);
-  void unbind(RenderContext const& context);
+  virtual void open();
+  virtual bool get_is_open() const;
+  virtual bool should_close() const;
+  virtual void close();
 
-  void toggle_ping_pong();
+  virtual void process_events() { }
 
-  void remove_buffers(RenderContext const& ctx);
+  /**
+   * Activate the context of this window.
+   *
+   * Makes the RenderContext of this window current. All preceeding
+   * OpenGL calls will be invoked on this window.
+   */
+  virtual void set_active(bool active);
 
-  std::shared_ptr<Texture2D> const& get_current_color_buffer()  const;
-  std::shared_ptr<Texture2D> const& get_current_pbr_buffer()    const;
-  std::shared_ptr<Texture2D> const& get_current_normal_buffer() const;
-  std::shared_ptr<Texture2D> const& get_current_flags_buffer()  const;
-  std::shared_ptr<Texture2D> const& get_current_depth_buffer()  const;
-
-  unsigned get_width()  const { return width_; }
-  unsigned get_height() const { return height_; }
+  /**
+   * Ends the drawing of a new frame.
+   *
+   * This should be called when drawing a frame has been done.
+   */
+  virtual void finish_frame() const;
 
  private:
-  scm::gl::frame_buffer_ptr fbo_read_;
-  scm::gl::frame_buffer_ptr fbo_write_;
-
-  scm::gl::frame_buffer_ptr fbo_read_only_color_;
-  scm::gl::frame_buffer_ptr fbo_write_only_color_;
-
-  std::shared_ptr<Texture2D> color_buffer_read_;
-  std::shared_ptr<Texture2D> color_buffer_write_;
-  std::shared_ptr<Texture2D> pbr_buffer_;
-  std::shared_ptr<Texture2D> normal_buffer_;
-  std::shared_ptr<Texture2D> flags_buffer_;
-  std::shared_ptr<Texture2D> depth_buffer_;
-
-  unsigned width_, height_;
+  scm::gl::wm::window_ptr window_ = nullptr;
+  scm::gl::wm::headless_surface_ptr headless_surface_ = nullptr;
 };
 
 }
 
-#endif  // GUA_GBUFFER_HPP
+#endif  // GUA_WINDOW_HPP

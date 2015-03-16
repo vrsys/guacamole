@@ -26,7 +26,7 @@
 #include <gua/math/BoundingBox.hpp>
 #include <gua/math/math.hpp>
 #include <gua/scenegraph/PickResult.hpp>
- 
+
 #include <set>
 
 namespace gua {
@@ -72,7 +72,8 @@ class GUA_DLL Frustum {
   inline float get_clip_near() const { return clip_near_; }
   inline float get_clip_far() const { return clip_far_; }
 
-  bool intersects(math::BoundingBox<math::vec3> const& bbox) const;
+  bool intersects(math::BoundingBox<math::vec3> const& bbox,
+                  std::vector<math::vec4f> const& global_planes = {}) const;
   bool contains(math::vec3 const& point) const;
 
   std::set<PickResult> const ray_test(node::RayNode const& ray,
@@ -91,7 +92,7 @@ class GUA_DLL Frustum {
   math::mat4 screen_transform_;
   math::mat4 projection_;
   math::mat4 view_;
-  std::vector<math::vec4> planes_;
+  std::vector<math::vec4f> planes_;
   float clip_near_;
   float clip_far_;
 
