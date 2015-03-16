@@ -372,7 +372,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
           MaterialLoader material_loader;
           FbxSurfaceMaterial* mat = node->GetMaterial(j);
           material = material_loader.load_material(*mat, file_name);
-          material->set_uniform("Roughness", 0.6f);
         }
 
         materials.push_back(material);
@@ -417,7 +416,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
       MaterialLoader material_loader;
       aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
       material = material_loader.load_material(ai_material, file_name);
-      material->set_uniform("Roughness", 0.6f);
     }
     materials.push_back(material);
   }
