@@ -339,7 +339,7 @@ std::string MaterialLoader::get_file_name(std::string const& path) {
   std::string file_name{path};
   auto path_end(path.find_last_of("/\\"));
   if(path_end != std::string::npos) {
-    file_name = path.substr(path_end + 1);
+    file_name = path.substr(path_end + 1, file_name.length() - path_end - 2);
   }
   return file_name;
 }
@@ -355,33 +355,19 @@ std::set<std::string> MaterialLoader::parse_unreal_material(std::string const& f
   std::string line;
   std::ifstream file{file_name};
 
-  if(file.is_open())
-  {
-    // std::cout << "Loading material file '" <<  file_name << "'" << std::endl;
-
-    while(getline(file, line))
-    {
-      std::string item;
-      std::stringstream ss(line);
-      ss >> item;
-      if(item.find("BaseColor") != std::string::npos)
-      {
-        // std::cout << item << std::endl;
-        // string name;
-        // ss >> name;
-      }
-      else if(item.find("Texture=") != std::string::npos) {
-        std::string value = get_file_name(item);
+  if(file.is_open()) {
+    while(getline(file, line)) {
+      if(line.find("Texture=") != std::string::npos) {
+        std::string value = get_file_name(line);
         std::string name = value.substr(value.find(".") + 1, value.size() - value.find(".") - 2);
+
         if(textures.find(name) == textures.end()) {
           textures.insert(name);
-          // std::cout << name << std::endl;
         } 
       }
     }
-    file.close();
 
-    // std::cout << "Loading file '" << file_name << "' finished" << std::endl;
+    file.close();
   }
   else
   {
