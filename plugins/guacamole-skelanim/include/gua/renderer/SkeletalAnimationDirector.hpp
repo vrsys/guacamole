@@ -97,6 +97,7 @@ private:
   bool firstRun_;
   bool has_anims_;
 
+  float blending_start_;
   float next_blending_end_;
   float blendDuration_ = 0.5f;
   Timer timer_;

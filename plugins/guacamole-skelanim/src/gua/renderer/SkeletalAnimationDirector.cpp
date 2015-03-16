@@ -168,14 +168,14 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
           default: blendFactor_ = blend::linear(time);
         }
         
-        blend_pose(currentTime, *animations_[last_anim_num_], *animations_[curr_anim_num_], transforms);
+        blend_pose(currentTime-blending_start_, *animations_[last_anim_num_], *animations_[curr_anim_num_], transforms);
       }
       //if(currentTime < next_transition_) {
       else {
         if (blendFactor_ != 1.0){
           blendFactor_ = 1.0;
         }
-        calculate_matrices(currentTime, *animations_[curr_anim_num_], transforms);  
+        calculate_matrices(currentTime-blending_start_, *animations_[curr_anim_num_], transforms);  
       }
       /*else {
         next_transition_ = currentTime + playDuration;
@@ -185,7 +185,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms()
     }
     //blend two anims
     case Playback::partial: {
-      partial_blend(currentTime, *animations_[0], *animations_[1], "Waist", transforms);
+      partial_blend(currentTime-blending_start_, *animations_[0], *animations_[1], "Waist", transforms);
       break;
     }
     default: Logger::LOG_WARNING << "playback mode not found" << std::endl; break;
@@ -255,9 +255,9 @@ void SkeletalAnimationDirector::set_animation(std::string const& animation_name)
   if(animation_mapping_.find(animation_name) != animation_mapping_.end()) {
     last_anim_num_ = curr_anim_num_;
     curr_anim_num_ = animation_mapping_.at(animation_name);
-    float currentTime = timer_.get_elapsed();
     //next_transition_ = currentTime + animations_[curr_anim_num_]->get_duration();
-    next_blending_end_ = currentTime + blendDuration_;
+    blending_start_ = timer_.get_elapsed();
+    next_blending_end_ = blending_start_ + blendDuration_;
   }
   else {
     gua::Logger::LOG_WARNING << "No matching animation with name: "<< animation_name<<" found!" << std::endl;
