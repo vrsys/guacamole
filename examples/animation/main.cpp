@@ -84,22 +84,22 @@ int main(int argc, char** argv) {
 
   // auto bob(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(bob, "data/objects/bob/boblampclean.md5anim", 0);
-  auto bob(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  bob->set_draw_bounding_box(true);
-  graph.add_node("/transform", bob);
-  loader.load_animation(bob, "data/objects/marine/crouch.md5anim", "unterschiedlich", 0);
-  loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", "unterschiedlich", 0);
-  loader.load_animation(bob, "data/objects/marine/run.md5anim", "unterschiedlich", 0);
-  loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", "unterschiedlich", 0);
+  // auto bob(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // bob->set_draw_bounding_box(true);
+  // graph.add_node("/transform", bob);
+  // loader.load_animation(bob, "data/objects/marine/crouch.md5anim", "unterschiedlich", 0);
+  // loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", "unterschiedlich", 0);
+  // loader.load_animation(bob, "data/objects/marine/run.md5anim", "unterschiedlich", 0);
+  // loader.load_animation(bob, "data/objects/marine/fists_idle.md5anim", "unterschiedlich", 0);
 
 
   // auto fbx(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/barrel.fbx", mat1, gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   
-  // auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/Necris/Necris_LP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // loader.load_animation(fbx, "data/objects/fbx/Necris/Idle_Ready_Pis.FBX", "unterschiedlich", 0);
+  auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/Necris/Necris_LP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  loader.load_animation(fbx, "data/objects/fbx/Necris/Idle_Ready_Pis.FBX", "unterschiedlich", 0);
   // loader.load_animation(fbx, "data/objects/fbx/Necris/Taunt_NoNo.FBX", "unterschiedlich", 0);
-  auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/Maw/Maw_J_Laygo.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  loader.load_animation(fbx, "data/objects/fbx/Maw/Walk.FBX", "unterschiedlich", 0);
+  // auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/Maw/Maw_J_Laygo.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  // loader.load_animation(fbx, "data/objects/fbx/Maw/Walk.FBX", "unterschiedlich", 0);
   // auto fbx(loader.create_geometry_from_file("fbx", "data/objects/fbx/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   // loader.load_animation(fbx, "data/objects/fbx/Idle.FBX", "unterschiedlich", 0);
   // loader.load_animation(fbx, "data/objects/fbx/Walk.FBX", "unterschiedlich", 0);
