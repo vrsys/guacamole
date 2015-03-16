@@ -40,8 +40,8 @@ void renderNode(PipelinePass& pass,
                                 quad_node->data.get_flip_y() ? -1 : 1));
   UniformValue opacity(quad_node->data.get_opacity());
 
-  auto width(pipe.get_gbuffer().get_width());
-  auto height(pipe.get_gbuffer().get_height());
+  auto width(pipe.get_current_target().get_width());
+  auto height(pipe.get_current_target().get_height());
 
   UniformValue size(scm::math::vec2f(1.0 * quad_node->data.get_size().x / width,
                                      1.0 * quad_node->data.get_size().y / height));
@@ -86,7 +86,6 @@ TexturedScreenSpaceQuadPassDescription::TexturedScreenSpaceQuadPassDescription()
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = true;
-  doClear_ = false;
   rendermode_ = RenderMode::Callback;
 
   depth_stencil_state_ =

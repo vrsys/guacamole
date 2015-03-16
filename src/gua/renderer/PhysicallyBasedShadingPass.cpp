@@ -156,7 +156,6 @@ PhysicallyBasedShadingPassDescription::PhysicallyBasedShadingPassDescription()
 
   needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
   writes_only_color_buffer_ = true; // we write out a color
-  doClear_ = false;
   rendermode_ = RenderMode::Callback;
 
   depth_stencil_state_ = boost::make_optional(

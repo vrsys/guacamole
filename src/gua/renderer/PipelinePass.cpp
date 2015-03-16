@@ -59,7 +59,6 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d,
   , blend_state_(nullptr)
   , needs_color_buffer_as_input_(d.needs_color_buffer_as_input_)
   , writes_only_color_buffer_(d.writes_only_color_buffer_)
-  , doClear_(d.doClear_)
   , rendermode_(d.rendermode_)
   , process_(d.process_)
   , name_(d.name_)
@@ -92,11 +91,8 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
   if (RenderMode::Custom == rendermode_) {
     process_(*this, desc, pipe);
   } else {
-    pipe.get_gbuffer().bind(ctx, writes_only_color_buffer_);
-    pipe.get_gbuffer().set_viewport(ctx);
-    pipe.get_abuffer().bind(ctx);
-    if (doClear_)
-      pipe.get_gbuffer().clear_color(ctx);
+    pipe.get_current_target().bind(ctx, !writes_only_color_buffer_);
+    pipe.get_current_target().set_viewport(ctx);
     if (depth_stencil_state_)
       ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
     if (blend_state_)
@@ -112,7 +108,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
     pipe.bind_gbuffer_input(shader_);
     pipe.bind_light_table(shader_);
 
-    std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / " + name_;
+    std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / " + name_;
     pipe.begin_gpu_query(ctx, gpu_query_name);
 
     if (RenderMode::Callback == rendermode_) {
@@ -123,12 +119,9 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
 
     pipe.end_gpu_query(ctx, gpu_query_name);
 
-    pipe.get_abuffer().unbind(ctx);
-    pipe.get_gbuffer().unbind(ctx);
+    pipe.get_current_target().unbind(ctx);
     ctx.render_context->reset_state_objects();
   }
-
-  
 }
 
 void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderContext const& ctx) {

@@ -18,59 +18,41 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-// class header
-#include <gua/renderer/PLODPass.hpp>
+
+#ifndef GUA_RENDER_TARGET_HPP
+#define GUA_RENDER_TARGET_HPP
 
 // guacamole headers
-#include <gua/renderer/PLODResource.hpp>
-#include <gua/renderer/PLODRenderer.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/databases.hpp>
-#include <gua/utils/Logger.hpp>
+#include <gua/renderer/enums.hpp>
+#include <gua/platform.hpp>
+#include <gua/renderer/Texture2D.hpp>
 
-#include <gua/config.hpp>
-
-#include <scm/gl_core/shader_objects.h>
-
-// external headers
-#include <sstream>
-#include <fstream>
-#include <regex>
-#include <list>
+#include <memory>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
+class GUA_DLL RenderTarget {
+ public:
 
-PLODPassDescription::PLODPassDescription()
-  : PipelinePassDescription()
-{
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  rendermode_ = RenderMode::Custom;
-}
+  RenderTarget(math::vec2ui const& resolution);
+  virtual ~RenderTarget() {}
 
-////////////////////////////////////////////////////////////////////////////////
+  virtual void clear(RenderContext const& context) = 0;  
+  virtual void set_viewport(RenderContext const& context);
 
-std::shared_ptr<PipelinePassDescription> PLODPassDescription::make_copy() const {
-  return std::make_shared<PLODPassDescription>(*this);
-}
+  virtual void bind(RenderContext const& context, bool write_depth) = 0;
+  virtual void unbind(RenderContext const& context);
 
-////////////////////////////////////////////////////////////////////////////////
+  virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const = 0;
 
-PipelinePass PLODPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
-{
-  PipelinePass pass{ *this, ctx, substitution_map };
+  unsigned            get_width()  const      { return resolution_.x; }
+  unsigned            get_height() const      { return resolution_.y; }
+  math::vec2ui const& get_resolution() const  { return resolution_; }
 
-  auto renderer = std::make_shared<PLODRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
-
-  pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
-  };
-
-  return pass;
-}
+ private:
+  math::vec2ui resolution_;
+};
 
 }
+
+#endif  // GUA_RENDER_TARGET_HPP

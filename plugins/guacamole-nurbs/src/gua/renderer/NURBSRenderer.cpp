@@ -55,7 +55,6 @@ namespace gua {
 
     needs_color_buffer_as_input_ = false;
     writes_only_color_buffer_ = false;
-    doClear_ = false;
     rendermode_ = RenderMode::Custom;
 
     std::shared_ptr<scm::gl::buffer_ptr> material_uniform_storage_buffer = std::make_shared<scm::gl::buffer_ptr>(nullptr);
@@ -74,8 +73,8 @@ namespace gua {
 
         RenderContext const& ctx(pipe.get_context());
 
-        bool writes_only_color_buffer = false;
-        pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
+        bool write_depth = true;
+        pipe.get_gbuffer().bind(ctx, write_depth);
         pipe.get_gbuffer().set_viewport(ctx);
         int view_id(pipe.get_camera().config.get_view_id());
 
@@ -302,8 +301,8 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
     RenderContext const& ctx(pipe.get_context());
 
-    bool writes_only_color_buffer = false;
-    pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
+    bool write_depth = true;
+    pipe.get_gbuffer().bind(ctx, write_depth);
     pipe.get_gbuffer().set_viewport(ctx);
 
     int view_id(pipe.get_camera().config.get_view_id());

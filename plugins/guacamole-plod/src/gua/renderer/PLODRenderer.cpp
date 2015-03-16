@@ -317,7 +317,7 @@ namespace gua {
 
     RenderContext const& ctx(pipe.get_context());
     
-    std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / PLODPass";
+    std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODPass";
     pipe.begin_cpu_query(cpu_query_name_plod_total);
     
     ///////////////////////////////////////////////////////////////////////////
@@ -336,7 +336,7 @@ namespace gua {
     ///////////////////////////////////////////////////////////////////////////
     // resource initialization
     ///////////////////////////////////////////////////////////////////////////
-    scm::math::vec2ui const& render_target_dims = pipe.get_camera().config.get_resolution();
+    scm::math::vec2ui const& render_target_dims = pipe.get_scene_camera().config.get_resolution();
 
     //allocate GPU resources if necessary
     bool resize_resource_containers = false;
@@ -389,7 +389,7 @@ namespace gua {
       gua::Logger::LOG_ERROR << "Error: PLODRenderer::render() : Failed to create programs. " << e.what() << std::endl;
     }
 
-    pipe.get_gbuffer().set_viewport(ctx);
+    pipe.get_current_target().set_viewport(ctx);
 
     ///////////////////////////////////////////////////////////////////////////
     // prepare PBR-cut update
@@ -416,7 +416,7 @@ namespace gua {
     cuts->SendCamera(context_id, pbr_view_id, cut_update_cam);
     cuts->SendHeightDividedByTopMinusBottom(context_id, pbr_view_id, height_divided_by_top_minus_bottom);
 
-    auto& gua_depth_buffer = pipe.get_gbuffer().get_current_depth_buffer()->get_buffer(ctx);
+    auto& gua_depth_buffer = pipe.get_current_target().get_depth_buffer()->get_buffer(ctx);
 
     ///////////////////////////////////////////////////////////////////////////
     // fullscreen gbuffer depth_conversion_pass
@@ -428,7 +428,7 @@ namespace gua {
         std::cout << "Log to lin pass program not instanciated\n";
       }
 
-      std::string const gpu_query_name_depth_conversion = "GPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / PLODRenderer::DepthConversionPass";
+      std::string const gpu_query_name_depth_conversion = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::DepthConversionPass";
       pipe.begin_gpu_query(ctx, gpu_query_name_depth_conversion);
 
       log_to_lin_conversion_pass_program_->use(ctx);
@@ -479,7 +479,7 @@ namespace gua {
     {
       scm::gl::context_all_guard context_guard(ctx.render_context);
 
-      std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / PLODRenderer::DepthPass";
+      std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::DepthPass";
       pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
 
       ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
@@ -570,7 +570,7 @@ namespace gua {
     {
       scm::gl::context_all_guard context_guard(ctx.render_context);
 
-      std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / PLODRenderer::AccumulationPass";
+      std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::AccumulationPass";
       pipe.begin_gpu_query(ctx, gpu_query_name_accum_pass);
 
       ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
@@ -580,7 +580,7 @@ namespace gua {
 
       accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
 
-      int view_id(pipe.get_camera().config.get_view_id());
+      int view_id(pipe.get_scene_camera().config.get_view_id());
 
       bool program_changed = false;
       //loop through all models and render accumulation pass
@@ -645,8 +645,8 @@ namespace gua {
       pipe.end_gpu_query(ctx, gpu_query_name_accum_pass);
     }
 
-    bool writes_only_color_buffer = false;
-    pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
+    bool write_depth = true;
+    pipe.get_current_target().bind(ctx, write_depth);
 
      //////////////////////////////////////////////////////////////////////////
      // 3. normalization pass 
@@ -654,7 +654,7 @@ namespace gua {
      {
        scm::gl::context_all_guard context_guard(ctx.render_context);
 
-       std::string const gpu_query_name_normalization_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / PLODRenderer::NormalizationPass";
+       std::string const gpu_query_name_normalization_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::NormalizationPass";
        pipe.begin_gpu_query(ctx, gpu_query_name_normalization_pass);
 
        normalization_pass_program_->use(ctx);
@@ -683,7 +683,7 @@ namespace gua {
      //////////////////////////////////////////////////////////////////////////
      // Draw finished -> unbind g-buffer
      //////////////////////////////////////////////////////////////////////////
-     pipe.get_gbuffer().unbind(ctx);
+     pipe.get_current_target().unbind(ctx);
 
      pipe.end_cpu_query(cpu_query_name_plod_total); 
   }

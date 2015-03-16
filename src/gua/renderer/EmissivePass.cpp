@@ -32,7 +32,6 @@ EmissivePassDescription::EmissivePassDescription()
 
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
-  doClear_ = true;
   rendermode_ = RenderMode::Quad;
 
   depth_stencil_state_ = boost::make_optional(

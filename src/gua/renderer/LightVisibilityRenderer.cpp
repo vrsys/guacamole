@@ -33,11 +33,11 @@ void LightVisibilityRenderer::render(PipelinePass& pass,
   prepare_light_table(pipe, transforms, lights);
   unsigned sun_lights_num = pipe.get_scene().nodes[std::type_index(typeid(node::SunLightNode))].size();
   math::vec2ui effective_resolution =
-      pipe.get_light_table().invalidate(ctx, pipe.get_camera().config.get_resolution(),
+      pipe.get_light_table().invalidate(ctx, pipe.get_scene_camera().config.get_resolution(),
                                         lights, tile_power, sun_lights_num);
 
   math::vec2ui rasterizer_resolution = (enable_fullscreen_fallback)
-      ? pipe.get_camera().config.get_resolution() : effective_resolution;
+      ? pipe.get_scene_camera().config.get_resolution() : effective_resolution;
 
   if (!empty_fbo_) {
     empty_fbo_ = ctx.render_device->create_frame_buffer();
@@ -128,7 +128,8 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
     LightTable::LightBlock light_block {};
 
     if (light->data.get_enable_shadows()) {
-      // not implemented yet
+      // light_block.shadow_map = pipe.render_shadow_map(pipe, light);
+      light_block.shadow_offset = light->data.get_shadow_offset();
     }
 
     light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, 0);
@@ -140,7 +141,7 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
     light_block.type            = 1;
     light_block.diffuse_enable  = light->data.get_enable_diffuse_shading();
     light_block.specular_enable = light->data.get_enable_specular_shading();
-    light_block.casts_shadow    = 0; //light->data.get_enable_shadows();
+    light_block.casts_shadow    = light->data.get_enable_shadows();
 
     lights.push_back(light_block);
     transforms.push_back(model_mat);

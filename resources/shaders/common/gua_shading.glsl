@@ -15,6 +15,9 @@ struct LightSource {
   bool   specular_enable;
   bool   casts_shadow;
   //uint   pad;
+
+  float  shadow_offset;
+  uvec2  shadow_map;
 };
 
 layout(std140, binding=1) uniform lightBlock {

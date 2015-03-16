@@ -24,6 +24,7 @@
 
 // guacamole headers
 
+#include <gua/node/SpotLightNode.hpp>
 #include <gua/renderer/Serializer.hpp>
 #include <gua/renderer/ShadowMapBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -35,25 +36,88 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ShadowMap::ShadowMap()
-  : serializer_(gua::make_unique<Serializer>()),
-    buffer_(nullptr),
-    projection_view_matrices_(),
-    camera_block_(nullptr) {
-}
-
+// ShadowMap::ShadowMap()
+//   : serializer_(gua::make_unique<Serializer>()),
+//     buffer_(nullptr),
+//     projection_view_matrices_(),
+//     camera_block_(nullptr) {
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ShadowMap::~ShadowMap() {
-  if (buffer_) {
-    delete buffer_;
+math::vec2ui ShadowMap::draw(Pipeline& pipe, node::SpotLightNode* light) {
+
+  auto& current_mask(pipe.get_scene_camera().config.mask());
+
+  // has the shadow map been rendered this frame already?
+  auto cached_shadow_map(res_->used_shadow_maps.find(light));
+
+  if (cached_shadow_map != res_->used_shadow_maps.end() && cached_shadow_map->second.render_mask == current_mask) {
+    return cached_shadow_map->second.shadow_map->get_handle(pipe.get_context());
+  }
+
+  // if not, find an unused shadow map with the correct size
+  std::shared_ptr<Texture2D> shadow_map;
+  unsigned map_size(light->data.shadow_map_size());
+
+  for (auto it(res_->unused_shadow_maps.begin()); it != res_->unused_shadow_maps.end(); ++it) {
+    if ((*it)->width() == map_size) {
+      shadow_map = *it;
+      res_->unused_shadow_maps.erase(it);
+      break;
+    }
+  } 
+
+  // if there is none, create a new one
+  if (!shadow_map) {
+    scm::gl::sampler_state_desc state(
+      scm::gl::FILTER_MIN_MAG_NEAREST,
+      scm::gl::WRAP_MIRRORED_REPEAT,
+      scm::gl::WRAP_MIRRORED_REPEAT
+    );
+    shadow_map = std::make_shared<Texture2D>(map_size, map_size, scm::gl::FORMAT_D24, 1, state);
+  }
+
+  // pipe.render_shadow_map(shadow_map, light);
+
+  res_->used_shadow_maps[light] = {shadow_map, current_mask};
+
+  return shadow_map->get_handle(pipe.get_context());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadowMap::allocate(RenderContext& ctx) {
+  if (!res_) {
+    res_ = ctx.resources.get<SharedResource>();
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
+void ShadowMap::clear_cache() {
+  if (res_) {
+    res_->unused_shadow_maps.clear();
+
+    for (auto& cached: res_->used_shadow_maps) {
+      res_->unused_shadow_maps.push_back(cached.second.shadow_map);
+    }
+
+    res_->used_shadow_maps.clear();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// ShadowMap::~ShadowMap() {
+//   if (buffer_) {
+//     delete buffer_;
+//   }
+// }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
 //     //check whether shadow map size is sufficient
 //     if (buffer_ && buffer_->width() < map_size) {
 //       buffer_->remove_buffers(ctx);
@@ -82,15 +146,15 @@ void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
 //     if (!camera_block_)
 //       camera_block_ = std::make_shared<CameraUniformBlock>(ctx.render_device);
 
-}
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::cleanup(RenderContext const& context) {
-  if (buffer_) {
-    buffer_->remove_buffers(context);
-  } 
-}
+// void ShadowMap::cleanup(RenderContext const& context) {
+//   if (buffer_) {
+//     buffer_->remove_buffers(context);
+//   } 
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -247,42 +311,42 @@ void ShadowMap::cleanup(RenderContext const& context) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::render(Pipeline* pipe,
-                       math::mat4 const& transform,
-                       unsigned map_size) {
+// void ShadowMap::render(Pipeline* pipe,
+//                        math::mat4 const& transform,
+//                        unsigned map_size) {
 
-  auto const& ctx(pipe->get_context());
+//   auto const& ctx(pipe->get_context());
 
-  // init members
-  update_members(ctx, map_size);
-  projection_view_matrices_ = std::vector<math::mat4>(1);
+//   // init members
+//   update_members(ctx, map_size);
+//   projection_view_matrices_ = std::vector<math::mat4>(1);
 
-  // buffer_->bind(ctx);
-  // buffer_->clear_depth_stencil_buffer(ctx);
+//   // buffer_->bind(ctx);
+//   // buffer_->clear_depth_stencil_buffer(ctx);
 
-  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-  ctx.render_context->set_rasterizer_state(rasterizer_state_);
-  ctx.render_context->set_viewport(scm::gl::viewport(
-    scm::math::vec2f(0.f, 0.f),
-    scm::math::vec2f(map_size, map_size))
-  );
+//   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+//   ctx.render_context->set_rasterizer_state(rasterizer_state_);
+//   ctx.render_context->set_viewport(scm::gl::viewport(
+//     scm::math::vec2f(0.f, 0.f),
+//     scm::math::vec2f(map_size, map_size))
+//   );
 
-  // calculate light frustum
-  math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
-  screen_transform = transform * screen_transform;
+//   // calculate light frustum
+//   math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
+//   screen_transform = transform * screen_transform;
 
-  Frustum shadow_frustum = Frustum::perspective(
-    transform, screen_transform,
-    pipe->get_camera().config.near_clip(), pipe->get_camera().config.far_clip()
-  );
+//   Frustum shadow_frustum = Frustum::perspective(
+//     transform, screen_transform,
+//     pipe->get_camera().config.near_clip(), pipe->get_camera().config.far_clip()
+//   );
 
-  // render geometries
-  // render_geometry(Pipeline* pipe, shadow_frustum, 0, map_size);
+//   // render geometries
+//   // render_geometry(Pipeline* pipe, shadow_frustum, 0, map_size);
 
-  ctx.render_context->reset_state_objects();
+//   ctx.render_context->reset_state_objects();
 
-  // buffer_->unbind(ctx);
-}
+//   // buffer_->unbind(ctx);
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -18,59 +18,31 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
+
 // class header
-#include <gua/renderer/PLODPass.hpp>
-
-// guacamole headers
-#include <gua/renderer/PLODResource.hpp>
-#include <gua/renderer/PLODRenderer.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/databases.hpp>
-#include <gua/utils/Logger.hpp>
-
-#include <gua/config.hpp>
-
-#include <scm/gl_core/shader_objects.h>
-
-// external headers
-#include <sstream>
-#include <fstream>
-#include <regex>
-#include <list>
+#include <gua/renderer/RenderTarget.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PLODPassDescription::PLODPassDescription()
-  : PipelinePassDescription()
-{
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  rendermode_ = RenderMode::Custom;
+RenderTarget::RenderTarget(math::vec2ui const& resolution):
+  resolution_(resolution) {}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RenderTarget::set_viewport(RenderContext const& ctx) {
+  if (ctx.render_context)
+    ctx.render_context->set_viewport(
+    scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(resolution_)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> PLODPassDescription::make_copy() const {
-  return std::make_shared<PLODPassDescription>(*this);
+void RenderTarget::unbind(RenderContext const& ctx) {
+  ctx.render_context->reset_framebuffer();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass PLODPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
-{
-  PipelinePass pass{ *this, ctx, substitution_map };
-
-  auto renderer = std::make_shared<PLODRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
-
-  pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
-  };
-
-  return pass;
-}
 
 }

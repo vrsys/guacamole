@@ -65,7 +65,6 @@ class GUA_DLL PipelinePassDescription {
 
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
-  bool doClear_ = false;
   unsigned mod_count_ = 0; 
 
   mutable bool recompile_shaders_ = true;
@@ -128,7 +127,6 @@ class GUA_DLL PipelinePass {
 
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
-  bool doClear_ = false;
   RenderMode rendermode_ = RenderMode::Custom;
   std::string name_ = "PipelinePass";
 

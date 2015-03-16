@@ -80,6 +80,10 @@ class GUA_DLL Mask {
     return user_data_;
   }
 
+  bool operator==(Mask const& other) const {
+    return whitelist == other.whitelist && blacklist == other.blacklist;
+  }
+
  private:
   void* user_data_ = nullptr;
 

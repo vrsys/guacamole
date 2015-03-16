@@ -47,7 +47,6 @@ namespace gua {
 Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
     : context_(ctx),
       gbuffer_(new GBuffer(ctx, resolution)),
-      abuffer_(),
       camera_block_(ctx.render_device),
       light_table_(new LightTable),
       current_graph_(nullptr),
@@ -61,14 +60,11 @@ Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
                                  scm::math::vec2f(-1.f, -1.f),
                                  scm::math::vec2f(1.f, 1.f)))
   {
-  abuffer_.allocate(ctx,
-                    last_description_.get_enable_abuffer()
-                        ? last_description_.get_abuffer_size()
-                        : 0);
+
+  shadow_map_.allocate(ctx);
 
   const float th = last_description_.get_blending_termination_threshold();
-  global_substitution_map_["enable_abuffer"] =
-      last_description_.get_enable_abuffer() ? "1" : "0";
+  global_substitution_map_["enable_abuffer"] = "0";
   global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
   global_substitution_map_["abuf_blending_termination_threshold"] =
       std::to_string(th);
@@ -88,13 +84,13 @@ std::vector<PipelinePass> const& Pipeline::get_passes() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::process(
+std::shared_ptr<Texture2D> Pipeline::render_scene(
     CameraMode mode,
     node::SerializedCameraNode const& camera,
     std::vector<std::unique_ptr<const SceneGraph> > const& scene_graphs) {
   // return if pipeline is disabled
   if (!camera.config.get_enabled()) {
-    return;
+    return std::shared_ptr<Texture2D>();
   }
 
   // store the current camera data
@@ -109,7 +105,7 @@ void Pipeline::process(
       context_.render_pipelines.insert(
           std::make_pair(cam.uuid, std::make_shared<Pipeline>(context_, camera.config.get_resolution())));
     }
-    context_.render_pipelines.at(cam.uuid)->process(mode, cam, scene_graphs);
+    context_.render_pipelines.at(cam.uuid)->render_scene(mode, cam, scene_graphs);
   }
 
   // recreate gbuffer if resolution changed
@@ -142,7 +138,7 @@ void Pipeline::process(
   }
 
   if (reload_abuffer) {
-    abuffer_.allocate(context_,
+    gbuffer_->allocate_a_buffer(context_,
                       last_description_.get_enable_abuffer()
                           ? last_description_.get_abuffer_size()
                           : 0);
@@ -191,9 +187,8 @@ void Pipeline::process(
                         camera.config.get_resolution());
   bind_camera_uniform_block(0);
 
-  // clear gbuffer and abuffer
-  gbuffer_->clear_all(context_);
-  abuffer_.clear(context_, camera.config.resolution());
+  // clear gbuffer
+  gbuffer_->clear(context_);
 
   // process all passes
   for (int i(0); i < passes_.size(); ++i) {
@@ -221,37 +216,25 @@ void Pipeline::process(
   gbuffer_->toggle_ping_pong();
 
   // add texture to texture database
-  auto const& tex(gbuffer_->get_current_color_buffer());
+  auto const& tex(gbuffer_->get_color_buffer());
   auto tex_name(camera.config.get_output_texture_name());
 
   if (tex_name != "") {
     TextureDatabase::instance()->add(tex_name, tex);
   }
 
-  if (camera.config.get_output_window_name() != "") {
-    auto window = WindowDatabase::instance()->lookup(
-        camera.config.get_output_window_name());
-    if (window) {
-      window->display(tex, mode != CameraMode::RIGHT);
-    }
-  }
+  return tex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GBuffer& Pipeline::get_gbuffer() const {
+RenderTarget& Pipeline::get_current_target() const {
   return *gbuffer_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ABuffer& Pipeline::get_abuffer() {
-  return abuffer_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-node::SerializedCameraNode const& Pipeline::get_camera() const {
+node::SerializedCameraNode const& Pipeline::get_scene_camera() const {
   return current_camera_;
 }
 
@@ -293,19 +276,19 @@ void Pipeline::bind_gbuffer_input(
       "gua_resolution");
 
   shader->set_uniform(context_,
-                      gbuffer_->get_current_color_buffer()->get_handle(context_),
+                      gbuffer_->get_color_buffer()->get_handle(context_),
                       "gua_gbuffer_color");
   shader->set_uniform(context_,
-                      gbuffer_->get_current_pbr_buffer()->get_handle(context_),
+                      gbuffer_->get_pbr_buffer()->get_handle(context_),
                       "gua_gbuffer_pbr");
   shader->set_uniform(context_,
-                      gbuffer_->get_current_normal_buffer()->get_handle(context_),
+                      gbuffer_->get_normal_buffer()->get_handle(context_),
                       "gua_gbuffer_normal");
   shader->set_uniform(context_,
-                      gbuffer_->get_current_flags_buffer()->get_handle(context_),
+                      gbuffer_->get_flags_buffer()->get_handle(context_),
                       "gua_gbuffer_flags");
   shader->set_uniform(context_,
-                      gbuffer_->get_current_depth_buffer()->get_handle(context_),
+                      gbuffer_->get_depth_buffer()->get_handle(context_),
                       "gua_gbuffer_depth");
 }
 

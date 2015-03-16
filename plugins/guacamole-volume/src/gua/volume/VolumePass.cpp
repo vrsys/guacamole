@@ -37,7 +37,6 @@ VolumePassDescription::VolumePassDescription()
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = true;
-  doClear_ = false;
   rendermode_ = RenderMode::Custom;
 }
 

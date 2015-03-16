@@ -23,34 +23,45 @@
 #define GUA_SHADOW_MAP_HPP
 
 // guacamole headers
-#include <gua/math.hpp>
+#include <gua/renderer/RenderTarget.hpp>
 #include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/CameraUniformBlock.hpp>
-
-#include <unordered_map>
-#include <typeindex>
+#include <gua/utils/Mask.hpp>
 
 namespace gua {
 
-class Serializer;
-class ShadowMapBuffer;
-class Frustum;
-class Pipeline;
+namespace node {
+  class SpotLightNode;
+}
 
-class SceneGraph;
+class Pipeline;
 
 /**
  *
  */
-class ShadowMap {
+class ShadowMap /*: public RenderTarget*/ {
  public:
 
-  ShadowMap();
-  virtual ~ShadowMap();
+  struct CachedShadowMap {
+    std::shared_ptr<Texture2D> shadow_map;
+    Mask                       render_mask;
+  };
 
-  void render(Pipeline* pipe,
-              math::mat4 const& transform,
-              unsigned map_size);
+  struct SharedResource {
+    std::list<std::shared_ptr<Texture2D>>                     unused_shadow_maps;
+    std::unordered_map<node::SpotLightNode*, CachedShadowMap> used_shadow_maps;
+  };
+
+  // ShadowMap();
+  // virtual ~ShadowMap();
+
+  math::vec2ui draw(Pipeline& pipe, node::SpotLightNode* light);
+
+  void allocate(RenderContext& ctx);
+  void clear_cache();
+
+  // void render(Pipeline* pipe,
+  //             math::mat4 const& transform,
+  //             unsigned map_size);
 
   // void render_cascaded(RenderContext const& ctx,
   //             SceneGraph const& scene_graph,
@@ -66,29 +77,31 @@ class ShadowMap {
   //             float split_4,
   //             float near_clipping_in_sun_direction);
 
-  ShadowMapBuffer*               get_buffer() const {return buffer_;}
-  std::vector<math::mat4> const& get_projection_view_matrices() const {return projection_view_matrices_;}
+  // ShadowMapBuffer*               get_buffer() const {return buffer_;}
+  // std::vector<math::mat4> const& get_projection_view_matrices() const {return projection_view_matrices_;}
 
-  virtual void cleanup(RenderContext const& context);
+  // virtual void cleanup(RenderContext const& context);
 
-  inline std::size_t const uuid() const { return reinterpret_cast<std::size_t>(buffer_); }
+  // inline std::size_t const uuid() const { return reinterpret_cast<std::size_t>(buffer_); }
 
  private:
 
-  void update_members(RenderContext const& ctx, unsigned map_size);
-  void render_geometry(
-    Pipeline* pipe, Frustum const& shadow_frustum,
-    unsigned cascade, unsigned map_size
-  );
+  std::shared_ptr<SharedResource> res_ = nullptr;
 
-  std::unique_ptr<Serializer> serializer_;
+  // void update_members(RenderContext const& ctx, unsigned map_size);
+  // void render_geometry(
+  //   Pipeline* pipe, Frustum const& shadow_frustum,
+  //   unsigned cascade, unsigned map_size
+  // );
 
-  ShadowMapBuffer* buffer_;
+  // std::unique_ptr<Serializer> serializer_;
 
-  scm::gl::depth_stencil_state_ptr          depth_stencil_state_;
-  scm::gl::rasterizer_state_ptr             rasterizer_state_;
-  std::vector<math::mat4>                   projection_view_matrices_;
-  std::shared_ptr<gua::CameraUniformBlock>  camera_block_;
+  // ShadowMapBuffer* buffer_;
+
+  // scm::gl::depth_stencil_state_ptr          depth_stencil_state_;
+  // scm::gl::rasterizer_state_ptr             rasterizer_state_;
+  // std::vector<math::mat4>                   projection_view_matrices_;
+  // std::shared_ptr<gua::CameraUniformBlock>  camera_block_;
 };
 
 }

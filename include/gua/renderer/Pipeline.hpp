@@ -25,7 +25,7 @@
 #include <gua/node/CameraNode.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ABuffer.hpp>
+#include <gua/renderer/ShadowMap.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/LightTable.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
@@ -64,16 +64,16 @@ public:
   Pipeline(RenderContext& ctx, math::vec2ui const& resolution);
   Pipeline(Pipeline const&) = delete;
 
-  void process(CameraMode mode, node::SerializedCameraNode const& camera,
-               std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
+  std::shared_ptr<Texture2D> render_scene(
+    CameraMode mode, node::SerializedCameraNode const& camera,
+    std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
   std::vector<PipelinePass>   const& get_passes()  const;
-  GBuffer                          & get_gbuffer() const;
-  ABuffer                          & get_abuffer();
+  RenderTarget                     & get_current_target() const;
   SerializedScene                  & get_scene();
   SceneGraph                  const& get_graph()   const;
   RenderContext               const& get_context() const;
-  node::SerializedCameraNode  const& get_camera()  const;
+  node::SerializedCameraNode  const& get_scene_camera()  const;
   LightTable                       & get_light_table();
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
@@ -94,7 +94,7 @@ public:
 
   RenderContext&                        context_;
   std::unique_ptr<GBuffer>              gbuffer_;
-  ABuffer                               abuffer_;
+  ShadowMap                             shadow_map_;
   CameraUniformBlock                    camera_block_;
   std::unique_ptr<LightTable>           light_table_;
 

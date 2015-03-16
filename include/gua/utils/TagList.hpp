@@ -61,6 +61,10 @@ class GUA_DLL TagList {
       return user_data_;
     }
 
+    bool operator==(TagList const& other) const {
+      return tags_ == other.tags_;
+    }
+
  private:
   void* user_data_ = nullptr;
   std::bitset<GUA_MAX_TAG_COUNT> tags_;
