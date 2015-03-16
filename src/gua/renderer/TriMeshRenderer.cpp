@@ -140,10 +140,11 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
       if (current_shader && tri_mesh_node->get_geometry())
       {
-        UniformValue model_mat (::scm::math::mat4f(tri_mesh_node->get_cached_world_transform()));
-        UniformValue normal_mat (::scm::math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));
+        auto model_view_mat = pipe.get_scene().frustum.get_view() * tri_mesh_node->get_cached_world_transform();
+        UniformValue normal_mat (math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));
 
-        current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
+        current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tri_mesh_node->get_cached_world_transform()));
+        current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
         current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
         tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);

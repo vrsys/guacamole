@@ -65,6 +65,12 @@ ResolvePassDescription::ResolvePassDescription()
   uniforms["gua_ssao_falloff"] = 0.1f;
   uniforms["gua_noise_tex"] = std::string("gua_default_texture");
 
+  // default screen space shadows
+  uniforms["gua_screen_space_shadows_enable"] = false;
+  uniforms["gua_screen_space_shadows_radius"] = 1.0f;
+  uniforms["gua_screen_space_shadows_max_radius_px"] = 200.0f;
+  uniforms["gua_screen_space_shadows_intensity"] = 0.8f;
+  
   // default fog configuration
   uniforms["gua_enable_fog"] = false;
   uniforms["gua_fog_start"] = 10.f;
@@ -232,17 +238,52 @@ std::string const& ResolvePassDescription::ssao_noise_texture() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription& ResolvePassDescription::screen_space_shadows(bool enable)
-{
-  uniforms["gua_screen_space_shadows"] = enable;
+ResolvePassDescription& ResolvePassDescription::screen_space_shadows(bool enable) {
+  uniforms["gua_screen_space_shadows_enable"] = enable;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 bool ResolvePassDescription::screen_space_shadows() const
 {
-  auto uniform(uniforms.find("gua_screen_space_shadows"));
+  auto uniform(uniforms.find("gua_screen_space_shadows_enable"));
   return boost::get<bool>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::screen_space_shadow_radius(float radius) {
+  uniforms["gua_screen_space_shadows_radius"] = radius;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::screen_space_shadow_radius() const {
+  auto uniform(uniforms.find("gua_screen_space_shadows_radius"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::screen_space_shadow_max_radius_px(float radius) {
+  uniforms["gua_screen_space_shadows_max_radius_px"] = radius;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::screen_space_shadow_max_radius_px() const {
+  auto uniform(uniforms.find("gua_screen_space_shadows_max_radius_px"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::screen_space_shadow_intensity(float intensity) {
+  uniforms["gua_screen_space_shadows_intensity"] = intensity;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::screen_space_shadow_intensity() const {
+  auto uniform(uniforms.find("gua_screen_space_shadows_intensity"));
+  return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

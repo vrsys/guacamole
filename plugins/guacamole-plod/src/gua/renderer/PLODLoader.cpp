@@ -67,7 +67,7 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& nod
       auto resource = std::make_shared<PLODResource>(model_id, flags & PLODLoader::MAKE_PICKABLE, local_transform);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
-      std::shared_ptr<node::PLODNode> node(new node::PLODNode(filename, desc.unique_key(), filename, material));
+      std::shared_ptr<node::PLODNode> node(new node::PLODNode(nodename, desc.unique_key(), filename, material));
       
       node->update_cache();
      

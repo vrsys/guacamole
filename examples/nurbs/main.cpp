@@ -345,7 +345,7 @@ int main(int argc, char** argv)
       loop.stop();
     }
     else {
-      renderer.queue_draw({ &graph }, { camera });
+      renderer.queue_draw({ &graph });
     }
   });
 
@@ -353,3 +353,4 @@ int main(int argc, char** argv)
 
   return 0;
 }
+ 

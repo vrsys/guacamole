@@ -114,6 +114,15 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& screen_space_shadows(bool enable);
   bool screen_space_shadows() const;
 
+  ResolvePassDescription& screen_space_shadow_radius(float radius_in_world_space_units);
+  float screen_space_shadow_radius() const;
+
+  ResolvePassDescription& screen_space_shadow_max_radius_px(float max_radius_in_pixel);
+  float screen_space_shadow_max_radius_px() const;
+
+  ResolvePassDescription& screen_space_shadow_intensity(float intensity);
+  float screen_space_shadow_intensity() const;
+
   /////////////////////////////////////////////////////////////////////////////
   // fog
   /////////////////////////////////////////////////////////////////////////////
