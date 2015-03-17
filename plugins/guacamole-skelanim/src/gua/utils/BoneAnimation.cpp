@@ -28,9 +28,9 @@ BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& Bone):
   for(unsigned i = start_frame; i <= end.GetFrameCount(FbxTime::eFrames30); ++i) {
     time.SetFrame(i, FbxTime::eFrames30);
     //get complete transformation at current time
-    transform_matrix = to_gua::mat4(Bone.EvaluateLocalTransform(time));
+    transform_matrix = to_gua::mat4f(Bone.EvaluateLocalTransform(time));
     
-    scalingKeys.push_back(Keyframe<scm::math::vec3f>{double(i - start_frame), to_gua::vec3(Bone.EvaluateLocalScaling(time))});
+    scalingKeys.push_back(Keyframe<scm::math::vec3f>{double(i - start_frame), to_gua::vec3f(Bone.EvaluateLocalScaling(time))});
     //get rotation from transformation matrix
     rotationKeys.push_back(Keyframe<scm::math::quatf>{double(i - start_frame), scm::math::quatf::from_matrix(transform_matrix)});
     //and translation
@@ -49,13 +49,13 @@ BoneAnimation::BoneAnimation(aiNodeAnim* anim):
  {
   //mTime is double but stored in frames
   for(unsigned i = 0; i < anim->mNumScalingKeys; ++i) {
-    scalingKeys.push_back(Keyframe<scm::math::vec3f>{anim->mScalingKeys[i].mTime, to_gua::vec3(anim->mScalingKeys[i].mValue)});
+    scalingKeys.push_back(Keyframe<scm::math::vec3f>{anim->mScalingKeys[i].mTime, to_gua::vec3f(anim->mScalingKeys[i].mValue)});
   }
   for(unsigned i = 0; i < anim->mNumRotationKeys; ++i) {
-    rotationKeys.push_back(Keyframe<scm::math::quatf>{anim->mRotationKeys[i].mTime, to_gua::quat(anim->mRotationKeys[i].mValue)});
+    rotationKeys.push_back(Keyframe<scm::math::quatf>{anim->mRotationKeys[i].mTime, to_gua::quatf(anim->mRotationKeys[i].mValue)});
   }
   for(unsigned i = 0; i < anim->mNumPositionKeys; ++i) {
-    translationKeys.push_back(Keyframe<scm::math::vec3f>{anim->mPositionKeys[i].mTime, to_gua::vec3(anim->mPositionKeys[i].mValue)});
+    translationKeys.push_back(Keyframe<scm::math::vec3f>{anim->mPositionKeys[i].mTime, to_gua::vec3f(anim->mPositionKeys[i].mValue)});
   }
 }
 

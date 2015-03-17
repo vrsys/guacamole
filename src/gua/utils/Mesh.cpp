@@ -12,26 +12,33 @@
 
 namespace to_gua{
 
-scm::math::mat4f mat4(aiMatrix4x4 const& m) {
+scm::math::mat4f mat4f(aiMatrix4x4 const& m) {
   scm::math::mat4f res(m.a1,m.b1,m.c1,m.d1
                       ,m.a2,m.b2,m.c2,m.d2
                       ,m.a3,m.b3,m.c3,m.d3
                       ,m.a4,m.b4,m.c4,m.d4);
   return res;
 }
-scm::math::quatf quat(aiQuaternion const& q) {
+scm::math::quatf quatf(aiQuaternion const& q) {
   scm::math::quatf res(q.w, q.x, q.y, q.z);
   return res;
 }
 #ifdef GUACAMOLE_FBX
-scm::math::mat4f mat4(FbxAMatrix const& m) {
+scm::math::mat4f mat4f(FbxAMatrix const& m) {
   scm::math::mat4f res(m[0][0],m[0][1],m[0][2],m[0][3],
                       m[1][0],m[1][1],m[1][2],m[1][3],
                       m[2][0],m[2][1],m[2][2],m[2][3],
                       m[3][0],m[3][1],m[3][2],m[3][3]);
   return res;
 }
-scm::math::quatf quat(FbxQuaternion const& q) {
+scm::math::mat4d mat4d(FbxAMatrix const& m) {
+  scm::math::mat4d res(m[0][0],m[0][1],m[0][2],m[0][3],
+                      m[1][0],m[1][1],m[1][2],m[1][3],
+                      m[2][0],m[2][1],m[2][2],m[2][3],
+                      m[3][0],m[3][1],m[3][2],m[3][3]);
+  return res;
+}
+scm::math::quatf quatf(FbxQuaternion const& q) {
   scm::math::quatf res(q[3], q[0], q[1], q[2]);
   return res;
 }
@@ -49,14 +56,16 @@ Mesh::Mesh():
  indices{}
 {}
 #ifdef GUACAMOLE_FBX
-Mesh::Mesh(FbxMesh& mesh, unsigned material_index) {
+Mesh::Mesh(FbxMesh& mesh, int material_index) {
   construct(mesh, material_index);
 }
 
-std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned const material_index) {
+std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   Timer timer{};
   timer.start();
 
+  //if the given materialindex is valid, assume that only the polys with this material should be loaded
+  bool split_materials = material_index >= 0;
   FbxGeometryElementMaterial const* material_layer = mesh.GetElementMaterial(0);
   // Logger::LOG_DEBUG << "num polys " << mesh.GetPolygonCount() << " num matlayer index " << material_layer->GetIndexArray().GetCount() << std::endl;
   for(unsigned i = 0; i < material_layer->GetIndexArray().GetCount() ; ++i) {
@@ -177,7 +186,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned const material_ind
   //iterate over polygons
   for(unsigned i = 0; i < mesh.GetPolygonCount(); ++i)
   {
-    if(get_material(i) == material_index) {
+    if(!split_materials || get_material(i) == material_index) {
 
       //triangulate face if necessary
       for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
@@ -193,24 +202,24 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned const material_ind
         temp_vert vert2{indices[1], tri.verts[1], num_triangles, 1};
         temp_vert vert3{indices[2], tri.verts[2], num_triangles, 2};
 
-        vert1.normal = to_gua::vec3(poly_normals[get_normal(vert1)]);
-        vert2.normal = to_gua::vec3(poly_normals[get_normal(vert2)]);
-        vert3.normal = to_gua::vec3(poly_normals[get_normal(vert3)]);
+        vert1.normal = to_gua::vec3f(poly_normals[get_normal(vert1)]);
+        vert2.normal = to_gua::vec3f(poly_normals[get_normal(vert2)]);
+        vert3.normal = to_gua::vec3f(poly_normals[get_normal(vert3)]);
         
         //set optional data
         if(has_uvs) {
-          vert1.uv = to_gua::vec2(poly_uvs[get_uv(vert1)]);
-          vert2.uv = to_gua::vec2(poly_uvs[get_uv(vert2)]);
-          vert3.uv = to_gua::vec2(poly_uvs[get_uv(vert3)]); 
+          vert1.uv = to_gua::vec2f(poly_uvs[get_uv(vert1)]);
+          vert2.uv = to_gua::vec2f(poly_uvs[get_uv(vert2)]);
+          vert3.uv = to_gua::vec2f(poly_uvs[get_uv(vert3)]); 
         }
         if(has_tangents) {
-          vert1.tangent = to_gua::vec3(poly_tangents[get_tangent(vert1)]);
-          vert2.tangent = to_gua::vec3(poly_tangents[get_tangent(vert2)]);
-          vert3.tangent = to_gua::vec3(poly_tangents[get_tangent(vert3)]);
+          vert1.tangent = to_gua::vec3f(poly_tangents[get_tangent(vert1)]);
+          vert2.tangent = to_gua::vec3f(poly_tangents[get_tangent(vert2)]);
+          vert3.tangent = to_gua::vec3f(poly_tangents[get_tangent(vert3)]);
           
-          vert1.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert1)]);
-          vert2.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert2)]);
-          vert3.bitangent = to_gua::vec3(poly_bitangents[get_bitangent(vert3)]);
+          vert1.bitangent = to_gua::vec3f(poly_bitangents[get_bitangent(vert1)]);
+          vert2.bitangent = to_gua::vec3f(poly_bitangents[get_bitangent(vert2)]);
+          vert3.bitangent = to_gua::vec3f(poly_bitangents[get_bitangent(vert3)]);
         }
 
         //add new vertices to respective control points
@@ -282,7 +291,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, unsigned const material_ind
   for(unsigned i = 0; i < vert_positions.size(); ++i) {
 
     //get position once per point, all vertices at this control point have this position
-    curr_position = to_gua::vec3(mesh.GetControlPointAt(i));
+    curr_position = to_gua::vec3f(mesh.GetControlPointAt(i));
 
     //iterate over vertices at that point
     for(temp_vert const& vert : vert_positions[i]) {
@@ -387,12 +396,12 @@ Mesh::Mesh(aiMesh const& mesh) {
     
     scm::math::vec3f pPos = scm::math::vec3f(0.0f);
     if(mesh.HasPositions()) {
-      pPos = to_gua::vec3(mesh.mVertices[i]);
+      pPos = to_gua::vec3f(mesh.mVertices[i]);
     }
 
     scm::math::vec3f pNormal = scm::math::vec3f(0.0f);
     if(mesh.HasNormals()) {
-      pNormal = to_gua::vec3(mesh.mNormals[i]);
+      pNormal = to_gua::vec3f(mesh.mNormals[i]);
     }
 
     scm::math::vec2f pTexCoord = scm::math::vec2(0.0f);
@@ -403,9 +412,9 @@ Mesh::Mesh(aiMesh const& mesh) {
     scm::math::vec3f pTangent = scm::math::vec3f(0.0f);
     scm::math::vec3f pBitangent = scm::math::vec3f(0.0f);
     if (mesh.HasTangentsAndBitangents()) {
-      pTangent = to_gua::vec3(mesh.mTangents[i]);
+      pTangent = to_gua::vec3f(mesh.mTangents[i]);
 
-      pBitangent = to_gua::vec3(mesh.mBitangents[i]);
+      pBitangent = to_gua::vec3f(mesh.mBitangents[i]);
     }
 
     positions.push_back(pPos);

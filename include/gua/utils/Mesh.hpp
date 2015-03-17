@@ -43,30 +43,31 @@ namespace fbxsdk_2015_1{
 
 namespace to_gua{
 
-scm::math::mat4f mat4(aiMatrix4x4 const& m);
-scm::math::quatf quat(aiQuaternion const& q);
+scm::math::mat4f mat4f(aiMatrix4x4 const& m);
+scm::math::quatf quatf(aiQuaternion const& q);
 
 template<typename T>
-scm::math::vec3f vec3(T const& v) {
+scm::math::vec3f vec3f(T const& v) {
   scm::math::vec3f res(v[0], v[1], v[2]);
   return res;
 }
 
 template<typename T>
-scm::math::vec2f vec2(T const& v) {
+scm::math::vec2f vec2f(T const& v) {
   scm::math::vec2f res(v[0], v[1]);
   return res;
 }
 
 template<typename T>
-scm::math::vec4f vec4(T const& v) {
+scm::math::vec4f vec4f(T const& v) {
   scm::math::vec4 res(v[0], v[1], v[2], v[3]);
   return res;
 }
 
 #ifdef GUACAMOLE_FBX
-  scm::math::mat4f mat4(fbxsdk_2015_1::FbxAMatrix const& m);
-  scm::math::quatf quat(fbxsdk_2015_1::FbxQuaternion const& q);
+  scm::math::mat4f mat4f(fbxsdk_2015_1::FbxAMatrix const& m);
+  scm::math::mat4d mat4d(fbxsdk_2015_1::FbxAMatrix const& m);
+  scm::math::quatf quatf(fbxsdk_2015_1::FbxQuaternion const& q);
 #endif
 }
 
@@ -79,7 +80,7 @@ struct Mesh {
   Mesh(aiMesh const& mesh);
   
 #ifdef GUACAMOLE_FBX
-  Mesh(FbxMesh& mesh, unsigned material_index = 0);
+  Mesh(fbxsdk_2015_1::FbxMesh& mesh, int material_index = -1);
 #endif
   
   struct Vertex {
@@ -134,7 +135,7 @@ struct Mesh {
     std::array<unsigned, 3> verts;
   };
 
-  std::vector<unsigned> construct(FbxMesh& mesh, unsigned const material_index);
+  std::vector<unsigned> construct(fbxsdk_2015_1::FbxMesh& mesh, int material_index);
 
   template<typename T>
   static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);

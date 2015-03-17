@@ -23,7 +23,7 @@ Bone::Bone(aiNode const& node):
   name{node.mName.C_Str()},
   parentName{node.mParent != NULL ? node.mParent->mName.C_Str() : "none"},
   numChildren{node.mNumChildren},
-  transformation{to_gua::mat4(node.mTransformation)},
+  transformation{to_gua::mat4f(node.mTransformation)},
   offsetMatrix{scm::math::mat4f::identity()}
 {
   for(unsigned i = 0; i < node.mNumChildren; ++i) {
@@ -37,7 +37,7 @@ Bone::Bone(FbxNode& node):
   name{node.GetName()},
   parentName{node.GetParent() != NULL ? node.GetParent()->GetName() : "none"},
   numChildren{unsigned(node.GetChildCount())},
-  transformation{to_gua::mat4(node.EvaluateLocalTransform())},
+  transformation{to_gua::mat4f(node.EvaluateLocalTransform())},
   offsetMatrix{scm::math::mat4f::identity()}
 {
   for(int i = 0; i < node.GetChildCount(); ++i) {
@@ -64,7 +64,7 @@ Bone::Bone(aiScene const& scene) {
       std::string BoneName(scene.mMeshes[i]->mBones[b]->mName.data);  
       if (bone_info.find(BoneName) == bone_info.end()) {
          
-        bone_info[BoneName] = std::make_pair(num_bones, to_gua::mat4(scene.mMeshes[i]->mBones[b]->mOffsetMatrix));   
+        bone_info[BoneName] = std::make_pair(num_bones, to_gua::mat4f(scene.mMeshes[i]->mBones[b]->mOffsetMatrix));   
         ++num_bones;
       }
     }
@@ -122,12 +122,12 @@ Bone::Bone(FbxScene& scene) {
         //check if the clusters have an extra transformation
         FbxAMatrix cluster_transform;
         cluster->GetTransformMatrix(cluster_transform);
-        if(magnitude(to_gua::mat4(cluster_transform) - scm::math::mat4f::identity())  > 0.000000001f) {
+        if(magnitude(to_gua::mat4f(cluster_transform) - scm::math::mat4f::identity())  > 0.000000001f) {
           Logger::LOG_WARNING << "weight cluster of bone '" << bone_name << "' has transformation, animation will be skewed" << std::endl;
         }
         //add bone to list if it is not already included
         if(bone_info.find(bone_name) == bone_info.end()) {
-        bone_info[bone_name] = std::make_pair(num_bones, to_gua::mat4(bind_transform.Inverse() * cluster_transform));   
+        bone_info[bone_name] = std::make_pair(num_bones, to_gua::mat4f(bind_transform.Inverse() * cluster_transform));   
         ++num_bones;
         }           
       }
