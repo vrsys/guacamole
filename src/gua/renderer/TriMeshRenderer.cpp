@@ -68,7 +68,6 @@ void TriMeshRenderer::create_state_objects(RenderContext const& ctx)
 void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
   auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
-
   if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
 
     std::sort(sorted_objects->second.begin(), sorted_objects->second.end(),

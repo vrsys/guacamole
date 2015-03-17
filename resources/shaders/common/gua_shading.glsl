@@ -29,6 +29,67 @@ const float INV_PI = 1.0f / Pi;
 
 @include "../brdf.glsl"
 
+// -----------------------------------------------------------------------------
+// shadow calculations ---------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+// float gua_get_shadow(vec4 smap_coords, ivec2 offset, float acne_offset) {
+//   const mat4 acne = mat4(
+//     1, 0, 0, 0,
+//     0, 1, 0, 0,
+//     0, 0, 1, 0,
+//     0, 0, -acne_offset, 1
+//   );
+
+//   return textureProjOffset(
+//     sampler2DShadow(gua_shadow_map), acne * smap_coords * vec4(
+//       gua_light_shadow_map_portion, gua_light_shadow_map_portion, 1.0, 1.0
+//     ), offset
+//   );
+// }
+
+// float gua_get_shadow(vec4 smap_coords) {
+//   const mat4 acne_offset = mat4(
+//     1, 0, 0, 0,
+//     0, 1, 0, 0,
+//     0, 0, 1, 0,
+//     0, 0, -gua_shadow_offset, 1
+//   );
+
+//   return textureProj(
+//     sampler2DShadow(gua_shadow_map), acne_offset * smap_coords * vec4(
+//       gua_light_shadow_map_portion, gua_light_shadow_map_portion, 1.0, 1.0
+//     )
+//   );
+// }
+
+// float gua_get_shadow(vec3 position, mat4 shadow_map_coords_matrix, vec2 lookup_offset, float acne_offset) {
+//   if(!gua_light_casts_shadow) {
+//     return 1.0;
+//   }
+
+//   vec4 smap_coords = shadow_map_coords_matrix * vec4(position, 1.0) + vec4(lookup_offset, 0, 0);
+
+//   float sum = 0;
+//   int x, y;
+
+//   for (y = -1; y <= 1; ++y) {
+//     for (x = -1; x <= 1; ++x) {
+//       sum += gua_get_shadow(smap_coords, ivec2(x, y), acne_offset);
+//     }
+//   }
+
+//   float shadow = sum / 9.0;
+
+//   return shadow;
+// }
+
+// bool gua_is_inside_frustum(mat4 frustum, vec3 position) {
+//   vec4 proj = frustum * vec4(position, 1.0);
+//   proj /= proj.w;
+//   return (abs(proj.x) <= 1 && abs(proj.y) <= 1 && abs(proj.z) <= 1);
+// }
+
 // light functions
 bool gua_calculate_light(int light_id,
                          vec3 normal, 
@@ -76,10 +137,11 @@ bool gua_calculate_light(int light_id,
         || dot(normal, gua_light_direction) < 0) {
       return false;
     }
-    /*float shadow = gua_get_shadow(position, gua_lightinfo4, vec2(0), gua_shadow_offset);
-    if(shadow <= 0.0) {
-      return;
-    }*/
+    float shadow = 1.0;
+    // float shadow = gua_get_shadow(position, gua_lightinfo4, vec2(0), gua_shadow_offset);
+    // if(shadow <= 0.0) {
+    //   return false;
+    // }
     float to_light_angle = dot(-gua_light_direction, beam_direction/beam_length);
     float radial_attenuation = (to_light_angle - 1.0) / (L.beam_direction_and_half_angle.w - 1.0);
     if (radial_attenuation >= 1.0)
@@ -87,7 +149,7 @@ bool gua_calculate_light(int light_id,
 
     float length_attenuation = pow(1.0 - gua_light_distance/beam_length, L.falloff);
     radial_attenuation = pow(1.0 - radial_attenuation, L.softness);
-    gua_light_intensity = radial_attenuation * length_attenuation /* shadow*/;
+    gua_light_intensity = radial_attenuation * length_attenuation * shadow;
     vec3 Cl = radial_attenuation * length_attenuation * L.color.rgb * L.brightness;
     gua_light_radiance = Cl;
   }

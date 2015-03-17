@@ -44,7 +44,6 @@ namespace gua {
 Serializer::Serializer()
     : data_(nullptr),
       current_frustum_(),
-      current_center_of_interest_(),
       enable_frustum_culling_(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +61,6 @@ void Serializer::check(SerializedScene& output,
   enable_frustum_culling_     = enable_frustum_culling;
   current_render_mask_        = mask;
   current_frustum_            = output.frustum;
-  current_center_of_interest_ = output.center_of_interest;
 
   for (auto plane: scene_graph.get_clipping_plane_nodes()) {
     if (current_render_mask_.check(plane->get_tags())) {
@@ -86,7 +84,7 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::LODNode* node) {
   if (is_visible(node)) {
 
-    float distance_to_camera(scm::math::length(node->get_world_position() - current_center_of_interest_));
+    float distance_to_camera(scm::math::length(node->get_world_position() - current_frustum_.get_camera_position()));
 
     unsigned child_index(0);
 

@@ -59,6 +59,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d,
   , blend_state_(nullptr)
   , needs_color_buffer_as_input_(d.needs_color_buffer_as_input_)
   , writes_only_color_buffer_(d.writes_only_color_buffer_)
+  , enable_for_shadows_(d.enable_for_shadows_)
   , rendermode_(d.rendermode_)
   , process_(d.process_)
   , name_(d.name_)
@@ -79,7 +80,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d,
   }
 }
 
-void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) {
+void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, bool rendering_shadows) {
 
   auto const& ctx(pipe.get_context());
 
@@ -89,7 +90,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
   }
 
   if (RenderMode::Custom == rendermode_) {
-    process_(*this, desc, pipe);
+    process_(*this, desc, pipe, rendering_shadows);
   } else {
     pipe.get_current_target().bind(ctx, !writes_only_color_buffer_);
     pipe.get_current_target().set_viewport(ctx);
@@ -112,7 +113,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
     pipe.begin_gpu_query(ctx, gpu_query_name);
 
     if (RenderMode::Callback == rendermode_) {
-      process_(*this, desc, pipe);
+      process_(*this, desc, pipe, rendering_shadows);
     } else { // RenderMode::Quad
       pipe.draw_quad();
     }

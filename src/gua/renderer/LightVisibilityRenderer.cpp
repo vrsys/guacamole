@@ -2,7 +2,6 @@
 #include <gua/renderer/LightVisibilityRenderer.hpp>
 
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/ShadowMapBuffer.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
@@ -126,9 +125,9 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
                                            scm::math::normalize(beam_direction));
 
     LightTable::LightBlock light_block {};
-
+    
     if (light->data.get_enable_shadows()) {
-      // light_block.shadow_map = pipe.render_shadow_map(pipe, light);
+      light_block.shadow_map = pipe.render_shadow_map(light)->get_handle(pipe.get_context());
       light_block.shadow_offset = light->data.get_shadow_offset();
     }
 

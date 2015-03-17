@@ -32,9 +32,10 @@ RenderTarget::RenderTarget(math::vec2ui const& resolution):
 ////////////////////////////////////////////////////////////////////////////////
 
 void RenderTarget::set_viewport(RenderContext const& ctx) {
-  if (ctx.render_context)
+  if (ctx.render_context) {
     ctx.render_context->set_viewport(
-    scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(resolution_)));
+        scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(resolution_)));
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

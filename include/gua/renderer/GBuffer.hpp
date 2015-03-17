@@ -44,7 +44,7 @@ class GUA_DLL GBuffer : public RenderTarget {
   void toggle_ping_pong();
 
   void allocate_a_buffer(RenderContext& ctx, size_t buffer_size);
-  void remove_buffers(RenderContext const& ctx);
+  void remove_buffers(RenderContext const& ctx) override;
 
   std::shared_ptr<Texture2D> const& get_color_buffer()  const;
   std::shared_ptr<Texture2D> const& get_pbr_buffer()    const;

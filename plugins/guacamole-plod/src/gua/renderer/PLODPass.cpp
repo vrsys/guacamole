@@ -66,7 +66,7 @@ PipelinePass PLODPassDescription::make_pass(RenderContext const& ctx, Substituti
   renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool) {
     renderer->render(pipe, desc);
   };
 

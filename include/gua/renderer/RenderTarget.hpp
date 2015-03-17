@@ -43,6 +43,8 @@ class GUA_DLL RenderTarget {
   virtual void bind(RenderContext const& context, bool write_depth) = 0;
   virtual void unbind(RenderContext const& context);
 
+  virtual void remove_buffers(RenderContext const& ctx) = 0;
+
   virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const = 0;
 
   unsigned            get_width()  const      { return resolution_.x; }

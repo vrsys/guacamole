@@ -32,7 +32,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void renderNode(PipelinePass& pass,
+void render_node(PipelinePass& pass,
                 node::TexturedScreenSpaceQuadNode* quad_node,
                 Pipeline& pipe) {
   UniformValue tex(quad_node->data.get_texture());
@@ -65,13 +65,14 @@ void renderNode(PipelinePass& pass,
   pipe.draw_quad();
 }
 
-void renderQuads(PipelinePass& pass,
-                 PipelinePassDescription const&,
-                 Pipeline& pipe) {
+void render_quads(PipelinePass& pass,
+                  PipelinePassDescription const&,
+                  Pipeline& pipe,
+                  bool rendering_shadows) {
   for (auto const& node : pipe.get_scene()
            .nodes[std::type_index(typeid(node::TexturedScreenSpaceQuadNode))]) {
     auto quad_node(reinterpret_cast<node::TexturedScreenSpaceQuadNode*>(node));
-    renderNode(pass, quad_node, pipe);
+    render_node(pass, quad_node, pipe);
   }
 }
 
@@ -97,7 +98,7 @@ TexturedScreenSpaceQuadPassDescription::TexturedScreenSpaceQuadPassDescription()
                          scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
                          scm::gl::FUNC_SRC_ALPHA,
                          scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
-  process_ = renderQuads;
+  process_ = render_quads;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

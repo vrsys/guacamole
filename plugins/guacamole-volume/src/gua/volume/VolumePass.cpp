@@ -50,7 +50,7 @@ PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx,
   auto renderer(std::make_shared<VolumeRenderer>());
 
   pass.process_ = [renderer](
-      PipelinePass & pass, PipelinePassDescription const&, Pipeline& pipe) {
+      PipelinePass & pass, PipelinePassDescription const&, Pipeline& pipe, bool) {
 
       renderer->render(pipe);
   };

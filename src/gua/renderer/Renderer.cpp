@@ -141,7 +141,7 @@ void Renderer::renderclient(Mailbox in) {
           if (img) window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);
         }
 
-        // pipe->get_shadow_map().clear_cache();
+        pipe->clear_frame_cache();
 
         // swap buffers
         window->finish_frame();

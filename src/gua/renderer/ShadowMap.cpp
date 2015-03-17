@@ -26,7 +26,6 @@
 
 #include <gua/node/SpotLightNode.hpp>
 #include <gua/renderer/Serializer.hpp>
-#include <gua/renderer/ShadowMapBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/View.hpp>
 #include <gua/databases.hpp>
@@ -36,84 +35,48 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// ShadowMap::ShadowMap()
-//   : serializer_(gua::make_unique<Serializer>()),
-//     buffer_(nullptr),
-//     projection_view_matrices_(),
-//     camera_block_(nullptr) {
-// }
+ShadowMap::ShadowMap(RenderContext const& ctx, unsigned size) :
+  RenderTarget(math::vec2ui(size, size)) {
 
-////////////////////////////////////////////////////////////////////////////////
+  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
+    scm::gl::WRAP_MIRRORED_REPEAT,
+    scm::gl::WRAP_MIRRORED_REPEAT);
 
-math::vec2ui ShadowMap::draw(Pipeline& pipe, node::SpotLightNode* light) {
+  depth_buffer_ = std::make_shared<Texture2D>(size, size, scm::gl::FORMAT_D24, 1, state);
 
-  auto& current_mask(pipe.get_scene_camera().config.mask());
-
-  // has the shadow map been rendered this frame already?
-  auto cached_shadow_map(res_->used_shadow_maps.find(light));
-
-  if (cached_shadow_map != res_->used_shadow_maps.end() && cached_shadow_map->second.render_mask == current_mask) {
-    return cached_shadow_map->second.shadow_map->get_handle(pipe.get_context());
-  }
-
-  // if not, find an unused shadow map with the correct size
-  std::shared_ptr<Texture2D> shadow_map;
-  unsigned map_size(light->data.shadow_map_size());
-
-  for (auto it(res_->unused_shadow_maps.begin()); it != res_->unused_shadow_maps.end(); ++it) {
-    if ((*it)->width() == map_size) {
-      shadow_map = *it;
-      res_->unused_shadow_maps.erase(it);
-      break;
-    }
-  } 
-
-  // if there is none, create a new one
-  if (!shadow_map) {
-    scm::gl::sampler_state_desc state(
-      scm::gl::FILTER_MIN_MAG_NEAREST,
-      scm::gl::WRAP_MIRRORED_REPEAT,
-      scm::gl::WRAP_MIRRORED_REPEAT
-    );
-    shadow_map = std::make_shared<Texture2D>(map_size, map_size, scm::gl::FORMAT_D24, 1, state);
-  }
-
-  // pipe.render_shadow_map(shadow_map, light);
-
-  res_->used_shadow_maps[light] = {shadow_map, current_mask};
-
-  return shadow_map->get_handle(pipe.get_context());
+  fbo_ = ctx.render_device->create_frame_buffer();
+  fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx), 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::allocate(RenderContext& ctx) {
-  if (!res_) {
-    res_ = ctx.resources.get<SharedResource>();
-  }
+void ShadowMap::clear(RenderContext const& ctx) {
+  ctx.render_context->clear_depth_stencil_buffer(fbo_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::clear_cache() {
-  if (res_) {
-    res_->unused_shadow_maps.clear();
-
-    for (auto& cached: res_->used_shadow_maps) {
-      res_->unused_shadow_maps.push_back(cached.second.shadow_map);
-    }
-
-    res_->used_shadow_maps.clear();
-  }
+void ShadowMap::bind(RenderContext const& ctx, bool write_depth) {
+  ctx.render_context->set_frame_buffer(fbo_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// ShadowMap::~ShadowMap() {
-//   if (buffer_) {
-//     delete buffer_;
-//   }
-// }
+std::shared_ptr<Texture2D> const& ShadowMap::get_depth_buffer() const {
+  return depth_buffer_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadowMap::remove_buffers(RenderContext const& ctx) {
+  unbind(ctx);
+
+  fbo_->clear_attachments();
+
+  if (depth_buffer_) {
+    depth_buffer_->make_non_resident(ctx);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

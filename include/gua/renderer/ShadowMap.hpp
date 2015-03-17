@@ -34,74 +34,36 @@ namespace node {
 }
 
 class Pipeline;
+struct CachedShadowMap;
 
 /**
  *
  */
-class ShadowMap /*: public RenderTarget*/ {
+class ShadowMap : public RenderTarget {
  public:
+  
+  ShadowMap(RenderContext const& ctx, unsigned size);
 
-  struct CachedShadowMap {
-    std::shared_ptr<Texture2D> shadow_map;
-    Mask                       render_mask;
-  };
+  virtual void clear(RenderContext const& context) override;  
+  virtual void bind(RenderContext const& context, bool write_depth) override;
 
-  struct SharedResource {
-    std::list<std::shared_ptr<Texture2D>>                     unused_shadow_maps;
-    std::unordered_map<node::SpotLightNode*, CachedShadowMap> used_shadow_maps;
-  };
+  virtual void remove_buffers(RenderContext const& ctx) override;
 
-  // ShadowMap();
-  // virtual ~ShadowMap();
-
-  math::vec2ui draw(Pipeline& pipe, node::SpotLightNode* light);
-
-  void allocate(RenderContext& ctx);
-  void clear_cache();
-
-  // void render(Pipeline* pipe,
-  //             math::mat4 const& transform,
-  //             unsigned map_size);
-
-  // void render_cascaded(RenderContext const& ctx,
-  //             SceneGraph const& scene_graph,
-  //             math::vec3 const& center_of_interest,
-  //             Frustum const& scene_frustum,
-  //             Camera const& scene_camera,
-  //             math::mat4 const& transform,
-  //             unsigned map_size,
-  //             float split_0,
-  //             float split_1,
-  //             float split_2,
-  //             float split_3,
-  //             float split_4,
-  //             float near_clipping_in_sun_direction);
-
-  // ShadowMapBuffer*               get_buffer() const {return buffer_;}
-  // std::vector<math::mat4> const& get_projection_view_matrices() const {return projection_view_matrices_;}
-
-  // virtual void cleanup(RenderContext const& context);
-
-  // inline std::size_t const uuid() const { return reinterpret_cast<std::size_t>(buffer_); }
+  virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const override;
 
  private:
+  scm::gl::frame_buffer_ptr fbo_;
+  std::shared_ptr<Texture2D> depth_buffer_;
+};
 
-  std::shared_ptr<SharedResource> res_ = nullptr;
+struct CachedShadowMap {
+  std::shared_ptr<ShadowMap> shadow_map;
+  Mask                       render_mask;
+};
 
-  // void update_members(RenderContext const& ctx, unsigned map_size);
-  // void render_geometry(
-  //   Pipeline* pipe, Frustum const& shadow_frustum,
-  //   unsigned cascade, unsigned map_size
-  // );
-
-  // std::unique_ptr<Serializer> serializer_;
-
-  // ShadowMapBuffer* buffer_;
-
-  // scm::gl::depth_stencil_state_ptr          depth_stencil_state_;
-  // scm::gl::rasterizer_state_ptr             rasterizer_state_;
-  // std::vector<math::mat4>                   projection_view_matrices_;
-  // std::shared_ptr<gua::CameraUniformBlock>  camera_block_;
+struct SharedShadowMapResource {
+  std::list<std::shared_ptr<ShadowMap>>                     unused_shadow_maps;
+  std::unordered_map<node::SpotLightNode*, CachedShadowMap> used_shadow_maps;
 };
 
 }

@@ -72,7 +72,7 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
         0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3f)), {buffer_});
 
   pass.process_ = [buffer_, vao_](
-      PipelinePass &, PipelinePassDescription const&, Pipeline & pipe) {
+      PipelinePass &, PipelinePassDescription const&, Pipeline & pipe, bool) {
 
     auto count(pipe.get_scene().bounding_boxes.size());
 

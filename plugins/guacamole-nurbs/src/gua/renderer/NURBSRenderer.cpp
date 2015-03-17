@@ -63,9 +63,9 @@ namespace gua {
     process_ = [material_uniform_storage_buffer, vertex_shader, fragment_shader](
       PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
 
-      auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
+      auto sorted_objects(pipe.get_scene().odes.find(std::type_index(typeid(node::TriMeshNode))));
 
-      if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
+      if (sorted_objects != pipe.get_scene().odes.end() && sorted_objects->second.size() > 0) {
 
         std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
           return reinterpret_cast<node::TriMeshNode*>(a)->get_material().get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material().get_shader();
