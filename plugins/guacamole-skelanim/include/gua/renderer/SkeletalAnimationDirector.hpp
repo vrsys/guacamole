@@ -66,13 +66,13 @@ class SkeletalAnimationDirector {
   float get_blending_duration() const;
   void set_blending_duration(float duration);
 
-
+  void fade_to(std::string const&, float, bool loop = true);
 private:
 
   void calculate_matrices(float TimeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
   void calculate_matrices(std::vector<scm::math::mat4f>& Transforms);
 
-  void blend_pose(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
+  void blend_pose(float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
   void partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms);
 
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
@@ -81,9 +81,9 @@ private:
   std::shared_ptr<Bone> root_;
   std::shared_ptr<Bone> anim_start_node_;
 
-  std::vector<std::shared_ptr<SkeletalAnimation>> animations_;
+  std::vector<SkeletalAnimation> animations_;
 
-  enum  Playback {partial = 0, crossfade = 1};
+  enum  Playback {partial = 0, crossfade = 1, play = 2};
   Playback state_;
 
   enum  Blending {swap = 0, linear = 1, smoothstep = 2, cosinus = 3};
@@ -97,9 +97,9 @@ private:
   bool firstRun_;
   bool has_anims_;
 
-  float blending_start_;
-  float next_blending_end_;
-  float blendDuration_ = 0.5f;
+  float blend_start_;
+  float blend_end_;
+  float blend_duration_;
   Timer timer_;
 
   const static std::string none_loaded;
