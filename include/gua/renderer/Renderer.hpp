@@ -35,10 +35,8 @@
 namespace gua {
 
 class SceneGraph;
-class Pipeline;
 
 namespace node {
-  class CameraNode;
   struct SerializedCameraNode;
 }
 
