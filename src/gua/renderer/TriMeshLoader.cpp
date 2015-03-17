@@ -334,7 +334,9 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     }
 
     //return std::make_shared<node::TriMeshNode>("", desc.unique_key(), material); // not allowed -> private c'tor
-    return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
+    auto node = std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
+    node->set_transform(to_gua::mat4d(fbx_node.EvaluateGlobalTransform()));
+    return node;
   };
 
   auto group(std::make_shared<node::TransformNode>());
