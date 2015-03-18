@@ -133,7 +133,7 @@ class GUA_DLL WindowBase {
 
   virtual void process_events() = 0;
 
-  void init_context();
+  virtual void init_context();
   void destroy_context();
 
   /**
