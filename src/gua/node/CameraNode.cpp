@@ -91,6 +91,7 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
     auto eye_transform(camera_transform);
     auto screen_transform(screen->get_scaled_world_transform());
 
+    float camera_scale(scm::math::length(math::vec3(camera_transform[8], camera_transform[9], camera_transform[10])));
     float clipping_offset(0.f);
 
     if (config.get_enable_stereo()) {
@@ -104,7 +105,7 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
             scm::math::length_sqr(screen_direction) * screen_direction
         );
 
-        float eye_dist_in_screen_direction(scm::math::length(eye_separation_in_screen_direction));
+        float eye_dist_in_screen_direction(scm::math::length(eye_separation_in_screen_direction)/camera_scale);
 
         // left eye is closer to screen than left eye
         if (eye_separation.x*screen_direction.x +
@@ -128,13 +129,13 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
     if (config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
         return Frustum::perspective(
             eye_transform, screen_transform,
-            config.near_clip() + clipping_offset, config.far_clip() + clipping_offset
+            config.near_clip()/camera_scale + clipping_offset, config.far_clip()/camera_scale + clipping_offset
         );
     }
 
     return Frustum::orthographic(
         eye_transform, screen_transform,
-        config.near_clip() + clipping_offset, config.far_clip() + clipping_offset
+        config.near_clip()/camera_scale + clipping_offset, config.far_clip()/camera_scale + clipping_offset
     );
 }
 
