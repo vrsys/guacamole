@@ -22,21 +22,13 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Bone> const
     has_anims_{false},
     firstRun_{true},
     animations_{},
-    curr_anim_num_{0},
-    last_anim_num_{0},
+    anim_num_1_{0},
+    anim_num_2_{0},
     bone_mapping_{},
     anim_start_node_{},
-    state_{Playback::play},
     animation_mapping_{},
     blend_factor_{0.0},
-    blend_start_{0},
-    blend_end_{0},
-    blend_duration_{0.5f},
-    blend_function_{&blend::linear},
-    blend_mode_{1},
-    root_{root},
-    timer_{} {
-  timer_.start();
+    root_{root} {
 
   root_->collect_indices(bone_mapping_);
   num_bones_ = bone_mapping_.size();
@@ -139,48 +131,20 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, SkeletalAnima
 std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms() {
   //reserve vector for transforms
   std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
-  
-  float currentTime = timer_.get_elapsed();
 
   if(!has_anims_) {
     calculate_matrices(transforms);
     return transforms;  
   }
 
-  //with loping disabled, freeye after one playback, ugly
-  float anim_time_1 = currentTime - blend_start_;
-  if(!loop_ && currentTime - blend_start_ > animations_[curr_anim_num_].get_duration()) {
-    anim_time_1 = animations_[curr_anim_num_].get_duration() * 0.9999999999;
+  if(blend_factor_ <= 0) {
+    calculate_matrices(anim_time_2_, animations_[anim_num_2_], transforms);
+  } 
+  else if(blend_factor_ >= 1) {
+    calculate_matrices(anim_time_1_, animations_[anim_num_1_], transforms);
   }
-  float anim_time_2 = currentTime;
-  if(!loop_prev_ && currentTime - blend_start_prev_ > animations_[last_anim_num_].get_duration()) {
-    anim_time_2 = animations_[last_anim_num_].get_duration() * 0.9999999999;
-  }
-
-  switch(state_) {
-    //crossfade two anims
-    case Playback::crossfade: {      
-      blend_factor_ = blend_function_(1.0f-((blend_end_ - currentTime) / blend_duration_));
-      
-      blend_pose(anim_time_2, anim_time_1, animations_[last_anim_num_], animations_[curr_anim_num_], transforms);
-      //if the blend duration is over, switch to normal playback
-      if(currentTime > blend_end_) {
-        state_ = Playback::play;
-        blend_factor_ = 1.0;
-        std::cout << "finished blending at " << timer_.get_elapsed() << std::endl;
-      }
-      break;
-    }
-    case Playback::play: {
-      calculate_matrices(anim_time_1, animations_[curr_anim_num_], transforms);  
-      break;
-    }
-    //blend two anims
-    case Playback::partial: {
-      partial_blend(anim_time_2, animations_[0], animations_[1], "Waist", transforms);
-      break;
-    }
-    default: Logger::LOG_WARNING << "playback mode not found" << std::endl; break;
+  else {
+    blend_pose(anim_time_2_, anim_time_1_, animations_[anim_num_2_], animations_[anim_num_1_], transforms);    
   }
   
   return transforms;
@@ -206,96 +170,6 @@ void SkeletalAnimationDirector::calculate_matrices(std::vector<scm::math::mat4f>
 
   scm::math::mat4f identity = scm::math::mat4f::identity();
   anim_start_node_->accumulate_matrices(transforms, pose, identity);
-}
-
-void SkeletalAnimationDirector::fade_to(std::string const& name, float duration, bool loop) {
-  set_animation(name);
-  blend_start_prev_ = blend_start_;
-  blend_start_ = timer_.get_elapsed();
-
-  blend_end_ = blend_start_ + duration;
-  blend_duration_ = duration;
-
-  loop_prev_ = loop_;
-  loop_ = loop;
-
-  state_ = Playback::crossfade;
-  std::cout << "fading to " << name << " at " << blend_start_ << std::endl;
-}
-
-uint SkeletalAnimationDirector::get_playback_mode() const {
-  return state_;
-}
-
-void SkeletalAnimationDirector::set_blending_mode(uint mode) {
-  switch(mode) {
-    case 0 :
-      blend_function_ = &blend::swap;
-      blend_mode_ = 0;
-    break;
-    case 1 :
-      blend_function_ = &blend::linear;
-      blend_mode_ = 1;
-    break;
-    case 2 :
-      blend_function_ = &blend::smoothstep;
-      blend_mode_ = 2;
-    break;
-    case 3 :
-      blend_function_ = &blend::cos;
-      blend_mode_ = 3;
-    break;
-    default:
-      blend_function_ = &blend::linear;
-      blend_mode_ = 1;
-  }
-}
-
-uint SkeletalAnimationDirector::get_blending_mode() const {
-  return blend_mode_;
-}
-
-std::string const& SkeletalAnimationDirector::get_animation() const {
-  if(has_anims_ && curr_anim_num_< animations_.size()){
-    return animations_[curr_anim_num_].get_name();
-  }
-  else{
-    return none_loaded;
-  }
-}
-
-void SkeletalAnimationDirector::set_animation(std::string const& animation_name) {
-  if(animation_mapping_.find(animation_name) != animation_mapping_.end()) {
-    last_anim_num_ = curr_anim_num_;
-    curr_anim_num_ = animation_mapping_.at(animation_name);
-  }
-  else {
-    gua::Logger::LOG_WARNING << "No matching animation with name: " << animation_name <<" found!" << std::endl;
-  }
-}
-
-float SkeletalAnimationDirector::get_blending_factor() const{
-  return blend_factor_;
-}
-
-void SkeletalAnimationDirector::set_blending_factor(float f){
-  blend_factor_ = f;
-}
-
-float SkeletalAnimationDirector::get_blending_duration() const{
-  return blend_duration_;
-}
-
-void SkeletalAnimationDirector::set_blending_duration(float duration){
-  blend_duration_ = duration;
-}
-
-bool SkeletalAnimationDirector::get_looping() const {
-  return loop_;
-}
-
-void SkeletalAnimationDirector::set_looping(bool loop) {
-  loop_ = loop;
 }
 
 bool SkeletalAnimationDirector::has_anims() const {
