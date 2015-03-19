@@ -75,9 +75,10 @@ float compute_screen_space_shadow (int light_id, vec3 position) {
     
     float shadow_threshold = position_view.z + relative_sampling_distance * (light_view.z - position_view.z);
 
-   float error_threshold = 2e-3;
-   if (sample_depth - error_threshold > shadow_threshold) {
-     return min(gua_screen_space_shadows_intensity, gua_screen_space_shadows_intensity * gaussian(distance / gua_screen_space_shadows_radius, gaussian_falloff, 0));
+    // allow 1% error 
+    float error_threshold = 1e-2 * gua_screen_space_shadows_radius;
+    if (sample_depth - error_threshold > shadow_threshold) {
+      return min(gua_screen_space_shadows_intensity, gua_screen_space_shadows_intensity * gaussian(distance / gua_screen_space_shadows_radius, gaussian_falloff, 0));
     }
   }
 
