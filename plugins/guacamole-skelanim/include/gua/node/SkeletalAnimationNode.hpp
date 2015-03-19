@@ -115,6 +115,8 @@ public : // methods
   float get_time_2() const;
   void set_time_2(float);
 
+  bool has_anims() const;
+
   std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
 
   /**
