@@ -41,7 +41,7 @@ namespace gua {
 // class SkeletalAnimationNode;
 
 class SkeletalAnimationDirector {
-  
+
   friend class SkeletalAnimationNode;
 
  public:
@@ -66,17 +66,16 @@ class SkeletalAnimationDirector {
   void partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms);
 
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
-  std::map<std::string, unsigned> animation_mapping_; // maps a bone name to its index
 
   std::shared_ptr<Bone> root_;
   std::shared_ptr<Bone> anim_start_node_;
 
-  std::vector<SkeletalAnimation> animations_;
+  std::map<std::string, SkeletalAnimation> animations_;
 
   float blend_factor_;
 
-  unsigned anim_num_1_;
-  unsigned anim_num_2_;
+  std::string anim_1_;
+  std::string anim_2_;
   float anim_time_1_;
   float anim_time_2_;
   uint num_bones_;
