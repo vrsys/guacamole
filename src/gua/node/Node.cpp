@@ -72,7 +72,7 @@ namespace node {
         world_transform_ = transform_;
       }
       else {
-        world_transform_ = parent_->world_transform_ * transform_;
+        world_transform_ = parent_->world_transform_ * transform_; 
       }
 
       if (world_transform_ != old_world_trans) {

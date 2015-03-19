@@ -5,8 +5,8 @@
       vec4 c = vec4(0.2, 0.2, 0.2, 1.0);
 
       // project fragment position into the projective texture
-      vec4 proj_tex_space_pos = projective_texture_matrix * inverse(gua_view_matrix) * vec4(gua_position, 1.0);
-      vec4 view_tex_space_pos = vec4(gua_position, 1.0);
+      vec4 proj_tex_space_pos = projective_texture_matrix * vec4(gua_world_position, 1.0);
+      vec4 view_tex_space_pos = gua_view_matrix * vec4(gua_world_position, 1.0);
       
       // projective normalization
       proj_tex_space_pos = proj_tex_space_pos / proj_tex_space_pos.w;

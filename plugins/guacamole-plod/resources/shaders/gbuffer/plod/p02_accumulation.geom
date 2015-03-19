@@ -54,7 +54,7 @@ void main() {
         pass_uv_coords        = vec2(u_multiplier, v_multiplier);
         vec4 q_pos_ms         = vec4( ( (s_pos_ms + (u_multiplier * step_u) ) + (v_multiplier * step_v) ) ,1.0);
         gl_Position           = gua_model_view_projection_matrix * q_pos_ms;
-        gua_varying_position  = (gua_model_matrix * q_pos_ms).xyz;
+        gua_varying_world_position  = (gua_model_matrix * q_pos_ms).xyz;
         float es_linear_depth_corner = (gua_model_view_matrix * q_pos_ms).z;
 
         es_shift       = abs(es_linear_depth_corner - es_linear_depth_center) * es_shift_scale;
