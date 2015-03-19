@@ -51,7 +51,6 @@ class SkeletalAnimationDirector {
 
   bool has_anims() const;
 
-  void set_playback_mode(uint mode);
   uint get_playback_mode() const;
   
   void set_blending_mode(uint mode);
@@ -59,6 +58,9 @@ class SkeletalAnimationDirector {
 
   std::string const& get_animation() const;
   void set_animation(std::string const&);
+
+  bool get_looping() const;
+  void set_looping(bool);
 
   float get_blending_factor() const;
   void set_blending_factor(float f);
@@ -83,12 +85,13 @@ private:
 
   std::vector<SkeletalAnimation> animations_;
 
+  std::function<float (float)> blend_function_;
+
   enum  Playback {partial = 0, crossfade = 1, play = 2};
   Playback state_;
 
-  enum  Blending {swap = 0, linear = 1, smoothstep = 2, cosinus = 3};
-  Blending blending_state_;
-  float blendFactor_;
+  uint blend_mode_;
+  float blend_factor_;
 
   unsigned curr_anim_num_;
   unsigned last_anim_num_;
@@ -96,8 +99,11 @@ private:
 
   bool firstRun_;
   bool has_anims_;
+  bool loop_;
+  bool loop_prev_;
 
   float blend_start_;
+  float blend_start_prev_;
   float blend_end_;
   float blend_duration_;
   Timer timer_;

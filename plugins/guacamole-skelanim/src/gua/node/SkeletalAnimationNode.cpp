@@ -100,16 +100,11 @@ namespace node {
       Logger::LOG_WARNING << "Cant set material of invalid index!"<< std::endl;
     }
   }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_animation_mode(uint mode) {
-    animation_director_->set_playback_mode(mode);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  uint SkeletalAnimationNode::get_animation_mode() const {
-    return animation_director_->get_playback_mode();
-  }
+  
+  // ////////////////////////////////////////////////////////////////////////////////
+  // uint SkeletalAnimationNode::get_animation_mode() const {
+  //   return animation_director_->get_playback_mode();
+  // }
 
   ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::set_blending_mode(uint mode) {
