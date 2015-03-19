@@ -77,7 +77,7 @@ vec3 environment_lighting (in ShadingTerms T)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags) {
+vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags, bool ssao_enable) {
 
   float emit = pbr.r;
 
@@ -102,7 +102,7 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
   }
 
   float ambient_occlusion = 0.0;
-  if (gua_ssao_enable) {
+  if (ssao_enable) {
     ambient_occlusion = compute_ssao();
   }
   frag_color += (1.0 - ambient_occlusion) * environment_lighting(T);
@@ -125,7 +125,7 @@ vec4 abuf_shade(uint pos, float depth) {
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   vec3 position = h.xyz / h.w;
 
-  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags), pbr.r);
+  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags, false), pbr.r);
   return frag_color_emit;
 }
 #endif
@@ -225,7 +225,8 @@ void main() {
                                         gua_get_normal(),
                                         gua_get_position(),
                                         gua_get_pbr(),
-                                        gua_get_flags());
+                                        gua_get_flags(),
+                                        gua_ssao_enable);
       }
     }
     else {
