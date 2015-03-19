@@ -101,51 +101,76 @@ namespace node {
     }
   }
   
-  // ////////////////////////////////////////////////////////////////////////////////
-  // uint SkeletalAnimationNode::get_animation_mode() const {
-  //   return animation_director_->get_playback_mode();
-  // }
-
   ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_blending_mode(uint mode) {
-    animation_director_->set_blending_mode(mode);
+  std::string const& SkeletalAnimationNode::get_animation_1() const {
+    if(animation_director_->has_anims_ && animation_director_->anim_num_1_< animation_director_->animations_.size()){
+      return animation_director_->animations_[animation_director_->anim_num_1_].get_name();
+    }
+    else{
+      return animation_director_->none_loaded;
+    }
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
-  uint SkeletalAnimationNode::get_blending_mode() const {
-    return animation_director_->get_blending_mode();
+  void SkeletalAnimationNode::set_animation_1(std::string const& animation_name) {
+    if(animation_director_->animation_mapping_.find(animation_name) != animation_director_->animation_mapping_.end()) {
+      animation_director_->anim_num_2_ = animation_director_->anim_num_1_;
+      animation_director_->anim_num_1_ = animation_director_->animation_mapping_.at(animation_name);
+    }
+    else {
+      gua::Logger::LOG_WARNING << "No matching animation with name: " << animation_name <<" found!" << std::endl;
+    }
+  }
+  std::string const& SkeletalAnimationNode::get_animation_2() const {
+    if(animation_director_->has_anims_ && animation_director_->anim_num_2_< animation_director_->animations_.size()){
+      return animation_director_->animations_[animation_director_->anim_num_2_].get_name();
+    }
+    else{
+      return SkeletalAnimationDirector::none_loaded;
+    }
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
-  std::string const& SkeletalAnimationNode::get_animation() const {
-    return animation_director_->get_animation();
+  void SkeletalAnimationNode::set_animation_2(std::string const& animation_name) {
+    if(animation_director_->animation_mapping_.find(animation_name) != animation_director_->animation_mapping_.end()) {
+      animation_director_->anim_num_2_ = animation_director_->animation_mapping_.at(animation_name);
+    }
+    else {
+      gua::Logger::LOG_WARNING << "No matching animation with name: " << animation_name <<" found!" << std::endl;
+    }
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_animation(std::string const& animation_name) {
-    animation_director_->set_animation(animation_name);
+  float SkeletalAnimationNode::get_duration(std::string const& animation_name) const {
+    if(animation_director_->animation_mapping_.find(animation_name) != animation_director_->animation_mapping_.end()) {
+      return animation_director_->animations_.at(animation_director_->animation_mapping_.at(animation_name)).get_duration();
+    }
+    else {
+      return 0;
+      gua::Logger::LOG_WARNING << "No matching animation with name: " << animation_name <<" found!" << std::endl;
+    }
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
-  float SkeletalAnimationNode::get_blending_factor()const{
-    return animation_director_->get_blending_factor();
+  float SkeletalAnimationNode::get_blending_factor() const{
+    return animation_director_->blend_factor_;
   }
-  
-  ////////////////////////////////////////////////////////////////////////////////
+
   void SkeletalAnimationNode::set_blending_factor(float f){
-    animation_director_->set_blending_factor(f);
+    animation_director_->blend_factor_ = f;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
-  float SkeletalAnimationNode::get_blending_duration()const{
-    return animation_director_->get_blending_duration();
-  }
-  
-  ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::set_blending_duration(float duration){
-    animation_director_->set_blending_duration(duration);
+  void SkeletalAnimationNode::set_time_1(float time){
+    animation_director_->anim_time_1_ = time;
   }
 
+  float SkeletalAnimationNode::get_time_1() const{
+    return animation_director_->anim_time_1_;
+  }
+
+  void SkeletalAnimationNode::set_time_2(float time){
+    animation_director_->anim_time_2_ = time;
+  }
+
+  float SkeletalAnimationNode::get_time_2() const{
+    return animation_director_->anim_time_2_;
+  }
 
   ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::update_bone_transforms(RenderContext const& ctx) {

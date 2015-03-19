@@ -98,21 +98,22 @@ public : // methods
   std::vector<std::shared_ptr<SkinnedMeshResource>> const& get_geometries() const;
   
   std::shared_ptr<SkeletalAnimationDirector> const& get_director() const;
+//getter and setter of director
+  std::string const& get_animation_1() const;
+  void set_animation_1(std::string const&);
 
-  void set_animation_mode(uint mode);
-  uint get_animation_mode() const;
-  
-  void set_blending_mode(uint mode);
-  uint get_blending_mode() const;
-
-  std::string const& get_animation() const;
-  void        set_animation(std::string const&);
+  std::string const& get_animation_2() const;
+  void set_animation_2(std::string const&);
 
   float get_blending_factor() const;
   void set_blending_factor(float f);
 
-  float get_blending_duration() const;
-  void set_blending_duration(float duration);
+  float get_duration(std::string const&) const;
+
+  float get_time_1() const;
+  void set_time_1(float);
+  float get_time_2() const;
+  void set_time_2(float);
 
   std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
 

@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/utils/SkeletalAnimation.hpp>
+
 #include <gua/utils/Bone.hpp>
 #include <gua/utils/Timer.hpp>
 
@@ -37,7 +38,12 @@ namespace fbxsdk_2015_1{
 
 namespace gua {
 
+// class SkeletalAnimationNode;
+
 class SkeletalAnimationDirector {
+  
+  friend class SkeletalAnimationNode;
+
  public:
 
   SkeletalAnimationDirector(std::shared_ptr<Bone> const&);
@@ -51,25 +57,7 @@ class SkeletalAnimationDirector {
 
   bool has_anims() const;
 
-  uint get_playback_mode() const;
-  
-  void set_blending_mode(uint mode);
-  uint get_blending_mode() const;
-
-  std::string const& get_animation() const;
-  void set_animation(std::string const&);
-
-  bool get_looping() const;
-  void set_looping(bool);
-
-  float get_blending_factor() const;
-  void set_blending_factor(float f);
-
-  float get_blending_duration() const;
-  void set_blending_duration(float duration);
-
-  void fade_to(std::string const&, float, bool loop = true);
-private:
+// private:
 
   void calculate_matrices(float TimeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
   void calculate_matrices(std::vector<scm::math::mat4f>& Transforms);
@@ -85,28 +73,24 @@ private:
 
   std::vector<SkeletalAnimation> animations_;
 
-  std::function<float (float)> blend_function_;
-
-  enum  Playback {partial = 0, crossfade = 1, play = 2};
-  Playback state_;
-
-  uint blend_mode_;
   float blend_factor_;
 
-  unsigned curr_anim_num_;
-  unsigned last_anim_num_;
+  unsigned anim_num_1_;
+  unsigned anim_num_2_;
+  float anim_time_1_;
+  float anim_time_2_;
   uint num_bones_;
 
   bool firstRun_;
   bool has_anims_;
-  bool loop_;
-  bool loop_prev_;
+  // bool loop_;
+  // bool loop_prev_;
 
-  float blend_start_;
-  float blend_start_prev_;
-  float blend_end_;
-  float blend_duration_;
-  Timer timer_;
+  // float blend_start_;
+  // float blend_start_prev_;
+  // float blend_end_;
+  // float blend_duration_;
+  // Timer timer_;
 
   const static std::string none_loaded;
 };
