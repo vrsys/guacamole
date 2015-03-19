@@ -63,7 +63,7 @@ void main() {
 
   // calculate world position from blended depth
   vec4 world_pos_h = gua_inverse_projection_view_matrix * vec4(gl_FragCoord.xy, depth_visibility_pass, 1.0);
-  gua_position = world_pos_h.xyz/world_pos_h.w;
+  gua_world_position = world_pos_h.xyz/world_pos_h.w;
 
   // write correct depth instead of shifted depth
   @include "common/gua_write_gbuffer.glsl"

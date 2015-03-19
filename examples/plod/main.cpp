@@ -409,13 +409,13 @@ int main(int argc, char** argv) {
   // create viewing setup
   /////////////////////////////////////////////////////////////////////////////
 
-  auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
-  portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal->data.set_texture("portal");
-  portal->scale(5.0f);
-  portal->translate(4.5f, 1.0, -0.2f);
-  portal->rotate(-60, 0.f, 1.f, 0.f);
-  portal->translate(0.0f, 0.f, 5.0f);
+  //auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
+  //portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
+  //portal->data.set_texture("portal");
+  //portal->scale(5.0f);
+  //portal->translate(4.5f, 1.0, -0.2f);
+  //portal->rotate(-60, 0.f, 1.f, 0.f);
+  //portal->translate(0.0f, 0.f, 5.0f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   //screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -427,7 +427,7 @@ int main(int argc, char** argv) {
   portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
   portal_screen->translate(0.0, 0, 17.0);
   portal_screen->rotate(-90, 0.0, 1.0, 0.0);
-
+  
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
@@ -488,18 +488,18 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
   pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
-  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   pipe->get_resolve_pass()->background_texture("data/images/skymap.jpg");
 
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(true);
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_radius(16.0);
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(2.5);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(true);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_radius(16.0);
 
   pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadows(true);
-  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_radius(0.05);
-  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_intensity(0.9);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_radius(0.2);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_max_radius_px(200);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_intensity(1.0);
 
   camera->set_pipeline_description(pipe);
 
@@ -538,6 +538,8 @@ int main(int argc, char** argv) {
 
   std::size_t ctr = 0;
 
+  auto last_frame_time = std::chrono::steady_clock::now();
+
   ticker.on_tick.connect([&]() {
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
                                                               gua::math::float_t(trackball.shifty()),
@@ -546,13 +548,20 @@ int main(int argc, char** argv) {
     static unsigned framecounter = 0;
     ++framecounter;
 
+    auto current_time = std::chrono::steady_clock::now();
+    double milliseconds = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_frame_time).count() / 1000.0;
+
     if (rotate_light) {
       // modify scene
       
-      light->translate(-0.3, -0.7, -1.0);
-      light->rotate(0.5, 0.0, 0.0, 1.0);
-      light->translate(0.3, 0.7, 1.0);
+      if (milliseconds > 0.0 ) {
+        double time_per_rotation = 15;
+        light->translate(-0.3, -1.0, -1.0);
+        light->rotate((360 * milliseconds) / (time_per_rotation * 1000.0), 0.0, 0.0, 1.0);
+        light->translate(0.3, 1.0, 1.0);
+      }  
     }
+    last_frame_time = current_time;
 
     if (ctr++ % 150 == 0)
       std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "

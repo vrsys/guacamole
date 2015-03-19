@@ -22,6 +22,7 @@ vec2 gua_get_quad_coords() {
 @material_method_declarations_frag@
 
 void main() {
+
   @material_input@
   @include "common/gua_global_variable_assignment.glsl"
   @material_method_calls_frag@
