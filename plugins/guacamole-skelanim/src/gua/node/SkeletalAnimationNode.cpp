@@ -171,10 +171,13 @@ namespace node {
     return animation_director_->anim_time_2_;
   }
 
+  bool SkeletalAnimationNode::has_anims() const {
+    return animation_director_->has_anims_;
+  }
   ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::update_bone_transforms(RenderContext const& ctx) {
-    if(!animation_director_->has_anims() && !first_run_) return;
-    if(!animation_director_->has_anims()) first_run_ = false;
+    if(!animation_director_->has_anims_ && !first_run_) return;
+    if(!animation_director_->has_anims_) first_run_ = false;
 
     if(!bone_transforms_block_) {
       //TODO one transform block per context

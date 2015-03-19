@@ -55,8 +55,6 @@ class SkeletalAnimationDirector {
 
   std::vector<scm::math::mat4f> get_bone_transforms();
 
-  bool has_anims() const;
-
 // private:
 
   void calculate_matrices(float TimeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);

@@ -179,8 +179,4 @@ void SkeletalAnimationDirector::calculate_matrices(std::vector<scm::math::mat4f>
   anim_start_node_->accumulate_matrices(transforms, pose, identity);
 }
 
-bool SkeletalAnimationDirector::has_anims() const {
-  return has_anims_;
-}
-
 } // namespace gua
