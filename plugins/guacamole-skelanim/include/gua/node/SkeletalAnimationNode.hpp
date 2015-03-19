@@ -105,8 +105,8 @@ public : // methods
   std::string const& get_animation_2() const;
   void set_animation_2(std::string const&);
 
-  float get_blending_factor() const;
-  void set_blending_factor(float f);
+  float get_blend_factor() const;
+  void set_blend_factor(float f);
 
   float get_duration(std::string const&) const;
 

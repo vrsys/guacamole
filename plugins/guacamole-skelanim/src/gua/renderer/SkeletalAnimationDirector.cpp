@@ -22,12 +22,11 @@ SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Bone> const
     has_anims_{false},
     firstRun_{true},
     animations_{},
-    anim_num_1_{0},
-    anim_num_2_{0},
     bone_mapping_{},
     anim_start_node_{},
-    animation_mapping_{},
-    blend_factor_{0.0},
+    anim_1_{"none"},
+    anim_2_{"none"},
+    blend_factor_{1.0},
     root_{root} {
 
   root_->collect_indices(bone_mapping_);
@@ -46,8 +45,7 @@ void SkeletalAnimationDirector::add_animations(aiScene const& scene, std::string
  
   for(uint i = 0; i < scene.mNumAnimations; ++i) {
     std::string new_name = (scene.mNumAnimations == 1) ? name : name + std::to_string(i);
-    animations_.push_back(SkeletalAnimation{*scene.mAnimations[i], new_name});
-    animation_mapping_.insert(std::make_pair(new_name, animations_.size() -1));
+    animations_.insert(std::make_pair(new_name, SkeletalAnimation{*scene.mAnimations[i], new_name}));
   }
 
   has_anims_ = animations_.size() > 0;
@@ -80,8 +78,7 @@ void SkeletalAnimationDirector::add_animations(FbxScene& scene, std::string cons
 
   for(uint i = 0; i < num_anims; ++i) {
     std::string new_name = (num_anims == 1) ? name : name + std::to_string(i);
-    animations_.push_back(SkeletalAnimation{scene.GetSrcObject<FbxAnimStack>(i), nodes, new_name});
-    animation_mapping_.insert(std::make_pair(new_name, animations_.size() -1));
+    animations_.insert(std::make_pair(new_name, SkeletalAnimation{scene.GetSrcObject<FbxAnimStack>(i), nodes, new_name}));
   }
 
   has_anims_ = animations_.size() > 0;
@@ -136,15 +133,25 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms() {
     calculate_matrices(transforms);
     return transforms;  
   }
-
+// TODO better checking for unset anims
   if(blend_factor_ <= 0) {
-    calculate_matrices(anim_time_2_, animations_[anim_num_2_], transforms);
+    if(anim_2_ != "none") {
+      calculate_matrices(anim_time_2_, animations_.at(anim_2_), transforms);
+    }
+    else {
+      calculate_matrices(transforms);
+    }
   } 
   else if(blend_factor_ >= 1) {
-    calculate_matrices(anim_time_1_, animations_[anim_num_1_], transforms);
+    if(anim_2_ != "none") {
+      calculate_matrices(anim_time_1_, animations_.at(anim_1_), transforms);
+    }
+    else {
+      calculate_matrices(transforms);
+    }
   }
   else {
-    blend_pose(anim_time_2_, anim_time_1_, animations_[anim_num_2_], animations_[anim_num_1_], transforms);    
+    blend_pose(anim_time_2_, anim_time_1_, animations_.at(anim_2_), animations_.at(anim_1_), transforms);    
   }
   
   return transforms;

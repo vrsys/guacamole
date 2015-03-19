@@ -103,8 +103,8 @@ namespace node {
   
   ////////////////////////////////////////////////////////////////////////////////
   std::string const& SkeletalAnimationNode::get_animation_1() const {
-    if(animation_director_->has_anims_ && animation_director_->anim_num_1_< animation_director_->animations_.size()){
-      return animation_director_->animations_[animation_director_->anim_num_1_].get_name();
+    if(animation_director_->has_anims_ && animation_director_->animations_.find(animation_director_->anim_1_) != animation_director_->animations_.end()){
+      return animation_director_->anim_1_;
     }
     else{
       return animation_director_->none_loaded;
@@ -112,17 +112,16 @@ namespace node {
   }
 
   void SkeletalAnimationNode::set_animation_1(std::string const& animation_name) {
-    if(animation_director_->animation_mapping_.find(animation_name) != animation_director_->animation_mapping_.end()) {
-      animation_director_->anim_num_2_ = animation_director_->anim_num_1_;
-      animation_director_->anim_num_1_ = animation_director_->animation_mapping_.at(animation_name);
+    if(animation_director_->animations_.find(animation_name) != animation_director_->animations_.end()) {
+       animation_director_->anim_1_ = animation_name;
     }
     else {
       gua::Logger::LOG_WARNING << "No matching animation with name: " << animation_name <<" found!" << std::endl;
     }
   }
   std::string const& SkeletalAnimationNode::get_animation_2() const {
-    if(animation_director_->has_anims_ && animation_director_->anim_num_2_< animation_director_->animations_.size()){
-      return animation_director_->animations_[animation_director_->anim_num_2_].get_name();
+    if(animation_director_->has_anims_ && animation_director_->animations_.find(animation_director_->anim_2_) != animation_director_->animations_.end()){
+      return animation_director_->anim_2_;
     }
     else{
       return SkeletalAnimationDirector::none_loaded;
@@ -130,8 +129,8 @@ namespace node {
   }
 
   void SkeletalAnimationNode::set_animation_2(std::string const& animation_name) {
-    if(animation_director_->animation_mapping_.find(animation_name) != animation_director_->animation_mapping_.end()) {
-      animation_director_->anim_num_2_ = animation_director_->animation_mapping_.at(animation_name);
+    if(animation_director_->animations_.find(animation_name) != animation_director_->animations_.end()) {
+       animation_director_->anim_2_ = animation_name;
     }
     else {
       gua::Logger::LOG_WARNING << "No matching animation with name: " << animation_name <<" found!" << std::endl;
@@ -139,8 +138,8 @@ namespace node {
   }
 
   float SkeletalAnimationNode::get_duration(std::string const& animation_name) const {
-    if(animation_director_->animation_mapping_.find(animation_name) != animation_director_->animation_mapping_.end()) {
-      return animation_director_->animations_.at(animation_director_->animation_mapping_.at(animation_name)).get_duration();
+    if(animation_director_->animations_.find(animation_name) != animation_director_->animations_.end()) {
+      return animation_director_->animations_.at(animation_name).get_duration();
     }
     else {
       return 0;
@@ -148,11 +147,11 @@ namespace node {
     }
   }
 
-  float SkeletalAnimationNode::get_blending_factor() const{
+  float SkeletalAnimationNode::get_blend_factor() const{
     return animation_director_->blend_factor_;
   }
 
-  void SkeletalAnimationNode::set_blending_factor(float f){
+  void SkeletalAnimationNode::set_blend_factor(float f){
     animation_director_->blend_factor_ = f;
   }
 
