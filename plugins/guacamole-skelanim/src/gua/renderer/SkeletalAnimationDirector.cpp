@@ -135,8 +135,8 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms() {
   }
 // TODO better checking for unset anims
   if(blend_factor_ <= 0) {
-    if(anim_2_ != "none") {
-      calculate_matrices(anim_time_2_, animations_.at(anim_2_), transforms);
+    if(anim_1_ != "none") {
+      calculate_matrices(anim_time_1_, animations_.at(anim_1_), transforms);
     }
     else {
       calculate_matrices(transforms);
@@ -144,14 +144,14 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms() {
   } 
   else if(blend_factor_ >= 1) {
     if(anim_2_ != "none") {
-      calculate_matrices(anim_time_1_, animations_.at(anim_1_), transforms);
+      calculate_matrices(anim_time_2_, animations_.at(anim_2_), transforms);
     }
     else {
       calculate_matrices(transforms);
     }
   }
   else {
-    blend_pose(anim_time_2_, anim_time_1_, animations_.at(anim_2_), animations_.at(anim_1_), transforms);    
+    blend_pose(anim_time_1_, anim_time_2_, animations_.at(anim_1_), animations_.at(anim_2_), transforms);    
   }
   
   return transforms;
