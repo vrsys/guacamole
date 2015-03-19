@@ -325,6 +325,11 @@ namespace node {
       return;
     }
 
+    // check mask
+    if (!mask.check(get_tags())) {
+      return;
+    }
+
     for (auto child : children_) {
       // test for intersection with each child
       child->ray_test_impl(ray, options, mask, hits);
