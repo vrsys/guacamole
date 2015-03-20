@@ -36,10 +36,6 @@
 
 #include <vector>
 
-struct aiMesh;
-
-namespace Assimp { class Importer; }
-
 namespace gua {
 
 struct RenderContext;
@@ -69,8 +65,7 @@ class TriMeshRessource : public GeometryResource {
    *
    * \param mesh             The Assimp mesh to load the data from.
    */
-   TriMeshRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importer> const& importer, bool build_kd_tree);
-   TriMeshRessource(Mesh const& mesh);
+   TriMeshRessource(Mesh const& mesh, bool build_kd_tree);
 
   /**
    * Draws the Mesh.
@@ -105,9 +100,7 @@ class TriMeshRessource : public GeometryResource {
 
   KDTree kd_tree_;
 
-  aiMesh* ai_mesh_;
   Mesh mesh_;
-  std::shared_ptr<Assimp::Importer> importer_;
 };
 
 }
