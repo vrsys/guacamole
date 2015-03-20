@@ -282,8 +282,12 @@ std::vector<TriMeshRessource*> const TriMeshLoader::load_from_buffer(
   std::vector<TriMeshRessource*> meshes;
 
   for (unsigned int n = 0; n < scene->mNumMeshes; ++n) {
+<<<<<<< HEAD
     meshes.push_back(
         new TriMeshRessource(scene->mMeshes[n], importer, build_kd_tree));
+=======
+    meshes.push_back(new TriMeshRessource(Mesh{*scene->mMeshes[n]}, build_kd_tree));
+>>>>>>> Remove aimesh from kdtree, replace with gua mesh
   }
 
   return meshes;
@@ -318,7 +322,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     FbxMesh* fbx_mesh = fbx_node.GetMesh();
 
     GeometryDescription desc ("TriMesh", file_name, mesh_count++, flags);
-    GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*fbx_mesh}));
+    GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*fbx_mesh}, flags & TriMeshLoader::MAKE_PICKABLE));
 
     // load material
     std::shared_ptr<Material> material;
@@ -379,6 +383,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     unsigned& mesh_count) {
 
   // creates a geometry node and returns it
+<<<<<<< HEAD
   auto load_geometry = [&](int i) {
     GeometryDescription desc("TriMesh", file_name, mesh_count++, flags);
     GeometryDatabase::instance()->add(
@@ -387,6 +392,12 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
             ai_scene->mMeshes[ai_root->mMeshes[i]],
             importer,
             flags & TriMeshLoader::MAKE_PICKABLE));
+=======
+  auto load_geometry = [&](int i) 
+  {
+    GeometryDescription desc ("TriMesh", file_name, mesh_count++, flags);
+    GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*ai_scene->mMeshes[ai_root->mMeshes[i]]}, flags & TriMeshLoader::MAKE_PICKABLE));
+>>>>>>> Remove aimesh from kdtree, replace with gua mesh
 
     // load material
     std::shared_ptr<Material> material;

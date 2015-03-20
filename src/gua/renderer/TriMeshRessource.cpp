@@ -29,69 +29,32 @@
 #include <gua/node/TriMeshNode.hpp>
 #include <gua/utils/Logger.hpp>
 
-// external headers
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-
-namespace {
-struct Vertex {
-  scm::math::vec3f pos;
-  scm::math::vec2f tex;
-  scm::math::vec3f normal;
-  scm::math::vec3f tangent;
-  scm::math::vec3f bitangent;
-};
-}
-
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TriMeshRessource::TriMeshRessource()
-    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), ai_mesh_(nullptr), mesh_() {}
+    : vertices_(), indices_(), vertex_array_(), upload_mutex_(), mesh_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TriMeshRessource::TriMeshRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importer> const& importer,
-           bool build_kd_tree)
+TriMeshRessource::TriMeshRessource(Mesh const& mesh, bool build_kd_tree)
     : vertices_(),
       indices_(),
       vertex_array_(),
       upload_mutex_(),
-      mesh_(*mesh),
-      ai_mesh_(mesh),
-      importer_(importer) {
+      mesh_(mesh) {
 
   if (mesh_.num_vertices > 0) {
     bounding_box_ = math::BoundingBox<math::vec3>();
 
     for (unsigned v(0); v < mesh_.num_vertices; ++v) {
-      bounding_box_.expandBy(mesh_.positions[v]);
-    }
+      bounding_box_.expandBy(math::vec3{mesh_.positions[v]});
+    } 
 
-    if (build_kd_tree) {
-      kd_tree_.generate(ai_mesh_);
-    }
-  }
-}
-////////////////////////////////////////////////////////////////////////////////
-
-TriMeshRessource::TriMeshRessource(Mesh const& mesh)
-    : vertices_(),
-      indices_(),
-      vertex_array_(),
-      upload_mutex_(),
-      mesh_(mesh),
-      ai_mesh_(nullptr),
-      importer_(nullptr) {
-
-  if (mesh_.num_vertices > 0) {
-    bounding_box_ = math::BoundingBox<math::vec3>();
-
-    for (unsigned v(0); v < mesh_.num_vertices; ++v) {
-      bounding_box_.expandBy(mesh_.positions[v]);
-    }    
-  }
+  if (build_kd_tree) {
+    kd_tree_.generate(mesh);
+  }   
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +121,7 @@ void TriMeshRessource::draw(RenderContext const& ctx) const {
 
 void TriMeshRessource::ray_test(Ray const& ray, int options,
                     node::Node* owner, std::set<PickResult>& hits) {
-  kd_tree_.ray_test(ray, ai_mesh_, options, owner, hits);
+  kd_tree_.ray_test(ray, mesh_, options, owner, hits);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -100,7 +100,7 @@ struct Mesh {
   std::vector<scm::math::vec3f> tangents;
   std::vector<scm::math::vec3f> bitangents;
   std::vector<unsigned> indices;
-
+// TODO: flags, to specify if texcoors are present
   unsigned int num_vertices;
   unsigned int num_triangles;
 
