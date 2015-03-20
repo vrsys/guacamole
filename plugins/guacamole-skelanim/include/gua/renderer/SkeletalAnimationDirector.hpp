@@ -38,11 +38,12 @@ namespace fbxsdk_2015_1{
 
 namespace gua {
 
-// class SkeletalAnimationNode;
+  namespace node {
+    class SkeletalAnimationNode;
+  }
 
 class SkeletalAnimationDirector {
-
-  friend class SkeletalAnimationNode;
+  friend node::SkeletalAnimationNode;
 
  public:
 
@@ -55,12 +56,12 @@ class SkeletalAnimationDirector {
 
   std::vector<scm::math::mat4f> get_bone_transforms();
 
-// private:
+ private:
 
   void calculate_matrices(float TimeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
   void calculate_matrices(std::vector<scm::math::mat4f>& Transforms);
 
-  void blend_pose(float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
+  void blend_pose(float belnd_factor, float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
   void partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms);
 
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index

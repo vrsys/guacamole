@@ -116,7 +116,7 @@ namespace node {
        animation_director_->anim_1_ = animation_name;
     }
     else {
-      gua::Logger::LOG_WARNING << "No matching animation with name: " << animation_name <<" found!" << std::endl;
+      gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name <<"' found!" << std::endl;
     }
   }
   std::string const& SkeletalAnimationNode::get_animation_2() const {
@@ -133,7 +133,7 @@ namespace node {
        animation_director_->anim_2_ = animation_name;
     }
     else {
-      gua::Logger::LOG_WARNING << "No matching animation with name: " << animation_name <<" found!" << std::endl;
+      gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name << "' found!" << std::endl;
     }
   }
 
@@ -143,7 +143,7 @@ namespace node {
     }
     else {
       return 0;
-      gua::Logger::LOG_WARNING << "No matching animation with name: " << animation_name <<" found!" << std::endl;
+      gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name << "' found!" << std::endl;
     }
   }
 

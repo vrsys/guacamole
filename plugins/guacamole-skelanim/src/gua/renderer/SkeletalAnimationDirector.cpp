@@ -84,7 +84,7 @@ void SkeletalAnimationDirector::add_animations(FbxScene& scene, std::string cons
   has_anims_ = animations_.size() > 0;
 }
 
-void SkeletalAnimationDirector::blend_pose(float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
+void SkeletalAnimationDirector::blend_pose(float blend_factor, float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms) {
   float time_normalized1 = timeInSeconds1 / pAnim1.get_duration();
   time_normalized1 = scm::math::fract(time_normalized1);
 
@@ -96,7 +96,7 @@ void SkeletalAnimationDirector::blend_pose(float timeInSeconds1, float timeInSec
   Pose pose1{pAnim1.calculate_pose(time_normalized1)};
   Pose pose2{pAnim2.calculate_pose(time_normalized2)};
   
-  pose1.blend(pose2, blend_factor_);
+  pose1.blend(pose2, blend_factor);
 
   anim_start_node_->accumulate_matrices(transforms, pose1, identity);
 }
@@ -151,7 +151,7 @@ std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms() {
     }
   }
   else {
-    blend_pose(anim_time_1_, anim_time_2_, animations_.at(anim_1_), animations_.at(anim_2_), transforms);    
+    blend_pose(blend_factor_, anim_time_1_, anim_time_2_, animations_.at(anim_1_), animations_.at(anim_2_), transforms);    
   }
   
   return transforms;
