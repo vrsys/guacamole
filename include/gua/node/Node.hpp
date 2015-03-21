@@ -37,6 +37,7 @@
 #include <list>
 #include <vector>
 #include <memory>
+#include <boost/uuid/uuid.hpp>
 
 namespace gua {
 
@@ -497,6 +498,7 @@ class GUA_DLL Node {
   mutable math::mat4 world_transform_;
 
   SceneGraph* scenegraph_;
+  boost::uuids::uuid uuid_;
 };
 
 } // namespace node {

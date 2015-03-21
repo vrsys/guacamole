@@ -32,6 +32,8 @@
 
 // external headers
 #include <iostream>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/functional/hash.hpp>
 
 namespace gua {
 namespace node {
@@ -48,7 +50,9 @@ namespace node {
     child_dirty_(true),
     self_dirty_(true),
     user_data_(),
-    scenegraph_(nullptr)
+    scenegraph_(nullptr),
+    uuid_(boost::uuids::random_generator()())
+    //uuid_(boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()()))
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -351,6 +355,7 @@ namespace node {
     copied_node->bounding_box_ = bounding_box_;
     copied_node->user_data_ = user_data_;
     copied_node->world_transform_ = world_transform_;
+    copied_node->uuid_ = uuid_;
 
     return copied_node;
   }
@@ -409,7 +414,7 @@ namespace node {
 
   std::size_t const Node::uuid() const
   {
-    return reinterpret_cast<std::size_t>(this);
+    return boost::hash<boost::uuids::uuid>()(uuid_);
   }
 
 }
