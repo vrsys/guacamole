@@ -401,8 +401,7 @@ namespace gua {
     float top_minus_bottom = scm::math::length((frustum_corner_values[2]) -
       (frustum_corner_values[0]));
 
-    float height_divided_by_top_minus_bottom =
-      2 * render_target_dims[1] / (top_minus_bottom);
+    float height_divided_by_top_minus_bottom = render_target_dims[1] / (top_minus_bottom);
 
     //create pbr camera out of gua camera values
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
@@ -502,8 +501,7 @@ namespace gua {
 
         cuts->SendTransform(context_id, model_id, math::mat4f(scm_model_matrix));
         cuts->SendRendered(context_id, model_id);
-        cuts->SendImportance(context_id, model_id, plod_node->get_importance());
-        cuts->SendThreshold(context_id, model_id, plod_node->get_threshold());
+        cuts->SendThreshold(context_id, model_id, plod_node->get_error_threshold());
 
         // update current model matrix for PLODLibrary in order to make bundle pick work
         database->GetModel(model_id)->set_transform(math::mat4f(scm_model_matrix));
@@ -528,11 +526,11 @@ namespace gua {
         }
 
         depth_pass_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
-        depth_pass_program_->apply_uniform(ctx, "model_view_matrix", math::mat4f(scm_model_view_matrix));
-        depth_pass_program_->apply_uniform(ctx, "model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
+        depth_pass_program_->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(scm_model_view_matrix));
+        depth_pass_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
         depth_pass_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
 
-        depth_pass_program_->apply_uniform(ctx, "radius_importance_scaling", plod_node->get_importance());
+        depth_pass_program_->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
         depth_pass_program_->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
 
         ctx.render_context->apply();
@@ -618,10 +616,10 @@ namespace gua {
           auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
           current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
-          current_material_program->apply_uniform(ctx, "model_view_matrix", math::mat4f(scm_model_view_matrix));
-          current_material_program->apply_uniform(ctx, "model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
+          current_material_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(scm_model_view_matrix));
+          current_material_program->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
           current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
-          current_material_program->apply_uniform(ctx, "radius_importance_scaling", plod_node->get_importance());
+          current_material_program->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
           current_material_program->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
 
           plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);

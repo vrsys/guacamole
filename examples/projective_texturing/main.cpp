@@ -23,6 +23,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
@@ -97,7 +98,7 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-
+  camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   // projector transform node, screen and transform node
   auto projector_transform = graph.add_node<gua::node::TransformNode>("/", "projector_transform");

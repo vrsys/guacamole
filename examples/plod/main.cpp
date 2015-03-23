@@ -29,13 +29,14 @@
 #include <gua/node/PLODNode.hpp>
 #include <gua/renderer/PLODPass.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
+#include <gua/renderer/SSAAPass.hpp>
 
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 
 #include <gua/renderer/TexturedQuadPass.hpp>
 
-bool rotate_light;
+bool rotate_light = false;
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -58,33 +59,59 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void increase_importance_radius(std::shared_ptr<gua::node::Node> const& node) {
+void increase_radius(std::shared_ptr<gua::node::Node> const& node) {
   auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
   if (plodnode) {
-    auto radius_scale = plodnode->get_importance();
-    plodnode->set_importance(std::min(2.0, 1.1 * radius_scale));
-    std::cout << "Setting radius scale to " << plodnode->get_importance() << std::endl;
+    auto radius_scale = plodnode->get_radius_scale();
+    plodnode->set_radius_scale(std::min(2.0, 1.1 * radius_scale));
+    std::cout << "Setting radius scale to " << plodnode->get_radius_scale() << std::endl;
   }
   for (auto const& c : node->get_children()) {
-    increase_importance_radius(c);
+    increase_radius(c);
   }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void decrease_importance_radius(std::shared_ptr<gua::node::Node> const& node) {
+void decrease_radius(std::shared_ptr<gua::node::Node> const& node) {
   auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
   if (plodnode) {
-    auto radius_scale = plodnode->get_importance();
-    plodnode->set_importance(std::max(0.1, 0.9 * radius_scale));
-    std::cout << "Setting radius scale to " << plodnode->get_importance() << std::endl;
+    auto radius_scale = plodnode->get_radius_scale();
+    plodnode->set_radius_scale(std::max(0.1, 0.9 * radius_scale));
+    std::cout << "Setting radius scale to " << plodnode->get_radius_scale() << std::endl;
   }
   for (auto const& c : node->get_children()) {
-    decrease_importance_radius(c);
+    decrease_radius(c);
   }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// keyboard callback
+void increase_error_threshold(std::shared_ptr<gua::node::Node> const& node) {
+  auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
+  if (plodnode) {
+    auto radius_scale = plodnode->get_error_threshold();
+    plodnode->set_error_threshold(std::min(16.0, 1.1 * radius_scale));
+    std::cout << "Setting error threshold to " << plodnode->get_error_threshold() << std::endl;
+  }
+  for (auto const& c : node->get_children()) {
+    increase_error_threshold(c);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void decrease_error_threshold(std::shared_ptr<gua::node::Node> const& node) {
+  auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
+  if (plodnode) {
+    auto radius_scale = plodnode->get_error_threshold();
+    plodnode->set_error_threshold(std::max(1.0, 0.9 * radius_scale));
+    std::cout << "Setting  error threshold to " << plodnode->get_error_threshold() << std::endl;
+  }
+  for (auto const& c : node->get_children()) {
+    decrease_error_threshold(c);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// keyboard callback 
 //    -> use 'r' to force shader recompilation
 //    -> use 'u' to increase splat radius
 //    -> use 'j' to decrease splat radius
@@ -93,17 +120,146 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 {
   if (action == 0) return;
 
+  float v = 0.0f;
+
   switch (std::tolower(key))
   {
   case 'r':
     pipe.get_resolve_pass()->touch();
     break;
   case 'u':
-    increase_importance_radius(graph.get_root());
+    increase_radius(graph.get_root());
     break;
   case 'j':
-    decrease_importance_radius(graph.get_root());
+    decrease_radius(graph.get_root());
     break;
+  case 'i':
+    increase_error_threshold(graph.get_root());
+    break;
+  case 'k':
+    decrease_error_threshold(graph.get_root());
+    break;
+
+  case 'm': // toggle environment lighting mode
+
+    if (pipe.get_resolve_pass()->environment_lighting_mode() == gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR) {
+      std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP" << std::endl;
+      pipe.get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP);
+    }
+    else if (pipe.get_resolve_pass()->environment_lighting_mode() == gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP) {
+      std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::CUBEMAP" << std::endl;
+      pipe.get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::CUBEMAP);
+    }
+    else {
+      std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR" << std::endl;
+      pipe.get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
+    }
+
+    pipe.get_resolve_pass()->touch();
+    break;
+
+  case 'b': // toggle background mode
+
+    if (pipe.get_resolve_pass()->background_mode() == gua::ResolvePassDescription::BackgroundMode::COLOR) {
+      std::cout << "Setting to gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE" << std::endl;
+      pipe.get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+    }
+    else if (pipe.get_resolve_pass()->background_mode() == gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE) {
+      std::cout << "Setting to gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE" << std::endl;
+      pipe.get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+    }
+    else {
+      std::cout << "Setting to gua::ResolvePassDescription::BackgroundMode::AMBIENT_COLOR" << std::endl;
+      pipe.get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::COLOR);
+    }
+
+    pipe.get_resolve_pass()->touch();
+    break;
+
+  case 'a':  // toggle screen space shadows
+    pipe.get_resolve_pass()->screen_space_shadows(!pipe.get_resolve_pass()->screen_space_shadows());
+    break;
+
+  case 'q':
+    pipe.get_resolve_pass()->screen_space_shadow_radius(std::min(2.0f, 1.2f * pipe.get_resolve_pass()->screen_space_shadow_radius()));
+    break;
+
+  case 'z':
+    pipe.get_resolve_pass()->screen_space_shadow_radius(std::max(0.002f, 0.9f * pipe.get_resolve_pass()->screen_space_shadow_radius()));
+    break;
+
+  case 'w':
+    pipe.get_resolve_pass()->screen_space_shadow_intensity(std::min(1.0f, 1.1f * pipe.get_resolve_pass()->screen_space_shadow_intensity()));
+    break;
+
+  case 'x':
+    pipe.get_resolve_pass()->screen_space_shadow_intensity(std::max(0.1f, 0.9f * pipe.get_resolve_pass()->screen_space_shadow_intensity()));
+    break;
+
+
+  case 's':  // toggle SSAO
+    pipe.get_resolve_pass()->ssao_enable(!pipe.get_resolve_pass()->ssao_enable());
+    break;
+
+  case '1':
+    pipe.get_resolve_pass()->ssao_intensity(std::min(5.0f, 1.1f * pipe.get_resolve_pass()->ssao_intensity()));
+    break;
+  case '2':
+    pipe.get_resolve_pass()->ssao_intensity(std::max(0.02f, 0.9f * pipe.get_resolve_pass()->ssao_intensity()));
+    break;
+
+  case '3':
+    pipe.get_resolve_pass()->ssao_radius(std::min(64.0f, 1.1f * pipe.get_resolve_pass()->ssao_radius()));
+    break;
+  case '4':
+    pipe.get_resolve_pass()->ssao_radius(std::max(1.0f, 0.9f * pipe.get_resolve_pass()->ssao_radius()));
+    break;
+
+  case '5':
+    pipe.get_resolve_pass()->ssao_falloff(std::min(256.0f, 1.1f * pipe.get_resolve_pass()->ssao_falloff()));
+    break;
+  case '6':
+    pipe.get_resolve_pass()->ssao_falloff(std::max(0.1f, 0.9f * pipe.get_resolve_pass()->ssao_falloff()));
+    break;
+
+  case 'f':
+    if (pipe.get_ssaa_pass()->mode() == gua::SSAAPassDescription::SSAAMode::FXAA311) {
+      std::cout << "Switching to simple FAST_FXAA\n" << std::endl;
+      pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FAST_FXAA);
+    }
+    else if (pipe.get_ssaa_pass()->mode() == gua::SSAAPassDescription::SSAAMode::FAST_FXAA) {
+      std::cout << "Switching to No FXAA\n" << std::endl;
+      pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::DISABLED);
+    }
+    else {
+      std::cout << "Switching to FXAA 3.11\n" << std::endl;
+      pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FXAA311);
+    }
+    break;
+
+  case '7':
+    v = std::min(1.0f, 1.1f * pipe.get_ssaa_pass()->fxaa_quality_subpix());
+    std::cout << "Setting quality_subpix to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_quality_subpix(v);
+    break;
+  case '8':
+    v = std::max(0.2f, 0.9f * pipe.get_ssaa_pass()->fxaa_quality_subpix());
+    std::cout << "Setting quality_subpix to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_quality_subpix(v);
+    break;
+
+  case '9':
+    v = std::min(0.333f, 1.1f * pipe.get_ssaa_pass()->fxaa_edge_threshold());
+    std::cout << "Setting edge_threshold to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_edge_threshold(v);
+    break;
+  case '0':
+    v = std::max(0.063f, 0.9f * pipe.get_ssaa_pass()->fxaa_edge_threshold());
+    std::cout << "Setting edge_threshold to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_edge_threshold(v);
+    break;
+
+
   case ' ':
     rotate_light = !rotate_light;
     break;
@@ -187,12 +343,14 @@ int main(int argc, char** argv) {
 #if RENDER_PITOTI_HUNTING_SCENE
   #if WIN32
     //auto plod_geometry(plodLoader.load_geometry("hunter", "\\GRANDMOTHER/pitoti/XYZ_ALL/new_pitoti_sampling/objects/Area_4_hunter_with_bow.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION ));
+  auto plod_geometry(plodLoader.load_geometry("hunter", "data/objects/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
   #else
   auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/precision_tests/001/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION ));
     //auto plod_geometry(plodLoader.load_geometry("/mnt/pitoti/XYZ_ALL/new_pitoti_sampling/Area_4_hunter_with_bow.kdn", gua::PLODLoader::NORMALIZE_POSITION  ));
   #endif
 #endif
+
+  std::cout << plod_geometry->get_bounding_box().center() << std::endl;
 
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
   //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_01.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
@@ -205,7 +363,7 @@ int main(int argc, char** argv) {
 #endif
 
   auto setup_plod_node = [] ( std::shared_ptr<gua::node::PLODNode> const& node) {
-    node->set_importance(1.0f);
+    node->set_radius_scale(1.0f);
     node->set_enable_backface_culling_by_normal(false);
     node->set_draw_bounding_box(true);
   };
@@ -218,12 +376,12 @@ int main(int argc, char** argv) {
   // create trimesh geometry
   gua::TriMeshLoader loader;
 
-  auto light_proxy_geometry(loader.create_geometry_from_file("light", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto light_proxy_geometry(loader.create_geometry_from_file("light_proxy", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   auto camera_proxy_geometry(loader.create_geometry_from_file("camera_proxy", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  light_proxy_geometry->scale(0.02);
+  light_proxy_geometry->scale(0.01);
 
   // connect scene graph
-  transform->add_child(plod_geometry);
+  graph.add_node("/transform", plod_geometry);  
   //transform->add_child(plod_geometry2);
 
 #if RENDER_ADDITIONAL_TRIMESH_MODEL
@@ -240,39 +398,36 @@ int main(int argc, char** argv) {
   /////////////////////////////////////////////////////////////////////////////
   // create lighting
   /////////////////////////////////////////////////////////////////////////////
-
-  auto light_center = graph.add_node<gua::node::TransformNode>("/", "light_center");
-  light_center->translate(0.f, 0.f, 2.f);
-
-  auto light = graph.add_node<gua::node::PointLightNode>("/light_center", "light");
+  auto light = graph.add_node<gua::node::PointLightNode>("/transform/hunter", "light");
   light->data.set_enable_shadows(true);
-  light->scale(3.f);
-  light->translate(0.f, 0.f, 3.7f);
+  light->data.set_brightness(30.f);
+  light->scale(1.f);
+  light->translate(0.5, 0.3, 1.3);
   light->add_child(light_proxy_geometry);
 
   /////////////////////////////////////////////////////////////////////////////
   // create viewing setup
   /////////////////////////////////////////////////////////////////////////////
 
-  auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
-  portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal->data.set_texture("portal");
-  portal->scale(5.0f);
-  portal->translate(4.5f, 1.0, -0.2f);
-  portal->rotate(-60, 0.f, 1.f, 0.f);
-  portal->translate(0.0f, 0.f, 5.0f);
+  //auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
+  //portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
+  //portal->data.set_texture("portal");
+  //portal->scale(5.0f);
+  //portal->translate(4.5f, 1.0, -0.2f);
+  //portal->rotate(-60, 0.f, 1.f, 0.f);
+  //portal->translate(0.0f, 0.f, 5.0f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   //screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   //screen->data.set_size(gua::math::vec2(1.6f, 0.9f));
   screen->data.set_size(gua::math::vec2(0.45f, 0.25f));
-  screen->translate(0, 0, 30.0);
+  screen->translate(0, 0, 15.0);
 
   auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
   portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal_screen->translate(0.0, 0, 15.0);
+  portal_screen->translate(0.0, 0, 17.0);
   portal_screen->rotate(-90, 0.0, 1.0, 0.0);
-
+  
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
@@ -319,8 +474,8 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-  camera->config.set_far_clip(200.0);
-  camera->config.set_near_clip(0.01);
+  camera->config.set_far_clip(100.0);
+  camera->config.set_near_clip(0.1);
   camera->add_child(camera_proxy_geometry);
  //camera->set_pre_render_cameras({portal_camera});
 
@@ -332,14 +487,19 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
+  //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   pipe->get_resolve_pass()->background_texture("data/images/skymap.jpg");
 
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(true);
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_radius(16.0);
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(2.5);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(true);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_radius(16.0);
+
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadows(true);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_radius(0.2);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_max_radius_px(200);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_intensity(1.0);
 
   camera->set_pipeline_description(pipe);
 
@@ -378,6 +538,8 @@ int main(int argc, char** argv) {
 
   std::size_t ctr = 0;
 
+  auto last_frame_time = std::chrono::steady_clock::now();
+
   ticker.on_tick.connect([&]() {
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
                                                               gua::math::float_t(trackball.shifty()),
@@ -386,14 +548,24 @@ int main(int argc, char** argv) {
     static unsigned framecounter = 0;
     ++framecounter;
 
+    auto current_time = std::chrono::steady_clock::now();
+    double milliseconds = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_frame_time).count() / 1000.0;
+
     if (rotate_light) {
       // modify scene
-      light->rotate(0.1, 0.0, 1.0, 0.0);
+      
+      if (milliseconds > 0.0 ) {
+        double time_per_rotation = 15;
+        light->translate(-0.3, -1.0, -1.0);
+        light->rotate((360 * milliseconds) / (time_per_rotation * 1000.0), 0.0, 0.0, 1.0);
+        light->translate(0.3, 1.0, 1.0);
+      }  
     }
+    last_frame_time = current_time;
 
     if (ctr++ % 150 == 0)
-      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
-      << camera->get_rendering_fps() << ", app fps: "
+      std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
+      << window->get_rendering_fps() << ", app fps: "
       << camera->get_application_fps() << std::endl;
 
     // apply trackball matrix to object

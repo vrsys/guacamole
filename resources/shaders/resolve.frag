@@ -12,8 +12,10 @@ in vec2 gua_quad_coords;
 
 // methods
 @include "common/gua_shading.glsl"
-@include "ssao.frag"
 @include "common/gua_tone_mapping.glsl"
+
+@include "ssao.frag"
+@include "screen_space_shadow.frag"
 
 #define ABUF_MODE readonly
 #define ABUF_SHADE_FUNC abuf_shade
@@ -75,7 +77,7 @@ vec3 environment_lighting (in ShadingTerms T)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags) {
+vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags, bool ssao_enable) {
 
   float emit = pbr.r;
 
@@ -90,15 +92,17 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
   vec3 frag_color = vec3(0.0);
   for (int i = 0; i < gua_lights_num; ++i) {
       // is it either a visible spot/point light or a sun light ?
+      float screen_space_shadow = compute_screen_space_shadow (i, position);
+
       if ( ((bitset[i>>5] & (1u << (i%32))) != 0)
          || i >= gua_lights_num - gua_sun_lights_num )
       {
-        frag_color += gua_shade(i, T);
+        frag_color += (1.0 - screen_space_shadow) * gua_shade(i, T);
       }
   }
 
   float ambient_occlusion = 0.0;
-  if (gua_ssao_enable) {
+  if (ssao_enable) {
     ambient_occlusion = compute_ssao();
   }
   frag_color += (1.0 - ambient_occlusion) * environment_lighting(T);
@@ -121,7 +125,7 @@ vec4 abuf_shade(uint pos, float depth) {
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   vec3 position = h.xyz / h.w;
 
-  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags), pbr.r);
+  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags, false), pbr.r);
   return frag_color_emit;
 }
 #endif
@@ -221,7 +225,8 @@ void main() {
                                         gua_get_normal(),
                                         gua_get_position(),
                                         gua_get_pbr(),
-                                        gua_get_flags());
+                                        gua_get_flags(),
+                                        gua_ssao_enable);
       }
     }
     else {

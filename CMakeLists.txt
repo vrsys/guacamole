@@ -72,6 +72,12 @@ endif (UNIX)
 
 include(FindSchism)
 include(FindBoost)
+#find_package(Boost COMPONENTS
+#  system
+#  regex
+#  thread
+#  REQUIRED
+#  )
 include(FindZMQ)
 
 if (GUACAMOLE_ENABLE_PHYSICS)
@@ -94,7 +100,7 @@ set(LIB_PATHS
     ${JSON_LIBRARY_DIRS}
     ${GL_LIBRARY_DIRS}
     ${GLEW_LIBRARY_DIRS}
-    ${BOOST_LIBRARY_DIRS}
+    ${Boost_LIBRARY_DIRS}
     ${BULLET_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
     ${ZMQ_LIBRARY_DIRS}
@@ -106,7 +112,7 @@ set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
     ${SCHISM_INCLUDE_DIRS}
-    ${BOOST_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIR}
     ${JSON_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
@@ -242,9 +248,9 @@ message(STATUS "   library path: ${SCHISM_LIBRARY_DIRS}" )
 message(STATUS "   include: ${SCHISM_INCLUDE_DIRS}" )
 message(STATUS "" )
 message(STATUS " boost:" )
-message(STATUS "   library: ${BOOST_LIBRARIES}" )
-message(STATUS "   library path: ${BOOST_LIBRARY_DIRS}" )
-message(STATUS "   include: ${BOOST_INCLUDE_DIRS}" )
+message(STATUS "   library: ${Boost_LIBRARIES}" )
+message(STATUS "   library path: ${Boost_LIBRARY_DIRS}" )
+message(STATUS "   include: ${Boost_INCLUDE_DIRS}" )
 message(STATUS "" )
 message(STATUS " assimp:" )
 message(STATUS "   library: ${ASSIMP_LIBRARIES}" )

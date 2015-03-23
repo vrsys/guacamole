@@ -176,6 +176,9 @@ class GUA_DLL WindowBase {
    */
   RenderContext* get_context();
 
+  float get_rendering_fps() { return rendering_fps; }
+  std::atomic<float> rendering_fps;
+
 protected:
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;

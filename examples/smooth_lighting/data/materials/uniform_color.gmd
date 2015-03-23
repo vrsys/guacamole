@@ -9,7 +9,7 @@
       "source" : "
         void uniform_color() 
         {
-          float noise = texture(sampler2D(noise_texture), mod((10.0 * gua_position.xy), vec2(1.0)) ).r;
+          float noise = texture(sampler2D(noise_texture), mod((10.0 * gua_world_position.xy), vec2(1.0)) ).r;
           gua_color = mix(vec3(noise), color, 1.0);
 
           gua_metalness = metalness;

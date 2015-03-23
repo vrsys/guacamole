@@ -16,4 +16,6 @@ layout (std140, binding=0) uniform cameraBlock {
 vec3 gua_camera_position = gua_camera_position_4.xyz;
 
 uniform mat4 gua_model_matrix;
+uniform mat4 gua_model_view_matrix;
+uniform mat4 gua_model_view_projection_matrix;
 uniform mat4 gua_normal_matrix;

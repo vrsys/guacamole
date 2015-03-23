@@ -5,9 +5,9 @@
       vec4 c = vec4(0.2, 0.2, 0.2, 1.0);
 
       // project fragment position into the projective texture
-      vec4 view_tex_space_pos = view_texture_matrix * vec4(gua_position, 1.0);
-      vec4 proj_tex_space_pos = projective_texture_matrix * view_texture_matrix * vec4(gua_position, 1.0);
-
+      vec4 proj_tex_space_pos = projective_texture_matrix * vec4(gua_world_position, 1.0);
+      vec4 view_tex_space_pos = gua_view_matrix * vec4(gua_world_position, 1.0);
+      
       // projective normalization
       proj_tex_space_pos = proj_tex_space_pos / proj_tex_space_pos.w;
       view_tex_space_pos = view_tex_space_pos / view_tex_space_pos.w;
@@ -22,9 +22,9 @@
         c = texture(sampler2D(projective_texture), proj_texcoord.xy);
       }
 
-      gua_color = vec3(0.2, 0.2, 0.2) + 0.5 * c.rgb;
-      gua_roughness = 0.5;
-      gua_metalness = 0.0;
+      gua_color = c.rgb;
+      gua_roughness = 1.0;
+      gua_metalness = 1.0;
       gua_emissivity = 0.0;
       gua_flags_passthrough = false;
       gua_alpha = c.a;

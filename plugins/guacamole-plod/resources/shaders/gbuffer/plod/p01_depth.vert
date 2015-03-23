@@ -10,7 +10,7 @@ layout(location = 0) in vec3 in_position;
 layout(location = 5) in float in_radius;
 layout(location = 6) in vec3 in_normal;
 
-uniform float radius_importance_scaling;
+uniform float radius_scaling;
 
 out VertexData {
   vec3 pass_ms_u;

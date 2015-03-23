@@ -89,7 +89,7 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx,
   if (needs_update) {
     uniform_block_.begin_manipulation(ctx.render_context);
     uniform_block_.end_manipulation();
-    Logger::LOG_DEBUG << "Light data upload" << std::endl;
+    //Logger::LOG_DEBUG << "Light data upload" << std::endl;
   }
   return math::vec2ui(width, height);
 }

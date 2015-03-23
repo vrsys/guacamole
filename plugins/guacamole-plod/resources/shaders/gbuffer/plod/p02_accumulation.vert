@@ -15,7 +15,7 @@ layout (location = 5) in float in_radius;
 layout (location = 6) in vec3 in_normal;
 
 uniform uint gua_material_id;
-uniform float radius_importance_scaling;
+uniform float radius_scaling;
 
 out VertexData {
   //output to geometry shader
