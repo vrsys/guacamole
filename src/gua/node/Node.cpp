@@ -32,8 +32,6 @@
 
 // external headers
 #include <iostream>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/functional/hash.hpp>
 
 namespace gua {
 namespace node {
@@ -41,18 +39,11 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
 
   Node::Node(std::string const& name, math::mat4 const& transform)
-    : parent_(nullptr),
-    children_(),
+    : children_(),
     name_(name),
     transform_(transform),
     bounding_box_(),
-    draw_bounding_box_(false),
-    child_dirty_(true),
-    self_dirty_(true),
-    user_data_(),
-    scenegraph_(nullptr),
-    uuid_(boost::uuids::random_generator()())
-    //uuid_(boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()()))
+    user_data_()
   {}
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -411,11 +402,6 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-
-  std::size_t const Node::uuid() const
-  {
-    return boost::hash<boost::uuids::uuid>()(uuid_);
-  }
 
 }
 }
