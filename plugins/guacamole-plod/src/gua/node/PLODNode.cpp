@@ -237,7 +237,7 @@ void PLODNode::update_cache() {
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Node> PLODNode::copy() const {
-  std::shared_ptr<PLODNode> result(new PLODNode(get_name(), geometry_description_, geometry_file_path_, material_, get_transform()));
+  std::shared_ptr<PLODNode> result = std::make_shared<PLODNode>(*this);
 
   result->update_cache();
 

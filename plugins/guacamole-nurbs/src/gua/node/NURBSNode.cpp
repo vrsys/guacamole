@@ -229,7 +229,7 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   std::shared_ptr<Node> NURBSNode::copy() const 
   {
-    std::shared_ptr<NURBSNode> result(new NURBSNode(get_name(), geometry_description_, material_, get_transform()));
+    std::shared_ptr<NURBSNode> result = std::make_shared<NURBSNode>(*this);
 
     result->update_cache();
 

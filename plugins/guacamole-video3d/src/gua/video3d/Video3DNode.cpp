@@ -91,9 +91,7 @@ namespace node {
   /////////////////////////////////////////////////////////////////////////////
 
   std::shared_ptr<Node> Video3DNode::copy() const {
-    auto result(std::make_shared<Video3DNode>(get_name(), video_name_, material_, get_transform()));
-    result->shadow_mode_ = shadow_mode_;
-    return result;
+    return std::make_shared<Video3DNode>(*this);
   }
 
   /////////////////////////////////////////////////////////////////////////////
