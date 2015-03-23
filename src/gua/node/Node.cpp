@@ -36,12 +36,11 @@ namespace node {
 ////////////////////////////////////////////////////////////////////////////////
 
 Node::Node(std::string const& name, math::mat4 const& transform)
-  : children_(),
-  name_(name),
-  transform_(transform),
-  bounding_box_(),
-  user_data_()
-{}
+    : children_(),
+      name_(name),
+      transform_(transform),
+      bounding_box_(),
+      user_data_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,16 +54,13 @@ Node::~Node() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Node::update_cache() {
-
-  if (self_dirty_)
-  {
+  if (self_dirty_) {
     math::mat4 old_world_trans(world_transform_);
 
     if (is_root()) {
       world_transform_ = transform_;
-    }
-    else {
-      world_transform_ = parent_->world_transform_ * transform_; 
+    } else {
+      world_transform_ = parent_->world_transform_ * transform_;
     }
 
     if (world_transform_ != old_world_trans) {
@@ -104,7 +100,6 @@ void Node::clear_children() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Node::remove_child(std::shared_ptr<Node> const& child) {
-
   for (auto c(children_.begin()); c != children_.end(); ++c) {
     if (*c == child) {
       children_.erase(c);
@@ -119,15 +114,11 @@ void Node::remove_child(std::shared_ptr<Node> const& child) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-gua::utils::TagList const& Node::get_tags() const {
-  return tags_;
-}
+gua::utils::TagList const& Node::get_tags() const { return tags_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-gua::utils::TagList& Node::get_tags() {
-  return tags_;
-}
+gua::utils::TagList& Node::get_tags() { return tags_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -147,15 +138,14 @@ math::mat4 const& Node::get_cached_world_transform() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Node::set_world_transform(math::mat4 const& transform) {
-    if (is_root()) {
-        transform_ = transform;
-    } else {
-        transform_ = scm::math::inverse(parent_->get_world_transform()) * transform;
-    }
+  if (is_root()) {
+    transform_ = transform;
+  } else {
+    transform_ = scm::math::inverse(parent_->get_world_transform()) * transform;
+  }
 
-    set_dirty();
+  set_dirty();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -165,16 +155,14 @@ math::vec3 Node::get_world_position() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Node::set_transform(math::mat4 const & transform) {
+void Node::set_transform(math::mat4 const& transform) {
   transform_ = transform;
   set_dirty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Node::scale(math::float_t s) {
-  scale(s, s, s);
-}
+void Node::scale(math::float_t s) { scale(s, s, s); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -185,13 +173,14 @@ void Node::scale(math::float_t x, math::float_t y, math::float_t z) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Node::scale(math::vec3 const& s) {
-  scale(s.x, s.y, s.z);
-}
+void Node::scale(math::vec3 const& s) { scale(s.x, s.y, s.z); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Node::rotate(math::float_t angle, math::float_t x, math::float_t y, math::float_t z) {
+void Node::rotate(math::float_t angle,
+                  math::float_t x,
+                  math::float_t y,
+                  math::float_t z) {
   transform_ = scm::math::make_rotation(angle, x, y, z) * transform_;
   set_dirty();
 }
@@ -267,15 +256,11 @@ void Node::update_bounding_box() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Node::set_draw_bounding_box(bool draw) {
-  draw_bounding_box_ = draw;
-}
+void Node::set_draw_bounding_box(bool draw) { draw_bounding_box_ = draw; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool Node::get_draw_bounding_box() const {
-  return draw_bounding_box_;
-}
+bool Node::get_draw_bounding_box() const { return draw_bounding_box_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -297,9 +282,10 @@ std::set<PickResult> const Node::ray_test(Ray const& ray,
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-void Node::ray_test_impl(Ray const& ray, int options,
-                         Mask const& mask, std::set<PickResult>& hits) {
-
+void Node::ray_test_impl(Ray const& ray,
+                         int options,
+                         Mask const& mask,
+                         std::set<PickResult>& hits) {
   auto box_hits(::gua::intersect(ray, bounding_box_));
 
   // ray did not intersect bbox -- therefore it wont intersect any child
@@ -310,9 +296,8 @@ void Node::ray_test_impl(Ray const& ray, int options,
   // return if only first object shall be returned and the current first hit
   // is in front of the bbox entry point and the ray does not start inside
   // the bbox
-  if (options & PickResult::PICK_ONLY_FIRST_OBJECT
-    && hits.size() > 0 && hits.begin()->distance < box_hits.first
-    && box_hits.first != Ray::END) {
+  if (options & PickResult::PICK_ONLY_FIRST_OBJECT && hits.size() > 0 &&
+      hits.begin()->distance < box_hits.first && box_hits.first != Ray::END) {
 
     return;
   }
@@ -351,8 +336,10 @@ std::shared_ptr<Node> Node::deep_copy() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void* Node::get_user_data(unsigned handle) const {
-  if (user_data_.size() > handle) return user_data_[handle];
-  else                            return nullptr;
+  if (user_data_.size() > handle)
+    return user_data_[handle];
+  else
+    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
