@@ -30,9 +30,6 @@
 #include <gua/node/RayNode.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 
-// external headers
-#include <iostream>
-
 namespace gua {
 namespace node {
 
