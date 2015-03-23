@@ -171,9 +171,7 @@ math::mat4 TexturedQuadNode::get_scaled_world_transform() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Node> TexturedQuadNode::copy() const {
-  return std::make_shared<TexturedQuadNode>(get_name(),
-                                            data,
-                                            get_transform());
+  return std::make_shared<TexturedQuadNode>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

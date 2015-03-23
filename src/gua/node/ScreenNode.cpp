@@ -50,7 +50,7 @@ math::mat4 ScreenNode::get_scaled_world_transform() const {
 }
 
 std::shared_ptr<Node> ScreenNode::copy() const {
-    return std::make_shared<ScreenNode>(get_name(), data, get_transform());
+  return std::make_shared<ScreenNode>(*this);
 }
 
 }

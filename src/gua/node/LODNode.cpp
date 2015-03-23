@@ -38,7 +38,7 @@ LODNode::LODNode(std::string const& name, Configuration const& configuration, ma
 }
 
 std::shared_ptr<Node> LODNode::copy() const {
-  return std::make_shared<LODNode>(get_name(), data, get_transform());
+  return std::make_shared<LODNode>(*this);
 }
 
 }

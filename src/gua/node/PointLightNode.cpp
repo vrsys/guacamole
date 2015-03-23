@@ -52,7 +52,7 @@ void PointLightNode::update_bounding_box() const {
 }
 
 std::shared_ptr<Node> PointLightNode::copy() const {
-    return std::make_shared<PointLightNode>(get_name(), data, get_transform());
+    return std::make_shared<PointLightNode>(*this);
 }
 
 }

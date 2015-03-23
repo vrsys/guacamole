@@ -48,7 +48,7 @@ void SunLightNode::update_bounding_box() const {
 }
 
 std::shared_ptr<Node> SunLightNode::copy() const {
-    return std::make_shared<SunLightNode>(get_name(), data, get_transform());
+    return std::make_shared<SunLightNode>(*this);
 }
 
 }

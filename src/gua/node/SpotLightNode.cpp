@@ -52,7 +52,7 @@ void SpotLightNode::update_bounding_box() const {
 }
 
 std::shared_ptr<Node> SpotLightNode::copy() const {
-    return std::make_shared<SpotLightNode>(get_name(), data, get_transform());
+    return std::make_shared<SpotLightNode>(*this);
 }
 
 }
