@@ -34,10 +34,9 @@ namespace gua {
 namespace node {
 
 VolumeNode::VolumeNode(std::string const& name,
-                         Configuration const& configuration,
-                         math::mat4 const& transform)
-  : SerializableNode(name, transform), data(configuration) {
-
+                       Configuration const& configuration,
+                       math::mat4 const& transform)
+    : SerializableNode(name, transform), data(configuration) {
   data.alpha_transfer().add_stop(0.f, 0.f);
   data.alpha_transfer().add_stop(1.f, 1.f);
 
@@ -50,10 +49,10 @@ void VolumeNode::accept(NodeVisitor& visitor) {
 }
 
 void VolumeNode::update_bounding_box() const {
-
   if (data.get_volume() != "") {
-
-    auto geometry_bbox(GeometryDatabase::instance()->lookup(data.get_volume())->get_bounding_box());
+    auto geometry_bbox(GeometryDatabase::instance()
+                           ->lookup(data.get_volume())
+                           ->get_bounding_box());
     bounding_box_ = transform(geometry_bbox, world_transform_);
 
     for (auto child : get_children()) {
@@ -68,5 +67,5 @@ std::shared_ptr<Node> VolumeNode::copy() const {
   return std::make_shared<VolumeNode>(*this);
 }
 
-} // namespace node
-} // namespace gua
+}  // namespace node
+}  // namespace gua
