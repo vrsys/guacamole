@@ -62,8 +62,8 @@ class GUA_DLL Pipeline {
      std::unordered_map<std::string, time_point>     cpu_queries;
      std::map<std::string, double>                   results;
    };
-   
-public: 
+
+public:
 
   Pipeline(RenderContext& ctx, math::vec2ui const& resolution);
   Pipeline(Pipeline const&) = delete;
@@ -72,7 +72,8 @@ public:
     CameraMode mode, node::SerializedCameraNode const& camera,
     std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
-  std::shared_ptr<Texture2D> render_shadow_map(node::SpotLightNode* light);
+  std::shared_ptr<Texture2D> render_shadow_map(node::SpotLightNode* light,
+                                               Frustum const& frustum);
 
   RenderTarget                     & get_current_target() const;
   SerializedScene                  & get_scene();
@@ -84,7 +85,7 @@ public:
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
   void draw_quad();
-  
+
   // time queries
   void begin_gpu_query(RenderContext const& ctx, std::string const& query_name);
   void end_gpu_query(RenderContext const& ctx, std::string const& query_name);

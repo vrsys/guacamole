@@ -229,7 +229,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Texture2D> Pipeline::render_shadow_map(node::SpotLightNode* light) {
+std::shared_ptr<Texture2D> Pipeline::render_shadow_map(node::SpotLightNode* light,
+                                                       Frustum const& frustum) {
 
   if (!shadow_map_res_) {
     shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
@@ -266,15 +267,6 @@ std::shared_ptr<Texture2D> Pipeline::render_shadow_map(node::SpotLightNode* ligh
 
   current_target_ = shadow_map.get();
   auto orig_scene(current_scene_);
-
-  //   // calculate light frustum
-  math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
-  screen_transform = light->get_cached_world_transform() * screen_transform;
-
-  Frustum frustum = Frustum::perspective(
-    light->get_cached_world_transform(), screen_transform,
-    current_camera_.config.near_clip(), current_camera_.config.far_clip()
-  );
 
   current_scene_ = current_graph_->serialize(frustum,
                                              current_camera_.config.enable_frustum_culling(),

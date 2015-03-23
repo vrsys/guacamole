@@ -125,9 +125,18 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
                                            scm::math::normalize(beam_direction));
 
     LightTable::LightBlock light_block {};
-    
+
     if (light->data.get_enable_shadows()) {
-      light_block.shadow_map = pipe.render_shadow_map(light)->get_handle(pipe.get_context());
+      // calculate light frustum
+      math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
+      screen_transform = light->get_cached_world_transform() * screen_transform;
+
+      Frustum frustum = Frustum::perspective(
+        light->get_cached_world_transform(), screen_transform,
+        pipe.get_scene_camera().config.near_clip(), pipe.get_scene_camera().config.far_clip()
+      );
+
+      light_block.shadow_map = pipe.render_shadow_map(light, frustum)->get_handle(pipe.get_context());
       light_block.shadow_offset = light->data.get_shadow_offset();
     }
 
@@ -195,7 +204,7 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe,
     math::mat4f light_transform(transforms[i]);
     gl_program->uniform("gua_model_matrix", 0, light_transform);
     gl_program->uniform("light_id", 0, int(i));
-    ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), 
+    ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx),
                                    scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
     ctx.render_context->apply();
 
