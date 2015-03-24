@@ -62,6 +62,22 @@ class GUA_DLL GlfwWindow : public WindowBase {
   void process_events();
 
   /**
+   * Control the cursor mode.
+   *
+   * NORMAL - usual cursor
+   * HIDDEN - cursor is invisible while within window
+   * DISABLED - cursor is hidden and captured in window until it is tabbed
+   */
+  enum class CursorMode {
+    NORMAL = 0,
+    HIDDEN = 1,
+    DISABLED = 2
+  };
+  
+  void cursor_mode(CursorMode mode);
+  CursorMode cursor_mode() const;
+
+  /**
    * Activate the context of this window.
    *
    * Makes the RenderContext of this window current. All preceeding
@@ -88,6 +104,8 @@ class GUA_DLL GlfwWindow : public WindowBase {
 
  private:
   GLFWwindow* glfw_window_;
+
+  CursorMode cursor_mode_;
 };
 
 }
