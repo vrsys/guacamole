@@ -59,6 +59,9 @@ class GUA_DLL MaterialLoader {
                                           std::string const& assets_directory,
                                           bool optimize_material) const;
 
+  std::shared_ptr<Material> load_material(std::string const& material,
+                                std::string const& assets_directory) const;
+
 #ifdef GUACAMOLE_FBX
   std::shared_ptr<Material> load_material(fbxsdk_2015_1::FbxSurfaceMaterial const& material,
                                 std::string const& assets_directory) const;
