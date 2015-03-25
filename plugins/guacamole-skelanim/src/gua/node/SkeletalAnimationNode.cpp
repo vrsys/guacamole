@@ -75,7 +75,18 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  std::shared_ptr<Material> SkeletalAnimationNode::get_material(uint index) const {
+  void SkeletalAnimationNode::add_material(std::shared_ptr<Material> const& material)
+  {
+    if(geometries_.size() > materials_.size()) {
+      materials_.push_back(material);
+    }
+    else {
+      Logger::LOG_ERROR << "Cant have more materials than geometries" << std::endl;
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  std::shared_ptr<Material> const& SkeletalAnimationNode::get_material(uint index) const {
     if(index < materials_.size()){
       return materials_[index];
     }
@@ -86,7 +97,7 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  std::vector<std::shared_ptr<Material>>& SkeletalAnimationNode::get_materials() {
+  std::vector<std::shared_ptr<Material>> const& SkeletalAnimationNode::get_materials() const {
     return materials_;
   }
 

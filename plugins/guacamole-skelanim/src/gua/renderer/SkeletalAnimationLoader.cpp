@@ -471,10 +471,10 @@ void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::Node
   
   if(g_node) {
     auto& materials = g_node->get_materials();
-    for(auto& mat : materials) {
-      if(!mat) mat = fallback_material;
+    for(unsigned i = 0; i < materials.size(); ++i) {
+      if(!materials[i]) g_node->set_material(fallback_material, i);
     }
-    // g_node->set_fallback_material(fallback_material);
+
     g_node->update_cache();
   }
 }
