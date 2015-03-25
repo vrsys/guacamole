@@ -69,14 +69,20 @@ public : // methods
   void set_geometry_description(std::string const& geometry_description, uint index);
 
   /**
+  * This is only for the multifield handling in avango
+  */
+  void add_material(std::shared_ptr<Material> const& material);
+  /**
   * A string referring to an entry in guacamole's MaterialShaderDatabase.
   */
 
-  std::vector<std::shared_ptr<Material>>&       get_materials();
+  std::vector<std::shared_ptr<Material>> const& get_materials() const;
 
-  std::shared_ptr<Material>                     get_material(uint index) const;
+  std::shared_ptr<Material> const&              get_material(uint index) const;
 
   void            set_material(std::shared_ptr<Material> material, uint index);
+
+  inline void clear_materials() { materials_.clear(); }
 
   /**
   * Implements ray picking for a triangular mesh
