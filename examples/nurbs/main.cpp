@@ -234,7 +234,8 @@ int main(int argc, char** argv)
     float z = float(std::rand() % unsigned(scene_size)) - scene_size;
 
     std::string lightname = std::string("light") + std::to_string(i);
-    auto light = graph.add_node<gua::node::PointLightNode>("/", lightname);
+    auto light = graph.add_node<gua::node::LightNode>("/", lightname);
+    light->data.set_type(gua::node::LightNode::Type::POINT);
 
     light->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
     //light->scale(light_scale * scene_size * relative_intensity);

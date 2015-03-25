@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/node/PointLightNode.hpp>
+#include <gua/node/LightNode.hpp>
 
 // guacamole header
 #include <gua/platform.hpp>
@@ -31,28 +31,43 @@
 namespace gua {
 namespace node {
 
-PointLightNode::PointLightNode(std::string const& name,
-                               Configuration const& configuration,
-                               math::mat4 const& transform)
-    : SerializableNode(name, transform), data(configuration) {}
+LightNode::LightNode(std::string const& name,
+                     Configuration const& configuration,
+                     math::mat4 const& transform)
+  : SerializableNode(name, transform), data(configuration) {}
 
-/* virtual */ void PointLightNode::accept(NodeVisitor& visitor) {
-    visitor.visit(this);
+void LightNode::accept(NodeVisitor& visitor) {
+  visitor.visit(this);
 }
 
-void PointLightNode::update_bounding_box() const {
+void LightNode::update_bounding_box() const {
+  if (data.get_type() == LightNode::Type::SUN) {
+    bounding_box_ = math::BoundingBox<math::vec3>(
+      math::vec3(std::numeric_limits<math::vec3::value_type>::lowest()),
+      math::vec3(std::numeric_limits<math::vec3::value_type>::max())
+    );
+    return;
+  }
 
-    auto geometry_bbox(GeometryDatabase::instance()->lookup(
-        "gua_light_sphere_proxy")->get_bounding_box());
-    bounding_box_ = transform(geometry_bbox, world_transform_);
+  math::BoundingBox<math::vec3> geometry_bbox;
 
-    for (auto child : get_children()) {
-        bounding_box_.expandBy(child->get_bounding_box());
-    }
+  if (data.get_type() == LightNode::Type::POINT) {
+    geometry_bbox = GeometryDatabase::instance()->lookup(
+        "gua_light_sphere_proxy")->get_bounding_box();
+  } else {
+    geometry_bbox = GeometryDatabase::instance()->lookup(
+        "gua_light_cone_proxy")->get_bounding_box();
+  }
+
+  bounding_box_ = transform(geometry_bbox, world_transform_);
+
+  for (auto child : get_children()) {
+      bounding_box_.expandBy(child->get_bounding_box());
+  }
 }
 
-std::shared_ptr<Node> PointLightNode::copy() const {
-    return std::make_shared<PointLightNode>(*this);
+std::shared_ptr<Node> LightNode::copy() const {
+  return std::make_shared<LightNode>(*this);
 }
 
 }

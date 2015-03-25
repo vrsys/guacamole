@@ -93,7 +93,8 @@ int main(int argc, char** argv) {
   cerberus->rotate(90, 0.f, 1.f, 0.f);
   cerberus->rotate(90, 0.f, 0.f, 1.f);
 
-  auto pointLight = graph.add_node<gua::node::PointLightNode>("/", "pointLight");
+  auto pointLight = graph.add_node<gua::node::LightNode>("/", "pointLight");
+  pointLight->data.set_type(gua::node::LightNode::Type::POINT);
   pointLight->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
   pointLight->data.brightness = 150.0f; // lm
   pointLight->scale(9.f);
@@ -101,6 +102,7 @@ int main(int argc, char** argv) {
 
 #if 0
   auto spotLight = graph.add_node<gua::node::SpotLightNode>("/", "spotLight");
+  spotLight->data.set_type(gua::node::LightNode::Type::SPOT);
   spotLight->data.set_enable_shadows(true);
   spotLight->data.brightness = 10.0f; // lm
   spotLight->scale(10.f);

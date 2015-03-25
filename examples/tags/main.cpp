@@ -57,7 +57,8 @@ int main(int argc, char** argv) {
   // cam.render_mask.blacklist.add_tags({"red"});
 
 
-  auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
+  auto light = graph.add_node<gua::node::LightNode>("/", "light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
   light->scale(5.f);
   light->translate(0, 1.f, 1.f);
 

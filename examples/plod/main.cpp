@@ -398,7 +398,8 @@ int main(int argc, char** argv) {
   /////////////////////////////////////////////////////////////////////////////
   // create lighting
   /////////////////////////////////////////////////////////////////////////////
-  auto light = graph.add_node<gua::node::PointLightNode>("/transform/hunter", "light");
+  auto light = graph.add_node<gua::node::LightNode>("/transform/hunter", "light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.set_enable_shadows(true);
   light->data.set_brightness(30.f);
   light->scale(1.f);
