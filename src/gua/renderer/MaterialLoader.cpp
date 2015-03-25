@@ -34,6 +34,8 @@
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
+#include <jsoncpp/json/json.h>
+
 #ifdef GUACAMOLE_FBX
   #include <fbxsdk.h>
 #endif
@@ -192,6 +194,117 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
   }
 
+
+  return new_mat;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Material> MaterialLoader::load_material(std::string const& file_name, std::string const& assets_directory) const {
+  PathParser path;
+  path.parse(assets_directory);
+  std::string assets(path.get_path(true));
+
+  auto new_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+
+  TextFile file{file_name};
+  if (!file.is_valid()) {
+    Logger::LOG_WARNING << "Failed to load material description\""
+                        << file_name << "\": "
+                        "File does not exist!" << std::endl;
+  return new_mat;
+  }
+
+  Json::Value properties;
+  Json::Reader reader;
+  if (!reader.parse(file.get_content(), properties)) {
+    Logger::LOG_WARNING << "Failed to parse json material description: " << file_name << std::endl;
+    return new_mat;
+  }
+
+  // helper lambdas ------------------------------------------------------------
+  auto get_sampler = [&properties](std::string const& name)->std::string {
+    if(properties[name] != Json::Value::null && properties[name].isString()) {
+      return properties[name].asString();
+    }
+    else {
+      return "";
+    }
+  };
+
+  auto get_float = [&properties](std::string const& name)->float {
+    if(properties[name] != Json::Value::null && properties[name].isDouble()) {
+      return properties[name].asFloat();
+    }
+    else {
+      return NAN;
+    }
+  };
+
+  auto get_color = [&properties](std::string const& name)->scm::math::vec4f {
+    if(properties[name] != Json::Value::null && properties[name].isArray()) {
+      size_t num_values = properties[name].size(); 
+      if(num_values == 4) {
+        return scm::math::vec4f{properties[name][0].asFloat(), properties[name][1].asFloat(), properties[name][2].asFloat(), properties[name][3].asFloat()};
+      }
+      else if(num_values == 3) {
+        return scm::math::vec4f{properties[name][0].asFloat(), properties[name][1].asFloat(), properties[name][2].asFloat(), 1.0f};
+      }
+      else {
+        Logger::LOG_WARNING << "Color property '" << name << "' has unsupported value number of " << num_values << std::endl;
+      }
+    }
+    return scm::math::vec4f{NAN, NAN, NAN};
+  };
+
+  // color
+  std::string uniform_color_map{get_sampler("color")};
+  if (uniform_color_map != "") {
+    new_mat->set_uniform("ColorMap", assets + uniform_color_map);
+      std::cout << uniform_color_map << std::endl;
+  } 
+  else {
+    scm::math::vec4f uniform_color{get_color("color")};
+    if (!isnan(uniform_color[0])) {
+      new_mat->set_uniform("Color", uniform_color);
+      std::cout << uniform_color << std::endl;
+    }
+  }
+
+  // normals
+  std::string uniform_normal_map{get_sampler("normal")};
+  if (uniform_normal_map != "") {
+    new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
+  } 
+
+  // roughness
+  std::string uniform_roughness_map{get_sampler("roughness")};
+  if (uniform_roughness_map != "") {
+    new_mat->set_uniform("RoughtnessMap", assets + uniform_roughness_map);
+  } 
+  else {
+    float uniform_roughness{get_float("roughness")};
+    if (!isnan(uniform_roughness)) {
+      new_mat->set_uniform("Roughness", uniform_roughness);
+    }
+  }
+  // emissivity
+  std::string uniform_emissivity_map{get_sampler("emissivity")};
+  if (uniform_emissivity_map != "") {
+    new_mat->set_uniform("EmissivityMap", assets + uniform_emissivity_map);
+  } 
+  else {
+    float uniform_emissivity{get_float("emissivity")};
+    if (!isnan(uniform_emissivity)) {
+      new_mat->set_uniform("Emissivity", uniform_emissivity);
+    }
+  }
+
+  // opacity
+  float uniform_opacity{get_float("opacity")};
+  if (!isnan(uniform_opacity)) {
+    new_mat->set_uniform("opacity", uniform_opacity);
+  }
 
   return new_mat;
 }
