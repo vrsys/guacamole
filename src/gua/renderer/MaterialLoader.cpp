@@ -199,117 +199,6 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Material> MaterialLoader::load_material(std::string const& file_name, std::string const& assets_directory) const {
-  PathParser path;
-  path.parse(assets_directory);
-  std::string assets(path.get_path(true));
-
-  auto new_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-
-  TextFile file{file_name};
-  if (!file.is_valid()) {
-    Logger::LOG_WARNING << "Failed to load material description\""
-                        << file_name << "\": "
-                        "File does not exist!" << std::endl;
-  return new_mat;
-  }
-
-  Json::Value properties;
-  Json::Reader reader;
-  if (!reader.parse(file.get_content(), properties)) {
-    Logger::LOG_WARNING << "Failed to parse json material description: " << file_name << std::endl;
-    return new_mat;
-  }
-
-  // helper lambdas ------------------------------------------------------------
-  auto get_sampler = [&properties](std::string const& name)->std::string {
-    if(properties[name] != Json::Value::null && properties[name].isString()) {
-      return properties[name].asString();
-    }
-    else {
-      return "";
-    }
-  };
-
-  auto get_float = [&properties](std::string const& name)->float {
-    if(properties[name] != Json::Value::null && properties[name].isDouble()) {
-      return properties[name].asFloat();
-    }
-    else {
-      return NAN;
-    }
-  };
-
-  auto get_color = [&properties](std::string const& name)->scm::math::vec4f {
-    if(properties[name] != Json::Value::null && properties[name].isArray()) {
-      size_t num_values = properties[name].size(); 
-      if(num_values == 4) {
-        return scm::math::vec4f{properties[name][0].asFloat(), properties[name][1].asFloat(), properties[name][2].asFloat(), properties[name][3].asFloat()};
-      }
-      else if(num_values == 3) {
-        return scm::math::vec4f{properties[name][0].asFloat(), properties[name][1].asFloat(), properties[name][2].asFloat(), 1.0f};
-      }
-      else {
-        Logger::LOG_WARNING << "Color property '" << name << "' has unsupported value number of " << num_values << std::endl;
-      }
-    }
-    return scm::math::vec4f{NAN, NAN, NAN};
-  };
-
-  // color
-  std::string uniform_color_map{get_sampler("color")};
-  if (uniform_color_map != "") {
-    new_mat->set_uniform("ColorMap", assets + uniform_color_map);
-      std::cout << uniform_color_map << std::endl;
-  } 
-  else {
-    scm::math::vec4f uniform_color{get_color("color")};
-    if (!isnan(uniform_color[0])) {
-      new_mat->set_uniform("Color", uniform_color);
-      std::cout << uniform_color << std::endl;
-    }
-  }
-
-  // normals
-  std::string uniform_normal_map{get_sampler("normal")};
-  if (uniform_normal_map != "") {
-    new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
-  } 
-
-  // roughness
-  std::string uniform_roughness_map{get_sampler("roughness")};
-  if (uniform_roughness_map != "") {
-    new_mat->set_uniform("RoughtnessMap", assets + uniform_roughness_map);
-  } 
-  else {
-    float uniform_roughness{get_float("roughness")};
-    if (!isnan(uniform_roughness)) {
-      new_mat->set_uniform("Roughness", uniform_roughness);
-    }
-  }
-  // emissivity
-  std::string uniform_emissivity_map{get_sampler("emissivity")};
-  if (uniform_emissivity_map != "") {
-    new_mat->set_uniform("EmissivityMap", assets + uniform_emissivity_map);
-  } 
-  else {
-    float uniform_emissivity{get_float("emissivity")};
-    if (!isnan(uniform_emissivity)) {
-      new_mat->set_uniform("Emissivity", uniform_emissivity);
-    }
-  }
-
-  // opacity
-  float uniform_opacity{get_float("opacity")};
-  if (!isnan(uniform_opacity)) {
-    new_mat->set_uniform("opacity", uniform_opacity);
-  }
-
-  return new_mat;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_FBX
 std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const& fbx_material, std::string const& assets_directory) const {
   PathParser path;
@@ -327,18 +216,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
       //texture could also be layered or procedural texture
       FbxFileTexture* texture = property.GetSrcObject<FbxFileTexture>(0);
       if(texture) {        
-        std::string file_name = texture->GetFileName();
-        //filter out possible path in front of filename
-        auto slash_pos(file_name.find_last_of("/"));
-        auto bslash_pos(file_name.find_last_of("\""));
-        auto path_end = slash_pos;
-        if(bslash_pos != std::string::npos && path_end < bslash_pos) {
-          path_end = bslash_pos;
-        }
-        if(path_end != std::string::npos) {
-          file_name = file_name.substr(path_end + 1);
-        }
-        return file_name;
+        return get_file_name(texture->GetFileName());
       }
       else {
         Logger::LOG_WARNING << "Texturetype of "<< property.GetNameAsCStr() << " not supported." << std::endl;
@@ -396,51 +274,18 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
     new_mat->set_uniform("Emissivity", math::vec4f(color[0], color[1], color[2], 1.f));
   }
 
-  auto ends_with = [](std::string const& name, std::string const& suffix) {
-    for(unsigned i = 0; i  < suffix.size(); ++i) {
-      if(name.at(name.size() - suffix.size() + i) != suffix.at(i)) {
-        return false;
-      }
-    }
-    return true;
-  };
-
   //see if there is an unreal engine material file avaible
-  std::set<std::string> textures{};
   std::string mat_name = assets + fbx_material.GetName() + ".COPY";
 
   if(file_exists(mat_name)) {
-    textures = parse_unreal_material(mat_name);
+    return load_unreal(mat_name, assets_directory, new_mat);
+  }
 
-    for(auto const& tex : textures) {
-      if(color_map == "" && (ends_with(tex, "_D") || ends_with(tex, "diffuse") || ends_with(tex, "DF"))) {
-        std::string name{assets + tex};
-        if(file_exists(name + ".TGA")) {
-          new_mat->set_uniform("ColorMap", name + ".TGA");
-        }
-        else if(file_exists(name + ".tga")) {
-          new_mat->set_uniform("ColorMap", name + ".tga");
-        }
-      }
-      else if(normal_map == "" && (ends_with(tex, "_N") || ends_with(tex, "normal") || ends_with(tex, "NRM"))) {
-        std::string name{assets + tex};
-        if(file_exists(name + ".TGA")) {
-          new_mat->set_uniform("NormalMap", name + ".TGA");
-        }
-        else if(file_exists(name + ".tga")) {
-          new_mat->set_uniform("NormalMap", name + ".tga");
-        }
-      }
-      else if(emit_map == "" && (ends_with(tex, "Emissive") || ends_with(tex, "glow"))) {
-        std::string name{assets + tex};
-        if(file_exists(name + ".TGA")) {
-          new_mat->set_uniform("EmissivityMap", name + ".TGA");
-        }
-        else if(file_exists(name + ".tga")) {
-          new_mat->set_uniform("EmissivityMap", name + ".tga");
-        }
-      }
-    }
+  //see if there is a json material file avaible
+  mat_name = assets + fbx_material.GetName() + ".json";
+
+  if(file_exists(mat_name)) {
+    return load_json(mat_name, assets_directory, new_mat);
   }
 
   return new_mat;
@@ -452,7 +297,7 @@ std::string MaterialLoader::get_file_name(std::string const& path) {
   std::string file_name{path};
   auto path_end(path.find_last_of("/\\"));
   if(path_end != std::string::npos) {
-    file_name = path.substr(path_end + 1, file_name.length() - path_end - 2);
+    file_name = path.substr(path_end + 1);
   }
   return file_name;
 }
@@ -462,7 +307,11 @@ inline bool MaterialLoader::file_exists(std::string const& path) {
   return !file.fail();
 }
 
-std::set<std::string> MaterialLoader::parse_unreal_material(std::string const& file_name) {
+std::shared_ptr<Material> MaterialLoader::load_unreal(std::string const& file_name, std::string const& assets_directory, std::shared_ptr<Material> const& material) {
+  PathParser path;
+  path.parse(assets_directory);
+  std::string assets(path.get_path(true));
+
   std::set<std::string> textures{};
 
   std::string line;
@@ -472,7 +321,7 @@ std::set<std::string> MaterialLoader::parse_unreal_material(std::string const& f
     while(getline(file, line)) {
       if(line.find("Texture=") != std::string::npos) {
         std::string value = get_file_name(line);
-        std::string name = value.substr(value.find(".") + 1, value.size() - value.find(".") - 2);
+        std::string name = value.substr(value.find(".") + 1, value.size() - value.find(".") - 3);
 
         if(textures.find(name) == textures.end()) {
           textures.insert(name);
@@ -482,12 +331,167 @@ std::set<std::string> MaterialLoader::parse_unreal_material(std::string const& f
 
     file.close();
   }
-  else
-  {
+  else {
     std::cout << "File '" <<  file_name << "' could not be opened" << std::endl;
+    return material;
   }
 
-  return textures;
+  auto ends_with = [](std::string const& name, std::string const& suffix) {
+    for(unsigned i = 0; i  < suffix.size(); ++i) {
+      if(name.at(name.size() - suffix.size() + i) != suffix.at(i)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  for(auto const& tex : textures) {
+    if(ends_with(tex, "_D") || ends_with(tex, "diffuse") || ends_with(tex, "DF")) {
+      std::string name{assets + tex};
+      if(file_exists(name + ".TGA")) {
+        material->set_uniform("ColorMap", name + ".TGA");
+      }
+      else if(file_exists(name + ".tga")) {
+        material->set_uniform("ColorMap", name + ".tga");
+      }
+    }
+    else if(ends_with(tex, "_N") || ends_with(tex, "normal") || ends_with(tex, "NRM")) {
+      std::string name{assets + tex};
+      if(file_exists(name + ".TGA")) {
+        material->set_uniform("NormalMap", name + ".TGA");
+      }
+      else if(file_exists(name + ".tga")) {
+        material->set_uniform("NormalMap", name + ".tga");
+      }
+    }
+    else if(ends_with(tex, "Emissive") || ends_with(tex, "glow")) {
+      std::string name{assets + tex};
+      if(file_exists(name + ".TGA")) {
+        material->set_uniform("EmissivityMap", name + ".TGA");
+      }
+      else if(file_exists(name + ".tga")) {
+        material->set_uniform("EmissivityMap", name + ".tga");
+      }
+    }
+  }
+
+  return material;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Material> MaterialLoader::load_json(std::string const& file_name, std::string const& assets_directory, std::shared_ptr<Material> const& material) const {
+  PathParser path;
+  path.parse(assets_directory);
+  std::string assets(path.get_path(true));
+
+  TextFile file{file_name};
+  if (!file.is_valid()) {
+    Logger::LOG_WARNING << "Failed to load material description\""
+                        << file_name << "\": "
+                        "File does not exist!" << std::endl;
+  return material;
+  }
+
+  Json::Value properties;
+  Json::Reader reader;
+  if (!reader.parse(file.get_content(), properties)) {
+    Logger::LOG_WARNING << "Failed to parse json material description: " << file_name << std::endl;
+    return material;
+  }
+
+  // helper lambdas ------------------------------------------------------------
+  auto get_sampler = [&properties](std::string const& name)->std::string {
+    if(properties[name] != Json::Value::null && properties[name].isString()) {
+      return get_file_name(properties[name].asString());
+    }
+    else {
+      return "";
+    }
+  };
+
+  auto get_float = [&properties](std::string const& name)->float {
+    if(properties[name] != Json::Value::null && (properties[name].isDouble() || properties[name].isInt())) {
+      return properties[name].asFloat();
+    }
+    else {
+      return NAN;
+    }
+  };
+  auto get_bool = [&properties](std::string const& name)->bool {
+    if(properties[name] != Json::Value::null && properties[name].isBool()) {
+      return properties[name].asBool();
+    }
+    else {
+      return true;
+    }
+  };
+
+  auto get_color = [&properties](std::string const& name)->scm::math::vec4f {
+    if(properties[name] != Json::Value::null && properties[name].isArray()) {
+      size_t num_values = properties[name].size(); 
+      if(num_values == 4) {
+        return scm::math::vec4f{properties[name][0].asFloat(), properties[name][1].asFloat(), properties[name][2].asFloat(), properties[name][3].asFloat()};
+      }
+      else if(num_values == 3) {
+        return scm::math::vec4f{properties[name][0].asFloat(), properties[name][1].asFloat(), properties[name][2].asFloat(), 1.0f};
+      }
+      else {
+        Logger::LOG_WARNING << "Color property '" << name << "' has unsupported value number of " << num_values << std::endl;
+      }
+    }
+    return scm::math::vec4f{NAN, NAN, NAN};
+  };
+
+  // color
+  std::string uniform_color_map{get_sampler("color")};
+  if (uniform_color_map != "") {
+    material->set_uniform("ColorMap", assets + uniform_color_map);
+  } 
+  else {
+    scm::math::vec4f uniform_color{get_color("color")};
+    if (!isnan(uniform_color[0])) {
+      material->set_uniform("Color", uniform_color);
+    }
+  }
+
+  // normals
+  std::string uniform_normal_map{get_sampler("normal")};
+  if (uniform_normal_map != "") {
+    material->set_uniform("NormalMap", assets + uniform_normal_map);
+  } 
+
+  // roughness
+  std::string uniform_roughness_map{get_sampler("roughness")};
+  if (uniform_roughness_map != "") {
+    material->set_uniform("RoughtnessMap", assets + uniform_roughness_map);
+  } 
+  else {
+    float uniform_roughness{get_float("roughness")};
+    if (!isnan(uniform_roughness)) {
+      material->set_uniform("Roughness", uniform_roughness);
+    }
+  }
+  // emissivity
+  std::string uniform_emissivity_map{get_sampler("emissivity")};
+  if (uniform_emissivity_map != "") {
+    material->set_uniform("EmissivityMap", assets + uniform_emissivity_map);
+  } 
+  else {
+    float uniform_emissivity{get_float("emissivity")};
+    if (!isnan(uniform_emissivity)) {
+      material->set_uniform("Emissivity", uniform_emissivity);
+    }
+  }
+
+  // opacity
+  float uniform_opacity{get_float("opacity")};
+  if (!isnan(uniform_opacity)) {
+    material->set_uniform("Opacity", uniform_opacity);
+  }
+
+  // bool uniform_bfculling{get_bool("backface_culling")};
+  return material;
 }
 
 }
