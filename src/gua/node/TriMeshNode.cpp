@@ -175,7 +175,7 @@ namespace node {
 
             for (auto& hit : hits) {
               if (hit.world_position == math::vec3(inf, inf, inf)) {
-                auto transformed(world_transform * math::vec4(hit.position.x, hit.position.y, hit.position.z, 0.0));
+                auto transformed(world_transform * math::vec4(hit.position.x, hit.position.y, hit.position.z, 1.0));
                 hit.world_position = scm::math::vec3(transformed.x, transformed.y, transformed.z);
               }
             }

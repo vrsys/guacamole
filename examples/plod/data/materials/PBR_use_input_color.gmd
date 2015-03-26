@@ -7,6 +7,9 @@
     {
       "name" : "PBR_uniform",
       "source" : "
+        void dummy() {
+        }
+
         void PBR_uniform() {
           // gua_color = ... keep color from point-based represetantation
           gua_metalness = metalness;
@@ -30,6 +33,26 @@
           "name" : "emissivity",
           "type" : "float",
           "value" : "0.0"
+        },
+        {
+          "name" : "lens_center",
+          "type" : "vec3",
+          "value" : "(0.0 0.0 0.0)"
+        },
+        {
+          "name" : "lens_normal",
+          "type" : "vec3",
+          "value" : "(0.0 0.0 0.0)"
+        },
+        {
+          "name" : "lens_radius",
+          "type" : "float",
+          "value" : "0.0"
+        },
+        {
+          "name" : "lens_mode",
+          "type" : "int",
+          "value" : "0"
         }
       ] 
     }

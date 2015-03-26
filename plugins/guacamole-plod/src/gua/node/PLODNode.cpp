@@ -43,7 +43,7 @@ PLODNode::PLODNode(std::string const& name,
                    std::string const& geometry_file_path,
                    std::shared_ptr<Material> const& material,
                    math::mat4 const& transform,
-                   float const importance,
+                   float const scale,
                    float const threshold,
                    bool const enable_backface_culling_by_normal)
     : GeometryNode(name, transform),
@@ -52,7 +52,7 @@ PLODNode::PLODNode(std::string const& name,
       geometry_description_(geometry_description),
       geometry_file_path_(geometry_file_path),
       material_(material),
-      radius_scale_(importance),
+      radius_scale_(scale),
       error_threshold_(threshold),
       enable_backface_culling_by_normal_(enable_backface_culling_by_normal)
     {}
