@@ -40,10 +40,10 @@ namespace gua {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ResourceFactory factory;
     std::string v_shader = factory.read_shader_file("resources/shaders/skinned_mesh_shader.vert");
-    std::string f_shader = factory.read_shader_file("resources/shaders/skinned_mesh_shader.frag");
+    std::string f_shader = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
 #else
     std::string v_shader = Resources::lookup_shader("shaders/skinned_mesh_shader.vert");
-    std::string f_shader = Resources::lookup_shader("shaders/skinned_mesh_shader.frag");
+    std::string f_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
 #endif
 
     program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
@@ -129,6 +129,9 @@ namespace gua {
                                           "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
               current_shader->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_width(),  "gua_texel_width");
               current_shader->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_height(), "gua_texel_height");
+              // hack
+              current_shader->set_uniform(ctx, pipe.get_gbuffer().get_current_depth_buffer()->get_handle(ctx),
+                                      "gua_gbuffer_depth");
             }
           }
 
@@ -150,7 +153,7 @@ namespace gua {
 
             ctx.render_context->apply_program();
 
-            bones_block_.update(ctx.render_context, skel_anim_node->get_director()->get_bone_transforms());
+          bones_block_.update(ctx.render_context, skel_anim_node->get_director()->get_bone_transforms());
 
             ctx.render_context->bind_uniform_buffer( bones_block_.block().block_buffer(), 2);
 
