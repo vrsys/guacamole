@@ -101,7 +101,7 @@ void TexturedScreenSpaceQuadNode::update_cache() {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Node> TexturedScreenSpaceQuadNode::copy() const {
-  return std::make_shared<TexturedScreenSpaceQuadNode>(get_name(), data);
+  return std::make_shared<TexturedScreenSpaceQuadNode>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

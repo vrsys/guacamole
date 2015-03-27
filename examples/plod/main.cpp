@@ -553,7 +553,8 @@ int main(int argc, char** argv) {
   /////////////////////////////////////////////////////////////////////////////
   // create lighting
   /////////////////////////////////////////////////////////////////////////////
-  auto light = graph.add_node<gua::node::PointLightNode>("/transform/model_xf", "light");
+  auto light = graph.add_node<gua::node::LightNode>("/transform/model_xf", "light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.set_enable_shadows(true);
   light->data.set_brightness(30.f);
   light->scale(3.f);

@@ -69,7 +69,7 @@ void RayNode::update_bounding_box() const {
 }
 
 std::shared_ptr<Node> RayNode::copy() const {
-    return std::make_shared<RayNode>(get_name(), get_transform());
+    return std::make_shared<RayNode>(*this);
 }
 
 }

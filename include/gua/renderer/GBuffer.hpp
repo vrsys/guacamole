@@ -57,6 +57,8 @@ class GUA_DLL GBuffer {
   unsigned get_width()  const { return width_; }
   unsigned get_height() const { return height_; }
 
+  inline scm::gl::frame_buffer_ptr get_fbo_read() const { return fbo_read_; }
+
  private:
   scm::gl::frame_buffer_ptr fbo_read_;
   scm::gl::frame_buffer_ptr fbo_write_;

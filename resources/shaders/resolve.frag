@@ -183,12 +183,12 @@ vec3 gua_apply_fog(vec3 fog_color) {
 vec3 gua_get_background_color() {
   switch (gua_background_mode) {
     case 0: // color
-      return gua_apply_background_color();
+      return sRGB_to_linear(gua_apply_background_color());
     case 1: // skymap texture
-      return gua_apply_skymap_texture();
+      return sRGB_to_linear(gua_apply_skymap_texture());
   }
   // quad texture
-  return gua_apply_background_texture();
+  return sRGB_to_linear(gua_apply_background_texture());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

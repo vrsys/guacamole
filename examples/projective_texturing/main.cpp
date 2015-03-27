@@ -76,7 +76,8 @@ int main(int argc, char** argv) {
   monkey->translate(0.0, 0.0, -1.0);
   graph.add_node("/transform", monkey);
 
-  auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
+  auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
+  light2->data.set_type(gua::node::LightNode::Type::POINT);
   light2->data.brightness = 150.0f;
   light2->scale(12.f);
   light2->translate(-3.f, 5.f, 5.f);

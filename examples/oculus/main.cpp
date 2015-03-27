@@ -53,7 +53,8 @@ std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGrap
     lights[i]->add_child(sphere_geometry);
     lights[i]->translate(randdir[0], randdir[1], randdir[2]);
 
-    auto light = lights[i]->add_child(std::make_shared<gua::node::PointLightNode>("light"));
+    auto light = lights[i]->add_child(std::make_shared<gua::node::LightNode>("light"));
+    light->data.set_type(gua::node::LightNode::Type::POINT);
     light->data.set_color(gua::utils::Color3f::random());
   }
 

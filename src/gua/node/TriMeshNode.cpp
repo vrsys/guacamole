@@ -283,10 +283,7 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   std::shared_ptr<Node> TriMeshNode::copy() const {
-    std::shared_ptr<TriMeshNode> result(new TriMeshNode(get_name(), geometry_description_, material_, get_transform()));
-    result->shadow_mode_ = shadow_mode_;
-    result->geometry_ = geometry_;
-    return result;
+    return std::make_shared<TriMeshNode>(*this);
   }
 }
 }
