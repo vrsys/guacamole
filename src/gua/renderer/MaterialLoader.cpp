@@ -472,6 +472,17 @@ std::shared_ptr<Material> MaterialLoader::load_json(std::string const& file_name
       material->set_uniform("Roughness", uniform_roughness);
     }
   }
+  // metalness
+  std::string uniform_metalness_map{get_sampler("metalness")};
+  if (uniform_metalness_map != "") {
+    material->set_uniform("MetalnessMap", assets + uniform_metalness_map);
+  } 
+  else {
+    float uniform_metalness{get_float("metalness")};
+    if (!isnan(uniform_metalness)) {
+      material->set_uniform("Metalness", uniform_metalness);
+    }
+  }
   // emissivity
   std::string uniform_emissivity_map{get_sampler("emissivity")};
   if (uniform_emissivity_map != "") {
@@ -490,7 +501,10 @@ std::shared_ptr<Material> MaterialLoader::load_json(std::string const& file_name
     material->set_uniform("Opacity", uniform_opacity);
   }
 
-  // bool uniform_bfculling{get_bool("backface_culling")};
+  if(properties["backface_culling"] != Json::Value::null && properties["backface_culling"].isBool()) {
+    material->set_show_back_faces(!properties["backface_culling"].asBool());
+  }
+
   return material;
 }
 
