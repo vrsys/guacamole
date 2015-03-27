@@ -154,12 +154,15 @@ void PLODResource::ray_test(Ray const& ray,
   if (plod_ray.IntersectModel(model_id, math::mat4f(model_transform), aabb_scale, max_depth, surfel_skip, wysiwyg, intersection)) {
     has_hit = true;
     pick.distance = intersection.distance_;
-    pick.position = intersection.position_;
+    pick.world_position = intersection.position_;
+    auto object_position = scm::math::inverse(model_transform) * gua::math::vec4(intersection.position_.x, intersection.position_.y, intersection.position_.z, 1.0);
+    pick.position = math::vec3(object_position.x, object_position.y, object_position.z);
     pick.normal = intersection.normal_;
   }
 
-  if (has_hit)
+  if (has_hit) {
     hits.insert(pick);
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////
