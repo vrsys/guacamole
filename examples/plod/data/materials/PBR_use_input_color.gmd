@@ -7,11 +7,142 @@
     {
       "name" : "PBR_uniform",
       "source" : "
-        void dummy() {
+
+        ///////////////////////////////////////////////////////////////////////
+        float Gamma        = 0.80;
+        float IntensityMax = 255.0;
+
+        ///////////////////////////////////////////////////////////////////////
+        float round(float d){
+          return floor(d + 0.5);
         }
 
-        void PBR_uniform() {
-          // gua_color = ... keep color from point-based represetantation
+        ///////////////////////////////////////////////////////////////////////
+        float Adjust(float Color, float Factor){
+          if (Color == 0.0){
+            return 0.0;
+          }
+          else{
+            float res = round(IntensityMax * pow(Color * Factor, Gamma));
+            return min(255.0, max(0.0, res));
+          }
+        } 
+
+        ///////////////////////////////////////////////////////////////////////
+        vec3 WavelengthToRGB(float Wavelength)
+        {
+          float Blue;
+          float factor;
+          float Green;
+          float Red;
+
+          if(380.0 <= Wavelength && Wavelength <= 440.0){
+            Red   = -(Wavelength - 440.0) / (440.0 - 380.0);
+            Green = 0.0;
+            Blue  = 1.0;
+          }
+          else if(440.0 < Wavelength && Wavelength <= 490.0){
+            Red   = 0.0;
+            Green = (Wavelength - 440.0) / (490.0 - 440.0);
+            Blue  = 1.0;
+          }
+          else if(490.0 < Wavelength && Wavelength <= 510.0){
+            Red   = 0.0;
+            Green = 1.0;
+            Blue  = -(Wavelength - 510.0) / (510.0 - 490.0);
+          }
+          else if(510.0 < Wavelength && Wavelength <= 580.0){
+            Red   = (Wavelength - 510.0) / (580.0 - 510.0);
+            Green = 1.0;
+            Blue  = 0.0;
+          }
+          else if(580.0 < Wavelength && Wavelength <= 645.0){
+            Red   = 1.0;
+            Green = -(Wavelength - 645.0) / (645.0 - 580.0);
+            Blue  = 0.0;
+          }
+          else if(645.0 < Wavelength && Wavelength <= 780.0){
+            Red   = 1.0;
+            Green = 0.0;
+            Blue  = 0.0;
+          }
+          else{
+            Red   = 0.0;
+            Green = 0.0;
+            Blue  = 0.0;
+          }
+
+
+          if(380.0 <= Wavelength && Wavelength <= 420.0){
+            factor = 0.3 + 0.7*(Wavelength - 380.0) / (420.0 - 380.0);
+          }
+          else if(420.0 < Wavelength && Wavelength <= 701.0){
+            factor = 1.0;
+          }
+          else if(701.0 < Wavelength && Wavelength <= 780.0){
+            factor = 0.3 + 0.7*(780.0 - Wavelength) / (780.0 - 701.0);
+          }
+          else{
+            factor = 0.0;
+          }
+          float R = Adjust(Red,   factor);
+          float G = Adjust(Green, factor);
+          float B = Adjust(Blue,  factor);
+          return vec3(R/255.0,G/255.0,B/255.0);
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        float GetWaveLengthFromDataPoint(float Value, float MinValue, float MaxValue)
+        {
+          float MinVisibleWavelength = 380.0;//350.0;
+          float MaxVisibleWavelength = 780.0;//650.0;
+          //Convert data value in the range of MinValues..MaxValues to the
+          //range 350..780
+          return (Value - MinValue) / (MaxValue-MinValue) * (MaxVisibleWavelength - MinVisibleWavelength) + MinVisibleWavelength;
+        } 
+
+
+        ///////////////////////////////////////////////////////////////////////
+        void distance_lens_effect () {
+          float signed_distance_to_lens_plane = abs(dot(lens_normal, (gua_world_position - lens_center)));
+          gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(signed_distance_to_lens_plane, -0.01, 0.01));
+        }
+        
+        ///////////////////////////////////////////////////////////////////////
+        void normal_lens_effect () {
+          
+          vec3 binormal = vec3(lens_normal.y, -lens_normal.x, 0.0);
+          binormal = normalize(binormal);
+
+          float angle = dot(binormal, normalize( (inverse(gua_normal_matrix) * vec4(gua_normal, 0.0)).xyz));
+          gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(angle, -1.0, 1.0));
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        void apply_lens_effect() 
+        {
+          switch (lens_mode) {
+            case 1 : 
+              distance_lens_effect();
+              break;
+            case 2 : 
+              normal_lens_effect();
+              break;
+            default : 
+              break;
+          }
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        void PBR_uniform() 
+        {
+          float distance_to_lens = length(gua_world_position - lens_center);
+          if ( lens_radius > distance_to_lens && 
+               lens_mode != 0 ) 
+          {
+            apply_lens_effect();
+          }
+
           gua_metalness = metalness;
           gua_roughness = roughness; 
           gua_emissivity = emissivity;
@@ -47,7 +178,7 @@
         {
           "name" : "lens_radius",
           "type" : "float",
-          "value" : "0.0"
+          "value" : "0.1"
         },
         {
           "name" : "lens_mode",

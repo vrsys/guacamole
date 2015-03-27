@@ -199,7 +199,7 @@ void PLODNode::update_cache() {
     geometry_changed_ = false;
   }
 
-  // modified version of Node::upodate_cache -> add local transformation
+  // modified version of Node::update_cache -> add local transformation
   if (self_dirty_)
   {
     math::mat4 old_world_trans(world_transform_);
