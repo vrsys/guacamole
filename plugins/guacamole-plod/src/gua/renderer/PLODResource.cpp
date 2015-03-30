@@ -138,7 +138,7 @@ void PLODResource::ray_test(Ray const& ray,
   const auto world_origin = ray.origin_;
   const auto world_direction = scm::math::normalize(ray.direction_);
   
-  pbr::ren::Ray plod_ray(math::vec3f(world_origin), math::vec3f(world_direction), 9999.0f);
+  pbr::ren::Ray plod_ray(math::vec3f(world_origin), math::vec3f(world_direction), scm::math::length(ray.direction_));
   pbr::ren::Ray::Intersection intersection;
 
   auto plod_node = reinterpret_cast<node::PLODNode*>(owner);
