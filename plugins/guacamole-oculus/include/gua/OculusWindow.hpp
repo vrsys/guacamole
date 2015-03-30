@@ -43,21 +43,15 @@ class GUA_OCULUS_DLL OculusWindow : public Window {
   OculusWindow(std::string const& display);
   virtual ~OculusWindow();
 
-  void create_shader();
+  void init_context() override;
 
   void set_distortion(math::vec4 const& distortion);
   void set_distortion(float distortion0, float distortion1, float distortion2, float distortion3);
 
   // virtual
-  void display(std::shared_ptr<Texture2D> const& left_texture,
-               std::shared_ptr<Texture2D> const& right_texture);
+  void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
   private:
-    void display(std::shared_ptr<Texture2D> const& texture,
-                 math::vec2ui const& size,
-                 math::vec2ui const& position,
-                 bool left);
-
     math::vec4 distortion_;
 };
 
