@@ -158,10 +158,10 @@ std::set<PickResult> PLODLoader::pick_plod_interpolate(math::vec3 const& bundle_
                                            float bundle_radius,
                                            float max_distance,
                                            unsigned int max_depth,
-                                           unsigned int surfel_skip) const {
+                                           unsigned int surfel_skip,
+                                           float aabb_scale) const {
 
   std::set<PickResult> results;
-
 
   scm::math::vec3f ray_pos = scm::math::vec3f(bundle_origin.x, bundle_origin.y, bundle_origin.z);
   scm::math::vec3f ray_fwd = scm::math::vec3f(bundle_forward.x, bundle_forward.y, bundle_forward.z);
@@ -170,7 +170,7 @@ std::set<PickResult> PLODLoader::pick_plod_interpolate(math::vec3 const& bundle_
   pbr::ren::Ray ray(ray_pos, ray_fwd, max_distance);
   pbr::ren::Ray::Intersection intersection;
 
-  if (ray.Intersect(max_distance, ray_up, bundle_radius, max_depth, surfel_skip, intersection)) {
+  if (ray.Intersect(aabb_scale, ray_up, bundle_radius, max_depth, surfel_skip, intersection)) {
     PickResult result(intersection.distance_, 
                       nullptr, 
                       math::vec3(), 
