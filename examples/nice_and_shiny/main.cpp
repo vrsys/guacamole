@@ -93,14 +93,16 @@ int main(int argc, char** argv) {
   cerberus->rotate(90, 0.f, 1.f, 0.f);
   cerberus->rotate(90, 0.f, 0.f, 1.f);
 
-  auto pointLight = graph.add_node<gua::node::PointLightNode>("/", "pointLight");
+  auto pointLight = graph.add_node<gua::node::LightNode>("/", "pointLight");
+  pointLight->data.set_type(gua::node::LightNode::Type::POINT);
   pointLight->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
   pointLight->data.brightness = 150.0f; // lm
   pointLight->scale(9.f);
   pointLight->translate(-2.f, 3.f, 5.f);
 
 #if 0
-  auto spotLight = graph.add_node<gua::node::SpotLightNode>("/", "spotLight");
+  auto spotLight = graph.add_node<gua::node::LightNode>("/", "spotLight");
+  // spotLight->data.set_type(gua::node::LightNode::Type::SPOT);
   spotLight->data.set_enable_shadows(true);
   spotLight->data.brightness = 10.0f; // lm
   spotLight->scale(10.f);
@@ -216,8 +218,8 @@ int main(int argc, char** argv) {
     transform->set_transform(modelmatrix);
 
     if (ctr++ % 150 == 0)
-      gua::Logger::LOG_WARNING << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
-                << camera->get_rendering_fps() << std::endl;
+      gua::Logger::LOG_WARNING << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
+                << window->get_rendering_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {

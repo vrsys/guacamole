@@ -1,4 +1,4 @@
-out vec3  gua_varying_position;
+out vec3  gua_varying_world_position;
 out vec3  gua_varying_normal;
 out vec3  gua_varying_tangent;
 out vec3  gua_varying_bitangent;

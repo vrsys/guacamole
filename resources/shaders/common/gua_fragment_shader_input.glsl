@@ -1,4 +1,4 @@
-in vec3  gua_varying_position;
+in vec3  gua_varying_world_position;
 in vec3  gua_varying_normal;
 in vec3  gua_varying_tangent;
 in vec3  gua_varying_bitangent;

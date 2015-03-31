@@ -63,7 +63,7 @@ math::vec4f ClippingPlaneNode::get_component_vector() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Node> ClippingPlaneNode::copy() const {
-  return std::make_shared<ClippingPlaneNode>(get_name(), get_transform());
+  return std::make_shared<ClippingPlaneNode>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -27,14 +27,14 @@
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
+#include <gua/node/LightNode.hpp>
 #include <gua/utils/Logger.hpp>
 
 namespace gua {
 
 LightingPassDescription::LightingPassDescription()
   : PipelinePassDescription() {
+#if 0
   // here we assume, that the emissive pass was run previously
   // so we don't swap and don't clear the colorbuffer
   vertex_shader_ = "shaders/lighting.vert";
@@ -162,6 +162,7 @@ LightingPassDescription::LightingPassDescription()
       light_cone->draw(ctx);
     }
   };
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

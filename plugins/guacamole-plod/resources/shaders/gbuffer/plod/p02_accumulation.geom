@@ -6,8 +6,6 @@
 @include "common/gua_camera_uniforms.glsl"
 
 uniform bool enable_backface_culling;
-uniform mat4 model_view_matrix;
-uniform mat4 model_view_projection_matrix;
 
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
@@ -38,11 +36,11 @@ void main() {
       pass_point_color = VertexIn[0].pass_point_color;
       pass_normal = VertexIn[0].pass_normal; 
 
-      vec3 s_pos_ms = gl_in[0].gl_Position.xyz; // poisition of surfel in model space
+      vec3 s_pos_ms = gl_in[0].gl_Position.xyz; // position of surfel in model space
       vec3 step_u   = VertexIn[0].pass_ms_u;
       vec3 step_v   = VertexIn[0].pass_ms_v;
 
-      float es_linear_depth_center = (model_view_matrix * vec4(s_pos_ms,1.0)).z;
+      float es_linear_depth_center = (gua_model_view_matrix * vec4(s_pos_ms,1.0)).z;
       float es_shift = 0.0;
       float es_shift_scale = 2.0;
 
@@ -55,9 +53,9 @@ void main() {
 
         pass_uv_coords        = vec2(u_multiplier, v_multiplier);
         vec4 q_pos_ms         = vec4( ( (s_pos_ms + (u_multiplier * step_u) ) + (v_multiplier * step_v) ) ,1.0);
-        gl_Position           = model_view_projection_matrix * q_pos_ms;
-        gua_varying_position  = (gua_model_matrix * q_pos_ms).xyz;
-        float es_linear_depth_corner = (model_view_matrix * q_pos_ms).z;
+        gl_Position           = gua_model_view_projection_matrix * q_pos_ms;
+        gua_varying_world_position  = (gua_model_matrix * q_pos_ms).xyz;
+        float es_linear_depth_corner = (gua_model_view_matrix * q_pos_ms).z;
 
         es_shift       = abs(es_linear_depth_corner - es_linear_depth_center) * es_shift_scale;
         gl_Position.z  = ( ( -(es_linear_depth_corner + es_shift ) ) / gua_clip_far);

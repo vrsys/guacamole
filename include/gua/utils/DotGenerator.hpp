@@ -37,9 +37,8 @@ class SceneGraph;
 namespace node {
 class Node;
 class GeometryNode;
-class PointLightNode;
+class LightNode;
 class ScreenNode;
-class SpotLightNode;
 }
 
 /**
@@ -70,9 +69,8 @@ class GUA_DLL DotGenerator : public NodeVisitor {
   /*virtual*/ void visit(node::TransformNode* cam);
   /*virtual*/ void visit(node::GeometryNode* geometry);
   /*virtual*/ void visit(node::VolumeNode* volume);
-  /*virtual*/ void visit(node::PointLightNode* pointlight);
+  /*virtual*/ void visit(node::LightNode* pointlight);
   /*virtual*/ void visit(node::ScreenNode* screen);
-  /*virtual*/ void visit(node::SpotLightNode* spotlight);
   /*virtual*/ void visit(node::RayNode* ray);
 #ifdef GUACAMOLE_ENABLE_PHYSICS
   /*virtual*/ void visit(physics::RigidBodyNode* rb);

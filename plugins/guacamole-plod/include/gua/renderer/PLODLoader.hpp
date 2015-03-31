@@ -77,7 +77,8 @@ public:
                                              float bundle_radius,
                                              float max_distance,
                                              unsigned int max_depth,
-                                             unsigned int surfel_skip) const;  
+                                             unsigned int surfel_skip,  
+                                             float aabb_scale) const;
   
   /**
    * PLOD-lib specific configuration methods. Might be moved into a separate object later.

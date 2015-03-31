@@ -118,13 +118,15 @@ int main(int argc, char** argv) {
   });
 
 
-  // auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
+  // auto light = graph.add_node<gua::node::LightNode>("/", "light");
+  // light->data.set_type(gua::node::LightNode::Type::SPOT);
   // light->data.set_enable_shadows(true);
   // light->scale(10.f);
   // light->rotate(-20, 0.f, 1.f, 0.f);
   // light->translate(-1.f, 0.f,  3.f);
 
-  auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
+  auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
+  light2->data.set_type(gua::node::LightNode::Type::POINT);
   light2->scale(10.f);
   light2->translate(-2.f, 3.f, 5.f);
 
@@ -219,7 +221,7 @@ int main(int argc, char** argv) {
     sstr.precision(1);
     sstr.setf(std::ios::fixed, std::ios::floatfield);
     sstr << "FPS: " << camera->get_application_fps()
-         << " / " << camera->get_rendering_fps();
+         << " / " << window->get_rendering_fps();
     fps->call_javascript("set_fps_text", sstr.str());
 
     // ray->rotate(1, 0, 1, 0);

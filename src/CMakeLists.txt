@@ -161,8 +161,8 @@ IF (GUACAMOLE_PBR_SUPPORT)
 ENDIF (GUACAMOLE_PBR_SUPPORT)
 
 IF (UNIX)
-    TARGET_LINK_LIBRARIES( guacamole general ${BOOST_LIBRARIES})
-    TARGET_LINK_LIBRARIES( guacamole general ${X11_LIBRARIES})
+  TARGET_LINK_LIBRARIES( guacamole general ${Boost_LIBRARIES})
+  TARGET_LINK_LIBRARIES( guacamole general ${X11_LIBRARIES})
 ELSEIF (MSVC)
     # use boost autolink feature
     # not necessary to link GL on msvc

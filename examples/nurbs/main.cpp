@@ -234,7 +234,8 @@ int main(int argc, char** argv)
     float z = float(std::rand() % unsigned(scene_size)) - scene_size;
 
     std::string lightname = std::string("light") + std::to_string(i);
-    auto light = graph.add_node<gua::node::PointLightNode>("/", lightname);
+    auto light = graph.add_node<gua::node::LightNode>("/", lightname);
+    light->data.set_type(gua::node::LightNode::Type::POINT);
 
     light->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
     //light->scale(light_scale * scene_size * relative_intensity);
@@ -336,7 +337,7 @@ int main(int argc, char** argv)
     input_transform->set_transform(modelmatrix);
 
     if (frame_counter++ % 500 == 0)
-      std::cout << camera->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
+      std::cout << window->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {
@@ -345,7 +346,7 @@ int main(int argc, char** argv)
       loop.stop();
     }
     else {
-      renderer.queue_draw({ &graph }, { camera });
+      renderer.queue_draw({ &graph });
     }
   });
 
@@ -353,3 +354,4 @@ int main(int argc, char** argv)
 
   return 0;
 }
+ 

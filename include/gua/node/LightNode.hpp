@@ -19,14 +19,14 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SUN_LIGHT_NODE_HPP
-#define GUA_SUN_LIGHT_NODE_HPP
+#ifndef GUA_LIGHT_NODE_HPP
+#define GUA_LIGHT_NODE_HPP
 
 #include <gua/platform.hpp>
 #include <gua/node/SerializableNode.hpp>
+#include <gua/utils/configuration_macro.hpp>
 
 #include <gua/utils/Color3f.hpp>
-#include <gua/utils/configuration_macro.hpp>
 
 #include <string>
 
@@ -34,15 +34,18 @@ namespace gua {
 namespace node {
 
 /**
- * This class is used to represent directional and parallel light in the
- * SceneGraph.
+ * This class is used to represent a light in the SceneGraph.
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL SunLightNode : public SerializableNode {
+class GUA_DLL LightNode : public SerializableNode {
  public:
 
+  enum class Type { POINT=0, SPOT=1, SUN=2 };
+
   struct Configuration {
+    // 0 - point, 1 - spot, 2 - sun
+    GUA_ADD_PROPERTY(Type,            type,                     Type::POINT);
     /**
      * The color of the light source.
      * It's possible to use negative values and values > 1.
@@ -50,37 +53,49 @@ class GUA_DLL SunLightNode : public SerializableNode {
     GUA_ADD_PROPERTY(utils::Color3f, color, utils::Color3f(1.f, 1.f, 1.f));
 
     /**
-     * The intensity of the directional light.
+     * The intensity of the light source.
      */
-    GUA_ADD_PROPERTY(float, brightness, 10.0f);
+    GUA_ADD_PROPERTY(float,           brightness,               10.0f);
 
     /**
-     * Triggers whether the light casts shadows.
+     * The exponent of distance attenuation.
+     * E.g. a value of 2 means quadratic falloff, 1 means linear falloff
      */
-    GUA_ADD_PROPERTY(bool, enable_shadows, false);
+    GUA_ADD_PROPERTY(float,           falloff,                  1.f);
+
+    /**
+     * The exponent of radial attenuation.
+     * E.g. a value of 2 means quadratic falloff, 1 means linear falloff
+     */
+    GUA_ADD_PROPERTY(float,           softness,                 0.5f);
+
+    /**
+     * Triggers whether the light casts shadows. NOTE: Not implemented yet!
+     */
+    GUA_ADD_PROPERTY(bool,            enable_shadows,           false);
 
     /**
      * Triggers volumetric screen-space effects for the light source.
      */
-    GUA_ADD_PROPERTY(bool,                enable_godrays,                         false);
+    GUA_ADD_PROPERTY(bool,            enable_godrays,           false);
 
     /**
      * Triggers whether or not the light source has influence on objects'
      * diffuse shading.
      */
-    GUA_ADD_PROPERTY(bool,                enable_diffuse_shading,                 true);
+    GUA_ADD_PROPERTY(bool,            enable_diffuse_shading,   true);
 
     /**
      * Triggers whether or not the light source has influence on objects'
      * specular shading.
      */
-    GUA_ADD_PROPERTY(bool,                enable_specular_shading,                true);
+    GUA_ADD_PROPERTY(bool,            enable_specular_shading,  true);
 
     /**
      * Sets the size in pixel of the texture used for shadow map generation.
      * Choose wisely!
      */
-    GUA_ADD_PROPERTY(unsigned,            shadow_map_size,                        1024);
+    GUA_ADD_PROPERTY(unsigned,        shadow_map_size,          512);
 
     /**
      * Sets the offset between a shadow casting object and the shadow's edge.
@@ -98,50 +113,48 @@ class GUA_DLL SunLightNode : public SerializableNode {
      * Sets the value used for near clipping when renering cascaded shadow maps.
      */
     GUA_ADD_PROPERTY(float,               shadow_near_clipping_in_sun_direction,  100.f);
+
   };
 
   /**
-   * The SunLightNode's configuration.
+   * The LightNode's configuration.
    */
   Configuration data;
 
   /**
    * Constructor.
    *
-   * This constructs an empty SunLightNode.
+   * This constructs an empty LightNode.
    *
    */
-  SunLightNode() {}
+  LightNode() {}
 
   /**
    * Constructor.
    *
-   * This constructs a SunLightNode with the given parameters.
+   * This constructs a LightNode with the given parameters.
    *
-   * \param name           The name of the new SunLightNode.
-   * \param configuration  A configuration struct to define the SunLightNode's
+   * \param name           The name of the new LightNode.
+   * \param configuration  A configuration struct to define the LightNode's
    *                       properties.
-   * \param transform      A matrix to describe the SunLightNode's
-   *                       transformation. The default light direction is -y.
-   *                       NOTE: Since a SunLightNode is a directional light
-   *                       source, only rotations are needed to describe its
+   * \param transform      A matrix to describe the LightNode's
    *                       transformation.
    */
-  SunLightNode(std::string const& name,
-                Configuration const& configuration = Configuration(),
-                math::mat4 const& transform = math::mat4::identity());
+  LightNode(std::string const& name,
+           Configuration const& configuration = Configuration(),
+           math::mat4 const& transform = math::mat4::identity());
 
   /**
    * Accepts a visitor and calls concrete visit method.
    *
    * This method implements the visitor pattern for Nodes.
    *
-   * \param visitor  A visitor to process the SunLightNode's data.
+   * \param visitor  A visitor to process the LightNode's data.
    */
   void accept(NodeVisitor& visitor) override;
 
   /**
-   * Updates a SunLightNode's BoundingBox.
+   * Updates a LightNode's BoundingBox.
    *
    * The bounding box is updated according to the transformation matrices of
    * all children.
@@ -149,11 +162,10 @@ class GUA_DLL SunLightNode : public SerializableNode {
   void update_bounding_box() const override;
 
  private:
-
   std::shared_ptr<Node> copy() const override;
 };
 
 } // namespace node {
 } // namespace gua {
 
-#endif  // GUA_SUN_LIGHT_NODE_HPP
+#endif  // GUA_POINT_LIGHT_NODE_HPP

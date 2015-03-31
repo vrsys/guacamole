@@ -27,8 +27,8 @@
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
+//#include <gua/node/PointLightNode.hpp>
+//#include <gua/node/SpotLightNode.hpp>
 #include <gua/utils/Logger.hpp>
 
 namespace gua {
@@ -38,6 +38,7 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 
 void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pipe, bool rendering_shadows) {
+#if 0
   auto const& ctx(pipe.get_context());
   auto gl_program(ctx.render_context->current_program());
 
@@ -139,6 +140,7 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
     ctx.render_context->apply();
     light_cone->draw(ctx);
   }
+#endif
 }
 
 }

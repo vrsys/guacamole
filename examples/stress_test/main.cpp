@@ -65,7 +65,8 @@ int main(int argc, char** argv) {
 
   auto resolution = gua::math::vec2ui(1920, 1080);
 
-  auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
+  auto light = graph.add_node<gua::node::LightNode>("/", "light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
   light->scale(4.4f);
   light->translate(1.f, 0.f, 2.f);
 
@@ -111,7 +112,7 @@ int main(int argc, char** argv) {
       }
     }
 
-    std::cout << camera->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
+    std::cout << window->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {

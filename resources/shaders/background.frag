@@ -49,7 +49,7 @@ vec3 gua_apply_skymap_texture() {
   vec2 texcoord = vec2(x, y);
   float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_camera_position) - normalize(gua_get_position(vec2(1, 0.5)) - gua_camera_position));
   vec2 uv = l*(gua_get_quad_coords() - 1.0)/4.0 + 0.5;
-  return textureGrad(sampler2D(background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
+  return textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
 }
 
 vec3 gua_apply_background_color() {
@@ -68,7 +68,7 @@ void main() {
     if (gua_enable_fog) {
       vec3 fog_color;
 
-      switch (background_mode) {
+      switch (gua_background_mode) {
         case 0: // color
           fog_color = gua_apply_background_color();
           break;
@@ -86,7 +86,7 @@ void main() {
     }
   } else {
 
-    switch (background_mode) {
+    switch (gua_background_mode) {
       case 0: // color
         gua_out_color = gua_apply_background_color();
         break;

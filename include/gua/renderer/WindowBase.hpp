@@ -133,7 +133,7 @@ class GUA_DLL WindowBase {
 
   virtual void process_events() = 0;
 
-  void init_context();
+  virtual void init_context();
   void destroy_context();
 
   /**
@@ -176,6 +176,9 @@ class GUA_DLL WindowBase {
    */
   RenderContext* get_context();
 
+  float get_rendering_fps() { return rendering_fps; }
+  std::atomic<float> rendering_fps;
+
 protected:
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
@@ -194,6 +197,11 @@ protected:
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::blend_state_ptr blend_state_;
 
+  static std::atomic_uint last_context_id_;
+
+  static std::mutex last_context_id_mutex_;
+
+
  private:
   void display(std::shared_ptr<Texture> const& texture,
                math::vec2ui const& size,
@@ -201,11 +209,6 @@ protected:
                TextureDisplayMode mode = FULL,
                bool is_left = true,
                bool clear = true);
-
-
-  static std::atomic_uint last_context_id_;
-
-  static std::mutex last_context_id_mutex_;
 
 };
 
