@@ -596,6 +596,9 @@ namespace gua {
           current_material_program,
           program_changed);
 
+         ctx.render_context->bind_texture(depth_pass_linear_depth_result_, nearest_sampler_state_, 0);
+         current_material_program->apply_uniform(ctx, "p01_linear_depth_texture", 0);
+
         ctx.render_context->apply();
 
         auto plod_resource = plod_node->get_geometry();
