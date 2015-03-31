@@ -19,47 +19,45 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_POSE_HPP
-#define GUA_POSE_HPP
+#ifndef GUA_BONEPOSE_HPP
+#define GUA_BONEPOSE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/utils/Mesh.hpp>
-#include <gua/utils/Transformation.hpp>
+
+// external headers
+#include <scm/gl_core.h>
+#include <scm/core/math/quat.h>
 
 #include <vector>
-#include <map>
 
 namespace gua {
-class Bone;
 
-class Pose {
+struct BonePose {
  public:
-  Pose();
+  BonePose();
 
-  ~Pose();
+  BonePose(scm::math::vec3f const& scale, scm::math::quatf const& rotate, scm::math::vec3f const& translate);
 
-  bool contains(std::string const& name ) const;
+  ~BonePose();
 
-  Transformation const& get_transform(std::string const& name) const;
+  scm::math::mat4f to_matrix() const;
 
-  void set_transform(std::string const& name, Transformation const& value);
+  BonePose blend(BonePose const& t, float const factor) const;
 
-  void blend(Pose const& pose2, float blendFactor);
+  BonePose operator+(BonePose const& t) const;
+  BonePose& operator+=(BonePose const& t);
 
-  Pose& operator+=(Pose const& pose2);
-  Pose operator+(Pose const& p2) const;
+  BonePose operator*(float const factor) const;
+  BonePose& operator*=(float const f);
 
-  Pose& operator*=(float const factor);
-  Pose operator*(float const factor) const;
-
-  void partial_replace(Pose const& pose2, std::shared_ptr<Bone> const& pNode);
-
- private: 
-  std::map<std::string, Transformation> transforms;
+ private:
+  scm::math::vec3f scaling;
+  scm::math::quatf rotation;
+  scm::math::vec3f translation;
 };
 
 }
 
-#endif //GUA_POSE_HPP
+#endif //GUA_BONEPOSE_HPP

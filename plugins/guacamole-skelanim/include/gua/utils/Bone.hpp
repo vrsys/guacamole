@@ -26,16 +26,16 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/utils/Pose.hpp>
-// #include <gua/renderer/SkeletalAnimationUtils.hpp>
+#include <gua/utils/SkeletalPose.hpp>
+#include <gua/utils/SkeletalAnimation.hpp>
 
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
-
 #include <vector>
 #include <map>
-#include <assimp/scene.h>       // Output data structure
+
+class aiScene;
 
 namespace fbxsdk_2015_1{
   class FbxNode;
@@ -60,12 +60,19 @@ class Bone {
 
   std::shared_ptr<Bone> find(std::string const& name) const;
 
-  void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, Pose const& pose, scm::math::mat4f const& parentTransform) const;
+
+  void calculate_matrices(std::vector<scm::math::mat4f>& Transforms) const;
+  void calculate_matrices(float TimeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms) const;
+
+  void blend_pose(float blend_factor, float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms) const;
+  // void partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms) const;
 
   std::string name;
   std::vector<std::shared_ptr<Bone>> children;
   
  private:
+  void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, SkeletalPose const& pose, scm::math::mat4f const& parentTransform) const;
+
   int index;
   std::string parentName;
   unsigned numChildren;

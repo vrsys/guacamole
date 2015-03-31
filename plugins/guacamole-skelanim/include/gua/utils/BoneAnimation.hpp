@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/utils/Transformation.hpp>
+#include <gua/utils/BonePose.hpp>
 #include <gua/utils/Mesh.hpp>
 
 namespace fbxsdk_2015_1{
@@ -58,7 +58,7 @@ class BoneAnimation {
   BoneAnimation(aiNodeAnim* anim);
   BoneAnimation(fbxsdk_2015_1::FbxTakeInfo const& take, fbxsdk_2015_1::FbxNode& node);
 
-  Transformation calculate_transform(float time) const;
+  BonePose calculate_transform(float time) const;
 
   std::string const& get_name() const;
 

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <queue>
 #include <fbxsdk.h>
+#include <assimp/scene.h>       // Output data structure
 
 namespace gua {
 
@@ -172,7 +173,7 @@ void Bone::set_properties(std::map<std::string, std::pair<uint, scm::math::mat4f
   }
 }
 
-void Bone::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, Pose const& pose, scm::math::mat4f const& parentTransform) const {
+void Bone::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, SkeletalPose const& pose, scm::math::mat4f const& parentTransform) const {
   scm::math::mat4f nodeTransformation{transformation};
   if(pose.contains(name)) { 
     nodeTransformation = pose.get_transform(name).to_matrix();  
@@ -189,5 +190,58 @@ void Bone::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, Po
      child->accumulate_matrices(transformMat4s, pose, finalTransformation);
   }
 }
+
+// start accumulating, to call on root
+void Bone::calculate_matrices(std::vector<scm::math::mat4f>& transforms) const{
+
+  scm::math::mat4f identity = scm::math::mat4f::identity();
+  accumulate_matrices(transforms, SkeletalPose{}, identity);
+}
+
+void Bone::calculate_matrices(float timeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& transforms) const {
+ 
+  float time_normalized = 0;
+
+  time_normalized = timeInSeconds / pAnim.get_duration();
+  time_normalized = scm::math::fract(time_normalized);
+
+  scm::math::mat4f identity = scm::math::mat4f::identity();
+  accumulate_matrices(transforms, pAnim.calculate_pose(time_normalized), identity);
+}
+
+void Bone::blend_pose(float blend_factor, float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms) const {
+  float time_normalized1 = timeInSeconds1 / pAnim1.get_duration();
+  time_normalized1 = scm::math::fract(time_normalized1);
+
+  float time_normalized2 = timeInSeconds2 / pAnim2.get_duration();
+  time_normalized2 = scm::math::fract(time_normalized2);
+
+  scm::math::mat4f identity = scm::math::mat4f::identity();
+
+  SkeletalPose pose1{pAnim1.calculate_pose(time_normalized1)};
+  SkeletalPose pose2{pAnim2.calculate_pose(time_normalized2)};
+  
+  pose1.blend(pose2, blend_factor);
+
+  accumulate_matrices(transforms, pose1, identity);
+}
+
+// void Bone::partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms) const {
+
+//   float time_normalized1 = timeInSeconds / pAnim1.get_duration();
+//   time_normalized1 = scm::math::fract(time_normalized1);
+
+//   float time_normalized2 = timeInSeconds / pAnim2.get_duration();
+//   time_normalized2 = scm::math::fract(time_normalized2);
+
+//   scm::math::mat4f identity = scm::math::mat4f::identity();
+
+//   SkeletalPose full_body{pAnim1.calculate_pose(time_normalized1)};
+//   SkeletalPose upper_body{pAnim2.calculate_pose(time_normalized2)};
+
+//   full_body.partial_replace(upper_body, *this);
+
+//   accumulate_matrices(transforms, full_body, identity);
+// }
 
 } // namespace gua

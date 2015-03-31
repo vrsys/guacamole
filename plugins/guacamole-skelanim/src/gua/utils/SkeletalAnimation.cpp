@@ -54,13 +54,13 @@ SkeletalAnimation::SkeletalAnimation(FbxAnimStack* anim, std::vector<FbxNode*> c
 SkeletalAnimation::~SkeletalAnimation()
 {}
 
-Pose SkeletalAnimation::calculate_pose(float time) const { 
-  Pose pose{};
+SkeletalPose SkeletalAnimation::calculate_pose(float time) const { 
+  SkeletalPose pose{};
 
   float currFrame = time * float(numFrames);
    
   for(BoneAnimation const& boneAnim : boneAnims) {
-    Transformation boneTransform = boneAnim.calculate_transform(currFrame);
+    BonePose boneTransform = boneAnim.calculate_transform(currFrame);
 
     pose.set_transform(boneAnim.get_name(), boneTransform);
   }  

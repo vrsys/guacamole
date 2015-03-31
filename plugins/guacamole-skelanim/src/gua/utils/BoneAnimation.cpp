@@ -59,8 +59,8 @@ BoneAnimation::BoneAnimation(aiNodeAnim* anim):
   }
 }
 
-Transformation BoneAnimation::calculate_transform(float time) const {
-  return Transformation{calculate_value(time, scalingKeys), calculate_value(time, rotationKeys), calculate_value(time, translationKeys)};
+BonePose BoneAnimation::calculate_transform(float time) const {
+  return BonePose{calculate_value(time, scalingKeys), calculate_value(time, rotationKeys), calculate_value(time, translationKeys)};
 }
 
 std::string const& BoneAnimation::get_name() const {

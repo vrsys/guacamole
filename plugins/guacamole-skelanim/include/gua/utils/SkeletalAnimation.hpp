@@ -27,7 +27,7 @@
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Mesh.hpp>
-#include <gua/utils/Pose.hpp>
+#include <gua/utils/SkeletalPose.hpp>
 #include <gua/utils/BoneAnimation.hpp>
 
 #include <vector>
@@ -38,7 +38,7 @@ namespace fbxsdk_2015_1{
 }
 
 namespace gua {
-class Pose;
+class SkeletalPose;
 
 class SkeletalAnimation {
  public:
@@ -49,7 +49,7 @@ class SkeletalAnimation {
 
   ~SkeletalAnimation();
 
-  Pose calculate_pose(float time) const;
+  SkeletalPose calculate_pose(float time) const;
 
   double get_duration() const;
   std::string const& get_name() const;
