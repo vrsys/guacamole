@@ -38,13 +38,12 @@ SkinnedMeshResource::SkinnedMeshResource()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SkinnedMeshResource::SkinnedMeshResource(SkinnedMesh const& mesh, std::shared_ptr<SkeletalAnimationDirector> animation_director, bool build_kd_tree)
+SkinnedMeshResource::SkinnedMeshResource(SkinnedMesh const& mesh, bool build_kd_tree)
 : vertices_(),
   indices_(),
   vertex_array_(),
   upload_mutex_(),
-  mesh_(mesh),
-  animation_director_(animation_director)
+  mesh_(mesh)
 {
 
   //TODO generate BBox and KDTree
@@ -193,16 +192,14 @@ void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
 ////////////////////////////////////////////////////////////////////////////////
 
 std::vector<math::BoundingBox<math::vec3>>
-SkinnedMeshResource::get_bone_boxes(){
+SkinnedMeshResource::get_bone_boxes(std::vector<scm::math::mat4f> const& bone_transforms){
   
   auto tmp_boxes = std::vector<math::BoundingBox<math::vec3>>(100,math::BoundingBox<math::vec3>());
 
-  auto bone_transformation = animation_director_->get_bone_transforms();
-
   for(uint b(0);b<bone_boxes_.size();++b){
 
-    if(!bone_boxes_[b].isEmpty()){
-      tmp_boxes[b] = transform(bone_boxes_[b], scm::math::mat4d(bone_transformation[b]));
+    if(!bone_boxes_[b].isEmpty() && b < bone_transforms.size()){
+      tmp_boxes[b] = transform(bone_boxes_[b], scm::math::mat4d(bone_transforms[b]));
     }
   }
   return tmp_boxes;

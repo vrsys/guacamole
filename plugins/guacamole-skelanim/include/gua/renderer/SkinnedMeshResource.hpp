@@ -39,8 +39,6 @@
 #include <vector>
 
 
-namespace Assimp { class Importer; }
-
 namespace gua {
 
 struct RenderContext;
@@ -48,7 +46,7 @@ struct RenderContext;
 /**
  * Stores geometry data.
  *
- * A mesh can be loaded from an Assimp mesh and the draw onto multiple
+ * A mesh can be loaded from an Assimp/FBX mesh and the draw onto multiple
  * contexts.
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
@@ -76,7 +74,7 @@ class SkinnedMeshResource : public GeometryResource {
    *
    * \param mesh             The Assimp mesh to load the data from.
    */
-   SkinnedMeshResource(SkinnedMesh const& mesh, std::shared_ptr<SkeletalAnimationDirector> animation_director, bool build_kd_tree);
+   SkinnedMeshResource(SkinnedMesh const& mesh, bool build_kd_tree);
 
   /**
    * Draws the Mesh.
@@ -97,7 +95,7 @@ class SkinnedMeshResource : public GeometryResource {
   std::vector<unsigned int> get_face(unsigned int i) const;
 
 
-  std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
+  std::vector<math::BoundingBox<math::vec3>> get_bone_boxes(std::vector<scm::math::mat4f> const& bone_transforms);
 
   friend class SkeletalAnimationRenderer;
   friend class LightingPass;
@@ -115,37 +113,13 @@ class SkinnedMeshResource : public GeometryResource {
 
   std::shared_ptr<SharedBoneResource> res_ = nullptr;
 
-  /*// intermediate mesh meta data
-  #define INVALID_MATERIAL 0xFFFFFFFF // TODO
-  struct MeshEntry {
-        MeshEntry()
-        {
-            NumIndices    = 0;
-            BaseVertex    = 0;
-            BaseIndex     = 0;
-            MaterialIndex = INVALID_MATERIAL;
-        }
-        
-        unsigned int NumIndices;
-        unsigned int BaseVertex;
-        unsigned int BaseIndex;
-        unsigned int MaterialIndex;
-    };*/
-    
-    //std::vector<MeshEntry> entries_;
+  std::vector<math::BoundingBox<math::vec3>> bone_boxes_;
 
-    std::shared_ptr<SkeletalAnimationDirector> animation_director_;
-
-    std::vector<math::BoundingBox<math::vec3>> bone_boxes_;
-
-    /////////////////////////////////
+  /////////////////////////////////
 
  public:
 
   KDTree kd_tree_;
-
-  // aiMesh const* mesh_;
-  // std::shared_ptr<Assimp::Importer> importer_;
 };
 
 }

@@ -123,6 +123,9 @@ public : // methods
 
   bool has_anims() const;
 
+  std::vector<scm::math::mat4f> const& get_bone_transforms() const;
+  void update_bone_transforms();
+
   std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
 
   /**
@@ -149,9 +152,18 @@ public : // methods
   bool                              material_changed_;
 
   std::shared_ptr<SkeletalAnimationDirector> animation_director_;
-  std::shared_ptr<BoneTransformUniformBlock> bone_transforms_block_;
 
   bool first_run_;
+  bool has_anims_;
+  float blend_factor_;
+
+  std::vector<scm::math::mat4f> bone_transforms_;
+
+  std::string anim_1_;
+  std::string anim_2_;
+  float anim_time_1_;
+  float anim_time_2_;
+
 };
 
 } // namespace node {
