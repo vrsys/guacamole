@@ -89,6 +89,9 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
                                                   ) const {
 
   sun_lights_num = 0u;
+  std::vector<math::mat4> sun_transforms;
+  std::vector<LightTable::LightBlock> sun_lights;
+
   for (auto const& l : pipe.get_scene().nodes[std::type_index(typeid(node::LightNode))]) {
     auto light(reinterpret_cast<node::LightNode*>(l));
 
@@ -111,6 +114,8 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.falloff         = 0.0f;
       light_block.softness        = 0.0f;
       light_block.casts_shadow    = light->data.get_enable_shadows();
+      sun_lights.push_back(light_block);
+      sun_transforms.push_back(model_mat);
     } else if (light->data.get_type() == node::LightNode::Type::POINT) {
       math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
       float light_radius = scm::math::length(light_position - math::vec3(model_mat * math::vec4(0.f, 0.f, 1.f, 1.f)));
@@ -120,6 +125,8 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = 0;
       light_block.casts_shadow    = 0;
+      lights.push_back(light_block);
+      transforms.push_back(model_mat);
     } else if (light->data.get_type() == node::LightNode::Type::SPOT) {
       math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
       math::vec3 beam_direction = math::vec3(model_mat * math::vec4(0.f, 0.f, -1.f, 1.f)) - light_position;
@@ -133,11 +140,13 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = light->data.get_softness();
       light_block.casts_shadow    = 0; //light->data.get_enable_shadows();
+      lights.push_back(light_block);
+      transforms.push_back(model_mat);
     }
-
-    lights.push_back(light_block);
-    transforms.push_back(model_mat);
   }
+  // sun lights need to be at the back
+  transforms.insert(transforms.end(), sun_transforms.begin(), sun_transforms.end());
+  lights.insert(lights.end(), sun_lights.begin(), sun_lights.end());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
