@@ -26,6 +26,8 @@
 #include <gua/node/GeometryNode.hpp>
 #include <gua/renderer/SkeletalAnimationDirector.hpp>
 #include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/utils/SkeletalAnimation.hpp>
+#include <gua/utils/Bone.hpp>
 
 namespace gua {
 
@@ -48,7 +50,7 @@ public : // typedef/enums/friends
   SkeletalAnimationNode(std::string const& node_name = "",
               std::vector<std::string> const& geometry_description = {},
               std::vector<std::shared_ptr<Material>> const& materials = {},
-              std::shared_ptr<SkeletalAnimationDirector> animation_director = nullptr,
+              std::shared_ptr<Bone> const& = nullptr,
               math::mat4 const& transform = math::mat4::identity());
 
 private : // c'tor / d'tor
@@ -97,14 +99,16 @@ public : // methods
   */
   void update_bounding_box() const override;
 
-  void update_bone_transforms(RenderContext const& ctx);
+  std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
 
   void update_cache() override;
 
   std::vector<std::shared_ptr<SkinnedMeshResource>> const& get_geometries() const;
-  
-  std::shared_ptr<SkeletalAnimationDirector> const& get_director() const;
-//getter and setter of director
+
+//animation related methods
+  void add_animations(aiScene const& scene, std::string const& name);
+  void add_animations(fbxsdk_2015_1::FbxScene& scene, std::string const& name);
+
   std::string const& get_animation_1() const;
   void set_animation_1(std::string const&);
 
@@ -126,7 +130,6 @@ public : // methods
   std::vector<scm::math::mat4f> const& get_bone_transforms() const;
   void update_bone_transforms();
 
-  std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
 
   /**
    * Accepts a visitor and calls concrete visit method.
@@ -151,19 +154,29 @@ public : // methods
 
   bool                              material_changed_;
 
-  std::shared_ptr<SkeletalAnimationDirector> animation_director_;
+  // attributes related to animation
+
+  std::map<std::string, int> bone_mapping_; // maps a bone name to its index
+
+  std::shared_ptr<Bone> root_;
+  std::shared_ptr<Bone> anim_start_node_;
+
+  std::map<std::string, SkeletalAnimation> animations_;
+
 
   bool first_run_;
   bool has_anims_;
+  uint num_bones_;
+
+  const static std::string none_loaded;
+
   float blend_factor_;
-
-  std::vector<scm::math::mat4f> bone_transforms_;
-
   std::string anim_1_;
   std::string anim_2_;
   float anim_time_1_;
   float anim_time_2_;
 
+  std::vector<scm::math::mat4f> bone_transforms_;
 };
 
 } // namespace node {
