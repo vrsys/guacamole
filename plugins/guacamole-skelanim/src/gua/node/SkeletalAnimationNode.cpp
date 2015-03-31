@@ -27,6 +27,7 @@
 #include <gua/node/RayNode.hpp>
 #include <gua/renderer/SkeletalAnimationLoader.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
+#include <gua/utils/SkeletalTransformation.hpp>
 // external headers
 #include <fbxsdk.h>
 #include <queue>

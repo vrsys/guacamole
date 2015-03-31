@@ -24,7 +24,6 @@
 
 // guacamole headers
 #include <gua/node/GeometryNode.hpp>
-#include <gua/renderer/SkeletalAnimationDirector.hpp>
 #include <gua/renderer/SkinnedMeshResource.hpp>
 #include <gua/utils/SkeletalAnimation.hpp>
 #include <gua/utils/Bone.hpp>
