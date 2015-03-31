@@ -273,10 +273,14 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfi
     // toggle lens modes and parametrization
   case 't':
     lens.radius = std::min(10.0f, 1.1f * lens.radius);
+    lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
+    lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'g':
     lens.radius = std::max(0.01f, 0.9f * lens.radius);
+    lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
+    lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'o':
