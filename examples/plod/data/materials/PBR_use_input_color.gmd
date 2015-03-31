@@ -234,12 +234,12 @@
         {
           "name" : "lens_square_ss_min",
           "type" : "vec2",
-          "value" : "(0.1 01)"
+          "value" : "(0.1 0.1)"
         },
         {
             "name" : "lens_square_ss_max",
             "type" : "vec2",
-            "value" : "(0.1 01)"
+            "value" : "(0.1 0.1)"
         },
         {
           "name" : "lens_square_ws_min",
