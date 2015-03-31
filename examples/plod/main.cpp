@@ -100,7 +100,8 @@ struct LensConfig {
     enum LensVisMode{ off = 0x0,
                     distance, 
                     normals,
-                    derivation };
+                    first_derivation,
+                    second_derivation};
 
     enum LensGeoMode { sphere_os = 0x0,
         sphere_ss,
@@ -273,10 +274,14 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfi
     // toggle lens modes and parametrization
   case 't':
     lens.radius = std::min(10.0f, 1.1f * lens.radius);
+    lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
+    lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'g':
     lens.radius = std::max(0.01f, 0.9f * lens.radius);
+    lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
+    lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'o':
@@ -288,7 +293,7 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfi
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'y':
-      lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 4);
+      lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 5);
     std::cout << "Set lens vis_mode to " << lens.vis_mode << std::endl;
     // 0 = off
     // 1 = distance to plane
@@ -669,7 +674,7 @@ int main(int argc, char** argv) {
   float lense_init_size = 0.1f;
 
   LensConfig lens_config = { gua::math::vec3{ 0.0, 0.0, 0.0 }, 
-      gua::math::vec3{ 0.0, 0.0, 0.0 },
+      gua::math::vec2{ 0.5, 0.5 },
       gua::math::vec3{ 1.0, 0.0, 0.0 }, 
       LensConfig::LensVisMode::off, 
       LensConfig::LensGeoMode::sphere_os, 
