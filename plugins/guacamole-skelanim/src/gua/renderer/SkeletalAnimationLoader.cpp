@@ -155,7 +155,7 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
 
     FbxScene* scene = load_fbx_file(sdk_manager, file_name);
     
-    skelNode->get_director()->add_animations(*scene,animation_name);
+    skelNode->add_animations(*scene,animation_name);
   }
   else {
     auto importer = std::make_shared<Assimp::Importer>();
@@ -167,7 +167,7 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
     aiScene const* scene(importer->GetOrphanedScene());
 
     if(scene->HasAnimations()) {
-      skelNode->get_director()->add_animations(*scene,animation_name);
+      skelNode->add_animations(*scene,animation_name);
     }
     else {
       Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;
@@ -378,7 +378,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
     }
   }
 
-  return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, std::make_shared<SkeletalAnimationDirector>(root));
+  return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, root);
 }
 /////////////////////////////////////////////////////////////////////////////
 
@@ -416,7 +416,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
     materials.push_back(material);
   }
 
-  return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, std::make_shared<SkeletalAnimationDirector>(root));
+  return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, root);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

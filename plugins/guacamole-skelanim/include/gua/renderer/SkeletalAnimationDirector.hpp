@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SKELETAL_ANIMATION_DIRECTOR_HPP
-#define GUA_SKELETAL_ANIMATION_DIRECTOR_HPP
+#ifndef GUA_SKELETALTRANSFORMATION_HPP
+#define GUA_SKELETALTRANSFORMATION_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -32,49 +32,18 @@
 // external headers
 #include <vector>
 
-namespace fbxsdk_2015_1{
-  class FbxScene;
-}
-
 namespace gua {
 
-  namespace node {
-    class SkeletalAnimationNode;
-  }
+  namespace SkeletalTransformation {
 
-class SkeletalAnimationDirector {
-  friend node::SkeletalAnimationNode;
+  void from_hierarchy(std::shared_ptr<Bone> const& anim_start_node_, std::vector<scm::math::mat4f>& Transforms);
+  
+  void from_anim(std::shared_ptr<Bone> const& anim_start_node_, float TimeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
 
- public:
-
-  SkeletalAnimationDirector(std::shared_ptr<Bone> const&);
-
-  inline ~SkeletalAnimationDirector(){};
-
-  void add_animations(aiScene const& scene, std::string const& name);
-  void add_animations(fbxsdk_2015_1::FbxScene& scene, std::string const& name);
-
- private:
-
-  void calculate_matrices(float TimeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
-  void calculate_matrices(std::vector<scm::math::mat4f>& Transforms);
-
-  void blend_pose(float blend_factor, float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
-  void partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms);
-
-  std::map<std::string, int> bone_mapping_; // maps a bone name to its index
-
-  std::shared_ptr<Bone> root_;
-  std::shared_ptr<Bone> anim_start_node_;
-
-  std::map<std::string, SkeletalAnimation> animations_;
-
-  uint num_bones_;
-  bool has_anims_;
-
-  const static std::string none_loaded;
-};
-
+  void blend_anims(std::shared_ptr<Bone> const& anim_start_node_, float blend_factor, float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
+  
+  void partial_blend(std::shared_ptr<Bone> const& anim_start_node_, float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms);
+}
 }
 
-#endif  // GUA_SKELETAL_ANIMATION_DIRECTOR_HPP
+#endif  // GUA_SKELETALTRANSFORMATION_HPP
