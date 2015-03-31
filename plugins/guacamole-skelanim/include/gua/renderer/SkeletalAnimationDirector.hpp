@@ -54,14 +54,12 @@ class SkeletalAnimationDirector {
   void add_animations(aiScene const& scene, std::string const& name);
   void add_animations(fbxsdk_2015_1::FbxScene& scene, std::string const& name);
 
-  std::vector<scm::math::mat4f> get_bone_transforms();
-
  private:
 
   void calculate_matrices(float TimeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& Transforms);
   void calculate_matrices(std::vector<scm::math::mat4f>& Transforms);
 
-  void blend_pose(float belnd_factor, float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
+  void blend_pose(float blend_factor, float timeInSeconds1, float timeInSeconds2, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::vector<scm::math::mat4f>& transforms);
   void partial_blend(float timeInSeconds, SkeletalAnimation const& pAnim1, SkeletalAnimation const& pAnim2, std::string const& nodeName, std::vector<scm::math::mat4f>& transforms);
 
   std::map<std::string, int> bone_mapping_; // maps a bone name to its index
@@ -71,24 +69,8 @@ class SkeletalAnimationDirector {
 
   std::map<std::string, SkeletalAnimation> animations_;
 
-  float blend_factor_;
-
-  std::string anim_1_;
-  std::string anim_2_;
-  float anim_time_1_;
-  float anim_time_2_;
   uint num_bones_;
-
-  bool firstRun_;
   bool has_anims_;
-  // bool loop_;
-  // bool loop_prev_;
-
-  // float blend_start_;
-  // float blend_start_prev_;
-  // float blend_end_;
-  // float blend_duration_;
-  // Timer timer_;
 
   const static std::string none_loaded;
 };

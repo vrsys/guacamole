@@ -47,7 +47,11 @@ namespace node {
       material_changed_(true),
       animation_director_(animation_director),
       bone_transforms_block_{nullptr},
-      first_run_{true}
+      first_run_{true},
+      has_anims_{false},
+      anim_1_{"none"},
+      anim_2_{"none"},
+      blend_factor_{1.0}
   {
     geometries_.resize(geometry_descriptions_.size());
   }
@@ -114,8 +118,8 @@ namespace node {
   
   ////////////////////////////////////////////////////////////////////////////////
   std::string const& SkeletalAnimationNode::get_animation_1() const {
-    if(animation_director_->has_anims_ && animation_director_->animations_.find(animation_director_->anim_1_) != animation_director_->animations_.end()){
-      return animation_director_->anim_1_;
+    if(animation_director_->has_anims_ && animation_director_->animations_.find(anim_1_) != animation_director_->animations_.end()){
+      return anim_1_;
     }
     else{
       return animation_director_->none_loaded;
@@ -124,15 +128,15 @@ namespace node {
 
   void SkeletalAnimationNode::set_animation_1(std::string const& animation_name) {
     if(animation_director_->animations_.find(animation_name) != animation_director_->animations_.end()) {
-       animation_director_->anim_1_ = animation_name;
+       anim_1_ = animation_name;
     }
     else {
       gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name <<"' found!" << std::endl;
     }
   }
   std::string const& SkeletalAnimationNode::get_animation_2() const {
-    if(animation_director_->has_anims_ && animation_director_->animations_.find(animation_director_->anim_2_) != animation_director_->animations_.end()){
-      return animation_director_->anim_2_;
+    if(animation_director_->has_anims_ && animation_director_->animations_.find(anim_2_) != animation_director_->animations_.end()){
+      return anim_2_;
     }
     else{
       return SkeletalAnimationDirector::none_loaded;
@@ -141,7 +145,7 @@ namespace node {
 
   void SkeletalAnimationNode::set_animation_2(std::string const& animation_name) {
     if(animation_director_->animations_.find(animation_name) != animation_director_->animations_.end()) {
-       animation_director_->anim_2_ = animation_name;
+       anim_2_ = animation_name;
     }
     else {
       gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name << "' found!" << std::endl;
@@ -159,45 +163,72 @@ namespace node {
   }
 
   float SkeletalAnimationNode::get_blend_factor() const{
-    return animation_director_->blend_factor_;
+    return blend_factor_;
   }
 
   void SkeletalAnimationNode::set_blend_factor(float f){
-    animation_director_->blend_factor_ = f;
+    blend_factor_ = f;
   }
 
   void SkeletalAnimationNode::set_time_1(float time){
-    animation_director_->anim_time_1_ = time;
+    anim_time_1_ = time;
   }
 
   float SkeletalAnimationNode::get_time_1() const{
-    return animation_director_->anim_time_1_;
+    return anim_time_1_;
   }
 
   void SkeletalAnimationNode::set_time_2(float time){
-    animation_director_->anim_time_2_ = time;
+    anim_time_2_ = time;
   }
 
   float SkeletalAnimationNode::get_time_2() const{
-    return animation_director_->anim_time_2_;
+    return anim_time_2_;
   }
 
   bool SkeletalAnimationNode::has_anims() const {
     return animation_director_->has_anims_;
+  }\
+
+  std::vector<scm::math::mat4f> const& SkeletalAnimationNode::get_bone_transforms() const {
+    return bone_transforms_;
   }
+
   ////////////////////////////////////////////////////////////////////////////////
-  void SkeletalAnimationNode::update_bone_transforms(RenderContext const& ctx) {
+  void SkeletalAnimationNode::update_bone_transforms() {
     if(!animation_director_->has_anims_ && !first_run_) return;
     if(!animation_director_->has_anims_) first_run_ = false;
 
-    if(!bone_transforms_block_) {
-      //TODO one transform block per context
-      bone_transforms_block_ = std::make_shared<BoneTransformUniformBlock>(ctx.render_device);
+    //reserve vector for transforms
+    bone_transforms_ = std::vector<scm::math::mat4f>{animation_director_->num_bones_, scm::math::mat4f::identity()};
+
+    if(!animation_director_->has_anims_) {
+      animation_director_->calculate_matrices(bone_transforms_);
     }
 
-    bone_transforms_block_->update(ctx.render_context, animation_director_->get_bone_transforms());
-    ctx.render_context->bind_uniform_buffer( bone_transforms_block_->block().block_buffer(), 1 );
+   // TODO better checking for unset anims
+    if(blend_factor_ <= 0) {
+      if(anim_1_ != "none") {
+        animation_director_->calculate_matrices(anim_time_1_, animation_director_->animations_.at(anim_1_), bone_transforms_);
+      }
+      else {
+        animation_director_->calculate_matrices(bone_transforms_);
+      }
+    } 
+    else if(blend_factor_ >= 1) {
+      if(anim_2_ != "none") {
+        animation_director_->calculate_matrices(anim_time_2_, animation_director_->animations_.at(anim_2_), bone_transforms_);
+      }
+      else {
+        animation_director_->calculate_matrices(bone_transforms_);
+        // std::cout << "updating for time " << anim_time_1_ << std::endl;
+      }
+    }
+    else {
+      animation_director_->blend_pose(blend_factor_, anim_time_1_, anim_time_2_, animation_director_->animations_.at(anim_1_), animation_director_->animations_.at(anim_2_), bone_transforms_);    
+    }
   }
+
 
   ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::ray_test_impl(Ray const& ray, int options,
@@ -412,15 +443,15 @@ namespace node {
 
     auto tmp_boxes = std::vector<math::BoundingBox<math::vec3>>(100,math::BoundingBox<math::vec3>());
 
-    // for(uint i(0);i<geometries_.size();++i){
-    //   auto bone_boxes = geometries_[i]->get_bone_boxes();
-    //   for(uint b(0);b<bone_boxes.size();++b){
-    //     if(!bone_boxes[b].isEmpty()){
-    //       bone_boxes[b] = transform(bone_boxes[b], world_transform_);
-    //       tmp_boxes[b].expandBy(bone_boxes[b]);
-    //     }
-    //   }
-    // }
+    for(uint i(0);i<geometries_.size();++i){
+      auto bone_boxes = geometries_[i]->get_bone_boxes(bone_transforms_);
+      for(uint b(0);b<bone_boxes.size();++b){
+        if(!bone_boxes[b].isEmpty()){
+          bone_boxes[b] = transform(bone_boxes[b], world_transform_);
+          tmp_boxes[b].expandBy(bone_boxes[b]);
+        }
+      }
+    }
 
     return tmp_boxes;
 
@@ -433,20 +464,20 @@ namespace node {
 
       auto geometry_bbox = math::BoundingBox<math::vec3>();
 
-      // for(uint i(0);i<geometries_.size();++i){
-      //   auto bone_boxes = geometries_[i]->get_bone_boxes();
-      //   for(uint b(0);b<bone_boxes.size();++b){
-      //     if(!bone_boxes[b].isEmpty()){
-      //       bone_boxes[b] = transform(bone_boxes[b],world_transform_);
-      //       geometry_bbox.expandBy(bone_boxes[b]);
-      //     }
-      //   }
-      // }
+      for(uint i(0);i<geometries_.size();++i){
+        auto bone_boxes = geometries_[i]->get_bone_boxes(bone_transforms_);
+        for(uint b(0);b<bone_boxes.size();++b){
+          if(!bone_boxes[b].isEmpty()){
+            bone_boxes[b] = transform(bone_boxes[b],world_transform_);
+            geometry_bbox.expandBy(bone_boxes[b]);
+          }
+        }
+      }
 
-      // if(!geometry_bbox.isEmpty()){
-      //   bounding_box_ = geometry_bbox;
-      // }
-      // else{//bbox out of bone boxes could not be computed yet....use initial bbox
+      if(!geometry_bbox.isEmpty()){
+        bounding_box_ = geometry_bbox;
+      }
+      else{//bbox out of bone boxes could not be computed yet....use initial bbox
         for(uint i(0);i<geometries_.size();++i){
           auto tmp_bbox = geometries_[i]->get_bounding_box();
           if(!tmp_bbox.isEmpty()){
@@ -454,7 +485,7 @@ namespace node {
           }
         }
         bounding_box_ = transform(geometry_bbox, world_transform_);
-      // }
+      }
 
 
       for (auto child : get_children()) {
@@ -467,10 +498,7 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   std::shared_ptr<Node> SkeletalAnimationNode::copy() const {
-    std::shared_ptr<SkeletalAnimationNode> result = std::make_shared<SkeletalAnimationNode>(get_name(), geometry_descriptions_, materials_, get_director(),get_transform());
-    result->shadow_mode_ = shadow_mode_;
-    result->geometries_ = geometries_;
-    return result;
+    return std::make_shared<SkeletalAnimationNode>(*this);
   }
 }
 }

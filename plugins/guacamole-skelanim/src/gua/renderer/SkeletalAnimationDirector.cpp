@@ -19,14 +19,9 @@ const std::string SkeletalAnimationDirector::none_loaded{"none loaded"};
 
 SkeletalAnimationDirector::SkeletalAnimationDirector(std::shared_ptr<Bone> const& root):
     num_bones_{0},
-    has_anims_{false},
-    firstRun_{true},
     animations_{},
     bone_mapping_{},
     anim_start_node_{},
-    anim_1_{"none"},
-    anim_2_{"none"},
-    blend_factor_{1.0},
     root_{root} {
 
   root_->collect_indices(bone_mapping_);
@@ -123,38 +118,6 @@ void SkeletalAnimationDirector::partial_blend(float timeInSeconds, SkeletalAnima
   full_body.partial_replace(upper_body, start);
 
   anim_start_node_->accumulate_matrices(transforms, full_body, identity);
-}
-
-std::vector<scm::math::mat4f> SkeletalAnimationDirector::get_bone_transforms() {
-  //reserve vector for transforms
-  std::vector<scm::math::mat4f> transforms{num_bones_, scm::math::mat4f::identity()};
-
-  if(!has_anims_) {
-    calculate_matrices(transforms);
-    return transforms;  
-  }
-// TODO better checking for unset anims
-  if(blend_factor_ <= 0) {
-    if(anim_1_ != "none") {
-      calculate_matrices(anim_time_1_, animations_.at(anim_1_), transforms);
-    }
-    else {
-      calculate_matrices(transforms);
-    }
-  } 
-  else if(blend_factor_ >= 1) {
-    if(anim_2_ != "none") {
-      calculate_matrices(anim_time_2_, animations_.at(anim_2_), transforms);
-    }
-    else {
-      calculate_matrices(transforms);
-    }
-  }
-  else {
-    blend_pose(blend_factor_, anim_time_1_, anim_time_2_, animations_.at(anim_1_), animations_.at(anim_2_), transforms);    
-  }
-  
-  return transforms;
 }
 
 void SkeletalAnimationDirector::calculate_matrices(float timeInSeconds, SkeletalAnimation const& pAnim, std::vector<scm::math::mat4f>& transforms) {

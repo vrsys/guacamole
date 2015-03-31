@@ -153,7 +153,8 @@ namespace gua {
 
             ctx.render_context->apply_program();
 
-          bones_block_.update(ctx.render_context, skel_anim_node->get_director()->get_bone_transforms());
+            skel_anim_node->update_bone_transforms();
+            bones_block_.update(ctx.render_context, skel_anim_node->get_bone_transforms());
 
             ctx.render_context->bind_uniform_buffer( bones_block_.block().block_buffer(), 2);
 

@@ -341,7 +341,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
   unsigned flags) {
 
   std::shared_ptr<Bone> root = std::make_shared<Bone>(*scene);
-  auto animation_director = std::make_shared<SkeletalAnimationDirector>(root);
 
   std::vector<std::string> geometry_descriptions{};
   std::vector<std::shared_ptr<Material>> materials{};
@@ -362,7 +361,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
         GeometryDatabase::instance()->add(desc.unique_key() 
           ,std::make_shared<SkinnedMeshResource>(
             SkinnedMesh{*mesh, *root, j}
-            , animation_director
             , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
         //there need to be as many materials as there are geometries or the geometries without material wont be drawn
@@ -380,7 +378,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
     }
   }
 
-  return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, animation_director);
+  return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, std::make_shared<SkeletalAnimationDirector>(root));
 }
 /////////////////////////////////////////////////////////////////////////////
 
@@ -392,7 +390,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
   unsigned flags) {
 
   auto root = std::make_shared<Bone>(*ai_scene);
-  auto animation_director = std::make_shared<SkeletalAnimationDirector>(root);
 
   std::vector<std::string> geometry_descriptions{};
   std::vector<std::shared_ptr<Material>> materials{};
@@ -406,7 +403,6 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
     GeometryDatabase::instance()->add(desc.unique_key() 
       ,std::make_shared<SkinnedMeshResource>(
         SkinnedMesh{*ai_scene->mMeshes[mesh_count], *root}
-        , animation_director
         , flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
     std::shared_ptr<Material> material;
@@ -420,7 +416,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(std::shared_ptr<As
     materials.push_back(material);
   }
 
-  return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, animation_director);
+  return std::make_shared<node::SkeletalAnimationNode>(file_name + "_" + node_name, geometry_descriptions, materials, std::make_shared<SkeletalAnimationDirector>(root));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
