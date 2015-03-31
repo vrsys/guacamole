@@ -1,5 +1,5 @@
 // class header
-#include <gua/utils/Pose.hpp>
+#include <gua/utils/SkeletalPose.hpp>
 #include <gua/utils/Bone.hpp>
 //external headers
 #include <iostream>
@@ -7,18 +7,18 @@
 
 namespace gua {
 
-Pose::Pose():
+SkeletalPose::SkeletalPose():
   transforms{}
 {}
 
-Pose::~Pose()
+SkeletalPose::~SkeletalPose()
 {}
 
-bool Pose::contains(std::string const& name ) const {
+bool SkeletalPose::contains(std::string const& name ) const {
   return transforms.find(name) != transforms.end();
 }
 
-Transformation const& Pose::get_transform(std::string const& name) const{
+BonePose const& SkeletalPose::get_transform(std::string const& name) const{
   try {
     return transforms.at(name);
   }
@@ -28,12 +28,12 @@ Transformation const& Pose::get_transform(std::string const& name) const{
   }
 }
 
-void Pose::set_transform(std::string const& name, Transformation const& value) {
+void SkeletalPose::set_transform(std::string const& name, BonePose const& value) {
   transforms[name] = value;
 }
 
-void Pose::blend(Pose const& pose2, float blendFactor) {
-  for_each(pose2.transforms.cbegin(), pose2.transforms.cend(), [this, &blendFactor](std::pair<std::string, Transformation> const& p) {
+void SkeletalPose::blend(SkeletalPose const& pose2, float blendFactor) {
+  for_each(pose2.transforms.cbegin(), pose2.transforms.cend(), [this, &blendFactor](std::pair<std::string, BonePose> const& p) {
     if(contains(p.first)) {
       set_transform(p.first, get_transform(p.first).blend(p.second, blendFactor));
     }
@@ -44,8 +44,8 @@ void Pose::blend(Pose const& pose2, float blendFactor) {
   // *this = *this * (1 - blendFactor) + pose2 * blendFactor;
 }
 
-Pose& Pose::operator+=(Pose const& pose2) {
-  for_each(pose2.transforms.cbegin(), pose2.transforms.cend(), [this](std::pair<std::string, Transformation> const& p) {
+SkeletalPose& SkeletalPose::operator+=(SkeletalPose const& pose2) {
+  for_each(pose2.transforms.cbegin(), pose2.transforms.cend(), [this](std::pair<std::string, BonePose> const& p) {
     if(contains(p.first)) {
       set_transform(p.first, get_transform(p.first) + p.second);
     }
@@ -55,26 +55,26 @@ Pose& Pose::operator+=(Pose const& pose2) {
   });
   return *this;
 }
-Pose Pose::operator+(Pose const& p2) const {
-  Pose temp{*this};
+SkeletalPose SkeletalPose::operator+(SkeletalPose const& p2) const {
+  SkeletalPose temp{*this};
   temp += p2;
   return temp;
 }
 
-Pose& Pose::operator*=(float const factor) {
+SkeletalPose& SkeletalPose::operator*=(float const factor) {
   for(auto& p : transforms)
   {
     p.second *=factor;
   }
   return *this;
 }
-Pose Pose::operator*(float const factor) const {
-  Pose temp{*this};
+SkeletalPose SkeletalPose::operator*(float const factor) const {
+  SkeletalPose temp{*this};
   temp *= factor;
   return temp;
 }
 
-void Pose::partial_replace(Pose const& pose2, std::shared_ptr<Bone> const& pNode) {
+void SkeletalPose::partial_replace(SkeletalPose const& pose2, std::shared_ptr<Bone> const& pNode) {
   if(pose2.contains(pNode->name)) {
     set_transform(pNode->name, pose2.get_transform(pNode->name));
   }

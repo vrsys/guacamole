@@ -19,45 +19,47 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TRANSFORMATION_HPP
-#define GUA_TRANSFORMATION_HPP
+#ifndef GUA_POSE_HPP
+#define GUA_POSE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/utils/Logger.hpp>
-
-// external headers
-#include <scm/gl_core.h>
-#include <scm/core/math/quat.h>
+#include <gua/utils/Mesh.hpp>
+#include <gua/utils/BonePose.hpp>
 
 #include <vector>
+#include <map>
 
 namespace gua {
+class Bone;
 
-struct Transformation {
+class SkeletalPose {
  public:
-  Transformation();
+  SkeletalPose();
 
-  Transformation(scm::math::vec3f const& scale, scm::math::quatf const& rotate, scm::math::vec3f const& translate);
+  ~SkeletalPose();
 
-  ~Transformation();
+  bool contains(std::string const& name ) const;
 
-  scm::math::mat4f to_matrix() const;
+  BonePose const& get_transform(std::string const& name) const;
 
-  Transformation blend(Transformation const& t, float const factor) const;
+  void set_transform(std::string const& name, BonePose const& value);
 
-  Transformation operator+(Transformation const& t) const;
-  Transformation& operator+=(Transformation const& t);
+  void blend(SkeletalPose const& pose2, float blendFactor);
 
-  Transformation operator*(float const factor) const;
-  Transformation& operator*=(float const f);
+  SkeletalPose& operator+=(SkeletalPose const& pose2);
+  SkeletalPose operator+(SkeletalPose const& p2) const;
 
- private:
-  scm::math::vec3f scaling;
-  scm::math::quatf rotation;
-  scm::math::vec3f translation;
+  SkeletalPose& operator*=(float const factor);
+  SkeletalPose operator*(float const factor) const;
+
+  void partial_replace(SkeletalPose const& pose2, std::shared_ptr<Bone> const& pNode);
+
+ private: 
+  std::map<std::string, BonePose> transforms;
 };
 
 }
 
-#endif //GUA_TRANSFORMATION_HPP
+#endif //GUA_POSE_HPP
