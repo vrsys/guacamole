@@ -1,5 +1,5 @@
 // class header
-#include <gua/renderer/SkeletalAnimationDirector.hpp>
+#include <gua/utils/SkeletalTransformation.hpp>
 #include <gua/utils/SkeletalPose.hpp>
 
 

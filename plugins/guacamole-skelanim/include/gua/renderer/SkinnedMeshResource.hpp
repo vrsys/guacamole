@@ -26,7 +26,6 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/utils/KDTree.hpp>
-#include <gua/renderer/SkeletalAnimationDirector.hpp>
 #include <gua/utils/SkinnedMesh.hpp>
 
 // external headers
