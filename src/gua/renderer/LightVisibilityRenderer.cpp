@@ -127,9 +127,6 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.shadow_map = pipe.render_shadow_map(light, frustum)->get_handle(pipe.get_context());
       light_block.shadow_offset = light->data.get_shadow_offset();
       light_block.shadow_map_coords_mat = LIGHT_COORDS_BIAS * math::mat4f(frustum.get_projection() * frustum.get_view());
-
-      std::cout << light_block.shadow_map_coords_mat << std::endl;
-      std::cout << light_block.shadow_offset << std::endl;
     }
 
     if (light->data.get_type() == node::LightNode::Type::SUN) {

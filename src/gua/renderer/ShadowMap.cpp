@@ -45,7 +45,7 @@ ShadowMap::ShadowMap(RenderContext const& ctx, unsigned size) :
 
   state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
 
-  depth_buffer_ = std::make_shared<Texture2D>(size, size, scm::gl::FORMAT_D24, 1, state);
+  depth_buffer_ = std::make_shared<Texture2D>(size, size, scm::gl::FORMAT_D16, 1, state);
 
   fbo_ = ctx.render_device->create_frame_buffer();
   fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx), 0, 0);

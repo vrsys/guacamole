@@ -35,7 +35,7 @@ float gua_get_shadow(int light_id, vec4 smap_coords, float acne_offset) {
   );
 
   return textureProj(
-    sampler2DShadow(gua_lights[light_id].shadow_map), acne_offset * smap_coords
+    sampler2DShadow(gua_lights[light_id].shadow_map), acne * smap_coords
     //* vec4(gua_light_shadow_map_portion, gua_light_shadow_map_portion, 1.0, 1.0)
   );
 }
@@ -70,15 +70,12 @@ bool gua_calculate_light(int light_id,
                          out vec3 gua_light_radiance) {
   LightSource L = gua_lights[light_id];
 
-  float gua_light_intensity = 0.0;
-
   // sun light
   if (L.type == 2) {
     gua_light_direction = L.position_and_radius.xyz;
     if (dot(normal, gua_light_direction) < 0) {
       return false;
     }
-    gua_light_intensity = 1.0 /* shadow*/;
     vec3 Cl = /*shadow */ L.color.rgb * L.brightness;
     gua_light_radiance = Cl;
     return true;
@@ -93,7 +90,6 @@ bool gua_calculate_light(int light_id,
     float x = clamp(1.0 - pow( (gua_light_distance / L.position_and_radius.w) , 4), 0, 1);
     float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
     vec3 Cl = falloff * L.color.rgb * L.brightness;
-    gua_light_intensity = 0.0;
     gua_light_radiance = Cl;
   }
   // spot lights
@@ -109,9 +105,9 @@ bool gua_calculate_light(int light_id,
         || dot(normal, gua_light_direction) < 0) {
       return false;
     }
-    float shadow = 1.0;
-    // float shadow = gua_get_shadow(light_id, position,
-    //                               vec2(0), L.shadow_offset);
+
+    float shadow = gua_get_shadow(light_id, position,
+                                  vec2(0), L.shadow_offset);
     if(shadow <= 0.0) {
       return false;
     }
@@ -122,8 +118,7 @@ bool gua_calculate_light(int light_id,
 
     float length_attenuation = pow(1.0 - gua_light_distance/beam_length, L.falloff);
     radial_attenuation = pow(1.0 - radial_attenuation, L.softness);
-    gua_light_intensity = radial_attenuation * length_attenuation * shadow;
-    vec3 Cl = radial_attenuation * length_attenuation * L.color.rgb * L.brightness;
+    vec3 Cl = radial_attenuation * length_attenuation * L.color.rgb * L.brightness * shadow;
     gua_light_radiance = Cl;
   }
   return true;

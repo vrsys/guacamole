@@ -136,7 +136,7 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   float fog_end() const;
 
   /////////////////////////////////////////////////////////////////////////////
-  // tone ampping and exposure
+  // tone mapping and exposure
   /////////////////////////////////////////////////////////////////////////////
   ResolvePassDescription& tone_mapping_exposure(float value);
   float tone_mapping_exposure() const;
