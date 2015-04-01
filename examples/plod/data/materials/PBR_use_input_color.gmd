@@ -119,15 +119,57 @@
         }
 
         ///////////////////////////////////////////////////////////////////////
-        void apply_lens_effect() 
+        float get_first_deviation_at_frag_coord(in vec2 pos_ss_norm){
+            
+            //central deviation first order
+            float step_size = 0.001;
+            float d_x_l = texture(p01_linear_depth_texture, pos_ss_norm - vec2(step_size, 0.0)).r;
+            float d_x_r = texture(p01_linear_depth_texture, pos_ss_norm + vec2(step_size, 0.0)).r;
+
+            float d_y_o = texture(p01_linear_depth_texture, pos_ss_norm - vec2(0.0, step_size)).r;
+            float d_y_u = texture(p01_linear_depth_texture, pos_ss_norm + vec2(0.0, step_size)).r;
+
+            return length(vec2((d_x_r - d_x_l) * 0.5, (d_y_u - d_y_o) * 0.5)) * 1000.0;
+        }
+        
+        void first_derivation_lens_effect() {
+            vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+            vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(get_first_deviation_at_frag_coord(pos_ss_norm), -0.01, 0.01));
+        }
+
+        void second_derivation_lens_effect() {
+            vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+            vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+            float step_size = 0.01;
+            float dd_x_l = get_first_deviation_at_frag_coord(pos_ss_norm - vec2(step_size, 0.0));
+            float dd_x_r = get_first_deviation_at_frag_coord(pos_ss_norm + vec2(step_size, 0.0));
+            float dd_y_o = get_first_deviation_at_frag_coord(pos_ss_norm - vec2(0.0, step_size));
+            float dd_y_u = get_first_deviation_at_frag_coord(pos_ss_norm + vec2(0.0, step_size));
+            
+            float d = length(vec2((dd_x_r - dd_x_l) * 0.5, (dd_y_u - dd_y_o) * 0.5)) * 1000.0;
+
+            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(d, -0.0001, 0.0001));
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        void apply_lens_effect()               
         {
-          switch (lens_mode) {
+          switch (lens_vis_mode) {
             case 1 : 
-              distance_lens_effect();
+                distance_lens_effect();
               break;
             case 2 : 
               normal_lens_effect();
               break;
+            case 3:                
+                first_derivation_lens_effect();
+                break;
+            case 4:
+                second_derivation_lens_effect();
+                break;
             default : 
               break;
           }
@@ -136,12 +178,49 @@
         ///////////////////////////////////////////////////////////////////////
         void PBR_uniform() 
         {
-          float distance_to_lens = length(gua_world_position - lens_center);
-          if ( lens_radius > distance_to_lens && 
-               lens_mode != 0 ) 
-          {
-            apply_lens_effect();
-          }
+            if (lens_vis_mode != 0){
+                bool fragment_in_lens = false;
+                switch (lens_geo_mode) {
+                case 0: { //sphere_ws                
+                    float distance_to_lens = length(gua_world_position - lens_center);
+                    fragment_in_lens = lens_radius > distance_to_lens ? true : false;
+                    break;
+                }
+                case 1: {//sphere_ss
+                    //TODO: recalculate?
+                    vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+                    vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+                    float distance_to_lens = length(pos_ss_norm - lens_center_ss);
+                    fragment_in_lens = lens_radius > distance_to_lens ? true : false;
+                    break;
+                }
+                case 2: //square_ss  
+                    vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+                    vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+                    if (lens_square_ss_min.x > pos_ss_norm.x || lens_square_ss_max.x < pos_ss_norm.x){
+                        fragment_in_lens = false;
+                        break;
+                    }
+                    if (lens_square_ss_min.y > pos_ss_norm.y || lens_square_ss_max.y < pos_ss_norm.y){
+                        fragment_in_lens = false;
+                        break;
+                    }
+                    fragment_in_lens = true;
+                    break;
+                case 3: //square_ws 
+                    break;
+                default:
+                    break;
+                }
+              
+                if (fragment_in_lens)
+              {
+                apply_lens_effect();
+              }
+
+            }
 
           gua_metalness = metalness;
           gua_roughness = roughness; 
@@ -171,6 +250,11 @@
           "value" : "(0.0 0.0 0.0)"
         },
         {
+            "name" : "lens_center_ss",
+            "type" : "vec2",
+            "value" : "(0.0 0.0)"
+        },
+        {
           "name" : "lens_normal",
           "type" : "vec3",
           "value" : "(0.0 0.0 0.0)"
@@ -181,7 +265,32 @@
           "value" : "0.1"
         },
         {
-          "name" : "lens_mode",
+          "name" : "lens_square_ss_min",
+          "type" : "vec2",
+          "value" : "(0.1 0.1)"
+        },
+        {
+            "name" : "lens_square_ss_max",
+            "type" : "vec2",
+            "value" : "(0.1 0.1)"
+        },
+        {
+          "name" : "lens_square_ws_min",
+          "type" : "vec3",
+          "value" : "vec3(-0.1 -0.1 -0.1)"
+        },
+        {
+          "name" : "lens_square_ws_max",
+          "type" : "vec3",
+          "value" : "vec3(0.1 0.1 0.1)"
+        },
+        {
+          "name" : "lens_vis_mode",
+          "type" : "int",
+          "value" : "0"
+        },
+        {
+          "name" : "lens_geo_mode",
           "type" : "int",
           "value" : "0"
         }

@@ -45,7 +45,7 @@ bool rotate_light = false;
 //
 //    general
 //    -> 'r' to force shader recompilation
-//    -> 'm' toggle ambient lighting mode
+//    -> 'm' toggle ambient lighting vis_mode
 //    -> 'b' toggle background
 //    -> SPACE toggle light rotation on/off
 //    -> use SHIFT + Mouse to pick lens center
@@ -57,7 +57,7 @@ bool rotate_light = false;
 //    -> 'k' to decrease error threshold
 
 //    lens effects
-//    -> 'y' toggle lens mode 
+//    -> 'y' toggle lens vis_mode 
 //        0 = off
 //        1 = distance to lens plane 
 //        2 = normal in object space
@@ -91,11 +91,34 @@ bool rotate_light = false;
 
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// 0 = off
+// 1 = distance to plane
+// 2 = normal visualization
+
 struct LensConfig {
+    enum LensVisMode{ off = 0x0,
+                    distance, 
+                    normals,
+                    first_derivation,
+                    second_derivation};
+
+    enum LensGeoMode { sphere_os = 0x0,
+        sphere_ss,
+        box_ss,
+        //box_ws
+    };
+
   gua::math::vec3 world_position;
+  gua::math::vec2 screen_position;
   gua::math::vec3 world_normal;
-  unsigned mode;
+  LensVisMode vis_mode;
+  LensGeoMode geo_mode;
   float radius;
+  gua::math::vec2 square_ss_min;
+  gua::math::vec2 square_ss_max;
+  gua::math::vec3 square_ws_min;
+  gua::math::vec3 square_ws_max;
   bool dirty_flag;
 };
 
@@ -149,11 +172,20 @@ void mouse_button(gua::utils::Trackball& trackball,
         gua::PickResult::GET_POSITIONS);
 
       for (auto const& r : picks)
-      {
+      {          
+        auto frustrum = camera->get_frustum(graph, gua::CameraMode::CENTER);
+        auto pick_centre_ss = frustrum.get_projection() * frustrum.get_view() * gua::math::vec4(r.world_position, 1.0f);
+        auto pick_centre_ss_norm = (gua::math::vec2(pick_centre_ss.x, pick_centre_ss.y) / pick_centre_ss.w) * 0.5f + gua::math::vec2(0.5f);
+        
+        lens.screen_position = pick_centre_ss_norm;
         lens.world_position = r.world_position;
         lens.world_normal = r.normal;
         lens.dirty_flag = true;
-        std::cout << "Picked : " << r.object->get_name() << r.position << ": " << r.normal<< std::endl;
+
+        lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
+        lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
+
+        std::cout << "Picked Name: " << r.object->get_name() << "Position: " <<  r.position << " Normal: " << r.normal<< std::endl;
       }
     }
   }
@@ -167,7 +199,7 @@ void increase_radius(std::shared_ptr<gua::node::Node> const& node) {
   auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
   if (plodnode) {
     auto radius_scale = plodnode->get_radius_scale();
-    plodnode->set_radius_scale(std::min(2.0, 1.1 * radius_scale));
+    plodnode->set_radius_scale(std::min(2.0f, 1.1f * radius_scale));
     std::cout << "Setting radius scale to " << plodnode->get_radius_scale() << std::endl;
   }
   for (auto const& c : node->get_children()) {
@@ -180,7 +212,7 @@ void decrease_radius(std::shared_ptr<gua::node::Node> const& node) {
   auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
   if (plodnode) {
     auto radius_scale = plodnode->get_radius_scale();
-    plodnode->set_radius_scale(std::max(0.1, 0.9 * radius_scale));
+    plodnode->set_radius_scale(std::max(0.1f, 0.9f * radius_scale));
     std::cout << "Setting radius scale to " << plodnode->get_radius_scale() << std::endl;
   }
   for (auto const& c : node->get_children()) {
@@ -193,7 +225,7 @@ void increase_error_threshold(std::shared_ptr<gua::node::Node> const& node) {
   auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
   if (plodnode) {
     auto radius_scale = plodnode->get_error_threshold();
-    plodnode->set_error_threshold(std::min(16.0, 1.1 * radius_scale));
+    plodnode->set_error_threshold(std::min(16.0f, 1.1f * radius_scale));
     std::cout << "Setting error threshold to " << plodnode->get_error_threshold() << std::endl;
   }
   for (auto const& c : node->get_children()) {
@@ -206,7 +238,7 @@ void decrease_error_threshold(std::shared_ptr<gua::node::Node> const& node) {
   auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
   if (plodnode) {
     auto radius_scale = plodnode->get_error_threshold();
-    plodnode->set_error_threshold(std::max(1.0, 0.9 * radius_scale));
+    plodnode->set_error_threshold(std::max(1.0f, 0.9f * radius_scale));
     std::cout << "Setting  error threshold to " << plodnode->get_error_threshold() << std::endl;
   }
   for (auto const& c : node->get_children()) {
@@ -241,30 +273,41 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfi
 
     // toggle lens modes and parametrization
   case 't':
-    lens.radius = std::min(10.0, 1.1 * lens.radius);
+    lens.radius = std::min(10.0f, 1.1f * lens.radius);
+    lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
+    lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'g':
-    lens.radius = std::max(0.01, 0.9 * lens.radius);
+    lens.radius = std::max(0.01f, 0.9f * lens.radius);
+    lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
+    lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'o':
-    lens.radius = std::max(0.01, 0.9 * lens.radius);
+    lens.radius = std::max(0.01f, 0.9f * lens.radius);
     std::cout << "Set lens  to " << lens.radius << std::endl;
     break;
   case 'l':
-    lens.radius = std::max(0.01, 0.9 * lens.radius);
+    lens.radius = std::max(0.01f, 0.9f * lens.radius);
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'y':
-    lens.mode = (lens.mode + 1) % 3;
-    std::cout << "Set lens mode to " << lens.mode << std::endl;
+      lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 5);
+    std::cout << "Set lens vis_mode to " << lens.vis_mode << std::endl;
     // 0 = off
     // 1 = distance to plane
     // 2 = normal visualization
     break;
+  case 'h':
+      lens.geo_mode = static_cast<LensConfig::LensGeoMode>((lens.geo_mode + 1) % 3);
+      std::cout << "Set lens geo_mode to " << lens.geo_mode << std::endl;
+      // 0 = sphere_os
+      // 1 = sphere_ss
+      // 2 = box_ss
+      break;
 
-  case 'm': // toggle environment lighting mode
+  case 'm': // toggle environment lighting vis_mode
 
     if (pipe.get_resolve_pass()->environment_lighting_mode() == gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR) {
       std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP" << std::endl;
@@ -282,7 +325,7 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfi
     pipe.get_resolve_pass()->touch();
     break;
 
-  case 'b': // toggle background mode
+  case 'b': // toggle background vis_mode
 
     if (pipe.get_resolve_pass()->background_mode() == gua::ResolvePassDescription::BackgroundMode::COLOR) {
       std::cout << "Setting to gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE" << std::endl;
@@ -586,7 +629,7 @@ int main(int argc, char** argv) {
   camera->translate(0, 0, 10.0);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
-  camera->config.set_eye_dist(0.06);
+  camera->config.set_eye_dist(0.06f);
   camera->config.set_left_screen_path("/screen");
   camera->config.set_right_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
@@ -596,8 +639,8 @@ int main(int argc, char** argv) {
 #else
   camera->config.set_enable_stereo(false);
 #endif
-  camera->config.set_far_clip(100.0);
-  camera->config.set_near_clip(0.01);
+  camera->config.set_far_clip(100.0f);
+  camera->config.set_near_clip(0.01f);
   camera->add_child(camera_proxy_geometry);
  //camera->set_pre_render_cameras({portal_camera});
 
@@ -619,7 +662,7 @@ int main(int argc, char** argv) {
   pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_radius(16.0);
 
   pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadows(true);
-  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_radius(0.2);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_radius(0.2f);
   pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_max_radius_px(200);
   pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_intensity(1.0);
 
@@ -628,8 +671,19 @@ int main(int argc, char** argv) {
   /////////////////////////////////////////////////////////////////////////////
   // create window and callback setup
   /////////////////////////////////////////////////////////////////////////////
+  float lense_init_size = 0.1f;
 
-  LensConfig lens_config = { gua::math::vec3{ 0.0, 0.0, 0.0 }, gua::math::vec3{ 1.0, 0.0, 0.0 }, 0U, 0.1f };
+  LensConfig lens_config = { gua::math::vec3{ 0.0, 0.0, 0.0 }, 
+      gua::math::vec2{ 0.5, 0.5 },
+      gua::math::vec3{ 1.0, 0.0, 0.0 }, 
+      LensConfig::LensVisMode::off, 
+      LensConfig::LensGeoMode::sphere_os, 
+      lense_init_size, 
+      gua::math::vec2(-lense_init_size),
+      gua::math::vec2(lense_init_size),
+      gua::math::vec3(-lense_init_size),
+      gua::math::vec3(lense_init_size),
+      true };
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -645,11 +699,11 @@ int main(int argc, char** argv) {
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
-    screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+    screen->data.set_size(gua::math::vec2(0.001f * new_size.x, 0.001f * new_size.y));
   });
 
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    trackball.motion(pos.x, pos.y);
+    trackball.motion((int)pos.x, (int)pos.y);
   });
 
   window->on_button_press.connect(std::bind(mouse_button,
@@ -698,9 +752,15 @@ int main(int argc, char** argv) {
     }
 
     plod_rough->set_uniform("lens_center", pick_transform->get_world_position());
+    plod_rough->set_uniform("lens_center_ss", lens_config.screen_position);
     plod_rough->set_uniform("lens_normal", lens_config.world_normal);
-    plod_rough->set_uniform("lens_mode", int(lens_config.mode));
+    plod_rough->set_uniform("lens_vis_mode", int(lens_config.vis_mode));
+    plod_rough->set_uniform("lens_geo_mode", int(lens_config.geo_mode));
     plod_rough->set_uniform("lens_radius", lens_config.radius);
+    plod_rough->set_uniform("lens_square_ss_min", lens_config.square_ss_min);
+    plod_rough->set_uniform("lens_square_ss_max", lens_config.square_ss_max);
+    plod_rough->set_uniform("lens_square_ws_min", lens_config.square_ws_min);
+    plod_rough->set_uniform("lens_square_ws_max", lens_config.square_ws_max);
 
     if (rotate_light) {
       // modify scene
@@ -715,10 +775,11 @@ int main(int argc, char** argv) {
     last_frame_time = current_time;
 
     if (ctr++ % 150 == 0) {
-      std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
-        << window->get_rendering_fps() << ", app fps: "
-        << camera->get_application_fps() << std::endl;
-      std::cout << lens_config.world_position << " , " << lens_config.world_normal << " , " << lens_config.radius << std::endl;
+      //std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
+      //  << window->get_rendering_fps() << ", app fps: "
+      //  << camera->get_application_fps() << std::endl;
+      std::cout << lens_config.screen_position << " , " << lens_config.world_position << " , " << lens_config.world_normal << " , " << lens_config.radius << std::endl;
+      
     }
 
     // apply trackball matrix to object

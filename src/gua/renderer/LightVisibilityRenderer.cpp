@@ -10,6 +10,15 @@
 
 #include <scm/gl_core/render_device/opengl/gl_core.h>
 
+namespace {
+  const gua::math::mat4f LIGHT_COORDS_BIAS(
+    0.5, 0.0, 0.0, 0.0,
+    0.0, 0.5, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0,
+    0.5, 0.5, 0.5, 1.0
+  );
+}
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,6 +97,9 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
                                                   ) const {
 
   sun_lights_num = 0u;
+  std::vector<math::mat4> sun_transforms;
+  std::vector<LightTable::LightBlock> sun_lights;
+
   for (auto const& l : pipe.get_scene().nodes[std::type_index(typeid(node::LightNode))]) {
     auto light(reinterpret_cast<node::LightNode*>(l));
 
@@ -102,8 +114,18 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
     light_block.casts_shadow    = light->data.get_enable_shadows();
 
     if (light->data.get_enable_shadows()) {
-      light_block.shadow_map = pipe.render_shadow_map(light)->get_handle(pipe.get_context());
+      // calculate light frustum
+      math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
+      screen_transform = light->get_cached_world_transform() * screen_transform;
+
+      Frustum frustum = Frustum::perspective(
+        light->get_cached_world_transform(), screen_transform,
+        pipe.get_scene_camera().config.near_clip(), pipe.get_scene_camera().config.far_clip()
+      );
+
+      light_block.shadow_map = pipe.render_shadow_map(light, frustum)->get_handle(pipe.get_context());
       light_block.shadow_offset = light->data.get_shadow_offset();
+      light_block.shadow_map_coords_mat = LIGHT_COORDS_BIAS * math::mat4f(frustum.get_projection() * frustum.get_view());
     }
 
     if (light->data.get_type() == node::LightNode::Type::SUN) {
@@ -115,6 +137,10 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
       light_block.falloff         = 0.0f;
       light_block.softness        = 0.0f;
+
+      sun_lights.push_back(light_block);
+      sun_transforms.push_back(model_mat);
+
     } else if (light->data.get_type() == node::LightNode::Type::POINT) {
       math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
       float light_radius = scm::math::length(light_position - math::vec3(model_mat * math::vec4(0.f, 0.f, 1.f, 1.f)));
@@ -123,6 +149,10 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = 0;
+
+      lights.push_back(light_block);
+      transforms.push_back(model_mat);
+
     } else if (light->data.get_type() == node::LightNode::Type::SPOT) {
       math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
       math::vec3 beam_direction = math::vec3(model_mat * math::vec4(0.f, 0.f, -1.f, 1.f)) - light_position;
@@ -132,11 +162,14 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(beam_direction.x, beam_direction.y, beam_direction.z, half_beam_angle);
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = light->data.get_softness();
-    }
 
-    lights.push_back(light_block);
-    transforms.push_back(model_mat);
+      lights.push_back(light_block);
+      transforms.push_back(model_mat);
+    }
   }
+  // sun lights need to be at the back
+  transforms.insert(transforms.end(), sun_transforms.begin(), sun_transforms.end());
+  lights.insert(lights.end(), sun_lights.begin(), sun_lights.end());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +195,7 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe,
     math::mat4f light_transform(transforms[i]);
     gl_program->uniform("gua_model_matrix", 0, light_transform);
     gl_program->uniform("light_id", 0, int(i));
-    ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), 
+    ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx),
                                    scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
     ctx.render_context->apply();
 
