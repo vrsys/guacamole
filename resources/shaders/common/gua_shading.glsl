@@ -109,9 +109,9 @@ bool gua_calculate_light(int light_id,
         || dot(normal, gua_light_direction) < 0) {
       return false;
     }
-    // float shadow = 1.0;
-    float shadow = gua_get_shadow(light_id, position,
-                                  vec2(0), L.shadow_offset);
+    float shadow = 1.0;
+    // float shadow = gua_get_shadow(light_id, position,
+    //                               vec2(0), L.shadow_offset);
     if(shadow <= 0.0) {
       return false;
     }

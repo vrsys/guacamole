@@ -153,7 +153,6 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = 0;
-      light_block.casts_shadow    = 0;
 
       lights.push_back(light_block);
       transforms.push_back(model_mat);

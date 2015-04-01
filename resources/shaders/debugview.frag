@@ -19,34 +19,27 @@ void main() {
   int debug_window_width  = int(gua_resolution.x / number_of_gbuffers);
   int debug_window_height = int((debug_window_width * gua_resolution.y) / gua_resolution.x);
 
-  if ( fragment_position.y / debug_window_height == 0)
+  int shadow_debug_size  = 150;
+
+  if ( fragment_position.y < debug_window_height)
   {
     vec2 texcoord  = vec2(float(mod(fragment_position.x, debug_window_width)) / debug_window_width, 
                           float(mod(fragment_position.y, debug_window_height)) / debug_window_height);
                            
     // output depth
-    if ( fragment_position.x / debug_window_width == 0 ) {
+    if ( fragment_position.x < debug_window_width) {
       gua_out_color = vec3(gua_get_depth(texcoord));
-    }
-
-    // output color
-    if ( fragment_position.x / debug_window_width == 1 ) {
+    } else if ( fragment_position.x < 2*debug_window_width) {
+        // output color
       gua_out_color = gua_get_color(texcoord);
-    }
-
-    // output normal
-    if ( fragment_position.x / debug_window_width == 2 ) {
+    } else if ( fragment_position.x < 3*debug_window_width) {
+        // output normal
       gua_out_color = gua_get_normal(texcoord);
-    }
-
-    // output position
-    if ( fragment_position.x / debug_window_width == 3 ) {
+    } else if ( fragment_position.x < 4*debug_window_width) {
+        // output position
       gua_out_color = gua_get_position(texcoord);
-    }
-
-    if ( fragment_position.x / debug_window_width == 4 ) {
-
-      uint nlights = 0;
+    } else if ( fragment_position.x < 5*debug_window_width) {
+      uint nlights = gua_sun_lights_num;
       int bitset_words = ((gua_lights_num - 1) >> 5) + 1;
 
       ivec2 tile = ivec2(mod(fragment_position.x, debug_window_width ), 
@@ -58,6 +51,26 @@ void main() {
         nlights += bitCount(texelFetch(usampler3D(gua_light_bitset), ivec3(tile, sl), 0).r);
       }
       gua_out_color = vec3(float(nlights) / gua_lights_num);
+    }
+
+  } else if (fragment_position.x < shadow_debug_size && fragment_position.y >= debug_window_height) {
+
+    int shadow_map = (fragment_position.y - debug_window_height) / shadow_debug_size + 1;
+    int light_id = -1;
+
+    for (int i = 0; i < gua_lights_num; ++i) {
+      if (gua_lights[i].casts_shadow && --shadow_map == 0) {
+        light_id = i;
+        break;
+      }
+    }
+
+    if (light_id >= 0) {
+      vec2 texcoord = vec2(float(mod(fragment_position.x, shadow_debug_size)) / shadow_debug_size, 
+                           float(mod(fragment_position.y-debug_window_height, shadow_debug_size)) / shadow_debug_size);
+      gua_out_color = vec3(texture(sampler2D(gua_lights[light_id].shadow_map), texcoord).r);
+    } else {
+      discard;
     }
 
   } else {

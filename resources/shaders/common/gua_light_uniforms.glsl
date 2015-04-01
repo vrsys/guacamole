@@ -12,14 +12,11 @@ struct LightSource {
   bool   diffuse_enable;
   bool   specular_enable;
   bool   casts_shadow;
-  //uint   pad;
 
   float  shadow_offset;
   mat4   shadow_map_coords_mat;
   uvec2  shadow_map;
-
-  vec2   pad;
-
+  uvec2  pad;
 };
 
 layout(std140, binding=1) uniform lightBlock {

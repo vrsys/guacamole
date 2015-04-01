@@ -529,7 +529,7 @@ void Pipeline::clear_frame_cache() {
   shadow_map_res_->unused_shadow_maps.clear();
 
   for (auto& cached: shadow_map_res_->used_shadow_maps) {
-    shadow_map_res_->unused_shadow_maps.push_back(cached.second.shadow_map);
+    shadow_map_res_->unused_shadow_maps.insert(cached.second.shadow_map);
   }
 
   shadow_map_res_->used_shadow_maps.clear();
