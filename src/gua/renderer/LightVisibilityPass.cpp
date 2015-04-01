@@ -19,7 +19,6 @@ LightVisibilityPassDescription::LightVisibilityPassDescription()
 
   needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
   writes_only_color_buffer_ = false; // we don't write out a color
-  doClear_ = false;
   rendermode_ = RenderMode::Custom;
 
   depth_stencil_state_ = boost::make_optional(
@@ -90,7 +89,7 @@ PipelinePass LightVisibilityPassDescription::make_pass(RenderContext const& ctx,
   auto renderer = std::make_shared<LightVisibilityRenderer>();
 
   pass.process_ = [renderer, tp, ms_sample_count, enable_conservative, enable_fullscreen_fallback](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool) {
     pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_);
     pipe.get_context().render_context->set_rasterizer_state(pass.rasterizer_state_);
     renderer->render(pass, pipe, tp, ms_sample_count, enable_conservative, enable_fullscreen_fallback);

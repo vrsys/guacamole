@@ -14,4 +14,4 @@ fi
 
 # buil it!
 cd build
-make install -j16
+make install -j8

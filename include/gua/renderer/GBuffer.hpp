@@ -23,43 +23,40 @@
 #define GUA_GBUFFER_HPP
 
 // guacamole headers
-#include <gua/renderer/enums.hpp>
-#include <gua/platform.hpp>
-#include <gua/renderer/Texture2D.hpp>
+#include <gua/renderer/RenderTarget.hpp>
+#include <gua/renderer/ABuffer.hpp>
 
 #include <memory>
 
 namespace gua {
 
-class GUA_DLL GBuffer {
+class GUA_DLL GBuffer : public RenderTarget {
  public:
 
   GBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
 
-  void clear_all(RenderContext const& context);
+  void clear(RenderContext const& context) override;
   void clear_color(RenderContext const& context);
   
-  void set_viewport(RenderContext const& context);
-
-  void bind(RenderContext const& context, bool pass_writes_only_color_buffer);
-  void unbind(RenderContext const& context);
+  void bind(RenderContext const& context, bool write_depth) override;
+  void unbind(RenderContext const& context) override;
 
   void toggle_ping_pong();
 
-  void remove_buffers(RenderContext const& ctx);
+  void allocate_a_buffer(RenderContext& ctx, size_t buffer_size);
+  void remove_buffers(RenderContext const& ctx) override;
 
-  std::shared_ptr<Texture2D> const& get_current_color_buffer()  const;
-  std::shared_ptr<Texture2D> const& get_current_pbr_buffer()    const;
-  std::shared_ptr<Texture2D> const& get_current_normal_buffer() const;
-  std::shared_ptr<Texture2D> const& get_current_flags_buffer()  const;
-  std::shared_ptr<Texture2D> const& get_current_depth_buffer()  const;
-
-  unsigned get_width()  const { return width_; }
-  unsigned get_height() const { return height_; }
+  std::shared_ptr<Texture2D> const& get_color_buffer()  const;
+  std::shared_ptr<Texture2D> const& get_pbr_buffer()    const;
+  std::shared_ptr<Texture2D> const& get_normal_buffer() const;
+  std::shared_ptr<Texture2D> const& get_flags_buffer()  const;
+  std::shared_ptr<Texture2D> const& get_depth_buffer()  const override;
 
   inline scm::gl::frame_buffer_ptr get_fbo_read() const { return fbo_read_; }
 
  private:
+  ABuffer abuffer_;
+
   scm::gl::frame_buffer_ptr fbo_read_;
   scm::gl::frame_buffer_ptr fbo_write_;
 
@@ -72,8 +69,6 @@ class GUA_DLL GBuffer {
   std::shared_ptr<Texture2D> normal_buffer_;
   std::shared_ptr<Texture2D> flags_buffer_;
   std::shared_ptr<Texture2D> depth_buffer_;
-
-  unsigned width_, height_;
 };
 
 }

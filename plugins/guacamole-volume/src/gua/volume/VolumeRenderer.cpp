@@ -62,8 +62,8 @@ void VolumeRenderer::render(Pipeline& pipe) {
 
       ctx.render_context->set_viewport(
           scm::gl::viewport(math::vec2f(0.0f, 0.0f),
-          math::vec2f(float(pipe.get_gbuffer().get_width()),
-                      float(pipe.get_gbuffer().get_height()))));
+          math::vec2f(float(pipe.get_current_target().get_width()),
+                      float(pipe.get_current_target().get_height()))));
       ctx.render_context->clear_color_buffers(
           volume_raygeneration_fbo_, math::vec4f(0, 0, 0, 0.f));
       ctx.render_context->clear_depth_stencil_buffer(volume_raygeneration_fbo_);
@@ -88,7 +88,8 @@ void VolumeRenderer::render(Pipeline& pipe) {
     ctx.render_context->set_blend_state(blend_state_);
 
     // 2. render fullscreen quad for compositing and volume ray casting
-    pipe.get_gbuffer().bind(ctx, true);
+    bool write_depth = false;
+    pipe.get_current_target().bind(ctx, write_depth);
     pipe.bind_gbuffer_input(composite_shader_);
     composite_shader_->set_uniform(ctx, volume_raygeneration_color_buffer_->get_handle(ctx), "gua_ray_entry_in");
 
@@ -109,7 +110,7 @@ void VolumeRenderer::render(Pipeline& pipe) {
       }
     }
 
-    pipe.get_gbuffer().unbind(ctx);
+    pipe.get_current_target().unbind(ctx);
     ctx.render_context->reset_state_objects();
   }
 }
@@ -125,14 +126,14 @@ void VolumeRenderer::init_resources(Pipeline& pipe) {
                                     scm::gl::WRAP_CLAMP_TO_EDGE);
 
   volume_raygeneration_color_buffer_ = std::make_shared<Texture2D>(
-    pipe.get_gbuffer().get_width(),
-    pipe.get_gbuffer().get_height(),
+    pipe.get_current_target().get_width(),
+    pipe.get_current_target().get_height(),
     scm::gl::FORMAT_RGB_32F, 1, state
   );
 
   volume_raygeneration_depth_buffer_ = std::make_shared<Texture2D>(
-    pipe.get_gbuffer().get_width(),
-    pipe.get_gbuffer().get_height(),
+    pipe.get_current_target().get_width(),
+    pipe.get_current_target().get_height(),
     scm::gl::FORMAT_D24, 1, state
   );
 

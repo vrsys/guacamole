@@ -55,11 +55,6 @@ struct GUA_DLL SerializedScene {
   Frustum frustum;
 
   /**
-   * The center of interest.
-   */
-  math::vec3 center_of_interest;
-
-  /**
    * Clipping plane parameters.
    */
   std::vector<math::vec4f> clipping_planes;

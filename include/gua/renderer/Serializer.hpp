@@ -104,7 +104,6 @@ class Serializer : public NodeVisitor {
   void visit_children(node::Node* node);
 
   Frustum current_frustum_;
-  math::vec3 current_center_of_interest_;
 
   Mask current_render_mask_;
 

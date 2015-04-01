@@ -134,15 +134,17 @@ void Renderer::renderclient(Mailbox in) {
         window->rendering_fps = fpsc.fps;
 
         if (cmd.serialized_cam->config.get_enable_stereo()) {
-          pipe->process(
-              CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs);
-          pipe->process(
-              CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
+          auto img(pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs));
+          if (img) window->display(img, true);
+          img = pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs);
+          if (img) window->display(img, false);
         } else {
-          pipe->process(cmd.serialized_cam->config.get_mono_mode(),
-                        *cmd.serialized_cam,
-                        *cmd.scene_graphs);
+          auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(),
+                   *cmd.serialized_cam, *cmd.scene_graphs));
+          if (img) window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);
         }
+
+        pipe->clear_frame_cache();
 
         // swap buffers
         window->finish_frame();

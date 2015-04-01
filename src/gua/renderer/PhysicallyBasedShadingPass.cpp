@@ -24,7 +24,6 @@
 
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/ShadowMapBuffer.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
@@ -38,7 +37,7 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pipe) {
+void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pipe, bool rendering_shadows) {
 #if 0
   auto const& ctx(pipe.get_context());
   auto gl_program(ctx.render_context->current_program());
@@ -158,7 +157,6 @@ PhysicallyBasedShadingPassDescription::PhysicallyBasedShadingPassDescription()
 
   needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
   writes_only_color_buffer_ = true; // we write out a color
-  doClear_ = false;
   rendermode_ = RenderMode::Callback;
 
   depth_stencil_state_ = boost::make_optional(

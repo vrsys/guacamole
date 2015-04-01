@@ -65,7 +65,7 @@ class GUA_DLL PipelinePassDescription {
 
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
-  bool doClear_ = false;
+  bool enable_for_shadows_ = false;
   unsigned mod_count_ = 0; 
 
   mutable bool recompile_shaders_ = true;
@@ -76,8 +76,8 @@ class GUA_DLL PipelinePassDescription {
   boost::optional<scm::gl::blend_state_desc> blend_state_;
   boost::optional<scm::gl::depth_stencil_state_desc> depth_stencil_state_;
 
-  std::function<void(PipelinePass&, PipelinePassDescription const& , Pipeline&)>
-    process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) {
+  std::function<void(PipelinePass&, PipelinePassDescription const& , Pipeline&, bool)>
+    process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&, bool) {
       return;
     };
 
@@ -105,8 +105,11 @@ class GUA_DLL PipelinePass {
   inline bool writes_only_color_buffer() const {
     return writes_only_color_buffer_;
   }
+  inline bool enable_for_shadows() const {
+    return enable_for_shadows_;
+  }
 
-  void process(PipelinePassDescription const& desc, Pipeline& pipe);
+  void process(PipelinePassDescription const& desc, Pipeline& pipe, bool rendering_shadows);
   virtual void on_delete(Pipeline* pipe) {}
 
   friend class Pipeline;
@@ -128,14 +131,15 @@ class GUA_DLL PipelinePass {
 
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
-  bool doClear_ = false;
+  bool enable_for_shadows_ = false;
   RenderMode rendermode_ = RenderMode::Custom;
   std::string name_ = "PipelinePass";
 
-  std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&)>
-    process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) {
+  std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&, bool rendering_shadows)>
+    process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&, bool) {
       return;
     };
+
 
  private:
   SubstitutionMap substitution_map_;

@@ -19,42 +19,31 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SHADOW_MAP_BUFFER_HPP
-#define GUA_SHADOW_MAP_BUFFER_HPP
-
-// guacamole headers
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/Texture2D.hpp>
-
-#include <memory>
+// class header
+#include <gua/renderer/RenderTarget.hpp>
 
 namespace gua {
 
-class ShadowMapBuffer {
- public:
+////////////////////////////////////////////////////////////////////////////////
 
-  ShadowMapBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
+RenderTarget::RenderTarget(math::vec2ui const& resolution):
+  resolution_(resolution) {}
 
-  void clear(RenderContext const& context);
-  void set_viewport(RenderContext const& context);
+////////////////////////////////////////////////////////////////////////////////
 
-  void bind(RenderContext const& context);
-  void unbind(RenderContext const& context);
-
-  void remove_buffers(RenderContext const& ctx);
-
-  std::shared_ptr<Texture2D> const& get_depth_buffer()  const;
-
-  unsigned get_width()  const { return width_; }
-  unsigned get_height() const { return height_; }
-
- private:
-  //std::shared_ptr<FrameBufferObject> fbo_;
-  std::shared_ptr<Texture2D> depth_buffer_;
-
-  unsigned width_, height_;
-};
-
+void RenderTarget::set_viewport(RenderContext const& ctx) {
+  if (ctx.render_context) {
+    ctx.render_context->set_viewport(
+        scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(resolution_)));
+  }
 }
 
-#endif  // GUA_SHADOW_MAP_BUFFER_HPP
+////////////////////////////////////////////////////////////////////////////////
+
+void RenderTarget::unbind(RenderContext const& ctx) {
+  ctx.render_context->reset_framebuffer();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+}

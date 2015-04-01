@@ -26,25 +26,22 @@ void main() {
                            
     // output depth
     if ( fragment_position.x / debug_window_width == 0 ) {
-      gua_out_color = vec3(texture2D(sampler2D(gua_gbuffer_depth), texcoord).x * 2.0 - 1.0);
+      gua_out_color = vec3(gua_get_depth(texcoord));
     }
 
     // output color
     if ( fragment_position.x / debug_window_width == 1 ) {
-      gua_out_color = texture2D(sampler2D(gua_gbuffer_color), texcoord).rgb;
+      gua_out_color = gua_get_color(texcoord);
     }
 
     // output normal
     if ( fragment_position.x / debug_window_width == 2 ) {
-      gua_out_color = texture2D(sampler2D(gua_gbuffer_normal), texcoord).rgb * 2 - 1;
+      gua_out_color = gua_get_normal(texcoord);
     }
 
     // output position
     if ( fragment_position.x / debug_window_width == 3 ) {
-      vec4 screen_space_pos = vec4(texcoord * 2.0 - 1.0, texture2D(sampler2D(gua_gbuffer_depth), texcoord).x, 1.0);
-      vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
-      h /= h.w;
-      gua_out_color = h.xyz;
+      gua_out_color = gua_get_position(texcoord);
     }
 
     if ( fragment_position.x / debug_window_width == 4 ) {
