@@ -24,6 +24,7 @@ public:
     int          view_id;
     float        clip_near;
     float        clip_far;
+    bool         rendering_shadows;
   };
 
   typedef scm::gl::uniform_block<CameraBlock> block_type;
@@ -33,7 +34,8 @@ public:
 
   void update(scm::gl::render_context_ptr const& context, Frustum const& cam,
               std::vector<math::vec4f> const& clipping_planes,
-              int view_id, math::vec2ui const& screen_resolution);
+              int view_id, math::vec2ui const& screen_resolution,
+              bool rendering_shadows);
 
   inline const block_type&   block() const { return uniform_block_; }
 

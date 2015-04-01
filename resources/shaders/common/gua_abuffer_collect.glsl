@@ -86,23 +86,26 @@ void submit_fragment(float depth)
 {
   check_clipping_planes();
 
-#if @enable_abuffer@
-  float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
-  if (depth > z) discard;
+  if ((bool)@enable_abuffer@ && !gua_rendering_shadows) {
+    float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
+    if (depth > z) discard;
 
-  if (gua_alpha < 1.0 - @abuf_insertion_threshold@) {
-    discard;
-  }
+    if (gua_alpha < 1.0 - @abuf_insertion_threshold@) {
+      discard;
+    }
 
-  if (gua_alpha > @abuf_insertion_threshold@) {
+    if (gua_alpha > @abuf_insertion_threshold@) {
+      @include "gua_write_gbuffer.glsl"
+    }
+    else {
+      if (abuf_insert(depth))
+        discard;
+    }
+  } else {
+    if (gua_alpha < 0.5) {
+      discard;
+    }
     @include "gua_write_gbuffer.glsl"
   }
-  else {
-    if (abuf_insert(depth))
-      discard;
-  }
-#else
-  @include "gua_write_gbuffer.glsl"
-#endif
 }
 
