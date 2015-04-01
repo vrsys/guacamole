@@ -43,7 +43,7 @@ PLODNode::PLODNode(std::string const& name,
                    std::string const& geometry_file_path,
                    std::shared_ptr<Material> const& material,
                    math::mat4 const& transform,
-                   float const importance,
+                   float const scale,
                    float const threshold,
                    bool const enable_backface_culling_by_normal)
     : GeometryNode(name, transform),
@@ -52,10 +52,10 @@ PLODNode::PLODNode(std::string const& name,
       geometry_description_(geometry_description),
       geometry_file_path_(geometry_file_path),
       material_(material),
-      radius_scale_(importance),
+      radius_scale_(scale),
       error_threshold_(threshold),
-      enable_backface_culling_by_normal_(enable_backface_culling_by_normal)
-    {}
+      enable_backface_culling_by_normal_(enable_backface_culling_by_normal) {
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<PLODResource> const& PLODNode::get_geometry() const {
@@ -112,7 +112,8 @@ float PLODNode::get_error_threshold() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PLODNode::set_enable_backface_culling_by_normal(bool const enable_backface_culling) {
+void PLODNode::set_enable_backface_culling_by_normal(
+    bool const enable_backface_culling) {
   enable_backface_culling_by_normal_ = enable_backface_culling;
   self_dirty_ = true;
 }
@@ -127,7 +128,6 @@ void PLODNode::ray_test_impl(Ray const& ray,
                              int options,
                              Mask const& mask,
                              std::set<PickResult>& hits) {
-
   // first of all, check bbox
   auto box_hits(::gua::intersect(ray, bounding_box_));
 
@@ -141,22 +141,20 @@ void PLODNode::ray_test_impl(Ray const& ray,
   // the bbox
   if (options & PickResult::PICK_ONLY_FIRST_OBJECT && hits.size() > 0 &&
       hits.begin()->distance < box_hits.first && box_hits.first != Ray::END) {
-
     return;
   }
 
-  auto geometry(GeometryDatabase::instance()->lookup(get_geometry_description()));
+  auto geometry(
+      GeometryDatabase::instance()->lookup(get_geometry_description()));
 
   if (geometry) {
     Ray world_ray(ray);
     geometry->ray_test(world_ray, options, this, hits);
-
   }
-  
+
   for (auto child : get_children()) {
     child->ray_test_impl(ray, options, mask, hits);
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,50 +163,51 @@ void PLODNode::update_bounding_box() const {
     auto geometry_bbox(geometry_->get_bounding_box());
     bounding_box_ = transform(geometry_bbox, world_transform_);
 
-    for (auto child: get_children()) {
+    for (auto child : get_children()) {
       bounding_box_.expandBy(child->get_bounding_box());
     }
-  }
-  else {
+  } else {
     Node::update_bounding_box();
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void PLODNode::update_cache() {
-
-  if(geometry_changed_) {
-    if(geometry_description_ != "") {
-      if(!GeometryDatabase::instance()->contains(geometry_description_)) {
+  if (geometry_changed_) {
+    if (geometry_description_ != "") {
+      if (!GeometryDatabase::instance()->contains(geometry_description_)) {
         GeometryDescription desc(geometry_description_);
-	try {
-	  gua::PLODLoader loader;
-	  loader.load_geometry(desc.filepath(), desc.flags());
-	}
-	catch (std::exception& e) {
-	  Logger::LOG_WARNING << "PLODNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
-	}
+        try {
+          gua::PLODLoader loader;
+          loader.load_geometry(desc.filepath(), desc.flags());
+        } catch (std::exception& e) {
+          Logger::LOG_WARNING
+              << "PLODNode::update_cache(): Loading failed from "
+              << desc.filepath() << " : " << e.what() << std::endl;
+        }
       }
-      geometry_ = std::dynamic_pointer_cast<PLODResource>(GeometryDatabase::instance()->lookup(geometry_description_));
+      geometry_ = std::dynamic_pointer_cast<PLODResource>(
+          GeometryDatabase::instance()->lookup(geometry_description_));
 
-      if(!geometry_) {
-        Logger::LOG_WARNING << "Failed to get PLODResource for " << geometry_description_ << ": The data base entry is of wrong type!" << std::endl;
+      if (!geometry_) {
+        Logger::LOG_WARNING
+            << "Failed to get PLODResource for " << geometry_description_
+            << ": The data base entry is of wrong type!" << std::endl;
       }
     }
 
     geometry_changed_ = false;
   }
 
-  // modified version of Node::upodate_cache -> add local transformation
-  if (self_dirty_)
-  {
+  // modified version of Node::update_cache -> add local transformation
+  if (self_dirty_) {
     math::mat4 old_world_trans(world_transform_);
 
     if (is_root()) {
       world_transform_ = get_transform();
-    }
-    else {
-      world_transform_ = get_parent()->get_world_transform() * transform_ * geometry_->local_transform();
+    } else {
+      world_transform_ = get_parent()->get_world_transform() * transform_ *
+                         geometry_->local_transform();
     }
 
     if (world_transform_ != old_world_trans) {
@@ -227,7 +226,6 @@ void PLODNode::update_cache() {
 
     child_dirty_ = false;
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,17 +235,17 @@ void PLODNode::update_cache() {
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Node> PLODNode::copy() const {
-  std::shared_ptr<PLODNode> result(new PLODNode(get_name(), geometry_description_, geometry_file_path_, material_, get_transform()));
+  std::shared_ptr<PLODNode> result = std::make_shared<PLODNode>(*this);
 
   result->update_cache();
 
   result->shadow_mode_ = shadow_mode_;
   result->radius_scale_ = radius_scale_;
   result->error_threshold_ = error_threshold_;
-  result->enable_backface_culling_by_normal_ = enable_backface_culling_by_normal_;
+  result->enable_backface_culling_by_normal_ =
+      enable_backface_culling_by_normal_;
 
   return result;
 }
-
 }
 }

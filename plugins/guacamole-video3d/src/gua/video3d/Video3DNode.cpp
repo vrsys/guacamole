@@ -35,87 +35,78 @@
 namespace gua {
 namespace node {
 
-  /////////////////////////////////////////////////////////////////////////////
-  Video3DNode::Video3DNode(std::string const& name,
-                           std::string const& video_name,
-                           std::shared_ptr<Material> const& material,
-                           math::mat4 const& transform)
-  : GeometryNode(name, transform),
-    video_name_(video_name),
-    material_(material)
-  {
+/////////////////////////////////////////////////////////////////////////////
+Video3DNode::Video3DNode(std::string const& name,
+                         std::string const& video_name,
+                         std::shared_ptr<Material> const& material,
+                         math::mat4 const& transform)
+    : GeometryNode(name, transform),
+      video_name_(video_name),
+      material_(material) {
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+void Video3DNode::ray_test_impl(Ray const& ray,
+                                int options,
+                                Mask const& mask,
+                                std::set<PickResult>& hits) {
+  // first of all, check bbox
+  auto box_hits(::gua::intersect(ray, bounding_box_));
+
+  // ray did not intersect bbox -- therefore it wont intersect
+  if (box_hits.first == Ray::END && box_hits.second == Ray::END) {
+    return;
   }
 
+  // return if only first object shall be returned and the current first hit
+  // is in front of the bbox entry point and the ray does not start inside
+  // the bbox
+  if (options & PickResult::PICK_ONLY_FIRST_OBJECT && hits.size() > 0 &&
+      hits.begin()->distance < box_hits.first && box_hits.first != Ray::END) {
+    return;
+  }
+}
 
-  /////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 
-  void Video3DNode::ray_test_impl(Ray const& ray, int options,
-                             Mask const& mask, std::set<PickResult>& hits) {
+/* virtual */ void Video3DNode::accept(NodeVisitor& visitor) {
+  visitor.visit(this);
+}
 
-    // first of all, check bbox
-    auto box_hits(::gua::intersect(ray, bounding_box_));
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<Material> const& Video3DNode::get_material() const {
+  return material_;
+}
 
-    // ray did not intersect bbox -- therefore it wont intersect
-    if (box_hits.first == Ray::END && box_hits.second == Ray::END) {
-      return;
+////////////////////////////////////////////////////////////////////////////////
+void Video3DNode::set_material(std::shared_ptr<Material> const& material) {
+  material_ = material;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Node> Video3DNode::copy() const {
+  return std::make_shared<Video3DNode>(*this);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+/* virtual */ void Video3DNode::update_cache() {
+  if (video_name_ != "") {
+    if (!GeometryDatabase::instance()->contains(video_name_)) {
+      Video3DLoader loader;
+      loader.create_geometry_from_file("dummy", video_name_);
     }
-
-    // return if only first object shall be returned and the current first hit
-    // is in front of the bbox entry point and the ray does not start inside
-    // the bbox
-    if (options & PickResult::PICK_ONLY_FIRST_OBJECT
-      && hits.size() > 0 && hits.begin()->distance < box_hits.first
-      && box_hits.first != Ray::END) {
-
-      return;
-    }
-
+    // video already in database
+  } else {
+    Logger::LOG_WARNING
+        << "Failed to auto-load geometry " << video_name_
+        << ": The name does not contain a type, file, id and flag parameter!"
+        << std::endl;
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  
-  /* virtual */ void Video3DNode::accept(NodeVisitor& visitor) {
-    visitor.visit(this);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  std::shared_ptr<Material> const& Video3DNode::get_material() const {
-    return material_;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void Video3DNode::set_material(std::shared_ptr<Material> const& material) {
-    material_ = material;
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-
-  std::shared_ptr<Node> Video3DNode::copy() const {
-    auto result(std::make_shared<Video3DNode>(get_name(), video_name_, material_, get_transform()));
-    result->shadow_mode_ = shadow_mode_;
-    return result;
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-
-  /* virtual */ void Video3DNode::update_cache()
-  {
-
-    if (video_name_ != "")
-    {
-      if (!GeometryDatabase::instance()->contains(video_name_))
-      {
-        Video3DLoader loader;
-        loader.create_geometry_from_file("dummy", video_name_);
-      }
-        // video already in database
-    }
-    else {
-      Logger::LOG_WARNING << "Failed to auto-load geometry " << video_name_ << ": The name does not contain a type, file, id and flag parameter!" << std::endl;
-    }
-
-    Node::update_cache();
-  }
-
+  Node::update_cache();
+}
 }
 }

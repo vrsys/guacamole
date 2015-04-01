@@ -319,6 +319,7 @@ std::shared_ptr<Node> Node::deep_copy() const {
   std::shared_ptr<Node> copied_node = copy();
   copied_node->tags_ = tags_;
   copied_node->draw_bounding_box_ = draw_bounding_box_;
+  copied_node->children_.clear();
   copied_node->children_.reserve(children_.size());
 
   for (auto const& child : children_) {

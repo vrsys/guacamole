@@ -24,7 +24,7 @@
 
 // guacamole headers
 
-#include <gua/node/SpotLightNode.hpp>
+#include <gua/node/LightNode.hpp>
 #include <gua/renderer/Serializer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/View.hpp>

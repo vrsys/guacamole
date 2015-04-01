@@ -232,7 +232,8 @@ int main(int argc, char** argv) {
   graph.add_node("/transform", city);
   city->set_draw_bounding_box(true);
   
-  auto light = graph.add_node<gua::node::PointLightNode>("/transform/city", "light");
+  auto light = graph.add_node<gua::node::LightNode>("/transform/city", "light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.brightness = 5.0f;
   light->scale(7.f);
   light->translate(0.f, 7.f, 5.f);

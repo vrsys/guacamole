@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-/*
+
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/OculusWindow.hpp>
@@ -43,8 +43,7 @@ std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGrap
     auto sphere_geometry(
       loader.create_geometry_from_file(
       "sphere" + gua::string_utils::to_string(i),
-      "data/objects/light_sphere.obj",
-      shader->get_default_material()
+      "data/objects/light_sphere.obj"
     ));
 
     sphere_geometry->scale(0.04, 0.04, 0.04);
@@ -53,7 +52,8 @@ std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGrap
     lights[i]->add_child(sphere_geometry);
     lights[i]->translate(randdir[0], randdir[1], randdir[2]);
 
-    auto light = lights[i]->add_child(std::make_shared<gua::node::PointLightNode>("light"));
+    auto light = lights[i]->add_child(std::make_shared<gua::node::LightNode>("light"));
+    light->data.set_type(gua::node::LightNode::Type::POINT);
     light->data.set_color(gua::utils::Color3f::random());
   }
 
@@ -80,8 +80,7 @@ void setup_scene(gua::SceneGraph& graph,
     for (auto direction: directions) {
       auto monkey_geometry(loader.create_geometry_from_file(
         "monkey",
-        geometry,
-        "data/materials/Stones.gmd"
+        geometry
       ));
 
       auto monkey = root_monkey->add_child(monkey_geometry);
@@ -113,9 +112,9 @@ gua::math::mat4 const get_oculus_transform(OVR::SensorFusion* sensor) {
                           mat.M[2][0], mat.M[2][1], mat.M[2][2], mat.M[2][3],
                           mat.M[3][0], mat.M[3][1], mat.M[3][2], mat.M[3][3]);
 }
-*/
+
 int main(int argc, char** argv) {
-/*
+
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -130,12 +129,11 @@ int main(int argc, char** argv) {
 
   auto monkey_geometry(loader.create_geometry_from_file(
     "root_ape",
-    geometry,
-    "data/materials/Stones.gmd"
+    geometry
   ));
 
   auto root_monkey = graph.add_node("/", monkey_geometry);
-  root_monkey->scale(0.5, 0.5, 0.5);
+  root_monkey->scale(1.5, 1.5, 1.5);
 
   // depth    monkey    cube          car
   // 1        14.084      56    3.619.000 Vertices  /      7 draw calls
@@ -148,54 +146,44 @@ int main(int argc, char** argv) {
 
   auto lights = add_lights(graph, 50);
 
-  auto pos = graph.add_node<gua::node::TransformNode>("/", "pos");
-  pos->translate(0, 0, 2);
-  auto nav = graph.add_node<gua::node::TransformNode>("/pos", "nav");
+  auto nav = graph.add_node<gua::node::TransformNode>("/", "nav");
+  nav->translate(0.0, 0.0, 2.0);
 
-  auto screen = graph.add_node<gua::node::ScreenNode>("/pos/nav", "screen_l");
-  screen->data.set_size(gua::math::vec2(0.08, 0.1));
-  screen->translate(-0.04, 0, -0.05f);
+  // setup rendering pipeline and window
+  auto resolution = gua::math::vec2ui(1280, 800);
 
-  screen = graph.add_node<gua::node::ScreenNode>("/pos/nav", "screen_r");
-  screen->data.set_size(gua::math::vec2(0.08, 0.1));
-  screen->translate(0.04, 0, -0.05f);
+  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
+  //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  resolve_pass->tone_mapping_exposure(1.0f);
 
-  auto eye = graph.add_node<gua::node::TransformNode>("/pos/nav", "eye_l");
-  eye->translate(-0.032, 0, 0);
+  auto camera = graph.add_node<gua::node::CameraNode>("/nav", "cam");
 
-  eye = graph.add_node<gua::node::TransformNode>("/pos/nav", "eye_r");
-  eye->translate(0.032, 0, 0);
+  //camera->translate(0, 0, 2.0);
+  camera->config.set_resolution(resolution);
+  camera->config.set_left_screen_path("/nav/cam/left_screen");
+  camera->config.set_right_screen_path("/nav/cam/right_screen");
+  camera->config.set_scene_graph_name("main_scenegraph");
+  camera->config.set_output_window_name("main_window");
+  camera->config.set_enable_stereo(true);
+  camera->config.set_eye_dist(0.064);
 
-  unsigned width = 1280/2;
-  unsigned height = 800;
+  camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
-  auto pipe = new gua::Pipeline();
-  pipe->config.set_camera(gua::Camera("/pos/nav/eye_l", "/pos/nav/eye_r", "/pos/nav/screen_l", "/pos/nav/screen_r", "main_scenegraph"));
-  pipe->config.set_resolution(gua::math::vec2ui(width, height));
-  pipe->config.set_enable_stereo(true);
-  // pipe->config.set_enable_fps_display(true);
-  // pipe->config.set_enable_frustum_culling(true);
+  auto left_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "left_screen");
+  left_screen->data.set_size(gua::math::vec2(0.08, 0.1));
+  left_screen->translate(-0.04, 0, -0.05f);
 
-  // pipe->config.set_enable_ssao(true);
-  // pipe->config.set_ssao_intensity(2.f);
-  // pipe->config.set_enable_fxaa(true);
-  // pipe->config.set_enable_hdr(true);
-  // pipe->config.set_hdr_key(5.f);
-  // pipe->config.set_enable_bloom(true);
-  // pipe->config.set_bloom_radius(10.f);
-  // pipe->config.set_bloom_threshold(0.8f);
-  // pipe->config.set_bloom_intensity(0.8f);
+  auto right_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "right_screen");
+  right_screen->data.set_size(gua::math::vec2(0.08, 0.1));
+  right_screen->translate(0.04, 0, -0.05f);
 
-#if WIN32
-  auto oculus_window(new gua::OculusWindow("\\\\.\\DISPLAY1"));
-#else
-  auto oculus_window(new gua::OculusWindow(":0.0"));
-#endif
-  // pipe->set_window(oculus_window);
+  auto window = std::make_shared<gua::OculusWindow>(":0.0");
+  gua::WindowDatabase::instance()->add("main_window", window);
+  window->config.set_enable_vsync(false);
 
-  gua::Renderer renderer({
-    pipe
-  });
+  window->open();
+
+  gua::Renderer renderer;
 
   gua::Timer timer;
   timer.start();
@@ -228,15 +216,14 @@ int main(int argc, char** argv) {
     }
 
     graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
-    //graph["/screen"]->rotate(20*frame_time, 0, 1, 0);
 
-    nav->set_transform(get_oculus_transform(oculus_sensor));
+    camera->set_transform(get_oculus_transform(oculus_sensor));
 
     renderer.queue_draw({&graph});
   });
 
   loop.start();
-*/
+
   return 0;
 }
 

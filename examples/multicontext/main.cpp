@@ -121,7 +121,8 @@ int main(int argc, char** argv) {
   cam4->config.set_resolution(resolution);
 
 
-  auto pointlight = graph.add_node<gua::node::PointLightNode>("/", "pointlight");
+  auto pointlight = graph.add_node<gua::node::LightNode>("/", "pointlight");
+  pointlight->data.set_type(gua::node::LightNode::Type::POINT);
   pointlight->scale(30.0f);
   pointlight->rotate(-90, 1, 0, 0);
   pointlight->translate(1.0, 18.0, 1.0);

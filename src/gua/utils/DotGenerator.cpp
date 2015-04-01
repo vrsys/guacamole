@@ -26,8 +26,7 @@
 #include <gua/scenegraph/SceneGraph.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/GeometryNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
+#include <gua/node/LightNode.hpp>
 #include <gua/node/ScreenNode.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/node/TexturedQuadNode.hpp>
@@ -121,16 +120,16 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(node::PointLightNode* pointlight) {
-  pre_node_info(pointlight);
+/* virtual */ void DotGenerator::visit(node::LightNode* light) {
+  pre_node_info(light);
 
   std::string fillcolor("[fillcolor =");
   fillcolor += " \"#FFDD55\"";
   fillcolor += "]";
 
-  post_node_info(pointlight, fillcolor);
+  post_node_info(light, fillcolor);
 
-  for (auto child : pointlight->children_) {
+  for (auto child : light->children_) {
     child->accept(*this);
   }
 }
@@ -146,21 +145,6 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
   post_node_info(screen, fillcolor);
 
   for (auto child : screen->children_) {
-    child->accept(*this);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(node::SpotLightNode* spot) {
-  pre_node_info(spot);
-
-  std::string fillcolor("[fillcolor =");
-  fillcolor += " \"#FFDD55\"";
-  fillcolor += "]";
-
-  post_node_info(spot, fillcolor);
-
-  for (auto child : spot->children_) {
     child->accept(*this);
   }
 }

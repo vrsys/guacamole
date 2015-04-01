@@ -30,7 +30,7 @@
 namespace gua {
 
 namespace node {
-  class SpotLightNode;
+  class LightNode;
 }
 
 class Pipeline;
@@ -62,8 +62,8 @@ struct CachedShadowMap {
 };
 
 struct SharedShadowMapResource {
-  std::list<std::shared_ptr<ShadowMap>>                     unused_shadow_maps;
-  std::unordered_map<node::SpotLightNode*, CachedShadowMap> used_shadow_maps;
+  std::list<std::shared_ptr<ShadowMap>>                 unused_shadow_maps;
+  std::unordered_map<node::LightNode*, CachedShadowMap> used_shadow_maps;
 };
 
 }

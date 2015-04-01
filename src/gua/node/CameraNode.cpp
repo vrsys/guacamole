@@ -59,7 +59,7 @@ Frustum CameraNode::get_frustum(SceneGraph const& graph, CameraMode mode) const 
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Node> CameraNode::copy() const {
-    return std::make_shared<CameraNode>(get_name(), pipeline_description_, config, get_transform());
+  return std::make_shared<CameraNode>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

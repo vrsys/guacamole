@@ -115,19 +115,22 @@ int main(int argc, char** argv) {
   portal->rotate(-30, 0.f, 1.f, 0.f);
 
   // Lights
-  auto light = graph.add_node<gua::node::SpotLightNode>("/", "light");
+  auto light = graph.add_node<gua::node::LightNode>("/", "light");
+  light->data.set_type(gua::node::LightNode::Type::SPOT);
   light->data.set_brightness(10.0f);
   light->scale(2.f);
   light->rotate(-10, 0.f, 1.f, 0.f);
   light->rotate(-10, 1.f, 0.f, 0.f);
   light->translate(-0.2f, 0.5f,  1.f);
 
-  auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
+  auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
+  light2->data.set_type(gua::node::LightNode::Type::POINT);
   light2->data.set_brightness(10.0f);
   light2->scale(1.2f);
   light2->translate(0.4f, 0.7f, -0.4f);
 
-  auto light3 = graph.add_node<gua::node::PointLightNode>("/", "light3");
+  auto light3 = graph.add_node<gua::node::LightNode>("/", "light3");
+  light3->data.set_type(gua::node::LightNode::Type::POINT);
   light3->scale(6.f);
   light3->translate(2.f, 1.f, -5.f);
 
