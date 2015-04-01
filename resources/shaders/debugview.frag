@@ -23,9 +23,9 @@ void main() {
 
   if ( fragment_position.y < debug_window_height)
   {
-    vec2 texcoord  = vec2(float(mod(fragment_position.x, debug_window_width)) / debug_window_width, 
+    vec2 texcoord  = vec2(float(mod(fragment_position.x, debug_window_width)) / debug_window_width,
                           float(mod(fragment_position.y, debug_window_height)) / debug_window_height);
-                           
+
     // output depth
     if ( fragment_position.x < debug_window_width) {
       gua_out_color = vec3(gua_get_depth(texcoord));
@@ -42,11 +42,11 @@ void main() {
       uint nlights = gua_sun_lights_num;
       int bitset_words = ((gua_lights_num - 1) >> 5) + 1;
 
-      ivec2 tile = ivec2(mod(fragment_position.x, debug_window_width ), 
+      ivec2 tile = ivec2(mod(fragment_position.x, debug_window_width ),
                          mod(fragment_position.y, debug_window_height ));
 
       tile = 5 * tile >> @light_table_tile_power@;
-                  
+
       for (int sl = 0; sl < bitset_words; ++sl) {
         nlights += bitCount(texelFetch(usampler3D(gua_light_bitset), ivec3(tile, sl), 0).r);
       }
@@ -66,9 +66,16 @@ void main() {
     }
 
     if (light_id >= 0) {
-      vec2 texcoord = vec2(float(mod(fragment_position.x, shadow_debug_size)) / shadow_debug_size, 
+      vec2 texcoord = vec2(float(mod(fragment_position.x, shadow_debug_size)) / shadow_debug_size,
                            float(mod(fragment_position.y-debug_window_height, shadow_debug_size)) / shadow_debug_size);
-      gua_out_color = vec3(texture(sampler2D(gua_lights[light_id].shadow_map), texcoord).r);
+
+      float intensity = 0.0;
+      const int slices = 30;
+      for (int i=0; i < slices; ++i) {
+        intensity += texture(sampler2DShadow(gua_lights[light_id].shadow_map), vec3(texcoord, i * 1.0/slices)).r;
+      }
+
+      gua_out_color = vec3(intensity/slices);
     } else {
       discard;
     }
@@ -76,6 +83,6 @@ void main() {
   } else {
     discard;
   }
-  
+
 }
 
