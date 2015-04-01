@@ -38,9 +38,12 @@ namespace gua {
 ShadowMap::ShadowMap(RenderContext const& ctx, unsigned size) :
   RenderTarget(math::vec2ui(size, size)) {
 
-  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
-    scm::gl::WRAP_MIRRORED_REPEAT,
-    scm::gl::WRAP_MIRRORED_REPEAT);
+  scm::gl::sampler_state_desc state;
+  // (scm::gl::FILTER_MIN_MAG_LINEAR,
+  //   scm::gl::WRAP_MIRRORED_REPEAT,
+  //   scm::gl::WRAP_MIRRORED_REPEAT);
+
+  state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
 
   depth_buffer_ = std::make_shared<Texture2D>(size, size, scm::gl::FORMAT_D24, 1, state);
 
@@ -116,7 +119,7 @@ void ShadowMap::remove_buffers(RenderContext const& ctx) {
 // void ShadowMap::cleanup(RenderContext const& context) {
 //   if (buffer_) {
 //     buffer_->remove_buffers(context);
-//   } 
+//   }
 // }
 
 ////////////////////////////////////////////////////////////////////////////////

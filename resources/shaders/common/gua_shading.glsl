@@ -26,20 +26,19 @@ float gua_get_shadow(int light_id, vec4 smap_coords, ivec2 offset, float acne_of
   );
 }
 
-// float gua_get_shadow(vec4 smap_coords) {
-//   const mat4 acne_offset = mat4(
-//     1, 0, 0, 0,
-//     0, 1, 0, 0,
-//     0, 0, 1, 0,
-//     0, 0, -gua_shadow_offset, 1
-//   );
+float gua_get_shadow(int light_id, vec4 smap_coords, float acne_offset) {
+  const mat4 acne = mat4(
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, -acne_offset, 1
+  );
 
-//   return textureProj(
-//     sampler2DShadow(gua_shadow_map), acne_offset * smap_coords * vec4(
-//       gua_light_shadow_map_portion, gua_light_shadow_map_portion, 1.0, 1.0
-//     )
-//   );
-// }
+  return textureProj(
+    sampler2DShadow(gua_lights[light_id].shadow_map), acne_offset * smap_coords
+    //* vec4(gua_light_shadow_map_portion, gua_light_shadow_map_portion, 1.0, 1.0)
+  );
+}
 
 float gua_get_shadow(int light_id, vec3 position, vec2 lookup_offset, float acne_offset) {
   if(!(gua_lights[light_id].casts_shadow)) {
