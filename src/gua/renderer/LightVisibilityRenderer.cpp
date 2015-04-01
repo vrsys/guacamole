@@ -99,6 +99,7 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
     light_block.specular_enable = light->data.get_enable_specular_shading();
     light_block.color           = math::vec4f(light->data.get_color().vec3f().r, light->data.get_color().vec3f().g, light->data.get_color().vec3f().b, 0.f);
     light_block.type            = static_cast<unsigned>(light->data.get_type());
+    light_block.casts_shadow    = light->data.get_enable_shadows();
 
     if (light->data.get_enable_shadows()) {
       light_block.shadow_map = pipe.render_shadow_map(light)->get_handle(pipe.get_context());
@@ -114,7 +115,6 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
       light_block.falloff         = 0.0f;
       light_block.softness        = 0.0f;
-      light_block.casts_shadow    = light->data.get_enable_shadows();
     } else if (light->data.get_type() == node::LightNode::Type::POINT) {
       math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
       float light_radius = scm::math::length(light_position - math::vec3(model_mat * math::vec4(0.f, 0.f, 1.f, 1.f)));
@@ -123,7 +123,6 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = 0;
-      light_block.casts_shadow    = 0;
     } else if (light->data.get_type() == node::LightNode::Type::SPOT) {
       math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
       math::vec3 beam_direction = math::vec3(model_mat * math::vec4(0.f, 0.f, -1.f, 1.f)) - light_position;
@@ -133,7 +132,6 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(beam_direction.x, beam_direction.y, beam_direction.z, half_beam_angle);
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = light->data.get_softness();
-      light_block.casts_shadow    = 0; //light->data.get_enable_shadows();
     }
 
     lights.push_back(light_block);

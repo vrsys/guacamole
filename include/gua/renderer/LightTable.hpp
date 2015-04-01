@@ -24,10 +24,10 @@ public:
     unsigned     diffuse_enable;  // bool
     unsigned     specular_enable; // bool
     unsigned     casts_shadow;    // bool
-    // unsigned    pad;
 
     float        shadow_offset;
     math::vec2ui shadow_map;
+    math::vec2ui pad;
     //float        light_shadow_map_portion;
     //math::vec2ui light_shadow_map;
 
