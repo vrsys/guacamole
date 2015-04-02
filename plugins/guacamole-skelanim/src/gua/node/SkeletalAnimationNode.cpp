@@ -507,8 +507,8 @@ namespace node {
       return animations_.at(animation_name).get_duration();
     }
     else {
-      return 0;
       gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name << "' found!" << std::endl;
+      return 0;
     }
   }
 
