@@ -58,7 +58,7 @@ class Bone {
 
   void set_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& infos);
 
-  void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, SkeletalPose const& pose, scm::math::mat4f const& parentTransform) const;
+  void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, SkeletalPose const& pose, scm::math::mat4f const& parentTransform = scm::math::mat4f::identity()) const;
 
   std::shared_ptr<Bone> find(std::string const& name) const;
 
