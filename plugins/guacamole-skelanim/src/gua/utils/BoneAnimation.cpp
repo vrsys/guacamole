@@ -59,7 +59,7 @@ BoneAnimation::BoneAnimation(aiNodeAnim* anim):
   }
 }
 
-BonePose BoneAnimation::calculate_transform(float time) const {
+BonePose BoneAnimation::calculate_pose(float time) const {
   return BonePose{calculate_value(time, scalingKeys), calculate_value(time, rotationKeys), calculate_value(time, translationKeys)};
 }
 
@@ -76,22 +76,19 @@ scm::math::quatf BoneAnimation::interpolate(scm::math::quatf val1, scm::math::qu
 }
 
 template<class T> 
-uint BoneAnimation::find_key(float animationTime, std::vector<Keyframe<T>> keys) const {    
+int BoneAnimation::find_key(float animationTime, std::vector<Keyframe<T>> keys) const {    
   if(keys.size() < 1) {
     Logger::LOG_ERROR << "no keys" << std::endl;
     assert(false);
   } 
 
-  for(uint i = 0 ; i < keys.size() - 1 ; i++) {
+  for(int i = -1; i < int(keys.size() - 1); ++i) {
     if(animationTime < (float)keys[i + 1].time) {
       return i;
     }
   }
-
-  Logger::LOG_ERROR << "no key found at frame " << animationTime << std::endl;
-  assert(false);
-
-  return 0;
+  
+  return keys.size() - 1;
 }
 
 template<class T> 
@@ -100,19 +97,21 @@ T BoneAnimation::calculate_value(float time, std::vector<Keyframe<T>> keys) cons
      return keys[0].value;
   }
 
-  uint lastIndex = find_key(time, keys);
-  uint nextIndex = (lastIndex + 1);
+  int last_index = find_key(time, keys);
+  uint next_index = (last_index + 1);
 
-  if(nextIndex > keys.size()) {
-    Logger::LOG_ERROR << "frame out of range" << std::endl;
-    assert(false);
+  if(last_index == -1) {
+    return keys[0].value;
+  }
+  else if(last_index == keys.size() -1) {
+    return keys.back().value;
   }
 
-  float deltaTime = (float)(keys[nextIndex].time - keys[lastIndex].time);
-  float factor = (time - (float)keys[lastIndex].time) / deltaTime;
+  float deltaTime = (float)(keys[next_index].time - keys[last_index].time);
+  float factor = (time - (float)keys[last_index].time) / deltaTime;
   //assert(factor >= 0.0f && factor <= 1.0f);
-  T const& key1 = keys[lastIndex].value;
-  T const& key2 = keys[nextIndex].value;
+  T const& key1 = keys[last_index].value;
+  T const& key2 = keys[next_index].value;
 
   return interpolate(key1, key2, factor);
 }
