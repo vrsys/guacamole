@@ -57,10 +57,9 @@ SkeletalAnimation::~SkeletalAnimation()
 SkeletalPose SkeletalAnimation::calculate_pose(float time) const { 
   SkeletalPose pose{};
 
-  float currFrame = time * float(numFrames);
-   
+  float currFrame = time * numFrames;
   for(BoneAnimation const& boneAnim : boneAnims) {
-    BonePose boneTransform = boneAnim.calculate_transform(currFrame);
+    BonePose boneTransform = boneAnim.calculate_pose(currFrame);
 
     pose.set_transform(boneAnim.get_name(), boneTransform);
   }  

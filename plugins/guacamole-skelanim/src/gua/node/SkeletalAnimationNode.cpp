@@ -165,84 +165,6 @@ namespace node {
 
     has_anims_ = animations_.size() > 0;
   }
-  ////////////////////////////////////////////////////////////////////////////////
-
-  std::string const& SkeletalAnimationNode::get_animation_1() const {
-    if(has_anims_ && animations_.find(anim_1_) != animations_.end()){
-      return anim_1_;
-    }
-    else{
-      return none_loaded;
-    }
-  }
-
-  void SkeletalAnimationNode::set_animation_1(std::string const& animation_name) {
-    if(animations_.find(animation_name) != animations_.end()) {
-       anim_1_ = animation_name;
-    }
-    else {
-      gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name <<"' found!" << std::endl;
-    }
-  }
-  std::string const& SkeletalAnimationNode::get_animation_2() const {
-    if(has_anims_ && animations_.find(anim_2_) != animations_.end()){
-      return anim_2_;
-    }
-    else{
-      return none_loaded;
-    }
-  }
-
-  void SkeletalAnimationNode::set_animation_2(std::string const& animation_name) {
-    if(animations_.find(animation_name) != animations_.end()) {
-       anim_2_ = animation_name;
-    }
-    else {
-      gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name << "' found!" << std::endl;
-    }
-  }
-
-  float SkeletalAnimationNode::get_duration(std::string const& animation_name) const {
-    if(animations_.find(animation_name) != animations_.end()) {
-      return animations_.at(animation_name).get_duration();
-    }
-    else {
-      return 0;
-      gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name << "' found!" << std::endl;
-    }
-  }
-
-  float SkeletalAnimationNode::get_blend_factor() const{
-    return blend_factor_;
-  }
-
-  void SkeletalAnimationNode::set_blend_factor(float f){
-    blend_factor_ = f;
-  }
-
-  void SkeletalAnimationNode::set_time_1(float time){
-    anim_time_1_ = time;
-  }
-
-  float SkeletalAnimationNode::get_time_1() const{
-    return anim_time_1_;
-  }
-
-  void SkeletalAnimationNode::set_time_2(float time){
-    anim_time_2_ = time;
-  }
-
-  float SkeletalAnimationNode::get_time_2() const{
-    return anim_time_2_;
-  }
-
-  bool SkeletalAnimationNode::has_anims() const {
-    return has_anims_;
-  }\
-
-  std::vector<scm::math::mat4f> const& SkeletalAnimationNode::get_bone_transforms() const {
-    return bone_transforms_;
-  }
 
   ////////////////////////////////////////////////////////////////////////////////
   void SkeletalAnimationNode::update_bone_transforms() {
@@ -544,7 +466,84 @@ namespace node {
     return std::make_shared<SkeletalAnimationNode>(*this);
   }
 
-  const std::string SkeletalAnimationNode::none_loaded{"none loaded"};
+  ////////////////////////////////////////////////////////////////////////////////
+  std::string const& SkeletalAnimationNode::get_animation_1() const {
+    if(has_anims_ && animations_.find(anim_1_) != animations_.end()){
+      return anim_1_;
+    }
+    else{
+      return none_loaded;
+    }
+  }
 
+  void SkeletalAnimationNode::set_animation_1(std::string const& animation_name) {
+    if(animations_.find(animation_name) != animations_.end()) {
+       anim_1_ = animation_name;
+    }
+    else {
+      gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name <<"' found!" << std::endl;
+    }
+  }
+  std::string const& SkeletalAnimationNode::get_animation_2() const {
+    if(has_anims_ && animations_.find(anim_2_) != animations_.end()){
+      return anim_2_;
+    }
+    else{
+      return none_loaded;
+    }
+  }
+
+  void SkeletalAnimationNode::set_animation_2(std::string const& animation_name) {
+    if(animations_.find(animation_name) != animations_.end()) {
+       anim_2_ = animation_name;
+    }
+    else {
+      gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name << "' found!" << std::endl;
+    }
+  }
+
+  float SkeletalAnimationNode::get_duration(std::string const& animation_name) const {
+    if(animations_.find(animation_name) != animations_.end()) {
+      return animations_.at(animation_name).get_duration();
+    }
+    else {
+      return 0;
+      gua::Logger::LOG_WARNING << "No matching animation with name: '" << animation_name << "' found!" << std::endl;
+    }
+  }
+
+  float SkeletalAnimationNode::get_blend_factor() const{
+    return blend_factor_;
+  }
+
+  void SkeletalAnimationNode::set_blend_factor(float f){
+    blend_factor_ = f;
+  }
+
+  void SkeletalAnimationNode::set_time_1(float time){
+    anim_time_1_ = time;
+  }
+
+  float SkeletalAnimationNode::get_time_1() const{
+    return anim_time_1_;
+  }
+
+  void SkeletalAnimationNode::set_time_2(float time){
+    anim_time_2_ = time;
+  }
+
+  float SkeletalAnimationNode::get_time_2() const{
+    return anim_time_2_;
+  }
+
+  bool SkeletalAnimationNode::has_anims() const {
+    return has_anims_;
+  }
+
+  std::vector<scm::math::mat4f> const& SkeletalAnimationNode::get_bone_transforms() const {
+    return bone_transforms_;
+  }
+  
+  const std::string SkeletalAnimationNode::none_loaded{"none loaded"};
 }
 }

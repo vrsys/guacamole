@@ -58,7 +58,7 @@ class BoneAnimation {
   BoneAnimation(aiNodeAnim* anim);
   BoneAnimation(fbxsdk_2015_1::FbxTakeInfo const& take, fbxsdk_2015_1::FbxNode& node);
 
-  BonePose calculate_transform(float time) const;
+  BonePose calculate_pose(float time) const;
 
   std::string const& get_name() const;
 
@@ -69,7 +69,7 @@ class BoneAnimation {
   scm::math::quatf interpolate(scm::math::quatf val1, scm::math::quatf val2, float factor) const;
 
   template<class T> 
-  uint find_key(float animationTime, std::vector<Keyframe<T>> keys) const;
+  int find_key(float animationTime, std::vector<Keyframe<T>> keys) const;
 
   template<class T> 
   T calculate_value(float time, std::vector<Keyframe<T>> keys) const;
