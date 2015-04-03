@@ -33,10 +33,6 @@
 #include <list>
 #include <memory>
 
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-
 namespace fbxsdk_2015_1{
   class FbxScene;
   class FbxManager;
@@ -54,10 +50,10 @@ class GeometryNode;
 
 
 /**
- * Loads and draws meshes.
+ * Loads skinned meshes and animations.
  *
- * This class can load mesh data from files and display them in multiple
- * contexts. A MeshLoader object is made of several Mesh objects.
+ * This class can load mesh and animation data from files and returns
+ * SkeletalanimationNodes.
  */
 class GUA_DLL SkeletalAnimationLoader {
 
@@ -89,7 +85,7 @@ public:
   /**
    *
    */
-   void load_animation(std::shared_ptr<node::Node>& node, std::string const& file_name, std::string const& animation_name, unsigned flags);
+   void load_animation(std::shared_ptr<node::Node>& node, std::string const& file_name, std::string const& animation_name);
 
    /**
    *
@@ -132,29 +128,19 @@ public:
 
  private: // methods
 
-  std::shared_ptr<node::Node> get_node(fbxsdk_2015_1::FbxScene* fbx_scene,
+  static std::shared_ptr<node::Node> get_node(fbxsdk_2015_1::FbxScene* fbx_scene,
                 std::string const& file_name,
                 std::string const& node_name,
                 unsigned flags);
 
-  std::shared_ptr<node::Node> get_node(std::shared_ptr<Assimp::Importer> const& importer,
-                aiScene const* ai_scene,
-                /*aiNode* ai_root,*/
+  static std::shared_ptr<node::Node> get_node(aiScene const* ai_scene,
                 std::string const& file_name,
                 std::string const& node_name,
                 unsigned flags);
 
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
-
-private: // attributes
-
-  std::string parent_material_name_;
-
-  unsigned node_counter_;
+  static void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material);
 
   static fbxsdk_2015_1::FbxScene* load_fbx_file(fbxsdk_2015_1::FbxManager* manager, std::string const& file_path);
-  static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
-  static unsigned mesh_counter_;
 };
 
 }
