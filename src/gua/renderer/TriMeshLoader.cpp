@@ -33,6 +33,10 @@
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
+// external headers
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 #ifdef GUACAMOLE_FBX
   #include <fbxsdk.h>
 #endif // GUACAMOLE_FBX
@@ -42,15 +46,13 @@ namespace gua {
 /////////////////////////////////////////////////////////////////////////////
 // static variables
 /////////////////////////////////////////////////////////////////////////////
-unsigned TriMeshLoader::mesh_counter_ = 0;
-
 std::unordered_map<std::string, std::shared_ptr< ::gua::node::Node> >
     TriMeshLoader::loaded_files_ =
         std::unordered_map<std::string, std::shared_ptr< ::gua::node::Node> >();
 
 /////////////////////////////////////////////////////////////////////////////
 
-TriMeshLoader::TriMeshLoader() : node_counter_(0) {}
+TriMeshLoader::TriMeshLoader(){}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -155,8 +157,6 @@ std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(
 
 std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
                                                 unsigned flags) {
-
-  node_counter_ = 0;
   TextFile file(file_name);
 
   // MESSAGE("Loading mesh file %s", file_name.c_str());
@@ -195,44 +195,38 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
       FbxScene* scene = load_fbx_file(sdk_manager, file_name);
 
       unsigned count(0);
-      return get_tree(*scene->GetRootNode(), file_name, flags, count);
+      std::shared_ptr<node::Node> tree{get_tree(*scene->GetRootNode(), file_name, flags, count)};
+      sdk_manager->Destroy();
 
-    }
-    else
+      return tree;
+    } else
 #endif
-    {  
+    {
       auto importer = std::make_shared<Assimp::Importer>();
 
-      importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
-                                    aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+      unsigned ai_process_flags = aiProcessPreset_TargetRealtime_Quality |
+                            aiProcess_RemoveComponent;
 
-      if ((flags & TriMeshLoader::OPTIMIZE_GEOMETRY) &&
-          (flags & TriMeshLoader::LOAD_MATERIALS)) {
-
-        importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS);
-        importer->ReadFile(
-            file_name,
-            aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
-                aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-                aiProcess_PreTransformVertices);
-
+      if(flags & TriMeshLoader::OPTIMIZE_GEOMETRY) {
+        ai_process_flags |= aiProcessPreset_TargetRealtime_MaxQuality |
+                            aiProcess_OptimizeGraph |
+                            aiProcess_PreTransformVertices;
       }
-      else if (flags & TriMeshLoader::OPTIMIZE_GEOMETRY) {
 
-        importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS,
-                                      aiComponent_COLORS | aiComponent_MATERIALS);
-        importer->ReadFile(
-            file_name,
-            aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GenNormals |
-                aiProcess_RemoveComponent | aiProcess_OptimizeGraph |
-                aiProcess_PreTransformVertices);
-      } else {
+      unsigned ai_ignore_flags = aiComponent_COLORS |
+                            aiComponent_ANIMATIONS |
+                            aiComponent_LIGHTS |
+                            aiComponent_CAMERAS |
+                            aiComponent_BONEWEIGHTS;
 
-        importer->ReadFile(
-            file_name,
-            aiProcessPreset_TargetRealtime_Quality | aiProcess_GenNormals);
+      if(!(flags & TriMeshLoader::LOAD_MATERIALS)) {
+        ai_ignore_flags |= aiComponent_MATERIALS;
+      } 
 
-      }
+      importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+      importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, ai_ignore_flags);
+
+      importer->ReadFile(file_name, ai_process_flags);
 
       aiScene const* scene(importer->GetScene());
 
@@ -245,11 +239,9 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
       }
 
       if (scene->mRootNode) {
-        // new_node = std::make_shared(new GeometryNode("unnamed",
-        //                             GeometryNode::Configuration("", ""),
-        //                             math::mat4::identity()));
-        unsigned count(0);
-        new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
+        unsigned count = 0;
+        new_node = get_tree(
+            importer, scene, scene->mRootNode, file_name, flags, count);
 
       } else {
         Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": No valid root node contained!" << std::endl;
@@ -282,12 +274,8 @@ std::vector<TriMeshRessource*> const TriMeshLoader::load_from_buffer(
   std::vector<TriMeshRessource*> meshes;
 
   for (unsigned int n = 0; n < scene->mNumMeshes; ++n) {
-<<<<<<< HEAD
     meshes.push_back(
-        new TriMeshRessource(scene->mMeshes[n], importer, build_kd_tree));
-=======
-    meshes.push_back(new TriMeshRessource(Mesh{*scene->mMeshes[n]}, build_kd_tree));
->>>>>>> Remove aimesh from kdtree, replace with gua mesh
+        new TriMeshRessource(Mesh{*scene->mMeshes[n]}, build_kd_tree));
   }
 
   return meshes;
@@ -312,6 +300,7 @@ bool TriMeshLoader::is_supported(std::string const& file_name) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#ifdef GUACAMOLE_FBX
 std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     FbxNode& node,
     std::string const& file_name,
@@ -326,7 +315,6 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
 
     // load material
     std::shared_ptr<Material> material;
-    // unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]->mMaterialIndex);
 
     if(fbx_node.GetMaterialCount() > 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
@@ -337,8 +325,9 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
       material = material_loader.load_material(*mat, file_name);
     }
 
-    //return std::make_shared<node::TriMeshNode>("", desc.unique_key(), material); // not allowed -> private c'tor
-    auto node = std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
+    auto node = std::shared_ptr<node::TriMeshNode>(
+        new node::TriMeshNode("", desc.unique_key(), material));
+
     node->set_transform(to_gua::mat4d(fbx_node.EvaluateGlobalTransform()));
     return node;
   };
@@ -383,7 +372,6 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     unsigned& mesh_count) {
 
   // creates a geometry node and returns it
-<<<<<<< HEAD
   auto load_geometry = [&](int i) {
     GeometryDescription desc("TriMesh", file_name, mesh_count++, flags);
     GeometryDatabase::instance()->add(
@@ -392,12 +380,6 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
             ai_scene->mMeshes[ai_root->mMeshes[i]],
             importer,
             flags & TriMeshLoader::MAKE_PICKABLE));
-=======
-  auto load_geometry = [&](int i) 
-  {
-    GeometryDescription desc ("TriMesh", file_name, mesh_count++, flags);
-    GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*ai_scene->mMeshes[ai_root->mMeshes[i]]}, flags & TriMeshLoader::MAKE_PICKABLE));
->>>>>>> Remove aimesh from kdtree, replace with gua mesh
 
     // load material
     std::shared_ptr<Material> material;
@@ -456,7 +438,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
 void TriMeshLoader::apply_fallback_material(
     std::shared_ptr<node::Node> const& root,
     std::shared_ptr<Material> const& fallback_material,
-    bool no_shared_materials) const {
+    bool no_shared_materials) {
   auto g_node(std::dynamic_pointer_cast<node::TriMeshNode>(root));
 
   if (g_node && !g_node->get_material()) {
@@ -519,7 +501,6 @@ FbxScene* TriMeshLoader::load_fbx_file(FbxManager* manager, std::string const& f
   } 
 
   return scene;
-  // TODO: destruction of fbx helper objects
 }
 #endif
 }
