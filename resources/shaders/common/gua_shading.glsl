@@ -106,12 +106,18 @@ vec3 sRGB_to_linear_simple(vec3 sRGB)
 
 struct ShadingTerms
 {
-  vec3 N;
+  // Surface position
   vec3 P;
+  // Viewing direction (from surface position to eye)
+  vec3 Vn;
+  // Shading normal
+  vec3 N;
+  // Camera (Eye) position
   vec3 E;
+
+  // parameters for our BSDF
   float roughness;
   vec3 cspec;
-  vec3 Vn;
   vec3 diffuse;
 };
 
