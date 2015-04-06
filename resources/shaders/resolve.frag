@@ -51,11 +51,11 @@ vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV )
 vec3 environment_lighting (in ShadingTerms T)
 {
   vec3 env_color = vec3(0);
-  vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.Vn));
+  vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.V));
 
   // http://marmosetco.tumblr.com/post/81245981087
   float gua_horizon_fade = 1.3;
-  vec3 R = reflect(-T.Vn, T.N);
+  vec3 R = reflect(-T.V, T.N);
   float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
   horizon *= horizon;
 
