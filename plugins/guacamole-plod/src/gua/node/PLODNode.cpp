@@ -204,17 +204,19 @@ void PLODNode::update_cache() {
     math::mat4 old_world_trans(world_transform_);
 
     if (is_root()) {
-      world_transform_ = get_transform();
+      world_transform_ = transform_ * geometry_->local_transform();
     } else {
       world_transform_ = get_parent()->get_world_transform() * transform_ *
                          geometry_->local_transform();
     }
 
+    update_bounding_box();
+
     if (world_transform_ != old_world_trans) {
       on_world_transform_changed.emit(world_transform_);
     }
 
-    self_dirty_ = false;
+    self_dirty_ = false; 
   }
 
   if (child_dirty_) {
