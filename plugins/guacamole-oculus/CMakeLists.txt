@@ -29,14 +29,26 @@ IF (MSVC)
 ENDIF (MSVC)
 
 IF (UNIX)
-    LIST(APPEND LIBS udev Xinerama guacamole ${OVR_LIBRARIES})
+    LIST(APPEND LIBS udev Xinerama guacamole optimized ${OVR_LIBRARY} debug ${OVR_LIBRARY_DEBUG})
 ELSEIF (MSVC)
-    LIST(APPEND LIBS winmm.lib guacamole ${OVR_LIBRARIES})
+    LIST(APPEND LIBS winmm.lib guacamole ${OVR_LIBRARY})
 ENDIF(UNIX)
 
 find_package (Threads)
 
-target_link_libraries( guacamole-oculus debug ${LIBS} ${CMAKE_THREAD_LIBS_INIT} optimized ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+if (MSVC)
+  target_link_libraries( guacamole-oculus 
+                         ${LIBS} 
+                         optimized ${FREEIMAGE_LIBRARY}
+                         debug ${FREEIMAGE_LIBRARY_DEBUG}
+                         optimized ${FREEIMAGE_PLUS_LIBRARY}
+                         debug ${FREEIMAGE_PLUS_LIBRARY_DEBUG}
+                         ${CMAKE_THREAD_LIBS_INIT} )
+elseif (UNIX)
+  target_link_libraries( guacamole-oculus 
+                         ${LIBS} 
+                         ${CMAKE_THREAD_LIBS_INIT} )
+endif (MSVC)
 
 ###############################################################################
 # install 

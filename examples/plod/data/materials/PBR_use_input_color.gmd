@@ -125,7 +125,6 @@
             float step_size = 0.001;
             float d_x_l = texture(p01_linear_depth_texture, pos_ss_norm - vec2(step_size, 0.0)).r;
             float d_x_r = texture(p01_linear_depth_texture, pos_ss_norm + vec2(step_size, 0.0)).r;
-
             float d_y_o = texture(p01_linear_depth_texture, pos_ss_norm - vec2(0.0, step_size)).r;
             float d_y_u = texture(p01_linear_depth_texture, pos_ss_norm + vec2(0.0, step_size)).r;
 
