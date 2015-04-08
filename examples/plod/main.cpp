@@ -522,6 +522,7 @@ int main(int argc, char** argv) {
 
 #if RENDER_PITOTI_HUNTING_SCENE
   #if WIN32
+  auto plod_geometry0(plodLoader.load_geometry("hunter0", "data/objects/Area-1_Warrior-scene_P01-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
   auto plod_geometry1(plodLoader.load_geometry("hunter1", "data/objects/Area-1_Warrior-scene_P01-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
   auto plod_geometry2(plodLoader.load_geometry("hunter2", "data/objects/Area-1_Warrior-scene_P01-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
   auto plod_geometry3(plodLoader.load_geometry("hunter3", "data/objects/Area-1_Warrior-scene_P01-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
@@ -534,18 +535,20 @@ int main(int argc, char** argv) {
   auto plod_geometry10(plodLoader.load_geometry("hunter10", "data/objects/Area-1_Warrior-scene_P03-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
   auto plod_geometry11(plodLoader.load_geometry("hunter11", "data/objects/TLS_Seradina_Rock-12C_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
 #else
-  auto plod_geometry1(plodLoader.load_geometry("hunter1",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry2(plodLoader.load_geometry("hunter2",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry3(plodLoader.load_geometry("hunter3",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry4(plodLoader.load_geometry("hunter4",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P02-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry5(plodLoader.load_geometry("hunter5",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P02-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry6(plodLoader.load_geometry("hunter6",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P02-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry7(plodLoader.load_geometry("hunter7",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry8(plodLoader.load_geometry("hunter8",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry9(plodLoader.load_geometry("hunter9",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry10(plodLoader.load_geometry("hunter10", "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry11(plodLoader.load_geometry("hunter11", "/mnt/pitoti/3d_pitoti/seradina_12c/rock/TLS_Seradina_Rock-12C_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
+  auto plod_geometry1(plodLoader.load_geometry("hunter1",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry1(plodLoader.load_geometry("hunter1",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry2(plodLoader.load_geometry("hunter2",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry3(plodLoader.load_geometry("hunter3",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry4(plodLoader.load_geometry("hunter4",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P02-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry5(plodLoader.load_geometry("hunter5",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P02-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry6(plodLoader.load_geometry("hunter6",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P02-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry7(plodLoader.load_geometry("hunter7",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry8(plodLoader.load_geometry("hunter8",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry9(plodLoader.load_geometry("hunter9",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry10(plodLoader.load_geometry("hunter10", "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry11(plodLoader.load_geometry("hunter11", "/mnt/pitoti/3d_pitoti/seradina_12c/rock/TLS_Seradina_Rock-12C_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
 #endif
+  setup_plod_node(plod_geometry0);
   setup_plod_node(plod_geometry1);
   setup_plod_node(plod_geometry2);
   setup_plod_node(plod_geometry3);
@@ -559,6 +562,7 @@ int main(int argc, char** argv) {
   setup_plod_node(plod_geometry11);
 
   // connect scene graph
+  graph.add_node("/transform/model_xf", plod_geometry0);
   graph.add_node("/transform/model_xf", plod_geometry1);
   graph.add_node("/transform/model_xf", plod_geometry2);
   graph.add_node("/transform/model_xf", plod_geometry3);
@@ -571,7 +575,7 @@ int main(int argc, char** argv) {
   graph.add_node("/transform/model_xf", plod_geometry10);
   graph.add_node("/transform/model_xf", plod_geometry11);
 
-  model_xf->translate(-plod_geometry1->get_bounding_box().center());
+  model_xf->translate(-plod_geometry0->get_bounding_box().center());
 
 #else
   auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE));
