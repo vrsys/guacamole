@@ -128,14 +128,50 @@
             float d_y_o = texture(p01_linear_depth_texture, pos_ss_norm - vec2(0.0, step_size)).r;
             float d_y_u = texture(p01_linear_depth_texture, pos_ss_norm + vec2(0.0, step_size)).r;
 
+
+
             return length(vec2((d_x_r - d_x_l) * 0.5, (d_y_u - d_y_o) * 0.5)) * 1000.0;
         }
         
         void first_derivation_lens_effect() {
-            vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
-            vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
 
-            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(get_first_deviation_at_frag_coord(pos_ss_norm), -0.01, 0.01));
+            float step_size_in_os = 0.001; //TODO: uniform
+
+            vec3 binormal = vec3(lens_normal.y, -lens_normal.x, 0.0);
+            binormal = normalize(binormal);
+            vec3 tangent = normalize(cross(binormal, lens_normal));
+
+            vec3 pos_os = (inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz;
+            
+            vec3 step_hori = binormal * step_size_in_os;
+            vec3 step_vert = tangent * step_size_in_os;
+
+            vec3 pos_l = pos_os - step_hori;
+            vec3 pos_r = pos_os + step_hori;
+            vec3 pos_o = pos_os - step_vert;
+            vec3 pos_u = pos_os + step_vert;
+
+            mat4 model_view_projection_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix; //TODO: use gua_model_view_projection_matrix
+
+            vec4 pos_l_ss = model_view_projection_matrix * vec4(pos_l, 1.0);
+            vec4 pos_r_ss = model_view_projection_matrix * vec4(pos_r, 1.0);
+            vec4 pos_o_ss = model_view_projection_matrix * vec4(pos_o, 1.0);
+            vec4 pos_u_ss = model_view_projection_matrix * vec4(pos_u, 1.0);
+
+            vec2 pos_l_ss_norm = (pos_l_ss.xy / pos_l_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_r_ss_norm = (pos_r_ss.xy / pos_r_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_o_ss_norm = (pos_o_ss.xy / pos_o_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_u_ss_norm = (pos_u_ss.xy / pos_u_ss.w) * 0.5f + vec2(0.5, 0.5);
+            
+            float d_x_l = texture(p01_linear_depth_texture, pos_l_ss_norm).r;
+            float d_x_r = texture(p01_linear_depth_texture, pos_r_ss_norm).r;
+            float d_y_o = texture(p01_linear_depth_texture, pos_o_ss_norm).r;
+            float d_y_u = texture(p01_linear_depth_texture, pos_u_ss_norm).r;
+
+            float d = length(vec2((d_x_r - d_x_l) * 0.5, (d_y_u - d_y_o) * 0.5)) * 100.0;
+
+            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(d, -0.005, 0.005));
+            //gua_color = vec3(d);
         }
 
         void second_derivation_lens_effect() {
