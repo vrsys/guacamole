@@ -106,12 +106,18 @@ vec3 sRGB_to_linear_simple(vec3 sRGB)
 
 struct ShadingTerms
 {
-  vec3 N;
+  // Surface position
   vec3 P;
+  // Viewing direction (from surface position to eye)
+  vec3 V;
+  // Shading normal
+  vec3 N;
+  // Camera (Eye) position
   vec3 E;
+
+  // parameters for our BSDF
   float roughness;
   vec3 cspec;
-  vec3 Vn;
   vec3 diffuse;
 };
 
@@ -128,7 +134,7 @@ void gua_prepare_shading(out ShadingTerms T, vec3 color, vec3 normal, vec3 posit
   T.cspec = mix(vec3(0.04), albedo, metalness);
   vec3 cdiff = mix(albedo, vec3(0.0),  metalness);
 
-  T.Vn = normalize(T.E - T.P);
+  T.V = normalize(T.E - T.P);
   T.diffuse = lambert(cdiff);
 }
 
@@ -140,13 +146,13 @@ vec3 gua_shade(int light_id, in ShadingTerms T)
   bool shaded = gua_calculate_light(light_id,
                                     T.N, T.P, L, R);
   if (shaded) {
-    vec3 H = normalize(L + T.Vn);
+    vec3 H = normalize(L + T.V);
     float NdotL = clamp(dot(T.N, L), 0.0, 1.0);
 
     vec3 Cl = R /* (1.0-T.emit)*/;
 
     vec3 F = Fresnel(T.cspec, H, L);
-    vec3 D_Vis = vec3(D_and_Vis(T.roughness, T.N, H, T.Vn, L));
+    vec3 D_Vis = vec3(D_and_Vis(T.roughness, T.N, H, T.V, L));
     vec3 brdf = mix(T.diffuse * float(gua_lights[light_id].diffuse_enable), D_Vis * float(gua_lights[light_id].specular_enable), F);
     col = Cl * brdf * NdotL;
   }
