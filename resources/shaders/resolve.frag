@@ -91,9 +91,9 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
 
   vec3 frag_color = vec3(0.0);
   for (int i = 0; i < gua_lights_num; ++i) {
-      // is it either a visible spot/point light or a sun light ?
       float screen_space_shadow = compute_screen_space_shadow (i, position);
 
+      // is it either a visible spot/point light or a sun light ?
       if ( ((bitset[i>>5] & (1u << (i%32))) != 0)
          || i >= gua_lights_num - gua_sun_lights_num )
       {
