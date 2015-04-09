@@ -122,7 +122,7 @@
 
         void first_derivation_lens_effect() {
 
-            float step_size_in_os = 0.001; //TODO: uniform
+            //float step_size_in_os = 0.001; //TODO: uniform
 
             vec3 binormal = vec3(lens_normal.y, -lens_normal.x, 0.0);
             binormal = normalize(binormal);
@@ -169,7 +169,7 @@
             vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
             vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
 
-            float step_size_in_os = 0.001; //TODO: uniform
+            //float step_size_in_os = 0.001; //TODO: uniform
 
             vec3 binormal = vec3(lens_normal.y, -lens_normal.x, 0.0);
             binormal = normalize(binormal);
@@ -214,7 +214,7 @@
             vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
             vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
 
-            float step_size_in_os = 0.005; //TODO: uniform
+            //float step_size_in_os = 0.005; //TODO: uniform
 
             vec3 binormal = vec3(lens_normal.y, -lens_normal.x, 0.0);
             binormal = normalize(binormal);
@@ -222,8 +222,8 @@
 
             vec3 pos_os = (inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz;
 
-            vec3 step_hori = binormal * step_size_in_os;
-            vec3 step_vert = tangent * step_size_in_os;
+            vec3 step_hori = binormal * step_size_in_ss;
+            vec3 step_vert = tangent * step_size_in_ss;
 
             vec3 pos_l = pos_os - step_hori;
             vec3 pos_r = pos_os + step_hori;
@@ -277,6 +277,7 @@
                 edge();
                 break;
             default : 
+                //gua_color = vec3(1.0, 0.0, 0.0);
               break;
           }
         }
@@ -318,6 +319,7 @@
                 case 3: //square_ws 
                     break;
                 default:
+                    
                     break;
                 }
               
