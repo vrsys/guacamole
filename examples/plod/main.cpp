@@ -101,7 +101,8 @@ struct LensConfig {
                     distance, 
                     normals,
                     first_derivation,
-                    second_derivation};
+                    second_derivation,
+                    edge};
 
     enum LensGeoMode { sphere_os = 0x0,
         sphere_ss,
@@ -293,7 +294,7 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfi
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'y':
-      lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 5);
+      lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 6);
     std::cout << "Set lens vis_mode to " << lens.vis_mode << std::endl;
     // 0 = off
     // 1 = distance to plane
