@@ -188,6 +188,7 @@ void SceneGraph::add_camera_node(node::CameraNode* camera) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void SceneGraph::remove_camera_node(node::CameraNode* camera) {
+  if (camera_nodes_.empty()) return;
   auto pos(std::find(camera_nodes_.begin(), camera_nodes_.end(), camera));
 
   if (pos != camera_nodes_.end()) {

@@ -95,8 +95,14 @@ std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() cons
 
 void Material::apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    for (auto const& uniform : uniforms_) {
+
+    try {
+      for (auto const& uniform : uniforms_) {
         uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
+      }
+    }
+    catch ( std::exception& e ) {
+      Logger::LOG_WARNING << "Error: Material::apply_uniforms(): Unable to set ViewDependentUniform.\n";
     }
 }
 
