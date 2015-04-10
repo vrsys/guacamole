@@ -101,7 +101,8 @@ struct LensConfig {
                     distance, 
                     normals,
                     first_derivation,
-                    second_derivation};
+                    second_derivation,
+                    edge};
 
     enum LensGeoMode { sphere_os = 0x0,
         sphere_ss,
@@ -119,6 +120,8 @@ struct LensConfig {
   gua::math::vec2 square_ss_max;
   gua::math::vec3 square_ws_min;
   gua::math::vec3 square_ws_max;
+  float step_size_ss;
+  float step_size_os;
   bool dirty_flag;
 };
 
@@ -285,15 +288,19 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfi
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'o':
-    lens.radius = std::max(0.01f, 0.9f * lens.radius);
-    std::cout << "Set lens  to " << lens.radius << std::endl;
+      lens.step_size_ss = std::max(0.001f, 0.9f * lens.step_size_ss);
+      lens.step_size_os = std::max(0.001f, 0.9f * lens.step_size_os);
+      std::cout << "Set lens step_size_ss to " << lens.step_size_ss;
+      std::cout << " Set lens step_size_os to " << lens.step_size_os << std::endl;
     break;
   case 'l':
-    lens.radius = std::max(0.01f, 0.9f * lens.radius);
-    std::cout << "Set lens radius to " << lens.radius << std::endl;
+      lens.step_size_ss = std::min(1.0f, 1.1f * lens.step_size_ss);
+      lens.step_size_os = std::min(1.0f, 1.1f * lens.step_size_os);
+      std::cout << "Set lens step_size_ss to " << lens.step_size_ss;
+      std::cout << " Set lens step_size_os to " << lens.step_size_os << std::endl;
     break;
   case 'y':
-      lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 5);
+      lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 6);
     std::cout << "Set lens vis_mode to " << lens.vis_mode << std::endl;
     // 0 = off
     // 1 = distance to plane
@@ -687,6 +694,8 @@ int main(int argc, char** argv) {
       gua::math::vec2(lense_init_size),
       gua::math::vec3(-lense_init_size),
       gua::math::vec3(lense_init_size),
+      0.001,
+      0.1,
       true };
 
   auto window = std::make_shared<gua::GlfwWindow>();
@@ -765,6 +774,8 @@ int main(int argc, char** argv) {
     plod_rough->set_uniform("lens_square_ss_max", lens_config.square_ss_max);
     plod_rough->set_uniform("lens_square_ws_min", lens_config.square_ws_min);
     plod_rough->set_uniform("lens_square_ws_max", lens_config.square_ws_max);
+    plod_rough->set_uniform("step_size_in_os", lens_config.step_size_os);
+    plod_rough->set_uniform("step_size_in_ss", lens_config.step_size_ss);
 
     if (rotate_light) {
       // modify scene
