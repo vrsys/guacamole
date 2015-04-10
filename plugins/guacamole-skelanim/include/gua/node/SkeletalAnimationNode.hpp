@@ -24,14 +24,12 @@
 
 // guacamole headers
 #include <gua/node/GeometryNode.hpp>
-#include <gua/renderer/SkinnedMeshResource.hpp>
-#include <gua/utils/SkeletalAnimation.hpp>
-#include <gua/utils/Bone.hpp>
 
 namespace gua {
 
-// class SkinnedMeshResource;
-class SkeletalAnimationLoader;
+class SkinnedMeshResource;
+class Bone;
+class SkeletalAnimation;
 
 namespace node {
 
@@ -43,8 +41,6 @@ namespace node {
 class GUA_DLL SkeletalAnimationNode : public GeometryNode {
 
 public : // typedef/enums/friends
-
-  friend class ::gua::SkeletalAnimationLoader;
 
   SkeletalAnimationNode(std::string const& node_name = "",
               std::vector<std::string> const& geometry_description = {},
@@ -105,8 +101,7 @@ public : // methods
   std::vector<std::shared_ptr<SkinnedMeshResource>> const& get_geometries() const;
 
 //animation related methods
-  void add_animations(aiScene const& scene, std::string const& name);
-  void add_animations(fbxsdk_2015_1::FbxScene& scene, std::string const& name);
+  void add_animations(std::string const& file_name, std::string const& animation_name);
 
   std::string const& get_animation_1() const;
   void set_animation_1(std::string const&);

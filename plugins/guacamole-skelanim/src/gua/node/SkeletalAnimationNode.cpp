@@ -25,12 +25,12 @@
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/node/RayNode.hpp>
-#include <gua/renderer/SkeletalAnimationLoader.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 #include <gua/utils/SkeletalTransformation.hpp>
-// external headers
-#include <fbxsdk.h>
-#include <queue>
+#include <gua/renderer/SkeletalAnimationLoader.hpp>
+#include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/utils/SkeletalAnimation.hpp>
+#include <gua/utils/Bone.hpp>
 
 namespace gua {
 namespace node {
@@ -122,45 +122,12 @@ namespace node {
   
   ////////////////////////////////////////////////////////////////////////////////
 
-  void SkeletalAnimationNode::add_animations(aiScene const& scene, std::string const& name) {
-    if(!scene.HasAnimations()) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
+  void SkeletalAnimationNode::add_animations(std::string const& file_name, std::string const& name) {
    
-    for(uint i = 0; i < scene.mNumAnimations; ++i) {
-      std::string new_name = (scene.mNumAnimations == 1) ? name : name + std::to_string(i);
-      animations_.insert(std::make_pair(new_name, SkeletalAnimation{*scene.mAnimations[i], new_name}));
-    }
+    std::vector<SkeletalAnimation> anims{SkeletalAnimationLoader{}.load_animation(file_name, name)};
 
-    has_anims_ = animations_.size() > 0;
-  }
-
-  void SkeletalAnimationNode::add_animations(FbxScene& scene, std::string const& name) {
-    std::vector<std::shared_ptr<SkeletalAnimation>> animations{};
-    unsigned num_anims = scene.GetSrcObjectCount<FbxAnimStack>();
-    if(num_anims <= 0) Logger::LOG_WARNING << "scene contains no animations!" << std::endl;
-   
-    std::vector<fbxsdk_2015_1::FbxNode*> nodes{};
-    // traverse hierarchy and collect pointers to all nodes
-    std::queue<fbxsdk_2015_1::FbxNode*> node_stack{};
-    node_stack.push(scene.GetRootNode());
-    while(!node_stack.empty()) {
-      fbxsdk_2015_1::FbxNode* curr_node = node_stack.front(); 
-      nodes.push_back(curr_node);
-
-      for(int i = 0; i < curr_node->GetChildCount(); ++i) {
-        FbxSkeleton const* skelnode{curr_node->GetChild(i)->GetSkeleton()};
-        if(skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector && curr_node->GetChild(i)->GetChildCount() == 0) {
-          Logger::LOG_DEBUG << curr_node->GetChild(i)->GetName() << " is effector, ignoring it" << std::endl;
-        }
-        else {
-          node_stack.push(curr_node->GetChild(i));
-        }
-      }
-      node_stack.pop();
-    }
-
-    for(uint i = 0; i < num_anims; ++i) {
-      std::string new_name = (num_anims == 1) ? name : name + std::to_string(i);
-      animations_.insert(std::make_pair(new_name, SkeletalAnimation{scene.GetSrcObject<FbxAnimStack>(i), nodes, new_name}));
+    for(uint i = 0; i < anims.size(); ++i) {
+      animations_.insert(std::make_pair(anims[i].get_name(), anims[i]));
     }
 
     has_anims_ = animations_.size() > 0;

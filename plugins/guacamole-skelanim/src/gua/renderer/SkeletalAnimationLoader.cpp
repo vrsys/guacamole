@@ -26,13 +26,16 @@
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
-#include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+#include <gua/node/SkeletalAnimationNode.hpp>
+#include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/utils/Bone.hpp>
 
 // external headers
+#include <queue>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -47,9 +50,9 @@ SkeletalAnimationLoader::SkeletalAnimationLoader()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> SkeletalAnimationLoader::load_geometry(std::string const& file_name, std::string const& node_name, unsigned flags)
+std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load_geometry(std::string const& file_name, std::string const& node_name, unsigned flags)
 {
-  std::shared_ptr<node::Node> new_node;
+  std::shared_ptr<node::SkeletalAnimationNode> new_node;
 
   bool fileload_succeed = false;
 
@@ -86,22 +89,20 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load_geometry(std::string c
   return new_node;
 }
 
-void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, std::string const& file_name, std::string const& animation_name)
+std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(std::string const& file_name, std::string const& animation_name)
 {
-  std::shared_ptr<node::SkeletalAnimationNode> skelNode = std::dynamic_pointer_cast<node::SkeletalAnimationNode, node::Node>(node);
-
-  if(!skelNode) Logger::LOG_ERROR << "Node is no SkeletalAnimationNode" << std::endl;
+  std::vector<SkeletalAnimation> animations{};
 
   if (!is_supported(file_name)) {
     Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
-    return;
+    return animations;
   }
 
   TextFile file(file_name);
 
   if (!file.is_valid()) {
     Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": File does not exist!" << std::endl;
-    return;
+    return animations;
   }
 
   auto point_pos(file_name.find_last_of("."));
@@ -130,8 +131,36 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
     sdk_manager->SetIOSettings(ios);
 
     FbxScene* scene = load_fbx_file(sdk_manager, file_name);
-    
-    skelNode->add_animations(*scene,animation_name);
+
+  // do actual importing
+    unsigned num_anims = scene->GetSrcObjectCount<FbxAnimStack>();
+    if(num_anims <= 0) Logger::LOG_WARNING << "Object \"" << file_name << "\" contains no animations!" << std::endl;
+   
+    std::vector<fbxsdk_2015_1::FbxNode*> nodes{};
+    // traverse hierarchy and collect pointers to all nodes
+    std::queue<fbxsdk_2015_1::FbxNode*> node_stack{};
+
+    node_stack.push(scene->GetRootNode());
+    while(!node_stack.empty()) {
+      fbxsdk_2015_1::FbxNode* curr_node = node_stack.front(); 
+      nodes.push_back(curr_node);
+
+      for(int i = 0; i < curr_node->GetChildCount(); ++i) {
+        FbxSkeleton const* skelnode{curr_node->GetChild(i)->GetSkeleton()};
+        if(skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector && curr_node->GetChild(i)->GetChildCount() == 0) {
+          Logger::LOG_DEBUG << curr_node->GetChild(i)->GetName() << " is effector, ignoring it" << std::endl;
+        }
+        else {
+          node_stack.push(curr_node->GetChild(i));
+        }
+      }
+      node_stack.pop();
+    }
+
+    for(uint i = 0; i < num_anims; ++i) {
+      std::string new_name = (num_anims == 1) ? animation_name : animation_name + std::to_string(i);
+      animations.push_back(SkeletalAnimation{scene->GetSrcObject<FbxAnimStack>(i), nodes, new_name});
+    }
 
     sdk_manager->Destroy();
   }
@@ -154,17 +183,23 @@ void SkeletalAnimationLoader::load_animation(std::shared_ptr<node::Node>& node, 
     if (!error.empty()) {
       Logger::LOG_WARNING << "SkeletalAnimationLoader::load_animation(): Importing failed, " << error << std::endl;
     }
-
+  
     if(scene->HasAnimations()) {
-      skelNode->add_animations(*scene,animation_name);
+    // do actual importing
+      for(uint i = 0; i < scene->mNumAnimations; ++i) {
+        std::string new_name = (scene->mNumAnimations == 1) ? animation_name : animation_name + std::to_string(i);
+        animations.push_back(SkeletalAnimation{*scene->mAnimations[i], new_name});
+      }
     }
     else {
-      Logger::LOG_WARNING << "object \"" << file_name << "\" contains no animations!" << std::endl;
+      Logger::LOG_WARNING << "Object \"" << file_name << "\" contains no animations!" << std::endl;
     }
   }
+
+  return animations;
 }
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::Node> SkeletalAnimationLoader::create_geometry_from_file(std::string const& node_name,
+std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::create_geometry_from_file(std::string const& node_name,
   std::string const& file_name,
   unsigned flags)
 {
@@ -179,11 +214,11 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_geometry_from_file(s
     return new_node;
   }
 
-  return std::make_shared<node::TransformNode>(node_name);
+  return std::make_shared<node::SkeletalAnimationNode>(node_name);
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> SkeletalAnimationLoader::create_geometry_from_file(std::string const& node_name,
+std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::create_geometry_from_file(std::string const& node_name,
   std::string const& file_name,
   std::shared_ptr<Material> const& fallback_material,
   unsigned flags)
@@ -198,12 +233,12 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::create_geometry_from_file(s
     return new_node;
   }
 
-  return std::make_shared<node::TransformNode>(node_name);
+  return std::make_shared<node::SkeletalAnimationNode>(node_name);
 }
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& file_name, std::string const& node_name,
+std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(std::string const& file_name, std::string const& node_name,
  unsigned flags) {
 
   TextFile file(file_name);
@@ -241,7 +276,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
       sdk_manager->SetIOSettings(ios);
       FbxScene* scene = load_fbx_file(sdk_manager, file_name);
 
-      std::shared_ptr<node::Node> new_node = get_node(scene, file_name, node_name, flags);
+      std::shared_ptr<node::SkeletalAnimationNode> new_node = get_node(scene, file_name, node_name, flags);
       sdk_manager->Destroy();
 
       return new_node;
@@ -289,7 +324,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
 
       aiScene const* scene(importer->GetScene());
 
-      std::shared_ptr<node::Node> new_node;
+      std::shared_ptr<node::SkeletalAnimationNode> new_node;
 
       std::string error = importer->GetErrorString();
       if (!error.empty()) {
@@ -316,7 +351,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::load(std::string const& fil
 }
 
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
+std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(FbxScene* scene,
   std::string const& file_name,
   std::string const& node_name,
   unsigned flags) {
@@ -365,7 +400,7 @@ std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(FbxScene* scene,
 }
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> SkeletalAnimationLoader::get_node(aiScene const* ai_scene,
+std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(aiScene const* ai_scene,
   std::string const& file_name,
   std::string const& node_name,
   unsigned flags) {
@@ -440,18 +475,16 @@ bool SkeletalAnimationLoader::is_supported(std::string const& file_name) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
+void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::SkeletalAnimationNode> const& node,
   std::shared_ptr<Material> const& fallback_material)
-{
-  auto g_node(std::dynamic_pointer_cast<node::SkeletalAnimationNode>(root));
-  
-  if(g_node) {
-    auto& materials = g_node->get_materials();
+{  
+  if(node) {
+    auto& materials = node->get_materials();
     for(unsigned i = 0; i < materials.size(); ++i) {
-      if(!materials[i]) g_node->set_material(fallback_material, i);
+      if(!materials[i]) node->set_material(fallback_material, i);
     }
 
-    g_node->update_cache();
+    node->update_cache();
   }
 }
 
