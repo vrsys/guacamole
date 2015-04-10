@@ -62,11 +62,16 @@ void ViewDependentUniform::apply(RenderContext const& ctx,
                                  std::string const& name, int view,
                                  scm::gl::program_ptr const& prog,
                                  unsigned location) const {
-  auto overwrite(uniforms_.find(view));
-  if (overwrite != uniforms_.end()) {
-    overwrite->second.apply(ctx, name, prog, location);
-  } else {
-    default_.apply(ctx, name, prog, location);
+  try {
+    auto overwrite(uniforms_.find(view));
+    if (overwrite != uniforms_.end()) {
+      overwrite->second.apply(ctx, name, prog, location);
+    } else {
+      default_.apply(ctx, name, prog, location);
+    }
+  }
+  catch (std::exception& e) {
+    Logger::LOG_WARNING << "Error: ViewDependentUniform::apply(): Unable to apply ViewDependentUniform.\n";
   }
 }
 
