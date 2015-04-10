@@ -23,9 +23,10 @@
 #include <gua/renderer/SkeletalAnimationRenderer.hpp>
 
 #include <gua/node/SkeletalAnimationNode.hpp>
-
+#include <gua/renderer/SkinnedMeshResource.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/ABuffer.hpp>
 
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
