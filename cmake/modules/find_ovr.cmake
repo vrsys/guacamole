@@ -5,14 +5,14 @@ SET(OVR_INCLUDE_SEARCH_DIRS
   ${GLOBAL_EXT_DIR}/inc/ovr/include
   ${OVR_INCLUDE_DIRS}
   ${OVR_INCLUDE_SEARCH_DIR}
-  /opt/OculusSDK/LibOVR/Include
+  /opt/OculusSDK/current/LibOVR/Include
 )
 
 SET(OVR_LIBRARY_SEARCH_DIRS
   ${GLOBAL_EXT_DIR}/lib
   ${OVR_LIBRARY_DIRS}
   ${OVR_LIBRARY_SEARCH_DIR}
-  /opt/OculusSDK/LibOVR/Lib/Linux/Release/x86_64
+  /opt/OculusSDK/current/LibOVR/Lib/Linux/Release/x86_64
 )
 
 ##############################################################################
