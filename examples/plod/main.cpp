@@ -782,7 +782,7 @@ int main(int argc, char** argv) {
       //std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
       //  << window->get_rendering_fps() << ", app fps: "
       //  << camera->get_application_fps() << std::endl;
-      std::cout << lens_config.screen_position << " , " << lens_config.world_position << " , " << lens_config.world_normal << " , " << lens_config.radius << std::endl;
+      //std::cout << lens_config.screen_position << " , " << lens_config.world_position << " , " << lens_config.world_normal << " , " << lens_config.radius << std::endl;
       
     }
 
