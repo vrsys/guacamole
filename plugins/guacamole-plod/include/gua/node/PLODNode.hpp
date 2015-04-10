@@ -64,6 +64,8 @@ public:  // methods
 
   std::shared_ptr<PLODResource> const& get_geometry() const;
 
+  /*virtual*/ math::mat4 get_world_transform() const override;
+
   std::string const& get_geometry_description() const;
   void               set_geometry_description(std::string const& v);
 
