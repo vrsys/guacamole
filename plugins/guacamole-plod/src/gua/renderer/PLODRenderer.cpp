@@ -658,8 +658,12 @@ namespace gua {
        std::string const gpu_query_name_normalization_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / PLODRenderer::NormalizationPass";
        pipe.begin_gpu_query(ctx, gpu_query_name_normalization_pass);
 
+
        normalization_pass_program_->use(ctx);
        {
+
+         //ctx.render_context->set_depth_stencil_state(no_depth_test_with_writing_depth_stencil_state_);
+         
          ctx.render_context->bind_texture(accumulation_pass_color_result_, nearest_sampler_state_, 0);
          normalization_pass_program_->apply_uniform(ctx, "p02_color_texture", 0);
 

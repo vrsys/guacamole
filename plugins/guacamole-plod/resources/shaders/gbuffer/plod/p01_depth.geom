@@ -21,6 +21,7 @@ out VertexData {
   vec2 pass_uv_coords;
   float pass_log_depth;
   float pass_es_linear_depth;
+  float pass_es_shift;
 } VertexOut;
 
 
@@ -54,12 +55,13 @@ void main() {
         float es_linear_depth_corner = (gua_model_view_matrix * q_pos_ms).z;
 
         es_shift       = abs(es_linear_depth_corner - es_linear_depth_center) * es_shift_scale;
-        gl_Position.z  = ( ( -(es_linear_depth_corner /*+ es_shift*/ ) ) / gua_clip_far);
+        gl_Position.z  = ( ( -(es_linear_depth_corner + es_shift ) ) / gua_clip_far);
         gl_Position.z  = (gl_Position.z - 0.5) * 2.0;
         gl_Position.z  *= gl_Position.w;
         
         VertexOut.pass_es_linear_depth = (-es_linear_depth_corner) / gua_clip_far;
 
+        VertexOut.pass_es_shift = es_shift;
         EmitVertex();
       }
 
