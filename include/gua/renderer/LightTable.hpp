@@ -26,7 +26,10 @@ public:
     unsigned     casts_shadow;    // bool
 
     float        shadow_offset;
-    math::mat4f  shadow_map_coords_mat;
+    math::mat4f  shadow_map_coords_mat_0;
+    math::mat4f  shadow_map_coords_mat_1;
+    math::mat4f  shadow_map_coords_mat_2;
+    math::mat4f  shadow_map_coords_mat_3;
     math::vec2ui shadow_map;
     float        light_source_size;
     float        pad;

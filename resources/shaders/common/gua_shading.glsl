@@ -45,7 +45,7 @@ float gua_get_shadow(int light_id, vec3 position, vec2 lookup_offset, float acne
     return 1.0;
   }
 
-  vec4 smap_coords = gua_lights[light_id].shadow_map_coords_mat * vec4(position, 1.0) + vec4(lookup_offset, 0, 0);
+  vec4 smap_coords = gua_lights[light_id].shadow_map_coords_mat_0 * vec4(position, 1.0) + vec4(lookup_offset, 0, 0);
 
   float sum = 0;
   int x, y;

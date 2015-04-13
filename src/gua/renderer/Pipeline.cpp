@@ -41,6 +41,16 @@
 // external headers
 #include <iostream>
 
+namespace {
+  const gua::math::mat4f LIGHT_COORDS_BIAS(
+    0.5, 0.0, 0.0, 0.0,
+    0.0, 0.5, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0,
+    0.5, 0.5, 0.5, 1.0
+  );
+}
+
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,12 +242,28 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Texture2D> Pipeline::render_shadow_map(node::LightNode* light,
-                                                       Frustum const& frustum) {
+void Pipeline::render_shadow_map(node::LightNode* light,
+                                 LightTable::LightBlock& light_block) {
 
     if (!shadow_map_res_) {
       shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
     }
+
+    // calculate light frustum
+    math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
+    screen_transform = light->get_cached_world_transform() * screen_transform;
+
+    Frustum frustum = Frustum::perspective(
+      light->get_cached_world_transform(), screen_transform,
+      get_scene_camera().config.near_clip(), get_scene_camera().config.far_clip()
+    );
+
+    light_block.shadow_map_coords_mat_0 = LIGHT_COORDS_BIAS * math::mat4f(frustum.get_projection() * frustum.get_view());
+    light_block.shadow_map_coords_mat_1 = math::mat4f::identity();
+    light_block.shadow_map_coords_mat_2 = math::mat4f::identity();
+    light_block.shadow_map_coords_mat_3 = math::mat4f::identity();
+
+    light_block.shadow_offset = light->data.get_shadow_offset();
 
     auto& current_mask(current_camera_.config.mask());
 
@@ -245,7 +271,8 @@ std::shared_ptr<Texture2D> Pipeline::render_shadow_map(node::LightNode* light,
     auto cached_shadow_map(shadow_map_res_->used_shadow_maps.find(light));
 
     if (cached_shadow_map != shadow_map_res_->used_shadow_maps.end() && cached_shadow_map->second.render_mask == current_mask) {
-      return cached_shadow_map->second.shadow_map->get_depth_buffer();
+      light_block.shadow_map = cached_shadow_map->second.shadow_map->get_depth_buffer()->get_handle(context_);
+      return;
     }
 
     // if not, find an unused shadow map with the correct size
@@ -305,7 +332,7 @@ std::shared_ptr<Texture2D> Pipeline::render_shadow_map(node::LightNode* light,
                          current_camera_.config.get_resolution(), false);
     bind_camera_uniform_block(0);
 
-    return shadow_map->get_depth_buffer();
+    light_block.shadow_map = shadow_map->get_depth_buffer()->get_handle(context_);
   }
 
   ////////////////////////////////////////////////////////////////////////////////

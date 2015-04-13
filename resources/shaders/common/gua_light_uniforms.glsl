@@ -14,7 +14,10 @@ struct LightSource {
   bool   casts_shadow;
 
   float  shadow_offset;
-  mat4   shadow_map_coords_mat;
+  mat4   shadow_map_coords_mat_0;
+  mat4   shadow_map_coords_mat_1;
+  mat4   shadow_map_coords_mat_2;
+  mat4   shadow_map_coords_mat_3;
   uvec2  shadow_map;
   float  light_source_size;
   float  pad;
