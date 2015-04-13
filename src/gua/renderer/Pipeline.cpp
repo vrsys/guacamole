@@ -254,11 +254,13 @@ void Pipeline::render_shadow_map(node::LightNode* light,
 
     // if not, find an unused shadow map with the correct size
     std::shared_ptr<ShadowMap> shadow_map;
-    unsigned map_size(light->data.get_type() == node::LightNode::Type::SUN
-                      ? light->data.shadow_map_size() * 2
-                      : light->data.shadow_map_size());
 
     unsigned viewport_size(light->data.shadow_map_size());
+    unsigned map_size(light->data.get_type() == node::LightNode::Type::SUN
+                      ? viewport_size * 2
+                      : viewport_size);
+
+    light_block.shadow_map_portion = viewport_size * 1.f / map_size;
 
 
     for (auto it(shadow_map_res_->unused_shadow_maps.begin()); it != shadow_map_res_->unused_shadow_maps.end(); ++it) {
@@ -286,8 +288,8 @@ void Pipeline::render_shadow_map(node::LightNode* light,
 
 
     // rendering lambda
-    auto render_shadows = [this, &light_block, map_size](Frustum const& frustum, unsigned split_id) {
-      light_block.projection_view_mats[split_id] = math::mat4f(frustum.get_projection() * frustum.get_view());
+    auto render_shadows = [this, &light_block, viewport_size](Frustum const& frustum, unsigned cascade_id) {
+      light_block.projection_view_mats[cascade_id] = math::mat4f(frustum.get_projection() * frustum.get_view());
       current_scene_ = current_graph_->serialize(frustum,
                                                  current_camera_.config.enable_frustum_culling(),
                                                  current_camera_.config.mask());
@@ -296,7 +298,7 @@ void Pipeline::render_shadow_map(node::LightNode* light,
                            frustum,
                            current_scene_->clipping_planes,
                            current_camera_.config.get_view_id(),
-                           math::vec2ui(map_size, map_size), true);
+                           math::vec2ui(viewport_size, viewport_size), true);
       bind_camera_uniform_block(0);
 
 
@@ -372,8 +374,9 @@ void Pipeline::render_shadow_map(node::LightNode* light,
 
           for (auto const& corner: corners_in_sun_space) {
             float radius = scm::math::length(corner-center_in_sun_space);
-            if (radius > radius_in_sun_space)
+            if (radius > radius_in_sun_space) {
               radius_in_sun_space = radius;
+            }
           }
 
           // center of front plane of frustum
@@ -425,6 +428,7 @@ void Pipeline::render_shadow_map(node::LightNode* light,
           );
 
           render_shadows(shadow_frustum, cascade);
+
         }
       }
 
