@@ -45,8 +45,8 @@ class GUA_DLL PipelinePassDescription {
   friend class PipelinePass;
 
   void touch();
-  std::string const& name() const; 
-  unsigned mod_count() const; 
+  std::string const& name() const;
+  unsigned mod_count() const;
 
  protected:
 
@@ -60,11 +60,12 @@ class GUA_DLL PipelinePassDescription {
   std::string name_ = "";
 
   bool vertex_shader_is_file_name_ = true;
-  bool fragment_shader_is_file_name_ = true;  
+  bool fragment_shader_is_file_name_ = true;
   bool geometry_shader_is_file_name_ = true;
 
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
+
   bool enable_for_shadows_ = false;
   unsigned mod_count_ = 0; 
 
@@ -120,7 +121,7 @@ class GUA_DLL PipelinePass {
 
   PipelinePass() = default;
   PipelinePass(PipelinePassDescription const&, RenderContext const&, SubstitutionMap const&);
-  
+
   virtual void upload_program(PipelinePassDescription const& desc, RenderContext const& ctx);
 
   std::shared_ptr<ShaderProgram> shader_ = nullptr;

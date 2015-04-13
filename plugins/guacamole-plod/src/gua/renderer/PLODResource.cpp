@@ -134,7 +134,7 @@ void PLODResource::ray_test(Ray const& ray,
     math::vec3(0.f, 1.f, 0.f),
     math::vec2(0.f, 0.f));
 
-  const auto model_transform = owner->get_world_transform();
+  const auto model_transform = owner->get_cached_world_transform();
   const auto world_origin = ray.origin_;
   const auto world_direction = scm::math::normalize(ray.direction_);
   

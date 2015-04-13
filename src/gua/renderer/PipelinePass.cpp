@@ -34,20 +34,20 @@
 
 namespace gua {
 
-  ////////////////////////////////////////////////////////////////////////////////
-  void PipelinePassDescription::touch() { 
-    ++mod_count_; 
-  }
+////////////////////////////////////////////////////////////////////////////////
+void PipelinePassDescription::touch() {
+  ++mod_count_;
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  std::string const& PipelinePassDescription::name() const { 
-    return name_; 
-  }
+////////////////////////////////////////////////////////////////////////////////
+std::string const& PipelinePassDescription::name() const {
+  return name_;
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  unsigned PipelinePassDescription::mod_count() const { 
-    return mod_count_; 
-  }
+////////////////////////////////////////////////////////////////////////////////
+unsigned PipelinePassDescription::mod_count() const {
+  return mod_count_;
+}
 
   ////////////////////////////////////////////////////////////////////////////////
 PipelinePass::PipelinePass(PipelinePassDescription const& d,
@@ -135,9 +135,9 @@ void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderCon
     std::string f_shader = desc.fragment_shader_is_file_name_
         ? factory.read_shader_file(desc.fragment_shader_) : desc.fragment_shader_;
 #else
-    std::string v_shader = desc.vertex_shader_is_file_name_ 
+    std::string v_shader = desc.vertex_shader_is_file_name_
         ? Resources::lookup_shader(desc.vertex_shader_) : desc.vertex_shader_;
-    std::string f_shader = desc.fragment_shader_is_file_name_ 
+    std::string f_shader = desc.fragment_shader_is_file_name_
         ? Resources::lookup_shader(desc.fragment_shader_) : desc.fragment_shader_;
 #endif
 
@@ -146,7 +146,7 @@ void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderCon
       std::string g_shader = desc.geometry_shader_is_file_name_
           ? factory.read_shader_file(desc.geometry_shader_) : desc.geometry_shader_;
 #else
-      std::string g_shader = desc.geometry_shader_is_file_name_ 
+      std::string g_shader = desc.geometry_shader_is_file_name_
           ? Resources::lookup_shader(desc.geometry_shader_) : desc.geometry_shader_;
 #endif
       shader_->create_from_sources(v_shader, g_shader, f_shader, substitution_map_);
@@ -157,7 +157,6 @@ void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderCon
 
     shader_->upload_to(ctx);
   }
-
 }
 
 }

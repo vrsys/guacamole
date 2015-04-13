@@ -51,11 +51,11 @@ vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV )
 vec3 environment_lighting (in ShadingTerms T)
 {
   vec3 env_color = vec3(0);
-  vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.Vn));
+  vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.V));
 
   // http://marmosetco.tumblr.com/post/81245981087
   float gua_horizon_fade = 1.3;
-  vec3 R = reflect(-T.Vn, T.N);
+  vec3 R = reflect(-T.V, T.N);
   float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
   horizon *= horizon;
 
@@ -91,9 +91,9 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
 
   vec3 frag_color = vec3(0.0);
   for (int i = 0; i < gua_lights_num; ++i) {
-      // is it either a visible spot/point light or a sun light ?
       float screen_space_shadow = compute_screen_space_shadow (i, position);
 
+      // is it either a visible spot/point light or a sun light ?
       if ( ((bitset[i>>5] & (1u << (i%32))) != 0)
          || i >= gua_lights_num - gua_sun_lights_num )
       {

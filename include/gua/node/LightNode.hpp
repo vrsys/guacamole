@@ -92,6 +92,12 @@ class GUA_DLL LightNode : public SerializableNode {
     GUA_ADD_PROPERTY(bool,            enable_specular_shading,  true);
 
     /**
+     * Virtual size of the light emitter. Values larger than 0 will generate
+     * soft shadows.
+     */
+    GUA_ADD_PROPERTY(float,           light_source_size,        0.f);
+
+    /**
      * Sets the size in pixel of the texture used for shadow map generation.
      * Choose wisely!
      */
@@ -101,18 +107,19 @@ class GUA_DLL LightNode : public SerializableNode {
      * Sets the offset between a shadow casting object and the shadow's edge.
      * Increase this value to reduce artefacts (especially shadow acne).
      */
-    GUA_ADD_PROPERTY(float,               shadow_offset,                          0.001f);
+    GUA_ADD_PROPERTY(float,           shadow_offset,            0.001f);
 
     /**
      * Sets the split distance-to-camera values for rendering cascaded shadow
-     * maps in world coordinates.
+     * maps in world coordinates. Only available for sun lights.
      */
     GUA_ADD_PROPERTY(std::vector<float>,  shadow_cascaded_splits,                 std::vector<float>({0.1f, 2, 10, 50, 100.f}));
 
     /**
      * Sets the value used for near clipping when renering cascaded shadow maps.
+     * Only available for sun lights.
      */
-    GUA_ADD_PROPERTY(float,               shadow_near_clipping_in_sun_direction,  100.f);
+    GUA_ADD_PROPERTY(float,           shadow_near_clipping_in_sun_direction,  100.f);
 
   };
 

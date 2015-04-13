@@ -62,7 +62,8 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& nod
 
       pbr::model_t model_id = database->AddModel(filename, desc.unique_key());
 
-      math::mat4 local_transform = _load_local_transform(filename);
+      //math::mat4 local_transform = _load_local_transform(filename);
+      math::mat4 local_transform = scm::math::make_translation(math::vec3(database->GetModel(model_id)->kdn_tree()->translation()));
 
       auto resource = std::make_shared<PLODResource>(model_id, flags & PLODLoader::MAKE_PICKABLE, local_transform);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);

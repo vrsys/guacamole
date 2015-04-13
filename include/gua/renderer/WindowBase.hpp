@@ -183,7 +183,7 @@ protected:
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
 
-  struct DebugOutput : public scm::gl::render_context::debug_output {
+  struct GUA_DLL DebugOutput : public scm::gl::render_context::debug_output {
     /*virtual*/ void operator()(scm::gl::debug_source source,
                                 scm::gl::debug_type type,
                                 scm::gl::debug_severity severity,

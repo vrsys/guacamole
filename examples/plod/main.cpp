@@ -101,7 +101,8 @@ struct LensConfig {
                     distance, 
                     normals,
                     first_derivation,
-                    second_derivation};
+                    second_derivation,
+                    edge};
 
     enum LensGeoMode { sphere_os = 0x0,
         sphere_ss,
@@ -119,6 +120,8 @@ struct LensConfig {
   gua::math::vec2 square_ss_max;
   gua::math::vec3 square_ws_min;
   gua::math::vec3 square_ws_max;
+  float step_size_ss;
+  float step_size_os;
   bool dirty_flag;
 };
 
@@ -285,15 +288,19 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfi
     std::cout << "Set lens radius to " << lens.radius << std::endl;
     break;
   case 'o':
-    lens.radius = std::max(0.01f, 0.9f * lens.radius);
-    std::cout << "Set lens  to " << lens.radius << std::endl;
+      lens.step_size_ss = std::max(0.001f, 0.9f * lens.step_size_ss);
+      lens.step_size_os = std::max(0.001f, 0.9f * lens.step_size_os);
+      std::cout << "Set lens step_size_ss to " << lens.step_size_ss;
+      std::cout << " Set lens step_size_os to " << lens.step_size_os << std::endl;
     break;
   case 'l':
-    lens.radius = std::max(0.01f, 0.9f * lens.radius);
-    std::cout << "Set lens radius to " << lens.radius << std::endl;
+      lens.step_size_ss = std::min(1.0f, 1.1f * lens.step_size_ss);
+      lens.step_size_os = std::min(1.0f, 1.1f * lens.step_size_os);
+      std::cout << "Set lens step_size_ss to " << lens.step_size_ss;
+      std::cout << " Set lens step_size_os to " << lens.step_size_os << std::endl;
     break;
   case 'y':
-      lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 5);
+      lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 6);
     std::cout << "Set lens vis_mode to " << lens.vis_mode << std::endl;
     // 0 = off
     // 1 = distance to plane
@@ -522,6 +529,7 @@ int main(int argc, char** argv) {
 
 #if RENDER_PITOTI_HUNTING_SCENE
   #if WIN32
+  auto plod_geometry0(plodLoader.load_geometry("hunter0", "data/objects/Area-1_Warrior-scene_P01-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
   auto plod_geometry1(plodLoader.load_geometry("hunter1", "data/objects/Area-1_Warrior-scene_P01-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
   auto plod_geometry2(plodLoader.load_geometry("hunter2", "data/objects/Area-1_Warrior-scene_P01-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
   auto plod_geometry3(plodLoader.load_geometry("hunter3", "data/objects/Area-1_Warrior-scene_P01-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
@@ -534,18 +542,20 @@ int main(int argc, char** argv) {
   auto plod_geometry10(plodLoader.load_geometry("hunter10", "data/objects/Area-1_Warrior-scene_P03-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
   auto plod_geometry11(plodLoader.load_geometry("hunter11", "data/objects/TLS_Seradina_Rock-12C_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
 #else
-  auto plod_geometry1(plodLoader.load_geometry("hunter1",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry2(plodLoader.load_geometry("hunter2",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry3(plodLoader.load_geometry("hunter3",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry4(plodLoader.load_geometry("hunter4",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P02-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry5(plodLoader.load_geometry("hunter5",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P02-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry6(plodLoader.load_geometry("hunter6",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P02-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry7(plodLoader.load_geometry("hunter7",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry8(plodLoader.load_geometry("hunter8",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry9(plodLoader.load_geometry("hunter9",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry10(plodLoader.load_geometry("hunter10", "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
-  auto plod_geometry11(plodLoader.load_geometry("hunter11", "/mnt/pitoti/3d_pitoti/seradina_12c/rock/TLS_Seradina_Rock-12C_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS));
+  auto plod_geometry0(plodLoader.load_geometry("hunter1",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry1(plodLoader.load_geometry("hunter1",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry2(plodLoader.load_geometry("hunter2",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry3(plodLoader.load_geometry("hunter3",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry4(plodLoader.load_geometry("hunter4",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P02-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry5(plodLoader.load_geometry("hunter5",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P02-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry6(plodLoader.load_geometry("hunter6",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P02-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry7(plodLoader.load_geometry("hunter7",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry8(plodLoader.load_geometry("hunter8",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry9(plodLoader.load_geometry("hunter9",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry10(plodLoader.load_geometry("hunter10", "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  auto plod_geometry11(plodLoader.load_geometry("hunter11", "/mnt/pitoti/3d_pitoti/seradina_12c/rock/TLS_Seradina_Rock-12C_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
 #endif
+  setup_plod_node(plod_geometry0);
   setup_plod_node(plod_geometry1);
   setup_plod_node(plod_geometry2);
   setup_plod_node(plod_geometry3);
@@ -559,6 +569,7 @@ int main(int argc, char** argv) {
   setup_plod_node(plod_geometry11);
 
   // connect scene graph
+  graph.add_node("/transform/model_xf", plod_geometry0);
   graph.add_node("/transform/model_xf", plod_geometry1);
   graph.add_node("/transform/model_xf", plod_geometry2);
   graph.add_node("/transform/model_xf", plod_geometry3);
@@ -571,7 +582,7 @@ int main(int argc, char** argv) {
   graph.add_node("/transform/model_xf", plod_geometry10);
   graph.add_node("/transform/model_xf", plod_geometry11);
 
-  model_xf->translate(-plod_geometry1->get_bounding_box().center());
+  model_xf->translate(-plod_geometry0->get_bounding_box().center());
 
 #else
   auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE));
@@ -683,6 +694,8 @@ int main(int argc, char** argv) {
       gua::math::vec2(lense_init_size),
       gua::math::vec3(-lense_init_size),
       gua::math::vec3(lense_init_size),
+      0.001,
+      0.1,
       true };
 
   auto window = std::make_shared<gua::GlfwWindow>();
@@ -761,6 +774,8 @@ int main(int argc, char** argv) {
     plod_rough->set_uniform("lens_square_ss_max", lens_config.square_ss_max);
     plod_rough->set_uniform("lens_square_ws_min", lens_config.square_ws_min);
     plod_rough->set_uniform("lens_square_ws_max", lens_config.square_ws_max);
+    plod_rough->set_uniform("step_size_in_os", lens_config.step_size_os);
+    plod_rough->set_uniform("step_size_in_ss", lens_config.step_size_ss);
 
     if (rotate_light) {
       // modify scene
@@ -778,7 +793,7 @@ int main(int argc, char** argv) {
       //std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
       //  << window->get_rendering_fps() << ", app fps: "
       //  << camera->get_application_fps() << std::endl;
-      std::cout << lens_config.screen_position << " , " << lens_config.world_position << " , " << lens_config.world_normal << " , " << lens_config.radius << std::endl;
+      //std::cout << lens_config.screen_position << " , " << lens_config.world_position << " , " << lens_config.world_normal << " , " << lens_config.radius << std::endl;
       
     }
 
