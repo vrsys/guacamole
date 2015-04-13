@@ -36,7 +36,9 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 ShadowMap::ShadowMap(RenderContext const& ctx, unsigned size) :
-  RenderTarget(math::vec2ui(size, size)) {
+  RenderTarget(math::vec2ui(size, size)),
+  viewport_offset_(math::vec2f(0.f, 0.f)),
+  viewport_size_(math::vec2f(size, size)) {
 
   scm::gl::sampler_state_desc state;
   // (scm::gl::FILTER_MIN_MAG_LINEAR,
@@ -61,6 +63,28 @@ void ShadowMap::clear(RenderContext const& ctx) {
 
 void ShadowMap::bind(RenderContext const& ctx, bool write_depth) {
   ctx.render_context->set_frame_buffer(fbo_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadowMap::set_viewport(RenderContext const& ctx) {
+  if (ctx.render_context) {
+    ctx.render_context->set_viewport(
+        scm::gl::viewport(scm::math::vec2f(viewport_size_.x * viewport_offset_.x, viewport_size_.y * viewport_offset_.y),
+                          scm::math::vec2f(viewport_size_)));
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadowMap::set_viewport_offset(math::vec2f const& offset) {
+  viewport_offset_ = offset;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadowMap::set_viewport_size(math::vec2f const& size) {
+  viewport_size_ = size;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

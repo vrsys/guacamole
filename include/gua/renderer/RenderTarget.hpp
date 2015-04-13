@@ -37,7 +37,7 @@ class GUA_DLL RenderTarget {
   RenderTarget(math::vec2ui const& resolution);
   virtual ~RenderTarget() {}
 
-  virtual void clear(RenderContext const& context) = 0;  
+  virtual void clear(RenderContext const& context) = 0;
   virtual void set_viewport(RenderContext const& context);
 
   virtual void bind(RenderContext const& context, bool write_depth) = 0;
@@ -51,7 +51,7 @@ class GUA_DLL RenderTarget {
   unsigned            get_height() const      { return resolution_.y; }
   math::vec2ui const& get_resolution() const  { return resolution_; }
 
- private:
+ protected:
   math::vec2ui resolution_;
 };
 
