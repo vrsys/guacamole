@@ -28,8 +28,7 @@ public:
     float        shadow_offset;
     math::mat4f  shadow_map_coords_mat;
     math::vec2ui shadow_map;
-    float        light_source_size;
-    float        pad;
+    math::vec2ui pad;
 
     bool operator==(const LightBlock& rhs) const {
       return    position_and_radius == rhs.position_and_radius
@@ -43,7 +42,6 @@ public:
              && specular_enable == rhs.specular_enable
              && shadow_map == rhs.shadow_map
              && shadow_offset == rhs.shadow_offset
-             && light_source_size == rhs.light_source_size
              && casts_shadow == rhs.casts_shadow;
     }
 

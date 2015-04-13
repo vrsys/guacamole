@@ -16,8 +16,7 @@ struct LightSource {
   float  shadow_offset;
   mat4   shadow_map_coords_mat;
   uvec2  shadow_map;
-  float  light_source_size;
-  float  pad;
+  uvec2  pad;
 };
 
 layout(std140, binding=1) uniform lightBlock {
