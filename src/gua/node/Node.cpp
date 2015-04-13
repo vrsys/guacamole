@@ -319,17 +319,17 @@ std::shared_ptr<Node> Node::deep_copy() const {
   std::shared_ptr<Node> copied_node = copy();
   copied_node->tags_ = tags_;
   copied_node->draw_bounding_box_ = draw_bounding_box_;
-  copied_node->children_.clear();
-  copied_node->children_.reserve(children_.size());
-
-  for (auto const& child : children_) {
-    copied_node->add_child(child->deep_copy());
-  }
-
+  copied_node->scenegraph_ = scenegraph_;
   copied_node->bounding_box_ = bounding_box_;
   copied_node->user_data_ = user_data_;
   copied_node->world_transform_ = world_transform_;
   copied_node->uuid_ = uuid_;
+
+  for (int i(0); i<children_.size(); ++i) {
+    copied_node->children_[i] = children_[i]->deep_copy();
+    copied_node->children_[i]->parent_ = copied_node.get();
+  }
+
 
   return copied_node;
 }
