@@ -92,12 +92,6 @@ class GUA_DLL LightNode : public SerializableNode {
     GUA_ADD_PROPERTY(bool,            enable_specular_shading,  true);
 
     /**
-     * Virtual size of the light emitter. Values larger than 0 will generate
-     * soft shadows.
-     */
-    GUA_ADD_PROPERTY(float,           light_source_size,        0.f);
-
-    /**
      * Sets the size in pixel of the texture used for shadow map generation.
      * Choose wisely!
      */

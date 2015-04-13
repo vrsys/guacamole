@@ -102,7 +102,6 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
     light_block.specular_enable = light->data.get_enable_specular_shading();
     light_block.color           = math::vec4f(light->data.get_color().vec3f().r, light->data.get_color().vec3f().g, light->data.get_color().vec3f().b, 0.f);
     light_block.type            = static_cast<unsigned>(light->data.get_type());
-    light_block.light_source_size = light->data.get_light_source_size();
     light_block.casts_shadow    = light->data.get_enable_shadows();
 
     if (light->data.get_enable_shadows()) {

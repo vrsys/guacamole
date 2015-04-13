@@ -17,7 +17,7 @@ struct LightSource {
   mat4   projection_view_mats[4];
   uvec2  shadow_map;
   float  shadow_map_portion;
-  float  light_source_size;
+  float  pad;
 };
 
 layout(std140, binding=1) uniform lightBlock {

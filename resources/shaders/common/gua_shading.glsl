@@ -74,7 +74,7 @@ bool gua_is_inside_frustum(mat4 frustum, vec3 position) {
 
 
 // light functions
-bool gua_calculate_light(int light_id,
+float gua_calculate_light(int light_id,
                          vec3 normal,
                          vec3 position,
                          out vec3 gua_light_direction,
@@ -85,7 +85,7 @@ bool gua_calculate_light(int light_id,
   if (L.type == 2) {
     gua_light_direction = L.position_and_radius.xyz;
     if (dot(normal, gua_light_direction) < 0) {
-      return false;
+      return 0.0;
     }
 
     float shadow = 1.0;
@@ -101,12 +101,12 @@ bool gua_calculate_light(int light_id,
     }
 
     if(shadow <= 0.0) {
-      return false;
+      return 0.0;
     }
 
     vec3 Cl = L.color.rgb * L.brightness * shadow;
     gua_light_radiance = Cl;
-    return true;
+    return shadow;
   }
 
   gua_light_direction = L.position_and_radius.xyz - position;
@@ -124,31 +124,33 @@ bool gua_calculate_light(int light_id,
   else if (L.type == 1) {
     vec3 beam_direction = L.beam_direction_and_half_angle.xyz;
     if (dot(-gua_light_direction, beam_direction) < 0) {
-      return false;
+      return 0.0;
     }
     float gua_light_distance = length(gua_light_direction);
     gua_light_direction /= gua_light_distance;
     float beam_length = length(beam_direction);
     if (   gua_light_distance > beam_length
         || dot(normal, gua_light_direction) < 0) {
-      return false;
+      return 0.0;
     }
 
     float shadow = gua_get_shadow(light_id, 0, position, vec2(0), L.shadow_offset);
     if(shadow <= 0.0) {
-      return false;
+      return 0.0;
     }
     float to_light_angle = dot(-gua_light_direction, beam_direction/beam_length);
     float radial_attenuation = (to_light_angle - 1.0) / (L.beam_direction_and_half_angle.w - 1.0);
     if (radial_attenuation >= 1.0)
-      return false;
+      return 0.0;
 
     float length_attenuation = pow(1.0 - gua_light_distance/beam_length, L.falloff);
     radial_attenuation = pow(1.0 - radial_attenuation, L.softness);
     vec3 Cl = radial_attenuation * length_attenuation * L.color.rgb * L.brightness * shadow;
     gua_light_radiance = Cl;
+
+    return shadow;
   }
-  return true;
+  return 1.0;
 }
 
 vec3 sRGB_to_linear(vec3 c)
@@ -203,16 +205,16 @@ vec3 gua_shade(int light_id, in ShadingTerms T)
   vec3 L, R;
   vec3 col = vec3(0);
   // lighting
-  bool shaded = gua_calculate_light(light_id,
+  float shaded = gua_calculate_light(light_id,
                                     T.N, T.P, L, R);
-  if (shaded) {
+  if (shaded > 0.0) {
     vec3 H = normalize(L + T.V);
     float NdotL = clamp(dot(T.N, L), 0.0, 1.0);
 
     vec3 Cl = R /* (1.0-T.emit)*/;
 
     vec3 F = Fresnel(T.cspec, H, L);
-    vec3 D_Vis = vec3(D_and_Vis(T.roughness, T.N, H, T.V, L));
+    vec3 D_Vis = vec3(D_and_Vis(T.roughness, T.N, H, T.V, L)) * shaded;
     vec3 brdf = mix(T.diffuse * float(gua_lights[light_id].diffuse_enable), D_Vis * float(gua_lights[light_id].specular_enable), F);
     col = Cl * brdf * NdotL;
   }
