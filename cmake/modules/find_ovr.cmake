@@ -6,6 +6,7 @@ SET(OVR_INCLUDE_SEARCH_DIRS
   ${OVR_INCLUDE_DIRS}
   ${OVR_INCLUDE_SEARCH_DIR}
   /opt/OculusSDK/current/LibOVR/Include
+  /opt/OculusSDK/current/LibOVRKernel/Src
 )
 
 SET(OVR_LIBRARY_SEARCH_DIRS
@@ -20,7 +21,8 @@ SET(OVR_LIBRARY_SEARCH_DIRS
 ##############################################################################
 message(STATUS "-- checking for OculusSDK")
 
-find_path(OVR_INCLUDE_DIR NAMES OVR.h PATHS ${OVR_INCLUDE_SEARCH_DIRS})
+find_path(OVR_INCLUDE_DIR NAMES OVR.h Kernel/OVR_Types.h PATHS ${OVR_INCLUDE_SEARCH_DIRS})
+message(${OVR_INCLUDE_DIR})
 
 IF (MSVC)
 	find_library(OVR_LIBRARY NAMES libovr64.lib PATHS ${OVR_LIBRARY_SEARCH_DIRS} PATH_SUFFIXES release)
