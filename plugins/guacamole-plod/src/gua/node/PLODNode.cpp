@@ -64,11 +64,16 @@ std::shared_ptr<PLODResource> const& PLODNode::get_geometry() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 math::mat4 PLODNode::get_world_transform() const {
-  if (get_parent()) {
-    return get_parent()->get_world_transform() * get_transform() * geometry_->local_transform();
+  if (!geometry_) {
+    return get_parent()->get_world_transform() * get_transform();
   }
   else {
-    return get_transform() * geometry_->local_transform();
+    if (get_parent()) {
+      return get_parent()->get_world_transform() * get_transform() * geometry_->local_transform();
+    }
+    else {
+      return get_transform() * geometry_->local_transform();
+    }
   }
 }
 
