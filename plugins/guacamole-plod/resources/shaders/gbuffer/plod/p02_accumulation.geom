@@ -23,6 +23,7 @@ in VertexData {
 out vec3 pass_point_color;
 out vec3 pass_normal;
 out vec2 pass_uv_coords;
+out float pass_log_depth;
 
 //} VertexOut;
 @include "common/gua_vertex_shader_output.glsl"
@@ -54,6 +55,7 @@ void main() {
         pass_uv_coords        = vec2(u_multiplier, v_multiplier);
         vec4 q_pos_ms         = vec4( ( (s_pos_ms + (u_multiplier * step_u) ) + (v_multiplier * step_v) ) ,1.0);
         gl_Position           = gua_model_view_projection_matrix * q_pos_ms;
+        pass_log_depth        = (gl_Position.z/gl_Position.w)/2.0 + 0.5;
         gua_varying_world_position  = (gua_model_matrix * q_pos_ms).xyz;
         float es_linear_depth_corner = (gua_model_view_matrix * q_pos_ms).z;
 

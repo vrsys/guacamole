@@ -172,10 +172,11 @@ namespace gua {
                                            scm::math::vec2ui const& render_target_dims,
              bool resize_resource_containers) {
 
-    depth_pass_log_depth_result_ = ctx.render_device
+    /*depth_pass_log_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_R_32F,
                           1, 1, 1);
+    */
 
     depth_pass_linear_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
@@ -184,12 +185,12 @@ namespace gua {
           
     accumulation_pass_color_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGBA_16F,
+                          scm::gl::FORMAT_RGBA_32F,
                           1, 1, 1);
 
     accumulation_pass_normal_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGBA_16F,
+                          scm::gl::FORMAT_RGBA_32F,
                           1, 1, 1);
 
     accumulation_pass_pbr_result_ = ctx.render_device
@@ -205,8 +206,9 @@ namespace gua {
     depth_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
     depth_pass_result_fbo_->clear_attachments();
     depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
-    depth_pass_result_fbo_->attach_color_buffer(0,
+    /*depth_pass_result_fbo_->attach_color_buffer(0,
                                                 depth_pass_log_depth_result_);
+    */
 
     accumulation_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
     accumulation_pass_result_fbo_->clear_attachments();
@@ -673,8 +675,8 @@ namespace gua {
          ctx.render_context->bind_texture(accumulation_pass_pbr_result_, nearest_sampler_state_, 2);
          normalization_pass_program_->apply_uniform(ctx, "p02_pbr_texture", 2);
 
-         ctx.render_context->bind_texture(depth_pass_log_depth_result_, nearest_sampler_state_, 3);
-         current_material_program->apply_uniform(ctx, "p01_log_depth_texture", 3);
+         //ctx.render_context->bind_texture(depth_pass_log_depth_result_, nearest_sampler_state_, 3);
+         //current_material_program->apply_uniform(ctx, "p01_log_depth_texture", 3);
 
          ctx.render_context->apply();
 
