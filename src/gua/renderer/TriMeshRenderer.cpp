@@ -167,7 +167,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
     ctx.render_context->reset_state_objects();
   }
-  
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

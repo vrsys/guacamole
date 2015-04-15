@@ -42,7 +42,7 @@ struct CachedShadowMap;
 class ShadowMap : public RenderTarget {
  public:
 
-  ShadowMap(RenderContext const& ctx, unsigned size);
+  ShadowMap(RenderContext const& ctx, math::vec2ui const& resolution);
 
   virtual void clear(RenderContext const& context) override;
   virtual void bind(RenderContext const& context, bool write_depth) override;

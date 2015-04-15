@@ -35,10 +35,10 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ShadowMap::ShadowMap(RenderContext const& ctx, unsigned size) :
-  RenderTarget(math::vec2ui(size, size)),
+ShadowMap::ShadowMap(RenderContext const& ctx, math::vec2ui const& resolution) :
+  RenderTarget(resolution),
   viewport_offset_(math::vec2f(0.f, 0.f)),
-  viewport_size_(math::vec2f(size, size)) {
+  viewport_size_(math::vec2f(resolution)) {
 
   scm::gl::sampler_state_desc state;
   // (scm::gl::FILTER_MIN_MAG_LINEAR,
@@ -47,7 +47,7 @@ ShadowMap::ShadowMap(RenderContext const& ctx, unsigned size) :
 
   state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
 
-  depth_buffer_ = std::make_shared<Texture2D>(size, size, scm::gl::FORMAT_D16, 1, state);
+  depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D16, 1, state);
 
   fbo_ = ctx.render_device->create_frame_buffer();
   fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx), 0, 0);

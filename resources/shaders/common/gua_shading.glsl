@@ -11,7 +11,7 @@ uniform uvec2 gua_light_bitset;
 // shadow calculations ---------------------------------------------------------
 // -----------------------------------------------------------------------------
 
-float gua_get_shadow(int light_id, vec4 smap_coords, ivec2 offset, float acne_offset) {
+float gua_get_shadow(int light_id, vec4 smap_coords, ivec2 offset, float portion, float acne_offset) {
   const mat4 acne = mat4(
     1, 0, 0, 0,
     0, 1, 0, 0,
@@ -21,26 +21,13 @@ float gua_get_shadow(int light_id, vec4 smap_coords, ivec2 offset, float acne_of
 
   return textureProjOffset(
     sampler2DShadow(gua_lights[light_id].shadow_map), acne * smap_coords
-    * vec4(gua_lights[light_id].shadow_map_portion, gua_lights[light_id].shadow_map_portion, 1.0, 1.0)
+    * vec4(portion, 1.0, 1.0, 1.0)
     , offset
   );
 }
 
-// float gua_get_shadow(int light_id, vec4 smap_coords, float acne_offset) {
-//   const mat4 acne = mat4(
-//     1, 0, 0, 0,
-//     0, 1, 0, 0,
-//     0, 0, 1, 0,
-//     0, 0, -acne_offset, 1
-//   );
 
-//   return textureProj(
-//     sampler2DShadow(gua_lights[light_id].shadow_map), acne * smap_coords
-//     //* vec4(gua_light_shadow_map_portion, gua_light_shadow_map_portion, 1.0, 1.0)
-//   );
-// }
-
-float gua_get_shadow(int light_id, int cascade_id, vec3 position, vec2 lookup_offset, float acne_offset) {
+float gua_get_shadow(int light_id, int cascade_id, vec3 position, vec2 lookup_offset, float portion, float acne_offset) {
   if(!(gua_lights[light_id].casts_shadow)) {
     return 1.0;
   }
@@ -57,7 +44,7 @@ float gua_get_shadow(int light_id, int cascade_id, vec3 position, vec2 lookup_of
 
   for (y = -1; y <= 1; ++y) {
     for (x = -1; x <= 1; ++x) {
-      sum += gua_get_shadow(light_id, smap_coords, ivec2(x, y), acne_offset);
+      sum += gua_get_shadow(light_id, smap_coords, ivec2(x, y), portion, acne_offset);
     }
   }
 
@@ -75,10 +62,10 @@ bool gua_is_inside_frustum(mat4 frustum, vec3 position) {
 
 // light functions
 float gua_calculate_light(int light_id,
-                         vec3 normal,
-                         vec3 position,
-                         out vec3 gua_light_direction,
-                         out vec3 gua_light_radiance) {
+                          vec3 normal,
+                          vec3 position,
+                          out vec3 gua_light_direction,
+                          out vec3 gua_light_radiance) {
   LightSource L = gua_lights[light_id];
 
   // sun light
@@ -88,17 +75,22 @@ float gua_calculate_light(int light_id,
       return 0.0;
     }
 
-    float shadow = 1.0;
 
-    if (gua_is_inside_frustum(L.projection_view_mats[0], position)) {
-      shadow = gua_get_shadow(light_id, 0, position, vec2(0, 0), L.shadow_offset);
-    } else if (gua_is_inside_frustum(L.projection_view_mats[1], position)) {
-      shadow = gua_get_shadow(light_id, 1, position, vec2(1, 0), L.shadow_offset*1.33);
-    } else if (gua_is_inside_frustum(L.projection_view_mats[2], position)) {
-      shadow = gua_get_shadow(light_id, 2, position, vec2(0, 1), L.shadow_offset*1.66);
-    } else if (gua_is_inside_frustum(L.projection_view_mats[3], position)) {
-      shadow = gua_get_shadow(light_id, 3, position, vec2(1, 1), L.shadow_offset*2);
+    float shadow = 1.0;
+    float fading = pow(clamp(length(gua_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), 2);
+
+    float portion = 1.0 / (gua_lights[light_id].cascade_count * 1.0);
+
+    if (fading < 1.0) {
+      for (int cascade = 0; cascade < L.cascade_count; ++cascade) {
+        if (gua_is_inside_frustum(L.projection_view_mats[cascade], position)) {
+          shadow = gua_get_shadow(light_id, cascade, position, vec2(cascade, 0), portion, L.shadow_offset);
+          break;
+        }
+      }
     }
+
+    shadow = mix(shadow, 1.0, fading);
 
     if(shadow <= 0.0) {
       return 0.0;
@@ -134,7 +126,7 @@ float gua_calculate_light(int light_id,
       return 0.0;
     }
 
-    float shadow = gua_get_shadow(light_id, 0, position, vec2(0), L.shadow_offset);
+    float shadow = gua_get_shadow(light_id, 0, position, vec2(0), 1.0, L.shadow_offset);
     if(shadow <= 0.0) {
       return 0.0;
     }
