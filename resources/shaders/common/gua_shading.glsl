@@ -37,7 +37,9 @@ float gua_get_shadow(int light_id, int cascade_id, vec3 position, vec2 lookup_of
   0.0, 0.0, 0.5, 0.0,
   0.5, 0.5, 0.5, 1.0);
 
-  vec4 smap_coords = bias * gua_lights[light_id].projection_view_mats[cascade_id] * vec4(position, 1.0) + vec4(lookup_offset, 0, 0);
+  vec4 smap_coords = bias * gua_lights[light_id].projection_view_mats[cascade_id] * vec4(position, 1.0);
+  smap_coords /= smap_coords.w;
+  smap_coords += vec4(lookup_offset, 0, 0);
 
   float sum = 0;
   int x, y;
@@ -79,7 +81,7 @@ float gua_calculate_light(int light_id,
     float shadow = 1.0;
     float fading = pow(clamp(length(gua_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), 2);
 
-    float portion = 1.0 / (gua_lights[light_id].cascade_count * 1.0);
+    float portion = 1.0 / (L.cascade_count * 1.0);
 
     if (fading < 1.0) {
       for (int cascade = 0; cascade < L.cascade_count; ++cascade) {
@@ -107,10 +109,26 @@ float gua_calculate_light(int light_id,
   if (L.type == 0) {
     float gua_light_distance = length(gua_light_direction);
     gua_light_direction /= gua_light_distance;
+
+    float shadow = 1.0;
+    float portion = 1.0 / (L.cascade_count * 1.0);
+
+    for (int cascade = 0; cascade < L.cascade_count; ++cascade) {
+      if (gua_is_inside_frustum(L.projection_view_mats[cascade], position)) {
+        shadow = gua_get_shadow(light_id, cascade, position, vec2(cascade, 0), portion, L.shadow_offset);
+        break;
+      }
+    }
+
+    if(shadow <= 0.0) {
+      return 0.0;
+    }
+
     float x = clamp(1.0 - pow( (gua_light_distance / L.position_and_radius.w) , 4), 0, 1);
     float falloff = x*x/ (gua_light_distance*gua_light_distance + 1);
-    vec3 Cl = falloff * L.color.rgb * L.brightness;
+    vec3 Cl = falloff * L.color.rgb * L.brightness * shadow;
     gua_light_radiance = Cl;
+    return shadow;
   }
   // spot lights
   else if (L.type == 1) {

@@ -26,7 +26,7 @@ public:
     unsigned     casts_shadow;    // bool
 
     float        shadow_offset;
-    math::mat4f  projection_view_mats[4];
+    math::mat4f  projection_view_mats[6];
     math::vec2ui shadow_map;
     int          cascade_count;
     float        max_shadow_distance;
@@ -44,6 +44,7 @@ public:
              && shadow_map == rhs.shadow_map
              && projection_view_mats == rhs.projection_view_mats
              && cascade_count == rhs.cascade_count
+             && max_shadow_distance == rhs.max_shadow_distance
              && shadow_offset == rhs.shadow_offset
              && casts_shadow == rhs.casts_shadow;
     }

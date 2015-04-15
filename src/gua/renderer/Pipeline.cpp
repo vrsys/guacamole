@@ -256,9 +256,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     std::shared_ptr<ShadowMap> shadow_map;
 
     unsigned viewport_size(light->data.shadow_map_size());
-    unsigned cascade_count(light->data.get_type() == node::LightNode::Type::SUN
-                           ? light->data.get_shadow_cascaded_splits().size() - 1
-                           : 1);
+    unsigned cascade_count(1);
+
+    if (light->data.get_type() == node::LightNode::Type::SUN) {
+      cascade_count = light->data.get_shadow_cascaded_splits().size() - 1;
+    } else if (light->data.get_type() == node::LightNode::Type::POINT) {
+      cascade_count = 6;
+    }
 
     // cascades are aligned horizontally on the shadow map
     unsigned map_width(viewport_size * cascade_count);
@@ -287,11 +291,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     // clear shadow map
     shadow_map->clear(context_);
-
+    shadow_map->set_viewport_size(math::vec2f(viewport_size));
 
 
     // rendering lambda
-    auto render_shadows = [this, &light_block, viewport_size](Frustum const& frustum, unsigned cascade_id) {
+    auto render_shadows = [this, &light_block, viewport_size]
+                          (Frustum const& frustum, unsigned cascade_id) {
+
       light_block.projection_view_mats[cascade_id] = math::mat4f(frustum.get_projection() * frustum.get_view());
       current_scene_ = current_graph_->serialize(frustum,
                                                  current_camera_.config.enable_frustum_culling(),
@@ -312,7 +318,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
         }
       }
     };
-
 
 
     // render cascaded shadows for sunlights
@@ -343,11 +348,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
       light_block.max_shadow_distance = splits.back();
 
-      shadow_map->set_viewport_size(math::vec2f(viewport_size));
-
       for (int cascade(0); cascade < splits.size()-1; ++cascade) {
 
-        // render each cascade to a quarter of the shadow map
         shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
 
         // set clipping of camera frustum according to current cascade
@@ -434,14 +436,46 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
       }
 
+    } else if (light->data.get_type() == node::LightNode::Type::POINT) {
+
+      // calculate light frustum
+      math::mat4 screen_transform(scm::math::make_translation(0., 0., -0.5));
+      std::vector<math::mat4> screen_transforms({
+        screen_transform,
+        scm::math::make_rotation(180., 0., 1., 0.) * screen_transform,
+        scm::math::make_rotation(90., 1., 0., 0.) * screen_transform,
+        scm::math::make_rotation(-90., 1., 0., 0.) * screen_transform,
+        scm::math::make_rotation(90., 0., 1., 0.) * screen_transform,
+        scm::math::make_rotation(-90., 0., 1., 0.) * screen_transform
+      });
+
+      for (unsigned cascade(0); cascade < screen_transforms.size(); ++cascade) {
+
+        auto transform(light->get_cached_world_transform() * screen_transforms[cascade]);
+
+        auto frustum(
+          Frustum::perspective(
+            light->get_cached_world_transform(), transform,
+            get_scene_camera().config.near_clip(),
+            scm::math::length(math::get_translation(transform))
+          )
+        );
+
+        shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
+        render_shadows(frustum, cascade);
+      }
+
     } else if (light->data.get_type() == node::LightNode::Type::SPOT) {
       // calculate light frustum
       math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
       screen_transform = light->get_cached_world_transform() * screen_transform;
 
-      Frustum frustum = Frustum::perspective(
-        light->get_cached_world_transform(), screen_transform,
-        get_scene_camera().config.near_clip(), get_scene_camera().config.far_clip()
+      auto frustum (
+        Frustum::perspective(
+          light->get_cached_world_transform(), screen_transform,
+          get_scene_camera().config.near_clip(),
+          scm::math::length(math::get_translation(screen_transform))
+        )
       );
 
       render_shadows(frustum, 0);
