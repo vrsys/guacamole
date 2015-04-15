@@ -406,7 +406,7 @@
           "name" : "step_size_in_os",
           "type" : "float",
           "value" : "0.1"
-        }
+        },
         {
           "name" : "step_size_in_ss",
           "type" : "float",
