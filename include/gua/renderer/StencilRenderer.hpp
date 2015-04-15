@@ -19,42 +19,39 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RENDER_TARGET_HPP
-#define GUA_RENDER_TARGET_HPP
+#ifndef GUA_STENCIL_RENDERER_HPP
+#define GUA_STENCIL_RENDERER_HPP
 
-// guacamole headers
-#include <gua/renderer/enums.hpp>
+#include <map>
+#include <unordered_map>
+
 #include <gua/platform.hpp>
-#include <gua/renderer/Texture2D.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
-#include <memory>
+#include <scm/gl_core/shader_objects.h>
 
 namespace gua {
 
-class GUA_DLL RenderTarget {
+class MaterialShader;
+class Pipeline;
+class PipelinePassDescription;
+
+class StencilRenderer {
+
  public:
 
-  RenderTarget(math::vec2ui const& resolution);
-  virtual ~RenderTarget() {}
+  StencilRenderer();
+  virtual ~StencilRenderer() {}
 
-  virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) = 0;  
-  virtual void set_viewport(RenderContext const& context);
+  void render(Pipeline& pipe, std::shared_ptr<ShaderProgram> const& shader);
 
-  virtual void bind(RenderContext const& context, bool write_depth) = 0;
-  virtual void unbind(RenderContext const& context);
-
-  virtual void remove_buffers(RenderContext const& ctx) = 0;
-
-  virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const = 0;
-
-  unsigned            get_width()  const      { return resolution_.x; }
-  unsigned            get_height() const      { return resolution_.y; }
-  math::vec2ui const& get_resolution() const  { return resolution_; }
+  void create_state_objects(RenderContext const& ctx);
 
  private:
-  math::vec2ui resolution_;
+  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
+  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
 };
 
 }
 
-#endif  // GUA_RENDER_TARGET_HPP
+#endif  // GUA_STENCIL_RENDERER_HPP

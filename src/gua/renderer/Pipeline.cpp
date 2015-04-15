@@ -179,14 +179,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   current_scene_ = current_graph_->serialize(camera, mode);
 
   camera_block_.update(context_.render_context,
-                        current_scene_->frustum,
+                        current_scene_->rendering_frustum,
                         current_scene_->clipping_planes,
                         camera.config.get_view_id(),
                         camera.config.get_resolution(), false);
   bind_camera_uniform_block(0);
 
   // clear gbuffer
-  gbuffer_->clear(context_);
+  gbuffer_->clear(context_, 1.f, 1);
 
   current_target_ = gbuffer_.get();
 
@@ -271,12 +271,12 @@ std::shared_ptr<Texture2D> Pipeline::render_shadow_map(node::LightNode* light,
     current_target_ = shadow_map.get();
     auto orig_scene(current_scene_);
 
-    current_scene_ = current_graph_->serialize(frustum,
+    current_scene_ = current_graph_->serialize(frustum, frustum, 
                                                current_camera_.config.enable_frustum_culling(),
                                                current_camera_.config.mask());
 
     camera_block_.update(context_.render_context,
-                         current_scene_->frustum,
+                         current_scene_->rendering_frustum,
                          current_scene_->clipping_planes,
                          current_camera_.config.get_view_id(),
                          math::vec2ui(map_size, map_size), true);
@@ -299,7 +299,7 @@ std::shared_ptr<Texture2D> Pipeline::render_shadow_map(node::LightNode* light,
     current_scene_ = orig_scene;
 
     camera_block_.update(context_.render_context,
-                         current_scene_->frustum,
+                         current_scene_->rendering_frustum,
                          current_scene_->clipping_planes,
                          current_camera_.config.get_view_id(),
                          current_camera_.config.get_resolution(), false);

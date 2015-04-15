@@ -44,7 +44,7 @@ class ShadowMap : public RenderTarget {
   
   ShadowMap(RenderContext const& ctx, unsigned size);
 
-  virtual void clear(RenderContext const& context) override;  
+  virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;  
   virtual void bind(RenderContext const& context, bool write_depth) override;
 
   virtual void remove_buffers(RenderContext const& ctx) override;

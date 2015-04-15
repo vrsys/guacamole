@@ -396,7 +396,8 @@ namespace gua {
     ///////////////////////////////////////////////////////////////////////////
     pbr::context_t context_id = _register_context_in_cut_update(ctx);
 
-    Frustum const& frustum = pipe.get_scene().frustum;
+    // TODO: can we use  pipe.get_scene().culling_frustum here?
+    Frustum const& frustum = pipe.get_scene().rendering_frustum;
     std::vector<math::vec3> frustum_corner_values = frustum.get_corners();
     float top_minus_bottom = scm::math::length((frustum_corner_values[2]) -
       (frustum_corner_values[0]));
@@ -495,8 +496,8 @@ namespace gua {
         pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
 
         auto const& scm_model_matrix = plod_node->get_cached_world_transform();
-        auto scm_model_view_matrix = pipe.get_scene().frustum.get_view() * scm_model_matrix;
-        auto scm_model_view_projection_matrix = pipe.get_scene().frustum.get_projection() * scm_model_view_matrix;
+        auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
+        auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
         auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
         cuts->SendTransform(context_id, model_id, math::mat4f(scm_model_matrix));
@@ -614,8 +615,8 @@ namespace gua {
           }
 
           auto const& scm_model_matrix = plod_node->get_cached_world_transform();
-          auto scm_model_view_matrix = pipe.get_scene().frustum.get_view() * scm_model_matrix;
-          auto scm_model_view_projection_matrix = pipe.get_scene().frustum.get_projection() * scm_model_view_matrix;
+          auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
+          auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
           auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
           current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));

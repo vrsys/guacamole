@@ -38,6 +38,14 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
 
   writes_only_color_buffer_ = false;
   rendermode_ = RenderMode::Callback;
+  
+  depth_stencil_state_ = boost::make_optional(
+    scm::gl::depth_stencil_state_desc(
+      true, true, scm::gl::COMPARISON_LESS, true, 1, 0, 
+      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    )
+  );
+
   rasterizer_state_ = boost::make_optional(
       scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID,
                                      scm::gl::CULL_NONE,

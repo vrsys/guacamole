@@ -95,7 +95,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, 
     pipe.get_current_target().bind(ctx, !writes_only_color_buffer_);
     pipe.get_current_target().set_viewport(ctx);
     if (depth_stencil_state_)
-      ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+      ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
     if (blend_state_)
       ctx.render_context->set_blend_state(blend_state_);
     if (rasterizer_state_)

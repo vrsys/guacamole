@@ -55,7 +55,7 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
   pbr_buffer_         = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_8,   1, state);
   normal_buffer_      = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_16,  1, state);
   flags_buffer_       = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_R_8UI,   1, state);
-  depth_buffer_       = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D24,     1, state);
+  depth_buffer_       = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D24_S8,  1, state);
 
   fbo_read_ = ctx.render_device->create_frame_buffer();
   fbo_read_->attach_color_buffer(0, color_buffer_read_->get_buffer(ctx),0,0);
@@ -88,10 +88,10 @@ void GBuffer::allocate_a_buffer(RenderContext& ctx, size_t buffer_size) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::clear(RenderContext const& ctx) {
+void GBuffer::clear(RenderContext const& ctx, float depth, unsigned stencil) {
   ctx.render_context->clear_color_buffers(
       fbo_write_, scm::math::vec4f(0,0,0,0));
-  ctx.render_context->clear_depth_stencil_buffer(fbo_write_);
+  ctx.render_context->clear_depth_stencil_buffer(fbo_write_, depth, stencil);
 
   abuffer_.clear(ctx, get_resolution());
 }

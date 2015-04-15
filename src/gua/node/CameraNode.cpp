@@ -52,14 +52,20 @@ CameraNode::CameraNode(std::string const& name,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Frustum CameraNode::get_frustum(SceneGraph const& graph, CameraMode mode) const {
-    return make_frustum(graph, get_world_transform(), config, mode);
+Frustum CameraNode::get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return make_frustum(graph, get_world_transform(), config, mode, false);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Frustum CameraNode::get_culling_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return make_frustum(graph, get_world_transform(), config, mode, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Node> CameraNode::copy() const {
-  return std::make_shared<CameraNode>(*this);
+    return std::make_shared<CameraNode>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,8 +85,16 @@ SerializedCameraNode CameraNode::serialize() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& camera_transform, CameraNode::Configuration const& config, CameraMode mode) {
-    std::string screen_name(mode != CameraMode::RIGHT ? config.left_screen_path() : config.right_screen_path());
+Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& camera_transform, 
+                                 CameraNode::Configuration const& config, CameraMode mode,
+                                 bool use_alternative_culling_screen) {
+
+    std::string screen_name(config.get_alternative_frustum_culling_screen_path());
+
+    if (screen_name == "" || !use_alternative_culling_screen) {
+      screen_name = mode != CameraMode::RIGHT ? config.left_screen_path() : config.right_screen_path();
+    }
+    
     auto screen_it(graph[screen_name]);
     auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
     if (!screen) {

@@ -50,9 +50,14 @@ struct GUA_DLL SerializedScene {
   std::unordered_map<std::type_index, std::vector<node::Node*>> nodes;
 
   /**
-   * The frustum.
+   * The rendering frustum.
    */
-  Frustum frustum;
+  Frustum rendering_frustum;
+
+  /**
+   * The culling frustum. Not neccessarily the same as above.
+   */
+  Frustum culling_frustum;
 
   /**
    * Clipping plane parameters.

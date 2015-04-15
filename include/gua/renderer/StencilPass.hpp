@@ -19,42 +19,28 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_RENDER_TARGET_HPP
-#define GUA_RENDER_TARGET_HPP
+#ifndef GUA_STENCIL_PASS_HPP
+#define GUA_STENCIL_PASS_HPP
 
-// guacamole headers
-#include <gua/renderer/enums.hpp>
+#include <gua/renderer/PipelinePass.hpp>
+
 #include <gua/platform.hpp>
-#include <gua/renderer/Texture2D.hpp>
 
-#include <memory>
+// external headers
+#include <scm/gl_core/buffer_objects.h>
 
 namespace gua {
 
-class GUA_DLL RenderTarget {
+
+class GUA_DLL StencilPassDescription : public PipelinePassDescription {
  public:
-
-  RenderTarget(math::vec2ui const& resolution);
-  virtual ~RenderTarget() {}
-
-  virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) = 0;  
-  virtual void set_viewport(RenderContext const& context);
-
-  virtual void bind(RenderContext const& context, bool write_depth) = 0;
-  virtual void unbind(RenderContext const& context);
-
-  virtual void remove_buffers(RenderContext const& ctx) = 0;
-
-  virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const = 0;
-
-  unsigned            get_width()  const      { return resolution_.x; }
-  unsigned            get_height() const      { return resolution_.y; }
-  math::vec2ui const& get_resolution() const  { return resolution_; }
-
- private:
-  math::vec2ui resolution_;
+  StencilPassDescription();
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
+  friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
 }
 
-#endif  // GUA_RENDER_TARGET_HPP
+#endif  // GUA_STENCIL_PASS_HPP

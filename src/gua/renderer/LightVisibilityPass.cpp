@@ -22,7 +22,11 @@ LightVisibilityPassDescription::LightVisibilityPassDescription()
   rendermode_ = RenderMode::Custom;
 
   depth_stencil_state_ = boost::make_optional(
-      scm::gl::depth_stencil_state_desc(false, false));
+    scm::gl::depth_stencil_state_desc(
+      false, false, scm::gl::COMPARISON_LESS, true, 0xFF, 0x00, 
+      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    )
+  );
 
   rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
         scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));

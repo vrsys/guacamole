@@ -60,7 +60,7 @@ void Serializer::check(SerializedScene& output,
 
   enable_frustum_culling_     = enable_frustum_culling;
   current_render_mask_        = mask;
-  current_frustum_            = output.frustum;
+  current_frustum_            = output.culling_frustum;
 
   for (auto plane: scene_graph.get_clipping_plane_nodes()) {
     if (current_render_mask_.check(plane->get_tags())) {

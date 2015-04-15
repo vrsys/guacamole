@@ -53,8 +53,8 @@ ShadowMap::ShadowMap(RenderContext const& ctx, unsigned size) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::clear(RenderContext const& ctx) {
-  ctx.render_context->clear_depth_stencil_buffer(fbo_);
+void ShadowMap::clear(RenderContext const& ctx, float depth, unsigned stencil) {
+  ctx.render_context->clear_depth_stencil_buffer(fbo_, depth, stencil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

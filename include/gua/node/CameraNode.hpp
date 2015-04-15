@@ -74,6 +74,7 @@ class GUA_DLL CameraNode : public Node {
     GUA_ADD_PROPERTY(float,           eye_offset,             0.f);
     GUA_ADD_PROPERTY(std::string,     left_screen_path,       "unknown_screen");
     GUA_ADD_PROPERTY(std::string,     right_screen_path,      "unknown_screen");
+    GUA_ADD_PROPERTY(std::string,     alternative_frustum_culling_screen_path, "");
     GUA_ADD_PROPERTY(CameraMode,      mono_mode,              CameraMode::CENTER);
 
     // the rendering is performed with thid resolution. Usually it should match
@@ -163,7 +164,8 @@ class GUA_DLL CameraNode : public Node {
     pipeline_description_ = pipeline_description;
   }
 
-  Frustum get_frustum(SceneGraph const& graph, CameraMode mode) const;
+  Frustum get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const;
+  Frustum get_culling_frustum(SceneGraph const& graph, CameraMode mode) const;
 
   float get_application_fps() const {
     return application_fps_;
@@ -199,7 +201,7 @@ class GUA_DLL CameraNode : public Node {
   static Frustum make_frustum(SceneGraph const& graph,
                               math::mat4 const& camera_transform,
                               CameraNode::Configuration const& config,
-                              CameraMode mode);
+                              CameraMode mode, bool use_alternative_culling_screen);
 
   float application_fps_;
   float rendering_fps_;
@@ -222,8 +224,12 @@ struct GUA_DLL SerializedCameraNode {
   std::shared_ptr<PipelineDescription>  pipeline_description;
   std::vector<SerializedCameraNode>     pre_render_cameras;
 
-  Frustum get_frustum(SceneGraph const& graph, CameraMode mode) const {
-    return CameraNode::make_frustum(graph, transform, config, mode);
+  Frustum get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return CameraNode::make_frustum(graph, transform, config, mode, false);
+  }
+
+  Frustum get_culling_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return CameraNode::make_frustum(graph, transform, config, mode, true);
   }
 };
 
