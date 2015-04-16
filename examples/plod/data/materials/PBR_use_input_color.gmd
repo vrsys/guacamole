@@ -286,9 +286,9 @@
         void PBR_uniform() 
         {
             if (lens_vis_mode != 0){
-                bool fragment_in_lens = false;
+                bool fragment_in_lens = true;
                 switch (lens_geo_mode) {
-                case 0: { //sphere_ws                
+                case 0: { //sphere_ws
                     float distance_to_lens = length(gua_world_position - lens_center);
                     fragment_in_lens = lens_radius > distance_to_lens ? true : false;
                     break;
@@ -302,27 +302,23 @@
                     fragment_in_lens = lens_radius > distance_to_lens ? true : false;
                     break;
                 }
-                case 2: //square_ss  
+                case 2: //square_ss
                     vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
                     vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
 
-                    if (lens_square_ss_min.x > pos_ss_norm.x || lens_square_ss_max.x < pos_ss_norm.x){
+                    if (lens_square_ss_min.x > pos_ss_norm.x
+                        || lens_square_ss_max.x < pos_ss_norm.x
+                        || lens_square_ss_min.y > pos_ss_norm.y
+                        || lens_square_ss_max.y < pos_ss_norm.y)
+                    {
                         fragment_in_lens = false;
-                        break;
                     }
-                    if (lens_square_ss_min.y > pos_ss_norm.y || lens_square_ss_max.y < pos_ss_norm.y){
-                        fragment_in_lens = false;
-                        break;
-                    }
-                    fragment_in_lens = true;
                     break;
-                case 3: //square_ws 
+                case 3: //square_ws
                     break;
                 default:
-                    
                     break;
                 }
-              
                 if (fragment_in_lens)
               {
                 apply_lens_effect();
@@ -331,7 +327,7 @@
             }
 
           gua_metalness = metalness;
-          gua_roughness = roughness; 
+          gua_roughness = roughness;
           gua_emissivity = emissivity;
         }
       ",
