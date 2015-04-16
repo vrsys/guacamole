@@ -83,7 +83,8 @@ void main() {
   @material_method_calls_frag@
 
   out_accumulated_color = vec4(weight * gua_color, weight);
-  out_accumulated_normal = vec4(weight * face_forward_normal, gl_FragCoord.z);
+  //out_accumulated_normal = vec4(weight * face_forward_normal, gl_FragCoord.z);
+  out_accumulated_normal = vec4(weight * face_forward_normal, weight * pass_log_depth);
   out_accumulated_pbr = vec3(gua_metalness, gua_roughness, gua_emissivity) * weight;
 
 
