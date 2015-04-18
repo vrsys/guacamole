@@ -270,8 +270,8 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
     new_mat->set_uniform("EmissivityMap", assets + emit_map);
   }
   else {
-    FbxDouble3 color = lambert->Diffuse.Get();
-    new_mat->set_uniform("Emissivity", math::vec4f(color[0], color[1], color[2], 1.f));
+    FbxDouble3 color = lambert->Emissive.Get();
+    new_mat->set_uniform("Emissivity", float((color[0] + color[1] + color[2]) / 3.0f));
   }
 
   //see if there is an unreal engine material file avaible
@@ -283,7 +283,6 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
 
   //see if there is a json material file avaible
   mat_name = assets + fbx_material.GetName() + ".json";
-
   if(file_exists(mat_name)) {
     return load_json(mat_name, assets_directory, new_mat);
   }
