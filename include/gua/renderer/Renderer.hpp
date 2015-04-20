@@ -75,6 +75,8 @@ class GUA_DLL Renderer {
    */
   void queue_draw(std::vector<SceneGraph const*> const& scene_graphs);
 
+  void draw_single_threaded(std::vector<SceneGraph const*> const& scene_graphs);
+
   void stop();
 
   inline float get_application_fps() { return application_fps_.fps; }
