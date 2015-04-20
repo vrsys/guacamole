@@ -86,7 +86,8 @@ void submit_fragment(float depth)
 {
   check_clipping_planes();
 
-  if ((bool)@enable_abuffer@ && !gua_rendering_shadows) {
+  // if abuffer enabled and not rendering shadows
+  if ((bool)@enable_abuffer@ && gua_rendering_mode == 0) {
     float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
     if (depth > z) discard;
 

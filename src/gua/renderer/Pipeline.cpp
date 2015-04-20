@@ -182,7 +182,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
                         current_scene_->frustum,
                         current_scene_->clipping_planes,
                         camera.config.get_view_id(),
-                        camera.config.get_resolution(), false);
+                        camera.config.get_resolution());
   bind_camera_uniform_block(0);
 
   // clear gbuffer
@@ -307,7 +307,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
                            frustum,
                            current_scene_->clipping_planes,
                            current_camera_.config.get_view_id(),
-                           math::vec2ui(viewport_size), true);
+                           math::vec2ui(viewport_size));
       bind_camera_uniform_block(0);
 
 
@@ -489,7 +489,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
                          current_scene_->frustum,
                          current_scene_->clipping_planes,
                          current_camera_.config.get_view_id(),
-                         current_camera_.config.get_resolution(), false);
+                         current_camera_.config.get_resolution());
     bind_camera_uniform_block(0);
 
     light_block.shadow_map = shadow_map->get_depth_buffer()->get_handle(context_);

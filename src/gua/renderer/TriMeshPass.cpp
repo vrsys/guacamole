@@ -73,7 +73,7 @@ PipelinePass TriMeshPassDescription::make_pass(RenderContext const& ctx, Substit
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool rendering_shadows) {
 
     pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_);
-    renderer->render(pipe, desc);
+    renderer->render(pipe, desc, rendering_shadows);
   };
 
   return pass;

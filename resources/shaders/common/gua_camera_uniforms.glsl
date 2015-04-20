@@ -11,7 +11,6 @@ layout (std140, binding=0) uniform cameraBlock {
   int   gua_view_id;
   float gua_clip_near;
   float gua_clip_far;
-  bool  gua_rendering_shadows;
 };
 
 vec3 gua_camera_position = gua_camera_position_4.xyz;
@@ -20,3 +19,4 @@ uniform mat4 gua_model_matrix;
 uniform mat4 gua_model_view_matrix;
 uniform mat4 gua_model_view_projection_matrix;
 uniform mat4 gua_normal_matrix;
+uniform int  gua_rendering_mode; // 0: normal, 1: lowfi shadows, 2: hifi shadows

@@ -15,8 +15,7 @@ CameraUniformBlock::~CameraUniformBlock()
 void CameraUniformBlock::update(scm::gl::render_context_ptr const& context,
                                 Frustum const& cam,
                                 std::vector<math::vec4f> const& clipping_planes,
-                                int view_id, math::vec2ui const& screen_resolution,
-                                bool rendering_shadows) {
+                                int view_id, math::vec2ui const& screen_resolution) {
 
   auto camera_position(cam.get_camera_position());
   auto projection(cam.get_projection());
@@ -37,7 +36,6 @@ void CameraUniformBlock::update(scm::gl::render_context_ptr const& context,
       uniform_block_->clip_near = cam.get_clip_near();
       uniform_block_->clip_far = cam.get_clip_far();
       uniform_block_->view_id = view_id;
-      uniform_block_->rendering_shadows = rendering_shadows;
   } uniform_block_.end_manipulation();
 }
 
