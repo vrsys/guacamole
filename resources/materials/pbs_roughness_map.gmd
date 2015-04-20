@@ -1,0 +1,19 @@
+{
+  "name" : "FragmentRoughnessMap",
+  "source" : "
+    // roughness generation ------------------------------------------------
+    void FragmentRoughnessMap() {
+      if (uvec2(0) != RoughnessMap) {
+        gua_roughness = texture(sampler2D(RoughnessMap), gua_texcoords).r;
+      }
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "RoughnessMap",
+      "type" : "sampler2D",
+      "value" : "0"
+    }
+  ]
+}

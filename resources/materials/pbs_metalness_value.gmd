@@ -1,0 +1,17 @@
+{
+  "name" : "FragmentMetalnessValue",
+  "source" : "
+    // metalness generation ------------------------------------------------
+    void FragmentMetalnessValue() {
+      gua_metalness = Metalness;
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "Metalness",
+      "type" : "float",
+      "value" : "0.01"
+    }
+  ]
+}
