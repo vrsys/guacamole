@@ -569,7 +569,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       context_, int(light_table_->get_lights_num()), "gua_lights_num");
     shader->set_uniform(
       context_, int(light_table_->get_sun_lights_num()), "gua_sun_lights_num");
-
+ 
     if (light_table_->get_light_bitset() && light_table_->get_lights_num() > 0) {
       shader->set_uniform(context_,
         light_table_->get_light_bitset()->get_handle(context_),

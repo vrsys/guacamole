@@ -55,10 +55,54 @@ float gua_get_shadow(int light_id, int cascade_id, vec3 position, vec2 lookup_of
   return shadow;
 }
 
-bool gua_is_inside_frustum(mat4 frustum, vec3 position) {
-  vec4 proj = frustum * vec4(position, 1.0);
+bool gua_point_outside_plane(vec4 plane, vec3 point) {
+  return plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3] < 0;
+}
+
+bool gua_is_inside_frustum(int light_id, int cascade, vec3 point) {
+  vec4 proj = gua_lights[light_id].projection_view_mats[cascade] * vec4(point, 1.0);
   proj /= proj.w;
-  return (abs(proj.x) <= 1 && abs(proj.y) <= 1 && abs(proj.z) <= 1);
+  proj = abs(proj);
+  return proj.x <= 1 && proj.y <= 1 && proj.z <= 1;
+
+  // vec4 plane = vec4(frustum[0][3] + frustum[0][0],
+  //                   frustum[1][3] + frustum[1][0],
+  //                   frustum[2][3] + frustum[2][0],
+  //                   frustum[3][3] + frustum[3][0]);
+  // if (gua_point_outside_plane(plane, point)) return false;
+
+
+  // plane = vec4(frustum[0][3] - frustum[0][0],
+  //                   frustum[1][3] - frustum[1][0],
+  //                   frustum[2][3] - frustum[2][0],
+  //                   frustum[3][3] - frustum[3][0]);
+  // if (gua_point_outside_plane(plane, point)) return false;
+
+  // plane = vec4(frustum[0][3] + frustum[0][1],
+  //                   frustum[1][3] + frustum[1][1],
+  //                   frustum[2][3] + frustum[2][1],
+  //                   frustum[3][3] + frustum[3][1]);
+  // if (gua_point_outside_plane(plane, point)) return false;
+
+  // plane = vec4(frustum[0][3] - frustum[0][1],
+  //                   frustum[1][3] - frustum[1][1],
+  //                   frustum[2][3] - frustum[2][1],
+  //                   frustum[3][3] - frustum[3][1]);
+  // if (gua_point_outside_plane(plane, point)) return false;
+
+  // plane = vec4(frustum[0][3] + frustum[0][2],
+  //                   frustum[1][3] + frustum[1][2],
+  //                   frustum[2][3] + frustum[2][2],
+  //                   frustum[3][3] + frustum[3][2]);
+  // if (gua_point_outside_plane(plane, point)) return false;
+
+  // plane = vec4(frustum[0][3] - frustum[0][2],
+  //                   frustum[1][3] - frustum[1][2],
+  //                   frustum[2][3] - frustum[2][2],
+  //                   frustum[3][3] - frustum[3][2]);
+  // if (gua_point_outside_plane(plane, point)) return false;
+
+  // return true;
 }
 
 
@@ -77,36 +121,37 @@ float gua_calculate_light(int light_id,
       return 0.0;
     }
 
-
     float shadow = 1.0;
-    float fading = pow(clamp(length(gua_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), 2);
 
-    float portion = 1.0 / (L.cascade_count * 1.0);
+    if (L.casts_shadow) {
+      float fading = pow(clamp(length(gua_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), 2);
+      float portion = 1.0 / (L.cascade_count * 1.0);
 
-    if (fading < 1.0) {
-      for (int cascade = 0; cascade < L.cascade_count; ++cascade) {
-        if (gua_is_inside_frustum(L.projection_view_mats[cascade], position)) {
-          shadow = gua_get_shadow(light_id, cascade, position, vec2(cascade, 0), portion, L.shadow_offset);
-          break;
+      if (fading < 1.0) {
+        for (int cascade = 0; cascade < L.cascade_count; ++cascade) {
+          if (gua_is_inside_frustum(light_id, cascade, position)) {
+            shadow = gua_get_shadow(light_id, cascade, position, vec2(cascade, 0), portion, L.shadow_offset);
+            break;
+          }
         }
       }
-    }
 
-    shadow = mix(shadow, 1.0, fading);
+      shadow = mix(shadow, 1.0, fading);
 
-    if(shadow <= 0.0) {
-      return 0.0;
+      if(shadow <= 0.0) {
+        return 0.0;
+      }
     }
 
     vec3 Cl = L.color.rgb * L.brightness * shadow;
     gua_light_radiance = Cl;
+
     return shadow;
   }
 
-  gua_light_direction = L.position_and_radius.xyz - position;
-
   // point lights
-  if (L.type == 0) {
+  else if (L.type == 0) {
+    gua_light_direction = L.position_and_radius.xyz - position;
     float gua_light_distance = length(gua_light_direction);
     gua_light_direction /= gua_light_distance;
 
@@ -114,7 +159,7 @@ float gua_calculate_light(int light_id,
     float portion = 1.0 / (L.cascade_count * 1.0);
 
     for (int cascade = 0; cascade < L.cascade_count; ++cascade) {
-      if (gua_is_inside_frustum(L.projection_view_mats[cascade], position)) {
+      if (gua_is_inside_frustum(light_id, cascade, position)) {
         shadow = gua_get_shadow(light_id, cascade, position, vec2(cascade, 0), portion, L.shadow_offset);
         break;
       }
@@ -132,6 +177,7 @@ float gua_calculate_light(int light_id,
   }
   // spot lights
   else if (L.type == 1) {
+    gua_light_direction = L.position_and_radius.xyz - position;
     vec3 beam_direction = L.beam_direction_and_half_angle.xyz;
     if (dot(-gua_light_direction, beam_direction) < 0) {
       return 0.0;
@@ -150,8 +196,9 @@ float gua_calculate_light(int light_id,
     }
     float to_light_angle = dot(-gua_light_direction, beam_direction/beam_length);
     float radial_attenuation = (to_light_angle - 1.0) / (L.beam_direction_and_half_angle.w - 1.0);
-    if (radial_attenuation >= 1.0)
+    if (radial_attenuation >= 1.0) {
       return 0.0;
+    }
 
     float length_attenuation = pow(1.0 - gua_light_distance/beam_length, L.falloff);
     radial_attenuation = pow(1.0 - radial_attenuation, L.softness);
@@ -160,7 +207,7 @@ float gua_calculate_light(int light_id,
 
     return shadow;
   }
-  return 1.0;
+  return 0.0;
 }
 
 vec3 sRGB_to_linear(vec3 c)
