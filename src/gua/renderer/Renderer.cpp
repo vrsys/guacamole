@@ -239,15 +239,17 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
           window->rendering_fps = application_fps_.fps;
 
           if (serialized_cam.config.get_enable_stereo()) {
-            pipe->process(
-                CameraMode::LEFT, serialized_cam, *sgs);
-            pipe->process(
-                CameraMode::RIGHT, serialized_cam, *sgs);
+            auto img(pipe->render_scene(CameraMode::LEFT,  serialized_cam, *sgs));
+            if (img) window->display(img, true);
+            img = pipe->render_scene(CameraMode::LEFT,  serialized_cam, *sgs);
+            if (img) window->display(img, false);
           } else {
-            pipe->process(serialized_cam.config.get_mono_mode(),
-                          serialized_cam,
-                          *sgs);
+            auto img(pipe->render_scene(serialized_cam.config.get_mono_mode(),
+                     serialized_cam, *sgs));
+            if (img) window->display(img, serialized_cam.config.get_mono_mode() != CameraMode::RIGHT);
           }
+
+          pipe->clear_frame_cache();
 
           // swap buffers
           window->finish_frame();
