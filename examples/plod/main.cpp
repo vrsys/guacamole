@@ -176,7 +176,7 @@ void mouse_button(gua::utils::Trackball& trackball,
 
       for (auto const& r : picks)
       {          
-        auto frustrum = camera->get_frustum(graph, gua::CameraMode::CENTER);
+        auto frustrum = camera->get_rendering_frustum(graph, gua::CameraMode::CENTER);
         auto pick_centre_ss = frustrum.get_projection() * frustrum.get_view() * gua::math::vec4(r.world_position, 1.0f);
         auto pick_centre_ss_norm = (gua::math::vec2(pick_centre_ss.x, pick_centre_ss.y) / pick_centre_ss.w) * 0.5f + gua::math::vec2(0.5f);
         

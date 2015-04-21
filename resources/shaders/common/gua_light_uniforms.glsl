@@ -14,9 +14,10 @@ struct LightSource {
   bool   casts_shadow;
 
   float  shadow_offset;
-  mat4   shadow_map_coords_mat;
+  mat4   projection_view_mats[6];
   uvec2  shadow_map;
-  uvec2  pad;
+  int    cascade_count;
+  float  max_shadow_distance;
 };
 
 layout(std140, binding=1) uniform lightBlock {

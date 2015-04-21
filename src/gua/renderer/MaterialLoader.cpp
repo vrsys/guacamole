@@ -29,6 +29,7 @@
 #include <gua/node/Node.hpp>
 #include <gua/renderer/MaterialShader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
+#include <gua/renderer/PBSMaterialFactory.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
@@ -38,7 +39,8 @@ namespace gua {
 
 std::shared_ptr<Material> MaterialLoader::load_material(
     aiMaterial const* ai_material,
-    std::string const& assets_directory) const {
+    std::string const& assets_directory,
+    bool optimize_material) const {
 
   // helper lambdas ------------------------------------------------------------
   auto get_color =
@@ -89,12 +91,70 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     uniform_normal_map =              get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0));
   }
 
+  unsigned capabilities;
 
-  auto new_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+  if (!optimize_material) {
+    capabilities |= PBSMaterialFactory::ALL;
+  } else {
+
+    if (uniform_color_map != "" && uniform_color != "") {
+      capabilities |= PBSMaterialFactory::COLOR_VALUE_AND_MAP;
+    } else if (uniform_color_map != "") {
+      capabilities |= PBSMaterialFactory::COLOR_MAP;
+    } else if (uniform_color != "") {
+      capabilities |= PBSMaterialFactory::COLOR_VALUE;
+    }
+
+  #if 0
+    if (uniform_roughness_map != "") {
+      capabilities |= PBSMaterialFactory::ROUGHNESS_MAP;
+    } else if (uniform_roughness != "" && uniform_roughness != "0") {
+      capabilities |= PBSMaterialFactory::ROUGHNESS_VALUE;
+    }
+  #endif
+
+  #if 0
+    if (uniform_metalness_map != "") {
+      capabilities |= PBSMaterialFactory::METALNESS_MAP;
+    } else if (uniform_metalness != "") {
+      capabilities |= PBSMaterialFactory::METALNESS_VALUE;
+    }
+  #endif
+
+    if (uniform_emit_map != "") {
+      capabilities |= PBSMaterialFactory::EMISSIVITY_MAP;
+    } else if (uniform_emit != "") {
+      capabilities |= PBSMaterialFactory::EMISSIVITY_VALUE;
+    }
+
+    if (uniform_normal_map != "") {
+      capabilities |= PBSMaterialFactory::NORMAL_MAP;
+    }
+
+  #if 0
+    if (uniform_opacity_map != "") {
+      Logger::LOG_WARNING << "Material not fully supported: guacamole does not support opacity maps. Please use the alpha channel of your diffuse map!" << std::endl;
+    }
+
+    if (uniform_reflection_map != "") {
+      Logger::LOG_WARNING << "Material not fully supported: guacamole does not support reflection maps." << std::endl;
+    }
+  #endif
+
+    if (ambient_map != "") {
+      Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
+    } else if (ambient_color != "") {
+      Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient colors." << std::endl;
+    }
+  }
+
+  auto new_mat(PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(capabilities)));
 
   if (uniform_color_map != "") {
     new_mat->set_uniform("ColorMap", assets + uniform_color_map);
-  } else if (uniform_color != "") {
+  }
+
+  if (uniform_color != "") {
     auto c(string_utils::from_string<math::vec3>(uniform_color));
     new_mat->set_uniform("Color", scm::math::vec4f(gua::math::float_t(c.x), gua::math::float_t(c.y), gua::math::float_t(c.z), 1.f));
   }
@@ -127,21 +187,6 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
   }
 
-#if 0
-  if (uniform_opacity_map != "") {
-    Logger::LOG_WARNING << "Material not fully supported: guacamole does not support opacity maps. Please use the alpha channel of your diffuse map!" << std::endl;
-  }
-
-  if (uniform_reflection_map != "") {
-    Logger::LOG_WARNING << "Material not fully supported: guacamole does not support reflection maps." << std::endl;
-  }
-#endif
-
-  if (ambient_map != "") {
-    Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
-  } else if (ambient_color != "") {
-    Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient colors." << std::endl;
-  }
 
   return new_mat;
 }

@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MATERIAL_LOADER_HPP
-#define GUA_MATERIAL_LOADER_HPP
+#ifndef GUA_PBS_MATERIAL_FACTORY_HPP
+#define GUA_PBS_MATERIAL_FACTORY_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -35,28 +35,32 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-namespace Assimp { class Importer; }
 
 namespace gua {
 
-class Node;
-class GeometryNode;
 
-/**
- * Loads and draws meshes.
- *
- * This class can load mesh data from files and display them in multiple
- * contexts. A MaterialLoader object is made of several Mesh objects.
- */
-class GUA_DLL MaterialLoader {
+class GUA_DLL PBSMaterialFactory {
+
  public:
+  enum Capabilities {
+    COLOR_VALUE = 1 << 0,
+    COLOR_MAP = 1 << 1,
+    COLOR_VALUE_AND_MAP = 1 << 2,
+    ROUGHNESS_VALUE = 1 << 3,
+    ROUGHNESS_MAP = 1 << 4,
+    METALNESS_VALUE = 1 << 5,
+    METALNESS_MAP = 1 << 6,
+    EMISSIVITY_VALUE = 1 << 7,
+    EMISSIVITY_MAP = 1 << 8,
+    NORMAL_MAP = 1 << 9,
+    ALL = 1 << 10
+  };
 
-  std::shared_ptr<Material> load_material(aiMaterial const* material,
-                                          std::string const& assets_directory,
-                                          bool optimize_material) const;
+  static std::shared_ptr<Material> create_material(Capabilities const& capabilities);
+  static std::string const material_name_from_capabilites(Capabilities const& capabilities);
 
 };
 
 }
 
-#endif  // GUA_MATERIAL_LOADER_HPP
+#endif  // GUA_PBS_MATERIAL_FACTORY_HPP

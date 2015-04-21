@@ -10,15 +10,6 @@
 
 #include <scm/gl_core/render_device/opengl/gl_core.h>
 
-namespace {
-  const gua::math::mat4f LIGHT_COORDS_BIAS(
-    0.5, 0.0, 0.0, 0.0,
-    0.0, 0.5, 0.0, 0.0,
-    0.0, 0.0, 0.5, 0.0,
-    0.5, 0.5, 0.5, 1.0
-  );
-}
-
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,18 +105,7 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
     light_block.casts_shadow    = light->data.get_enable_shadows();
 
     if (light->data.get_enable_shadows()) {
-      // calculate light frustum
-      math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
-      screen_transform = light->get_cached_world_transform() * screen_transform;
-
-      Frustum frustum = Frustum::perspective(
-        light->get_cached_world_transform(), screen_transform,
-        pipe.get_scene_camera().config.near_clip(), pipe.get_scene_camera().config.far_clip()
-      );
-
-      light_block.shadow_map = pipe.render_shadow_map(light, frustum)->get_handle(pipe.get_context());
-      light_block.shadow_offset = light->data.get_shadow_offset();
-      light_block.shadow_map_coords_mat = LIGHT_COORDS_BIAS * math::mat4f(frustum.get_projection() * frustum.get_view());
+      pipe.render_shadow_map(light, light_block);
     }
 
     if (light->data.get_type() == node::LightNode::Type::SUN) {

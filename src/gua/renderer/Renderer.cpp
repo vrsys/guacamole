@@ -101,7 +101,6 @@ void Renderer::renderclient(Mailbox in) {
 
   for (auto& cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
     auto window_name(cmd.serialized_cam->config.get_output_window_name());
-
     if (window_name != "") {
       auto window = WindowDatabase::instance()->lookup(window_name);
 
@@ -187,6 +186,74 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
               sgs));
           render_clients_[window_name] = std::make_pair(
               p.first, std::thread(Renderer::renderclient, p.second));
+        }
+      }
+    }
+  }
+  application_fps_.step();
+}
+
+void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_graphs) {
+  for (auto graph : scene_graphs) {
+    graph->update_cache();
+  }
+
+  auto sgs = garbage_collected_copy(scene_graphs);
+
+  for (auto graph : scene_graphs) {
+    for (auto& cam : graph->get_camera_nodes()) {
+      auto window_name(cam->config.get_output_window_name());
+      cam->set_application_fps(application_fps_.fps);
+      auto serialized_cam(cam->serialize());
+
+      if (window_name != "") {
+        auto window = WindowDatabase::instance()->lookup(window_name);
+
+        if (window && !window->get_is_open()) {
+          window->open();
+        }
+        // update window if one is assigned
+        if (window && window->get_is_open()) {
+          window->set_active(true);
+
+          if (window->get_context()->framecount == 0) {
+            display_loading_screen(*window);
+          }
+
+          // make sure pipeline was created
+          std::shared_ptr<Pipeline> pipe = nullptr;
+          auto pipe_iter = window->get_context()->render_pipelines.find(
+              serialized_cam.uuid);
+
+          if (pipe_iter == window->get_context()->render_pipelines.end()) {
+            pipe = std::make_shared<Pipeline>(
+                *window->get_context(),
+                serialized_cam.config.get_resolution());
+            window->get_context()->render_pipelines.insert(
+                std::make_pair(serialized_cam.uuid, pipe));
+          } else {
+            pipe = pipe_iter->second;
+          }
+
+          window->rendering_fps = application_fps_.fps;
+
+          if (serialized_cam.config.get_enable_stereo()) {
+            auto img(pipe->render_scene(CameraMode::LEFT,  serialized_cam, *sgs));
+            if (img) window->display(img, true);
+            img = pipe->render_scene(CameraMode::LEFT,  serialized_cam, *sgs);
+            if (img) window->display(img, false);
+          } else {
+            auto img(pipe->render_scene(serialized_cam.config.get_mono_mode(),
+                     serialized_cam, *sgs));
+            if (img) window->display(img, serialized_cam.config.get_mono_mode() != CameraMode::RIGHT);
+          }
+
+          pipe->clear_frame_cache();
+
+          // swap buffers
+          window->finish_frame();
+          ++(window->get_context()->framecount);
+
         }
       }
     }

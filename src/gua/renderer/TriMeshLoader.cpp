@@ -289,7 +289,8 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     if (material_index != 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
       aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
-      material = material_loader.load_material(ai_material, file_name);
+      material = material_loader.load_material(ai_material, file_name,
+                                               flags & TriMeshLoader::OPTIMIZE_MATERIALS);
     }
 
     //return std::make_shared<node::TriMeshNode>("", desc.unique_key(),

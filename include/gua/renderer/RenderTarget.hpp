@@ -51,7 +51,7 @@ class GUA_DLL RenderTarget {
   unsigned            get_height() const      { return resolution_.y; }
   math::vec2ui const& get_resolution() const  { return resolution_; }
 
- private:
+ protected:
   math::vec2ui resolution_;
 };
 

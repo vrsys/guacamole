@@ -43,8 +43,9 @@ namespace gua {
 
 Serializer::Serializer()
     : data_(nullptr),
-      current_frustum_(),
-      enable_frustum_culling_(false) {}
+      rendering_frustum_(),
+      enable_frustum_culling_(false),
+      enable_alternative_frustum_culling_(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,12 +59,15 @@ void Serializer::check(SerializedScene& output,
   data_->bounding_boxes.clear();
   data_->clipping_planes.clear();
 
-  enable_frustum_culling_     = enable_frustum_culling;
-  current_render_mask_        = mask;
-  current_frustum_            = output.culling_frustum;
+  enable_frustum_culling_ = enable_frustum_culling;
+  enable_alternative_frustum_culling_ = (output.rendering_frustum != output.culling_frustum) && enable_frustum_culling;
+
+  render_mask_ = mask;
+  rendering_frustum_ = output.rendering_frustum;
+  culling_frustum_ = output.culling_frustum;
 
   for (auto plane: scene_graph.get_clipping_plane_nodes()) {
-    if (current_render_mask_.check(plane->get_tags())) {
+    if (render_mask_.check(plane->get_tags())) {
       data_->clipping_planes.push_back(plane->get_component_vector());
     }
   }
@@ -84,7 +88,7 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::LODNode* node) {
   if (is_visible(node)) {
 
-    float distance_to_camera(scm::math::length(node->get_world_position() - current_frustum_.get_camera_position()));
+    float distance_to_camera(scm::math::length(node->get_world_position() - rendering_frustum_.get_camera_position()));
 
     unsigned child_index(0);
 
@@ -126,13 +130,17 @@ bool Serializer::is_visible(node::Node* node) const {
   if (enable_frustum_culling_) {
     auto bbox(node->get_bounding_box());
     if (bbox != math::BoundingBox<math::vec3>()) {
-      is_visible = current_frustum_.intersects(bbox, data_->clipping_planes);
+      is_visible = rendering_frustum_.intersects(bbox, data_->clipping_planes);
+
+      if (is_visible && enable_alternative_frustum_culling_) {
+        is_visible = culling_frustum_.intersects(bbox);
+      }
     }
   }
 
   // check whether mask allows rendering
   if (is_visible) {
-    is_visible = current_render_mask_.check(node->get_tags());
+    is_visible = render_mask_.check(node->get_tags());
   }
 
   if (is_visible && node->get_draw_bounding_box()) {

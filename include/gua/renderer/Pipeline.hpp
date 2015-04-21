@@ -72,8 +72,8 @@ public:
     CameraMode mode, node::SerializedCameraNode const& camera,
     std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
-  std::shared_ptr<Texture2D> render_shadow_map(node::LightNode* light,
-                                               Frustum const& frustum);
+  void render_shadow_map(node::LightNode* light,
+                         LightTable::LightBlock& light_block);
 
   RenderTarget                     & get_current_target() const;
   SerializedScene                  & get_scene();

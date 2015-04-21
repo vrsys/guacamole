@@ -89,7 +89,7 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
   ShadingTerms T;
   gua_prepare_shading(T, color, normal, position, pbr);
 
-  vec3 frag_color = vec3(0.0);
+  vec3 frag_color = vec3(0);
   for (int i = 0; i < gua_lights_num; ++i) {
       float screen_space_shadow = compute_screen_space_shadow (i, position);
 

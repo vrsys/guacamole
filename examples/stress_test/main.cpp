@@ -52,7 +52,8 @@ int main(int argc, char** argv) {
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE |
       gua::TriMeshLoader::LOAD_MATERIALS |
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY |
+      gua::TriMeshLoader::OPTIMIZE_MATERIALS
     ));
     t->add_child(rig);
   };

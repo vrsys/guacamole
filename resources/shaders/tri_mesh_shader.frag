@@ -25,7 +25,11 @@ void main() {
 
   @material_input@
   @include "common/gua_global_variable_assignment.glsl"
-  @material_method_calls_frag@
+
+  // normal mode or high fidelity shadows
+  if (gua_rendering_mode != 1) {
+    @material_method_calls_frag@
+  }
 
   submit_fragment(gl_FragCoord.z);
 }

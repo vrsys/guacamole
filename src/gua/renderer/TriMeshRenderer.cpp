@@ -65,7 +65,7 @@ void TriMeshRenderer::create_state_objects(RenderContext const& ctx)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
+void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc, bool rendering_shadows)
 {
   auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
   if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
@@ -99,6 +99,9 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
     for (auto const& object : sorted_objects->second) {
 
       auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
+      if (rendering_shadows && tri_mesh_node->get_shadow_mode() == ShadowMode::OFF) {
+        continue;
+      }
 
       if (!tri_mesh_node->get_render_to_gbuffer()) {
         continue;
@@ -145,11 +148,17 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         auto model_view_mat = pipe.get_scene().rendering_frustum.get_view() * tri_mesh_node->get_cached_world_transform();
         UniformValue normal_mat (math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));
 
+        int rendering_mode = rendering_shadows ? (tri_mesh_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
+
         current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tri_mesh_node->get_cached_world_transform()));
         current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
         current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+        current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
-        tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
+        // lowfi shadows dont need material input
+        if (rendering_mode != 1) {
+          tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
+        }
 
         current_rasterizer_state = tri_mesh_node->get_material()->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
 
@@ -171,7 +180,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
     ctx.render_context->reset_state_objects();
   }
-  
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
