@@ -47,7 +47,6 @@ PLODPassDescription::PLODPassDescription()
 {
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
-  doClear_ = false;
   rendermode_ = RenderMode::Custom;
 }
 
@@ -67,7 +66,7 @@ PipelinePass PLODPassDescription::make_pass(RenderContext const& ctx, Substituti
   renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool) {
     renderer->render(pipe, desc);
   };
 

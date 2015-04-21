@@ -19,3 +19,4 @@ uniform mat4 gua_model_matrix;
 uniform mat4 gua_model_view_matrix;
 uniform mat4 gua_model_view_projection_matrix;
 uniform mat4 gua_normal_matrix;
+uniform int  gua_rendering_mode; // 0: normal, 1: lowfi shadows, 2: hifi shadows

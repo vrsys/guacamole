@@ -39,14 +39,14 @@ TexturedQuadPassDescription::TexturedQuadPassDescription()
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
-  doClear_ = false;
+  enable_for_shadows_ = true;
   rendermode_ = RenderMode::Callback;
 
   rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
         scm::gl::FILL_SOLID, scm::gl::CULL_NONE));
 
   process_ = [](
-      PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe) {
+      PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe, bool) {
 
     for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
       auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));

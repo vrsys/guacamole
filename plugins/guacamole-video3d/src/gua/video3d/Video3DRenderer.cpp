@@ -87,7 +87,7 @@ void Video3DRenderer::render(Pipeline& pipe)
 
     // initialize Texture Arrays (kinect depths & colors)
     warp_color_result_ = ctx.render_device->create_texture_2d(
-                  pipe.get_camera().config.resolution(),
+                  pipe.get_scene_camera().config.resolution(),
                   scm::gl::FORMAT_RGBA_32F,
                   1,
                   MAX_NUM_KINECTS,
@@ -95,7 +95,7 @@ void Video3DRenderer::render(Pipeline& pipe)
                   );
 
     warp_depth_result_ = ctx.render_device->create_texture_2d(
-                  pipe.get_camera().config.resolution(),
+                  pipe.get_scene_camera().config.resolution(),
                   scm::gl::FORMAT_D32F,
                   1,
                   MAX_NUM_KINECTS,
@@ -112,7 +112,7 @@ void Video3DRenderer::render(Pipeline& pipe)
 
 
   auto objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::Video3DNode))));
-  int view_id(pipe.get_camera().config.get_view_id());
+  int view_id(pipe.get_scene_camera().config.get_view_id());
 
   if (objects != pipe.get_scene().nodes.end() && objects->second.size() > 0) {
 
@@ -231,8 +231,9 @@ void Video3DRenderer::render(Pipeline& pipe)
 
       current_shader->use(ctx);
 
-      pipe.get_gbuffer().bind(ctx, false);
-      pipe.get_gbuffer().set_viewport(ctx);
+      bool write_depth = true;
+      pipe.get_current_target().bind(ctx, write_depth);
+      pipe.get_current_target().set_viewport(ctx);
 
       {
         // single texture only
@@ -270,6 +271,8 @@ void Video3DRenderer::render(Pipeline& pipe)
         }
         current_shader->unuse(ctx);
       }
+
+      pipe.get_current_target().unbind(ctx);
     }
   }
 }

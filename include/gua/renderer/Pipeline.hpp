@@ -25,7 +25,7 @@
 #include <gua/node/CameraNode.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ABuffer.hpp>
+#include <gua/renderer/ShadowMap.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/LightTable.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
@@ -43,6 +43,10 @@ class WindowBase;
 struct RenderContext;
 class ShaderProgram;
 
+namespace node {
+  class SpotLightNode;
+}
+
 class GUA_DLL Pipeline {
  public:
 
@@ -58,48 +62,54 @@ class GUA_DLL Pipeline {
      std::unordered_map<std::string, time_point>     cpu_queries;
      std::map<std::string, double>                   results;
    };
-   
-public: 
+
+public:
 
   Pipeline(RenderContext& ctx, math::vec2ui const& resolution);
   Pipeline(Pipeline const&) = delete;
 
-  void process(CameraMode mode, node::SerializedCameraNode const& camera,
-               std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
+  std::shared_ptr<Texture2D> render_scene(
+    CameraMode mode, node::SerializedCameraNode const& camera,
+    std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
-  std::vector<PipelinePass>   const& get_passes()  const;
-  GBuffer                          & get_gbuffer() const;
-  ABuffer                          & get_abuffer();
+  void render_shadow_map(node::LightNode* light,
+                         LightTable::LightBlock& light_block);
+
+  RenderTarget                     & get_current_target() const;
   SerializedScene                  & get_scene();
-  SceneGraph                  const& get_graph()   const;
+  SceneGraph                  const& get_graph() const;
   RenderContext               const& get_context() const;
-  node::SerializedCameraNode  const& get_camera()  const;
+  node::SerializedCameraNode  const& get_scene_camera() const;
   LightTable                       & get_light_table();
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
-  void bind_camera_uniform_block(unsigned location) const;
   void draw_quad();
-  
+
   // time queries
-  void                                  begin_gpu_query(RenderContext const& ctx, std::string const& query_name);
-  void                                  end_gpu_query(RenderContext const& ctx, std::string const& query_name);
+  void begin_gpu_query(RenderContext const& ctx, std::string const& query_name);
+  void end_gpu_query(RenderContext const& ctx, std::string const& query_name);
 
-  void                                  begin_cpu_query(std::string const& query_name);
-  void                                  end_cpu_query(std::string const& query_name);
+  void begin_cpu_query(std::string const& query_name);
+  void end_cpu_query(std::string const& query_name);
 
-  void                                  fetch_gpu_query_results(RenderContext const& ctx);
+  void fetch_gpu_query_results(RenderContext const& ctx);
+
+  void clear_frame_cache();
 
  private:
+  void bind_camera_uniform_block(unsigned location) const;
+
+  RenderTarget*                         current_target_;
 
   RenderContext&                        context_;
   std::unique_ptr<GBuffer>              gbuffer_;
-  ABuffer                               abuffer_;
+  std::shared_ptr<SharedShadowMapResource> shadow_map_res_;
   CameraUniformBlock                    camera_block_;
   std::unique_ptr<LightTable>           light_table_;
 
   SceneGraph const*                     current_graph_;
-  SerializedScene                       current_scene_;
+  std::shared_ptr<SerializedScene>      current_scene_;
   node::SerializedCameraNode            current_camera_;
 
   math::vec2ui                          last_resolution_;

@@ -19,59 +19,42 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TAG_LIST_HPP
-#define GUA_TAG_LIST_HPP
+#ifndef GUA_RENDER_TARGET_HPP
+#define GUA_RENDER_TARGET_HPP
 
 // guacamole headers
+#include <gua/renderer/enums.hpp>
 #include <gua/platform.hpp>
-#include <gua/utils/TagRegister.hpp>
+#include <gua/renderer/Texture2D.hpp>
 
-// external headers
-#include <string>
-#include <bitset>
-#include <vector>
+#include <memory>
 
 namespace gua {
-namespace utils {
 
-/**
- * A class for smooth value interpolation.
- */
-class GUA_DLL TagList {
-  public:
+class GUA_DLL RenderTarget {
+ public:
 
-    TagList(std::vector<std::string> const& tags = std::vector<std::string>());
+  RenderTarget(math::vec2ui const& resolution);
+  virtual ~RenderTarget() {}
 
-    void add_tag(std::string const& tag);
-    void add_tags(std::vector<std::string> const& tags);
+  virtual void clear(RenderContext const& context) = 0;
+  virtual void set_viewport(RenderContext const& context);
 
-    void remove_tag(std::string const& tag);
-    void remove_tags(std::vector<std::string> const& tags);
+  virtual void bind(RenderContext const& context, bool write_depth) = 0;
+  virtual void unbind(RenderContext const& context);
 
-    void clear_tags();
+  virtual void remove_buffers(RenderContext const& ctx) = 0;
 
-    std::vector<std::string> const get_strings() const;
-    std::bitset<GUA_MAX_TAG_COUNT> const& get_bits() const;
+  virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const = 0;
 
-    void set_user_data(void* data) {
-      user_data_ = data;
-    }
+  unsigned            get_width()  const      { return resolution_.x; }
+  unsigned            get_height() const      { return resolution_.y; }
+  math::vec2ui const& get_resolution() const  { return resolution_; }
 
-    void* get_user_data() const {
-      return user_data_;
-    }
-
-    bool operator==(TagList const& other) const {
-      return tags_ == other.tags_;
-    }
-
- private:
-  void* user_data_ = nullptr;
-  std::bitset<GUA_MAX_TAG_COUNT> tags_;
-
+ protected:
+  math::vec2ui resolution_;
 };
 
 }
-}
 
-#endif  //GUA_TAG_LIST_HPP
+#endif  // GUA_RENDER_TARGET_HPP

@@ -24,14 +24,14 @@ public:
     unsigned     diffuse_enable;  // bool
     unsigned     specular_enable; // bool
     unsigned     casts_shadow;    // bool
-    //unsigned    pad;
 
-    //math::vec2ui shadow_map;
-    //float        shadow_offset;
-    //float        light_shadow_map_portion;
-    //math::vec2ui light_shadow_map;
+    float        shadow_offset;
+    math::mat4f  projection_view_mats[6];
+    math::vec2ui shadow_map;
+    int          cascade_count;
+    float        max_shadow_distance;
 
-    bool operator==(const LightBlock& rhs) const { 
+    bool operator==(const LightBlock& rhs) const {
       return    position_and_radius == rhs.position_and_radius
              && beam_direction_and_half_angle == rhs.beam_direction_and_half_angle
              && color == rhs.color
@@ -41,6 +41,11 @@ public:
              && type == rhs.type
              && diffuse_enable == rhs.diffuse_enable
              && specular_enable == rhs.specular_enable
+             && shadow_map == rhs.shadow_map
+             && projection_view_mats == rhs.projection_view_mats
+             && cascade_count == rhs.cascade_count
+             && max_shadow_distance == rhs.max_shadow_distance
+             && shadow_offset == rhs.shadow_offset
              && casts_shadow == rhs.casts_shadow;
     }
 
@@ -55,25 +60,25 @@ public:
 
 
   virtual ~LightTable() {}
-  
+
   void remove_buffers(RenderContext const& ctx);
 
   math::vec2ui invalidate(RenderContext const& ctx,
                           math::vec2ui const& resolution,
                           array_type const& lights,
                           int tile_power,
-                          unsigned sun_lights_num);
+                          int sun_lights_num);
 
   std::shared_ptr<Texture3D> const& get_light_bitset() const { return light_bitset_; }
-  unsigned get_lights_num() const { return lights_num_; }
-  unsigned get_sun_lights_num() const { return sun_lights_num_; }
+  int get_lights_num() const { return lights_num_; }
+  int get_sun_lights_num() const { return sun_lights_num_; }
 
   inline const uniform_array_type&   light_uniform_block() const { return uniform_block_; }
 
 private:
   uniform_array_type  uniform_block_;
-  unsigned            lights_num_ = 0;
-  unsigned            sun_lights_num_ = 0;
+  int                 lights_num_ = 0;
+  int                 sun_lights_num_ = 0;
 
   std::shared_ptr<Texture3D> light_bitset_;
   unsigned light_bitset_words_ = 0;

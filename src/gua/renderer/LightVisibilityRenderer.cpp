@@ -2,7 +2,6 @@
 #include <gua/renderer/LightVisibilityRenderer.hpp>
 
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/ShadowMapBuffer.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
@@ -31,11 +30,11 @@ void LightVisibilityRenderer::render(PipelinePass& pass,
   unsigned sun_lights_num = 0u;
   prepare_light_table(pipe, transforms, lights, sun_lights_num);
   math::vec2ui effective_resolution =
-      pipe.get_light_table().invalidate(ctx, pipe.get_camera().config.get_resolution(),
+      pipe.get_light_table().invalidate(ctx, pipe.get_scene_camera().config.get_resolution(),
                                         lights, tile_power, sun_lights_num);
 
   math::vec2ui rasterizer_resolution = (enable_fullscreen_fallback)
-      ? pipe.get_camera().config.get_resolution() : effective_resolution;
+      ? pipe.get_scene_camera().config.get_resolution() : effective_resolution;
 
   if (!empty_fbo_) {
     empty_fbo_ = ctx.render_device->create_frame_buffer();
@@ -103,6 +102,11 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
     light_block.specular_enable = light->data.get_enable_specular_shading();
     light_block.color           = math::vec4f(light->data.get_color().vec3f().r, light->data.get_color().vec3f().g, light->data.get_color().vec3f().b, 0.f);
     light_block.type            = static_cast<unsigned>(light->data.get_type());
+    light_block.casts_shadow    = light->data.get_enable_shadows();
+
+    if (light->data.get_enable_shadows()) {
+      pipe.render_shadow_map(light, light_block);
+    }
 
     if (light->data.get_type() == node::LightNode::Type::SUN) {
       ++sun_lights_num;
@@ -113,9 +117,10 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
       light_block.falloff         = 0.0f;
       light_block.softness        = 0.0f;
-      light_block.casts_shadow    = light->data.get_enable_shadows();
+
       sun_lights.push_back(light_block);
       sun_transforms.push_back(model_mat);
+
     } else if (light->data.get_type() == node::LightNode::Type::POINT) {
       math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
       float light_radius = scm::math::length(light_position - math::vec3(model_mat * math::vec4(0.f, 0.f, 1.f, 1.f)));
@@ -124,22 +129,20 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = 0;
-      light_block.casts_shadow    = 0;
+
       lights.push_back(light_block);
       transforms.push_back(model_mat);
+
     } else if (light->data.get_type() == node::LightNode::Type::SPOT) {
       math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
       math::vec3 beam_direction = math::vec3(model_mat * math::vec4(0.f, 0.f, -1.f, 1.f)) - light_position;
       float half_beam_angle = scm::math::dot(scm::math::normalize(math::vec3(model_mat * math::vec4(0.f, 0.5f, -1.f, 0.f))),
                                              scm::math::normalize(beam_direction));
-      if (light->data.get_enable_shadows()) {
-        // not implemented yet
-      }
       light_block.position_and_radius = math::vec4f(light_position.x, light_position.y, light_position.z, 0);
       light_block.beam_direction_and_half_angle = math::vec4f(beam_direction.x, beam_direction.y, beam_direction.z, half_beam_angle);
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = light->data.get_softness();
-      light_block.casts_shadow    = 0; //light->data.get_enable_shadows();
+
       lights.push_back(light_block);
       transforms.push_back(model_mat);
     }
@@ -172,7 +175,7 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe,
     math::mat4f light_transform(transforms[i]);
     gl_program->uniform("gua_model_matrix", 0, light_transform);
     gl_program->uniform("light_id", 0, int(i));
-    ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), 
+    ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx),
                                    scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
     ctx.render_context->apply();
 
