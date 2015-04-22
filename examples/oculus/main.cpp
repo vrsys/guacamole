@@ -21,6 +21,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/OculusWindow.hpp>
 
 #include <OVR.h>
@@ -120,7 +121,10 @@ int main(int argc, char** argv) {
 
   // initialize Oculus SDK
   OVR::SensorFusion* oculus_sensor = init_oculus();
-  if (!oculus_sensor) return 1; // no oculus sensor found
+  if (!oculus_sensor) {
+    gua::Logger::LOG_WARNING << "Could not connect to Oculus Rift! " <<
+      "There will be not rotation input." << std::endl;
+  }
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
@@ -217,7 +221,9 @@ int main(int argc, char** argv) {
 
     graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
 
-    camera->set_transform(get_oculus_transform(oculus_sensor));
+    if (oculus_sensor) {
+      camera->set_transform(get_oculus_transform(oculus_sensor));
+    }
 
     renderer.queue_draw({&graph});
   });
