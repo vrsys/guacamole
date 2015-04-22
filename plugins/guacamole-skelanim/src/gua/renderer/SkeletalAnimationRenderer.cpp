@@ -33,141 +33,151 @@
 
 namespace gua {
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  SkeletalAnimationRenderer::SkeletalAnimationRenderer(RenderContext const& ctx)
-    : bones_block_(ctx.render_device)
-  {
+SkeletalAnimationRenderer::SkeletalAnimationRenderer(RenderContext const& ctx)
+  : bones_block_(ctx.render_device)
+{
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-    ResourceFactory factory;
-    std::string v_shader = factory.read_shader_file("resources/shaders/skinned_mesh_shader.vert");
-    std::string f_shader = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
+  ResourceFactory factory;
+  std::string v_shader = factory.read_shader_file("resources/shaders/skinned_mesh_shader.vert");
+  std::string f_shader = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
 #else
-    std::string v_shader = Resources::lookup_shader("shaders/skinned_mesh_shader.vert");
-    std::string f_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
+  std::string v_shader = Resources::lookup_shader("shaders/skinned_mesh_shader.vert");
+  std::string f_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
 #endif
 
-    program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
-    program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
-  }
+  program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
+  program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  void SkeletalAnimationRenderer::create_state_objects(RenderContext const& ctx)
-  {
-    rs_cull_back_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
-    rs_cull_none_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
-  }
+void SkeletalAnimationRenderer::create_state_objects(RenderContext const& ctx)
+{
+  rs_cull_back_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
+  rs_cull_none_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
-  {
-    auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::SkeletalAnimationNode))));
+void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc, bool rendering_shadows)
+{
+  auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::SkeletalAnimationNode))));
 
-    if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
+  if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
 
-      // TODO
-      /*std::sort(sorted_objects->second.begin(), sorted_objects->second.end(),
-                [](node::Node* a, node::Node* b) {
-                  return reinterpret_cast<node::SkeletalAnimationNode*>(a)->get_material()->get_shader()
-                       < reinterpret_cast<node::SkeletalAnimationNode*>(b)->get_material()->get_shader();
-                });*/
+    // TODO
+    /*std::sort(sorted_objects->second.begin(), sorted_objects->second.end(),
+              [](node::Node* a, node::Node* b) {
+                return reinterpret_cast<node::SkeletalAnimationNode*>(a)->get_material()->get_shader()
+                     < reinterpret_cast<node::SkeletalAnimationNode*>(b)->get_material()->get_shader();
+              });*/
 
-      RenderContext const& ctx(pipe.get_context());
+  RenderContext& ctx(pipe.get_context());
 
-      bool writes_only_color_buffer = false;
-      pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
-      pipe.get_gbuffer().set_viewport(ctx);
-      pipe.get_abuffer().bind(ctx);
+  std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / TrimeshPass";
+  std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / TrimeshPass";
 
-      int view_id(pipe.get_camera().config.get_view_id());
+  pipe.begin_gpu_query(ctx, gpu_query_name);
+  pipe.begin_cpu_query(cpu_query_name);
 
-      MaterialShader*                current_material(nullptr);
-      std::shared_ptr<ShaderProgram> current_shader;
-      auto current_rasterizer_state = rs_cull_back_;
-      ctx.render_context->apply();
+  bool write_depth = true;
+  pipe.get_current_target().bind(ctx, write_depth);
+  pipe.get_current_target().set_viewport(ctx);
 
-      // loop through all objects, sorted by material ----------------------------
-      for (auto const& object : sorted_objects->second) {
+  int view_id(pipe.get_scene_camera().config.get_view_id());
 
-        auto skel_anim_node(reinterpret_cast<node::SkeletalAnimationNode*>(object));
+  MaterialShader*                current_material(nullptr);
+  std::shared_ptr<ShaderProgram> current_shader;
+  auto current_rasterizer_state = rs_cull_back_;
+  ctx.render_context->apply();
+
+    // loop through all objects, sorted by material ----------------------------
+    for (auto const& object : sorted_objects->second) {
+
+      auto skel_anim_node(reinterpret_cast<node::SkeletalAnimationNode*>(object));
 
 
-        auto materials = skel_anim_node->get_materials();
-        auto geometries = skel_anim_node->get_geometries();
+      auto materials = skel_anim_node->get_materials();
+      auto geometries = skel_anim_node->get_geometries();
 
-        // loop through all resources in animation node
-        for(uint i(0);i<materials.size();++i){
+      // loop through all resources in animation node
+      for(uint i(0);i<materials.size();++i){
 
-          if (current_material != materials[i]->get_shader()) {
-            current_material = materials[i]->get_shader();
-            if (current_material) {
+        if (current_material != materials[i]->get_shader()) {
+          current_material = materials[i]->get_shader();
+          if (current_material) {
 
-              auto shader_iterator = programs_.find(current_material);
-              if (shader_iterator != programs_.end())
-              {
-                current_shader = shader_iterator->second;
-              }
-              else {
-                auto smap = global_substitution_map_;
-                for (const auto& i: current_material->generate_substitution_map())
-                  smap[i.first] = i.second;
-
-                current_shader = std::make_shared<ShaderProgram>();
-                current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
-                programs_[current_material] = current_shader;
-              }
+            auto shader_iterator = programs_.find(current_material);
+            if (shader_iterator != programs_.end())
+            {
+              current_shader = shader_iterator->second;
             }
             else {
-              Logger::LOG_WARNING << "SkeletalAnimationPass::process(): Cannot find material: "
-                                  << materials[i]->get_shader_name() << std::endl;
-            }
-            if (current_shader) {
-              current_shader->use(ctx);
-              current_shader->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
-                                                           pipe.get_gbuffer().get_height()),
-                                          "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
-              current_shader->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_width(),  "gua_texel_width");
-              current_shader->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_height(), "gua_texel_height");
-              // hack
-              current_shader->set_uniform(ctx, pipe.get_gbuffer().get_current_depth_buffer()->get_handle(ctx),
-                                      "gua_gbuffer_depth");
+              auto smap = global_substitution_map_;
+              for (const auto& i: current_material->generate_substitution_map())
+                smap[i.first] = i.second;
+
+              current_shader = std::make_shared<ShaderProgram>();
+              current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+              programs_[current_material] = current_shader;
             }
           }
-
-          if (current_shader && geometries[i]) {
-            UniformValue model_mat(::scm::math::mat4f(skel_anim_node->get_cached_world_transform()));
-            UniformValue normal_mat(::scm::math::mat4f(scm::math::transpose(scm::math::inverse(skel_anim_node->get_cached_world_transform()))));
-
-            current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
-            current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-
-            materials[i]->apply_uniforms(ctx, current_shader.get(), view_id);
-
-            current_rasterizer_state = materials[i]->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
-
-            if (ctx.render_context->current_rasterizer_state() != current_rasterizer_state) {
-              ctx.render_context->set_rasterizer_state(current_rasterizer_state);
-              ctx.render_context->apply_state_objects();
-            }
-
-            ctx.render_context->apply_program();
-
-            skel_anim_node->update_bone_transforms();
-            bones_block_.update(ctx.render_context, skel_anim_node->get_bone_transforms());
-
-            ctx.render_context->bind_uniform_buffer( bones_block_.block().block_buffer(), 2);
-
-            geometries[i]->draw(ctx);
+          else {
+            Logger::LOG_WARNING << "SkeletalAnimationPass::process(): Cannot find material: "
+                                << materials[i]->get_shader_name() << std::endl;
+          }
+          if (current_shader) {
+            current_shader->use(ctx);
+            current_shader->set_uniform(ctx, math::vec2i(pipe.get_current_target().get_width(),
+                                                         pipe.get_current_target().get_height()),
+                                        "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
+            current_shader->set_uniform(ctx, 1.0f / pipe.get_current_target().get_width(),  "gua_texel_width");
+            current_shader->set_uniform(ctx, 1.0f / pipe.get_current_target().get_height(), "gua_texel_height");
+            // hack
+            current_shader->set_uniform(ctx, pipe.get_current_target().get_depth_buffer()->get_handle(ctx),
+                                    "gua_gbuffer_depth");
           }
         }
-      }
 
-      pipe.get_gbuffer().unbind(ctx);
-      pipe.get_abuffer().unbind(ctx);
-      ctx.render_context->reset_state_objects();
+        if (current_shader && geometries[i]) {
+          auto model_view_mat = pipe.get_scene().frustum.get_view() * skel_anim_node->get_cached_world_transform();
+          UniformValue model_mat(::scm::math::mat4f(skel_anim_node->get_cached_world_transform()));
+          UniformValue normal_mat(::scm::math::mat4f(scm::math::transpose(scm::math::inverse(skel_anim_node->get_cached_world_transform()))));
+
+          current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
+          current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
+          current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+
+          materials[i]->apply_uniforms(ctx, current_shader.get(), view_id);
+
+          current_rasterizer_state = materials[i]->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
+
+          if (ctx.render_context->current_rasterizer_state() != current_rasterizer_state) {
+            ctx.render_context->set_rasterizer_state(current_rasterizer_state);
+            ctx.render_context->apply_state_objects();
+          }
+
+          ctx.render_context->apply_program();
+
+          skel_anim_node->update_bone_transforms();
+          bones_block_.update(ctx.render_context, skel_anim_node->get_bone_transforms());
+
+          ctx.render_context->bind_uniform_buffer( bones_block_.block().block_buffer(), 2);
+
+          geometries[i]->draw(ctx);
+        }
+      }
     }
 
+    pipe.get_current_target().unbind(ctx);
+
+    pipe.end_gpu_query(ctx, gpu_query_name);
+    pipe.end_cpu_query(cpu_query_name);
+
+    ctx.render_context->reset_state_objects();
   }
+
+}
 } // namespace gua

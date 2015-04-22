@@ -5,8 +5,8 @@
 //external headers
 #include <iostream>
 #include <queue>
-#include <map>
 #include <fbxsdk.h>
+#include <map>
 
 namespace gua{
 
@@ -54,17 +54,6 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh, Bone const& root, unsigned const materia
       bone_counts.push_back(curr_influence.weights.size());
     }
   }
-
-  //load reduced triangles
-  indices.reserve(num_triangles * 3);
-  for(temp_tri const& tri : temp_tris) {
-    indices.push_back(tri.verts[0]);
-    indices.push_back(tri.verts[1]);
-    indices.push_back(tri.verts[2]);
-  }
-
-  //output reduction info
-  Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;*/
 }
 
 SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root):

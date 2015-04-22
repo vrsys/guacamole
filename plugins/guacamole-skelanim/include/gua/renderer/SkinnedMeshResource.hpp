@@ -82,7 +82,7 @@ class SkinnedMeshResource : public GeometryResource {
    *
    * \param context          The RenderContext to draw onto.
    */
-  void draw(RenderContext const& context) /*const*/;
+  void draw(RenderContext& context) /*const*/;
 
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits);
@@ -101,7 +101,7 @@ class SkinnedMeshResource : public GeometryResource {
 
  private:
 
-  void upload_to(RenderContext const& context) /*const*/;
+  void upload_to(RenderContext& ctx) /*const*/;
 
   SkinnedMesh mesh_;
 

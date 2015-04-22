@@ -565,7 +565,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   
   ////////////////////////////////////////////////////////////////////////////////
 
-  RenderContext const& Pipeline::get_context() const {
+  RenderContext& Pipeline::get_context() {
     return context_;
   }
 
@@ -625,7 +625,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Pipeline::bind_camera_uniform_block(unsigned location) const {
+  void Pipeline::bind_camera_uniform_block(unsigned location) {
     get_context().render_context->bind_uniform_buffer(
       camera_block_.block().block_buffer(), location);
   }

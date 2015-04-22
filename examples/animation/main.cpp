@@ -30,6 +30,7 @@
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
+#include <gua/renderer/SkeletalAnimationPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 
 // forward mouse interaction to trackball
@@ -129,11 +130,11 @@ int main(int argc, char** argv) {
   // skelNode->add_animations("data/objects/fbx/Run.FBX", "unterschiedlich");
   
 
-  auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
-  light2->data.set_brightness(100.f);
-  light2->scale(10.f);
-  light2->translate(-2.f, 3.f, 5.f);
+  // auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
+  // light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
+  // light2->data.set_brightness(100.f);
+  // light2->scale(10.f);
+  // light2->translate(-2.f, 3.f, 5.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));

@@ -6,6 +6,7 @@
  *                                                                            *
  * This program is free software: you can redistribute it and/or modify it    *
  * under the terms of the GNU General Public License as published by the Free *
+ * Software Foundation, either version 3 of the License, or (at your option)  *
  * any later version.                                                         *
  *                                                                            *
  * This program is distributed in the hope that it will be useful, but        *
@@ -18,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SKELETAL_ANIMATION_PASS_HPP
-#define GUA_SKELETAL_ANIMATION_PASS_HPP
+#ifndef GUA_TRIMESH_PASS_HPP
+#define GUA_TRIMESH_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
 
@@ -36,11 +37,10 @@ class GUA_DLL SkeletalAnimationPassDescription : public PipelinePassDescription 
   SkeletalAnimationPassDescription();
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
-  
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
 }
 
-#endif  // GUA_SKELETAL_ANIMATION_PASS_HPP
+#endif  // GUA_TRIMESH_PASS_HPP

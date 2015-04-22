@@ -38,14 +38,4 @@ namespace gua {
     framecount(0),
     bone_transform_blocks{}
     {}
-  RenderContext::RenderContext(RenderContext const& ctx)
-    : context(ctx.context),
-    display(ctx.display),
-    render_context(ctx.render_context),
-    render_device(ctx.render_device),
-    render_window(ctx.render_window),
-    id(ctx.id),
-    framecount(ctx.framecount),
-    bone_transform_blocks{ctx.bone_transform_blocks}
-    {}
 }
