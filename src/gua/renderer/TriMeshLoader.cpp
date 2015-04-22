@@ -302,7 +302,7 @@ bool TriMeshLoader::is_supported(std::string const& file_name) const {
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_FBX
 std::shared_ptr<node::Node> TriMeshLoader::get_tree(
-    FbxNode& node,
+    FbxNode& fbx_node,
     std::string const& file_name,
     unsigned flags, unsigned& mesh_count) {
   // creates a geometry node and returns it
@@ -377,8 +377,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     GeometryDatabase::instance()->add(
         desc.unique_key(),
         std::make_shared<TriMeshRessource>(
-            ai_scene->mMeshes[ai_root->mMeshes[i]],
-            importer,
+            Mesh {*ai_scene->mMeshes[ai_root->mMeshes[i]]},
             flags & TriMeshLoader::MAKE_PICKABLE));
 
     // load material

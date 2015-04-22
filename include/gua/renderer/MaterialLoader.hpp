@@ -57,13 +57,12 @@ class GUA_DLL MaterialLoader {
  public:
 
   std::shared_ptr<Material> load_material(aiMaterial const* material,
-                                          std::string const& assets_directory,
-                                          bool optimize_material) const;
+                                std::string const& assets_directory,
+                                bool optimize_material) const;
 
   std::shared_ptr<Material> load_json(std::string const& material,
                                 std::string const& assets_directory,
                                 std::shared_ptr<Material> const& base_mat = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material()) const;
-
 #ifdef GUACAMOLE_FBX
   std::shared_ptr<Material> load_material(fbxsdk_2015_1::FbxSurfaceMaterial const& material,
                                 std::string const& assets_directory) const;
@@ -80,3 +79,4 @@ class GUA_DLL MaterialLoader {
 }
 
 #endif  // GUA_MATERIAL_LOADER_HPP
+

@@ -66,7 +66,7 @@ SkinnedMeshResource::SkinnedMeshResource(SkinnedMesh const& mesh, bool build_kd_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkinnedMeshResource::upload_to(RenderContext const& ctx) /*const*/{
+void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/{
 
   if (vertices_.size() <= ctx.id || vertices_[ctx.id] == nullptr) {
     if (!mesh_.num_vertices > 0) {
@@ -208,7 +208,7 @@ SkinnedMeshResource::get_bone_boxes(std::vector<scm::math::mat4f> const& bone_tr
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkinnedMeshResource::draw(RenderContext const& ctx) /*const*/ {
+void SkinnedMeshResource::draw(RenderContext& ctx) /*const*/ {
 
   // upload to GPU if neccessary
   upload_to(ctx);

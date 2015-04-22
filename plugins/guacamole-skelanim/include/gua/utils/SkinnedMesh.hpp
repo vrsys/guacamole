@@ -34,6 +34,7 @@
 #include <scm/core/math/quat.h>
 
 #include <vector>
+#include <map>
 #include <assimp/scene.h>
 
 namespace fbxsdk_2015_1{
@@ -47,8 +48,7 @@ struct SkinnedMesh : public Mesh {
   SkinnedMesh();
 
   SkinnedMesh(aiMesh const& mesh, Bone const& root = Bone{});
-
-  SkinnedMesh(FbxMesh& mesh, Bone const& root = Bone{}, unsigned const material_index = 0);
+  SkinnedMesh(fbxsdk_2015_1::FbxMesh& mesh, Bone const& root = Bone{}, unsigned const material_index = 0);
 
   struct Vertex {
     scm::math::vec3f pos;
@@ -89,7 +89,10 @@ struct SkinnedMesh : public Mesh {
     }
   };
 
+  static std::vector<bone_influences> get_weights(aiMesh const& mesh, Bone const& root);
   static std::vector<bone_influences> get_weights(fbxsdk_2015_1::FbxMesh const& mesh, Bone const& root);
+
+
 };
 
 }

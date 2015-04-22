@@ -39,6 +39,9 @@ namespace fbxsdk_2015_1{
   class FbxAMatrix;
   class FbxQuaternion;
   class FbxMesh;
+
+  template<class T>
+  class FbxLayerElementTemplate;
 }
 
 namespace to_gua{
@@ -138,7 +141,7 @@ struct Mesh {
   std::vector<unsigned> construct(fbxsdk_2015_1::FbxMesh& mesh, int material_index);
 
   template<typename T>
-  static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);
+  static std::function<unsigned(temp_vert const&)> get_access_function(fbxsdk_2015_1::FbxLayerElementTemplate<T> const& layer);
 };
 
 

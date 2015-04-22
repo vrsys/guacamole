@@ -66,7 +66,9 @@ class GUA_DLL SkeletalAnimationLoader {
      OPTIMIZE_GEOMETRY = 1 << 1,
      MAKE_PICKABLE = 1 << 2,
      NORMALIZE_POSITION = 1 << 3,
-     NORMALIZE_SCALE = 1 << 4
+     NORMALIZE_SCALE = 1 << 4,
+     NO_SHARED_MATERIALS = 1 << 5,
+     OPTIMIZE_MATERIALS = 1 << 6
    };
 
 public:

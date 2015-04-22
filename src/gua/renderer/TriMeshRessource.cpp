@@ -52,9 +52,10 @@ TriMeshRessource::TriMeshRessource(Mesh const& mesh, bool build_kd_tree)
       bounding_box_.expandBy(math::vec3{mesh_.positions[v]});
     } 
 
-  if (build_kd_tree) {
-    kd_tree_.generate(mesh);
-  }   
+    if (build_kd_tree) {
+      kd_tree_.generate(mesh);
+    }   
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

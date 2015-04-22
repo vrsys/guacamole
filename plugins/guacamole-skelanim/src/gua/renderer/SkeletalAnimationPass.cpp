@@ -22,7 +22,6 @@
 // class header
 #include <gua/renderer/SkeletalAnimationPass.hpp>
 
-#include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/renderer/SkeletalAnimationRenderer.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -39,11 +38,15 @@ SkeletalAnimationPassDescription::SkeletalAnimationPassDescription()
   : PipelinePassDescription() {
   vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
   fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
+  name_ = "SkeletalAnimationPass";
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
-  doClear_ = false;
+  enable_for_shadows_ = true;
   rendermode_ = RenderMode::Custom;
+
+  depth_stencil_state_ = boost::make_optional(
+      scm::gl::depth_stencil_state_desc(true, true));
 }
 
 
@@ -65,9 +68,10 @@ PipelinePass SkeletalAnimationPassDescription::make_pass(RenderContext const& ct
   renderer->create_state_objects(ctx);
 
   pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    //pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_);
-    renderer->render(pipe, desc);
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool rendering_shadows) {
+
+    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+    renderer->render(pipe, desc, rendering_shadows);
   };
 
   return pass;

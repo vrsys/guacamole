@@ -426,7 +426,8 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(a
     if (flags & SkeletalAnimationLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
       aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
-      material = material_loader.load_material(ai_material, file_name);
+      material = material_loader.load_material(ai_material, file_name,
+                                              flags & SkeletalAnimationLoader::OPTIMIZE_MATERIALS);
     }
     materials.push_back(material);
   }
