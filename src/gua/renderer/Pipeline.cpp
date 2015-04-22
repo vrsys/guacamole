@@ -178,11 +178,11 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   // serialize this scenegraph
   current_scene_ = current_graph_->serialize(camera, mode);
 
-  camera_block_.update(context_.render_context,
-                        current_scene_->rendering_frustum,
-                        current_scene_->clipping_planes,
-                        camera.config.get_view_id(),
-                        camera.config.get_resolution());
+  camera_block_.update(context_,
+                       current_scene_->rendering_frustum,
+                       current_scene_->clipping_planes,
+                       camera.config.get_view_id(),
+                       camera.config.get_resolution());
   bind_camera_uniform_block(0);
 
   // clear gbuffer
@@ -308,7 +308,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
                                                    current_camera_.config.enable_frustum_culling(),
                                                    current_camera_.config.mask());
 
-        camera_block_.update(context_.render_context,
+        camera_block_.update(context_,
                              frustum,
                              current_scene_->clipping_planes,
                              current_camera_.config.get_view_id(),
@@ -493,7 +493,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     current_target_ = gbuffer_.get();
     current_scene_ = orig_scene;
 
-    camera_block_.update(context_.render_context,
+    camera_block_.update(context_,
                          current_scene_->rendering_frustum,
                          current_scene_->clipping_planes,
                          current_camera_.config.get_view_id(),

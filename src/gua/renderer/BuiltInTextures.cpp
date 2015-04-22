@@ -456,7 +456,10 @@ k\204\205ke\217\211p\\~Z\303\224{(s\224Jxs\256s\245\30{\204|vn\241\214s<\
 
 NoiseTexture::
 NoiseTexture()
-  : Texture2D(64, 64, scm::gl::FORMAT_RGB_8, scm::gl::FORMAT_RGB_8, {pixel_data})
+  : Texture2D(64, 64, scm::gl::FORMAT_RGB_8, scm::gl::FORMAT_RGB_8, {pixel_data},
+              1, scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
+                                             scm::gl::WRAP_REPEAT,
+                                             scm::gl::WRAP_REPEAT))
 {}
 
 ////////////////////////////////////////////////////////////////////////////////

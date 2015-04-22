@@ -3,6 +3,7 @@
 
 #include <gua/math/math.hpp>
 #include <gua/renderer/Frustum.hpp>
+#include <gua/renderer/RenderContext.hpp>
 
 #include <scm/gl_core/render_device/render_device_fwd.h>
 #include <scm/gl_core/buffer_objects/uniform_buffer_adaptor.h>
@@ -20,6 +21,7 @@ public:
     math::vec4f  position;
     math::vec4f  clipping_planes[64];
     math::vec2i  resolution;
+    math::vec2ui noise_texture;
     int          clipping_plane_count;
     int          view_id;
     float        clip_near;
@@ -31,14 +33,15 @@ public:
   CameraUniformBlock(scm::gl::render_device_ptr const& device);
   ~CameraUniformBlock();
 
-  void update(scm::gl::render_context_ptr const& context, Frustum const& cam,
+  void update(RenderContext const& context, Frustum const& cam,
               std::vector<math::vec4f> const& clipping_planes,
               int view_id, math::vec2ui const& screen_resolution);
 
   inline const block_type&   block() const { return uniform_block_; }
 
 private:
-  block_type          uniform_block_;
+  block_type   uniform_block_;
+  math::vec2ui noise_texture_;
 };
 
 } // namespace gua {
