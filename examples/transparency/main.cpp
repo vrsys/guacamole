@@ -118,6 +118,7 @@ int main(int argc, char** argv) {
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SPOT);
   light->data.set_brightness(10.0f);
+  light->data.set_enable_shadows(true);
   light->scale(2.f);
   light->rotate(-10, 0.f, 1.f, 0.f);
   light->rotate(-10, 1.f, 0.f, 0.f);
