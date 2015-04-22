@@ -54,7 +54,7 @@ void VolumeRenderer::render(Pipeline& pipe) {
 
     auto const& ctx(pipe.get_context());
 
-    ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+    ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
 
     // 1. render proxy geometry into fbo
     ctx.render_context->set_frame_buffer(volume_raygeneration_fbo_);
@@ -165,7 +165,9 @@ void VolumeRenderer::init_resources(Pipeline& pipe) {
   ray_generation_shader_ = std::make_shared<ShaderProgram>();
   ray_generation_shader_->create_from_sources(ray_generation_vertex_shader, ray_generation_fragment_shader);
 
-  depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
+  depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(
+    false, false, scm::gl::COMPARISON_NEVER, true, 1, 0,
+    scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL));
 
   blend_state_ = ctx.render_device->create_blend_state(true,
                          scm::gl::FUNC_SRC_ALPHA,
