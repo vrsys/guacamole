@@ -135,7 +135,7 @@ void Renderer::renderclient(Mailbox in) {
         if (cmd.serialized_cam->config.get_enable_stereo()) {
           auto img(pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs));
           if (img) window->display(img, true);
-          img = pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs);
+          img = pipe->render_scene(CameraMode::RIGHT,  *cmd.serialized_cam, *cmd.scene_graphs);
           if (img) window->display(img, false);
         } else {
           auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(),
@@ -240,7 +240,7 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
           if (serialized_cam.config.get_enable_stereo()) {
             auto img(pipe->render_scene(CameraMode::LEFT,  serialized_cam, *sgs));
             if (img) window->display(img, true);
-            img = pipe->render_scene(CameraMode::LEFT,  serialized_cam, *sgs);
+            img = pipe->render_scene(CameraMode::RIGHT,  serialized_cam, *sgs);
             if (img) window->display(img, false);
           } else {
             auto img(pipe->render_scene(serialized_cam.config.get_mono_mode(),
