@@ -40,8 +40,12 @@ ShadowMap::ShadowMap(RenderContext const& ctx, math::vec2ui const& resolution) :
   viewport_offset_(math::vec2f(0.f, 0.f)),
   viewport_size_(math::vec2f(resolution)) {
 
-  scm::gl::sampler_state_desc state;
+  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
+                                    // scm::gl::FILTER_ANISOTROPIC,
+                                    scm::gl::WRAP_CLAMP_TO_EDGE,
+                                    scm::gl::WRAP_CLAMP_TO_EDGE);
   state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
+  state._max_anisotropy = 16;
 
   depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D16, 1, state);
 

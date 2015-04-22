@@ -46,7 +46,7 @@ float gua_get_shadow(int light_id, int cascade_id, vec3 position, vec2 lookup_of
 
   for (y = -1; y <= 1; ++y) {
     for (x = -1; x <= 1; ++x) {
-      sum += gua_get_shadow(light_id, smap_coords, ivec2(x, y), portion, acne_offset);
+      sum += gua_get_shadow(light_id, smap_coords, ivec2(x, y) * 2, portion, acne_offset);
     }
   }
 
