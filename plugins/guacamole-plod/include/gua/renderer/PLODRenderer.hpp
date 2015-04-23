@@ -90,6 +90,7 @@ namespace gua {
     scm::gl::texture_2d_ptr                      accumulation_pass_color_result_;
     scm::gl::texture_2d_ptr                      accumulation_pass_normal_result_;
     scm::gl::texture_2d_ptr                      accumulation_pass_pbr_result_;
+    scm::gl::texture_2d_ptr                      accumulation_pass_weight_and_depth_result_;
     scm::gl::frame_buffer_ptr                    accumulation_pass_result_fbo_;
 
     //normalization pass FBO & attachments

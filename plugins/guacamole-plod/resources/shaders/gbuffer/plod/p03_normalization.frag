@@ -11,11 +11,10 @@ in vec2 plod_quad_coords;
 @include "common/gua_camera_uniforms.glsl"
 @include "common/gua_global_variable_declaration.glsl"
 ///////////////////////////////////////////////////////////////////////////////
-//layout(binding=0) uniform sampler2D p01_depth_texture;
 layout(binding=0) uniform sampler2D p02_color_texture;
 layout(binding=1) uniform sampler2D p02_normal_texture;
 layout(binding=2) uniform sampler2D p02_pbr_texture;
-//layout(binding=3) uniform sampler2D p01_log_depth_texture;
+layout(binding=3) uniform sampler2D p02_weight_and_depth_texture;
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -31,9 +30,10 @@ void main() {
   float output_depth  = 1.0;
   vec3  output_normal = vec3(0.0);
   vec3 coords = vec3(plod_quad_coords, 0.0);
-  vec4 accumulated_color = texture(p02_color_texture, coords.xy);
+  vec3 accumulated_color = texture(p02_color_texture, coords.xy).rgb;
  
-  float accumulated_weight = accumulated_color.a;
+  vec2 accumulated_weight_and_depth = texture(p02_weight_and_depth_texture, coords.xy).rg;
+  float accumulated_weight = accumulated_weight_and_depth.x;
 
   if(accumulated_weight == 0.0) {
     discard;
@@ -44,7 +44,7 @@ void main() {
   normalized_color = pow(normalized_color, vec3(1.4));
  
   vec3 accumulated_normal = texture(p02_normal_texture, coords.xy).rgb;
-  float accumulated_depth =  texture(p02_normal_texture, coords.xy).a;
+  float accumulated_depth =  accumulated_weight_and_depth.y ;
   vec3 normalized_normal = normalize(accumulated_normal.rgb / accumulated_weight);
 
   float blended_depth = accumulated_depth / accumulated_weight;

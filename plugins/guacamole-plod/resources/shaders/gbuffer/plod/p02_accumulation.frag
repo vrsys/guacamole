@@ -32,9 +32,10 @@ layout(binding=0) uniform sampler2D p01_linear_depth_texture;
 // output
 ///////////////////////////////////////////////////////////////////////////////
 
-layout (location = 0) out vec4 out_accumulated_color;
-layout (location = 1) out vec4 out_accumulated_normal;
+layout (location = 0) out vec3 out_accumulated_color;
+layout (location = 1) out vec3 out_accumulated_normal;
 layout (location = 2) out vec3 out_accumulated_pbr;
+layout (location = 3) out vec2 out_accumulated_weight_and_depth;
 
 ///////////////////////////////////////////////////////////////////////////////
 // splatting methods
@@ -82,11 +83,12 @@ void main() {
   @material_input@
   @material_method_calls_frag@
 
-  out_accumulated_color = vec4(weight * gua_color, weight);
+  out_accumulated_color = vec3(weight * gua_color);
   //out_accumulated_normal = vec4(weight * face_forward_normal, gl_FragCoord.z);
-  out_accumulated_normal = vec4(weight * face_forward_normal, weight * pass_log_depth);
+  out_accumulated_normal = vec3(weight * face_forward_normal);
   out_accumulated_pbr = vec3(gua_metalness, gua_roughness, gua_emissivity) * weight;
 
+  out_accumulated_weight_and_depth = vec2(weight, weight * pass_log_depth);
 
 }
 
