@@ -35,7 +35,7 @@ class GUA_DLL GBuffer : public RenderTarget {
 
   GBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
 
-  void clear(RenderContext const& context) override;
+  void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;
   void clear_color(RenderContext const& context);
   
   void bind(RenderContext const& context, bool write_depth) override;

@@ -19,57 +19,28 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SERIALIZED_SCENE_HPP
-#define GUA_SERIALIZED_SCENE_HPP
+#ifndef GUA_STENCIL_PASS_HPP
+#define GUA_STENCIL_PASS_HPP
 
-// guacamole headers
-#include <gua/node/Node.hpp>
-#include <gua/node/ScreenNode.hpp>
-#include <gua/node/ClippingPlaneNode.hpp>
-#include <gua/math/BoundingBox.hpp>
-#include <gua/renderer/Frustum.hpp>
+#include <gua/renderer/PipelinePass.hpp>
+
+#include <gua/platform.hpp>
 
 // external headers
-#include <vector>
-#include <unordered_map>
-#include <typeindex>
+#include <scm/gl_core/buffer_objects.h>
 
 namespace gua {
 
-/**
- * Stores a serialized scene graph.
- *
- * When the optimizer traverses the scene graph, it produces an SerializedScene
- * which contains relevant nodes only.
- */
-struct GUA_DLL SerializedScene {
 
-  /**
-  * All geometry nodes.
-  */
-  std::unordered_map<std::type_index, std::vector<node::Node*>> nodes;
-
-  /**
-   * The rendering frustum.
-   */
-  Frustum rendering_frustum;
-
-  /**
-   * The culling frustum. Not neccessarily the same as above.
-   */
-  Frustum culling_frustum;
-
-  /**
-   * Clipping plane parameters.
-   */
-  std::vector<math::vec4f> clipping_planes;
-
-  /**
-   * All bounding boxes.
-   */
-  std::vector<math::BoundingBox<math::vec3> > bounding_boxes;
+class GUA_DLL StencilPassDescription : public PipelinePassDescription {
+ public:
+  StencilPassDescription();
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
+  friend class Pipeline;
+ protected:
+  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
 }
 
-#endif  // GUA_SERIALIZED_SCENE_HPP
+#endif  // GUA_STENCIL_PASS_HPP

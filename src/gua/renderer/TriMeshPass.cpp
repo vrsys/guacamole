@@ -48,7 +48,11 @@ TriMeshPassDescription::TriMeshPassDescription()
   rendermode_ = RenderMode::Custom;
 
   depth_stencil_state_ = boost::make_optional(
-      scm::gl::depth_stencil_state_desc(true, true));
+    scm::gl::depth_stencil_state_desc(
+      true, true, scm::gl::COMPARISON_LESS, true, 1, 0, 
+      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    )
+  );
 }
 
 
@@ -72,7 +76,7 @@ PipelinePass TriMeshPassDescription::make_pass(RenderContext const& ctx, Substit
   pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool rendering_shadows) {
 
-    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
     renderer->render(pipe, desc, rendering_shadows);
   };
 

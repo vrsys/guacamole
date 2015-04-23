@@ -178,15 +178,15 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   // serialize this scenegraph
   current_scene_ = current_graph_->serialize(camera, mode);
 
-  camera_block_.update(context_.render_context,
-                        current_scene_->frustum,
-                        current_scene_->clipping_planes,
-                        camera.config.get_view_id(),
-                        camera.config.get_resolution());
+  camera_block_.update(context_,
+                       current_scene_->rendering_frustum,
+                       current_scene_->clipping_planes,
+                       camera.config.get_view_id(),
+                       camera.config.get_resolution());
   bind_camera_uniform_block(0);
 
   // clear gbuffer
-  gbuffer_->clear(context_);
+  gbuffer_->clear(context_, 1.f, 1);
 
   current_target_ = gbuffer_.get();
 
@@ -233,27 +233,23 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   ////////////////////////////////////////////////////////////////////////////////
 
   void Pipeline::render_shadow_map(node::LightNode* light,
-                                 LightTable::LightBlock& light_block) {
+                                   LightTable::LightBlock& light_block) {
 
     if (!shadow_map_res_) {
       shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
     }
 
-
-    light_block.shadow_offset = light->data.get_shadow_offset();
-
     auto& current_mask(current_camera_.config.mask());
+
+    std::shared_ptr<ShadowMap> shadow_map(nullptr);
+    bool needs_redraw(false);
 
     // has the shadow map been rendered this frame already?
     auto cached_shadow_map(shadow_map_res_->used_shadow_maps.find(light));
 
     if (cached_shadow_map != shadow_map_res_->used_shadow_maps.end() && cached_shadow_map->second.render_mask == current_mask) {
-      light_block.shadow_map = cached_shadow_map->second.shadow_map->get_depth_buffer()->get_handle(context_);
-      return;
+      shadow_map = cached_shadow_map->second.shadow_map;
     }
-
-    // if not, find an unused shadow map with the correct size
-    std::shared_ptr<ShadowMap> shadow_map;
 
     unsigned viewport_size(light->data.shadow_map_size());
     unsigned cascade_count(1);
@@ -270,15 +266,19 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     light_block.cascade_count = cascade_count;
     light_block.max_shadow_distance = 1.f;
 
-    for (auto it(shadow_map_res_->unused_shadow_maps.begin()); it != shadow_map_res_->unused_shadow_maps.end(); ++it) {
-      if ((*it)->get_width() == map_width) {
-        shadow_map = *it;
-        shadow_map_res_->unused_shadow_maps.erase(it);
-        break;
+    // if shadow map hasn't been rendered yet, try to find an unused one
+    if (!shadow_map) {
+      needs_redraw = true;
+      for (auto it(shadow_map_res_->unused_shadow_maps.begin()); it != shadow_map_res_->unused_shadow_maps.end(); ++it) {
+        if ((*it)->get_width() == map_width) {
+          shadow_map = *it;
+          shadow_map_res_->unused_shadow_maps.erase(it);
+          break;
+        }
       }
     }
 
-    // if there is none, create a new one
+    // if there is still no shadow map, create a new one
     if (!shadow_map) {
       shadow_map = std::make_shared<ShadowMap>(context_, math::vec2ui(map_width, viewport_size));
     }
@@ -290,31 +290,37 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     auto orig_scene(current_scene_);
 
     // clear shadow map
-    shadow_map->clear(context_);
-    shadow_map->set_viewport_size(math::vec2f(viewport_size));
+    if (needs_redraw) {
+      shadow_map->clear(context_);
+      shadow_map->set_viewport_size(math::vec2f(viewport_size));
+    }
 
 
     // rendering lambda
-    auto render_shadows = [this, &light_block, viewport_size]
+    auto render_shadows = [this, &light_block, viewport_size, needs_redraw]
                           (Frustum const& frustum, unsigned cascade_id) {
 
       light_block.projection_view_mats[cascade_id] = math::mat4f(frustum.get_projection() * frustum.get_view());
-      current_scene_ = current_graph_->serialize(frustum,
-                                                 current_camera_.config.enable_frustum_culling(),
-                                                 current_camera_.config.mask());
 
-      camera_block_.update(context_.render_context,
-                           frustum,
-                           current_scene_->clipping_planes,
-                           current_camera_.config.get_view_id(),
-                           math::vec2ui(viewport_size));
-      bind_camera_uniform_block(0);
+      // only render shadow map if it hasn't been rendered before this frame
+      if (needs_redraw) {
+        current_scene_ = current_graph_->serialize(frustum, frustum,
+                                                   current_camera_.config.enable_frustum_culling(),
+                                                   current_camera_.config.mask());
+
+        camera_block_.update(context_,
+                             frustum,
+                             current_scene_->clipping_planes,
+                             current_camera_.config.get_view_id(),
+                             math::vec2ui(viewport_size));
+        bind_camera_uniform_block(0);
 
 
-      // process all passes
-      for (int i(0); i < passes_.size(); ++i) {
-        if (passes_[i].enable_for_shadows()) {
-          passes_[i].process(*last_description_.get_passes()[i], *this, true);
+        // process all passes
+        for (int i(0); i < passes_.size(); ++i) {
+          if (passes_[i].enable_for_shadows()) {
+            passes_[i].process(*last_description_.get_passes()[i], *this, true);
+          }
         }
       }
     };
@@ -353,9 +359,11 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
         shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
 
         // set clipping of camera frustum according to current cascade
+        // use cyclops for consisten cascades for left and right eye in stereo
         Frustum cropped_frustum(Frustum::perspective(
-          orig_scene->frustum.get_camera_transform(),
-          orig_scene->frustum.get_screen_transform(),
+          // orig_scene->rendering_frustum.get_camera_transform(),
+          current_camera_.transform,
+          orig_scene->rendering_frustum.get_screen_transform(),
           splits[cascade], splits[cascade+1]
         ));
 
@@ -485,13 +493,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     current_target_ = gbuffer_.get();
     current_scene_ = orig_scene;
 
-    camera_block_.update(context_.render_context,
-                         current_scene_->frustum,
+    camera_block_.update(context_,
+                         current_scene_->rendering_frustum,
                          current_scene_->clipping_planes,
                          current_camera_.config.get_view_id(),
                          current_camera_.config.get_resolution());
     bind_camera_uniform_block(0);
 
+    light_block.shadow_offset = light->data.get_shadow_offset();
     light_block.shadow_map = shadow_map->get_depth_buffer()->get_handle(context_);
   }
 
@@ -569,7 +578,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       context_, int(light_table_->get_lights_num()), "gua_lights_num");
     shader->set_uniform(
       context_, int(light_table_->get_sun_lights_num()), "gua_sun_lights_num");
- 
+
     if (light_table_->get_light_bitset() && light_table_->get_lights_num() > 0) {
       shader->set_uniform(context_,
         light_table_->get_light_bitset()->get_handle(context_),

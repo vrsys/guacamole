@@ -238,11 +238,13 @@ std::set<PickResult> const SceneGraph::ray_test(Ray const& ray,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<SerializedScene> SceneGraph::serialize(Frustum const& frustum, 
+std::shared_ptr<SerializedScene> SceneGraph::serialize(Frustum const& rendering_frustum, 
+                                                       Frustum const& culling_frustum, 
                                                        bool enable_frustum_culling, 
                                                        Mask const& mask) const {
   auto out = std::make_shared<SerializedScene>();
-  out->frustum = frustum;
+  out->rendering_frustum = rendering_frustum;
+  out->culling_frustum = culling_frustum;
 
   Serializer s;
   s.check(*out, *this, mask, enable_frustum_culling);
@@ -256,9 +258,12 @@ std::shared_ptr<SerializedScene> SceneGraph::serialize(
                                        node::SerializedCameraNode const& camera, 
                                        CameraMode mode) const {
 
-    return serialize(camera.get_frustum(*this, mode),
-                     camera.config.enable_frustum_culling(),
-                     camera.config.mask());
+    return serialize(
+      camera.get_rendering_frustum(*this, mode),
+      camera.get_culling_frustum(*this, mode),
+      camera.config.enable_frustum_culling(),
+      camera.config.mask()
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

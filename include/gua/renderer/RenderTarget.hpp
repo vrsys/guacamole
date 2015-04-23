@@ -37,7 +37,7 @@ class GUA_DLL RenderTarget {
   RenderTarget(math::vec2ui const& resolution);
   virtual ~RenderTarget() {}
 
-  virtual void clear(RenderContext const& context) = 0;
+  virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) = 0;  
   virtual void set_viewport(RenderContext const& context);
 
   virtual void bind(RenderContext const& context, bool write_depth) = 0;

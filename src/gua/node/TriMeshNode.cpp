@@ -43,8 +43,9 @@ namespace node {
       geometry_(nullptr),
       geometry_description_(geometry_description),
       geometry_changed_(true),
-      material_(material)
-      // material_changed_(true)
+      material_(material),
+      render_to_gbuffer_(true),
+      render_to_stencil_buffer_(false)
   {}
 
 
@@ -68,6 +69,26 @@ namespace node {
   void TriMeshNode::set_material(std::shared_ptr<Material> const& material) {
     material_ = material;
     // material_changed_ = self_dirty_ = true;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  bool TriMeshNode::get_render_to_gbuffer() const {
+    return render_to_gbuffer_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void TriMeshNode::set_render_to_gbuffer(bool enable) {
+    render_to_gbuffer_ = enable;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  bool TriMeshNode::get_render_to_stencil_buffer() const {
+    return render_to_stencil_buffer_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void TriMeshNode::set_render_to_stencil_buffer(bool enable) {
+    render_to_stencil_buffer_ = enable;
   }
 
   ////////////////////////////////////////////////////////////////////////////////

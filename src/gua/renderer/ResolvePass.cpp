@@ -44,7 +44,11 @@ ResolvePassDescription::ResolvePassDescription()
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Quad;
   depth_stencil_state_ = boost::make_optional(
-    scm::gl::depth_stencil_state_desc(false, false));
+    scm::gl::depth_stencil_state_desc(
+      false, false, scm::gl::COMPARISON_LESS, true, 1, 0, 
+      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    )
+  );
 
   // default background configuration
   uniforms["gua_background_mode"] = static_cast<int>(BackgroundMode::COLOR);

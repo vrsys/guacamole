@@ -101,7 +101,6 @@ void Renderer::renderclient(Mailbox in) {
 
   for (auto& cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
     auto window_name(cmd.serialized_cam->config.get_output_window_name());
-
     if (window_name != "") {
       auto window = WindowDatabase::instance()->lookup(window_name);
 

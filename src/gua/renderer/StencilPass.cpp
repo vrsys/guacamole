@@ -20,72 +20,65 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/TexturedQuadPass.hpp>
+#include <gua/renderer/StencilPass.hpp>
 
-#include <gua/node/TexturedQuadNode.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
+#include <gua/renderer/StencilRenderer.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/Resources.hpp>
+#include <gua/node/TriMeshNode.hpp>
 
 namespace gua {
 
-TexturedQuadPassDescription::TexturedQuadPassDescription()
-  : PipelinePassDescription() {
+////////////////////////////////////////////////////////////////////////////////
 
-  vertex_shader_ = "resources/shaders/common/quad.vert";
-  fragment_shader_ = "resources/shaders/textured_quad.frag";
-  name_ = "TexturedQuadPass";
+StencilPassDescription::StencilPassDescription()
+  : PipelinePassDescription() {
+  vertex_shader_ = "shaders/tri_mesh_shader_stencil.vert";
+  fragment_shader_ = "shaders/tri_mesh_shader_stencil.frag";
+  name_ = "StencilPass";
 
   needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = true;
+  writes_only_color_buffer_ = true;
+  enable_for_shadows_ = false;
   rendermode_ = RenderMode::Callback;
-
-  rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
-        scm::gl::FILL_SOLID, scm::gl::CULL_NONE));
 
   depth_stencil_state_ = boost::make_optional(
     scm::gl::depth_stencil_state_desc(
-      true, true, scm::gl::COMPARISON_LESS, true, 1, 0, 
-      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+      false, false, scm::gl::COMPARISON_LESS, true, 1, 0xFF, 
+      scm::gl::stencil_ops(scm::gl::COMPARISON_ALWAYS, scm::gl::STENCIL_KEEP, 
+                           scm::gl::STENCIL_KEEP, scm::gl::STENCIL_REPLACE)
     )
   );
-
-  process_ = [](
-      PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe, bool) {
-
-    for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
-      auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
-
-      UniformValue model_mat(scm::math::mat4f(quad_node->get_scaled_world_transform()));
-      UniformValue normal_mat(scm::math::mat4f(scm::math::transpose(scm::math::inverse(quad_node->get_scaled_world_transform()))));
-      UniformValue tex(quad_node->data.get_texture());
-      UniformValue flip(scm::math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
-
-      auto const& ctx(pipe.get_context());
-
-      pass.shader_->apply_uniform(ctx, "gua_model_matrix", model_mat);
-      pass.shader_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-      pass.shader_->apply_uniform(ctx, "gua_in_texture", tex);
-      pass.shader_->apply_uniform(ctx, "flip", flip);
-
-      pipe.draw_quad();
-    }
-  };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> TexturedQuadPassDescription::make_copy() const {
-  return std::make_shared<TexturedQuadPassDescription>(*this);
+std::shared_ptr<PipelinePassDescription> StencilPassDescription::make_copy() const {
+  return std::make_shared<StencilPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass TexturedQuadPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+PipelinePass StencilPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
   PipelinePass pass{*this, ctx, substitution_map};
+
+  auto renderer = std::make_shared<StencilRenderer>();
+  renderer->create_state_objects(ctx);
+
+  pass.process_ = [renderer](
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool rendering_shadows) {
+
+    pipe.get_current_target().clear(pipe.get_context(), 1.f, 0);
+    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
+    renderer->render(pipe, pass.shader_);
+  };
+
   return pass;
 }
 

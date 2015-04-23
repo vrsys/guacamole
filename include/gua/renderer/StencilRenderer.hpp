@@ -19,57 +19,39 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SERIALIZED_SCENE_HPP
-#define GUA_SERIALIZED_SCENE_HPP
+#ifndef GUA_STENCIL_RENDERER_HPP
+#define GUA_STENCIL_RENDERER_HPP
 
-// guacamole headers
-#include <gua/node/Node.hpp>
-#include <gua/node/ScreenNode.hpp>
-#include <gua/node/ClippingPlaneNode.hpp>
-#include <gua/math/BoundingBox.hpp>
-#include <gua/renderer/Frustum.hpp>
-
-// external headers
-#include <vector>
+#include <map>
 #include <unordered_map>
-#include <typeindex>
+
+#include <gua/platform.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+
+#include <scm/gl_core/shader_objects.h>
 
 namespace gua {
 
-/**
- * Stores a serialized scene graph.
- *
- * When the optimizer traverses the scene graph, it produces an SerializedScene
- * which contains relevant nodes only.
- */
-struct GUA_DLL SerializedScene {
+class MaterialShader;
+class Pipeline;
+class PipelinePassDescription;
 
-  /**
-  * All geometry nodes.
-  */
-  std::unordered_map<std::type_index, std::vector<node::Node*>> nodes;
+class StencilRenderer {
 
-  /**
-   * The rendering frustum.
-   */
-  Frustum rendering_frustum;
+ public:
 
-  /**
-   * The culling frustum. Not neccessarily the same as above.
-   */
-  Frustum culling_frustum;
+  StencilRenderer();
+  virtual ~StencilRenderer() {}
 
-  /**
-   * Clipping plane parameters.
-   */
-  std::vector<math::vec4f> clipping_planes;
+  void render(Pipeline& pipe, std::shared_ptr<ShaderProgram> const& shader);
 
-  /**
-   * All bounding boxes.
-   */
-  std::vector<math::BoundingBox<math::vec3> > bounding_boxes;
+  void create_state_objects(RenderContext const& ctx);
+
+ private:
+  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
+  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
 };
 
 }
 
-#endif  // GUA_SERIALIZED_SCENE_HPP
+#endif  // GUA_STENCIL_RENDERER_HPP

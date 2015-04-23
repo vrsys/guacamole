@@ -103,13 +103,14 @@ class Serializer : public NodeVisitor {
 
   void visit_children(node::Node* node);
 
-  Frustum current_frustum_;
-
-  Mask current_render_mask_;
+  Frustum culling_frustum_;
+  Frustum rendering_frustum_;
+  Mask    render_mask_;
 
   SerializedScene* data_;
-  bool enable_frustum_culling_;
 
+  bool enable_frustum_culling_;
+  bool enable_alternative_frustum_culling_;
 };
 
 }

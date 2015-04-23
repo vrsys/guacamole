@@ -19,10 +19,12 @@ float gua_get_shadow(int light_id, vec4 smap_coords, ivec2 offset, float portion
     0, 0, -acne_offset, 1
   );
 
+  // ivec2 random_offset = offset + ivec2(ceil((texture(sampler2D(gua_noise_texture), gl_FragCoord.xy/64.0).xy * 2.0 - 1.0) * 3));
+
   return textureProjOffset(
-    sampler2DShadow(gua_lights[light_id].shadow_map), acne * smap_coords
-    * vec4(portion, 1.0, 1.0, 1.0)
-    , offset
+    sampler2DShadow(gua_lights[light_id].shadow_map),
+    acne * smap_coords * vec4(portion, 1.0, 1.0, 1.0),
+    offset
   );
 }
 
@@ -41,18 +43,35 @@ float gua_get_shadow(int light_id, int cascade_id, vec3 position, vec2 lookup_of
   smap_coords /= smap_coords.w;
   smap_coords += vec4(lookup_offset, 0, 0);
 
-  float sum = 0;
-  int x, y;
+  float shadow = 0.0;
 
-  for (y = -1; y <= 1; ++y) {
-    for (x = -1; x <= 1; ++x) {
-      sum += gua_get_shadow(light_id, smap_coords, ivec2(x, y), portion, acne_offset);
-    }
+  // test if 4 surrounding fragments are in shadow
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1, -1), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1,  2), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2, -1), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2,  2), portion, acne_offset);
+
+  if (shadow == 0.0) {
+    return 0.0;
+  } else if (shadow == 4.0) {
+    return 1.0;
   }
 
-  float shadow = sum / 9.0;
+  // only do expensive sampling if some fragments are in shadow and some are not
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1,  0), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1,  1), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0, -1), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0,  0), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0,  1), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0,  2), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1, -1), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1,  0), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1,  1), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1,  2), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2,  0), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2,  1), portion, acne_offset);
 
-  return shadow;
+  return shadow / 16.0;
 }
 
 bool gua_point_outside_plane(vec4 plane, vec3 point) {

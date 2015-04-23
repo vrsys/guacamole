@@ -36,6 +36,7 @@ VolumePassDescription::VolumePassDescription()
   fragment_shader_ = "shaders/textured_screen_space_quad.frag";
 
   needs_color_buffer_as_input_ = false;
+  enable_for_shadows_ = false;
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Custom;
 }
