@@ -22,6 +22,11 @@ layout(binding=3) uniform sampler2D p02_weight_and_depth_texture;
 @include "common/gua_fragment_shader_output.glsl"
 
 
+//info: for using standard hole filling, define USE_SS_HOLE_FILLING without MARK_FILLED_HOLES.
+//      in order to visualize the filled holes, also enable MARK_FILLED_HOLES.
+
+#define USE_SS_HOLE_FILLING
+//#define MARK_FILLED_HOLES
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -32,22 +37,22 @@ void main() {
   vec2 accumulated_weight_and_depth = texelFetch(p02_weight_and_depth_texture, current_fragment_pos, 0).rg;
   float accumulated_weight = accumulated_weight_and_depth.x;
 
-  if(accumulated_weight == 0.0) {
-    //discard;
+#ifdef USE_SS_HOLE_FILLING
+  if(accumulated_weight == 0.0) {  //the pixel is a background pixel and we have to analyze, if we are able to fill it based on the neighbourhood
 
     vec2 neighbour_weights_and_depth[8]; 
 
-    int bit_pattern = (0x0);
+    unsigned int bit_pattern = unsigned int(0x0);
 
-    int cell_counter = 0;
+    unsigned int cell_counter = 0;
 
     for( int y = -1; y <= 1; ++y ) {
       for( int x = -1; x <= 1; ++x ) {
         if(x == 0 && y == 0)
           continue;
         float current_accumulated_neighbour_weight = 0.0;
-        ivec2 array_index_xy = ivec2(x+1, 
-                                     y+1);
+        ivec2 array_index_xy = ivec2(x, 
+                                     y);
 
         neighbour_weights_and_depth[cell_counter] = texelFetch(p02_weight_and_depth_texture, current_fragment_pos + array_index_xy,0 ).rg;
         current_accumulated_neighbour_weight = neighbour_weights_and_depth[cell_counter].r;
@@ -58,16 +63,29 @@ void main() {
       }
     }
 
+
+    /* 8 background hole detection pattern after "An Image-space Approach to Interactive Point Cloud Rendering Including Shadows and Transparency" [Dobrev et al.]:
+
+    3x3 box kernel:
+
+    # F F   F F F   F F F   # # #   F F F   F F F   F # #  # # F   
+    # B F   F B F   F B F   F B F   # B F   F B #   F B #  # B F
+    # F F   # # #   # # #   F F F   # # F   F # #   F F F  F F F
+
+    B = fackground (to be filled)
+    F = foreground
+    # = arbitrary
+
+    */
     if(  ( (bit_pattern & 0xD6) == 0xD6) 
       || ( (bit_pattern & 0xF8) == 0xF8) 
-      //|| ( (bit_pattern & 0x6B) == 0x6B)
-      //|| ( (bit_pattern & 0x1F) == 0x1F)
+      || ( (bit_pattern & 0x6B) == 0x6B)
+      || ( (bit_pattern & 0x1F) == 0x1F)
       || ( (bit_pattern & 0x97) == 0x97)
       || ( (bit_pattern & 0xF4) == 0xF4)
       || ( (bit_pattern & 0xE9) == 0xE9)
-      //|| ( (bit_pattern & 0x2F) == 0x2F)
-      )
-    {
+      || ( (bit_pattern & 0x2F) == 0x2F)
+      ) {   //matches, therefore perform filling
     unsigned int num_accumulated_neighbours = 0;
     vec3 final_neighbours_color  = vec3(0.0, 0.0, 0.0);
     vec3 final_neighbours_normal = vec3(0.0, 0.0, 0.0);
@@ -75,10 +93,10 @@ void main() {
     float final_neighbours_depth = 0.0;
 
 
-    for(int bit_index = 0; bit_index < 8; ++bit_index) {
-      if( (bit_pattern & (1 << bit_index) ) != 0x0 ) {
-        ivec2 lookup_index_xy =  ivec2(0,0);//( (bit_index % 3) - 1, 
-                                            //(bit_index / 3) - 1);
+    for(unsigned int bit_index = 0; bit_index < 8; ++bit_index) {
+      if( (bit_pattern & unsigned int(1 << bit_index) ) != 0x0 ) {
+        ivec2 lookup_index_xy = ivec2(0,0);//ivec2( (bit_index % 3) - 1, 
+                                           //(bit_index / 3) - 1);
 
         if(bit_index == 0) {
           lookup_index_xy = ivec2(-1,-1);
@@ -103,11 +121,16 @@ void main() {
         vec2 current_neighbours_weight_and_depth = texelFetch(p02_weight_and_depth_texture, current_fragment_pos + lookup_index_xy,0 ).rg;
 
         if(current_neighbours_weight_and_depth.x != 0.0) {
-        final_neighbours_color  +=  (texelFetch(p02_color_texture, current_fragment_pos + lookup_index_xy,0 ).rgb) / current_neighbours_weight_and_depth.x;
-        final_neighbours_normal +=  (texelFetch(p02_normal_texture, current_fragment_pos + lookup_index_xy,0 ).xyz) /  current_neighbours_weight_and_depth.x;
-        final_neighbours_pbr    +=  (texelFetch(p02_pbr_texture, current_fragment_pos + lookup_index_xy,0 ).rgb) / current_neighbours_weight_and_depth.x;
-        final_neighbours_depth  +=   current_neighbours_weight_and_depth.y / current_neighbours_weight_and_depth.x;
-        } else {
+          #ifdef MARK_FILLED_HOLES
+            final_neighbours_color  +=  vec3(0.0, 1.0, 1.0);   
+            num_accumulated_neighbours = 1;     
+          #else 
+            final_neighbours_color  +=  (texelFetch(p02_color_texture, current_fragment_pos + lookup_index_xy,0 ).rgb) / current_neighbours_weight_and_depth.x;
+            final_neighbours_normal +=  (texelFetch(p02_normal_texture, current_fragment_pos + lookup_index_xy,0 ).xyz) /  current_neighbours_weight_and_depth.x;
+            final_neighbours_pbr    +=  (texelFetch(p02_pbr_texture, current_fragment_pos + lookup_index_xy,0 ).rgb) / current_neighbours_weight_and_depth.x;
+            final_neighbours_depth  +=   current_neighbours_weight_and_depth.y / current_neighbours_weight_and_depth.x;
+          #endif
+        } else {  //this is an invalid case (pixel should become red)
          final_neighbours_color  +=  vec3(1.0, 0.0, 0.0);   
          num_accumulated_neighbours = 1;       
         }
@@ -133,24 +156,12 @@ void main() {
 
     gl_FragDepth = final_neighbours_depth;
 
-    //gua_color  = vec3(1.0,0.0,0.0);
-    /*gua_normal = vec3(0.0, 0.0, 1.0);
-    gua_metalness  = 1.0;
-    gua_roughness  = 1.0;
-    gua_emissivity = 1.0;
-    gua_alpha      = 1.0;
-    gua_flags_passthrough = (gua_emissivity > 0.99999);
-
-    gl_FragDepth = 0.5;
-    */
-    } else {
+    } else { //did not match, this background fragment will not contribute
       discard;
     }
 
-
-
-  } else {
-
+  } else { 
+#endif
     float accumulated_depth =  accumulated_weight_and_depth.y ;
     float blended_depth = accumulated_depth / accumulated_weight;
 
@@ -194,7 +205,10 @@ void main() {
 
 
     gl_FragDepth = blended_depth; 
+
+#ifdef USE_SS_HOLE_FILLING
   }
+#endif
 
     @include "common/gua_write_gbuffer.glsl"
 
