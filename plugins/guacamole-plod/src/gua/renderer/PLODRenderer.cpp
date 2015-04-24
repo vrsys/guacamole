@@ -322,7 +322,7 @@ namespace gua {
   }
 
   ///////////////////////////////////////////////////////////////////////////////
-  void PLODRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
+  void PLODRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc, bool rendering_shadows) {
 
     RenderContext const& ctx(pipe.get_context());
     
