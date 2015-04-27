@@ -359,7 +359,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
         shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
 
         // set clipping of camera frustum according to current cascade
-        // use cyclops for consisten cascades for left and right eye in stereo
+        // use cyclops for consistent cascades for left and right eye in stereo
         Frustum cropped_frustum(Frustum::perspective(
           // orig_scene->rendering_frustum.get_camera_transform(),
           current_camera_.transform,
@@ -436,7 +436,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
             sun_eye_transform,
             sun_screen_transform,
             0,
-            scm::math::length(sun_eye_depth)
+            scm::math::length(sun_eye_depth) + light->data.get_shadow_far_clipping_in_sun_direction()
           )
         );
 

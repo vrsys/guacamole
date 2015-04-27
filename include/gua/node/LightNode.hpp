@@ -107,13 +107,16 @@ class GUA_DLL LightNode : public SerializableNode {
      * Sets the split distance-to-camera values for rendering cascaded shadow
      * maps in world coordinates. Only available for sun lights.
      */
-    GUA_ADD_PROPERTY(std::vector<float>,  shadow_cascaded_splits,                 std::vector<float>({0.1f, 2, 10, 50, 100.f}));
+    GUA_ADD_PROPERTY(std::vector<float>, shadow_cascaded_splits, std::vector<float>({0.1f, 2, 10, 50}));
 
     /**
-     * Sets the value used for near clipping when renering cascaded shadow maps.
-     * Only available for sun lights.
+     * Sets the value used for additional near and far clipping when renering
+     * cascaded shadow maps. Only available for sun lights. If both are set to
+     * zero, only objects wchich are visible in the viewing frustum will cast
+     * shadows.
      */
-    GUA_ADD_PROPERTY(float,           shadow_near_clipping_in_sun_direction,  100.f);
+    GUA_ADD_PROPERTY(float,       shadow_near_clipping_in_sun_direction, 100.f);
+    GUA_ADD_PROPERTY(float,       shadow_far_clipping_in_sun_direction,  100.f);
 
   };
 
