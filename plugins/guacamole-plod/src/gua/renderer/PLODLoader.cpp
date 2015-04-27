@@ -153,7 +153,7 @@ void PLODLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root
 }
 /////////////////////////////////////////////////////////////////////////////////
 
-std::string PLODLoader::pick_plod_bvh(math::vec3 const& ray_origin,
+std::pair<std::string, math::vec3> PLODLoader::pick_plod_bvh(math::vec3 const& ray_origin,
                                       math::vec3 const& ray_forward,
                                       float max_distance,
                                       std::set<std::string> const& model_filenames,
@@ -165,13 +165,14 @@ std::string PLODLoader::pick_plod_bvh(math::vec3 const& ray_origin,
   pbr::ren::Ray ray(ray_pos, ray_fwd, max_distance);
   pbr::ren::Ray::IntersectionBvh intersection;
 
-  std::string pick_filename = "";
+  std::pair<std::string, math::vec3> result = std::make_pair("", math::vec3::zero());
 
   if (ray.IntersectBvh(model_filenames, aabb_scale, intersection)) {
-     pick_filename = intersection.kdn_filename_;
+     result = std::make_pair(intersection.kdn_filename_, intersection.position_);
+
   }
 
-  return pick_filename;
+  return result;
 
 }
 

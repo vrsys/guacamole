@@ -75,11 +75,11 @@ public:
    * Pointcloud-specific picking methods. Might be moved into a separate object later.
    *
    */
-  std::string pick_plod_bvh(math::vec3 const& ray_origin,
-                            math::vec3 const& ray_forward,
-                            float max_distance,
-                            std::set<std::string> const& model_filenames,
-                            float aabb_scale) const;
+  std::pair<std::string, math::vec3> pick_plod_bvh(math::vec3 const& ray_origin,
+                                                   math::vec3 const& ray_forward,
+                                                   float max_distance,
+                                                   std::set<std::string> const& model_filenames,
+                                                    float aabb_scale) const;
                               
   std::set<PickResult> pick_plod_interpolate(math::vec3 const& bundle_origin,
                                              math::vec3 const& bundle_forward,
