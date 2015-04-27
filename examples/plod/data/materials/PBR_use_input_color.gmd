@@ -104,8 +104,14 @@
 
         ///////////////////////////////////////////////////////////////////////
         void distance_lens_effect () {
-          float signed_distance_to_lens_plane = abs(dot(lens_normal, (gua_world_position - lens_center)));
-          gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(signed_distance_to_lens_plane, -0.01, 0.01));
+
+            vec3 lens_normal_n = normalize(lens_normal.xyz);
+                                  
+            //float sn = -dot(normalize(ref_plane_n), ((inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz - (inverse(gua_model_matrix) * vec4(lens_center, 1.0)).xyz));
+            float sn = dot(normalize(lens_normal_n), ((inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz - (inverse(gua_model_matrix) * vec4(lens_center, 1.0)).xyz));
+                                 
+            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(sn, -0.001, 0.05));
+            
         }
         
         ///////////////////////////////////////////////////////////////////////
@@ -271,11 +277,11 @@
                 first_derivation_lens_effect();
                 break;
             case 4:
-                second_derivation_lens_effect();
-                break;
-            case 5:
                 edge();
                 break;
+            case 5:
+                second_derivation_lens_effect();
+                break;            
             default : 
                 //gua_color = vec3(1.0, 0.0, 0.0);
               break;
@@ -379,16 +385,6 @@
             "value" : "(0.1 0.1)"
         },
         {
-          "name" : "lens_square_ws_min",
-          "type" : "vec3",
-          "value" : "vec3(-0.1 -0.1 -0.1)"
-        },
-        {
-          "name" : "lens_square_ws_max",
-          "type" : "vec3",
-          "value" : "vec3(0.1 0.1 0.1)"
-        },
-        {
           "name" : "lens_vis_mode",
           "type" : "int",
           "value" : "0"
@@ -407,7 +403,22 @@
           "name" : "step_size_in_ss",
           "type" : "float",
           "value" : "0.1"
-        }
+        },
+        {
+            "name" : "ref_plane_v",
+            "type" : "vec3",
+            "value" : "vec3(0.0 0.0 0.0)"
+        },
+        {
+            "name" : "ref_plane_n",
+            "type" : "vec3",
+            "value" : "vec3(0.0 1.0 0.0)"
+        },
+        {
+            "name" : "ref_plane_range",
+            "type" : "vec2",
+            "value" : "vec2(0.0 1.0)"
+        }        
       ] 
     }
   ]
