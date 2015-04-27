@@ -11,7 +11,18 @@ uniform uvec2 gua_light_bitset;
 // shadow calculations ---------------------------------------------------------
 // -----------------------------------------------------------------------------
 
-float gua_get_shadow(int light_id, vec4 smap_coords, ivec2 offset, float portion, float acne_offset) {
+float gua_get_shadow(int light_id, vec4 smap_coords, ivec2 offset) {
+  // ivec2 random_offset = offset + ivec2(ceil((texture(sampler2D(gua_noise_texture), gl_FragCoord.xy/64.0).xy * 2.0 - 1.0) * 3));
+  return textureProjOffset(
+    sampler2DShadow(gua_lights[light_id].shadow_map), smap_coords, offset);
+}
+
+
+float gua_get_shadow(int light_id, int cascade_id, vec3 position, float portion, float acne_offset, out float fade_to_next_cascade) {
+  if(!(gua_lights[light_id].casts_shadow)) {
+    return 1.0;
+  }
+
   const mat4 acne = mat4(
     1, 0, 0, 0,
     0, 1, 0, 0,
@@ -19,37 +30,40 @@ float gua_get_shadow(int light_id, vec4 smap_coords, ivec2 offset, float portion
     0, 0, -acne_offset, 1
   );
 
-  // ivec2 random_offset = offset + ivec2(ceil((texture(sampler2D(gua_noise_texture), gl_FragCoord.xy/64.0).xy * 2.0 - 1.0) * 3));
-
-  return textureProjOffset(
-    sampler2DShadow(gua_lights[light_id].shadow_map),
-    acne * smap_coords * vec4(portion, 1.0, 1.0, 1.0),
-    offset
+  const mat4 bias = mat4(
+    0.5, 0.0, 0.0, 0.0,
+    0.0, 0.5, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0,
+    0.5, 0.5, 0.5, 1.0
   );
-}
-
-
-float gua_get_shadow(int light_id, int cascade_id, vec3 position, vec2 lookup_offset, float portion, float acne_offset) {
-  if(!(gua_lights[light_id].casts_shadow)) {
-    return 1.0;
-  }
-
-  const mat4 bias = mat4(0.5, 0.0, 0.0, 0.0,
-  0.0, 0.5, 0.0, 0.0,
-  0.0, 0.0, 0.5, 0.0,
-  0.5, 0.5, 0.5, 1.0);
 
   vec4 smap_coords = bias * gua_lights[light_id].projection_view_mats[cascade_id] * vec4(position, 1.0);
   smap_coords /= smap_coords.w;
-  smap_coords += vec4(lookup_offset, 0, 0);
+  smap_coords += vec4(cascade_id, 0, 0, 0);
+  smap_coords *= vec4(portion, 1.0, 1.0, 1.0);
+  smap_coords  = acne * smap_coords;
+
+
+  fade_to_next_cascade = 1.0;
+  const float fade_range = 0.05;
+
+  float posx = abs(0.5 - (smap_coords.x - cascade_id*portion)/portion);
+  if (posx > 0.5 - fade_range) {
+    fade_to_next_cascade *= 1.0 - (posx - 0.5 + fade_range)/fade_range;
+  }
+
+  float posy = abs(0.5 - smap_coords.y);
+  if (posy > 0.5 - fade_range) {
+    fade_to_next_cascade *= 1.0 - (posy - 0.5 + fade_range)/fade_range;
+  }
 
   float shadow = 0.0;
 
   // test if 4 surrounding fragments are in shadow
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1, -1), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1,  2), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2, -1), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2,  2), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1, -1));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1,  2));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2, -1));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2,  2));
 
   if (shadow == 0.0) {
     return 0.0;
@@ -58,18 +72,18 @@ float gua_get_shadow(int light_id, int cascade_id, vec3 position, vec2 lookup_of
   }
 
   // only do expensive sampling if some fragments are in shadow and some are not
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1,  0), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1,  1), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0, -1), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0,  0), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0,  1), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0,  2), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1, -1), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1,  0), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1,  1), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1,  2), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2,  0), portion, acne_offset);
-  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2,  1), portion, acne_offset);
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1,  0));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2(-1,  1));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0, -1));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0,  0));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0,  1));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 0,  2));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1, -1));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1,  0));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1,  1));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 1,  2));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2,  0));
+  shadow += gua_get_shadow(light_id, smap_coords, ivec2( 2,  1));
 
   return shadow / 16.0;
 }
@@ -79,49 +93,71 @@ bool gua_point_outside_plane(vec4 plane, vec3 point) {
 }
 
 bool gua_is_inside_frustum(int light_id, int cascade, vec3 point) {
-  vec4 proj = gua_lights[light_id].projection_view_mats[cascade] * vec4(point, 1.0);
-  proj /= proj.w;
-  proj = abs(proj);
-  return proj.x <= 1 && proj.y <= 1 && proj.z <= 1;
+  // vec4 proj = gua_lights[light_id].projection_view_mats[cascade] * vec4(point, 1.0);
+  // proj /= proj.w;
+  // return proj.x < 1 && proj.y < 1 && proj.z < 1 && proj.x > -1 && proj.y > -1 && proj.z > -1;
 
-  // vec4 plane = vec4(frustum[0][3] + frustum[0][0],
-  //                   frustum[1][3] + frustum[1][0],
-  //                   frustum[2][3] + frustum[2][0],
-  //                   frustum[3][3] + frustum[3][0]);
-  // if (gua_point_outside_plane(plane, point)) return false;
+  vec4 plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][0][0],
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][1][0],
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][2][0],
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][3][0]);
+  if (gua_point_outside_plane(plane, point)) return false;
 
+  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][0][0],
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][1][0],
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][2][0],
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][3][0]);
+  if (gua_point_outside_plane(plane, point)) return false;
 
-  // plane = vec4(frustum[0][3] - frustum[0][0],
-  //                   frustum[1][3] - frustum[1][0],
-  //                   frustum[2][3] - frustum[2][0],
-  //                   frustum[3][3] - frustum[3][0]);
-  // if (gua_point_outside_plane(plane, point)) return false;
+  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][0][1],
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][1][1],
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][2][1],
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][3][1]);
+  if (gua_point_outside_plane(plane, point)) return false;
 
-  // plane = vec4(frustum[0][3] + frustum[0][1],
-  //                   frustum[1][3] + frustum[1][1],
-  //                   frustum[2][3] + frustum[2][1],
-  //                   frustum[3][3] + frustum[3][1]);
-  // if (gua_point_outside_plane(plane, point)) return false;
+  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][0][1],
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][1][1],
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][2][1],
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][3][1]);
+  if (gua_point_outside_plane(plane, point)) return false;
 
-  // plane = vec4(frustum[0][3] - frustum[0][1],
-  //                   frustum[1][3] - frustum[1][1],
-  //                   frustum[2][3] - frustum[2][1],
-  //                   frustum[3][3] - frustum[3][1]);
-  // if (gua_point_outside_plane(plane, point)) return false;
+  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][0][2],
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][1][2],
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][2][2],
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][3][2]);
+  if (gua_point_outside_plane(plane, point)) return false;
 
-  // plane = vec4(frustum[0][3] + frustum[0][2],
-  //                   frustum[1][3] + frustum[1][2],
-  //                   frustum[2][3] + frustum[2][2],
-  //                   frustum[3][3] + frustum[3][2]);
-  // if (gua_point_outside_plane(plane, point)) return false;
+  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][0][2],
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][1][2],
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][2][2],
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][3][2]);
+  if (gua_point_outside_plane(plane, point)) return false;
 
-  // plane = vec4(frustum[0][3] - frustum[0][2],
-  //                   frustum[1][3] - frustum[1][2],
-  //                   frustum[2][3] - frustum[2][2],
-  //                   frustum[3][3] - frustum[3][2]);
-  // if (gua_point_outside_plane(plane, point)) return false;
-
-  // return true;
+  return true;
 }
 
 
@@ -133,6 +169,9 @@ float gua_calculate_light(int light_id,
                           out vec3 gua_light_radiance) {
   LightSource L = gua_lights[light_id];
 
+  const float fading_exponent = 5;
+  float fading = pow(clamp(length(gua_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), fading_exponent);
+
   // sun light
   if (L.type == 2) {
     gua_light_direction = L.position_and_radius.xyz;
@@ -143,13 +182,18 @@ float gua_calculate_light(int light_id,
     float shadow = 1.0;
 
     if (L.casts_shadow) {
-      float fading = pow(clamp(length(gua_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), 2);
       float portion = 1.0 / (L.cascade_count * 1.0);
 
       if (fading < 1.0) {
         for (int cascade = 0; cascade < L.cascade_count; ++cascade) {
           if (gua_is_inside_frustum(light_id, cascade, position)) {
-            shadow = gua_get_shadow(light_id, cascade, position, vec2(cascade, 0), portion, L.shadow_offset);
+            float fade_to_next;
+            shadow = gua_get_shadow(light_id, cascade, position, portion, L.shadow_offset, fade_to_next);
+
+            float tmp;
+            if (fade_to_next < 1.0 && cascade+1 < L.cascade_count) {
+              shadow = shadow*fade_to_next + (1.0-fade_to_next)*gua_get_shadow(light_id, cascade+1, position, portion, L.shadow_offset, tmp);
+            }
             break;
           }
         }
@@ -179,10 +223,13 @@ float gua_calculate_light(int light_id,
 
     for (int cascade = 0; cascade < L.cascade_count; ++cascade) {
       if (gua_is_inside_frustum(light_id, cascade, position)) {
-        shadow = gua_get_shadow(light_id, cascade, position, vec2(cascade, 0), portion, L.shadow_offset);
+        float tmp;
+        shadow = gua_get_shadow(light_id, cascade, position, portion, L.shadow_offset, tmp);
         break;
       }
     }
+
+    shadow = mix(shadow, 1.0, fading);
 
     if(shadow <= 0.0) {
       return 0.0;
@@ -209,7 +256,11 @@ float gua_calculate_light(int light_id,
       return 0.0;
     }
 
-    float shadow = gua_get_shadow(light_id, 0, position, vec2(0), 1.0, L.shadow_offset);
+    float tmp;
+    float shadow = gua_get_shadow(light_id, 0, position, 1.0, L.shadow_offset, tmp);
+
+    shadow = mix(shadow, 1.0, fading);
+
     if(shadow <= 0.0) {
       return 0.0;
     }

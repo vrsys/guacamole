@@ -102,11 +102,8 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
     light_block.specular_enable = light->data.get_enable_specular_shading();
     light_block.color           = math::vec4f(light->data.get_color().vec3f().r, light->data.get_color().vec3f().g, light->data.get_color().vec3f().b, 0.f);
     light_block.type            = static_cast<unsigned>(light->data.get_type());
-    light_block.casts_shadow    = light->data.get_enable_shadows();
+    light_block.max_shadow_distance = light->data.get_max_shadow_dist();
 
-    if (light->data.get_enable_shadows()) {
-      pipe.render_shadow_map(light, light_block);
-    }
 
     if (light->data.get_type() == node::LightNode::Type::SUN) {
       ++sun_lights_num;
@@ -117,6 +114,11 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
       light_block.falloff         = 0.0f;
       light_block.softness        = 0.0f;
+
+      light_block.casts_shadow    = light->data.get_enable_shadows();
+      if (light->data.get_enable_shadows()) {
+        pipe.render_shadow_map(light, light_block);
+      }
 
       sun_lights.push_back(light_block);
       sun_transforms.push_back(model_mat);
@@ -129,6 +131,17 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.beam_direction_and_half_angle = math::vec4f(0.f, 0.f, 0.f, 0.f);
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = 0;
+
+      if (light->data.get_enable_shadows()) {
+        if (light->data.get_max_shadow_dist() > 0.f && 
+            scm::math::length(light_position - math::get_translation(pipe.get_scene_camera().transform)) - light_radius > light->data.get_max_shadow_dist()) {
+
+          light_block.casts_shadow = false;
+        } else {
+          light_block.casts_shadow = true;
+          pipe.render_shadow_map(light, light_block);
+        }
+      }
 
       lights.push_back(light_block);
       transforms.push_back(model_mat);
@@ -143,9 +156,21 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe,
       light_block.falloff         = light->data.get_falloff();
       light_block.softness        = light->data.get_softness();
 
+      if (light->data.get_enable_shadows()) {
+        if (light->data.get_max_shadow_dist() > 0.f && 
+            scm::math::length(light_position - math::get_translation(pipe.get_scene_camera().transform)) - scm::math::length(beam_direction) > light->data.get_max_shadow_dist()) {
+          
+          light_block.casts_shadow = false;
+        } else {
+          light_block.casts_shadow = true;
+          pipe.render_shadow_map(light, light_block);
+        }
+      }
+
       lights.push_back(light_block);
       transforms.push_back(model_mat);
     }
+
   }
   // sun lights need to be at the back
   transforms.insert(transforms.end(), sun_transforms.begin(), sun_transforms.end());

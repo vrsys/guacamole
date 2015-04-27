@@ -185,17 +185,22 @@ namespace gua {
           
     accumulation_pass_color_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGBA_32F,
+                          scm::gl::FORMAT_RGB_16F,
                           1, 1, 1);
 
     accumulation_pass_normal_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGBA_32F,
+                          scm::gl::FORMAT_RGB_16F,
                           1, 1, 1);
 
     accumulation_pass_pbr_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_RGB_16F,
+                          1, 1, 1);
+
+    accumulation_pass_weight_and_depth_result_ = ctx.render_device
+      ->create_texture_2d(render_target_dims,
+                          scm::gl::FORMAT_RG_32F,
                           1, 1, 1);
 
     log_to_lin_gua_depth_conversion_pass_fbo_ = ctx.render_device->create_frame_buffer();
@@ -218,6 +223,8 @@ namespace gua {
                                                        accumulation_pass_normal_result_);
     accumulation_pass_result_fbo_->attach_color_buffer(2,
                                                        accumulation_pass_pbr_result_);
+    accumulation_pass_result_fbo_->attach_color_buffer(3,
+                                                       accumulation_pass_weight_and_depth_result_);
     //accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_log_depth_result_);
     accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
 
@@ -315,7 +322,7 @@ namespace gua {
   }
 
   ///////////////////////////////////////////////////////////////////////////////
-  void PLODRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
+  void PLODRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc, bool rendering_shadows) {
 
     RenderContext const& ctx(pipe.get_context());
     
@@ -358,16 +365,22 @@ namespace gua {
     ctx.render_context
       ->clear_color_buffer(accumulation_pass_result_fbo_,
       0,
-      scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+      scm::math::vec3f(0.0f, 0.0f, 0.0f));
+
     ctx.render_context
       ->clear_color_buffer(accumulation_pass_result_fbo_,
       1,
-      scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+      scm::math::vec3f(0.0f, 0.0f, 0.0f));
 
     ctx.render_context
       ->clear_color_buffer(accumulation_pass_result_fbo_,
       2,
-      scm::math::vec4f(0.0f, 0.0f, 0.0f));
+      scm::math::vec3f(0.0f, 0.0f, 0.0f));
+
+    ctx.render_context
+      ->clear_color_buffer(accumulation_pass_result_fbo_,
+      3,
+      scm::math::vec2f(0.0f, 0.0f));
 
     ///////////////////////////////////////////////////////////////////////////
     // program initialization
@@ -675,6 +688,9 @@ namespace gua {
 
          ctx.render_context->bind_texture(accumulation_pass_pbr_result_, nearest_sampler_state_, 2);
          normalization_pass_program_->apply_uniform(ctx, "p02_pbr_texture", 2);
+
+         ctx.render_context->bind_texture(accumulation_pass_weight_and_depth_result_, nearest_sampler_state_, 3);
+         normalization_pass_program_->apply_uniform(ctx, "p02_weight_and_depth_texture", 3);
 
          //ctx.render_context->bind_texture(depth_pass_log_depth_result_, nearest_sampler_state_, 3);
          //current_material_program->apply_uniform(ctx, "p01_log_depth_texture", 3);
