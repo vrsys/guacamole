@@ -70,7 +70,17 @@ public:
                                                 unsigned flags =  DEFAULTS);
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
-
+ 
+  /**
+   * Pointcloud-specific picking methods. Might be moved into a separate object later.
+   *
+   */
+  std::pair<std::string, math::vec3> pick_plod_bvh(math::vec3 const& ray_origin,
+                                                   math::vec3 const& ray_forward,
+                                                   float max_distance,
+                                                   std::set<std::string> const& model_filenames,
+                                                    float aabb_scale) const;
+                              
   std::set<PickResult> pick_plod_interpolate(math::vec3 const& bundle_origin,
                                              math::vec3 const& bundle_forward,
                                              math::vec3 const& bundle_up,

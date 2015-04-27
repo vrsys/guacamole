@@ -151,7 +151,32 @@ void PLODLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root
     apply_fallback_material(child, fallback_material);
   }
 }
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+
+std::pair<std::string, math::vec3> PLODLoader::pick_plod_bvh(math::vec3 const& ray_origin,
+                                      math::vec3 const& ray_forward,
+                                      float max_distance,
+                                      std::set<std::string> const& model_filenames,
+                                      float aabb_scale) const {
+
+  scm::math::vec3f ray_pos = scm::math::vec3f(ray_origin.x, ray_origin.y, ray_origin.z);
+  scm::math::vec3f ray_fwd = scm::math::vec3f(ray_forward.x, ray_forward.y, ray_forward.z);
+
+  pbr::ren::Ray ray(ray_pos, ray_fwd, max_distance);
+  pbr::ren::Ray::IntersectionBvh intersection;
+
+  std::pair<std::string, math::vec3> result = std::make_pair("", math::vec3::zero());
+
+  if (ray.IntersectBvh(model_filenames, aabb_scale, intersection)) {
+     result = std::make_pair(intersection.kdn_filename_, intersection.position_);
+
+  }
+
+  return result;
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 std::set<PickResult> PLODLoader::pick_plod_interpolate(math::vec3 const& bundle_origin,
                                            math::vec3 const& bundle_forward,
