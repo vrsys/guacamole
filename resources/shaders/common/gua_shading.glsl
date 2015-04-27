@@ -169,6 +169,9 @@ float gua_calculate_light(int light_id,
                           out vec3 gua_light_radiance) {
   LightSource L = gua_lights[light_id];
 
+  const float fading_exponent = 5;
+  float fading = pow(clamp(length(gua_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), fading_exponent);
+
   // sun light
   if (L.type == 2) {
     gua_light_direction = L.position_and_radius.xyz;
@@ -179,21 +182,18 @@ float gua_calculate_light(int light_id,
     float shadow = 1.0;
 
     if (L.casts_shadow) {
-      float fading = pow(clamp(length(gua_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), 2);
       float portion = 1.0 / (L.cascade_count * 1.0);
 
       if (fading < 1.0) {
         for (int cascade = 0; cascade < L.cascade_count; ++cascade) {
           if (gua_is_inside_frustum(light_id, cascade, position)) {
-            float fade;
-            shadow = gua_get_shadow(light_id, cascade, position, portion, L.shadow_offset, fade);
+            float fade_to_next;
+            shadow = gua_get_shadow(light_id, cascade, position, portion, L.shadow_offset, fade_to_next);
 
             float tmp;
-            if (fade < 1.0 && cascade+1 < L.cascade_count) {
-              shadow = shadow*fade + (1.0-fade)*gua_get_shadow(light_id, cascade+1, position, portion, L.shadow_offset, tmp);
+            if (fade_to_next < 1.0 && cascade+1 < L.cascade_count) {
+              shadow = shadow*fade_to_next + (1.0-fade_to_next)*gua_get_shadow(light_id, cascade+1, position, portion, L.shadow_offset, tmp);
             }
-            //   shadow = (1.0-fade) * shadow + fade * 
-            // }
             break;
           }
         }
@@ -223,11 +223,13 @@ float gua_calculate_light(int light_id,
 
     for (int cascade = 0; cascade < L.cascade_count; ++cascade) {
       if (gua_is_inside_frustum(light_id, cascade, position)) {
-        float fade;
-        shadow = gua_get_shadow(light_id, cascade, position, portion, L.shadow_offset, fade);
+        float tmp;
+        shadow = gua_get_shadow(light_id, cascade, position, portion, L.shadow_offset, tmp);
         break;
       }
     }
+
+    shadow = mix(shadow, 1.0, fading);
 
     if(shadow <= 0.0) {
       return 0.0;
@@ -254,8 +256,11 @@ float gua_calculate_light(int light_id,
       return 0.0;
     }
 
-    float fade;
-    float shadow = gua_get_shadow(light_id, 0, position, 1.0, L.shadow_offset, fade);
+    float tmp;
+    float shadow = gua_get_shadow(light_id, 0, position, 1.0, L.shadow_offset, tmp);
+
+    shadow = mix(shadow, 1.0, fading);
+
     if(shadow <= 0.0) {
       return 0.0;
     }

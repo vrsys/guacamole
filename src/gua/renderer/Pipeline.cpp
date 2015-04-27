@@ -264,7 +264,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     unsigned map_width(viewport_size * cascade_count);
 
     light_block.cascade_count = cascade_count;
-    light_block.max_shadow_distance = 1.f;
 
     // if shadow map hasn't been rendered yet, try to find an unused one
     if (!shadow_map) {
@@ -351,8 +350,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
           current_camera_.config.far_clip()
         };
       }
-
-      light_block.max_shadow_distance = splits.back();
 
       for (int cascade(0); cascade < splits.size()-1; ++cascade) {
 

@@ -70,7 +70,7 @@ class GUA_DLL LightNode : public SerializableNode {
     GUA_ADD_PROPERTY(float,           softness,                 0.5f);
 
     /**
-     * Triggers whether the light casts shadows. NOTE: Not implemented yet!
+     * Triggers whether the light casts shadows.
      */
     GUA_ADD_PROPERTY(bool,            enable_shadows,           false);
 
@@ -96,6 +96,13 @@ class GUA_DLL LightNode : public SerializableNode {
      * Choose wisely!
      */
     GUA_ADD_PROPERTY(unsigned,        shadow_map_size,          512);
+
+    /**
+     * Maximum shadow distance. The shadow will fade to the given distance
+     * and no shadow will be calculated beyond. Use zero to disable this
+     * feature.
+     */
+    GUA_ADD_PROPERTY(float,           max_shadow_dist,          100.f);
 
     /**
      * Sets the offset between a shadow casting object and the shadow's edge.
