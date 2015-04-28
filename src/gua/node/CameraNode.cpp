@@ -73,7 +73,7 @@ SerializedCameraNode CameraNode::serialize() const
   SerializedCameraNode s = { config, get_world_transform(), uuid() };
 
   for (auto const& cam: pre_render_cameras_) {
-      s.pre_render_cameras.push_back(cam->serialize());
+    s.pre_render_cameras.push_back(cam->serialize());
   }
 
   s.pipeline_description = pipeline_description_;
@@ -83,7 +83,7 @@ SerializedCameraNode CameraNode::serialize() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& camera_transform, 
+Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& camera_transform,
                                  CameraNode::Configuration const& config, CameraMode mode,
                                  bool use_alternative_culling_screen) {
 
@@ -92,7 +92,7 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
     if (screen_name == "" || !use_alternative_culling_screen) {
       screen_name = mode != CameraMode::RIGHT ? config.left_screen_path() : config.right_screen_path();
     }
-    
+
     auto screen_it(graph[screen_name]);
     auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
     if (!screen) {

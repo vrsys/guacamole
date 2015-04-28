@@ -66,7 +66,8 @@ class Serializer : public NodeVisitor {
   void check(SerializedScene& output,
              SceneGraph const& scene_graph,
              Mask const& mask,
-             bool enable_frustum_culling);
+             bool enable_frustum_culling,
+             int view_id);
 
   /**
    * Visits a TransformNode
