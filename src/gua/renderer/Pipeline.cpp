@@ -305,7 +305,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       if (needs_redraw) {
         current_scene_ = current_graph_->serialize(frustum, frustum,
                                                    current_camera_.config.enable_frustum_culling(),
-                                                   current_camera_.config.mask());
+                                                   current_camera_.config.mask(),
+                                                   current_camera_.config.view_id());
 
         camera_block_.update(context_,
                              frustum,
