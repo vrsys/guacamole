@@ -80,6 +80,11 @@ ResolvePassDescription::ResolvePassDescription()
   uniforms["gua_fog_start"] = 10.f;
   uniforms["gua_fog_end"] = 1000.f;
 
+  // default vignette
+  uniforms["gua_vignette_coverage"] = 0.5f;
+  uniforms["gua_vignette_softness"] = 0.5f;
+  uniforms["gua_vignette_color"] = scm::math::vec4f(0.f, 0.f, 0.f, 0.f);
+
   // default tone mapping exposure
   uniforms["gua_tone_mapping_exposure"] = 1.0f;
 }
@@ -324,6 +329,42 @@ ResolvePassDescription& ResolvePassDescription::fog_end(float fog_end) {
 float ResolvePassDescription::fog_end() const {
   auto uniform(uniforms.find("gua_fog_end"));
   return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::vignette_coverage(float vignette_coverage) {
+  uniforms["gua_vignette_coverage"] = vignette_coverage;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::vignette_coverage() const {
+  auto uniform(uniforms.find("gua_vignette_coverage"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::vignette_softness(float vignette_softness) {
+  uniforms["gua_vignette_softness"] = vignette_softness;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::vignette_softness() const {
+  auto uniform(uniforms.find("gua_vignette_softness"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::vignette_color(math::vec4f const& vignette_color) {
+  uniforms["gua_vignette_color"] = vignette_color;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+math::vec4f ResolvePassDescription::vignette_color() const {
+  auto uniform(uniforms.find("gua_vignette_color"));
+  return boost::get<math::vec4f>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

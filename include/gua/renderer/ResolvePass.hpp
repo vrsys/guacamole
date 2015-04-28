@@ -136,6 +136,18 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   float fog_end() const;
 
   /////////////////////////////////////////////////////////////////////////////
+  // vignette
+  /////////////////////////////////////////////////////////////////////////////
+  ResolvePassDescription& vignette_coverage(float vignette_coverage);
+  float vignette_coverage() const;
+
+  ResolvePassDescription& vignette_softness(float vignette_softness);
+  float vignette_softness() const;
+
+  ResolvePassDescription& vignette_color(math::vec4f const& vignette_color);
+  math::vec4f vignette_color() const;
+
+  /////////////////////////////////////////////////////////////////////////////
   // tone mapping and exposure
   /////////////////////////////////////////////////////////////////////////////
   ResolvePassDescription& tone_mapping_exposure(float value);

@@ -140,11 +140,6 @@ layout(location=0) out vec3 gua_out_color;
 
 // skymap
 
-// why does this not work properly?
-// float gua_my_atan2(float a, float b) {
-//   return 2.0 * atan(fma(a, inversesqrt(b*b + a*a), b));
-// }
-
 float gua_my_atan2(float a, float b) {
   return 2.0 * atan(a/(sqrt(b*b + a*a) + b));
 }
@@ -189,6 +184,15 @@ vec3 gua_get_background_color() {
   }
   // quad texture
   return sRGB_to_linear(gua_apply_background_texture());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+float get_vignette(float coverage, float softness, float intensity) {
+  // inigo quilez's great vigneting effect!
+  float a = -coverage/softness;
+  float b = 1.0/softness;
+  vec2 q = gua_get_quad_coords();
+  return clamp(a + b*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 ), 0, 1) * intensity + (1-intensity);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -238,9 +242,14 @@ void main() {
   }
 
   gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
-  // toneMap
-  // color correction
+
   // vignette
+  if (gua_vignette_color.a > 0) {
+    float vignetting = get_vignette(gua_vignette_coverage, gua_vignette_softness, gua_vignette_color.a);
+    gua_out_color = mix(gua_vignette_color.rgb, gua_out_color, vignetting);
+  }
+
+  // color correction
 
 #if @gua_debug_tiles@
   vec3 color_codes[] = {vec3(1,0,0), vec3(0,1,0), vec3(0,0,1), vec3(1,1,0), vec3(1,0,1), vec3(0,1,1)};
