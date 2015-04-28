@@ -304,6 +304,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       // only render shadow map if it hasn't been rendered before this frame
       if (needs_redraw) {
         current_scene_ = current_graph_->serialize(frustum, frustum,
+                                                   math::get_translation(current_camera_.transform),
                                                    current_camera_.config.enable_frustum_culling(),
                                                    current_camera_.config.mask(),
                                                    current_camera_.config.view_id());

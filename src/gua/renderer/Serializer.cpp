@@ -89,7 +89,7 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::LODNode* node) {
   if (is_visible(node)) {
 
-    float distance_to_camera(scm::math::length(node->get_world_position() - rendering_frustum_.get_camera_position()));
+    float distance_to_camera(scm::math::length(node->get_world_position() - data_->reference_camera_position));
 
     unsigned child_index(0);
 

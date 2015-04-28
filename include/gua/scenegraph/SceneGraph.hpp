@@ -272,6 +272,7 @@ class GUA_DLL SceneGraph {
 
   std::shared_ptr<SerializedScene> serialize(Frustum const& rendering_frustum,
                                              Frustum const& culling_frustum,
+                                             math::vec3 const& reference_camera_position,
                                              bool enable_frustum_culling,
                                              Mask const& mask,
                                              int view_id) const;
