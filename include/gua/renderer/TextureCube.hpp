@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TEXTURE2D_HPP
-#define GUA_TEXTURE2D_HPP
+#ifndef GUA_TEXTURE_CUBE_HPP
+#define GUA_TEXTURE_CUBE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -44,7 +44,7 @@ namespace gua {
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-  class GUA_DLL Texture2D : public Texture {
+  class GUA_DLL TextureCube : public Texture {
  public:
 
   /**
@@ -58,11 +58,10 @@ namespace gua {
    *                         texture.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture2D(unsigned width,
+  TextureCube(unsigned width,
             unsigned height,
             scm::gl::data_format color_format,
             scm::gl::data_format internal_format,
-            std::vector<void*> const& data,
             unsigned mipmap_layers = 1,
             scm::gl::sampler_state_desc const& state_descripton =
                 scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
@@ -80,7 +79,7 @@ namespace gua {
    *                         texture.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture2D(unsigned width,
+  TextureCube(unsigned width,
             unsigned height,
             scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
             unsigned mipmap_layers = 1,
@@ -97,20 +96,25 @@ namespace gua {
    * \param file             The file which contains the texture data.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture2D(std::string const& file,
+  TextureCube(std::string const& file_px,
+            std::string const& file_nx,
+            std::string const& file_py,
+            std::string const& file_ny,
+            std::string const& file_pz,
+            std::string const& file_nz,
             bool generate_mipmaps = false,
             scm::gl::sampler_state_desc const& state_descripton =
                 scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
                                             scm::gl::WRAP_REPEAT,
                                             scm::gl::WRAP_REPEAT));
 
-  virtual ~Texture2D() {}
+  virtual ~TextureCube() {}
 
   ///@{
   /**
    * Gets the size.
    *
-   * Returns the size of the Texture2D.
+   * Returns the size of the TextureCube.
    */
   unsigned width() const { return width_; }
   unsigned height() const { return height_; }
@@ -124,11 +128,17 @@ namespace gua {
 
   mutable unsigned width_;
   mutable unsigned height_;
-  mutable std::vector<void*> data_;
+
+  std::string file_px_;
+  std::string file_nx_;
+  std::string file_py_;
+  std::string file_ny_;
+  std::string file_pz_;
+  std::string file_nz_;
 
  private:
 
 };
 
 }
-#endif  // GUA_TEXTURE2D_HPP
+#endif  // GUA_TEXTURE_CUBE_HPP

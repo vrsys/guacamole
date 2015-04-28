@@ -56,7 +56,6 @@ class GUA_DLL Texture {
    */
   Texture(scm::gl::data_format color_format,
           scm::gl::data_format internal_format,
-          std::vector<void*> const& data,
           unsigned mipmap_layers = 1,
           scm::gl::sampler_state_desc const& state_descripton =
               scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
@@ -140,7 +139,6 @@ class GUA_DLL Texture {
   mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
   mutable std::mutex upload_mutex_;
 
-  mutable std::vector<void*> data_;
   std::string file_name_;
 };
 
