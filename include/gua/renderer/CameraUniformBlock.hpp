@@ -22,6 +22,7 @@ public:
     math::vec4f  clipping_planes[64];
     math::vec2i  resolution;
     math::vec2ui noise_texture;
+    math::vec4f  cyclops_position;
     int          clipping_plane_count;
     int          view_id;
     float        clip_near;
@@ -34,6 +35,7 @@ public:
   ~CameraUniformBlock();
 
   void update(RenderContext const& context, Frustum const& cam,
+              math::vec3 const& cyclops_position,
               std::vector<math::vec4f> const& clipping_planes,
               int view_id, math::vec2ui const& screen_resolution);
 

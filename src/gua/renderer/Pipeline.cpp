@@ -180,6 +180,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   camera_block_.update(context_,
                        current_scene_->rendering_frustum,
+                       math::get_translation(camera.transform),
                        current_scene_->clipping_planes,
                        camera.config.get_view_id(),
                        camera.config.get_resolution());
@@ -311,6 +312,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
         camera_block_.update(context_,
                              frustum,
+                             frustum.get_camera_position(),
                              current_scene_->clipping_planes,
                              current_camera_.config.get_view_id(),
                              math::vec2ui(viewport_size));
@@ -494,6 +496,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     camera_block_.update(context_,
                          current_scene_->rendering_frustum,
+                         math::get_translation(current_camera_.transform),
                          current_scene_->clipping_planes,
                          current_camera_.config.get_view_id(),
                          current_camera_.config.get_resolution());
