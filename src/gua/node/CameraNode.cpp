@@ -38,9 +38,7 @@ CameraNode::CameraNode(std::string const& name,
                        math::mat4 const& transform)
   : Node(name, transform),
     config(configuration),
-    pipeline_description_(description),
-    application_fps_(0.f),
-    rendering_fps_(0.f)
+    pipeline_description_(description)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
