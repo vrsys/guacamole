@@ -170,7 +170,6 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
     for (auto& cam : graph->get_camera_nodes()) {
       auto window_name(cam->config.get_output_window_name());
       auto rclient(render_clients_.find(window_name));
-      cam->set_application_fps(application_fps_.fps);
       if (rclient != render_clients_.end()) {
         rclient->second.first->push_back(
             Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()),
@@ -203,7 +202,6 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
   for (auto graph : scene_graphs) {
     for (auto& cam : graph->get_camera_nodes()) {
       auto window_name(cam->config.get_output_window_name());
-      cam->set_application_fps(application_fps_.fps);
       auto serialized_cam(cam->serialize());
 
       if (window_name != "") {
