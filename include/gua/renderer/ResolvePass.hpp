@@ -35,7 +35,8 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   enum class BackgroundMode {
     COLOR = 0,
     SKYMAP_TEXTURE = 1,
-    QUAD_TEXTURE = 2
+    QUAD_TEXTURE = 2,
+    CUBEMAP = 3
   };
 
   enum class ToneMappingMethod {

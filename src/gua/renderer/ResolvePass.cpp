@@ -45,7 +45,7 @@ ResolvePassDescription::ResolvePassDescription()
   rendermode_ = RenderMode::Quad;
   depth_stencil_state_ = boost::make_optional(
     scm::gl::depth_stencil_state_desc(
-      false, false, scm::gl::COMPARISON_LESS, true, 1, 0, 
+      false, false, scm::gl::COMPARISON_LESS, true, 1, 0,
       scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
     )
   );
@@ -74,7 +74,7 @@ ResolvePassDescription::ResolvePassDescription()
   uniforms["gua_screen_space_shadows_radius"] = 1.0f;
   uniforms["gua_screen_space_shadows_max_radius_px"] = 200.0f;
   uniforms["gua_screen_space_shadows_intensity"] = 0.8f;
-  
+
   // default fog configuration
   uniforms["gua_enable_fog"] = false;
   uniforms["gua_fog_start"] = 10.f;
@@ -371,35 +371,35 @@ math::vec4f ResolvePassDescription::vignette_color() const {
 ResolvePassDescription& ResolvePassDescription::tone_mapping_exposure(float value)
 {
   uniforms["gua_tone_mapping_exposure"] = value;
-  return *this; 
+  return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float ResolvePassDescription::tone_mapping_exposure() const { 
+float ResolvePassDescription::tone_mapping_exposure() const {
   auto uniform(uniforms.find("gua_tone_mapping_exposure"));
   return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::tone_mapping_method(ToneMappingMethod value) {
-  tone_mapping_method_ = value; 
+  tone_mapping_method_ = value;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription::ToneMappingMethod ResolvePassDescription::tone_mapping_method() const { 
-  return tone_mapping_method_; 
+ResolvePassDescription::ToneMappingMethod ResolvePassDescription::tone_mapping_method() const {
+  return tone_mapping_method_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::debug_tiles(bool value) {
-  debug_tiles_ = value; 
+  debug_tiles_ = value;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 bool ResolvePassDescription::debug_tiles() const {
-  return debug_tiles_; 
+  return debug_tiles_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -92,8 +92,7 @@ void TextureCube::upload_to(RenderContext const& context) const {
     render_contexts_.resize(context.id + 1);
   }
 
-  if (file_name_ == "") { 
-
+  if (file_name_ == "") {
     // if (data_.size() == 0) {
       textures_[context.id] = context.render_device->create_texture_cube(
           math::vec2ui(width_, height_), color_format_, mipmap_layers_);

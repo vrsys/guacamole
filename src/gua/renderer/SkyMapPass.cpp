@@ -1,0 +1,106 @@
+/******************************************************************************
+ * guacamole - delicious VR                                                   *
+ *                                                                            *
+ * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
+ * Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
+ *                                                                            *
+ * This program is free software: you can redistribute it and/or modify it    *
+ * under the terms of the GNU General Public License as published by the Free *
+ * Software Foundation, either version 3 of the License, or (at your option)  *
+ * any later version.                                                         *
+ *                                                                            *
+ * This program is distributed in the hope that it will be useful, but        *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY *
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License   *
+ * for more details.                                                          *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License along    *
+ * with this program. If not, see <http://www.gnu.org/licenses/>.             *
+ *                                                                            *
+ ******************************************************************************/
+
+// class header
+#include <gua/renderer/SkyMapPass.hpp>
+
+#include <gua/renderer/SkyMapRenderer.hpp>
+
+namespace gua {
+
+////////////////////////////////////////////////////////////////////////////////
+
+SkyMapPassDescription::SkyMapPassDescription()
+  : PipelinePassDescription() {
+  vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
+  fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
+  name_ = "SkyMapPass";
+
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = true;
+  enable_for_shadows_ = false;
+  rendermode_ = RenderMode::Custom;
+
+  uniforms["light_direction"] = math::vec3f(0,-1,0);
+  uniforms["light_color"] = math::vec3f(0.65, 0.57, 0.475);
+  uniforms["output_texture_name"] = std::string("");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+SkyMapPassDescription& SkyMapPassDescription::light_direction(math::vec3f const& light_direction) {
+  uniforms["light_direction"] = light_direction;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+math::vec3f SkyMapPassDescription::light_direction() const {
+  auto uniform(uniforms.find("light_direction"));
+  return boost::get<math::vec3f>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+SkyMapPassDescription& SkyMapPassDescription::light_color(math::vec3f const& light_color) {
+  uniforms["light_color"] = light_color;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+math::vec3f SkyMapPassDescription::light_color() const {
+  auto uniform(uniforms.find("light_color"));
+  return boost::get<math::vec3f>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+SkyMapPassDescription& SkyMapPassDescription::output_texture_name(std::string const& output_texture_name) {
+  uniforms["output_texture_name"] = output_texture_name;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::string SkyMapPassDescription::output_texture_name() const {
+  auto uniform(uniforms.find("output_texture_name"));
+  return boost::get<std::string>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<PipelinePassDescription> SkyMapPassDescription::make_copy() const {
+  return std::make_shared<SkyMapPassDescription>(*this);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+PipelinePass SkyMapPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+{
+  PipelinePass pass{*this, ctx, substitution_map};
+
+  auto renderer = std::make_shared<SkyMapRenderer>();
+
+  pass.process_ = [renderer](
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool rendering_shadows) {
+    renderer->render_sky_map(pipe, desc);
+  };
+
+  return pass;
+}
+
+}

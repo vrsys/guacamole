@@ -150,6 +150,13 @@ vec3 gua_apply_background_texture() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+vec3 gua_apply_cubemap_texture() {
+  vec3 pos = gua_get_position();
+  vec3 view = normalize(pos - gua_camera_position);
+  return texture(samplerCube(gua_background_texture), view).xyz;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_skymap_texture() {
   vec3 pos = gua_get_position();
   vec3 view = normalize(pos - gua_camera_position);
@@ -181,9 +188,11 @@ vec3 gua_get_background_color() {
       return sRGB_to_linear(gua_apply_background_color());
     case 1: // skymap texture
       return sRGB_to_linear(gua_apply_skymap_texture());
+    case 2: // quad texture
+      return sRGB_to_linear(gua_apply_background_texture());
   }
-  // quad texture
-  return sRGB_to_linear(gua_apply_background_texture());
+  // cubemap
+  return sRGB_to_linear(gua_apply_cubemap_texture());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
