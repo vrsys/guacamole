@@ -3,8 +3,7 @@ uniform vec3    gua_background_color;
 uniform uvec2   gua_background_texture;
 
 uniform int     gua_environment_lighting_mode;
-uniform uvec2   gua_environment_lighting_spheremap;
-uniform uvec2   gua_environment_lighting_cubemap;
+uniform uvec2   gua_environment_lighting_texture;
 uniform vec3    gua_environment_lighting_color;
 uniform float   gua_horizon_fade;
 
