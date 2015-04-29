@@ -174,10 +174,10 @@ vec3 gua_apply_background_color() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec3 gua_apply_fog(vec3 fog_color) {
+vec3 gua_apply_fog(vec3 color, vec3 fog_color) {
   float dist       = length(gua_camera_position - gua_get_position());
   float fog_factor = clamp((dist - gua_fog_start)/(gua_fog_end - gua_fog_start), 0.0, 1.0);
-  return mix(gua_get_color(), fog_color, fog_factor);
+  return mix(color, fog_color, fog_factor);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -229,16 +229,14 @@ void main() {
 
   if (res) {
     if (depth < 1) {
+      gbuffer_color += shade_for_all_lights(gua_get_color(),
+                                      gua_get_normal(),
+                                      gua_get_position(),
+                                      gua_get_pbr(),
+                                      gua_get_flags(),
+                                      gua_ssao_enable);
       if (gua_enable_fog) {
-        gbuffer_color += gua_apply_fog(gua_get_background_color());
-      }
-      else {
-        gbuffer_color += shade_for_all_lights(gua_get_color(),
-                                        gua_get_normal(),
-                                        gua_get_position(),
-                                        gua_get_pbr(),
-                                        gua_get_flags(),
-                                        gua_ssao_enable);
+        gbuffer_color = gua_apply_fog(gbuffer_color, gua_get_background_color());
       }
     }
     else {
