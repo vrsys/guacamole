@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->screen_space_shadow_intensity(0.9);
 
   camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
-  camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_spheremap("data/textures/envlightmap.jpg");
+  camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_texture("data/textures/envlightmap.jpg");
 
   camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
   camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/textures/envmap.jpg");

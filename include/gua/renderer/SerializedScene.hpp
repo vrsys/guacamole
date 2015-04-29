@@ -60,6 +60,12 @@ struct GUA_DLL SerializedScene {
   Frustum culling_frustum;
 
   /**
+   * The original camera position for which we are rendering. This stays the
+   * same even if rendering shadow maps, for example.
+   */
+  math::vec3 reference_camera_position;
+
+  /**
    * Clipping plane parameters.
    */
   std::vector<math::vec4f> clipping_planes;

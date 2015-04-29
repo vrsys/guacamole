@@ -17,6 +17,7 @@ CameraUniformBlock::~CameraUniformBlock()
 
 void CameraUniformBlock::update(RenderContext const& context,
                                 Frustum const& cam,
+                                math::vec3 const& cyclops_position,
                                 std::vector<math::vec4f> const& clipping_planes,
                                 int view_id, math::vec2ui const& screen_resolution) {
 
@@ -41,6 +42,7 @@ void CameraUniformBlock::update(RenderContext const& context,
         uniform_block_->clipping_planes[i] = clipping_planes[i];
       }
       uniform_block_->clipping_plane_count = clipping_planes.size();
+      uniform_block_->cyclops_position = math::vec4(cyclops_position, 1.0);
       uniform_block_->clip_near = cam.get_clip_near();
       uniform_block_->clip_far = cam.get_clip_far();
       uniform_block_->view_id = view_id;
