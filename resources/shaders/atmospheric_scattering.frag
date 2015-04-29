@@ -67,8 +67,8 @@ const vec3 wave_length = 1.0 / pow(light_color, vec3(4.0));
 const float PI = 3.14159265358979323846;
 const float Kr4PI = 0.0025 * 4 * PI;  // Kr * 4 * PI
 const float KrESun = 0.0025 * 15; // Kr * ESun
-const float Km4PI = 0.0015 * 4 * PI;  // Km * 4 * PI
-const float KmESun = 0.0015 * 15; // Km * ESun
+const float Km4PI = 0.0005 * 4 * PI;  // Km * 4 * PI
+const float KmESun = 0.0005 * 15; // Km * ESun
 const float MiePhase = -0.95; // Used in phase function, not applicable for Rayleigh
 
 // gamma
@@ -207,8 +207,7 @@ void main() {
     float cose = dot(light_direction, direction) / length(direction);
     float cos2 = cose * cose;
     color = (rayleigh_color * get_rayleigh_phase(cos2)) + (mie_color * get_phase(cose, cos2, MiePhase, MiePhase * MiePhase));
-
-
+    color = clamp(color, 0, 1);
   }
 
   // Gamma correction
