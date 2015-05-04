@@ -53,21 +53,20 @@ vec3 environment_lighting (in ShadingTerms T)
   vec3 env_color = vec3(0);
   vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.V));
 
-  // http://marmosetco.tumblr.com/post/81245981087
-  float gua_horizon_fade = 1.3;
-  vec3 R = reflect(-T.V, T.N);
-  float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
-  horizon *= horizon;
-
   switch (gua_environment_lighting_mode) {
     case 0 : // spheremap
       vec2 texcoord = longitude_latitude(T.N);
-      env_color = brdf_spec * texture2D(sampler2D(gua_environment_lighting_spheremap), texcoord).rgb;
+      env_color = brdf_spec * texture(sampler2D(gua_environment_lighting_texture), texcoord).rgb;
       break;
     case 1 : // cubemap
-      env_color = brdf_spec * vec3(0.0); // not implemented yet!
+      env_color = brdf_spec * texture(samplerCube(gua_environment_lighting_texture), T.N).rgb;
       break;
     case 2 : // single color
+      // http://marmosetco.tumblr.com/post/81245981087
+      float gua_horizon_fade = 1.3;
+      vec3 R = reflect(-T.V, T.N);
+      float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
+      horizon *= horizon;
       vec3 brdf_diff = T.diffuse;
       env_color = (Pi * brdf_diff + (horizon * brdf_spec)) * gua_horizon_fade * gua_environment_lighting_color;
       break;
@@ -146,7 +145,7 @@ float gua_my_atan2(float a, float b) {
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_background_texture() {
-  return texture2D(sampler2D(gua_background_texture), gua_quad_coords).xyz;
+  return texture(sampler2D(gua_background_texture), gua_quad_coords).xyz;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -58,8 +58,7 @@ ResolvePassDescription::ResolvePassDescription()
   // default ambient lighting
   uniforms["gua_environment_lighting_mode"] = static_cast<int>(EnvironmentLightingMode::AMBIENT_COLOR);
   uniforms["gua_environment_lighting_color"] = scm::math::vec3f(0.05f, 0.05f, 0.05f);
-  uniforms["gua_environment_lighting_spheremap"] = std::string("gua_default_texture");
-  uniforms["gua_environment_lighting_cubemap"] = std::string("gua_default_texture");
+  uniforms["gua_environment_lighting_texture"] = std::string("gua_default_texture");
   uniforms["gua_horizon_fade"] = 1.3f;
 
   // default ssao
@@ -126,27 +125,15 @@ std::string ResolvePassDescription::background_texture() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription& ResolvePassDescription::environment_lighting_spheremap(std::string const& spheremap_texture) {
-  uniforms["gua_environment_lighting_spheremap"] = spheremap_texture;
+ResolvePassDescription& ResolvePassDescription::environment_lighting_texture(std::string const& texture) {
+  uniforms["gua_environment_lighting_texture"] = texture;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& ResolvePassDescription::environment_lighting_spheremap() const {
-  auto uniform(uniforms.find("gua_environment_lighting_spheremap"));
+std::string const& ResolvePassDescription::environment_lighting_texture() const {
+  auto uniform(uniforms.find("gua_environment_lighting_texture"));
   return boost::get<std::string>(uniform->second.data);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription& ResolvePassDescription::environment_lighting_cubemap(std::string const& cube_map_positive_x,
-  std::string const& cube_map_negative_x,
-  std::string const& cube_map_positive_y,
-  std::string const& cube_map_negative_y,
-  std::string const& cube_map_positive_z,
-  std::string const& cube_map_negative_z) {
-
-  gua::Logger::LOG_WARNING << "ResolvePassDescription::environment_lighting_cubemap() : Using deafult texture. Opening not implemented yet." << std::endl;
-  return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
