@@ -22,6 +22,7 @@ out VertexData {
   //float pass_log_depth;
   float pass_es_linear_depth;
   float pass_es_shift;
+  vec3 pass_world_position;
 } VertexOut;
 
 
@@ -50,6 +51,8 @@ void main() {
         VertexOut.pass_uv_coords        = vec2(u_multiplier, v_multiplier);
         vec4 q_pos_ms                   = vec4( ( (s_pos_ms + (u_multiplier * step_u) ) + (v_multiplier * step_v) ) ,1.0);
         gl_Position                     = gua_model_view_projection_matrix * q_pos_ms;
+
+        VertexOut.pass_world_position = (gua_model_matrix * q_pos_ms).xyz;
         //VertexOut.pass_log_depth        = (gl_Position.z/gl_Position.w)/2.0 + 0.5;
 
         float es_linear_depth_corner = (gua_model_view_matrix * q_pos_ms).z;

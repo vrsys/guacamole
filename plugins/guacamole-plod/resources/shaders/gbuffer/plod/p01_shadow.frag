@@ -9,9 +9,8 @@ layout(early_fragment_tests) in;
 ///////////////////////////////////////////////////////////////////////////////
 in VertexData {
   vec2 pass_uv_coords;
-  //float pass_log_depth;
-  float pass_es_linear_depth;
-  float pass_es_shift;
+  vec3 pass_world_position;
+
 } VertexIn;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,5 +26,16 @@ void main() {
 
   if( dot(uv_coords, uv_coords) > 1)
     discard;
+
+    //clip against global clipping planes
+  vec3 gua_world_position = VertexIn.pass_world_position;
+
+  for (int i=0; i < gua_clipping_plane_count; ++i) {
+
+    if (dot(gua_clipping_planes[i].xyz, gua_world_position.xyz) + gua_clipping_planes[i].w < 0) {
+      discard;
+    }
+  }
+
 }
 
