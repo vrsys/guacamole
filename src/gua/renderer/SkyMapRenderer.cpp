@@ -55,6 +55,9 @@ void SkyMapRenderer::render_sky_map(Pipeline& pipe, PipelinePassDescription cons
   auto light_col_uniform(desc.uniforms.find("light_color"));
   auto light_color(boost::get<math::vec3f>(light_col_uniform->second.data));
 
+  auto ground_col_uniform(desc.uniforms.find("ground_color"));
+  auto ground_color(boost::get<math::vec3f>(ground_col_uniform->second.data));
+
   if (!sky_map_) {
     if (output_texture_name == "") {
       gua::Logger::LOG_WARNING << "Unable to render skymap: No output texture name specified!"<< std::endl;
@@ -98,6 +101,7 @@ void SkyMapRenderer::render_sky_map(Pipeline& pipe, PipelinePassDescription cons
   program_->set_uniform(ctx, 1.f/size_, "texel_size");
   program_->set_uniform(ctx, light_direction, "light_direction");
   program_->set_uniform(ctx, light_color, "light_color");
+  program_->set_uniform(ctx, ground_color, "ground_color");
 
   pipe.draw_quad();
 

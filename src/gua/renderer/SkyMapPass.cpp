@@ -41,6 +41,7 @@ SkyMapPassDescription::SkyMapPassDescription()
 
   uniforms["light_direction"] = math::vec3f(0,-1,0);
   uniforms["light_color"] = math::vec3f(0.65, 0.57, 0.475);
+  uniforms["ground_color"] = math::vec3f(1.f);
   uniforms["output_texture_name"] = std::string("");
 }
 
@@ -65,6 +66,18 @@ SkyMapPassDescription& SkyMapPassDescription::light_color(math::vec3f const& lig
 ////////////////////////////////////////////////////////////////////////////////
 math::vec3f SkyMapPassDescription::light_color() const {
   auto uniform(uniforms.find("light_color"));
+  return boost::get<math::vec3f>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+SkyMapPassDescription& SkyMapPassDescription::ground_color(math::vec3f const& ground_color) {
+  uniforms["ground_color"] = ground_color;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+math::vec3f SkyMapPassDescription::ground_color() const {
+  auto uniform(uniforms.find("ground_color"));
   return boost::get<math::vec3f>(uniform->second.data);
 }
 

@@ -44,6 +44,9 @@ class GUA_DLL SkyMapPassDescription : public PipelinePassDescription {
   SkyMapPassDescription& light_color(math::vec3f const& light_color);
   math::vec3f light_color() const;
 
+  SkyMapPassDescription& ground_color(math::vec3f const& ground_color);
+  math::vec3f ground_color() const;
+
   SkyMapPassDescription& output_texture_name(std::string const& output_texture_name);
   std::string output_texture_name() const;
 

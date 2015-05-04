@@ -25,6 +25,9 @@ in flat int texlayer;
 in vec2 texcoods;
 
 uniform float texel_size;
+uniform vec3 ground_color;
+uniform vec3 light_direction;
+uniform vec3 light_color;
 
 // write outputs
 layout(location=0) out vec3 gua_out_color;
@@ -58,9 +61,6 @@ const float inner_radius = 1.0;    // Radius of planet
 const float outer_radius = inner_radius * 1.025;    // Outter radius of atmosphere (= inner_radius * 1.025)
 const float num_samples = 5.0;   // Number of scatter samples to perform
 
-// Light properties
-uniform vec3 light_direction; // Vector from light source to surface
-uniform vec3 light_color;     // Vector light color
 const vec3 wave_length = 1.0 / pow(light_color, vec3(4.0));
 
 // constants
@@ -131,7 +131,7 @@ void main() {
 
   vec3 color = vec3(0);
   vec3 direction = get_view_direction();
-  vec3 position = vec3(0,1.,0);
+  vec3 position = vec3(0,1,0);
 
   // Find intersection points in the atmosphere
   vec3 intersection_near;
@@ -144,19 +144,16 @@ void main() {
     vec3 end_point;
     float height = distance(position, center);
     bool inside = height < outer_radius;
-    if ( inside )
-    {
+
+    if (inside) {
       // Inside scattering
       start_point = position;
       end_point = intersection_near;
-    }
-    else
-    {
+    } else {
       // Outside scattering
       start_point = intersection_near;
       end_point = intersection_far;
     }
-
 
     // Setup variables
     float dist = distance(start_point, end_point);
@@ -208,10 +205,17 @@ void main() {
     float cos2 = cose * cose;
     color = (rayleigh_color * get_rayleigh_phase(cos2)) + (mie_color * get_phase(cose, cos2, MiePhase, MiePhase * MiePhase));
     color = clamp(color, 0, 1);
+
+    if (start_angle < 0 && start_angle > -0.1) {
+      color = mix(color, ground_color, abs(start_angle) * 10.0);
+    } else if (start_angle <= -0.1) {
+      color = ground_color;
+    }
   }
 
   // Gamma correction
   color = pow(color, vec3(InvGamma));
+
 
   gua_out_color = color;
 }
