@@ -117,6 +117,11 @@ namespace gua {
       normalization_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p03_normalization.vert")));
       normalization_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p03_normalization.frag")));
 
+      shadow_pass_shader_stages_.clear();
+      shadow_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_shadow.vert")));
+      shadow_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_shadow.geom")));
+      shadow_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_shadow.frag")));
+
       shaders_loaded_ = true;
     }
   }
@@ -165,6 +170,16 @@ namespace gua {
       normalization_pass_program_ = new_program;
     }
     assert(normalization_pass_program_);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  void PLODRenderer::_initialize_shadow_pass_program() {
+    if(!shadow_pass_program_) {
+      auto new_program = std::make_shared<ShaderProgram>();
+      new_program->set_shaders(shadow_pass_shader_stages_);
+      shadow_pass_program_ = new_program;
+    }
+    assert(shadow_pass_program_);
   }
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -398,6 +413,10 @@ namespace gua {
         _initialize_normalization_pass_program();
       }
 
+      if (!shadow_pass_program_) {
+        _initialize_shadow_pass_program();
+      }
+
       assert(log_to_lin_conversion_pass_program_ && depth_pass_program_ && normalization_pass_program_);
     }
     catch (std::exception& e) {
@@ -433,284 +452,373 @@ namespace gua {
 
     auto& gua_depth_buffer = pipe.get_current_target().get_depth_buffer()->get_buffer(ctx);
 
-    ///////////////////////////////////////////////////////////////////////////
-    // fullscreen gbuffer depth_conversion_pass
-    ///////////////////////////////////////////////////////////////////////////
-    {
-      scm::gl::context_all_guard context_guard(ctx.render_context);
 
-      if (!log_to_lin_conversion_pass_program_) {
-        std::cout << "Log to lin pass program not instanciated\n";
-      }
-
-      std::string const gpu_query_name_depth_conversion = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::DepthConversionPass";
-      pipe.begin_gpu_query(ctx, gpu_query_name_depth_conversion);
-
-      log_to_lin_conversion_pass_program_->use(ctx);
-
-      ctx.render_context
-        ->set_depth_stencil_state(no_depth_test_with_writing_depth_stencil_state_);
-
-      ctx.render_context
-        ->set_frame_buffer(log_to_lin_gua_depth_conversion_pass_fbo_);
-
-      ctx.render_context
-        ->clear_depth_stencil_buffer(log_to_lin_gua_depth_conversion_pass_fbo_);
-
-
-      ctx.render_context
-        ->bind_texture(gua_depth_buffer, nearest_sampler_state_, 0);
-      log_to_lin_conversion_pass_program_->apply_uniform(ctx,
-        "gua_log_depth_buffer", 0);
-
-      float width = render_target_dims[0];
-      float height = render_target_dims[1];
-      log_to_lin_conversion_pass_program_->apply_uniform(ctx,
-        "win_width",
-        (width));
-
-      log_to_lin_conversion_pass_program_->apply_uniform(ctx,
-        "win_height",
-        (height));
-
-      ctx.render_context->apply();
-
-      fullscreen_quad_->draw(ctx.render_context);
-
-      //pipe.end_cpu_query("CPU : PLODRenderer::depth_conversion_pass");
-      //pipe.end_gpu_query(ctx, "GPU : PLODRenderer::depth_conversion_pass");
-
-      log_to_lin_conversion_pass_program_->unuse(ctx);
-
-      pipe.end_gpu_query(ctx, gpu_query_name_depth_conversion);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    // 1. depth pass 
-    //////////////////////////////////////////////////////////////////////////
     std::unordered_map<node::PLODNode*, pbr::ren::Cut*> cut_map;
     std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_out_of_frustum_per_model;
 
-    {
-      scm::gl::context_all_guard context_guard(ctx.render_context);
+    //loop through all models and perform frustum culling
+    for (auto const& object : sorted_objects->second) {
 
-      std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::DepthPass";
-      pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
+      auto plod_node(reinterpret_cast<node::PLODNode*>(object));
 
-      ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
-      depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
-      ctx.render_context->set_frame_buffer(depth_pass_result_fbo_);
+      pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
 
-      depth_pass_program_->use(ctx);
+      auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+      auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
+      auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
+      auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
-      //loop through all models and render depth pass
-      for (auto const& object : sorted_objects->second) {
+      cuts->SendTransform(context_id, model_id, math::mat4f(scm_model_matrix));
+      cuts->SendRendered(context_id, model_id);
+      cuts->SendThreshold(context_id, model_id, plod_node->get_error_threshold());
 
-        auto plod_node(reinterpret_cast<node::PLODNode*>(object));
+      // update current model matrix for PLODLibrary in order to make bundle pick work
+      database->GetModel(model_id)->set_transform(math::mat4f(scm_model_matrix));
 
-        pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
+      pbr::ren::Cut& cut = cuts->GetCut(context_id, pbr_view_id, model_id);
+      cut_map.insert(std::make_pair(plod_node, &cut));
 
-        auto const& scm_model_matrix = plod_node->get_cached_world_transform();
-        auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
-        auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
-        auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+      std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
 
-        cuts->SendTransform(context_id, model_id, math::mat4f(scm_model_matrix));
-        cuts->SendRendered(context_id, model_id);
-        cuts->SendThreshold(context_id, model_id, plod_node->get_error_threshold());
+      //perform frustum culling 
+      pbr::ren::KdnTree const* kdn_tree = database->GetModel(model_id)->kdn_tree();
+      scm::gl::frustum const& culling_frustum = cut_update_cam.GetFrustumByModel(math::mat4f(scm_model_matrix));
 
-        // update current model matrix for PLODLibrary in order to make bundle pick work
-        database->GetModel(model_id)->set_transform(math::mat4f(scm_model_matrix));
+      std::vector<scm::gl::boxf> const& model_bounding_boxes = kdn_tree->bounding_boxes();
 
-        pbr::ren::Cut& cut = cuts->GetCut(context_id, pbr_view_id, model_id);
-        cut_map.insert(std::make_pair(plod_node, &cut));
+      std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
 
-        std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
-
-        //perform frustum culling 
-        pbr::ren::KdnTree const* kdn_tree = database->GetModel(model_id)->kdn_tree();
-        scm::gl::frustum const& culling_frustum = cut_update_cam.GetFrustumByModel(math::mat4f(scm_model_matrix));
-
-        std::vector<scm::gl::boxf> const& model_bounding_boxes = kdn_tree->bounding_boxes();
-
-        std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
-
-        for (auto const& n : node_list) {
-          if (culling_frustum.classify(model_bounding_boxes[n.node_id_]) == 1) {
-            nodes_out_of_frustum.insert(n.node_id_);
-          }
-        }
-
-        depth_pass_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
-        depth_pass_program_->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(scm_model_view_matrix));
-        depth_pass_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
-        depth_pass_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
-
-        depth_pass_program_->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
-        depth_pass_program_->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
-
-        ctx.render_context->apply();
-
-        auto const& plod_resource = plod_node->get_geometry();
-
-        if (plod_resource && depth_pass_program_) {
-
-          plod_resource->draw(ctx,
-            context_id,
-            pbr_view_id,
-            model_id,
-            controller->GetContextMemory(context_id, ctx.render_device),
-            nodes_out_of_frustum);
-
-          
-
-        }
-        else {
-          Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+      for (auto const& n : node_list) {
+        if (culling_frustum.classify(model_bounding_boxes[n.node_id_]) == 1) {
+          nodes_out_of_frustum.insert(n.node_id_);
         }
       }
 
-      depth_pass_program_->unuse(ctx);
-
-      pipe.end_gpu_query(ctx, gpu_query_name_depth_pass);
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    // 2. accumulation pass 
-    //////////////////////////////////////////////////////////////////////////
-    MaterialShader* current_material(nullptr);
-    std::shared_ptr<ShaderProgram> current_material_program;
+    if( !rendering_shadows ) { 
+      ///////////////////////////////////////////////////////////////////////////
+      // fullscreen gbuffer depth_conversion_pass
+      ///////////////////////////////////////////////////////////////////////////
+      {
+        scm::gl::context_all_guard context_guard(ctx.render_context);
 
-    {
-      scm::gl::context_all_guard context_guard(ctx.render_context);
+        if (!log_to_lin_conversion_pass_program_) {
+          std::cout << "Log to lin pass program not instanciated\n";
+        }
 
-      std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::AccumulationPass";
-      pipe.begin_gpu_query(ctx, gpu_query_name_accum_pass);
+        std::string const gpu_query_name_depth_conversion = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::DepthConversionPass";
+        pipe.begin_gpu_query(ctx, gpu_query_name_depth_conversion);
 
-      ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
-      ctx.render_context->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
-      ctx.render_context->set_blend_state(color_accumulation_state_);
-      ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
+        log_to_lin_conversion_pass_program_->use(ctx);
 
-      accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
+        ctx.render_context
+          ->set_depth_stencil_state(no_depth_test_with_writing_depth_stencil_state_);
 
-      int view_id(pipe.get_scene_camera().config.get_view_id());
+        ctx.render_context
+          ->set_frame_buffer(log_to_lin_gua_depth_conversion_pass_fbo_);
 
-      bool program_changed = false;
-      //loop through all models and render accumulation pass
-      for (auto const& object : sorted_objects->second) {
+        ctx.render_context
+          ->clear_depth_stencil_buffer(log_to_lin_gua_depth_conversion_pass_fbo_);
 
-        auto plod_node(reinterpret_cast<node::PLODNode*>(object));
-        pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
 
-        auto& cut = *(cut_map.at(plod_node));
-        std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
+        ctx.render_context
+          ->bind_texture(gua_depth_buffer, nearest_sampler_state_, 0);
+        log_to_lin_conversion_pass_program_->apply_uniform(ctx,
+          "gua_log_depth_buffer", 0);
 
-        current_material = plod_node->get_material()->get_shader();
+        float width = render_target_dims[0];
+        float height = render_target_dims[1];
+        log_to_lin_conversion_pass_program_->apply_uniform(ctx,
+          "win_width",
+          (width));
 
-        current_material_program = _get_material_program(current_material,
-          current_material_program,
-          program_changed);
-
-         ctx.render_context->bind_texture(depth_pass_linear_depth_result_, nearest_sampler_state_, 0);
-         current_material_program->apply_uniform(ctx, "p01_linear_depth_texture", 0);
+        log_to_lin_conversion_pass_program_->apply_uniform(ctx,
+          "win_height",
+          (height));
 
         ctx.render_context->apply();
 
-        auto plod_resource = plod_node->get_geometry();
+        fullscreen_quad_->draw(ctx.render_context);
 
-        //retrieve frustum culling results      
-        std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
+        //pipe.end_cpu_query("CPU : PLODRenderer::depth_conversion_pass");
+        //pipe.end_gpu_query(ctx, "GPU : PLODRenderer::depth_conversion_pass");
 
-        if (plod_resource && current_material_program) {
+        log_to_lin_conversion_pass_program_->unuse(ctx);
 
-          if (program_changed) {
-            current_material_program->unuse(ctx);
-            current_material_program->use(ctx);
-          }
+        pipe.end_gpu_query(ctx, gpu_query_name_depth_conversion);
+      }
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // 1. depth pass 
+      //////////////////////////////////////////////////////////////////////////
+
+      {
+        scm::gl::context_all_guard context_guard(ctx.render_context);
+
+        std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::DepthPass";
+        pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
+
+        ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
+        depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
+        ctx.render_context->set_frame_buffer(depth_pass_result_fbo_);
+
+        depth_pass_program_->use(ctx);
+
+        //loop through all models and render depth pass
+        for (auto const& object : sorted_objects->second) {
+
+          auto plod_node(reinterpret_cast<node::PLODNode*>(object));
+
+          pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
 
           auto const& scm_model_matrix = plod_node->get_cached_world_transform();
           auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
           auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
           auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
-          current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
-          current_material_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(scm_model_view_matrix));
-          current_material_program->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
-          current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
-          current_material_program->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
-          current_material_program->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
 
-          plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
-  
-          plod_resource->draw(ctx,
-            context_id,
-            pbr_view_id,
-            model_id,
-            controller->GetContextMemory(context_id, ctx.render_device),
-            nodes_out_of_frustum);
+          depth_pass_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
+          depth_pass_program_->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(scm_model_view_matrix));
+          depth_pass_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
+          depth_pass_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
 
-          program_changed = false;
+          depth_pass_program_->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
+          depth_pass_program_->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
+
+          ctx.render_context->apply();
+
+          std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
+
+          auto const& plod_resource = plod_node->get_geometry();
+
+          if (plod_resource && depth_pass_program_) {
+
+            plod_resource->draw(ctx,
+              context_id,
+              pbr_view_id,
+              model_id,
+              controller->GetContextMemory(context_id, ctx.render_device),
+              nodes_out_of_frustum);
+
+            
+
+          }
+          else {
+            Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+          }
         }
-        else {
-          Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
-        }
+
+        depth_pass_program_->unuse(ctx);
+
+        pipe.end_gpu_query(ctx, gpu_query_name_depth_pass);
       }
 
-      current_material_program->unuse(ctx);
+      //////////////////////////////////////////////////////////////////////////
+      // 2. accumulation pass 
+      //////////////////////////////////////////////////////////////////////////
+      MaterialShader* current_material(nullptr);
+      std::shared_ptr<ShaderProgram> current_material_program;
 
-      pipe.end_gpu_query(ctx, gpu_query_name_accum_pass);
-    }
+      {
+        scm::gl::context_all_guard context_guard(ctx.render_context);
 
-    bool write_depth = true;
-    pipe.get_current_target().bind(ctx, write_depth);
+        std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::AccumulationPass";
+        pipe.begin_gpu_query(ctx, gpu_query_name_accum_pass);
 
-     //////////////////////////////////////////////////////////////////////////
-     // 3. normalization pass 
-     //////////////////////////////////////////////////////////////////////////
-     {
-       scm::gl::context_all_guard context_guard(ctx.render_context);
+        ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
+        ctx.render_context->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
+        ctx.render_context->set_blend_state(color_accumulation_state_);
+        ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
 
-       std::string const gpu_query_name_normalization_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::NormalizationPass";
-       pipe.begin_gpu_query(ctx, gpu_query_name_normalization_pass);
+        accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
 
+        int view_id(pipe.get_scene_camera().config.get_view_id());
 
-       normalization_pass_program_->use(ctx);
+        bool program_changed = false;
+        //loop through all models and render accumulation pass
+        for (auto const& object : sorted_objects->second) {
+
+          auto plod_node(reinterpret_cast<node::PLODNode*>(object));
+          pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
+
+          auto& cut = *(cut_map.at(plod_node));
+          std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
+
+          current_material = plod_node->get_material()->get_shader();
+
+          current_material_program = _get_material_program(current_material,
+            current_material_program,
+            program_changed);
+
+           ctx.render_context->bind_texture(depth_pass_linear_depth_result_, nearest_sampler_state_, 0);
+           current_material_program->apply_uniform(ctx, "p01_linear_depth_texture", 0);
+
+          ctx.render_context->apply();
+
+          auto plod_resource = plod_node->get_geometry();
+
+          //retrieve frustum culling results      
+          std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
+
+          if (plod_resource && current_material_program) {
+
+            if (program_changed) {
+              current_material_program->unuse(ctx);
+              current_material_program->use(ctx);
+            }
+
+            auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+            auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
+            auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
+            auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+
+            current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
+            current_material_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(scm_model_view_matrix));
+            current_material_program->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
+            current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
+            current_material_program->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
+            current_material_program->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
+
+            plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+    
+            plod_resource->draw(ctx,
+              context_id,
+              pbr_view_id,
+              model_id,
+              controller->GetContextMemory(context_id, ctx.render_device),
+              nodes_out_of_frustum);
+
+            program_changed = false;
+          }
+          else {
+            Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+          }
+        }
+
+        current_material_program->unuse(ctx);
+
+        pipe.end_gpu_query(ctx, gpu_query_name_accum_pass);
+      }
+
+      bool write_depth = true;
+      pipe.get_current_target().bind(ctx, write_depth);
+
+       //////////////////////////////////////////////////////////////////////////
+       // 3. normalization pass 
+       //////////////////////////////////////////////////////////////////////////
        {
+         scm::gl::context_all_guard context_guard(ctx.render_context);
 
-         //ctx.render_context->set_depth_stencil_state(no_depth_test_with_writing_depth_stencil_state_);
-         
-         ctx.render_context->bind_texture(accumulation_pass_color_result_, nearest_sampler_state_, 0);
-         normalization_pass_program_->apply_uniform(ctx, "p02_color_texture", 0);
+         std::string const gpu_query_name_normalization_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::NormalizationPass";
+         pipe.begin_gpu_query(ctx, gpu_query_name_normalization_pass);
 
-         ctx.render_context->bind_texture(accumulation_pass_normal_result_, nearest_sampler_state_, 1);
-         normalization_pass_program_->apply_uniform(ctx, "p02_normal_texture", 1);
 
-         ctx.render_context->bind_texture(accumulation_pass_pbr_result_, nearest_sampler_state_, 2);
-         normalization_pass_program_->apply_uniform(ctx, "p02_pbr_texture", 2);
+         normalization_pass_program_->use(ctx);
+         {
 
-         ctx.render_context->bind_texture(accumulation_pass_weight_and_depth_result_, nearest_sampler_state_, 3);
-         normalization_pass_program_->apply_uniform(ctx, "p02_weight_and_depth_texture", 3);
+           //ctx.render_context->set_depth_stencil_state(no_depth_test_with_writing_depth_stencil_state_);
+           
+           ctx.render_context->bind_texture(accumulation_pass_color_result_, nearest_sampler_state_, 0);
+           normalization_pass_program_->apply_uniform(ctx, "p02_color_texture", 0);
 
-         //ctx.render_context->bind_texture(depth_pass_log_depth_result_, nearest_sampler_state_, 3);
-         //current_material_program->apply_uniform(ctx, "p01_log_depth_texture", 3);
+           ctx.render_context->bind_texture(accumulation_pass_normal_result_, nearest_sampler_state_, 1);
+           normalization_pass_program_->apply_uniform(ctx, "p02_normal_texture", 1);
 
-         ctx.render_context->apply();
+           ctx.render_context->bind_texture(accumulation_pass_pbr_result_, nearest_sampler_state_, 2);
+           normalization_pass_program_->apply_uniform(ctx, "p02_pbr_texture", 2);
 
-         fullscreen_quad_->draw(ctx.render_context);
+           ctx.render_context->bind_texture(accumulation_pass_weight_and_depth_result_, nearest_sampler_state_, 3);
+           normalization_pass_program_->apply_uniform(ctx, "p02_weight_and_depth_texture", 3);
+
+           //ctx.render_context->bind_texture(depth_pass_log_depth_result_, nearest_sampler_state_, 3);
+           //current_material_program->apply_uniform(ctx, "p01_log_depth_texture", 3);
+
+           ctx.render_context->apply();
+
+           fullscreen_quad_->draw(ctx.render_context);
+         }
+         normalization_pass_program_->unuse(ctx);
+
+         pipe.begin_gpu_query(ctx, gpu_query_name_normalization_pass);
        }
-       normalization_pass_program_->unuse(ctx);
 
-       pipe.begin_gpu_query(ctx, gpu_query_name_normalization_pass);
-     }
+    } else { //shadow branch
+          bool write_depth = true;
+          pipe.get_current_target().bind(ctx, write_depth);
 
+      //////////////////////////////////////////////////////////////////////////
+      // only pass in this branch: shadow pass 
+      //////////////////////////////////////////////////////////////////////////
+      std::unordered_map<node::PLODNode*, pbr::ren::Cut*> cut_map;
+      std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_out_of_frustum_per_model;
+
+      {
+        scm::gl::context_all_guard context_guard(ctx.render_context);
+
+        std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::DepthPass";
+        pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
+
+        ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
+
+        shadow_pass_program_->use(ctx);
+
+        for (auto const& object : sorted_objects->second) {
+
+          auto plod_node(reinterpret_cast<node::PLODNode*>(object));
+
+          pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
+
+          auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+          auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
+          auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
+          auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+
+          shadow_pass_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
+          shadow_pass_program_->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(scm_model_view_matrix));
+          shadow_pass_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
+          shadow_pass_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
+
+          shadow_pass_program_->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
+          shadow_pass_program_->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
+
+          ctx.render_context->apply();
+
+          auto const& plod_resource = plod_node->get_geometry();
+
+          std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
+
+          if (plod_resource && depth_pass_program_) {
+
+            plod_resource->draw(ctx,
+              context_id,
+              pbr_view_id,
+              model_id,
+              controller->GetContextMemory(context_id, ctx.render_device),
+              nodes_out_of_frustum);
+
+            
+
+          }
+          else {
+            Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+          }
+        }
+
+        shadow_pass_program_->unuse(ctx);
+
+      }
+
+    }
      //////////////////////////////////////////////////////////////////////////
      // Draw finished -> unbind g-buffer
      //////////////////////////////////////////////////////////////////////////
      pipe.get_current_target().unbind(ctx);
 
      pipe.end_cpu_query(cpu_query_name_plod_total); 
-  }
+  
+  } 
 
 }
  
