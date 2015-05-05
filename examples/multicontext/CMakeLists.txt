@@ -28,7 +28,7 @@ IF (MSVC)
 ELSEIF (UNIX)
   target_link_libraries( ${_EXE_NAME} 
                          general ${ASSIMP_LIBRARIES} 
-                         general guacamole )
+                         general guacamole guacamole-PLOD)
                          # general guacamole-nurbs )
 ENDIF (MSVC)
 
