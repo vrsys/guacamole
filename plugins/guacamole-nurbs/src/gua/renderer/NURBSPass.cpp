@@ -67,8 +67,9 @@ PipelinePass NURBSPassDescription::make_pass(RenderContext const& ctx, Substitut
   renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
-    PipelinePass&, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool rendering_shadows) {
+    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
+    renderer->render(pipe, desc, rendering_shadows);
   };
 
   return pass;
