@@ -64,7 +64,11 @@ int main(int argc, char** argv) {
   using namespace gua::math;
 
   auto resolution = gua::math::vec2ui(1920, 1080);
+#if WIN32
+  const std::string engine_directory = "data/engine/";
+#else
   const std::string engine_directory = "/opt/3d_models/engine/";
+#endif
   Mode mode{Mode::SeeThrough};
 
   std::vector<PartDesc> part_names{

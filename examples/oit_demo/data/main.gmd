@@ -34,6 +34,7 @@
                         pow((1.0 - abs(dot(gua_normal,
                                            normalize(gua_world_position - gua_camera_position)))), 5.0);
         gua_alpha = clamp(opacity + mix(0.0, fresnel, 0.5), 0.0, 1.0);
+        //gua_alpha = fresnel;
 
         // highlight
         float hl_intensity = mix(0.0, clamp(fresnel+0.1, 0.0, 0.9), highlight);
