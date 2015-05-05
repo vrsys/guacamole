@@ -47,6 +47,31 @@ namespace node {
   class SpotLightNode;
 }
 
+struct GUA_DLL PipelineViewState 
+{
+  enum ViewDirection {
+    front   = 0,
+    back    = 1,
+    left    = 2,
+    right   = 3,
+    top     = 4,
+    bottom  = 5,
+    count   = 6
+  };
+
+  PipelineViewState() = default;
+
+  RenderTarget*                     target = nullptr;
+
+  SceneGraph const*                 graph = nullptr;
+  std::shared_ptr<SerializedScene>  scene = nullptr;
+  node::SerializedCameraNode        camera;
+
+  Frustum                           frustum;
+  std::size_t                       viewpoint_uuid = 0;
+  ViewDirection                     view_direction = front;
+};
+
 class GUA_DLL Pipeline {
  public:
 
@@ -100,24 +125,20 @@ public:
  private:
   void bind_camera_uniform_block(unsigned location) const;
 
-  RenderTarget*                         current_target_;
+  PipelineViewState                         current_viewstate_;
+  
+  RenderContext&                            context_;
+  std::unique_ptr<GBuffer>                  gbuffer_;
+  std::shared_ptr<SharedShadowMapResource>  shadow_map_res_;
+  CameraUniformBlock                        camera_block_;
+  std::unique_ptr<LightTable>               light_table_;
 
-  RenderContext&                        context_;
-  std::unique_ptr<GBuffer>              gbuffer_;
-  std::shared_ptr<SharedShadowMapResource> shadow_map_res_;
-  CameraUniformBlock                    camera_block_;
-  std::unique_ptr<LightTable>           light_table_;
+  math::vec2ui                              last_resolution_;
+  PipelineDescription                       last_description_;
+  SubstitutionMap                           global_substitution_map_;
 
-  SceneGraph const*                     current_graph_;
-  std::shared_ptr<SerializedScene>      current_scene_;
-  node::SerializedCameraNode            current_camera_;
-
-  math::vec2ui                          last_resolution_;
-  PipelineDescription                   last_description_;
-  SubstitutionMap                       global_substitution_map_;
-
-  std::vector<PipelinePass>             passes_;
-  scm::gl::quad_geometry_ptr            quad_;
+  std::vector<PipelinePass>                 passes_;
+  scm::gl::quad_geometry_ptr                quad_;
 
 #define GUA_ENABLE_PROFILING_TIME_QUERIES
   time_query_collection                 queries_;

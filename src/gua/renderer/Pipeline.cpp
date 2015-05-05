@@ -50,9 +50,7 @@ namespace gua {
       gbuffer_(new GBuffer(ctx, resolution)),
       camera_block_(ctx.render_device),
       light_table_(new LightTable),
-      current_graph_(nullptr),
-      current_scene_(nullptr),
-      current_camera_(),
+      current_viewstate_(),
       last_resolution_(0, 0),
       last_description_(),
       global_substitution_map_(),
@@ -88,7 +86,9 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
 
   // store the current camera data
-  current_camera_ = camera;
+  current_viewstate_.camera = camera;
+  current_viewstate_.viewpoint_uuid = camera.uuid;
+  current_viewstate_.view_direction = PipelineViewState::front;
 
   bool reload_gbuffer(false);
   bool reload_abuffer(false);
@@ -165,10 +165,10 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
 
   // get scenegraph which shall be rendered
-  current_graph_ = nullptr;
+  current_viewstate_.graph = nullptr;
   for (auto& graph : scene_graphs) {
     if (graph->get_name() == camera.config.get_scene_graph_name()) {
-      current_graph_ = graph.get();
+      current_viewstate_.graph = graph.get();
       break;
     }
   }
@@ -176,21 +176,20 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   context_.mode = mode;
 
   // serialize this scenegraph
-  current_scene_ = current_graph_->serialize(camera, mode);
+  current_viewstate_.scene = current_viewstate_.graph->serialize(camera, mode);
+  current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
+  current_viewstate_.target = gbuffer_.get();
 
   camera_block_.update(context_,
-                       current_scene_->rendering_frustum,
+                       current_viewstate_.scene->rendering_frustum,
                        math::get_translation(camera.transform),
-                       current_scene_->clipping_planes,
+                       current_viewstate_.scene->clipping_planes,
                        camera.config.get_view_id(),
                        camera.config.get_resolution());
   bind_camera_uniform_block(0);
 
   // clear gbuffer
   gbuffer_->clear(context_, 1.f, 1);
-
-  current_target_ = gbuffer_.get();
-
 
   // process all passes
   for (unsigned i(0); i < passes_.size(); ++i) {
@@ -240,7 +239,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
     }
 
-    auto& current_mask(current_camera_.config.mask());
+    auto& current_mask(current_viewstate_.camera.config.mask());
 
     std::shared_ptr<ShadowMap> shadow_map(nullptr);
     bool needs_redraw(false);
@@ -286,8 +285,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     // store shadow map
     shadow_map_res_->used_shadow_maps[light] = {shadow_map, current_mask};
 
-    current_target_ = shadow_map.get();
-    auto orig_scene(current_scene_);
+    current_viewstate_.target = shadow_map.get();
+    auto orig_scene(current_viewstate_.scene);
 
     // clear shadow map
     if (needs_redraw) {
@@ -295,29 +294,34 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       shadow_map->set_viewport_size(math::vec2f(viewport_size));
     }
 
+    // set view parameters
+    
 
     // rendering lambda
-    auto render_shadows = [this, &light_block, viewport_size, needs_redraw]
-                          (Frustum const& frustum, unsigned cascade_id) {
+    auto render_shadows = [this, &light_block, viewport_size, needs_redraw, light]
+      (Frustum const& frustum, PipelineViewState::ViewDirection direction, unsigned cascade_id) {
 
       light_block.projection_view_mats[cascade_id] = math::mat4f(frustum.get_projection() * frustum.get_view());
 
       // only render shadow map if it hasn't been rendered before this frame
       if (needs_redraw) {
-        current_scene_ = current_graph_->serialize(frustum, frustum,
-                                                   math::get_translation(current_camera_.transform),
-                                                   current_camera_.config.enable_frustum_culling(),
-                                                   current_camera_.config.mask(),
-                                                   current_camera_.config.view_id());
+        current_viewstate_.scene = current_viewstate_.graph->serialize(frustum, frustum,
+                                                   math::get_translation(current_viewstate_.camera.transform),
+                                                   current_viewstate_.camera.config.enable_frustum_culling(),
+                                                   current_viewstate_.camera.config.mask(),
+                                                   current_viewstate_.camera.config.view_id());
+
+        current_viewstate_.frustum        = frustum;
+        current_viewstate_.viewpoint_uuid = light->uuid();
+        current_viewstate_.view_direction = direction;
 
         camera_block_.update(context_,
                              frustum,
                              frustum.get_camera_position(),
-                             current_scene_->clipping_planes,
-                             current_camera_.config.get_view_id(),
+                             current_viewstate_.scene->clipping_planes,
+                             current_viewstate_.camera.config.get_view_id(),
                              math::vec2ui(viewport_size));
         bind_camera_uniform_block(0);
-
 
         // process all passes
         for (int i(0); i < passes_.size(); ++i) {
@@ -328,6 +332,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       }
     };
 
+    
+    current_viewstate_.view_direction = PipelineViewState::front;
 
     // render cascaded shadows for sunlights
     if (light->data.get_type() == node::LightNode::Type::SUN) {
@@ -338,20 +344,19 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
         Logger::LOG_WARNING << "At least 2 splits have to be defined for cascaded shadow maps!" << std::endl;
       }
 
-
-      if (current_camera_.config.near_clip() > splits.front() || current_camera_.config.far_clip() < splits.back()) {
+      if (current_viewstate_.camera.config.near_clip() > splits.front() || current_viewstate_.camera.config.far_clip() < splits.back()) {
 
         Logger::LOG_WARNING << "Splits of cascaded shadow maps are not inside "
                             << "clipping range! Fallback to equidistant splits used." << std::endl;
 
-        float clipping_range(current_camera_.config.far_clip()
-                              - current_camera_.config.near_clip());
+        float clipping_range(current_viewstate_.camera.config.far_clip()
+          - current_viewstate_.camera.config.near_clip());
         splits = {
-          current_camera_.config.near_clip(),
-          current_camera_.config.near_clip() + clipping_range * 0.25f,
-          current_camera_.config.near_clip() + clipping_range * 0.5f,
-          current_camera_.config.near_clip() + clipping_range * 0.75f,
-          current_camera_.config.far_clip()
+          current_viewstate_.camera.config.near_clip(),
+          current_viewstate_.camera.config.near_clip() + clipping_range * 0.25f,
+          current_viewstate_.camera.config.near_clip() + clipping_range * 0.5f,
+          current_viewstate_.camera.config.near_clip() + clipping_range * 0.75f,
+          current_viewstate_.camera.config.far_clip()
         };
       }
 
@@ -363,7 +368,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
         // use cyclops for consistent cascades for left and right eye in stereo
         Frustum cropped_frustum(Frustum::perspective(
           // orig_scene->rendering_frustum.get_camera_transform(),
-          current_camera_.transform,
+          current_viewstate_.camera.transform,
           orig_scene->rendering_frustum.get_screen_transform(),
           splits[cascade], splits[cascade+1]
         ));
@@ -441,7 +446,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
           )
         );
 
-        render_shadows(shadow_frustum, cascade);
+        render_shadows(shadow_frustum, PipelineViewState::ViewDirection::front, cascade);
 
       }
 
@@ -458,6 +463,15 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
         scm::math::make_rotation(-90., 0., 1., 0.) * screen_transform
       });
 
+      std::vector<PipelineViewState::ViewDirection> view_directions = { 
+        PipelineViewState::front, 
+        PipelineViewState::back, 
+        PipelineViewState::top, 
+        PipelineViewState::bottom, 
+        PipelineViewState::left, 
+        PipelineViewState::right 
+      };
+
       for (unsigned cascade(0); cascade < screen_transforms.size(); ++cascade) {
 
         auto transform(light->get_cached_world_transform() * screen_transforms[cascade]);
@@ -471,7 +485,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
         );
 
         shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
-        render_shadows(frustum, cascade);
+
+        render_shadows(frustum, view_directions[cascade], cascade);
       }
 
     } else if (light->data.get_type() == node::LightNode::Type::SPOT) {
@@ -487,19 +502,19 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
         )
       );
 
-      render_shadows(frustum, 0);
+      render_shadows(frustum, PipelineViewState::ViewDirection::front, 0);
     }
 
     // restore previous configuration
-    current_target_ = gbuffer_.get();
-    current_scene_ = orig_scene;
+    current_viewstate_.target = gbuffer_.get();
+    current_viewstate_.scene = orig_scene;
 
     camera_block_.update(context_,
-                         current_scene_->rendering_frustum,
-                         math::get_translation(current_camera_.transform),
-                         current_scene_->clipping_planes,
-                         current_camera_.config.get_view_id(),
-                         current_camera_.config.get_resolution());
+                         current_viewstate_.scene->rendering_frustum,
+                         math::get_translation(current_viewstate_.camera.transform),
+                         current_viewstate_.scene->clipping_planes,
+                         current_viewstate_.camera.config.get_view_id(),
+                         current_viewstate_.camera.config.get_resolution());
     bind_camera_uniform_block(0);
 
     light_block.shadow_offset = light->data.get_shadow_offset();
@@ -509,13 +524,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   ////////////////////////////////////////////////////////////////////////////////
 
   RenderTarget& Pipeline::get_current_target() const {
-    return *current_target_;
+    return *current_viewstate_.target;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
   node::SerializedCameraNode const& Pipeline::get_scene_camera() const {
-    return current_camera_;
+    return current_viewstate_.camera;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -527,13 +542,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   ////////////////////////////////////////////////////////////////////////////////
 
   SerializedScene& Pipeline::get_scene() {
-    return *current_scene_;
+    return *current_viewstate_.scene;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
   SceneGraph const& Pipeline::get_graph() const {
-    return *current_graph_;
+    return *current_viewstate_.graph;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
