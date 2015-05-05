@@ -80,7 +80,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d,
   }
 }
 
-void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, bool rendering_shadows) {
+void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) {
 
   auto const& ctx(pipe.get_context());
 
@@ -90,10 +90,12 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, 
   }
 
   if (RenderMode::Custom == rendermode_) {
-    process_(*this, desc, pipe, rendering_shadows);
+    process_(*this, desc, pipe);
   } else {
-    pipe.get_current_target().bind(ctx, !writes_only_color_buffer_);
-    pipe.get_current_target().set_viewport(ctx);
+    auto& target = *pipe.current_viewstate().target;
+
+    target.bind(ctx, !writes_only_color_buffer_);
+    target.set_viewport(ctx);
     if (depth_stencil_state_)
       ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
     if (blend_state_)
@@ -109,18 +111,18 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, 
     pipe.bind_gbuffer_input(shader_);
     pipe.bind_light_table(shader_);
 
-    std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / " + name_;
+    std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + name_;
     pipe.begin_gpu_query(ctx, gpu_query_name);
 
     if (RenderMode::Callback == rendermode_) {
-      process_(*this, desc, pipe, rendering_shadows);
+      process_(*this, desc, pipe);
     } else { // RenderMode::Quad
       pipe.draw_quad();
     }
 
     pipe.end_gpu_query(ctx, gpu_query_name);
 
-    pipe.get_current_target().unbind(ctx);
+    target.unbind(ctx);
     ctx.render_context->reset_state_objects();
   }
 }

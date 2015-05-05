@@ -55,13 +55,16 @@ void StencilRenderer::create_state_objects(RenderContext const& ctx)
 
 void StencilRenderer::render(Pipeline& pipe, std::shared_ptr<ShaderProgram> const& shader)
 {
-  auto objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
-  if (objects != pipe.get_scene().nodes.end() && objects->second.size() > 0) {
+  auto const& scene = *pipe.current_viewstate().scene;
+
+  auto objects(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
+
+  if (objects != scene.nodes.end() && objects->second.size() > 0) {
 
     RenderContext const& ctx(pipe.get_context());
 
-    std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / StencilPass";
-    std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / StencilPass";
+    std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / StencilPass";
+    std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / StencilPass";
 
     pipe.begin_gpu_query(ctx, gpu_query_name);
     pipe.begin_cpu_query(cpu_query_name);
@@ -79,7 +82,7 @@ void StencilRenderer::render(Pipeline& pipe, std::shared_ptr<ShaderProgram> cons
       }
 
       if (tri_mesh_node->get_geometry()) {
-        auto model_view_mat = pipe.get_scene().rendering_frustum.get_view() * tri_mesh_node->get_cached_world_transform();
+        auto model_view_mat = scene.rendering_frustum.get_view() * tri_mesh_node->get_cached_world_transform();
         UniformValue normal_mat (math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));
 
         shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tri_mesh_node->get_cached_world_transform()));

@@ -37,7 +37,7 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pipe, bool rendering_shadows) {
+void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pipe) {
 #if 0
   auto const& ctx(pipe.get_context());
   auto gl_program(ctx.render_context->current_program());
