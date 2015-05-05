@@ -1,17 +1,16 @@
 @include "common/header.glsl"
 
-@include "common/gua_camera_uniforms.glsl"
+layout(early_fragment_tests) in;
 
+@include "common/gua_camera_uniforms.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
 in VertexData {
   vec2 pass_uv_coords;
-  //float pass_log_depth;
-  float pass_es_linear_depth;
-  float pass_es_shift;
   vec3 pass_world_position;
+
 } VertexIn;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,7 +27,7 @@ void main() {
   if( dot(uv_coords, uv_coords) > 1)
     discard;
 
-  //clip against global clipping planes
+    //clip against global clipping planes
   vec3 gua_world_position = VertexIn.pass_world_position;
 
   for (int i=0; i < gua_clipping_plane_count; ++i) {
@@ -37,8 +36,6 @@ void main() {
       discard;
     }
   }
-
-  gl_FragDepth = (gl_FragCoord.z * gua_clip_far + VertexIn.pass_es_shift) / gua_clip_far;//( ( -(es_linear_depth_corner + es_shift ) ) / gua_clip_far);; // this is used for depth testing/early z in accum pass
 
 }
 
