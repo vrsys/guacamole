@@ -446,7 +446,7 @@ int main(int argc, char** argv) {
     if (SHOW_FRAME_RATE && ctr++ % 150 == 0) {
       std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
                 << window->get_rendering_fps() << ", app fps: "
-                << camera->get_application_fps() << std::endl;
+                << renderer.get_application_fps() << std::endl;
     }
 
     window->process_events();

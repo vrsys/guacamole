@@ -105,22 +105,22 @@
         ///////////////////////////////////////////////////////////////////////
         void distance_lens_effect () {
 
-            vec3 lens_normal_n = normalize(lens_normal.xyz);
+            vec3 lens_world_normal_n = normalize(lens_world_normal.xyz);
                                   
             //float sn = -dot(normalize(ref_plane_n), ((inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz - (inverse(gua_model_matrix) * vec4(lens_center, 1.0)).xyz));
-            float sn = dot(normalize(lens_normal_n), ((inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz - (inverse(gua_model_matrix) * vec4(lens_center, 1.0)).xyz));
+            float sn = dot(lens_world_normal_n, gua_world_position - lens_center);
                                  
-            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(sn, -0.001, 0.05));
+            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(sn, depth_range.x, depth_range.y));
             
         }
         
         ///////////////////////////////////////////////////////////////////////
         void normal_lens_effect () {
           
-          vec3 binormal = vec3(lens_normal.y, -lens_normal.x, 0.0);
+          vec3 binormal = vec3(lens_world_normal.y, -lens_world_normal.x, 0.0);
           binormal = normalize(binormal);
 
-          float angle = dot(binormal, normalize( (inverse(gua_normal_matrix) * vec4(gua_normal, 0.0)).xyz));
+          float angle = dot(binormal, gua_normal);
           gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(angle, -1.0, 1.0));
         }
 
@@ -130,9 +130,9 @@
 
             //float step_size_in_os = 0.001; //TODO: uniform
 
-            vec3 binormal = vec3(lens_normal.y, -lens_normal.x, 0.0);
+            vec3 binormal = vec3(lens_world_normal.y, -lens_world_normal.x, 0.0);
             binormal = normalize(binormal);
-            vec3 tangent = normalize(cross(binormal, lens_normal));
+            vec3 tangent = normalize(cross(binormal, lens_world_normal));
 
             vec3 pos_os = (inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz;
             
@@ -144,12 +144,12 @@
             vec3 pos_o = pos_os - step_vert;
             vec3 pos_u = pos_os + step_vert;
 
-            mat4 model_view_projection_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix; //TODO: use gua_model_view_projection_matrix
+            //mat4 model_view_projection_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix; //TODO: use gua_model_view_projection_matrix
 
-            vec4 pos_l_ss = model_view_projection_matrix * vec4(pos_l, 1.0);
-            vec4 pos_r_ss = model_view_projection_matrix * vec4(pos_r, 1.0);
-            vec4 pos_o_ss = model_view_projection_matrix * vec4(pos_o, 1.0);
-            vec4 pos_u_ss = model_view_projection_matrix * vec4(pos_u, 1.0);
+            vec4 pos_l_ss = gua_model_view_projection_matrix * vec4(pos_l, 1.0);
+            vec4 pos_r_ss = gua_model_view_projection_matrix * vec4(pos_r, 1.0);
+            vec4 pos_o_ss = gua_model_view_projection_matrix * vec4(pos_o, 1.0);
+            vec4 pos_u_ss = gua_model_view_projection_matrix * vec4(pos_u, 1.0);
 
             vec2 pos_l_ss_norm = (pos_l_ss.xy / pos_l_ss.w) * 0.5f + vec2(0.5, 0.5);
             vec2 pos_r_ss_norm = (pos_r_ss.xy / pos_r_ss.w) * 0.5f + vec2(0.5, 0.5);
@@ -177,9 +177,9 @@
 
             //float step_size_in_os = 0.001; //TODO: uniform
 
-            vec3 binormal = vec3(lens_normal.y, -lens_normal.x, 0.0);
+            vec3 binormal = vec3(lens_world_normal.y, -lens_world_normal.x, 0.0);
             binormal = normalize(binormal);
-            vec3 tangent = normalize(cross(binormal, lens_normal));
+            vec3 tangent = normalize(cross(binormal, lens_world_normal));
 
             vec3 pos_os = (inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz;
 
@@ -222,9 +222,9 @@
 
             //float step_size_in_os = 0.005; //TODO: uniform
 
-            vec3 binormal = vec3(lens_normal.y, -lens_normal.x, 0.0);
+            vec3 binormal = vec3(lens_world_normal.y, -lens_world_normal.x, 0.0);
             binormal = normalize(binormal);
-            vec3 tangent = normalize(cross(binormal, lens_normal));
+            vec3 tangent = normalize(cross(binormal, lens_world_normal));
 
             vec3 pos_os = (inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz;
 
@@ -236,12 +236,12 @@
             vec3 pos_o = pos_os - step_vert;
             vec3 pos_u = pos_os + step_vert;
 
-            mat4 model_view_projection_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix; //TODO: use gua_model_view_projection_matrix
+            //mat4 model_view_projection_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix; //TODO: use gua_model_view_projection_matrix
 
-            vec4 pos_l_ss = model_view_projection_matrix * vec4(pos_l, 1.0);
-            vec4 pos_r_ss = model_view_projection_matrix * vec4(pos_r, 1.0);
-            vec4 pos_o_ss = model_view_projection_matrix * vec4(pos_o, 1.0);
-            vec4 pos_u_ss = model_view_projection_matrix * vec4(pos_u, 1.0);
+            vec4 pos_l_ss = gua_model_view_projection_matrix * vec4(pos_l, 1.0);
+            vec4 pos_r_ss = gua_model_view_projection_matrix * vec4(pos_r, 1.0);
+            vec4 pos_o_ss = gua_model_view_projection_matrix * vec4(pos_o, 1.0);
+            vec4 pos_u_ss = gua_model_view_projection_matrix * vec4(pos_u, 1.0);
 
             vec2 pos_l_ss_norm = (pos_l_ss.xy / pos_l_ss.w) * 0.5f + vec2(0.5, 0.5);
             vec2 pos_r_ss_norm = (pos_r_ss.xy / pos_r_ss.w) * 0.5f + vec2(0.5, 0.5);
@@ -365,7 +365,7 @@
             "value" : "(0.0 0.0)"
         },
         {
-          "name" : "lens_normal",
+          "name" : "lens_world_normal",
           "type" : "vec3",
           "value" : "(0.0 0.0 0.0)"
         },
@@ -415,12 +415,11 @@
             "value" : "vec3(0.0 1.0 0.0)"
         },
         {
-            "name" : "ref_plane_range",
+            "name" : "depth_range",
             "type" : "vec2",
             "value" : "vec2(0.0 1.0)"
         }        
       ] 
     }
   ]
-
 }

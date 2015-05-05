@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
     std::stringstream sstr;
     sstr.precision(1);
     sstr.setf(std::ios::fixed, std::ios::floatfield);
-    sstr << "FPS: " << camera->get_application_fps()
+    sstr << "FPS: " << renderer.get_application_fps()
          << " / " << window->get_rendering_fps();
     fps->call_javascript("set_fps_text", sstr.str());
 

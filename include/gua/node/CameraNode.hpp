@@ -118,9 +118,7 @@ class GUA_DLL CameraNode : public Node {
    * This constructs an empty CameraNode.
    *
    */
-  CameraNode()
-    : application_fps_(0.f)
-    , rendering_fps_(0.f) {}
+  CameraNode() {}
 
   /**
    * Constructor.
@@ -167,22 +165,6 @@ class GUA_DLL CameraNode : public Node {
   Frustum get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const;
   Frustum get_culling_frustum(SceneGraph const& graph, CameraMode mode) const;
 
-  float get_application_fps() const {
-    return application_fps_;
-  }
-
-  float get_rendering_fps() const {
-    return rendering_fps_;
-  }
-
-  void set_application_fps(float application_fps) {
-    application_fps_ = application_fps;
-  }
-
-  void set_rendering_fps(float rendering_fps) {
-    rendering_fps_ = rendering_fps;
-  }
-
   SerializedCameraNode serialize() const;
 
   /**
@@ -202,9 +184,6 @@ class GUA_DLL CameraNode : public Node {
                               math::mat4 const& camera_transform,
                               CameraNode::Configuration const& config,
                               CameraMode mode, bool use_alternative_culling_screen);
-
-  float application_fps_;
-  float rendering_fps_;
 
   std::shared_ptr<Node> copy() const override;
 

@@ -53,21 +53,20 @@ vec3 environment_lighting (in ShadingTerms T)
   vec3 env_color = vec3(0);
   vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.V));
 
-  // http://marmosetco.tumblr.com/post/81245981087
-  float gua_horizon_fade = 1.3;
-  vec3 R = reflect(-T.V, T.N);
-  float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
-  horizon *= horizon;
-
   switch (gua_environment_lighting_mode) {
     case 0 : // spheremap
       vec2 texcoord = longitude_latitude(T.N);
-      env_color = brdf_spec * texture2D(sampler2D(gua_environment_lighting_spheremap), texcoord).rgb;
+      env_color = brdf_spec * texture(sampler2D(gua_environment_lighting_texture), texcoord).rgb;
       break;
     case 1 : // cubemap
-      env_color = brdf_spec * vec3(0.0); // not implemented yet!
+      env_color = brdf_spec * texture(samplerCube(gua_environment_lighting_texture), T.N).rgb;
       break;
     case 2 : // single color
+      // http://marmosetco.tumblr.com/post/81245981087
+      float gua_horizon_fade = 1.3;
+      vec3 R = reflect(-T.V, T.N);
+      float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
+      horizon *= horizon;
       vec3 brdf_diff = T.diffuse;
       env_color = (Pi * brdf_diff + (horizon * brdf_spec)) * gua_horizon_fade * gua_environment_lighting_color;
       break;
@@ -140,18 +139,13 @@ layout(location=0) out vec3 gua_out_color;
 
 // skymap
 
-// why does this not work properly?
-// float gua_my_atan2(float a, float b) {
-//   return 2.0 * atan(fma(a, inversesqrt(b*b + a*a), b));
-// }
-
 float gua_my_atan2(float a, float b) {
   return 2.0 * atan(a/(sqrt(b*b + a*a) + b));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_background_texture() {
-  return texture2D(sampler2D(gua_background_texture), gua_quad_coords).xyz;
+  return texture(sampler2D(gua_background_texture), gua_quad_coords).xyz;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -189,6 +183,15 @@ vec3 gua_get_background_color() {
   }
   // quad texture
   return sRGB_to_linear(gua_apply_background_texture());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+float get_vignette(float coverage, float softness, float intensity) {
+  // inigo quilez's great vigneting effect!
+  float a = -coverage/softness;
+  float b = 1.0/softness;
+  vec2 q = gua_get_quad_coords();
+  return clamp(a + b*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 ), 0, 1) * intensity + (1-intensity);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -238,9 +241,14 @@ void main() {
   }
 
   gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
-  // toneMap
-  // color correction
+
   // vignette
+  if (gua_vignette_color.a > 0) {
+    float vignetting = get_vignette(gua_vignette_coverage, gua_vignette_softness, gua_vignette_color.a);
+    gua_out_color = mix(gua_vignette_color.rgb, gua_out_color, vignetting);
+  }
+
+  // color correction
 
 #if @gua_debug_tiles@
   vec3 color_codes[] = {vec3(1,0,0), vec3(0,1,0), vec3(0,0,1), vec3(1,1,0), vec3(1,0,1), vec3(0,1,1)};

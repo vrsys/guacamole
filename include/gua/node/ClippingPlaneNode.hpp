@@ -24,6 +24,7 @@
 
 #include <gua/platform.hpp>
 #include <gua/node/Node.hpp>
+#include <gua/utils/configuration_macro.hpp>
 
 namespace gua {
 namespace node {
@@ -39,6 +40,17 @@ namespace node {
  */
 class GUA_DLL ClippingPlaneNode : public Node {
  public:
+
+  struct Configuration {
+
+    // if not empty, the clipping plane is only active for specified view ids
+    GUA_ADD_PROPERTY(std::vector<int>, view_ids, std::vector<int>());
+  };
+
+  /**
+   * The CameraNode's configuration.
+   */
+  Configuration config;
 
   /**
    * Constructor.
@@ -58,12 +70,15 @@ class GUA_DLL ClippingPlaneNode : public Node {
    *                       transformation.
    */
   ClippingPlaneNode(std::string const& name,
-            math::mat4 const& transform = math::mat4::identity());
+                    math::mat4 const& transform = math::mat4::identity(),
+                    Configuration configuration = Configuration());
 
 
   math::vec3  get_center() const;
   math::vec3  get_normal() const;
   math::vec4f get_component_vector() const;
+
+  bool        is_visible(int view_id) const;
 
   /**
    * Accepts a visitor and calls concrete visit method.

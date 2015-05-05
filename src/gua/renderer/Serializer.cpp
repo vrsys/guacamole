@@ -52,7 +52,8 @@ Serializer::Serializer()
 void Serializer::check(SerializedScene& output,
                        SceneGraph const& scene_graph,
                        Mask const& mask,
-                       bool enable_frustum_culling) {
+                       bool enable_frustum_culling,
+                       int view_id) {
 
   data_ = &output;
   data_->nodes.clear();
@@ -67,7 +68,7 @@ void Serializer::check(SerializedScene& output,
   culling_frustum_ = output.culling_frustum;
 
   for (auto plane: scene_graph.get_clipping_plane_nodes()) {
-    if (render_mask_.check(plane->get_tags())) {
+    if (plane->is_visible(view_id) && render_mask_.check(plane->get_tags())) {
       data_->clipping_planes.push_back(plane->get_component_vector());
     }
   }
@@ -88,7 +89,7 @@ void Serializer::check(SerializedScene& output,
 /* virtual */ void Serializer::visit(node::LODNode* node) {
   if (is_visible(node)) {
 
-    float distance_to_camera(scm::math::length(node->get_world_position() - rendering_frustum_.get_camera_position()));
+    float distance_to_camera(scm::math::length(node->get_world_position() - data_->reference_camera_position));
 
     unsigned child_index(0);
 

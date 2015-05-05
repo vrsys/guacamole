@@ -180,6 +180,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   camera_block_.update(context_,
                        current_scene_->rendering_frustum,
+                       math::get_translation(camera.transform),
                        current_scene_->clipping_planes,
                        camera.config.get_view_id(),
                        camera.config.get_resolution());
@@ -264,7 +265,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     unsigned map_width(viewport_size * cascade_count);
 
     light_block.cascade_count = cascade_count;
-    light_block.max_shadow_distance = 1.f;
 
     // if shadow map hasn't been rendered yet, try to find an unused one
     if (!shadow_map) {
@@ -305,11 +305,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       // only render shadow map if it hasn't been rendered before this frame
       if (needs_redraw) {
         current_scene_ = current_graph_->serialize(frustum, frustum,
+                                                   math::get_translation(current_camera_.transform),
                                                    current_camera_.config.enable_frustum_culling(),
-                                                   current_camera_.config.mask());
+                                                   current_camera_.config.mask(),
+                                                   current_camera_.config.view_id());
 
         camera_block_.update(context_,
                              frustum,
+                             frustum.get_camera_position(),
                              current_scene_->clipping_planes,
                              current_camera_.config.get_view_id(),
                              math::vec2ui(viewport_size));
@@ -352,14 +355,12 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
         };
       }
 
-      light_block.max_shadow_distance = splits.back();
-
       for (int cascade(0); cascade < splits.size()-1; ++cascade) {
 
         shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
 
         // set clipping of camera frustum according to current cascade
-        // use cyclops for consisten cascades for left and right eye in stereo
+        // use cyclops for consistent cascades for left and right eye in stereo
         Frustum cropped_frustum(Frustum::perspective(
           // orig_scene->rendering_frustum.get_camera_transform(),
           current_camera_.transform,
@@ -436,7 +437,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
             sun_eye_transform,
             sun_screen_transform,
             0,
-            scm::math::length(sun_eye_depth)
+            scm::math::length(sun_eye_depth) + light->data.get_shadow_far_clipping_in_sun_direction()
           )
         );
 
@@ -495,6 +496,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     camera_block_.update(context_,
                          current_scene_->rendering_frustum,
+                         math::get_translation(current_camera_.transform),
                          current_scene_->clipping_planes,
                          current_camera_.config.get_view_id(),
                          current_camera_.config.get_resolution());

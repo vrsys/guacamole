@@ -68,17 +68,8 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   /////////////////////////////////////////////////////////////////////////////
   // ambient lighting
   /////////////////////////////////////////////////////////////////////////////
-  ResolvePassDescription& environment_lighting_spheremap(
-      std::string const& spheremap_texture);
-  std::string const& environment_lighting_spheremap() const;
-
-  ResolvePassDescription& environment_lighting_cubemap(
-      std::string const& cube_map_positive_x,
-      std::string const& cube_map_negative_x,
-      std::string const& cube_map_positive_y,
-      std::string const& cube_map_negative_y,
-      std::string const& cube_map_positive_z,
-      std::string const& cube_map_negative_z);
+  ResolvePassDescription& environment_lighting_texture(std::string const& texture);
+  std::string const& environment_lighting_texture() const;
 
   ResolvePassDescription& environment_lighting(utils::Color3f const& color);
   utils::Color3f environment_lighting() const;
@@ -134,6 +125,18 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
 
   ResolvePassDescription& fog_end(float fog_end);
   float fog_end() const;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // vignette
+  /////////////////////////////////////////////////////////////////////////////
+  ResolvePassDescription& vignette_coverage(float vignette_coverage);
+  float vignette_coverage() const;
+
+  ResolvePassDescription& vignette_softness(float vignette_softness);
+  float vignette_softness() const;
+
+  ResolvePassDescription& vignette_color(math::vec4f const& vignette_color);
+  math::vec4f vignette_color() const;
 
   /////////////////////////////////////////////////////////////////////////////
   // tone mapping and exposure

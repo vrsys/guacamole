@@ -113,6 +113,7 @@ struct LensConfig {
   gua::math::vec3 world_position;
   gua::math::vec2 screen_position;
   gua::math::vec3 world_normal;
+  gua::math::mat4 model_transform_on_pick;
   LensVisMode vis_mode;
   LensGeoMode geo_mode;
   float radius;
@@ -135,6 +136,7 @@ gua::math::vec3 compute_ray(std::shared_ptr<gua::node::ScreenNode> const& screen
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+
 void mouse_button(gua::utils::Trackball& trackball, 
                   gua::SceneGraph& graph, 
                   std::shared_ptr<gua::node::ScreenNode> const& screen, 
@@ -177,20 +179,21 @@ void mouse_button(gua::utils::Trackball& trackball,
         gua::PickResult::GET_POSITIONS);
 
       for (auto const& r : picks)
+      //for (auto const& r : picks_interpol)
       {          
         auto frustrum = camera->get_rendering_frustum(graph, gua::CameraMode::CENTER);
         auto pick_centre_ss = frustrum.get_projection() * frustrum.get_view() * gua::math::vec4(r.world_position, 1.0f);
         auto pick_centre_ss_norm = (gua::math::vec2(pick_centre_ss.x, pick_centre_ss.y) / pick_centre_ss.w) * 0.5f + gua::math::vec2(0.5f);
-        
+      
         lens.screen_position = pick_centre_ss_norm;
         lens.world_position = r.world_position;
-        lens.world_normal = r.normal;
+        lens.world_normal = r.normal;        
         lens.dirty_flag = true;
 
         lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
         lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
 
-        std::cout << "Picked Name: " << r.object->get_name() << "Position: " <<  r.position << " Normal: " << r.normal<< std::endl;
+        std::cout << "Picked Name: " << r.object->get_name() << " Position: " <<  r.position << "  Normal: " << r.normal<< std::endl;
       }
     }
   }
@@ -301,6 +304,22 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfi
       std::cout << "Set lens step_size_ss to " << lens.step_size_ss;
       std::cout << " Set lens step_size_os to " << lens.step_size_os << std::endl;
     break;
+  case 'p':      
+      lens.depth_range.x -= 0.0001;
+      std::cout << "Set lens lens.depth_range.min to " << lens.depth_range.x << std::endl;
+      break;
+  case '[':
+      lens.depth_range.x += 0.0001;      
+      std::cout << "Set lens lens.depth_range.min to " << lens.depth_range.x << std::endl;
+      break;
+  case ']':      
+      lens.depth_range.y -= 0.0001;
+      std::cout << "Set lens lens.depth_range.max to " << lens.depth_range.y << std::endl;
+      break;
+  case '\\':
+      lens.depth_range.y += 0.0001;
+      std::cout << "Set lens lens.depth_range.max to " << lens.depth_range.y << std::endl;
+      break;
   case 'y':
       lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 6);
     std::cout << "Set lens vis_mode to " << lens.vis_mode << std::endl;
@@ -617,6 +636,7 @@ int main(int argc, char** argv) {
   LensConfig lens_config = { gua::math::vec3{ 0.0, 0.0, 0.0 },
       gua::math::vec2{ 0.5, 0.5 },
       gua::math::vec3{ 1.0, 0.0, 0.0 },
+      gua::math::mat4(),
       LensConfig::LensVisMode::off,
       LensConfig::LensGeoMode::sphere_os,
       lense_init_size,
@@ -649,7 +669,8 @@ int main(int argc, char** argv) {
       lens_config.vis_plane_n = gua::math::vec3(0.0f, 0.0f, 1.0f);
   }
 
-  lens_config.depth_range = gua::math::vec2(bb.min[min_dim], bb.max[min_dim]);
+  //lens_config.depth_range = gua::math::vec2(bb.min[min_dim], bb.max[min_dim]);
+  lens_config.depth_range = gua::math::vec2(-0.1f, 0.1f);
 
   auto pick_proxy_geometry(trimesh_loader.create_geometry_from_file("pick_proxy", "data/objects/sphere.obj", rough_red, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   pick_proxy_geometry->scale(0.01);
@@ -793,7 +814,9 @@ int main(int argc, char** argv) {
                                                               gua::math::float_t(trackball.shifty()),
                                                               gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
 
-    transform->set_transform(modelmatrix);
+    //transform->set_transform(modelmatrix);
+
+    screen->set_transform(modelmatrix);
 
     static unsigned framecounter = 0;
     ++framecounter;
@@ -808,7 +831,7 @@ int main(int argc, char** argv) {
     
     plod_rough->set_uniform("lens_center", pick_transform->get_world_position());
     plod_rough->set_uniform("lens_center_ss", lens_config.screen_position);
-    plod_rough->set_uniform("lens_normal", lens_config.world_normal);
+    plod_rough->set_uniform("lens_world_normal", lens_config.world_normal);
     plod_rough->set_uniform("lens_vis_mode", int(lens_config.vis_mode));
     plod_rough->set_uniform("lens_geo_mode", int(lens_config.geo_mode));
     plod_rough->set_uniform("lens_radius", lens_config.radius);
@@ -818,7 +841,7 @@ int main(int argc, char** argv) {
     plod_rough->set_uniform("step_size_in_ss", lens_config.step_size_ss);    
     plod_rough->set_uniform("ref_plane_v", lens_config.vis_plane_v);
     plod_rough->set_uniform("ref_plane_n", lens_config.vis_plane_n);
-    plod_rough->set_uniform("ref_plane_range", lens_config.depth_range);
+    plod_rough->set_uniform("depth_range", lens_config.depth_range);
 
     if (rotate_light) {
       // modify scene

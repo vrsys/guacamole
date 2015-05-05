@@ -270,13 +270,15 @@ class GUA_DLL SceneGraph {
    */
   void accept(NodeVisitor& visitor) const;
 
-  std::shared_ptr<SerializedScene> serialize(Frustum const& rendering_frustum, 
-                                             Frustum const& culling_frustum, 
-                                             bool enable_frustum_culling, 
-                                             Mask const& mask) const;
+  std::shared_ptr<SerializedScene> serialize(Frustum const& rendering_frustum,
+                                             Frustum const& culling_frustum,
+                                             math::vec3 const& reference_camera_position,
+                                             bool enable_frustum_culling,
+                                             Mask const& mask,
+                                             int view_id) const;
 
   std::shared_ptr<SerializedScene> serialize(
-                                       node::SerializedCameraNode const& camera, 
+                                       node::SerializedCameraNode const& camera,
                                        CameraMode mode) const;
 
   /**

@@ -58,8 +58,7 @@ ResolvePassDescription::ResolvePassDescription()
   // default ambient lighting
   uniforms["gua_environment_lighting_mode"] = static_cast<int>(EnvironmentLightingMode::AMBIENT_COLOR);
   uniforms["gua_environment_lighting_color"] = scm::math::vec3f(0.05f, 0.05f, 0.05f);
-  uniforms["gua_environment_lighting_spheremap"] = std::string("gua_default_texture");
-  uniforms["gua_environment_lighting_cubemap"] = std::string("gua_default_texture");
+  uniforms["gua_environment_lighting_texture"] = std::string("gua_default_texture");
   uniforms["gua_horizon_fade"] = 1.3f;
 
   // default ssao
@@ -79,6 +78,11 @@ ResolvePassDescription::ResolvePassDescription()
   uniforms["gua_enable_fog"] = false;
   uniforms["gua_fog_start"] = 10.f;
   uniforms["gua_fog_end"] = 1000.f;
+
+  // default vignette
+  uniforms["gua_vignette_coverage"] = 0.5f;
+  uniforms["gua_vignette_softness"] = 0.5f;
+  uniforms["gua_vignette_color"] = scm::math::vec4f(0.f, 0.f, 0.f, 0.f);
 
   // default tone mapping exposure
   uniforms["gua_tone_mapping_exposure"] = 1.0f;
@@ -121,27 +125,15 @@ std::string ResolvePassDescription::background_texture() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription& ResolvePassDescription::environment_lighting_spheremap(std::string const& spheremap_texture) {
-  uniforms["gua_environment_lighting_spheremap"] = spheremap_texture;
+ResolvePassDescription& ResolvePassDescription::environment_lighting_texture(std::string const& texture) {
+  uniforms["gua_environment_lighting_texture"] = texture;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& ResolvePassDescription::environment_lighting_spheremap() const {
-  auto uniform(uniforms.find("gua_environment_lighting_spheremap"));
+std::string const& ResolvePassDescription::environment_lighting_texture() const {
+  auto uniform(uniforms.find("gua_environment_lighting_texture"));
   return boost::get<std::string>(uniform->second.data);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription& ResolvePassDescription::environment_lighting_cubemap(std::string const& cube_map_positive_x,
-  std::string const& cube_map_negative_x,
-  std::string const& cube_map_positive_y,
-  std::string const& cube_map_negative_y,
-  std::string const& cube_map_positive_z,
-  std::string const& cube_map_negative_z) {
-
-  gua::Logger::LOG_WARNING << "ResolvePassDescription::environment_lighting_cubemap() : Using deafult texture. Opening not implemented yet." << std::endl;
-  return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -324,6 +316,42 @@ ResolvePassDescription& ResolvePassDescription::fog_end(float fog_end) {
 float ResolvePassDescription::fog_end() const {
   auto uniform(uniforms.find("gua_fog_end"));
   return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::vignette_coverage(float vignette_coverage) {
+  uniforms["gua_vignette_coverage"] = vignette_coverage;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::vignette_coverage() const {
+  auto uniform(uniforms.find("gua_vignette_coverage"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::vignette_softness(float vignette_softness) {
+  uniforms["gua_vignette_softness"] = vignette_softness;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::vignette_softness() const {
+  auto uniform(uniforms.find("gua_vignette_softness"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::vignette_color(math::vec4f const& vignette_color) {
+  uniforms["gua_vignette_color"] = vignette_color;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+math::vec4f ResolvePassDescription::vignette_color() const {
+  auto uniform(uniforms.find("gua_vignette_color"));
+  return boost::get<math::vec4f>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

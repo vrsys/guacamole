@@ -238,16 +238,19 @@ std::set<PickResult> const SceneGraph::ray_test(Ray const& ray,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<SerializedScene> SceneGraph::serialize(Frustum const& rendering_frustum, 
-                                                       Frustum const& culling_frustum, 
-                                                       bool enable_frustum_culling, 
-                                                       Mask const& mask) const {
+std::shared_ptr<SerializedScene> SceneGraph::serialize(Frustum const& rendering_frustum,
+                                                       Frustum const& culling_frustum,
+                                                       math::vec3 const& reference_camera_position,
+                                                       bool enable_frustum_culling,
+                                                       Mask const& mask,
+                                                       int view_id) const {
   auto out = std::make_shared<SerializedScene>();
   out->rendering_frustum = rendering_frustum;
   out->culling_frustum = culling_frustum;
+  out->reference_camera_position = reference_camera_position;
 
   Serializer s;
-  s.check(*out, *this, mask, enable_frustum_culling);
+  s.check(*out, *this, mask, enable_frustum_culling, view_id);
 
   return out;
 }
@@ -255,14 +258,16 @@ std::shared_ptr<SerializedScene> SceneGraph::serialize(Frustum const& rendering_
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<SerializedScene> SceneGraph::serialize(
-                                       node::SerializedCameraNode const& camera, 
+                                       node::SerializedCameraNode const& camera,
                                        CameraMode mode) const {
 
     return serialize(
       camera.get_rendering_frustum(*this, mode),
       camera.get_culling_frustum(*this, mode),
+      math::get_translation(camera.transform),
       camera.config.enable_frustum_culling(),
-      camera.config.mask()
+      camera.config.mask(),
+      camera.config.view_id()
     );
 }
 

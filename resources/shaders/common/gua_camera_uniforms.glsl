@@ -8,6 +8,7 @@ layout (std140, binding=0) uniform cameraBlock {
   vec4  gua_clipping_planes[64];
   uvec2 gua_resolution;
   uvec2 gua_noise_texture;
+  vec4  gua_cyclops_position_4;
   int   gua_clipping_plane_count;
   int   gua_view_id;
   float gua_clip_near;
@@ -15,6 +16,7 @@ layout (std140, binding=0) uniform cameraBlock {
 };
 
 vec3 gua_camera_position = gua_camera_position_4.xyz;
+vec3 gua_cyclops_position = gua_cyclops_position_4.xyz;
 
 uniform mat4 gua_model_matrix;
 uniform mat4 gua_model_view_matrix;
