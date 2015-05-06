@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 @include "shaders/common/header.glsl"
+@include "shaders/common/gua_camera_uniforms.glsl"
 
 in flat int texlayer;
 in vec2 texcoods;
@@ -46,7 +47,6 @@ vec3 get_view_direction() {
 
   return vec3(0,0,0);
 }
-
 
 // Code for Rayleigh/Mie-Scattering adopted from Nathaniel Meyer's
 // implementation of  Sean O'Neill's GPU Gems 2 article.
@@ -218,4 +218,5 @@ void main() {
 
 
   gua_out_color = color;
+
 }

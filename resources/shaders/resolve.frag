@@ -52,14 +52,20 @@ vec3 environment_lighting (in ShadingTerms T)
 {
   vec3 env_color = vec3(0);
   vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.V));
+  vec3 col1 = vec3(0);
+  vec3 col2 = vec3(0);
 
   switch (gua_environment_lighting_mode) {
     case 0 : // spheremap
       vec2 texcoord = longitude_latitude(T.N);
-      env_color = brdf_spec * texture(sampler2D(gua_environment_lighting_texture), texcoord).rgb;
+      col1 = brdf_spec * texture(sampler2D(gua_environment_lighting_texture), texcoord).rgb;
+      col2 = brdf_spec * texture(sampler2D(gua_alternative_environment_lighting_texture), texcoord).rgb;
+      env_color = mix(col1, col2, gua_environment_lighting_texture_blend_factor);
       break;
     case 1 : // cubemap
-      env_color = brdf_spec * texture(samplerCube(gua_environment_lighting_texture), T.N).rgb;
+      col1 = brdf_spec * texture(samplerCube(gua_environment_lighting_texture), T.N).rgb;
+      col2 = brdf_spec * texture(samplerCube(gua_alternative_environment_lighting_texture), T.N).rgb;
+      env_color = mix(col1, col2, gua_environment_lighting_texture_blend_factor);
       break;
     case 2 : // single color
       // http://marmosetco.tumblr.com/post/81245981087
@@ -145,14 +151,18 @@ float gua_my_atan2(float a, float b) {
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_background_texture() {
-  return texture(sampler2D(gua_background_texture), gua_quad_coords).xyz;
+  vec3 col1 = texture(sampler2D(gua_background_texture), gua_quad_coords).xyz;
+  vec3 col2 = texture(sampler2D(gua_alternative_background_texture), gua_quad_coords).xyz;
+  return mix(col1, col2, gua_background_texture_blend_factor);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_cubemap_texture() {
   vec3 pos = gua_get_position();
-  vec3 view = normalize(pos - gua_camera_position);
-  return texture(samplerCube(gua_background_texture), view).xyz;
+  vec3 view = normalize(pos - gua_camera_position) ;
+  vec3 col1 = texture(samplerCube(gua_background_texture), view).xyz;
+  vec3 col2 = texture(samplerCube(gua_alternative_background_texture), view).xyz;
+  return mix(col1, col2, gua_background_texture_blend_factor);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -165,7 +175,9 @@ vec3 gua_apply_skymap_texture() {
   vec2 texcoord = vec2(x, y);
   float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_camera_position) - normalize(gua_get_position(vec2(1, 0.5)) - gua_camera_position));
   vec2 uv = l*(gua_get_quad_coords() - 1.0)/4.0 + 0.5;
-  return textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
+  vec3 col1 = textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
+  vec3 col2 = textureGrad(sampler2D(gua_alternative_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
+  return mix(col1, col2, gua_background_texture_blend_factor);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -66,11 +66,23 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& background_texture(std::string const& texture);
   std::string background_texture() const;
 
+  ResolvePassDescription& alternative_background_texture(std::string const& texture);
+  std::string alternative_background_texture() const;
+
+  ResolvePassDescription& background_texture_blend_factor(float factor);
+  float background_texture_blend_factor() const;
+
   /////////////////////////////////////////////////////////////////////////////
   // ambient lighting
   /////////////////////////////////////////////////////////////////////////////
   ResolvePassDescription& environment_lighting_texture(std::string const& texture);
   std::string const& environment_lighting_texture() const;
+
+  ResolvePassDescription& alternative_environment_lighting_texture(std::string const& texture);
+  std::string const& alternative_environment_lighting_texture() const;
+
+  ResolvePassDescription& environment_lighting_texture_blend_factor(float factor);
+  float environment_lighting_texture_blend_factor() const;
 
   ResolvePassDescription& environment_lighting(utils::Color3f const& color);
   utils::Color3f environment_lighting() const;

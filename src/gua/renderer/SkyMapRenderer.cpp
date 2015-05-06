@@ -44,7 +44,7 @@ SkyMapRenderer::SkyMapRenderer()
 
 void SkyMapRenderer::render_sky_map(Pipeline& pipe, PipelinePassDescription const& desc) {
   auto const& ctx(pipe.get_context());
-  const int size_(256);
+  const int size_(1024);
 
   auto tex_uniform(desc.uniforms.find("output_texture_name"));
   auto output_texture_name(boost::get<std::string>(tex_uniform->second.data));

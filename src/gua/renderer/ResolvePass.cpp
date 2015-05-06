@@ -54,11 +54,15 @@ ResolvePassDescription::ResolvePassDescription()
   uniforms["gua_background_mode"] = static_cast<int>(BackgroundMode::COLOR);
   uniforms["gua_background_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);
   uniforms["gua_background_texture"] = std::string("gua_default_texture");
+  uniforms["gua_alternative_background_texture"] = std::string("gua_default_texture");
+  uniforms["gua_background_texture_blend_factor"] = 0.f;
 
   // default ambient lighting
   uniforms["gua_environment_lighting_mode"] = static_cast<int>(EnvironmentLightingMode::AMBIENT_COLOR);
   uniforms["gua_environment_lighting_color"] = scm::math::vec3f(0.05f, 0.05f, 0.05f);
   uniforms["gua_environment_lighting_texture"] = std::string("gua_default_texture");
+  uniforms["gua_alternative_environment_lighting_texture"] = std::string("gua_default_texture");
+  uniforms["gua_environment_lighting_texture_blend_factor"] = 0.f;
   uniforms["gua_horizon_fade"] = 1.3f;
 
   // default ssao
@@ -125,6 +129,30 @@ std::string ResolvePassDescription::background_texture() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::alternative_background_texture(std::string const& texture) {
+  uniforms["gua_alternative_background_texture"] = texture;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::string ResolvePassDescription::alternative_background_texture() const {
+  auto uniform(uniforms.find("gua_alternative_background_texture"));
+  return boost::get<std::string>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::background_texture_blend_factor(float factor) {
+  uniforms["gua_background_texture_blend_factor"] = factor;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::background_texture_blend_factor() const {
+  auto uniform(uniforms.find("gua_background_texture_blend_factor"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::environment_lighting_texture(std::string const& texture) {
   uniforms["gua_environment_lighting_texture"] = texture;
   return *this;
@@ -134,6 +162,30 @@ ResolvePassDescription& ResolvePassDescription::environment_lighting_texture(std
 std::string const& ResolvePassDescription::environment_lighting_texture() const {
   auto uniform(uniforms.find("gua_environment_lighting_texture"));
   return boost::get<std::string>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::alternative_environment_lighting_texture(std::string const& texture) {
+  uniforms["gua_alternative_environment_lighting_texture"] = texture;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::string const& ResolvePassDescription::alternative_environment_lighting_texture() const {
+  auto uniform(uniforms.find("gua_alternative_environment_lighting_texture"));
+  return boost::get<std::string>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::environment_lighting_texture_blend_factor(float factor) {
+  uniforms["gua_environment_lighting_texture_blend_factor"] = factor;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::environment_lighting_texture_blend_factor() const {
+  auto uniform(uniforms.find("gua_environment_lighting_texture_blend_factor"));
+  return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
