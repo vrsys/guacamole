@@ -74,7 +74,7 @@ void main() {
 
   for (int i=0; i < gua_clipping_plane_count; ++i) {
 
-    if (dot(gua_clipping_planes[i].xyz, gua_world_position.xyz) + gua_clipping_planes[i].w < 0) {
+    if (dot(gua_clipping_planes[i].xyz, gua_varying_world_position.xyz) + gua_clipping_planes[i].w < 0) {
       discard;
     }
   }
