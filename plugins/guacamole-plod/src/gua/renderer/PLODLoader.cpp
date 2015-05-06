@@ -197,9 +197,9 @@ std::set<PickResult> PLODLoader::pick_plod_interpolate(math::vec3 const& bundle_
   pbr::ren::Ray::Intersection intersection;
 
   if (ray.Intersect(aabb_scale, ray_up, bundle_radius, max_depth, surfel_skip, intersection)) {
-    PickResult result(intersection.distance_, 
+    PickResult result(intersection.distance_,  
                       nullptr, 
-                      math::vec3(), 
+                      math::vec3(intersection.error_),
                       math::vec3(intersection.position_), 
                       math::vec3(), 
                       math::vec3(intersection.normal_),
