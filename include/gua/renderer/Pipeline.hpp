@@ -69,7 +69,9 @@ struct GUA_DLL PipelineViewState
 
   Frustum                           frustum;
   std::size_t                       viewpoint_uuid = 0;
+
   ViewDirection                     view_direction = front;
+  bool                              shadow_mode = false;
 };
 
 class GUA_DLL Pipeline {
@@ -97,15 +99,12 @@ public:
     CameraMode mode, node::SerializedCameraNode const& camera,
     std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
-  void render_shadow_map(node::LightNode* light,
-                         LightTable::LightBlock& light_block);
+  void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
 
-  RenderTarget                     & get_current_target() const;
-  SerializedScene                  & get_scene();
-  SceneGraph                  const& get_graph() const;
-  RenderContext               const& get_context() const;
-  node::SerializedCameraNode  const& get_scene_camera() const;
-  LightTable                       & get_light_table();
+  PipelineViewState const&           current_viewstate() const;
+
+  RenderContext const&               get_context() const;
+  LightTable&                        get_light_table();
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
@@ -123,7 +122,21 @@ public:
   void clear_frame_cache();
 
  private:
+
   void bind_camera_uniform_block(unsigned location) const;
+
+  void render_shadow_map(LightTable::LightBlock& light_block, Frustum const& frustum,
+    unsigned cascade_id, unsigned viewport_size, bool redraw);
+
+  void generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const& shadowmap,
+    node::LightNode* light, LightTable::LightBlock& light_block,
+    unsigned viewport_size, bool redraw);
+
+  void generate_shadow_map_pointlight(std::shared_ptr<ShadowMap> const& shadowmap,
+    node::LightNode* light, LightTable::LightBlock& light_block,
+    unsigned viewport_size, bool redraw);
+
+  void generate_shadow_map_spotlight(node::LightNode* light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw);
 
   PipelineViewState                         current_viewstate_;
   

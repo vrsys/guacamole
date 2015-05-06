@@ -89,6 +89,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   current_viewstate_.camera = camera;
   current_viewstate_.viewpoint_uuid = camera.uuid;
   current_viewstate_.view_direction = PipelineViewState::front;
+  current_viewstate_.shadow_mode = false;
 
   bool reload_gbuffer(false);
   bool reload_abuffer(false);
@@ -99,7 +100,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       context_.render_pipelines.insert(
         std::make_pair(cam.uuid, std::make_shared<Pipeline>(context_, camera.config.get_resolution())));
     }
-    context_.render_pipelines.at(cam.uuid)->render_scene(mode, cam, scene_graphs);
+    context_.render_pipelines[cam.uuid]->render_scene(mode, cam, scene_graphs);
   }
 
   // recreate gbuffer if resolution changed
@@ -178,7 +179,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   // serialize this scenegraph
   current_viewstate_.scene = current_viewstate_.graph->serialize(camera, mode);
   current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
-  current_viewstate_.target = gbuffer_.get();
 
   camera_block_.update(context_,
                        current_viewstate_.scene->rendering_frustum,
@@ -190,13 +190,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   // clear gbuffer
   gbuffer_->clear(context_, 1.f, 1);
+  current_viewstate_.target = gbuffer_.get();
 
   // process all passes
   for (unsigned i(0); i < passes_.size(); ++i) {
     if (passes_[i].needs_color_buffer_as_input()) {
       gbuffer_->toggle_ping_pong();
     }
-  passes_[i].process(*last_description_.get_passes()[i], *this, false);
+    passes_[i].process(*last_description_.get_passes()[i], *this);
   }
 
 
@@ -232,7 +233,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Pipeline::render_shadow_map(node::LightNode* light,
+  void Pipeline::generate_shadow_map(node::LightNode* light,
                                    LightTable::LightBlock& light_block) {
 
     if (!shadow_map_res_) {
@@ -286,6 +287,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     shadow_map_res_->used_shadow_maps[light] = {shadow_map, current_mask};
 
     current_viewstate_.target = shadow_map.get();
+
     auto orig_scene(current_viewstate_.scene);
 
     // clear shadow map
@@ -295,215 +297,25 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     }
 
     // set view parameters
-    
-
-    // rendering lambda
-    auto render_shadows = [this, &light_block, viewport_size, needs_redraw, light]
-      (Frustum const& frustum, PipelineViewState::ViewDirection direction, unsigned cascade_id) {
-
-      light_block.projection_view_mats[cascade_id] = math::mat4f(frustum.get_projection() * frustum.get_view());
-
-      // only render shadow map if it hasn't been rendered before this frame
-      if (needs_redraw) {
-        current_viewstate_.scene = current_viewstate_.graph->serialize(frustum, frustum,
-                                                   math::get_translation(current_viewstate_.camera.transform),
-                                                   current_viewstate_.camera.config.enable_frustum_culling(),
-                                                   current_viewstate_.camera.config.mask(),
-                                                   current_viewstate_.camera.config.view_id());
-
-        current_viewstate_.frustum        = frustum;
-        current_viewstate_.viewpoint_uuid = light->uuid();
-        current_viewstate_.view_direction = direction;
-
-        camera_block_.update(context_,
-                             frustum,
-                             frustum.get_camera_position(),
-                             current_viewstate_.scene->clipping_planes,
-                             current_viewstate_.camera.config.get_view_id(),
-                             math::vec2ui(viewport_size));
-        bind_camera_uniform_block(0);
-
-        // process all passes
-        for (int i(0); i < passes_.size(); ++i) {
-          if (passes_[i].enable_for_shadows()) {
-            passes_[i].process(*last_description_.get_passes()[i], *this, true);
-          }
-        }
-      }
-    };
-
-    
+    current_viewstate_.viewpoint_uuid = light->uuid();
     current_viewstate_.view_direction = PipelineViewState::front;
+    current_viewstate_.shadow_mode = true;
 
     // render cascaded shadows for sunlights
-    if (light->data.get_type() == node::LightNode::Type::SUN) {
+    switch (light->data.get_type()) {
 
-      auto splits(light->data.get_shadow_cascaded_splits());
-
-      if (light->data.get_shadow_cascaded_splits().size() < 2) {
-        Logger::LOG_WARNING << "At least 2 splits have to be defined for cascaded shadow maps!" << std::endl;
-      }
-
-      if (current_viewstate_.camera.config.near_clip() > splits.front() || current_viewstate_.camera.config.far_clip() < splits.back()) {
-
-        Logger::LOG_WARNING << "Splits of cascaded shadow maps are not inside "
-                            << "clipping range! Fallback to equidistant splits used." << std::endl;
-
-        float clipping_range(current_viewstate_.camera.config.far_clip()
-          - current_viewstate_.camera.config.near_clip());
-        splits = {
-          current_viewstate_.camera.config.near_clip(),
-          current_viewstate_.camera.config.near_clip() + clipping_range * 0.25f,
-          current_viewstate_.camera.config.near_clip() + clipping_range * 0.5f,
-          current_viewstate_.camera.config.near_clip() + clipping_range * 0.75f,
-          current_viewstate_.camera.config.far_clip()
-        };
-      }
-
-      for (int cascade(0); cascade < splits.size()-1; ++cascade) {
-
-        shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
-
-        // set clipping of camera frustum according to current cascade
-        // use cyclops for consistent cascades for left and right eye in stereo
-        Frustum cropped_frustum(Frustum::perspective(
-          // orig_scene->rendering_frustum.get_camera_transform(),
-          current_viewstate_.camera.transform,
-          orig_scene->rendering_frustum.get_screen_transform(),
-          splits[cascade], splits[cascade+1]
-        ));
-
-        // transform cropped frustum into sun space and calculate radius and
-        // bbox of transformed frustum
-        auto cropped_frustum_corners(cropped_frustum.get_corners());
-        math::BoundingBox<math::vec3> extends_in_sun_space;
-        float radius_in_sun_space = 0;
-        std::vector<math::vec3> corners_in_sun_space;
-        math::vec3 center_in_sun_space(0, 0, 0);
-
-        auto transform(light->get_cached_world_transform());
-
-        auto inverse_sun_transform(scm::math::inverse(transform));
-        for (auto const& corner: cropped_frustum_corners) {
-          math::vec3 new_corner(inverse_sun_transform * corner);
-          center_in_sun_space += new_corner/8;
-          corners_in_sun_space.push_back(new_corner);
-          extends_in_sun_space.expandBy(new_corner);
-        }
-
-        for (auto const& corner: corners_in_sun_space) {
-          float radius = scm::math::length(corner-center_in_sun_space);
-          if (radius > radius_in_sun_space) {
-            radius_in_sun_space = radius;
-          }
-        }
-
-        // center of front plane of frustum
-        auto center(math::vec3f(
-              (extends_in_sun_space.min[0] + extends_in_sun_space.max[0])/2,
-              (extends_in_sun_space.min[1] + extends_in_sun_space.max[1])/2,
-               extends_in_sun_space.max[2] + light->data.get_shadow_near_clipping_in_sun_direction()));
-
-        // eliminate sub-pixel movement
-        float tex_coord_x = center.x * viewport_size / radius_in_sun_space / 2;
-        float tex_coord_y = center.y * viewport_size / radius_in_sun_space / 2;
-
-        float tex_coord_rounded_x = round(tex_coord_x);
-        float tex_coord_rounded_y = round(tex_coord_y);
-
-        float dx = tex_coord_rounded_x - tex_coord_x;
-        float dy = tex_coord_rounded_y - tex_coord_y;
-
-        dx /= viewport_size / radius_in_sun_space / 2;
-        dy /= viewport_size / radius_in_sun_space / 2;
-
-        center.x += dx;
-        center.y += dy;
-
-        // calculate transformation of shadow screen
-        math::mat4 screen_in_sun_space(scm::math::make_translation(center)
-                                      * scm::math::make_scale(radius_in_sun_space*2,
-                                                              radius_in_sun_space*2,
-                                                              1.0f));
-        auto sun_screen_transform(transform * screen_in_sun_space);
-
-        // calculate transformation of shadow eye
-        auto sun_eye_transform(scm::math::make_translation(
-              sun_screen_transform.column(3)[0],
-              sun_screen_transform.column(3)[1],
-              sun_screen_transform.column(3)[2]));
-        auto sun_eye_depth(transform * math::vec4(0, 0,
-                                          extends_in_sun_space.max[2]
-                                        - extends_in_sun_space.min[2]
-                                        + light->data.get_shadow_near_clipping_in_sun_direction(), 0.0f));
-
-        auto shadow_frustum(
-          Frustum::orthographic(
-            sun_eye_transform,
-            sun_screen_transform,
-            0,
-            scm::math::length(sun_eye_depth) + light->data.get_shadow_far_clipping_in_sun_direction()
-          )
-        );
-
-        render_shadows(shadow_frustum, PipelineViewState::ViewDirection::front, cascade);
-
-      }
-
-    } else if (light->data.get_type() == node::LightNode::Type::POINT) {
-
-      // calculate light frustum
-      math::mat4 screen_transform(scm::math::make_translation(0., 0., -0.5));
-      std::vector<math::mat4> screen_transforms({
-        screen_transform,
-        scm::math::make_rotation(180., 0., 1., 0.) * screen_transform,
-        scm::math::make_rotation(90., 1., 0., 0.) * screen_transform,
-        scm::math::make_rotation(-90., 1., 0., 0.) * screen_transform,
-        scm::math::make_rotation(90., 0., 1., 0.) * screen_transform,
-        scm::math::make_rotation(-90., 0., 1., 0.) * screen_transform
-      });
-
-      std::vector<PipelineViewState::ViewDirection> view_directions = { 
-        PipelineViewState::front, 
-        PipelineViewState::back, 
-        PipelineViewState::top, 
-        PipelineViewState::bottom, 
-        PipelineViewState::left, 
-        PipelineViewState::right 
-      };
-
-      for (unsigned cascade(0); cascade < screen_transforms.size(); ++cascade) {
-
-        auto transform(light->get_cached_world_transform() * screen_transforms[cascade]);
-
-        auto frustum(
-          Frustum::perspective(
-            light->get_cached_world_transform(), transform,
-            get_scene_camera().config.near_clip(),
-            scm::math::length(math::get_translation(transform))
-          )
-        );
-
-        shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
-
-        render_shadows(frustum, view_directions[cascade], cascade);
-      }
-
-    } else if (light->data.get_type() == node::LightNode::Type::SPOT) {
-      // calculate light frustum
-      math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
-      screen_transform = light->get_cached_world_transform() * screen_transform;
-
-      auto frustum (
-        Frustum::perspective(
-          light->get_cached_world_transform(), screen_transform,
-          get_scene_camera().config.near_clip(),
-          scm::math::length(math::get_translation(screen_transform))
-        )
-      );
-
-      render_shadows(frustum, PipelineViewState::ViewDirection::front, 0);
-    }
+      case node::LightNode::Type::SUN :
+        generate_shadow_map_sunlight(shadow_map, light, light_block, viewport_size, needs_redraw);
+        break;
+      case node::LightNode::Type::POINT :
+        generate_shadow_map_pointlight(shadow_map, light, light_block, viewport_size, needs_redraw);
+        break;
+      case node::LightNode::Type::SPOT :
+        generate_shadow_map_spotlight(light, light_block, viewport_size, needs_redraw);
+        break;
+    default : 
+      throw std::runtime_error("Pipeline::generate_shadow_map(): Lightnode type not supported.");
+    };
 
     // restore previous configuration
     current_viewstate_.target = gbuffer_.get();
@@ -523,32 +335,225 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  RenderTarget& Pipeline::get_current_target() const {
-    return *current_viewstate_.target;
+  void Pipeline::render_shadow_map(LightTable::LightBlock& light_block, Frustum const& frustum, unsigned cascade_id, unsigned viewport_size, bool redraw) {
+
+    light_block.projection_view_mats[cascade_id] = math::mat4f(frustum.get_projection() * frustum.get_view());
+
+    // only render shadow map if it hasn't been rendered before this frame
+    if (redraw) {
+      current_viewstate_.scene = current_viewstate_.graph->serialize(frustum, frustum,
+        math::get_translation(current_viewstate_.camera.transform),
+        current_viewstate_.camera.config.enable_frustum_culling(),
+        current_viewstate_.camera.config.mask(),
+        current_viewstate_.camera.config.view_id());
+
+      current_viewstate_.frustum = frustum;
+
+      camera_block_.update(context_,
+        frustum,
+        frustum.get_camera_position(),
+        current_viewstate_.scene->clipping_planes,
+        current_viewstate_.camera.config.get_view_id(),
+        math::vec2ui(viewport_size));
+      bind_camera_uniform_block(0);
+
+      // process all passes
+      for (int i(0); i < passes_.size(); ++i) {
+        if (passes_[i].enable_for_shadows()) {
+          passes_[i].process(*last_description_.get_passes()[i], *this);
+        }
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void Pipeline::generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const& shadow_map, node::LightNode* light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw) {
+
+    auto splits(light->data.get_shadow_cascaded_splits());
+
+    if (light->data.get_shadow_cascaded_splits().size() < 2) {
+      Logger::LOG_WARNING << "At least 2 splits have to be defined for cascaded shadow maps!" << std::endl;
+    }
+
+    if (current_viewstate_.camera.config.near_clip() > splits.front() || current_viewstate_.camera.config.far_clip() < splits.back()) {
+
+      Logger::LOG_WARNING << "Splits of cascaded shadow maps are not inside "
+        << "clipping range! Fallback to equidistant splits used." << std::endl;
+
+      float clipping_range(current_viewstate_.camera.config.far_clip()
+        - current_viewstate_.camera.config.near_clip());
+      splits = {
+        current_viewstate_.camera.config.near_clip(),
+        current_viewstate_.camera.config.near_clip() + clipping_range * 0.25f,
+        current_viewstate_.camera.config.near_clip() + clipping_range * 0.5f,
+        current_viewstate_.camera.config.near_clip() + clipping_range * 0.75f,
+        current_viewstate_.camera.config.far_clip()
+      };
+    }
+
+    for (int cascade(0); cascade < splits.size() - 1; ++cascade) {
+
+      shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
+
+      // set clipping of camera frustum according to current cascade
+      // use cyclops for consistent cascades for left and right eye in stereo
+      Frustum cropped_frustum(Frustum::perspective(
+        // orig_scene->rendering_frustum.get_camera_transform(),
+        current_viewstate_.camera.transform,
+        current_viewstate_.scene->rendering_frustum.get_screen_transform(),
+        splits[cascade], splits[cascade + 1]
+        ));
+
+      // transform cropped frustum into sun space and calculate radius and
+      // bbox of transformed frustum
+      auto cropped_frustum_corners(cropped_frustum.get_corners());
+      math::BoundingBox<math::vec3> extends_in_sun_space;
+      float radius_in_sun_space = 0;
+      std::vector<math::vec3> corners_in_sun_space;
+      math::vec3 center_in_sun_space(0, 0, 0);
+
+      auto transform(light->get_cached_world_transform());
+
+      auto inverse_sun_transform(scm::math::inverse(transform));
+      for (auto const& corner : cropped_frustum_corners) {
+        math::vec3 new_corner(inverse_sun_transform * corner);
+        center_in_sun_space += new_corner / 8;
+        corners_in_sun_space.push_back(new_corner);
+        extends_in_sun_space.expandBy(new_corner);
+      }
+
+      for (auto const& corner : corners_in_sun_space) {
+        float radius = scm::math::length(corner - center_in_sun_space);
+        if (radius > radius_in_sun_space) {
+          radius_in_sun_space = radius;
+        }
+      }
+
+      // center of front plane of frustum
+      auto center(math::vec3f(
+        (extends_in_sun_space.min[0] + extends_in_sun_space.max[0]) / 2,
+        (extends_in_sun_space.min[1] + extends_in_sun_space.max[1]) / 2,
+        extends_in_sun_space.max[2] + light->data.get_shadow_near_clipping_in_sun_direction()));
+
+      // eliminate sub-pixel movement
+      float tex_coord_x = center.x * viewport_size / radius_in_sun_space / 2;
+      float tex_coord_y = center.y * viewport_size / radius_in_sun_space / 2;
+
+      float tex_coord_rounded_x = round(tex_coord_x);
+      float tex_coord_rounded_y = round(tex_coord_y);
+
+      float dx = tex_coord_rounded_x - tex_coord_x;
+      float dy = tex_coord_rounded_y - tex_coord_y;
+
+      dx /= viewport_size / radius_in_sun_space / 2;
+      dy /= viewport_size / radius_in_sun_space / 2;
+
+      center.x += dx;
+      center.y += dy;
+
+      // calculate transformation of shadow screen
+      math::mat4 screen_in_sun_space(scm::math::make_translation(center)
+        * scm::math::make_scale(radius_in_sun_space * 2,
+        radius_in_sun_space * 2,
+        1.0f));
+      auto sun_screen_transform(transform * screen_in_sun_space);
+
+      // calculate transformation of shadow eye
+      auto sun_eye_transform(scm::math::make_translation(
+        sun_screen_transform.column(3)[0],
+        sun_screen_transform.column(3)[1],
+        sun_screen_transform.column(3)[2]));
+      auto sun_eye_depth(transform * math::vec4(0, 0,
+        extends_in_sun_space.max[2]
+        - extends_in_sun_space.min[2]
+        + light->data.get_shadow_near_clipping_in_sun_direction(), 0.0f));
+
+      auto shadow_frustum(
+        Frustum::orthographic(
+        sun_eye_transform,
+        sun_screen_transform,
+        0,
+        scm::math::length(sun_eye_depth) + light->data.get_shadow_far_clipping_in_sun_direction()
+        )
+        );
+
+      render_shadow_map(light_block, shadow_frustum, cascade, viewport_size, redraw);
+    }
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  node::SerializedCameraNode const& Pipeline::get_scene_camera() const {
-    return current_viewstate_.camera;
+  void Pipeline::generate_shadow_map_pointlight(std::shared_ptr<ShadowMap> const& shadow_map, node::LightNode* light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw) {
+
+    // calculate light frustum
+    math::mat4 screen_transform(scm::math::make_translation(0., 0., -0.5));
+    std::vector<math::mat4> screen_transforms({
+      screen_transform,
+      scm::math::make_rotation(180., 0., 1., 0.) * screen_transform,
+      scm::math::make_rotation(90., 1., 0., 0.) * screen_transform,
+      scm::math::make_rotation(-90., 1., 0., 0.) * screen_transform,
+      scm::math::make_rotation(90., 0., 1., 0.) * screen_transform,
+      scm::math::make_rotation(-90., 0., 1., 0.) * screen_transform
+    });
+
+    std::vector<PipelineViewState::ViewDirection> view_directions = {
+      PipelineViewState::front,
+      PipelineViewState::back,
+      PipelineViewState::top,
+      PipelineViewState::bottom,
+      PipelineViewState::left,
+      PipelineViewState::right
+    };
+
+    for (unsigned cascade(0); cascade < screen_transforms.size(); ++cascade) {
+
+      auto transform(light->get_cached_world_transform() * screen_transforms[cascade]);
+
+      auto frustum(
+        Frustum::perspective(
+        light->get_cached_world_transform(), transform,
+        current_viewstate_.camera.config.near_clip(),
+        scm::math::length(math::get_translation(transform))
+        )
+        );
+
+      shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
+
+      current_viewstate_.view_direction = view_directions[cascade];
+
+      render_shadow_map(light_block, frustum, cascade, viewport_size, redraw);
+    }
+
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  void Pipeline::generate_shadow_map_spotlight(node::LightNode* light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw) {
+
+    // calculate light frustum
+    math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
+    screen_transform = light->get_cached_world_transform() * screen_transform;
+
+    auto frustum(
+      Frustum::perspective(
+      light->get_cached_world_transform(), screen_transform,
+      current_viewstate_.camera.config.near_clip(),
+      scm::math::length(math::get_translation(screen_transform))
+      )
+      );
+
+    render_shadow_map(light_block, frustum, 0, viewport_size, redraw);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  PipelineViewState const& Pipeline::current_viewstate() const {
+    return current_viewstate_;
+  }
+  
   ////////////////////////////////////////////////////////////////////////////////
 
   RenderContext const& Pipeline::get_context() const {
     return context_;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  SerializedScene& Pipeline::get_scene() {
-    return *current_viewstate_.scene;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  SceneGraph const& Pipeline::get_graph() const {
-    return *current_viewstate_.graph;
   }
 
   ////////////////////////////////////////////////////////////////////////////////

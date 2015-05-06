@@ -337,19 +337,27 @@ namespace gua {
   }
 
   ///////////////////////////////////////////////////////////////////////////////
-  void PLODRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc, bool rendering_shadows) {
+  void PLODRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
 
     RenderContext const& ctx(pipe.get_context());
-    
-    std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODPass";
+
+    ///////////////////////////////////////////////////////////////////////////
+    //  retrieve current view state
+    ///////////////////////////////////////////////////////////////////////////
+    auto& scene = *pipe.current_viewstate().scene;
+    auto const& camera = pipe.current_viewstate().camera;
+    auto const& frustum = pipe.current_viewstate().frustum;
+    auto& target = *pipe.current_viewstate().target;
+
+    std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLODPass";
     pipe.begin_cpu_query(cpu_query_name_plod_total);
     
     ///////////////////////////////////////////////////////////////////////////
     //  sort nodes 
     ///////////////////////////////////////////////////////////////////////////
-    auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::PLODNode))));
+    auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::PLODNode))));
 
-    if (sorted_objects == pipe.get_scene().nodes.end() || sorted_objects->second.empty()) {
+    if (sorted_objects == scene.nodes.end() || sorted_objects->second.empty()) {
       return; // return if no nodes in scene
     }
 
@@ -360,7 +368,7 @@ namespace gua {
     ///////////////////////////////////////////////////////////////////////////
     // resource initialization
     ///////////////////////////////////////////////////////////////////////////
-    scm::math::vec2ui const& render_target_dims = pipe.get_scene_camera().config.get_resolution();
+    scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
 
     //allocate GPU resources if necessary
     bool resize_resource_containers = false;
@@ -423,7 +431,7 @@ namespace gua {
       gua::Logger::LOG_ERROR << "Error: PLODRenderer::render() : Failed to create programs. " << e.what() << std::endl;
     }
 
-    pipe.get_current_target().set_viewport(ctx);
+    target.set_viewport(ctx);
 
     ///////////////////////////////////////////////////////////////////////////
     // prepare PBR-cut update
@@ -431,7 +439,6 @@ namespace gua {
     pbr::context_t context_id = _register_context_in_cut_update(ctx);
 
     // TODO: can we use  pipe.get_scene().culling_frustum here?
-    Frustum const& frustum = pipe.get_scene().rendering_frustum;
     std::vector<math::vec3> frustum_corner_values = frustum.get_corners();
     float top_minus_bottom = scm::math::length((frustum_corner_values[2]) -
       (frustum_corner_values[0]));
@@ -450,7 +457,7 @@ namespace gua {
     cuts->SendCamera(context_id, pbr_view_id, cut_update_cam);
     cuts->SendHeightDividedByTopMinusBottom(context_id, pbr_view_id, height_divided_by_top_minus_bottom);
 
-    auto& gua_depth_buffer = pipe.get_current_target().get_depth_buffer()->get_buffer(ctx);
+    auto& gua_depth_buffer = target.get_depth_buffer()->get_buffer(ctx);
 
 
     std::unordered_map<node::PLODNode*, pbr::ren::Cut*> cut_map;
@@ -464,8 +471,8 @@ namespace gua {
       pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
 
       auto const& scm_model_matrix = plod_node->get_cached_world_transform();
-      auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
-      auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
+      auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
+      auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
       auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
       cuts->SendTransform(context_id, model_id, math::mat4f(scm_model_matrix));
@@ -496,7 +503,7 @@ namespace gua {
 
     }
 
-    if( !rendering_shadows ) {  //normal rendering branch
+    if (!pipe.current_viewstate().shadow_mode) {  //normal rendering branch
       ///////////////////////////////////////////////////////////////////////////
       // fullscreen gbuffer depth_conversion_pass
       ///////////////////////////////////////////////////////////////////////////
@@ -507,7 +514,7 @@ namespace gua {
           std::cout << "Log to lin pass program not instanciated\n";
         }
 
-        std::string const gpu_query_name_depth_conversion = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::DepthConversionPass";
+        std::string const gpu_query_name_depth_conversion = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLODRenderer::DepthConversionPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_depth_conversion);
 
         log_to_lin_conversion_pass_program_->use(ctx);
@@ -557,7 +564,7 @@ namespace gua {
       {
         scm::gl::context_all_guard context_guard(ctx.render_context);
 
-        std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::DepthPass";
+        std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLODRenderer::DepthPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
 
         ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
@@ -574,8 +581,8 @@ namespace gua {
           pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
 
           auto const& scm_model_matrix = plod_node->get_cached_world_transform();
-          auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
-          auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
+          auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
+          auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
           auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
 
@@ -624,7 +631,7 @@ namespace gua {
       {
         scm::gl::context_all_guard context_guard(ctx.render_context);
 
-        std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::AccumulationPass";
+        std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLODRenderer::AccumulationPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_accum_pass);
 
         ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
@@ -634,7 +641,7 @@ namespace gua {
 
         accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
 
-        int view_id(pipe.get_scene_camera().config.get_view_id());
+        int view_id(camera.config.get_view_id());
 
         bool program_changed = false;
         //loop through all models and render accumulation pass
@@ -670,8 +677,8 @@ namespace gua {
             }
 
             auto const& scm_model_matrix = plod_node->get_cached_world_transform();
-            auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
-            auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
+            auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
+            auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
             auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
             current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
@@ -703,7 +710,7 @@ namespace gua {
       }
 
       bool write_depth = true;
-      pipe.get_current_target().bind(ctx, write_depth);
+      target.bind(ctx, write_depth);
 
        //////////////////////////////////////////////////////////////////////////
        // 3. normalization pass 
@@ -711,7 +718,7 @@ namespace gua {
        {
          scm::gl::context_all_guard context_guard(ctx.render_context);
 
-         std::string const gpu_query_name_normalization_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::NormalizationPass";
+         std::string const gpu_query_name_normalization_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLODRenderer::NormalizationPass";
          pipe.begin_gpu_query(ctx, gpu_query_name_normalization_pass);
 
 
@@ -745,8 +752,8 @@ namespace gua {
        }
 
     } else { //shadow branch
-          bool write_depth = true;
-          pipe.get_current_target().bind(ctx, write_depth);
+        bool write_depth = true;
+        target.bind(ctx, write_depth);
 
       //////////////////////////////////////////////////////////////////////////
       // only pass in this branch: shadow pass 
@@ -757,7 +764,7 @@ namespace gua {
       {
         scm::gl::context_all_guard context_guard(ctx.render_context);
 
-        std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / PLODRenderer::DepthPass";
+        std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLODRenderer::DepthPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
 
         ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
@@ -771,8 +778,8 @@ namespace gua {
           pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
 
           auto const& scm_model_matrix = plod_node->get_cached_world_transform();
-          auto scm_model_view_matrix = pipe.get_scene().rendering_frustum.get_view() * scm_model_matrix;
-          auto scm_model_view_projection_matrix = pipe.get_scene().rendering_frustum.get_projection() * scm_model_view_matrix;
+          auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
+          auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
           auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
           shadow_pass_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
@@ -814,7 +821,7 @@ namespace gua {
      //////////////////////////////////////////////////////////////////////////
      // Draw finished -> unbind g-buffer
      //////////////////////////////////////////////////////////////////////////
-     pipe.get_current_target().unbind(ctx);
+     target.unbind(ctx);
 
      pipe.end_cpu_query(cpu_query_name_plod_total); 
   
