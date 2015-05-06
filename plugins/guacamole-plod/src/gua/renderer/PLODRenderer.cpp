@@ -295,14 +295,14 @@ namespace gua {
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
       controller->ResetSystem();
 
-      pbr::context_t context_id = controller->DeduceContextId((size_t)(&ctx));
+      pbr::context_t context_id = controller->DeduceContextId(ctx.id);
       controller->Dispatch(context_id, ctx.render_device);
 
       return context_id;
     }
     else {
       pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-      return controller->DeduceContextId((size_t)(&ctx));
+      return controller->DeduceContextId(ctx.id);
     }
       
   }
@@ -450,7 +450,12 @@ namespace gua {
     pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
     pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
 
-    pbr::view_t pbr_view_id = controller->DeduceViewId(context_id, (size_t)(&pipe));
+    std::size_t pipe_id = (size_t)&pipe;
+    std::size_t camera_id = pipe.current_viewstate().viewpoint_uuid;
+    unsigned char view_direction = unsigned char(pipe.current_viewstate().view_direction);
+
+    std::size_t gua_view_id = (camera_id >> 8) | ( std::size_t(view_direction) << 56 );
+    pbr::view_t pbr_view_id = controller->DeduceViewId(context_id, gua_view_id);
 
     pbr::ren::Camera cut_update_cam(pbr_view_id, frustum.get_clip_near(), math::mat4f(frustum.get_view()), math::mat4f(frustum.get_projection()));
 
