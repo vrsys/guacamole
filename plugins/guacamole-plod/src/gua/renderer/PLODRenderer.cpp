@@ -452,7 +452,7 @@ namespace gua {
 
     std::size_t pipe_id = (size_t)&pipe;
     std::size_t camera_id = pipe.current_viewstate().viewpoint_uuid;
-    unsigned char view_direction = unsigned char(pipe.current_viewstate().view_direction);
+    unsigned char view_direction = (unsigned char)pipe.current_viewstate().view_direction;
 
     std::size_t gua_view_id = (camera_id >> 8) | ( std::size_t(view_direction) << 56 );
     pbr::view_t pbr_view_id = controller->DeduceViewId(context_id, gua_view_id);
