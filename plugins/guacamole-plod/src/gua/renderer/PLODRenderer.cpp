@@ -287,23 +287,10 @@ namespace gua {
   pbr::context_t PLODRenderer::_register_context_in_cut_update(gua::RenderContext const& ctx) {
     
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-
     if (previous_frame_count_ != ctx.framecount) {
-
-      previous_frame_count_ = ctx.framecount;
-
-      pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
       controller->ResetSystem();
-
-      pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-      controller->Dispatch(context_id, ctx.render_device);
-
-      return context_id;
     }
-    else {
-      pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-      return controller->DeduceContextId(ctx.id);
-    }
+    return controller->DeduceContextId(ctx.id);
       
   }
 
@@ -461,6 +448,7 @@ namespace gua {
 
     cuts->SendCamera(context_id, pbr_view_id, cut_update_cam);
     cuts->SendHeightDividedByTopMinusBottom(context_id, pbr_view_id, height_divided_by_top_minus_bottom);
+    //std::cout << "hdbtmb: " << height_divided_by_top_minus_bottom << " view: " << pbr_view_id << " height: " << render_target_dims[1] << " tmb: " << top_minus_bottom << std::endl;
 
     auto& gua_depth_buffer = target.get_depth_buffer()->get_buffer(ctx);
 
@@ -507,6 +495,7 @@ namespace gua {
       }
 
     }
+ 
 
     if (!pipe.current_viewstate().shadow_mode) {  //normal rendering branch
       ///////////////////////////////////////////////////////////////////////////
@@ -829,7 +818,16 @@ namespace gua {
      target.unbind(ctx);
 
      pipe.end_cpu_query(cpu_query_name_plod_total); 
-  
+ 
+    //dispatch cut updates when all info has been uploaded
+    if (previous_frame_count_ != ctx.framecount) {
+      previous_frame_count_ = ctx.framecount;
+      pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+      controller->Dispatch(context_id, ctx.render_device);
+
+    }
+
+ 
   } 
 
 }
