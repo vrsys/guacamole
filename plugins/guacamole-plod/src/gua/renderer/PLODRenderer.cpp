@@ -448,10 +448,8 @@ namespace gua {
 
     cuts->SendCamera(context_id, pbr_view_id, cut_update_cam);
     cuts->SendHeightDividedByTopMinusBottom(context_id, pbr_view_id, height_divided_by_top_minus_bottom);
-    //std::cout << "hdbtmb: " << height_divided_by_top_minus_bottom << " view: " << pbr_view_id << " height: " << render_target_dims[1] << " tmb: " << top_minus_bottom << std::endl;
 
     auto& gua_depth_buffer = target.get_depth_buffer()->get_buffer(ctx);
-
 
     std::unordered_map<node::PLODNode*, pbr::ren::Cut*> cut_map;
     std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_out_of_frustum_per_model;
