@@ -287,23 +287,10 @@ namespace gua {
   pbr::context_t PLODRenderer::_register_context_in_cut_update(gua::RenderContext const& ctx) {
     
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-
     if (previous_frame_count_ != ctx.framecount) {
-
-      previous_frame_count_ = ctx.framecount;
-
-      pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
       controller->ResetSystem();
-
-      pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-      controller->Dispatch(context_id, ctx.render_device);
-
-      return context_id;
     }
-    else {
-      pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-      return controller->DeduceContextId(ctx.id);
-    }
+    return controller->DeduceContextId(ctx.id);
       
   }
 
@@ -464,7 +451,6 @@ namespace gua {
 
     auto& gua_depth_buffer = target.get_depth_buffer()->get_buffer(ctx);
 
-
     std::unordered_map<node::PLODNode*, pbr::ren::Cut*> cut_map;
     std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_out_of_frustum_per_model;
 
@@ -507,6 +493,7 @@ namespace gua {
       }
 
     }
+ 
 
     if (!pipe.current_viewstate().shadow_mode) {  //normal rendering branch
       ///////////////////////////////////////////////////////////////////////////
@@ -829,7 +816,16 @@ namespace gua {
      target.unbind(ctx);
 
      pipe.end_cpu_query(cpu_query_name_plod_total); 
-  
+ 
+    //dispatch cut updates when all info has been uploaded
+    if (previous_frame_count_ != ctx.framecount) {
+      previous_frame_count_ = ctx.framecount;
+      pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+      controller->Dispatch(context_id, ctx.render_device);
+
+    }
+
+ 
   } 
 
 }
