@@ -305,7 +305,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     switch (light->data.get_type()) {
 
       case node::LightNode::Type::SUN :
-        generate_shadow_map_sunlight(shadow_map, light, light_block, viewport_size, needs_redraw);
+        generate_shadow_map_sunlight(shadow_map, light, light_block, viewport_size, needs_redraw, orig_scene->rendering_frustum.get_screen_transform());
         break;
       case node::LightNode::Type::POINT :
         generate_shadow_map_pointlight(shadow_map, light, light_block, viewport_size, needs_redraw);
@@ -320,6 +320,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     // restore previous configuration
     current_viewstate_.target = gbuffer_.get();
     current_viewstate_.scene = orig_scene;
+    current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
 
     camera_block_.update(context_,
                          current_viewstate_.scene->rendering_frustum,
@@ -367,7 +368,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void Pipeline::generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const& shadow_map, node::LightNode* light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw) {
+  void Pipeline::generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const& shadow_map, node::LightNode* light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw, math::mat4 const& original_screen_transform) {
 
     auto splits(light->data.get_shadow_cascaded_splits());
 
@@ -400,9 +401,9 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       Frustum cropped_frustum(Frustum::perspective(
         // orig_scene->rendering_frustum.get_camera_transform(),
         current_viewstate_.camera.transform,
-        current_viewstate_.scene->rendering_frustum.get_screen_transform(),
+        original_screen_transform,
         splits[cascade], splits[cascade + 1]
-        ));
+      ));
 
       // transform cropped frustum into sun space and calculate radius and
       // bbox of transformed frustum

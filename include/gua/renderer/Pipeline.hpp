@@ -130,7 +130,7 @@ public:
 
   void generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const& shadowmap,
     node::LightNode* light, LightTable::LightBlock& light_block,
-    unsigned viewport_size, bool redraw);
+    unsigned viewport_size, bool redraw, math::mat4 const& original_screen_transform);
 
   void generate_shadow_map_pointlight(std::shared_ptr<ShadowMap> const& shadowmap,
     node::LightNode* light, LightTable::LightBlock& light_block,
