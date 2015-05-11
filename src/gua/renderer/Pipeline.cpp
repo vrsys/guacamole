@@ -245,6 +245,11 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     std::shared_ptr<ShadowMap> shadow_map(nullptr);
     bool needs_redraw(false);
 
+    if (light->data.get_type() == node::LightNode::Type::SUN) {
+      // cascaded shadow maps need to be redrawn every frame
+      needs_redraw = true;
+    }
+
     // has the shadow map been rendered this frame already?
     auto cached_shadow_map(shadow_map_res_->used_shadow_maps.find(light));
 
