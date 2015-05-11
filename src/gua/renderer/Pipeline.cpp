@@ -251,10 +251,15 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     }
 
     // has the shadow map been rendered this frame already?
-    auto cached_shadow_map(shadow_map_res_->used_shadow_maps.find(light));
+    auto cached_shadow_maps(shadow_map_res_->used_shadow_maps.find(light));
 
-    if (cached_shadow_map != shadow_map_res_->used_shadow_maps.end() && cached_shadow_map->second.render_mask == current_mask) {
-      shadow_map = cached_shadow_map->second.shadow_map;
+    if (cached_shadow_maps != shadow_map_res_->used_shadow_maps.end()) {
+      for (auto& cached_shadow_map : cached_shadow_maps->second) {
+        if (cached_shadow_map.render_mask == current_mask) {
+          shadow_map = cached_shadow_map.shadow_map;
+          break;
+        }
+      }
     }
 
     unsigned viewport_size(light->data.shadow_map_size());
@@ -289,7 +294,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     }
 
     // store shadow map
-    shadow_map_res_->used_shadow_maps[light] = {shadow_map, current_mask};
+    shadow_map_res_->used_shadow_maps[light].push_back({shadow_map, current_mask});
 
     current_viewstate_.target = shadow_map.get();
 
@@ -748,12 +753,15 @@ void Pipeline::clear_frame_cache() {
   }
 
   for (auto& unused: shadow_map_res_->unused_shadow_maps) {
+    unused->unbind(context_);
     unused->remove_buffers(context_);
   }
   shadow_map_res_->unused_shadow_maps.clear();
 
-  for (auto& cached: shadow_map_res_->used_shadow_maps) {
-    shadow_map_res_->unused_shadow_maps.insert(cached.second.shadow_map);
+  for (auto& cached_maps: shadow_map_res_->used_shadow_maps) {
+    for (auto& cached_map: cached_maps.second) {
+      shadow_map_res_->unused_shadow_maps.insert(cached_map.shadow_map);
+    }
   }
 
   shadow_map_res_->used_shadow_maps.clear();
