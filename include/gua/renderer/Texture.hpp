@@ -126,6 +126,7 @@ class GUA_DLL Texture {
 
   virtual unsigned width() const = 0;
   virtual unsigned height() const = 0;
+  virtual std::vector<void*> const& get_data() const { return data_; }
 
   virtual void upload_to(RenderContext const& context) const = 0;
 
