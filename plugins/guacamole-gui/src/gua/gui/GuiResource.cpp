@@ -105,8 +105,10 @@ GuiResource::~GuiResource() {
 
 void GuiResource::set_url(std::string const& url) {
   url_ = url;
-  Awesomium::WebURL u(Awesomium::WSLit(url_.c_str()));
-  view_->LoadURL(u);
+  if (view_) {
+    Awesomium::WebURL u(Awesomium::WSLit(url_.c_str()));
+    view_->LoadURL(u);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
