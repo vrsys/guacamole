@@ -36,7 +36,8 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 SkeletalAnimationRenderer::SkeletalAnimationRenderer(RenderContext const& ctx)
-  : bones_block_(ctx.render_device)
+  : bones_block_(ctx.render_device),
+    last_frame_(0)
 {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
   ResourceFactory factory;
@@ -97,7 +98,9 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
     for (auto const& object : sorted_objects->second) {
 
       auto skel_anim_node(reinterpret_cast<node::SkeletalAnimationNode*>(object));
-
+      if (rendering_shadows && skel_anim_node->get_shadow_mode() == ShadowMode::OFF) {
+        continue;
+      }
 
       auto materials = skel_anim_node->get_materials();
       auto geometries = skel_anim_node->get_geometries();
@@ -146,6 +149,8 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
           UniformValue model_mat(::scm::math::mat4f(skel_anim_node->get_cached_world_transform()));
           UniformValue normal_mat(::scm::math::mat4f(scm::math::transpose(scm::math::inverse(skel_anim_node->get_cached_world_transform()))));
 
+          int rendering_mode = rendering_shadows ? (skel_anim_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
+
           current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
           current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
           current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
@@ -160,8 +165,11 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
           }
 
           ctx.render_context->apply_program();
-
-          skel_anim_node->update_bone_transforms();
+          if(ctx.framecount > last_frame_) {
+            skel_anim_node->update_bone_transforms();
+            last_frame_ = ctx.framecount;
+          }
+          
           bones_block_.update(ctx.render_context, skel_anim_node->get_bone_transforms());
 
           ctx.render_context->bind_uniform_buffer( bones_block_.block().block_buffer(), 2);

@@ -208,7 +208,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::create_geo
   if (new_node) {
 
     auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
-    apply_fallback_material(new_node, shader->make_new_material());
+    apply_fallback_material(new_node, shader->make_new_material(), flags & NO_SHARED_MATERIALS);
     new_node->set_name(node_name);
 
     return new_node;
@@ -227,7 +227,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::create_geo
 
   if (new_node) {
 
-    apply_fallback_material(new_node, fallback_material);
+    apply_fallback_material(new_node, fallback_material, flags & NO_SHARED_MATERIALS);
     new_node->set_name(node_name);
 
     return new_node;
@@ -476,13 +476,20 @@ bool SkeletalAnimationLoader::is_supported(std::string const& file_name) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkeletalAnimationLoader::apply_fallback_material(std::shared_ptr<node::SkeletalAnimationNode> const& node,
-  std::shared_ptr<Material> const& fallback_material)
+void SkeletalAnimationLoader::apply_fallback_material(
+  std::shared_ptr<node::SkeletalAnimationNode> const& node,
+  std::shared_ptr<Material> const& fallback_material,
+  bool no_shared_materials)
 {  
   if(node) {
     auto& materials = node->get_materials();
     for(unsigned i = 0; i < materials.size(); ++i) {
-      if(!materials[i]) node->set_material(fallback_material, i);
+      if(!materials[i]){
+        node->set_material(fallback_material, i);
+      } 
+      else if(no_shared_materials) {
+        node->set_material(std::make_shared<Material>(*node->get_material(i)), i);
+      }
     }
 
     node->update_cache();

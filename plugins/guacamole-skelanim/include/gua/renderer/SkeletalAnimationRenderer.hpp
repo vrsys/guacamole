@@ -52,6 +52,7 @@ class SkeletalAnimationRenderer {
   void create_state_objects(RenderContext const& ctx);
 
  private:
+  unsigned                                                            last_frame_;
 
   scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
   scm::gl::rasterizer_state_ptr                                       rs_cull_none_;

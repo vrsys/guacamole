@@ -83,7 +83,9 @@ public:
    /**
    *
    */
-   std::shared_ptr<node::SkeletalAnimationNode> load_geometry(std::string const& file_name, std::string const& node_name, unsigned flags = DEFAULTS);
+   std::shared_ptr<node::SkeletalAnimationNode> load_geometry(std::string const& file_name,
+                                                  std::string const& node_name,
+                                                  unsigned flags = DEFAULTS);
 
   /**
    *
@@ -141,7 +143,9 @@ public:
                 std::string const& node_name,
                 unsigned flags);
 
-  static void apply_fallback_material(std::shared_ptr<node::SkeletalAnimationNode> const& root, std::shared_ptr<Material> const& fallback_material);
+  static void apply_fallback_material(std::shared_ptr<node::SkeletalAnimationNode> const& root,
+                std::shared_ptr<Material> const& fallback_material,
+                bool no_shared_materials);
 
   static fbxsdk_2015_1::FbxScene* load_fbx_file(fbxsdk_2015_1::FbxManager* manager, std::string const& file_path);
 };

@@ -200,10 +200,25 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_FBX
-std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const& fbx_material, std::string const& assets_directory) const {
+std::shared_ptr<Material> MaterialLoader::load_material(
+    FbxSurfaceMaterial const& fbx_material,
+    std::string const& assets_directory,
+    bool optimize_material) const {
   PathParser path;
   path.parse(assets_directory);
   std::string assets(path.get_path(true));
+
+  //see if there is an unreal engine material file avaible
+  std::string mat_name = assets + fbx_material.GetName() + ".COPY";
+  if(file_exists(mat_name)) {
+    return load_unreal(mat_name, assets_directory);
+  }
+
+  //see if there is a json material file avaible
+  mat_name = assets + fbx_material.GetName() + ".json";
+  if(file_exists(mat_name)) {
+    return load_material(mat_name, assets_directory);
+  }
   
   //method to check if texture is set for an attribute
   auto get_sampler = [&](const char* attribute)->std::string {
@@ -236,55 +251,66 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
   if(!lambert) {
     Logger::LOG_ERROR << "Casting Material to Lambert failed." << std::endl;
     assert(0);
-  } 
-
-  auto new_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-  
-  // new_mat->set_shader_name(fbx_material.GetName());
-
-  std::string color_map{get_sampler(FbxSurfaceMaterial::sDiffuse)};
-  if(color_map != "") {
-    new_mat->set_uniform("ColorMap", assets + color_map);
   }
-  else {
-    FbxDouble3 color = lambert->Diffuse.Get();
-    new_mat->set_uniform("Color", math::vec4f(color[0], color[1], color[2], 1.f));
-  } 
 
-  std::string normal_map{get_sampler(FbxSurfaceMaterial::sNormalMap)};
+  std::string uniform_color_map{get_sampler(FbxSurfaceMaterial::sDiffuse)};
+  std::string uniform_ambient_map{get_sampler(FbxSurfaceMaterial::sAmbient)};
+  std::string uniform_emit_map{get_sampler(FbxSurfaceMaterial::sEmissive)};
+  std::string uniform_normal_map{get_sampler(FbxSurfaceMaterial::sNormalMap)};
   //check bump slot if no normalmap found
-  if(normal_map == "") {
-    normal_map = get_sampler(FbxSurfaceMaterial::sBump);
-  }
-  if(normal_map != "") {
-    new_mat->set_uniform("NormalMap", assets + normal_map);
+  if(uniform_normal_map == "") {
+    uniform_normal_map = get_sampler(FbxSurfaceMaterial::sBump);
   }
 
-  std::string ambient_map{get_sampler(FbxSurfaceMaterial::sAmbient)};
-  if (ambient_map != "") {
-    Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
+  unsigned capabilities;
+
+  if (!optimize_material) {
+    capabilities |= PBSMaterialFactory::ALL;
+  } else {
+
+    if (uniform_color_map != "") {
+      capabilities |= PBSMaterialFactory::COLOR_VALUE_AND_MAP;
+    } else {
+      capabilities |= PBSMaterialFactory::COLOR_VALUE;
+    }
+
+    if (uniform_emit_map != "") {
+      capabilities |= PBSMaterialFactory::EMISSIVITY_MAP;
+    } else {
+      capabilities |= PBSMaterialFactory::EMISSIVITY_VALUE;
+    }
+
+    if (uniform_normal_map != "") {
+      capabilities |= PBSMaterialFactory::NORMAL_MAP;
+    }
+
+    if (uniform_ambient_map != "") {
+      Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
+    }
+    // else if (ambient_color != "") {
+    //   Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient colors." << std::endl;
+    // }
   }
 
-  std::string emit_map{get_sampler(FbxSurfaceMaterial::sEmissive)};
-  if(emit_map != "") {
-    new_mat->set_uniform("EmissivityMap", assets + emit_map);
+  auto new_mat(PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(capabilities)));
+
+  if(capabilities & PBSMaterialFactory::COLOR_MAP || capabilities & PBSMaterialFactory::COLOR_VALUE_AND_MAP) {
+    new_mat->set_uniform("ColorMap", assets + uniform_color_map);
+  }
+  // fbx shader always contains a color value
+  FbxDouble3 color = lambert->Diffuse.Get();
+  new_mat->set_uniform("Color", math::vec4f(color[0], color[1], color[2], 1.f));
+
+  if(capabilities & PBSMaterialFactory::NORMAL_MAP) {
+    new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
+  }
+
+  if(capabilities & PBSMaterialFactory::EMISSIVITY_MAP) {
+    new_mat->set_uniform("EmissivityMap", assets + uniform_emit_map);
   }
   else {
-    FbxDouble3 color = lambert->Emissive.Get();
-    new_mat->set_uniform("Emissivity", float((color[0] + color[1] + color[2]) / 3.0f));
-  }
-
-  //see if there is an unreal engine material file avaible
-  std::string mat_name = assets + fbx_material.GetName() + ".COPY";
-
-  if(file_exists(mat_name)) {
-    return load_unreal(mat_name, assets_directory, new_mat);
-  }
-
-  //see if there is a json material file avaible
-  mat_name = assets + fbx_material.GetName() + ".json";
-  if(file_exists(mat_name)) {
-    return load_json(mat_name, assets_directory, new_mat);
+    FbxDouble3 emit = lambert->Emissive.Get();
+    new_mat->set_uniform("Emissivity", float((emit[0] + emit[1] + emit[2]) / 3.0f));
   }
 
   return new_mat;
@@ -306,7 +332,10 @@ inline bool MaterialLoader::file_exists(std::string const& path) {
   return !file.fail();
 }
 
-std::shared_ptr<Material> MaterialLoader::load_unreal(std::string const& file_name, std::string const& assets_directory, std::shared_ptr<Material> const& material) {
+std::shared_ptr<Material> MaterialLoader::load_unreal(
+    std::string const& file_name,
+    std::string const& assets_directory,
+    bool optimize_material) const {
   PathParser path;
   path.parse(assets_directory);
   std::string assets(path.get_path(true));
@@ -332,7 +361,7 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(std::string const& file_na
   }
   else {
     std::cout << "File '" <<  file_name << "' could not be opened" << std::endl;
-    return material;
+    return PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(PBSMaterialFactory::ALL));
   }
 
   auto ends_with = [](std::string const& name, std::string const& suffix) {
@@ -344,42 +373,75 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(std::string const& file_na
     return true;
   };
 
+  std::string uniform_color_map{""};
+  std::string uniform_emit_map{""};
+  std::string uniform_normal_map{""};
+
+  unsigned capabilities;
+
+  if (!optimize_material) {
+    capabilities |= PBSMaterialFactory::ALL;
+  }
+
   for(auto const& tex : textures) {
     if(ends_with(tex, "_D") || ends_with(tex, "diffuse") || ends_with(tex, "DF")) {
       std::string name{assets + tex};
       if(file_exists(name + ".TGA")) {
-        material->set_uniform("ColorMap", name + ".TGA");
+        capabilities |= PBSMaterialFactory::COLOR_MAP;
+        uniform_color_map = name + ".TGA";
       }
       else if(file_exists(name + ".tga")) {
-        material->set_uniform("ColorMap", name + ".tga");
+        capabilities |= PBSMaterialFactory::COLOR_MAP;
+        uniform_color_map = name + ".tga";
       }
     }
     else if(ends_with(tex, "_N") || ends_with(tex, "normal") || ends_with(tex, "NRM")) {
       std::string name{assets + tex};
       if(file_exists(name + ".TGA")) {
-        material->set_uniform("NormalMap", name + ".TGA");
+        capabilities |= PBSMaterialFactory::NORMAL_MAP;
+        uniform_normal_map = name + ".TGA";
       }
       else if(file_exists(name + ".tga")) {
-        material->set_uniform("NormalMap", name + ".tga");
+        capabilities |= PBSMaterialFactory::NORMAL_MAP;
+        uniform_normal_map = name + ".tga";
       }
     }
     else if(ends_with(tex, "Emissive") || ends_with(tex, "glow")) {
       std::string name{assets + tex};
       if(file_exists(name + ".TGA")) {
-        material->set_uniform("EmissivityMap", name + ".TGA");
+        capabilities |= PBSMaterialFactory::EMISSIVITY_MAP;
+        uniform_emit_map = name + ".TGA";
       }
       else if(file_exists(name + ".tga")) {
-        material->set_uniform("EmissivityMap", name + ".tga");
+        capabilities |= PBSMaterialFactory::EMISSIVITY_MAP;
+        uniform_emit_map = name + ".tga";
       }
     }
   }
 
-  return material;
+  auto new_mat(PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(capabilities)));
+
+  if(capabilities & PBSMaterialFactory::COLOR_MAP) {
+    new_mat->set_uniform("ColorMap", uniform_color_map);
+  }
+
+  if(capabilities & PBSMaterialFactory::NORMAL_MAP) {
+    new_mat->set_uniform("NormalMap", uniform_normal_map);
+  }
+
+  if(capabilities & PBSMaterialFactory::EMISSIVITY_MAP) {
+    new_mat->set_uniform("EmissivityMap", uniform_emit_map);
+  }
+
+  return new_mat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Material> MaterialLoader::load_json(std::string const& file_name, std::string const& assets_directory, std::shared_ptr<Material> const& material) const {
+std::shared_ptr<Material> MaterialLoader::load_material(
+    std::string const& file_name,
+    std::string const& assets_directory,
+    bool optimize_material) const {
   PathParser path;
   path.parse(assets_directory);
   std::string assets(path.get_path(true));
@@ -389,14 +451,14 @@ std::shared_ptr<Material> MaterialLoader::load_json(std::string const& file_name
     Logger::LOG_WARNING << "Failed to load material description\""
                         << file_name << "\": "
                         "File does not exist!" << std::endl;
-  return material;
+    return PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(PBSMaterialFactory::ALL));
   }
 
   Json::Value properties;
   Json::Reader reader;
   if (!reader.parse(file.get_content(), properties)) {
     Logger::LOG_WARNING << "Failed to parse json material description: " << file_name << std::endl;
-    return material;
+    return PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(PBSMaterialFactory::ALL));
   }
 
   // helper lambdas ------------------------------------------------------------
@@ -442,69 +504,109 @@ std::shared_ptr<Material> MaterialLoader::load_json(std::string const& file_name
     return scm::math::vec4f{NAN, NAN, NAN};
   };
 
-  // color
+  unsigned capabilities;
+
   std::string uniform_color_map{get_sampler("color")};
-  if (uniform_color_map != "") {
-    material->set_uniform("ColorMap", assets + uniform_color_map);
-  } 
-  else {
-    scm::math::vec4f uniform_color{get_color("color")};
-    if (!isnan(uniform_color[0])) {
-      material->set_uniform("Color", uniform_color);
+  std::string uniform_normal_map{get_sampler("normal")};
+  std::string uniform_roughness_map{get_sampler("roughness")};
+  std::string uniform_metalness_map{get_sampler("metalness")};
+  std::string uniform_emissivity_map{get_sampler("emissivity")};
+  scm::math::vec4f uniform_color{get_color("color")};
+  float uniform_roughness{get_float("roughness")};
+  float uniform_metalness{get_float("metalness")};
+  float uniform_emissivity{get_float("emissivity")};
+  float uniform_opacity{get_float("opacity")};
+  
+  if (!optimize_material) {
+    capabilities |= PBSMaterialFactory::ALL;
+  } else {
+    // color
+    if (uniform_color_map != "") {
+      if(!isnan(uniform_color[0])) {
+        capabilities |= PBSMaterialFactory::COLOR_VALUE_AND_MAP;
+      }
+      else {
+        capabilities |= PBSMaterialFactory::COLOR_MAP;
+      }
     }
+    else if (!isnan(uniform_color[0])) {
+        capabilities |= PBSMaterialFactory::COLOR_VALUE;
+    }
+    // normals
+    if (uniform_normal_map != "") {
+      capabilities |= PBSMaterialFactory::NORMAL_MAP;
+    } 
+    // roughness
+    if (uniform_roughness_map != "") {
+      capabilities |= PBSMaterialFactory::ROUGHNESS_MAP;
+    } 
+    else if (!isnan(uniform_roughness)) {
+      capabilities |= PBSMaterialFactory::ROUGHNESS_VALUE;
+    }
+    // metalness
+    if (uniform_metalness_map != "") {
+      capabilities |= PBSMaterialFactory::METALNESS_MAP;
+    } 
+    else if (!isnan(uniform_metalness)) {
+      capabilities |= PBSMaterialFactory::METALNESS_VALUE;
+    }
+    // emissivity
+    if (uniform_emissivity_map != "") {
+      capabilities |= PBSMaterialFactory::EMISSIVITY_MAP;
+    } 
+    else if (!isnan(uniform_emissivity)) {
+      capabilities |= PBSMaterialFactory::EMISSIVITY_VALUE;
+    }
+  }
+
+  auto new_mat(PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(capabilities)));
+
+  // color
+  if (capabilities & PBSMaterialFactory::COLOR_MAP || capabilities & PBSMaterialFactory::COLOR_VALUE_AND_MAP) {
+    new_mat->set_uniform("ColorMap", assets + uniform_color_map);
+    if (capabilities & PBSMaterialFactory::COLOR_VALUE_AND_MAP) {
+      new_mat->set_uniform("Color", uniform_color);
+    }
+  } 
+  else if (capabilities & PBSMaterialFactory::COLOR_VALUE) {
+    new_mat->set_uniform("Color", uniform_color);
   }
 
   // normals
-  std::string uniform_normal_map{get_sampler("normal")};
-  if (uniform_normal_map != "") {
-    material->set_uniform("NormalMap", assets + uniform_normal_map);
+  if (capabilities & PBSMaterialFactory::NORMAL_MAP) {
+    new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
   } 
-
   // roughness
-  std::string uniform_roughness_map{get_sampler("roughness")};
-  if (uniform_roughness_map != "") {
-    material->set_uniform("RoughtnessMap", assets + uniform_roughness_map);
+  if (capabilities & PBSMaterialFactory::ROUGHNESS_MAP) {
+    new_mat->set_uniform("RoughtnessMap", assets + uniform_roughness_map);
   } 
-  else {
-    float uniform_roughness{get_float("roughness")};
-    if (!isnan(uniform_roughness)) {
-      material->set_uniform("Roughness", uniform_roughness);
-    }
+  else if (capabilities & PBSMaterialFactory::ROUGHNESS_VALUE) {
+    new_mat->set_uniform("Roughness", uniform_roughness);
   }
   // metalness
-  std::string uniform_metalness_map{get_sampler("metalness")};
-  if (uniform_metalness_map != "") {
-    material->set_uniform("MetalnessMap", assets + uniform_metalness_map);
+  if (capabilities & PBSMaterialFactory::METALNESS_MAP) {
+    new_mat->set_uniform("MetalnessMap", assets + uniform_metalness_map);
   } 
-  else {
-    float uniform_metalness{get_float("metalness")};
-    if (!isnan(uniform_metalness)) {
-      material->set_uniform("Metalness", uniform_metalness);
-    }
+  else if (capabilities & PBSMaterialFactory::METALNESS_VALUE) {
+    new_mat->set_uniform("Metalness", uniform_metalness);
   }
   // emissivity
-  std::string uniform_emissivity_map{get_sampler("emissivity")};
-  if (uniform_emissivity_map != "") {
-    material->set_uniform("EmissivityMap", assets + uniform_emissivity_map);
+  if (capabilities & PBSMaterialFactory::EMISSIVITY_MAP) {
+    new_mat->set_uniform("EmissivityMap", assets + uniform_emissivity_map);
   } 
-  else {
-    float uniform_emissivity{get_float("emissivity")};
-    if (!isnan(uniform_emissivity)) {
-      material->set_uniform("Emissivity", uniform_emissivity);
-    }
+  else if (capabilities & PBSMaterialFactory::EMISSIVITY_VALUE) {
+    new_mat->set_uniform("Emissivity", uniform_emissivity);
   }
-
   // opacity
-  float uniform_opacity{get_float("opacity")};
   if (!isnan(uniform_opacity)) {
-    material->set_uniform("Opacity", uniform_opacity);
+    new_mat->set_uniform("Opacity", uniform_opacity);
+  }
+  //culling 
+  if (properties["backface_culling"] != Json::Value::null && properties["backface_culling"].isBool()) {
+    new_mat->set_show_back_faces(!properties["backface_culling"].asBool());
   }
 
-  if(properties["backface_culling"] != Json::Value::null && properties["backface_culling"].isBool()) {
-    material->set_show_back_faces(!properties["backface_culling"].asBool());
-  }
-
-  return material;
+  return new_mat;
 }
 
 }

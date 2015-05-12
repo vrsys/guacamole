@@ -62,8 +62,8 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   auto load_mat = [](std::string const& file){
-    gua::MaterialShaderDescription desc;
-    desc.load_from_file(file);
+    auto desc(std::make_shared<gua::MaterialShaderDescription>());
+    desc->load_from_file(file);
     auto shader(std::make_shared<gua::MaterialShader>(file, desc));
     gua::MaterialShaderDatabase::instance()->add(shader);
     return shader->make_new_material();
@@ -96,9 +96,11 @@ int main(int argc, char** argv) {
 
 
   // auto triNode(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/barrel.fbx", mat1, gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  // auto triNode(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/highrise/highrise.fbx", mat1, gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto triNode(tri_loader.create_geometry_from_file("fbx", "data/objects/plane.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   // auto triNode(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/office/BlueprintOffice.FBX", mat1, gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   // auto triNode(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/SunTemple/SunTemple.FBX", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  triNode->set_transform(scm::math::make_scale(10.0,1.0,10.0));
+  graph.add_node("/transform2", triNode);
   
   // auto skelNode(loader.create_geometry_from_file("fbx", "data/objects/fbx/face.fbx", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   auto skelNode(loader.create_geometry_from_file("fbx", "data/objects/fbx/Necris/Necris_LP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
@@ -130,11 +132,15 @@ int main(int argc, char** argv) {
   // skelNode->add_animations("data/objects/fbx/Run.FBX", "unterschiedlich");
   
 
-  // auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  // light2->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
-  // light2->data.set_brightness(100.f);
-  // light2->scale(10.f);
-  // light2->translate(-2.f, 3.f, 5.f);
+  auto pointLight = graph.add_node<gua::node::LightNode>("/", "pointLight");
+  pointLight->data.set_type(gua::node::LightNode::Type::SUN);
+  pointLight->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
+  pointLight->data.brightness = 1.0f; // lm
+  pointLight->data.brightness = 1.0f; // lm
+  pointLight->data.enable_shadows = true;
+  // pointLight->scale(9.f);
+  // pointLight->translate(-2.f, 3.f, 5.f);
+  pointLight->rotate(-30.0f, 1.0f, 0.0f, 0.0f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -167,7 +173,7 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
   pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
-  // pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   camera->set_pipeline_description(pipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
@@ -203,7 +209,7 @@ int main(int argc, char** argv) {
     skelNode->set_time_2(i);
     // skelNode2->set_time_2(i);
     i += 0.001;
-    if (i >0.5) i = 0;
+    if (i > 1) i = 0;
     window->process_events();
     if (window->should_close()) {
       renderer.stop();

@@ -58,20 +58,20 @@ class GUA_DLL MaterialLoader {
 
   std::shared_ptr<Material> load_material(aiMaterial const* material,
                                 std::string const& assets_directory,
-                                bool optimize_material) const;
-
-  std::shared_ptr<Material> load_json(std::string const& material,
-                                std::string const& assets_directory,
-                                std::shared_ptr<Material> const& base_mat = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material()) const;
+                                bool optimize_material = true) const;
 #ifdef GUACAMOLE_FBX
   std::shared_ptr<Material> load_material(fbxsdk_2015_1::FbxSurfaceMaterial const& material,
-                                std::string const& assets_directory) const;
-#endif
-	static std::shared_ptr<Material> load_unreal(std::string const& file_name,
-															 	std::string const& assets_directory,
-															  std::shared_ptr<Material> const& base_mat = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+                                std::string const& assets_directory,
+                                bool optimize_material = true) const;
 
-  static std::set<std::string> parse_unreal_material(std::string const& file);
+	std::shared_ptr<Material> load_unreal(std::string const& file_name,
+															 	std::string const& assets_directory,
+															 	bool optimize_material = true) const;
+#endif
+  std::shared_ptr<Material> load_material(std::string const& file_name,
+                                std::string const& assets_directory,
+                                bool optimize_material = true) const;
+
   static std::string get_file_name(std::string const& path);
   inline static bool file_exists(std::string const& path);
 };
