@@ -44,8 +44,10 @@ namespace gua {
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-  class GUA_DLL Texture2D : public Texture {
+class GUA_DLL Texture2D : public Texture {
  public:
+
+   Texture2D() = default;
 
   /**
    * Constructor.
@@ -114,6 +116,27 @@ namespace gua {
    */
   unsigned width() const { return width_; }
   unsigned height() const { return height_; }
+
+  void width(unsigned w) { width_ = w; }
+  void height(unsigned h) { height_ = h; }
+
+  /**
+   * Gets the base layer size.
+   *
+   * Returns the size of the base layer in bytes
+   */
+  inline unsigned base_layer_size() const {
+    return width_ * height_ * scm::gl::size_of_format(color_format_);
+  }
+
+  /**
+   * Gets the base layer data.
+   *
+   * Returns the data of the base layer
+   */
+  void const* base_layer_data() const;
+  void* base_layer_data();
+  void base_layer_data(void* p);
 
   virtual void upload_to(RenderContext const& context) const;
 

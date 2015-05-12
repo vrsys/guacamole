@@ -60,6 +60,22 @@ Texture2D::Texture2D(std::string const& file,
       width_(0),
       height_(0) {}
 
+void const* Texture2D::base_layer_data() const {
+  return data_.empty() ? nullptr : data_[0];
+}
+
+void* Texture2D::base_layer_data() {
+  return data_.empty() ? nullptr : data_[0];
+}
+
+void Texture2D::base_layer_data(void* p) {
+  if (data_.empty()) {
+    data_.push_back(p);
+  } else {
+    data_[0] = p;
+  }
+}
+
 void Texture2D::upload_to(RenderContext const& context) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
