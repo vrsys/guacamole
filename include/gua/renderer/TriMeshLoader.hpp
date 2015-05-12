@@ -131,7 +131,9 @@ public:
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);
 
-  static void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material, bool no_shared_materials);
+  static void apply_fallback_material(std::shared_ptr<node::Node> const& root,
+                std::shared_ptr<Material> const& fallback_material,
+                bool no_shared_materials);
 
 #ifdef GUACAMOLE_FBX
   static std::shared_ptr<node::Node> get_tree(fbxsdk_2015_1::FbxNode& node,

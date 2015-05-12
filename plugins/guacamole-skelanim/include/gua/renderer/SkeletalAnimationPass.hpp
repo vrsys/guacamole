@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TRIMESH_PASS_HPP
-#define GUA_TRIMESH_PASS_HPP
+#ifndef GUA_SLELETAL_ANIMATION_PASS_HPP
+#define GUA_SLELETAL_ANIMATION_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
 
@@ -43,4 +43,4 @@ class GUA_DLL SkeletalAnimationPassDescription : public PipelinePassDescription 
 
 }
 
-#endif  // GUA_TRIMESH_PASS_HPP
+#endif  // GUA_SLELETAL_ANIMATION_PASS_HPP

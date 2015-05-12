@@ -155,8 +155,9 @@ std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
-                                                unsigned flags) {
+std::shared_ptr<node::Node> TriMeshLoader::load(
+    std::string const& file_name,
+    unsigned flags) {
   TextFile file(file_name);
 
   // MESSAGE("Loading mesh file %s", file_name.c_str());
@@ -322,7 +323,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
         Logger::LOG_WARNING << "Trimesh has more than one material, using only first one" << std::endl;
       }
       fbxsdk_2015_1::FbxSurfaceMaterial* mat = fbx_node.GetMaterial(0);
-      material = material_loader.load_material(*mat, file_name);
+      material = material_loader.load_material(*mat, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS);
     }
 
     auto node = std::shared_ptr<node::TriMeshNode>(
@@ -454,7 +455,9 @@ void TriMeshLoader::apply_fallback_material(
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_FBX
-FbxScene* TriMeshLoader::load_fbx_file(FbxManager* manager, std::string const& file_name) {
+FbxScene* TriMeshLoader::load_fbx_file(
+    FbxManager* manager,
+    std::string const& file_name) {
   // Create an importer.
   FbxImporter* lImporter = FbxImporter::Create(manager,"");
 
