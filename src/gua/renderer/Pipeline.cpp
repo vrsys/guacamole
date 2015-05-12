@@ -220,12 +220,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   // add texture to texture database
   auto const& tex(gbuffer_->get_color_buffer());
+  auto const& depth_tex(gbuffer_->get_depth_buffer());
   auto tex_name(camera.config.get_output_texture_name());
 
   if (tex_name != "") {
     TextureDatabase::instance()->add(tex_name, tex);
+    TextureDatabase::instance()->add(tex_name + "_depth", depth_tex);
   }
-
 
   return tex;
 }
