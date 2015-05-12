@@ -81,6 +81,12 @@ public : // methods
 
   inline void clear_materials() { materials_.clear(); }
 
+  bool get_render_to_gbuffer() const;
+  void set_render_to_gbuffer(bool enable);
+
+  bool get_render_to_stencil_buffer() const;
+  void set_render_to_stencil_buffer(bool enable);
+
   /**
   * Implements ray picking for a triangular mesh
   */
@@ -145,8 +151,8 @@ public : // methods
   bool                              geometry_changed_;
 
   std::vector<std::shared_ptr<Material>>             materials_;
-
-  bool                              material_changed_;
+  bool                              render_to_gbuffer_;
+  bool                              render_to_stencil_buffer_;
 
   // attributes related to animation
 

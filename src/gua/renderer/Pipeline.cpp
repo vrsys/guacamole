@@ -571,6 +571,12 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   ////////////////////////////////////////////////////////////////////////////////
 
+  RenderContext const& Pipeline::get_context() const {
+    return context_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
   LightTable& Pipeline::get_light_table() {
     return *light_table_;
   }
@@ -625,7 +631,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void Pipeline::bind_camera_uniform_block(unsigned location) {
+  void Pipeline::bind_camera_uniform_block(unsigned location) const {
     get_context().render_context->bind_uniform_buffer(
       camera_block_.block().block_buffer(), location);
   }

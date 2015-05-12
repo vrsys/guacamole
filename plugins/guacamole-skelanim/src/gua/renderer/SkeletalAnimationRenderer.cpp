@@ -62,11 +62,15 @@ void SkeletalAnimationRenderer::create_state_objects(RenderContext const& ctx)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc, bool rendering_shadows)
+void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-  auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::SkeletalAnimationNode))));
+  auto& scene = *pipe.current_viewstate().scene;
+  auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::SkeletalAnimationNode))));
 
-  if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
+  if (sorted_objects != scene.nodes.end() && sorted_objects->second.size() > 0) {
+
+    auto& target = *pipe.current_viewstate().target;
+    auto const& camera = pipe.current_viewstate().camera;
 
     // TODO
     /*std::sort(sorted_objects->second.begin(), sorted_objects->second.end(),
@@ -77,17 +81,17 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
 
   RenderContext& ctx(pipe.get_context());
 
-  std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / TrimeshPass";
-  std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.get_scene_camera().uuid) + " / TrimeshPass";
+  std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / SkeletalanimationPass";
+  std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / SkeletalanimationPass";
 
   pipe.begin_gpu_query(ctx, gpu_query_name);
   pipe.begin_cpu_query(cpu_query_name);
 
   bool write_depth = true;
-  pipe.get_current_target().bind(ctx, write_depth);
-  pipe.get_current_target().set_viewport(ctx);
+  target.bind(ctx, write_depth);
+  target.set_viewport(ctx);
 
-  int view_id(pipe.get_scene_camera().config.get_view_id());
+  int view_id(camera.config.get_view_id());
 
   MaterialShader*                current_material(nullptr);
   std::shared_ptr<ShaderProgram> current_shader;
@@ -98,7 +102,11 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
     for (auto const& object : sorted_objects->second) {
 
       auto skel_anim_node(reinterpret_cast<node::SkeletalAnimationNode*>(object));
-      if (rendering_shadows && skel_anim_node->get_shadow_mode() == ShadowMode::OFF) {
+      if (pipe.current_viewstate().shadow_mode && skel_anim_node->get_shadow_mode() == ShadowMode::OFF) {
+        continue;
+      }
+
+      if (!skel_anim_node->get_render_to_gbuffer()) {
         continue;
       }
 
@@ -133,29 +141,33 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
           }
           if (current_shader) {
             current_shader->use(ctx);
-            current_shader->set_uniform(ctx, math::vec2i(pipe.get_current_target().get_width(),
-                                                         pipe.get_current_target().get_height()),
+            current_shader->set_uniform(ctx, math::vec2i(target.get_width(),
+                                                         target.get_height()),
                                         "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
-            current_shader->set_uniform(ctx, 1.0f / pipe.get_current_target().get_width(),  "gua_texel_width");
-            current_shader->set_uniform(ctx, 1.0f / pipe.get_current_target().get_height(), "gua_texel_height");
+            current_shader->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
+            current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
             // hack
-            current_shader->set_uniform(ctx, pipe.get_current_target().get_depth_buffer()->get_handle(ctx),
-                                    "gua_gbuffer_depth");
+            current_shader->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx),
+                                        "gua_gbuffer_depth");
           }
         }
 
         if (current_shader && geometries[i]) {
-          auto model_view_mat = pipe.get_scene().frustum.get_view() * skel_anim_node->get_cached_world_transform();
+          auto model_view_mat = scene.rendering_frustum.get_view() * skel_anim_node->get_cached_world_transform();
           UniformValue model_mat(::scm::math::mat4f(skel_anim_node->get_cached_world_transform()));
           UniformValue normal_mat(::scm::math::mat4f(scm::math::transpose(scm::math::inverse(skel_anim_node->get_cached_world_transform()))));
 
-          int rendering_mode = rendering_shadows ? (skel_anim_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
+          int rendering_mode = pipe.current_viewstate().shadow_mode ? (skel_anim_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
-          current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
+          current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(skel_anim_node->get_cached_world_transform()));
           current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
           current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+          current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
-          materials[i]->apply_uniforms(ctx, current_shader.get(), view_id);
+          // lowfi shadows dont need material input
+          if (rendering_mode != 1) {
+            materials[i]->apply_uniforms(ctx, current_shader.get(), view_id);
+          }
 
           current_rasterizer_state = materials[i]->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
 
@@ -165,6 +177,7 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
           }
 
           ctx.render_context->apply_program();
+
           if(ctx.framecount > last_frame_) {
             skel_anim_node->update_bone_transforms();
             last_frame_ = ctx.framecount;
@@ -179,7 +192,7 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
       }
     }
 
-    pipe.get_current_target().unbind(ctx);
+    target.unbind(ctx);
 
     pipe.end_gpu_query(ctx, gpu_query_name);
     pipe.end_cpu_query(cpu_query_name);
