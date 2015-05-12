@@ -212,7 +212,7 @@ void GuiResource::inject_mouse_wheel(math::vec2 const& direction) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GuiResource::call_javascript_impl(std::string const& method, std::vector<std::string> const& args) const {
+void GuiResource::call_javascript_arg_vector(std::string const& method, std::vector<std::string> const& args) const {
 
   if (!js_window_) {
     return;
