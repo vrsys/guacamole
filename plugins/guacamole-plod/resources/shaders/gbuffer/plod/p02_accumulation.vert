@@ -28,18 +28,7 @@ out VertexData {
 
 
 void main() {
+  @include "common_PLOD/PLOD_vertex_pass_through.glsl"
 
-@include "common_PLOD/PLOD_calculate_tangents.glsl"
-
-@include "common_PLOD/PLOD_assign_tangents.glsl"
-
-  VertexOut.pass_point_color = vec3(in_r, in_g, in_b);
-  
-  vec4 world_normal = gua_normal_matrix * vec4(in_normal, 0.0);
-
-  VertexOut.pass_normal = normalize(world_normal.xyz);
-
-
-  gl_Position = vec4(in_position, 1.0);
+  VertexOut.pass_point_color = vec3(in_r, in_g, in_b); 
 }
-

@@ -47,6 +47,33 @@ namespace node {
   class SpotLightNode;
 }
 
+struct GUA_DLL PipelineViewState 
+{
+  enum ViewDirection {
+    front   = 0,
+    back    = 1,
+    left    = 2,
+    right   = 3,
+    top     = 4,
+    bottom  = 5,
+    count   = 6
+  };
+
+  PipelineViewState() = default;
+
+  RenderTarget*                     target = nullptr;
+
+  SceneGraph const*                 graph = nullptr;
+  std::shared_ptr<SerializedScene>  scene = nullptr;
+  node::SerializedCameraNode        camera;
+
+  Frustum                           frustum;
+  std::size_t                       viewpoint_uuid = 0;
+
+  ViewDirection                     view_direction = front;
+  bool                              shadow_mode = false;
+};
+
 class GUA_DLL Pipeline {
  public:
 
@@ -72,15 +99,12 @@ public:
     CameraMode mode, node::SerializedCameraNode const& camera,
     std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
-  void render_shadow_map(node::LightNode* light,
-                         LightTable::LightBlock& light_block);
+  void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
 
-  RenderTarget                     & get_current_target() const;
-  SerializedScene                  & get_scene();
-  SceneGraph                  const& get_graph() const;
-  RenderContext               const& get_context() const;
-  node::SerializedCameraNode  const& get_scene_camera() const;
-  LightTable                       & get_light_table();
+  PipelineViewState const&           current_viewstate() const;
+
+  RenderContext const&               get_context() const;
+  LightTable&                        get_light_table();
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
@@ -98,26 +122,36 @@ public:
   void clear_frame_cache();
 
  private:
+
   void bind_camera_uniform_block(unsigned location) const;
 
-  RenderTarget*                         current_target_;
+  void render_shadow_map(LightTable::LightBlock& light_block, Frustum const& frustum,
+    unsigned cascade_id, unsigned viewport_size, bool redraw);
 
-  RenderContext&                        context_;
-  std::unique_ptr<GBuffer>              gbuffer_;
-  std::shared_ptr<SharedShadowMapResource> shadow_map_res_;
-  CameraUniformBlock                    camera_block_;
-  std::unique_ptr<LightTable>           light_table_;
+  void generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const& shadowmap,
+    node::LightNode* light, LightTable::LightBlock& light_block,
+    unsigned viewport_size, bool redraw, math::mat4 const& original_screen_transform);
 
-  SceneGraph const*                     current_graph_;
-  std::shared_ptr<SerializedScene>      current_scene_;
-  node::SerializedCameraNode            current_camera_;
+  void generate_shadow_map_pointlight(std::shared_ptr<ShadowMap> const& shadowmap,
+    node::LightNode* light, LightTable::LightBlock& light_block,
+    unsigned viewport_size, bool redraw);
 
-  math::vec2ui                          last_resolution_;
-  PipelineDescription                   last_description_;
-  SubstitutionMap                       global_substitution_map_;
+  void generate_shadow_map_spotlight(node::LightNode* light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw);
 
-  std::vector<PipelinePass>             passes_;
-  scm::gl::quad_geometry_ptr            quad_;
+  PipelineViewState                         current_viewstate_;
+  
+  RenderContext&                            context_;
+  std::unique_ptr<GBuffer>                  gbuffer_;
+  std::shared_ptr<SharedShadowMapResource>  shadow_map_res_;
+  CameraUniformBlock                        camera_block_;
+  std::unique_ptr<LightTable>               light_table_;
+
+  math::vec2ui                              last_resolution_;
+  PipelineDescription                       last_description_;
+  SubstitutionMap                           global_substitution_map_;
+
+  std::vector<PipelinePass>                 passes_;
+  scm::gl::quad_geometry_ptr                quad_;
 
 #define GUA_ENABLE_PROFILING_TIME_QUERIES
   time_query_collection                 queries_;

@@ -18,6 +18,7 @@ float compute_screen_space_shadow (int light_id, vec3 position) {
 
   LightSource light_params = gua_lights[light_id];
 
+  // return 0.0 if ss_shadows are disabled or light casts regular shadow
   if (!gua_screen_space_shadows_enable || !light_params.casts_shadow) {
     return 0.0; 
   } 

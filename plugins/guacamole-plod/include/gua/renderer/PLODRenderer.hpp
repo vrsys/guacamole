@@ -46,7 +46,7 @@ namespace gua {
 
     PLODRenderer();
 
-    void render(Pipeline& pipe, PipelinePassDescription const& desc, bool rendering_shadows);
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
     void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
   
     void reload_programs();
@@ -58,6 +58,7 @@ namespace gua {
   void          _initialize_depth_pass_program();
   void          _initialize_accumulation_pass_program(MaterialShader* material);
   void          _initialize_normalization_pass_program();
+  void          _initialize_shadow_pass_program();
 
   std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
                                                        std::shared_ptr<ShaderProgram> const& current_program,
@@ -92,12 +93,6 @@ namespace gua {
     scm::gl::texture_2d_ptr                      accumulation_pass_pbr_result_;
     scm::gl::texture_2d_ptr                      accumulation_pass_weight_and_depth_result_;
     scm::gl::frame_buffer_ptr                    accumulation_pass_result_fbo_;
-
-    //normalization pass FBO & attachments
-    scm::gl::texture_2d_ptr                      normalization_pass_color_result_;
-    scm::gl::texture_2d_ptr                      normalization_pass_normal_result_;
-    scm::gl::frame_buffer_ptr                    normalization_pass_result_fbo_;
-
 
     //schism-GL states:
     //////////////////////////////////////////////////////////////////////////////////////
@@ -145,11 +140,15 @@ namespace gua {
     std::vector<ShaderProgramStage>                                      accumulation_pass_shader_stages_;
     std::vector<ShaderProgramStage>                                      normalization_pass_shader_stages_;
 
+    std::vector<ShaderProgramStage>                                      shadow_pass_shader_stages_;
+
     //additional GPU resources 
     std::shared_ptr<ShaderProgram>                                       log_to_lin_conversion_pass_program_;
     std::shared_ptr<ShaderProgram>                                       depth_pass_program_;
     std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > accumulation_pass_programs_;
     std::shared_ptr<ShaderProgram>                                       normalization_pass_program_;
+
+    std::shared_ptr<ShaderProgram>                                       shadow_pass_program_;
 
     SubstitutionMap                                                      global_substitution_map_;
     ResourceFactory                                                      factory_;

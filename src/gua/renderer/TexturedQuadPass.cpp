@@ -53,9 +53,9 @@ TexturedQuadPassDescription::TexturedQuadPassDescription()
   );
 
   process_ = [](
-      PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe, bool) {
-
-    for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
+      PipelinePass & pass, PipelinePassDescription const&, Pipeline & pipe) {
+    
+    for (auto const& node : pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::TexturedQuadNode))]) {
       auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
 
       UniformValue model_mat(scm::math::mat4f(quad_node->get_scaled_world_transform()));

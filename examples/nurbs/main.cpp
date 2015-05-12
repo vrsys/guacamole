@@ -336,8 +336,8 @@ int main(int argc, char** argv)
 
     input_transform->set_transform(modelmatrix);
 
-    if (frame_counter++ % 500 == 0)
-      std::cout << window->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
+    //if (frame_counter++ % 500 == 0)
+    // std::cout << window->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {
