@@ -46,7 +46,8 @@ namespace node {
       geometry_descriptions_(geometry_descriptions),
       geometry_changed_(true),
       materials_(materials),
-      material_changed_(true),
+      render_to_gbuffer_(true),
+      render_to_stencil_buffer_(false),
       root_(root),
       first_run_{true},
       has_anims_{false},
@@ -113,7 +114,6 @@ namespace node {
   void SkeletalAnimationNode::set_material(std::shared_ptr<Material> material,uint index) {
     if(index < materials_.size()){
       materials_[index] = material;
-      // material_changed_ = self_dirty_ = true;
     }
     else{
       Logger::LOG_WARNING << "Cant set material of invalid index!"<< std::endl;
@@ -165,6 +165,26 @@ namespace node {
     else {
       SkeletalTransformation::blend_anims(root_,blend_factor_, anim_time_1_, anim_time_2_, animations_.at(anim_1_), animations_.at(anim_2_), bone_transforms_);    
     }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  bool SkeletalAnimationNode::get_render_to_gbuffer() const {
+    return render_to_gbuffer_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void SkeletalAnimationNode::set_render_to_gbuffer(bool enable) {
+    render_to_gbuffer_ = enable;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  bool SkeletalAnimationNode::get_render_to_stencil_buffer() const {
+    return render_to_stencil_buffer_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void SkeletalAnimationNode::set_render_to_stencil_buffer(bool enable) {
+    render_to_stencil_buffer_ = enable;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -336,24 +356,6 @@ namespace node {
 
       geometry_changed_ = false;
     }
-
-    // The code below auto-loads a material if it's not already supported by
-    // the MaterialShaderDatabase. It expects a material name like
-    //
-    // data/materials/Stones.gmd
-
-    /*if (material_changed_)
-    {
-      if (material_.get_shader_name() != "")
-      {
-        // if (!MaterialShaderDatabase::instance()->contains(material_))
-        // {
-        //   MaterialShaderDatabase::instance()->load_material(material_);
-        // }
-      }
-
-      material_changed_ = false;
-    }*/ // is not doing anything???????
 
     GeometryNode::update_cache();
   }
