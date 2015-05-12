@@ -42,6 +42,8 @@ SkyMapPassDescription::SkyMapPassDescription()
   uniforms["light_direction"] = math::vec3f(0,-1,0);
   uniforms["light_color"] = math::vec3f(0.65, 0.57, 0.475);
   uniforms["ground_color"] = math::vec3f(1.f);
+  uniforms["rayleigh_factor"] = 2.5f;
+  uniforms["mie_factor"] = 0.5f;
   uniforms["output_texture_name"] = std::string("");
 }
 
@@ -82,6 +84,30 @@ math::vec3f SkyMapPassDescription::ground_color() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+SkyMapPassDescription& SkyMapPassDescription::rayleigh_factor(float rayleigh_factor) {
+  uniforms["rayleigh_factor"] = rayleigh_factor;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float SkyMapPassDescription::rayleigh_factor() const {
+  auto uniform(uniforms.find("rayleigh_factor"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+SkyMapPassDescription& SkyMapPassDescription::mie_factor(float mie_factor) {
+  uniforms["mie_factor"] = mie_factor;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float SkyMapPassDescription::mie_factor() const {
+  auto uniform(uniforms.find("mie_factor"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 SkyMapPassDescription& SkyMapPassDescription::output_texture_name(std::string const& output_texture_name) {
   uniforms["output_texture_name"] = output_texture_name;
   return *this;
@@ -109,7 +135,7 @@ PipelinePass SkyMapPassDescription::make_pass(RenderContext const& ctx, Substitu
   auto renderer = std::make_shared<SkyMapRenderer>();
 
   pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool rendering_shadows) {
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
     renderer->render_sky_map(pipe, desc);
   };
 

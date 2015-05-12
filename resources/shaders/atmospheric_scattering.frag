@@ -29,6 +29,9 @@ uniform float texel_size;
 uniform vec3 ground_color;
 uniform vec3 light_direction;
 uniform vec3 light_color;
+uniform float rayleigh_factor;
+uniform float mie_factor;
+
 
 // write outputs
 layout(location=0) out vec3 gua_out_color;
@@ -51,10 +54,6 @@ vec3 get_view_direction() {
 // Code for Rayleigh/Mie-Scattering adopted from Nathaniel Meyer's
 // implementation of  Sean O'Neill's GPU Gems 2 article.
 
-#ifdef GL_ES
-  precision highp float;
-#endif
-
 // atmosphere properties
 const vec3 center = vec3(0);      // center position of planet
 const float inner_radius = 1.0;    // Radius of planet
@@ -65,14 +64,10 @@ const vec3 wave_length = 1.0 / pow(light_color, vec3(4.0));
 
 // constants
 const float PI = 3.14159265358979323846;
-const float Kr4PI = 0.0025 * 4 * PI;  // Kr * 4 * PI
-const float KrESun = 0.0025 * 15; // Kr * ESun
-const float Km4PI = 0.0005 * 4 * PI;  // Km * 4 * PI
-const float KmESun = 0.0005 * 15; // Km * ESun
 const float MiePhase = -0.95; // Used in phase function, not applicable for Rayleigh
 
 // gamma
-const float InvGamma = 1/2.2;
+// const float InvGamma = 1/2.2;
 
 bool intersect_ray_sphere(in vec3 p, in vec3 v, in vec3 centre, in float radius,
                           out vec3 intersection_near, out vec3 intersection_far) {
@@ -128,6 +123,11 @@ float get_rayleigh_phase(float cos2) {
 
 void main() {
   const float height_density = 0.25;
+
+  float Kr4PI = rayleigh_factor / 1000.0 * 4.0 * PI;  // Kr * 4 * PI
+  float KrESun = rayleigh_factor / 1000.0 * 15.0; // Kr * ESun
+  float Km4PI = mie_factor / 1000.0 * 4.0 * PI;  // Km * 4 * PI
+  float KmESun = mie_factor / 1000.0 * 15.0; // Km * ESun
 
   vec3 color = vec3(0);
   vec3 direction = get_view_direction();
@@ -214,8 +214,7 @@ void main() {
   }
 
   // Gamma correction
-  color = pow(color, vec3(InvGamma));
-
+  // color = pow(color, vec3(InvGamma));
 
   gua_out_color = color;
 
