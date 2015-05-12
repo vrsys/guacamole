@@ -43,7 +43,7 @@ class TriMeshRenderer {
   TriMeshRenderer();
   virtual ~TriMeshRenderer() {}
 
-  void render(Pipeline& pipe, PipelinePassDescription const& desc, bool rendering_shadows);
+  void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
   void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 

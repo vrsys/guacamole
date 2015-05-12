@@ -69,8 +69,8 @@ struct CachedShadowMap {
 };
 
 struct SharedShadowMapResource {
-  std::set<std::shared_ptr<ShadowMap>>                  unused_shadow_maps;
-  std::unordered_map<node::LightNode*, CachedShadowMap> used_shadow_maps;
+  std::set<std::shared_ptr<ShadowMap>>                               unused_shadow_maps;
+  std::unordered_map<node::LightNode*, std::vector<CachedShadowMap>> used_shadow_maps;
 };
 
 }

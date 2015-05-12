@@ -40,8 +40,9 @@ void render_node(PipelinePass& pass,
                                 quad_node->data.get_flip_y() ? -1 : 1));
   UniformValue opacity(quad_node->data.get_opacity());
 
-  auto width(pipe.get_current_target().get_width());
-  auto height(pipe.get_current_target().get_height());
+
+  auto width(pipe.current_viewstate().target->get_width());
+  auto height(pipe.current_viewstate().target->get_height());
 
   UniformValue size(scm::math::vec2f(1.0 * quad_node->data.get_size().x / width,
                                      1.0 * quad_node->data.get_size().y / height));
@@ -67,10 +68,9 @@ void render_node(PipelinePass& pass,
 
 void render_quads(PipelinePass& pass,
                   PipelinePassDescription const&,
-                  Pipeline& pipe,
-                  bool rendering_shadows) {
-  for (auto const& node : pipe.get_scene()
-           .nodes[std::type_index(typeid(node::TexturedScreenSpaceQuadNode))]) {
+                  Pipeline& pipe) {
+  auto& scene = *pipe.current_viewstate().scene;
+  for (auto const& node : scene.nodes[std::type_index(typeid(node::TexturedScreenSpaceQuadNode))]) {
     auto quad_node(reinterpret_cast<node::TexturedScreenSpaceQuadNode*>(node));
     render_node(pass, quad_node, pipe);
   }

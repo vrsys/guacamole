@@ -47,7 +47,11 @@ VolumeRenderer::VolumeRenderer():
 ////////////////////////////////////////////////////////////////////////////////
 
 void VolumeRenderer::render(Pipeline& pipe) {
-  if (pipe.get_scene().nodes[std::type_index(typeid(node::VolumeNode))].size() > 0) {
+
+  auto& scene = *pipe.current_viewstate().scene;
+  auto& target = *pipe.current_viewstate().target;
+
+  if (scene.nodes[std::type_index(typeid(node::VolumeNode))].size() > 0) {
     if (!volume_raygeneration_fbo_) {
       init_resources(pipe);
     }
@@ -62,13 +66,12 @@ void VolumeRenderer::render(Pipeline& pipe) {
 
       ctx.render_context->set_viewport(
           scm::gl::viewport(math::vec2f(0.0f, 0.0f),
-          math::vec2f(float(pipe.get_current_target().get_width()),
-                      float(pipe.get_current_target().get_height()))));
+          math::vec2f(float(target.get_width()), float(target.get_height()))));
       ctx.render_context->clear_color_buffers(
           volume_raygeneration_fbo_, math::vec4f(0, 0, 0, 0.f));
       ctx.render_context->clear_depth_stencil_buffer(volume_raygeneration_fbo_);
 
-      for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::VolumeNode))]) {
+      for (auto const& node : scene.nodes[std::type_index(typeid(node::VolumeNode))]) {
 
         auto volume_node = reinterpret_cast<gua::node::VolumeNode*>(node);
         auto volume = std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(volume_node->data.get_volume()));
@@ -89,11 +92,11 @@ void VolumeRenderer::render(Pipeline& pipe) {
 
     // 2. render fullscreen quad for compositing and volume ray casting
     bool write_depth = false;
-    pipe.get_current_target().bind(ctx, write_depth);
+    target.bind(ctx, write_depth);
     pipe.bind_gbuffer_input(composite_shader_);
     composite_shader_->set_uniform(ctx, volume_raygeneration_color_buffer_->get_handle(ctx), "gua_ray_entry_in");
 
-    for (auto const& node : pipe.get_scene().nodes[std::type_index(typeid(node::VolumeNode))]) {
+    for (auto const& node : scene.nodes[std::type_index(typeid(node::VolumeNode))]) {
 
       auto volume_node = reinterpret_cast<gua::node::VolumeNode*>(node);
       auto volume = std::static_pointer_cast<gua::Volume>(GeometryDatabase::instance()->lookup(volume_node->data.get_volume()));
@@ -110,7 +113,7 @@ void VolumeRenderer::render(Pipeline& pipe) {
       }
     }
 
-    pipe.get_current_target().unbind(ctx);
+    target.unbind(ctx);
     ctx.render_context->reset_state_objects();
   }
 }
@@ -120,20 +123,21 @@ void VolumeRenderer::render(Pipeline& pipe) {
 void VolumeRenderer::init_resources(Pipeline& pipe) {
 
   auto const& ctx(pipe.get_context());
+  auto& target = *pipe.current_viewstate().target;
 
   scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
                                     scm::gl::WRAP_CLAMP_TO_EDGE,
                                     scm::gl::WRAP_CLAMP_TO_EDGE);
 
   volume_raygeneration_color_buffer_ = std::make_shared<Texture2D>(
-    pipe.get_current_target().get_width(),
-    pipe.get_current_target().get_height(),
+    target.get_width(),
+    target.get_height(),
     scm::gl::FORMAT_RGB_32F, 1, state
   );
 
   volume_raygeneration_depth_buffer_ = std::make_shared<Texture2D>(
-    pipe.get_current_target().get_width(),
-    pipe.get_current_target().get_height(),
+    target.get_width(),
+    target.get_height(),
     scm::gl::FORMAT_D24, 1, state
   );
 

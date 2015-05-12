@@ -77,8 +77,8 @@ class GUA_DLL PipelinePassDescription {
   boost::optional<scm::gl::blend_state_desc> blend_state_;
   boost::optional<scm::gl::depth_stencil_state_desc> depth_stencil_state_;
 
-  std::function<void(PipelinePass&, PipelinePassDescription const& , Pipeline&, bool)>
-    process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&, bool) {
+  std::function<void(PipelinePass&, PipelinePassDescription const& , Pipeline&)>
+    process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) {
       return;
     };
 
@@ -110,7 +110,7 @@ class GUA_DLL PipelinePass {
     return enable_for_shadows_;
   }
 
-  void process(PipelinePassDescription const& desc, Pipeline& pipe, bool rendering_shadows);
+  void process(PipelinePassDescription const& desc, Pipeline& pipe);
   virtual void on_delete(Pipeline* pipe) {}
 
   friend class Pipeline;
@@ -136,8 +136,8 @@ class GUA_DLL PipelinePass {
   RenderMode rendermode_ = RenderMode::Custom;
   std::string name_ = "PipelinePass";
 
-  std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&, bool rendering_shadows)>
-    process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&, bool) {
+  std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&)>
+    process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) {
       return;
     };
 

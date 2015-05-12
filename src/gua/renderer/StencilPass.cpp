@@ -72,9 +72,9 @@ PipelinePass StencilPassDescription::make_pass(RenderContext const& ctx, Substit
   renderer->create_state_objects(ctx);
 
   pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe, bool rendering_shadows) {
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
 
-    pipe.get_current_target().clear(pipe.get_context(), 1.f, 0);
+    pipe.current_viewstate().target->clear(pipe.get_context(), 1.f, 0);
     pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
     renderer->render(pipe, pass.shader_);
   };
