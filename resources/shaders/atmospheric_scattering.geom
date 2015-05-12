@@ -19,34 +19,25 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+@include "shaders/common/header.glsl"
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/EmissivePass.hpp>
-#include <gua/renderer/LightingPass.hpp>
-#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
-#include <gua/renderer/LightVisibilityPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/ResolvePass.hpp>
-#include <gua/renderer/SkyMapPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/FullscreenPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/HeadlessSurface.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
-#include <gua/renderer/Material.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+layout(triangles, invocations = 6) in;
+layout(triangle_strip, max_vertices = 24) out;
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+in vec3 varying_position[];
+in vec2 varying_texcoord[];
+
+out flat int texlayer;
+out vec2 texcoords;
+
+void main() {
+  texlayer = gl_InvocationID;
+  gl_Layer = texlayer;
+
+  for(int i = 0; i < 3; ++i) {
+    gl_Position = vec4(varying_position[i], 1);
+    texcoords = varying_texcoord[i];
+    EmitVertex();
+  }
+  EndPrimitive();
+}
