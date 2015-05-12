@@ -55,6 +55,9 @@ void SkyMapRenderer::render_sky_map(Pipeline& pipe, PipelinePassDescription cons
   auto light_color_uniform(desc.uniforms.find("light_color"));
   auto light_color(boost::get<math::vec3f>(light_color_uniform->second.data));
 
+  auto light_brightness_uniform(desc.uniforms.find("light_brightness"));
+  auto light_brightness(boost::get<float>(light_brightness_uniform->second.data));
+
   auto ground_color_uniform(desc.uniforms.find("ground_color"));
   auto ground_color(boost::get<math::vec3f>(ground_color_uniform->second.data));
 
@@ -63,6 +66,8 @@ void SkyMapRenderer::render_sky_map(Pipeline& pipe, PipelinePassDescription cons
 
   auto mie_factor_uniform(desc.uniforms.find("mie_factor"));
   auto mie_factor(boost::get<float>(mie_factor_uniform->second.data));
+
+  math::vec3f rayleigh_mie_light_brightness(rayleigh_factor, mie_factor, light_brightness);
 
   if (!sky_map_) {
     if (output_texture_name == "") {
@@ -108,8 +113,7 @@ void SkyMapRenderer::render_sky_map(Pipeline& pipe, PipelinePassDescription cons
   program_->set_uniform(ctx, light_direction, "light_direction");
   program_->set_uniform(ctx, light_color, "light_color");
   program_->set_uniform(ctx, ground_color, "ground_color");
-  program_->set_uniform(ctx, rayleigh_factor, "rayleigh_factor");
-  program_->set_uniform(ctx, mie_factor, "mie_factor");
+  program_->set_uniform(ctx, rayleigh_mie_light_brightness, "rayleigh_mie_light_brightness");
 
   pipe.draw_quad();
 

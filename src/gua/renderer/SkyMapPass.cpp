@@ -41,6 +41,7 @@ SkyMapPassDescription::SkyMapPassDescription()
 
   uniforms["light_direction"] = math::vec3f(0,-1,0);
   uniforms["light_color"] = math::vec3f(0.65, 0.57, 0.475);
+  uniforms["light_brightness"] = 15.f;
   uniforms["ground_color"] = math::vec3f(1.f);
   uniforms["rayleigh_factor"] = 2.5f;
   uniforms["mie_factor"] = 0.5f;
@@ -69,6 +70,18 @@ SkyMapPassDescription& SkyMapPassDescription::light_color(math::vec3f const& lig
 math::vec3f SkyMapPassDescription::light_color() const {
   auto uniform(uniforms.find("light_color"));
   return boost::get<math::vec3f>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+SkyMapPassDescription& SkyMapPassDescription::light_brightness(float light_brightness) {
+  uniforms["light_brightness"] = light_brightness;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float SkyMapPassDescription::light_brightness() const {
+  auto uniform(uniforms.find("light_brightness"));
+  return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

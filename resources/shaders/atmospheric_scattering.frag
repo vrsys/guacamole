@@ -20,7 +20,6 @@
  ******************************************************************************/
 
 @include "shaders/common/header.glsl"
-@include "shaders/common/gua_camera_uniforms.glsl"
 
 in flat int texlayer;
 in vec2 texcoods;
@@ -29,8 +28,7 @@ uniform float texel_size;
 uniform vec3 ground_color;
 uniform vec3 light_direction;
 uniform vec3 light_color;
-uniform float rayleigh_factor;
-uniform float mie_factor;
+uniform vec3 rayleigh_mie_light_brightness;
 
 
 // write outputs
@@ -59,19 +57,15 @@ const vec3 center = vec3(0);      // center position of planet
 const float inner_radius = 1.0;    // Radius of planet
 const float outer_radius = inner_radius * 1.025;    // Outter radius of atmosphere (= inner_radius * 1.025)
 const float num_samples = 5.0;   // Number of scatter samples to perform
-
-const vec3 wave_length = 1.0 / pow(light_color, vec3(4.0));
+const float height_density = 0.25;
 
 // constants
 const float PI = 3.14159265358979323846;
 const float MiePhase = -0.95; // Used in phase function, not applicable for Rayleigh
 
-// gamma
-// const float InvGamma = 1/2.2;
-
-bool intersect_ray_sphere(in vec3 p, in vec3 v, in vec3 centre, in float radius,
+bool intersect_ray_sphere(in vec3 p, in vec3 v, in vec3 center, in float radius,
                           out vec3 intersection_near, out vec3 intersection_far) {
-  vec3 vc = p - centre;
+  vec3 vc = p - center;
   float B = dot(-vc, v);
   float C = dot(vc, vc) - (radius * radius);
   float D = (B * B) - C;
@@ -106,8 +100,6 @@ bool intersect_ray_sphere(in vec3 p, in vec3 v, in vec3 centre, in float radius,
 
 
 float scale_angle(float cose) {
-  const float height_density = 0.25;
-
   float x = 1.0 - cose;
   return height_density * exp(-0.00287 + x * (0.459 + x * (3.83 + x * (-6.80 + x * 5.25))));
 }
@@ -122,12 +114,6 @@ float get_rayleigh_phase(float cos2) {
 
 
 void main() {
-  const float height_density = 0.25;
-
-  float Kr4PI = rayleigh_factor / 1000.0 * 4.0 * PI;  // Kr * 4 * PI
-  float KrESun = rayleigh_factor / 1000.0 * 15.0; // Kr * ESun
-  float Km4PI = mie_factor / 1000.0 * 4.0 * PI;  // Km * 4 * PI
-  float KmESun = mie_factor / 1000.0 * 15.0; // Km * ESun
 
   vec3 color = vec3(0);
   vec3 direction = get_view_direction();
@@ -136,7 +122,15 @@ void main() {
   // Find intersection points in the atmosphere
   vec3 intersection_near;
   vec3 intersection_far;
+
   if (intersect_ray_sphere(position, direction, center, outer_radius, intersection_near, intersection_far) ) {
+    float Kr4PI = rayleigh_mie_light_brightness.x / 1000.0 * 4.0 * PI;  // Kr * 4 * PI
+    float KrESun = rayleigh_mie_light_brightness.x / 1000.0 * rayleigh_mie_light_brightness.z; // Kr * ESun
+    float Km4PI = rayleigh_mie_light_brightness.y / 1000.0 * 4.0 * PI;  // Km * 4 * PI
+    float KmESun = rayleigh_mie_light_brightness.y / 1000.0 * rayleigh_mie_light_brightness.z; // Km * ESun
+
+    vec3 wave_length = 1.0 / pow(light_color, vec3(4.0));
+
     // An intersection was found. Compute scattering effect.
 
     // Are we inside or outside the atmosphere?
@@ -164,47 +158,50 @@ void main() {
     // Starting scatter
     height = length(start_point);
     float start_angle = dot(direction, start_point) / (inside ? height : outer_radius);
-    float start_depth = inside ? exp(scale_over_scale_depth * (inner_radius - height)) : exp(-1.0 / height_density);
-    float start_offset = start_depth * scale_angle(start_angle);
 
-    // Initialize the scattering loop variables
-    float sample_length = dist / num_samples;
-    float scaled_length = sample_length * scale;
-    vec3 sample_ray = direction * sample_length;
-    vec3 sample_point = start_point + sample_ray * 0.5;
+    if (start_angle > -0.1) {
+
+      float start_depth = inside ? exp(scale_over_scale_depth * (inner_radius - height)) : exp(-1.0 / height_density);
+      float start_offset = start_depth * scale_angle(start_angle);
+
+      // Initialize the scattering loop variables
+      float sample_length = dist / num_samples;
+      float scaled_length = sample_length * scale;
+      vec3 sample_ray = direction * sample_length;
+      vec3 sample_point = start_point + sample_ray * 0.5;
 
 
-    // Iterate through sample points
-    for (float i = 0.0; i < 10.0; ++i)
-    {
-      if ( i >= num_samples )
-        break;
+      // Iterate through sample points
+      for (float i = 0.0; i < 10.0; ++i)
+      {
+        if ( i >= num_samples )
+          break;
 
-      // Find height, depth, and angles at sample point
-      height = length(sample_point);
-      float depth = exp(scale_over_scale_depth * (inner_radius - height));
-      float light_angle = dot(-light_direction, sample_point) / height;
-      float camera_angle = dot(direction, sample_point) / height;
+        // Find height, depth, and angles at sample point
+        height = length(sample_point);
+        float depth = exp(scale_over_scale_depth * (inner_radius - height));
+        float light_angle = dot(-light_direction, sample_point) / height;
+        float camera_angle = dot(direction, sample_point) / height;
 
-      // Scatter and attenuate light
-      float scatter = (start_offset + depth * (scale_angle(light_angle) - scale_angle(camera_angle)));
-      vec3 attenuate = exp(-scatter * (wave_length * Kr4PI + Km4PI));
-      color += attenuate * (depth * scaled_length);
+        // Scatter and attenuate light
+        float scatter = (start_offset + depth * (scale_angle(light_angle) - scale_angle(camera_angle)));
+        vec3 attenuate = exp(-scatter * (wave_length * Kr4PI + Km4PI));
+        color += attenuate * (depth * scaled_length);
 
-      // Move to the next sample point
-      sample_point += sample_ray;
+        // Move to the next sample point
+        sample_point += sample_ray;
+      }
+
+      // Scale the Mie and Rayleigh colors
+      vec3 mie_color = color * KmESun;
+      vec3 rayleigh_color = color * (wave_length * KrESun);
+
+      // Add rayleigh and mie scatter phase
+      float cose = dot(light_direction, direction) / length(direction);
+      float cos2 = cose * cose;
+      color = (rayleigh_color * get_rayleigh_phase(cos2)) + (mie_color * get_phase(cose, cos2, MiePhase, MiePhase * MiePhase));
+      color = clamp(color, 0, 1);
     }
-
-
-    // Scale the Mie and Rayleigh colors
-    vec3 mie_color = color * KmESun;
-    vec3 rayleigh_color = color * (wave_length * KrESun);
-
-    // Add rayleigh and mie scatter phase
-    float cose = dot(light_direction, direction) / length(direction);
-    float cos2 = cose * cose;
-    color = (rayleigh_color * get_rayleigh_phase(cos2)) + (mie_color * get_phase(cose, cos2, MiePhase, MiePhase * MiePhase));
-    color = clamp(color, 0, 1);
 
     if (start_angle < 0 && start_angle > -0.1) {
       color = mix(color, ground_color, abs(start_angle) * 10.0);
@@ -213,8 +210,6 @@ void main() {
     }
   }
 
-  // Gamma correction
-  // color = pow(color, vec3(InvGamma));
 
   gua_out_color = color;
 
