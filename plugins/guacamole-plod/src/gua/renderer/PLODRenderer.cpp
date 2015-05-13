@@ -55,6 +55,33 @@
 
 namespace gua {
 
+bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
+                              std::vector<math::vec4f> const& global_planes) const {
+
+
+  auto outside = [](math::vec4f const & plane, scm::math::vec3f const & point) {
+    return (plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3]) < 0;
+  };
+
+
+  for (auto const& plane : global_planes) {
+    auto bbox_max(bbox.max_vertex());
+    auto p(bbox.min_vertex());
+    if (plane[0] >= 0)
+      p[0] = bbox_max[0];
+    if (plane[1] >= 0)
+      p[1] = bbox_max[1];
+    if (plane[2] >= 0)
+      p[2] = bbox_max[2];
+
+    // is the positive vertex outside?
+    if ( outside(plane, p) ) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
   std::vector<math::vec3> PLODRenderer::_get_frustum_corners_vs(gua::Frustum const& frustum) const{
     std::vector<math::vec4> tmp(8);
@@ -452,7 +479,13 @@ namespace gua {
     auto& gua_depth_buffer = target.get_depth_buffer()->get_buffer(ctx);
 
     std::unordered_map<node::PLODNode*, pbr::ren::Cut*> cut_map;
-    std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_out_of_frustum_per_model;
+    std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_in_frustum_per_model;
+
+
+
+
+
+    //std::cout << "clipping plane vec size: " << num_global_clipping_planes << "\n";
 
     //loop through all models and perform frustum culling
     for (auto const& object : sorted_objects->second) {
@@ -484,11 +517,41 @@ namespace gua {
 
       std::vector<scm::gl::boxf> const& model_bounding_boxes = kdn_tree->bounding_boxes();
 
-      std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
+      std::unordered_set<pbr::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[model_id];
+
+      auto global_clipping_planes = scene.clipping_planes;
+      unsigned num_global_clipping_planes = global_clipping_planes.size();
+      auto scm_transpose_model_matrix = scm::math::transpose( scm_model_matrix);
+      auto scm_inverse_model_matrix = scm::math::inverse(scm_model_matrix);
+
+      for(unsigned plane_idx = 0; plane_idx < num_global_clipping_planes; ++plane_idx) {
+  
+        scm::math::vec4d plane_vec = scm::math::vec4d(global_clipping_planes[plane_idx]);
+
+        scm::math::vec3d xyz_comp = scm::math::vec3d(plane_vec);
+    
+        double d = -plane_vec.w ;
+
+        scm::math::vec4d O = scm::math::vec4d( xyz_comp * d, 1.0);
+        scm::math::vec4d N = scm::math::vec4d( xyz_comp, 0.0);
+        O = scm_inverse_model_matrix  * O;
+        N = scm_transpose_model_matrix * N;
+        xyz_comp = scm::math::vec3d(N);
+               d = scm::math::dot(scm::math::vec3d(O), scm::math::vec3d(N));
+
+        global_clipping_planes[plane_idx] = scm::math::vec4d(xyz_comp, -d );
+
+      }
+
 
       for (auto const& n : node_list) {
-        if (culling_frustum.classify(model_bounding_boxes[n.node_id_]) == 1) {
-          nodes_out_of_frustum.insert(n.node_id_);
+        if (culling_frustum.classify(model_bounding_boxes[n.node_id_]) != 1) {
+          if( _intersects(model_bounding_boxes[n.node_id_], global_clipping_planes) ) {
+             nodes_in_frustum.insert(n.node_id_);         
+          }
+
+//          std::cout << "bbpos: [" << model_bounding_boxes[n.node_id_].min_vertex()<<"], [" << model_bounding_boxes[n.node_id_].max_vertex()<<"\n"; 
+
         }
       }
 
@@ -588,7 +651,7 @@ namespace gua {
 
           ctx.render_context->apply();
 
-          std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
+          std::unordered_set<pbr::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[model_id];
 
           auto const& plod_resource = plod_node->get_geometry();
 
@@ -599,7 +662,7 @@ namespace gua {
               pbr_view_id,
               model_id,
               controller->GetContextMemory(context_id, ctx.render_device),
-              nodes_out_of_frustum);
+              nodes_in_frustum);
 
             
 
@@ -659,7 +722,7 @@ namespace gua {
           auto plod_resource = plod_node->get_geometry();
 
           //retrieve frustum culling results      
-          std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
+          std::unordered_set<pbr::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[model_id];
 
           if (plod_resource && current_material_program) {
 
@@ -687,7 +750,7 @@ namespace gua {
               pbr_view_id,
               model_id,
               controller->GetContextMemory(context_id, ctx.render_device),
-              nodes_out_of_frustum);
+              nodes_in_frustum);
 
             program_changed = false;
           }
@@ -751,7 +814,7 @@ namespace gua {
       // only pass in this branch: shadow pass 
       //////////////////////////////////////////////////////////////////////////
       std::unordered_map<node::PLODNode*, pbr::ren::Cut*> cut_map;
-      std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_out_of_frustum_per_model;
+      std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_in_frustum_per_model;
 
       {
         scm::gl::context_all_guard context_guard(ctx.render_context);
@@ -786,7 +849,7 @@ namespace gua {
 
           auto const& plod_resource = plod_node->get_geometry();
 
-          std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
+          std::unordered_set<pbr::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[model_id];
 
           if (plod_resource && depth_pass_program_) {
 
@@ -795,7 +858,7 @@ namespace gua {
               pbr_view_id,
               model_id,
               controller->GetContextMemory(context_id, ctx.render_device),
-              nodes_out_of_frustum);
+              nodes_in_frustum);
 
             
 
