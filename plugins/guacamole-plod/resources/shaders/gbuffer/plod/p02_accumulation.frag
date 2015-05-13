@@ -79,6 +79,7 @@ void main() {
     }
   }
 
+
   @include "common/gua_global_variable_assignment.glsl"
 
   gua_color = pass_point_color;

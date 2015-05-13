@@ -73,6 +73,9 @@ namespace gua {
    pbr::context_t _register_context_in_cut_update(gua::RenderContext const& ctx);
 
  private: //misc auxiliary methods
+  bool _intersects(scm::gl::boxf const& bbox,
+                   std::vector<math::vec4f> const& global_planes) const;
+
    std::vector<math::vec3> _get_frustum_corners_vs(gua::Frustum const& frustum) const;
    
  private:  //member variables
