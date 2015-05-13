@@ -548,7 +548,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     auto frustum(
       Frustum::perspective(
       light->get_cached_world_transform(), screen_transform,
-      current_viewstate_.camera.config.near_clip(),
+      //current_viewstate_.camera.config.near_clip(),
+      light->data.get_shadow_near_clipping_in_sun_direction(),
       scm::math::length(math::get_translation(screen_transform))
       )
       );
