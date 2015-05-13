@@ -482,11 +482,6 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
     std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_in_frustum_per_model;
 
 
-
-
-
-    //std::cout << "clipping plane vec size: " << num_global_clipping_planes << "\n";
-
     //loop through all models and perform frustum culling
     for (auto const& object : sorted_objects->second) {
 
@@ -540,17 +535,14 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
                d = scm::math::dot(scm::math::vec3d(O), scm::math::vec3d(N));
 
         global_clipping_planes[plane_idx] = scm::math::vec4d(xyz_comp, -d );
-
       }
 
 
       for (auto const& n : node_list) {
         if (culling_frustum.classify(model_bounding_boxes[n.node_id_]) != 1) {
-          if( _intersects(model_bounding_boxes[n.node_id_], global_clipping_planes) ) {
+          if( num_global_clipping_planes == 0 || _intersects(model_bounding_boxes[n.node_id_], global_clipping_planes) ) {
              nodes_in_frustum.insert(n.node_id_);         
           }
-
-//          std::cout << "bbpos: [" << model_bounding_boxes[n.node_id_].min_vertex()<<"], [" << model_bounding_boxes[n.node_id_].max_vertex()<<"\n"; 
 
         }
       }
@@ -813,8 +805,6 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
       //////////////////////////////////////////////////////////////////////////
       // only pass in this branch: shadow pass 
       //////////////////////////////////////////////////////////////////////////
-      std::unordered_map<node::PLODNode*, pbr::ren::Cut*> cut_map;
-      std::unordered_map<pbr::model_t, std::unordered_set<pbr::node_t> > nodes_in_frustum_per_model;
 
       {
         scm::gl::context_all_guard context_guard(ctx.render_context);
