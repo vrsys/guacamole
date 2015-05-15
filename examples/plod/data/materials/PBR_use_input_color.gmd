@@ -146,6 +146,9 @@
 
             //mat4 model_view_projection_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix; //TODO: use gua_model_view_projection_matrix
 
+            vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+            vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
             vec4 pos_l_ss = gua_model_view_projection_matrix * vec4(pos_l, 1.0);
             vec4 pos_r_ss = gua_model_view_projection_matrix * vec4(pos_r, 1.0);
             vec4 pos_o_ss = gua_model_view_projection_matrix * vec4(pos_o, 1.0);
@@ -156,6 +159,22 @@
             vec2 pos_o_ss_norm = (pos_o_ss.xy / pos_o_ss.w) * 0.5f + vec2(0.5, 0.5);
             vec2 pos_u_ss_norm = (pos_u_ss.xy / pos_u_ss.w) * 0.5f + vec2(0.5, 0.5);
             
+
+            const vec2 screen_res = vec2(1.0 / 1920.0, 1.0 / 1080.0);
+
+            if (length(pos_l_ss_norm - pos_ss_norm) < screen_res.x){
+                pos_l_ss_norm = pos_ss_norm + vec2(-screen_res.x, 0.0);
+            }
+            if (length(pos_r_ss_norm - pos_ss_norm) < screen_res.x){
+                pos_r_ss_norm = pos_ss_norm + vec2(screen_res.x, 0.0);
+            }
+            if (length(pos_o_ss_norm - pos_ss_norm) < screen_res.y){
+                pos_o_ss_norm = pos_ss_norm + vec2(0.0, screen_res.y);
+            }
+            if (length(pos_u_ss_norm - pos_ss_norm) < screen_res.y){
+                pos_u_ss_norm = pos_ss_norm + vec2(0.0, -screen_res.y);
+            }
+
             float d_x_l = texture(p01_linear_depth_texture, pos_l_ss_norm).r;
             float d_x_r = texture(p01_linear_depth_texture, pos_r_ss_norm).r;
             float d_y_o = texture(p01_linear_depth_texture, pos_o_ss_norm).r;
@@ -172,8 +191,6 @@
         }
 
         void second_derivation_lens_effect() {
-            vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
-            vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
 
             //float step_size_in_os = 0.001; //TODO: uniform
 
@@ -193,6 +210,9 @@
 
             mat4 model_view_projection_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix; //TODO: use gua_model_view_projection_matrix
 
+            vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+            vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
             vec4 pos_l_ss = model_view_projection_matrix * vec4(pos_l, 1.0);
             vec4 pos_r_ss = model_view_projection_matrix * vec4(pos_r, 1.0);
             vec4 pos_o_ss = model_view_projection_matrix * vec4(pos_o, 1.0);
@@ -202,6 +222,21 @@
             vec2 pos_r_ss_norm = (pos_r_ss.xy / pos_r_ss.w) * 0.5f + vec2(0.5, 0.5);
             vec2 pos_o_ss_norm = (pos_o_ss.xy / pos_o_ss.w) * 0.5f + vec2(0.5, 0.5);
             vec2 pos_u_ss_norm = (pos_u_ss.xy / pos_u_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+            const vec2 screen_res = vec2(1.0 / 1920.0, 1.0 / 1080.0);
+
+            if (length(pos_l_ss_norm - pos_ss_norm) < screen_res.x){
+                pos_l_ss_norm = pos_ss_norm + vec2(-screen_res.x, 0.0);
+            }
+            if (length(pos_r_ss_norm - pos_ss_norm) < screen_res.x){
+                pos_r_ss_norm = pos_ss_norm + vec2(screen_res.x, 0.0);
+            }
+            if (length(pos_o_ss_norm - pos_ss_norm) < screen_res.y){
+                pos_o_ss_norm = pos_ss_norm + vec2(0.0, screen_res.y);
+            }
+            if (length(pos_u_ss_norm - pos_ss_norm) < screen_res.y){
+                pos_u_ss_norm = pos_ss_norm + vec2(0.0, -screen_res.y);
+            }
 
             float d_x_l = texture(p01_linear_depth_texture, pos_l_ss_norm).r;
             float d_x_r = texture(p01_linear_depth_texture, pos_r_ss_norm).r;
