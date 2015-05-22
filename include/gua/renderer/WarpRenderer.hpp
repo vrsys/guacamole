@@ -19,35 +19,43 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_WARP_RENDERER_HPP
+#define GUA_WARP_RENDERER_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/WarpPass.hpp>
-#include <gua/renderer/EmissivePass.hpp>
-#include <gua/renderer/LightingPass.hpp>
-#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
-#include <gua/renderer/LightVisibilityPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/ResolvePass.hpp>
-#include <gua/renderer/SkyMapPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/FullscreenPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/HeadlessSurface.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
-#include <gua/renderer/Material.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+#include <map>
+#include <unordered_map>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+#include <gua/platform.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+
+#include <scm/gl_core/shader_objects.h>
+
+namespace gua {
+
+class MaterialShader;
+class Pipeline;
+class PipelinePassDescription;
+
+class WarpRenderer {
+
+ public:
+
+  WarpRenderer();
+  virtual ~WarpRenderer() {}
+
+  void render(Pipeline& pipe, PipelinePassDescription const& desc);
+
+  void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
+
+ private:
+
+  scm::gl::rasterizer_state_ptr    points_;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+  std::vector<ShaderProgramStage>  program_stages_;
+  SubstitutionMap                  global_substitution_map_;
+  std::shared_ptr<ShaderProgram>   program_;
+};
+
+}
+
+#endif  // GUA_WARP_RENDERER_HPP

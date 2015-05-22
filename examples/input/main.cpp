@@ -27,6 +27,8 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
+const bool SHOW_FRAME_RATE = true;
+
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -47,6 +49,18 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
+void make_transparent(std::shared_ptr<gua::node::Node> const& node) {
+  auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(node));
+  if (casted) {
+    casted->get_material()->set_uniform("Color", gua::math::vec4(0.8, 0.6, 1, 0.5));
+    // casted->get_material()->set_show_back_faces(true);
+  }
+
+  for (auto& child: node->get_children()) {
+    make_transparent(child);
+  }
+}
+
 int main(int argc, char** argv) {
 
   // initialize guacamole
@@ -58,22 +72,12 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  // auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",  
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",  
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
-  teapot->set_draw_bounding_box(true);
 
-  auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
-  portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal->data.set_texture("portal");
-  portal->translate(0.5f, 0.f, -0.2f);
-  portal->rotate(-30, 0.f, 1.f, 0.f);
-
-  //auto light = graph.add_node<gua::node::LightNode>("/", "light");
-  //light->data.set_type(gua::node::LightNode::Type::SPOT);
-  //light->data.set_enable_shadows(true);
-  //light->scale(10.f);
-  //light->rotate(-20, 0.f, 1.f, 0.f);
-  //light->translate(-1.f, 0.f,  3.f);
+  make_transparent(teapot);
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::POINT);
@@ -82,17 +86,8 @@ int main(int argc, char** argv) {
   light2->translate(-3.f, 5.f, 5.f);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
+  screen->data.set_size(gua::math::vec2(1.92f/2, 1.08f));
   screen->translate(0, 0, 1.0);
-
-  //gua::VolumeLoader vloader;
-  //auto volume(vloader.create_volume_from_file("volume", "/opt/gua_vrgeo_2013/data/objects/head_w256_h256_d225_c1_b8.raw", 0));
-  //graph.add_node("/transform", volume);
-
-  auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
-  portal_screen->translate(0.0, 0.0, 5.0);
-  portal_screen->rotate(90, 0.0, 1.0, 0.0);
-  portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
@@ -100,38 +95,22 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
 
-  auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0, 0, 2.0);
-  portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
-  portal_camera->config.set_screen_path("/portal_screen");
-  portal_camera->config.set_scene_graph_name("main_scenegraph");
-  portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(false);
-
-  auto portal_pipe = std::make_shared<gua::PipelineDescription>();
-  portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-
-  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-  resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  resolve_pass->tone_mapping_exposure(1.0f);
-
-  portal_pipe->add_pass(resolve_pass);
-  portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-
-  portal_camera->set_pipeline_description(portal_pipe);
-
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(false);
-  camera->set_pre_render_cameras({portal_camera});
+  
+  auto pipe = std::make_shared<gua::PipelineDescription>();
+  pipe->set_enable_abuffer(true);
+  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  // pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+  pipe->add_pass(std::make_shared<gua::WarpPassDescription>());
+  // pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
-  camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
-  camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  camera->set_pipeline_description(pipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -151,12 +130,13 @@ int main(int argc, char** argv) {
 
   window->open();
 
-
   gua::Renderer renderer;
 
   // application loop
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0/500.0);
+
+  int ctr=0;
 
   ticker.on_tick.connect([&]() {
 
@@ -166,6 +146,12 @@ int main(int argc, char** argv) {
                                                               gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
 
     transform->set_transform(modelmatrix);
+
+    if (SHOW_FRAME_RATE && ctr++ % 150 == 0) {
+      std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
+                << window->get_rendering_fps() << ", app fps: "
+                << renderer.get_application_fps() << std::endl;
+    }
 
     window->process_events();
     if (window->should_close()) {

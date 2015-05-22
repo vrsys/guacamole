@@ -104,6 +104,8 @@ void submit_fragment(float depth)
       if (abuf_insert(depth))
         discard;
     }
+    // abuf_insert(depth);
+    // discard;
 #endif
   } 
   else {
