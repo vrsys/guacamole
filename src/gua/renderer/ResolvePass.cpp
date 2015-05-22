@@ -94,7 +94,7 @@ ResolvePassDescription::ResolvePassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::background_mode(BackgroundMode mode) {
-  uniforms["gua_background_mode"] = static_cast<int>(mode);;
+  uniforms["gua_background_mode"] = static_cast<int>(mode);
   return *this;
 }
 

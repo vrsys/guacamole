@@ -88,6 +88,7 @@ class GUA_DLL WindowBase {
     GUA_ADD_PROPERTY(std::string, warp_matrix_red_left, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_green_left, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_blue_left, "");
+    GUA_ADD_PROPERTY(std::string, context_share, "");
 
     // convenience access to resolution
     void set_resolution(math::vec2ui const& res) {

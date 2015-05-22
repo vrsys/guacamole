@@ -22,6 +22,7 @@
 // class header
 #include <gua/renderer/WarpRenderer.hpp>
 
+#include <gua/renderer/WarpPass.hpp>
 #include <gua/config.hpp>
 
 #include <gua/renderer/ResourceFactory.hpp>
@@ -31,6 +32,7 @@
 
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 
 #include <scm/core/math/math.h>
 
@@ -77,15 +79,17 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
         true, true, scm::gl::COMPARISON_LESS, true, 1, 0,
         scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
     );
+
+    auto empty_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, sizeof(math::vec2), 0);
+    empty_vao_ = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC2F, sizeof(math::vec2)), {empty_vbo});
   }
 
   auto& target = *pipe.current_viewstate().target;
 
-  target.bind(ctx, true);
+  bool write_depth = true;
+  target.bind(ctx, write_depth);
   target.set_viewport(ctx);
-  // if (blend_state_)
-  //   ctx.render_context->set_blend_state(blend_state_);
-  // if (rasterizer_state_)
+
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
   ctx.render_context->set_rasterizer_state(points_);
   program_->use(ctx);
@@ -94,9 +98,26 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
   }
 
-  pipe.bind_gbuffer_input(program_);
-  pipe.bind_light_table(program_);
+  ABuffer a_buffer;
+  a_buffer.allocate_shared(ctx);
 
+  auto warp_desc(dynamic_cast<WarpPassDescription const*>(&desc));
+  if (warp_desc->use_abuffer_from_window() != "") {
+    auto shared_window(WindowDatabase::instance()->lookup(warp_desc->use_abuffer_from_window()));
+    if (shared_window) {
+      if (!shared_window->get_is_open()) {
+        Logger::LOG_WARNING << "Failed to share ABuffer for WarpPass: Shared window is not opened yet!" << std::endl;
+      } else {
+        a_buffer.allocate_shared(*shared_window->get_context());
+      }
+    } else {
+      Logger::LOG_WARNING << "Failed to share ABuffer for WarpPass: Target window not found!" << std::endl;
+    }
+  }
+
+  a_buffer.bind(ctx);
+
+  ctx.render_context->bind_vertex_array(empty_vao_);
   ctx.render_context->apply();
 
   ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, 1920*1080);

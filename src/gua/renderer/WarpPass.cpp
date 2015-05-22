@@ -45,11 +45,38 @@ WarpPassDescription::WarpPassDescription()
   writes_only_color_buffer_ = false;
   rendermode_ = RenderMode::Custom;
 
-  uniforms["warp_matrix1"] = scm::math::make_rotation(5.f, 0.f, 1.f, 0.f);
-  uniforms["warp_matrix2"] = scm::math::make_rotation(-5.f, 0.f, 1.f, 0.f);
+  uniforms["original_inverse_projection_view_matrix"] = scm::math::make_translation(0.f, 0.f, 0.f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription& WarpPassDescription::use_abuffer_from_window(std::string const& name) {
+  shared_window_name_ = name;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string const& WarpPassDescription::use_abuffer_from_window() const {
+  return shared_window_name_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription& WarpPassDescription::original_inverse_projection_view_matrix(math::mat4f const& mat) {
+  uniforms["original_inverse_projection_view_matrix"] = mat;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::mat4f const& WarpPassDescription::original_inverse_projection_view_matrix() const {
+  auto uniform(uniforms.find("original_inverse_projection_view_matrix"));
+  return boost::get<math::mat4f>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<PipelinePassDescription> WarpPassDescription::make_copy() const {
   return std::make_shared<WarpPassDescription>(*this);
 }

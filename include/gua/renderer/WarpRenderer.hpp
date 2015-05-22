@@ -48,7 +48,8 @@ class WarpRenderer {
   void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
  private:
-
+  
+  scm::gl::vertex_array_ptr        empty_vao_;
   scm::gl::rasterizer_state_ptr    points_;
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   std::vector<ShaderProgramStage>  program_stages_;

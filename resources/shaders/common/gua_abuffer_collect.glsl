@@ -51,9 +51,9 @@ bool abuf_insert(float depth)
         if (!success) {
           float current_frag_alpha = float(bitfieldExtract(unpackUint2x32(old).y, 0, 8)) / 255.0;
           accum_alpha += mix(current_frag_alpha, 0.0, accum_alpha);
-          if (accum_alpha > @abuf_blending_termination_threshold@) {
-            break;
-          }
+          // if (accum_alpha > @abuf_blending_termination_threshold@) {
+          //   break;
+          // }
         }
       }
       else { // inserted
@@ -97,15 +97,15 @@ void submit_fragment(float depth)
       discard;
     }
 
-    if (gua_alpha > @abuf_insertion_threshold@) {
-      @include "gua_write_gbuffer.glsl"
-    }
-    else {
-      if (abuf_insert(depth))
-        discard;
-    }
-    // abuf_insert(depth);
-    // discard;
+    // if (gua_alpha > @abuf_insertion_threshold@) {
+    //   @include "gua_write_gbuffer.glsl"
+    // }
+    // else {
+    //   if (abuf_insert(depth))
+    //     discard;
+    // }
+    abuf_insert(depth);
+    discard;
 #endif
   } 
   else {

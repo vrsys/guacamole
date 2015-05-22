@@ -28,6 +28,8 @@
 #include <gua/utils/Trackball.hpp>
 
 const bool SHOW_FRAME_RATE = true;
+const bool CLIENT_SERVER = false;
+const bool RENDER_BACKFACES = false;
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -49,15 +51,14 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
-void make_transparent(std::shared_ptr<gua::node::Node> const& node) {
+void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
   auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(node));
   if (casted) {
-    casted->get_material()->set_uniform("Color", gua::math::vec4(0.8, 0.6, 1, 0.5));
-    // casted->get_material()->set_show_back_faces(true);
+    casted->get_material()->set_show_back_faces(true);
   }
 
   for (auto& child: node->get_children()) {
-    make_transparent(child);
+    show_backfaces(child);
   }
 }
 
@@ -72,12 +73,15 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  // auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",  
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",  
+  transform->get_tags().add_tag("scene");
+  auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",  
+  // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",  
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
 
-  make_transparent(teapot);
+  if (RENDER_BACKFACES) {
+    show_backfaces(teapot);
+  }
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::POINT);
@@ -85,9 +89,11 @@ int main(int argc, char** argv) {
   light2->scale(12.f);
   light2->translate(-3.f, 5.f, 5.f);
 
-  auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(1.92f/2, 1.08f));
-  screen->translate(0, 0, 1.0);
+  auto fast_screen = graph.add_node<gua::node::ScreenNode>("/", "fast_screen");
+  fast_screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
+
+  auto slow_screen = graph.add_node<gua::node::ScreenNode>("/", "slow_screen");
+  slow_screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
@@ -95,41 +101,84 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
 
-  auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 2.0);
-  camera->config.set_resolution(resolution);
-  camera->config.set_screen_path("/screen");
-  camera->config.set_scene_graph_name("main_scenegraph");
-  camera->config.set_output_window_name("main_window");
+  std::shared_ptr<gua::WindowBase> window;
+  std::shared_ptr<gua::WindowBase> hidden_window;
+
+  // slow client ---------------------------------------------------------------
+  auto slow_cam = graph.add_node<gua::node::CameraNode>("/slow_screen", "slow_cam");
+  slow_cam->translate(0, 0, 2.0);
+  slow_cam->config.set_resolution(resolution);
+  slow_cam->config.set_screen_path("/slow_screen");
+  slow_cam->config.set_scene_graph_name("main_scenegraph");
   
-  auto pipe = std::make_shared<gua::PipelineDescription>();
-  pipe->set_enable_abuffer(true);
-  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-  // pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-  pipe->add_pass(std::make_shared<gua::WarpPassDescription>());
-  // pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  // fast client ---------------------------------------------------------------
+  auto fast_cam = graph.add_node<gua::node::CameraNode>("/fast_screen", "fast_cam");
+  fast_cam->translate(0, 0, 2.0);
+  fast_cam->config.set_resolution(resolution);
+  fast_cam->config.set_screen_path("/fast_screen");
+  fast_cam->config.set_scene_graph_name("main_scenegraph");
+  
+  auto warp_pass(std::make_shared<gua::WarpPassDescription>());
 
-  camera->set_pipeline_description(pipe);
+  if (CLIENT_SERVER) {
+    slow_cam->config.set_output_window_name("hidden_window");
+    fast_cam->config.set_output_window_name("window");
+    
+    auto slow_pipe = std::make_shared<gua::PipelineDescription>();
+    slow_pipe->set_enable_abuffer(true);
+    slow_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    slow_cam->set_pipeline_description(slow_pipe);
+    
+    warp_pass->use_abuffer_from_window("hidden_window");
 
-  auto window = std::make_shared<gua::GlfwWindow>();
-  gua::WindowDatabase::instance()->add("main_window", window);
-  window->config.set_enable_vsync(false);
+    auto fast_pipe = std::make_shared<gua::PipelineDescription>();
+    fast_pipe->set_enable_abuffer(true);
+    fast_pipe->add_pass(warp_pass);
+    fast_cam->set_pipeline_description(fast_pipe);
+    fast_cam->config.mask().blacklist.add_tag("scene");
+
+  } else {
+
+    slow_cam->config.set_output_window_name("window");
+
+    auto pipe = std::make_shared<gua::PipelineDescription>();
+    pipe->set_enable_abuffer(true);
+    pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    pipe->add_pass(warp_pass);
+    slow_cam->set_pipeline_description(pipe);
+  }
+
+
+  // create windows
+  if (CLIENT_SERVER) {
+    window = std::make_shared<gua::Window>();
+    
+    hidden_window = std::make_shared<gua::HeadlessSurface>();
+    hidden_window->config.set_size(resolution);
+    hidden_window->config.set_resolution(resolution);
+    hidden_window->config.set_enable_vsync(false);
+    hidden_window->config.set_context_share("window");
+
+    gua::WindowDatabase::instance()->add("hidden_window", hidden_window);
+  } else {
+    auto glfw = std::make_shared<gua::GlfwWindow>();
+    glfw->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
+      trackball.motion(pos.x, pos.y);
+    });
+    glfw->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    window = glfw;
+  }
+  
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
-  window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-    window->config.set_resolution(new_size);
-    camera->config.set_resolution(new_size);
-    screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
-  });
-  window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    trackball.motion(pos.x, pos.y);
-  });
-  window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
+  window->config.set_enable_vsync(false);
+  gua::WindowDatabase::instance()->add("window", window);
   window->open();
+  
 
+
+
+  // render setup --------------------------------------------------------------
   gua::Renderer renderer;
 
   // application loop
@@ -145,13 +194,29 @@ int main(int argc, char** argv) {
                                                               gua::math::float_t(trackball.shifty()),
                                                               gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
 
-    transform->set_transform(modelmatrix);
+    gua::Frustum warp_frustum;
 
-    if (SHOW_FRAME_RATE && ctr++ % 150 == 0) {
-      std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
-                << window->get_rendering_fps() << ", app fps: "
-                << renderer.get_application_fps() << std::endl;
+    if (CLIENT_SERVER) {
+      fast_screen->rotate(0.1, 0, 1, 0);
+      if (SHOW_FRAME_RATE && ctr++ % 300 == 0) {
+        slow_screen->set_transform(fast_screen->get_transform());
+        std::cout << "Slow fps: " << hidden_window->get_rendering_fps() 
+                  << ", Fast fps: " << window->get_rendering_fps() 
+                  << ", App fps: " << renderer.get_application_fps() << std::endl;
+      }
+      warp_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+    } else {
+      fast_screen->set_transform(modelmatrix);
+      if (SHOW_FRAME_RATE && ctr++ % 300 == 0) {
+        std::cout << "Render fps: " << window->get_rendering_fps() 
+                  << ", App fps: " << renderer.get_application_fps() << std::endl;
+      }
+      warp_frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     }
+
+    gua::math::mat4f projection(warp_frustum.get_projection());
+    gua::math::mat4f view(warp_frustum.get_view());
+    warp_pass->original_inverse_projection_view_matrix(scm::math::inverse(projection * view));
 
     window->process_events();
     if (window->should_close()) {

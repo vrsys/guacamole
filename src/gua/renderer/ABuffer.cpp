@@ -59,6 +59,10 @@ void ABuffer::allocate(RenderContext& ctx, size_t buffer_size) {
   res_ = resource;
 }
 
+void ABuffer::allocate_shared(RenderContext const& with_ctx) {
+  res_ = with_ctx.resources.get_dont_create<SharedResource>();
+}
+
 void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution) {
 
   if (!res_) {

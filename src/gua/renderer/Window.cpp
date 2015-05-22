@@ -77,8 +77,22 @@ void Window::open() {
       math::vec2ui(config.get_size().x, config.get_size().y),
       window_format));
 
+  scm::gl::wm::context_ptr share;
+  if (config.get_context_share() != "") {
+    auto shared_window(WindowDatabase::instance()->lookup(config.get_context_share()));
+    if (shared_window) {
+      if (!shared_window->get_context()->context) {
+        Logger::LOG_WARNING << "Failed to initialize context sharing: Target window is not opened yet!" << std::endl;
+      } else {
+        share = shared_window->get_context()->context;
+      }
+    } else {
+      Logger::LOG_WARNING << "Failed to initialize context sharing: Target window not found!" << std::endl;
+    }
+  }
+
   ctx_.context = scm::gl::wm::context_ptr(
-      new scm::gl::wm::context(window_, context_attribs));
+      new scm::gl::wm::context(window_, context_attribs, share));
 
   window_->show();
 }
