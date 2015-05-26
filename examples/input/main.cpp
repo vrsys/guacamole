@@ -27,7 +27,9 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
-const bool SHOW_FRAME_RATE = true;
+#define COUNT 5
+
+const bool SHOW_FRAME_RATE = false;
 const bool CLIENT_SERVER = false;
 const bool RENDER_BACKFACES = false;
 
@@ -71,16 +73,28 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   gua::TriMeshLoader loader;
-
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
-  auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",  
-  // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",  
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform", teapot);
 
-  if (RENDER_BACKFACES) {
-    show_backfaces(teapot);
+  auto add_oilrig = [&](int x, int y) {
+    auto t = graph.add_node<gua::node::TransformNode>("/transform", "t");
+    t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/2, 0);
+    auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",  
+    // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",  
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION | 
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE |
+      gua::TriMeshLoader::OPTIMIZE_MATERIALS));
+    t->add_child(teapot);
+
+    if (RENDER_BACKFACES) {
+      show_backfaces(teapot);
+    }
+  };
+
+  for (int x(0); x<COUNT; ++x) {
+    for (int y(0); y<COUNT; ++y) {
+      add_oilrig(x, y);
+    }
   }
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
@@ -90,10 +104,10 @@ int main(int argc, char** argv) {
   light2->translate(-3.f, 5.f, 5.f);
 
   auto fast_screen = graph.add_node<gua::node::ScreenNode>("/", "fast_screen");
-  fast_screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
+  fast_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
 
   auto slow_screen = graph.add_node<gua::node::ScreenNode>("/", "slow_screen");
-  slow_screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
+  slow_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
@@ -142,9 +156,9 @@ int main(int argc, char** argv) {
     slow_cam->config.set_output_window_name("window");
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
-    pipe->set_enable_abuffer(true);
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     pipe->add_pass(warp_pass);
+    pipe->set_enable_abuffer(true);
     slow_cam->set_pipeline_description(pipe);
   }
 
@@ -164,6 +178,12 @@ int main(int argc, char** argv) {
     auto glfw = std::make_shared<gua::GlfwWindow>();
     glfw->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
       trackball.motion(pos.x, pos.y);
+    });
+    glfw->on_resize.connect([&](gua::math::vec2ui const& new_size) {
+      glfw->config.set_resolution(new_size);
+      slow_cam->config.set_resolution(new_size);
+      slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+      fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
     });
     glfw->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     window = glfw;

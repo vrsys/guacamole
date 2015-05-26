@@ -78,7 +78,7 @@ class GUA_DLL Pipeline {
  public:
 
    struct GUA_DLL query_dispatch {
-     scm::gl::timer_query_ptr  query;
+     scm::gl::query_ptr        query;
      bool                      dispatched;
      unsigned                  collect_attempts;
    };
@@ -88,6 +88,12 @@ class GUA_DLL Pipeline {
      std::unordered_map<std::string, query_dispatch> gpu_queries;
      std::unordered_map<std::string, time_point>     cpu_queries;
      std::map<std::string, double>                   results;
+   };
+
+   struct GUA_DLL primitive_query_collection {
+     typedef std::chrono::steady_clock::time_point   time_point;
+     std::unordered_map<std::string, query_dispatch> gpu_queries;
+     std::map<std::string, std::pair<int, int>>      results;
    };
 
 public:
@@ -113,6 +119,9 @@ public:
   // time queries
   void begin_gpu_query(RenderContext const& ctx, std::string const& query_name);
   void end_gpu_query(RenderContext const& ctx, std::string const& query_name);
+
+  void begin_primitive_query(RenderContext const& ctx, std::string const& query_name);
+  void end_primitive_query(RenderContext const& ctx, std::string const& query_name);
 
   void begin_cpu_query(std::string const& query_name);
   void end_cpu_query(std::string const& query_name);
@@ -153,8 +162,8 @@ public:
   std::vector<PipelinePass>                 passes_;
   scm::gl::quad_geometry_ptr                quad_;
 
-#define GUA_ENABLE_PROFILING_TIME_QUERIES
-  time_query_collection                 queries_;
+  time_query_collection                     time_queries_;
+  primitive_query_collection                primitive_queries_;
 };
 
 }

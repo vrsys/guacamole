@@ -70,6 +70,14 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   auto const& ctx(pipe.get_context());
 
+  std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass";
+  std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass";
+  std::string const pri_query_name = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass";
+
+  pipe.begin_primitive_query(ctx, pri_query_name);
+  pipe.begin_gpu_query(ctx, gpu_query_name);
+  pipe.begin_cpu_query(cpu_query_name);
+
   if (!points_) {
     scm::gl::rasterizer_state_desc desc;
     desc._point_state = scm::gl::point_raster_state(true);
@@ -86,7 +94,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   auto& target = *pipe.current_viewstate().target;
 
-  bool write_depth = true;
+  bool write_depth = false;
   target.bind(ctx, write_depth);
   target.set_viewport(ctx);
 
@@ -120,9 +128,17 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   ctx.render_context->bind_vertex_array(empty_vao_);
   ctx.render_context->apply();
 
-  ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, 1920*1080);
+  math::vec2ui resolution(pipe.current_viewstate().camera.config.get_resolution());
+  int pixel_count(resolution.x * resolution.y);
+
+  ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, pixel_count);
 
   target.unbind(ctx);
+
+  pipe.end_primitive_query(ctx, pri_query_name);
+  pipe.end_gpu_query(ctx, gpu_query_name);
+  pipe.end_cpu_query(cpu_query_name);
+
   ctx.render_context->reset_state_objects();
 }
 

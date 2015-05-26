@@ -107,6 +107,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   if (last_resolution_ != camera.config.get_resolution()) {
     last_resolution_ = camera.config.get_resolution();
     reload_gbuffer = true;
+    reload_abuffer = true;
   }
 
   if (reload_gbuffer) {
@@ -200,21 +201,36 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     passes_[i].process(*last_description_.get_passes()[i], *this);
   }
 
-
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+#if defined(GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES) || defined(GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES)
     fetch_gpu_query_results(context_);
+#endif
+  
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 
     if (context_.framecount % 60 == 0) {
       std::cout << "===== Time Queries for Context: " << context_.id
         << " ============================" << std::endl;
-      for (auto const& t : queries_.results) {
+      for (auto const& t : time_queries_.results) {
         std::cout << t.first << " : " << t.second << " ms" << std::endl;
       }
-      queries_.results.clear();
-      std::cout << ">>===================================================="
-        << std::endl;
+      time_queries_.results.clear();
+      std::cout << std::endl;
     }
 #endif
+
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
+
+    if (context_.framecount % 60 == 0) {
+      std::cout << "===== Primitive Queries for Context: " << context_.id
+        << " ============================" << std::endl;
+      for (auto const& t : primitive_queries_.results) {
+        std::cout << t.first << " : Generated: " << t.second.first << " Written: " << t.second.second << std::endl;
+      }
+      primitive_queries_.results.clear();
+      std::cout << std::endl;
+    }
+#endif
+
 
     gbuffer_->toggle_ping_pong();
 
@@ -641,23 +657,23 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::chrono::steady_clock::time_point start_time =
       std::chrono::steady_clock::now();
-    queries_.cpu_queries[query_name] = start_time;
+    time_queries_.cpu_queries[query_name] = start_time;
 #endif
   }
 
   ////////////////////////////////////////////////////////////////////////////////
   void Pipeline::end_cpu_query(std::string const& query_name) {
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-    assert(queries_.cpu_queries.count(query_name));
+    assert(time_queries_.cpu_queries.count(query_name));
 
     std::chrono::steady_clock::time_point end_time =
       std::chrono::steady_clock::now();
     std::chrono::steady_clock::time_point start_time =
-      queries_.cpu_queries.at(query_name);
+      time_queries_.cpu_queries.at(query_name);
 
     double mcs = std::chrono::duration_cast<std::chrono::microseconds>(
       end_time - start_time).count();
-    queries_.results[query_name] = mcs / 1000.0;
+    time_queries_.results[query_name] = mcs / 1000.0;
 #endif
   }
 
@@ -668,17 +684,17 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 
     if (ctx.framecount < 50) {
-      queries_.gpu_queries.clear();
+      time_queries_.gpu_queries.clear();
       return;
     }
 
-    auto existing_query = queries_.gpu_queries.find(name);
+    auto existing_query = time_queries_.gpu_queries.find(name);
 
-    if (existing_query != queries_.gpu_queries.end()) {
+    if (existing_query != time_queries_.gpu_queries.end()) {
       // delete existing query if it is too old
       const unsigned max_wait_frames = 50;
       if (existing_query->second.collect_attempts > max_wait_frames) {
-        queries_.gpu_queries.erase(existing_query);
+        time_queries_.gpu_queries.erase(existing_query);
       }
       else {
         // existing query in process -> nothing to be done!!! -> return!!
@@ -691,7 +707,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       auto query = ctx.render_device->create_timer_query();
       query_dispatch dispatch = { query, false, 0U };
 
-      queries_.gpu_queries.insert(std::make_pair(name, dispatch));
+      time_queries_.gpu_queries.insert(std::make_pair(name, dispatch));
       ctx.render_context->begin_query(query);
     }
     catch (...) {
@@ -707,11 +723,11 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     std::string const& name) {
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     // query started
-    if (queries_.gpu_queries.count(name)) {
+    if (time_queries_.gpu_queries.count(name)) {
       // query not finished yet
-      if (!queries_.gpu_queries.at(name).dispatched) {
-        ctx.render_context->end_query(queries_.gpu_queries.at(name).query);
-        queries_.gpu_queries.at(name).dispatched = true;
+      if (!time_queries_.gpu_queries.at(name).dispatched) {
+        ctx.render_context->end_query(time_queries_.gpu_queries.at(name).query);
+        time_queries_.gpu_queries.at(name).dispatched = true;
       }
       else {
         // no such query
@@ -721,13 +737,74 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 #endif
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void Pipeline::begin_primitive_query(RenderContext const& ctx,
+    std::string const& name) {
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
+
+    if (ctx.framecount < 50) {
+      primitive_queries_.gpu_queries.clear();
+      return;
+    }
+
+    auto existing_query = primitive_queries_.gpu_queries.find(name);
+
+    if (existing_query != primitive_queries_.gpu_queries.end()) {
+      // delete existing query if it is too old
+      const unsigned max_wait_frames = 50;
+      if (existing_query->second.collect_attempts > max_wait_frames) {
+        primitive_queries_.gpu_queries.erase(existing_query);
+      }
+      else {
+        // existing query in process -> nothing to be done!!! -> return!!
+        return;
+      }
+    }
+
+    try {
+      // create query
+      auto query = ctx.render_device->create_transform_feedback_statistics_query();
+      query_dispatch dispatch = { query, false, 0U };
+
+      primitive_queries_.gpu_queries.insert(std::make_pair(name, dispatch));
+      ctx.render_context->begin_query(query);
+    }
+    catch (...) {
+      // query dispatch failed
+    }
+
+#endif
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void Pipeline::end_primitive_query(RenderContext const& ctx,
+    std::string const& name) {
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
+    // query started
+    if (primitive_queries_.gpu_queries.count(name)) {
+      // query not finished yet
+      if (!primitive_queries_.gpu_queries.at(name).dispatched) {
+        ctx.render_context->end_query(primitive_queries_.gpu_queries.at(name).query);
+        primitive_queries_.gpu_queries.at(name).dispatched = true;
+      }
+      else {
+        // no such query
+        return;
+      }
+    }
+#endif
+  }
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
   bool queries_ready = true;
-  for (auto& q : queries_.gpu_queries) {
+  for (auto& q : time_queries_.gpu_queries) {
     bool query_ready =
       ctx.render_context->query_result_available(q.second.query);
     ++q.second.collect_attempts;
@@ -735,14 +812,34 @@ void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
   }
 
   if (queries_ready) {
-    for (auto const& q : queries_.gpu_queries) {
+    for (auto const& q : time_queries_.gpu_queries) {
       ctx.render_context->collect_query_results(q.second.query);
       double draw_time_in_ms =
-        static_cast<double>(q.second.query->result()) / 1e6;
-      queries_.results[q.first] = draw_time_in_ms;
+        static_cast<double>(dynamic_cast<scm::gl::timer_query*>(q.second.query.get())->result()) / 1e6;
+      time_queries_.results[q.first] = draw_time_in_ms;
     }
 
-    queries_.gpu_queries.clear();
+    time_queries_.gpu_queries.clear();
+  }
+#endif
+
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
+  queries_ready = true;
+  for (auto& q : primitive_queries_.gpu_queries) {
+    bool query_ready =
+      ctx.render_context->query_result_available(q.second.query);
+    ++q.second.collect_attempts;
+    queries_ready &= query_ready;
+  }
+
+  if (queries_ready) {
+    for (auto const& q : primitive_queries_.gpu_queries) {
+      ctx.render_context->collect_query_results(q.second.query);
+      auto query = dynamic_cast<scm::gl::transform_feedback_statistics_query*>(q.second.query.get());
+      primitive_queries_.results[q.first] = std::make_pair(query->result()._primitives_generated, query->result()._primitives_written);
+    }
+
+    primitive_queries_.gpu_queries.clear();
   }
 #endif
 }

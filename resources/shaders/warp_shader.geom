@@ -17,21 +17,22 @@ flat out uint data_pos;
 
 void main() {
 
-  vec2 pos = vec2(vertex_id[0] % 1920, vertex_id[0] / 1920);
-  vec2 frag_pos = pos/vec2(1920, 1080)*2-1;
+  vec2 pos = vec2(vertex_id[0] % gua_resolution.x, vertex_id[0] / gua_resolution.x);
+  vec2 frag_pos = pos/vec2(gua_resolution.x, gua_resolution.y)*2-1;
 
-  int frag_count = 0;
   uint current = vertex_id[0];
 
-  while (frag_count < ABUF_MAX_FRAGMENTS) {
+  // const int MAX_LAYERS = 1;
+  const int MAX_LAYERS = ABUF_MAX_FRAGMENTS;
+
+  for (int i=0; i<MAX_LAYERS; ++i) {
 
     uvec2 frag = unpackUint2x32(frag_list[current]);
-    current = frag.x;
-    if (current == 0) {
-      break;
+    if (frag.x == 0) {
+      return;
     }
 
-    ++frag_count;
+    current = frag.x;
 
     float z = unpack_depth24(frag.y);
     float depth = fma(z, 2.0, -1.0);
@@ -40,26 +41,10 @@ void main() {
     vec4 h = original_inverse_projection_view_matrix * screen_space_pos;
     vec3 position = h.xyz / h.w;
 
-    data_pos = current - 1920*1080;
+    data_pos = current - gua_resolution.x*gua_resolution.y;
     gl_PointSize = 1;
+    gl_Position =  gua_projection_matrix * gua_view_matrix * vec4(position, 1 + 0.000000000000001*bar[0]);
 
-    // gl_Position = gua_projection_matrix * gua_view_matrix * warp_matrix1 * vec4(position, 1 + 0.000001*bar[0]);
-    // gl_Position /= gl_Position.w;
-    // gl_Position *= vec4(0.5, 1, 1, 1);
-    // gl_Position -= vec4(0.5, 0, 0, 0);
-    // EmitVertex(); EndPrimitive();
-
-    // gl_Position = gua_projection_matrix * gua_view_matrix * warp_matrix2 * vec4(position, 1 + 0.000001*bar[0]);
-    // gl_Position /= gl_Position.w;
-    // gl_Position *= vec4(0.5, 1, 1, 1);
-    // gl_Position += vec4(0.5, 0, 0, 0);
-    // EmitVertex(); EndPrimitive();
-
-    gl_Position = gua_projection_matrix * gua_view_matrix * vec4(position, 1 + 0.000000000000001*bar[0]);
-    gl_Position /= gl_Position.w;
     EmitVertex(); EndPrimitive();
-
-    // break;
-
   }
 }

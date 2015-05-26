@@ -15,5 +15,7 @@ void main() {
   vec3 color = vec3(unpackUnorm2x16(data.x), unpackUnorm2x16(data.y).x);
   vec3 normal = vec3(unpackSnorm2x16(data.y).y, unpackSnorm2x16(data.z));
 
-  gua_out_color = normal.rgb;
+  gua_out_color = color.rgb;
+
+  // gua_out_color = vec3(0, 1, 0);
 }
