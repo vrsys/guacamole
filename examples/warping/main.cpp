@@ -30,7 +30,7 @@
 
 #include <gua/gui.hpp>
 
-#define COUNT 15
+#define COUNT 4
 
 const bool SHOW_FRAME_RATE = false;
 const bool CLIENT_SERVER = false;
@@ -294,6 +294,9 @@ int main(int argc, char** argv) {
     });
     glfw->on_button_press.connect([&](int key, int action, int mods) {
       gui->inject_mouse_button(gua::Button(key), action, mods);
+    });
+    glfw->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+      gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
     });
     glfw->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
       gui->inject_mouse_position(pos);
