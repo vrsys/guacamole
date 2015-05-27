@@ -51,7 +51,8 @@ class WarpRenderer {
   
   scm::gl::vertex_array_ptr        empty_vao_;
   scm::gl::rasterizer_state_ptr    points_;
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_yes_;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_no_;
   std::vector<ShaderProgramStage>  program_stages_;
   SubstitutionMap                  global_substitution_map_;
   std::shared_ptr<ShaderProgram>   program_;

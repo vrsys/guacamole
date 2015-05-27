@@ -22,16 +22,24 @@
 #include <functional>
 
 #include <gua/guacamole.hpp>
+#include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
-#define COUNT 5
+#include <gua/gui.hpp>
+
+#define COUNT 15
 
 const bool SHOW_FRAME_RATE = false;
 const bool CLIENT_SERVER = false;
-const bool RENDER_BACKFACES = false;
+
+int depth_layers      = 2;
+bool depth_test       = true;
+bool backface_culling = true;
+bool orthographic     = false;
+gua::WarpPassDescription::DisplayMode display_mode = gua::WarpPassDescription::DisplayMode::POINTS;
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods) {
@@ -55,7 +63,7 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
   auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(node));
   if (casted) {
-    casted->get_material()->set_show_back_faces(true);
+    casted->get_material()->set_show_back_faces(!backface_culling);
   }
 
   for (auto& child: node->get_children()) {
@@ -65,29 +73,34 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 
 int main(int argc, char** argv) {
 
+  auto resolution = gua::math::vec2ui(1920, 1080);
+
+  // add mouse interaction
+  gua::utils::Trackball trackball(0.01, 0.002, 0.2);
+
   // initialize guacamole
   gua::init(argc, argv);
 
-  // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
+  // ---------------------------------------------------------------------------
+  // ---------------------------- setup scene ----------------------------------
+  
   gua::TriMeshLoader loader;
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
 
+  // 'real' scene  -------------------------------------------------------------
   auto add_oilrig = [&](int x, int y) {
     auto t = graph.add_node<gua::node::TransformNode>("/transform", "t");
     t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/2, 0);
     auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",  
     // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",  
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION | 
-      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE |
-      gua::TriMeshLoader::OPTIMIZE_MATERIALS));
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
     t->add_child(teapot);
 
-    if (RENDER_BACKFACES) {
-      show_backfaces(teapot);
-    }
   };
 
   for (int x(0); x<COUNT; ++x) {
@@ -96,37 +109,43 @@ int main(int argc, char** argv) {
     }
   }
 
-  auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
-  light2->data.set_type(gua::node::LightNode::Type::POINT);
-  light2->data.brightness = 150.0f;
-  light2->scale(12.f);
-  light2->translate(-3.f, 5.f, 5.f);
+  // textured quads ------------------------------------------------------------
+  // for (int x(0); x<COUNT; ++x) {
+  //   auto node = graph.add_node<gua::node::TexturedQuadNode>("/transform", "node" + std::to_string(x));
+  //   node->translate(0, 0, -x);
+  //   node->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
+  // }
 
-  auto fast_screen = graph.add_node<gua::node::ScreenNode>("/", "fast_screen");
-  fast_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
+  show_backfaces(transform);
 
+  // auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
+  // light2->data.set_type(gua::node::LightNode::Type::POINT);
+  // light2->data.brightness = 150.0f;
+  // light2->scale(12.f);
+  // light2->translate(-3.f, 5.f, 5.f);
+
+
+  // ---------------------------------------------------------------------------
+  // ------------------------ setup rendering pipelines ------------------------
+  
+  // slow client ---------------------------------------------------------------
   auto slow_screen = graph.add_node<gua::node::ScreenNode>("/", "slow_screen");
   slow_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
 
-  // add mouse interaction
-  gua::utils::Trackball trackball(0.01, 0.002, 0.2);
-
-  // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1920, 1080);
-
-  std::shared_ptr<gua::WindowBase> window;
-  std::shared_ptr<gua::WindowBase> hidden_window;
-
-  // slow client ---------------------------------------------------------------
   auto slow_cam = graph.add_node<gua::node::CameraNode>("/slow_screen", "slow_cam");
   slow_cam->translate(0, 0, 2.0);
+  if (orthographic) slow_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::ORTHOGRAPHIC);
   slow_cam->config.set_resolution(resolution);
   slow_cam->config.set_screen_path("/slow_screen");
   slow_cam->config.set_scene_graph_name("main_scenegraph");
   
   // fast client ---------------------------------------------------------------
+  auto fast_screen = graph.add_node<gua::node::ScreenNode>("/", "fast_screen");
+  fast_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
+
   auto fast_cam = graph.add_node<gua::node::CameraNode>("/fast_screen", "fast_cam");
   fast_cam->translate(0, 0, 2.0);
+  if (orthographic) fast_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::ORTHOGRAPHIC);
   fast_cam->config.set_resolution(resolution);
   fast_cam->config.set_screen_path("/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
@@ -156,13 +175,102 @@ int main(int argc, char** argv) {
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
     pipe->add_pass(warp_pass);
+    pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
     pipe->set_enable_abuffer(true);
     slow_cam->set_pipeline_description(pipe);
   }
 
 
-  // create windows
+  // ---------------------------------------------------------------------------
+  // ----------------------------- setup gui -----------------------------------
+
+  auto gui = std::make_shared<gua::GuiResource>();
+  auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
+  
+  if (!CLIENT_SERVER) {
+    gui->init("gui", "asset://gua/data/gui/gui.html", resolution);
+
+    gui->on_loaded.connect([&]() {
+      gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(depth_layers);});
+      gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
+      gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
+      gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
+      gui->add_javascript_getter("get_type_points", [&](){ return std::to_string(display_mode == gua::WarpPassDescription::DisplayMode::POINTS);});
+      gui->add_javascript_getter("get_type_quads", [&](){ return std::to_string(display_mode == gua::WarpPassDescription::DisplayMode::QUADS);});
+
+      gui->add_javascript_callback("set_depth_layers");
+      gui->add_javascript_callback("set_depth_test");
+      gui->add_javascript_callback("set_backface_culling");
+      gui->add_javascript_callback("set_orthographic");
+      gui->add_javascript_callback("set_type_points");
+      gui->add_javascript_callback("set_type_quads");
+
+      gui->add_javascript_callback("reset_view");
+
+      gui->call_javascript("init");
+    });
+
+    gui->on_javascript_callback.connect([&](std::string const& callback, std::vector<std::string> const& params) {
+      if (callback == "set_depth_layers") {
+        std::stringstream str(params[0]);
+        str >> depth_layers;
+        warp_pass->max_layers(depth_layers);
+      } else if (callback == "set_depth_test") {
+        std::stringstream str(params[0]);
+        str >> depth_test;
+        warp_pass->depth_test(depth_test);
+      } else if (callback == "set_backface_culling") {
+        std::stringstream str(params[0]);
+        str >> backface_culling;
+        show_backfaces(transform);
+      } else if (callback == "set_orthographic") {
+        std::stringstream str(params[0]);
+        str >> orthographic;
+        if (orthographic) {
+          fast_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::ORTHOGRAPHIC);
+          slow_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::ORTHOGRAPHIC);
+        } else {
+          fast_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::PERSPECTIVE);
+          slow_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::PERSPECTIVE);
+        }
+        
+      } else if (callback == "reset_view") {
+        trackball.reset();
+      } else if (callback == "set_type_points") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        if (checked) {
+          warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::POINTS);
+        }
+
+      }  else if (callback == "set_type_quads") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        if (checked) {
+          warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::QUADS);
+        }
+      } 
+    });
+
+    gui_quad->data.texture() = "gui";
+    gui_quad->data.size() = resolution;
+    gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
+
+    graph.add_node("/", gui_quad);
+  }
+  
+
+  // ---------------------------------------------------------------------------
+  // ----------------------------- setup windows -------------------------------
+
+  std::shared_ptr<gua::WindowBase> window;
+  std::shared_ptr<gua::WindowBase> hidden_window;
+
+
   if (CLIENT_SERVER) {
     window = std::make_shared<gua::Window>();
     
@@ -181,8 +289,14 @@ int main(int argc, char** argv) {
     glfw->on_resize.connect([&](gua::math::vec2ui const& new_size) {
       glfw->config.set_resolution(new_size);
       slow_cam->config.set_resolution(new_size);
-      slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
-      fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+      // slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+      // fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+    });
+    glfw->on_button_press.connect([&](int key, int action, int mods) {
+      gui->inject_mouse_button(gua::Button(key), action, mods);
+    });
+    glfw->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
+      gui->inject_mouse_position(pos);
     });
     glfw->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     window = glfw;
@@ -193,8 +307,6 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   gua::WindowDatabase::instance()->add("window", window);
   window->open();
-  
-
 
 
   // render setup --------------------------------------------------------------
@@ -207,6 +319,10 @@ int main(int argc, char** argv) {
   int ctr=0;
 
   ticker.on_tick.connect([&]() {
+
+    if (!CLIENT_SERVER) {
+      gua::Interface::instance()->update();
+    }
 
     // apply trackball matrix to object
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
@@ -226,10 +342,30 @@ int main(int argc, char** argv) {
       warp_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     } else {
       fast_screen->set_transform(modelmatrix);
-      if (SHOW_FRAME_RATE && ctr++ % 300 == 0) {
-        std::cout << "Render fps: " << window->get_rendering_fps() 
-                  << ", App fps: " << renderer.get_application_fps() << std::endl;
+      if (ctr++ % 100 == 0) {
+        if (SHOW_FRAME_RATE) {
+          std::cout << "Render fps: " << window->get_rendering_fps() 
+                    << ", App fps: " << renderer.get_application_fps() << std::endl;
+        }
+
+        double trimesh_time(0); 
+        double warp_time(0); 
+        int primitives(0);
+
+        for (auto const& result: window->get_context()->time_query_results) {
+          if (result.first.find("Trimesh") != std::string::npos) trimesh_time = result.second;
+          if (result.first.find("Warp") != std::string::npos) warp_time = result.second;
+        }
+
+        for (auto const& result: window->get_context()->primitive_query_results) {
+          if (result.first.find("Warp") != std::string::npos) primitives = result.second.first;
+        }
+
+        gui->call_javascript("set_stats", renderer.get_application_fps(), 
+                             window->get_rendering_fps(), trimesh_time, 
+                             warp_time, primitives);
       }
+
       warp_frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     }
 

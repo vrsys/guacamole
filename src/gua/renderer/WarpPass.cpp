@@ -37,6 +37,9 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 WarpPassDescription::WarpPassDescription()
   : PipelinePassDescription()
+  , max_layers_(10)
+  , depth_test_(true)
+  , mode_(POINTS)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
@@ -77,6 +80,48 @@ math::mat4f const& WarpPassDescription::original_inverse_projection_view_matrix(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WarpPassDescription& WarpPassDescription::max_layers(int val) {
+  max_layers_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int WarpPassDescription::max_layers() const {
+  return max_layers_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription& WarpPassDescription::depth_test(bool val) {
+  depth_test_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool WarpPassDescription::depth_test() const {
+  return depth_test_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription& WarpPassDescription::display_mode(DisplayMode mode) {
+  mode_ = mode;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription::DisplayMode WarpPassDescription::display_mode() const {
+  return mode_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<PipelinePassDescription> WarpPassDescription::make_copy() const {
   return std::make_shared<WarpPassDescription>(*this);
 }
@@ -84,6 +129,8 @@ std::shared_ptr<PipelinePassDescription> WarpPassDescription::make_copy() const 
 ////////////////////////////////////////////////////////////////////////////////
 PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
   substitution_map["gua_debug_tiles"] = "0";
+  substitution_map["display_mode"] = std::to_string(mode_);
+  substitution_map["warping_max_layers"] = std::to_string(max_layers_);
   PipelinePass pass{*this, ctx, substitution_map};
 
   auto renderer = std::make_shared<WarpRenderer>();

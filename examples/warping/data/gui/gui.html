@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>particles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap-theme.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap-slider.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap.colorpickersliders.min.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap-select.min.css">
+    <link href="gui.css" rel="stylesheet">
+
+    <script type="text/javascript" src="third_party/js/jquery-1.10.2.js"></script>
+    <script type="text/javascript" src="third_party/js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="third_party/js/tinycolor.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap-slider.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap.colorpickersliders.min.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap-select.min.js"></script>
+
+
+    <script type="text/javascript">
+
+      function add_space(parent_selector, label) {
+        $(parent_selector).append('<hr />');
+      }
+
+      function init_color_picker(parent_selector, func) {
+
+        $(parent_selector + " ." + func).ColorPickerSliders({
+          size: "sm",
+          placement: "top",
+          sliders: false,
+          swatches: false,
+          hsvpanel: true,
+          onchange: function(container, color) {
+            var colorPicker = $(parent_selector + " ." + func);
+            var color_string = color.tiny.toRgbString();
+            colorPicker.css("background-color", color_string);
+            gua["set_" + func](color_string);
+          }
+        });
+
+        return {func: func, selector: parent_selector + " ." + func};
+      }
+
+      function add_texture_select(parent_selector, func, label) {
+
+        var texture_button_popover = "";
+        var count = textures.length;
+        for (var i = 0; i < count; i++) {
+          texture_button_popover += '<div data-texture="' + textures[i] + '" style="background-image:url(../../' + textures[i] + '); margin-right:4px; height: 40px; width: 30%;" class="btn btn-default btn-image ' + func + '_button"></div>';
+        }
+
+        $(parent_selector).append(
+          '<div class="row">' +
+            '<div class="col-xs-6">' +
+              label + ':' +
+            '</div>' +
+            '<div class="col-xs-6">' +
+              '<div class="btn btn-default btn-image texture_button ' + func + '" data-toggle="popover" data-placement="left" title="Select Texture" style="height: 20px; width: 100%; padding:0"></div>' +
+            '</div>' +
+          '</div>'
+        );
+
+        $(parent_selector + ' .' + func).popover({container:"body", html:true});
+        $(parent_selector + ' .' + func).data('bs.popover').options.content = texture_button_popover;
+
+        return {func: func, selector: parent_selector + " ." + func};
+      }
+
+      function add_color_picker_group(parent_selector, func1, func2, func3, label) {
+
+        $(parent_selector).append(
+          '<div class="row">' +
+            '<div class="col-xs-6">' +
+              label + ':' +
+            '</div>' +
+            '<div class="col-xs-6">' +
+              '<div class="btn btn-default ' + func1 + '" style="height: 20px; width: 30%; padding:0">' +
+              '</div>' +
+              '<div class="btn btn-default ' + func2 + '" style="height: 20px; width: 30%; margin-left:5%; margin-right:5%; padding:0">' +
+              '</div>' +
+              '<div class="btn btn-default ' + func3 + '" style="height: 20px; width: 30%; padding:0">' +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+
+        return [init_color_picker(parent_selector, func1), init_color_picker(parent_selector, func2), init_color_picker(parent_selector, func3)];
+      }
+
+      function add_slider(parent_selector, func, label, min, max, step) {
+        $(parent_selector).append(
+          '<div class="row">' +
+            '<div class="col-xs-6">' +
+              label + ':' +
+            '</div>' +
+            '<div class="col-xs-6">' +
+              '<input class="slider ' + func + '" data-slider-tooltip="hide" data-slider-id=' +
+                func + ' type="text" data-slider-min="' +
+                min + '" data-slider-max="' + max + '" data-slider-step="' +
+                step + '" handle="custom"/>' +
+            '</div>' +
+          '</div>'
+        );
+
+        return init_slider(parent_selector + ' .' + func, func);
+      }
+
+      function init_slider(id, func) {
+
+        var slider = $(id).slider();
+
+        var obj = $(id);
+
+        slider.swift_func = func;
+
+        slider.on("slideStop", function() {
+          var val = $(this).slider('getValue');
+          $(this).parent().attr("val", ""+val);
+          gua["set_" + func](val);
+        });
+
+        slider.on("slide", function() {
+          var val = $(this).slider('getValue');
+          gua["set_" + func](val);
+          $(this).parent().attr("val", +val.toFixed(2));
+          obj.find(".slider-handle").focus();
+        });
+
+        obj.on("click", function(){
+          obj.find(".slider-handle").focus();
+        });
+
+        var val = slider.slider('getValue');
+        $(id).attr("val", ""+val);
+
+        return slider;
+      }
+
+      function add_checkbox(parent_selector, func, label) {
+        $(parent_selector).append(
+          '<div class="row">' +
+            '<div class="col-xs-6">' +
+              label + ':' +
+            '</div>' +
+            '<div class="col-xs-6">' +
+              '<div class="checkbox">' +
+                '<label>' +
+                  '<input id="' + func + '" type="checkbox" value="">' +
+                  '<span></span>' +
+                '</label>' +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+
+        return init_checkbox("#" + func, func);
+      }
+
+      var init_checkbox = function(selector, func) {
+        $(selector).prop('checked', !(typeof(gua) === "undefined") && gua["get_" + func]() == "1").change(function() {
+          gua["set_" + func](this.checked ? 1 : 0);
+        });
+      }
+
+      function format_int(num) {
+        if (num >= 1000000000) {
+          return (num / 1000000000).toFixed(2) + ' G';
+        }
+        if (num >= 1000000) {
+          return (num / 1000000).toFixed(2) + ' M';
+        }
+        if (num >= 1000) {
+          return (num / 1000).toFixed(2) + ' K';
+        }
+        return num;
+      }
+
+      function set_stats (app_fps, render_fps, rendering, warping, primitives) {
+        $("#time-app-fps").text(parseFloat(app_fps).toFixed(1));
+        $("#time-render-fps").text(parseFloat(render_fps).toFixed(1));
+        $("#time-rendering").text(parseFloat(rendering).toFixed(1));
+        $("#time-warping").text(parseFloat(warping).toFixed(1));
+        $("#primitives").text(format_int(parseInt(primitives)));
+      }
+
+      function init() {
+        init_checkbox("#type_quads", "type_quads");
+        init_checkbox("#type_points", "type_points");
+        add_slider("#preview-panel", "depth_layers", "Depth Layers", 1, 20, 1);
+        add_space("#preview-panel");
+        add_checkbox("#preview-panel", "depth_test", "Depth Test");
+        add_checkbox("#preview-panel", "backface_culling", "Backface Culling");
+        add_space("#preview-panel");
+        add_checkbox("#preview-panel", "orthographic", "Orthographic");
+        $("body").addClass("on");
+      }
+
+
+      $(document).ready(function() {
+        // init();
+
+        $('body').on('click', function (e) {
+          $('[data-toggle="popover"]').each(function () {
+            if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+                $(this).popover('hide');
+            }
+          });
+        });
+
+        $('#settings-right .side-panel').hover(function(){
+          $('#settings-right .side-panel').removeClass("expanded");
+          $(this).addClass("expanded");
+        });
+
+        $('body').on('click','.ps_texture_button', function () {
+          gua.set_ps_texture($(this).data("texture"));
+          $('.texture_button').css('background-image', 'url(../../' + $(this).data("texture") + ')');
+        });
+      });
+
+    </script>
+
+  </head>
+  <body>
+
+    <!-- ################################################################### -->
+    <!-- ############################# Footer ############################## -->
+    <!-- ################################################################### -->
+
+    <div id="settings-bottom"><div class="settings-bottom-content">
+      <div class="row">
+        <div class="col-xs-2">
+          App: <span id="time-app-fps">0.0</span> FPS
+        </div>
+
+        <div class="col-xs-2">
+          Render: <span id="time-render-fps">0.0</span> FPS
+        </div>
+
+        <div class="col-xs-2">
+          TriMesh: <span id="time-rendering">0.0</span> ms
+        </div>
+
+        <div class="col-xs-2">
+          Warping: <span id="time-warping">0.0</span> ms
+        </div>
+
+        <div class="col-xs-4">
+          Genrated Primitives: <span id="primitives">0</span>
+        </div>
+
+      </div>
+
+    </div></div>
+
+
+
+    <!-- ################################################################### -->
+    <!-- ############################ Right Pane ########################### -->
+    <!-- ################################################################### -->
+
+
+    <div id="settings-right">
+
+
+      <div class="side-panel">
+        <div id="control-panel" class="panel-inner">
+
+          <h4>Controls</h4>
+
+            <button onclick="gua.reset_view()" class="btn btn-block">Reset View</button>
+
+        </div>
+      </div>
+
+
+      <div class="side-panel">
+        <div id="preview-panel" class="panel-inner">
+
+          <h4>Warping Options</h4>
+
+          <div class="row">
+            <div class="col-xs-6">
+            Render Mode:
+            </div>
+            <div class="col-xs-6">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="optionsRadios" id="type_points" value="" checked>
+                  <span>Points</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="optionsRadios" id="type_quads" value="">
+                  <span>Quads</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      
+
+    </div>
+
+  </body>
+</html>

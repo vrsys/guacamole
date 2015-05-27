@@ -35,6 +35,7 @@
 #include <gua/renderer/LightVisibilityPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
+#include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/SkyMapPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/FullscreenPass.hpp>

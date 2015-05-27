@@ -70,6 +70,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   auto const& ctx(pipe.get_context());
 
+  auto description(dynamic_cast<WarpPassDescription const*>(&desc));
+
   std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass";
   std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass";
   std::string const pri_query_name = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass";
@@ -79,12 +81,17 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   pipe.begin_cpu_query(cpu_query_name);
 
   if (!points_) {
-    scm::gl::rasterizer_state_desc desc;
-    desc._point_state = scm::gl::point_raster_state(true);
-    points_ = ctx.render_device->create_rasterizer_state(desc);
+    scm::gl::rasterizer_state_desc p_desc;
+    p_desc._point_state = scm::gl::point_raster_state(true);
+    points_ = ctx.render_device->create_rasterizer_state(p_desc);
 
-    depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(
+    depth_stencil_state_yes_ = ctx.render_device->create_depth_stencil_state(
         true, true, scm::gl::COMPARISON_LESS, true, 1, 0,
+        scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    );
+
+    depth_stencil_state_no_ = ctx.render_device->create_depth_stencil_state(
+        false, false, scm::gl::COMPARISON_LESS, true, 1, 0,
         scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
     );
 
@@ -98,7 +105,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   target.bind(ctx, write_depth);
   target.set_viewport(ctx);
 
-  ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
+  if (description->depth_test()) ctx.render_context->set_depth_stencil_state(depth_stencil_state_yes_, 1);
+  else ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_, 1);
   ctx.render_context->set_rasterizer_state(points_);
   program_->use(ctx);
 

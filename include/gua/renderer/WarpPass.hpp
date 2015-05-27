@@ -33,10 +33,24 @@ class Pipeline;
 class GUA_DLL WarpPassDescription : public PipelinePassDescription {
  public:
 
+  enum DisplayMode {
+    POINTS,
+    QUADS
+  };
+
   WarpPassDescription();
 
   WarpPassDescription& use_abuffer_from_window(std::string const& name);
   std::string const& use_abuffer_from_window() const;
+
+  WarpPassDescription& max_layers(int val);
+  int max_layers() const;
+
+  WarpPassDescription& depth_test(bool val);
+  bool depth_test() const;
+
+  WarpPassDescription& display_mode(DisplayMode mode);
+  DisplayMode display_mode() const;
 
   WarpPassDescription& original_inverse_projection_view_matrix(math::mat4f const& mat);
   math::mat4f const& original_inverse_projection_view_matrix() const;
@@ -48,6 +62,10 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
   std::string shared_window_name_;
+
+  bool depth_test_;
+  int max_layers_;
+  DisplayMode mode_;
 };
 
 }

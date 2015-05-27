@@ -87,13 +87,11 @@ class GUA_DLL Pipeline {
      typedef std::chrono::steady_clock::time_point   time_point;
      std::unordered_map<std::string, query_dispatch> gpu_queries;
      std::unordered_map<std::string, time_point>     cpu_queries;
-     std::map<std::string, double>                   results;
    };
 
    struct GUA_DLL primitive_query_collection {
      typedef std::chrono::steady_clock::time_point   time_point;
      std::unordered_map<std::string, query_dispatch> gpu_queries;
-     std::map<std::string, std::pair<int, int>>      results;
    };
 
 public:

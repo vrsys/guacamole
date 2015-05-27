@@ -210,10 +210,10 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     if (context_.framecount % 60 == 0) {
       std::cout << "===== Time Queries for Context: " << context_.id
         << " ============================" << std::endl;
-      for (auto const& t : time_queries_.results) {
+      for (auto const& t : context_.time_query_results) {
         std::cout << t.first << " : " << t.second << " ms" << std::endl;
       }
-      time_queries_.results.clear();
+      // context_.time_query_results.clear();
       std::cout << std::endl;
     }
 #endif
@@ -223,10 +223,10 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     if (context_.framecount % 60 == 0) {
       std::cout << "===== Primitive Queries for Context: " << context_.id
         << " ============================" << std::endl;
-      for (auto const& t : primitive_queries_.results) {
+      for (auto const& t : context_.primitive_query_results) {
         std::cout << t.first << " : Generated: " << t.second.first << " Written: " << t.second.second << std::endl;
       }
-      primitive_queries_.results.clear();
+      // context_.primitive_query_results.clear();
       std::cout << std::endl;
     }
 #endif
@@ -673,7 +673,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     double mcs = std::chrono::duration_cast<std::chrono::microseconds>(
       end_time - start_time).count();
-    time_queries_.results[query_name] = mcs / 1000.0;
+   context_.time_query_results[query_name] = mcs / 1000.0;
 #endif
   }
 
@@ -816,7 +816,7 @@ void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
       ctx.render_context->collect_query_results(q.second.query);
       double draw_time_in_ms =
         static_cast<double>(dynamic_cast<scm::gl::timer_query*>(q.second.query.get())->result()) / 1e6;
-      time_queries_.results[q.first] = draw_time_in_ms;
+      context_.time_query_results[q.first] = draw_time_in_ms;
     }
 
     time_queries_.gpu_queries.clear();
@@ -836,7 +836,7 @@ void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
     for (auto const& q : primitive_queries_.gpu_queries) {
       ctx.render_context->collect_query_results(q.second.query);
       auto query = dynamic_cast<scm::gl::transform_feedback_statistics_query*>(q.second.query.get());
-      primitive_queries_.results[q.first] = std::make_pair(query->result()._primitives_generated, query->result()._primitives_written);
+      context_.primitive_query_results[q.first] = std::make_pair(query->result()._primitives_generated, query->result()._primitives_written);
     }
 
     primitive_queries_.gpu_queries.clear();
