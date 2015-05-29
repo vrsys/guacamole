@@ -28,22 +28,21 @@
 #include <gua/utils/BonePose.hpp>
 #include <gua/utils/Mesh.hpp>
 
-namespace fbxsdk_2015_1{
-  class FbxTakeInfo;
-  class FbxNode;
+namespace fbxsdk_2015_1 {
+class FbxTakeInfo;
+class FbxNode;
 }
 
 namespace gua {
 
-template<class T>
-struct Keyframe {
+template <class T> struct Keyframe {
 
-  Keyframe(double time, T const& value):
-    time{time},
-    value{value}
+  Keyframe(double time, T const& value) : time { time }
+  , value { value }
   {}
 
-  ~Keyframe(){};
+  ~Keyframe() {}
+  ;
 
   double time;
   T value;
@@ -56,7 +55,8 @@ class BoneAnimation {
   ~BoneAnimation();
 
   BoneAnimation(aiNodeAnim* anim);
-  BoneAnimation(fbxsdk_2015_1::FbxTakeInfo const& take, fbxsdk_2015_1::FbxNode& node);
+  BoneAnimation(fbxsdk_2015_1::FbxTakeInfo const& take,
+                fbxsdk_2015_1::FbxNode& node);
 
   BonePose calculate_pose(float time) const;
 
@@ -64,23 +64,27 @@ class BoneAnimation {
 
  private:
 
-  scm::math::vec3f interpolate(scm::math::vec3f val1, scm::math::vec3f val2, float factor) const;
+  scm::math::vec3f interpolate(scm::math::vec3f val1,
+                               scm::math::vec3f val2,
+                               float factor) const;
 
-  scm::math::quatf interpolate(scm::math::quatf val1, scm::math::quatf val2, float factor) const;
+  scm::math::quatf interpolate(scm::math::quatf val1,
+                               scm::math::quatf val2,
+                               float factor) const;
 
-  template<class T> 
-  int find_key(float animationTime, std::vector<Keyframe<T>> keys) const;
+  template <class T>
+  int find_key(float animationTime, std::vector<Keyframe<T> > keys) const;
 
-  template<class T> 
-  T calculate_value(float time, std::vector<Keyframe<T>> keys) const;
+  template <class T>
+  T calculate_value(float time, std::vector<Keyframe<T> > keys) const;
 
   std::string name;
 
-  std::vector<Keyframe<scm::math::vec3f>> scalingKeys;
-  std::vector<Keyframe<scm::math::quatf>> rotationKeys;
-  std::vector<Keyframe<scm::math::vec3f>> translationKeys;
+  std::vector<Keyframe<scm::math::vec3f> > scalingKeys;
+  std::vector<Keyframe<scm::math::quatf> > rotationKeys;
+  std::vector<Keyframe<scm::math::vec3f> > translationKeys;
 };
 
 }
 
-#endif //GUA_BONE_ANIMATION_HPP
+#endif  //GUA_BONE_ANIMATION_HPP

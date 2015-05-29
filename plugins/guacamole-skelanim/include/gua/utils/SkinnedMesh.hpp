@@ -37,18 +37,21 @@
 #include <map>
 #include <assimp/scene.h>
 
-namespace fbxsdk_2015_1{
-  class FbxMesh;
-}
- 
+namespace fbxsdk_2015_1 { class FbxMesh; }
+
 namespace gua {
 
 struct SkinnedMesh : public Mesh {
  public:
   SkinnedMesh();
 
-  SkinnedMesh(aiMesh const& mesh, Bone const& root = Bone{});
-  SkinnedMesh(fbxsdk_2015_1::FbxMesh& mesh, Bone const& root = Bone{}, unsigned const material_index = 0);
+  SkinnedMesh(aiMesh const& mesh,
+              Bone const& root = Bone {
+  });
+  SkinnedMesh(fbxsdk_2015_1::FbxMesh& mesh,
+              Bone const& root = Bone {
+  },
+              unsigned const material_index = 0);
 
   struct Vertex {
     scm::math::vec3f pos;
@@ -57,14 +60,14 @@ struct SkinnedMesh : public Mesh {
     scm::math::vec3f tangent;
     scm::math::vec3f bitangent;
     uint bone_id_offset;
-    uint nr_of_bones; 
+    uint nr_of_bones;
   };
-  
+
   void copy_to_buffer(Vertex* vertex_buffer, uint resource_offset) const;
   scm::gl::vertex_format get_vertex_format() const override;
 
-  std::vector<uint>     bone_ids;
-  std::vector<float>    bone_weights;
+  std::vector<uint> bone_ids;
+  std::vector<float> bone_weights;
   std::vector<unsigned> bone_counts;
 
   std::vector<uint> const& get_bone_ids() const;
@@ -72,29 +75,29 @@ struct SkinnedMesh : public Mesh {
 
  private:
   //struct to transfer temporary vertex to bone mapping info
-  struct bone_influences
-  {        
+  struct bone_influences {
     std::vector<uint> IDs;
     std::vector<float> weights;
 
-    bone_influences():
-     IDs{},
-     weights{}
-    {};
-    
-    void add_bone(uint bone_ID, float weight)
-    {
+    bone_influences() : IDs {}
+    , weights {}
+    {}
+    ;
+
+    void add_bone(uint bone_ID, float weight) {
       IDs.push_back(bone_ID);
       weights.push_back(weight);
     }
   };
 
-  static std::vector<bone_influences> get_weights(aiMesh const& mesh, Bone const& root);
-  static std::vector<bone_influences> get_weights(fbxsdk_2015_1::FbxMesh const& mesh, Bone const& root);
-
+  static std::vector<bone_influences> get_weights(aiMesh const& mesh,
+                                                  Bone const& root);
+  static std::vector<bone_influences> get_weights(
+      fbxsdk_2015_1::FbxMesh const& mesh,
+      Bone const& root);
 
 };
 
 }
 
-#endif //GUA_SKINNED_MESH_HPP
+#endif  //GUA_SKINNED_MESH_HPP

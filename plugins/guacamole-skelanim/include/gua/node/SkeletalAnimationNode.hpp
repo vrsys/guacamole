@@ -40,18 +40,20 @@ namespace node {
  */
 class GUA_DLL SkeletalAnimationNode : public GeometryNode {
 
-public : // typedef/enums/friends
+ public:  // typedef/enums/friends
 
-  SkeletalAnimationNode(std::string const& node_name = "",
-              std::vector<std::string> const& geometry_description = {},
-              std::vector<std::shared_ptr<Material>> const& materials = {},
-              std::shared_ptr<Bone> const& = nullptr,
-              math::mat4 const& transform = math::mat4::identity());
+  SkeletalAnimationNode(
+      std::string const& node_name = "",
+      std::vector<std::string> const& geometry_description = {
+  },
+      std::vector<std::shared_ptr<Material> > const& materials = {
+  },
+      std::shared_ptr<Bone> const& = nullptr,
+      math::mat4 const& transform = math::mat4::identity());
 
-private : // c'tor / d'tor
+ private:  // c'tor / d'tor
 
-public : // methods
-
+ public:  // methods
 
   Node* get();
 
@@ -63,7 +65,8 @@ public : // methods
   /**
   * Set the string referring to an entry in guacamole's GeometryDatabase.
   */
-  void set_geometry_description(std::string const& geometry_description, uint index);
+  void set_geometry_description(std::string const& geometry_description,
+                                uint index);
 
   /**
   * This is only for the multifield handling in avango
@@ -73,11 +76,11 @@ public : // methods
   * A string referring to an entry in guacamole's MaterialShaderDatabase.
   */
 
-  std::vector<std::shared_ptr<Material>> const& get_materials() const;
+  std::vector<std::shared_ptr<Material> > const& get_materials() const;
 
-  std::shared_ptr<Material> const&              get_material(uint index) const;
+  std::shared_ptr<Material> const& get_material(uint index) const;
 
-  void            set_material(std::shared_ptr<Material> material, uint index);
+  void set_material(std::shared_ptr<Material> material, uint index);
 
   inline void clear_materials() { materials_.clear(); }
 
@@ -100,14 +103,16 @@ public : // methods
   */
   void update_bounding_box() const override;
 
-  std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
+  std::vector<math::BoundingBox<math::vec3> > get_bone_boxes();
 
   void update_cache() override;
 
-  std::vector<std::shared_ptr<SkinnedMeshResource>> const& get_geometries() const;
+  std::vector<std::shared_ptr<SkinnedMeshResource> > const&
+      get_geometries() const;
 
-//animation related methods
-  void add_animations(std::string const& file_name, std::string const& animation_name);
+  //animation related methods
+  void add_animations(std::string const& file_name,
+                      std::string const& animation_name);
 
   std::string const& get_animation_1() const;
   void set_animation_1(std::string const&);
@@ -130,7 +135,6 @@ public : // methods
   std::vector<scm::math::mat4f> const& get_bone_transforms() const;
   void update_bone_transforms();
 
-
   /**
    * Accepts a visitor and calls concrete visit method.
    *
@@ -146,23 +150,22 @@ public : // methods
 
  private:  // attributes e.g. special attributes for drawing
 
-  std::vector<std::shared_ptr<SkinnedMeshResource>> geometries_;
-  std::vector<std::string>          geometry_descriptions_;
-  bool                              geometry_changed_;
+  std::vector<std::shared_ptr<SkinnedMeshResource> > geometries_;
+  std::vector<std::string> geometry_descriptions_;
+  bool geometry_changed_;
 
-  std::vector<std::shared_ptr<Material>>             materials_;
-  bool                              render_to_gbuffer_;
-  bool                              render_to_stencil_buffer_;
+  std::vector<std::shared_ptr<Material> > materials_;
+  bool render_to_gbuffer_;
+  bool render_to_stencil_buffer_;
 
   // attributes related to animation
 
-  std::map<std::string, int> bone_mapping_; // maps a bone name to its index
+  std::map<std::string, int> bone_mapping_;  // maps a bone name to its index
 
   std::shared_ptr<Bone> root_;
   std::shared_ptr<Bone> anim_start_node_;
 
   std::map<std::string, SkeletalAnimation> animations_;
-
 
   bool first_run_;
   bool has_anims_;
@@ -179,7 +182,7 @@ public : // methods
   std::vector<scm::math::mat4f> bone_transforms_;
 };
 
-} // namespace node {
-} // namespace gua {
+}  // namespace node {
+}  // namespace gua {
 
 #endif  // GUA_SKELETAL_ANIMATION_NODE_HPP

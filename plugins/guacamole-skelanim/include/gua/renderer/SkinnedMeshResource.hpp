@@ -37,7 +37,6 @@
 
 #include <vector>
 
-
 namespace gua {
 
 struct RenderContext;
@@ -56,7 +55,7 @@ class SkinnedMeshResource : public GeometryResource {
   struct SharedBoneResource {
     scm::gl::buffer_ptr bone_ids_;
     scm::gl::buffer_ptr bone_weights_;
-    size_t              offset = 0;
+    size_t offset = 0;
   };
 
   /**
@@ -64,7 +63,7 @@ class SkinnedMeshResource : public GeometryResource {
    *
    * Creates a new and empty Mesh.
    */
-   SkinnedMeshResource();
+  SkinnedMeshResource();
 
   /**
    * Constructor from an Assimp mesh.
@@ -73,7 +72,7 @@ class SkinnedMeshResource : public GeometryResource {
    *
    * \param mesh             The Assimp mesh to load the data from.
    */
-   SkinnedMeshResource(SkinnedMesh const& mesh, bool build_kd_tree);
+  SkinnedMeshResource(SkinnedMesh const& mesh, bool build_kd_tree);
 
   /**
    * Draws the Mesh.
@@ -84,8 +83,10 @@ class SkinnedMeshResource : public GeometryResource {
    */
   void draw(RenderContext& context) /*const*/;
 
-  void ray_test(Ray const& ray, int options,
-                node::Node* owner, std::set<PickResult>& hits);
+  void ray_test(Ray const& ray,
+                int options,
+                node::Node* owner,
+                std::set<PickResult>& hits);
 
   unsigned int num_vertices() const;
   unsigned int num_faces() const;
@@ -93,8 +94,8 @@ class SkinnedMeshResource : public GeometryResource {
   scm::math::vec3 get_vertex(unsigned int i) const;
   std::vector<unsigned int> get_face(unsigned int i) const;
 
-
-  std::vector<math::BoundingBox<math::vec3>> get_bone_boxes(std::vector<scm::math::mat4f> const& bone_transforms);
+  std::vector<math::BoundingBox<math::vec3> > get_bone_boxes(
+      std::vector<scm::math::mat4f> const& bone_transforms);
 
   friend class SkeletalAnimationRenderer;
   friend class LightingPass;
@@ -112,7 +113,7 @@ class SkinnedMeshResource : public GeometryResource {
 
   std::shared_ptr<SharedBoneResource> res_ = nullptr;
 
-  std::vector<math::BoundingBox<math::vec3>> bone_boxes_;
+  std::vector<math::BoundingBox<math::vec3> > bone_boxes_;
 
   /////////////////////////////////
 

@@ -34,32 +34,35 @@
 
 namespace gua {
 
-  class MaterialShader;
-  class Pipeline;
-  class PipelinePassDescription;
+class MaterialShader;
+class Pipeline;
+class PipelinePassDescription;
 
 class SkeletalAnimationRenderer {
 
  public:
 
-   SkeletalAnimationRenderer(RenderContext const& ctx);
-   virtual ~SkeletalAnimationRenderer() {}
+  SkeletalAnimationRenderer(RenderContext const& ctx);
+  virtual ~SkeletalAnimationRenderer() {}
 
   void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
-  void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
+  void set_global_substitution_map(SubstitutionMap const& smap) {
+    global_substitution_map_ = smap;
+  }
 
   void create_state_objects(RenderContext const& ctx);
 
  private:
-  unsigned                                                            last_frame_;
+  unsigned last_frame_;
 
-  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
-  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
+  scm::gl::rasterizer_state_ptr rs_cull_back_;
+  scm::gl::rasterizer_state_ptr rs_cull_none_;
 
-  std::vector<ShaderProgramStage>                                     program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
-  SubstitutionMap                                                     global_substitution_map_;
+  std::vector<ShaderProgramStage> program_stages_;
+  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> >
+      programs_;
+  SubstitutionMap global_substitution_map_;
 
   BoneTransformUniformBlock bones_block_;
 };
