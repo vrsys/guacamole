@@ -47,7 +47,6 @@ std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
   auto pipe(std::make_shared<PipelineDescription>());
 
   pipe->add_pass(std::make_shared<TriMeshPassDescription>());
-  // pipe->add_pass(std::make_shared<SkeletalAnimationPassDescription>());
   pipe->add_pass(std::make_shared<TexturedQuadPassDescription>());
   pipe->add_pass(std::make_shared<LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<BBoxPassDescription>());

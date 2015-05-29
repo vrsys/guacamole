@@ -114,7 +114,7 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
       auto geometries = skel_anim_node->get_geometries();
 
       // loop through all resources in animation node
-      for(uint i(0);i<materials.size();++i){
+      for(unsigned i(0); i < materials.size(); ++i){
 
         if (current_material != materials[i]->get_shader()) {
           current_material = materials[i]->get_shader();
@@ -154,8 +154,7 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
 
         if (current_shader && geometries[i]) {
           auto model_view_mat = scene.rendering_frustum.get_view() * skel_anim_node->get_cached_world_transform();
-          UniformValue model_mat(::scm::math::mat4f(skel_anim_node->get_cached_world_transform()));
-          UniformValue normal_mat(::scm::math::mat4f(scm::math::transpose(scm::math::inverse(skel_anim_node->get_cached_world_transform()))));
+          UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(skel_anim_node->get_cached_world_transform()))));
 
           int rendering_mode = pipe.current_viewstate().shadow_mode ? (skel_anim_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
@@ -184,8 +183,7 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
           }
           
           bones_block_.update(ctx.render_context, skel_anim_node->get_bone_transforms());
-
-          ctx.render_context->bind_uniform_buffer( bones_block_.block().block_buffer(), 2);
+          ctx.render_context->bind_uniform_buffer(bones_block_.block().block_buffer(), 2);
 
           geometries[i]->draw(ctx);
         }

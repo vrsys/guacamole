@@ -46,7 +46,11 @@ SkeletalAnimationPassDescription::SkeletalAnimationPassDescription()
   rendermode_ = RenderMode::Custom;
 
   depth_stencil_state_ = boost::make_optional(
-      scm::gl::depth_stencil_state_desc(true, true));
+    scm::gl::depth_stencil_state_desc(
+      true, true, scm::gl::COMPARISON_LESS, true, 1, 0, 
+      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    )
+  );
 }
 
 
