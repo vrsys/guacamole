@@ -40,7 +40,7 @@ class SkeletalPose {
 
   ~SkeletalPose();
 
-  bool contains(std::string const& name ) const;
+  bool contains(std::string const& name) const;
 
   BonePose const& get_transform(std::string const& name) const;
 
@@ -54,12 +54,13 @@ class SkeletalPose {
   SkeletalPose& operator*=(float const factor);
   SkeletalPose operator*(float const factor) const;
 
-  void partial_replace(SkeletalPose const& pose2, std::shared_ptr<Bone> const& pNode);
+  void partial_replace(SkeletalPose const& pose2,
+                       std::shared_ptr<Bone> const& pNode);
 
- private: 
+ private:
   std::map<std::string, BonePose> transforms;
 };
 
 }
 
-#endif //GUA_POSE_HPP
+#endif  //GUA_POSE_HPP

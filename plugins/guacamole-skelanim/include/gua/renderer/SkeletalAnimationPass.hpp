@@ -31,12 +31,13 @@
 
 namespace gua {
 
-
-class GUA_DLL SkeletalAnimationPassDescription : public PipelinePassDescription {
+class GUA_DLL SkeletalAnimationPassDescription
+    : public PipelinePassDescription {
  public:
   SkeletalAnimationPassDescription();
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
+
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };

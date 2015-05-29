@@ -34,15 +34,31 @@
 
 namespace gua {
 
-  namespace SkeletalTransformation {
+namespace SkeletalTransformation {
 
-  void from_hierarchy(std::shared_ptr<Bone> const& anim_start_node_, std::vector<scm::math::mat4f>& Transforms);
-  
-  void from_anim(std::shared_ptr<Bone> const& anim_start_node_, float time_normalized, SkeletalAnimation const& anim, std::vector<scm::math::mat4f>& Transforms);
+void from_hierarchy(std::shared_ptr<Bone> const& anim_start_node_,
+                    std::vector<scm::math::mat4f>& Transforms);
 
-  void blend_anims(std::shared_ptr<Bone> const& anim_start_node_, float blend_factor, float time_normalized1, float time_normalized2, SkeletalAnimation const& anim_1, SkeletalAnimation const& anim_2, std::vector<scm::math::mat4f>& transforms);
-  
-  void partial_blend(std::shared_ptr<Bone> const& anim_start_node_, float time_normalized1, float time_normalized2, SkeletalAnimation const& anim_1, SkeletalAnimation const& anim_2, std::string const& split_node_name, std::vector<scm::math::mat4f>& transforms);
+void from_anim(std::shared_ptr<Bone> const& anim_start_node_,
+               float time_normalized,
+               SkeletalAnimation const& anim,
+               std::vector<scm::math::mat4f>& Transforms);
+
+void blend_anims(std::shared_ptr<Bone> const& anim_start_node_,
+                 float blend_factor,
+                 float time_normalized1,
+                 float time_normalized2,
+                 SkeletalAnimation const& anim_1,
+                 SkeletalAnimation const& anim_2,
+                 std::vector<scm::math::mat4f>& transforms);
+
+void partial_blend(std::shared_ptr<Bone> const& anim_start_node_,
+                   float time_normalized1,
+                   float time_normalized2,
+                   SkeletalAnimation const& anim_1,
+                   SkeletalAnimation const& anim_2,
+                   std::string const& split_node_name,
+                   std::vector<scm::math::mat4f>& transforms);
 }
 }
 

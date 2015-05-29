@@ -25,10 +25,10 @@
 namespace gua {
 
 namespace blend {
-  float cos(float x); 
-  float swap(float x); 
-  float linear(float x);
-  float smoothstep(float x);
+float cos(float x);
+float swap(float x);
+float linear(float x);
+float smoothstep(float x);
 };
 }
-#endif //GUA_BLENDING_HPP
+#endif  //GUA_BLENDING_HPP

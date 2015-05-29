@@ -24,14 +24,13 @@ float blend::linear(float x) {
 float blend::smoothstep(float x) {
   x = fmod(x, 2.0f);
   x = 1 - scm::math::abs(x - 1);
-  
+
   return 3 * x * x - 2 * x * x * x;
 }
 
-float blend::swap(float x)
-{
+float blend::swap(float x) {
   x = fmod(x, 2.0f);
   return (x > 0.5) ? 1 : 0;
 }
 
-} // namespace gua
+}  // namespace gua

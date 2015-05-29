@@ -38,7 +38,9 @@ struct BonePose {
  public:
   BonePose();
 
-  BonePose(scm::math::vec3f const& scale, scm::math::quatf const& rotate, scm::math::vec3f const& translate);
+  BonePose(scm::math::vec3f const& scale,
+           scm::math::quatf const& rotate,
+           scm::math::vec3f const& translate);
 
   ~BonePose();
 
@@ -60,4 +62,4 @@ struct BonePose {
 
 }
 
-#endif //GUA_BONEPOSE_HPP
+#endif  //GUA_BONEPOSE_HPP

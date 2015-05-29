@@ -31,24 +31,21 @@
 #include <list>
 #include <memory>
 
-namespace fbxsdk_2015_1{
-  class FbxScene;
-  class FbxManager;
+namespace fbxsdk_2015_1 {
+class FbxScene;
+class FbxManager;
 }
 
-namespace Assimp {
-  class Importer; 
-}
+namespace Assimp { class Importer; }
 class aiScene;
 
 namespace gua {
 
 namespace node {
-  class Node;
-  class InnerNode;
-  class GeometryNode;
+class Node;
+class InnerNode;
+class GeometryNode;
 }
-
 
 /**
  * Loads skinned meshes and animations.
@@ -58,51 +55,56 @@ namespace node {
  */
 class GUA_DLL SkeletalAnimationLoader {
 
- public: // typedefs, enums
+ public:  // typedefs, enums
 
-   enum Flags {
-     DEFAULTS = 0,
-     LOAD_MATERIALS = 1 << 0,
-     OPTIMIZE_GEOMETRY = 1 << 1,
-     MAKE_PICKABLE = 1 << 2,
-     NORMALIZE_POSITION = 1 << 3,
-     NORMALIZE_SCALE = 1 << 4,
-     NO_SHARED_MATERIALS = 1 << 5,
-     OPTIMIZE_MATERIALS = 1 << 6
-   };
+  enum Flags {
+    DEFAULTS = 0,
+    LOAD_MATERIALS = 1 << 0,
+    OPTIMIZE_GEOMETRY = 1 << 1,
+    MAKE_PICKABLE = 1 << 2,
+    NORMALIZE_POSITION = 1 << 3,
+    NORMALIZE_SCALE = 1 << 4,
+    NO_SHARED_MATERIALS = 1 << 5,
+    OPTIMIZE_MATERIALS = 1 << 6
+  };
 
-public:
+ public:
 
   /**
    * Default constructor.
    *
    * Constructs a new and empty MeshLoader.
    */
-   SkeletalAnimationLoader();
+  SkeletalAnimationLoader();
 
-   /**
-   *
-   */
-   std::shared_ptr<node::SkeletalAnimationNode> load_geometry(std::string const& file_name,
-                                                  std::string const& node_name,
-                                                  unsigned flags = DEFAULTS);
+  /**
+  *
+  */
+  std::shared_ptr<node::SkeletalAnimationNode> load_geometry(
+      std::string const& file_name,
+      std::string const& node_name,
+      unsigned flags = DEFAULTS);
 
   /**
    *
    */
-   std::vector<SkeletalAnimation> load_animation(std::string const& file_name, std::string const& animation_name);
+  std::vector<SkeletalAnimation> load_animation(
+      std::string const& file_name,
+      std::string const& animation_name);
 
-   /**
-   *
-   */
-   std::shared_ptr<node::SkeletalAnimationNode> create_geometry_from_file(std::string const& node_name,
-                                                   std::string const& file_name,
-                                                   std::shared_ptr<Material> const& fallback_material,
-                                                   unsigned flags = DEFAULTS);
+  /**
+  *
+  */
+  std::shared_ptr<node::SkeletalAnimationNode> create_geometry_from_file(
+      std::string const& node_name,
+      std::string const& file_name,
+      std::shared_ptr<Material> const& fallback_material,
+      unsigned flags = DEFAULTS);
 
-  std::shared_ptr<node::SkeletalAnimationNode> create_geometry_from_file(std::string const& node_name,
-                                                    std::string const& file_name,
-                                                    unsigned flags = DEFAULTS);
+  std::shared_ptr<node::SkeletalAnimationNode> create_geometry_from_file(
+      std::string const& node_name,
+      std::string const& file_name,
+      unsigned flags = DEFAULTS);
   /**
    * Constructor from a file.
    *
@@ -111,8 +113,10 @@ public:
    * \param file_name        The file to load the meshs data from.
    * \param material_name    The material name that was set to the parent node
    */
-  std::shared_ptr<node::SkeletalAnimationNode> load(std::string const& file_name, std::string const& node_name,
-                             unsigned flags);
+  std::shared_ptr<node::SkeletalAnimationNode> load(
+      std::string const& file_name,
+      std::string const& node_name,
+      unsigned flags);
 
   /**
    * Constructor from memory buffer.
@@ -123,7 +127,8 @@ public:
    * \param buffer_size      The buffer's size.
    */
   // TODO
-  /*std::vector<SkeletalAnimationRessource*> const load_from_buffer(char const* buffer_name,
+  /*std::vector<SkeletalAnimationRessource*> const load_from_buffer(char const*
+                                                        buffer_name,
                                                         unsigned buffer_size,
                                                         bool build_kd_tree);*/
   /**
@@ -131,23 +136,28 @@ public:
   */
   bool is_supported(std::string const& file_name) const;
 
- private: // methods
+ private:  // methods
 
-  static std::shared_ptr<node::SkeletalAnimationNode> get_node(fbxsdk_2015_1::FbxScene* fbx_scene,
-                std::string const& file_name,
-                std::string const& node_name,
-                unsigned flags);
+  static std::shared_ptr<node::SkeletalAnimationNode> get_node(
+      fbxsdk_2015_1::FbxScene* fbx_scene,
+      std::string const& file_name,
+      std::string const& node_name,
+      unsigned flags);
 
-  static std::shared_ptr<node::SkeletalAnimationNode> get_node(aiScene const* ai_scene,
-                std::string const& file_name,
-                std::string const& node_name,
-                unsigned flags);
+  static std::shared_ptr<node::SkeletalAnimationNode> get_node(
+      aiScene const* ai_scene,
+      std::string const& file_name,
+      std::string const& node_name,
+      unsigned flags);
 
-  static void apply_fallback_material(std::shared_ptr<node::SkeletalAnimationNode> const& root,
-                std::shared_ptr<Material> const& fallback_material,
-                bool no_shared_materials);
+  static void apply_fallback_material(
+      std::shared_ptr<node::SkeletalAnimationNode> const& root,
+      std::shared_ptr<Material> const& fallback_material,
+      bool no_shared_materials);
 
-  static fbxsdk_2015_1::FbxScene* load_fbx_file(fbxsdk_2015_1::FbxManager* manager, std::string const& file_path);
+  static fbxsdk_2015_1::FbxScene* load_fbx_file(
+      fbxsdk_2015_1::FbxManager* manager,
+      std::string const& file_path);
 };
 
 }

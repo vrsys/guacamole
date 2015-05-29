@@ -37,13 +37,13 @@
 
 class aiScene;
 
-namespace fbxsdk_2015_1{
-  class FbxNode;
-  class FbxScene;
+namespace fbxsdk_2015_1 {
+class FbxNode;
+class FbxScene;
 }
 
 namespace gua {
-  
+
 class Bone {
  public:
   Bone();
@@ -56,15 +56,19 @@ class Bone {
 
   void collect_indices(std::map<std::string, int>& ids) const;
 
-  void set_properties(std::map<std::string, std::pair<uint, scm::math::mat4f>> const& infos);
+  void set_properties(
+      std::map<std::string, std::pair<uint, scm::math::mat4f> > const& infos);
 
-  void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s, SkeletalPose const& pose, scm::math::mat4f const& parentTransform = scm::math::mat4f::identity()) const;
+  void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s,
+                           SkeletalPose const& pose,
+                           scm::math::mat4f const& parentTransform =
+                               scm::math::mat4f::identity()) const;
 
   std::shared_ptr<Bone> find(std::string const& name) const;
 
   std::string name;
-  std::vector<std::shared_ptr<Bone>> children;
-  
+  std::vector<std::shared_ptr<Bone> > children;
+
  private:
 
   int index;
@@ -77,4 +81,4 @@ class Bone {
 
 }
 
-#endif //GUA_BONE_HPP
+#endif  //GUA_BONE_HPP

@@ -32,9 +32,9 @@
 
 #include <vector>
 
-namespace fbxsdk_2015_1{
-  class FbxNode;
-  class FbxAnimStack;
+namespace fbxsdk_2015_1 {
+class FbxNode;
+class FbxAnimStack;
 }
 
 namespace gua {
@@ -45,7 +45,9 @@ class SkeletalAnimation {
   SkeletalAnimation();
 
   SkeletalAnimation(aiAnimation const& anim, std::string const& name = "");
-  SkeletalAnimation(fbxsdk_2015_1::FbxAnimStack* anim, std::vector<fbxsdk_2015_1::FbxNode*> const& bones, std::string const& name = "");
+  SkeletalAnimation(fbxsdk_2015_1::FbxAnimStack* anim,
+                    std::vector<fbxsdk_2015_1::FbxNode*> const& bones,
+                    std::string const& name = "");
 
   ~SkeletalAnimation();
 
@@ -66,4 +68,4 @@ class SkeletalAnimation {
 
 }
 
-#endif //GUA_SKELETAL_ANIMATION_HPP
+#endif  //GUA_SKELETAL_ANIMATION_HPP
