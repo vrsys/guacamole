@@ -61,77 +61,29 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  auto load_mat = [](std::string const& file){
-    auto desc(std::make_shared<gua::MaterialShaderDescription>());
-    desc->load_from_file(file);
-    auto shader(std::make_shared<gua::MaterialShader>(file, desc));
-    gua::MaterialShaderDatabase::instance()->add(shader);
-    return shader->make_new_material();
-  };
-
   auto mat1(gua::PBSMaterialFactory::create_material(static_cast<gua::PBSMaterialFactory::Capabilities>(gua::PBSMaterialFactory::ALL)));
+  // mat1->set_uniform("Color", gua::math::vec3f(1.0f, 1.0f, 1.0f));
+  mat1->set_uniform("Metalness", 0.0f);
+  mat1->set_uniform("Roughness", 0.7f);
+  mat1->set_uniform("Emissivity", 0.0f);
   gua::SkeletalAnimationLoader loader;
   gua::TriMeshLoader tri_loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto transform2 = graph.add_node<gua::node::TransformNode>("/", "transform2");
-
-  // auto skelNode2(loader.create_geometry_from_file("bobby", "data/objects/pinky/pinky.md5mesh", gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // graph.add_node("/transform", skelNode2);
-  // skelNode2->add_animations("data/objects/pinky/idle1.md5anim", "idle");
-  // skelNode2->add_animations("data/objects/pinky/attack.md5anim", "attack");
-  // skelNode2->add_animations("data/objects/pinky/run.md5anim", "run");
-  // skelNode2->set_animation_2("run");
-  // skelNode2->set_draw_bounding_box(true);
-
-  // auto bob(loader.create_geometry_from_file("bob", "data/objects/bob/boblampclean.md5mesh", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // bob->add_animations("data/objects/bob/boblampclean.md5anim");
-  // auto bob(loader.create_geometry_from_file("bob", "data/objects/marine/mpplayer.md5mesh",  gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // bob->set_draw_bounding_box(true);
-  // graph.add_node("/transform", bob);
-  // bob->add_animations("data/objects/marine/crouch.md5anim", "unterschiedlich");
-  // bob->add_animations("data/objects/marine/fists_idle.md5anim", "unterschiedlich");
-  // bob->add_animations("data/objects/marine/run.md5anim", "unterschiedlich");
-  // bob->add_animations("data/objects/marine/fists_idle.md5anim", "unterschiedlich");
-
-
-  auto triNode(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/barrel.fbx", mat1, gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  // auto triNode(tri_loader.create_geometry_from_file("fbx", "data/objects/plane.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  // auto triNode(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/office/BlueprintOffice.FBX", mat1, gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  // auto triNode(tri_loader.create_geometry_from_file("fbx", "data/objects/fbx/SunTemple/SunTemple.FBX", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  // triNode->set_transform(scm::math::make_scale(10.0,1.0,10.0));
-  graph.add_node("/transform2", triNode);
+  // load ground
+  auto ground_node(tri_loader.create_geometry_from_file("fbx", "data/objects/plane.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  ground_node->set_transform(scm::math::make_translation(0.0, -0.48, 0.0) * scm::math::make_scale(5.0, 5.0, 5.0) * ground_node->get_transform());
+  // load character
+  auto character_node(loader.create_geometry_from_file("fbx", "data/objects/fbx/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  character_node->set_transform(scm::math::make_rotation(-90.0, 1.0, 0.0, 0.0) * character_node->get_transform());
   
-  // auto skelNode(loader.create_geometry_from_file("fbx", "data/objects/fbx/face.fbx", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  auto skelNode(loader.create_geometry_from_file("fbx", "data/objects/fbx/Necris/Necris_LP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // skelNode->set_shadow_mode(gua::ShadowMode::HIGH_QUALITY);
-  // auto skelNode(loader.create_geometry_from_file("fbx", "data/objects/fbx/Necris/Necris_LP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // skelNode->add_animations("data/objects/fbx/Necris/Swim_Bwd_Rif.FBX", "swim");
-  // skelNode->add_animations("data/objects/fbx/Necris/Idle_Ready_Pis.FBX", "pistol");
-  // skelNode->add_animations("data/objects/fbx/Necris/Taunt_NoNo.FBX", "no");
+  character_node->add_animations("data/objects/fbx/Walk.FBX", "walk");
+  character_node->set_animation_1("walk");
+  // play only anim nr. 1
+  character_node->set_blend_factor(0);
 
-  // skelNode->set_animation_2("no");
-  // skelNode->set_animation_2("swim");
-  // // skelNode->set_blend_factor(0.5);
-  // // skelNode->get_director()->fade_to("no", 1.5, false);
-  // skelNode->set_draw_bounding_box(true);
-  graph.add_node("/transform2", skelNode);
-
-  // auto fbx2(loader.create_geometry_from_file("fbx2", "data/objects/fbx/jill/Mortimer.FBX", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // auto fbx2(loader.create_geometry_from_file("fbx2", "data/objects/fbx/malcolm/malcolm_ut4_SKELMESH.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // auto fbx2(loader.create_geometry_from_file("fbx2", "data/objects/fbx/maw/maw.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // fbx2->add_animations("data/objects/fbx/Necris/Taunt_NoNo.FBX", "no");
-  // fbx2->add_animations("data/objects/fbx/Maw/Walk.FBX", "no");
-  // std::shared_ptr<gua::node::SkeletalAnimationNode> skelNode2 = std::dynamic_pointer_cast<gua::node::SkeletalAnimationNode, gua::node::Node>(fbx2);
-  // skelNode2->set_animation_2("no");
-  // graph.add_node("/transform", skelNode2);
-
-  // auto skelNode(loader.create_geometry_from_file("fbx", "data/objects/fbx/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::LOAD_MATERIALS | gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
-  // skelNode->add_animations("data/objects/fbx/Idle.FBX", "unterschiedlich");
-  // skelNode->add_animations("data/objects/fbx/face.fbx", "unterschiedlich");
-  // skelNode->add_animations("data/objects/fbx/Walk.FBX", "unterschiedlich");
-  // skelNode->add_animations("data/objects/fbx/Run.FBX", "unterschiedlich");
-  
+  graph.add_node("/transform", ground_node);
+  graph.add_node("/transform", character_node);
 
   auto pointLight = graph.add_node<gua::node::LightNode>("/", "pointLight");
   pointLight->data.set_type(gua::node::LightNode::Type::SUN);
@@ -152,9 +104,6 @@ int main(int argc, char** argv) {
 
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
-  
-  gua::TextureDatabase::instance()->load("/opt/guacamole/resources/skymaps/skymap.jpg");
-
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -175,6 +124,7 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
   pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   // pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  pipe->get_resolve_pass()->background_color(gua::utils::Color3f(0.5f,0.7f, 1.0f));
   camera->set_pipeline_description(pipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
@@ -197,20 +147,21 @@ int main(int argc, char** argv) {
 
   gua::Renderer renderer;
 
+  float i = 0;
   // application loop
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0/500.0);
-  float i = -1;
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
-    transform->set_transform(scm::math::make_translation(-0.75,0.0,0.0) * modelmatrix);
-    transform2->set_transform(scm::math::make_translation(0.75,0.0,0.0) * modelmatrix);
-    // skelNode->set_time_2(i);
-    // skelNode2->set_time_2(i);
-    i += 0.001;
+    transform->set_transform(modelmatrix);
+
+    // set time variable for animation
+    i += 1.0 / 600.0;
     if (i > 1) i = 0;
+    character_node->set_time_1(i);
+
     window->process_events();
     if (window->should_close()) {
       renderer.stop();
