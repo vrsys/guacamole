@@ -49,7 +49,6 @@ class GUA_DLL GBuffer : public RenderTarget {
   std::shared_ptr<Texture2D> const& get_color_buffer()  const;
   std::shared_ptr<Texture2D> const& get_pbr_buffer()    const;
   std::shared_ptr<Texture2D> const& get_normal_buffer() const;
-  std::shared_ptr<Texture2D> const& get_flags_buffer()  const;
   std::shared_ptr<Texture2D> const& get_depth_buffer()  const override;
 
   inline scm::gl::frame_buffer_ptr get_fbo_read() const { return fbo_read_; }
@@ -67,7 +66,6 @@ class GUA_DLL GBuffer : public RenderTarget {
   std::shared_ptr<Texture2D> color_buffer_write_;
   std::shared_ptr<Texture2D> pbr_buffer_;
   std::shared_ptr<Texture2D> normal_buffer_;
-  std::shared_ptr<Texture2D> flags_buffer_;
   std::shared_ptr<Texture2D> depth_buffer_;
 };
 

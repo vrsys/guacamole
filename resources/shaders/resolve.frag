@@ -82,7 +82,7 @@ vec3 environment_lighting (in ShadingTerms T)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags, bool ssao_enable) {
+vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, bool ssao_enable) {
 
   float emit = pbr.r;
 
@@ -124,13 +124,13 @@ vec4 abuf_shade(uint pos, float depth) {
   vec3 color = vec3(unpackUnorm2x16(data.x), unpackUnorm2x16(data.y).x);
   vec3 normal = vec3(unpackSnorm2x16(data.y).y, unpackSnorm2x16(data.z));
   vec3 pbr = unpackUnorm4x8(data.w).xyz;
-  uint flags = bitfieldExtract(data.w, 24, 8);
+  // uint flags = bitfieldExtract(data.w, 24, 8);
 
   vec4 screen_space_pos = vec4(gua_get_quad_coords() * 2.0 - 1.0, depth, 1.0);
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   vec3 position = h.xyz / h.w;
 
-  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags, false), pbr.r);
+  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, false), pbr.r);
   return frag_color_emit;
 }
 #endif
@@ -245,7 +245,6 @@ void main() {
                                       gua_get_normal(),
                                       gua_get_position(),
                                       gua_get_pbr(),
-                                      gua_get_flags(),
                                       gua_ssao_enable);
       if (gua_enable_fog) {
         gbuffer_color = gua_apply_fog(gbuffer_color, gua_get_background_color());

@@ -102,6 +102,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   auto& target = *pipe.current_viewstate().target;
 
   bool write_depth = false;
+  // target.clear(ctx);
   target.bind(ctx, write_depth);
   target.set_viewport(ctx);
 
@@ -130,6 +131,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
       Logger::LOG_WARNING << "Failed to share ABuffer for WarpPass: Target window not found!" << std::endl;
     }
   }
+
+  pipe.bind_gbuffer_input(program_);
 
   a_buffer.bind(ctx);
 

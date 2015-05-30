@@ -614,9 +614,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
                         gbuffer_->get_normal_buffer()->get_handle(context_),
                         "gua_gbuffer_normal");
     shader->set_uniform(context_,
-                        gbuffer_->get_flags_buffer()->get_handle(context_),
-                        "gua_gbuffer_flags");
-    shader->set_uniform(context_,
                         gbuffer_->get_depth_buffer()->get_handle(context_),
                         "gua_gbuffer_depth");
   }
