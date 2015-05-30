@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
   auto scene_root = graph.add_node<gua::node::TransformNode>("/transform", "many_oilrigs");
   auto add_oilrig = [&](int x, int y, int c, std::string const& parent) {
     auto t = graph.add_node<gua::node::TransformNode>(parent, "t");
-    t->translate((x - c*0.5 + 0.5)/1.5, (y - c*0.5 + 0.5)/2, 0);
+    t->translate((x - c*0.5 + 0.5)/1.5, (y - c*0.5 + 0.8)/2, 0);
     auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",  
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION | 
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
@@ -111,7 +111,8 @@ int main(int argc, char** argv) {
 
   // one oilrig ----------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "one_oilrig");
-  add_oilrig(0, 0, 0, "/transform/one_oilrig");
+  scene_root->scale(3);
+  add_oilrig(0, 0, 1, "/transform/one_oilrig");
 
   // textured quads scene ------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "textured_quads");
