@@ -30,7 +30,7 @@
 
 #include <gua/gui.hpp>
 
-#define COUNT 4
+#define COUNT 6
 
 const bool SHOW_FRAME_RATE = false;
 const bool CLIENT_SERVER = false;
@@ -90,12 +90,12 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
 
-  // 'real' scene  -------------------------------------------------------------
-  auto add_oilrig = [&](int x, int y) {
-    auto t = graph.add_node<gua::node::TransformNode>("/transform", "t");
-    t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/2, 0);
+  // many oilrigs scene --------------------------------------------------------
+  auto scene_root = graph.add_node<gua::node::TransformNode>("/transform", "many_oilrigs");
+  auto add_oilrig = [&](int x, int y, int c, std::string const& parent) {
+    auto t = graph.add_node<gua::node::TransformNode>(parent, "t");
+    t->translate((x - c*0.5 + 0.5)/1.5, (y - c*0.5 + 0.5)/2, 0);
     auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",  
-    // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",  
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION | 
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -105,25 +105,49 @@ int main(int argc, char** argv) {
 
   for (int x(0); x<COUNT; ++x) {
     for (int y(0); y<COUNT; ++y) {
-      add_oilrig(x, y);
+      add_oilrig(x, y, COUNT, "/transform/many_oilrigs");
     }
   }
 
-  // textured quads ------------------------------------------------------------
-  // for (int x(0); x<COUNT; ++x) {
-  //   auto node = graph.add_node<gua::node::TexturedQuadNode>("/transform", "node" + std::to_string(x));
-  //   node->translate(0, 0, -x);
-  //   node->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
-  // }
+  // one oilrig ----------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "one_oilrig");
+  add_oilrig(0, 0, 0, "/transform/one_oilrig");
+
+  // textured quads scene ------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "textured_quads");
+  for (int x(0); x<10; ++x) {
+    auto node = graph.add_node<gua::node::TexturedQuadNode>("/transform/textured_quads", "node" + std::to_string(x));
+    node->translate(0, 0, -x);
+    node->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
+  }
+
+  // teapot --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "teapot");
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",  
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION | 
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  scene_root->add_child(teapot);
+
 
   show_backfaces(transform);
 
-  // auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
-  // light2->data.set_type(gua::node::LightNode::Type::POINT);
-  // light2->data.brightness = 150.0f;
-  // light2->scale(12.f);
-  // light2->translate(-3.f, 5.f, 5.f);
+  auto set_scene = [&](std::string const& name) {
+    graph["/transform/many_oilrigs"]->get_tags().add_tag("invisible");
+    graph["/transform/one_oilrig"]->get_tags().add_tag("invisible");
+    graph["/transform/textured_quads"]->get_tags().add_tag("invisible");
+    graph["/transform/teapot"]->get_tags().add_tag("invisible");
 
+    if (name == "set_scene_many_oilrigs") 
+      graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_one_oilrig") 
+      graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_textured_quads") 
+      graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_teapot") 
+      graph["/transform/teapot"]->get_tags().remove_tag("invisible");
+  };
+
+  set_scene("set_scene_one_oilrig");
 
   // ---------------------------------------------------------------------------
   // ------------------------ setup rendering pipelines ------------------------
@@ -138,6 +162,7 @@ int main(int argc, char** argv) {
   slow_cam->config.set_resolution(resolution);
   slow_cam->config.set_screen_path("/slow_screen");
   slow_cam->config.set_scene_graph_name("main_scenegraph");
+  slow_cam->config.mask().blacklist.add_tag("invisible");
   
   // fast client ---------------------------------------------------------------
   auto fast_screen = graph.add_node<gua::node::ScreenNode>("/", "fast_screen");
@@ -176,6 +201,7 @@ int main(int argc, char** argv) {
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
+    pipe->add_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
     pipe->add_pass(warp_pass);
     pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
     pipe->set_enable_abuffer(true);
@@ -197,9 +223,6 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
       gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
       gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
-      gui->add_javascript_getter("get_type_points", [&](){ return std::to_string(display_mode == gua::WarpPassDescription::DisplayMode::POINTS);});
-      gui->add_javascript_getter("get_type_quads", [&](){ return std::to_string(display_mode == gua::WarpPassDescription::DisplayMode::QUADS);});
-      gui->add_javascript_getter("get_type_scaled_points", [&](){ return std::to_string(display_mode == gua::WarpPassDescription::DisplayMode::SCALED_POINTS);});
 
       gui->add_javascript_callback("set_depth_layers");
       gui->add_javascript_callback("set_depth_test");
@@ -208,6 +231,10 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_type_points");
       gui->add_javascript_callback("set_type_quads");
       gui->add_javascript_callback("set_type_scaled_points");
+      gui->add_javascript_callback("set_scene_one_oilrig");
+      gui->add_javascript_callback("set_scene_many_oilrigs");
+      gui->add_javascript_callback("set_scene_teapot");
+      gui->add_javascript_callback("set_scene_textured_quads");
 
       gui->add_javascript_callback("reset_view");
 
@@ -247,20 +274,25 @@ int main(int argc, char** argv) {
         if (checked) {
           warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::POINTS);
         }
-      }  else if (callback == "set_type_quads") {
+      } else if (callback == "set_type_quads") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
           warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::QUADS);
         }
-      }  else if (callback == "set_type_scaled_points") {
+      } else if (callback == "set_type_scaled_points") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
           warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::SCALED_POINTS);
         }
+      } else if (callback == "set_scene_one_oilrig" || 
+                 callback == "set_scene_many_oilrigs" ||
+                 callback == "set_scene_teapot" ||
+                 callback == "set_scene_textured_quads") {
+        set_scene(callback);
       } 
     });
 
