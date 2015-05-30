@@ -107,7 +107,7 @@ void submit_fragment(float depth)
 
 
     // always abuffer
-    // abuf_insert(depth);
+    abuf_insert(depth);
     // discard;
 
     // always gbuffer

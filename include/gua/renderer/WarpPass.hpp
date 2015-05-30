@@ -35,7 +35,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   enum DisplayMode {
     POINTS,
-    QUADS
+    QUADS,
+    SCALED_POINTS
   };
 
   WarpPassDescription();

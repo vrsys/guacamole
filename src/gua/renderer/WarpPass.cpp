@@ -37,7 +37,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 WarpPassDescription::WarpPassDescription()
   : PipelinePassDescription()
-  , max_layers_(10)
+  , max_layers_(2)
   , depth_test_(true)
   , mode_(POINTS)
 {
@@ -45,7 +45,7 @@ WarpPassDescription::WarpPassDescription()
   fragment_shader_ = "";
   name_ = "WarpPass";
   needs_color_buffer_as_input_ = true;
-  writes_only_color_buffer_ = false;
+  writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Custom;
 
   uniforms["original_inverse_projection_view_matrix"] = scm::math::make_translation(0.f, 0.f, 0.f);

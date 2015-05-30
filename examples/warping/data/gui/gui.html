@@ -192,6 +192,7 @@
       function init() {
         init_checkbox("#type_quads", "type_quads");
         init_checkbox("#type_points", "type_points");
+        init_checkbox("#type_scaled_points", "type_scaled_points");
         add_slider("#preview-panel", "depth_layers", "Depth Layers", 1, 20, 1);
         add_space("#preview-panel");
         add_checkbox("#preview-panel", "depth_test", "Depth Test");
@@ -300,6 +301,12 @@
                 <label>
                   <input type="radio" name="optionsRadios" id="type_quads" value="">
                   <span>Quads</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="optionsRadios" id="type_scaled_points" value="">
+                  <span>Scaled Points</span>
                 </label>
               </div>
             </div>

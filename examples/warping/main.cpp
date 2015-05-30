@@ -199,6 +199,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
       gui->add_javascript_getter("get_type_points", [&](){ return std::to_string(display_mode == gua::WarpPassDescription::DisplayMode::POINTS);});
       gui->add_javascript_getter("get_type_quads", [&](){ return std::to_string(display_mode == gua::WarpPassDescription::DisplayMode::QUADS);});
+      gui->add_javascript_getter("get_type_scaled_points", [&](){ return std::to_string(display_mode == gua::WarpPassDescription::DisplayMode::SCALED_POINTS);});
 
       gui->add_javascript_callback("set_depth_layers");
       gui->add_javascript_callback("set_depth_test");
@@ -206,6 +207,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_orthographic");
       gui->add_javascript_callback("set_type_points");
       gui->add_javascript_callback("set_type_quads");
+      gui->add_javascript_callback("set_type_scaled_points");
 
       gui->add_javascript_callback("reset_view");
 
@@ -245,13 +247,19 @@ int main(int argc, char** argv) {
         if (checked) {
           warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::POINTS);
         }
-
       }  else if (callback == "set_type_quads") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
           warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::QUADS);
+        }
+      }  else if (callback == "set_type_scaled_points") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        if (checked) {
+          warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::SCALED_POINTS);
         }
       } 
     });
