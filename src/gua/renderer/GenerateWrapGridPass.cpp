@@ -20,65 +20,64 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/TriMeshPass.hpp>
+#include <gua/renderer/GenerateWarpGridPass.hpp>
 
-#include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/renderer/TriMeshRenderer.hpp>
 #include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/ABuffer.hpp>
+#include <gua/renderer/WarpRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/utils/Logger.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/Resources.hpp>
-#include <gua/node/TriMeshNode.hpp>
+#include <gua/utils/Logger.hpp>
+
+#include <boost/variant.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-
-TriMeshPassDescription::TriMeshPassDescription()
-  : PipelinePassDescription() {
-  vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
-  fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
-  name_ = "TriMeshPass";
-
-  needs_color_buffer_as_input_ = true;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = true;
-  rendermode_ = RenderMode::Custom;
-
-  depth_stencil_state_ = boost::make_optional(
-    scm::gl::depth_stencil_state_desc(
-      true, true, scm::gl::COMPARISON_LESS, true, 1, 0, 
-      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
-    )
-  );
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<PipelinePassDescription> TriMeshPassDescription::make_copy() const {
-  return std::make_shared<TriMeshPassDescription>(*this);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass TriMeshPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+GenerateWarpGridPassDescription::GenerateWarpGridPassDescription()
+  : PipelinePassDescription()
+  , cell_size_(32)
 {
+  vertex_shader_ = "";
+  fragment_shader_ = "";
+  name_ = "GenerateWarpGridPass";
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = true;
+  rendermode_ = RenderMode::Custom;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+GenerateWarpGridPassDescription& GenerateWarpGridPassDescription::cell_size(int val) {
+  cell_size_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int GenerateWarpGridPassDescription::cell_size() const {
+  return cell_size_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<PipelinePassDescription> GenerateWarpGridPassDescription::make_copy() const {
+  return std::make_shared<GenerateWarpGridPassDescription>(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+PipelinePass GenerateWarpGridPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
+
   PipelinePass pass{*this, ctx, substitution_map};
 
-  auto renderer = std::make_shared<TriMeshRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
-  renderer->create_state_objects(ctx);
+  // auto renderer = std::make_shared<WarpRenderer>();
 
-  pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-
-    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
-    renderer->render(pipe, desc);
-  };
+  // pass.process_ = [renderer](
+  //   PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+  //   renderer->render(pipe, desc);
+  // };
 
   return pass;
 }

@@ -69,7 +69,7 @@ bool abuf_insert(float depth)
     // write data
 
     uint pbr = packUnorm4x8(vec4(gua_emissivity, gua_roughness, gua_metalness, 0.0));
-    pbr = bitfieldInsert(pbr, ((gua_flags_passthrough)?1u:0u), 24, 8);
+    pbr = bitfieldInsert(pbr, /*((gua_flags_passthrough)?1u:0u*/0u, 24, 8);
 
     uint col_norm = bitfieldInsert(packUnorm2x16(gua_color.bb),
                                    packSnorm2x16(gua_normal.xx), 16, 16);
@@ -104,8 +104,15 @@ void submit_fragment(float depth)
     //   if (abuf_insert(depth))
     //     discard;
     // }
+
+
+    // always abuffer
     abuf_insert(depth);
-    discard;
+    // discard;
+
+    // always gbuffer
+    @include "gua_write_gbuffer.glsl"
+    
 #endif
   } 
   else {

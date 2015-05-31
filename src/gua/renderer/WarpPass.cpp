@@ -37,15 +37,15 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 WarpPassDescription::WarpPassDescription()
   : PipelinePassDescription()
-  , max_layers_(10)
+  , max_layers_(2)
   , depth_test_(true)
   , mode_(POINTS)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
   name_ = "WarpPass";
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
+  needs_color_buffer_as_input_ = true;
+  writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Custom;
 
   uniforms["original_inverse_projection_view_matrix"] = scm::math::make_translation(0.f, 0.f, 0.f);
@@ -138,8 +138,6 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
 
   pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-
-    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
     renderer->render(pipe, desc);
   };
 

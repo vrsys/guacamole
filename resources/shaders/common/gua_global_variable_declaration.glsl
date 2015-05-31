@@ -8,5 +8,4 @@ vec3  gua_color;
 float gua_roughness;
 float gua_metalness;
 float gua_emissivity;
-bool  gua_flags_passthrough;
 float gua_alpha;

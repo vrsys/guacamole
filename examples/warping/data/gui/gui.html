@@ -168,6 +168,12 @@
         });
       }
 
+      var init_radio = function(selector, func) {
+        $(selector).change(function() {
+          gua["set_" + func](this.checked ? 1 : 0);
+        });
+      }
+
       function format_int(num) {
         if (num >= 1000000000) {
           return (num / 1000000000).toFixed(2) + ' G';
@@ -190,8 +196,15 @@
       }
 
       function init() {
-        init_checkbox("#type_quads", "type_quads");
-        init_checkbox("#type_points", "type_points");
+        
+        init_radio("#scene_one_oilrig", "scene_one_oilrig");
+        init_radio("#scene_many_oilrigs", "scene_many_oilrigs");
+        init_radio("#scene_teapot", "scene_teapot");
+        init_radio("#scene_textured_quads", "scene_textured_quads");
+        
+        init_radio("#type_quads", "type_quads");
+        init_radio("#type_points", "type_points");
+        init_radio("#type_scaled_points", "type_scaled_points");
         add_slider("#preview-panel", "depth_layers", "Depth Layers", 1, 20, 1);
         add_space("#preview-panel");
         add_checkbox("#preview-panel", "depth_test", "Depth Test");
@@ -203,8 +216,6 @@
 
 
       $(document).ready(function() {
-        // init();
-
         $('body').on('click', function (e) {
           $('[data-toggle="popover"]').each(function () {
             if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
@@ -272,9 +283,41 @@
       <div class="side-panel">
         <div id="control-panel" class="panel-inner">
 
-          <h4>Controls</h4>
+          <h4>View Options</h4>
 
-            <button onclick="gua.reset_view()" class="btn btn-block">Reset View</button>
+          <button onclick="gua.reset_view()" class="btn btn-block">Reset View</button>
+          <hr />
+          <div class="row">
+            <div class="col-xs-6">
+            Scene:
+            </div>
+            <div class="col-xs-6">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_one_oilrig" value="" checked>
+                  <span>One Oilrig</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_many_oilrigs" value="">
+                  <span>Many Oilrigs</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_teapot" value="">
+                  <span>Teapot</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_textured_quads" value="">
+                  <span>Textured Quads</span>
+                </label>
+              </div>
+            </div>
+          </div>
 
         </div>
       </div>
@@ -292,14 +335,20 @@
             <div class="col-xs-6">
               <div class="radio">
                 <label>
-                  <input type="radio" name="optionsRadios" id="type_points" value="" checked>
+                  <input type="radio" name="renderRadios" id="type_points" value="" checked>
                   <span>Points</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="optionsRadios" id="type_quads" value="">
+                  <input type="radio" name="renderRadios" id="type_quads" value="">
                   <span>Quads</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="renderRadios" id="type_scaled_points" value="">
+                  <span>Scaled Points</span>
                 </label>
               </div>
             </div>

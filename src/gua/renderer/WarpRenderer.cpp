@@ -101,8 +101,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   auto& target = *pipe.current_viewstate().target;
 
-  bool write_depth = false;
-  target.bind(ctx, write_depth);
+  bool write_all_layers = true;
+  target.bind(ctx, write_all_layers);
   target.set_viewport(ctx);
 
   if (description->depth_test()) ctx.render_context->set_depth_stencil_state(depth_stencil_state_yes_, 1);
@@ -130,6 +130,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
       Logger::LOG_WARNING << "Failed to share ABuffer for WarpPass: Target window not found!" << std::endl;
     }
   }
+
+  pipe.bind_gbuffer_input(program_);
 
   a_buffer.bind(ctx);
 

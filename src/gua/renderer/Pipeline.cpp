@@ -189,17 +189,25 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
                        camera.config.get_resolution());
   bind_camera_uniform_block(0);
 
-  // clear gbuffer
-  gbuffer_->clear(context_, 1.f, 1);
   current_viewstate_.target = gbuffer_.get();
+  gbuffer_->clear(context_, 1.f, 1);
 
   // process all passes
   for (unsigned i(0); i < passes_.size(); ++i) {
     if (passes_[i].needs_color_buffer_as_input()) {
       gbuffer_->toggle_ping_pong();
     }
+
+    gbuffer_->bind(context_, !passes_[i].writes_only_color_buffer());
+
+    if (passes_[i].needs_color_buffer_as_input()) {
+      gbuffer_->clear(context_, 1.f, 1);
+    }
+
     passes_[i].process(*last_description_.get_passes()[i], *this);
   }
+  
+  gbuffer_->clear_abuffer(context_);
 
 #if defined(GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES) || defined(GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES)
     fetch_gpu_query_results(context_);
@@ -213,7 +221,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       for (auto const& t : context_.time_query_results) {
         std::cout << t.first << " : " << t.second << " ms" << std::endl;
       }
-      // context_.time_query_results.clear();
       std::cout << std::endl;
     }
 #endif
@@ -226,13 +233,12 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       for (auto const& t : context_.primitive_query_results) {
         std::cout << t.first << " : Generated: " << t.second.first << " Written: " << t.second.second << std::endl;
       }
-      // context_.primitive_query_results.clear();
       std::cout << std::endl;
     }
 #endif
 
 
-    gbuffer_->toggle_ping_pong();
+  gbuffer_->toggle_ping_pong();
 
   // add texture to texture database
   auto const& tex(gbuffer_->get_color_buffer());
@@ -613,9 +619,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     shader->set_uniform(context_,
                         gbuffer_->get_normal_buffer()->get_handle(context_),
                         "gua_gbuffer_normal");
-    shader->set_uniform(context_,
-                        gbuffer_->get_flags_buffer()->get_handle(context_),
-                        "gua_gbuffer_flags");
     shader->set_uniform(context_,
                         gbuffer_->get_depth_buffer()->get_handle(context_),
                         "gua_gbuffer_depth");
