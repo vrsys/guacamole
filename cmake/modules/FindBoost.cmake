@@ -29,7 +29,7 @@ SET(BOOST_LIBRARY_SEARCH_DIRS
 # feedback to provide user-defined paths to search for boost
 ##############################################################################
 MACRO (request_boost_search_directories)
-    
+
     IF ( NOT Boost_INCLUDE_DIRS AND NOT Boost_LIBRARY_DIRS )
         SET(BOOST_INCLUDE_SEARCH_DIR "Please provide boost include path." CACHE PATH "path to boost headers.")
         SET(BOOST_LIBRARY_SEARCH_DIR "Please provide boost library path." CACHE PATH "path to boost libraries.")
@@ -48,7 +48,7 @@ MACRO (request_boost_search_directories)
         MESSAGE(FATAL_ERROR "find_boost.cmake: unable to find boost libraries.")
     ELSE ( NOT Boost_LIBRARY_DIRS )
         UNSET(BOOST_LIBRARY_SEARCH_DIR CACHE)
-    ENDIF ( NOT Boost_LIBRARY_DIRS ) 
+    ENDIF ( NOT Boost_LIBRARY_DIRS )
 
 ENDMACRO (request_boost_search_directories)
 
@@ -170,7 +170,7 @@ IF ( Boost_INCLUDE_DIRS AND NOT Boost_LIBRARY_DIRS )
     ELSE (NOT _BOOST_FOUND_LIB_DIR)
         SET(Boost_LIBRARY_DIRS ${_BOOST_FOUND_LIB_DIR} CACHE PATH "boost library path.")
         IF (UNIX)
-            FILE(GLOB _BOOST_LIBRARIES ${_BOOST_FOUND_LIB_DIR}/*.so)
+            FILE(GLOB _BOOST_LIBRARIES ${_BOOST_FOUND_LIB_DIR}/libboost*.so)
             SET(Boost_LIBRARIES ${_BOOST_LIBRARIES} CACHE PATH "boost libraries")
         ELSEIF (MSVC)
             # use boost auto link
@@ -188,7 +188,7 @@ IF ( Boost_INCLUDE_DIRS AND NOT Boost_LIBRARY_DIRS )
         set(BOOST_MT_S_REL  "${COMPILER_SUFFIX}-mt-s-${BOOST_LIB_VERSION}"   CACHE STRING "boost static library release postfix")
         set(BOOST_MT_S_DBG  "${COMPILER_SUFFIX}-mt-sgd-${BOOST_LIB_VERSION}" CACHE STRING "boost static library debug postfix")
     endif (UNIX)
-	
+
 ENDIF ( Boost_INCLUDE_DIRS AND NOT Boost_LIBRARY_DIRS )
 
 ##############################################################################
@@ -196,7 +196,7 @@ ENDIF ( Boost_INCLUDE_DIRS AND NOT Boost_LIBRARY_DIRS )
 ##############################################################################
 IF ( NOT Boost_INCLUDE_DIRS OR NOT Boost_LIBRARY_DIRS )
     request_boost_search_directories()
-ELSE ( NOT Boost_INCLUDE_DIRS OR NOT Boost_LIBRARY_DIRS ) 
+ELSE ( NOT Boost_INCLUDE_DIRS OR NOT Boost_LIBRARY_DIRS )
     UNSET(BOOST_INCLUDE_SEARCH_DIR CACHE)
     UNSET(BOOST_LIBRARY_SEARCH_DIR CACHE)
     MESSAGE(STATUS "--  found matching boost version")

@@ -98,7 +98,7 @@ void submit_fragment(float depth)
     }
 
     // if (gua_alpha > @abuf_insertion_threshold@) {
-    //   @include "gua_write_gbuffer.glsl"
+    //   @_include "gua_write_gbuffer.glsl"
     // }
     // else {
     //   if (abuf_insert(depth))
@@ -112,9 +112,9 @@ void submit_fragment(float depth)
 
     // always gbuffer
     @include "gua_write_gbuffer.glsl"
-    
+
 #endif
-  } 
+  }
   else {
     if (gua_alpha < 0.5) {
       discard;

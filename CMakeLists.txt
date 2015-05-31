@@ -74,12 +74,11 @@ endif (UNIX)
 
 include(FindSchism)
 include(FindBoost)
-#find_package(Boost COMPONENTS
+# find_package(Boost REQUIRED COMPONENTS
 #  system
 #  regex
 #  thread
-#  REQUIRED
-#  )
+# )
 include(FindZMQ)
 
 if (GUACAMOLE_ENABLE_PHYSICS)

@@ -62,11 +62,11 @@ namespace gua {
 
   const float th = last_description_.get_blending_termination_threshold();
   global_substitution_map_["enable_abuffer"] = "0";
-  global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
+  global_substitution_map_["abuf_insertion_threshold"] = gua::string_utils::to_string(th);
   global_substitution_map_["abuf_blending_termination_threshold"] =
-      std::to_string(th);
+      gua::string_utils::to_string(th);
   global_substitution_map_["max_lights_num"] =
-      std::to_string(last_description_.get_max_lights_count());
+      gua::string_utils::to_string(last_description_.get_max_lights_count());
 
   for (auto pass : last_description_.get_passes()) {
     passes_.push_back(pass->make_pass(ctx, global_substitution_map_));
@@ -155,11 +155,11 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     const float th = last_description_.get_blending_termination_threshold();
     global_substitution_map_["enable_abuffer"] =
       last_description_.get_enable_abuffer() ? "1" : "0";
-    global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
+    global_substitution_map_["abuf_insertion_threshold"] = gua::string_utils::to_string(th);
     global_substitution_map_["abuf_blending_termination_threshold"] =
-      std::to_string(th);
+      gua::string_utils::to_string(th);
     global_substitution_map_["max_lights_num"] =
-      std::to_string(last_description_.get_max_lights_count());
+      gua::string_utils::to_string(last_description_.get_max_lights_count());
 
     for (auto pass : last_description_.get_passes()) {
       passes_.push_back(pass->make_pass(context_, global_substitution_map_));
@@ -206,13 +206,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     passes_[i].process(*last_description_.get_passes()[i], *this);
   }
-  
+
   gbuffer_->clear_abuffer(context_);
 
 #if defined(GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES) || defined(GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES)
     fetch_gpu_query_results(context_);
 #endif
-  
+
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 
     if (context_.framecount % 60 == 0) {
@@ -346,7 +346,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       case node::LightNode::Type::SPOT :
         generate_shadow_map_spotlight(light, light_block, viewport_size, needs_redraw);
         break;
-    default : 
+    default :
       throw std::runtime_error("Pipeline::generate_shadow_map(): Lightnode type not supported.");
     };
 
@@ -584,7 +584,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   PipelineViewState const& Pipeline::current_viewstate() const {
     return current_viewstate_;
   }
-  
+
   ////////////////////////////////////////////////////////////////////////////////
 
   RenderContext const& Pipeline::get_context() const {

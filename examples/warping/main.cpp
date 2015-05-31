@@ -73,7 +73,7 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 
 int main(int argc, char** argv) {
 
-  auto resolution = gua::math::vec2ui(1920, 1080);
+  auto resolution = gua::math::vec2ui(1280, 768);
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 
   // ---------------------------------------------------------------------------
   // ---------------------------- setup scene ----------------------------------
-  
+
   gua::TriMeshLoader loader;
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
@@ -95,8 +95,8 @@ int main(int argc, char** argv) {
   auto add_oilrig = [&](int x, int y, int c, std::string const& parent) {
     auto t = graph.add_node<gua::node::TransformNode>(parent, "t");
     t->translate((x - c*0.5 + 0.5)/1.5, (y - c*0.5 + 0.8)/2, 0);
-    auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",  
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION | 
+    auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
     t->add_child(teapot);
@@ -124,8 +124,8 @@ int main(int argc, char** argv) {
 
   // teapot --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "teapot");
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",  
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION | 
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(teapot);
 
@@ -138,13 +138,13 @@ int main(int argc, char** argv) {
     graph["/transform/textured_quads"]->get_tags().add_tag("invisible");
     graph["/transform/teapot"]->get_tags().add_tag("invisible");
 
-    if (name == "set_scene_many_oilrigs") 
+    if (name == "set_scene_many_oilrigs")
       graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_one_oilrig") 
+    if (name == "set_scene_one_oilrig")
       graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_textured_quads") 
+    if (name == "set_scene_textured_quads")
       graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_teapot") 
+    if (name == "set_scene_teapot")
       graph["/transform/teapot"]->get_tags().remove_tag("invisible");
   };
 
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
 
   // ---------------------------------------------------------------------------
   // ------------------------ setup rendering pipelines ------------------------
-  
+
   // slow client ---------------------------------------------------------------
   auto slow_screen = graph.add_node<gua::node::ScreenNode>("/", "slow_screen");
   slow_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
   slow_cam->config.set_screen_path("/slow_screen");
   slow_cam->config.set_scene_graph_name("main_scenegraph");
   slow_cam->config.mask().blacklist.add_tag("invisible");
-  
+
   // fast client ---------------------------------------------------------------
   auto fast_screen = graph.add_node<gua::node::ScreenNode>("/", "fast_screen");
   fast_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
@@ -175,18 +175,18 @@ int main(int argc, char** argv) {
   fast_cam->config.set_resolution(resolution);
   fast_cam->config.set_screen_path("/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
-  
+
   auto warp_pass(std::make_shared<gua::WarpPassDescription>());
 
   if (CLIENT_SERVER) {
     slow_cam->config.set_output_window_name("hidden_window");
     fast_cam->config.set_output_window_name("window");
-    
+
     auto slow_pipe = std::make_shared<gua::PipelineDescription>();
     slow_pipe->set_enable_abuffer(true);
     slow_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     slow_cam->set_pipeline_description(slow_pipe);
-    
+
     warp_pass->use_abuffer_from_window("hidden_window");
 
     auto fast_pipe = std::make_shared<gua::PipelineDescription>();
@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
 
   auto gui = std::make_shared<gua::GuiResource>();
   auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
-  
+
   if (!CLIENT_SERVER) {
     gui->init("gui", "asset://gua/data/gui/gui.html", resolution);
 
@@ -265,7 +265,7 @@ int main(int argc, char** argv) {
           fast_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::PERSPECTIVE);
           slow_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::PERSPECTIVE);
         }
-        
+
       } else if (callback == "reset_view") {
         trackball.reset();
       } else if (callback == "set_type_points") {
@@ -289,12 +289,12 @@ int main(int argc, char** argv) {
         if (checked) {
           warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::SCALED_POINTS);
         }
-      } else if (callback == "set_scene_one_oilrig" || 
+      } else if (callback == "set_scene_one_oilrig" ||
                  callback == "set_scene_many_oilrigs" ||
                  callback == "set_scene_teapot" ||
                  callback == "set_scene_textured_quads") {
         set_scene(callback);
-      } 
+      }
     });
 
     gui_quad->data.texture() = "gui";
@@ -303,7 +303,7 @@ int main(int argc, char** argv) {
 
     graph.add_node("/", gui_quad);
   }
-  
+
 
   // ---------------------------------------------------------------------------
   // ----------------------------- setup windows -------------------------------
@@ -314,7 +314,7 @@ int main(int argc, char** argv) {
 
   if (CLIENT_SERVER) {
     window = std::make_shared<gua::Window>();
-    
+
     hidden_window = std::make_shared<gua::HeadlessSurface>();
     hidden_window->config.set_size(resolution);
     hidden_window->config.set_resolution(resolution);
@@ -345,7 +345,7 @@ int main(int argc, char** argv) {
     glfw->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     window = glfw;
   }
-  
+
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
   window->config.set_enable_vsync(false);
@@ -379,8 +379,8 @@ int main(int argc, char** argv) {
       fast_screen->rotate(0.1, 0, 1, 0);
       if (SHOW_FRAME_RATE && ctr++ % 300 == 0) {
         slow_screen->set_transform(fast_screen->get_transform());
-        std::cout << "Slow fps: " << hidden_window->get_rendering_fps() 
-                  << ", Fast fps: " << window->get_rendering_fps() 
+        std::cout << "Slow fps: " << hidden_window->get_rendering_fps()
+                  << ", Fast fps: " << window->get_rendering_fps()
                   << ", App fps: " << renderer.get_application_fps() << std::endl;
       }
       warp_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
@@ -388,12 +388,12 @@ int main(int argc, char** argv) {
       fast_screen->set_transform(modelmatrix);
       if (ctr++ % 100 == 0) {
         if (SHOW_FRAME_RATE) {
-          std::cout << "Render fps: " << window->get_rendering_fps() 
+          std::cout << "Render fps: " << window->get_rendering_fps()
                     << ", App fps: " << renderer.get_application_fps() << std::endl;
         }
 
-        double trimesh_time(0); 
-        double warp_time(0); 
+        double trimesh_time(0);
+        double warp_time(0);
         int primitives(0);
 
         for (auto const& result: window->get_context()->time_query_results) {
@@ -405,8 +405,8 @@ int main(int argc, char** argv) {
           if (result.first.find("Warp") != std::string::npos) primitives = result.second.first;
         }
 
-        gui->call_javascript("set_stats", renderer.get_application_fps(), 
-                             window->get_rendering_fps(), trimesh_time, 
+        gui->call_javascript("set_stats", renderer.get_application_fps(),
+                             window->get_rendering_fps(), trimesh_time,
                              warp_time, primitives);
       }
 
