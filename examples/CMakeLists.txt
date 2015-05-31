@@ -12,13 +12,13 @@ link_directories(${LIB_PATH})
 
 set(LIBS
   ${SCHISM_LIBRARIES}
-  ${Boost_LIBRARIES}
   ${BULLET_LIBRARIES}
   ${GUACAMOLE_LIBRARIES}
   ${ASSIMP_LIBRARIES}
   ${JSON_LIBRARIES}
+  ${Boost_LIBRARIES}
   )
-#link_libraries(${LIBS})
+# link_libraries(${LIBS})
 
 set(INCLUDE_PATHS
   ${SCHISM_INCLUDE_DIRS}

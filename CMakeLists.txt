@@ -36,7 +36,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Default install
                  prefix" FORCE)
-ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT) 
+ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 ###############################################################################
 # write Config.h

@@ -146,7 +146,7 @@ ENDIF(MSVC)
 # link static libraries
 TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES} general ${GL_LIBRARIES})
 IF (MSVC)
-  TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})  
+  TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
 ELSEIF (UNIX)
   TARGET_LINK_LIBRARIES( guacamole general ${GL_LIBRARIES})
   TARGET_LINK_LIBRARIES( guacamole general ${ASSIMP_LIBRARIES})
@@ -198,7 +198,7 @@ IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 ###############################################################################
-# install 
+# install
 ###############################################################################
 
 IF (MSVC)
@@ -216,23 +216,23 @@ IF (MSVC)
     ARCHIVE DESTINATION lib/Debug
   )
 ELSEIF (UNIX)
-  install (TARGETS guacamole 
+  install (TARGETS guacamole
     RUNTIME DESTINATION lib
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
   )
 ENDIF (MSVC)
 
-# header files 
+# header files
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../include/gua/ DESTINATION include/gua FILES_MATCHING PATTERN "*.hpp")
 
 # shader and material resources
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../resources/ DESTINATION resources 
-        FILES_MATCHING 
-        PATTERN "*.frag" 
-        PATTERN "*.vert" 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../resources/ DESTINATION resources
+        FILES_MATCHING
+        PATTERN "*.frag"
+        PATTERN "*.vert"
         PATTERN "*.geom"
-        PATTERN "*.glsl" 
-        PATTERN "*.gmd" 
+        PATTERN "*.glsl"
+        PATTERN "*.gmd"
         PATTERN "*.obj"
         )

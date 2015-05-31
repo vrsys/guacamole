@@ -7,7 +7,7 @@ list(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
 
 link_directories(${LIB_PATHS} ${ASSIMP_LIBRARY_DIR})
 
-include_directories( ${INCLUDE_PATHS} 
+include_directories( ${INCLUDE_PATHS}
                      ${PROJECT_SOURCE_DIR}/include
                      ${GUACAMOLE_NURBS_INCLUDE_DIR}
                      ${GUACAMOLE_PLOD_INCLUDE_DIR}
@@ -15,28 +15,28 @@ include_directories( ${INCLUDE_PATHS}
 
 add_executable( ${_EXE_NAME} main.cpp)
 
-add_dependencies(${_EXE_NAME} guacamole guacamole-PLOD)
-# add_dependencies(${_EXE_NAME} guacamole guacamole-nurbs guacamole-PLOD)
+add_dependencies(${_EXE_NAME} guacamole)
+# add_dependencies(${_EXE_NAME} guacamole guacamole-nurbe)
 
 list(APPEND LIBS guacamole)
 
 IF (MSVC)
-  target_link_libraries( ${_EXE_NAME} 
-                         debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE} 
-                         general guacamole guacamole-PLOD)
+  target_link_libraries( ${_EXE_NAME}
+                         debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE}
+                         general guacamole)
                          # general guacamole-nurbs)
 ELSEIF (UNIX)
-  target_link_libraries( ${_EXE_NAME} 
-                         general ${ASSIMP_LIBRARIES} 
-                         general guacamole guacamole-PLOD)
+  target_link_libraries( ${_EXE_NAME}
+                         general ${ASSIMP_LIBRARIES}
+                         general guacamole)
                          # general guacamole-nurbs )
 ENDIF (MSVC)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)
-    ADD_CUSTOM_COMMAND ( TARGET ${_EXE_NAME} POST_BUILD 
-      COMMAND robocopy \"${GLOBAL_EXT_DIR}/bin/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP 
-            & robocopy \"${LIBRARY_OUTPUT_PATH}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP 
+    ADD_CUSTOM_COMMAND ( TARGET ${_EXE_NAME} POST_BUILD
+      COMMAND robocopy \"${GLOBAL_EXT_DIR}/bin/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP
+            & robocopy \"${LIBRARY_OUTPUT_PATH}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP
             \n if %ERRORLEVEL% LEQ 7 (exit /b 0) else (exit /b 1)
     )
 ENDIF (MSVC)

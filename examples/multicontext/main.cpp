@@ -29,9 +29,6 @@
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
-#include <gua/renderer/PLODPass.hpp>
-#include <gua/renderer/PLODLoader.hpp>
-#include <gua/node/PLODNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 
 #include <thread>
@@ -68,13 +65,11 @@ int main(int argc, char** argv) {
   //mat.set_uniform("color", gua::math::vec3(1, 0, 1), 2);
 
   gua::TriMeshLoader trimeshloader;
-  gua::PLODLoader plodloader;
   // gua::NURBSLoader nurbsloader;
   // gua::Video3DLoader videoloader;
 
   auto teapot_geode(trimeshloader.create_geometry_from_file("teapot_geode", "data/objects/teapot.obj", mat, gua::TriMeshLoader::DEFAULTS));
   auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", mat, gua::TriMeshLoader::DEFAULTS));
-  auto pig_geode(plodloader.load_geometry("plate_geode", "data/objects/pig.kdn", mat, gua::PLODLoader::DEFAULTS));
   // auto video_geode(videoloader.create_geometry_from_file("video_geode", argv[1]));
   // auto nurbs_geode(nurbsloader.create_geometry_from_file("nurbs_geode", "data/objects/teapot.igs", "data/materials/Orange.gmd", gua::NURBSLoader::DEFAULTS));
 
@@ -87,7 +82,6 @@ int main(int argc, char** argv) {
 
   graph.add_node("/teapot", teapot_geode);
   graph.add_node("/plate", plate_geode);
-  graph.add_node("/pig", pig_geode);
   // graph.add_node("/video", video_geode);
   // graph.add_node("/nurbs", nurbs_geode);
 
@@ -107,7 +101,6 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
   pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
-  pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
   pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
@@ -162,7 +155,7 @@ int main(int argc, char** argv) {
   pointlight->data.set_enable_specular_shading(true);
   pointlight->data.set_enable_diffuse_shading(true);
 
-  auto add_window = [](std::string const& window_name, 
+  auto add_window = [](std::string const& window_name,
                        std::shared_ptr<gua::node::CameraNode> const& cam_node)
   {
     auto window = std::make_shared<gua::GlfwWindow>();
