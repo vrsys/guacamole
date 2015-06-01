@@ -24,7 +24,7 @@
 
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
-#include <gua/renderer/WarpRenderer.hpp>
+#include <gua/renderer/WarpGridGenerator.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
@@ -72,12 +72,12 @@ PipelinePass GenerateWarpGridPassDescription::make_pass(RenderContext const& ctx
 
   PipelinePass pass{*this, ctx, substitution_map};
 
-  // auto renderer = std::make_shared<WarpRenderer>();
+  auto renderer = std::make_shared<WarpGridGenerator>();
 
-  // pass.process_ = [renderer](
-  //   PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-  //   renderer->render(pipe, desc);
-  // };
+  pass.process_ = [renderer](
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+    renderer->render(pipe, desc);
+  };
 
   return pass;
 }

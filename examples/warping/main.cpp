@@ -39,6 +39,7 @@ int depth_layers      = 2;
 bool depth_test       = true;
 bool backface_culling = true;
 bool orthographic     = false;
+bool manipulation_object = false;
 gua::WarpPassDescription::DisplayMode display_mode = gua::WarpPassDescription::DisplayMode::POINTS;
 
 // forward mouse interaction to trackball
@@ -76,7 +77,8 @@ int main(int argc, char** argv) {
   auto resolution = gua::math::vec2ui(1280, 768);
 
   // add mouse interaction
-  gua::utils::Trackball trackball(0.01, 0.002, 0.2);
+  gua::utils::Trackball view_trackball(0.01, 0.002, 0.2);
+  gua::utils::Trackball object_trackball(0.01, 0.002, 0.2);
 
   // initialize guacamole
   gua::init(argc, argv);
@@ -244,8 +246,11 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_scene_many_oilrigs");
       gui->add_javascript_callback("set_scene_teapot");
       gui->add_javascript_callback("set_scene_textured_quads");
+      gui->add_javascript_callback("set_manipulation_camera");
+      gui->add_javascript_callback("set_manipulation_object");
 
       gui->add_javascript_callback("reset_view");
+      gui->add_javascript_callback("reset_object");
       gui->add_javascript_callback("render_view");
 
       gui->call_javascript("init");
@@ -276,10 +281,11 @@ int main(int argc, char** argv) {
         }
 
       } else if (callback == "reset_view") {
-        trackball.reset();
+        view_trackball.reset();
+      } else if (callback == "reset_object") {
+        object_trackball.reset();
       } else if (callback == "render_view") {
         slow_screen->set_transform(fast_screen->get_transform());
-        // trackball.reset();
       } else if (callback == "set_type_points") {
         std::stringstream str(params[0]);
         bool checked;
@@ -301,6 +307,16 @@ int main(int argc, char** argv) {
         if (checked) {
           warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::SCALED_POINTS);
         }
+      } else if (callback == "set_manipulation_object") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        manipulation_object = checked;
+      } else if (callback == "set_manipulation_camera") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        manipulation_object = !checked;
       } else if (callback == "set_scene_one_oilrig" ||
                  callback == "set_scene_many_oilrigs" ||
                  callback == "set_scene_teapot" ||
@@ -368,10 +384,15 @@ int main(int argc, char** argv) {
       if (gui_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
         gui->inject_mouse_position_relative(hit_pos);
       } else {
-        trackball.motion(pos.x, pos.y);
+        if (manipulation_object) {
+          object_trackball.motion(pos.x, pos.y);
+        } else {
+          view_trackball.motion(pos.x, pos.y);
+        }
       }
     });
-    glfw->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    glfw->on_button_press.connect(std::bind(mouse_button, std::ref(view_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    glfw->on_button_press.connect(std::bind(mouse_button, std::ref(object_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     window = glfw;
   }
 
@@ -397,11 +418,14 @@ int main(int argc, char** argv) {
       gua::Interface::instance()->update();
     }
 
-    // apply trackball matrix to object
-    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
-                                                              gua::math::float_t(trackball.shifty()),
-                                                              gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
-    gua::math::mat4 viewmatrix = scm::math::inverse(modelmatrix);
+    // apply view_trackball matrix to object
+    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(object_trackball.shiftx()),
+                                                              gua::math::float_t(object_trackball.shifty()),
+                                                              gua::math::float_t(object_trackball.distance())) * gua::math::mat4(object_trackball.rotation());
+    gua::math::mat4 viewmatrix = scm::math::inverse(scm::math::make_translation(
+                                    gua::math::float_t(view_trackball.shiftx()),
+                                    gua::math::float_t(view_trackball.shifty()),
+                                    gua::math::float_t(view_trackball.distance())) * gua::math::mat4(view_trackball.rotation()));
     gua::Frustum warp_frustum;
 
     if (CLIENT_SERVER) {
@@ -415,6 +439,7 @@ int main(int argc, char** argv) {
       warp_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     } else {
       fast_screen->set_transform(viewmatrix);
+      transform->set_transform(modelmatrix);
       if (ctr++ % 100 == 0) {
         if (SHOW_FRAME_RATE) {
           std::cout << "Render fps: " << window->get_rendering_fps()
