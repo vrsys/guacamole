@@ -25,6 +25,7 @@
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/WarpRenderer.hpp>
+#include <gua/renderer/WarpGridRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
@@ -39,6 +40,7 @@ WarpPassDescription::WarpPassDescription()
   : PipelinePassDescription()
   , max_layers_(2)
   , depth_test_(true)
+  , show_warp_grid_(false)
   , mode_(POINTS)
 {
   vertex_shader_ = "";
@@ -108,6 +110,20 @@ bool WarpPassDescription::depth_test() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WarpPassDescription& WarpPassDescription::show_warp_grid(bool val) {
+  show_warp_grid_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool WarpPassDescription::show_warp_grid() const {
+  return show_warp_grid_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 WarpPassDescription& WarpPassDescription::display_mode(DisplayMode mode) {
   mode_ = mode;
   touch();
@@ -136,9 +152,12 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   auto renderer = std::make_shared<WarpRenderer>();
   renderer->set_global_substitution_map(substitution_map);
 
-  pass.process_ = [renderer](
+  auto grid_renderer = std::make_shared<WarpGridRenderer>();
+
+  pass.process_ = [renderer, grid_renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
     renderer->render(pipe, desc);
+    grid_renderer->render(pipe, desc);
   };
 
   return pass;

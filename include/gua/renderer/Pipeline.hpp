@@ -108,6 +108,7 @@ public:
   PipelineViewState const&           current_viewstate() const;
 
   RenderContext const&               get_context() const;
+  RenderContext&                     get_context();
   LightTable&                        get_light_table();
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;

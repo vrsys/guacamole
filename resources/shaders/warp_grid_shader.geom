@@ -19,58 +19,41 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_WARP_GENERATOR_HPP
-#define GUA_WARP_GENERATOR_HPP
 
-#include <map>
-#include <unordered_map>
+@include "shaders/common/header.glsl"
+@include "shaders/common/gua_camera_uniforms.glsl"
 
-#include <gua/platform.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
+layout(points) in;
+layout(line_strip, max_vertices = 5) out;
 
-#include <scm/gl_core/shader_objects.h>
+flat in ivec3 varying_position[];
+flat out int cellsize;
 
-namespace gua {
 
-class Pipeline;
-class PipelinePassDescription;
+// body 
+void main() { 
 
-class WarpGridGenerator {
+  cellsize = varying_position[0].z;
 
- public:
+  vec2 vertex_position = vec2(varying_position[0].xy) / gua_resolution * 2 - 1;
+  gl_Position = vec4(vertex_position, 0, 1);
+  EmitVertex(); 
 
-  struct SharedResource {
-    inline int current_tfb() const { return ping ? 1 : 0; }
-    inline int current_vbo() const { return ping ? 0 : 1; }
+  vertex_position = vec2(varying_position[0].xy + vec2(cellsize, 0)) / gua_resolution * 2 - 1;
+  gl_Position = vec4(vertex_position, 0, 1);
+  EmitVertex(); 
 
-    bool ping = false;
+  vertex_position = vec2(varying_position[0].xy + vec2(cellsize, cellsize)) / gua_resolution * 2 - 1;
+  gl_Position = vec4(vertex_position, 0, 1);
+  EmitVertex(); 
 
-    scm::gl::transform_feedback_ptr grid_tfb[2];
-    scm::gl::buffer_ptr             grid_vbo[2];
-    scm::gl::vertex_array_ptr       grid_vao[2];
-    size_t                          cell_count = 0;
+  vertex_position = vec2(varying_position[0].xy + vec2(0, cellsize)) / gua_resolution * 2 - 1;
+  gl_Position = vec4(vertex_position, 0, 1);
+  EmitVertex(); 
 
-    std::shared_ptr<Texture>                min_max_depth_buffer;
-    std::vector<scm::gl::frame_buffer_ptr>  min_max_depth_buffer_fbos;
-  };
+  vertex_position = vec2(varying_position[0].xy) / gua_resolution * 2 - 1;
+  gl_Position = vec4(vertex_position, 0, 1);
+  EmitVertex(); 
 
-  WarpGridGenerator();
-  virtual ~WarpGridGenerator();
-
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
-
- private:
-  std::shared_ptr<SharedResource>  res_;
-
-  std::vector<ShaderProgramStage>  grid_generation_program_stages_;
-  std::shared_ptr<ShaderProgram>   grid_generation_program_;
-
-  std::vector<ShaderProgramStage>  min_max_filter_program_stages_;
-  std::shared_ptr<ShaderProgram>   min_max_filter_program_;
-
-  Pipeline* pipe_;
-};
-
+  EndPrimitive();
 }
-
-#endif  // GUA_WARP_GENERATOR_HPP

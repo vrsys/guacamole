@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_WARP_GENERATOR_HPP
-#define GUA_WARP_GENERATOR_HPP
+#ifndef GUA_WARP_GRID_RENDERER_HPP
+#define GUA_WARP_GRID_RENDERER_HPP
 
 #include <map>
 #include <unordered_map>
@@ -35,42 +35,23 @@ namespace gua {
 class Pipeline;
 class PipelinePassDescription;
 
-class WarpGridGenerator {
+class WarpGridRenderer {
 
  public:
 
-  struct SharedResource {
-    inline int current_tfb() const { return ping ? 1 : 0; }
-    inline int current_vbo() const { return ping ? 0 : 1; }
-
-    bool ping = false;
-
-    scm::gl::transform_feedback_ptr grid_tfb[2];
-    scm::gl::buffer_ptr             grid_vbo[2];
-    scm::gl::vertex_array_ptr       grid_vao[2];
-    size_t                          cell_count = 0;
-
-    std::shared_ptr<Texture>                min_max_depth_buffer;
-    std::vector<scm::gl::frame_buffer_ptr>  min_max_depth_buffer_fbos;
-  };
-
-  WarpGridGenerator();
-  virtual ~WarpGridGenerator();
+  WarpGridRenderer();
+  virtual ~WarpGridRenderer() {}
 
   void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
  private:
-  std::shared_ptr<SharedResource>  res_;
-
-  std::vector<ShaderProgramStage>  grid_generation_program_stages_;
-  std::shared_ptr<ShaderProgram>   grid_generation_program_;
-
-  std::vector<ShaderProgramStage>  min_max_filter_program_stages_;
-  std::shared_ptr<ShaderProgram>   min_max_filter_program_;
-
-  Pipeline* pipe_;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+  scm::gl::rasterizer_state_ptr    rasterizer_state_;
+  scm::gl::blend_state_ptr         blend_state_;
+  std::vector<ShaderProgramStage>  program_stages_;
+  std::shared_ptr<ShaderProgram>   program_;
 };
 
 }
 
-#endif  // GUA_WARP_GENERATOR_HPP
+#endif  // GUA_WARP_GRID_RENDERER_HPP

@@ -452,11 +452,11 @@ int main(int argc, char** argv) {
 
         for (auto const& result: window->get_context()->time_query_results) {
           if (result.first.find("Trimesh") != std::string::npos) trimesh_time = result.second;
-          if (result.first.find("Warp") != std::string::npos) warp_time = result.second;
+          if (result.first.find("WarpPass") != std::string::npos) warp_time = result.second;
         }
 
         for (auto const& result: window->get_context()->primitive_query_results) {
-          if (result.first.find("Warp") != std::string::npos) primitives = result.second.first;
+          if (result.first.find("WarpPass") != std::string::npos) primitives = result.second.first;
         }
 
         stats->call_javascript("set_stats", renderer.get_application_fps(),

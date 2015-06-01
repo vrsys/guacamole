@@ -593,6 +593,12 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   ////////////////////////////////////////////////////////////////////////////////
 
+  RenderContext& Pipeline::get_context() {
+    return context_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
   LightTable& Pipeline::get_light_table() {
     return *light_table_;
   }
@@ -604,11 +610,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     shader->set_uniform(context_, 1.0f / gbuffer_->get_width(), "gua_texel_width");
     shader->set_uniform(context_, 1.0f / gbuffer_->get_height(), "gua_texel_height");
-
-    shader->set_uniform(
-      context_,
-      math::vec2i(gbuffer_->get_width(), gbuffer_->get_height()),
-      "gua_resolution");
 
     shader->set_uniform(context_,
                         gbuffer_->get_color_buffer()->get_handle(context_),

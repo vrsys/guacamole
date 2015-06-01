@@ -19,58 +19,40 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_WARP_GENERATOR_HPP
-#define GUA_WARP_GENERATOR_HPP
+@include "shaders/common/header.glsl"
 
-#include <map>
-#include <unordered_map>
+layout(points) in;
+layout(points, max_vertices = 4) out;
 
-#include <gua/platform.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
+@include "shaders/common/gua_camera_uniforms.glsl"
 
-#include <scm/gl_core/shader_objects.h>
+in ivec3 varying_position[];
 
-namespace gua {
+uniform uvec2 min_max_depth_buffer;
 
-class Pipeline;
-class PipelinePassDescription;
+out ivec3 xfb_output;
 
-class WarpGridGenerator {
+void main() { 
 
- public:
+  const int new_cellsize = varying_position[0].z/2;
+  const int layer = int(log2(new_cellsize));
 
-  struct SharedResource {
-    inline int current_tfb() const { return ping ? 1 : 0; }
-    inline int current_vbo() const { return ping ? 0 : 1; }
+  vec2 min_max = texelFetch(sampler2D(min_max_depth_buffer), varying_position[0].xy/varying_position[0].z, layer).xy;
 
-    bool ping = false;
+  if (abs(min_max.x - min_max.y) > 0.001) {
+    const vec2 offsets[4] = {ivec2(0), ivec2(new_cellsize, 0),
+                             ivec2(new_cellsize), ivec2(0, new_cellsize)};
 
-    scm::gl::transform_feedback_ptr grid_tfb[2];
-    scm::gl::buffer_ptr             grid_vbo[2];
-    scm::gl::vertex_array_ptr       grid_vao[2];
-    size_t                          cell_count = 0;
+    for (int v=0; v<4; ++v) {
+      xfb_output = ivec3(varying_position[0].xy + offsets[v], new_cellsize);
+      EmitVertex();
+      EndPrimitive();
+    }
+    
 
-    std::shared_ptr<Texture>                min_max_depth_buffer;
-    std::vector<scm::gl::frame_buffer_ptr>  min_max_depth_buffer_fbos;
-  };
-
-  WarpGridGenerator();
-  virtual ~WarpGridGenerator();
-
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
-
- private:
-  std::shared_ptr<SharedResource>  res_;
-
-  std::vector<ShaderProgramStage>  grid_generation_program_stages_;
-  std::shared_ptr<ShaderProgram>   grid_generation_program_;
-
-  std::vector<ShaderProgramStage>  min_max_filter_program_stages_;
-  std::shared_ptr<ShaderProgram>   min_max_filter_program_;
-
-  Pipeline* pipe_;
-};
-
+  } else {
+    xfb_output = varying_position[0];
+    EmitVertex(); 
+    EndPrimitive();
+  }
 }
-
-#endif  // GUA_WARP_GENERATOR_HPP

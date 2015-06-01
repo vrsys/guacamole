@@ -50,6 +50,9 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& depth_test(bool val);
   bool depth_test() const;
 
+  WarpPassDescription& show_warp_grid(bool val);
+  bool show_warp_grid() const;
+
   WarpPassDescription& display_mode(DisplayMode mode);
   DisplayMode display_mode() const;
 
@@ -65,6 +68,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   std::string shared_window_name_;
 
   bool depth_test_;
+  bool show_warp_grid_;
   int max_layers_;
   DisplayMode mode_;
 };
