@@ -174,33 +174,15 @@
         });
       }
 
-      function format_int(num) {
-        if (num >= 1000000000) {
-          return (num / 1000000000).toFixed(2) + ' G';
-        }
-        if (num >= 1000000) {
-          return (num / 1000000).toFixed(2) + ' M';
-        }
-        if (num >= 1000) {
-          return (num / 1000).toFixed(2) + ' K';
-        }
-        return num;
-      }
-
-      function set_stats (app_fps, render_fps, rendering, warping, primitives) {
-        $("#time-app-fps").text(parseFloat(app_fps).toFixed(1));
-        $("#time-render-fps").text(parseFloat(render_fps).toFixed(1));
-        $("#time-rendering").text(parseFloat(rendering).toFixed(1));
-        $("#time-warping").text(parseFloat(warping).toFixed(1));
-        $("#primitives").text(format_int(parseInt(primitives)));
-      }
-
       function init() {
         
         init_radio("#scene_one_oilrig", "scene_one_oilrig");
         init_radio("#scene_many_oilrigs", "scene_many_oilrigs");
         init_radio("#scene_teapot", "scene_teapot");
         init_radio("#scene_textured_quads", "scene_textured_quads");
+
+        add_space("#control-panel");
+        add_checkbox("#control-panel", "orthographic", "Orthographic");
         
         init_radio("#type_quads", "type_quads");
         init_radio("#type_points", "type_points");
@@ -209,8 +191,7 @@
         add_space("#preview-panel");
         add_checkbox("#preview-panel", "depth_test", "Depth Test");
         add_checkbox("#preview-panel", "backface_culling", "Backface Culling");
-        add_space("#preview-panel");
-        add_checkbox("#preview-panel", "orthographic", "Orthographic");
+        
         $("body").addClass("on");
       }
 
@@ -240,37 +221,6 @@
   </head>
   <body>
 
-    <!-- ################################################################### -->
-    <!-- ############################# Footer ############################## -->
-    <!-- ################################################################### -->
-
-    <div id="settings-bottom"><div class="settings-bottom-content">
-      <div class="row">
-        <div class="col-xs-2">
-          App: <span id="time-app-fps">0.0</span> FPS
-        </div>
-
-        <div class="col-xs-2">
-          Render: <span id="time-render-fps">0.0</span> FPS
-        </div>
-
-        <div class="col-xs-2">
-          TriMesh: <span id="time-rendering">0.0</span> ms
-        </div>
-
-        <div class="col-xs-2">
-          Warping: <span id="time-warping">0.0</span> ms
-        </div>
-
-        <div class="col-xs-4">
-          Genrated Primitives: <span id="primitives">0</span>
-        </div>
-
-      </div>
-
-    </div></div>
-
-
 
     <!-- ################################################################### -->
     <!-- ############################ Right Pane ########################### -->
@@ -280,12 +230,13 @@
     <div id="settings-right">
 
 
-      <div class="side-panel">
+      <div class="side-panel expanded">
         <div id="control-panel" class="panel-inner">
 
-          <h4>View Options</h4>
+          <h4><i class="fa fa-eye"></i> View Options</h4>
 
-          <button onclick="gua.reset_view()" class="btn btn-block">Reset View</button>
+          <button onclick="gua.reset_view()" class="btn btn-block"><i class="fa fa-undo"></i> Reset View</button>
+          <button onclick="gua.render_view()" class="btn btn-block"><i class="fa fa-desktop"></i> Render Current View</button>
           <hr />
           <div class="row">
             <div class="col-xs-6">
@@ -326,7 +277,7 @@
       <div class="side-panel">
         <div id="preview-panel" class="panel-inner">
 
-          <h4>Warping Options</h4>
+          <h4><i class="fa fa-recycle"></i> Warping Options</h4>
 
           <div class="row">
             <div class="col-xs-6">

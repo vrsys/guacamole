@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>particles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap-theme.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap-slider.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap.colorpickersliders.min.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap-select.min.css">
+    <link href="gui.css" rel="stylesheet">
+
+    <script type="text/javascript" src="third_party/js/jquery-1.10.2.js"></script>
+    <script type="text/javascript" src="third_party/js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="third_party/js/tinycolor.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap-slider.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap.colorpickersliders.min.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap-select.min.js"></script>
+
+
+    <script type="text/javascript">
+
+      function format_int(num) {
+        if (num >= 1000000000) {
+          return (num / 1000000000).toFixed(2) + ' G';
+        }
+        if (num >= 1000000) {
+          return (num / 1000000).toFixed(2) + ' M';
+        }
+        if (num >= 1000) {
+          return (num / 1000).toFixed(2) + ' K';
+        }
+        return num;
+      }
+
+      function set_stats (app_fps, render_fps, rendering, warping, primitives) {
+        $("#time-app-fps").text(parseFloat(app_fps).toFixed(1));
+        $("#time-render-fps").text(parseFloat(render_fps).toFixed(1));
+        $("#time-rendering").text(parseFloat(rendering).toFixed(1));
+        $("#time-warping").text(parseFloat(warping).toFixed(1));
+        $("#primitives").text(format_int(parseInt(primitives)));
+      }
+
+      function init() {
+        $("body").addClass("on");
+      }
+
+    </script>
+
+  </head>
+  <body>
+
+    <!-- ################################################################### -->
+    <!-- ############################# Footer ############################## -->
+    <!-- ################################################################### -->
+
+    <div id="settings-bottom"><div class="settings-bottom-content">
+      <div class="row">
+        <div class="col-xs-2">
+          App: <span id="time-app-fps">0.0</span> FPS
+        </div>
+
+        <div class="col-xs-2">
+          Render: <span id="time-render-fps">0.0</span> FPS
+        </div>
+
+        <div class="col-xs-2">
+          TriMesh: <span id="time-rendering">0.0</span> ms
+        </div>
+
+        <div class="col-xs-2">
+          Warping: <span id="time-warping">0.0</span> ms
+        </div>
+
+        <div class="col-xs-4">
+          Genrated Primitives: <span id="primitives">0</span>
+        </div>
+
+      </div>
+
+    </div></div>
+
+  </body>
+</html>

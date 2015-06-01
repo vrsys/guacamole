@@ -44,6 +44,10 @@ a:hover {
   text-decoration: none;
 }
 
+h4 {
+  margin-bottom: 20px;
+}
+
 hr {
   margin-top: 4px;
   margin-bottom: 6px;
@@ -414,6 +418,10 @@ hr {
 
 .modal-footer .btn+.btn {
   margin-bottom: 3px;
+}
+
+.btn i {
+  margin-right: 8px;
 }
 
 /* ########################################################################## */

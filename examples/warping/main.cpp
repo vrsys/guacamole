@@ -85,6 +85,7 @@ int main(int argc, char** argv) {
 
   // ---------------------------------------------------------------------------
   // ---------------------------- setup scene ----------------------------------
+  // ---------------------------------------------------------------------------
 
   gua::TriMeshLoader loader;
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
@@ -152,6 +153,7 @@ int main(int argc, char** argv) {
 
   // ---------------------------------------------------------------------------
   // ------------------------ setup rendering pipelines ------------------------
+  // ---------------------------------------------------------------------------
 
   // slow client ---------------------------------------------------------------
   auto slow_screen = graph.add_node<gua::node::ScreenNode>("/", "slow_screen");
@@ -212,12 +214,18 @@ int main(int argc, char** argv) {
 
   // ---------------------------------------------------------------------------
   // ----------------------------- setup gui -----------------------------------
+  // ---------------------------------------------------------------------------
 
   auto gui = std::make_shared<gua::GuiResource>();
   auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
 
+  auto stats = std::make_shared<gua::GuiResource>();
+  auto stats_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("stats_quad");
+
   if (!CLIENT_SERVER) {
-    gui->init("gui", "asset://gua/data/gui/gui.html", resolution);
+
+    // right side gui ----------------------------------------------------------
+    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 600));
 
     gui->on_loaded.connect([&]() {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(depth_layers);});
@@ -238,6 +246,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_scene_textured_quads");
 
       gui->add_javascript_callback("reset_view");
+      gui->add_javascript_callback("render_view");
 
       gui->call_javascript("init");
     });
@@ -268,6 +277,9 @@ int main(int argc, char** argv) {
 
       } else if (callback == "reset_view") {
         trackball.reset();
+      } else if (callback == "render_view") {
+        slow_screen->set_transform(fast_screen->get_transform());
+        // trackball.reset();
       } else if (callback == "set_type_points") {
         std::stringstream str(params[0]);
         bool checked;
@@ -298,15 +310,29 @@ int main(int argc, char** argv) {
     });
 
     gui_quad->data.texture() = "gui";
-    gui_quad->data.size() = resolution;
+    gui_quad->data.size() = gua::math::vec2ui(330, 600);
     gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
     graph.add_node("/", gui_quad);
+
+    // bottom gui --------------------------------------------------------------
+    stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(1210, 30));
+
+    stats->on_loaded.connect([&]() {
+      stats->call_javascript("init");
+    });
+
+    stats_quad->data.texture() = "stats";
+    stats_quad->data.size() = gua::math::vec2ui(1210, 30);
+    stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
+
+    graph.add_node("/", stats_quad);
   }
 
 
   // ---------------------------------------------------------------------------
   // ----------------------------- setup windows -------------------------------
+  // ---------------------------------------------------------------------------
 
   std::shared_ptr<gua::WindowBase> window;
   std::shared_ptr<gua::WindowBase> hidden_window;
@@ -324,14 +350,12 @@ int main(int argc, char** argv) {
     gua::WindowDatabase::instance()->add("hidden_window", hidden_window);
   } else {
     auto glfw = std::make_shared<gua::GlfwWindow>();
-    glfw->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-      trackball.motion(pos.x, pos.y);
-    });
     glfw->on_resize.connect([&](gua::math::vec2ui const& new_size) {
+      resolution = new_size;
       glfw->config.set_resolution(new_size);
       slow_cam->config.set_resolution(new_size);
-      // slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
-      // fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+      slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+      fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
     });
     glfw->on_button_press.connect([&](int key, int action, int mods) {
       gui->inject_mouse_button(gua::Button(key), action, mods);
@@ -340,7 +364,12 @@ int main(int argc, char** argv) {
       gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
     });
     glfw->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-      gui->inject_mouse_position(pos);
+      gua::math::vec2 hit_pos;
+      if (gui_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
+        gui->inject_mouse_position_relative(hit_pos);
+      } else {
+        trackball.motion(pos.x, pos.y);
+      }
     });
     glfw->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     window = glfw;
@@ -372,20 +401,20 @@ int main(int argc, char** argv) {
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
                                                               gua::math::float_t(trackball.shifty()),
                                                               gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
-
+    gua::math::mat4 viewmatrix = scm::math::inverse(modelmatrix);
     gua::Frustum warp_frustum;
 
     if (CLIENT_SERVER) {
-      fast_screen->rotate(0.1, 0, 1, 0);
+      // fast_screen->rotate(0.1, 0, 1, 0);
       if (SHOW_FRAME_RATE && ctr++ % 300 == 0) {
-        slow_screen->set_transform(fast_screen->get_transform());
+        // slow_screen->set_transform(fast_screen->get_transform());
         std::cout << "Slow fps: " << hidden_window->get_rendering_fps()
                   << ", Fast fps: " << window->get_rendering_fps()
                   << ", App fps: " << renderer.get_application_fps() << std::endl;
       }
       warp_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     } else {
-      fast_screen->set_transform(modelmatrix);
+      fast_screen->set_transform(viewmatrix);
       if (ctr++ % 100 == 0) {
         if (SHOW_FRAME_RATE) {
           std::cout << "Render fps: " << window->get_rendering_fps()
@@ -405,7 +434,7 @@ int main(int argc, char** argv) {
           if (result.first.find("Warp") != std::string::npos) primitives = result.second.first;
         }
 
-        gui->call_javascript("set_stats", renderer.get_application_fps(),
+        stats->call_javascript("set_stats", renderer.get_application_fps(),
                              window->get_rendering_fps(), trimesh_time,
                              warp_time, primitives);
       }
@@ -415,7 +444,7 @@ int main(int argc, char** argv) {
 
     gua::math::mat4f projection(warp_frustum.get_projection());
     gua::math::mat4f view(warp_frustum.get_view());
-    warp_pass->original_inverse_projection_view_matrix(scm::math::inverse(projection * view));
+    warp_pass->original_inverse_projection_view_matrix(projection * view);
 
     window->process_events();
     if (window->should_close()) {
