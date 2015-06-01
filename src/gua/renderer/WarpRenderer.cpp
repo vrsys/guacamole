@@ -26,6 +26,7 @@
 #include <gua/config.hpp>
 
 #include <gua/renderer/ResourceFactory.hpp>
+#include <gua/renderer/WarpGridGenerator.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
@@ -68,7 +69,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     program_->set_shaders(program_stages_, std::list<std::string>(), false, global_substitution_map_);
   }
 
-  auto const& ctx(pipe.get_context());
+  auto& ctx(pipe.get_context());
 
   auto description(dynamic_cast<WarpPassDescription const*>(&desc));
 
@@ -135,13 +136,20 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   a_buffer.bind(ctx);
 
-  ctx.render_context->bind_vertex_array(empty_vao_);
-  ctx.render_context->apply();
+  if (description->display_mode() == WarpPassDescription::GRID) {
+    auto res(ctx.resources.get<WarpGridGenerator::SharedResource>());
+    if (res) {
+      ctx.render_context->bind_vertex_array(res->grid_vao[res->current_vbo()]);
+      ctx.render_context->apply();
+      ctx.render_context->draw_transform_feedback(scm::gl::PRIMITIVE_POINT_LIST, res->grid_tfb[res->current_vbo()]);
+    }
+  } else {
+    ctx.render_context->bind_vertex_array(empty_vao_);
+    ctx.render_context->apply();
+    math::vec2ui resolution(pipe.current_viewstate().camera.config.get_resolution());
+    ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, resolution.x * resolution.y);
+  }
 
-  math::vec2ui resolution(pipe.current_viewstate().camera.config.get_resolution());
-  int pixel_count(resolution.x * resolution.y);
-
-  ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, pixel_count);
 
   target.unbind(ctx);
 

@@ -234,6 +234,8 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
       gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
       gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
+      gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(warp_pass->show_warp_grid());});
+      gui->add_javascript_getter("get_debug_mode", [&](){ return std::to_string(warp_pass->debug_mode());});
 
       gui->add_javascript_callback("set_depth_layers");
       gui->add_javascript_callback("set_depth_test");
@@ -242,12 +244,15 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_type_points");
       gui->add_javascript_callback("set_type_quads");
       gui->add_javascript_callback("set_type_scaled_points");
+      gui->add_javascript_callback("set_type_grid");
       gui->add_javascript_callback("set_scene_one_oilrig");
       gui->add_javascript_callback("set_scene_many_oilrigs");
       gui->add_javascript_callback("set_scene_teapot");
       gui->add_javascript_callback("set_scene_textured_quads");
       gui->add_javascript_callback("set_manipulation_camera");
       gui->add_javascript_callback("set_manipulation_object");
+      gui->add_javascript_callback("set_show_warp_grid");
+      gui->add_javascript_callback("set_debug_mode");
 
       gui->add_javascript_callback("reset_view");
       gui->add_javascript_callback("reset_object");
@@ -279,7 +284,16 @@ int main(int argc, char** argv) {
           fast_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::PERSPECTIVE);
           slow_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::PERSPECTIVE);
         }
-
+      } else if (callback == "set_show_warp_grid") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        warp_pass->show_warp_grid(checked);
+      } else if (callback == "set_debug_mode") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        warp_pass->debug_mode(checked);
       } else if (callback == "reset_view") {
         view_trackball.reset();
       } else if (callback == "reset_object") {
@@ -306,6 +320,13 @@ int main(int argc, char** argv) {
         str >> checked;
         if (checked) {
           warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::SCALED_POINTS);
+        }
+      } else if (callback == "set_type_grid") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        if (checked) {
+          warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::GRID);
         }
       } else if (callback == "set_manipulation_object") {
         std::stringstream str(params[0]);

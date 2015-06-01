@@ -29,31 +29,29 @@ layout(line_strip, max_vertices = 5) out;
 flat in ivec3 varying_position[];
 flat out int cellsize;
 
-
-// body 
-void main() { 
+void main() {
 
   cellsize = varying_position[0].z;
 
   vec2 vertex_position = vec2(varying_position[0].xy) / gua_resolution * 2 - 1;
   gl_Position = vec4(vertex_position, 0, 1);
-  EmitVertex(); 
+  EmitVertex();
 
   vertex_position = vec2(varying_position[0].xy + vec2(cellsize, 0)) / gua_resolution * 2 - 1;
   gl_Position = vec4(vertex_position, 0, 1);
-  EmitVertex(); 
+  EmitVertex();
 
   vertex_position = vec2(varying_position[0].xy + vec2(cellsize, cellsize)) / gua_resolution * 2 - 1;
   gl_Position = vec4(vertex_position, 0, 1);
-  EmitVertex(); 
+  EmitVertex();
 
   vertex_position = vec2(varying_position[0].xy + vec2(0, cellsize)) / gua_resolution * 2 - 1;
   gl_Position = vec4(vertex_position, 0, 1);
-  EmitVertex(); 
+  EmitVertex();
 
   vertex_position = vec2(varying_position[0].xy) / gua_resolution * 2 - 1;
   gl_Position = vec4(vertex_position, 0, 1);
-  EmitVertex(); 
+  EmitVertex();
 
   EndPrimitive();
 }

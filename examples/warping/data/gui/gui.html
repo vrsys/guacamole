@@ -175,7 +175,7 @@
       }
 
       function init() {
-        
+
         init_radio("#manipulation_camera", "manipulation_camera");
         init_radio("#manipulation_object", "manipulation_object");
 
@@ -186,15 +186,18 @@
 
         add_space("#control-panel");
         add_checkbox("#control-panel", "orthographic", "Orthographic");
-        
+        add_checkbox("#control-panel", "show_warp_grid", "Warp Grid");
+        add_checkbox("#control-panel", "debug_mode", "Debug Vis");
+
         init_radio("#type_quads", "type_quads");
         init_radio("#type_points", "type_points");
         init_radio("#type_scaled_points", "type_scaled_points");
+        init_radio("#type_grid", "type_grid");
         add_slider("#preview-panel", "depth_layers", "Depth Layers", 1, 20, 1);
         add_space("#preview-panel");
         add_checkbox("#preview-panel", "depth_test", "Depth Test");
         add_checkbox("#preview-panel", "backface_culling", "Backface Culling");
-        
+
         $("body").addClass("on");
       }
 
@@ -346,13 +349,19 @@
                   <span>Scaled Points</span>
                 </label>
               </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="renderRadios" id="type_grid" value="">
+                  <span>Grid</span>
+                </label>
+              </div>
             </div>
           </div>
 
         </div>
       </div>
 
-      
+
 
     </div>
 

@@ -41,6 +41,7 @@ WarpPassDescription::WarpPassDescription()
   , max_layers_(2)
   , depth_test_(true)
   , show_warp_grid_(false)
+  , debug_mode_(false)
   , mode_(POINTS)
 {
   vertex_shader_ = "";
@@ -124,6 +125,20 @@ bool WarpPassDescription::show_warp_grid() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WarpPassDescription& WarpPassDescription::debug_mode(bool val) {
+  debug_mode_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool WarpPassDescription::debug_mode() const {
+  return debug_mode_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 WarpPassDescription& WarpPassDescription::display_mode(DisplayMode mode) {
   mode_ = mode;
   touch();
@@ -145,6 +160,7 @@ std::shared_ptr<PipelinePassDescription> WarpPassDescription::make_copy() const 
 ////////////////////////////////////////////////////////////////////////////////
 PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
   substitution_map["gua_debug_tiles"] = "0";
+  substitution_map["debug_mode"] = debug_mode_ ? "1" : "0";
   substitution_map["display_mode"] = std::to_string(mode_);
   substitution_map["warping_max_layers"] = std::to_string(max_layers_);
   PipelinePass pass{*this, ctx, substitution_map};
@@ -157,7 +173,11 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   pass.process_ = [renderer, grid_renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
     renderer->render(pipe, desc);
-    grid_renderer->render(pipe, desc);
+
+    auto description(dynamic_cast<WarpPassDescription const*>(&desc));
+    if (description->show_warp_grid()) {
+      grid_renderer->render(pipe, desc);
+    }
   };
 
   return pass;

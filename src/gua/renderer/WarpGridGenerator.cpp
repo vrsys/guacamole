@@ -118,9 +118,9 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
       math::vec2ui size(resolution/2);
       unsigned mip_map_levels(scm::gl::util::max_mip_levels(size/32.f));
       scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
-        scm::gl::WRAP_MIRRORED_REPEAT,
-        scm::gl::WRAP_MIRRORED_REPEAT);
-      res_->min_max_depth_buffer = std::make_shared<Texture2D>(size.x, size.y, 
+        scm::gl::WRAP_CLAMP_TO_EDGE,
+        scm::gl::WRAP_CLAMP_TO_EDGE);
+      res_->min_max_depth_buffer = std::make_shared<Texture2D>(size.x, size.y,
           scm::gl::FORMAT_RG_16, mip_map_levels, state);
 
       res_->min_max_depth_buffer_fbos.clear();
@@ -186,7 +186,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
   ctx.render_context->end_transform_feedback();
   res_->ping = !res_->ping;
 
-  for (int i(0); i<3; ++i) {
+  for (int i(0); i<4; ++i) {
     // further subdivisions
     ctx.render_context->begin_transform_feedback(res_->grid_tfb[res_->current_tfb()],
       scm::gl::PRIMITIVE_POINTS);
