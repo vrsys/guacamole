@@ -444,7 +444,7 @@ int main(int argc, char** argv) {
 
     gua::math::mat4f projection(warp_frustum.get_projection());
     gua::math::mat4f view(warp_frustum.get_view());
-    warp_pass->original_inverse_projection_view_matrix(projection * view);
+    warp_pass->original_projection_view_matrix(projection * view);
 
     window->process_events();
     if (window->should_close()) {

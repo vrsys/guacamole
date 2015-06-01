@@ -22,7 +22,7 @@ const bool QUADS = false;
 @include "common/gua_abuffer.glsl"
 @include "common/gua_gbuffer_input.glsl"
 
-uniform mat4 original_inverse_projection_view_matrix;
+uniform mat4 original_projection_view_matrix;
 
 const int MAX_LAYERS = @warping_max_layers@;
 
@@ -41,10 +41,10 @@ void emit_primitive(float depth, vec2 frag_pos) {
 
     for (int v=0; v<4; ++v) {
       vec4 screen_space_pos = vec4(frag_pos + offsets[v], depth, 1.0);
-      vec4 h = original_inverse_projection_view_matrix * screen_space_pos;
+      vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
       vec3 position = h.xyz / h.w;
 
-      gl_Position =  gua_projection_matrix * gua_view_matrix * vec4(position, 1 + 0.000000000000001*bar[0]);
+      gl_Position =  original_projection_view_matrix * vec4(position, 1 + 0.000000000000001*bar[0]);
 
       EmitVertex();
     }
@@ -53,11 +53,11 @@ void emit_primitive(float depth, vec2 frag_pos) {
 
   } else {
     vec4 screen_space_pos = vec4(frag_pos, depth, 1.0);
-    vec4 h = original_inverse_projection_view_matrix * screen_space_pos;
+    vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
     vec3 position = h.xyz / h.w;
 
 
-    gl_Position =  gua_projection_matrix * gua_view_matrix * vec4(position, 1 + 0.000000000000001*bar[0]);
+    gl_Position =  original_projection_view_matrix * vec4(position, 1 + 0.000000000000001*bar[0]);
 
     #if DISPLAY_MODE == 2
       gl_PointSize = 12*(1-gl_Position.z/gl_Position.w);
