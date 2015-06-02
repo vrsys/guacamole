@@ -139,7 +139,7 @@ bool WarpPassDescription::debug_mode() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::display_mode(DisplayMode mode) {
+WarpPassDescription& WarpPassDescription::mode(Mode mode) {
   mode_ = mode;
   touch();
   return *this;
@@ -147,7 +147,7 @@ WarpPassDescription& WarpPassDescription::display_mode(DisplayMode mode) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription::DisplayMode WarpPassDescription::display_mode() const {
+WarpPassDescription::Mode WarpPassDescription::mode() const {
   return mode_;
 }
 

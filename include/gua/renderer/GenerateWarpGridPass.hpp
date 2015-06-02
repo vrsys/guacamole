@@ -33,10 +33,22 @@ class Pipeline;
 class GUA_DLL GenerateWarpGridPassDescription : public PipelinePassDescription {
  public:
 
+  enum Mode {
+    SURFACE_ESTIMATION,
+    ADAPTIVE_SURFACE_ESTIMATION,
+    DEPTH_THRESHOLD
+  };
+
   GenerateWarpGridPassDescription();
 
   GenerateWarpGridPassDescription& cell_size(int val);
   int cell_size() const;
+
+  GenerateWarpGridPassDescription& split_threshold(float val);
+  float split_threshold() const;
+
+  GenerateWarpGridPassDescription& mode(Mode mode);
+  Mode mode() const;
 
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
@@ -45,6 +57,8 @@ class GUA_DLL GenerateWarpGridPassDescription : public PipelinePassDescription {
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
   int cell_size_;
+  float split_threshold_;
+  Mode mode_;
 };
 
 }

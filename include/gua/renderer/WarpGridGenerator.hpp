@@ -58,9 +58,11 @@ class WarpGridGenerator {
   virtual ~WarpGridGenerator();
 
   void render(Pipeline& pipe, PipelinePassDescription const& desc);
+  void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
  private:
   std::shared_ptr<SharedResource>  res_;
+  SubstitutionMap                  global_substitution_map_;
 
   std::vector<ShaderProgramStage>  grid_generation_program_stages_;
   std::shared_ptr<ShaderProgram>   grid_generation_program_;

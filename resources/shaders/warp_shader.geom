@@ -60,7 +60,7 @@ void main() {
     cellsize = varying_position[0].z;
 
     #if @debug_mode@ == 1
-      const float offset = 0.5;
+      const float offset = 0.8;
     #else
       const float offset = 1.0;
     #endif

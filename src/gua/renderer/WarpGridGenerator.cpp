@@ -23,6 +23,7 @@
 #include <gua/renderer/WarpGridGenerator.hpp>
 
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/GenerateWarpGridPass.hpp>
 #include <gua/databases/Resources.hpp>
 
 namespace gua {
@@ -85,17 +86,19 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
   if (!grid_generation_program_) {
     grid_generation_program_ = std::make_shared<ShaderProgram>();
-    grid_generation_program_->set_shaders(grid_generation_program_stages_, {"xfb_output"}, true);
+    grid_generation_program_->set_shaders(grid_generation_program_stages_, {"xfb_output"}, true, global_substitution_map_);
   }
 
   if (!min_max_filter_program_) {
     min_max_filter_program_ = std::make_shared<ShaderProgram>();
-    min_max_filter_program_->set_shaders(min_max_filter_program_stages_, {}, false);
+    min_max_filter_program_->set_shaders(min_max_filter_program_stages_, {}, false, global_substitution_map_);
   }
 
   // create resources
   if (!res_) {
     res_ = ctx.resources.get<SharedResource>();
+
+    auto description(dynamic_cast<GenerateWarpGridPassDescription const*>(&desc));
 
     if (!res_->grid_vbo[0] || res_->cell_count < pixel_count) {
       for (int i(0); i<2; ++i) {
@@ -120,8 +123,14 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
       scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
         scm::gl::WRAP_CLAMP_TO_EDGE,
         scm::gl::WRAP_CLAMP_TO_EDGE);
-      res_->min_max_depth_buffer = std::make_shared<Texture2D>(size.x, size.y,
-          scm::gl::FORMAT_RG_16, mip_map_levels, state);
+
+      if (description->mode() == GenerateWarpGridPassDescription::DEPTH_THRESHOLD) {
+        res_->min_max_depth_buffer = std::make_shared<Texture2D>(size.x, size.y,
+            scm::gl::FORMAT_RGB_16, mip_map_levels, state);
+      } else {
+        res_->min_max_depth_buffer = std::make_shared<Texture2D>(size.x, size.y,
+            scm::gl::FORMAT_R_8I, mip_map_levels, state);
+      }
 
       res_->min_max_depth_buffer_fbos.clear();
 
@@ -173,6 +182,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
   grid_generation_program_->use(ctx);
   grid_generation_program_->set_uniform(ctx, res_->min_max_depth_buffer->get_handle(ctx), "min_max_depth_buffer");
+  grid_generation_program_->set_uniform(ctx, 32, "current_cellsize");
 
   // first subdivision
   ctx.render_context->begin_transform_feedback(res_->grid_tfb[res_->current_tfb()],
@@ -188,6 +198,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
   for (int i(0); i<4; ++i) {
     // further subdivisions
+    grid_generation_program_->set_uniform(ctx, (int)std::pow(2, 4-i), "current_cellsize");
     ctx.render_context->begin_transform_feedback(res_->grid_tfb[res_->current_tfb()],
       scm::gl::PRIMITIVE_POINTS);
     {

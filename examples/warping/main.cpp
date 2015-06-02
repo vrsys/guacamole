@@ -32,15 +32,13 @@
 
 #define COUNT 6
 
-const bool SHOW_FRAME_RATE = false;
-const bool CLIENT_SERVER = false;
+const bool SHOW_FRAME_RATE  = false;
+const bool CLIENT_SERVER    = false;
 
-int depth_layers      = 2;
-bool depth_test       = true;
-bool backface_culling = true;
-bool orthographic     = false;
-bool manipulation_object = false;
-gua::WarpPassDescription::DisplayMode display_mode = gua::WarpPassDescription::DisplayMode::POINTS;
+bool depth_test             = true;
+bool backface_culling       = true;
+bool orthographic           = false;
+bool manipulation_object    = false;
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods) {
@@ -181,6 +179,7 @@ int main(int argc, char** argv) {
   fast_cam->config.set_scene_graph_name("main_scenegraph");
 
   auto warp_pass(std::make_shared<gua::WarpPassDescription>());
+  auto grid_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
 
   if (CLIENT_SERVER) {
     slow_cam->config.set_output_window_name("hidden_window");
@@ -206,7 +205,7 @@ int main(int argc, char** argv) {
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
-    pipe->add_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
+    pipe->add_pass(grid_pass);
     pipe->add_pass(warp_pass);
     pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
     pipe->set_enable_abuffer(true);
@@ -230,7 +229,8 @@ int main(int argc, char** argv) {
     gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 600));
 
     gui->on_loaded.connect([&]() {
-      gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(depth_layers);});
+      gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
+      gui->add_javascript_getter("get_split_threshold", [&](){ return gua::string_utils::to_string(grid_pass->split_threshold());});
       gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
       gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
       gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
@@ -238,6 +238,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_debug_mode", [&](){ return std::to_string(warp_pass->debug_mode());});
 
       gui->add_javascript_callback("set_depth_layers");
+      gui->add_javascript_callback("set_split_threshold");
       gui->add_javascript_callback("set_depth_test");
       gui->add_javascript_callback("set_backface_culling");
       gui->add_javascript_callback("set_orthographic");
@@ -253,6 +254,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_manipulation_object");
       gui->add_javascript_callback("set_show_warp_grid");
       gui->add_javascript_callback("set_debug_mode");
+      gui->add_javascript_callback("set_grid_depth_threshold");
+      gui->add_javascript_callback("set_grid_surface");
+      gui->add_javascript_callback("set_grid_adaptive_surface");
 
       gui->add_javascript_callback("reset_view");
       gui->add_javascript_callback("reset_object");
@@ -264,8 +268,14 @@ int main(int argc, char** argv) {
     gui->on_javascript_callback.connect([&](std::string const& callback, std::vector<std::string> const& params) {
       if (callback == "set_depth_layers") {
         std::stringstream str(params[0]);
+        int depth_layers;
         str >> depth_layers;
         warp_pass->max_layers(depth_layers);
+      } else if (callback == "set_split_threshold") {
+        std::stringstream str(params[0]);
+        float split_threshold;
+        str >> split_threshold;
+        grid_pass->split_threshold(split_threshold);
       } else if (callback == "set_depth_test") {
         std::stringstream str(params[0]);
         str >> depth_test;
@@ -305,28 +315,49 @@ int main(int argc, char** argv) {
         bool checked;
         str >> checked;
         if (checked) {
-          warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::POINTS);
+          warp_pass->mode(gua::WarpPassDescription::Mode::POINTS);
         }
       } else if (callback == "set_type_quads") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
-          warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::QUADS);
+          warp_pass->mode(gua::WarpPassDescription::Mode::QUADS);
         }
       } else if (callback == "set_type_scaled_points") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
-          warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::SCALED_POINTS);
+          warp_pass->mode(gua::WarpPassDescription::Mode::SCALED_POINTS);
         }
       } else if (callback == "set_type_grid") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
-          warp_pass->display_mode(gua::WarpPassDescription::DisplayMode::GRID);
+          warp_pass->mode(gua::WarpPassDescription::Mode::GRID);
+        }
+      } else if (callback == "set_grid_surface") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        if (checked) {
+          grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::SURFACE_ESTIMATION);
+        }
+      } else if (callback == "set_grid_adaptive_surface") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        if (checked) {
+          grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::ADAPTIVE_SURFACE_ESTIMATION);
+        }
+      } else if (callback == "set_grid_depth_threshold") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        if (checked) {
+          grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::DEPTH_THRESHOLD);
         }
       } else if (callback == "set_manipulation_object") {
         std::stringstream str(params[0]);

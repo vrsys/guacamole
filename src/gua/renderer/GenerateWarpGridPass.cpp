@@ -38,6 +38,8 @@ namespace gua {
 GenerateWarpGridPassDescription::GenerateWarpGridPassDescription()
   : PipelinePassDescription()
   , cell_size_(32)
+  , mode_(SURFACE_ESTIMATION)
+  , split_threshold_(0.001)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
@@ -63,6 +65,34 @@ int GenerateWarpGridPassDescription::cell_size() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+GenerateWarpGridPassDescription& GenerateWarpGridPassDescription::split_threshold(float val) {
+  split_threshold_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float GenerateWarpGridPassDescription::split_threshold() const {
+  return split_threshold_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+GenerateWarpGridPassDescription& GenerateWarpGridPassDescription::mode(Mode mode) {
+  mode_ = mode;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+GenerateWarpGridPassDescription::Mode GenerateWarpGridPassDescription::mode() const {
+  return mode_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<PipelinePassDescription> GenerateWarpGridPassDescription::make_copy() const {
   return std::make_shared<GenerateWarpGridPassDescription>(*this);
 }
@@ -72,7 +102,11 @@ PipelinePass GenerateWarpGridPassDescription::make_pass(RenderContext const& ctx
 
   PipelinePass pass{*this, ctx, substitution_map};
 
+  substitution_map["generation_mode"] = std::to_string(mode_);
+  substitution_map["split_threshold"] = gua::string_utils::to_string(split_threshold_);
+
   auto renderer = std::make_shared<WarpGridGenerator>();
+  renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {

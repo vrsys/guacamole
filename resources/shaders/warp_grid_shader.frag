@@ -9,5 +9,5 @@ layout(location=0) out vec3 gua_out_color;
 
 void main() {
   float intensity = log2(cellsize) / 5.0;
-  gua_out_color = vec3(0.5 * (1-intensity), 0.5 * intensity, 0.1);
+  gua_out_color = 0.2*(vec3(1, 0.1, 0.1) * (1-intensity) + vec3(0.1, 1, 0.1) * intensity);
 }

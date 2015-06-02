@@ -29,26 +29,39 @@ layout(points, max_vertices = 4) out;
 in ivec3 varying_position[];
 
 uniform uvec2 min_max_depth_buffer;
+uniform int current_cellsize;
 
 out ivec3 xfb_output;
 
 void main() { 
 
-  const int new_cellsize = varying_position[0].z/2;
-  const int layer = int(log2(new_cellsize));
+  if (current_cellsize == varying_position[0].z) {
+    const int new_cellsize = varying_position[0].z/2;
+    const int layer = int(log2(new_cellsize));
 
-  vec2 min_max = texelFetch(sampler2D(min_max_depth_buffer), varying_position[0].xy/varying_position[0].z, layer).xy;
+    #if @generation_mode@ == 2 // DEPTH_THRESHOLD
+    float is_surface = texelFetch(sampler2D(min_max_depth_buffer), varying_position[0].xy/varying_position[0].z, layer).x;
+    if (is_surface == 0) {
+    #else
+    int is_surface = texelFetch(isampler2D(min_max_depth_buffer), varying_position[0].xy/varying_position[0].z, layer).x;
+    if ((is_surface & 1) == 0) {
+    #endif
 
-  if (abs(min_max.x - min_max.y) > 0.001) {
-    const vec2 offsets[4] = {ivec2(0), ivec2(new_cellsize, 0),
-                             ivec2(new_cellsize), ivec2(0, new_cellsize)};
+      const vec2 offsets[4] = {ivec2(0), ivec2(new_cellsize, 0),
+                               ivec2(new_cellsize), ivec2(0, new_cellsize)};
 
-    for (int v=0; v<4; ++v) {
-      xfb_output = ivec3(varying_position[0].xy + offsets[v], new_cellsize);
-      EmitVertex();
+      for (int v=0; v<4; ++v) {
+        xfb_output = ivec3(varying_position[0].xy + offsets[v], new_cellsize);
+        EmitVertex();
+        EndPrimitive();
+      }
+      
+
+    } else {
+      xfb_output = varying_position[0];
+      EmitVertex(); 
       EndPrimitive();
     }
-    
 
   } else {
     xfb_output = varying_position[0];

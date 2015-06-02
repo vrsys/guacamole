@@ -33,7 +33,7 @@ class Pipeline;
 class GUA_DLL WarpPassDescription : public PipelinePassDescription {
  public:
 
-  enum DisplayMode {
+  enum Mode {
     POINTS,
     QUADS,
     SCALED_POINTS,
@@ -57,8 +57,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& debug_mode(bool val);
   bool debug_mode() const;
 
-  WarpPassDescription& display_mode(DisplayMode mode);
-  DisplayMode display_mode() const;
+  WarpPassDescription& mode(Mode mode);
+  Mode mode() const;
 
   WarpPassDescription& original_projection_view_matrix(math::mat4f const& mat);
   math::mat4f const& original_projection_view_matrix() const;
@@ -75,7 +75,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   bool show_warp_grid_;
   bool debug_mode_;
   int max_layers_;
-  DisplayMode mode_;
+  Mode mode_;
 };
 
 }

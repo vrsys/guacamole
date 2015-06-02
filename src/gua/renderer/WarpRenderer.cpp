@@ -136,7 +136,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   a_buffer.bind(ctx);
 
-  if (description->display_mode() == WarpPassDescription::GRID) {
+  if (description->mode() == WarpPassDescription::GRID) {
     auto res(ctx.resources.get<WarpGridGenerator::SharedResource>());
     if (res) {
       ctx.render_context->bind_vertex_array(res->grid_vao[res->current_vbo()]);

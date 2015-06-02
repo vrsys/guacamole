@@ -121,14 +121,14 @@
 
         slider.on("slideStop", function() {
           var val = $(this).slider('getValue');
-          $(this).parent().attr("val", ""+val);
+          $(this).parent().attr("val", ""+val.toFixed(4));
           gua["set_" + func](val);
         });
 
         slider.on("slide", function() {
           var val = $(this).slider('getValue');
           gua["set_" + func](val);
-          $(this).parent().attr("val", +val.toFixed(2));
+          $(this).parent().attr("val", +val.toFixed(4));
           obj.find(".slider-handle").focus();
         });
 
@@ -184,19 +184,26 @@
         init_radio("#scene_teapot", "scene_teapot");
         init_radio("#scene_textured_quads", "scene_textured_quads");
 
-        add_space("#control-panel");
-        add_checkbox("#control-panel", "orthographic", "Orthographic");
-        add_checkbox("#control-panel", "show_warp_grid", "Warp Grid");
-        add_checkbox("#control-panel", "debug_mode", "Debug Vis");
+        init_checkbox("#orthographic", "orthographic");
+        init_checkbox("#depth_test", "depth_test");
+        init_checkbox("#backface_culling", "backface_culling");
 
         init_radio("#type_quads", "type_quads");
         init_radio("#type_points", "type_points");
         init_radio("#type_scaled_points", "type_scaled_points");
         init_radio("#type_grid", "type_grid");
-        add_slider("#preview-panel", "depth_layers", "Depth Layers", 1, 20, 1);
+
+        init_checkbox("#show_warp_grid", "show_warp_grid");
+        init_checkbox("#debug_mode", "debug_mode");
+
+        init_radio("#grid_surface", "grid_surface");
+        init_radio("#grid_adaptive_surface", "grid_adaptive_surface");
+        init_radio("#grid_depth_threshold", "grid_depth_threshold");
+
+        add_slider("#preview-panel", "split_threshold", "Split", 0, 0.01, 0.00001);
+
         add_space("#preview-panel");
-        add_checkbox("#preview-panel", "depth_test", "Depth Test");
-        add_checkbox("#preview-panel", "backface_culling", "Backface Culling");
+        add_slider("#preview-panel", "depth_layers", "Depth Layers", 1, 20, 1);
 
         $("body").addClass("on");
       }
@@ -248,6 +255,31 @@
             <div class="col-xs-7">
               <button onclick="gua.reset_view()" class="btn btn-block"><i class="fa fa-undo"></i> Reset</button>
               <button onclick="gua.render_view()" class="btn btn-block"><i class="fa fa-desktop"></i> Render Current</button>
+
+
+              <div class="checkbox">
+                <label>
+                  <input id="orthographic" type="checkbox" value="">
+                  <span>Orthographic</span>
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label>
+                  <input id="depth_test" type="checkbox" value="">
+                  <span>Depth Test</span>
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label>
+                  <input id="backface_culling" type="checkbox" value="">
+                  <span>Backface Culling</span>
+                </label>
+              </div>
+
+
+
             </div>
           </div>
 
@@ -333,14 +365,14 @@
             <div class="col-xs-7">
               <div class="radio">
                 <label>
-                  <input type="radio" name="renderRadios" id="type_points" value="" checked>
-                  <span>Points</span>
+                  <input type="radio" name="renderRadios" id="type_quads" value="">
+                  <span>Quads</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="renderRadios" id="type_quads" value="">
-                  <span>Quads</span>
+                  <input type="radio" name="renderRadios" id="type_points" value="" checked>
+                  <span>Points</span>
                 </label>
               </div>
               <div class="radio">
@@ -355,6 +387,52 @@
                   <span>Grid</span>
                 </label>
               </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Grid Options:
+            </div>
+            <div class="col-xs-7">
+
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gridRadios" id="grid_surface" value="" checked="">
+                  <span>Surface Estimation</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gridRadios" id="grid_adaptive_surface" value="">
+                  <span>Adapt. Surf. Est.</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gridRadios" id="grid_depth_threshold" value="">
+                  <span>Depth Threshold</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="show_warp_grid" type="checkbox" value="">
+                  <span>Display Grid</span>
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label>
+                  <input id="debug_mode" type="checkbox" value="">
+                  <span>Debug Colors</span>
+                </label>
+              </div>
+
+
+
+
             </div>
           </div>
 
