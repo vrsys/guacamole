@@ -26,6 +26,7 @@
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
+#include <gua/utils/ToGua.hpp>
 #include <gua/node/TriMeshNode.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/renderer/MaterialLoader.hpp>

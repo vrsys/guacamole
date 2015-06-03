@@ -31,47 +31,14 @@
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
-
 #include <vector>
 #include <assimp/scene.h>       // Output data structure
 
 namespace fbxsdk_2015_1{
-  class FbxAMatrix;
-  class FbxQuaternion;
   class FbxMesh;
 
   template<class T>
   class FbxLayerElementTemplate;
-}
-
-namespace to_gua{
-
-scm::math::mat4f mat4f(aiMatrix4x4 const& m);
-scm::math::quatf quatf(aiQuaternion const& q);
-
-template<typename T>
-scm::math::vec3f vec3f(T const& v) {
-  scm::math::vec3f res(v[0], v[1], v[2]);
-  return res;
-}
-
-template<typename T>
-scm::math::vec2f vec2f(T const& v) {
-  scm::math::vec2f res(v[0], v[1]);
-  return res;
-}
-
-template<typename T>
-scm::math::vec4f vec4f(T const& v) {
-  scm::math::vec4 res(v[0], v[1], v[2], v[3]);
-  return res;
-}
-
-#ifdef GUACAMOLE_FBX
-  scm::math::mat4f mat4f(fbxsdk_2015_1::FbxAMatrix const& m);
-  scm::math::mat4d mat4d(fbxsdk_2015_1::FbxAMatrix const& m);
-  scm::math::quatf quatf(fbxsdk_2015_1::FbxQuaternion const& q);
-#endif
 }
 
 namespace gua {

@@ -25,66 +25,92 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/utils/BonePose.hpp>
-#include <gua/utils/Mesh.hpp>
+// external headers
+#include <scm/gl_core.h>
+#include <scm/core/math/quat.h>
 
-namespace fbxsdk_2015_1 {
-class FbxTakeInfo;
-class FbxNode;
+ 
+namespace fbxsdk_2015_1{
+  class FbxTakeInfo;
+  class FbxNode;
 }
 
 namespace gua {
+  struct BonePose;
+}
 
-template <class T> struct Keyframe {
+class aiNodeAnim;
 
-  Keyframe(double time, T const& value) : time { time }
-  , value { value }
+namespace gua {
+ /**
+  * @brief holds transformation at one point in time
+  */
+template<class T>
+struct Keyframe {
+
+  Keyframe(double time, T const& value):
+    time{time},
+    value{value}
   {}
 
-  ~Keyframe() {}
-  ;
+  ~Keyframe(){};
 
   double time;
   T value;
 };
 
+ /**
+  * @brief keyframe container
+  * @details holds transformations for one bone throughout one animation 
+  */
 class BoneAnimation {
  public:
   BoneAnimation();
+  BoneAnimation(aiNodeAnim* anim);
+  BoneAnimation(fbxsdk_2015_1::FbxTakeInfo const& take, fbxsdk_2015_1::FbxNode& node);
 
   ~BoneAnimation();
 
-  BoneAnimation(aiNodeAnim* anim);
-  BoneAnimation(fbxsdk_2015_1::FbxTakeInfo const& take,
-                fbxsdk_2015_1::FbxNode& node);
-
+  // returns BondePose at given time
   BonePose calculate_pose(float time) const;
 
   std::string const& get_name() const;
 
  private:
 
-  scm::math::vec3f interpolate(scm::math::vec3f val1,
-                               scm::math::vec3f val2,
-                               float factor) const;
+  scm::math::vec3f interpolate(scm::math::vec3f val1, scm::math::vec3f val2, float factor) const;
+  scm::math::quatf interpolate(scm::math::quatf val1, scm::math::quatf val2, float factor) const;
 
-  scm::math::quatf interpolate(scm::math::quatf val1,
-                               scm::math::quatf val2,
-                               float factor) const;
+  /**
+   * @brief finds keyframe closest to given time
+   * @details finds last keyframe before given time
+   * 
+   * @param animationTime normalized time
+   * @param keys vector of keyframes to search in
+   * @return index of keyframe
+   */
+  template<class T> 
+  int find_key(float animationTime, std::vector<Keyframe<T>> keys) const;
 
-  template <class T>
-  int find_key(float animationTime, std::vector<Keyframe<T> > keys) const;
-
-  template <class T>
-  T calculate_value(float time, std::vector<Keyframe<T> > keys) const;
+  /**
+   * @brief returns transformation at given time
+   * @details searches for two closest keyframes
+   *  and interpolates them
+   * 
+   * @param time normalized time
+   * @param keys vector of keyframes ot use
+   * 
+   * @return interpolated transformation
+   */
+  template<class T> 
+  T calculate_value(float time, std::vector<Keyframe<T>> keys) const;
 
   std::string name;
-
-  std::vector<Keyframe<scm::math::vec3f> > scalingKeys;
-  std::vector<Keyframe<scm::math::quatf> > rotationKeys;
-  std::vector<Keyframe<scm::math::vec3f> > translationKeys;
+  std::vector<Keyframe<scm::math::vec3f>> scalingKeys;
+  std::vector<Keyframe<scm::math::quatf>> rotationKeys;
+  std::vector<Keyframe<scm::math::vec3f>> translationKeys;
 };
 
 }
 
-#endif  //GUA_BONE_ANIMATION_HPP
+#endif //GUA_BONE_ANIMATION_HPP
