@@ -19,52 +19,50 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_BONEPOSE_HPP
-#define GUA_BONEPOSE_HPP
+#ifndef GUA_TOGUA_HPP
+#define GUA_TOGUA_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
-#include <gua/utils/Logger.hpp>
+#include <gua/config.hpp>
 
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
+#include <assimp/scene.h>       // for ainodeanim
 
-#include <vector>
-
-namespace gua {
-
-/**
- * @brief holds transformation of bone
- * @details [long description]
- * @return [description]
- */
-struct BonePose {
- public:
-  BonePose();
-
-  BonePose(scm::math::vec3f const& scale,
-           scm::math::quatf const& rotate,
-           scm::math::vec3f const& translate);
-
-  ~BonePose();
-
-  scm::math::mat4f to_matrix() const;
-
-  BonePose blend(BonePose const& t, float const factor) const;
-
-  BonePose operator+(BonePose const& t) const;
-  BonePose& operator+=(BonePose const& t);
-
-  BonePose operator*(float const factor) const;
-  BonePose& operator*=(float const f);
-
- private:
-  scm::math::vec3f scaling;
-  scm::math::quatf rotation;
-  scm::math::vec3f translation;
-};
-
+namespace fbxsdk_2015_1{
+  class FbxAMatrix;
+  class FbxQuaternion;
 }
 
-#endif  //GUA_BONEPOSE_HPP
+namespace to_gua{
+
+scm::math::mat4f mat4f(aiMatrix4x4 const& m);
+scm::math::quatf quatf(aiQuaternion const& q);
+
+template<typename T>
+scm::math::vec3f vec3f(T const& v) {
+  scm::math::vec3f res(v[0], v[1], v[2]);
+  return res;
+}
+
+template<typename T>
+scm::math::vec2f vec2f(T const& v) {
+  scm::math::vec2f res(v[0], v[1]);
+  return res;
+}
+
+template<typename T>
+scm::math::vec4f vec4f(T const& v) {
+  scm::math::vec4 res(v[0], v[1], v[2], v[3]);
+  return res;
+}
+
+#ifdef GUACAMOLE_FBX
+  scm::math::mat4f mat4f(fbxsdk_2015_1::FbxAMatrix const& m);
+  scm::math::mat4d mat4d(fbxsdk_2015_1::FbxAMatrix const& m);
+  scm::math::quatf quatf(fbxsdk_2015_1::FbxQuaternion const& q);
+#endif
+}
+
+#endif //GUA_TOGUA_HPP

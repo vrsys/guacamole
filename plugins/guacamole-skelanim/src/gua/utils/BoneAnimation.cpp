@@ -1,9 +1,14 @@
 // class header
 #include <gua/utils/BoneAnimation.hpp>
+// guacamole headers
+#include <gua/utils/BonePose.hpp>
+#include <gua/utils/ToGua.hpp>
+
 //external headers
 #include <iostream>
 #include <queue>
 #include <fbxsdk.h>
+#include <assimp/scene.h>       // for ainodeanim
 
 namespace gua {
 

@@ -1,6 +1,8 @@
 // class header
 #include <gua/utils/Bone.hpp>
-#include <gua/utils/Mesh.hpp>
+
+// guacamole headers
+#include <gua/utils/ToGua.hpp>
 
 //external headers
 #include <iostream>
