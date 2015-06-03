@@ -96,6 +96,7 @@ void main() {
     uint s2 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 0)).x;
     uint s3 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 0)).x;
 
+    // if each child has been a connected surface, the parent is as a surface as well
     result = s0 & s1 & s2 & s3;
   }
 
@@ -135,19 +136,22 @@ void main() {
     float d14 = texelFetch(sampler2D(depth_buffer), max(ivec2(0), min(res, ivec2(gl_FragCoord.xy*2) + ivec2( 1, -1))), 0).x;
     float d15 = texelFetch(sampler2D(depth_buffer), max(ivec2(0), min(res, ivec2(gl_FragCoord.xy*2) + ivec2( 2, -1))), 0).x;
 
-
-    uint t = is_on_line(d1, d5, d9)  & is_on_line(d2, d6, d10);
+    // check for horizontal and vertical continuity
+    uint t = is_on_line(d1, d5, d9)  & is_on_line(d2, d6,  d10);
     uint r = is_on_line(d5, d6, d7)  & is_on_line(d9, d10, d11);
     uint b = is_on_line(d5, d9, d13) & is_on_line(d6, d10, d14);
-    uint l = is_on_line(d4, d5, d6)  & is_on_line(d8, d9, d10);
+    uint l = is_on_line(d4, d5, d6)  & is_on_line(d8, d9,  d10);
 
-    uint tl = is_on_line(d0, d5, d10);
-    uint tr = is_on_line(d3, d6, d9);
-    uint bl = is_on_line(d12, d9, d6);
-    uint br = is_on_line(d5, d10, d15);
+    // check for diagonal continuity
+    uint tl = is_on_line(d0,  d5,  d10);
+    uint tr = is_on_line(d3,  d6,  d9);
+    uint bl = is_on_line(d12, d9,  d6);
+    uint br = is_on_line(d5,  d10, d15);
 
+    // if the patch is connected on to othogonal sides, it represents a surface
     uint is_surface = (t & r) | (r & b) | (b & l) | (l & t);
 
+    // store all continuities
     uint continious = (t  << BIT_CONTINIOUS_T)
                     | (r  << BIT_CONTINIOUS_R)
                     | (b  << BIT_CONTINIOUS_B)
@@ -178,7 +182,6 @@ void main() {
 
     // if any child is no complete surface, the parent is neither
     uint is_surface = s0 & s1 & s2 & s3 & internal_continuity;
-
 
     // check for external continuity
     uint continious = (((s0 >> BIT_CONTINIOUS_T) & (s1 >> BIT_CONTINIOUS_T) & 1) << BIT_CONTINIOUS_T)    
