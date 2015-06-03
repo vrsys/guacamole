@@ -22,15 +22,9 @@
 #ifndef GUA_BONEPOSE_HPP
 #define GUA_BONEPOSE_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/utils/Logger.hpp>
-
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
-
-#include <vector>
 
 namespace gua {
 

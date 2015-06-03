@@ -23,24 +23,19 @@
 #define GUA_MATERIAL_LOADER_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
+#include <gua/config.hpp>
 #include <gua/renderer/Material.hpp>
-#include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/databases/MaterialShaderDatabase.hpp>
 
 // external headers
 #include <string>
-#include <list>
 #include <memory>
-
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
 
 namespace fbxsdk_2015_1{
   class FbxSurfaceMaterial;
 }
 
 namespace Assimp { class Importer; }
+class aiMaterial;
 
 namespace gua {
 

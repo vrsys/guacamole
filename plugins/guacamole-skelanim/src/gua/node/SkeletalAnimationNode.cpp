@@ -30,6 +30,7 @@
 #include <gua/renderer/SkeletalAnimationLoader.hpp>
 #include <gua/renderer/SkinnedMeshResource.hpp>
 #include <gua/utils/SkeletalAnimation.hpp>
+#include <gua/utils/BoneAnimation.hpp>
 #include <gua/utils/Bone.hpp>
 
 namespace gua {

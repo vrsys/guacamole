@@ -22,20 +22,13 @@
 #ifndef GUA_BONE_HPP
 #define GUA_BONE_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/utils/Logger.hpp>
-#include <gua/utils/SkeletalPose.hpp>
-#include <gua/utils/SkeletalAnimation.hpp>
-
 // external headers
 #include <scm/gl_core.h>
-#include <scm/core/math/quat.h>
 #include <vector>
 #include <map>
 
 class aiScene;
+class aiNode;
 
 namespace fbxsdk_2015_1 {
 class FbxNode;
@@ -43,6 +36,8 @@ class FbxScene;
 }
 
 namespace gua {
+
+class SkeletalPose;
 
 class Bone {
  public:

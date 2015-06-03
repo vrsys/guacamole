@@ -1,8 +1,5 @@
 // class header
 #include <gua/utils/BonePose.hpp>
-//external headers
-#include <iostream>
-#include <queue>
 
 namespace gua {
 

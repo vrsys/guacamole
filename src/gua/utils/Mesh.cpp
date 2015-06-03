@@ -2,13 +2,13 @@
 #include <gua/utils/Mesh.hpp>
 
 // guacamole headers
-#include <gua/utils/Timer.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/ToGua.hpp>
+// #include <gua/utils/Timer.hpp>
 
 //external headers
 #include <iostream>
-#include <queue>
-
+#include <assimp/scene.h>
 #ifdef GUACAMOLE_FBX
   #include <fbxsdk.h>
 #endif // GUACAMOLE_FBX
@@ -23,14 +23,15 @@ Mesh::Mesh():
  bitangents{},
  indices{}
 {}
+
 #ifdef GUACAMOLE_FBX
 Mesh::Mesh(FbxMesh& mesh, int material_index) {
   construct(mesh, material_index);
 }
 
 std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
-  Timer timer{};
-  timer.start();
+  // Timer timer{};
+  // timer.start();
 
   //if the given materialindex is valid, assume that only the polys with this material should be loaded
   bool split_materials = material_index >= 0;

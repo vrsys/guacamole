@@ -22,26 +22,21 @@
 #ifndef GUA_BONE_ANIMATION_HPP
 #define GUA_BONE_ANIMATION_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/utils/Logger.hpp>
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
 
- 
 namespace fbxsdk_2015_1{
   class FbxTakeInfo;
   class FbxNode;
 }
 
-namespace gua {
-  struct BonePose;
-}
-
 class aiNodeAnim;
 
 namespace gua {
+  
+  struct BonePose;
+
  /**
   * @brief holds transformation at one point in time
   */

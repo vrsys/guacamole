@@ -3,10 +3,11 @@
 
 // guacamole headers
 #include <gua/utils/ToGua.hpp>
+#include <gua/utils/Logger.hpp>
+#include <gua/utils/SkeletalPose.hpp>
+#include <gua/utils/BonePose.hpp>
 
 //external headers
-#include <iostream>
-#include <queue>
 #include <fbxsdk.h>
 #include <assimp/scene.h>
 

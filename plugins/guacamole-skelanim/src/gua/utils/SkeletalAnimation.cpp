@@ -1,10 +1,14 @@
 // class header
 #include <gua/utils/SkeletalAnimation.hpp>
 
+// guacamole headers
+#include <gua/utils/SkeletalPose.hpp>
+#include <gua/utils/BonePose.hpp>
+#include <gua/utils/BoneAnimation.hpp>
+
 //external headers
-#include <iostream>
-#include <queue>
 #include <fbxsdk.h>
+#include <assimp/scene.h>
 
 namespace gua {
 

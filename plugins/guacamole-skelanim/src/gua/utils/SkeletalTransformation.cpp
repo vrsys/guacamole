@@ -4,10 +4,11 @@
 // guacamole headers
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/SkeletalPose.hpp>
+#include <gua/utils/BonePose.hpp>
+#include <gua/utils/SkeletalAnimation.hpp>
+#include <gua/utils/Bone.hpp>
 
 //external headers
-#include <iostream>
-#include <queue>
 #include <fbxsdk.h>
 
 namespace gua {
