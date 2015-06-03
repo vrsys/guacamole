@@ -23,18 +23,13 @@
 #define GUA_SKINNED_MESH_RESSOURCE_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/GeometryResource.hpp>
-#include <gua/utils/KDTree.hpp>
 #include <gua/utils/SkinnedMesh.hpp>
+#include <gua/renderer/GeometryResource.hpp>
+// #include <gua/utils/KDTree.hpp>
 
 // external headers
 #include <scm/gl_core.h>
-#include <scm/core/math/quat.h>
-
 #include <mutex>
-#include <thread>
-
 #include <vector>
 
 namespace gua {
@@ -117,9 +112,8 @@ class SkinnedMeshResource : public GeometryResource {
 
   /////////////////////////////////
 
- public:
-
-  KDTree kd_tree_;
+ // public:
+ //  KDTree kd_tree_;
 };
 
 }

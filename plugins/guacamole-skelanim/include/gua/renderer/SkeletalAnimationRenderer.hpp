@@ -22,15 +22,13 @@
 #ifndef GUA_SKELETAL_ANIMATION_RENDERER_HPP
 #define GUA_SKELETAL_ANIMATION_RENDERER_HPP
 
-#include <map>
-#include <unordered_map>
-
+// guacamole headers
+#include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
 
-#include <gua/platform.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-
+// external headers
 #include <scm/gl_core/shader_objects.h>
+#include <unordered_map>
 
 namespace gua {
 

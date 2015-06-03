@@ -26,15 +26,15 @@
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
-#include <gua/node/TransformNode.hpp>
-#include <gua/renderer/MaterialLoader.hpp>
-#include <gua/databases/MaterialShaderDatabase.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/utils/SkeletalAnimation.hpp>
-#include <gua/renderer/SkinnedMeshResource.hpp>
 #include <gua/utils/BoneAnimation.hpp>
 #include <gua/utils/Bone.hpp>
+#include <gua/node/SkeletalAnimationNode.hpp>
+#include <gua/renderer/Material.hpp>
+#include <gua/renderer/MaterialLoader.hpp>
+#include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
 
 // external headers
 #include <queue>

@@ -21,17 +21,17 @@
 
 // class header
 #include "gua/node/SkeletalAnimationNode.hpp"
+ 
 // guacamole headers
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/MaterialShaderDatabase.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/math/BoundingBoxAlgo.hpp>
+#include <gua/utils/Bone.hpp>
+#include <gua/utils/SkeletalAnimation.hpp>
+#include <gua/utils/BoneAnimation.hpp>
 #include <gua/utils/SkeletalTransformation.hpp>
 #include <gua/renderer/SkeletalAnimationLoader.hpp>
 #include <gua/renderer/SkinnedMeshResource.hpp>
-#include <gua/utils/SkeletalAnimation.hpp>
-#include <gua/utils/BoneAnimation.hpp>
-#include <gua/utils/Bone.hpp>
+// #include <gua/node/RayNode.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
 
 namespace gua {
 namespace node {

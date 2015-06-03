@@ -23,12 +23,11 @@
 #include <gua/renderer/SkinnedMeshResource.hpp>
 
 // guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
-#include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/renderer/RenderContext.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
+
+// external headers
 #include <scm/gl_core/buffer_objects/scoped_buffer_map.h>
 
 namespace gua {
