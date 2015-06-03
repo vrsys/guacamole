@@ -30,8 +30,7 @@ namespace gua {
 
 /**
  * @brief holds transformation of bone
- * @details [long description]
- * @return [description]
+ * @details can be blended with another bone pose
  */
 struct BonePose {
  public:

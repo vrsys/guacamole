@@ -39,6 +39,10 @@ namespace gua {
 
 class SkeletalPose;
 
+/**
+ * @brief represents one node in skeletal hierarchy
+ * @details has methods to traverse skeleton hierarchy
+ */
 class Bone {
  public:
   Bone();
@@ -49,16 +53,48 @@ class Bone {
 
   ~Bone();
 
+  /**
+   * @brief collects 
+   * @details adds entry for itself to given map
+   * and calls method on children
+   * 
+   * @param ids map to store bone ids
+   */
   void collect_indices(std::map<std::string, int>& ids) const;
 
+  /**
+   * @brief sets offset matrix and index
+   * @details offset matrices may be stored somewhere else
+   * therefore they cant be set at construction 
+   * 
+   * @param infos map with index and offset matrix of each bone
+   */
   void set_properties(
       std::map<std::string, std::pair<uint, scm::math::mat4f> > const& infos);
 
+
+  /**
+   * @brief calculates tranform matricex from skeletalpose
+   * @details writes own transform matrix at index in vector
+   * and calls method on children
+   * 
+   * @param transformMat4s vector to which matrix is written
+   * @param pose pose from which transformation is calculated 
+   * @param parentTransform transform matrix of parent bone
+   */
   void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s,
                            SkeletalPose const& pose,
                            scm::math::mat4f const& parentTransform =
                                scm::math::mat4f::identity()) const;
 
+  /**
+   * @brief finds bone in hierarchy
+   * @details checks if child and given name and
+   * calls method on children
+   * 
+   * @param name name of bone
+   * @return pointer to found bone, nullptr if not found
+   */
   std::shared_ptr<Bone> find(std::string const& name) const;
 
   std::string name;

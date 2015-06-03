@@ -40,7 +40,7 @@ namespace node {
  */
 class GUA_DLL SkeletalAnimationNode : public GeometryNode {
 
- private:  // c'tor / d'tor
+ public:  // c'tor / d'tor
 
   SkeletalAnimationNode(
       std::string const& node_name = "",

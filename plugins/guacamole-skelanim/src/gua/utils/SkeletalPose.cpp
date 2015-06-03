@@ -8,6 +8,8 @@
 
 namespace gua {
 
+const BonePose SkeletalPose::blank_pose = BonePose{};
+
 SkeletalPose::SkeletalPose() : transforms {}
 {}
 
@@ -18,13 +20,13 @@ bool SkeletalPose::contains(std::string const& name) const {
 }
 
 BonePose const& SkeletalPose::get_transform(std::string const& name) const {
-  try {
+  if(contains(name)) {
     return transforms.at(name);
   }
-  catch (std::exception const & e) {
+  else {
     Logger::LOG_ERROR << "bone '" << name << "' not contained in pose"
                       << std::endl;
-    return transforms.begin()->second;
+    return blank_pose;
   }
 }
 

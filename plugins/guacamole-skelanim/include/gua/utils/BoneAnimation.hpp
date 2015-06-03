@@ -66,7 +66,12 @@ class BoneAnimation {
 
   ~BoneAnimation();
 
-  // returns BondePose at given time
+  /**
+   * @brief return pose at given time
+   * 
+   * @param time normalized time
+   * @return interpolated pose
+   */
   BonePose calculate_pose(float time) const;
 
   std::string const& get_name() const;

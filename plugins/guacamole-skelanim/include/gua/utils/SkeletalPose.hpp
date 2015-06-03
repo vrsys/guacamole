@@ -36,8 +36,23 @@ class SkeletalPose {
 
   ~SkeletalPose();
 
+  /**
+   * @brief returns if pose contains bonepose
+   * @details checks if the pose 
+   * contains transform for given bone
+   * 
+   * @param name name of bone
+   * @return whether pose exists
+   */
   bool contains(std::string const& name) const;
 
+  /**
+   * @brief returns tranform for given bone
+   * @details returns 
+   * 
+   * @param name name of bone
+   * @return pose of the bone
+   */
   BonePose const& get_transform(std::string const& name) const;
 
   void set_transform(std::string const& name, BonePose const& value);
@@ -55,6 +70,8 @@ class SkeletalPose {
 
  private:
   std::map<std::string, BonePose> transforms;
+
+  const static BonePose blank_pose;
 };
 
 }
