@@ -22,17 +22,14 @@
 #ifndef GUA_SKELETALTRANSFORMATION_HPP
 #define GUA_SKELETALTRANSFORMATION_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/utils/SkeletalAnimation.hpp>
-
-#include <gua/utils/Bone.hpp>
-#include <gua/utils/Timer.hpp>
-
 // external headers
+#include <scm/gl_core.h>
 #include <vector>
+#include <memory>
 
 namespace gua {
+  class Bone;
+  class SkeletalAnimation;
 
 namespace SkeletalTransformation {
 

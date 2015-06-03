@@ -1,12 +1,14 @@
 // class header
 #include <gua/utils/SkinnedMesh.hpp>
-#include <gua/utils/Timer.hpp>
+
+// guacamole headers
+#include <gua/utils/Mesh.hpp>
+#include <gua/utils/Logger.hpp>
 
 //external headers
-#include <iostream>
-#include <queue>
 #include <fbxsdk.h>
 #include <map>
+#include <assimp/scene.h>
 
 namespace gua {
 

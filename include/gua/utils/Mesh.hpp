@@ -24,15 +24,11 @@
 
 // guacamole headers
 #include <gua/config.hpp>
-#include <gua/platform.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
 #include <vector>
-#include <assimp/scene.h>       // Output data structure
 
 namespace fbxsdk_2015_1{
   class FbxMesh;
@@ -40,6 +36,8 @@ namespace fbxsdk_2015_1{
   template<class T>
   class FbxLayerElementTemplate;
 }
+
+class aiMesh;
 
 namespace gua {
 

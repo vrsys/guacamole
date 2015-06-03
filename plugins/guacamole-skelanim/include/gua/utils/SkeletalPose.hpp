@@ -22,17 +22,13 @@
 #ifndef GUA_POSE_HPP
 #define GUA_POSE_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/utils/Logger.hpp>
-#include <gua/utils/Mesh.hpp>
-#include <gua/utils/BonePose.hpp>
-
-#include <vector>
+//external headers
 #include <map>
+#include <memory>
 
 namespace gua {
 class Bone;
+class BonePose;
 
 class SkeletalPose {
  public:

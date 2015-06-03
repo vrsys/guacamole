@@ -31,7 +31,9 @@
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/node/SkeletalAnimationNode.hpp>
+#include <gua/utils/SkeletalAnimation.hpp>
 #include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/utils/BoneAnimation.hpp>
 #include <gua/utils/Bone.hpp>
 
 // external headers

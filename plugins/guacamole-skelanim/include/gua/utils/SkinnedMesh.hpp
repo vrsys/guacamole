@@ -23,23 +23,20 @@
 #define GUA_SKINNED_MESH_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/utils/Bone.hpp>
 #include <gua/utils/Mesh.hpp>
-#include <gua/utils/Logger.hpp>
+#include <gua/utils/Bone.hpp>
 
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
-
 #include <vector>
-#include <map>
-#include <assimp/scene.h>
 
 namespace fbxsdk_2015_1 { class FbxMesh; }
 
+class aiMesh;
+
 namespace gua {
+  class Bone;
 
 struct SkinnedMesh : public Mesh {
  public:

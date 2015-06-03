@@ -22,23 +22,20 @@
 #ifndef GUA_SKELETAL_ANIMATION_HPP
 #define GUA_SKELETAL_ANIMATION_HPP
 
-// guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/utils/Logger.hpp>
-#include <gua/utils/Mesh.hpp>
-#include <gua/utils/SkeletalPose.hpp>
-#include <gua/utils/BoneAnimation.hpp>
-
+// external headers
 #include <vector>
+#include <string>
 
 namespace fbxsdk_2015_1 {
 class FbxNode;
 class FbxAnimStack;
 }
 
+class aiAnimation;
+
 namespace gua {
 class SkeletalPose;
+class BoneAnimation;
 
 class SkeletalAnimation {
  public:

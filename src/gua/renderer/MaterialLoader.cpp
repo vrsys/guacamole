@@ -24,18 +24,15 @@
 
 // guacamole headers
 #include <gua/utils/TextFile.hpp>
-#include <fstream>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
-#include <gua/node/Node.hpp>
 #include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/PBSMaterialFactory.hpp>
-#include <gua/databases/MaterialShaderDatabase.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
 
+// external headers
+#include <assimp/scene.h>
+#include <fstream>
 #include <jsoncpp/json/json.h>
-
 #ifdef GUACAMOLE_FBX
   #include <fbxsdk.h>
 #endif

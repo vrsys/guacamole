@@ -39,6 +39,8 @@ namespace fbxsdk_2015_1{
 }
 
 namespace Assimp { class Importer; }
+class aiScene;
+class aiNode;
 
 namespace gua {
 
