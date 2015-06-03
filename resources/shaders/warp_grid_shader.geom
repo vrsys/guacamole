@@ -26,12 +26,15 @@
 layout(points) in;
 layout(line_strip, max_vertices = 5) out;
 
-flat in ivec3 varying_position[];
-flat out int cellsize;
+flat in uvec3 varying_position[];
+flat out uint cellsize;
+
+@include "shaders/warp_grid_bits.glsl"
 
 void main() {
 
-  cellsize = varying_position[0].z;
+  uint level = varying_position[0].z >> BIT_CURRENT_LEVEL;
+  cellsize = 1 << level;
 
   vec2 vertex_position = vec2(varying_position[0].xy) / gua_resolution * 2 - 1;
   gl_Position = vec4(vertex_position, 0, 1);

@@ -130,11 +130,21 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(teapot);
 
+  // sponza --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
+  scene_root->scale(10);
+  auto sponza(loader.create_geometry_from_file("sponza", "/opt/3d_models/Sponza/sponza.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  scene_root->add_child(sponza);
+
 
   show_backfaces(transform);
 
   auto set_scene = [&](std::string const& name) {
     graph["/transform/many_oilrigs"]->get_tags().add_tag("invisible");
+    graph["/transform/sponza"]->get_tags().add_tag("invisible");
     graph["/transform/one_oilrig"]->get_tags().add_tag("invisible");
     graph["/transform/textured_quads"]->get_tags().add_tag("invisible");
     graph["/transform/teapot"]->get_tags().add_tag("invisible");
@@ -143,6 +153,8 @@ int main(int argc, char** argv) {
       graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_one_oilrig")
       graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_sponza")
+      graph["/transform/sponza"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_textured_quads")
       graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_teapot")
@@ -246,8 +258,10 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_type_quads");
       gui->add_javascript_callback("set_type_scaled_points");
       gui->add_javascript_callback("set_type_grid");
+      gui->add_javascript_callback("set_type_adaptive_grid");
       gui->add_javascript_callback("set_scene_one_oilrig");
       gui->add_javascript_callback("set_scene_many_oilrigs");
+      gui->add_javascript_callback("set_scene_sponza");
       gui->add_javascript_callback("set_scene_teapot");
       gui->add_javascript_callback("set_scene_textured_quads");
       gui->add_javascript_callback("set_manipulation_camera");
@@ -338,6 +352,13 @@ int main(int argc, char** argv) {
         if (checked) {
           warp_pass->mode(gua::WarpPassDescription::Mode::GRID);
         }
+      } else if (callback == "set_type_adaptive_grid") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        if (checked) {
+          warp_pass->mode(gua::WarpPassDescription::Mode::ADAPTIVE_GRID);
+        }
       } else if (callback == "set_grid_surface") {
         std::stringstream str(params[0]);
         bool checked;
@@ -371,6 +392,7 @@ int main(int argc, char** argv) {
         manipulation_object = !checked;
       } else if (callback == "set_scene_one_oilrig" ||
                  callback == "set_scene_many_oilrigs" ||
+                 callback == "set_scene_sponza" ||
                  callback == "set_scene_teapot" ||
                  callback == "set_scene_textured_quads") {
         set_scene(callback);

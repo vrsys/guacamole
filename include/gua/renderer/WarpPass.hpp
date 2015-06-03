@@ -37,7 +37,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
     POINTS,
     QUADS,
     SCALED_POINTS,
-    GRID
+    GRID,
+    ADAPTIVE_GRID
   };
 
   WarpPassDescription();

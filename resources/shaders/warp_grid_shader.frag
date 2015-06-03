@@ -2,7 +2,7 @@
 
 @include "shaders/common/gua_camera_uniforms.glsl"
 
-flat in int cellsize;
+flat in uint cellsize;
 
 // output
 layout(location=0) out vec3 gua_out_color;

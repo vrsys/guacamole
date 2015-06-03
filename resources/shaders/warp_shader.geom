@@ -23,23 +23,27 @@
 @include "common/gua_camera_uniforms.glsl"
 @include "common/gua_abuffer.glsl"
 @include "common/gua_gbuffer_input.glsl"
+
 #define DISPLAY_MODE @display_mode@
 
 uniform mat4 original_projection_view_matrix;
 
 // -----------------------------------------------------------------------------
-#if DISPLAY_MODE == 3 // GRID --------------------------------------------------
+#if DISPLAY_MODE == 3 || DISPLAY_MODE == 4 // GRID modes -----------------------
 // -----------------------------------------------------------------------------
 
 layout(points) in;
 layout(triangle_strip, max_vertices = 4) out;
 
+@include "shaders/warp_grid_bits.glsl"
+
 flat in ivec3 varying_position[];
 flat out int cellsize;
+
 out vec2 texcoords;
 
-float gua_get_depth_raw(ivec2 frag_pos) {
-    return texelFetch(sampler2D(gua_gbuffer_depth), frag_pos, 0).x * 2.0 - 1.0;
+float gua_get_depth_raw(vec2 frag_pos) {
+    return texelFetch(sampler2D(gua_gbuffer_depth), ivec2(frag_pos), 0).x * 2.0 - 1.0;
 }
 
 void emit_grid_vertex(vec2 position, float depth) {
@@ -51,31 +55,68 @@ void emit_grid_vertex(vec2 position, float depth) {
 }
 
 void main() {
-  ivec2 position = varying_position[0].xy;
+  vec2 position = varying_position[0].xy;
   float depth = gua_get_depth_raw(position);
 
   if (depth < 1) {
-    emit_grid_vertex(position, depth);
 
-    cellsize = varying_position[0].z;
+    int level = varying_position[0].z >> BIT_CURRENT_LEVEL;
+    cellsize = 1 << level;
 
-    #if @debug_mode@ == 1
-      const float offset = 0.8;
-    #else
-      const float offset = 1.0;
-    #endif
 
-    position = varying_position[0].xy + ivec2(cellsize-1, 0);
-    depth = gua_get_depth_raw(position);
-    emit_grid_vertex(position + vec2(offset, 0), depth);
+    #if DISPLAY_MODE == 3 // GRID ----------------------------------------------
+      emit_grid_vertex(position + vec2(0, 0), depth);
 
-    position = varying_position[0].xy + ivec2(0, cellsize-1);
-    depth = gua_get_depth_raw(position);
-    emit_grid_vertex(position + vec2(0, offset), depth);
+      position = varying_position[0].xy + vec2(cellsize-1, 0);
+      depth = gua_get_depth_raw(position);
+      emit_grid_vertex(position + vec2(1, 0), depth);
 
-    position = varying_position[0].xy + ivec2(cellsize-1, cellsize-1);
-    depth = gua_get_depth_raw(position);
-    emit_grid_vertex(position + vec2(offset, offset), depth);
+      position = varying_position[0].xy + vec2(0, cellsize-1);
+      depth = gua_get_depth_raw(position);
+      emit_grid_vertex(position + vec2(0, 1), depth);
+
+      position = varying_position[0].xy + vec2(cellsize-1, cellsize-1);
+      depth = gua_get_depth_raw(position);
+      emit_grid_vertex(position + vec2(1, 1), depth);
+    
+    #elif DISPLAY_MODE == 4 // ADAPTIVE_GRID -----------------------------------
+
+      int cont_l = (varying_position[0].z >> BIT_CONTINIOUS_L) & 1;
+      int cont_r = (varying_position[0].z >> BIT_CONTINIOUS_R) & 1;
+      int cont_t = (varying_position[0].z >> BIT_CONTINIOUS_T) & 1;
+      int cont_b = (varying_position[0].z >> BIT_CONTINIOUS_B) & 1;
+
+      int cont_tl = (varying_position[0].z >> BIT_CONTINIOUS_TL) & 1;
+      int cont_tr = (varying_position[0].z >> BIT_CONTINIOUS_TR) & 1;
+      int cont_bl = (varying_position[0].z >> BIT_CONTINIOUS_BL) & 1;
+      int cont_br = (varying_position[0].z >> BIT_CONTINIOUS_BR) & 1;
+
+      // cont_tl = 1;
+      // cont_tr = 1;
+      // cont_bl = 1;
+      // cont_br = 1;
+
+      position = varying_position[0].xy;
+      vec2 lookup_offset = vec2(-cont_l, -cont_b) * cont_bl;
+      depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
+      emit_grid_vertex(position + vec2(0, 0), depth);
+
+      position = varying_position[0].xy + vec2(cellsize-1, 0);
+      lookup_offset = vec2(cont_r, -cont_b) * cont_br;
+      depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
+      emit_grid_vertex(position + vec2(1, 0), depth);
+
+      position = varying_position[0].xy + vec2(0, cellsize-1);
+      lookup_offset = vec2(-cont_l, cont_t) * cont_tl;
+      depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
+      emit_grid_vertex(position + vec2(0, 1), depth);
+
+      position = varying_position[0].xy + vec2(cellsize-1, cellsize-1);
+      lookup_offset = vec2(cont_r, cont_t) * cont_tr;
+      depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
+      emit_grid_vertex(position + vec2(1, 1), depth);
+
+    #endif // ------------------------------------------------------------------
 
     EndPrimitive();
   }

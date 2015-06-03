@@ -105,9 +105,9 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
         res_->grid_vbo[i] =
           ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
                                            scm::gl::USAGE_DYNAMIC_DRAW,
-                                           pixel_count * sizeof(math::vec3i));
+                                           pixel_count * sizeof(math::vec3ui));
         res_->grid_vao[i] = ctx.render_device->create_vertex_array(
-          scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3I, sizeof(math::vec3i)), {res_->grid_vbo[i]});
+          scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3UI, sizeof(math::vec3ui)), {res_->grid_vbo[i]});
         res_->grid_tfb[i] = ctx.render_device->create_transform_feedback(
           scm::gl::stream_output_setup(res_->grid_vbo[i]));
       }
@@ -129,7 +129,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
             scm::gl::FORMAT_RGB_16, mip_map_levels, state);
       } else {
         res_->min_max_depth_buffer = std::make_shared<Texture2D>(size.x, size.y,
-            scm::gl::FORMAT_R_8I, mip_map_levels, state);
+            scm::gl::FORMAT_R_16UI, mip_map_levels, state);
       }
 
       res_->min_max_depth_buffer_fbos.clear();
@@ -168,12 +168,12 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
   {
     // upload initial data
-    auto data = static_cast<math::vec3i*>(ctx.render_context->map_buffer(
+    auto data = static_cast<math::vec3ui*>(ctx.render_context->map_buffer(
         res_->grid_vbo[res_->current_vbo()], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
-    for (int x(0); x < initial_grid_x; ++x) {
-      for (int y(0); y < initial_grid_y; ++y) {
-        data[y*initial_grid_x + x] = math::vec3i(x*32, y*32, 32);
+    for (uint x(0); x < initial_grid_x; ++x) {
+      for (uint y(0); y < initial_grid_y; ++y) {
+        data[y*initial_grid_x + x] = math::vec3ui(x*32, y*32, 5<<9 /* write the current mipmap level at bit position 5 (log2(32)) */);
       }
     }
 
@@ -182,7 +182,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
   grid_generation_program_->use(ctx);
   grid_generation_program_->set_uniform(ctx, res_->min_max_depth_buffer->get_handle(ctx), "min_max_depth_buffer");
-  grid_generation_program_->set_uniform(ctx, 32, "current_cellsize");
+  grid_generation_program_->set_uniform(ctx, 5, "current_level");
 
   // first subdivision
   ctx.render_context->begin_transform_feedback(res_->grid_tfb[res_->current_tfb()],
@@ -198,7 +198,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
   for (int i(0); i<4; ++i) {
     // further subdivisions
-    grid_generation_program_->set_uniform(ctx, (int)std::pow(2, 4-i), "current_cellsize");
+    grid_generation_program_->set_uniform(ctx, 4-i, "current_level");
     ctx.render_context->begin_transform_feedback(res_->grid_tfb[res_->current_tfb()],
       scm::gl::PRIMITIVE_POINTS);
     {

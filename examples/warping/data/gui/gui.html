@@ -181,6 +181,7 @@
 
         init_radio("#scene_one_oilrig", "scene_one_oilrig");
         init_radio("#scene_many_oilrigs", "scene_many_oilrigs");
+        init_radio("#scene_sponza", "scene_sponza");
         init_radio("#scene_teapot", "scene_teapot");
         init_radio("#scene_textured_quads", "scene_textured_quads");
 
@@ -192,6 +193,7 @@
         init_radio("#type_points", "type_points");
         init_radio("#type_scaled_points", "type_scaled_points");
         init_radio("#type_grid", "type_grid");
+        init_radio("#type_adaptive_grid", "type_adaptive_grid");
 
         init_checkbox("#show_warp_grid", "show_warp_grid");
         init_checkbox("#debug_mode", "debug_mode");
@@ -336,6 +338,12 @@
               </div>
               <div class="radio">
                 <label>
+                  <input type="radio" name="sceneRadios" id="scene_sponza" value="">
+                  <span>Sponza</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
                   <input type="radio" name="sceneRadios" id="scene_teapot" value="">
                   <span>Teapot</span>
                 </label>
@@ -385,6 +393,12 @@
                 <label>
                   <input type="radio" name="renderRadios" id="type_grid" value="">
                   <span>Grid</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="renderRadios" id="type_adaptive_grid" value="">
+                  <span>Adaptive Grid</span>
                 </label>
               </div>
             </div>
