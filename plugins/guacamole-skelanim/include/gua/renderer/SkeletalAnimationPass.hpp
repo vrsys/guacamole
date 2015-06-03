@@ -22,8 +22,8 @@
 #ifndef GUA_SLELETAL_ANIMATION_PASS_HPP
 #define GUA_SLELETAL_ANIMATION_PASS_HPP
 
+// guacamole headers
 #include <gua/renderer/PipelinePass.hpp>
-
 #include <gua/platform.hpp>
 
 // external headers

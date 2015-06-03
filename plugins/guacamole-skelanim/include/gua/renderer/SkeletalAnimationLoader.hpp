@@ -23,13 +23,12 @@
 #define GUA_SKELETAL_ANIMATION_LOADER_HPP
 
 // guacamole headers
-#include <gua/node/SkeletalAnimationNode.hpp>
-#include <gua/renderer/Material.hpp>
+#include <gua/platform.hpp>
 
 // external headers
 #include <string>
-#include <list>
 #include <memory>
+#include <vector>
 
 namespace fbxsdk_2015_1 {
 class FbxScene;
@@ -40,11 +39,14 @@ namespace Assimp { class Importer; }
 class aiScene;
 
 namespace gua {
+class SkeletalAnimation;
+class Material;
 
 namespace node {
 class Node;
 class InnerNode;
 class GeometryNode;
+class SkeletalAnimationNode;
 }
 
 /**

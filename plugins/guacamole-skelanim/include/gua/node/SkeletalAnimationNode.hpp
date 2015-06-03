@@ -40,7 +40,7 @@ namespace node {
  */
 class GUA_DLL SkeletalAnimationNode : public GeometryNode {
 
- public:  // typedef/enums/friends
+ private:  // c'tor / d'tor
 
   SkeletalAnimationNode(
       std::string const& node_name = "",
@@ -51,7 +51,6 @@ class GUA_DLL SkeletalAnimationNode : public GeometryNode {
       std::shared_ptr<Bone> const& = nullptr,
       math::mat4 const& transform = math::mat4::identity());
 
- private:  // c'tor / d'tor
 
  public:  // methods
 
