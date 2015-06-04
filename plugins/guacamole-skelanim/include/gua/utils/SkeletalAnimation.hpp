@@ -37,20 +37,36 @@ namespace gua {
 class SkeletalPose;
 class BoneAnimation;
 
+/**
+ * @brief holds bone animations for one animation
+ */
 class SkeletalAnimation {
  public:
   SkeletalAnimation();
 
   SkeletalAnimation(aiAnimation const& anim, std::string const& name = "");
+
   SkeletalAnimation(fbxsdk_2015_1::FbxAnimStack* anim,
                     std::vector<fbxsdk_2015_1::FbxNode*> const& bones,
                     std::string const& name = "");
 
   ~SkeletalAnimation();
 
+  /**
+   * @brief calculates skelpose from this anim
+   * @details calculates the pose at the given time
+   * 
+   * @param time time for which to calculate pose
+   * @return SkeletalPose at given time
+   */
   SkeletalPose calculate_pose(float time) const;
 
+  /**
+   * @brief returns anim duration
+   * @return duration in seconds
+   */
   double get_duration() const;
+
   std::string const& get_name() const;
 
  private:

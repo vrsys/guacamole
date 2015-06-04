@@ -38,6 +38,9 @@ class aiMesh;
 namespace gua {
   class Bone;
 
+/**
+ * @brief mesh with vertex-bone mapping
+ */
 struct SkinnedMesh : public Mesh {
  public:
   SkinnedMesh();
@@ -50,6 +53,9 @@ struct SkinnedMesh : public Mesh {
   },
               unsigned const material_index = 0);
 
+/**
+ * @brief holds information of a skinned vertex
+ */
   struct Vertex {
     scm::math::vec3f pos;
     scm::math::vec2f tex;
@@ -60,7 +66,20 @@ struct SkinnedMesh : public Mesh {
     uint nr_of_bones;
   };
 
+  /**
+   * @brief writes vertex info to given buffer
+   * @details writes vertex info to buffer
+   * and offsets weight info
+   * 
+   * @param vertex_buffer buffer to write to
+   * @param resource_offset weight info offset
+   */
   void copy_to_buffer(Vertex* vertex_buffer, uint resource_offset) const;
+
+  /**
+   * @brief returns vertex layout for skinned mesh
+   * @return schism vertex format
+   */
   scm::gl::vertex_format get_vertex_format() const override;
 
   std::vector<uint> bone_ids;
@@ -71,7 +90,9 @@ struct SkinnedMesh : public Mesh {
   std::vector<float> const& get_bone_weights() const;
 
  private:
-  //struct to transfer temporary vertex to bone mapping info
+  /**
+   * @brief holds information for influences on one vertex
+   */
   struct bone_influences {
     std::vector<uint> IDs;
     std::vector<float> weights;
@@ -87,8 +108,28 @@ struct SkinnedMesh : public Mesh {
     }
   };
 
+  /**
+   * @brief create bone influences from assimp mesh and hierarchy
+   * @details collects the bone indices from the hierarchy and
+   * mapping info from the mesh
+   * 
+   * @param mesh skinned assimp mesh
+   * @param root root of hierarchy
+   * @return the calculated bone influences
+   */
   static std::vector<bone_influences> get_weights(aiMesh const& mesh,
                                                   Bone const& root);
+
+  /**
+   * @brief create bone influences from fbx mesh and hierarchy
+   * @details collects the bone indices from the hierarchy and
+   * mapping info from the mesh
+   * 
+   * @param mesh skinned fbx mesh
+   * @param root root of hierarchy
+   * 
+   * @return the calculated bone influences
+   */
   static std::vector<bone_influences> get_weights(
       fbxsdk_2015_1::FbxMesh const& mesh,
       Bone const& root);

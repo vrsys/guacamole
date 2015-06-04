@@ -33,14 +33,41 @@ namespace gua {
 
 namespace SkeletalTransformation {
 
+/**
+ * @brief creates transformations from hierarchy
+ * @details returns the binding/default transformation
+ *  stored in the skeleton
+ * 
+ * @param anim_start_node_ node from which to start calculating transforms
+ * @param Transforms vector to write transforms to
+ */
 void from_hierarchy(std::shared_ptr<Bone> const& anim_start_node_,
                     std::vector<scm::math::mat4f>& Transforms);
-
+/**
+ * @brief creates transformations from anim at given time
+ * @details calculates transforms from the pose at given time 
+ * 
+ * @param anim_start_node_ node from which to start calculating transforms
+ * @param time_normalized time for which to calculate transforms
+ * @param anim anim from which to calculate pose
+ * @param Transforms vector to write transforms to
+ */
 void from_anim(std::shared_ptr<Bone> const& anim_start_node_,
                float time_normalized,
                SkeletalAnimation const& anim,
                std::vector<scm::math::mat4f>& Transforms);
-
+/**
+ * @brief calculates two poses and blends them
+ * @details calculates poses for both anims at given time and blend swith blend factor
+ * 
+ * @param anim_start_node_ node from which to start calculating transforms
+ * @param blend_factor factor to blend anims with
+ * @param time_normalized1 time for which to calculate transforms from anim_1
+ * @param time_normalized2 time for which to calculate transforms frim anim_2
+ * @param anim_1 first anim
+ * @param anim_2 second anim
+ * @param transforms vector to write transforms to
+ */
 void blend_anims(std::shared_ptr<Bone> const& anim_start_node_,
                  float blend_factor,
                  float time_normalized1,
@@ -48,7 +75,18 @@ void blend_anims(std::shared_ptr<Bone> const& anim_start_node_,
                  SkeletalAnimation const& anim_1,
                  SkeletalAnimation const& anim_2,
                  std::vector<scm::math::mat4f>& transforms);
-
+/**
+ * @brief calculates two poses and changes them from node on
+ * @details overwrites first pose with second pose on from given node
+ * 
+ * @param anim_start_node_ node from which to start calculating transforms
+ * @param time_normalized1 time for which to calculate transforms from anim_1
+ * @param time_normalized2 time for which to calculate transforms frim anim_2
+ * @param anim_1 base anim
+ * @param anim_2 anim to override base anim with
+ * @param node_name node form which to start overwriting pose1 with pose2
+ * @param transforms vector to write transforms to
+ */
 void partial_blend(std::shared_ptr<Bone> const& anim_start_node_,
                    float time_normalized1,
                    float time_normalized2,

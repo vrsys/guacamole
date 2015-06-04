@@ -30,6 +30,10 @@ namespace gua {
 class Bone;
 class BonePose;
 
+/**
+ * @brief holds transformations for bones at one point in an anim
+ * @details used to accumulate and blend boneposes
+ */
 class SkeletalPose {
  public:
   SkeletalPose();
@@ -55,8 +59,27 @@ class SkeletalPose {
    */
   BonePose const& get_transform(std::string const& name) const;
 
+  /**
+   * @brief sets pose for bone
+   * @details sets the transformation 
+   * of the given bone to given pose
+   * adds this bone to the skepose if
+   * it wasnt included before 
+   * 
+   * @param name name of bone
+   * @param value pose to set
+   */
   void set_transform(std::string const& name, BonePose const& value);
 
+  /**
+   * @brief blends with another pose
+   * @details if seconds pose contains poses for
+   * bones that are no included in this they
+   * are simply added 
+   * 
+   * @param pose2 pose to blend with
+   * @param blendFactor factor to blend
+   */
   void blend(SkeletalPose const& pose2, float blendFactor);
 
   SkeletalPose& operator+=(SkeletalPose const& pose2);
@@ -65,6 +88,15 @@ class SkeletalPose {
   SkeletalPose& operator*=(float const factor);
   SkeletalPose operator*(float const factor) const;
 
+  /**
+   * @brief replaces part of bone poses
+   * @details searches for giben bone and 
+   * replaces boneposes from there on
+   * 
+   * @param pose2 pose to replace with
+   * @param pNode bone from which to start
+   * replacing  
+   */
   void partial_replace(SkeletalPose const& pose2,
                        std::shared_ptr<Bone> const& pNode);
 
