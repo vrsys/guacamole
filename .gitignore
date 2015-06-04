@@ -53,6 +53,6 @@ examples/screenshot/example-screenshot
 examples/smooth_lighting/example-smooth_lighting
 examples/clipping/clipping
 examples/oit_demo/example-oit_demo
-examples/animation/example_animation
-
+examples/animation/example-animation
+externals
 install
