@@ -37,12 +37,15 @@
         return num;
       }
 
-      function set_stats (app_fps, render_fps, rendering, warping, primitives) {
+      function set_stats (app_fps, render_fps, rendering, grid, gbuffer_warping, abuffer_warping, gbuffer_primitives, abuffer_primitives) {
         $("#time-app-fps").text(parseFloat(app_fps).toFixed(1));
         $("#time-render-fps").text(parseFloat(render_fps).toFixed(1));
         $("#time-rendering").text(parseFloat(rendering).toFixed(1));
-        $("#time-warping").text(parseFloat(warping).toFixed(1));
-        $("#primitives").text(format_int(parseInt(primitives)));
+        $("#time-grid").text(parseFloat(grid).toFixed(1));
+        $("#time-gbuffer-warping").text(parseFloat(gbuffer_warping).toFixed(1));
+        $("#time-abuffer-warping").text(parseFloat(abuffer_warping).toFixed(1));
+        $("#gbuffer_primitives").text(format_int(parseInt(gbuffer_primitives)));
+        $("#abuffer_primitives").text(format_int(parseInt(abuffer_primitives)));
       }
 
       function init() {
@@ -61,11 +64,7 @@
     <div id="settings-bottom"><div class="settings-bottom-content">
       <div class="row">
         <div class="col-xs-2">
-          App: <span id="time-app-fps">0.0</span> FPS
-        </div>
-
-        <div class="col-xs-2">
-          Render: <span id="time-render-fps">0.0</span> FPS
+          <span id="time-app-fps">0.0</span> FPS / <span id="time-render-fps">0.0</span> FPS
         </div>
 
         <div class="col-xs-2">
@@ -73,11 +72,15 @@
         </div>
 
         <div class="col-xs-2">
-          Warping: <span id="time-warping">0.0</span> ms
+          Grid: <span id="time-grid">0.0</span> ms
         </div>
 
-        <div class="col-xs-4">
-          Genrated Primitives: <span id="primitives">0</span>
+        <div class="col-xs-3">
+          Warping: <span id="time-gbuffer-warping">0.0</span> ms (GB) / <span id="time-abuffer-warping">0.0</span> ms (AB)
+        </div>
+
+        <div class="col-xs-3">
+          Primitives: <span id="gbuffer_primitives">0</span> (GB) / <span id="abuffer_primitives">0</span> (AB)
         </div>
 
       </div>

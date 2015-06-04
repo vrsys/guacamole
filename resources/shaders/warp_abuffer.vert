@@ -19,34 +19,15 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TRIMESH_PASS_HPP
-#define GUA_TRIMESH_PASS_HPP
+@include "common/header.glsl"
 
-#include <gua/renderer/PipelinePass.hpp>
+layout(location=0) in float foo;
 
-#include <gua/platform.hpp>
+flat out uint vertex_id;
+out float bar;
 
-// external headers
-#include <scm/gl_core/buffer_objects.h>
-
-namespace gua {
-
-
-class GUA_DLL TriMeshPassDescription : public PipelinePassDescription {
- public:
-  TriMeshPassDescription();
-
-  TriMeshPassDescription& adaptive_abuffer(bool val);
-  bool adaptive_abuffer() const;
-
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
-
-  bool adaptive_abuffer_;
-};
-
+void main() {
+  vertex_id = gl_VertexID;
+  bar = foo;
 }
 
-#endif  // GUA_TRIMESH_PASS_HPP

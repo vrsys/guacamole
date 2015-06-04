@@ -33,12 +33,20 @@ class Pipeline;
 class GUA_DLL WarpPassDescription : public PipelinePassDescription {
  public:
 
-  enum Mode {
-    POINTS,
-    QUADS,
-    SCALED_POINTS,
-    GRID,
-    ADAPTIVE_GRID
+  enum GBufferWarpMode {
+    GBUFFER_NONE,
+    GBUFFER_POINTS,
+    GBUFFER_QUADS,
+    GBUFFER_SCALED_POINTS,
+    GBUFFER_GRID,
+    GBUFFER_ADAPTIVE_GRID
+  };
+
+  enum ABufferWarpMode {
+    ABUFFER_NONE,
+    ABUFFER_POINTS,
+    ABUFFER_QUADS,
+    ABUFFER_SCALED_POINTS
   };
 
   WarpPassDescription();
@@ -58,8 +66,11 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& debug_mode(bool val);
   bool debug_mode() const;
 
-  WarpPassDescription& mode(Mode mode);
-  Mode mode() const;
+  WarpPassDescription& gbuffer_warp_mode(GBufferWarpMode gbuffer_warp_mode);
+  GBufferWarpMode gbuffer_warp_mode() const;
+
+  WarpPassDescription& abuffer_warp_mode(ABufferWarpMode abuffer_warp_mode);
+  ABufferWarpMode abuffer_warp_mode() const;
 
   WarpPassDescription& original_projection_view_matrix(math::mat4f const& mat);
   math::mat4f const& original_projection_view_matrix() const;
@@ -76,7 +87,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   bool show_warp_grid_;
   bool debug_mode_;
   int max_layers_;
-  Mode mode_;
+  GBufferWarpMode gbuffer_warp_mode_;
+  ABufferWarpMode abuffer_warp_mode_;
 };
 
 }

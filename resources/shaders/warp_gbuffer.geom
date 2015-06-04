@@ -21,15 +21,13 @@
 
 @include "common/header.glsl"
 @include "common/gua_camera_uniforms.glsl"
-@include "common/gua_abuffer.glsl"
 @include "common/gua_gbuffer_input.glsl"
-
-#define DISPLAY_MODE @display_mode@
+@include "gbuffer_warp_modes.glsl"
 
 uniform mat4 original_projection_view_matrix;
 
 // -----------------------------------------------------------------------------
-#if DISPLAY_MODE == 3 || DISPLAY_MODE == 4 // GRID modes -----------------------
+#if WARP_MODE == WARP_MODE_GRID || WARP_MODE == WARP_MODE_ADAPTIVE_GRID // -----
 // -----------------------------------------------------------------------------
 
 layout(points) in;
@@ -37,19 +35,19 @@ layout(triangle_strip, max_vertices = 4) out;
 
 @include "shaders/warp_grid_bits.glsl"
 
-flat in ivec3 varying_position[];
-flat out int cellsize;
+flat in  uvec3 varying_position[];
+flat out uint cellsize;
 
 out vec2 texcoords;
 
 float gua_get_depth_raw(vec2 frag_pos) {
-    return texelFetch(sampler2D(gua_gbuffer_depth), ivec2(frag_pos), 0).x * 2.0 - 1.0;
+  return texelFetch(sampler2D(gua_gbuffer_depth), ivec2(frag_pos), 0).x * 2.0 - 1.0;
 }
 
 void emit_grid_vertex(vec2 position, float depth) {
   texcoords = position / gua_resolution;
-  vec4 screen_space_pos = vec4(2.0 * texcoords - 1.0, depth, 1.0);
-  vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
+  const vec4 screen_space_pos = vec4(2.0 * texcoords - 1.0, depth, 1.0);
+  const vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   gl_Position = original_projection_view_matrix * vec4(h.xyz / h.w, 1);
   EmitVertex();
 }
@@ -60,11 +58,10 @@ void main() {
 
   if (depth < 1) {
 
-    int level = varying_position[0].z >> BIT_CURRENT_LEVEL;
+    uint level = varying_position[0].z >> BIT_CURRENT_LEVEL;
     cellsize = 1 << level;
 
-
-    #if DISPLAY_MODE == 3 // GRID ----------------------------------------------
+    #if WARP_MODE == WARP_MODE_GRID // -----------------------------------------
       emit_grid_vertex(position + vec2(0, 0), depth);
 
       position = varying_position[0].xy + vec2(cellsize-1, 0);
@@ -78,23 +75,18 @@ void main() {
       position = varying_position[0].xy + vec2(cellsize-1, cellsize-1);
       depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(1, 1), depth);
-    
-    #elif DISPLAY_MODE == 4 // ADAPTIVE_GRID -----------------------------------
 
-      int cont_l = (varying_position[0].z >> BIT_CONTINIOUS_L) & 1;
-      int cont_r = (varying_position[0].z >> BIT_CONTINIOUS_R) & 1;
-      int cont_t = (varying_position[0].z >> BIT_CONTINIOUS_T) & 1;
-      int cont_b = (varying_position[0].z >> BIT_CONTINIOUS_B) & 1;
+    #elif WARP_MODE == WARP_MODE_ADAPTIVE_GRID // ------------------------------
 
-      int cont_tl = (varying_position[0].z >> BIT_CONTINIOUS_TL) & 1;
-      int cont_tr = (varying_position[0].z >> BIT_CONTINIOUS_TR) & 1;
-      int cont_bl = (varying_position[0].z >> BIT_CONTINIOUS_BL) & 1;
-      int cont_br = (varying_position[0].z >> BIT_CONTINIOUS_BR) & 1;
+      const int cont_l = int(varying_position[0].z >> BIT_CONTINIOUS_L) & 1;
+      const int cont_r = int(varying_position[0].z >> BIT_CONTINIOUS_R) & 1;
+      const int cont_t = int(varying_position[0].z >> BIT_CONTINIOUS_T) & 1;
+      const int cont_b = int(varying_position[0].z >> BIT_CONTINIOUS_B) & 1;
 
-      // cont_tl = 1;
-      // cont_tr = 1;
-      // cont_bl = 1;
-      // cont_br = 1;
+      const int cont_tl = int(varying_position[0].z >> BIT_CONTINIOUS_TL) & 1;
+      const int cont_tr = int(varying_position[0].z >> BIT_CONTINIOUS_TR) & 1;
+      const int cont_bl = int(varying_position[0].z >> BIT_CONTINIOUS_BL) & 1;
+      const int cont_br = int(varying_position[0].z >> BIT_CONTINIOUS_BR) & 1;
 
       position = varying_position[0].xy;
       vec2 lookup_offset = vec2(-cont_l, -cont_b) * cont_bl;
@@ -129,18 +121,12 @@ void main() {
 
 layout(points) in;
 
-#if DISPLAY_MODE == 0
+#if WARP_MODE == WARP_MODE_POINTS || WARP_MODE == WARP_MODE_SCALED_POINTS
   layout(points) out;
-  layout(max_vertices = 20) out;
-  const bool QUADS = false;
-#elif DISPLAY_MODE == 1
-  layout(triangle_strip) out;
-  layout(max_vertices = 80) out;
-  const bool QUADS = true;
+  layout(max_vertices = 1) out;
 #else
-  layout(points) out;
-  layout(max_vertices = 20) out;
-  const bool QUADS = false;
+  layout(triangle_strip) out;
+  layout(max_vertices = 4) out;
 #endif
 
 
@@ -154,7 +140,7 @@ out vec3 normal;
 
 
 void emit_primitive(float depth, vec2 frag_pos) {
-  if (QUADS) {
+  #if WARP_MODE == WARP_MODE_QUADS
     const vec2 half_pixel = vec2(1.0) / vec2(gua_resolution);
     const vec2 offsets[4] = {vec2(half_pixel), vec2(-half_pixel.x, half_pixel.y),
                               vec2(half_pixel.x, -half_pixel.y), vec2(-half_pixel)};
@@ -171,7 +157,7 @@ void emit_primitive(float depth, vec2 frag_pos) {
 
     EndPrimitive();
 
-  } else {
+  #else
     vec4 screen_space_pos = vec4(frag_pos, depth, 1.0);
     vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
     vec3 position = h.xyz / h.w;
@@ -179,16 +165,15 @@ void emit_primitive(float depth, vec2 frag_pos) {
 
     gl_Position =  original_projection_view_matrix * vec4(position, 1 + 0.000000000000001*bar[0]);
 
-    #if DISPLAY_MODE == 2
+    #if WARP_MODE == WARP_MODE_SCALED_POINTS
       gl_PointSize = 12*(1-gl_Position.z/gl_Position.w);
     #else
       gl_PointSize = 1;
     #endif
 
     EmitVertex(); EndPrimitive();
-  }
+  #endif
 }
-
 
 void main() {
 
@@ -198,42 +183,11 @@ void main() {
 
   uint current = vertex_id[0];
 
-  // first layer from gbuffer
   color = gua_get_color(tex_coords);
   normal = gua_get_normal(tex_coords);
   float depth = gua_get_depth(tex_coords);
 
   if (depth < 1) {
-    emit_primitive(depth, frag_pos);
-  } else {
-    return;
-  }
-
-
-  // skip first abuffer layer
-  uvec2 frag = unpackUint2x32(frag_list[current]);
-  if (frag.x == 0) {
-    return;
-  }
-  current = frag.x;
-
-  // following layers from abuffer
-  for (int i=0; i<MAX_LAYERS-1; ++i) {
-
-    uvec2 frag = unpackUint2x32(frag_list[current]);
-    if (frag.x == 0) {
-      return;
-    }
-
-    current = frag.x;
-
-    uvec4 data = frag_data[current - gua_resolution.x*gua_resolution.y];
-    color = vec3(unpackUnorm2x16(data.x), unpackUnorm2x16(data.y).x);
-    normal = vec3(unpackSnorm2x16(data.y).y, unpackSnorm2x16(data.z));
-
-    float z = unpack_depth24(frag.y);
-    float depth = fma(z, 2.0, -1.0);
-
     emit_primitive(depth, frag_pos);
   }
 }

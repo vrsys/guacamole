@@ -27,6 +27,8 @@
 
 #include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
+#include <gua/renderer/TriMeshPass.hpp>
+#include <gua/renderer/WarpGridGenerator.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
@@ -81,7 +83,9 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                      < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
               });
 
-    RenderContext const& ctx(pipe.get_context());
+    RenderContext& ctx(pipe.get_context());
+    auto description(dynamic_cast<TriMeshPassDescription const*>(&desc));
+
 
     std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
     std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
@@ -145,8 +149,21 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
           current_shader->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
           current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
           // hack
-          current_shader->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx),
-                                      "gua_gbuffer_depth");
+
+          auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
+          if (gbuffer) {
+            current_shader->set_uniform(ctx, gbuffer->get_depth_buffer_write()->get_handle(ctx),
+                                        "gua_gbuffer_depth");
+          } else {
+            current_shader->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx),
+                                        "gua_gbuffer_depth");
+          }
+
+          // bind warp grid for adaptive abuffer filling
+          auto res(ctx.resources.get<WarpGridGenerator::SharedResource>());
+          if (description->adaptive_abuffer() && res && res->min_max_depth_buffer) {
+            current_shader->set_uniform(ctx, res->min_max_depth_buffer->get_handle(ctx),  "gua_warp_grid_tex");
+          }
         }
       }
 

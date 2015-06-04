@@ -3,6 +3,7 @@
 #if @enable_abuffer@
 
 uniform uvec2 gua_gbuffer_depth;
+uniform uvec2 gua_warp_grid_tex;
 
 @include "gua_abuffer.glsl"
 
@@ -91,7 +92,7 @@ void submit_fragment(float depth)
   if ((bool)@enable_abuffer@ && gua_rendering_mode == 0) {
 #if @enable_abuffer@
     float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
-    if (depth > z) discard;
+    // if (abs(depth - z) < 0.0001) discard;
 
     if (gua_alpha < 1.0 - @abuf_insertion_threshold@) {
       discard;
@@ -107,8 +108,14 @@ void submit_fragment(float depth)
 
 
     // always abuffer
-    // abuf_insert(depth);
-    // discard;
+    #if @adaptive_abuffer@ == 1
+      uint is_surface = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(gl_FragCoord.xy/16), 3).x;
+      if ((is_surface & 1) == 0) {
+        abuf_insert(depth);
+      }
+    #else
+      abuf_insert(depth);
+    #endif
 
     // always gbuffer
     @include "gua_write_gbuffer.glsl"

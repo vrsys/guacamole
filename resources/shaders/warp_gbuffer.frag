@@ -20,19 +20,27 @@
  ******************************************************************************/
 
 @include "common/header.glsl"
-#define DISPLAY_MODE @display_mode@
-
+@include "common/gua_camera_uniforms.glsl"
+@include "common/gua_gbuffer_input.glsl"
+@include "gbuffer_warp_modes.glsl"
 
 // -----------------------------------------------------------------------------
-#if DISPLAY_MODE == 3 || DISPLAY_MODE == 4 // GRID modes -----------------------
+#if WARP_MODE == WARP_MODE_GRID || WARP_MODE == WARP_MODE_ADAPTIVE_GRID // -----
 // -----------------------------------------------------------------------------
 
-layout(location=0) in ivec3 position;
+flat in uint cellsize;
+in vec2 texcoords;
 
-flat out ivec3 varying_position;
+// output
+layout(location=0) out vec3 gua_out_color;
 
 void main() {
-  varying_position = position;
+  #if @debug_mode@ == 1
+    float intensity = log2(cellsize) / 5.0;
+    gua_out_color =  0.6*(vec3(1, 0.1, 0.1) * (1-intensity) + vec3(0.1, 1, 0.1) * intensity);
+  #else
+    gua_out_color = gua_get_color(texcoords);
+  #endif
 }
 
 
@@ -40,14 +48,14 @@ void main() {
 #else // all other modes -------------------------------------------------------
 // -----------------------------------------------------------------------------
 
-layout(location=0) in float foo;
+in vec3 color;
+in vec3 normal;
 
-flat out uint vertex_id;
-out float bar;
+// output
+layout(location=0) out vec3 gua_out_color;
 
 void main() {
-  vertex_id = gl_VertexID;
-  bar = foo;
+  gua_out_color = color;
 }
 
 #endif

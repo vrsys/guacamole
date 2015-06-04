@@ -121,14 +121,14 @@
 
         slider.on("slideStop", function() {
           var val = $(this).slider('getValue');
-          $(this).parent().attr("val", ""+val.toFixed(4));
+          $(this).parent().attr("val", parseFloat(val.toFixed(4)));
           gua["set_" + func](val);
         });
 
         slider.on("slide", function() {
           var val = $(this).slider('getValue');
           gua["set_" + func](val);
-          $(this).parent().attr("val", +val.toFixed(4));
+          $(this).parent().attr("val", parseFloat(val.toFixed(4)));
           obj.find(".slider-handle").focus();
         });
 
@@ -189,23 +189,30 @@
         init_checkbox("#depth_test", "depth_test");
         init_checkbox("#backface_culling", "backface_culling");
 
-        init_radio("#type_quads", "type_quads");
-        init_radio("#type_points", "type_points");
-        init_radio("#type_scaled_points", "type_scaled_points");
-        init_radio("#type_grid", "type_grid");
-        init_radio("#type_adaptive_grid", "type_adaptive_grid");
+        init_radio("#gbuffer_type_none", "gbuffer_type_none");
+        init_radio("#gbuffer_type_quads", "gbuffer_type_quads");
+        init_radio("#gbuffer_type_points", "gbuffer_type_points");
+        init_radio("#gbuffer_type_scaled_points", "gbuffer_type_scaled_points");
+        init_radio("#gbuffer_type_grid", "gbuffer_type_grid");
+        init_radio("#gbuffer_type_adaptive_grid", "gbuffer_type_adaptive_grid");
+
+        init_radio("#abuffer_type_none", "abuffer_type_none");
+        init_radio("#abuffer_type_quads", "abuffer_type_quads");
+        init_radio("#abuffer_type_points", "abuffer_type_points");
+        init_radio("#abuffer_type_scaled_points", "abuffer_type_scaled_points");
+        init_checkbox("#adaptive_abuffer", "adaptive_abuffer");
 
         init_checkbox("#show_warp_grid", "show_warp_grid");
         init_checkbox("#debug_mode", "debug_mode");
+
 
         init_radio("#grid_surface", "grid_surface");
         init_radio("#grid_adaptive_surface", "grid_adaptive_surface");
         init_radio("#grid_depth_threshold", "grid_depth_threshold");
 
-        add_slider("#preview-panel", "split_threshold", "Split", 0, 0.01, 0.00001);
 
-        add_space("#preview-panel");
-        add_slider("#preview-panel", "depth_layers", "Depth Layers", 1, 20, 1);
+        init_slider("#preview-panel .depth_layers", "depth_layers");
+        init_slider("#preview-panel .split_threshold", "split_threshold");
 
         $("body").addClass("on");
       }
@@ -368,36 +375,42 @@
 
           <div class="row">
             <div class="col-xs-5">
-            Render Mode:
+            GBuffer:
             </div>
             <div class="col-xs-7">
               <div class="radio">
                 <label>
-                  <input type="radio" name="renderRadios" id="type_quads" value="">
-                  <span>Quads</span>
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_none" value="">
+                  <span>None</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="renderRadios" id="type_points" value="" checked>
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_points" value="" checked>
                   <span>Points</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="renderRadios" id="type_scaled_points" value="">
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_scaled_points" value="">
                   <span>Scaled Points</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="renderRadios" id="type_grid" value="">
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_quads" value="">
+                  <span>Quads</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid" value="">
                   <span>Grid</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="renderRadios" id="type_adaptive_grid" value="">
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_adaptive_grid" value="">
                   <span>Adaptive Grid</span>
                 </label>
               </div>
@@ -406,9 +419,57 @@
 
           <hr />
 
+           <div class="row">
+            <div class="col-xs-5">
+            ABuffer:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="abufferRadios" id="abuffer_type_none" value="">
+                  <span>None</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="abufferRadios" id="abuffer_type_points" value="" checked>
+                  <span>Points</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="abufferRadios" id="abuffer_type_scaled_points" value="">
+                  <span>Scaled Points</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="abufferRadios" id="abuffer_type_quads" value="">
+                  <span>Quads</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="adaptive_abuffer" type="checkbox" value="">
+                  <span>Adaptive ABuffer</span>
+                </label>
+              </div>
+            </div>
+          </div>
           <div class="row">
             <div class="col-xs-5">
-            Grid Options:
+              Layers:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider depth_layers" data-slider-tooltip="hide" data-slider-id="depth_layers" type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" handle="custom"/>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Grid:
             </div>
             <div class="col-xs-7">
 
@@ -444,9 +505,14 @@
                 </label>
               </div>
 
-
-
-
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-5">
+              Threshold:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider split_threshold" data-slider-tooltip="hide" data-slider-id="split_threshold" type="text" data-slider-min="0" data-slider-max="0.01" data-slider-step="0.0001" handle="custom"/>
             </div>
           </div>
 

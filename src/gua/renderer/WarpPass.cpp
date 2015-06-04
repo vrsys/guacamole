@@ -42,7 +42,8 @@ WarpPassDescription::WarpPassDescription()
   , depth_test_(true)
   , show_warp_grid_(false)
   , debug_mode_(false)
-  , mode_(POINTS)
+  , gbuffer_warp_mode_(GBUFFER_POINTS)
+  , abuffer_warp_mode_(ABUFFER_POINTS)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
@@ -139,16 +140,30 @@ bool WarpPassDescription::debug_mode() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::mode(Mode mode) {
-  mode_ = mode;
+WarpPassDescription& WarpPassDescription::gbuffer_warp_mode(GBufferWarpMode gbuffer_warp_mode) {
+  gbuffer_warp_mode_ = gbuffer_warp_mode;
   touch();
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription::Mode WarpPassDescription::mode() const {
-  return mode_;
+WarpPassDescription::GBufferWarpMode WarpPassDescription::gbuffer_warp_mode() const {
+  return gbuffer_warp_mode_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription& WarpPassDescription::abuffer_warp_mode(ABufferWarpMode abuffer_warp_mode) {
+  abuffer_warp_mode_ = abuffer_warp_mode;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription::ABufferWarpMode WarpPassDescription::abuffer_warp_mode() const {
+  return abuffer_warp_mode_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +176,8 @@ std::shared_ptr<PipelinePassDescription> WarpPassDescription::make_copy() const 
 PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
   substitution_map["gua_debug_tiles"] = "0";
   substitution_map["debug_mode"] = debug_mode_ ? "1" : "0";
-  substitution_map["display_mode"] = std::to_string(mode_);
+  substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
+  substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
   substitution_map["warping_max_layers"] = std::to_string(max_layers_);
   PipelinePass pass{*this, ctx, substitution_map};
 

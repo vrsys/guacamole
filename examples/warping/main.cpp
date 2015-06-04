@@ -192,6 +192,7 @@ int main(int argc, char** argv) {
 
   auto warp_pass(std::make_shared<gua::WarpPassDescription>());
   auto grid_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
+  auto trimesh_pass(std::make_shared<gua::TriMeshPassDescription>());
 
   if (CLIENT_SERVER) {
     slow_cam->config.set_output_window_name("hidden_window");
@@ -199,7 +200,7 @@ int main(int argc, char** argv) {
 
     auto slow_pipe = std::make_shared<gua::PipelineDescription>();
     slow_pipe->set_enable_abuffer(true);
-    slow_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    slow_pipe->add_pass(trimesh_pass);
     slow_cam->set_pipeline_description(slow_pipe);
 
     warp_pass->use_abuffer_from_window("hidden_window");
@@ -215,7 +216,7 @@ int main(int argc, char** argv) {
     slow_cam->config.set_output_window_name("window");
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
-    pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    pipe->add_pass(trimesh_pass);
     pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
     pipe->add_pass(grid_pass);
     pipe->add_pass(warp_pass);
@@ -238,7 +239,7 @@ int main(int argc, char** argv) {
   if (!CLIENT_SERVER) {
 
     // right side gui ----------------------------------------------------------
-    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 600));
+    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 700));
 
     gui->on_loaded.connect([&]() {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
@@ -248,17 +249,24 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
       gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(warp_pass->show_warp_grid());});
       gui->add_javascript_getter("get_debug_mode", [&](){ return std::to_string(warp_pass->debug_mode());});
+      gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
       gui->add_javascript_callback("set_depth_layers");
       gui->add_javascript_callback("set_split_threshold");
       gui->add_javascript_callback("set_depth_test");
       gui->add_javascript_callback("set_backface_culling");
       gui->add_javascript_callback("set_orthographic");
-      gui->add_javascript_callback("set_type_points");
-      gui->add_javascript_callback("set_type_quads");
-      gui->add_javascript_callback("set_type_scaled_points");
-      gui->add_javascript_callback("set_type_grid");
-      gui->add_javascript_callback("set_type_adaptive_grid");
+      gui->add_javascript_callback("set_gbuffer_type_none");
+      gui->add_javascript_callback("set_gbuffer_type_points");
+      gui->add_javascript_callback("set_gbuffer_type_quads");
+      gui->add_javascript_callback("set_gbuffer_type_scaled_points");
+      gui->add_javascript_callback("set_gbuffer_type_grid");
+      gui->add_javascript_callback("set_gbuffer_type_adaptive_grid");
+      gui->add_javascript_callback("set_abuffer_type_none");
+      gui->add_javascript_callback("set_abuffer_type_points");
+      gui->add_javascript_callback("set_abuffer_type_quads");
+      gui->add_javascript_callback("set_abuffer_type_scaled_points");
+      gui->add_javascript_callback("set_adaptive_abuffer");
       gui->add_javascript_callback("set_scene_one_oilrig");
       gui->add_javascript_callback("set_scene_many_oilrigs");
       gui->add_javascript_callback("set_scene_sponza");
@@ -318,67 +326,57 @@ int main(int argc, char** argv) {
         bool checked;
         str >> checked;
         warp_pass->debug_mode(checked);
+      } else if (callback == "set_adaptive_abuffer") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        trimesh_pass->adaptive_abuffer(checked);
       } else if (callback == "reset_view") {
         view_trackball.reset();
       } else if (callback == "reset_object") {
         object_trackball.reset();
       } else if (callback == "render_view") {
         slow_screen->set_transform(fast_screen->get_transform());
-      } else if (callback == "set_type_points") {
+      } else if (callback == "set_gbuffer_type_points"
+               | callback == "set_gbuffer_type_quads"
+               | callback == "set_gbuffer_type_scaled_points"
+               | callback == "set_gbuffer_type_grid"
+               | callback == "set_gbuffer_type_adaptive_grid"
+               | callback == "set_gbuffer_type_none") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
-          warp_pass->mode(gua::WarpPassDescription::Mode::POINTS);
+          if (callback == "set_gbuffer_type_points")        warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_POINTS);
+          if (callback == "set_gbuffer_type_quads")         warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_QUADS);
+          if (callback == "set_gbuffer_type_scaled_points") warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_SCALED_POINTS);
+          if (callback == "set_gbuffer_type_grid")          warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_GRID);
+          if (callback == "set_gbuffer_type_adaptive_grid") warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_ADAPTIVE_GRID);
+          if (callback == "set_gbuffer_type_none")          warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_NONE);
         }
-      } else if (callback == "set_type_quads") {
+      } else if (callback == "set_abuffer_type_points"
+               | callback == "set_abuffer_type_quads"
+               | callback == "set_abuffer_type_scaled_points"
+               | callback == "set_abuffer_type_none") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
-          warp_pass->mode(gua::WarpPassDescription::Mode::QUADS);
+          if (callback == "set_abuffer_type_points")        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_POINTS);
+          if (callback == "set_abuffer_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
+          if (callback == "set_abuffer_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
+          if (callback == "set_abuffer_type_none")          warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
         }
-      } else if (callback == "set_type_scaled_points") {
+      } else if (callback == "set_grid_adaptive_surface"
+               | callback == "set_grid_surface"
+               | callback == "set_grid_depth_threshold") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
-          warp_pass->mode(gua::WarpPassDescription::Mode::SCALED_POINTS);
-        }
-      } else if (callback == "set_type_grid") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
-          warp_pass->mode(gua::WarpPassDescription::Mode::GRID);
-        }
-      } else if (callback == "set_type_adaptive_grid") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
-          warp_pass->mode(gua::WarpPassDescription::Mode::ADAPTIVE_GRID);
-        }
-      } else if (callback == "set_grid_surface") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
-          grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::SURFACE_ESTIMATION);
-        }
-      } else if (callback == "set_grid_adaptive_surface") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
-          grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::ADAPTIVE_SURFACE_ESTIMATION);
-        }
-      } else if (callback == "set_grid_depth_threshold") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
-          grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::DEPTH_THRESHOLD);
+          if (callback == "set_grid_adaptive_surface")  grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::ADAPTIVE_SURFACE_ESTIMATION);
+          if (callback == "set_grid_surface")           grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::SURFACE_ESTIMATION);
+          if (callback == "set_grid_depth_threshold")   grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::DEPTH_THRESHOLD);
         }
       } else if (callback == "set_manipulation_object") {
         std::stringstream str(params[0]);
@@ -400,8 +398,8 @@ int main(int argc, char** argv) {
     });
 
     gui_quad->data.texture() = "gui";
-    gui_quad->data.size() = gua::math::vec2ui(330, 600);
-    gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
+    gui_quad->data.size() = gua::math::vec2ui(330, 700);
+    gui_quad->data.anchor() = gua::math::vec2(1.f, 0.f);
 
     graph.add_node("/", gui_quad);
 
@@ -521,21 +519,28 @@ int main(int argc, char** argv) {
         }
 
         double trimesh_time(0);
-        double warp_time(0);
-        int primitives(0);
+        double gbuffer_warp_time(0);
+        double abuffer_warp_time(0);
+        double grid_time(0);
+        int gbuffer_primitives(0);
+        int abuffer_primitives(0);
 
         for (auto const& result: window->get_context()->time_query_results) {
           if (result.first.find("Trimesh") != std::string::npos) trimesh_time = result.second;
-          if (result.first.find("WarpPass") != std::string::npos) warp_time = result.second;
+          if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time = result.second;
+          if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time = result.second;
+          if (result.first.find("WarpGridGenerator") != std::string::npos) grid_time += result.second;
         }
 
         for (auto const& result: window->get_context()->primitive_query_results) {
-          if (result.first.find("WarpPass") != std::string::npos) primitives = result.second.first;
+          if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_primitives = result.second.first;
+          if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives = result.second.first;
         }
 
         stats->call_javascript("set_stats", renderer.get_application_fps(),
-                             window->get_rendering_fps(), trimesh_time,
-                             warp_time, primitives);
+                             window->get_rendering_fps(), trimesh_time, grid_time,
+                             gbuffer_warp_time, abuffer_warp_time, gbuffer_primitives,
+                             abuffer_primitives);
       }
 
       warp_frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);

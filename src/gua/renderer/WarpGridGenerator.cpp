@@ -73,13 +73,6 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
   pipe_ = &pipe;
 
-  std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpGridGenerator";
-  std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpGridGenerator";
-  std::string const pri_query_name = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpGridGenerator";
-
-  pipe.begin_primitive_query(ctx, pri_query_name);
-  pipe.begin_gpu_query(ctx, gpu_query_name);
-  pipe.begin_cpu_query(cpu_query_name);
 
   math::vec2ui resolution(pipe.current_viewstate().camera.config.get_resolution());
   size_t pixel_count(resolution.x * resolution.y);
@@ -145,6 +138,11 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
   // ---------------------- MinMax Depth Map -----------------------------------
   // ---------------------------------------------------------------------------
 
+  std::string const gpu_query_name_a = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpGridGenerator Preprocessing";
+  std::string const cpu_query_name_a = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpGridGenerator Preprocessing";
+  pipe.begin_gpu_query(ctx, gpu_query_name_a);
+  pipe.begin_cpu_query(cpu_query_name_a);
+
   auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
 
   min_max_filter_program_->use(ctx);
@@ -158,6 +156,9 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
     min_max_filter_program_->set_uniform(ctx, i, "current_level");
     pipe.draw_quad();
   }
+
+  pipe.end_gpu_query(ctx, gpu_query_name_a);
+  pipe.end_cpu_query(cpu_query_name_a);
 
   // ---------------------------------------------------------------------------
   // --------------------- Generate Warp Grid ----------------------------------
@@ -179,6 +180,11 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
     ctx.render_context->unmap_buffer(res_->grid_vbo[res_->current_vbo()]);
   }
+
+  std::string const gpu_query_name_b = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpGridGenerator Tesselation";
+  std::string const cpu_query_name_b = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpGridGenerator Tesselation";
+  pipe.begin_gpu_query(ctx, gpu_query_name_b);
+  pipe.begin_cpu_query(cpu_query_name_b);
 
   grid_generation_program_->use(ctx);
   grid_generation_program_->set_uniform(ctx, res_->min_max_depth_buffer->get_handle(ctx), "min_max_depth_buffer");
@@ -211,9 +217,8 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
     res_->ping = !res_->ping;
   }
 
-  pipe.end_primitive_query(ctx, pri_query_name);
-  pipe.end_gpu_query(ctx, gpu_query_name);
-  pipe.end_cpu_query(cpu_query_name);
+  pipe.end_gpu_query(ctx, gpu_query_name_b);
+  pipe.end_cpu_query(cpu_query_name_b);
 
   ctx.render_context->reset_state_objects();
 }

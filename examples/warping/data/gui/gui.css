@@ -58,7 +58,6 @@ hr {
 #settings-left {
     position: absolute;
     left: 0px;
-    height: 80%;
     top: 5%;
     width: 320px;
 }
@@ -66,7 +65,6 @@ hr {
 #settings-right {
     position: absolute;
     right: 0px;
-    height: 80%;
     top: 5%;
     width: 320px;
 }
@@ -84,7 +82,7 @@ hr {
     height: 100%;
     padding: 2px 10px 10px 10px;
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(48, 40, 48, 0.7);
     box-shadow: 0 0 10px #000;
 }
 
@@ -97,7 +95,7 @@ hr {
 }
 
 .side-panel.expanded {
-    height: 490px;
+    height: 580px;
 }
 
 #settings-bottom {
@@ -109,7 +107,7 @@ hr {
 #settings-bottom .settings-bottom-content {
   position: relative;
   padding: 0px 10px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(48, 40, 48, 0.7);
   box-shadow: 0 0 10px #000;
   margin: 0 auto;
   width: 1200px;
@@ -612,7 +610,7 @@ input[type="color"]:focus,
 /* ########################################################################## */
 
 .radio, .checkbox {
-  margin-top: 0px; 
+  margin-top: 0px;
 }
 
 .radio label,

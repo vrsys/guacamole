@@ -37,7 +37,8 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 TriMeshPassDescription::TriMeshPassDescription()
-  : PipelinePassDescription() {
+  : PipelinePassDescription()
+  , adaptive_abuffer_(false) {
   vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
   fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
   name_ = "TriMeshPass";
@@ -49,12 +50,25 @@ TriMeshPassDescription::TriMeshPassDescription()
 
   depth_stencil_state_ = boost::make_optional(
     scm::gl::depth_stencil_state_desc(
-      true, true, scm::gl::COMPARISON_LESS, true, 1, 0, 
+      true, true, scm::gl::COMPARISON_LESS, true, 1, 0,
       scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
     )
   );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+TriMeshPassDescription& TriMeshPassDescription::adaptive_abuffer(bool val) {
+  adaptive_abuffer_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool TriMeshPassDescription::adaptive_abuffer() const {
+  return adaptive_abuffer_;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +81,8 @@ std::shared_ptr<PipelinePassDescription> TriMeshPassDescription::make_copy() con
 
 PipelinePass TriMeshPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
+  substitution_map["adaptive_abuffer"] = adaptive_abuffer_ ? "1" : "0";
+
   PipelinePass pass{*this, ctx, substitution_map};
 
   auto renderer = std::make_shared<TriMeshRenderer>();
