@@ -77,7 +77,7 @@ struct SkinnedMesh : public Mesh {
   void copy_to_buffer(Vertex* vertex_buffer, uint resource_offset) const;
 
   /**
-   * @brief returns vertex layout for skinned mesh
+   * @brief returns vertex layout for skinned mesh vertex
    * @return schism vertex format
    */
   scm::gl::vertex_format get_vertex_format() const override;

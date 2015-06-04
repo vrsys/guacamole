@@ -88,7 +88,14 @@ class GUA_DLL SkeletalAnimationLoader {
       unsigned flags = DEFAULTS);
 
   /**
-   *
+   * @brief loads animations from file
+   * @details loads animation(s) from a file
+   * and numbers them if there are multiple
+   * 
+   * @param file_name file to load
+   * @param animation_name name of loaded anim
+   * 
+   * @return loaded animations
    */
   std::vector<SkeletalAnimation> load_animation(
       std::string const& file_name,
@@ -107,13 +114,14 @@ class GUA_DLL SkeletalAnimationLoader {
       std::string const& node_name,
       std::string const& file_name,
       unsigned flags = DEFAULTS);
+
   /**
    * Constructor from a file.
    *
    * Creates a new MeshLoader from a given file.
    *
-   * \param file_name        The file to load the meshs data from.
-   * \param material_name    The material name that was set to the parent node
+   * @param file_name        The file to load the meshs data from.
+   * @param material_name    The material name that was set to the parent node
    */
   std::shared_ptr<node::SkeletalAnimationNode> load(
       std::string const& file_name,
@@ -125,8 +133,8 @@ class GUA_DLL SkeletalAnimationLoader {
    *
    * Creates a new MeshLoader from a existing memory buffer.
    *
-   * \param buffer_name      The buffer to load the meh's data from.
-   * \param buffer_size      The buffer's size.
+   * @param buffer_name      The buffer to load the meh's data from.
+   * @param buffer_size      The buffer's size.
    */
   // TODO
   /*std::vector<SkeletalAnimationRessource*> const load_from_buffer(char const*
@@ -139,24 +147,62 @@ class GUA_DLL SkeletalAnimationLoader {
   bool is_supported(std::string const& file_name) const;
 
  private:  // methods
-
+  /**
+   * @brief creates skelanim node from fbxscene
+   * @details converts all meshes in scene to skinned meshes and
+   * puts them in one skelanimnode
+   * 
+   * @param fbx_scene scene to import
+   * @param file_name file from which scene was loaded
+   * @param node_name name for node
+   * @param flags import options
+   * @return new node
+   */
   static std::shared_ptr<node::SkeletalAnimationNode> get_node(
       fbxsdk_2015_1::FbxScene* fbx_scene,
       std::string const& file_name,
       std::string const& node_name,
       unsigned flags);
 
+  /**
+   * @brief creates skelanimnode from aiscene
+   * @details converts all meshes in scene to skinned meshes and
+   * puts them in one skelanimnode
+   * 
+   * @param ai_scene scene to import
+   * @param file_name file from which scene was loaded
+   * @param node_name name for node
+   * @param flags import options
+   * @return new node
+   */
   static std::shared_ptr<node::SkeletalAnimationNode> get_node(
       aiScene const* ai_scene,
       std::string const& file_name,
       std::string const& node_name,
       unsigned flags);
 
+  /**
+   * @brief applies materials to resources that do not have one
+   * @details assigns given material to all resources that
+   * did not previously have a material assigned
+   * 
+   * @param node node to check for missing materials
+   * @param fallback_material material to apply
+   * @param no_shared_materials whether material is instanced for each resource
+   */
   static void apply_fallback_material(
-      std::shared_ptr<node::SkeletalAnimationNode> const& root,
+      std::shared_ptr<node::SkeletalAnimationNode> const& node,
       std::shared_ptr<Material> const& fallback_material,
       bool no_shared_materials);
 
+  /**
+   * @brief loads scene from fbx file
+   * @details using given manager to configure the loading
+   * 
+   * @param manager manager to use
+   * @param file_path file to load
+   * @return loaded scene
+   */
   static fbxsdk_2015_1::FbxScene* load_fbx_file(
       fbxsdk_2015_1::FbxManager* manager,
       std::string const& file_path);
