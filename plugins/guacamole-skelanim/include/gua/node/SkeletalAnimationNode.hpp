@@ -98,8 +98,10 @@ class GUA_DLL SkeletalAnimationNode : public GeometryNode {
                      std::set<PickResult>& hits) override;
 
   /**
-  * Updates bounding box by accessing the ressource in the databse
-  */
+   * @brief updates bounding boxes
+   * @details by transforming bone boex with current bone 
+   * transforms and accumulating them
+   */
   void update_bounding_box() const override;
 
   std::vector<math::BoundingBox<math::vec3> > get_bone_boxes();
@@ -131,7 +133,16 @@ class GUA_DLL SkeletalAnimationNode : public GeometryNode {
 
   bool has_anims() const;
 
+  /**
+   * @brief returns current bone transformations
+   * @details does not trigger an update of the transforms
+   * @return current bone transforms
+   */
   std::vector<scm::math::mat4f> const& get_bone_transforms() const;
+
+  /**
+   * @brief recalculates the bone transformations with the current parameters
+   */
   void update_bone_transforms();
 
   /**
@@ -139,7 +150,7 @@ class GUA_DLL SkeletalAnimationNode : public GeometryNode {
    *
    * This method implements the visitor pattern for Nodes.
    *
-   * \param visitor  A visitor to process the GeometryNode's data.
+   * @param visitor  A visitor to process the GeometryNode's data.
    */
   void accept(NodeVisitor& visitor) override;
 

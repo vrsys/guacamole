@@ -41,6 +41,9 @@ class aiMesh;
 
 namespace gua {
 
+/**
+ * @brief holds vertex information of one mesh
+ */
 struct Mesh {
  public:
   Mesh();
@@ -50,7 +53,10 @@ struct Mesh {
 #ifdef GUACAMOLE_FBX
   Mesh(fbxsdk_2015_1::FbxMesh& mesh, int material_index = -1);
 #endif
-  
+
+  /**
+   * @brief holds information of a vertex
+   */
   struct Vertex {
     scm::math::vec3f pos;
     scm::math::vec2f tex;
@@ -59,7 +65,17 @@ struct Mesh {
     scm::math::vec3f bitangent;
   };
 
+  /**
+   * @brief writes vertex info to given buffer
+   * 
+   * @param vertex_buffer buffer to write to
+   */
   void copy_to_buffer(Vertex* vertex_buffer) const;
+
+  /**
+   * @brief returns vertex layout for mesh vertex
+   * @return schism vertex format
+   */
   virtual scm::gl::vertex_format get_vertex_format() const;
 
   std::vector<scm::math::vec3f> positions;
@@ -74,7 +90,9 @@ struct Mesh {
 
  protected:
 
-  //struct to save info about future vertex
+  /**
+   * @brief stores a temporary vertex to be filtered and then written to buffers
+   */
   struct temp_vert {
     temp_vert(unsigned oindex, unsigned pt, unsigned tr, unsigned ind):
      old_index{oindex},
@@ -95,7 +113,10 @@ struct Mesh {
     scm::math::vec2f uv;
     std::vector<std::pair<unsigned, unsigned>> tris; //tris which share vertex
   };
-  //struct to save info about future triangle
+
+   /**
+   * @brief stores a temporary tri to be filtered and then written to buffers
+   */
   struct temp_tri {
     temp_tri(unsigned a, unsigned b, unsigned c):
      verts{a, b, c}
@@ -103,8 +124,23 @@ struct Mesh {
     std::array<unsigned, 3> verts;
   };
 
+  /**
+   * @brief constructs this mesh from the given fbxmesh
+   * @details if material index is given only triangles with this material are imported
+   * 
+   * @param mesh mesh to convert
+   * @param material_index material to filter with
+   * 
+   * @return indices of triangles that were added to this mesh
+   */
   std::vector<unsigned> construct(fbxsdk_2015_1::FbxMesh& mesh, int material_index);
 
+  /**
+   * @brief gets function to acces fbx vertex attribute
+   * @details the returned function allows to acces a vertex attribute regardless of internal mapping
+   * 
+   * @return access function
+   */
   template<typename T>
   static std::function<unsigned(temp_vert const&)> get_access_function(fbxsdk_2015_1::FbxLayerElementTemplate<T> const& layer);
 };

@@ -1,3 +1,4 @@
+// class header
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
 
 namespace gua {

@@ -47,6 +47,10 @@ struct RenderContext;
 class SkinnedMeshResource : public GeometryResource {
  public:
 
+  /**
+   * @brief holds bone mapping offsets
+   * @details holds info about where to read from the bonetransformblock buffers
+   */
   struct SharedBoneResource {
     scm::gl::buffer_ptr bone_ids_;
     scm::gl::buffer_ptr bone_weights_;
@@ -61,11 +65,12 @@ class SkinnedMeshResource : public GeometryResource {
   SkinnedMeshResource();
 
   /**
-   * Constructor from an Assimp mesh.
+   * Constructor from an Skinned mesh.
    *
-   * Initializes the mesh from a given Assimp mesh.
+   * Initializes the mesh from a given skinned mesh.
    *
-   * \param mesh             The Assimp mesh to load the data from.
+   * @param mesh mesh to store in this resource.
+   * @param build_kd_tree whether to build the kd tree (not supported).
    */
   SkinnedMeshResource(SkinnedMesh const& mesh, bool build_kd_tree);
 
@@ -74,7 +79,7 @@ class SkinnedMeshResource : public GeometryResource {
    *
    * Draws the Mesh to the given context.
    *
-   * \param context          The RenderContext to draw onto.
+   * @param context          The RenderContext to draw onto.
    */
   void draw(RenderContext& context) /*const*/;
 
@@ -89,6 +94,13 @@ class SkinnedMeshResource : public GeometryResource {
   scm::math::vec3 get_vertex(unsigned int i) const;
   std::vector<unsigned int> get_face(unsigned int i) const;
 
+  /**
+   * @brief calculates the bone bounding boxes
+   * @details applies the transforms to bone boxes and returns them
+   * 
+   * @param bone_transforms transform to apply
+   * @return bounding boxes
+   */
   std::vector<math::BoundingBox<math::vec3> > get_bone_boxes(
       std::vector<scm::math::mat4f> const& bone_transforms);
 
