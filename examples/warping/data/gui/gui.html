@@ -136,8 +136,9 @@
           obj.find(".slider-handle").focus();
         });
 
-        var val = slider.slider('getValue');
-        $(id).attr("val", ""+val);
+        var val = parseFloat(gua["get_" + func]());
+        slider.slider('setValue', val);
+        $(id).parent().attr("val", parseFloat(val.toFixed(4)));
 
         return slider;
       }
@@ -183,6 +184,7 @@
         init_radio("#scene_many_oilrigs", "scene_many_oilrigs");
         init_radio("#scene_sponza", "scene_sponza");
         init_radio("#scene_teapot", "scene_teapot");
+        init_radio("#scene_sphere", "scene_sphere");
         init_radio("#scene_textured_quads", "scene_textured_quads");
 
         init_checkbox("#orthographic", "orthographic");
@@ -353,6 +355,12 @@
                 <label>
                   <input type="radio" name="sceneRadios" id="scene_teapot" value="">
                   <span>Teapot</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_sphere" value="">
+                  <span>Textured Spheres</span>
                 </label>
               </div>
               <div class="radio">
