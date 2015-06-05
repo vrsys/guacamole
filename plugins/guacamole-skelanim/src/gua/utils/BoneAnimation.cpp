@@ -7,7 +7,9 @@
 #include <gua/utils/ToGua.hpp>
 
 //external headers
-#include <fbxsdk.h>
+#ifdef GUACAMOLE_FBX
+  #include <fbxsdk.h>
+#endif
 #include <assimp/scene.h>       // for ainodeanim
 
 namespace gua {
@@ -17,6 +19,8 @@ BoneAnimation::BoneAnimation() : name { "default" }
 , rotationKeys {}
 , translationKeys {}
 {}
+
+#ifdef GUACAMOLE_FBX
 BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& Bone) : name {
   Bone.GetName()
 }
@@ -51,6 +55,7 @@ BoneAnimation::BoneAnimation(FbxTakeInfo const& take, FbxNode& Bone) : name {
     });
   }
 }
+#endif
 
 BoneAnimation::~BoneAnimation() {}
 

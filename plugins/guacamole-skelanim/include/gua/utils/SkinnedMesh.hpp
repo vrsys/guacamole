@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/utils/Mesh.hpp>
 #include <gua/utils/Bone.hpp>
+#include <gua/config.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -48,11 +49,13 @@ struct SkinnedMesh : public Mesh {
   SkinnedMesh(aiMesh const& mesh,
               Bone const& root = Bone {
   });
+
+#ifdef GUACAMOLE_FBX
   SkinnedMesh(fbxsdk_2015_1::FbxMesh& mesh,
               Bone const& root = Bone {
   },
               unsigned const material_index = 0);
-
+#endif
 /**
  * @brief holds information of a skinned vertex
  */
@@ -130,10 +133,11 @@ struct SkinnedMesh : public Mesh {
    * 
    * @return the calculated bone influences
    */
+#ifdef GUACAMOLE_FBX
   static std::vector<bone_influences> get_weights(
       fbxsdk_2015_1::FbxMesh const& mesh,
       Bone const& root);
-
+#endif
 };
 
 }

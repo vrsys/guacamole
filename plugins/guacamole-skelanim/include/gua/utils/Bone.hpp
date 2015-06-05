@@ -22,6 +22,9 @@
 #ifndef GUA_BONE_HPP
 #define GUA_BONE_HPP
 
+// guacamole headers
+#include <gua/config.hpp>
+
 // external headers
 #include <scm/gl_core.h>
 #include <vector>
@@ -47,10 +50,13 @@ class Bone {
  public:
   Bone();
   Bone(aiNode const& node);
-  Bone(fbxsdk_2015_1::FbxNode& node);
   Bone(aiScene const& scene);
-  Bone(fbxsdk_2015_1::FbxScene& scene);
 
+#ifdef GUACAMOLE_FBX
+  Bone(fbxsdk_2015_1::FbxNode& node);
+  Bone(fbxsdk_2015_1::FbxScene& scene);
+#endif
+  
   ~Bone();
 
   /**

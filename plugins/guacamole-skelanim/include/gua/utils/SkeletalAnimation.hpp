@@ -22,6 +22,9 @@
 #ifndef GUA_SKELETAL_ANIMATION_HPP
 #define GUA_SKELETAL_ANIMATION_HPP
 
+// guacamole headers
+#include <gua/config.hpp>
+ 
 // external headers
 #include <vector>
 #include <string>
@@ -45,11 +48,11 @@ class SkeletalAnimation {
   SkeletalAnimation();
 
   SkeletalAnimation(aiAnimation const& anim, std::string const& name = "");
-
+#ifdef GUACAMOLE_FBX
   SkeletalAnimation(fbxsdk_2015_1::FbxAnimStack* anim,
                     std::vector<fbxsdk_2015_1::FbxNode*> const& bones,
                     std::string const& name = "");
-
+#endif
   ~SkeletalAnimation();
 
   /**

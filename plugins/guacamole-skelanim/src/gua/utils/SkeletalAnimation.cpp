@@ -7,7 +7,9 @@
 #include <gua/utils/BoneAnimation.hpp>
 
 //external headers
-#include <fbxsdk.h>
+#ifdef GUACAMOLE_FBX
+  #include <fbxsdk.h>
+#endif
 #include <assimp/scene.h>
 
 namespace gua {
@@ -37,6 +39,8 @@ SkeletalAnimation::SkeletalAnimation(aiAnimation const& anim,
     });
   }
 }
+
+#ifdef GUACAMOLE_FBX
 SkeletalAnimation::SkeletalAnimation(FbxAnimStack* anim,
                                      std::vector<FbxNode*> const& bones,
                                      std::string const& nm)
@@ -65,6 +69,7 @@ SkeletalAnimation::SkeletalAnimation(FbxAnimStack* anim,
     });
   }
 }
+#endif 
 
 SkeletalAnimation::~SkeletalAnimation() {}
 
