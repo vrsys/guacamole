@@ -511,7 +511,8 @@ int main(int argc, char** argv) {
                                     gua::math::float_t(view_trackball.shiftx()),
                                     gua::math::float_t(view_trackball.shifty()),
                                     gua::math::float_t(view_trackball.distance())) * gua::math::mat4(view_trackball.rotation()));
-    gua::Frustum warp_frustum;
+    gua::Frustum target_frustum;
+    gua::Frustum source_frustum;
 
     if (CLIENT_SERVER) {
       // fast_screen->rotate(0.1, 0, 1, 0);
@@ -521,7 +522,8 @@ int main(int argc, char** argv) {
                   << ", Fast fps: " << window->get_rendering_fps()
                   << ", App fps: " << renderer.get_application_fps() << std::endl;
       }
-      warp_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+      target_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+      source_frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     } else {
       fast_screen->set_transform(viewmatrix);
       transform->set_transform(modelmatrix);
@@ -556,12 +558,15 @@ int main(int argc, char** argv) {
                              abuffer_primitives);
       }
 
-      warp_frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+      target_frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+      source_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     }
 
-    gua::math::mat4f projection(warp_frustum.get_projection());
-    gua::math::mat4f view(warp_frustum.get_view());
-    warp_pass->original_projection_view_matrix(projection * view);
+    gua::math::mat4f target_projection(target_frustum.get_projection());
+    gua::math::mat4f target_view(target_frustum.get_view());
+    gua::math::mat4f source_projection(source_frustum.get_projection());
+    gua::math::mat4f source_view(source_frustum.get_view());
+    warp_pass->warp_matrix(target_projection * target_view * scm::math::inverse(source_projection * source_view));
 
     window->process_events();
     if (window->should_close()) {

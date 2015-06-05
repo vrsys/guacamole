@@ -72,8 +72,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& abuffer_warp_mode(ABufferWarpMode abuffer_warp_mode);
   ABufferWarpMode abuffer_warp_mode() const;
 
-  WarpPassDescription& original_projection_view_matrix(math::mat4f const& mat);
-  math::mat4f const& original_projection_view_matrix() const;
+  WarpPassDescription& warp_matrix(math::mat4f const& mat);
+  math::mat4f const& warp_matrix() const;
 
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;

@@ -24,7 +24,7 @@
 @include "common/gua_gbuffer_input.glsl"
 @include "gbuffer_warp_modes.glsl"
 
-uniform mat4 original_projection_view_matrix;
+uniform mat4 warp_matrix;
 
 // -----------------------------------------------------------------------------
 #if WARP_MODE == WARP_MODE_GRID || WARP_MODE == WARP_MODE_ADAPTIVE_GRID // -----
@@ -46,9 +46,7 @@ float gua_get_depth_raw(vec2 frag_pos) {
 
 void emit_grid_vertex(vec2 position, float depth) {
   texcoords = position / gua_resolution;
-  const vec4 screen_space_pos = vec4(2.0 * texcoords - 1.0, depth, 1.0);
-  const vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
-  gl_Position = original_projection_view_matrix * vec4(h.xyz / h.w, 1);
+  gl_Position = warp_matrix * vec4(2.0 * texcoords - 1.0, depth, 1.0);
   EmitVertex();
 }
 
@@ -58,8 +56,7 @@ void main() {
 
   if (depth < 1) {
 
-    uint level = varying_position[0].z >> BIT_CURRENT_LEVEL;
-    cellsize = 1 << level;
+    cellsize = 1 << (varying_position[0].z >> BIT_CURRENT_LEVEL);
 
     #if WARP_MODE == WARP_MODE_GRID // -----------------------------------------
       emit_grid_vertex(position + vec2(0, 0), depth);
@@ -146,11 +143,8 @@ void emit_primitive(float depth, vec2 frag_pos) {
                               vec2(half_pixel.x, -half_pixel.y), vec2(-half_pixel)};
 
     for (int v=0; v<4; ++v) {
-      vec4 screen_space_pos = vec4(frag_pos + offsets[v], depth, 1.0);
-      vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
-      vec3 position = h.xyz / h.w;
-
-      gl_Position =  original_projection_view_matrix * vec4(position, 1 + 0.000000000000001*bar[0]);
+      vec3 screen_space_pos = vec3(frag_pos + offsets[v], depth);
+      gl_Position = warp_matrix * vec4(screen_space_pos, 1 + 0.000000000000001*bar[0]);
 
       EmitVertex();
     }
@@ -158,12 +152,8 @@ void emit_primitive(float depth, vec2 frag_pos) {
     EndPrimitive();
 
   #else
-    vec4 screen_space_pos = vec4(frag_pos, depth, 1.0);
-    vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
-    vec3 position = h.xyz / h.w;
-
-
-    gl_Position =  original_projection_view_matrix * vec4(position, 1 + 0.000000000000001*bar[0]);
+    vec3 screen_space_pos = vec3(frag_pos, depth);
+    gl_Position = warp_matrix * vec4(screen_space_pos, 1 + 0.000000000000001*bar[0]);
 
     #if WARP_MODE == WARP_MODE_SCALED_POINTS
       gl_PointSize = 12*(1-gl_Position.z/gl_Position.w);
