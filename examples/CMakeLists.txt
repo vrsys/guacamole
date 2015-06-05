@@ -45,10 +45,14 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(oit_demo)
     add_subdirectory(tiled_shading_test)
     add_subdirectory(clipping)
-    add_subdirectory(animation)
   ENDIF (${GUACAMOLE_GLFW3})
   add_subdirectory(screenshot)
 
+  # skelanim example requires skelanim-plugin and the fbx sdk
+  if(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
+    add_subdirectory(animation)
+  endif(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
+  
   # nurbs example requires GLFW3 and nurbs-plugin
   IF (${PLUGIN_guacamole-nurbs} AND ${GUACAMOLE_GLFW3})
     add_subdirectory(nurbs)
