@@ -8,7 +8,9 @@
 #include <gua/utils/BonePose.hpp>
 
 //external headers
-#include <fbxsdk.h>
+#ifdef GUACAMOLE_FBX
+  #include <fbxsdk.h>
+#endif
 #include <assimp/scene.h>
 
 namespace gua {
@@ -31,27 +33,6 @@ Bone::Bone(aiNode const& node) : index { -1 }
   for (unsigned i = 0; i < node.mNumChildren; ++i) {
     std::shared_ptr<Bone> child = std::make_shared<Bone>(*(node.mChildren[i]));
     children.push_back(child);
-  }
-}
-
-Bone::Bone(FbxNode& node) : index { -1 }
-, name { node.GetName() }
-, parentName { node.GetParent() != NULL ? node.GetParent()->GetName() : "none" }
-, numChildren { unsigned(node.GetChildCount()) }
-, transformation { to_gua::mat4f(node.EvaluateLocalTransform()) }
-, offsetMatrix { scm::math::mat4f::identity() }
-{
-  for (int i = 0; i < node.GetChildCount(); ++i) {
-    FbxSkeleton const* skelnode { node.GetChild(i)->GetSkeleton() }
-    ;
-    if (skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector &&
-        node.GetChild(i)->GetChildCount() == 0) {
-      Logger::LOG_DEBUG << node.GetChild(i)->GetName()
-                        << " is effector, ignoring it" << std::endl;
-    } else {
-      std::shared_ptr<Bone> child = std::make_shared<Bone>(*(node.GetChild(i)));
-      children.push_back(child);
-    }
   }
 }
 
@@ -78,6 +59,8 @@ Bone::Bone(aiScene const& scene) {
   }
   this->set_properties(bone_info);
 }
+
+#ifdef GUACAMOLE_FBX
 Bone::Bone(FbxScene& scene) {
   //construct hierarchy
   *this = Bone { *(scene.GetRootNode()) }
@@ -152,6 +135,28 @@ Bone::Bone(FbxScene& scene) {
     }
   }
 }
+
+Bone::Bone(FbxNode& node) : index { -1 }
+, name { node.GetName() }
+, parentName { node.GetParent() != NULL ? node.GetParent()->GetName() : "none" }
+, numChildren { unsigned(node.GetChildCount()) }
+, transformation { to_gua::mat4f(node.EvaluateLocalTransform()) }
+, offsetMatrix { scm::math::mat4f::identity() }
+{
+  for (int i = 0; i < node.GetChildCount(); ++i) {
+    FbxSkeleton const* skelnode { node.GetChild(i)->GetSkeleton() }
+    ;
+    if (skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector &&
+        node.GetChild(i)->GetChildCount() == 0) {
+      Logger::LOG_DEBUG << node.GetChild(i)->GetName()
+                        << " is effector, ignoring it" << std::endl;
+    } else {
+      std::shared_ptr<Bone> child = std::make_shared<Bone>(*(node.GetChild(i)));
+      children.push_back(child);
+    }
+  }
+}
+#endif
 
 Bone::~Bone() {}
 

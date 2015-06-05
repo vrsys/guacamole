@@ -23,6 +23,7 @@
 #define GUA_SKELETAL_ANIMATION_LOADER_HPP
 
 // guacamole headers
+#include <gua/config.hpp>
 #include <gua/platform.hpp>
 
 // external headers
@@ -158,12 +159,13 @@ class GUA_DLL SkeletalAnimationLoader {
    * @param flags import options
    * @return new node
    */
+#ifdef GUACAMOLE_FBX
   static std::shared_ptr<node::SkeletalAnimationNode> get_node(
       fbxsdk_2015_1::FbxScene* fbx_scene,
       std::string const& file_name,
       std::string const& node_name,
       unsigned flags);
-
+#endif
   /**
    * @brief creates skelanimnode from aiscene
    * @details converts all meshes in scene to skinned meshes and
@@ -203,9 +205,11 @@ class GUA_DLL SkeletalAnimationLoader {
    * @param file_path file to load
    * @return loaded scene
    */
+#ifdef GUACAMOLE_FBX
   static fbxsdk_2015_1::FbxScene* load_fbx_file(
       fbxsdk_2015_1::FbxManager* manager,
       std::string const& file_path);
+#endif
 };
 
 }

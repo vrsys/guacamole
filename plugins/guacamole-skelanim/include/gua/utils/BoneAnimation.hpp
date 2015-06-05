@@ -21,6 +21,9 @@
 
 #ifndef GUA_BONE_ANIMATION_HPP
 #define GUA_BONE_ANIMATION_HPP
+ 
+// guacamole headers
+#include <gua/config.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -61,9 +64,12 @@ struct Keyframe {
 class BoneAnimation {
  public:
   BoneAnimation();
-  BoneAnimation(aiNodeAnim* anim);
-  BoneAnimation(fbxsdk_2015_1::FbxTakeInfo const& take, fbxsdk_2015_1::FbxNode& node);
 
+  BoneAnimation(aiNodeAnim* anim);
+
+#ifdef GUACAMOLE_FBX
+  BoneAnimation(fbxsdk_2015_1::FbxTakeInfo const& take, fbxsdk_2015_1::FbxNode& node);
+#endif
   ~BoneAnimation();
 
   /**

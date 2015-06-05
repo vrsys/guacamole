@@ -41,8 +41,9 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <fbxsdk.h>
-
+#ifdef GUACAMOLE_FBX
+  #include <fbxsdk.h>
+#endif
 namespace gua {
 
 /////////////////////////////////////////////////////////////////////////////
@@ -113,8 +114,8 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
     return animations;
   }
 
+#ifdef GUACAMOLE_FBX
   auto point_pos(file_name.find_last_of("."));
-
   if (file_name.substr(point_pos + 1) == "fbx" ||
       file_name.substr(point_pos + 1) == "FBX") {
 
@@ -183,7 +184,10 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
     }
 
     sdk_manager->Destroy();
-  } else {
+  }
+  else
+#endif // GUACAMOLE_FBX
+  {
     auto importer = std::make_shared<Assimp::Importer>();
 
     unsigned ai_ignore_flags =
@@ -273,6 +277,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(
   TextFile file(file_name);
 
   if (file.is_valid()) {
+#ifdef GUACAMOLE_FBX
     auto point_pos(file_name.find_last_of("."));
 
     if (file_name.substr(point_pos + 1) == "fbx" ||
@@ -310,7 +315,10 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(
       sdk_manager->Destroy();
 
       return new_node;
-    } else {
+    } 
+    else 
+#endif
+    {
       auto importer = std::make_shared<Assimp::Importer>();
 
       // equals aiProcessPreset_TargetRealtime_Quality, but with weight limiting
@@ -379,6 +387,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(
 }
 
 /////////////////////////////////////////////////////////////////////////////
+#ifdef GUACAMOLE_FBX
 std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
     FbxScene* scene,
     std::string const& file_name,
@@ -432,6 +441,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
   return std::make_shared<node::SkeletalAnimationNode>(
       file_name + "_" + node_name, geometry_descriptions, materials, root);
 }
+#endif
 /////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
@@ -541,7 +551,7 @@ void SkeletalAnimationLoader::apply_fallback_material(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef GUACAMOLE_FBX
 FbxScene* SkeletalAnimationLoader::load_fbx_file(FbxManager* manager,
                                                  std::string const& file_name) {
   // Create an importer.
@@ -595,5 +605,5 @@ FbxScene* SkeletalAnimationLoader::load_fbx_file(FbxManager* manager,
 
   return scene;
 }
-
+#endif
 }

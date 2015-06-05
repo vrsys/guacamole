@@ -312,22 +312,6 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   return new_mat;
 }
-#endif
-
-std::string MaterialLoader::get_file_name(std::string const& path) {
-  //filter out possible path in front of filename
-  std::string file_name{path};
-  auto path_end(path.find_last_of("/\\"));
-  if(path_end != std::string::npos) {
-    file_name = path.substr(path_end + 1);
-  }
-  return file_name;
-}
-
-inline bool MaterialLoader::file_exists(std::string const& path) {
-  std::ifstream file{path.c_str()};
-  return !file.fail();
-}
 
 std::shared_ptr<Material> MaterialLoader::load_unreal(
     std::string const& file_name,
@@ -432,6 +416,7 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(
 
   return new_mat;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -604,6 +589,23 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   }
 
   return new_mat;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string MaterialLoader::get_file_name(std::string const& path) {
+  //filter out possible path in front of filename
+  std::string file_name{path};
+  auto path_end(path.find_last_of("/\\"));
+  if(path_end != std::string::npos) {
+    file_name = path.substr(path_end + 1);
+  }
+  return file_name;
+}
+
+inline bool MaterialLoader::file_exists(std::string const& path) {
+  std::ifstream file{path.c_str()};
+  return !file.fail();
 }
 
 }

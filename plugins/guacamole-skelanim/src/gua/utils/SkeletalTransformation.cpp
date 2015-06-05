@@ -8,9 +8,6 @@
 #include <gua/utils/SkeletalAnimation.hpp>
 #include <gua/utils/Bone.hpp>
 
-//external headers
-#include <fbxsdk.h>
-
 namespace gua {
 
 namespace SkeletalTransformation {

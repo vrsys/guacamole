@@ -34,9 +34,12 @@ class SkeletalAnimation;
 namespace node {
 
 /**
- * This class is used to represent polygonal geometry in the SceneGraph.
- *
- * \ingroup gua_scenegraph
+ * @brief represents an entity with geometry and bone hierarchy
+ * which can be animated and influencs the mesh
+ * @details has two current animations and two times which
+ * determinate the current poses in the anims
+ * the blend factor controls how much theseconds pose influecnes the first
+ * 
  */
 class GUA_DLL SkeletalAnimationNode : public GeometryNode {
 
