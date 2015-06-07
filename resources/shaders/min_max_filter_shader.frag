@@ -152,16 +152,16 @@ void main() {
     const uint is_surface = (t & r) | (r & b) | (b & l) | (l & t);
 
     // store all continuities
-    const uint continious = (t  << BIT_CONTINIOUS_T)
-                    | (r  << BIT_CONTINIOUS_R)
-                    | (b  << BIT_CONTINIOUS_B)
-                    | (l  << BIT_CONTINIOUS_L)
-                    | (tl << BIT_CONTINIOUS_TL)
-                    | (tr << BIT_CONTINIOUS_TR)
-                    | (bl << BIT_CONTINIOUS_BL)
-                    | (br << BIT_CONTINIOUS_BR);
+    const uint continuous = (t  << BIT_CONTINUOUS_T)
+                    | (r  << BIT_CONTINUOUS_R)
+                    | (b  << BIT_CONTINUOUS_B)
+                    | (l  << BIT_CONTINUOUS_L)
+                    | (tl << BIT_CONTINUOUS_TL)
+                    | (tr << BIT_CONTINUOUS_TR)
+                    | (bl << BIT_CONTINUOUS_BL)
+                    | (br << BIT_CONTINUOUS_BR);
 
-    result = is_surface | continious;
+    result = is_surface | continuous;
 
   } else {
 
@@ -175,25 +175,25 @@ void main() {
     const uint s3 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 0)).x;
 
     // check for internal continuity
-    const uint internal_continuity = (s0 >> BIT_CONTINIOUS_R)
-                             & (s0 >> BIT_CONTINIOUS_B)
-                             & (s3 >> BIT_CONTINIOUS_T)
-                             & (s3 >> BIT_CONTINIOUS_L) & 1;
+    const uint internal_continuity = (s0 >> BIT_CONTINUOUS_R)
+                             & (s0 >> BIT_CONTINUOUS_B)
+                             & (s3 >> BIT_CONTINUOUS_T)
+                             & (s3 >> BIT_CONTINUOUS_L) & 1;
 
     // if any child is no complete surface, the parent is neither
     const uint is_surface = s0 & s1 & s2 & s3 & internal_continuity;
 
     // check for external continuity
-    const uint continious = (((s0 >> BIT_CONTINIOUS_T) & (s1 >> BIT_CONTINIOUS_T) & 1) << BIT_CONTINIOUS_T)
-                    | (((s1 >> BIT_CONTINIOUS_R) & (s3 >> BIT_CONTINIOUS_R) & 1) << BIT_CONTINIOUS_R)
-                    | (((s2 >> BIT_CONTINIOUS_B) & (s3 >> BIT_CONTINIOUS_B) & 1) << BIT_CONTINIOUS_B)
-                    | (((s0 >> BIT_CONTINIOUS_L) & (s2 >> BIT_CONTINIOUS_L) & 1) << BIT_CONTINIOUS_L)
-                    | (((s0 >> BIT_CONTINIOUS_TL) & 1) << BIT_CONTINIOUS_TL)
-                    | (((s1 >> BIT_CONTINIOUS_TR) & 1) << BIT_CONTINIOUS_TR)
-                    | (((s2 >> BIT_CONTINIOUS_BL) & 1) << BIT_CONTINIOUS_BL)
-                    | (((s3 >> BIT_CONTINIOUS_BR) & 1) << BIT_CONTINIOUS_BR);
+    const uint continuous = (((s0 >> BIT_CONTINUOUS_T) & (s1 >> BIT_CONTINUOUS_T) & 1) << BIT_CONTINUOUS_T)
+                    | (((s1 >> BIT_CONTINUOUS_R) & (s3 >> BIT_CONTINUOUS_R) & 1) << BIT_CONTINUOUS_R)
+                    | (((s2 >> BIT_CONTINUOUS_B) & (s3 >> BIT_CONTINUOUS_B) & 1) << BIT_CONTINUOUS_B)
+                    | (((s0 >> BIT_CONTINUOUS_L) & (s2 >> BIT_CONTINUOUS_L) & 1) << BIT_CONTINUOUS_L)
+                    | (((s0 >> BIT_CONTINUOUS_TL) & 1) << BIT_CONTINUOUS_TL)
+                    | (((s1 >> BIT_CONTINUOUS_TR) & 1) << BIT_CONTINUOUS_TR)
+                    | (((s2 >> BIT_CONTINUOUS_BL) & 1) << BIT_CONTINUOUS_BL)
+                    | (((s3 >> BIT_CONTINUOUS_BR) & 1) << BIT_CONTINUOUS_BR);
 
-    result = is_surface | continious;
+    result = is_surface | continuous;
   }
 
   // ---------------------------------------------------------------------------

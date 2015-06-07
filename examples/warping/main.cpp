@@ -259,7 +259,8 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
       gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
       gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(warp_pass->show_warp_grid());});
-      gui->add_javascript_getter("get_debug_mode", [&](){ return std::to_string(warp_pass->debug_mode());});
+      gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
+      gui->add_javascript_getter("get_debug_cell_gap", [&](){ return std::to_string(warp_pass->debug_cell_gap());});
       gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
       gui->add_javascript_callback("set_depth_layers");
@@ -287,7 +288,8 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_manipulation_camera");
       gui->add_javascript_callback("set_manipulation_object");
       gui->add_javascript_callback("set_show_warp_grid");
-      gui->add_javascript_callback("set_debug_mode");
+      gui->add_javascript_callback("set_debug_cell_colors");
+      gui->add_javascript_callback("set_debug_cell_gap");
       gui->add_javascript_callback("set_grid_depth_threshold");
       gui->add_javascript_callback("set_grid_surface");
       gui->add_javascript_callback("set_grid_adaptive_surface");
@@ -333,11 +335,16 @@ int main(int argc, char** argv) {
         bool checked;
         str >> checked;
         warp_pass->show_warp_grid(checked);
-      } else if (callback == "set_debug_mode") {
+      } else if (callback == "set_debug_cell_colors") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
-        warp_pass->debug_mode(checked);
+        warp_pass->debug_cell_colors(checked);
+      } else if (callback == "set_debug_cell_gap") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        warp_pass->debug_cell_gap(checked);
       } else if (callback == "set_adaptive_abuffer") {
         std::stringstream str(params[0]);
         bool checked;

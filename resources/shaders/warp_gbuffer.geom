@@ -30,6 +30,12 @@ uniform mat4 warp_matrix;
 #if WARP_MODE == WARP_MODE_GRID || WARP_MODE == WARP_MODE_ADAPTIVE_GRID // -----
 // -----------------------------------------------------------------------------
 
+#if @debug_cell_gap@ == 1
+  #define GAP 0.6
+#else
+  #define GAP 1.0
+#endif
+
 layout(points) in;
 layout(triangle_strip, max_vertices = 4) out;
 
@@ -63,27 +69,27 @@ void main() {
 
       position = varying_position[0].xy + vec2(cellsize-1, 0);
       depth = gua_get_depth_raw(position);
-      emit_grid_vertex(position + vec2(1, 0), depth);
+      emit_grid_vertex(position + vec2(GAP, 0), depth);
 
       position = varying_position[0].xy + vec2(0, cellsize-1);
       depth = gua_get_depth_raw(position);
-      emit_grid_vertex(position + vec2(0, 1), depth);
+      emit_grid_vertex(position + vec2(0, GAP), depth);
 
       position = varying_position[0].xy + vec2(cellsize-1, cellsize-1);
       depth = gua_get_depth_raw(position);
-      emit_grid_vertex(position + vec2(1, 1), depth);
+      emit_grid_vertex(position + vec2(GAP, GAP), depth);
 
     #elif WARP_MODE == WARP_MODE_ADAPTIVE_GRID // ------------------------------
 
-      const int cont_l = int(varying_position[0].z >> BIT_CONTINIOUS_L) & 1;
-      const int cont_r = int(varying_position[0].z >> BIT_CONTINIOUS_R) & 1;
-      const int cont_t = int(varying_position[0].z >> BIT_CONTINIOUS_T) & 1;
-      const int cont_b = int(varying_position[0].z >> BIT_CONTINIOUS_B) & 1;
+      const int cont_l = int(varying_position[0].z >> BIT_CONTINUOUS_L) & 1;
+      const int cont_r = int(varying_position[0].z >> BIT_CONTINUOUS_R) & 1;
+      const int cont_t = int(varying_position[0].z >> BIT_CONTINUOUS_T) & 1;
+      const int cont_b = int(varying_position[0].z >> BIT_CONTINUOUS_B) & 1;
 
-      const int cont_tl = int(varying_position[0].z >> BIT_CONTINIOUS_TL) & 1;
-      const int cont_tr = int(varying_position[0].z >> BIT_CONTINIOUS_TR) & 1;
-      const int cont_bl = int(varying_position[0].z >> BIT_CONTINIOUS_BL) & 1;
-      const int cont_br = int(varying_position[0].z >> BIT_CONTINIOUS_BR) & 1;
+      const int cont_tl = int(varying_position[0].z >> BIT_CONTINUOUS_TL) & 1;
+      const int cont_tr = int(varying_position[0].z >> BIT_CONTINUOUS_TR) & 1;
+      const int cont_bl = int(varying_position[0].z >> BIT_CONTINUOUS_BL) & 1;
+      const int cont_br = int(varying_position[0].z >> BIT_CONTINUOUS_BR) & 1;
 
       position = varying_position[0].xy;
       vec2 lookup_offset = vec2(-cont_l, -cont_b) * cont_bl;
@@ -93,17 +99,17 @@ void main() {
       position = varying_position[0].xy + vec2(cellsize-1, 0);
       lookup_offset = vec2(cont_r, -cont_b) * cont_br;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
-      emit_grid_vertex(position + vec2(1, 0), depth);
+      emit_grid_vertex(position + vec2(GAP, 0), depth);
 
       position = varying_position[0].xy + vec2(0, cellsize-1);
       lookup_offset = vec2(-cont_l, cont_t) * cont_tl;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
-      emit_grid_vertex(position + vec2(0, 1), depth);
+      emit_grid_vertex(position + vec2(0, GAP), depth);
 
       position = varying_position[0].xy + vec2(cellsize-1, cellsize-1);
       lookup_offset = vec2(cont_r, cont_t) * cont_tr;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
-      emit_grid_vertex(position + vec2(1, 1), depth);
+      emit_grid_vertex(position + vec2(GAP, GAP), depth);
 
     #endif // ------------------------------------------------------------------
 

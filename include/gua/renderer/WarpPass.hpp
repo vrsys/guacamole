@@ -63,8 +63,11 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& show_warp_grid(bool val);
   bool show_warp_grid() const;
 
-  WarpPassDescription& debug_mode(bool val);
-  bool debug_mode() const;
+  WarpPassDescription& debug_cell_colors(bool val);
+  bool debug_cell_colors() const;
+
+  WarpPassDescription& debug_cell_gap(bool val);
+  bool debug_cell_gap() const;
 
   WarpPassDescription& gbuffer_warp_mode(GBufferWarpMode gbuffer_warp_mode);
   GBufferWarpMode gbuffer_warp_mode() const;
@@ -85,7 +88,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   bool depth_test_;
   bool show_warp_grid_;
-  bool debug_mode_;
+  bool debug_cell_colors_;
+  bool debug_cell_gap_;
   int max_layers_;
   GBufferWarpMode gbuffer_warp_mode_;
   ABufferWarpMode abuffer_warp_mode_;

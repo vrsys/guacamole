@@ -205,7 +205,8 @@
         init_checkbox("#adaptive_abuffer", "adaptive_abuffer");
 
         init_checkbox("#show_warp_grid", "show_warp_grid");
-        init_checkbox("#debug_mode", "debug_mode");
+        init_checkbox("#debug_cell_colors", "debug_cell_colors");
+        init_checkbox("#debug_cell_gap", "debug_cell_gap");
 
 
         init_radio("#grid_surface", "grid_surface");
@@ -508,8 +509,15 @@
 
               <div class="checkbox">
                 <label>
-                  <input id="debug_mode" type="checkbox" value="">
-                  <span>Debug Colors</span>
+                  <input id="debug_cell_colors" type="checkbox" value="">
+                  <span>Cell Colors</span>
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label>
+                  <input id="debug_cell_gap" type="checkbox" value="">
+                  <span>Cell Gap</span>
                 </label>
               </div>
 

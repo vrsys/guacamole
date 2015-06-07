@@ -41,7 +41,8 @@ WarpPassDescription::WarpPassDescription()
   , max_layers_(2)
   , depth_test_(true)
   , show_warp_grid_(false)
-  , debug_mode_(false)
+  , debug_cell_colors_(false)
+  , debug_cell_gap_(false)
   , gbuffer_warp_mode_(GBUFFER_POINTS)
   , abuffer_warp_mode_(ABUFFER_POINTS)
 {
@@ -126,16 +127,30 @@ bool WarpPassDescription::show_warp_grid() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::debug_mode(bool val) {
-  debug_mode_ = val;
+WarpPassDescription& WarpPassDescription::debug_cell_colors(bool val) {
+  debug_cell_colors_ = val;
   touch();
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool WarpPassDescription::debug_mode() const {
-  return debug_mode_;
+bool WarpPassDescription::debug_cell_colors() const {
+  return debug_cell_colors_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription& WarpPassDescription::debug_cell_gap(bool val) {
+  debug_cell_gap_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool WarpPassDescription::debug_cell_gap() const {
+  return debug_cell_gap_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,7 +190,8 @@ std::shared_ptr<PipelinePassDescription> WarpPassDescription::make_copy() const 
 ////////////////////////////////////////////////////////////////////////////////
 PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
   substitution_map["gua_debug_tiles"] = "0";
-  substitution_map["debug_mode"] = debug_mode_ ? "1" : "0";
+  substitution_map["debug_cell_colors"] = debug_cell_colors_ ? "1" : "0";
+  substitution_map["debug_cell_gap"] = debug_cell_gap_ ? "1" : "0";
   substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
   substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
   substitution_map["warping_max_layers"] = std::to_string(max_layers_);
