@@ -251,7 +251,7 @@ int main(int argc, char** argv) {
   if (!CLIENT_SERVER) {
 
     // right side gui ----------------------------------------------------------
-    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 720));
+    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 760));
 
     gui->on_loaded.connect([&]() {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
@@ -273,7 +273,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_orthographic");
       gui->add_javascript_callback("set_gbuffer_type_none");
       gui->add_javascript_callback("set_gbuffer_type_points");
-      gui->add_javascript_callback("set_gbuffer_type_quads");
+      gui->add_javascript_callback("set_gbuffer_type_screen_aligned_quads");
+      gui->add_javascript_callback("set_gbuffer_type_normal_aligned_quads");
+      gui->add_javascript_callback("set_gbuffer_type_depth_aligned_quads");
       gui->add_javascript_callback("set_gbuffer_type_scaled_points");
       gui->add_javascript_callback("set_gbuffer_type_grid");
       gui->add_javascript_callback("set_gbuffer_type_adaptive_grid");
@@ -365,7 +367,9 @@ int main(int argc, char** argv) {
       } else if (callback == "render_view") {
         slow_screen->set_transform(fast_screen->get_transform());
       } else if (callback == "set_gbuffer_type_points"
-               | callback == "set_gbuffer_type_quads"
+               | callback == "set_gbuffer_type_screen_aligned_quads"
+               | callback == "set_gbuffer_type_normal_aligned_quads"
+               | callback == "set_gbuffer_type_depth_aligned_quads"
                | callback == "set_gbuffer_type_scaled_points"
                | callback == "set_gbuffer_type_grid"
                | callback == "set_gbuffer_type_adaptive_grid"
@@ -375,7 +379,9 @@ int main(int argc, char** argv) {
         str >> checked;
         if (checked) {
           if (callback == "set_gbuffer_type_points")        warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_POINTS);
-          if (callback == "set_gbuffer_type_quads")         warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_QUADS);
+          if (callback == "set_gbuffer_type_screen_aligned_quads") warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_SCREEN_ALIGNED_QUADS);
+          if (callback == "set_gbuffer_type_normal_aligned_quads") warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_NORMAL_ALIGNED_QUADS);
+          if (callback == "set_gbuffer_type_depth_aligned_quads")  warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_DEPTH_ALIGNED_QUADS);
           if (callback == "set_gbuffer_type_scaled_points") warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_SCALED_POINTS);
           if (callback == "set_gbuffer_type_grid")          warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_GRID);
           if (callback == "set_gbuffer_type_adaptive_grid") warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_ADAPTIVE_GRID);
@@ -426,7 +432,7 @@ int main(int argc, char** argv) {
     });
 
     gui_quad->data.texture() = "gui";
-    gui_quad->data.size() = gua::math::vec2ui(330, 720);
+    gui_quad->data.size() = gua::math::vec2ui(330, 760);
     gui_quad->data.anchor() = gua::math::vec2(1.f, 0.f);
 
     graph.add_node("/", gui_quad);

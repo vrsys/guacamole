@@ -68,7 +68,7 @@ void main() {
         xfb_output = uvec3(varying_position[0].xy, ((old_layer << BIT_CURRENT_LEVEL) | continuity_flags | 0));
         EmitVertex(); 
         EndPrimitive();
-      } else {
+      } else { 
         for (int v=0; v<4; ++v) {
           xfb_output = uvec3(varying_position[0].xy + offsets[v], (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
           EmitVertex();

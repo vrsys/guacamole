@@ -26,6 +26,10 @@
 
 uniform mat4 warp_matrix;
 
+float gua_get_depth_raw(vec2 frag_pos) {
+  return texelFetch(sampler2D(gua_gbuffer_depth), ivec2(frag_pos), 0).x * 2.0 - 1.0;
+}
+
 // -----------------------------------------------------------------------------
 #if WARP_MODE == WARP_MODE_GRID || WARP_MODE == WARP_MODE_ADAPTIVE_GRID // -----
 // -----------------------------------------------------------------------------
@@ -45,10 +49,6 @@ flat in  uvec3 varying_position[];
 flat out uint cellsize;
 
 out vec2 texcoords;
-
-float gua_get_depth_raw(vec2 frag_pos) {
-  return texelFetch(sampler2D(gua_gbuffer_depth), ivec2(frag_pos), 0).x * 2.0 - 1.0;
-}
 
 void emit_grid_vertex(vec2 position, float depth) {
   texcoords = position / gua_resolution;
@@ -118,6 +118,21 @@ void emit_quad(uvec2 offset, uint size) {
   }
 }
 
+void emit_pixel(uvec2 position) {
+  
+  const float depth = gua_get_depth_raw(position);
+  
+  if (depth < 1) {
+    cellsize = 1;
+
+    emit_grid_vertex(position + vec2(0, 0), depth);
+    emit_grid_vertex(position + vec2(GAP, 0), depth);
+    emit_grid_vertex(position + vec2(0, GAP), depth);
+    emit_grid_vertex(position + vec2(GAP, GAP), depth);
+    EndPrimitive();
+  }
+}
+
 void main() {
 
   if ((varying_position[0].z & 1) > 0) {
@@ -126,7 +141,7 @@ void main() {
     const uvec2 offsets[4] = {uvec2(0), uvec2(1, 0),
                               uvec2(1), uvec2(0, 1)};
     for (int v=0; v<4; ++v) {
-      emit_quad(offsets[v], 1);
+      emit_pixel(varying_position[0].xy+offsets[v]);
     }
   }
 }
@@ -156,8 +171,13 @@ out vec3 color;
 out vec3 normal;
 
 
-void emit_primitive(float depth, vec2 frag_pos) {
-  #if WARP_MODE == WARP_MODE_QUADS
+void emit_primitive(vec2 tex_coords) {
+  float depth = gua_get_depth(tex_coords);
+  vec2 frag_pos = tex_coords*2-1;
+
+  if (depth < 1) {
+
+  #if WARP_MODE == WARP_MODE_SCREEN_ALIGNED_QUADS
     const vec2 half_pixel = vec2(1.0) / vec2(gua_resolution);
     const vec2 offsets[4] = {vec2(half_pixel), vec2(-half_pixel.x, half_pixel.y),
                               vec2(half_pixel.x, -half_pixel.y), vec2(-half_pixel)};
@@ -168,6 +188,74 @@ void emit_primitive(float depth, vec2 frag_pos) {
 
       EmitVertex();
     }
+
+    EndPrimitive();
+
+  #elif WARP_MODE == WARP_MODE_NORMAL_ALIGNED_QUADS
+
+    const vec2 half_pixel = vec2(1.0) / vec2(gua_resolution);
+    const vec2 offsets[4] = {vec2(half_pixel), vec2(-half_pixel.x, half_pixel.y),
+                              vec2(half_pixel.x, -half_pixel.y), vec2(-half_pixel)};
+
+    for (int v=0; v<4; ++v) {
+      vec3 screen_space_pos = vec3(frag_pos + offsets[v], depth);
+      gl_Position = warp_matrix * vec4(screen_space_pos, 1 + 0.000000000000001*bar[0]);
+
+      EmitVertex();
+    }
+
+    EndPrimitive();
+
+  #elif WARP_MODE == WARP_MODE_DEPTH_ALIGNED_QUADS
+
+    float d_max = -1;
+    vec2 t = tex_coords;
+
+    vec2  p1 = vec2(tex_coords*gua_resolution) + vec2(0, 0);
+    float d1 = gua_get_depth_raw(p1);
+
+    if (d1 < 1 && d1 > d_max) {
+      d_max = d1;
+    }
+
+    vec2  p2 = vec2(tex_coords*gua_resolution) + vec2(1, 0);
+    float d2 = gua_get_depth_raw(p2);
+
+    if (d2 < 1 && d2 > d_max) {
+      d_max = d2;
+      t = tex_coords + vec2(1.0/float(gua_resolution.x), 0);
+    }
+
+    vec2  p3 = vec2(tex_coords*gua_resolution) + vec2(0, 1);
+    float d3 = gua_get_depth_raw(p3);
+
+    if (d3 < 1 && d3 > d_max) {
+      d_max = d3;
+      t = tex_coords + vec2(0, 1.0/float(gua_resolution.y));
+    }
+
+    vec2  p4 = vec2(tex_coords*gua_resolution) + vec2(1, 1);
+    float d4 = gua_get_depth_raw(p4);
+
+    if (d4 < 1 && d4 > d_max) {
+      d_max = d4;
+      t = tex_coords + vec2(1.0)/vec2(gua_resolution);
+    }
+
+    color = gua_get_color(t);
+    normal = gua_get_normal(t);
+
+    gl_Position = warp_matrix * vec4(p1/gua_resolution*2-1, min(d_max, d1), 1 + 0.000000000000001*bar[0]);
+    EmitVertex();
+
+    gl_Position = warp_matrix * vec4(p2/gua_resolution*2-1, min(d_max, d2), 1 + 0.000000000000001*bar[0]);
+    EmitVertex();
+
+    gl_Position = warp_matrix * vec4(p3/gua_resolution*2-1, min(d_max, d3), 1 + 0.000000000000001*bar[0]);
+    EmitVertex();
+
+    gl_Position = warp_matrix * vec4(p4/gua_resolution*2-1, min(d_max, d4), 1 + 0.000000000000001*bar[0]);
+    EmitVertex();
 
     EndPrimitive();
 
@@ -183,23 +271,20 @@ void emit_primitive(float depth, vec2 frag_pos) {
 
     EmitVertex(); EndPrimitive();
   #endif
+  }
 }
 
 void main() {
 
   vec2 pos = vec2(vertex_id[0] % gua_resolution.x, vertex_id[0] / gua_resolution.x) + 0.5;
   vec2 tex_coords = pos/vec2(gua_resolution.x, gua_resolution.y);
-  vec2 frag_pos = tex_coords*2-1;
 
   uint current = vertex_id[0];
 
   color = gua_get_color(tex_coords);
   normal = gua_get_normal(tex_coords);
-  float depth = gua_get_depth(tex_coords);
 
-  if (depth < 1) {
-    emit_primitive(depth, frag_pos);
-  }
+  emit_primitive(tex_coords);
 }
 
 #endif
