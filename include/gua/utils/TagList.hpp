@@ -50,6 +50,8 @@ class GUA_DLL TagList {
 
     void clear_tags();
 
+    bool has_tag(std::string const& tag) const;
+
     std::vector<std::string> const get_strings() const;
     std::bitset<GUA_MAX_TAG_COUNT> const& get_bits() const;
 

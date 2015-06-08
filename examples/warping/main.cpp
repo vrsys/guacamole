@@ -478,6 +478,16 @@ int main(int argc, char** argv) {
     });
     glfw->on_key_press.connect([&](int key, int scancode, int action, int mods) {
       gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
+      if (key == 72 && action == 1) {
+        // hide gui
+        if (gui_quad->get_tags().has_tag("invisible")) {
+          gui_quad->get_tags().remove_tag("invisible");
+          stats_quad->get_tags().remove_tag("invisible");
+        } else {
+          gui_quad->get_tags().add_tag("invisible");
+          stats_quad->get_tags().add_tag("invisible");
+        }
+      }
     });
     glfw->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
       gua::math::vec2 hit_pos;
