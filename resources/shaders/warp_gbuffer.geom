@@ -37,7 +37,7 @@ uniform mat4 warp_matrix;
 #endif
 
 layout(points) in;
-layout(triangle_strip, max_vertices = 4) out;
+layout(triangle_strip, max_vertices = 16) out;
 
 @include "shaders/warp_grid_bits.glsl"
 
@@ -56,26 +56,27 @@ void emit_grid_vertex(vec2 position, float depth) {
   EmitVertex();
 }
 
-void main() {
-  vec2 position = varying_position[0].xy;
+void emit_quad(uvec2 offset, uint size) {
+  
+  vec2 position = varying_position[0].xy+offset;
   float depth = gua_get_depth_raw(position);
-
+  
   if (depth < 1) {
 
-    cellsize = 1 << (varying_position[0].z >> BIT_CURRENT_LEVEL);
+    cellsize = size;
 
     #if WARP_MODE == WARP_MODE_GRID // -----------------------------------------
       emit_grid_vertex(position + vec2(0, 0), depth);
 
-      position = varying_position[0].xy + vec2(cellsize-1, 0);
+      position = varying_position[0].xy+offset + vec2(cellsize-1, 0);
       depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(GAP, 0), depth);
 
-      position = varying_position[0].xy + vec2(0, cellsize-1);
+      position = varying_position[0].xy+offset + vec2(0, cellsize-1);
       depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(0, GAP), depth);
 
-      position = varying_position[0].xy + vec2(cellsize-1, cellsize-1);
+      position = varying_position[0].xy+offset + vec2(cellsize-1, cellsize-1);
       depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(GAP, GAP), depth);
 
@@ -91,22 +92,22 @@ void main() {
       const int cont_bl = int(varying_position[0].z >> BIT_CONTINUOUS_BL) & 1;
       const int cont_br = int(varying_position[0].z >> BIT_CONTINUOUS_BR) & 1;
 
-      position = varying_position[0].xy;
+      position = varying_position[0].xy+offset;
       vec2 lookup_offset = vec2(-cont_l, -cont_b) * cont_bl;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(0, 0), depth);
 
-      position = varying_position[0].xy + vec2(cellsize-1, 0);
+      position = varying_position[0].xy+offset + vec2(cellsize-1, 0);
       lookup_offset = vec2(cont_r, -cont_b) * cont_br;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(GAP, 0), depth);
 
-      position = varying_position[0].xy + vec2(0, cellsize-1);
+      position = varying_position[0].xy+offset + vec2(0, cellsize-1);
       lookup_offset = vec2(-cont_l, cont_t) * cont_tl;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(0, GAP), depth);
 
-      position = varying_position[0].xy + vec2(cellsize-1, cellsize-1);
+      position = varying_position[0].xy+offset + vec2(cellsize-1, cellsize-1);
       lookup_offset = vec2(cont_r, cont_t) * cont_tr;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(GAP, GAP), depth);
@@ -114,6 +115,19 @@ void main() {
     #endif // ------------------------------------------------------------------
 
     EndPrimitive();
+  }
+}
+
+void main() {
+
+  if ((varying_position[0].z & 1) > 0) {
+    emit_quad(uvec2(0), 1 << (varying_position[0].z >> BIT_CURRENT_LEVEL));
+  } else {
+    const uvec2 offsets[4] = {uvec2(0), uvec2(1, 0),
+                              uvec2(1), uvec2(0, 1)};
+    for (int v=0; v<4; ++v) {
+      emit_quad(offsets[v], 1);
+    }
   }
 }
 

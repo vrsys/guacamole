@@ -45,39 +45,46 @@ void main() {
 
     uint continuity_flags = 0;
 
-
   #if @generation_mode@ == 2 // DEPTH_THRESHOLD
 
     float is_surface = texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/old_cellsize), int(new_layer)).x;
     if (is_surface == 0) {
 
   #else
-
     uint is_surface = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/old_cellsize), int(new_layer)).x;
-
     continuity_flags = ALL_CONTINUITY_BITS & is_surface;
     
     if ((is_surface & 1) == 0) {
 
   #endif
 
-      const vec2 offsets[4] = {ivec2(0),            ivec2(new_cellsize, 0),
-                               ivec2(new_cellsize), ivec2(0, new_cellsize)};
+      // the current cell covers more than one surface --- we need to split it!
 
+      const uvec2 offsets[4] = {uvec2(0),            uvec2(new_cellsize, 0),
+                                uvec2(new_cellsize), uvec2(0, new_cellsize)};
 
-      for (int v=0; v<4; ++v) {
-        xfb_output = uvec3(varying_position[0].xy + offsets[v], (new_layer << BIT_CURRENT_LEVEL) | continuity_flags);
-        EmitVertex();
+      if (new_layer == 0) {
+        // we are at the last level -- dont write on pixel sized quads; just output one quad (2x2 pixels) and set the is_surface flag to 0
+        xfb_output = uvec3(varying_position[0].xy, ((old_layer << BIT_CURRENT_LEVEL) | continuity_flags | 0));
+        EmitVertex(); 
         EndPrimitive();
+      } else {
+        for (int v=0; v<4; ++v) {
+          xfb_output = uvec3(varying_position[0].xy + offsets[v], (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
+          EmitVertex();
+          EndPrimitive();
+        }
       }
 
     } else {
-      xfb_output = uvec3(varying_position[0].xy, (old_layer << BIT_CURRENT_LEVEL) | continuity_flags);
+      // the current cell covers only one continuous surface --- write it's size, continuity and that's one surface
+      xfb_output = uvec3(varying_position[0].xy, ((old_layer << BIT_CURRENT_LEVEL) | continuity_flags | 1));
       EmitVertex(); 
       EndPrimitive();
     }
 
   } else {
+    // the current cell has not been split in the previous pass --- we dont need to touch it
     xfb_output = varying_position[0];
     EmitVertex(); 
     EndPrimitive();

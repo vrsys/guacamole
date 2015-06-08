@@ -39,7 +39,7 @@ GenerateWarpGridPassDescription::GenerateWarpGridPassDescription()
   : PipelinePassDescription()
   , cell_size_(32)
   , mode_(SURFACE_ESTIMATION)
-  , split_threshold_(0.0002)
+  , split_threshold_(0.0001)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";

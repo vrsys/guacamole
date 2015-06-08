@@ -72,7 +72,8 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 
 int main(int argc, char** argv) {
 
-  auto resolution = gua::math::vec2ui(1280, 768);
+  auto resolution = gua::math::vec2ui(1920, 1080);
+  // auto resolution = gua::math::vec2ui(1280, 768);
 
   // add mouse interaction
   gua::utils::Trackball view_trackball(0.01, 0.002, 0.2);
@@ -250,11 +251,12 @@ int main(int argc, char** argv) {
   if (!CLIENT_SERVER) {
 
     // right side gui ----------------------------------------------------------
-    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 700));
+    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 720));
 
     gui->on_loaded.connect([&]() {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
       gui->add_javascript_getter("get_split_threshold", [&](){ return gua::string_utils::to_string(grid_pass->split_threshold());});
+      gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
       gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
       gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
       gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
@@ -265,6 +267,7 @@ int main(int argc, char** argv) {
 
       gui->add_javascript_callback("set_depth_layers");
       gui->add_javascript_callback("set_split_threshold");
+      gui->add_javascript_callback("set_cell_size");
       gui->add_javascript_callback("set_depth_test");
       gui->add_javascript_callback("set_backface_culling");
       gui->add_javascript_callback("set_orthographic");
@@ -312,6 +315,11 @@ int main(int argc, char** argv) {
         float split_threshold;
         str >> split_threshold;
         grid_pass->split_threshold(split_threshold);
+      } else if (callback == "set_cell_size") {
+        std::stringstream str(params[0]);
+        int cell_size;
+        str >> cell_size;
+        grid_pass->cell_size(std::pow(2, cell_size));
       } else if (callback == "set_depth_test") {
         std::stringstream str(params[0]);
         str >> depth_test;
@@ -418,7 +426,7 @@ int main(int argc, char** argv) {
     });
 
     gui_quad->data.texture() = "gui";
-    gui_quad->data.size() = gua::math::vec2ui(330, 700);
+    gui_quad->data.size() = gua::math::vec2ui(330, 720);
     gui_quad->data.anchor() = gua::math::vec2(1.f, 0.f);
 
     graph.add_node("/", gui_quad);
@@ -548,10 +556,12 @@ int main(int argc, char** argv) {
         int abuffer_primitives(0);
 
         for (auto const& result: window->get_context()->time_query_results) {
-          if (result.first.find("Trimesh") != std::string::npos) trimesh_time = result.second;
-          if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time = result.second;
-          if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time = result.second;
-          if (result.first.find("WarpGridGenerator") != std::string::npos) grid_time += result.second;
+          if (result.first.find("GPU") != std::string::npos) {
+            if (result.first.find("Trimesh") != std::string::npos) trimesh_time = result.second;
+            if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time = result.second;
+            if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time = result.second;
+            if (result.first.find("WarpGridGenerator") != std::string::npos) grid_time += result.second;
+          }
         }
 
         for (auto const& result: window->get_context()->primitive_query_results) {

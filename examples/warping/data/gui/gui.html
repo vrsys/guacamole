@@ -216,6 +216,7 @@
 
         init_slider("#preview-panel .depth_layers", "depth_layers");
         init_slider("#preview-panel .split_threshold", "split_threshold");
+        init_slider("#preview-panel .cell_size", "cell_size");
 
         $("body").addClass("on");
       }
@@ -529,6 +530,15 @@
             </div>
             <div class="col-xs-7">
               <input class="slider split_threshold" data-slider-tooltip="hide" data-slider-id="split_threshold" type="text" data-slider-min="0" data-slider-max="0.01" data-slider-step="0.0001" handle="custom"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Cell Size:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider cell_size" data-slider-tooltip="hide" data-slider-id="cell_size" type="text" data-slider-min="1" data-slider-max="8" data-slider-step="1" handle="custom"/>
             </div>
           </div>
 
