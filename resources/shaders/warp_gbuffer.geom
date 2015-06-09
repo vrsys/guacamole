@@ -35,7 +35,7 @@ float gua_get_depth_raw(vec2 frag_pos) {
 // -----------------------------------------------------------------------------
 
 #if @debug_cell_gap@ == 1
-  #define GAP 0.6
+  #define GAP 0.49
 #else
   #define GAP 1.0
 #endif
@@ -264,7 +264,7 @@ void emit_primitive(vec2 tex_coords) {
     gl_Position = warp_matrix * vec4(screen_space_pos, 1 + 0.000000000000001*bar[0]);
 
     #if WARP_MODE == WARP_MODE_SCALED_POINTS
-      gl_PointSize = 12*(1-gl_Position.z/gl_Position.w);
+      gl_PointSize = 15*(1-gl_Position.z/gl_Position.w);
     #else
       gl_PointSize = 1;
     #endif

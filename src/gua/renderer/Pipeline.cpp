@@ -215,7 +215,10 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 
+
     if (context_.framecount % 60 == 0) {
+      math::vec2ui resolution(current_viewstate().camera.config.get_resolution());
+      std::cout << resolution.x * resolution.y << std::endl;
       std::cout << "===== Time Queries for Context: " << context_.id
         << " ============================" << std::endl;
       for (auto const& t : context_.time_query_results) {
