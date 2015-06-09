@@ -57,10 +57,10 @@ void emit_grid_vertex(vec2 position, float depth) {
 }
 
 void emit_quad(uvec2 offset, uint size) {
-  
+
   vec2 position = varying_position[0].xy+offset;
   float depth = gua_get_depth_raw(position);
-  
+
   if (depth < 1) {
 
     cellsize = size;
@@ -119,9 +119,9 @@ void emit_quad(uvec2 offset, uint size) {
 }
 
 void emit_pixel(uvec2 position) {
-  
+
   const float depth = gua_get_depth_raw(position);
-  
+
   if (depth < 1) {
     cellsize = 1;
 
@@ -153,16 +153,8 @@ void main() {
 
 layout(points) in;
 
-#if WARP_MODE == WARP_MODE_POINTS || WARP_MODE == WARP_MODE_SCALED_POINTS
-  layout(points) out;
-  layout(max_vertices = 1) out;
-#else
-  layout(triangle_strip) out;
-  layout(max_vertices = 4) out;
-#endif
-
-
-const int MAX_LAYERS = @warping_max_layers@;
+layout(triangle_strip) out;
+layout(max_vertices = 4) out;
 
 flat in uint vertex_id[];
 in float bar[];
@@ -258,28 +250,13 @@ void emit_primitive(vec2 tex_coords) {
     EmitVertex();
 
     EndPrimitive();
-
-  #else
-    vec3 screen_space_pos = vec3(frag_pos, depth);
-    gl_Position = warp_matrix * vec4(screen_space_pos, 1 + 0.000000000000001*bar[0]);
-
-    #if WARP_MODE == WARP_MODE_SCALED_POINTS
-      gl_PointSize = 15*(1-gl_Position.z/gl_Position.w);
-    #else
-      gl_PointSize = 1;
-    #endif
-
-    EmitVertex(); EndPrimitive();
   #endif
   }
 }
 
 void main() {
-
   vec2 pos = vec2(vertex_id[0] % gua_resolution.x, vertex_id[0] / gua_resolution.x) + 0.5;
   vec2 tex_coords = pos/vec2(gua_resolution.x, gua_resolution.y);
-
-  uint current = vertex_id[0];
 
   color = gua_get_color(tex_coords);
   normal = gua_get_normal(tex_coords);

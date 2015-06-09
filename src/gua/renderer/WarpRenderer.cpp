@@ -42,36 +42,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 WarpRenderer::WarpRenderer()
-{
-#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  ResourceFactory factory;
-  std::string v_shader = factory.read_shader_file("shaders/warp_gbuffer.vert");
-  std::string f_shader = factory.read_shader_file("shaders/warp_gbuffer.frag");
-  std::string g_shader = factory.read_shader_file("shaders/warp_gbuffer.geom");
-#else
-  std::string v_shader = Resources::lookup_shader("shaders/warp_gbuffer.vert");
-  std::string f_shader = Resources::lookup_shader("shaders/warp_gbuffer.frag");
-  std::string g_shader = Resources::lookup_shader("shaders/warp_gbuffer.geom");
-#endif
-
-  warp_gbuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
-  warp_gbuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, g_shader));
-  warp_gbuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
-
-#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  v_shader = factory.read_shader_file("shaders/warp_abuffer.vert");
-  f_shader = factory.read_shader_file("shaders/warp_abuffer.frag");
-  g_shader = factory.read_shader_file("shaders/warp_abuffer.geom");
-#else
-  v_shader = Resources::lookup_shader("shaders/warp_abuffer.vert");
-  f_shader = Resources::lookup_shader("shaders/warp_abuffer.frag");
-  g_shader = Resources::lookup_shader("shaders/warp_abuffer.geom");
-#endif
-
-  warp_abuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
-  warp_abuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, g_shader));
-  warp_abuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
-}
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -86,11 +57,41 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   // ---------------------------------------------------------------------------
 
   if (!warp_abuffer_program_) {
+  #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    ResourceFactory factory;
+    std::string v_shader = factory.read_shader_file("shaders/warp_abuffer.vert");
+    std::string f_shader = factory.read_shader_file("shaders/warp_abuffer.frag");
+    std::string g_shader = factory.read_shader_file("shaders/warp_abuffer.geom");
+  #else
+    std::string v_shader = Resources::lookup_shader("shaders/warp_abuffer.vert");
+    std::string f_shader = Resources::lookup_shader("shaders/warp_abuffer.frag");
+    std::string g_shader = Resources::lookup_shader("shaders/warp_abuffer.geom");
+  #endif
+
+    warp_abuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
+    warp_abuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, g_shader));
+    warp_abuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
     warp_abuffer_program_ = std::make_shared<ShaderProgram>();
     warp_abuffer_program_->set_shaders(warp_abuffer_program_stages_, std::list<std::string>(), false, global_substitution_map_);
   }
 
   if (!warp_gbuffer_program_) {
+  #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    ResourceFactory factory;
+    std::string v_shader = factory.read_shader_file("shaders/warp_gbuffer.vert");
+    std::string f_shader = factory.read_shader_file("shaders/warp_gbuffer.frag");
+    std::string g_shader = factory.read_shader_file("shaders/warp_gbuffer.geom");
+  #else
+    std::string v_shader = Resources::lookup_shader("shaders/warp_gbuffer.vert");
+    std::string f_shader = Resources::lookup_shader("shaders/warp_gbuffer.frag");
+    std::string g_shader = Resources::lookup_shader("shaders/warp_gbuffer.geom");
+  #endif
+
+    warp_gbuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
+    if (description->gbuffer_warp_mode() != WarpPassDescription::GBUFFER_POINTS && description->gbuffer_warp_mode() != WarpPassDescription::GBUFFER_SCALED_POINTS) {
+      warp_gbuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, g_shader));
+    }
+    warp_gbuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
     warp_gbuffer_program_ = std::make_shared<ShaderProgram>();
     warp_gbuffer_program_->set_shaders(warp_gbuffer_program_stages_, std::list<std::string>(), false, global_substitution_map_);
   }
