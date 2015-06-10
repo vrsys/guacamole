@@ -28,6 +28,8 @@ in vec2 gua_quad_coords;
 @include "shaders/common/gua_gbuffer_input.glsl"
 @include "shaders/common/gua_resolve_pass_uniforms.glsl"
 
+uniform vec2 gua_repeat;
+
 // output
 layout(location=0) out vec3 gua_out_color;
 
@@ -37,7 +39,7 @@ float gua_my_atan2(float a, float b) {
 }
 
 vec3 gua_apply_background_texture() {
-  return texture2D(sampler2D(gua_background_texture), gua_quad_coords).xyz;
+  return texture2D(sampler2D(gua_background_texture), gua_quad_coords * gua_repeat).xyz;
 }
 
 vec3 gua_apply_skymap_texture() {

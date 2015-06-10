@@ -64,7 +64,7 @@ void main() {
                                 uvec2(new_cellsize), uvec2(0, new_cellsize)};
 
       if (new_layer == 0) {
-        // we are at the last level -- dont write on pixel sized quads; just output one quad (2x2 pixels) and set the is_surface flag to 0
+        // we are at the last level -- dont write one pixel sized quads; just output one quad (2x2 pixels) and set the is_surface flag to 0
         xfb_output = uvec3(varying_position[0].xy, ((old_layer << BIT_CURRENT_LEVEL) | continuity_flags | 0));
         EmitVertex(); 
         EndPrimitive();

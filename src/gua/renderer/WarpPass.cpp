@@ -25,7 +25,6 @@
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/WarpRenderer.hpp>
-#include <gua/renderer/WarpGridRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
@@ -40,7 +39,6 @@ WarpPassDescription::WarpPassDescription()
   : PipelinePassDescription()
   , max_layers_(2)
   , depth_test_(true)
-  , show_warp_grid_(false)
   , debug_cell_colors_(false)
   , debug_cell_gap_(false)
   , gbuffer_warp_mode_(GBUFFER_POINTS)
@@ -109,20 +107,6 @@ WarpPassDescription& WarpPassDescription::depth_test(bool val) {
 
 bool WarpPassDescription::depth_test() const {
   return depth_test_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription& WarpPassDescription::show_warp_grid(bool val) {
-  show_warp_grid_ = val;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool WarpPassDescription::show_warp_grid() const {
-  return show_warp_grid_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,16 +184,11 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   auto renderer = std::make_shared<WarpRenderer>();
   renderer->set_global_substitution_map(substitution_map);
 
-  auto grid_renderer = std::make_shared<WarpGridRenderer>();
-
-  pass.process_ = [renderer, grid_renderer](
+  pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
     renderer->render(pipe, desc);
 
     auto description(dynamic_cast<WarpPassDescription const*>(&desc));
-    if (description->show_warp_grid()) {
-      grid_renderer->render(pipe, desc);
-    }
   };
 
   return pass;

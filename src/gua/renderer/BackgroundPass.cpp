@@ -43,7 +43,11 @@ BackgroundPassDescription::BackgroundPassDescription()
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Quad;
   depth_stencil_state_ = boost::make_optional(
-      scm::gl::depth_stencil_state_desc(false, false));
+    scm::gl::depth_stencil_state_desc(
+      false, false, scm::gl::COMPARISON_LESS, true, 1, 0,
+      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    )
+  );
 
   uniforms["gua_background_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);
   uniforms["gua_background_mode"] = (int)COLOR;
@@ -51,6 +55,7 @@ BackgroundPassDescription::BackgroundPassDescription()
   uniforms["gua_enable_fog"] = false;
   uniforms["gua_fog_start"] = 10.f;
   uniforms["gua_fog_end"] = 1000.f;
+  uniforms["gua_repeat"] = math::vec2f(1, 1);
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,6 +140,20 @@ BackgroundPassDescription& BackgroundPassDescription::fog_end(float fog_end) {
 float BackgroundPassDescription::fog_end() const {
   auto uniform(uniforms.find("gua_fog_end"));
   return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+BackgroundPassDescription& BackgroundPassDescription::repeat(math::vec2f const& count) {
+  uniforms["gua_repeat"] = count;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::vec2f BackgroundPassDescription::repeat() const {
+  auto uniform(uniforms.find("gua_repeat"));
+  return boost::get<math::vec2f>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

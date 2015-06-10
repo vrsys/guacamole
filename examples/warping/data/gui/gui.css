@@ -82,7 +82,7 @@ hr {
     height: 100%;
     padding: 2px 10px 10px 10px;
     overflow: hidden;
-    background: rgba(48, 40, 48, 0.7);
+    background: rgba(0, 0, 0, 0.7);
     box-shadow: 0 0 10px #000;
 }
 
@@ -107,7 +107,7 @@ hr {
 #settings-bottom .settings-bottom-content {
   position: relative;
   padding: 0px 10px;
-  background: rgba(48, 40, 48, 0.7);
+  background: rgba(0, 0, 0, 0.7);
   box-shadow: 0 0 10px #000;
   margin: 0 auto;
   width: 1200px;

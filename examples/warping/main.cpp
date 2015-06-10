@@ -71,8 +71,9 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 }
 
 int main(int argc, char** argv) {
+  bool fullscreen = (argc == 2);
 
-  auto resolution = gua::math::vec2ui(1920, 1080);
+  auto resolution = gua::math::vec2ui(1920, 1200);
   // auto resolution = gua::math::vec2ui(1280, 768);
 
   // add mouse interaction
@@ -204,7 +205,13 @@ int main(int argc, char** argv) {
 
   auto warp_pass(std::make_shared<gua::WarpPassDescription>());
   auto grid_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
+  auto render_grid_pass(std::make_shared<gua::RenderWarpGridPassDescription>());
   auto trimesh_pass(std::make_shared<gua::TriMeshPassDescription>());
+  auto background_pass(std::make_shared<gua::BackgroundPassDescription>());
+  background_pass->mode(gua::BackgroundPassDescription::QUAD_TEXTURE).
+                   texture("data/textures/bg0.png").
+                   repeat(gua::math::vec2f(12, 7.5)).
+                   color(gua::utils::Color3f(0.05, 0.05, 0.05));
 
   if (CLIENT_SERVER) {
     slow_cam->config.set_output_window_name("hidden_window");
@@ -232,6 +239,8 @@ int main(int argc, char** argv) {
     pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
     pipe->add_pass(grid_pass);
     pipe->add_pass(warp_pass);
+    pipe->add_pass(background_pass);
+    pipe->add_pass(render_grid_pass);
     pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
     pipe->set_enable_abuffer(true);
     slow_cam->set_pipeline_description(pipe);
@@ -259,8 +268,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
       gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
       gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
+      gui->add_javascript_getter("get_background", [&](){ return std::to_string(background_pass->mode() == gua::BackgroundPassDescription::QUAD_TEXTURE);});
       gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
-      gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(warp_pass->show_warp_grid());});
+      gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
       gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
       gui->add_javascript_getter("get_debug_cell_gap", [&](){ return std::to_string(warp_pass->debug_cell_gap());});
       gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
@@ -270,6 +280,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_cell_size");
       gui->add_javascript_callback("set_depth_test");
       gui->add_javascript_callback("set_backface_culling");
+      gui->add_javascript_callback("set_background");
       gui->add_javascript_callback("set_orthographic");
       gui->add_javascript_callback("set_gbuffer_type_none");
       gui->add_javascript_callback("set_gbuffer_type_points");
@@ -298,6 +309,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_grid_depth_threshold");
       gui->add_javascript_callback("set_grid_surface");
       gui->add_javascript_callback("set_grid_adaptive_surface");
+      gui->add_javascript_callback("set_bg_tex");
 
       gui->add_javascript_callback("reset_view");
       gui->add_javascript_callback("reset_object");
@@ -317,6 +329,8 @@ int main(int argc, char** argv) {
         float split_threshold;
         str >> split_threshold;
         grid_pass->split_threshold(split_threshold);
+      } else if (callback == "set_bg_tex") {
+        background_pass->texture(params[0]);
       } else if (callback == "set_cell_size") {
         std::stringstream str(params[0]);
         int cell_size;
@@ -330,6 +344,11 @@ int main(int argc, char** argv) {
         std::stringstream str(params[0]);
         str >> backface_culling;
         show_backfaces(transform);
+      } else if (callback == "set_background") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        background_pass->mode(checked ? gua::BackgroundPassDescription::QUAD_TEXTURE : gua::BackgroundPassDescription::COLOR);
       } else if (callback == "set_orthographic") {
         std::stringstream str(params[0]);
         str >> orthographic;
@@ -344,7 +363,7 @@ int main(int argc, char** argv) {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
-        warp_pass->show_warp_grid(checked);
+        render_grid_pass->show_warp_grid(checked);
       } else if (callback == "set_debug_cell_colors") {
         std::stringstream str(params[0]);
         bool checked;
@@ -472,6 +491,7 @@ int main(int argc, char** argv) {
     gua::WindowDatabase::instance()->add("hidden_window", hidden_window);
   } else {
     auto glfw = std::make_shared<gua::GlfwWindow>();
+    glfw->config.set_fullscreen_mode(fullscreen);
     glfw->on_resize.connect([&](gua::math::vec2ui const& new_size) {
       resolution = new_size;
       glfw->config.set_resolution(new_size);

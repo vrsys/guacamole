@@ -24,6 +24,12 @@
 
     <script type="text/javascript">
 
+    var textures = [
+      "data/textures/bg0.png",
+      "data/textures/bg1.png",
+      "data/textures/bg2.png"
+    ]
+
       function add_space(parent_selector, label) {
         $(parent_selector).append('<hr />');
       }
@@ -190,6 +196,7 @@
         init_checkbox("#orthographic", "orthographic");
         init_checkbox("#depth_test", "depth_test");
         init_checkbox("#backface_culling", "backface_culling");
+        init_checkbox("#background", "background");
 
         init_radio("#gbuffer_type_none", "gbuffer_type_none");
         init_radio("#gbuffer_type_screen_aligned_quads", "gbuffer_type_screen_aligned_quads");
@@ -220,6 +227,8 @@
         init_slider("#preview-panel .split_threshold", "split_threshold");
         init_slider("#preview-panel .cell_size", "cell_size");
 
+        add_texture_select("#control-panel", "bg_tex", "Background Texture");
+
         $("body").addClass("on");
       }
 
@@ -238,8 +247,8 @@
           $(this).addClass("expanded");
         });
 
-        $('body').on('click','.ps_texture_button', function () {
-          gua.set_ps_texture($(this).data("texture"));
+        $('body').on('click','.bg_tex_button', function () {
+          gua.set_bg_tex($(this).data("texture"));
           $('.texture_button').css('background-image', 'url(../../' + $(this).data("texture") + ')');
         });
       });
@@ -293,7 +302,12 @@
                 </label>
               </div>
 
-
+              <div class="checkbox">
+                <label>
+                  <input id="background" type="checkbox" value="">
+                  <span>Background</span>
+                </label>
+              </div>
 
             </div>
           </div>
