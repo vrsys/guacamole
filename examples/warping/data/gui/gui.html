@@ -199,13 +199,14 @@
         init_checkbox("#background", "background");
 
         init_radio("#gbuffer_type_none", "gbuffer_type_none");
-        init_radio("#gbuffer_type_screen_aligned_quads", "gbuffer_type_screen_aligned_quads");
-        init_radio("#gbuffer_type_normal_aligned_quads", "gbuffer_type_normal_aligned_quads");
-        init_radio("#gbuffer_type_depth_aligned_quads", "gbuffer_type_depth_aligned_quads");
         init_radio("#gbuffer_type_points", "gbuffer_type_points");
         init_radio("#gbuffer_type_scaled_points", "gbuffer_type_scaled_points");
-        init_radio("#gbuffer_type_grid", "gbuffer_type_grid");
-        init_radio("#gbuffer_type_adaptive_grid", "gbuffer_type_adaptive_grid");
+        init_radio("#gbuffer_type_quads_screen_aligned", "gbuffer_type_quads_screen_aligned");
+        init_radio("#gbuffer_type_quads_normal_aligned", "gbuffer_type_quads_normal_aligned");
+        init_radio("#gbuffer_type_quads_depth_aligned", "gbuffer_type_quads_depth_aligned");
+        init_radio("#gbuffer_type_grid_depth_theshold", "gbuffer_type_grid_depth_theshold");
+        init_radio("#gbuffer_type_grid_surface_estimation", "gbuffer_type_grid_surface_estimation");
+        init_radio("#gbuffer_type_grid_advanced_surface_estimation", "gbuffer_type_grid_advanced_surface_estimation");
 
         init_radio("#abuffer_type_none", "abuffer_type_none");
         init_radio("#abuffer_type_quads", "abuffer_type_quads");
@@ -399,9 +400,10 @@
 
           <h4><i class="fa fa-recycle"></i> Warping Options</h4>
 
+
           <div class="row">
             <div class="col-xs-5">
-            GBuffer:
+            Disable:
             </div>
             <div class="col-xs-7">
               <div class="radio">
@@ -410,52 +412,132 @@
                   <span>None</span>
                 </label>
               </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Point Based:
+            </div>
+            <div class="col-xs-7">
               <div class="radio">
                 <label>
                   <input type="radio" name="gbufferRadios" id="gbuffer_type_points" value="" checked>
-                  <span>Points</span>
+                  <span>Simple</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
                   <input type="radio" name="gbufferRadios" id="gbuffer_type_scaled_points" value="">
-                  <span>Scaled Points</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_screen_aligned_quads" value="">
-                  <span>Screen algn. Quads</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_normal_aligned_quads" value="">
-                  <span>Normal algn. Quads</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_depth_aligned_quads" value="">
-                  <span>Depth algn. Quads</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid" value="">
-                  <span>Grid</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_adaptive_grid" value="">
-                  <span>Adaptive Grid</span>
+                  <span>Scaled</span>
                 </label>
               </div>
             </div>
           </div>
 
           <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Quad Based:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_quads_screen_aligned" value="">
+                  <span>Screen aligned</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_quads_normal_aligned" value="">
+                  <span>Normal aligned</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_quads_depth_aligned" value="">
+                  <span>Depth aligned</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Grid Based:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_depth_theshold" value="">
+                  <span>Depth Threshold</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_surface_estimation" value="">
+                  <span>Surface Estimation</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_advanced_surface_estimation" value="">
+                  <span>Advanced S. Est.</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="show_warp_grid" type="checkbox" value="">
+                  <span>Display Grid</span>
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label>
+                  <input id="debug_cell_colors" type="checkbox" value="">
+                  <span>Cell Colors</span>
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label>
+                  <input id="debug_cell_gap" type="checkbox" value="">
+                  <span>Cell Gap</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Threshold:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider split_threshold" data-slider-tooltip="hide" data-slider-id="split_threshold" type="text" data-slider-min="0" data-slider-max="0.01" data-slider-step="0.0001" handle="custom"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Cell Size:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider cell_size" data-slider-tooltip="hide" data-slider-id="cell_size" type="text" data-slider-min="1" data-slider-max="8" data-slider-step="1" handle="custom"/>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <div id="preview-panel" class="panel-inner">
+
+          <h4><i class="fa fa-magic"></i> Hole Filling Options</h4>
 
            <div class="row">
             <div class="col-xs-5">
@@ -503,77 +585,8 @@
             </div>
           </div>
 
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-            Grid:
-            </div>
-            <div class="col-xs-7">
-
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gridRadios" id="grid_surface" value="" checked="">
-                  <span>Surface Estimation</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gridRadios" id="grid_adaptive_surface" value="">
-                  <span>Advan. Surf. Est.</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gridRadios" id="grid_depth_threshold" value="">
-                  <span>Depth Threshold</span>
-                </label>
-              </div>
-              <div class="checkbox">
-                <label>
-                  <input id="show_warp_grid" type="checkbox" value="">
-                  <span>Display Grid</span>
-                </label>
-              </div>
-
-              <div class="checkbox">
-                <label>
-                  <input id="debug_cell_colors" type="checkbox" value="">
-                  <span>Cell Colors</span>
-                </label>
-              </div>
-
-              <div class="checkbox">
-                <label>
-                  <input id="debug_cell_gap" type="checkbox" value="">
-                  <span>Cell Gap</span>
-                </label>
-              </div>
-
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-xs-5">
-              Threshold:
-            </div>
-            <div class="col-xs-7">
-              <input class="slider split_threshold" data-slider-tooltip="hide" data-slider-id="split_threshold" type="text" data-slider-min="0" data-slider-max="0.01" data-slider-step="0.0001" handle="custom"/>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-xs-5">
-              Cell Size:
-            </div>
-            <div class="col-xs-7">
-              <input class="slider cell_size" data-slider-tooltip="hide" data-slider-id="cell_size" type="text" data-slider-min="1" data-slider-max="8" data-slider-step="1" handle="custom"/>
-            </div>
-          </div>
-
         </div>
       </div>
-
-
 
     </div>
 

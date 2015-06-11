@@ -22,7 +22,7 @@
 #ifndef GUA_GENERATE_WARP_GRID_PASS_HPP
 #define GUA_GENERATE_WARP_GRID_PASS_HPP
 
-#include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/WarpPass.hpp>
 
 #include <memory>
 
@@ -33,12 +33,6 @@ class Pipeline;
 class GUA_DLL GenerateWarpGridPassDescription : public PipelinePassDescription {
  public:
 
-  enum Mode {
-    SURFACE_ESTIMATION,
-    ADAPTIVE_SURFACE_ESTIMATION,
-    DEPTH_THRESHOLD
-  };
-
   GenerateWarpGridPassDescription();
 
   GenerateWarpGridPassDescription& cell_size(int val);
@@ -47,8 +41,8 @@ class GUA_DLL GenerateWarpGridPassDescription : public PipelinePassDescription {
   GenerateWarpGridPassDescription& split_threshold(float val);
   float split_threshold() const;
 
-  GenerateWarpGridPassDescription& mode(Mode mode);
-  Mode mode() const;
+  GenerateWarpGridPassDescription& mode(WarpPassDescription::GBufferWarpMode mode);
+  WarpPassDescription::GBufferWarpMode mode() const;
 
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
@@ -58,7 +52,7 @@ class GUA_DLL GenerateWarpGridPassDescription : public PipelinePassDescription {
 
   int cell_size_;
   float split_threshold_;
-  Mode mode_;
+  WarpPassDescription::GBufferWarpMode mode_;
 };
 
 }

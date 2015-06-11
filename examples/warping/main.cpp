@@ -73,7 +73,8 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 int main(int argc, char** argv) {
   bool fullscreen = (argc == 2);
 
-  auto resolution = gua::math::vec2ui(1920, 1200);
+  // auto resolution = gua::math::vec2ui(1920, 1200);
+  auto resolution = gua::math::vec2ui(1600, 900);
   // auto resolution = gua::math::vec2ui(1280, 768);
 
   // add mouse interaction
@@ -239,7 +240,7 @@ int main(int argc, char** argv) {
     pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
     pipe->add_pass(grid_pass);
     pipe->add_pass(warp_pass);
-    pipe->add_pass(background_pass);
+    // pipe->add_pass(background_pass);
     pipe->add_pass(render_grid_pass);
     pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
     pipe->set_enable_abuffer(true);
@@ -260,7 +261,7 @@ int main(int argc, char** argv) {
   if (!CLIENT_SERVER) {
 
     // right side gui ----------------------------------------------------------
-    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 760));
+    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 740));
 
     gui->on_loaded.connect([&]() {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
@@ -284,12 +285,13 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_orthographic");
       gui->add_javascript_callback("set_gbuffer_type_none");
       gui->add_javascript_callback("set_gbuffer_type_points");
-      gui->add_javascript_callback("set_gbuffer_type_screen_aligned_quads");
-      gui->add_javascript_callback("set_gbuffer_type_normal_aligned_quads");
-      gui->add_javascript_callback("set_gbuffer_type_depth_aligned_quads");
       gui->add_javascript_callback("set_gbuffer_type_scaled_points");
-      gui->add_javascript_callback("set_gbuffer_type_grid");
-      gui->add_javascript_callback("set_gbuffer_type_adaptive_grid");
+      gui->add_javascript_callback("set_gbuffer_type_quads_screen_aligned");
+      gui->add_javascript_callback("set_gbuffer_type_quads_normal_aligned");
+      gui->add_javascript_callback("set_gbuffer_type_quads_depth_aligned");
+      gui->add_javascript_callback("set_gbuffer_type_grid_depth_theshold");
+      gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation");
+      gui->add_javascript_callback("set_gbuffer_type_grid_advanced_surface_estimation");
       gui->add_javascript_callback("set_abuffer_type_none");
       gui->add_javascript_callback("set_abuffer_type_points");
       gui->add_javascript_callback("set_abuffer_type_quads");
@@ -306,9 +308,6 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_show_warp_grid");
       gui->add_javascript_callback("set_debug_cell_colors");
       gui->add_javascript_callback("set_debug_cell_gap");
-      gui->add_javascript_callback("set_grid_depth_threshold");
-      gui->add_javascript_callback("set_grid_surface");
-      gui->add_javascript_callback("set_grid_adaptive_surface");
       gui->add_javascript_callback("set_bg_tex");
 
       gui->add_javascript_callback("reset_view");
@@ -386,25 +385,43 @@ int main(int argc, char** argv) {
       } else if (callback == "render_view") {
         slow_screen->set_transform(fast_screen->get_transform());
       } else if (callback == "set_gbuffer_type_points"
-               | callback == "set_gbuffer_type_screen_aligned_quads"
-               | callback == "set_gbuffer_type_normal_aligned_quads"
-               | callback == "set_gbuffer_type_depth_aligned_quads"
                | callback == "set_gbuffer_type_scaled_points"
-               | callback == "set_gbuffer_type_grid"
-               | callback == "set_gbuffer_type_adaptive_grid"
+               | callback == "set_gbuffer_type_quads_screen_aligned"
+               | callback == "set_gbuffer_type_quads_normal_aligned"
+               | callback == "set_gbuffer_type_quads_depth_aligned"
+               | callback == "set_gbuffer_type_grid_depth_theshold"
+               | callback == "set_gbuffer_type_grid_surface_estimation"
+               | callback == "set_gbuffer_type_grid_advanced_surface_estimation"
                | callback == "set_gbuffer_type_none") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
-          if (callback == "set_gbuffer_type_points")        warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_POINTS);
-          if (callback == "set_gbuffer_type_screen_aligned_quads") warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_SCREEN_ALIGNED_QUADS);
-          if (callback == "set_gbuffer_type_normal_aligned_quads") warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_NORMAL_ALIGNED_QUADS);
-          if (callback == "set_gbuffer_type_depth_aligned_quads")  warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_DEPTH_ALIGNED_QUADS);
-          if (callback == "set_gbuffer_type_scaled_points") warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_SCALED_POINTS);
-          if (callback == "set_gbuffer_type_grid")          warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_GRID);
-          if (callback == "set_gbuffer_type_adaptive_grid") warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_ADAPTIVE_GRID);
-          if (callback == "set_gbuffer_type_none")          warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_NONE);
+
+          gua::WarpPassDescription::GBufferWarpMode mode(gua::WarpPassDescription::GBUFFER_NONE);
+
+          if (callback == "set_gbuffer_type_points")
+            mode = gua::WarpPassDescription::GBUFFER_POINTS;
+          if (callback == "set_gbuffer_type_scaled_points")
+            mode = gua::WarpPassDescription::GBUFFER_SCALED_POINTS;
+          if (callback == "set_gbuffer_type_quads_screen_aligned")
+            mode = gua::WarpPassDescription::GBUFFER_QUADS_SCREEN_ALIGNED;
+          if (callback == "set_gbuffer_type_quads_normal_aligned")
+            mode = gua::WarpPassDescription::GBUFFER_QUADS_NORMAL_ALIGNED;
+          if (callback == "set_gbuffer_type_quads_depth_aligned")
+            mode = gua::WarpPassDescription::GBUFFER_QUADS_DEPTH_ALIGNED;
+          if (callback == "set_gbuffer_type_grid_depth_theshold")
+            mode = gua::WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD;
+          if (callback == "set_gbuffer_type_grid_surface_estimation")
+            mode = gua::WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION;
+          if (callback == "set_gbuffer_type_grid_advanced_surface_estimation")
+            mode = gua::WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION;
+          if (callback == "set_gbuffer_type_none")
+            mode = gua::WarpPassDescription::GBUFFER_NONE;
+
+          warp_pass->gbuffer_warp_mode(mode);
+          grid_pass->mode(mode);
+          render_grid_pass->mode(mode);
         }
       } else if (callback == "set_abuffer_type_points"
                | callback == "set_abuffer_type_quads"
@@ -418,17 +435,6 @@ int main(int argc, char** argv) {
           if (callback == "set_abuffer_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
           if (callback == "set_abuffer_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
           if (callback == "set_abuffer_type_none")          warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-        }
-      } else if (callback == "set_grid_adaptive_surface"
-               | callback == "set_grid_surface"
-               | callback == "set_grid_depth_threshold") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
-          if (callback == "set_grid_adaptive_surface")  grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::ADAPTIVE_SURFACE_ESTIMATION);
-          if (callback == "set_grid_surface")           grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::SURFACE_ESTIMATION);
-          if (callback == "set_grid_depth_threshold")   grid_pass->mode(gua::GenerateWarpGridPassDescription::Mode::DEPTH_THRESHOLD);
         }
       } else if (callback == "set_manipulation_object") {
         std::stringstream str(params[0]);
@@ -451,7 +457,7 @@ int main(int argc, char** argv) {
     });
 
     gui_quad->data.texture() = "gui";
-    gui_quad->data.size() = gua::math::vec2ui(330, 760);
+    gui_quad->data.size() = gua::math::vec2ui(330, 740);
     gui_quad->data.anchor() = gua::math::vec2(1.f, 0.f);
 
     graph.add_node("/", gui_quad);

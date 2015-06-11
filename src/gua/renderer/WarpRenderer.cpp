@@ -147,8 +147,9 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
       u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
     }
 
-
-    if (description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID || description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_ADAPTIVE_GRID) {
+    if (description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
+        description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
+        description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION) {
       auto res(ctx.resources.get<WarpGridGenerator::SharedResource>());
       if (res) {
         ctx.render_context->bind_vertex_array(res->grid_vao[res->current_vbo()]);
@@ -176,9 +177,9 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   std::string const gpu_query_name_b = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass ABuffer";
   std::string const cpu_query_name_b = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass ABuffer";
   std::string const pri_query_name_b = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass ABuffer";
-  pipe.begin_primitive_query(ctx, pri_query_name_b);
   pipe.begin_gpu_query(ctx, gpu_query_name_b);
   pipe.begin_cpu_query(cpu_query_name_b);
+  pipe.begin_primitive_query(ctx, pri_query_name_b);
 
   if (description->abuffer_warp_mode() != WarpPassDescription::ABUFFER_NONE) {
     warp_abuffer_program_->use(ctx);

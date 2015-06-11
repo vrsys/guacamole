@@ -31,7 +31,7 @@ float gua_get_depth_raw(vec2 frag_pos) {
 }
 
 // -----------------------------------------------------------------------------
-#if WARP_MODE == WARP_MODE_GRID || WARP_MODE == WARP_MODE_ADAPTIVE_GRID // -----
+#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION
 // -----------------------------------------------------------------------------
 
 #if @debug_cell_gap@ == 1
@@ -65,7 +65,7 @@ void emit_quad(uvec2 offset, uint size) {
 
     cellsize = size;
 
-    #if WARP_MODE == WARP_MODE_GRID // -----------------------------------------
+    #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
       emit_grid_vertex(position + vec2(0, 0), depth);
 
       position = varying_position[0].xy+offset + vec2(cellsize-1, 0);
@@ -80,7 +80,7 @@ void emit_quad(uvec2 offset, uint size) {
       depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(GAP, GAP), depth);
 
-    #elif WARP_MODE == WARP_MODE_ADAPTIVE_GRID // ------------------------------
+    #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION
 
       const int cont_l = int(varying_position[0].z >> BIT_CONTINUOUS_L) & 1;
       const int cont_r = int(varying_position[0].z >> BIT_CONTINUOUS_R) & 1;
@@ -169,7 +169,7 @@ void emit_primitive(vec2 tex_coords) {
 
   if (depth < 1) {
 
-  #if WARP_MODE == WARP_MODE_SCREEN_ALIGNED_QUADS
+  #if WARP_MODE == WARP_MODE_QUADS_SCREEN_ALIGNED
     const vec2 half_pixel = vec2(1.0) / vec2(gua_resolution);
     const vec2 offsets[4] = {vec2(half_pixel), vec2(-half_pixel.x, half_pixel.y),
                               vec2(half_pixel.x, -half_pixel.y), vec2(-half_pixel)};
@@ -183,7 +183,7 @@ void emit_primitive(vec2 tex_coords) {
 
     EndPrimitive();
 
-  #elif WARP_MODE == WARP_MODE_NORMAL_ALIGNED_QUADS
+  #elif WARP_MODE == WARP_MODE_QUADS_NORMAL_ALIGNED
 
     const vec2 half_pixel = vec2(1.0) / vec2(gua_resolution);
     const vec2 offsets[4] = {vec2(half_pixel), vec2(-half_pixel.x, half_pixel.y),
@@ -198,7 +198,7 @@ void emit_primitive(vec2 tex_coords) {
 
     EndPrimitive();
 
-  #elif WARP_MODE == WARP_MODE_DEPTH_ALIGNED_QUADS
+  #elif WARP_MODE == WARP_MODE_QUADS_DEPTH_ALIGNED
 
     float d_max = -1;
     vec2 t = tex_coords;

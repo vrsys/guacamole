@@ -63,6 +63,20 @@ bool RenderWarpGridPassDescription::show_warp_grid() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+RenderWarpGridPassDescription& RenderWarpGridPassDescription::mode(WarpPassDescription::GBufferWarpMode mode) {
+  mode_ = mode;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription::GBufferWarpMode RenderWarpGridPassDescription::mode() const {
+  return mode_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<PipelinePassDescription> RenderWarpGridPassDescription::make_copy() const {
   return std::make_shared<RenderWarpGridPassDescription>(*this);
 }
@@ -70,14 +84,19 @@ std::shared_ptr<PipelinePassDescription> RenderWarpGridPassDescription::make_cop
 ////////////////////////////////////////////////////////////////////////////////
 PipelinePass RenderWarpGridPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
 
+  substitution_map["gbuffer_warp_mode"] = std::to_string(mode_);
+
   auto grid_renderer = std::make_shared<WarpGridRenderer>();
   PipelinePass pass{*this, ctx, substitution_map};
-  
-  pass.process_ = [grid_renderer](
+
+  pass.process_ = [grid_renderer, this](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
 
     auto description(dynamic_cast<RenderWarpGridPassDescription const*>(&desc));
-    if (description->show_warp_grid()) {
+    if (description->show_warp_grid() && (
+        mode_ == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
+        mode_ == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
+        mode_ == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION)) {
       grid_renderer->render(pipe, desc);
     }
   };

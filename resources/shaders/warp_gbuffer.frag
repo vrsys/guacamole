@@ -25,7 +25,7 @@
 @include "gbuffer_warp_modes.glsl"
 
 // -----------------------------------------------------------------------------
-#if WARP_MODE == WARP_MODE_GRID || WARP_MODE == WARP_MODE_ADAPTIVE_GRID // -----
+#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION
 // -----------------------------------------------------------------------------
 
 flat in uint cellsize;

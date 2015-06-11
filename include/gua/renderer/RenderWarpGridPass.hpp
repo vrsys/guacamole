@@ -22,7 +22,7 @@
 #ifndef GUA_RENDER_WARP_GRID_PASS_HPP
 #define GUA_RENDER_WARP_GRID_PASS_HPP
 
-#include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/WarpPass.hpp>
 
 #include <memory>
 
@@ -38,6 +38,9 @@ class GUA_DLL RenderWarpGridPassDescription : public PipelinePassDescription {
   RenderWarpGridPassDescription& show_warp_grid(bool val);
   bool show_warp_grid() const;
 
+  RenderWarpGridPassDescription& mode(WarpPassDescription::GBufferWarpMode mode);
+  WarpPassDescription::GBufferWarpMode mode() const;
+
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
 
@@ -45,6 +48,7 @@ class GUA_DLL RenderWarpGridPassDescription : public PipelinePassDescription {
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
   bool show_warp_grid_;
+  WarpPassDescription::GBufferWarpMode mode_;
 };
 
 }

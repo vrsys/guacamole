@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 @include "shaders/common/header.glsl"
+@include "gbuffer_warp_modes.glsl"
 
 uniform uvec2 depth_buffer;
 uniform uvec2 min_max_depth_buffer;
@@ -30,10 +31,10 @@ in vec2 gua_quad_coords;
 layout(pixel_center_integer) in vec4 gl_FragCoord;
 
 // write output
-#if @generation_mode@ == 2 // DEPTH_THRESHOLD
-layout(location=0) out vec3 result;
+#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD
+  layout(location=0) out vec3 result;
 #else
-layout(location=0) out uint result;
+  layout(location=0) out uint result;
 #endif
 
 @include "shaders/warp_grid_bits.glsl"
@@ -49,7 +50,7 @@ uint is_on_line(float a, float b, float c) {
 void main() {
 
   // ---------------------------------------------------------------------------
-  #if @generation_mode@ == 0 // SURFACE_ESTIMATION -----------------------------
+  #if WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION // ------------------------
   // ---------------------------------------------------------------------------
 
   if (current_level == 0) {
@@ -101,7 +102,7 @@ void main() {
   }
 
   // ---------------------------------------------------------------------------
-  #elif @generation_mode@ == 1 // ADAPTIVE_SURFACE_ESTIMATION ------------------
+  #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION // -------------
   // ---------------------------------------------------------------------------
 
   if (current_level == 0) {

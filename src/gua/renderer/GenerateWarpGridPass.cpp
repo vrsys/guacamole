@@ -38,7 +38,7 @@ namespace gua {
 GenerateWarpGridPassDescription::GenerateWarpGridPassDescription()
   : PipelinePassDescription()
   , cell_size_(32)
-  , mode_(SURFACE_ESTIMATION)
+  , mode_(WarpPassDescription::GBUFFER_POINTS)
   , split_threshold_(0.0001)
 {
   vertex_shader_ = "";
@@ -79,7 +79,7 @@ float GenerateWarpGridPassDescription::split_threshold() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GenerateWarpGridPassDescription& GenerateWarpGridPassDescription::mode(Mode mode) {
+GenerateWarpGridPassDescription& GenerateWarpGridPassDescription::mode(WarpPassDescription::GBufferWarpMode mode) {
   mode_ = mode;
   touch();
   return *this;
@@ -87,7 +87,7 @@ GenerateWarpGridPassDescription& GenerateWarpGridPassDescription::mode(Mode mode
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GenerateWarpGridPassDescription::Mode GenerateWarpGridPassDescription::mode() const {
+WarpPassDescription::GBufferWarpMode GenerateWarpGridPassDescription::mode() const {
   return mode_;
 }
 
@@ -102,15 +102,19 @@ PipelinePass GenerateWarpGridPassDescription::make_pass(RenderContext const& ctx
 
   PipelinePass pass{*this, ctx, substitution_map};
 
-  substitution_map["generation_mode"] = std::to_string(mode_);
+  substitution_map["gbuffer_warp_mode"] = std::to_string(mode_);
   substitution_map["split_threshold"] = gua::string_utils::to_string(split_threshold_);
 
   auto renderer = std::make_shared<WarpGridGenerator>();
   renderer->set_global_substitution_map(substitution_map);
 
-  pass.process_ = [renderer](
+  pass.process_ = [renderer, this](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
+    if (mode_ == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
+        mode_ == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
+        mode_ == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION) {
+      renderer->render(pipe, desc);
+    }
   };
 
   return pass;
