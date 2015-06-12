@@ -32,6 +32,7 @@ namespace node {
 class Node;
 class TransformNode;
 class LODNode;
+class SkeletalAnimationNode;
 class TriMeshNode;
 class Video3DNode;
 class VolumeNode;
@@ -103,6 +104,16 @@ class NodeVisitor {
    * \param cam   Pointer to a LODNode.
    */
   virtual void visit(node::LODNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
+
+  /**
+   * Visits an SkeletalAnimationNode.
+   *
+   * This function provides the interface to visit an SkeletalAnimationNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
+   *
+   * \param cam   Pointer to a SkeletalAnimationNode.
+   */
+  virtual void visit(node::SkeletalAnimationNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
 
   /**
    * Visits a GeometryNode.

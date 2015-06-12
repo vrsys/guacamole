@@ -32,7 +32,6 @@
 #include <gua/scenegraph/NodeVisitor.hpp>
 
 namespace gua {
-
 class SceneGraph;
 
 namespace node {

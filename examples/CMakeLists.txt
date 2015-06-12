@@ -6,6 +6,7 @@ set(LIB_PATH
   ${BULLET_LIBRARY_DIRS}
   ${GUACAMOLE_LIBRARY_DIRS}
   ${ASSIMP_LIBRARY_DIRS}
+  ${FBX_LIBRARY_DIRS}
   ${JSON_LIBRARY_DIRS}
   )
 link_directories(${LIB_PATH})
@@ -15,6 +16,7 @@ set(LIBS
   ${Boost_LIBRARIES}
   ${BULLET_LIBRARIES}
   ${GUACAMOLE_LIBRARIES}
+  ${FBX_LIBRARIES}
   ${ASSIMP_LIBRARIES}
   ${JSON_LIBRARIES}
   )
@@ -26,6 +28,7 @@ set(INCLUDE_PATHS
   ${BULLET_INCLUDE_DIRS}
   ${GUACAMOLE_INCLUDE_DIRS}
   ${ASSIMP_INCLUDE_DIR}
+  ${FBX_INCLUDE_DIR}
   ${JSON_INCLUDE_DIRS}
   )
 
@@ -36,7 +39,7 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(input)
     add_subdirectory(projective_texturing)
     add_subdirectory(nice_and_shiny)
-	add_subdirectory(smooth_lighting)
+  add_subdirectory(smooth_lighting)
     add_subdirectory(stress_test)
     add_subdirectory(transparency)
     add_subdirectory(oit_demo)
@@ -45,6 +48,11 @@ IF (GUACAMOLE_EXAMPLES)
   ENDIF (${GUACAMOLE_GLFW3})
   add_subdirectory(screenshot)
 
+  # skelanim example requires skelanim-plugin and the fbx sdk
+  if(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
+    add_subdirectory(animation)
+  endif(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
+  
   # nurbs example requires GLFW3 and nurbs-plugin
   IF (${PLUGIN_guacamole-nurbs} AND ${GUACAMOLE_GLFW3})
     add_subdirectory(nurbs)
@@ -55,23 +63,14 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(oculus)
   ENDIF (${PLUGIN_guacamole-oculus})
 
-  # plod example requires plod-plugin
-  IF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})
-    add_subdirectory(plod)
-  ENDIF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})
-
-  IF (${PLUGIN_guacamole-video3d})
-    add_subdirectory(video3d)
-  ENDIF (${PLUGIN_guacamole-video3d})
-
   # gui example requires gui-plugin
-  IF (${PLUGIN_guacamole-gui})
-    add_subdirectory(gui)
+  #IF (${PLUGIN_guacamole-gui})
+  #  add_subdirectory(gui)
     # volume example requires volume-plugin and gui-plugin
-    IF (${PLUGIN_guacamole-volume})
-      add_subdirectory(volume)
-    ENDIF (${PLUGIN_guacamole-volume})
-  ENDIF (${PLUGIN_guacamole-gui})
+  #  IF (${PLUGIN_guacamole-volume})
+  #    add_subdirectory(volume)
+  #  ENDIF (${PLUGIN_guacamole-volume})
+  #ENDIF (${PLUGIN_guacamole-gui})
 
 
   # multicontext example requires nurbs-plugin

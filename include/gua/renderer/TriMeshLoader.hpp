@@ -24,19 +24,23 @@
 
 // guacamole headers
 #include <gua/renderer/TriMeshRessource.hpp>
-
 #include <gua/renderer/Material.hpp>
+#include <gua/utils/Mesh.hpp>
 
 // external headers
 #include <string>
 #include <list>
 #include <memory>
 
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
+namespace fbxsdk_2015_1{
+  class FbxNode;
+  class FbxManager;
+  class FbxScene;
+}
 
 namespace Assimp { class Importer; }
+class aiScene;
+class aiNode;
 
 namespace gua {
 
@@ -101,7 +105,7 @@ public:
    *
    * \param file_name        The file to load the meshs data from.
    * \param material_name    The material name that was set to the parent node
-   */
+ */
   std::shared_ptr<node::Node> load(std::string const& file_name,
                              unsigned flags);
 
@@ -123,22 +127,27 @@ public:
 
  private: // methods
 
-  std::shared_ptr<node::Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
+  static std::shared_ptr<node::Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
                 aiScene const* ai_scene,
                 aiNode* ai_root,
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);
 
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material, bool no_shared_materials) const;
+  static void apply_fallback_material(std::shared_ptr<node::Node> const& root,
+                std::shared_ptr<Material> const& fallback_material,
+                bool no_shared_materials);
+
+#ifdef GUACAMOLE_FBX
+  static std::shared_ptr<node::Node> get_tree(fbxsdk_2015_1::FbxNode& node,
+                std::string const& file_name,
+                unsigned flags, unsigned& mesh_count);
+
+  static fbxsdk_2015_1::FbxScene* load_fbx_file(fbxsdk_2015_1::FbxManager* manager, std::string const& file_path);
+#endif
 
 private: // attributes
 
-  std::string parent_material_name_;
-
-  unsigned node_counter_;
-
   static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
-  static unsigned mesh_counter_;
 };
 
 }
