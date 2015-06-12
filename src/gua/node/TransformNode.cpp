@@ -37,7 +37,7 @@ TransformNode::TransformNode(std::string const& name, math::mat4 const& transfor
 }
 
 std::shared_ptr<Node> TransformNode::copy() const {
-  return std::make_shared<TransformNode>(get_name(), get_transform());
+  return std::make_shared<TransformNode>(*this);
 }
 
 }

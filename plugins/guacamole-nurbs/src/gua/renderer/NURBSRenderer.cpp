@@ -55,7 +55,6 @@ namespace gua {
 
     needs_color_buffer_as_input_ = false;
     writes_only_color_buffer_ = false;
-    doClear_ = false;
     rendermode_ = RenderMode::Custom;
 
     std::shared_ptr<scm::gl::buffer_ptr> material_uniform_storage_buffer = std::make_shared<scm::gl::buffer_ptr>(nullptr);
@@ -64,9 +63,9 @@ namespace gua {
     process_ = [material_uniform_storage_buffer, vertex_shader, fragment_shader](
       PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
 
-      auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
+      auto sorted_objects(pipe.get_scene().odes.find(std::type_index(typeid(node::TriMeshNode))));
 
-      if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
+      if (sorted_objects != pipe.get_scene().odes.end() && sorted_objects->second.size() > 0) {
 
         std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
           return reinterpret_cast<node::TriMeshNode*>(a)->get_material().get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material().get_shader();
@@ -74,8 +73,8 @@ namespace gua {
 
         RenderContext const& ctx(pipe.get_context());
 
-        bool writes_only_color_buffer = false;
-        pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
+        bool write_depth = true;
+        pipe.get_gbuffer().bind(ctx, write_depth);
         pipe.get_gbuffer().set_viewport(ctx);
         int view_id(pipe.get_camera().config.get_view_id());
 
@@ -290,11 +289,19 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
+  void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-  auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::NURBSNode))));
+  ///////////////////////////////////////////////////////////////////////////
+  //  retrieve current view state
+  ///////////////////////////////////////////////////////////////////////////
+  auto& scene = *pipe.current_viewstate().scene;
+  auto const& camera = pipe.current_viewstate().camera;
+  auto const& frustum = pipe.current_viewstate().frustum;
+  auto& target = *pipe.current_viewstate().target;
 
-  if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
+  auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::NURBSNode))));
+
+  if (sorted_objects != scene.nodes.end() && sorted_objects->second.size() > 0) {
 
     std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
       return reinterpret_cast<node::NURBSNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::NURBSNode*>(b)->get_material()->get_shader();
@@ -302,11 +309,11 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
     RenderContext const& ctx(pipe.get_context());
 
-    bool writes_only_color_buffer = false;
-    pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
-    pipe.get_gbuffer().set_viewport(ctx);
+    bool write_depth = true;
+    target.bind(ctx, write_depth);
+    target.set_viewport(ctx);
 
-    int view_id(pipe.get_camera().config.get_view_id());
+    int view_id(camera.config.get_view_id());
     
     MaterialShader* current_material(nullptr);
     std::shared_ptr<ShaderProgram> current_material_program;
@@ -344,13 +351,15 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
             current_material_program->apply_uniform(ctx, "gua_model_matrix",  math::mat4f(model_mat));
             current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_mat));
           
-            current_material_program->apply_uniform(ctx, "nearplane", pipe.get_camera().config.get_near_clip());
-            current_material_program->apply_uniform(ctx, "farplane", pipe.get_camera().config.get_far_clip());
+            current_material_program->apply_uniform(ctx, "nearplane", camera.config.get_near_clip());
+            current_material_program->apply_uniform(ctx, "farplane",  camera.config.get_far_clip());
           
-            current_material_program->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
-              pipe.get_gbuffer().get_height()),
-              "gua_resolution"); 
-          
+            current_material_program->set_uniform(ctx, math::vec2i(target.get_width(),
+                                                                   target.get_height()),
+                                                                   "gua_resolution");
+            // hack
+            current_material_program->set_uniform(ctx, target.get_depth_buffer()
+                                                  ->get_handle(ctx), "gua_gbuffer_depth");
             nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
           
             nurbs_ressource->draw(ctx, true, nurbs_node->render_backfaces());
@@ -390,10 +399,10 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
             current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_mat));
             current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_mat));
 
-            current_material_program->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
-              pipe.get_gbuffer().get_height()),
-              "gua_resolution");
-
+            current_material_program->set_uniform(ctx, math::vec2i(target.get_width(), target.get_height()), "gua_resolution");
+            // hack
+            current_material_program->set_uniform(ctx, target.get_depth_buffer()
+                                                  ->get_handle(ctx), "gua_gbuffer_depth");
             ctx.render_context->apply();
             nurbs_ressource->draw(ctx, false, nurbs_node->render_backfaces());
           }
@@ -406,7 +415,7 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
       
     }
 
-    pipe.get_gbuffer().unbind(ctx);
+    target.unbind(ctx);
   }
 }
 

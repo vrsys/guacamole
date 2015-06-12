@@ -25,7 +25,7 @@
 #include <gua/node/CameraNode.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/renderer/ABuffer.hpp>
+#include <gua/renderer/ShadowMap.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/LightTable.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
@@ -43,6 +43,37 @@ class WindowBase;
 struct RenderContext;
 class ShaderProgram;
 
+namespace node {
+  class SpotLightNode;
+}
+
+struct GUA_DLL PipelineViewState 
+{
+  enum ViewDirection {
+    front   = 0,
+    back    = 1,
+    left    = 2,
+    right   = 3,
+    top     = 4,
+    bottom  = 5,
+    count   = 6
+  };
+
+  PipelineViewState() = default;
+
+  RenderTarget*                     target = nullptr;
+
+  SceneGraph const*                 graph = nullptr;
+  std::shared_ptr<SerializedScene>  scene = nullptr;
+  node::SerializedCameraNode        camera;
+
+  Frustum                           frustum;
+  std::size_t                       viewpoint_uuid = 0;
+
+  ViewDirection                     view_direction = front;
+  bool                              shadow_mode = false;
+};
+
 class GUA_DLL Pipeline {
  public:
 
@@ -58,56 +89,70 @@ class GUA_DLL Pipeline {
      std::unordered_map<std::string, time_point>     cpu_queries;
      std::map<std::string, double>                   results;
    };
-   
-public: 
+
+public:
 
   Pipeline(RenderContext& ctx, math::vec2ui const& resolution);
   Pipeline(Pipeline const&) = delete;
 
-  void process(CameraMode mode, node::SerializedCameraNode const& camera,
-               std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
+  std::shared_ptr<Texture2D> render_scene(
+    CameraMode mode, node::SerializedCameraNode const& camera,
+    std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
-  std::vector<PipelinePass>   const& get_passes()  const;
-  GBuffer                          & get_gbuffer() const;
-  ABuffer                          & get_abuffer();
-  SerializedScene                  & get_scene();
-  SceneGraph                  const& get_graph()   const;
-  RenderContext               const& get_context() const;
-  node::SerializedCameraNode  const& get_camera()  const;
-  LightTable                       & get_light_table();
+  void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
+
+  PipelineViewState const&           current_viewstate() const;
+
+  RenderContext&                     get_context();
+  RenderContext const&               get_context() const;
+  LightTable&                        get_light_table();
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
   void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
-  void bind_camera_uniform_block(unsigned location) const;
   void draw_quad();
-  
+
   // time queries
-  void                                  begin_gpu_query(RenderContext const& ctx, std::string const& query_name);
-  void                                  end_gpu_query(RenderContext const& ctx, std::string const& query_name);
+  void begin_gpu_query(RenderContext const& ctx, std::string const& query_name);
+  void end_gpu_query(RenderContext const& ctx, std::string const& query_name);
 
-  void                                  begin_cpu_query(std::string const& query_name);
-  void                                  end_cpu_query(std::string const& query_name);
+  void begin_cpu_query(std::string const& query_name);
+  void end_cpu_query(std::string const& query_name);
 
-  void                                  fetch_gpu_query_results(RenderContext const& ctx);
+  void fetch_gpu_query_results(RenderContext const& ctx);
+
+  void clear_frame_cache();
 
  private:
 
-  std::unique_ptr<GBuffer>              gbuffer_;
-  ABuffer                               abuffer_;
-  RenderContext&                        context_;
-  std::unique_ptr<CameraUniformBlock>   camera_block_;
-  std::unique_ptr<LightTable>           light_table_;
+  void bind_camera_uniform_block(unsigned location) const;
 
-  SceneGraph const*                     current_graph_;
-  SerializedScene                       current_scene_;
-  node::SerializedCameraNode            current_camera_;
+  void render_shadow_map(LightTable::LightBlock& light_block, Frustum const& frustum,
+    unsigned cascade_id, unsigned viewport_size, bool redraw);
 
-  math::vec2ui                          last_resolution_;
-  PipelineDescription                   last_description_;
-  SubstitutionMap                       global_substitution_map_;
+  void generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const& shadowmap,
+    node::LightNode* light, LightTable::LightBlock& light_block,
+    unsigned viewport_size, bool redraw, math::mat4 const& original_screen_transform);
 
-  std::vector<PipelinePass>             passes_;
-  scm::gl::quad_geometry_ptr            quad_;
+  void generate_shadow_map_pointlight(std::shared_ptr<ShadowMap> const& shadowmap,
+    node::LightNode* light, LightTable::LightBlock& light_block,
+    unsigned viewport_size, bool redraw);
+
+  void generate_shadow_map_spotlight(node::LightNode* light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw);
+
+  PipelineViewState                         current_viewstate_;
+  
+  RenderContext&                            context_;
+  std::unique_ptr<GBuffer>                  gbuffer_;
+  std::shared_ptr<SharedShadowMapResource>  shadow_map_res_;
+  CameraUniformBlock                        camera_block_;
+  std::unique_ptr<LightTable>               light_table_;
+
+  math::vec2ui                              last_resolution_;
+  PipelineDescription                       last_description_;
+  SubstitutionMap                           global_substitution_map_;
+
+  std::vector<PipelinePass>                 passes_;
+  scm::gl::quad_geometry_ptr                quad_;
 
 #define GUA_ENABLE_PROFILING_TIME_QUERIES
   time_query_collection                 queries_;

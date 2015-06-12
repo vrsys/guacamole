@@ -38,6 +38,14 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription() {
 
   writes_only_color_buffer_ = false;
   rendermode_ = RenderMode::Callback;
+  
+  depth_stencil_state_ = boost::make_optional(
+    scm::gl::depth_stencil_state_desc(
+      true, true, scm::gl::COMPARISON_LESS, true, 1, 0, 
+      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    )
+  );
+
   rasterizer_state_ = boost::make_optional(
       scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID,
                                      scm::gl::CULL_NONE,
@@ -74,7 +82,8 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
   pass.process_ = [buffer_, vao_](
       PipelinePass &, PipelinePassDescription const&, Pipeline & pipe) {
 
-    auto count(pipe.get_scene().bounding_boxes.size());
+    auto const& scene = *(pipe.current_viewstate().scene);
+    auto count(scene.bounding_boxes.size());
 
     if (count < 1)
       return;
@@ -88,8 +97,8 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
           buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
       for (int i(0); i < count; ++i) {
-        data[2 * i] = math::vec3f(pipe.get_scene().bounding_boxes[i].min);
-        data[2 * i + 1] = math::vec3f(pipe.get_scene().bounding_boxes[i].max);
+        data[2 * i] = math::vec3f(scene.bounding_boxes[i].min);
+        data[2 * i + 1] = math::vec3f(scene.bounding_boxes[i].max);
       }
 
       ctx.render_context->unmap_buffer(buffer_);

@@ -6,8 +6,6 @@
 @include "common/gua_camera_uniforms.glsl"
 
 uniform bool enable_backface_culling;
-uniform mat4 model_view_matrix;
-uniform mat4 model_view_projection_matrix;
 
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
@@ -21,8 +19,10 @@ in VertexData {
 
 out VertexData {
   vec2 pass_uv_coords;
-  float pass_log_depth;
+  //float pass_log_depth;
   float pass_es_linear_depth;
+  float pass_es_shift;
+  vec3 pass_world_position;
 } VertexOut;
 
 
@@ -37,7 +37,7 @@ void main() {
       vec3 step_u   = VertexIn[0].pass_ms_u;
       vec3 step_v   = VertexIn[0].pass_ms_v;
 
-      float es_linear_depth_center = (model_view_matrix * vec4(s_pos_ms,1.0)).z;
+      float es_linear_depth_center = (gua_model_view_matrix * vec4(s_pos_ms,1.0)).z;
       float es_shift = 0.0;
       float es_shift_scale = 2.0;
 
@@ -50,18 +50,21 @@ void main() {
 
         VertexOut.pass_uv_coords        = vec2(u_multiplier, v_multiplier);
         vec4 q_pos_ms                   = vec4( ( (s_pos_ms + (u_multiplier * step_u) ) + (v_multiplier * step_v) ) ,1.0);
-        gl_Position                     = model_view_projection_matrix * q_pos_ms;
-        VertexOut.pass_log_depth        = (gl_Position.z/gl_Position.w)/2.0 + 0.5;
+        gl_Position                     = gua_model_view_projection_matrix * q_pos_ms;
 
-        float es_linear_depth_corner = (model_view_matrix * q_pos_ms).z;
+        VertexOut.pass_world_position = (gua_model_matrix * q_pos_ms).xyz;
+        //VertexOut.pass_log_depth        = (gl_Position.z/gl_Position.w)/2.0 + 0.5;
+
+        float es_linear_depth_corner = (gua_model_view_matrix * q_pos_ms).z;
 
         es_shift       = abs(es_linear_depth_corner - es_linear_depth_center) * es_shift_scale;
-        gl_Position.z  = ( ( -(es_linear_depth_corner /*+ es_shift*/ ) ) / gua_clip_far);
+        gl_Position.z  = ( ( -(es_linear_depth_corner + es_shift ) ) / gua_clip_far);
         gl_Position.z  = (gl_Position.z - 0.5) * 2.0;
         gl_Position.z  *= gl_Position.w;
-
+        
         VertexOut.pass_es_linear_depth = (-es_linear_depth_corner) / gua_clip_far;
 
+        VertexOut.pass_es_shift = es_shift;
         EmitVertex();
       }
 

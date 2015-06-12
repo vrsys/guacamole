@@ -28,6 +28,8 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
+bool animate_light = true;
+
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -92,6 +94,27 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     pipe.get_resolve_pass()->touch();
     break;
 
+  case 'a':  // toggle screen space shadows
+    pipe.get_resolve_pass()->screen_space_shadows(!pipe.get_resolve_pass()->screen_space_shadows());
+    break;
+
+  case 'q':
+    pipe.get_resolve_pass()->screen_space_shadow_radius(std::min(10.0f, 1.1f * pipe.get_resolve_pass()->screen_space_shadow_radius()));
+    break;
+
+  case 'z':
+    pipe.get_resolve_pass()->screen_space_shadow_radius(std::max(0.005f, 0.9f * pipe.get_resolve_pass()->screen_space_shadow_radius()));
+    break;
+
+  case 'w':
+    pipe.get_resolve_pass()->screen_space_shadow_intensity(std::min(1.0f, 1.1f * pipe.get_resolve_pass()->screen_space_shadow_intensity()));
+    break;
+
+  case 'x':
+    pipe.get_resolve_pass()->screen_space_shadow_intensity(std::max(0.1f, 0.9f * pipe.get_resolve_pass()->screen_space_shadow_intensity()));
+    break;
+
+
   case 's':  // toggle SSAO
     pipe.get_resolve_pass()->ssao_enable(!pipe.get_resolve_pass()->ssao_enable());
     break;
@@ -155,7 +178,15 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     break;
 
   case 't':
+    pipe.get_resolve_pass()->touch();
+    break;
 
+  case ' ':
+    animate_light = !animate_light;
+    break;
+
+  // recompile shaders 
+  case 'r' :
     pipe.get_resolve_pass()->touch();
     break;
 
@@ -196,14 +227,20 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto monkey(loader.create_geometry_from_file("teapot", "data/objects/city.3ds", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform", monkey);
-  monkey->set_draw_bounding_box(true);
+  auto city(loader.create_geometry_from_file("city", "data/objects/city.3ds", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  //auto city(loader.create_geometry_from_file("city", "data/objects/city.3ds", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
+  graph.add_node("/transform", city);
+  city->set_draw_bounding_box(true);
+  
+  auto light = graph.add_node<gua::node::LightNode>("/transform/city", "light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
+  light->data.brightness = 5.0f;
+  light->scale(7.f);
+  light->translate(0.f, 7.f, 5.f);
 
-  auto light = graph.add_node<gua::node::PointLightNode>("/", "light2");
-  light->data.brightness = 40.0f;
-  light->scale(9.f);
-  light->translate(-3.f, 5.f, 5.f);
+  auto light_proxy_geometry(loader.create_geometry_from_file("light_proxy", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  light_proxy_geometry->scale(0.02);
+  light->add_child(light_proxy_geometry);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -218,7 +255,6 @@ int main(int argc, char** argv) {
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
 
   camera->translate(0, 0, 2.0);
-
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
@@ -232,8 +268,12 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->ssao_falloff(1.0);
   camera->get_pipeline_description()->get_resolve_pass()->ssao_radius(4.0);
 
+  camera->get_pipeline_description()->get_resolve_pass()->screen_space_shadows(true);
+  camera->get_pipeline_description()->get_resolve_pass()->screen_space_shadow_radius(1.0);
+  camera->get_pipeline_description()->get_resolve_pass()->screen_space_shadow_intensity(0.9);
+
   camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
-  camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_spheremap("data/textures/envlightmap.jpg");
+  camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_texture("data/textures/envlightmap.jpg");
 
   camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
   camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/textures/envmap.jpg");
@@ -285,6 +325,10 @@ int main(int argc, char** argv) {
       gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
 
     transform->set_transform(modelmatrix);
+
+    if (animate_light) {
+      light->rotate(0.1, 0.0, 1.0, 0.0);
+    }
 
     window->process_events();
     if (window->should_close()) {

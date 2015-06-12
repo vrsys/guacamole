@@ -8,10 +8,11 @@ cd $DIR/..
 if [ ! -d "build" ]; then
     mkdir build
     cd build
-    cmake -DCMAKE_BUILD_TYPE=release -DPLUGIN_guacamole-oculus=TRUE ..
+    cmake -DCMAKE_BUILD_TYPE=release -DGUACAMOLE_EXAMPLES=TRUE -DGUACAMOLE_GLFW3=TRUE ..
+    # cmake -DCMAKE_BUILD_TYPE=release -DPLUGIN_guacamole-oculus=TRUE ..
     cd ..
 fi
 
 # buil it!
 cd build
-make install -j16
+make install -j8

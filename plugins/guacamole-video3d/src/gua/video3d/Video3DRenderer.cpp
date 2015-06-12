@@ -70,6 +70,14 @@ Video3DRenderer::Video3DRenderer()
 
 void Video3DRenderer::render(Pipeline& pipe)
 {
+  ///////////////////////////////////////////////////////////////////////////
+  //  retrieve current view state
+  ///////////////////////////////////////////////////////////////////////////
+  auto& scene = *pipe.current_viewstate().scene;
+  auto const& camera = pipe.current_viewstate().camera;
+  auto const& frustum = pipe.current_viewstate().frustum;
+  auto& target = *pipe.current_viewstate().target;
+
   auto const& ctx(pipe.get_context());
   
   if (!initialized_) {
@@ -87,7 +95,7 @@ void Video3DRenderer::render(Pipeline& pipe)
 
     // initialize Texture Arrays (kinect depths & colors)
     warp_color_result_ = ctx.render_device->create_texture_2d(
-                  pipe.get_camera().config.resolution(),
+                  camera.config.resolution(),
                   scm::gl::FORMAT_RGBA_32F,
                   1,
                   MAX_NUM_KINECTS,
@@ -95,7 +103,7 @@ void Video3DRenderer::render(Pipeline& pipe)
                   );
 
     warp_depth_result_ = ctx.render_device->create_texture_2d(
-                  pipe.get_camera().config.resolution(),
+                  camera.config.resolution(),
                   scm::gl::FORMAT_D32F,
                   1,
                   MAX_NUM_KINECTS,
@@ -111,10 +119,10 @@ void Video3DRenderer::render(Pipeline& pipe)
   }
 
 
-  auto objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::Video3DNode))));
-  int view_id(pipe.get_camera().config.get_view_id());
+  auto objects(scene.nodes.find(std::type_index(typeid(node::Video3DNode))));
+  int view_id(camera.config.get_view_id());
 
-  if (objects != pipe.get_scene().nodes.end() && objects->second.size() > 0) {
+  if (objects != scene.nodes.end() && objects->second.size() > 0) {
 
     for (auto& o: objects->second) {
 
@@ -231,8 +239,9 @@ void Video3DRenderer::render(Pipeline& pipe)
 
       current_shader->use(ctx);
 
-      pipe.get_gbuffer().bind(ctx, false);
-      pipe.get_gbuffer().set_viewport(ctx);
+      bool write_depth = true;
+      target.bind(ctx, write_depth);
+      target.set_viewport(ctx);
 
       {
         // single texture only
@@ -270,6 +279,8 @@ void Video3DRenderer::render(Pipeline& pipe)
         }
         current_shader->unuse(ctx);
       }
+
+      target.unbind(ctx);
     }
   }
 }

@@ -84,7 +84,8 @@ int main(int argc, char** argv) {
 
   if (mode == 1 || mode == 2) {
     for (int i = 0; i < 256; ++i) {
-      auto light = graph.add_node<gua::node::PointLightNode>("/", "light_"+std::to_string(i));
+      auto light = graph.add_node<gua::node::LightNode>("/", "light_"+std::to_string(i));
+      light->data.set_type(gua::node::LightNode::Type::POINT);
       light->data.set_color(gua::utils::Color3f(dstc(gen), dstc(gen), dstc(gen)));
       if (mode == 1)
         light->scale(1.2);
@@ -96,10 +97,12 @@ int main(int argc, char** argv) {
   }
 
   if (mode == 3) {
-    auto light1 = graph.add_node<gua::node::PointLightNode>("/", "big_light1");
+    auto light1 = graph.add_node<gua::node::LightNode>("/", "big_light1");
+    light1->data.set_type(gua::node::LightNode::Type::POINT);
     light1->scale(16.0);
     light1->translate(0.f, 3.f, 2.f);
-    auto light2 = graph.add_node<gua::node::PointLightNode>("/", "big_light2");
+    auto light2 = graph.add_node<gua::node::LightNode>("/", "big_light2");
+    light2->data.set_type(gua::node::LightNode::Type::POINT);
     light2->scale(18.0);
     light2->translate(3.f, -3.f, 1.f);
   }
@@ -220,9 +223,9 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     if (ctr++ % 150 == 0)
-      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
-                << camera->get_rendering_fps() << ", app fps: "
-                << camera->get_application_fps() << std::endl;
+      std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
+                << window->get_rendering_fps() << ", app fps: "
+                << renderer.get_application_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {

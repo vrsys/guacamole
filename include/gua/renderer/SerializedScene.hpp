@@ -50,14 +50,20 @@ struct GUA_DLL SerializedScene {
   std::unordered_map<std::type_index, std::vector<node::Node*>> nodes;
 
   /**
-   * The frustum.
+   * The rendering frustum.
    */
-  Frustum frustum;
+  Frustum rendering_frustum;
 
   /**
-   * The center of interest.
+   * The culling frustum. Not neccessarily the same as above.
    */
-  math::vec3 center_of_interest;
+  Frustum culling_frustum;
+
+  /**
+   * The original camera position for which we are rendering. This stays the
+   * same even if rendering shadow maps, for example.
+   */
+  math::vec3 reference_camera_position;
 
   /**
    * Clipping plane parameters.

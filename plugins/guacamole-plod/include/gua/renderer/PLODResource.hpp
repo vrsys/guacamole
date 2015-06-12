@@ -83,7 +83,7 @@ class PLODResource : public GeometryResource {
               pbr::view_t view_id,
               pbr::model_t model_id,
               scm::gl::vertex_array_ptr const& vertex_array,
-              std::unordered_set<pbr::node_t> const& nodes_out_of_frustum) const;
+              std::unordered_set<pbr::node_t> const& nodes_in_frustum) const;
 
     math::mat4 const& local_transform() const;
 

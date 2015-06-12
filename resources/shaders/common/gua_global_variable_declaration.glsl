@@ -1,4 +1,5 @@
-vec3  gua_position;
+vec3  gua_world_position;
+vec3  gua_view_position;
 vec3  gua_normal;
 vec3  gua_tangent;
 vec3  gua_bitangent;

@@ -21,6 +21,7 @@ option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support." OFF)
 option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
 option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using per-pass time queries." OFF)
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
+option (GUACAMOLE_FBX "Set to enable FBX support." ON)
 
 # We require at least version 2.8.0
 cmake_minimum_required(VERSION 2.8.0)
@@ -67,11 +68,18 @@ if (UNIX)
   include(find_x11)
 elseif (WIN32)
   include(FindAssimp)
+  include(FindFreeImage)
   set(GL_LIBRARIES OpenGL32.lib)
 endif (UNIX)
 
 include(FindSchism)
 include(FindBoost)
+#find_package(Boost COMPONENTS
+#  system
+#  regex
+#  thread
+#  REQUIRED
+#  )
 include(FindZMQ)
 
 if (GUACAMOLE_ENABLE_PHYSICS)
@@ -82,6 +90,18 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   endif (UNIX)
   find_package(Bullet REQUIRED)
 endif (GUACAMOLE_ENABLE_PHYSICS)
+
+if (GUACAMOLE_FBX)
+  include(FindFBX)
+  set (FBX_ROOT "externals/fbx" CACHE PATH "Set to your FBX SDK install path.")
+  # set (FBX_INCLUDE_DIRS "externals/fbx/include" CACHE PATH "Set to your FBX SDK install path.")
+  # if (UNIX)
+  #   set (FBXSDK_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
+  # elseif (WIN32)
+  #   set (FBXSDK_ROOT "externals/" CACHE PATH "Set to your bullet install path.")
+  # endif (UNIX)
+  find_package(FBX REQUIRED)
+endif (GUACAMOLE_FBX)
 
 if (GUACAMOLE_GLFW3)
   find_package(GLFW3 REQUIRED)
@@ -94,8 +114,9 @@ set(LIB_PATHS
     ${JSON_LIBRARY_DIRS}
     ${GL_LIBRARY_DIRS}
     ${GLEW_LIBRARY_DIRS}
-    ${BOOST_LIBRARY_DIRS}
+    ${Boost_LIBRARY_DIRS}
     ${BULLET_LIBRARY_DIRS}
+    ${FBX_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
     ${ZMQ_LIBRARY_DIRS}
     ${X11_LIBRARY_DIRS}
@@ -106,12 +127,13 @@ set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
     ${SCHISM_INCLUDE_DIRS}
-    ${BOOST_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIR}
     ${JSON_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
+    ${FBX_INCLUDE_DIRS}
     ${ZMQ_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
 )
@@ -242,9 +264,9 @@ message(STATUS "   library path: ${SCHISM_LIBRARY_DIRS}" )
 message(STATUS "   include: ${SCHISM_INCLUDE_DIRS}" )
 message(STATUS "" )
 message(STATUS " boost:" )
-message(STATUS "   library: ${BOOST_LIBRARIES}" )
-message(STATUS "   library path: ${BOOST_LIBRARY_DIRS}" )
-message(STATUS "   include: ${BOOST_INCLUDE_DIRS}" )
+message(STATUS "   library: ${Boost_LIBRARIES}" )
+message(STATUS "   library path: ${Boost_LIBRARY_DIRS}" )
+message(STATUS "   include: ${Boost_INCLUDE_DIRS}" )
 message(STATUS "" )
 message(STATUS " assimp:" )
 message(STATUS "   library: ${ASSIMP_LIBRARIES}" )
@@ -277,6 +299,15 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   message(STATUS "   include: ${BULLET_INCLUDE_DIRS}" )
   message(STATUS "" )
 endif (GUACAMOLE_ENABLE_PHYSICS)
+
+
+if (GUACAMOLE_FBX)
+  message(STATUS " FBX SDK:" )
+  message(STATUS "   library: ${FBX_LIBRARIES}" )
+  message(STATUS "   library path: ${FBX_LIBRARY_DIRS}" )
+  message(STATUS "   include: ${FBX_INCLUDE_DIRS}" )
+  message(STATUS "" )
+endif (GUACAMOLE_FBX)
 
 if (GUACAMOLE_GLFW3)
   message(STATUS " glfw:" )

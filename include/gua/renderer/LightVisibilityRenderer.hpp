@@ -30,7 +30,17 @@ class LightVisibilityRenderer {
 
   void prepare_light_table(Pipeline& pipe,
                            std::vector<math::mat4>& transforms,
-                           LightTable::array_type& lights) const;
+                           LightTable::array_type& lights,
+                           unsigned& sun_lights_num) const;
+
+  void add_pointlight(Pipeline& pipe, node::LightNode* light, LightTable::LightBlock& light_block, 
+                      LightTable::array_type& lights, std::vector<math::mat4>& light_transforms) const;
+
+  void add_spotlight(Pipeline& pipe, node::LightNode* light, LightTable::LightBlock& light_block,
+                     LightTable::array_type& lights, std::vector<math::mat4>& light_transforms) const;
+
+  void add_sunlight(Pipeline& pipe, node::LightNode* light, LightTable::LightBlock& light_block,
+                    LightTable::array_type& lights, std::vector<math::mat4>& light_transforms) const;
 
   scm::gl::frame_buffer_ptr empty_fbo_ = nullptr;
 };

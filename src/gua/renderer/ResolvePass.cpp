@@ -44,18 +44,25 @@ ResolvePassDescription::ResolvePassDescription()
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Quad;
   depth_stencil_state_ = boost::make_optional(
-    scm::gl::depth_stencil_state_desc(false, false));
+    scm::gl::depth_stencil_state_desc(
+      false, false, scm::gl::COMPARISON_LESS, true, 1, 0,
+      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    )
+  );
 
   // default background configuration
   uniforms["gua_background_mode"] = static_cast<int>(BackgroundMode::COLOR);
   uniforms["gua_background_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);
   uniforms["gua_background_texture"] = std::string("gua_default_texture");
+  uniforms["gua_alternative_background_texture"] = std::string("gua_default_texture");
+  uniforms["gua_background_texture_blend_factor"] = 0.f;
 
   // default ambient lighting
   uniforms["gua_environment_lighting_mode"] = static_cast<int>(EnvironmentLightingMode::AMBIENT_COLOR);
   uniforms["gua_environment_lighting_color"] = scm::math::vec3f(0.05f, 0.05f, 0.05f);
-  uniforms["gua_environment_lighting_spheremap"] = std::string("gua_default_texture");
-  uniforms["gua_environment_lighting_cubemap"] = std::string("gua_default_texture");
+  uniforms["gua_environment_lighting_texture"] = std::string("gua_default_texture");
+  uniforms["gua_alternative_environment_lighting_texture"] = std::string("gua_default_texture");
+  uniforms["gua_environment_lighting_texture_blend_factor"] = 0.f;
   uniforms["gua_horizon_fade"] = 1.3f;
 
   // default ssao
@@ -65,10 +72,21 @@ ResolvePassDescription::ResolvePassDescription()
   uniforms["gua_ssao_falloff"] = 0.1f;
   uniforms["gua_noise_tex"] = std::string("gua_default_texture");
 
+  // default screen space shadows
+  uniforms["gua_screen_space_shadows_enable"] = false;
+  uniforms["gua_screen_space_shadows_radius"] = 1.0f;
+  uniforms["gua_screen_space_shadows_max_radius_px"] = 200.0f;
+  uniforms["gua_screen_space_shadows_intensity"] = 0.8f;
+
   // default fog configuration
   uniforms["gua_enable_fog"] = false;
   uniforms["gua_fog_start"] = 10.f;
   uniforms["gua_fog_end"] = 1000.f;
+
+  // default vignette
+  uniforms["gua_vignette_coverage"] = 0.5f;
+  uniforms["gua_vignette_softness"] = 0.5f;
+  uniforms["gua_vignette_color"] = scm::math::vec4f(0.f, 0.f, 0.f, 0.f);
 
   // default tone mapping exposure
   uniforms["gua_tone_mapping_exposure"] = 1.0f;
@@ -111,27 +129,63 @@ std::string ResolvePassDescription::background_texture() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription& ResolvePassDescription::environment_lighting_spheremap(std::string const& spheremap_texture) {
-  uniforms["gua_environment_lighting_spheremap"] = spheremap_texture;
+ResolvePassDescription& ResolvePassDescription::alternative_background_texture(std::string const& texture) {
+  uniforms["gua_alternative_background_texture"] = texture;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& ResolvePassDescription::environment_lighting_spheremap() const {
-  auto uniform(uniforms.find("gua_environment_lighting_spheremap"));
+std::string ResolvePassDescription::alternative_background_texture() const {
+  auto uniform(uniforms.find("gua_alternative_background_texture"));
   return boost::get<std::string>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription& ResolvePassDescription::environment_lighting_cubemap(std::string const& cube_map_positive_x,
-  std::string const& cube_map_negative_x,
-  std::string const& cube_map_positive_y,
-  std::string const& cube_map_negative_y,
-  std::string const& cube_map_positive_z,
-  std::string const& cube_map_negative_z) {
-
-  gua::Logger::LOG_WARNING << "ResolvePassDescription::environment_lighting_cubemap() : Using deafult texture. Opening not implemented yet." << std::endl;
+ResolvePassDescription& ResolvePassDescription::background_texture_blend_factor(float factor) {
+  uniforms["gua_background_texture_blend_factor"] = factor;
   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::background_texture_blend_factor() const {
+  auto uniform(uniforms.find("gua_background_texture_blend_factor"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::environment_lighting_texture(std::string const& texture) {
+  uniforms["gua_environment_lighting_texture"] = texture;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::string const& ResolvePassDescription::environment_lighting_texture() const {
+  auto uniform(uniforms.find("gua_environment_lighting_texture"));
+  return boost::get<std::string>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::alternative_environment_lighting_texture(std::string const& texture) {
+  uniforms["gua_alternative_environment_lighting_texture"] = texture;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::string const& ResolvePassDescription::alternative_environment_lighting_texture() const {
+  auto uniform(uniforms.find("gua_alternative_environment_lighting_texture"));
+  return boost::get<std::string>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::environment_lighting_texture_blend_factor(float factor) {
+  uniforms["gua_environment_lighting_texture_blend_factor"] = factor;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::environment_lighting_texture_blend_factor() const {
+  auto uniform(uniforms.find("gua_environment_lighting_texture_blend_factor"));
+  return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,17 +286,52 @@ std::string const& ResolvePassDescription::ssao_noise_texture() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription& ResolvePassDescription::screen_space_shadows(bool enable)
-{
-  uniforms["gua_screen_space_shadows"] = enable;
+ResolvePassDescription& ResolvePassDescription::screen_space_shadows(bool enable) {
+  uniforms["gua_screen_space_shadows_enable"] = enable;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 bool ResolvePassDescription::screen_space_shadows() const
 {
-  auto uniform(uniforms.find("gua_screen_space_shadows"));
+  auto uniform(uniforms.find("gua_screen_space_shadows_enable"));
   return boost::get<bool>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::screen_space_shadow_radius(float radius) {
+  uniforms["gua_screen_space_shadows_radius"] = radius;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::screen_space_shadow_radius() const {
+  auto uniform(uniforms.find("gua_screen_space_shadows_radius"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::screen_space_shadow_max_radius_px(float radius) {
+  uniforms["gua_screen_space_shadows_max_radius_px"] = radius;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::screen_space_shadow_max_radius_px() const {
+  auto uniform(uniforms.find("gua_screen_space_shadows_max_radius_px"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::screen_space_shadow_intensity(float intensity) {
+  uniforms["gua_screen_space_shadows_intensity"] = intensity;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::screen_space_shadow_intensity() const {
+  auto uniform(uniforms.find("gua_screen_space_shadows_intensity"));
+  return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,38 +371,74 @@ float ResolvePassDescription::fog_end() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription& ResolvePassDescription::tone_mapping_exposure(float value)
-{
-  uniforms["gua_tone_mapping_exposure"] = value;
-  return *this; 
+ResolvePassDescription& ResolvePassDescription::vignette_coverage(float vignette_coverage) {
+  uniforms["gua_vignette_coverage"] = vignette_coverage;
+  return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float ResolvePassDescription::tone_mapping_exposure() const { 
+float ResolvePassDescription::vignette_coverage() const {
+  auto uniform(uniforms.find("gua_vignette_coverage"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::vignette_softness(float vignette_softness) {
+  uniforms["gua_vignette_softness"] = vignette_softness;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::vignette_softness() const {
+  auto uniform(uniforms.find("gua_vignette_softness"));
+  return boost::get<float>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::vignette_color(math::vec4f const& vignette_color) {
+  uniforms["gua_vignette_color"] = vignette_color;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+math::vec4f ResolvePassDescription::vignette_color() const {
+  auto uniform(uniforms.find("gua_vignette_color"));
+  return boost::get<math::vec4f>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::tone_mapping_exposure(float value)
+{
+  uniforms["gua_tone_mapping_exposure"] = value;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float ResolvePassDescription::tone_mapping_exposure() const {
   auto uniform(uniforms.find("gua_tone_mapping_exposure"));
   return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::tone_mapping_method(ToneMappingMethod value) {
-  tone_mapping_method_ = value; 
+  tone_mapping_method_ = value;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription::ToneMappingMethod ResolvePassDescription::tone_mapping_method() const { 
-  return tone_mapping_method_; 
+ResolvePassDescription::ToneMappingMethod ResolvePassDescription::tone_mapping_method() const {
+  return tone_mapping_method_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::debug_tiles(bool value) {
-  debug_tiles_ = value; 
+  debug_tiles_ = value;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 bool ResolvePassDescription::debug_tiles() const {
-  return debug_tiles_; 
+  return debug_tiles_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

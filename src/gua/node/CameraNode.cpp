@@ -38,9 +38,7 @@ CameraNode::CameraNode(std::string const& name,
                        math::mat4 const& transform)
   : Node(name, transform),
     config(configuration),
-    pipeline_description_(description),
-    application_fps_(0.f),
-    rendering_fps_(0.f)
+    pipeline_description_(description)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,14 +50,20 @@ CameraNode::CameraNode(std::string const& name,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Frustum CameraNode::get_frustum(SceneGraph const& graph, CameraMode mode) const {
-    return make_frustum(graph, get_world_transform(), config, mode);
+Frustum CameraNode::get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return make_frustum(graph, get_world_transform(), config, mode, false);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Frustum CameraNode::get_culling_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return make_frustum(graph, get_world_transform(), config, mode, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Node> CameraNode::copy() const {
-    return std::make_shared<CameraNode>(get_name(), pipeline_description_, config, get_transform());
+    return std::make_shared<CameraNode>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +73,7 @@ SerializedCameraNode CameraNode::serialize() const
   SerializedCameraNode s = { config, get_world_transform(), uuid() };
 
   for (auto const& cam: pre_render_cameras_) {
-      s.pre_render_cameras.push_back(cam->serialize());
+    s.pre_render_cameras.push_back(cam->serialize());
   }
 
   s.pipeline_description = pipeline_description_;
@@ -79,8 +83,16 @@ SerializedCameraNode CameraNode::serialize() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& camera_transform, CameraNode::Configuration const& config, CameraMode mode) {
-    std::string screen_name(mode != CameraMode::RIGHT ? config.left_screen_path() : config.right_screen_path());
+Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& camera_transform,
+                                 CameraNode::Configuration const& config, CameraMode mode,
+                                 bool use_alternative_culling_screen) {
+
+    std::string screen_name(config.get_alternative_frustum_culling_screen_path());
+
+    if (screen_name == "" || !use_alternative_culling_screen) {
+      screen_name = mode != CameraMode::RIGHT ? config.left_screen_path() : config.right_screen_path();
+    }
+
     auto screen_it(graph[screen_name]);
     auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
     if (!screen) {
@@ -91,6 +103,7 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
     auto eye_transform(camera_transform);
     auto screen_transform(screen->get_scaled_world_transform());
 
+    float camera_scale(scm::math::length(math::vec3(camera_transform[8], camera_transform[9], camera_transform[10])));
     float clipping_offset(0.f);
 
     if (config.get_enable_stereo()) {
@@ -104,7 +117,7 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
             scm::math::length_sqr(screen_direction) * screen_direction
         );
 
-        float eye_dist_in_screen_direction(scm::math::length(eye_separation_in_screen_direction));
+        float eye_dist_in_screen_direction(scm::math::length(eye_separation_in_screen_direction)/camera_scale);
 
         // left eye is closer to screen than left eye
         if (eye_separation.x*screen_direction.x +
@@ -128,13 +141,13 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
     if (config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
         return Frustum::perspective(
             eye_transform, screen_transform,
-            config.near_clip() + clipping_offset, config.far_clip() + clipping_offset
+            config.near_clip()/camera_scale + clipping_offset, config.far_clip()/camera_scale + clipping_offset
         );
     }
 
     return Frustum::orthographic(
         eye_transform, screen_transform,
-        config.near_clip() + clipping_offset, config.far_clip() + clipping_offset
+        config.near_clip()/camera_scale + clipping_offset, config.far_clip()/camera_scale + clipping_offset
     );
 }
 

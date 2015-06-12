@@ -31,8 +31,11 @@ namespace node {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClippingPlaneNode::ClippingPlaneNode(std::string const& name, math::mat4 const& transform)
-    : Node(name, transform) {}
+ClippingPlaneNode::ClippingPlaneNode(std::string const& name,
+                                     math::mat4 const& transform,
+                                     Configuration configuration)
+    : Node(name, transform)
+    , config(configuration) {}
 
 /* virtual */ void ClippingPlaneNode::accept(NodeVisitor& visitor) {
 
@@ -62,8 +65,25 @@ math::vec4f ClippingPlaneNode::get_component_vector() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool ClippingPlaneNode::is_visible(int view_id) const {
+  bool visible(false);
+
+  if (config.view_ids().empty()) {
+    visible = true;
+  } else {
+    visible = std::find(config.view_ids().begin(),
+                        config.view_ids().end(),
+                        view_id) != config.view_ids().end();
+  }
+
+  return visible;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<Node> ClippingPlaneNode::copy() const {
-  return std::make_shared<ClippingPlaneNode>(get_name(), get_transform());
+  return std::make_shared<ClippingPlaneNode>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

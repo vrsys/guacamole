@@ -1,4 +1,4 @@
-gua_position          = gua_varying_position;
+gua_world_position    = gua_varying_world_position;
 gua_normal            = normalize(gua_varying_normal);
 gua_tangent           = normalize(gua_varying_tangent);
 gua_bitangent         = normalize(gua_varying_bitangent);

@@ -23,6 +23,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
@@ -75,7 +76,8 @@ int main(int argc, char** argv) {
   monkey->translate(0.0, 0.0, -1.0);
   graph.add_node("/transform", monkey);
 
-  auto light2 = graph.add_node<gua::node::PointLightNode>("/", "light2");
+  auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
+  light2->data.set_type(gua::node::LightNode::Type::POINT);
   light2->data.brightness = 150.0f;
   light2->scale(12.f);
   light2->translate(-3.f, 5.f, 5.f);
@@ -97,7 +99,7 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-
+  camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   // projector transform node, screen and transform node
   auto projector_transform = graph.add_node<gua::node::TransformNode>("/", "projector_transform");

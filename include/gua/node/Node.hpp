@@ -38,6 +38,9 @@
 #include <vector>
 #include <memory>
 
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/functional/hash.hpp>
+
 namespace gua {
 
 class NodeVisitor;
@@ -189,7 +192,7 @@ class GUA_DLL Node {
    *
    * \return math::mat4  The Node's world transformation.
    */
-  math::mat4 get_world_transform() const;
+  virtual math::mat4 get_world_transform() const;
 
   math::mat4 const& get_cached_world_transform() const;
 
@@ -416,7 +419,7 @@ class GUA_DLL Node {
   /**
   * \return size_t unique address of node
   */
-  std::size_t const uuid() const;
+  inline std::size_t const uuid() const { return uuid_; }
 
   friend class ::gua::SceneGraph;
   friend class ::gua::Serializer;
@@ -467,7 +470,7 @@ class GUA_DLL Node {
 
  private:
   // structure
-  Node* parent_;
+  Node* parent_ = nullptr;
   std::vector<std::shared_ptr<Node>> children_;
 
   // internal annotations
@@ -484,19 +487,21 @@ class GUA_DLL Node {
 
   virtual void set_scenegraph(SceneGraph* scenegraph);
 
-  mutable bool self_dirty_;
-  mutable bool child_dirty_;
+  mutable bool self_dirty_ = true;
+  mutable bool child_dirty_ = true;
 
 
   // up (cached) annotations
   mutable math::BoundingBox<math::vec3> bounding_box_;
-  bool draw_bounding_box_;
+  bool draw_bounding_box_ = false;
 
   // down (cached) annotations
-  math::mat4 transform_; // invertible affine transformation
-  mutable math::mat4 world_transform_;
+  math::mat4 transform_ = math::mat4::identity(); // invertible affine transformation
+  mutable math::mat4 world_transform_ = math::mat4::identity();
 
-  SceneGraph* scenegraph_;
+  SceneGraph* scenegraph_ = nullptr;
+  std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(
+                        boost::uuids::random_generator()());
 };
 
 } // namespace node {

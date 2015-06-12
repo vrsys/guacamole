@@ -45,8 +45,8 @@ class GUA_DLL PipelinePassDescription {
   friend class PipelinePass;
 
   void touch();
-  std::string const& name() const; 
-  unsigned mod_count() const; 
+  std::string const& name() const;
+  unsigned mod_count() const;
 
  protected:
 
@@ -60,12 +60,13 @@ class GUA_DLL PipelinePassDescription {
   std::string name_ = "";
 
   bool vertex_shader_is_file_name_ = true;
-  bool fragment_shader_is_file_name_ = true;  
+  bool fragment_shader_is_file_name_ = true;
   bool geometry_shader_is_file_name_ = true;
 
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
-  bool doClear_ = false;
+
+  bool enable_for_shadows_ = false;
   unsigned mod_count_ = 0; 
 
   mutable bool recompile_shaders_ = true;
@@ -105,6 +106,9 @@ class GUA_DLL PipelinePass {
   inline bool writes_only_color_buffer() const {
     return writes_only_color_buffer_;
   }
+  inline bool enable_for_shadows() const {
+    return enable_for_shadows_;
+  }
 
   void process(PipelinePassDescription const& desc, Pipeline& pipe);
   virtual void on_delete(Pipeline* pipe) {}
@@ -117,7 +121,7 @@ class GUA_DLL PipelinePass {
 
   PipelinePass() = default;
   PipelinePass(PipelinePassDescription const&, RenderContext const&, SubstitutionMap const&);
-  
+
   virtual void upload_program(PipelinePassDescription const& desc, RenderContext const& ctx);
 
   std::shared_ptr<ShaderProgram> shader_ = nullptr;
@@ -128,7 +132,7 @@ class GUA_DLL PipelinePass {
 
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
-  bool doClear_ = false;
+  bool enable_for_shadows_ = false;
   RenderMode rendermode_ = RenderMode::Custom;
   std::string name_ = "PipelinePass";
 
@@ -136,6 +140,7 @@ class GUA_DLL PipelinePass {
     process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) {
       return;
     };
+
 
  private:
   SubstitutionMap substitution_map_;

@@ -63,6 +63,12 @@ public : // methods
   std::shared_ptr<Material> const& get_material() const;
   void                      set_material(std::shared_ptr<Material> const& material);
 
+  bool get_render_to_gbuffer() const;
+  void set_render_to_gbuffer(bool enable);
+
+  bool get_render_to_stencil_buffer() const;
+  void set_render_to_stencil_buffer(bool enable);
+
   /**
   * Implements ray picking for a triangular mesh
   */
@@ -100,7 +106,8 @@ public : // methods
   bool                              geometry_changed_;
 
   std::shared_ptr<Material>         material_;
-  // bool                              material_changed_;
+  bool                              render_to_gbuffer_;
+  bool                              render_to_stencil_buffer_;
 };
 
 } // namespace node {

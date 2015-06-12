@@ -74,6 +74,7 @@ class GUA_DLL CameraNode : public Node {
     GUA_ADD_PROPERTY(float,           eye_offset,             0.f);
     GUA_ADD_PROPERTY(std::string,     left_screen_path,       "unknown_screen");
     GUA_ADD_PROPERTY(std::string,     right_screen_path,      "unknown_screen");
+    GUA_ADD_PROPERTY(std::string,     alternative_frustum_culling_screen_path, "");
     GUA_ADD_PROPERTY(CameraMode,      mono_mode,              CameraMode::CENTER);
 
     // the rendering is performed with thid resolution. Usually it should match
@@ -117,9 +118,7 @@ class GUA_DLL CameraNode : public Node {
    * This constructs an empty CameraNode.
    *
    */
-  CameraNode()
-    : application_fps_(0.f)
-    , rendering_fps_(0.f) {}
+  CameraNode() {}
 
   /**
    * Constructor.
@@ -163,23 +162,8 @@ class GUA_DLL CameraNode : public Node {
     pipeline_description_ = pipeline_description;
   }
 
-  Frustum get_frustum(SceneGraph const& graph, CameraMode mode) const;
-
-  float get_application_fps() const {
-    return application_fps_;
-  }
-
-  float get_rendering_fps() const {
-    return rendering_fps_;
-  }
-
-  void set_application_fps(float application_fps) {
-    application_fps_ = application_fps;
-  }
-
-  void set_rendering_fps(float rendering_fps) {
-    rendering_fps_ = rendering_fps;
-  }
+  Frustum get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const;
+  Frustum get_culling_frustum(SceneGraph const& graph, CameraMode mode) const;
 
   SerializedCameraNode serialize() const;
 
@@ -199,10 +183,7 @@ class GUA_DLL CameraNode : public Node {
   static Frustum make_frustum(SceneGraph const& graph,
                               math::mat4 const& camera_transform,
                               CameraNode::Configuration const& config,
-                              CameraMode mode);
-
-  float application_fps_;
-  float rendering_fps_;
+                              CameraMode mode, bool use_alternative_culling_screen);
 
   std::shared_ptr<Node> copy() const override;
 
@@ -222,8 +203,12 @@ struct GUA_DLL SerializedCameraNode {
   std::shared_ptr<PipelineDescription>  pipeline_description;
   std::vector<SerializedCameraNode>     pre_render_cameras;
 
-  Frustum get_frustum(SceneGraph const& graph, CameraMode mode) const {
-    return CameraNode::make_frustum(graph, transform, config, mode);
+  Frustum get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return CameraNode::make_frustum(graph, transform, config, mode, false);
+  }
+
+  Frustum get_culling_frustum(SceneGraph const& graph, CameraMode mode) const {
+    return CameraNode::make_frustum(graph, transform, config, mode, true);
   }
 };
 

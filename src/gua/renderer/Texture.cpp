@@ -37,14 +37,12 @@ namespace gua {
 
 Texture::Texture(scm::gl::data_format color_format,
                  scm::gl::data_format internal_format,
-                 std::vector<void*> const& data,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
     : mipmap_layers_(mipmap_layers),
       color_format_(color_format),
       internal_format_(internal_format),
       file_name_(""),
-      data_(data),
       state_descripton_(state_descripton),
       textures_(),
       sampler_states_(),

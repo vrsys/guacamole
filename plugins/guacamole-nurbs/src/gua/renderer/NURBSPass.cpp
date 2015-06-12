@@ -48,7 +48,6 @@ NURBSPassDescription::NURBSPassDescription()
 {
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
-  doClear_ = false;
   rendermode_ = RenderMode::Custom;
 }
 
@@ -68,7 +67,8 @@ PipelinePass NURBSPassDescription::make_pass(RenderContext const& ctx, Substitut
   renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
-    PipelinePass&, PipelinePassDescription const& desc, Pipeline & pipe) {
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
     renderer->render(pipe, desc);
   };
 

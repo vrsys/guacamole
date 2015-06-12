@@ -35,7 +35,8 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   enum class BackgroundMode {
     COLOR = 0,
     SKYMAP_TEXTURE = 1,
-    QUAD_TEXTURE = 2
+    QUAD_TEXTURE = 2,
+    CUBEMAP = 3
   };
 
   enum class ToneMappingMethod {
@@ -65,20 +66,23 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& background_texture(std::string const& texture);
   std::string background_texture() const;
 
+  ResolvePassDescription& alternative_background_texture(std::string const& texture);
+  std::string alternative_background_texture() const;
+
+  ResolvePassDescription& background_texture_blend_factor(float factor);
+  float background_texture_blend_factor() const;
+
   /////////////////////////////////////////////////////////////////////////////
   // ambient lighting
   /////////////////////////////////////////////////////////////////////////////
-  ResolvePassDescription& environment_lighting_spheremap(
-      std::string const& spheremap_texture);
-  std::string const& environment_lighting_spheremap() const;
+  ResolvePassDescription& environment_lighting_texture(std::string const& texture);
+  std::string const& environment_lighting_texture() const;
 
-  ResolvePassDescription& environment_lighting_cubemap(
-      std::string const& cube_map_positive_x,
-      std::string const& cube_map_negative_x,
-      std::string const& cube_map_positive_y,
-      std::string const& cube_map_negative_y,
-      std::string const& cube_map_positive_z,
-      std::string const& cube_map_negative_z);
+  ResolvePassDescription& alternative_environment_lighting_texture(std::string const& texture);
+  std::string const& alternative_environment_lighting_texture() const;
+
+  ResolvePassDescription& environment_lighting_texture_blend_factor(float factor);
+  float environment_lighting_texture_blend_factor() const;
 
   ResolvePassDescription& environment_lighting(utils::Color3f const& color);
   utils::Color3f environment_lighting() const;
@@ -114,6 +118,15 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& screen_space_shadows(bool enable);
   bool screen_space_shadows() const;
 
+  ResolvePassDescription& screen_space_shadow_radius(float radius_in_world_space_units);
+  float screen_space_shadow_radius() const;
+
+  ResolvePassDescription& screen_space_shadow_max_radius_px(float max_radius_in_pixel);
+  float screen_space_shadow_max_radius_px() const;
+
+  ResolvePassDescription& screen_space_shadow_intensity(float intensity);
+  float screen_space_shadow_intensity() const;
+
   /////////////////////////////////////////////////////////////////////////////
   // fog
   /////////////////////////////////////////////////////////////////////////////
@@ -127,7 +140,19 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   float fog_end() const;
 
   /////////////////////////////////////////////////////////////////////////////
-  // tone ampping and exposure
+  // vignette
+  /////////////////////////////////////////////////////////////////////////////
+  ResolvePassDescription& vignette_coverage(float vignette_coverage);
+  float vignette_coverage() const;
+
+  ResolvePassDescription& vignette_softness(float vignette_softness);
+  float vignette_softness() const;
+
+  ResolvePassDescription& vignette_color(math::vec4f const& vignette_color);
+  math::vec4f vignette_color() const;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // tone mapping and exposure
   /////////////////////////////////////////////////////////////////////////////
   ResolvePassDescription& tone_mapping_exposure(float value);
   float tone_mapping_exposure() const;

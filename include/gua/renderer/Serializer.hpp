@@ -32,7 +32,6 @@
 #include <gua/scenegraph/NodeVisitor.hpp>
 
 namespace gua {
-
 class SceneGraph;
 
 namespace node {
@@ -66,7 +65,8 @@ class Serializer : public NodeVisitor {
   void check(SerializedScene& output,
              SceneGraph const& scene_graph,
              Mask const& mask,
-             bool enable_frustum_culling);
+             bool enable_frustum_culling,
+             int view_id);
 
   /**
    * Visits a TransformNode
@@ -103,14 +103,14 @@ class Serializer : public NodeVisitor {
 
   void visit_children(node::Node* node);
 
-  Frustum current_frustum_;
-  math::vec3 current_center_of_interest_;
-
-  Mask current_render_mask_;
+  Frustum culling_frustum_;
+  Frustum rendering_frustum_;
+  Mask    render_mask_;
 
   SerializedScene* data_;
-  bool enable_frustum_culling_;
 
+  bool enable_frustum_culling_;
+  bool enable_alternative_frustum_culling_;
 };
 
 }

@@ -24,8 +24,8 @@
 
 // guacamole headers
 
+#include <gua/node/LightNode.hpp>
 #include <gua/renderer/Serializer.hpp>
-#include <gua/renderer/ShadowMapBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/View.hpp>
 #include <gua/databases.hpp>
@@ -35,394 +35,75 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ShadowMap::ShadowMap()
-  : serializer_(gua::make_unique<Serializer>()),
-    buffer_(nullptr),
-    projection_view_matrices_(),
-    camera_block_(nullptr) {
-}
+ShadowMap::ShadowMap(RenderContext const& ctx, math::vec2ui const& resolution) :
+  RenderTarget(resolution),
+  viewport_offset_(math::vec2f(0.f, 0.f)),
+  viewport_size_(math::vec2f(resolution)) {
 
+  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
+                                    // scm::gl::FILTER_ANISOTROPIC,
+                                    scm::gl::WRAP_CLAMP_TO_EDGE,
+                                    scm::gl::WRAP_CLAMP_TO_EDGE);
+  state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
+  state._max_anisotropy = 16;
+
+  depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D16, 1, state);
+
+  fbo_ = ctx.render_device->create_frame_buffer();
+  fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx), 0, 0);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ShadowMap::~ShadowMap() {
-  if (buffer_) {
-    delete buffer_;
+void ShadowMap::clear(RenderContext const& ctx, float depth, unsigned stencil) {
+  ctx.render_context->clear_depth_stencil_buffer(fbo_, depth, stencil);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadowMap::bind(RenderContext const& ctx, bool write_depth) {
+  ctx.render_context->set_frame_buffer(fbo_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ShadowMap::set_viewport(RenderContext const& ctx) {
+  if (ctx.render_context) {
+    ctx.render_context->set_viewport(
+        scm::gl::viewport(scm::math::vec2f(viewport_size_.x * viewport_offset_.x, viewport_size_.y * viewport_offset_.y),
+                          scm::math::vec2f(viewport_size_)));
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::update_members(RenderContext const & ctx, unsigned map_size) {
-//     //check whether shadow map size is sufficient
-//     if (buffer_ && buffer_->width() < map_size) {
-//       buffer_->remove_buffers(ctx);
-//       delete buffer_;
-//       buffer_ = nullptr;
-//     }
-
-//     if (!buffer_) {
-//         scm::gl::sampler_state_desc state;
-//         state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
-
-//         buffer_ = new ShadowMapBuffer({{ BufferComponent::DEPTH_16, state }},
-//                               map_size,
-//                               map_size);
-//         buffer_->create(ctx);
-//     }
-
-//     // let derived class render all geometries
-//     if (!depth_stencil_state_)
-//         depth_stencil_state_ =
-//             ctx.render_device->create_depth_stencil_state(true, true);
-
-//     if (!rasterizer_state_)
-//         rasterizer_state_ = ctx.render_device
-//             ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
-//     if (!camera_block_)
-//       camera_block_ = std::make_shared<CameraUniformBlock>(ctx.render_device);
-
+void ShadowMap::set_viewport_offset(math::vec2f const& offset) {
+  viewport_offset_ = offset;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::cleanup(RenderContext const& context) {
-  if (buffer_) {
-    buffer_->remove_buffers(context);
-  } 
+void ShadowMap::set_viewport_size(math::vec2f const& size) {
+  viewport_size_ = size;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// void ShadowMap::render_geometry(RenderContext const & ctx,
-//                                 SceneGraph const& current_graph,
-//                                 math::vec3 const& center_of_interest,
-//                                 Frustum const& shadow_frustum,
-//                                 Camera const& scene_camera,
-//                                 unsigned cascade,
-//                                 unsigned map_size) {
-//   SerializedScene scene;
-//   scene.frustum = shadow_frustum;
-//   scene.center_of_interest = center_of_interest;
-//   scene.enable_global_clipping_plane =
-//     pipeline_->config.get_enable_global_clipping_plane();
-//   scene.global_clipping_plane = pipeline_->config.get_global_clipping_plane();
-//   serializer_->check(scene,
-//                      current_graph,
-//                      scene_camera.render_mask,
-//                      false,
-//                      false,
-//                      true);
-
-//   projection_view_matrices_[cascade] =
-//       shadow_frustum.get_projection() * shadow_frustum.get_view();
-
-//   // create shadow view
-//   View view(uuid(), false);
-//   view.left = scene.frustum;
-//   view.right = scene.frustum;
-
-//   for (auto const& type : scene.geometrynodes_) {
-//     // pointer to appropriate ubershader
-//     GeometryUberShader* ubershader = nullptr;
-//     auto const& ressource_container = type.second;
-
-//     // get appropriate ubershader
-//     if (!type.second.empty()) {
-//       auto const& filename = type.second.front()->get_filename();
-//       auto geometry = GeometryDatabase::instance()->lookup(filename);
-
-//       if (geometry) {
-//         ubershader = pipeline_->get_geometry_ubershaders().at(type.first).get();
-//       } else {
-//         Logger::LOG_WARNING
-//           << "ShadowMap::render_geometry(): No such file/geometry "
-//           << filename << std::endl;
-//       }
-//     }
-
-//     if (ubershader) {
-//       scm::gl::context_uniform_buffer_guard ubg(ctx.render_context);
-//       camera_block_->update(ctx.render_context, scene.frustum);
-//       ctx.render_context->bind_uniform_buffer(
-//           camera_block_->block().block_buffer(), 0);
-
-//       ubershader->set_uniform(ctx, scene.enable_global_clipping_plane,
-//           "gua_enable_global_clipping_plane");
-//       ubershader->set_uniform(ctx, scene.global_clipping_plane,
-//           "gua_global_clipping_plane");
-
-//       ubershader->set_uniform(ctx, 1.0f / map_size, "gua_texel_width");
-//       ubershader->set_uniform(ctx, 1.0f / map_size, "gua_texel_height");
-//       ubershader->set_uniform(ctx, true, "gua_render_shadow_map");
-
-//       // 1. call preframe callback if available for type
-//       if (ubershader->get_stage_mask() & GeometryUberShader::PRE_FRAME_STAGE) {
-//         ubershader->preframe(ctx);
-//       }
-
-//       // 2. iterate all drawables of current type and call predraw of current
-//       // ubershader
-//       if (ubershader->get_stage_mask() & GeometryUberShader::PRE_DRAW_STAGE) {
-//         for (auto const& node : ressource_container) {
-//           if (node->get_shadow_mode() != ShadowMode::OFF) {
-//             ubershader->set_uniform(ctx, static_cast<int>(node->get_shadow_mode())
-//               , "gua_shadow_quality");
-//           }
-//           auto const& ressource =
-//             GeometryDatabase::instance()->lookup(node->get_filename());
-//           auto const& material =
-//             MaterialShaderDatabase::instance()->lookup(node->get_material());
-
-//           ubershader->predraw(ctx,
-//             node->get_filename(),
-//             node->get_material(),
-//             node->get_cached_world_transform(),
-//             scm::math::transpose(scm::math::inverse(
-//             node->get_cached_world_transform())),
-//             scene.frustum,
-//             view);
-//         }
-//       }
-
-//       // 3. iterate all drawables of current type and call draw of current
-//       // ubershader
-//       if (ubershader->get_stage_mask() & GeometryUberShader::DRAW_STAGE) {
-//         for (auto const& node : ressource_container) {
-//           if (node->get_shadow_mode() != ShadowMode::OFF) {
-//             ubershader->set_uniform(ctx, static_cast<int>(node->get_shadow_mode())
-//               , "gua_shadow_quality");
-//           }
-//           auto const& ressource =
-//             GeometryDatabase::instance()->lookup(node->get_filename());
-//           auto const& material =
-//             MaterialShaderDatabase::instance()->lookup(node->get_material());
-
-//           ubershader->draw(ctx,
-//             node->get_filename(),
-//             node->get_material(),
-//             node->get_cached_world_transform(),
-//             scm::math::transpose(scm::math::inverse(
-//             node->get_cached_world_transform())),
-//             scene.frustum,
-//             view);
-//         }
-//       }
-
-//       // 4. iterate all drawables of current type and call postdraw of current
-//       // ubershader
-//       if (ubershader->get_stage_mask() & GeometryUberShader::POST_DRAW_STAGE) {
-//         for (auto const& node : ressource_container) {
-//           if (node->get_shadow_mode() != ShadowMode::OFF) {
-//             ubershader->set_uniform(ctx, static_cast<int>(node->get_shadow_mode())
-//               , "gua_shadow_quality");
-//           }
-//           auto const& ressource =
-//             GeometryDatabase::instance()->lookup(node->get_filename());
-//           auto const& material =
-//             MaterialShaderDatabase::instance()->lookup(node->get_material());
-
-//           ubershader->postdraw(ctx,
-//             node->get_filename(),
-//             node->get_material(),
-//             node->get_cached_world_transform(),
-//             scm::math::transpose(scm::math::inverse(
-//             node->get_cached_world_transform())),
-//             scene.frustum,
-//             view);
-//         }
-//       }
-
-//       // 5. call postframe callback if available for type
-//       if (ubershader->get_stage_mask() & GeometryUberShader::POST_FRAME_STAGE) {
-//         ubershader->postframe(ctx);
-//       }
-
-//     } else {
-//       Logger::LOG_WARNING << "ShadowMap::render_geometry(): UberShader missing."
-//                           << std::endl;
-//     }
-//   }
-// }
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShadowMap::render(Pipeline* pipe,
-                       math::mat4 const& transform,
-                       unsigned map_size) {
-
-  auto const& ctx(pipe->get_context());
-
-  // init members
-  update_members(ctx, map_size);
-  projection_view_matrices_ = std::vector<math::mat4>(1);
-
-  // buffer_->bind(ctx);
-  // buffer_->clear_depth_stencil_buffer(ctx);
-
-  ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-  ctx.render_context->set_rasterizer_state(rasterizer_state_);
-  ctx.render_context->set_viewport(scm::gl::viewport(
-    scm::math::vec2f(0.f, 0.f),
-    scm::math::vec2f(map_size, map_size))
-  );
-
-  // calculate light frustum
-  math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
-  screen_transform = transform * screen_transform;
-
-  Frustum shadow_frustum = Frustum::perspective(
-    transform, screen_transform,
-    pipe->get_camera().config.near_clip(), pipe->get_camera().config.far_clip()
-  );
-
-  // render geometries
-  // render_geometry(Pipeline* pipe, shadow_frustum, 0, map_size);
-
-  ctx.render_context->reset_state_objects();
-
-  // buffer_->unbind(ctx);
+std::shared_ptr<Texture2D> const& ShadowMap::get_depth_buffer() const {
+  return depth_buffer_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// void ShadowMap::render_cascaded(RenderContext const& ctx,
-//               SceneGraph const& scene_graph,
-//               math::vec3 const& center_of_interest,
-//               Frustum const& scene_frustum,
-//               Camera const& scene_camera,
-//               math::mat4 const& transform,
-//               unsigned map_size, float split_0,
-//               float split_1, float split_2,
-//               float split_3, float split_4,
-//               float near_clipping_in_sun_direction) {
+void ShadowMap::remove_buffers(RenderContext const& ctx) {
+  unbind(ctx);
 
-//   update_members(ctx, map_size*2);
-//   projection_view_matrices_ = std::vector<math::mat4>(4);
+  fbo_->clear_attachments();
 
-//   buffer_->bind(ctx);
-//   buffer_->clear_depth_stencil_buffer(ctx);
-
-//   ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
-//   ctx.render_context->set_rasterizer_state(rasterizer_state_);
-
-//   std::vector<float> splits({
-//     split_0, split_1, split_2, split_3, split_4
-//   });
-
-//   if (pipeline_->config.near_clip() > split_0
-//       || pipeline_->config.far_clip() < split_4) {
-//     Logger::LOG_WARNING << "Splits of cascaded shadow maps are not inside "
-//       << "clipping range! Fallback to equidistant splits used." << std::endl;
-//     float clipping_range(pipeline_->config.far_clip()
-//                       - pipeline_->config.near_clip());
-//     splits = {
-//       pipeline_->config.near_clip(),
-//       pipeline_->config.near_clip() + clipping_range * 0.25f,
-//       pipeline_->config.near_clip() + clipping_range * 0.5f,
-//       pipeline_->config.near_clip() + clipping_range * 0.75f,
-//       pipeline_->config.far_clip()
-//     };
-//   }
-
-//   for (int y(0); y<2; ++y) {
-//     for (int x(0); x<2; ++x) {
-
-//       int cascade(y*2 + x);
-
-//       // render each cascade to a quarter of the shadow map
-//       ctx.render_context->set_viewport(scm::gl::viewport(
-//           math::vec2(x * map_size, y * map_size),
-//           math::vec2(map_size, map_size)));
-
-//       // set clipping of camera frustum according to current cascade
-//       Frustum cropped_frustum(Frustum::perspective(
-//         scene_frustum.get_camera_transform(),
-//         scene_frustum.get_screen_transform(),
-//         splits[cascade], splits[cascade+1]
-//       ));
-
-//       // transform cropped frustum tu sun space and calculate radius and bbox
-//       // of transformed frustum
-//       auto cropped_frustum_corners(cropped_frustum.get_corners());
-//       math::BoundingBox<math::vec3> extends_in_sun_space;
-//       float radius_in_sun_space = 0;
-//       std::vector<math::vec3> corners_in_sun_space;
-//       math::vec3 center_in_sun_space(0, 0, 0);
-
-//       auto inverse_sun_transform(scm::math::inverse(transform));
-//       for (auto const& corner: cropped_frustum_corners) {
-//         math::vec3 new_corner(inverse_sun_transform * corner);
-//         center_in_sun_space += new_corner/8;
-//         corners_in_sun_space.push_back(new_corner);
-//         extends_in_sun_space.expandBy(new_corner);
-//       }
-
-//       for (auto const& corner: corners_in_sun_space) {
-//         float radius = scm::math::length(corner-center_in_sun_space);
-//         if (radius > radius_in_sun_space)
-//           radius_in_sun_space = radius;
-//       }
-
-//       // center of front plane of frustum
-//       auto center(math::vec3(
-//             (extends_in_sun_space.min[0] + extends_in_sun_space.max[0])/2,
-//             (extends_in_sun_space.min[1] + extends_in_sun_space.max[1])/2,
-//              extends_in_sun_space.max[2] + near_clipping_in_sun_direction));
-
-//       // eliminate sub-pixel movement
-//       float tex_coord_x = center.x * map_size / radius_in_sun_space / 2;
-//       float tex_coord_y = center.y * map_size / radius_in_sun_space / 2;
-
-//       float tex_coord_rounded_x = round(tex_coord_x);
-//       float tex_coord_rounded_y = round(tex_coord_y);
-
-//       float dx = tex_coord_rounded_x - tex_coord_x;
-//       float dy = tex_coord_rounded_y - tex_coord_y;
-
-//       dx /= map_size / radius_in_sun_space / 2;
-//       dy /= map_size / radius_in_sun_space / 2;
-
-//       center.x += dx;
-//       center.y += dy;
-
-//       // calculate transformation of shadow screen
-//       auto screen_in_sun_space(scm::math::make_translation(center)
-//                               * scm::math::make_scale(radius_in_sun_space*2,
-//                                                       radius_in_sun_space*2,
-//                                                       1.0f));
-//       auto sun_screen_transform(transform * screen_in_sun_space);
-
-//       // calculate transformation of shadow eye
-//       auto sun_eye_transform(scm::math::make_translation(
-//             sun_screen_transform.column(3)[0],
-//             sun_screen_transform.column(3)[1],
-//             sun_screen_transform.column(3)[2]));
-//       auto sun_eye_depth(transform * math::vec4(0, 0,
-//                                         extends_in_sun_space.max[2]
-//                                       - extends_in_sun_space.min[2]
-//                                       + near_clipping_in_sun_direction, 0.0f));
-
-//       auto shadow_frustum(
-//         Frustum::orthographic(
-//           sun_eye_transform,
-//           sun_screen_transform,
-//           0,
-//           scm::math::length(sun_eye_depth)
-//         )
-//       );
-
-//       // render geometries
-//       render_geometry(ctx, scene_graph, center_of_interest, shadow_frustum,
-//                       scene_camera, cascade, map_size);
-//     }
-//   }
-
-//   ctx.render_context->reset_state_objects();
-
-//   buffer_->unbind(ctx);
-
-// }
+  if (depth_buffer_) {
+    depth_buffer_->make_non_resident(ctx);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

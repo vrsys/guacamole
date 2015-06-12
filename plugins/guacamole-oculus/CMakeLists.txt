@@ -29,17 +29,29 @@ IF (MSVC)
 ENDIF (MSVC)
 
 IF (UNIX)
-    LIST(APPEND LIBS udev Xinerama guacamole ${OVR_LIBRARIES})
+    LIST(APPEND LIBS udev Xinerama pthread guacamole optimized ${OVR_LIBRARY} debug ${OVR_LIBRARY_DEBUG})
 ELSEIF (MSVC)
-    LIST(APPEND LIBS winmm.lib guacamole ${OVR_LIBRARIES})
+    LIST(APPEND LIBS winmm.lib guacamole ${OVR_LIBRARY})
 ENDIF(UNIX)
 
 find_package (Threads)
 
-target_link_libraries( guacamole-oculus debug ${LIBS} ${CMAKE_THREAD_LIBS_INIT} optimized ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+if (MSVC)
+  target_link_libraries( guacamole-oculus
+                         ${LIBS}
+                         optimized ${FREEIMAGE_LIBRARY}
+                         debug ${FREEIMAGE_LIBRARY_DEBUG}
+                         optimized ${FREEIMAGE_PLUS_LIBRARY}
+                         debug ${FREEIMAGE_PLUS_LIBRARY_DEBUG}
+                         ${CMAKE_THREAD_LIBS_INIT} )
+elseif (UNIX)
+  target_link_libraries( guacamole-oculus
+                         ${LIBS}
+                         ${CMAKE_THREAD_LIBS_INIT} )
+endif (MSVC)
 
 ###############################################################################
-# install 
+# install
 ###############################################################################
 
 IF (MSVC)
@@ -57,21 +69,21 @@ IF (MSVC)
     ARCHIVE DESTINATION lib/Debug
   )
 ELSEIF (UNIX)
-  install (TARGETS guacamole-oculus 
+  install (TARGETS guacamole-oculus
     RUNTIME DESTINATION lib
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
   )
 ENDIF (MSVC)
 
-# header files 
+# header files
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/gua/ DESTINATION include/gua FILES_MATCHING PATTERN "*.hpp")
 
 # shader and material resources
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION resources 
-        FILES_MATCHING 
-        PATTERN "*.frag" 
-        PATTERN "*.vert" 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION resources
+        FILES_MATCHING
+        PATTERN "*.frag"
+        PATTERN "*.vert"
         PATTERN "*.glsl"
         PATTERN "*.geom"
         PATTERN "*.tctrl"

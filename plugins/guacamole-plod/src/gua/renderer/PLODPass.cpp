@@ -47,7 +47,7 @@ PLODPassDescription::PLODPassDescription()
 {
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
-  doClear_ = false;
+  enable_for_shadows_ = true;
   rendermode_ = RenderMode::Custom;
 }
 

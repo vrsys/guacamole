@@ -32,13 +32,12 @@ namespace node {
 class Node;
 class TransformNode;
 class LODNode;
+class SkeletalAnimationNode;
 class TriMeshNode;
 class Video3DNode;
 class VolumeNode;
-class PointLightNode;
+class LightNode;
 class ScreenNode;
-class SpotLightNode;
-class SunLightNode;
 class RayNode;
 class SerializableNode;
 class TexturedQuadNode;
@@ -107,6 +106,16 @@ class NodeVisitor {
   virtual void visit(node::LODNode* node) { visit(reinterpret_cast<node::Node*>(node)); }
 
   /**
+   * Visits an SkeletalAnimationNode.
+   *
+   * This function provides the interface to visit an SkeletalAnimationNode.
+   * Unless overwritten by derived classes, this defaults to visit(Node*).
+   *
+   * \param cam   Pointer to a SkeletalAnimationNode.
+   */
+  virtual void visit(node::SkeletalAnimationNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
+
+  /**
    * Visits a GeometryNode.
    *
    * This function provides the interface to visit a GeometryNode.
@@ -148,37 +157,17 @@ class NodeVisitor {
 
 
   /**
-   * Visits a PointLightNode.
+   * Visits a LightNode.
    *
-   * This function provides the interface to visit a PointLightNode.
+   * This function provides the interface to visit a LightNode.
    * Unless overwritten by derived classes, this defaults to visit(Node*).
    *
-   * \param cam   Pointer to a PointLightNode.
+   * \param cam   Pointer to a LightNode.
    */
-  virtual void visit(node::PointLightNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
+  virtual void visit(node::LightNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
 
   /**
-   * Visits a SpotLightNode.
-   *
-   * This function provides the interface to visit a SpotLightNode.
-   * Unless overwritten by derived classes, this defaults to visit(Node*).
-   *
-   * \param cam   Pointer to a SpotLightNode.
-   */
-  virtual void visit(node::SpotLightNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
-
-  /**
-   * Visits a SunLightNode.
-   *
-   * This function provides the interface to visit a SunLightNode.
-   * Unless overwritten by derived classes, this defaults to visit(Node*).
-   *
-   * \param cam   Pointer to a SunLightNode.
-   */
-  virtual void visit(node::SunLightNode* node) { visit(reinterpret_cast<node::SerializableNode*>(node)); }
-
-  /**
-   * Visits a SpotLightNode.
+   * Visits a ScreenNode.
    *
    * This function provides the interface to visit a ScreenNode.
    * Unless overwritten by derived classes, this defaults to visit(Node*).

@@ -67,9 +67,13 @@ void TriMeshRenderer::create_state_objects(RenderContext const& ctx)
 
 void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-  auto sorted_objects(pipe.get_scene().nodes.find(std::type_index(typeid(node::TriMeshNode))));
+  auto& scene = *pipe.current_viewstate().scene;
+  auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
-  if (sorted_objects != pipe.get_scene().nodes.end() && sorted_objects->second.size() > 0) {
+  if (sorted_objects != scene.nodes.end() && sorted_objects->second.size() > 0) {
+
+    auto& target = *pipe.current_viewstate().target;
+    auto const& camera = pipe.current_viewstate().camera;
 
     std::sort(sorted_objects->second.begin(), sorted_objects->second.end(),
               [](node::Node* a, node::Node* b) {
@@ -79,18 +83,17 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
     RenderContext const& ctx(pipe.get_context());
 
-    std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / TrimeshPass";
-    std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / TrimeshPass";
+    std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
+    std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
 
     pipe.begin_gpu_query(ctx, gpu_query_name);
     pipe.begin_cpu_query(cpu_query_name);
 
-    bool writes_only_color_buffer = false;
-    pipe.get_gbuffer().bind(ctx, writes_only_color_buffer);
-    pipe.get_gbuffer().set_viewport(ctx);
-    pipe.get_abuffer().bind(ctx);
+    bool write_depth = true;
+    target.bind(ctx, write_depth);
+    target.set_viewport(ctx);
 
-    int view_id(pipe.get_camera().config.get_view_id());
+    int view_id(camera.config.get_view_id());
 
     MaterialShader*                current_material(nullptr);
     std::shared_ptr<ShaderProgram> current_shader;
@@ -101,6 +104,13 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
     for (auto const& object : sorted_objects->second) {
 
       auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
+      if (pipe.current_viewstate().shadow_mode && tri_mesh_node->get_shadow_mode() == ShadowMode::OFF) {
+        continue;
+      }
+
+      if (!tri_mesh_node->get_render_to_gbuffer()) {
+        continue;
+      }
 
       if (current_material != tri_mesh_node->get_material()->get_shader()) {
         current_material = tri_mesh_node->get_material()->get_shader();
@@ -127,23 +137,33 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         }
         if (current_shader) {
           current_shader->use(ctx);
-          current_shader->set_uniform(ctx, math::vec2i(pipe.get_gbuffer().get_width(),
-                                                       pipe.get_gbuffer().get_height()),
+          current_shader->set_uniform(ctx, math::vec2i(target.get_width(),
+                                                       target.get_height()),
                                       "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
-          current_shader->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_width(),  "gua_texel_width");
-          current_shader->set_uniform(ctx, 1.0f / pipe.get_gbuffer().get_height(), "gua_texel_height");
+          current_shader->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
+          current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
+          // hack
+          current_shader->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx),
+                                      "gua_gbuffer_depth");
         }
       }
 
       if (current_shader && tri_mesh_node->get_geometry())
       {
-        UniformValue model_mat (::scm::math::mat4f(tri_mesh_node->get_cached_world_transform()));
-        UniformValue normal_mat (::scm::math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));
+        auto model_view_mat = scene.rendering_frustum.get_view() * tri_mesh_node->get_cached_world_transform();
+        UniformValue normal_mat (math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));
 
-        current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
+        int rendering_mode = pipe.current_viewstate().shadow_mode ? (tri_mesh_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
+
+        current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tri_mesh_node->get_cached_world_transform()));
+        current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
         current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+        current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
-        tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
+        // lowfi shadows dont need material input
+        if (rendering_mode != 1) {
+          tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
+        }
 
         current_rasterizer_state = tri_mesh_node->get_material()->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
 
@@ -158,15 +178,14 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
       }
     }
 
-    pipe.get_gbuffer().unbind(ctx);
-    pipe.get_abuffer().unbind(ctx);
+    target.unbind(ctx);
 
     pipe.end_gpu_query(ctx, gpu_query_name);
     pipe.end_cpu_query(cpu_query_name);
 
     ctx.render_context->reset_state_objects();
   }
-  
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
