@@ -20,64 +20,69 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/DepthCubeMapPass.hpp>
-
-
 #include <gua/renderer/DepthCubeMapRenderer.hpp>
-#include <gua/renderer/GBuffer.hpp>
+
+#include <gua/config.hpp>
+
+#include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/utils/Logger.hpp>
+#include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/ABuffer.hpp>
+
 #include <gua/databases/Resources.hpp>
+
+#include <scm/core/math/math.h>
+
+#include <chrono>
+#include <thread>
 
 namespace gua {
 
-DepthCubeMapPassDesciption::DepthCubeMapPassDesciption()
-  : PipelinePassDescription() {
-
-  vertex_shader_ = "resources/shaders/common/quad.vert";
-  fragment_shader_ = "resources/shaders/textured_quad.frag";
-  name_ = "DepthCubeMapPass";
-
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  rendermode_ = RenderMode::Custom;
-
-  rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
-        scm::gl::FILL_SOLID, scm::gl::CULL_NONE));
-
-  depth_stencil_state_ = boost::make_optional(
-    scm::gl::depth_stencil_state_desc(
-      true, true, scm::gl::COMPARISON_LESS, true, 1, 0, 
-      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
-    )
-  );
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> DepthCubeMapPassDesciption::make_copy() const {
-  return std::make_shared<DepthCubeMapPassDesciption>(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass DepthCubeMapPassDesciption::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+DepthCubeMapRenderer::DepthCubeMapRenderer()
 {
-  PipelinePass pass{*this, ctx, substitution_map};
-
-  auto renderer = std::make_shared<DepthCubeMapRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
-  renderer->create_state_objects(ctx);
-
-  pass.process_ = [renderer](
-      PipelinePass & pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-
-    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
-    renderer->render(pipe, desc);
-  };
-
-  return pass;
+  std::cout << "DepthCubeMapRenderer constructed" << std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void DepthCubeMapRenderer::create_state_objects(RenderContext const& ctx)
+{
+  rs_cull_back_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
+  rs_cull_none_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
+{
+  auto& target = *pipe.current_viewstate().target;
+  RenderContext const& ctx(pipe.get_context());
+
+  std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / DepthCubeMapPass";
+  std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / DepthCubeMapPass";
+
+  pipe.begin_gpu_query(ctx, gpu_query_name);
+  pipe.begin_cpu_query(cpu_query_name);
+
+  bool write_depth = true;
+  target.bind(ctx, write_depth);
+  target.set_viewport(ctx);
+
+  //RENDER
+  // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+  target.unbind(ctx);
+
+  pipe.end_gpu_query(ctx, gpu_query_name);
+  pipe.end_cpu_query(cpu_query_name);
+
+  ctx.render_context->reset_state_objects();
+
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+} // namespace gua
