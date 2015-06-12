@@ -140,7 +140,7 @@ void Trackball::motion(int x, int y)
   if (button_left_)
   {
     double angle_y = (mapping_rotate_ * double(x - mousepos_x_));
-    double angle_x = (mapping_rotate_ * double(-y - mousepos_y_));
+    double angle_x = (mapping_rotate_ * double(mousepos_y_ - y));
 
     rotation_euler_ = scm::math::make_rotation(angle_x, scm::math::vec3d(1, 0, 0)) * rotation_euler_;
     rotation_euler_ = scm::math::make_rotation(angle_y, scm::math::vec3d(0, 1, 0)) * rotation_euler_;
@@ -148,16 +148,16 @@ void Trackball::motion(int x, int y)
 
   if (button_right_)
   {
-    distance_ += mapping_zoom_ * double(-y - mousepos_y_);
+    distance_ += mapping_zoom_ * double(mousepos_y_ - y);
   }
 
   if (button_middle_)
   {
     shiftx_ += mapping_shift_ * double(x - mousepos_x_);
-    shifty_ -= mapping_shift_ * double(-y - mousepos_y_);
+    shifty_ += mapping_shift_ * double(y - mousepos_y_);
   }
 
-  mousepos_y_ = -y;
+  mousepos_y_ = y;
   mousepos_x_ = x;
 }
 

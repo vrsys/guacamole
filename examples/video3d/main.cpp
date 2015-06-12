@@ -65,7 +65,8 @@ int main(int argc, char** argv) {
   teapot->translate(0, -2, 0);
   graph.add_node("/transform", teapot);
 
-  auto light = graph.add_node<gua::node::PointLightNode>("/", "light");
+  auto light = graph.add_node<gua::node::LightNode>("/", "light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.brightness = 150.0f;
   light->scale(100.f);
   light->translate(-3.f, 5.f, 5.f);

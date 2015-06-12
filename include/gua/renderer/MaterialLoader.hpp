@@ -23,19 +23,19 @@
 #define GUA_MATERIAL_LOADER_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
+#include <gua/config.hpp>
 #include <gua/renderer/Material.hpp>
-#include <gua/renderer/TriMeshRessource.hpp>
 
 // external headers
 #include <string>
-#include <list>
 #include <memory>
 
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
+namespace fbxsdk_2015_1{
+  class FbxSurfaceMaterial;
+}
 
 namespace Assimp { class Importer; }
+class aiMaterial;
 
 namespace gua {
 
@@ -52,10 +52,26 @@ class GUA_DLL MaterialLoader {
  public:
 
   std::shared_ptr<Material> load_material(aiMaterial const* material,
-                                std::string const& assets_directory) const;
+                                std::string const& assets_directory,
+                                bool optimize_material = true) const;
+#ifdef GUACAMOLE_FBX
+  std::shared_ptr<Material> load_material(fbxsdk_2015_1::FbxSurfaceMaterial const& material,
+                                std::string const& assets_directory,
+                                bool optimize_material = true) const;
 
+	std::shared_ptr<Material> load_unreal(std::string const& file_name,
+															 	std::string const& assets_directory,
+															 	bool optimize_material = true) const;
+#endif
+  std::shared_ptr<Material> load_material(std::string const& file_name,
+                                std::string const& assets_directory,
+                                bool optimize_material = true) const;
+
+  static std::string get_file_name(std::string const& path);
+  inline static bool file_exists(std::string const& path);
 };
 
 }
 
 #endif  // GUA_MATERIAL_LOADER_HPP
+

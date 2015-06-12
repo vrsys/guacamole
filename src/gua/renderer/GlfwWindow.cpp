@@ -94,7 +94,8 @@ void on_window_enter(GLFWwindow* glfw_window, int enter) {
 
 GlfwWindow::GlfwWindow(Configuration const& configuration)
   : WindowBase(configuration),
-    glfw_window_(nullptr) {}
+    glfw_window_(nullptr),
+    cursor_mode_{CursorMode::NORMAL} {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -142,6 +143,18 @@ void GlfwWindow::open() {
   glfwSetScrollCallback(      glfw_window_, &on_window_scroll);
   glfwSetCursorEnterCallback( glfw_window_, &on_window_enter);
 
+  switch(cursor_mode_) { 
+    case CursorMode::NORMAL:
+     glfwSetInputMode(glfw_window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    break;
+    case CursorMode::HIDDEN:
+     glfwSetInputMode(glfw_window_, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    break;
+    case CursorMode::DISABLED:
+     glfwSetInputMode(glfw_window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    break;
+  }
+
   if (!glfw_window_) {
     Logger::LOG_WARNING << "Failed to open GlfwWindow: Could not create glfw3 window!" << std::endl;
     glfwTerminate();
@@ -174,6 +187,34 @@ void GlfwWindow::close() {
 
 void GlfwWindow::process_events() {
   glfwPollEvents();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GlfwWindow::cursor_mode(CursorMode mode) {
+  
+  switch(mode) { 
+    case CursorMode::NORMAL:
+      if(get_is_open()) glfwSetInputMode(glfw_window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+      cursor_mode_ = mode;
+    break;
+    case CursorMode::HIDDEN:
+      if(get_is_open()) glfwSetInputMode(glfw_window_, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+      cursor_mode_ = mode;
+    break;
+    case CursorMode::DISABLED:
+      if(get_is_open()) glfwSetInputMode(glfw_window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+      cursor_mode_ = mode;
+    break;
+    default:
+      Logger::LOG_WARNING << "Cursor mode undefined or unsupported" << std::endl; break;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+GlfwWindow::CursorMode GlfwWindow::cursor_mode() const {
+  return cursor_mode_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

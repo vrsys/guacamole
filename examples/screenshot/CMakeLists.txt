@@ -15,7 +15,7 @@ add_executable( ${_EXE_NAME} main.cpp)
 
 add_dependencies(${_EXE_NAME} guacamole)
 
-list(APPEND LIBS guacamole)
+list(APPEND LIBS guacamole freeimageplus)
 
 target_link_libraries( ${_EXE_NAME} debug ${LIBS} optimized ${LIBS})
 

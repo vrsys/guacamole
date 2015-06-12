@@ -92,12 +92,10 @@ class GuiResource {
     template<typename ...Args>
     void call_javascript(std::string const& method, Args&& ... a) const {
       std::vector<std::string> args = {(gua::to_string(a))...};
-      call_javascript_impl(method, args);
+      call_javascript_arg_vector(method, args);
     }
 
-    void call_javascript(std::string const& method, std::vector<std::string> const& args) const {
-      call_javascript_impl(method, args);
-    }
+    void call_javascript_arg_vector(std::string const& method, std::vector<std::string> const& args) const;
 
     void add_javascript_callback(std::string const& name);
     void add_javascript_getter(std::string const& name, std::function<std::string()> callback);
@@ -109,7 +107,6 @@ class GuiResource {
 
   private:
 
-    void call_javascript_impl(std::string const& method, std::vector<std::string> const& args) const;
     void add_javascript_callback(std::string const& callback, bool with_result);
 
     std::string name_;

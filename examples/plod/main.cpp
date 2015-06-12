@@ -27,26 +27,133 @@
 
 #include <gua/renderer/PLODLoader.hpp>
 #include <gua/node/PLODNode.hpp>
+#include <gua/node/RayNode.hpp>
 #include <gua/renderer/PLODPass.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
+#include <gua/renderer/SSAAPass.hpp>
 
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 
 #include <gua/renderer/TexturedQuadPass.hpp>
 
-bool rotate_light;
+bool rotate_light = false;
 
-// forward mouse interaction to trackball
-void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
+/////////////////////////////////////////////////////////////////////////////
+// keyboard callbacks:
+/////////////////////////////////////////////////////////////////////////////
+//
+//    general
+//    -> 'r' to force shader recompilation
+//    -> 'm' toggle ambient lighting vis_mode
+//    -> 'b' toggle background
+//    -> SPACE toggle light rotation on/off
+//    -> use SHIFT + Mouse to pick lens center
+
+//    splatting configuration
+//    -> 'u' to increase splat radius
+//    -> 'j' to decrease splat radius
+//    -> 'i' to increase error threshold
+//    -> 'k' to decrease error threshold
+
+//    lens effects
+//    -> 'y' toggle lens vis_mode 
+//        0 = off
+//        1 = distance to lens plane 
+//        2 = normal in object space
+//    -> 't' to increase lens radius
+//    -> 'g' to decrease lens radius
+
+//    screen space shadows
+//    -> 'a' toggle on/off
+//    -> 'q' to increase shadow radius
+//    -> 'z' to decrease shadow radius
+//    -> 'w' to increase shadow intensity
+//    -> 'x' to decrease shadow intensity
+
+//    SSAO
+//    -> 's' toggle on/off
+//    -> '1' to increase SSAO intensity
+//    -> '2' to decrease SSAO intensity
+//    -> '3' to increase SSAO radius
+//    -> '4' to decrease SSAO radius
+//    -> '5' to increase SSAO falloff
+//    -> '6' to decrease SSAO falloff
+
+//    FXAA
+//    -> 'f' toggle FXAA: off/fast/FXAA311
+//    -> '7' to increase FXAA subpix quality
+//    -> '8' to decrease FXAA subpix quality
+//    -> '9' to increase FXAA edge threshold
+//    -> '0' to increase FXAA edge threshold
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+// 0 = off
+// 1 = distance to plane
+// 2 = normal visualization
+
+struct LensConfig {
+    enum LensVisMode{ off = 0x0,
+                    distance, 
+                    normals,
+                    first_derivation,
+                    second_derivation,
+                    edge};
+
+    enum LensGeoMode { sphere_os = 0x0,
+        sphere_ss,
+        box_ss,
+        //box_ws
+    };
+
+  gua::math::vec3 world_position;
+  gua::math::vec2 screen_position;
+  gua::math::vec3 world_normal;
+  gua::math::mat4 model_transform_on_pick;
+  LensVisMode vis_mode;
+  LensGeoMode geo_mode;
+  float radius;
+  gua::math::vec2 square_ss_min;
+  gua::math::vec2 square_ss_max;
+  float step_size_ss;
+  float step_size_os;
+  bool dirty_flag;
+
+  gua::math::vec3 vis_plane_v;
+  gua::math::vec3 vis_plane_n;
+  gua::math::vec2 depth_range;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+gua::math::vec3 compute_ray(std::shared_ptr<gua::node::ScreenNode> const& screen, std::shared_ptr<gua::node::CameraNode> const& camera, double x, double y) {
+  auto sz = screen->data.get_size();
+  gua::math::vec4 t = screen->get_world_transform() * gua::math::vec4(x*(sz.x / 2.0), y*(sz.y / 2.0), 0.0, 1.0);
+  return normalize(gua::math::vec3(t) - gua::math::get_translation(camera->get_world_transform()));
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+void mouse_button(gua::utils::Trackball& trackball, 
+                  gua::SceneGraph& graph, 
+                  std::shared_ptr<gua::node::ScreenNode> const& screen, 
+                  std::shared_ptr<gua::node::CameraNode> const& camera, 
+                  gua::math::vec2ui const& resolution, 
+                  LensConfig& lens,
+                  int mousebutton, 
+                  int action, 
+                  int mods)
 {
   gua::utils::Trackball::button_type button;
   gua::utils::Trackball::state_type state;
 
   switch (mousebutton) {
     case 0: button = gua::utils::Trackball::left; break;
-    case 2: button = gua::utils::Trackball::middle; break;
     case 1: button = gua::utils::Trackball::right; break;
+    case 2: button = gua::utils::Trackball::middle; break;
   };
 
   switch (action) {
@@ -54,44 +161,105 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
     case 1: state = gua::utils::Trackball::pressed; break;
   };
 
-  trackball.mouse(button, state, trackball.posx(), trackball.posy());
+  if (mods) {
+    if (state == gua::utils::Trackball::released) {
+      // current mouse pos
+      double nx = 2.0 * (double(int(trackball.posx()) - int(resolution.x / 2)) / double(resolution.x));
+      double ny = 2.0 * (double(int(trackball.posy()) - int(resolution.y / 2)) / double(resolution.y));
+
+      const double ray_dist = 2000.0;
+      auto origin = gua::math::get_translation(camera->get_world_transform());
+      auto direction = compute_ray(screen, camera, nx, ny) * ray_dist;
+
+      std::set<gua::PickResult> picks = graph.ray_test(
+        gua::Ray(origin, direction, 1.0),
+        gua::PickResult::PICK_ONLY_FIRST_OBJECT |
+        gua::PickResult::PICK_ONLY_FIRST_FACE |
+        gua::PickResult::GET_WORLD_POSITIONS |
+        gua::PickResult::GET_POSITIONS);
+
+      for (auto const& r : picks)
+      //for (auto const& r : picks_interpol)
+      {          
+        auto frustrum = camera->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+        auto pick_centre_ss = frustrum.get_projection() * frustrum.get_view() * gua::math::vec4(r.world_position, 1.0f);
+        auto pick_centre_ss_norm = (gua::math::vec2(pick_centre_ss.x, pick_centre_ss.y) / pick_centre_ss.w) * 0.5f + gua::math::vec2(0.5f);
+      
+        lens.screen_position = pick_centre_ss_norm;
+        lens.world_position = r.world_position;
+        lens.world_normal = r.normal;        
+        lens.dirty_flag = true;
+
+        lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
+        lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
+
+        std::cout << "Picked Name: " << r.object->get_name() << " Position: " <<  r.position << "  Normal: " << r.normal<< std::endl;
+      }
+    }
+  }
+  else {
+    trackball.mouse(button, state, trackball.posx(), trackball.posy());
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void increase_importance_radius(std::shared_ptr<gua::node::Node> const& node) {
+void increase_radius(std::shared_ptr<gua::node::Node> const& node) {
   auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
   if (plodnode) {
-    auto radius_scale = plodnode->get_importance();
-    plodnode->set_importance(std::min(2.0, 1.1 * radius_scale));
-    std::cout << "Setting radius scale to " << plodnode->get_importance() << std::endl;
+    auto radius_scale = plodnode->get_radius_scale();
+    plodnode->set_radius_scale(std::min(2.0f, 1.1f * radius_scale));
+    std::cout << "Setting radius scale to " << plodnode->get_radius_scale() << std::endl;
   }
   for (auto const& c : node->get_children()) {
-    increase_importance_radius(c);
+    increase_radius(c);
   }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void decrease_importance_radius(std::shared_ptr<gua::node::Node> const& node) {
+void decrease_radius(std::shared_ptr<gua::node::Node> const& node) {
   auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
   if (plodnode) {
-    auto radius_scale = plodnode->get_importance();
-    plodnode->set_importance(std::max(0.1, 0.9 * radius_scale));
-    std::cout << "Setting radius scale to " << plodnode->get_importance() << std::endl;
+    auto radius_scale = plodnode->get_radius_scale();
+    plodnode->set_radius_scale(std::max(0.1f, 0.9f * radius_scale));
+    std::cout << "Setting radius scale to " << plodnode->get_radius_scale() << std::endl;
   }
   for (auto const& c : node->get_children()) {
-    decrease_importance_radius(c);
+    decrease_radius(c);
   }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// keyboard callback
-//    -> use 'r' to force shader recompilation
-//    -> use 'u' to increase splat radius
-//    -> use 'j' to decrease splat radius
+void increase_error_threshold(std::shared_ptr<gua::node::Node> const& node) {
+  auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
+  if (plodnode) {
+    auto radius_scale = plodnode->get_error_threshold();
+    plodnode->set_error_threshold(std::min(16.0f, 1.1f * radius_scale));
+    std::cout << "Setting error threshold to " << plodnode->get_error_threshold() << std::endl;
+  }
+  for (auto const& c : node->get_children()) {
+    increase_error_threshold(c);
+  }
+}
 
-void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods)
+/////////////////////////////////////////////////////////////////////////////
+void decrease_error_threshold(std::shared_ptr<gua::node::Node> const& node) {
+  auto plodnode = std::dynamic_pointer_cast<gua::node::PLODNode>(node);
+  if (plodnode) {
+    auto radius_scale = plodnode->get_error_threshold();
+    plodnode->set_error_threshold(std::max(1.0f, 0.9f * radius_scale));
+    std::cout << "Setting  error threshold to " << plodnode->get_error_threshold() << std::endl;
+  }
+  for (auto const& c : node->get_children()) {
+    decrease_error_threshold(c);
+  }
+}
+
+
+void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfig& lens, int key, int scancode, int action, int mods)
 {
   if (action == 0) return;
+
+  float v = 0.0f;
 
   switch (std::tolower(key))
   {
@@ -99,11 +267,194 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     pipe.get_resolve_pass()->touch();
     break;
   case 'u':
-    increase_importance_radius(graph.get_root());
+    increase_radius(graph.get_root());
     break;
   case 'j':
-    decrease_importance_radius(graph.get_root());
+    decrease_radius(graph.get_root());
     break;
+  case 'i':
+    increase_error_threshold(graph.get_root());
+    break;
+  case 'k':
+    decrease_error_threshold(graph.get_root());
+    break;
+
+    // toggle lens modes and parametrization
+  case 't':
+    lens.radius = std::min(10.0f, 1.1f * lens.radius);
+    lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
+    lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
+    std::cout << "Set lens radius to " << lens.radius << std::endl;
+    break;
+  case 'g':
+    lens.radius = std::max(0.01f, 0.9f * lens.radius);
+    lens.square_ss_min = lens.screen_position - gua::math::vec2(lens.radius);
+    lens.square_ss_max = lens.screen_position + gua::math::vec2(lens.radius);
+    std::cout << "Set lens radius to " << lens.radius << std::endl;
+    break;
+  case 'o':
+      lens.step_size_ss = std::max(0.0001f, 0.9f * lens.step_size_ss);
+      lens.step_size_os = std::max(0.0001f, 0.9f * lens.step_size_os);
+      std::cout << "Set lens step_size_ss to " << lens.step_size_ss;
+      std::cout << " Set lens step_size_os to " << lens.step_size_os << std::endl;
+    break;
+  case 'l':
+      lens.step_size_ss = std::min(1.0f, 1.1f * lens.step_size_ss);
+      lens.step_size_os = std::min(1.0f, 1.1f * lens.step_size_os);
+      std::cout << "Set lens step_size_ss to " << lens.step_size_ss;
+      std::cout << " Set lens step_size_os to " << lens.step_size_os << std::endl;
+    break;
+  case 'p':      
+      lens.depth_range.x -= 0.0001;
+      std::cout << "Set lens lens.depth_range.min to " << lens.depth_range.x << std::endl;
+      break;
+  case '[':
+      lens.depth_range.x += 0.0001;      
+      std::cout << "Set lens lens.depth_range.min to " << lens.depth_range.x << std::endl;
+      break;
+  case ']':      
+      lens.depth_range.y -= 0.0001;
+      std::cout << "Set lens lens.depth_range.max to " << lens.depth_range.y << std::endl;
+      break;
+  case '\\':
+      lens.depth_range.y += 0.0001;
+      std::cout << "Set lens lens.depth_range.max to " << lens.depth_range.y << std::endl;
+      break;
+  case 'y':
+      lens.vis_mode = static_cast<LensConfig::LensVisMode>((lens.vis_mode + 1) % 6);
+    std::cout << "Set lens vis_mode to " << lens.vis_mode << std::endl;
+    // 0 = off
+    // 1 = distance to plane
+    // 2 = normal visualization
+    break;
+  case 'h':
+      lens.geo_mode = static_cast<LensConfig::LensGeoMode>((lens.geo_mode + 1) % 3);
+      std::cout << "Set lens geo_mode to " << lens.geo_mode << std::endl;
+      // 0 = sphere_os
+      // 1 = sphere_ss
+      // 2 = box_ss
+      break;
+
+  case 'm': // toggle environment lighting vis_mode
+
+    if (pipe.get_resolve_pass()->environment_lighting_mode() == gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR) {
+      std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP" << std::endl;
+      pipe.get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP);
+    }
+    else if (pipe.get_resolve_pass()->environment_lighting_mode() == gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP) {
+      std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::CUBEMAP" << std::endl;
+      pipe.get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::CUBEMAP);
+    }
+    else {
+      std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR" << std::endl;
+      pipe.get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
+    }
+
+    pipe.get_resolve_pass()->touch();
+    break;
+
+  case 'b': // toggle background vis_mode
+
+    if (pipe.get_resolve_pass()->background_mode() == gua::ResolvePassDescription::BackgroundMode::COLOR) {
+      std::cout << "Setting to gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE" << std::endl;
+      pipe.get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+    }
+    else if (pipe.get_resolve_pass()->background_mode() == gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE) {
+      std::cout << "Setting to gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE" << std::endl;
+      pipe.get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+    }
+    else {
+      std::cout << "Setting to gua::ResolvePassDescription::BackgroundMode::AMBIENT_COLOR" << std::endl;
+      pipe.get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::COLOR);
+    }
+
+    pipe.get_resolve_pass()->touch();
+    break;
+
+  case 'a':  // toggle screen space shadows
+    pipe.get_resolve_pass()->screen_space_shadows(!pipe.get_resolve_pass()->screen_space_shadows());
+    break;
+
+  case 'q':
+    pipe.get_resolve_pass()->screen_space_shadow_radius(std::min(2.0f, 1.2f * pipe.get_resolve_pass()->screen_space_shadow_radius()));
+    break;
+
+  case 'z':
+    pipe.get_resolve_pass()->screen_space_shadow_radius(std::max(0.002f, 0.9f * pipe.get_resolve_pass()->screen_space_shadow_radius()));
+    break;
+
+  case 'w':
+    pipe.get_resolve_pass()->screen_space_shadow_intensity(std::min(1.0f, 1.1f * pipe.get_resolve_pass()->screen_space_shadow_intensity()));
+    break;
+
+  case 'x':
+    pipe.get_resolve_pass()->screen_space_shadow_intensity(std::max(0.1f, 0.9f * pipe.get_resolve_pass()->screen_space_shadow_intensity()));
+    break;
+
+
+  case 's':  // toggle SSAO
+    pipe.get_resolve_pass()->ssao_enable(!pipe.get_resolve_pass()->ssao_enable());
+    break;
+
+  case '1':
+    pipe.get_resolve_pass()->ssao_intensity(std::min(5.0f, 1.1f * pipe.get_resolve_pass()->ssao_intensity()));
+    break;
+  case '2':
+    pipe.get_resolve_pass()->ssao_intensity(std::max(0.02f, 0.9f * pipe.get_resolve_pass()->ssao_intensity()));
+    break;
+
+  case '3':
+    pipe.get_resolve_pass()->ssao_radius(std::min(64.0f, 1.1f * pipe.get_resolve_pass()->ssao_radius()));
+    break;
+  case '4':
+    pipe.get_resolve_pass()->ssao_radius(std::max(1.0f, 0.9f * pipe.get_resolve_pass()->ssao_radius()));
+    break;
+
+  case '5':
+    pipe.get_resolve_pass()->ssao_falloff(std::min(256.0f, 1.1f * pipe.get_resolve_pass()->ssao_falloff()));
+    break;
+  case '6':
+    pipe.get_resolve_pass()->ssao_falloff(std::max(0.1f, 0.9f * pipe.get_resolve_pass()->ssao_falloff()));
+    break;
+
+  case 'f':
+    if (pipe.get_ssaa_pass()->mode() == gua::SSAAPassDescription::SSAAMode::FXAA311) {
+      std::cout << "Switching to simple FAST_FXAA\n" << std::endl;
+      pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FAST_FXAA);
+    }
+    else if (pipe.get_ssaa_pass()->mode() == gua::SSAAPassDescription::SSAAMode::FAST_FXAA) {
+      std::cout << "Switching to No FXAA\n" << std::endl;
+      pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::DISABLED);
+    }
+    else {
+      std::cout << "Switching to FXAA 3.11\n" << std::endl;
+      pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FXAA311);
+    }
+    break;
+
+  case '7':
+    v = std::min(1.0f, 1.1f * pipe.get_ssaa_pass()->fxaa_quality_subpix());
+    std::cout << "Setting quality_subpix to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_quality_subpix(v);
+    break;
+  case '8':
+    v = std::max(0.2f, 0.9f * pipe.get_ssaa_pass()->fxaa_quality_subpix());
+    std::cout << "Setting quality_subpix to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_quality_subpix(v);
+    break;
+
+  case '9':
+    v = std::min(0.333f, 1.1f * pipe.get_ssaa_pass()->fxaa_edge_threshold());
+    std::cout << "Setting edge_threshold to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_edge_threshold(v);
+    break;
+  case '0':
+    v = std::max(0.063f, 0.9f * pipe.get_ssaa_pass()->fxaa_edge_threshold());
+    std::cout << "Setting edge_threshold to " << v << std::endl;
+    pipe.get_ssaa_pass()->fxaa_edge_threshold(v);
+    break;
+
+
   case ' ':
     rotate_light = !rotate_light;
     break;
@@ -115,9 +466,8 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 /////////////////////////////////////////////////////////////////////////////
 // example configuration
 /////////////////////////////////////////////////////////////////////////////
-#define RENDER_SINGLE_PIG_MODEL 0
 #define RENDER_PITOTI_HUNTING_SCENE 1
-#define RENDER_ADDITIONAL_TRIMESH_MODEL 0
+#define RENDER_EXAMPLE_STEREO 0
 
 int main(int argc, char** argv) {
   /////////////////////////////////////////////////////////////////////////////
@@ -168,6 +518,12 @@ int main(int argc, char** argv) {
   rough_white->set_uniform("roughness", 0.8f);
   rough_white->set_uniform("emissivity", 0.0f);
 
+  auto rough_red = pbr_overwrite_color_shader->make_new_material();
+  rough_red->set_uniform("color", gua::math::vec3f(0.8f, 0.0f, 0.0f));
+  rough_red->set_uniform("metalness", 0.0f);
+  rough_red->set_uniform("roughness", 0.8f);
+  rough_red->set_uniform("emissivity", 0.0f);
+
   /////////////////////////////////////////////////////////////////////////////
   // create scene
   /////////////////////////////////////////////////////////////////////////////
@@ -177,101 +533,174 @@ int main(int argc, char** argv) {
 
   // configure plod-renderer and create point-based objects
   gua::PLODLoader plodLoader;
+  gua::TriMeshLoader trimesh_loader;
 
   plodLoader.set_upload_budget_in_mb(32);
   plodLoader.set_render_budget_in_mb(2048);
   plodLoader.set_out_of_core_budget_in_mb(4096);
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+  auto model_xf = graph.add_node<gua::node::TransformNode>("/transform", "model_xf");
 
-#if RENDER_PITOTI_HUNTING_SCENE
-  #if WIN32
-    //auto plod_geometry(plodLoader.load_geometry("hunter", "\\GRANDMOTHER/pitoti/XYZ_ALL/new_pitoti_sampling/objects/Area_4_hunter_with_bow.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION ));
-  #else
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/precision_tests/001/Area-1_Warrior-scene_P01-1_transformed.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION ));
-    //auto plod_geometry(plodLoader.load_geometry("/mnt/pitoti/XYZ_ALL/new_pitoti_sampling/Area_4_hunter_with_bow.kdn", gua::PLODLoader::NORMALIZE_POSITION  ));
-  #endif
-#endif
-
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/opt/3d_models/point_based/plod/pig.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
-  //auto plod_geometry(plodLoader.load_geometry("plod_pig", "/mnt/pitoti/Seradina_FULL_SCAN/sera_fixed/sera_part_01.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ));
-  //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "/mnt/pitoti/KDN_LOD/PITOTI_KDN_LOD/_seradina.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE ) );
-
-#if RENDER_SINGLE_PIG_MODEL
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-  //auto plod_geometry2(plodLoader.load_geometry("plod_pig2", "data/objects/pig2.kdn", plod_glossy, gua::PLODLoader::NORMALIZE_POSITION));
-  //auto plod_geometry3(plodLoader.load_geometry("plod_pig3", "data/objects/pig3.kdn", plod_passthrough, gua::PLODLoader::NORMALIZE_POSITION));
-#endif
-
-  auto setup_plod_node = [] ( std::shared_ptr<gua::node::PLODNode> const& node) {
-    node->set_importance(1.0f);
+  auto setup_plod_node = [](std::shared_ptr<gua::node::PLODNode> const& node) {
+    node->set_radius_scale(1.0f);
     node->set_enable_backface_culling_by_normal(false);
     node->set_draw_bounding_box(true);
   };
 
+  std::vector<std::shared_ptr<gua::node::PLODNode>> plod_geometrys;
 
-  setup_plod_node(plod_geometry);
-  //setup_plod_node(plod_geometry2);
-  //setup_plod_node(plod_geometry3);
+#if RENDER_PITOTI_HUNTING_SCENE
+  #if WIN32
 
-  // create trimesh geometry
-  gua::TriMeshLoader loader;
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter0", "data/objects/Area-1_Warrior-scene_P01-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter1", "data/objects/Area-1_Warrior-scene_P01-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter2", "data/objects/Area-1_Warrior-scene_P01-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter3", "data/objects/Area-1_Warrior-scene_P01-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter4", "data/objects/Area-1_Warrior-scene_P02-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter5", "data/objects/Area-2_Plowing-scene_P02-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter6", "data/objects/Area-2_Plowing-scene_P02-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter7", "data/objects/Area-1_Warrior-scene_P03-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter8", "data/objects/Area-1_Warrior-scene_P03-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter9", "data/objects/Area-1_Warrior-scene_P03-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter10", "data/objects/Area-1_Warrior-scene_P03-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter11", "data/objects/TLS_Seradina_Rock-12C_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE));
+  
+#else
 
-  auto light_proxy_geometry(loader.create_geometry_from_file("light", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  auto camera_proxy_geometry(loader.create_geometry_from_file("camera_proxy", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  light_proxy_geometry->scale(0.02);
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter1",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter1",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter2",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter3",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P01-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter4",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P02-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter5",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P02-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter6",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P02-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter7",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-1_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter8",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-2_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter9",   "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-3_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter10", "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-1_Warrior-scene_P03-4_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
+  plod_geometrys.push_back(plodLoader.load_geometry("hunter11", "/mnt/pitoti/3d_pitoti/seradina_12c/rock/TLS_Seradina_Rock-12C_knn.kdn", plod_rough, gua::PLODLoader::DEFAULTS | gua::PLODLoader::MAKE_PICKABLE ));
 
-  // connect scene graph
-  transform->add_child(plod_geometry);
-  //transform->add_child(plod_geometry2);
-
-#if RENDER_ADDITIONAL_TRIMESH_MODEL
-  auto teapot_geometry(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION));
-  transform->add_child(teapot_geometry);
 #endif
 
-  //transform->add_child(plod_geometry2);
-  //transform->add_child(plod_geometry3);
+  for (auto p : plod_geometrys){
+      setup_plod_node(p);
+  }
 
-  //plod_geometry2->translate(0.0, 2.5, 0.0);
-  //plod_geometry3->translate(0.0, -2.5, 0.0);
+  // connect scene graph
+  for (auto p : plod_geometrys){
+      graph.add_node("/transform/model_xf", p);
+  }
+
+
+    
+  model_xf->translate(-plod_geometrys[0]->get_bounding_box().center());
+
+#else
+  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE));
+  setup_plod_node(plod_geometry);
+  graph.add_node("/transform/model_xf", plod_geometry);
+
+  auto teapot(trimesh_loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
+  graph.add_node("/transform/model_xf", teapot);
+  teapot->translate(0.6, 0.0, 0.0);
+
+#endif 
+
+  auto bb = plod_geometrys[0]->get_bounding_box();
+
+  // get complete BB
+  for (auto p : plod_geometrys){
+      bb.expandBy(p->get_bounding_box());
+  }
+
+  gua::math::vec3 bb_ranges;
+
+  bb_ranges.x = bb.max.x - bb.min.x;
+  bb_ranges.y = bb.max.y - bb.min.y;
+  bb_ranges.z = bb.max.z - bb.min.z;
+
+  auto min_range = std::min(bb_ranges.x, std::min(bb_ranges.y, bb_ranges.z));
+
+  auto min_dim = 0u;
+
+  if(bb_ranges.y == min_range){
+      min_dim = 1u;
+  }
+  if (bb_ranges.z == min_range){
+      min_dim = 2u;
+  }
+
+  float lense_init_size = 0.1f;
+
+  LensConfig lens_config = { gua::math::vec3{ 0.0, 0.0, 0.0 },
+      gua::math::vec2{ 0.5, 0.5 },
+      gua::math::vec3{ 1.0, 0.0, 0.0 },
+      gua::math::mat4(),
+      LensConfig::LensVisMode::off,
+      LensConfig::LensGeoMode::sphere_os,
+      lense_init_size,
+      gua::math::vec2(-lense_init_size),
+      gua::math::vec2(lense_init_size),
+      0.0066,
+      0.0009,
+      true,
+      gua::math::vec3(0.0),
+      gua::math::vec3(0.0, 1.0, 0.0),
+      gua::math::vec2(0.0, 1.0)
+  };
+
+
+  lens_config.vis_plane_v = gua::math::vec3(bb_ranges.x * 0.5f + bb.min.x, bb_ranges.y * 0.5f + bb.min.y, bb_ranges.z * 0.5f + bb.min.z);
+
+  //std::cout << "min: " << bb.min << std::endl;
+  //std::cout << "max: " << bb.max << std::endl;
+  //std::cout << "range: " << bb_ranges << std::endl;
+  //std::cout << "visplane_V: " << lens_config.vis_plane_v << std::endl;
+  //getchar();
+
+  if (0u == min_dim){
+      lens_config.vis_plane_n = gua::math::vec3(1.0f, 0.0f, 0.0f);
+  }
+  if (1u == min_dim){
+      lens_config.vis_plane_n = gua::math::vec3(0.0f, 1.0f, 0.0f);
+  }
+  if (2u == min_dim){
+      lens_config.vis_plane_n = gua::math::vec3(0.0f, 0.0f, 1.0f);
+  }
+
+  //lens_config.depth_range = gua::math::vec2(bb.min[min_dim], bb.max[min_dim]);
+  lens_config.depth_range = gua::math::vec2(-0.1f, 0.1f);
+
+  auto pick_proxy_geometry(trimesh_loader.create_geometry_from_file("pick_proxy", "data/objects/sphere.obj", rough_red, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  pick_proxy_geometry->scale(0.01);
+  auto pick_transform = graph.add_node<gua::node::TransformNode>("/transform/model_xf", "pick_transform");
+  pick_transform->add_child(pick_proxy_geometry);
+
+  auto light_proxy_geometry(trimesh_loader.create_geometry_from_file("light_proxy", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto camera_proxy_geometry(trimesh_loader.create_geometry_from_file("camera_proxy", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  light_proxy_geometry->scale(0.01);
 
   /////////////////////////////////////////////////////////////////////////////
   // create lighting
   /////////////////////////////////////////////////////////////////////////////
-
-  auto light_center = graph.add_node<gua::node::TransformNode>("/", "light_center");
-  light_center->translate(0.f, 0.f, 2.f);
-
-  auto light = graph.add_node<gua::node::PointLightNode>("/light_center", "light");
+  auto light = graph.add_node<gua::node::LightNode>("/transform/model_xf", "light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.set_enable_shadows(true);
+  light->data.set_brightness(30.f);
   light->scale(3.f);
-  light->translate(0.f, 0.f, 3.7f);
+  light->translate(0.5, 0.3, 1.3);
   light->add_child(light_proxy_geometry);
 
   /////////////////////////////////////////////////////////////////////////////
   // create viewing setup
   /////////////////////////////////////////////////////////////////////////////
-
-  auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
-  portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal->data.set_texture("portal");
-  portal->scale(5.0f);
-  portal->translate(4.5f, 1.0, -0.2f);
-  portal->rotate(-60, 0.f, 1.f, 0.f);
-  portal->translate(0.0f, 0.f, 5.0f);
-
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   //screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   //screen->data.set_size(gua::math::vec2(1.6f, 0.9f));
-  screen->data.set_size(gua::math::vec2(0.45f, 0.25f));
-  screen->translate(0, 0, 30.0);
-
-  auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
-  portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal_screen->translate(0.0, 0, 15.0);
-  portal_screen->rotate(-90, 0.0, 1.0, 0.0);
+  screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
+  //screen->data.set_size(gua::math::vec2(12.0f, 8.0f));
+  screen->translate(0.0, 0.0, 10.0);
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
@@ -281,46 +710,25 @@ int main(int argc, char** argv) {
   auto resolution = gua::math::vec2ui(1920, 1080);
 
   /////////////////////////////////////////////////////////////////////////////
-  // create portal camera and pipeline
-  /////////////////////////////////////////////////////////////////////////////
-
-  auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0.0, 0, 3.0);
-  portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
-  //portal_camera->config.set_resolution(resolution);
-  portal_camera->config.set_screen_path("/portal_screen");
-  portal_camera->config.set_scene_graph_name("main_scenegraph");
-  portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(false);
-  portal_camera->config.set_far_clip(200.0);
-  portal_camera->config.set_near_clip(0.1);
-
-  auto portal_pipe = std::make_shared<gua::PipelineDescription>();
-  portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  portal_pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
-  portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-  portal_pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-  portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  portal_pipe->get_pass_by_type<gua::ResolvePassDescription>()->background_texture("data/images/skymap.jpg");
-  portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-  portal_camera->set_pipeline_description(portal_pipe);
-
-  /////////////////////////////////////////////////////////////////////////////
   // create scene camera and pipeline
   /////////////////////////////////////////////////////////////////////////////
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 1.0);
+  camera->translate(0, 0, 10.0);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
-  camera->config.set_eye_dist(0.06);
+  camera->config.set_eye_dist(0.06f);
   camera->config.set_left_screen_path("/screen");
   camera->config.set_right_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
+#if RENDER_EXAMPLE_STEREO
+  camera->config.set_enable_stereo(true);
+#else
   camera->config.set_enable_stereo(false);
-  camera->config.set_far_clip(200.0);
-  camera->config.set_near_clip(0.01);
+#endif
+  camera->config.set_far_clip(100.0f);
+  camera->config.set_near_clip(0.01f);
   camera->add_child(camera_proxy_geometry);
  //camera->set_pre_render_cameras({portal_camera});
 
@@ -332,14 +740,19 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
+  //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   pipe->get_resolve_pass()->background_texture("data/images/skymap.jpg");
 
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(true);
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_radius(16.0);
-  //pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(2.5);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_enable(true);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->ssao_radius(16.0);
+
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadows(true);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_radius(0.2f);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_max_radius_px(200);
+  pipe->get_pass_by_type<gua::ResolvePassDescription>()->screen_space_shadow_intensity(1.0);
 
   camera->set_pipeline_description(pipe);
 
@@ -347,26 +760,42 @@ int main(int argc, char** argv) {
   // create window and callback setup
   /////////////////////////////////////////////////////////////////////////////
 
+
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+#if RENDER_EXAMPLE_STEREO
+  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+#else
   window->config.set_stereo_mode(gua::StereoMode::MONO);
+#endif
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
-    screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+    screen->data.set_size(gua::math::vec2(0.001f * new_size.x, 0.001f * new_size.y));
   });
 
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    trackball.motion(pos.x, pos.y);
+    trackball.motion((int)pos.x, (int)pos.y);
   });
 
-  window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-  window->on_key_press.connect(std::bind(key_press, std::ref(*(camera->get_pipeline_description())), std::ref(graph), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+  window->on_button_press.connect(std::bind(mouse_button,
+    std::ref(trackball),
+    std::ref(graph),
+    std::cref(screen),
+    std::cref(camera),
+    std::cref(window->config.get_left_resolution()), 
+    std::ref(lens_config),
+    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+  window->on_key_press.connect(std::bind(key_press, 
+                               std::ref(*(camera->get_pipeline_description())), 
+                               std::ref(graph), 
+                               std::ref(lens_config), 
+                               std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
   window->open();
 
@@ -378,23 +807,62 @@ int main(int argc, char** argv) {
 
   std::size_t ctr = 0;
 
+  auto last_frame_time = std::chrono::steady_clock::now();
+
   ticker.on_tick.connect([&]() {
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
                                                               gua::math::float_t(trackball.shifty()),
                                                               gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
-    transform->set_transform(modelmatrix);
+
+    //transform->set_transform(modelmatrix);
+
+    screen->set_transform(modelmatrix);
+
     static unsigned framecounter = 0;
     ++framecounter;
 
+    auto current_time = std::chrono::steady_clock::now();
+    double milliseconds = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_frame_time).count() / 1000.0;
+
+    if (lens_config.dirty_flag) {
+      pick_transform->set_transform(scm::math::inverse(model_xf->get_world_transform()) * scm::math::make_translation(lens_config.world_position));
+      lens_config.dirty_flag = false;
+    }
+    
+    plod_rough->set_uniform("lens_center", pick_transform->get_world_position());
+    plod_rough->set_uniform("lens_center_ss", lens_config.screen_position);
+    plod_rough->set_uniform("lens_world_normal", lens_config.world_normal);
+    plod_rough->set_uniform("lens_vis_mode", int(lens_config.vis_mode));
+    plod_rough->set_uniform("lens_geo_mode", int(lens_config.geo_mode));
+    plod_rough->set_uniform("lens_radius", lens_config.radius);
+    plod_rough->set_uniform("lens_square_ss_min", lens_config.square_ss_min);
+    plod_rough->set_uniform("lens_square_ss_max", lens_config.square_ss_max);
+    plod_rough->set_uniform("step_size_in_os", lens_config.step_size_os);
+    plod_rough->set_uniform("step_size_in_ss", lens_config.step_size_ss);    
+    plod_rough->set_uniform("ref_plane_v", lens_config.vis_plane_v);
+    plod_rough->set_uniform("ref_plane_n", lens_config.vis_plane_n);
+    plod_rough->set_uniform("depth_range", lens_config.depth_range);
+
     if (rotate_light) {
       // modify scene
-      light->rotate(0.1, 0.0, 1.0, 0.0);
+      
+      if (milliseconds > 0.0 ) {
+        double time_per_rotation = 15;
+        light->translate(-0.3, -1.0, -1.0);
+        light->rotate((360 * milliseconds) / (time_per_rotation * 1000.0), 0.0, 0.0, 1.0);
+        light->translate(0.3, 1.0, 1.0);
+      }  
     }
+    last_frame_time = current_time;
 
-    if (ctr++ % 150 == 0)
-      std::cout << "Frame time: " << 1000.f / camera->get_rendering_fps() << " ms, fps: "
-      << camera->get_rendering_fps() << ", app fps: "
-      << camera->get_application_fps() << std::endl;
+#if 0
+    if (ctr++ % 150 == 0) {
+      std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
+        << window->get_rendering_fps() << ", app fps: "
+        << camera->get_application_fps() << std::endl;
+      std::cout << lens_config.screen_position << " , " << lens_config.world_position << " , " << lens_config.world_normal << " , " << lens_config.radius << std::endl;      
+    }
+#endif
 
     // apply trackball matrix to object
     window->process_events();

@@ -51,9 +51,9 @@ TexturedScreenSpaceQuadNode::TexturedScreenSpaceQuadNode(
 ////////////////////////////////////////////////////////////////////////////////
 
 bool TexturedScreenSpaceQuadNode::pixel_to_texcoords(
-  math::vec2 const& pixel, math::vec2ui const& screen_size, 
+  math::vec2 const& pixel, math::vec2ui const& screen_size,
   math::vec2& result) const {
-  
+
   math::vec2 pos(pixel/screen_size*2-1);
 
   math::vec2 size(
@@ -77,15 +77,7 @@ bool TexturedScreenSpaceQuadNode::pixel_to_texcoords(
 ////////////////////////////////////////////////////////////////////////////////
 
 void TexturedScreenSpaceQuadNode::update_bounding_box() const {
-  math::BoundingBox<math::vec3> geometry_bbox(
-      math::vec3(-0.5 * data.size().x, -0.5 * data.size().y, 0),
-      math::vec3(0.5 * data.size().x, 0.5 * data.size().y, 0));
-
-  bounding_box_ = transform(geometry_bbox, world_transform_);
-
-  for (auto child : get_children()) {
-    bounding_box_.expandBy(child->get_bounding_box());
-  }
+  bounding_box_ = math::BoundingBox<math::vec3>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +93,7 @@ void TexturedScreenSpaceQuadNode::update_cache() {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Node> TexturedScreenSpaceQuadNode::copy() const {
-  return std::make_shared<TexturedScreenSpaceQuadNode>(get_name(), data);
+  return std::make_shared<TexturedScreenSpaceQuadNode>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

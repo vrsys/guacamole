@@ -27,6 +27,7 @@
 #include <gua/math/BoundingBox.hpp>
 #include <gua/utils/KDTreeUtils.hpp>
 #include <gua/scenegraph/PickResult.hpp>
+#include <gua/utils/Mesh.hpp>
 
 #include <set>
 #include <vector>
@@ -48,7 +49,7 @@ class KDTree {
    *
    * \param triangles A vector of Triangle.
    */
-  void generate(aiMesh* mesh);
+  void generate(Mesh const& mesh);
 
   /**
    * Checks for intersections with the KDTree.
@@ -59,7 +60,7 @@ class KDTree {
    * \param hits    A reference to the resulting set. Any contained data will be
    *                deleted depending on the supplied options.
    */
-  void ray_test(Ray const& ray, aiMesh* mesh, int options,
+  void ray_test(Ray const& ray, Mesh const& mesh, int options,
                 node::Node* owner, std::set<PickResult>& hits) const;
 
  private:
@@ -75,7 +76,7 @@ class KDTree {
     };
 
     LeafData();
-    LeafData(aiMesh* mesh, Triangle const& triangle, unsigned id);
+    LeafData(Mesh const& mesh, Triangle const& triangle, unsigned id);
     LeafData(math::BoundingBox<math::vec3> const& bbox, unsigned id);
 
     unsigned id_;
@@ -111,7 +112,7 @@ class KDTree {
   // ray test against the tree, returns upon the first intersection
   bool intersect_one(KDNode* node,
                      Ray const& ray,
-                     aiMesh* mesh,
+                     Mesh const& mesh,
                      int options,
                      std::vector<Triangle> const& triangles,
                      std::set<PickResult>& hits) const;
@@ -119,7 +120,7 @@ class KDTree {
   // ray test against the tree, searches for all intersections
   void intersect_all(KDNode* node,
                      Ray const& ray,
-                     aiMesh* mesh,
+                     Mesh const& mesh,
                      int options,
                      std::vector<Triangle> const& triangles,
                      std::set<PickResult>& hits) const;

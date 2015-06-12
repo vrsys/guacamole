@@ -1,0 +1,17 @@
+  {
+    "name" : "FragmentEmissivityValue",
+    "source" : "
+      // emissivity generation -----------------------------------------------
+      void FragmentEmissivityValue() {
+        gua_emissivity = Emissivity;
+      }
+    ",
+    "uniforms" :
+    [
+      {
+        "name" : "Emissivity",
+        "type" : "float",
+        "value" : "0.0"
+      }
+    ]
+  }

@@ -24,10 +24,6 @@
 #include <iostream>
 #include <algorithm>
 
- // external headers
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-
 namespace gua {
 
 namespace {
@@ -35,24 +31,23 @@ namespace {
 // helper function to access mesh attributes
 // no bounds checking!
 // local to this translation unit
-inline math::vec3 aiMesh_vertex(aiMesh* mesh, unsigned face, unsigned i) {
-  return math::vec3(mesh->mVertices[mesh->mFaces[face].mIndices[i]].x,
-                    mesh->mVertices[mesh->mFaces[face].mIndices[i]].y,
-                    mesh->mVertices[mesh->mFaces[face].mIndices[i]].z);
+inline math::vec3 mesh_vertex(Mesh const& mesh, unsigned face, unsigned i) {
+  return math::vec3(mesh.positions[mesh.indices[face * 3 + i]].x,
+                    mesh.positions[mesh.indices[face * 3 + i]].y,
+                    mesh.positions[mesh.indices[face * 3 + i]].z);
 }
 
-inline math::vec3 aiMesh_normal(aiMesh* mesh, unsigned face, unsigned i) {
-  return math::vec3(mesh->mNormals[mesh->mFaces[face].mIndices[i]].x,
-                    mesh->mNormals[mesh->mFaces[face].mIndices[i]].y,
-                    mesh->mNormals[mesh->mFaces[face].mIndices[i]].z);
+inline math::vec3 mesh_normal(Mesh const& mesh, unsigned face, unsigned i) {
+  return math::vec3(mesh.normals[mesh.indices[face * 3 + i]].x,
+                    mesh.normals[mesh.indices[face * 3 + i]].y,
+                    mesh.normals[mesh.indices[face * 3 + i]].z);
 }
 
-inline math::vec2 aiMesh_texcoord(aiMesh* mesh, 
+inline math::vec2 mesh_texcoord(Mesh const& mesh, 
                                   unsigned face, 
-                                  unsigned i, 
-                                  unsigned j) {
-  return math::vec2(mesh->mTextureCoords[i][mesh->mFaces[face].mIndices[j]].x,
-                    mesh->mTextureCoords[i][mesh->mFaces[face].mIndices[j]].y);
+                                  unsigned i) {
+  return math::vec2(mesh.texCoords[mesh.indices[face * 3 + i]].x,
+                    mesh.texCoords[mesh.indices[face * 3 + i]].y);
 }
 
 }
@@ -128,11 +123,11 @@ Triangle::Triangle() : face_id_(0) {}
 Triangle::Triangle(unsigned face_id)
   : face_id_(face_id) {}
 
-float Triangle::intersect(aiMesh* mesh, Ray const& ray) const {
+float Triangle::intersect(Mesh const& mesh, Ray const& ray) const {
   std::vector<math::vec3> points(3);
   // math::vec3 normal(0, 0, 0);
   for (unsigned i = 0; i < 3; ++i) {
-    points[i] = aiMesh_vertex(mesh, face_id_, i);
+    points[i] = mesh_vertex(mesh, face_id_, i);
   }
 
   // Find Triangle Normal
@@ -182,65 +177,56 @@ float Triangle::intersect(aiMesh* mesh, Ray const& ray) const {
   return t;
 }
 
-math::vec3 Triangle::get_vertex(aiMesh* mesh, unsigned vertex_id) const {
+math::vec3 Triangle::get_vertex(Mesh const& mesh, unsigned vertex_id) const {
   math::vec3 vertex;
   if (vertex_id < 3) {
-    vertex = aiMesh_vertex(mesh,face_id_,vertex_id);
+    vertex = mesh_vertex(mesh,face_id_,vertex_id);
   }
 
   return vertex;
 }
 
-math::vec3 Triangle::get_normal(aiMesh* mesh) const {
+math::vec3 Triangle::get_normal(Mesh const& mesh) const {
   math::vec3 normal(0, 0, 0);
 
-  if (mesh->HasNormals()) {
-    for (unsigned i = 0; i < 3; ++i) {
-    normal += math::vec3(
-                        mesh->mNormals[mesh->mFaces[face_id_].mIndices[i]].x,
-                        mesh->mNormals[mesh->mFaces[face_id_].mIndices[i]].y,
-                        mesh->mNormals[mesh->mFaces[face_id_].mIndices[i]].z);
-    }
-
-    normal = scm::math::normalize(normal);
+  for (unsigned i = 0; i < 3; ++i) {
+    normal += mesh_normal(mesh, face_id_, i);
   }
+
+  normal = scm::math::normalize(normal);
 
   return normal;
 }
 
-math::vec3 Triangle::get_normal_interpolated(aiMesh* mesh, 
+math::vec3 Triangle::get_normal_interpolated(Mesh const& mesh, 
                                              math::vec3 const& position) const {
   math::vec3 normal(0, 0, 0);
 
-  if (mesh->HasNormals()) {
-    normal = math::interpolate(position,
-      std::make_pair(aiMesh_vertex(mesh,face_id_,0), 
-                     aiMesh_normal(mesh,face_id_,0)),
-      std::make_pair(aiMesh_vertex(mesh,face_id_,1), 
-                     aiMesh_normal(mesh,face_id_,1)),
-      std::make_pair(aiMesh_vertex(mesh,face_id_,2), 
-                     aiMesh_normal(mesh,face_id_,2)));
-    normal = scm::math::normalize(normal);
-  }
+  normal = math::interpolate(position,
+    std::make_pair(mesh_vertex(mesh,face_id_,0), 
+                   mesh_normal(mesh,face_id_,0)),
+    std::make_pair(mesh_vertex(mesh,face_id_,1), 
+                   mesh_normal(mesh,face_id_,1)),
+    std::make_pair(mesh_vertex(mesh,face_id_,2), 
+                   mesh_normal(mesh,face_id_,2)));
+  normal = scm::math::normalize(normal);
 
   return normal;
 }
 
 math::vec2 Triangle::get_texture_coords_interpolated(
-    aiMesh* mesh, 
+    Mesh const& mesh, 
     math::vec3 const& position) const {
   math::vec2 tex_coords(0, 0);
 
-  if (mesh->HasTextureCoords(0)) {
-    tex_coords = math::interpolate(position,
-      std::make_pair(aiMesh_vertex(mesh,face_id_,0), 
-                     aiMesh_texcoord(mesh,face_id_,0,0)),
-      std::make_pair(aiMesh_vertex(mesh,face_id_,1), 
-                     aiMesh_texcoord(mesh,face_id_,0,1)),
-      std::make_pair(aiMesh_vertex(mesh,face_id_,2), 
-                     aiMesh_texcoord(mesh,face_id_,0,2))
-    );
-  }
+  tex_coords = math::interpolate(position,
+    std::make_pair(mesh_vertex(mesh,face_id_,0), 
+                   mesh_texcoord(mesh,face_id_,0)),
+    std::make_pair(mesh_vertex(mesh,face_id_,1), 
+                   mesh_texcoord(mesh,face_id_,1)),
+    std::make_pair(mesh_vertex(mesh,face_id_,2), 
+                   mesh_texcoord(mesh,face_id_,2))
+  );
 
   return tex_coords;
 }

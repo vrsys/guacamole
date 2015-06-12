@@ -82,6 +82,13 @@ class GUA_DLL Frustum {
   std::set<PickResult> const ray_test(Ray const& ray,
                                       int options = PickResult::PICK_ALL);
 
+  bool operator==(Frustum const& other) const {
+    return projection_==other.projection_ && clip_near_==other.clip_near_ && clip_far_==other.clip_far_;
+  }
+  bool operator!=(Frustum const& other) const {
+    return !(*this==other);
+  }
+
  private:
 
   static void init_frustum_members(math::mat4 const& camera_transform,

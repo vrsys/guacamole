@@ -40,7 +40,6 @@ SSAOPassDescription::SSAOPassDescription()
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = true;
-  doClear_ = false;
   rendermode_ = RenderMode::Quad;
 
   depth_stencil_state_ = boost::make_optional(

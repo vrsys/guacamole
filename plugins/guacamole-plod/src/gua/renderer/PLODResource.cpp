@@ -78,7 +78,7 @@ void PLODResource::draw(
     pbr::view_t view_id,
     pbr::model_t model_id,
     scm::gl::vertex_array_ptr const& vertex_array,
-    std::unordered_set<pbr::node_t> const& nodes_out_of_frustum) const {
+    std::unordered_set<pbr::node_t> const& nodes_in_frustum) const {
 
   pbr::ren::ModelDatabase* database = pbr::ren::ModelDatabase::GetInstance();
   pbr::ren::CutDatabase* cuts = pbr::ren::CutDatabase::GetInstance();
@@ -97,7 +97,7 @@ void PLODResource::draw(
   
   for (const auto& n : node_list) {
     //result inside vector means the node is out of frustum
-    if (nodes_out_of_frustum.find(n.node_id_) == nodes_out_of_frustum.end()) {
+    if (nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end()) {
     
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
                                       n.slot_id_ * surfels_per_node,
@@ -134,11 +134,11 @@ void PLODResource::ray_test(Ray const& ray,
     math::vec3(0.f, 1.f, 0.f),
     math::vec2(0.f, 0.f));
 
-  const auto model_transform = owner->get_world_transform();
+  const auto model_transform = owner->get_cached_world_transform();
   const auto world_origin = ray.origin_;
   const auto world_direction = scm::math::normalize(ray.direction_);
   
-  pbr::ren::Ray plod_ray(math::vec3f(world_origin), math::vec3f(world_direction), 9999.0f);
+  pbr::ren::Ray plod_ray(math::vec3f(world_origin), math::vec3f(world_direction), scm::math::length(ray.direction_));
   pbr::ren::Ray::Intersection intersection;
 
   auto plod_node = reinterpret_cast<node::PLODNode*>(owner);
@@ -154,12 +154,15 @@ void PLODResource::ray_test(Ray const& ray,
   if (plod_ray.IntersectModel(model_id, math::mat4f(model_transform), aabb_scale, max_depth, surfel_skip, wysiwyg, intersection)) {
     has_hit = true;
     pick.distance = intersection.distance_;
-    pick.position = intersection.position_;
+    pick.world_position = intersection.position_;
+    auto object_position = scm::math::inverse(model_transform) * gua::math::vec4(intersection.position_.x, intersection.position_.y, intersection.position_.z, 1.0);
+    pick.position = math::vec3(object_position.x, object_position.y, object_position.z);
     pick.normal = intersection.normal_;
   }
 
-  if (has_hit)
+  if (has_hit) {
     hits.insert(pick);
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////

@@ -34,20 +34,20 @@
 
 namespace gua {
 
-  ////////////////////////////////////////////////////////////////////////////////
-  void PipelinePassDescription::touch() { 
-    ++mod_count_; 
-  }
+////////////////////////////////////////////////////////////////////////////////
+void PipelinePassDescription::touch() {
+  ++mod_count_;
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  std::string const& PipelinePassDescription::name() const { 
-    return name_; 
-  }
+////////////////////////////////////////////////////////////////////////////////
+std::string const& PipelinePassDescription::name() const {
+  return name_;
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  unsigned PipelinePassDescription::mod_count() const { 
-    return mod_count_; 
-  }
+////////////////////////////////////////////////////////////////////////////////
+unsigned PipelinePassDescription::mod_count() const {
+  return mod_count_;
+}
 
   ////////////////////////////////////////////////////////////////////////////////
 PipelinePass::PipelinePass(PipelinePassDescription const& d,
@@ -59,7 +59,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d,
   , blend_state_(nullptr)
   , needs_color_buffer_as_input_(d.needs_color_buffer_as_input_)
   , writes_only_color_buffer_(d.writes_only_color_buffer_)
-  , doClear_(d.doClear_)
+  , enable_for_shadows_(d.enable_for_shadows_)
   , rendermode_(d.rendermode_)
   , process_(d.process_)
   , name_(d.name_)
@@ -92,13 +92,12 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
   if (RenderMode::Custom == rendermode_) {
     process_(*this, desc, pipe);
   } else {
-    pipe.get_gbuffer().bind(ctx, writes_only_color_buffer_);
-    pipe.get_gbuffer().set_viewport(ctx);
-    pipe.get_abuffer().bind(ctx);
-    if (doClear_)
-      pipe.get_gbuffer().clear_color(ctx);
+    auto& target = *pipe.current_viewstate().target;
+
+    target.bind(ctx, !writes_only_color_buffer_);
+    target.set_viewport(ctx);
     if (depth_stencil_state_)
-      ctx.render_context->set_depth_stencil_state(depth_stencil_state_);
+      ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
     if (blend_state_)
       ctx.render_context->set_blend_state(blend_state_);
     if (rasterizer_state_)
@@ -112,7 +111,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
     pipe.bind_gbuffer_input(shader_);
     pipe.bind_light_table(shader_);
 
-    std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.get_camera().uuid) + " / " + name_;
+    std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + name_;
     pipe.begin_gpu_query(ctx, gpu_query_name);
 
     if (RenderMode::Callback == rendermode_) {
@@ -123,12 +122,9 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
 
     pipe.end_gpu_query(ctx, gpu_query_name);
 
-    pipe.get_abuffer().unbind(ctx);
-    pipe.get_gbuffer().unbind(ctx);
+    target.unbind(ctx);
     ctx.render_context->reset_state_objects();
   }
-
-  
 }
 
 void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderContext const& ctx) {
@@ -141,9 +137,9 @@ void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderCon
     std::string f_shader = desc.fragment_shader_is_file_name_
         ? factory.read_shader_file(desc.fragment_shader_) : desc.fragment_shader_;
 #else
-    std::string v_shader = desc.vertex_shader_is_file_name_ 
+    std::string v_shader = desc.vertex_shader_is_file_name_
         ? Resources::lookup_shader(desc.vertex_shader_) : desc.vertex_shader_;
-    std::string f_shader = desc.fragment_shader_is_file_name_ 
+    std::string f_shader = desc.fragment_shader_is_file_name_
         ? Resources::lookup_shader(desc.fragment_shader_) : desc.fragment_shader_;
 #endif
 
@@ -152,7 +148,7 @@ void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderCon
       std::string g_shader = desc.geometry_shader_is_file_name_
           ? factory.read_shader_file(desc.geometry_shader_) : desc.geometry_shader_;
 #else
-      std::string g_shader = desc.geometry_shader_is_file_name_ 
+      std::string g_shader = desc.geometry_shader_is_file_name_
           ? Resources::lookup_shader(desc.geometry_shader_) : desc.geometry_shader_;
 #endif
       shader_->create_from_sources(v_shader, g_shader, f_shader, substitution_map_);
@@ -163,7 +159,6 @@ void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderCon
 
     shader_->upload_to(ctx);
   }
-
 }
 
 }

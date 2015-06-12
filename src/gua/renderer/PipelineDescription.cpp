@@ -23,6 +23,7 @@
 #include <gua/renderer/PipelineDescription.hpp>
 
 // guacamole headers
+#include <gua/renderer/StencilPass.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
 #include <gua/renderer/EmissivePass.hpp>
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
@@ -100,6 +101,13 @@ std::shared_ptr<TriMeshPassDescription> const& PipelineDescription::get_tri_mesh
 {
   return get_pass_by_type<TriMeshPassDescription>();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// std::shared_ptr<SkeletalAnimationPassDescription> const& PipelineDescription::get_skel_anim_pass() const
+// {
+//   return get_pass_by_type<SkeletalAnimationPassDescription>();
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<TexturedQuadPassDescription> const& PipelineDescription::get_textured_quad_pass() const

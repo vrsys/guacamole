@@ -25,6 +25,14 @@
 #include <gua/platform.hpp>
 
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/SSAAPass.hpp>
+#include <gua/renderer/BBoxPass.hpp>
+#include <gua/renderer/TexturedQuadPass.hpp>
+#include <gua/renderer/DebugViewPass.hpp>
+#include <gua/renderer/PLODPass.hpp>
+#include <gua/renderer/PLODLoader.hpp>
+#include <gua/node/PLODNode.hpp>
+#include <gua/renderer/TriMeshLoader.hpp>
 
 #include <thread>
 #include <chrono>
@@ -60,21 +68,26 @@ int main(int argc, char** argv) {
   //mat.set_uniform("color", gua::math::vec3(1, 0, 1), 2);
 
   gua::TriMeshLoader trimeshloader;
+  gua::PLODLoader plodloader;
   // gua::NURBSLoader nurbsloader;
   // gua::Video3DLoader videoloader;
 
   auto teapot_geode(trimeshloader.create_geometry_from_file("teapot_geode", "data/objects/teapot.obj", mat, gua::TriMeshLoader::DEFAULTS));
   auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", mat, gua::TriMeshLoader::DEFAULTS));
+  auto pig_geode(plodloader.load_geometry("plate_geode", "data/objects/pig.kdn", mat, gua::PLODLoader::DEFAULTS));
   // auto video_geode(videoloader.create_geometry_from_file("video_geode", argv[1]));
   // auto nurbs_geode(nurbsloader.create_geometry_from_file("nurbs_geode", "data/objects/teapot.igs", "data/materials/Orange.gmd", gua::NURBSLoader::DEFAULTS));
 
   auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
   auto plate = graph.add_node<gua::node::TransformNode>("/", "plate");
+  auto pig = graph.add_node<gua::node::TransformNode>("/", "pig");
+  pig->scale(0.4);
   // auto video = graph.add_node<gua::node::TransformNode>("/", "video");
   // auto nurbs = graph.add_node<gua::node::TransformNode>("/", "nurbs");
 
   graph.add_node("/teapot", teapot_geode);
   graph.add_node("/plate", plate_geode);
+  graph.add_node("/pig", pig_geode);
   // graph.add_node("/video", video_geode);
   // graph.add_node("/nurbs", nurbs_geode);
 
@@ -89,13 +102,25 @@ int main(int argc, char** argv) {
   screen2->translate(0, 0, 6.f);
   screen2->rotate(90, 0, 1, 0.f);
 
+  auto pipe = std::make_shared<gua::PipelineDescription>();
+
+  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
+  pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
+  pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
+  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+  pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
+  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+
   auto cam1 = graph.add_node<gua::node::CameraNode>("/screen1", "cam1");
-  cam1->translate(0.0, 0.0, 1.0);
+  cam1->translate(0.0, 0.0, 4.0);
   cam1->config.set_output_window_name("window1");
   cam1->config.set_screen_path("/screen1");
   cam1->config.set_scene_graph_name("main_scenegraph");
   cam1->config.set_resolution(resolution);
   cam1->config.set_view_id(1);
+  cam1->set_pipeline_description(pipe);
 
   auto cam2 = graph.add_node<gua::node::CameraNode>("/screen1", "cam2");
   cam2->translate(0.0, 0, 7.5);
@@ -104,24 +129,27 @@ int main(int argc, char** argv) {
   cam2->config.set_scene_graph_name("main_scenegraph");
   cam2->config.set_resolution(resolution);
   cam2->config.set_view_id(2);
+  cam2->set_pipeline_description(pipe);
 
   auto cam3 = graph.add_node<gua::node::CameraNode>("/screen2", "cam3");
-  cam3->translate(0.0, 0, 6.5);
+  cam3->translate(0.0, 0.5, 16.5);
   cam3->config.set_output_window_name("window3");
   cam3->config.set_screen_path("/screen2");
   cam3->config.set_scene_graph_name("main_scenegraph");
   cam3->config.set_resolution(resolution);
   cam3->config.set_view_id(2);
+  cam3->set_pipeline_description(pipe);
 
   auto cam4 = graph.add_node<gua::node::CameraNode>("/screen2", "cam4");
-  cam4->translate(0.0, 0, 8.5);
+  cam4->translate(0.0, -0.5, 8.5);
   cam4->config.set_output_window_name("window4");
   cam4->config.set_screen_path("/screen2");
   cam4->config.set_scene_graph_name("main_scenegraph");
   cam4->config.set_resolution(resolution);
+  cam4->set_pipeline_description(pipe);
 
-
-  auto pointlight = graph.add_node<gua::node::PointLightNode>("/", "pointlight");
+  auto pointlight = graph.add_node<gua::node::LightNode>("/", "pointlight");
+  pointlight->data.set_type(gua::node::LightNode::Type::POINT);
   pointlight->scale(30.0f);
   pointlight->rotate(-90, 1, 0, 0);
   pointlight->translate(1.0, 18.0, 1.0);
@@ -134,26 +162,18 @@ int main(int argc, char** argv) {
   pointlight->data.set_enable_specular_shading(true);
   pointlight->data.set_enable_diffuse_shading(true);
 
+  auto add_window = [](std::string const& window_name, 
+                       std::shared_ptr<gua::node::CameraNode> const& cam_node)
+  {
+    auto window = std::make_shared<gua::GlfwWindow>();
+    gua::WindowDatabase::instance()->add(window_name, window);
+    set_window_default(window, cam_node->config.get_resolution());
+    window->open();
 
-  auto window1 = std::make_shared<gua::GlfwWindow>();
-  auto window2 = std::make_shared<gua::GlfwWindow>();
-  auto window3 = std::make_shared<gua::GlfwWindow>();
-  auto window4 = std::make_shared<gua::GlfwWindow>();
+    cam_node->config.set_output_window_name(window_name);
+  };
 
-  gua::WindowDatabase::instance()->add("window1", window1);
-  gua::WindowDatabase::instance()->add("window2", window2);
-  gua::WindowDatabase::instance()->add("window3", window3);
-  gua::WindowDatabase::instance()->add("window4", window4);
-
-  set_window_default(window1, resolution);
-  set_window_default(window2, resolution);
-  set_window_default(window3, resolution);
-  set_window_default(window4, resolution);
-
-  window1->open();
-  window2->open();
-  window3->open();
-  window4->open();
+  add_window("window1", cam1);
 
   gua::Renderer renderer;
 
@@ -182,6 +202,7 @@ int main(int argc, char** argv) {
   float time_value = 0;
 
   // application loop
+  std::size_t cnt = 0;
   while (true) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
@@ -198,6 +219,18 @@ int main(int argc, char** argv) {
     teapot_geode->rotate(0.3, 0, 1, 0);
     //video_geode->rotate(0.1, 0, 1, 0);
     //nurbs_geode->rotate(0.3, 0, 0, 1);
+
+    ++cnt;
+
+    if (cnt == 10) {
+      add_window("window2", cam2);
+    }
+    if (cnt == 20) {
+      add_window("window3", cam3);
+    }
+    if (cnt == 30) {
+      add_window("window4", cam4);
+    }
 
     plate->translate(-plate->get_bounding_box().center());
     plate->rotate(0.04f, 0, 1, 0);

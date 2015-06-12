@@ -270,7 +270,16 @@ class GUA_DLL SceneGraph {
    */
   void accept(NodeVisitor& visitor) const;
 
-  SerializedScene serialize(node::SerializedCameraNode const& camera, CameraMode mode) const;
+  std::shared_ptr<SerializedScene> serialize(Frustum const& rendering_frustum,
+                                             Frustum const& culling_frustum,
+                                             math::vec3 const& reference_camera_position,
+                                             bool enable_frustum_culling,
+                                             Mask const& mask,
+                                             int view_id) const;
+
+  std::shared_ptr<SerializedScene> serialize(
+                                       node::SerializedCameraNode const& camera,
+                                       CameraMode mode) const;
 
   /**
    * Intersects a SceneGraph with a given RayNode.

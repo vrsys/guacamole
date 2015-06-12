@@ -12,8 +12,10 @@ in vec2 gua_quad_coords;
 
 // methods
 @include "common/gua_shading.glsl"
-@include "ssao.frag"
 @include "common/gua_tone_mapping.glsl"
+
+@include "ssao.frag"
+@include "screen_space_shadow.frag"
 
 #define ABUF_MODE readonly
 #define ABUF_SHADE_FUNC abuf_shade
@@ -49,23 +51,28 @@ vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV )
 vec3 environment_lighting (in ShadingTerms T)
 {
   vec3 env_color = vec3(0);
-  vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.Vn));
-
-  // http://marmosetco.tumblr.com/post/81245981087
-  float gua_horizon_fade = 1.3;
-  vec3 R = reflect(-T.Vn, T.N);
-  float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
-  horizon *= horizon;
+  vec3 brdf_spec = EnvBRDFApprox(T.cspec, T.roughness, dot(T.N, T.V));
+  vec3 col1 = vec3(0);
+  vec3 col2 = vec3(0);
 
   switch (gua_environment_lighting_mode) {
     case 0 : // spheremap
       vec2 texcoord = longitude_latitude(T.N);
-      env_color = brdf_spec * texture2D(sampler2D(gua_environment_lighting_spheremap), texcoord).rgb;
+      col1 = brdf_spec * texture(sampler2D(gua_environment_lighting_texture), texcoord).rgb;
+      col2 = brdf_spec * texture(sampler2D(gua_alternative_environment_lighting_texture), texcoord).rgb;
+      env_color = mix(col1, col2, gua_environment_lighting_texture_blend_factor);
       break;
     case 1 : // cubemap
-      env_color = brdf_spec * vec3(0.0); // not implemented yet!
+      col1 = brdf_spec * texture(samplerCube(gua_environment_lighting_texture), T.N).rgb;
+      col2 = brdf_spec * texture(samplerCube(gua_alternative_environment_lighting_texture), T.N).rgb;
+      env_color = mix(col1, col2, gua_environment_lighting_texture_blend_factor);
       break;
     case 2 : // single color
+      // http://marmosetco.tumblr.com/post/81245981087
+      float gua_horizon_fade = 1.3;
+      vec3 R = reflect(-T.V, T.N);
+      float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
+      horizon *= horizon;
       vec3 brdf_diff = T.diffuse;
       env_color = (Pi * brdf_diff + (horizon * brdf_spec)) * gua_horizon_fade * gua_environment_lighting_color;
       break;
@@ -75,7 +82,7 @@ vec3 environment_lighting (in ShadingTerms T)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags) {
+vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags, bool ssao_enable) {
 
   float emit = pbr.r;
 
@@ -87,18 +94,20 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
   ShadingTerms T;
   gua_prepare_shading(T, color, normal, position, pbr);
 
-  vec3 frag_color = vec3(0.0);
+  vec3 frag_color = vec3(0);
   for (int i = 0; i < gua_lights_num; ++i) {
+      float screen_space_shadow = compute_screen_space_shadow (i, position);
+
       // is it either a visible spot/point light or a sun light ?
       if ( ((bitset[i>>5] & (1u << (i%32))) != 0)
          || i >= gua_lights_num - gua_sun_lights_num )
       {
-        frag_color += gua_shade(i, T);
+        frag_color += (1.0 - screen_space_shadow) * gua_shade(i, T);
       }
   }
 
   float ambient_occlusion = 0.0;
-  if (gua_ssao_enable) {
+  if (ssao_enable) {
     ambient_occlusion = compute_ssao();
   }
   frag_color += (1.0 - ambient_occlusion) * environment_lighting(T);
@@ -110,7 +119,7 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
 #if @enable_abuffer@
 vec4 abuf_shade(uint pos, float depth) {
 
-  uvec4 data = ABUF_FRAG(pos, 0);
+  uvec4 data = frag_data[pos];
 
   vec3 color = vec3(unpackUnorm2x16(data.x), unpackUnorm2x16(data.y).x);
   vec3 normal = vec3(unpackSnorm2x16(data.y).y, unpackSnorm2x16(data.z));
@@ -121,7 +130,7 @@ vec4 abuf_shade(uint pos, float depth) {
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   vec3 position = h.xyz / h.w;
 
-  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags), pbr.r);
+  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags, false), pbr.r);
   return frag_color_emit;
 }
 #endif
@@ -136,18 +145,24 @@ layout(location=0) out vec3 gua_out_color;
 
 // skymap
 
-// why does this not work properly?
-// float gua_my_atan2(float a, float b) {
-//   return 2.0 * atan(fma(a, inversesqrt(b*b + a*a), b));
-// }
-
 float gua_my_atan2(float a, float b) {
   return 2.0 * atan(a/(sqrt(b*b + a*a) + b));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_background_texture() {
-  return texture2D(sampler2D(gua_background_texture), gua_quad_coords).xyz;
+  vec3 col1 = texture(sampler2D(gua_background_texture), gua_quad_coords).xyz;
+  vec3 col2 = texture(sampler2D(gua_alternative_background_texture), gua_quad_coords).xyz;
+  return mix(col1, col2, gua_background_texture_blend_factor);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+vec3 gua_apply_cubemap_texture() {
+  vec3 pos = gua_get_position();
+  vec3 view = normalize(pos - gua_camera_position) ;
+  vec3 col1 = texture(samplerCube(gua_background_texture), view).xyz;
+  vec3 col2 = texture(samplerCube(gua_alternative_background_texture), view).xyz;
+  return mix(col1, col2, gua_background_texture_blend_factor);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -160,7 +175,9 @@ vec3 gua_apply_skymap_texture() {
   vec2 texcoord = vec2(x, y);
   float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_camera_position) - normalize(gua_get_position(vec2(1, 0.5)) - gua_camera_position));
   vec2 uv = l*(gua_get_quad_coords() - 1.0)/4.0 + 0.5;
-  return textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
+  vec3 col1 = textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
+  vec3 col2 = textureGrad(sampler2D(gua_alternative_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
+  return mix(col1, col2, gua_background_texture_blend_factor);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -169,22 +186,33 @@ vec3 gua_apply_background_color() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec3 gua_apply_fog(vec3 fog_color) {
+vec3 gua_apply_fog(vec3 color, vec3 fog_color) {
   float dist       = length(gua_camera_position - gua_get_position());
   float fog_factor = clamp((dist - gua_fog_start)/(gua_fog_end - gua_fog_start), 0.0, 1.0);
-  return mix(gua_get_color(), fog_color, fog_factor);
+  return mix(color, fog_color, fog_factor);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_get_background_color() {
   switch (gua_background_mode) {
     case 0: // color
-      return gua_apply_background_color();
+      return sRGB_to_linear(gua_apply_background_color());
     case 1: // skymap texture
-      return gua_apply_skymap_texture();
+      return sRGB_to_linear(gua_apply_skymap_texture());
+    case 2: // quad texture
+      return sRGB_to_linear(gua_apply_background_texture());
   }
-  // quad texture
-  return gua_apply_background_texture();
+  // cubemap
+  return sRGB_to_linear(gua_apply_cubemap_texture());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+float get_vignette(float coverage, float softness, float intensity) {
+  // inigo quilez's great vigneting effect!
+  float a = -coverage/softness;
+  float b = 1.0/softness;
+  vec2 q = gua_get_quad_coords();
+  return clamp(a + b*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 ), 0, 1) * intensity + (1-intensity);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -206,22 +234,21 @@ void main() {
   float depth = gua_get_depth();
 
 #if @enable_abuffer@
-  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, depth);
+  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
 #else
   bool res = true;
 #endif
 
   if (res) {
     if (depth < 1) {
+      gbuffer_color += shade_for_all_lights(gua_get_color(),
+                                      gua_get_normal(),
+                                      gua_get_position(),
+                                      gua_get_pbr(),
+                                      gua_get_flags(),
+                                      gua_ssao_enable);
       if (gua_enable_fog) {
-        gbuffer_color += gua_apply_fog(gua_get_background_color());
-      }
-      else {
-        gbuffer_color += shade_for_all_lights(gua_get_color(),
-                                        gua_get_normal(),
-                                        gua_get_position(),
-                                        gua_get_pbr(),
-                                        gua_get_flags());
+        gbuffer_color = gua_apply_fog(gbuffer_color, gua_get_background_color());
       }
     }
     else {
@@ -233,9 +260,14 @@ void main() {
   }
 
   gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
-  // toneMap
-  // color correction
+
   // vignette
+  if (gua_vignette_color.a > 0) {
+    float vignetting = get_vignette(gua_vignette_coverage, gua_vignette_softness, gua_vignette_color.a);
+    gua_out_color = mix(gua_vignette_color.rgb, gua_out_color, vignetting);
+  }
+
+  // color correction
 
 #if @gua_debug_tiles@
   vec3 color_codes[] = {vec3(1,0,0), vec3(0,1,0), vec3(0,0,1), vec3(1,1,0), vec3(1,0,1), vec3(0,1,1)};

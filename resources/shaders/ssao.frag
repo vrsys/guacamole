@@ -19,7 +19,8 @@ vec3 object_space_random() {
   const int B = 621;
   const int C = 721191;
 
-  vec4 object_space = inverse(gua_model_matrix) * vec4(gua_get_position(), 1.0);
+  // vec4 object_space = inverse(gua_model_matrix) * vec4(gua_get_position(), 1.0);
+  vec4 object_space = vec4(1.0);
 
   int x = int(object_space.x * float(A));
   int y = int(object_space.y * float(A));
@@ -52,7 +53,7 @@ float compute_ssao ()
   float incy = gua_texel_height * gua_ssao_radius;
   float pw = incx;
   float ph = incy;
-  float cdepth = max(gua_get_depth(), 0.01);
+  float cdepth = max(gua_get_depth(), 0.1);
 
   //3 rounds of 8 samples each.
   for(float i=0.0; i<4.0; ++i) {

@@ -124,6 +124,7 @@ namespace gua {
 
   mutable unsigned width_;
   mutable unsigned height_;
+  mutable std::vector<void*> data_;
 
  private:
 
