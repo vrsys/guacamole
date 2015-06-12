@@ -31,6 +31,7 @@ namespace gua {
 
   class TriMeshPassDescription;
   class TexturedQuadPassDescription;
+  class DepthCubeMapPassDesciption;
   class LightVisibilityPassDescription;
   class BBoxPassDescription;
   class ResolvePassDescription;
