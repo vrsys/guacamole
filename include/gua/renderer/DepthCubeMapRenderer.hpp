@@ -19,22 +19,46 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TEXTURED_DEPTH_CUBEMAP_PASS_HPP
-#define GUA_TEXTURED_DEPTH_CUBEMAP_PASS_HPP
+#ifndef GUA_DEPTH_CUBEMAP_RENDERER_HPP
+#define GUA_DEPTH_CUBEMAP_RENDERER_HPP
 
-#include <gua/renderer/PipelinePass.hpp>
+#include <map>
+#include <unordered_map>
+
+#include <gua/platform.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+
+#include <scm/gl_core/shader_objects.h>
 
 namespace gua {
 
-class GUA_DLL DepthCubeMapPassDesciption : public PipelinePassDescription {
+class MaterialShader;
+class Pipeline;
+class PipelinePassDescription;
+
+class DepthCubeMapRenderer {
+
  public:
-  DepthCubeMapPassDesciption();
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+
+  DepthCubeMapRenderer();
+  virtual ~DepthCubeMapRenderer() {}
+
+  void render(Pipeline& pipe, PipelinePassDescription const& desc);
+
+  void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
+
+  void create_state_objects(RenderContext const& ctx);
+
+ private:
+
+  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
+  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
+
+  std::vector<ShaderProgramStage>                                     program_stages_;
+  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+  SubstitutionMap                                                     global_substitution_map_;
 };
 
 }
 
-#endif  // GUA_TEXTURED_DEPTH_CUBEMAP_PASS_HPP
+#endif  // GUA_DEPTH_CUBEMAP_RENDERER_HPP
