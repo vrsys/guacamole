@@ -21,6 +21,7 @@ option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support." OFF)
 option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
 option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using per-pass time queries." OFF)
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
+option (GUACAMOLE_FBX "Set to enable FBX support." ON)
 
 # We require at least version 2.8.0
 cmake_minimum_required(VERSION 2.8.0)
@@ -90,6 +91,18 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   find_package(Bullet REQUIRED)
 endif (GUACAMOLE_ENABLE_PHYSICS)
 
+if (GUACAMOLE_FBX)
+  include(FindFBX)
+  set (FBX_ROOT "externals/fbx" CACHE PATH "Set to your FBX SDK install path.")
+  # set (FBX_INCLUDE_DIRS "externals/fbx/include" CACHE PATH "Set to your FBX SDK install path.")
+  # if (UNIX)
+  #   set (FBXSDK_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
+  # elseif (WIN32)
+  #   set (FBXSDK_ROOT "externals/" CACHE PATH "Set to your bullet install path.")
+  # endif (UNIX)
+  find_package(FBX REQUIRED)
+endif (GUACAMOLE_FBX)
+
 if (GUACAMOLE_GLFW3)
   find_package(GLFW3 REQUIRED)
 endif (GUACAMOLE_GLFW3)
@@ -103,6 +116,7 @@ set(LIB_PATHS
     ${GLEW_LIBRARY_DIRS}
     ${Boost_LIBRARY_DIRS}
     ${BULLET_LIBRARY_DIRS}
+    ${FBX_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
     ${ZMQ_LIBRARY_DIRS}
     ${X11_LIBRARY_DIRS}
@@ -119,6 +133,7 @@ set(INCLUDE_PATHS
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
+    ${FBX_INCLUDE_DIRS}
     ${ZMQ_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
 )
@@ -284,6 +299,15 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   message(STATUS "   include: ${BULLET_INCLUDE_DIRS}" )
   message(STATUS "" )
 endif (GUACAMOLE_ENABLE_PHYSICS)
+
+
+if (GUACAMOLE_FBX)
+  message(STATUS " FBX SDK:" )
+  message(STATUS "   library: ${FBX_LIBRARIES}" )
+  message(STATUS "   library path: ${FBX_LIBRARY_DIRS}" )
+  message(STATUS "   include: ${FBX_INCLUDE_DIRS}" )
+  message(STATUS "" )
+endif (GUACAMOLE_FBX)
 
 if (GUACAMOLE_GLFW3)
   message(STATUS " glfw:" )
