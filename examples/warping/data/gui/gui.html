@@ -207,6 +207,7 @@
         init_radio("#gbuffer_type_grid_depth_theshold", "gbuffer_type_grid_depth_theshold");
         init_radio("#gbuffer_type_grid_surface_estimation", "gbuffer_type_grid_surface_estimation");
         init_radio("#gbuffer_type_grid_advanced_surface_estimation", "gbuffer_type_grid_advanced_surface_estimation");
+        init_radio("#gbuffer_type_grid_non_uniform_surface_estimation", "gbuffer_type_grid_non_uniform_surface_estimation");
 
         init_radio("#abuffer_type_none", "abuffer_type_none");
         init_radio("#abuffer_type_quads", "abuffer_type_quads");
@@ -398,7 +399,7 @@
       <div class="side-panel">
         <div id="preview-panel" class="panel-inner">
 
-          <h4><i class="fa fa-recycle"></i> Warping Options</h4>
+          <h4><i class="fa fa-recycle"></i> Warp Options</h4>
 
 
           <div class="row">
@@ -487,7 +488,13 @@
               <div class="radio">
                 <label>
                   <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_advanced_surface_estimation" value="">
-                  <span>Advanced S. Est.</span>
+                  <span>Advanced Surf. Est.</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_non_uniform_surface_estimation" value="">
+                  <span>Non-Uniform Surf. Est.</span>
                 </label>
               </div>
               <div class="checkbox">
@@ -527,7 +534,7 @@
               Cell Size:
             </div>
             <div class="col-xs-7">
-              <input class="slider cell_size" data-slider-tooltip="hide" data-slider-id="cell_size" type="text" data-slider-min="1" data-slider-max="8" data-slider-step="1" handle="custom"/>
+              <input class="slider cell_size" data-slider-tooltip="hide" data-slider-id="cell_size" type="text" data-slider-min="1" data-slider-max="7" data-slider-step="1" handle="custom"/>
             </div>
           </div>
 

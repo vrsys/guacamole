@@ -102,7 +102,7 @@ void main() {
   }
 
   // ---------------------------------------------------------------------------
-  #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION // -------------
+  #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
   // ---------------------------------------------------------------------------
 
   if (current_level == 0) {
@@ -149,20 +149,29 @@ void main() {
     const uint bl = is_on_line(d12, d9,  d6);
     const uint br = is_on_line(d5,  d10, d15);
 
-    // if the patch is connected on to othogonal sides, it represents a surface
+
+    // if the patch is connected on two othogonal sides, it represents a surface
     const uint is_surface = (t & r) | (r & b) | (b & l) | (l & t);
 
     // store all continuities
     const uint continuous = (t  << BIT_CONTINUOUS_T)
-                    | (r  << BIT_CONTINUOUS_R)
-                    | (b  << BIT_CONTINUOUS_B)
-                    | (l  << BIT_CONTINUOUS_L)
-                    | (tl << BIT_CONTINUOUS_TL)
-                    | (tr << BIT_CONTINUOUS_TR)
-                    | (bl << BIT_CONTINUOUS_BL)
-                    | (br << BIT_CONTINUOUS_BR);
+                          | (r  << BIT_CONTINUOUS_R)
+                          | (b  << BIT_CONTINUOUS_B)
+                          | (l  << BIT_CONTINUOUS_L)
+                          | (tl << BIT_CONTINUOUS_TL)
+                          | (tr << BIT_CONTINUOUS_TR)
+                          | (bl << BIT_CONTINUOUS_BL)
+                          | (br << BIT_CONTINUOUS_BR);
 
     result = is_surface | continuous;
+
+    #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
+      // only exand to right if continuous and if a left child
+      // const uint expand_x = r & (1-(uint(gl_FragCoord.x) % 2));
+      // only exand to top if continuous and if a bottom child and if not expanded to right
+      // const uint expand_y = t & (1-(uint(gl_FragCoord.y) % 2)) & ~expand_x;
+      // result |= (expand_x << BIT_EXPAND_X) | (expand_y << BIT_EXPAND_Y);
+    #endif
 
   } else {
 
@@ -177,24 +186,83 @@ void main() {
 
     // check for internal continuity
     const uint internal_continuity = (s0 >> BIT_CONTINUOUS_R)
-                             & (s0 >> BIT_CONTINUOUS_B)
-                             & (s3 >> BIT_CONTINUOUS_T)
-                             & (s3 >> BIT_CONTINUOUS_L) & 1;
+                                   & (s0 >> BIT_CONTINUOUS_B)
+                                   & (s3 >> BIT_CONTINUOUS_T)
+                                   & (s3 >> BIT_CONTINUOUS_L) & 1;
 
     // if any child is no complete surface, the parent is neither
-    const uint is_surface = s0 & s1 & s2 & s3 & internal_continuity;
+    #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
+      const uint merge_all = int((s0 & ALL_MERGE_TYPE_BITS) == MERGE_ALL)
+                           & int((s1 & ALL_MERGE_TYPE_BITS) == MERGE_ALL)
+                           & int((s2 & ALL_MERGE_TYPE_BITS) == MERGE_ALL)
+                           & int((s3 & ALL_MERGE_TYPE_BITS) == MERGE_ALL) & internal_continuity;
+    #else
+      const uint merge_all = s0 & s1 & s2 & s3 & internal_continuity;
+    #endif
+
+    // check for horizontal and vertical continuity
+    const uint t = (s0 >> BIT_CONTINUOUS_T) & (s1 >> BIT_CONTINUOUS_T) & 1;
+    const uint r = (s1 >> BIT_CONTINUOUS_R) & (s3 >> BIT_CONTINUOUS_R) & 1;
+    const uint b = (s2 >> BIT_CONTINUOUS_B) & (s3 >> BIT_CONTINUOUS_B) & 1;
+    const uint l = (s0 >> BIT_CONTINUOUS_L) & (s2 >> BIT_CONTINUOUS_L) & 1;
+
+    // check for diagonal continuity
+    const uint tl = (s0 >> BIT_CONTINUOUS_TL) & 1;
+    const uint tr = (s1 >> BIT_CONTINUOUS_TR) & 1;
+    const uint bl = (s2 >> BIT_CONTINUOUS_BL) & 1;
+    const uint br = (s3 >> BIT_CONTINUOUS_BR) & 1;
 
     // check for external continuity
-    const uint continuous = (((s0 >> BIT_CONTINUOUS_T) & (s1 >> BIT_CONTINUOUS_T) & 1) << BIT_CONTINUOUS_T)
-                    | (((s1 >> BIT_CONTINUOUS_R) & (s3 >> BIT_CONTINUOUS_R) & 1) << BIT_CONTINUOUS_R)
-                    | (((s2 >> BIT_CONTINUOUS_B) & (s3 >> BIT_CONTINUOUS_B) & 1) << BIT_CONTINUOUS_B)
-                    | (((s0 >> BIT_CONTINUOUS_L) & (s2 >> BIT_CONTINUOUS_L) & 1) << BIT_CONTINUOUS_L)
-                    | (((s0 >> BIT_CONTINUOUS_TL) & 1) << BIT_CONTINUOUS_TL)
-                    | (((s1 >> BIT_CONTINUOUS_TR) & 1) << BIT_CONTINUOUS_TR)
-                    | (((s2 >> BIT_CONTINUOUS_BL) & 1) << BIT_CONTINUOUS_BL)
-                    | (((s3 >> BIT_CONTINUOUS_BR) & 1) << BIT_CONTINUOUS_BR);
+    const uint continuous = (t  << BIT_CONTINUOUS_T)
+                          | (r  << BIT_CONTINUOUS_R)
+                          | (b  << BIT_CONTINUOUS_B)
+                          | (l  << BIT_CONTINUOUS_L)
+                          | (tl << BIT_CONTINUOUS_TL)
+                          | (tr << BIT_CONTINUOUS_TR)
+                          | (bl << BIT_CONTINUOUS_BL)
+                          | (br << BIT_CONTINUOUS_BR);
 
-    result = is_surface | continuous;
+    result = merge_all | continuous;
+
+    #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
+      if (merge_all != MERGE_ALL) {
+
+        // merge both sides horizontally
+        uint possible = (s0 >> BIT_CONTINUOUS_R) & (s2 >> BIT_CONTINUOUS_R) & 1;
+        // result = (possible*MERGE_TB) | continuous;
+
+        // // merge top side
+        // if (possible == 0) {
+        //   possible = (s0 >> BIT_CONTINUOUS_R) & 1;
+        //   result = (possible*MERGE_T) | continuous;
+        // }
+
+        // // merge bottom side
+        // if (possible == 0) {
+        //   possible = (s2 >> BIT_CONTINUOUS_R) & 1;
+        //   result = (possible*MERGE_B) | continuous;
+        // }
+
+        // // merge both sides vertically
+        // if (possible == 0) {
+        //   possible = (s0 >> BIT_CONTINUOUS_B) & (s1 >> BIT_CONTINUOUS_B) & 1;
+        //   result = (possible*MERGE_LR) | continuous;
+        // }
+
+        // // merge left side
+        // if (possible == 0) {
+          possible = (s0 >> BIT_CONTINUOUS_B) & 1;
+          result = (possible*MERGE_L) | continuous;
+        // }
+
+        // // merge right side
+        // if (possible == 0) {
+        //   possible = (s1 >> BIT_CONTINUOUS_B) & 1;
+        //   result = (possible*MERGE_R) | continuous;
+        // }
+      }
+
+    #endif
   }
 
   // ---------------------------------------------------------------------------

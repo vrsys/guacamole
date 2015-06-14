@@ -174,7 +174,9 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
     for (uint x(0); x < initial_grid_x; ++x) {
       for (uint y(0); y < initial_grid_y; ++y) {
-        data[y*initial_grid_x + x] = math::vec3ui(x*description->cell_size(), y*description->cell_size(), current_level<<9 /* write the current mipmap level at bit position 5 (log2(32)) */);
+        data[y*initial_grid_x + x] = math::vec3ui(x*description->cell_size(),
+                                                  y*description->cell_size(),
+                                                  current_level<<11 /* write the current mipmap level at bit position 5 (log2(32)) */);
       }
     }
 

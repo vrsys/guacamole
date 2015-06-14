@@ -51,44 +51,108 @@ void main() {
 
   #else
 
-    uint is_surface = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/old_cellsize), int(new_layer)).x;
-    continuity_flags = ALL_CONTINUITY_BITS & is_surface;
+    uint bit_data = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/old_cellsize), int(new_layer)).x;
+    continuity_flags = ALL_CONTINUITY_BITS & bit_data;
 
-    if ((is_surface & 1) == 0) {
+    if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_NONE) {
 
   #endif
 
       // the current cell covers more than one surface --- we need to split it!
+
       const uvec2 offsets[4] = {uvec2(0),            uvec2(new_cellsize, 0),
                                 uvec2(new_cellsize), uvec2(0, new_cellsize)};
 
       if (new_layer == 0) {
         // we are at the last level -- dont write one pixel sized quads; just output one quad (2x2 pixels) and set the is_surface flag to 0
         xfb_output = uvec3(varying_position[0].xy, ((new_layer << BIT_CURRENT_LEVEL) | continuity_flags | 0));
-        EmitVertex();
-        EndPrimitive();
+        EmitVertex(); EndPrimitive();
       } else {
+
         for (int v=0; v<4; ++v) {
           xfb_output = uvec3(varying_position[0].xy + offsets[v], (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
 
           if (xfb_output.x < gua_resolution.x && xfb_output.y < gua_resolution.y) {
-            EmitVertex();
-            EndPrimitive();
+            EmitVertex(); EndPrimitive();
           }
         }
       }
 
     } else {
-      // the current cell covers only one continuous surface --- write it's size, continuity and that's one surface
-      xfb_output = uvec3(varying_position[0].xy, ((old_layer << BIT_CURRENT_LEVEL) | continuity_flags | 1));
-      EmitVertex();
-      EndPrimitive();
+
+
+      #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
+
+        // if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_LR) {
+
+        //   xfb_output = uvec3(varying_position[0].xy, (old_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_Y) | continuity_flags | 1);
+        //   EmitVertex(); EndPrimitive();
+        //   xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize, 0), (old_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_Y) | continuity_flags | 1);
+        //   EmitVertex(); EndPrimitive();
+
+        // } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_L) {
+        if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_L) {
+
+          xfb_output = uvec3(varying_position[0].xy, (old_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_Y) | continuity_flags | 1);
+          EmitVertex(); EndPrimitive();
+          xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize, 0), (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
+          EmitVertex(); EndPrimitive();
+          xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize), (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
+          EmitVertex(); EndPrimitive();
+
+        // } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_R) {
+
+        //   xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize, 0), (old_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_Y) | continuity_flags | 1);
+        //   EmitVertex(); EndPrimitive();
+        //   xfb_output = uvec3(varying_position[0].xy, (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
+        //   EmitVertex(); EndPrimitive();
+        //   xfb_output = uvec3(varying_position[0].xy+uvec2(0, new_cellsize), (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
+        //   EmitVertex(); EndPrimitive();
+
+        // } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_TB) {
+
+        //   xfb_output = uvec3(varying_position[0].xy, (old_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_X) | continuity_flags | 1);
+        //   EmitVertex(); EndPrimitive();
+        //   xfb_output = uvec3(varying_position[0].xy+uvec2(0, new_cellsize), (old_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_X) | continuity_flags | 1);
+        //   EmitVertex(); EndPrimitive();
+
+        // } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_T) {
+
+        //   xfb_output = uvec3(varying_position[0].xy+uvec2(0, new_cellsize), (old_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_X) | continuity_flags | 1);
+        //   EmitVertex(); EndPrimitive();
+        //   xfb_output = uvec3(varying_position[0].xy, (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
+        //   EmitVertex(); EndPrimitive();
+        //   xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize, 0), (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
+        //   EmitVertex(); EndPrimitive();
+
+        // } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_B) {
+
+        //   xfb_output = uvec3(varying_position[0].xy, (old_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_X) | continuity_flags | 1);
+        //   EmitVertex(); EndPrimitive();
+        //   xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize), (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
+        //   EmitVertex(); EndPrimitive();
+        //   xfb_output = uvec3(varying_position[0].xy+uvec2(0, new_cellsize), (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
+        //   EmitVertex(); EndPrimitive();
+
+        } else {
+          // the current cell covers only one continuous surface --- write it's size, continuity and that's one surface
+          xfb_output = uvec3(varying_position[0].xy, ((old_layer << BIT_CURRENT_LEVEL) | continuity_flags | 1));
+          EmitVertex(); EndPrimitive();
+
+        }
+
+      #else
+
+        // the current cell covers only one continuous surface --- write it's size, continuity and that's one surface
+        xfb_output = uvec3(varying_position[0].xy, ((old_layer << BIT_CURRENT_LEVEL) | continuity_flags | 1));
+        EmitVertex(); EndPrimitive();
+
+      #endif
     }
 
   } else {
     // the current cell has not been split in the previous pass --- we dont need to touch it
     xfb_output = varying_position[0];
-    EmitVertex();
-    EndPrimitive();
+    EmitVertex(); EndPrimitive();
   }
 }

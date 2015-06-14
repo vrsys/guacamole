@@ -31,20 +31,20 @@ flat out uint cellsize;
 
 @include "shaders/warp_grid_bits.glsl"
 
-void emit_quad(uvec2 offset, uint size) {
+void emit_quad(uvec2 offset, vec2 size) {
   vec2 vertex_position = vec2(varying_position[0].xy + offset) / gua_resolution * 2 - 1;
   gl_Position = vec4(vertex_position, 0, 1);
   EmitVertex();
 
-  vertex_position = vec2(varying_position[0].xy + offset + vec2(size, 0)) / gua_resolution * 2 - 1;
+  vertex_position = vec2(varying_position[0].xy + offset + vec2(size.x, 0)) / gua_resolution * 2 - 1;
   gl_Position = vec4(vertex_position, 0, 1);
   EmitVertex();
 
-  vertex_position = vec2(varying_position[0].xy + offset + vec2(size, size)) / gua_resolution * 2 - 1;
+  vertex_position = vec2(varying_position[0].xy + offset + vec2(size.x, size.y)) / gua_resolution * 2 - 1;
   gl_Position = vec4(vertex_position, 0, 1);
   EmitVertex();
 
-  vertex_position = vec2(varying_position[0].xy + offset + vec2(0, size)) / gua_resolution * 2 - 1;
+  vertex_position = vec2(varying_position[0].xy + offset + vec2(0, size.y)) / gua_resolution * 2 - 1;
   gl_Position = vec4(vertex_position, 0, 1);
   EmitVertex();
 
@@ -58,16 +58,18 @@ void emit_quad(uvec2 offset, uint size) {
 
 void main() {
 
-  uint level = varying_position[0].z >> BIT_CURRENT_LEVEL;
+  uint  level = varying_position[0].z >> BIT_CURRENT_LEVEL;
+  uvec2 scale = 1 + uvec2((varying_position[0].z >> BIT_EXPAND_X) & 1, (varying_position[0].z >> BIT_EXPAND_Y) & 1);
+
   cellsize = 1 << level;
 
   if ((varying_position[0].z & 1) > 0) {
-    emit_quad(uvec2(0), cellsize);
+    emit_quad(uvec2(0), max(vec2(1), cellsize * scale - vec2(0)));
   } else {
     const uvec2 offsets[4] = {uvec2(0), uvec2(1, 0),
                               uvec2(1), uvec2(0, 1)};
     for (int v=0; v<4; ++v) {
-      emit_quad(offsets[v], 1);
+      emit_quad(offsets[v]+uvec2(0), max(vec2(1), scale - vec2(0)));
     }
   }
 }

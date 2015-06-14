@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
   background_pass->mode(gua::BackgroundPassDescription::QUAD_TEXTURE).
                    texture("data/textures/bg0.png").
                    repeat(gua::math::vec2f(12, 7.5)).
-                   color(gua::utils::Color3f(0.05, 0.05, 0.05));
+                   color(gua::utils::Color3f(0.9, 0.9, 0.9));
 
   if (CLIENT_SERVER) {
     slow_cam->config.set_output_window_name("hidden_window");
@@ -240,7 +240,7 @@ int main(int argc, char** argv) {
     pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
     pipe->add_pass(grid_pass);
     pipe->add_pass(warp_pass);
-    // pipe->add_pass(background_pass);
+    pipe->add_pass(background_pass);
     pipe->add_pass(render_grid_pass);
     pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
     pipe->set_enable_abuffer(true);
@@ -292,6 +292,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_gbuffer_type_grid_depth_theshold");
       gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation");
       gui->add_javascript_callback("set_gbuffer_type_grid_advanced_surface_estimation");
+      gui->add_javascript_callback("set_gbuffer_type_grid_non_uniform_surface_estimation");
       gui->add_javascript_callback("set_abuffer_type_none");
       gui->add_javascript_callback("set_abuffer_type_points");
       gui->add_javascript_callback("set_abuffer_type_quads");
@@ -392,6 +393,7 @@ int main(int argc, char** argv) {
                | callback == "set_gbuffer_type_grid_depth_theshold"
                | callback == "set_gbuffer_type_grid_surface_estimation"
                | callback == "set_gbuffer_type_grid_advanced_surface_estimation"
+               | callback == "set_gbuffer_type_grid_non_uniform_surface_estimation"
                | callback == "set_gbuffer_type_none") {
         std::stringstream str(params[0]);
         bool checked;
@@ -416,6 +418,8 @@ int main(int argc, char** argv) {
             mode = gua::WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION;
           if (callback == "set_gbuffer_type_grid_advanced_surface_estimation")
             mode = gua::WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION;
+          if (callback == "set_gbuffer_type_grid_non_uniform_surface_estimation")
+            mode = gua::WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION;
           if (callback == "set_gbuffer_type_none")
             mode = gua::WarpPassDescription::GBUFFER_NONE;
 
