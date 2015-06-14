@@ -27,7 +27,7 @@
 #define MERGE_TB   (2 << BIT_MERGE_TYPE)
 #define MERGE_T    (3 << BIT_MERGE_TYPE)
 #define MERGE_B    (4 << BIT_MERGE_TYPE)
-#define MERGE_LR   (4 << BIT_MERGE_TYPE)
-#define MERGE_L    (5 << BIT_MERGE_TYPE)
-#define MERGE_R    (6 << BIT_MERGE_TYPE)
+#define MERGE_LR   (5 << BIT_MERGE_TYPE)
+#define MERGE_L    (6 << BIT_MERGE_TYPE)
+#define MERGE_R    (7 << BIT_MERGE_TYPE)
 

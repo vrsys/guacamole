@@ -56,58 +56,68 @@ void emit_grid_vertex(vec2 position, float depth) {
   EmitVertex();
 }
 
-void emit_quad(uvec2 offset, uint size) {
+void emit_quad(uvec2 offset, uvec2 size) {
 
   vec2 position = varying_position[0].xy+offset;
   float depth = gua_get_depth_raw(position);
 
   if (depth < 1) {
 
-    cellsize = size;
+    cellsize = min(size.x, size.y);
 
     #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
       emit_grid_vertex(position + vec2(0, 0), depth);
 
-      position = varying_position[0].xy+offset + vec2(cellsize-1, 0);
+      position = varying_position[0].xy+offset + vec2(size.x-1, 0);
       depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(GAP, 0), depth);
 
-      position = varying_position[0].xy+offset + vec2(0, cellsize-1);
+      position = varying_position[0].xy+offset + vec2(0, size.y-1);
       depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(0, GAP), depth);
 
-      position = varying_position[0].xy+offset + vec2(cellsize-1, cellsize-1);
+      position = varying_position[0].xy+offset + vec2(size.x-1, size.y-1);
       depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(GAP, GAP), depth);
 
-    #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION
+    #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 
-      const int cont_l = int(varying_position[0].z >> BIT_CONTINUOUS_L) & 1;
-      const int cont_r = int(varying_position[0].z >> BIT_CONTINUOUS_R) & 1;
-      const int cont_t = int(varying_position[0].z >> BIT_CONTINUOUS_T) & 1;
-      const int cont_b = int(varying_position[0].z >> BIT_CONTINUOUS_B) & 1;
+      int cont_l = int(varying_position[0].z >> BIT_CONTINUOUS_L) & 1;
+      int cont_r = int(varying_position[0].z >> BIT_CONTINUOUS_R) & 1;
+      int cont_t = int(varying_position[0].z >> BIT_CONTINUOUS_T) & 1;
+      int cont_b = int(varying_position[0].z >> BIT_CONTINUOUS_B) & 1;
 
-      const int cont_tl = int(varying_position[0].z >> BIT_CONTINUOUS_TL) & 1;
-      const int cont_tr = int(varying_position[0].z >> BIT_CONTINUOUS_TR) & 1;
-      const int cont_bl = int(varying_position[0].z >> BIT_CONTINUOUS_BL) & 1;
-      const int cont_br = int(varying_position[0].z >> BIT_CONTINUOUS_BR) & 1;
+      int cont_tl = int(varying_position[0].z >> BIT_CONTINUOUS_TL) & 1;
+      int cont_tr = int(varying_position[0].z >> BIT_CONTINUOUS_TR) & 1;
+      int cont_bl = int(varying_position[0].z >> BIT_CONTINUOUS_BL) & 1;
+      int cont_br = int(varying_position[0].z >> BIT_CONTINUOUS_BR) & 1;
+
+      // cont_l = 0;
+      // cont_r = 0;
+      // cont_t = 0;
+      // cont_b = 0;
+
+      // cont_tl = 0;
+      // cont_tr = 0;
+      // cont_bl = 0;
+      // cont_br = 0;
 
       position = varying_position[0].xy+offset;
       vec2 lookup_offset = vec2(-cont_l, -cont_b) * cont_bl;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(0, 0), depth);
 
-      position = varying_position[0].xy+offset + vec2(cellsize-1, 0);
+      position = varying_position[0].xy+offset + vec2(size.x-1, 0);
       lookup_offset = vec2(cont_r, -cont_b) * cont_br;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(GAP, 0), depth);
 
-      position = varying_position[0].xy+offset + vec2(0, cellsize-1);
+      position = varying_position[0].xy+offset + vec2(0, size.y-1);
       lookup_offset = vec2(-cont_l, cont_t) * cont_tl;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(0, GAP), depth);
 
-      position = varying_position[0].xy+offset + vec2(cellsize-1, cellsize-1);
+      position = varying_position[0].xy+offset + vec2(size.x-1, size.y-1);
       lookup_offset = vec2(cont_r, cont_t) * cont_tr;
       depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(GAP, GAP), depth);
@@ -136,7 +146,8 @@ void emit_pixel(uvec2 position) {
 void main() {
 
   if ((varying_position[0].z & 1) > 0) {
-    emit_quad(uvec2(0), 1 << (varying_position[0].z >> BIT_CURRENT_LEVEL));
+    uvec2 scale = 1 + uvec2((varying_position[0].z >> BIT_EXPAND_X) & 1, (varying_position[0].z >> BIT_EXPAND_Y) & 1);
+    emit_quad(uvec2(0), (1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)) * scale);
   } else {
     const uvec2 offsets[4] = {uvec2(0), uvec2(1, 0),
                               uvec2(1), uvec2(0, 1)};

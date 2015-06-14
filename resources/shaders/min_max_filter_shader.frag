@@ -151,7 +151,7 @@ void main() {
 
 
     // if the patch is connected on two othogonal sides, it represents a surface
-    const uint is_surface = (t & r) | (r & b) | (b & l) | (l & t);
+    const uint merge_all = (t & r) | (r & b) | (b & l) | (l & t);
 
     // store all continuities
     const uint continuous = (t  << BIT_CONTINUOUS_T)
@@ -163,14 +163,16 @@ void main() {
                           | (bl << BIT_CONTINUOUS_BL)
                           | (br << BIT_CONTINUOUS_BR);
 
-    result = is_surface | continuous;
+    result = merge_all | continuous;
 
     #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
-      // only exand to right if continuous and if a left child
-      // const uint expand_x = r & (1-(uint(gl_FragCoord.x) % 2));
-      // only exand to top if continuous and if a bottom child and if not expanded to right
-      // const uint expand_y = t & (1-(uint(gl_FragCoord.y) % 2)) & ~expand_x;
-      // result |= (expand_x << BIT_EXPAND_X) | (expand_y << BIT_EXPAND_Y);
+      if (merge_all != MERGE_ALL) {
+        if (t == 1 || b == 1) {
+          result = MERGE_LR | continuous;
+        } else if (r == 1 || l == 1) {
+          result = MERGE_TB | continuous;
+        }
+      }
     #endif
 
   } else {
@@ -227,39 +229,33 @@ void main() {
     #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
       if (merge_all != MERGE_ALL) {
 
-        // merge both sides horizontally
-        uint possible = (s0 >> BIT_CONTINUOUS_R) & (s2 >> BIT_CONTINUOUS_R) & 1;
-        // result = (possible*MERGE_TB) | continuous;
+        const uint merge_s0 = int((s0 & ALL_MERGE_TYPE_BITS) == MERGE_ALL);
+        const uint merge_s1 = int((s1 & ALL_MERGE_TYPE_BITS) == MERGE_ALL);
+        const uint merge_s2 = int((s2 & ALL_MERGE_TYPE_BITS) == MERGE_ALL);
+        const uint merge_s3 = int((s3 & ALL_MERGE_TYPE_BITS) == MERGE_ALL);
 
-        // // merge top side
-        // if (possible == 0) {
-        //   possible = (s0 >> BIT_CONTINUOUS_R) & 1;
-        //   result = (possible*MERGE_T) | continuous;
-        // }
+        const uint merge_l = (s0 >> BIT_CONTINUOUS_B) & merge_s0 & merge_s2;
+        const uint merge_r = (s1 >> BIT_CONTINUOUS_B) & merge_s1 & merge_s3;
+        const uint merge_t = (s0 >> BIT_CONTINUOUS_R) & merge_s0 & merge_s1;
+        const uint merge_b = (s2 >> BIT_CONTINUOUS_R) & merge_s2 & merge_s3;
 
-        // // merge bottom side
-        // if (possible == 0) {
-        //   possible = (s2 >> BIT_CONTINUOUS_R) & 1;
-        //   result = (possible*MERGE_B) | continuous;
-        // }
-
-        // // merge both sides vertically
-        // if (possible == 0) {
-        //   possible = (s0 >> BIT_CONTINUOUS_B) & (s1 >> BIT_CONTINUOUS_B) & 1;
-        //   result = (possible*MERGE_LR) | continuous;
-        // }
-
-        // // merge left side
-        // if (possible == 0) {
-          possible = (s0 >> BIT_CONTINUOUS_B) & 1;
-          result = (possible*MERGE_L) | continuous;
-        // }
-
-        // // merge right side
-        // if (possible == 0) {
-        //   possible = (s1 >> BIT_CONTINUOUS_B) & 1;
-        //   result = (possible*MERGE_R) | continuous;
-        // }
+        if (merge_l == 1) {
+          if (merge_r == 1) {
+            result = MERGE_LR | continuous;
+          } else {
+            result = MERGE_L | continuous;
+          }
+        } else if (merge_t == 1) {
+          if (merge_b == 1) {
+            result = MERGE_TB | continuous;
+          } else {
+            result = MERGE_T | continuous;
+          }
+        } else if (merge_r == 1) {
+          result = MERGE_R | continuous;
+        } else if (merge_b == 1) {
+          result = MERGE_B | continuous;
+        }
       }
 
     #endif
