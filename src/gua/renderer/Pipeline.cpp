@@ -219,7 +219,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     gbuffer_->toggle_ping_pong();
 
   // add texture to texture database
-  auto const& tex(gbuffer_->get_color_buffer());
+  auto const& tex(depth_cube_map_->get_depth_buffer());
+  // auto const& tex(gbuffer_->get_color_buffer());
   auto const& depth_tex(gbuffer_->get_depth_buffer());
   auto tex_name(camera.config.get_output_texture_name());
 
@@ -344,6 +345,116 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     light_block.shadow_map = shadow_map->get_depth_buffer()->get_handle(context_);
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  void Pipeline::generate_depth_cubemap(unsigned resolution)
+  { 
+    unsigned viewport_size(resolution);
+    unsigned map_width(resolution*6);
+    // unsigned map_width(resolution);
+
+    if (!depth_cube_map_) {
+      depth_cube_map_ = std::make_shared<DepthCubeMap>(context_, math::vec2ui(map_width, viewport_size));;
+    }
+
+    depth_cube_map_->clear(context_);
+    depth_cube_map_->set_viewport_size(math::vec2f(viewport_size));
+    
+    current_viewstate_.target = depth_cube_map_.get();
+    auto orig_scene(current_viewstate_.scene);
+
+    // set view parameters
+    current_viewstate_.viewpoint_uuid = current_viewstate_.camera.uuid;
+    current_viewstate_.view_direction = PipelineViewState::front;
+    current_viewstate_.shadow_mode = true;
+
+    //generate_shadow_map_pointlight
+    // calculate light frustum
+    math::mat4 screen_transform(scm::math::make_translation(0., 0., -0.5));
+    std::vector<math::mat4> screen_transforms({
+      screen_transform,
+      scm::math::make_rotation(180., 0., 1., 0.) * screen_transform,
+      scm::math::make_rotation(90., 1., 0., 0.) * screen_transform,
+      scm::math::make_rotation(-90., 1., 0., 0.) * screen_transform,
+      scm::math::make_rotation(90., 0., 1., 0.) * screen_transform,
+      scm::math::make_rotation(-90., 0., 1., 0.) * screen_transform
+    });
+
+    std::vector<PipelineViewState::ViewDirection> view_directions = {
+      PipelineViewState::front,
+      PipelineViewState::back,
+      PipelineViewState::top,
+      PipelineViewState::bottom,
+      PipelineViewState::left,
+      PipelineViewState::right
+    };
+
+    for (unsigned i(0); i < screen_transforms.size(); ++i) {
+    // for (unsigned i(0); i < 1; ++i) {
+
+      math::mat4 identity(scm::math::mat4::identity());
+      math::mat4 transform(identity * screen_transforms[i]);
+
+      auto frustum(
+        Frustum::perspective(
+        identity, transform,
+        current_viewstate_.camera.config.near_clip(),
+        scm::math::length(math::get_translation(transform))
+        )
+        );
+
+      depth_cube_map_->set_viewport_offset(math::vec2f(i, 0.f));
+
+      current_viewstate_.view_direction = view_directions[i];
+
+      // render_shadow_map(light_block, frustum, i, viewport_size, redraw);
+      current_viewstate_.scene = current_viewstate_.graph->serialize(frustum, frustum,
+        math::get_translation(current_viewstate_.camera.transform),
+        current_viewstate_.camera.config.enable_frustum_culling(),
+        current_viewstate_.camera.config.mask(),
+        current_viewstate_.camera.config.view_id());
+
+      current_viewstate_.frustum = frustum;
+
+      camera_block_.update(context_,
+        frustum,
+        frustum.get_camera_position(),
+        current_viewstate_.scene->clipping_planes,
+        current_viewstate_.camera.config.get_view_id(),
+        math::vec2ui(viewport_size));
+      bind_camera_uniform_block(0);
+
+      // process all passes
+      for (int i(0); i < passes_.size(); ++i) {
+        if (passes_[i].enable_for_shadows()) {
+          passes_[i].process(*last_description_.get_passes()[i], *this);
+        }
+      }
+
+    }
+
+  // depth_cube_map->bind(ctx, write_depth);
+  // depth_cube_map->set_viewport(ctx);
+
+  // RenderTarget* prev_target = pipe.current_viewstate().target;
+  // bool prev_shadow = pipe.current_viewstate().shadow_mode;
+  // pipe.set_target_and_shadow(depth_cube_map.get(), true);
+
+
+  // depth_cube_map->unbind(ctx);
+  // pipe.set_target_and_shadow(prev_target, prev_shadow);
+
+    // restore previous configuration
+    current_viewstate_.target = gbuffer_.get();
+    current_viewstate_.scene = orig_scene;
+    current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
+    camera_block_.update(context_,
+                         current_viewstate_.scene->rendering_frustum,
+                         math::get_translation(current_viewstate_.camera.transform),
+                         current_viewstate_.scene->clipping_planes,
+                         current_viewstate_.camera.config.get_view_id(),
+                         current_viewstate_.camera.config.get_resolution());
+    bind_camera_uniform_block(0);
+  }
   ////////////////////////////////////////////////////////////////////////////////
 
   void Pipeline::render_shadow_map(LightTable::LightBlock& light_block, Frustum const& frustum, unsigned cascade_id, unsigned viewport_size, bool redraw) {

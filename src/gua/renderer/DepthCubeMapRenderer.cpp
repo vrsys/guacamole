@@ -23,18 +23,16 @@
 #include <gua/renderer/DepthCubeMapRenderer.hpp>
 
 #include <gua/config.hpp>
-
 #include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
-
+#include <gua/renderer/DepthCubeMap.hpp>
 #include <gua/databases/Resources.hpp>
 
 #include <scm/core/math/math.h>
 
-#include <chrono>
-#include <thread>
+#define RESOLUTION 64 
 
 namespace gua {
 
@@ -42,7 +40,6 @@ namespace gua {
 
 DepthCubeMapRenderer::DepthCubeMapRenderer()
 {
-  std::cout << "DepthCubeMapRenderer constructed" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,9 +54,10 @@ void DepthCubeMapRenderer::create_state_objects(RenderContext const& ctx)
 
 void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-  auto& target = *pipe.current_viewstate().target;
-  RenderContext const& ctx(pipe.get_context());
 
+
+  RenderContext const& ctx(pipe.get_context());
+  
   std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / DepthCubeMapPass";
   std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / DepthCubeMapPass";
 
@@ -67,18 +65,13 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
   pipe.begin_cpu_query(cpu_query_name);
 
   bool write_depth = true;
-  target.bind(ctx, write_depth);
-  target.set_viewport(ctx);
 
-  //RENDER
-  // std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-  target.unbind(ctx);
+  pipe.generate_depth_cubemap(RESOLUTION);
 
   pipe.end_gpu_query(ctx, gpu_query_name);
   pipe.end_cpu_query(cpu_query_name);
 
-  ctx.render_context->reset_state_objects();
+  // ctx.render_context->reset_state_objects();
 
 
 }
