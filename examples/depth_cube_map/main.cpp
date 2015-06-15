@@ -61,13 +61,7 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
-  teapot->set_draw_bounding_box(true);
-
-  auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
-  portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal->data.set_texture("portal");
-  portal->translate(0.5f, 0.f, -0.2f);
-  portal->rotate(-30, 0.f, 1.f, 0.f);
+  // teapot->set_draw_bounding_box(true);
 
   //auto light = graph.add_node<gua::node::LightNode>("/", "light");
   //light->data.set_type(gua::node::LightNode::Type::SPOT);
@@ -81,46 +75,17 @@ int main(int argc, char** argv) {
   light2->data.brightness = 150.0f;
   light2->scale(12.f);
   light2->translate(-3.f, 5.f, 5.f);
+  // light2->data.set_enable_shadows(true);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
-
-  //gua::VolumeLoader vloader;
-  //auto volume(vloader.create_volume_from_file("volume", "/opt/gua_vrgeo_2013/data/objects/head_w256_h256_d225_c1_b8.raw", 0));
-  //graph.add_node("/transform", volume);
-
-  auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
-  portal_screen->translate(0.0, 0.0, 5.0);
-  portal_screen->rotate(90, 0.0, 1.0, 0.0);
-  portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
-
-  auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0, 0, 2.0);
-  portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
-  portal_camera->config.set_screen_path("/portal_screen");
-  portal_camera->config.set_scene_graph_name("main_scenegraph");
-  portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(false);
-
-  auto portal_pipe = std::make_shared<gua::PipelineDescription>();
-  portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-
-  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-  resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  resolve_pass->tone_mapping_exposure(1.0f);
-
-  portal_pipe->add_pass(resolve_pass);
-  portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-
-  portal_camera->set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -129,7 +94,6 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-  camera->set_pre_render_cameras({portal_camera});
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
