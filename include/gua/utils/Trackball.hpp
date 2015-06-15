@@ -45,7 +45,7 @@ public:
     released = 0x02
   };
 
-  Trackball(double zoom_factor = 1.0f, double shift_factor = 0.5f, double rotation_factor = 0.25f);
+  Trackball(double zoom_factor = 1.0f, double shift_factor = 0.5f, double rotation_factor_x = 0.25f, double rotation_factor_y = 0.25f);
 
   /* virtual */ ~Trackball();
 
@@ -70,7 +70,8 @@ private:
   // trackball configuration
   double mapping_zoom_;
   double mapping_shift_;
-  double mapping_rotate_;
+  double mapping_rotate_x_;
+  double mapping_rotate_y_;
 
 private: // temporary state
 

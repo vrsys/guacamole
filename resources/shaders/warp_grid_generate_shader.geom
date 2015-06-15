@@ -34,119 +34,128 @@ uniform int current_level;
 
 out uvec3 xfb_output;
 
+void emit(uvec2 offset, uint data) {
+  xfb_output = uvec3(varying_position[0].xy+offset, data);
+  if (xfb_output.x < gua_resolution.x && xfb_output.y < gua_resolution.y) {
+    EmitVertex(); EndPrimitive();
+  }
+}
+
 void main() {
 
   if (current_level == (varying_position[0].z >> BIT_CURRENT_LEVEL)) {
-    const uint old_layer = (varying_position[0].z >> BIT_CURRENT_LEVEL);
-    const uint new_layer = old_layer - 1;
-    const uint old_cellsize = 1 << old_layer;
-    const uint new_cellsize = 1 << new_layer;
+    const uint new_level = current_level - 1;
+    const uint size = 1 << new_level;
+    uint bit_data = 0;
 
-    uint continuity_flags = 0;
+    uint s0 = 0;
+    uint s1 = 0;
+    uint s2 = 0;
+    uint s3 = 0;
 
   #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD
 
-    float is_surface = texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/old_cellsize), int(new_layer)).x;
+    float is_surface = texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << current_level)), int(new_level)).x;
     if (is_surface == 0) {
+
+      if (current_level == 2) {
+        // we are at the last level. Output 2x2 quads and set a flag whether it
+        // should be splitted by the warp pass. 
+
+        // s0-s1
+        // |   |
+        // s2-s3
+
+        s0 = uint(texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 1), int(new_level-1)).x == 1);
+        s1 = uint(texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 1), int(new_level-1)).x == 1);
+        s2 = uint(texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 0), int(new_level-1)).x == 1);
+        s3 = uint(texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 0), int(new_level-1)).x == 1);
+      }
 
   #else
 
-    uint bit_data = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/old_cellsize), int(new_layer)).x;
-    continuity_flags = ALL_CONTINUITY_BITS & bit_data;
+    bit_data = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << current_level)), int(new_level)).x;
+
+    if (current_level == 2) {
+
+      // we are at the last level. Output 2x2 quads and set a flag whether it
+      // should be splitted by the warp pass. 
+
+      // s0-s1
+      // |   |
+      // s2-s3
+
+      s0 = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 1), int(new_level-1)).x;
+      s1 = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 1), int(new_level-1)).x;
+      s2 = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 0), int(new_level-1)).x;
+      s3 = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 0), int(new_level-1)).x;
+    }
 
     if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_NONE) {
 
   #endif
 
       // the current cell covers more than one surface --- we need to split it!
+      emit(uvec2(0,    size), (new_level << BIT_CURRENT_LEVEL) | s0);
+      emit(uvec2(size, size), (new_level << BIT_CURRENT_LEVEL) | s1);
+      emit(uvec2(0,    0),    (new_level << BIT_CURRENT_LEVEL) | s2);
+      emit(uvec2(size, 0),    (new_level << BIT_CURRENT_LEVEL) | s3);
 
-      const uvec2 offsets[4] = {uvec2(0),            uvec2(new_cellsize, 0),
-                                uvec2(new_cellsize), uvec2(0, new_cellsize)};
+  #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 
-      if (new_layer == 0) {
-        // we are at the last level -- dont write one pixel sized quads; just output one quad (2x2 pixels) and set the is_surface flag to 0
-        xfb_output = uvec3(varying_position[0].xy, ((new_layer << BIT_CURRENT_LEVEL) | continuity_flags | 0));
-        EmitVertex(); EndPrimitive();
-      } else {
+    } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_LR) {
+      emit(uvec2(0),       (new_level << BIT_CURRENT_LEVEL) | (1 << BIT_EXPAND_Y) | 1);
+      emit(uvec2(size, 0), (new_level << BIT_CURRENT_LEVEL) | (1 << BIT_EXPAND_Y) | 1);
 
-        for (int v=0; v<4; ++v) {
-          xfb_output = uvec3(varying_position[0].xy + offsets[v], (new_layer << BIT_CURRENT_LEVEL) | continuity_flags | int(new_layer==0));
+    } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_L) {
+      emit(uvec2(0),       (new_level << BIT_CURRENT_LEVEL) | (1 << BIT_EXPAND_Y) | 1);
+      emit(uvec2(size, 0), (new_level << BIT_CURRENT_LEVEL) | s3);
+      emit(uvec2(size),    (new_level << BIT_CURRENT_LEVEL) | s1);
 
-          if (xfb_output.x < gua_resolution.x && xfb_output.y < gua_resolution.y) {
-            EmitVertex(); EndPrimitive();
-          }
-        }
-      }
+    } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_R) {
+      emit(uvec2(size, 0), (new_level << BIT_CURRENT_LEVEL) | (1 << BIT_EXPAND_Y) | 1);
+      emit(uvec2(0),       (new_level << BIT_CURRENT_LEVEL) | s2);
+      emit(uvec2(0, size), (new_level << BIT_CURRENT_LEVEL) | s0);
+
+    } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_TB) {
+      emit(uvec2(0),       (new_level << BIT_CURRENT_LEVEL) | (1 << BIT_EXPAND_X) | 1);
+      emit(uvec2(0, size), (new_level << BIT_CURRENT_LEVEL) | (1 << BIT_EXPAND_X) | 1);
+
+    } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_T) {
+      emit(uvec2(0, size), (new_level << BIT_CURRENT_LEVEL) | (1 << BIT_EXPAND_X) | 1);
+      emit(uvec2(0),       (new_level << BIT_CURRENT_LEVEL) | s2);
+      emit(uvec2(size, 0), (new_level << BIT_CURRENT_LEVEL) | s3);
+
+    } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_B) {
+      emit(uvec2(0),       (new_level << BIT_CURRENT_LEVEL) | (1 << BIT_EXPAND_X) | 1);
+      emit(uvec2(size),    (new_level << BIT_CURRENT_LEVEL) | s1);
+      emit(uvec2(0, size), (new_level << BIT_CURRENT_LEVEL) | s0);
+
+  #endif
 
     } else {
+      
+  #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 
+      if ((varying_position[0].z & (1<<BIT_EXPAND_X)) == (1<<BIT_EXPAND_X)) {
+        uint n = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << current_level)) + ivec2(1, 0), int(new_level)).x;
+        bit_data = (n            & ((1<<BIT_CONTINUOUS_R) | (1<<BIT_CONTINUOUS_TR) | (1<<BIT_CONTINUOUS_BR)))
+                 | (bit_data     & ((1<<BIT_CONTINUOUS_L) | (1<<BIT_CONTINUOUS_TL) | (1<<BIT_CONTINUOUS_BL)))
+                 | (n & bit_data & ((1<<BIT_CONTINUOUS_B) | (1<<BIT_CONTINUOUS_T)));
 
-      #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
+      } else if ((varying_position[0].z & (1<<BIT_EXPAND_Y)) == (1<<BIT_EXPAND_Y)) {
+        uint n = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << current_level)) + ivec2(0, 1), int(new_level)).x;
+        bit_data = (n            & ((1<<BIT_CONTINUOUS_T) | (1<<BIT_CONTINUOUS_TR) | (1<<BIT_CONTINUOUS_TL)))
+                 | (bit_data     & ((1<<BIT_CONTINUOUS_B) | (1<<BIT_CONTINUOUS_BL) | (1<<BIT_CONTINUOUS_BR)))
+                 | (n & bit_data & ((1<<BIT_CONTINUOUS_L) | (1<<BIT_CONTINUOUS_R)));
+      }
 
-        if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_LR) {
-
-          xfb_output = uvec3(varying_position[0].xy, (new_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_Y) | 1);
-          EmitVertex(); EndPrimitive();
-          xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize, 0), (new_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_Y) | 1);
-          EmitVertex(); EndPrimitive();
-
-        } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_L) {
-
-          xfb_output = uvec3(varying_position[0].xy, (new_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_Y) | 1);
-          EmitVertex(); EndPrimitive();
-          xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize, 0), (new_layer << BIT_CURRENT_LEVEL) | int(new_layer==0));
-          EmitVertex(); EndPrimitive();
-          xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize), (new_layer << BIT_CURRENT_LEVEL) | int(new_layer==0));
-          EmitVertex(); EndPrimitive();
-
-        } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_R) {
-
-          xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize, 0), (new_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_Y) | 1);
-          EmitVertex(); EndPrimitive();
-          xfb_output = uvec3(varying_position[0].xy, (new_layer << BIT_CURRENT_LEVEL) | int(new_layer==0));
-          EmitVertex(); EndPrimitive();
-          xfb_output = uvec3(varying_position[0].xy+uvec2(0, new_cellsize), (new_layer << BIT_CURRENT_LEVEL) | int(new_layer==0));
-          EmitVertex(); EndPrimitive();
-
-        } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_TB) {
-
-          xfb_output = uvec3(varying_position[0].xy, (new_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_X) | 1);
-          EmitVertex(); EndPrimitive();
-          xfb_output = uvec3(varying_position[0].xy+uvec2(0, new_cellsize), (new_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_X) | 1);
-          EmitVertex(); EndPrimitive();
-
-        } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_T) {
-
-          xfb_output = uvec3(varying_position[0].xy+uvec2(0, new_cellsize), (new_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_X) | 1);
-          EmitVertex(); EndPrimitive();
-          xfb_output = uvec3(varying_position[0].xy, (new_layer << BIT_CURRENT_LEVEL) | int(new_layer==0));
-          EmitVertex(); EndPrimitive();
-          xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize, 0), (new_layer << BIT_CURRENT_LEVEL) | int(new_layer==0));
-          EmitVertex(); EndPrimitive();
-
-        } else if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_B) {
-
-          xfb_output = uvec3(varying_position[0].xy, (new_layer << BIT_CURRENT_LEVEL) | (1<<BIT_EXPAND_X) | 1);
-          EmitVertex(); EndPrimitive();
-          xfb_output = uvec3(varying_position[0].xy+uvec2(new_cellsize), (new_layer << BIT_CURRENT_LEVEL) | int(new_layer==0));
-          EmitVertex(); EndPrimitive();
-          xfb_output = uvec3(varying_position[0].xy+uvec2(0, new_cellsize), (new_layer << BIT_CURRENT_LEVEL) | int(new_layer==0));
-          EmitVertex(); EndPrimitive();
-
-        } else {
-          // the current cell covers only one continuous surface --- write it's size, continuity and that's one surface
-          xfb_output = uvec3(varying_position[0].xy, (old_layer << BIT_CURRENT_LEVEL) | (varying_position[0].z & (1<<BIT_EXPAND_X)) | (varying_position[0].z & (1<<BIT_EXPAND_Y)) | continuity_flags | 1);
-          EmitVertex(); EndPrimitive();
-
-        }
-
-      #else
-
-        // the current cell covers only one continuous surface --- write it's size, continuity and that's one surface
-        xfb_output = uvec3(varying_position[0].xy, (old_layer << BIT_CURRENT_LEVEL) | continuity_flags | 1);
-        EmitVertex(); EndPrimitive();
-
-      #endif
+  #endif
+      // the current cell covers only one continuous surface --- write it's size, continuity and that's one surface
+      emit(uvec2(0), (current_level << BIT_CURRENT_LEVEL) 
+                   | (varying_position[0].z & (1<<BIT_EXPAND_X)) 
+                   | (varying_position[0].z & (1<<BIT_EXPAND_Y)) 
+                   | (ALL_CONTINUITY_BITS & bit_data) | 1);
     }
 
   } else {

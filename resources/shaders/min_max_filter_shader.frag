@@ -81,10 +81,13 @@ void main() {
     const float d10 = texelFetch(sampler2D(depth_buffer), max(ivec2(0), min(res, ivec2(gl_FragCoord.xy*2) + ivec2( 0, -1))), 0).x;
     const float d11 = texelFetch(sampler2D(depth_buffer), max(ivec2(0), min(res, ivec2(gl_FragCoord.xy*2) + ivec2( 1, -1))), 0).x;
 
-    result = is_on_line(d0, d3, d7, d10)
-           & is_on_line(d1, d4, d8, d11)
-           & is_on_line(d2, d3, d4, d5)
-           & is_on_line(d6, d7, d8, d9);
+    const uint is_surface = is_on_line(d0, d3, d7, d10)
+                          & is_on_line(d1, d4, d8, d11)
+                          & is_on_line(d2, d3, d4, d5)
+                          & is_on_line(d6, d7, d8, d9);
+    const uint merge_type = is_surface << BIT_MERGE_TYPE;
+
+    result = is_surface | merge_type;
 
   } else {
 
@@ -98,7 +101,10 @@ void main() {
     uint s3 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 0)).x;
 
     // if each child has been a connected surface, the parent is as a surface as well
-    result = s0 & s1 & s2 & s3;
+    const uint is_surface = s0 & s1 & s2 & s3;
+    const uint merge_type = is_surface << BIT_MERGE_TYPE;
+
+    result = is_surface | merge_type;
   }
 
   // ---------------------------------------------------------------------------
@@ -151,7 +157,8 @@ void main() {
 
 
     // if the patch is connected on two othogonal sides, it represents a surface
-    const uint merge_all = (t & r) | (r & b) | (b & l) | (l & t);
+    const uint is_surface = (t & r) | (r & b) | (b & l) | (l & t);
+    const uint merge_type = is_surface << BIT_MERGE_TYPE;
 
     // store all continuities
     const uint continuous = (t  << BIT_CONTINUOUS_T)
@@ -163,14 +170,22 @@ void main() {
                           | (bl << BIT_CONTINUOUS_BL)
                           | (br << BIT_CONTINUOUS_BR);
 
-    result = merge_all | continuous;
+    result = is_surface | merge_type | continuous;
 
     #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
-      if (merge_all != MERGE_ALL) {
+      if (merge_type == MERGE_NONE) {
         if (t == 1 || b == 1) {
           result = MERGE_LR | continuous;
         } else if (r == 1 || l == 1) {
           result = MERGE_TB | continuous;
+        } else if ((is_on_line(d4, d5, d6) | is_on_line(d5, d6, d7)) == 1) {
+          result = MERGE_T | continuous;
+        } else if ((is_on_line(d8, d9, d10) | is_on_line(d9, d10, d11)) == 1) {
+          result = MERGE_B | continuous;
+        } else if ((is_on_line(d1, d5, d9) | is_on_line(d5, d9, d13)) == 1) {
+          result = MERGE_L | continuous;
+        } else if ((is_on_line(d2, d6, d10) | is_on_line(d6, d10, d14)) == 1) {
+          result = MERGE_R | continuous;
         }
       }
     #endif
@@ -193,14 +208,8 @@ void main() {
                                    & (s3 >> BIT_CONTINUOUS_L) & 1;
 
     // if any child is no complete surface, the parent is neither
-    #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
-      const uint merge_all = int((s0 & ALL_MERGE_TYPE_BITS) == MERGE_ALL)
-                           & int((s1 & ALL_MERGE_TYPE_BITS) == MERGE_ALL)
-                           & int((s2 & ALL_MERGE_TYPE_BITS) == MERGE_ALL)
-                           & int((s3 & ALL_MERGE_TYPE_BITS) == MERGE_ALL) & internal_continuity;
-    #else
-      const uint merge_all = s0 & s1 & s2 & s3 & internal_continuity;
-    #endif
+    const uint is_surface = s0 & s1 & s2 & s3 & internal_continuity;
+    const uint merge_type = is_surface << BIT_MERGE_TYPE;
 
     // check for horizontal and vertical continuity
     const uint t = (s0 >> BIT_CONTINUOUS_T) & (s1 >> BIT_CONTINUOUS_T) & 1;
@@ -224,15 +233,15 @@ void main() {
                           | (bl << BIT_CONTINUOUS_BL)
                           | (br << BIT_CONTINUOUS_BR);
 
-    result = merge_all | continuous;
+    result = is_surface | merge_type | continuous;
 
     #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
-      if (merge_all != MERGE_ALL) {
+      if (merge_type == MERGE_NONE) {
 
-        const uint merge_s0 = int((s0 & ALL_MERGE_TYPE_BITS) == MERGE_ALL);
-        const uint merge_s1 = int((s1 & ALL_MERGE_TYPE_BITS) == MERGE_ALL);
-        const uint merge_s2 = int((s2 & ALL_MERGE_TYPE_BITS) == MERGE_ALL);
-        const uint merge_s3 = int((s3 & ALL_MERGE_TYPE_BITS) == MERGE_ALL);
+        const uint merge_s0 = s0 & 1;
+        const uint merge_s1 = s1 & 1;
+        const uint merge_s2 = s2 & 1;
+        const uint merge_s3 = s3 & 1;
 
         const uint merge_l = (s0 >> BIT_CONTINUOUS_B) & merge_s0 & merge_s2;
         const uint merge_r = (s1 >> BIT_CONTINUOUS_B) & merge_s1 & merge_s3;

@@ -22,6 +22,7 @@
 #include <functional>
 
 #include <gua/guacamole.hpp>
+#include "Navigator.hpp"
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
@@ -38,6 +39,8 @@ const bool CLIENT_SERVER    = false;
 bool depth_test             = true;
 bool backface_culling       = true;
 bool orthographic           = false;
+bool manipulation_navigator = true;
+bool manipulation_camera    = false;
 bool manipulation_object    = false;
 
 // forward mouse interaction to trackball
@@ -73,13 +76,15 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 int main(int argc, char** argv) {
   bool fullscreen = (argc == 2);
 
-  // auto resolution = gua::math::vec2ui(1920, 1200);
-  auto resolution = gua::math::vec2ui(1600, 900);
+  auto resolution = gua::math::vec2ui(1920, 1080);
+  // auto resolution = gua::math::vec2ui(1600, 900);
   // auto resolution = gua::math::vec2ui(1280, 768);
 
   // add mouse interaction
-  gua::utils::Trackball view_trackball(0.01, 0.002, 0.2);
-  gua::utils::Trackball object_trackball(0.01, 0.002, 0.2);
+  gua::utils::Trackball view_trackball(0.01, 0.002, 0.2, 0.2);
+  gua::utils::Trackball object_trackball(0.01, 0.002, 0, 0.2);
+  Navigator nav;
+  nav.set_transform(scm::math::make_translation(0.f, 0.f, 3.f));
 
   // initialize guacamole
   gua::init(argc, argv);
@@ -94,8 +99,21 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
 
+  auto light = graph.add_node<gua::node::LightNode>("/", "light");
+  light->data.set_type(gua::node::LightNode::Type::SUN);
+  light->data.set_brightness(3.f);
+  light->data.set_shadow_cascaded_splits({0.1f, 0.6f, 1.5f, 4.f});
+  light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
+  light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
+  light->data.set_max_shadow_dist(8.0f);
+  light->data.set_shadow_offset(0.0002f);
+  light->data.set_enable_shadows(true);
+  light->data.set_shadow_map_size(2048);
+  light->rotate(-95, 1, 0.5, 0);
+
   // many oilrigs scene --------------------------------------------------------
   auto scene_root = graph.add_node<gua::node::TransformNode>("/transform", "many_oilrigs");
+  scene_root->rotate(-90, 1, 0, 0);
   auto add_oilrig = [&](int x, int y, int c, std::string const& parent) {
     auto t = graph.add_node<gua::node::TransformNode>(parent, "t");
     t->translate((x - c*0.5 + 0.5)/1.5, (y - c*0.5 + 0.8)/2, 0);
@@ -116,6 +134,7 @@ int main(int argc, char** argv) {
   // one oilrig ----------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "one_oilrig");
   scene_root->scale(3);
+  scene_root->rotate(-90, 1, 0, 0);
   add_oilrig(0, 0, 1, "/transform/one_oilrig");
 
   // textured quads scene ------------------------------------------------------
@@ -133,7 +152,7 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(teapot);
 
-  // sphers --------------------------------------------------------------------
+  // spheres -------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sphere");
   auto sphere(loader.create_geometry_from_file("sphere", "data/objects/sphere.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
@@ -182,26 +201,24 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------------
 
   // slow client ---------------------------------------------------------------
-  auto slow_screen = graph.add_node<gua::node::ScreenNode>("/", "slow_screen");
+  auto slow_cam = graph.add_node<gua::node::CameraNode>("/", "slow_cam");
+  auto slow_screen = graph.add_node<gua::node::ScreenNode>("/slow_cam", "slow_screen");
   slow_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
-
-  auto slow_cam = graph.add_node<gua::node::CameraNode>("/slow_screen", "slow_cam");
-  slow_cam->translate(0, 0, 2.0);
+  slow_screen->translate(0, 0, -2.0);
   if (orthographic) slow_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::ORTHOGRAPHIC);
   slow_cam->config.set_resolution(resolution);
-  slow_cam->config.set_screen_path("/slow_screen");
+  slow_cam->config.set_screen_path("/slow_cam/slow_screen");
   slow_cam->config.set_scene_graph_name("main_scenegraph");
   slow_cam->config.mask().blacklist.add_tag("invisible");
 
   // fast client ---------------------------------------------------------------
-  auto fast_screen = graph.add_node<gua::node::ScreenNode>("/", "fast_screen");
+  auto fast_cam = graph.add_node<gua::node::CameraNode>("/", "fast_cam");
+  auto fast_screen = graph.add_node<gua::node::ScreenNode>("/fast_cam", "fast_screen");
   fast_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
-
-  auto fast_cam = graph.add_node<gua::node::CameraNode>("/fast_screen", "fast_cam");
-  fast_cam->translate(0, 0, 2.0);
+  fast_screen->translate(0, 0, -2.0);
   if (orthographic) fast_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::ORTHOGRAPHIC);
   fast_cam->config.set_resolution(resolution);
-  fast_cam->config.set_screen_path("/fast_screen");
+  fast_cam->config.set_screen_path("/fast_cam/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
 
   auto warp_pass(std::make_shared<gua::WarpPassDescription>());
@@ -209,10 +226,17 @@ int main(int argc, char** argv) {
   auto render_grid_pass(std::make_shared<gua::RenderWarpGridPassDescription>());
   auto trimesh_pass(std::make_shared<gua::TriMeshPassDescription>());
   auto background_pass(std::make_shared<gua::BackgroundPassDescription>());
-  background_pass->mode(gua::BackgroundPassDescription::QUAD_TEXTURE).
+  background_pass->mode(gua::BackgroundPassDescription::COLOR).
                    texture("data/textures/bg0.png").
                    repeat(gua::math::vec2f(12, 7.5)).
-                   color(gua::utils::Color3f(0.9, 0.9, 0.9));
+                   color(gua::utils::Color3f(0.1, 0.1, 0.1));
+  auto res_pass(std::make_shared<gua::ResolvePassDescription>());
+  res_pass->ssao_enable(true).
+            background_color(gua::utils::Color3f(0.1, 0.1, 0.1)).
+            environment_lighting(gua::utils::Color3f(0.3, 0.3, 0.3)).
+            horizon_fade(0.1f).
+            ssao_intensity(2.f).
+            ssao_radius(5.f);
 
   if (CLIENT_SERVER) {
     slow_cam->config.set_output_window_name("hidden_window");
@@ -238,6 +262,8 @@ int main(int argc, char** argv) {
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(trimesh_pass);
     pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
+    pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+    pipe->add_pass(res_pass);
     pipe->add_pass(grid_pass);
     pipe->add_pass(warp_pass);
     pipe->add_pass(background_pass);
@@ -304,6 +330,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_scene_teapot");
       gui->add_javascript_callback("set_scene_sphere");
       gui->add_javascript_callback("set_scene_textured_quads");
+      gui->add_javascript_callback("set_manipulation_navigator");
       gui->add_javascript_callback("set_manipulation_camera");
       gui->add_javascript_callback("set_manipulation_object");
       gui->add_javascript_callback("set_show_warp_grid");
@@ -384,7 +411,8 @@ int main(int argc, char** argv) {
       } else if (callback == "reset_object") {
         object_trackball.reset();
       } else if (callback == "render_view") {
-        slow_screen->set_transform(fast_screen->get_transform());
+        view_trackball.reset();
+        nav.set_transform(gua::math::mat4f(fast_cam->get_transform()));
       } else if (callback == "set_gbuffer_type_points"
                | callback == "set_gbuffer_type_scaled_points"
                | callback == "set_gbuffer_type_quads_screen_aligned"
@@ -440,16 +468,21 @@ int main(int argc, char** argv) {
           if (callback == "set_abuffer_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
           if (callback == "set_abuffer_type_none")          warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
         }
-      } else if (callback == "set_manipulation_object") {
+      } else if (callback == "set_manipulation_object"
+              || callback == "set_manipulation_camera"
+              || callback == "set_manipulation_navigator") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
-        manipulation_object = checked;
-      } else if (callback == "set_manipulation_camera") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        manipulation_object = !checked;
+        if (checked) {
+          manipulation_object = false;
+          manipulation_camera = false;
+          manipulation_navigator = false;
+
+          if (callback == "set_manipulation_camera") manipulation_camera = true;
+          if (callback == "set_manipulation_object") manipulation_object = true;
+          if (callback == "set_manipulation_navigator") manipulation_navigator = true;
+        }
       } else if (callback == "set_scene_one_oilrig" ||
                  callback == "set_scene_many_oilrigs" ||
                  callback == "set_scene_sponza" ||
@@ -511,8 +544,14 @@ int main(int argc, char** argv) {
     });
     glfw->on_button_press.connect([&](int key, int action, int mods) {
       gui->inject_mouse_button(gua::Button(key), action, mods);
+
+      nav.set_mouse_button(key, action);
+    
     });
     glfw->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+      if (manipulation_navigator) {
+        nav.set_key_press(static_cast<gua::Key>(key), action);
+      }
       gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
       if (key == 72 && action == 1) {
         // hide gui
@@ -532,6 +571,8 @@ int main(int argc, char** argv) {
       } else {
         if (manipulation_object) {
           object_trackball.motion(pos.x, pos.y);
+        } else if (manipulation_navigator) {
+          nav.set_mouse_position(gua::math::vec2i(pos));
         } else {
           view_trackball.motion(pos.x, pos.y);
         }
@@ -564,6 +605,8 @@ int main(int argc, char** argv) {
       gua::Interface::instance()->update();
     }
 
+    nav.update();
+
     // apply view_trackball matrix to object
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(object_trackball.shiftx()),
                                                               gua::math::float_t(object_trackball.shifty()),
@@ -586,7 +629,8 @@ int main(int argc, char** argv) {
       target_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
       source_frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     } else {
-      fast_screen->set_transform(viewmatrix);
+      slow_cam->set_transform(gua::math::mat4(nav.get_transform()));
+      fast_cam->set_transform(viewmatrix * gua::math::mat4(nav.get_transform()));
       transform->set_transform(modelmatrix);
       if (ctr++ % 100 == 0) {
         if (SHOW_FRAME_RATE) {
@@ -603,7 +647,8 @@ int main(int argc, char** argv) {
 
         for (auto const& result: window->get_context()->time_query_results) {
           if (result.first.find("GPU") != std::string::npos) {
-            if (result.first.find("Trimesh") != std::string::npos) trimesh_time = result.second;
+            if (result.first.find("Trimesh") != std::string::npos) trimesh_time += result.second;
+            if (result.first.find("Resolve") != std::string::npos) trimesh_time += result.second;
             if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time = result.second;
             if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time = result.second;
             if (result.first.find("WarpGridGenerator") != std::string::npos) grid_time += result.second;

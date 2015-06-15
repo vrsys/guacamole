@@ -41,11 +41,11 @@ ResolvePassDescription::ResolvePassDescription()
   fragment_shader_ = "shaders/resolve.frag";
   name_ = "ResolvePass";
   needs_color_buffer_as_input_ = true;
-  writes_only_color_buffer_ = true;
+  writes_only_color_buffer_ = false;
   rendermode_ = RenderMode::Quad;
   depth_stencil_state_ = boost::make_optional(
     scm::gl::depth_stencil_state_desc(
-      false, false, scm::gl::COMPARISON_LESS, true, 1, 0,
+      true, true, scm::gl::COMPARISON_LESS, true, 1, 0,
       scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
     )
   );

@@ -30,7 +30,7 @@ namespace utils {
 ////////////////////////////////////////////////////////////////////////////////
 Trackball::Trackball(double zoom,
                     double shift,
-                    double rotation)
+                    double rotation_x, double rotation_y)
   : button_left_(false),
     button_middle_(false),
     button_right_(false),
@@ -43,7 +43,8 @@ Trackball::Trackball(double zoom,
 {
   mapping_zoom_ = zoom;
   mapping_shift_ = shift;
-  mapping_rotate_ = rotation;
+  mapping_rotate_x_ = rotation_x;
+  mapping_rotate_y_ = rotation_y;
 
   reset();
 }
@@ -139,8 +140,8 @@ void Trackball::motion(int x, int y)
 {
   if (button_left_)
   {
-    double angle_y = (mapping_rotate_ * double(x - mousepos_x_));
-    double angle_x = (mapping_rotate_ * double(mousepos_y_ - y));
+    double angle_y = (mapping_rotate_y_ * double(x - mousepos_x_));
+    double angle_x = (mapping_rotate_x_ * double(mousepos_y_ - y));
 
     rotation_euler_ = scm::math::make_rotation(angle_x, scm::math::vec3d(1, 0, 0)) * rotation_euler_;
     rotation_euler_ = scm::math::make_rotation(angle_y, scm::math::vec3d(0, 1, 0)) * rotation_euler_;

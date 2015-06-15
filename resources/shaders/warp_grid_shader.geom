@@ -69,7 +69,7 @@ void main() {
     const uvec2 offsets[4] = {uvec2(0), uvec2(1, 0),
                               uvec2(1), uvec2(0, 1)};
     for (int v=0; v<4; ++v) {
-      emit_quad(offsets[v]+uvec2(0), max(vec2(1), scale - vec2(0)));
+      emit_quad(offsets[v]+uvec2(1), max(vec2(1), scale - vec2(2)));
     }
   }
 }

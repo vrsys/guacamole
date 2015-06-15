@@ -69,12 +69,11 @@ vec3 environment_lighting (in ShadingTerms T)
       break;
     case 2 : // single color
       // http://marmosetco.tumblr.com/post/81245981087
-      float gua_horizon_fade = 1.3;
       vec3 R = reflect(-T.V, T.N);
       float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
       horizon *= horizon;
       vec3 brdf_diff = T.diffuse;
-      env_color = (Pi * brdf_diff + (horizon * brdf_spec)) * gua_horizon_fade * gua_environment_lighting_color;
+      env_color = (Pi * brdf_diff + (horizon*gua_horizon_fade * brdf_spec)) * gua_horizon_fade * vec3(0.3);
       break;
   };
 
@@ -232,6 +231,8 @@ void main() {
   vec3 gbuffer_color = vec3(0);
 
   float depth = gua_get_depth();
+
+  gl_FragDepth = depth*0.5+0.5;
 
 #if @enable_abuffer@
   bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());

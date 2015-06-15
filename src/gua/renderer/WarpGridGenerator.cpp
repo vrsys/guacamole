@@ -176,7 +176,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
       for (uint y(0); y < initial_grid_y; ++y) {
         data[y*initial_grid_x + x] = math::vec3ui(x*description->cell_size(),
                                                   y*description->cell_size(),
-                                                  current_level<<11 /* write the current mipmap level at bit position 5 (log2(32)) */);
+                                                  current_level<<12 /* write the current mipmap level at bit position 12 */);
       }
     }
 
@@ -202,7 +202,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
   ctx.render_context->end_transform_feedback();
   res_->ping = !res_->ping;
 
-  while (--current_level > 0) {
+  while (--current_level > 1) {
     // further subdivisions
     grid_generation_program_->set_uniform(ctx, current_level, "current_level");
     ctx.render_context->begin_transform_feedback(res_->grid_tfb[res_->current_tfb()],

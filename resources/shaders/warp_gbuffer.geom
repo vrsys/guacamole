@@ -61,7 +61,7 @@ void emit_quad(uvec2 offset, uvec2 size) {
   vec2 position = varying_position[0].xy+offset;
   float depth = gua_get_depth_raw(position);
 
-  if (depth < 1) {
+  if (depth < 1 && size.x > 0 && size.y > 0) {
 
     cellsize = min(size.x, size.y);
 
@@ -82,25 +82,15 @@ void emit_quad(uvec2 offset, uvec2 size) {
 
     #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 
-      int cont_l = int(varying_position[0].z >> BIT_CONTINUOUS_L) & 1;
-      int cont_r = int(varying_position[0].z >> BIT_CONTINUOUS_R) & 1;
-      int cont_t = int(varying_position[0].z >> BIT_CONTINUOUS_T) & 1;
-      int cont_b = int(varying_position[0].z >> BIT_CONTINUOUS_B) & 1;
+      const int cont_l = int(varying_position[0].z >> BIT_CONTINUOUS_L) & 1;
+      const int cont_r = int(varying_position[0].z >> BIT_CONTINUOUS_R) & 1;
+      const int cont_t = int(varying_position[0].z >> BIT_CONTINUOUS_T) & 1;
+      const int cont_b = int(varying_position[0].z >> BIT_CONTINUOUS_B) & 1;
 
-      int cont_tl = int(varying_position[0].z >> BIT_CONTINUOUS_TL) & 1;
-      int cont_tr = int(varying_position[0].z >> BIT_CONTINUOUS_TR) & 1;
-      int cont_bl = int(varying_position[0].z >> BIT_CONTINUOUS_BL) & 1;
-      int cont_br = int(varying_position[0].z >> BIT_CONTINUOUS_BR) & 1;
-
-      // cont_l = 0;
-      // cont_r = 0;
-      // cont_t = 0;
-      // cont_b = 0;
-
-      // cont_tl = 0;
-      // cont_tr = 0;
-      // cont_bl = 0;
-      // cont_br = 0;
+      const int cont_tl = int(varying_position[0].z >> BIT_CONTINUOUS_TL) & 1;
+      const int cont_tr = int(varying_position[0].z >> BIT_CONTINUOUS_TR) & 1;
+      const int cont_bl = int(varying_position[0].z >> BIT_CONTINUOUS_BL) & 1;
+      const int cont_br = int(varying_position[0].z >> BIT_CONTINUOUS_BR) & 1;
 
       position = varying_position[0].xy+offset;
       vec2 lookup_offset = vec2(-cont_l, -cont_b) * cont_bl;
@@ -128,33 +118,103 @@ void emit_quad(uvec2 offset, uvec2 size) {
   }
 }
 
-void emit_pixel(uvec2 position) {
+void emit_pixel(uvec2 offset) {
 
-  const float depth = gua_get_depth_raw(position);
+  const float depth = gua_get_depth_raw(varying_position[0].xy + offset);
 
   if (depth < 1) {
     cellsize = 1;
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   0),   depth);
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, 0),   depth);
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   GAP), depth);
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, GAP), depth);
+    EndPrimitive();
+  }
+}
 
-    emit_grid_vertex(position + vec2(0, 0), depth);
-    emit_grid_vertex(position + vec2(GAP, 0), depth);
-    emit_grid_vertex(position + vec2(0, GAP), depth);
-    emit_grid_vertex(position + vec2(GAP, GAP), depth);
+void emit_pixel(uvec2 offset, uint do_emit) {
+
+  const float depth = gua_get_depth_raw(varying_position[0].xy + offset);
+
+  if (depth < 1 && do_emit > 0) {
+    cellsize = 1;
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   0),   depth);
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, 0),   depth);
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   GAP), depth);
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, GAP), depth);
     EndPrimitive();
   }
 }
 
 void main() {
 
+#if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
+
+  const uint merge_type = varying_position[0].z & ALL_MERGE_TYPE_BITS;
+
+  uvec4 quad0 = uvec4(0);
+  uvec4 quad1 = uvec4(0);
+  uvec4 quad2 = uvec4(0);
+  uvec4 quad3 = uvec4(0);
+
+  if ((varying_position[0].z & 1) > 0) {
+    uvec2 scale = 1 + uvec2((varying_position[0].z >> BIT_EXPAND_X) & 1, (varying_position[0].z >> BIT_EXPAND_Y) & 1);
+    quad0 = uvec4(uvec2(0), (1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)) * scale);
+
+  } else if (merge_type == MERGE_NONE) {
+    quad0 = uvec4(0, 0, 1, 1);
+    quad1 = uvec4(1, 0, 1, 1);
+    quad2 = uvec4(1, 1, 1, 1);
+    quad3 = uvec4(0, 1, 1, 1);
+
+  } else if (merge_type == MERGE_LR) {
+    quad0 = uvec4(uvec2(0, 0), uvec2(1, 2));
+    quad1 = uvec4(uvec2(1, 0), uvec2(1, 2));
+
+  } else if (merge_type == MERGE_L) {
+    quad0 = uvec4(uvec2(0, 0), uvec2(1, 2));
+    quad1 = uvec4(1, 0, 1, 1);
+    quad2 = uvec4(1, 1, 1, 1);
+
+  } else if (merge_type == MERGE_R) {
+    quad0 = uvec4(uvec2(1, 0), uvec2(1, 2));
+    quad1 = uvec4(0, 0, 1, 1);
+    quad2 = uvec4(0, 1, 1, 1);
+
+  } else if (merge_type == MERGE_TB) {
+    quad0 = uvec4(uvec2(0, 0), uvec2(2, 1));
+    quad1 = uvec4(uvec2(0, 1), uvec2(2, 1));
+
+  } else if (merge_type == MERGE_T) {
+    quad0 = uvec4(uvec2(0, 1), uvec2(2, 1));
+    quad1 = uvec4(0, 0, 1, 1);
+    quad2 = uvec4(1, 0, 1, 1);
+
+  } else if (merge_type == MERGE_B) {
+    quad0 = uvec4(uvec2(0, 0), uvec2(2, 1));
+    quad1 = uvec4(1, 1, 1, 1);
+    quad2 = uvec4(0, 1, 1, 1);
+
+  }
+
+  emit_quad(quad0.xy, quad0.zw);
+  emit_quad(quad1.xy, quad1.zw);
+  emit_pixel(quad2.xy, quad2.z);
+  emit_pixel(quad3.xy, quad3.z);
+
+#else
+
   if ((varying_position[0].z & 1) > 0) {
     uvec2 scale = 1 + uvec2((varying_position[0].z >> BIT_EXPAND_X) & 1, (varying_position[0].z >> BIT_EXPAND_Y) & 1);
     emit_quad(uvec2(0), (1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)) * scale);
   } else {
-    const uvec2 offsets[4] = {uvec2(0), uvec2(1, 0),
-                              uvec2(1), uvec2(0, 1)};
-    for (int v=0; v<4; ++v) {
-      emit_pixel(varying_position[0].xy+offsets[v]);
-    }
+    emit_pixel(uvec2(0, 0));
+    emit_pixel(uvec2(1, 0));
+    emit_pixel(uvec2(1, 1));
+    emit_pixel(uvec2(0, 1));
   }
+
+#endif
 }
 
 

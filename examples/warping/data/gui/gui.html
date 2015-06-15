@@ -183,6 +183,7 @@
 
       function init() {
 
+        init_radio("#manipulation_navigator", "manipulation_navigator");
         init_radio("#manipulation_camera", "manipulation_camera");
         init_radio("#manipulation_object", "manipulation_object");
 
@@ -334,8 +335,14 @@
             <div class="col-xs-7">
               <div class="radio">
                 <label>
-                  <input type="radio" name="manipulationRadios" id="manipulation_camera" value="" checked>
-                  <span>Camera</span>
+                  <input type="radio" name="manipulationRadios" id="manipulation_navigator" value="" checked>
+                  <span>Navigation</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="manipulationRadios" id="manipulation_camera" value="">
+                  <span>Warp Camera</span>
                 </label>
               </div>
               <div class="radio">
