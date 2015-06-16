@@ -79,6 +79,15 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& warp_matrix(math::mat4f const& mat);
   math::mat4f const& warp_matrix() const;
 
+  WarpPassDescription& stereo_mode(StereoMode val);
+  StereoMode stereo_mode() const;
+
+  WarpPassDescription& warp_matrix_left(math::mat4f const& mat);
+  math::mat4f const& warp_matrix_left() const;
+
+  WarpPassDescription& warp_matrix_right(math::mat4f const& mat);
+  math::mat4f const& warp_matrix_right() const;
+
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
 
@@ -91,6 +100,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   bool debug_cell_colors_;
   bool debug_cell_gap_;
   int max_layers_;
+  StereoMode stereo_mode_;
   GBufferWarpMode gbuffer_warp_mode_;
   ABufferWarpMode abuffer_warp_mode_;
 };

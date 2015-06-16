@@ -24,6 +24,8 @@
 @include "common/gua_gbuffer_input.glsl"
 @include "gbuffer_warp_modes.glsl"
 
+uniform bool warp_left_eye;
+
 // -----------------------------------------------------------------------------
 #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 // -----------------------------------------------------------------------------
@@ -41,6 +43,20 @@ void main() {
   #else
     gua_out_color = gua_get_color(texcoords);
   #endif
+
+  #if @warping_stereo_mode@ == 2
+    if (warp_left_eye) {
+        gua_out_color = vec3(gua_out_color.r, 0, 0);
+    } else {
+        gua_out_color = vec3(0, gua_out_color.g, 0);
+    }
+  #elif  @warping_stereo_mode@ == 3
+    if (warp_left_eye) {
+        gua_out_color = vec3(gua_out_color.r, 0, 0);
+    } else {
+        gua_out_color = vec3(0, gua_out_color.gb);
+    }
+  #endif
 }
 
 
@@ -56,6 +72,20 @@ layout(location=0) out vec3 gua_out_color;
 
 void main() {
   gua_out_color = color;
+
+  #if @warping_stereo_mode@ == 2
+    if (warp_left_eye) {
+        gua_out_color = vec3(gua_out_color.r, 0, 0);
+    } else {
+        gua_out_color = vec3(0, gua_out_color.g, 0);
+    }
+  #elif  @warping_stereo_mode@ == 3
+    if (warp_left_eye) {
+        gua_out_color = vec3(gua_out_color.r, 0, 0);
+    } else {
+        gua_out_color = vec3(0, gua_out_color.gb);
+    }
+  #endif
 }
 
 #endif

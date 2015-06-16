@@ -42,7 +42,7 @@ class WarpRenderer {
   WarpRenderer();
   virtual ~WarpRenderer() {}
 
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
+  void render(Pipeline& pipe, PipelinePassDescription const& desc, bool left_eye);
 
   void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 

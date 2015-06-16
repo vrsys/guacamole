@@ -33,12 +33,8 @@
 
 #define COUNT 6
 
-const bool SHOW_FRAME_RATE  = false;
-const bool CLIENT_SERVER    = false;
-
 bool depth_test             = true;
 bool backface_culling       = true;
-bool orthographic           = false;
 bool manipulation_navigator = true;
 bool manipulation_camera    = false;
 bool manipulation_object    = false;
@@ -206,7 +202,6 @@ int main(int argc, char** argv) {
   auto slow_screen = graph.add_node<gua::node::ScreenNode>("/slow_cam", "slow_screen");
   slow_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
   slow_screen->translate(0, 0, -2.0);
-  if (orthographic) slow_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::ORTHOGRAPHIC);
   slow_cam->config.set_resolution(resolution);
   slow_cam->config.set_screen_path("/slow_cam/slow_screen");
   slow_cam->config.set_scene_graph_name("main_scenegraph");
@@ -217,7 +212,6 @@ int main(int argc, char** argv) {
   auto fast_screen = graph.add_node<gua::node::ScreenNode>("/fast_cam", "fast_screen");
   fast_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
   fast_screen->translate(0, 0, -2.0);
-  if (orthographic) fast_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::ORTHOGRAPHIC);
   fast_cam->config.set_resolution(resolution);
   fast_cam->config.set_screen_path("/fast_cam/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
@@ -230,51 +224,40 @@ int main(int argc, char** argv) {
   auto res_pass(std::make_shared<gua::ResolvePassDescription>());
   res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
             background_texture("/opt/guacamole/resources/skymaps/cycles_island.jpg").
-            background_color(gua::utils::Color3f(0.1, 0.1, 0.1)).
+            background_color(gua::utils::Color3f(0, 0, 0)).
             ssao_enable(true).
             environment_lighting(gua::utils::Color3f(0.05, 0.1, 0.2)).
             horizon_fade(0.2f).
             ssao_intensity(2.f).
             ssao_radius(5.f);
 
-  if (CLIENT_SERVER) {
-    slow_cam->config.set_output_window_name("hidden_window");
-    fast_cam->config.set_output_window_name("window");
+  slow_cam->config.set_output_window_name("window");
 
-    auto slow_pipe = std::make_shared<gua::PipelineDescription>();
-    slow_pipe->set_enable_abuffer(true);
-    slow_pipe->add_pass(trimesh_pass);
-    slow_cam->set_pipeline_description(slow_pipe);
+  auto warp_pipe = std::make_shared<gua::PipelineDescription>();
+  warp_pipe->add_pass(trimesh_pass);
+  warp_pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
+  warp_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  warp_pipe->add_pass(res_pass);
+  warp_pipe->add_pass(grid_pass);
+  warp_pipe->add_pass(warp_pass);
+  warp_pipe->add_pass(render_grid_pass);
+  warp_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
+  warp_pipe->set_enable_abuffer(true);
+  slow_cam->set_pipeline_description(warp_pipe);
 
-    warp_pass->use_abuffer_from_window("hidden_window");
-
-    auto fast_pipe = std::make_shared<gua::PipelineDescription>();
-    fast_pipe->set_enable_abuffer(true);
-    fast_pipe->add_pass(warp_pass);
-    fast_cam->set_pipeline_description(fast_pipe);
-    fast_cam->config.mask().blacklist.add_tag("scene");
-
-  } else {
-
-    slow_cam->config.set_output_window_name("window");
-
-    auto pipe = std::make_shared<gua::PipelineDescription>();
-    pipe->add_pass(trimesh_pass);
-    pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
-    pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-    pipe->add_pass(res_pass);
-    pipe->add_pass(grid_pass);
-    pipe->add_pass(warp_pass);
-    pipe->add_pass(render_grid_pass);
-    pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
-    pipe->set_enable_abuffer(true);
-    slow_cam->set_pipeline_description(pipe);
-  }
+  auto normal_pipe = std::make_shared<gua::PipelineDescription>();
+  normal_pipe->add_pass(trimesh_pass);
+  normal_pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
+  normal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  normal_pipe->add_pass(res_pass);
+  normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
+  normal_pipe->set_enable_abuffer(true);
 
 
   // ---------------------------------------------------------------------------
   // ----------------------------- setup gui -----------------------------------
   // ---------------------------------------------------------------------------
+  auto window = std::make_shared<gua::GlfwWindow>();
 
   auto gui = std::make_shared<gua::GuiResource>();
   auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
@@ -282,310 +265,299 @@ int main(int argc, char** argv) {
   auto stats = std::make_shared<gua::GuiResource>();
   auto stats_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("stats_quad");
 
-  if (!CLIENT_SERVER) {
+  // right side gui ----------------------------------------------------------
+  gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 820));
 
-    // right side gui ----------------------------------------------------------
-    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 740));
+  gui->on_loaded.connect([&]() {
+    gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
+    gui->add_javascript_getter("get_split_threshold", [&](){ return gua::string_utils::to_string(grid_pass->split_threshold());});
+    gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
+    gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
+    gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
+    gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
+    gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
+    gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
+    gui->add_javascript_getter("get_debug_cell_gap", [&](){ return std::to_string(warp_pass->debug_cell_gap());});
+    gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
-    gui->on_loaded.connect([&]() {
-      gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
-      gui->add_javascript_getter("get_split_threshold", [&](){ return gua::string_utils::to_string(grid_pass->split_threshold());});
-      gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
-      gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
-      gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
-      gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
-      gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
-      gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
-      gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
-      gui->add_javascript_getter("get_debug_cell_gap", [&](){ return std::to_string(warp_pass->debug_cell_gap());});
-      gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
+    gui->add_javascript_callback("set_depth_layers");
+    gui->add_javascript_callback("set_split_threshold");
+    gui->add_javascript_callback("set_cell_size");
+    gui->add_javascript_callback("set_depth_test");
+    gui->add_javascript_callback("set_backface_culling");
+    gui->add_javascript_callback("set_background");
+    gui->add_javascript_callback("set_gbuffer_type_none");
+    gui->add_javascript_callback("set_gbuffer_type_points");
+    gui->add_javascript_callback("set_gbuffer_type_scaled_points");
+    gui->add_javascript_callback("set_gbuffer_type_quads_screen_aligned");
+    gui->add_javascript_callback("set_gbuffer_type_quads_normal_aligned");
+    gui->add_javascript_callback("set_gbuffer_type_quads_depth_aligned");
+    gui->add_javascript_callback("set_gbuffer_type_grid_depth_theshold");
+    gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation");
+    gui->add_javascript_callback("set_gbuffer_type_grid_advanced_surface_estimation");
+    gui->add_javascript_callback("set_gbuffer_type_grid_non_uniform_surface_estimation");
+    gui->add_javascript_callback("set_abuffer_type_none");
+    gui->add_javascript_callback("set_abuffer_type_points");
+    gui->add_javascript_callback("set_abuffer_type_quads");
+    gui->add_javascript_callback("set_abuffer_type_scaled_points");
+    gui->add_javascript_callback("set_adaptive_abuffer");
+    gui->add_javascript_callback("set_scene_one_oilrig");
+    gui->add_javascript_callback("set_scene_many_oilrigs");
+    gui->add_javascript_callback("set_scene_sponza");
+    gui->add_javascript_callback("set_scene_teapot");
+    gui->add_javascript_callback("set_scene_sphere");
+    gui->add_javascript_callback("set_scene_textured_quads");
+    gui->add_javascript_callback("set_manipulation_navigator");
+    gui->add_javascript_callback("set_manipulation_camera");
+    gui->add_javascript_callback("set_manipulation_object");
+    gui->add_javascript_callback("set_show_warp_grid");
+    gui->add_javascript_callback("set_debug_cell_colors");
+    gui->add_javascript_callback("set_debug_cell_gap");
+    gui->add_javascript_callback("set_bg_tex");
+    gui->add_javascript_callback("set_view_mono_warped");
+    gui->add_javascript_callback("set_view_stereo_warped");
+    gui->add_javascript_callback("set_view_mono");
+    gui->add_javascript_callback("set_view_stereo");
 
-      gui->add_javascript_callback("set_depth_layers");
-      gui->add_javascript_callback("set_split_threshold");
-      gui->add_javascript_callback("set_cell_size");
-      gui->add_javascript_callback("set_depth_test");
-      gui->add_javascript_callback("set_backface_culling");
-      gui->add_javascript_callback("set_background");
-      gui->add_javascript_callback("set_orthographic");
-      gui->add_javascript_callback("set_gbuffer_type_none");
-      gui->add_javascript_callback("set_gbuffer_type_points");
-      gui->add_javascript_callback("set_gbuffer_type_scaled_points");
-      gui->add_javascript_callback("set_gbuffer_type_quads_screen_aligned");
-      gui->add_javascript_callback("set_gbuffer_type_quads_normal_aligned");
-      gui->add_javascript_callback("set_gbuffer_type_quads_depth_aligned");
-      gui->add_javascript_callback("set_gbuffer_type_grid_depth_theshold");
-      gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation");
-      gui->add_javascript_callback("set_gbuffer_type_grid_advanced_surface_estimation");
-      gui->add_javascript_callback("set_gbuffer_type_grid_non_uniform_surface_estimation");
-      gui->add_javascript_callback("set_abuffer_type_none");
-      gui->add_javascript_callback("set_abuffer_type_points");
-      gui->add_javascript_callback("set_abuffer_type_quads");
-      gui->add_javascript_callback("set_abuffer_type_scaled_points");
-      gui->add_javascript_callback("set_adaptive_abuffer");
-      gui->add_javascript_callback("set_scene_one_oilrig");
-      gui->add_javascript_callback("set_scene_many_oilrigs");
-      gui->add_javascript_callback("set_scene_sponza");
-      gui->add_javascript_callback("set_scene_teapot");
-      gui->add_javascript_callback("set_scene_sphere");
-      gui->add_javascript_callback("set_scene_textured_quads");
-      gui->add_javascript_callback("set_manipulation_navigator");
-      gui->add_javascript_callback("set_manipulation_camera");
-      gui->add_javascript_callback("set_manipulation_object");
-      gui->add_javascript_callback("set_show_warp_grid");
-      gui->add_javascript_callback("set_debug_cell_colors");
-      gui->add_javascript_callback("set_debug_cell_gap");
-      gui->add_javascript_callback("set_bg_tex");
+    gui->add_javascript_callback("reset_view");
+    gui->add_javascript_callback("reset_object");
+    gui->add_javascript_callback("render_view");
 
-      gui->add_javascript_callback("reset_view");
-      gui->add_javascript_callback("reset_object");
-      gui->add_javascript_callback("render_view");
+    gui->call_javascript("init");
+  });
 
-      gui->call_javascript("init");
-    });
+  gui->on_javascript_callback.connect([&](std::string const& callback, std::vector<std::string> const& params) {
+    if (callback == "set_depth_layers") {
+      std::stringstream str(params[0]);
+      int depth_layers;
+      str >> depth_layers;
+      warp_pass->max_layers(depth_layers);
+    } else if (callback == "set_view_mono_warped") {
+      slow_cam->set_pipeline_description(warp_pipe);
+      slow_cam->config.set_enable_stereo(false);
+      warp_pass->stereo_mode(gua::StereoMode::MONO);
+      window->config.set_stereo_mode(gua::StereoMode::MONO);
+    } else if (callback == "set_view_stereo_warped") {
+      slow_cam->set_pipeline_description(warp_pipe);
+      slow_cam->config.set_enable_stereo(false);
+      warp_pass->stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+      window->config.set_stereo_mode(gua::StereoMode::MONO);
+    } else if (callback == "set_view_mono") {
+      slow_cam->set_pipeline_description(normal_pipe);
+      slow_cam->config.set_enable_stereo(false);
+      window->config.set_stereo_mode(gua::StereoMode::MONO);
+    } else if (callback == "set_view_stereo") {
+      slow_cam->set_pipeline_description(normal_pipe);
+      slow_cam->config.set_enable_stereo(true);
+      window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+    } else if (callback == "set_split_threshold") {
+      std::stringstream str(params[0]);
+      float split_threshold;
+      str >> split_threshold;
+      grid_pass->split_threshold(split_threshold);
+    } else if (callback == "set_bg_tex") {
+      res_pass->background_texture(params[0]);
+    } else if (callback == "set_cell_size") {
+      std::stringstream str(params[0]);
+      int cell_size;
+      str >> cell_size;
+      grid_pass->cell_size(std::pow(2, cell_size));
+    } else if (callback == "set_depth_test") {
+      std::stringstream str(params[0]);
+      str >> depth_test;
+      warp_pass->depth_test(depth_test);
+    } else if (callback == "set_backface_culling") {
+      std::stringstream str(params[0]);
+      str >> backface_culling;
+      show_backfaces(transform);
+    } else if (callback == "set_background") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      res_pass->background_mode(checked ? gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE : gua::ResolvePassDescription::BackgroundMode::COLOR);
+    } else if (callback == "set_show_warp_grid") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      render_grid_pass->show_warp_grid(checked);
+    } else if (callback == "set_debug_cell_colors") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      warp_pass->debug_cell_colors(checked);
+    } else if (callback == "set_debug_cell_gap") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      warp_pass->debug_cell_gap(checked);
+    } else if (callback == "set_adaptive_abuffer") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      trimesh_pass->adaptive_abuffer(checked);
+    } else if (callback == "reset_view") {
+      view_trackball.reset();
+      warp_nav.reset();
+    } else if (callback == "reset_object") {
+      object_trackball.reset();
+    } else if (callback == "render_view") {
+      view_trackball.reset();
+      warp_nav.reset();
+      nav.set_transform(gua::math::mat4f(fast_cam->get_transform()));
+    } else if (callback == "set_gbuffer_type_points"
+             | callback == "set_gbuffer_type_scaled_points"
+             | callback == "set_gbuffer_type_quads_screen_aligned"
+             | callback == "set_gbuffer_type_quads_normal_aligned"
+             | callback == "set_gbuffer_type_quads_depth_aligned"
+             | callback == "set_gbuffer_type_grid_depth_theshold"
+             | callback == "set_gbuffer_type_grid_surface_estimation"
+             | callback == "set_gbuffer_type_grid_advanced_surface_estimation"
+             | callback == "set_gbuffer_type_grid_non_uniform_surface_estimation"
+             | callback == "set_gbuffer_type_none") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      if (checked) {
 
-    gui->on_javascript_callback.connect([&](std::string const& callback, std::vector<std::string> const& params) {
-      if (callback == "set_depth_layers") {
-        std::stringstream str(params[0]);
-        int depth_layers;
-        str >> depth_layers;
-        warp_pass->max_layers(depth_layers);
-      } else if (callback == "set_split_threshold") {
-        std::stringstream str(params[0]);
-        float split_threshold;
-        str >> split_threshold;
-        grid_pass->split_threshold(split_threshold);
-      } else if (callback == "set_bg_tex") {
-        res_pass->background_texture(params[0]);
-      } else if (callback == "set_cell_size") {
-        std::stringstream str(params[0]);
-        int cell_size;
-        str >> cell_size;
-        grid_pass->cell_size(std::pow(2, cell_size));
-      } else if (callback == "set_depth_test") {
-        std::stringstream str(params[0]);
-        str >> depth_test;
-        warp_pass->depth_test(depth_test);
-      } else if (callback == "set_backface_culling") {
-        std::stringstream str(params[0]);
-        str >> backface_culling;
-        show_backfaces(transform);
-      } else if (callback == "set_background") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        res_pass->background_mode(checked ? gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE : gua::ResolvePassDescription::BackgroundMode::COLOR);
-      } else if (callback == "set_orthographic") {
-        std::stringstream str(params[0]);
-        str >> orthographic;
-        if (orthographic) {
-          fast_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::ORTHOGRAPHIC);
-          slow_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::ORTHOGRAPHIC);
-        } else {
-          fast_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::PERSPECTIVE);
-          slow_cam->config.set_mode(gua::node::CameraNode::ProjectionMode::PERSPECTIVE);
-        }
-      } else if (callback == "set_show_warp_grid") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        render_grid_pass->show_warp_grid(checked);
-      } else if (callback == "set_debug_cell_colors") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        warp_pass->debug_cell_colors(checked);
-      } else if (callback == "set_debug_cell_gap") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        warp_pass->debug_cell_gap(checked);
-      } else if (callback == "set_adaptive_abuffer") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        trimesh_pass->adaptive_abuffer(checked);
-      } else if (callback == "reset_view") {
-        view_trackball.reset();
-        warp_nav.reset();
-      } else if (callback == "reset_object") {
-        object_trackball.reset();
-      } else if (callback == "render_view") {
-        view_trackball.reset();
-        warp_nav.reset();
-        nav.set_transform(gua::math::mat4f(fast_cam->get_transform()));
-      } else if (callback == "set_gbuffer_type_points"
-               | callback == "set_gbuffer_type_scaled_points"
-               | callback == "set_gbuffer_type_quads_screen_aligned"
-               | callback == "set_gbuffer_type_quads_normal_aligned"
-               | callback == "set_gbuffer_type_quads_depth_aligned"
-               | callback == "set_gbuffer_type_grid_depth_theshold"
-               | callback == "set_gbuffer_type_grid_surface_estimation"
-               | callback == "set_gbuffer_type_grid_advanced_surface_estimation"
-               | callback == "set_gbuffer_type_grid_non_uniform_surface_estimation"
-               | callback == "set_gbuffer_type_none") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
+        gua::WarpPassDescription::GBufferWarpMode mode(gua::WarpPassDescription::GBUFFER_NONE);
 
-          gua::WarpPassDescription::GBufferWarpMode mode(gua::WarpPassDescription::GBUFFER_NONE);
+        if (callback == "set_gbuffer_type_points")
+          mode = gua::WarpPassDescription::GBUFFER_POINTS;
+        if (callback == "set_gbuffer_type_scaled_points")
+          mode = gua::WarpPassDescription::GBUFFER_SCALED_POINTS;
+        if (callback == "set_gbuffer_type_quads_screen_aligned")
+          mode = gua::WarpPassDescription::GBUFFER_QUADS_SCREEN_ALIGNED;
+        if (callback == "set_gbuffer_type_quads_normal_aligned")
+          mode = gua::WarpPassDescription::GBUFFER_QUADS_NORMAL_ALIGNED;
+        if (callback == "set_gbuffer_type_quads_depth_aligned")
+          mode = gua::WarpPassDescription::GBUFFER_QUADS_DEPTH_ALIGNED;
+        if (callback == "set_gbuffer_type_grid_depth_theshold")
+          mode = gua::WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD;
+        if (callback == "set_gbuffer_type_grid_surface_estimation")
+          mode = gua::WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION;
+        if (callback == "set_gbuffer_type_grid_advanced_surface_estimation")
+          mode = gua::WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION;
+        if (callback == "set_gbuffer_type_grid_non_uniform_surface_estimation")
+          mode = gua::WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION;
+        if (callback == "set_gbuffer_type_none")
+          mode = gua::WarpPassDescription::GBUFFER_NONE;
 
-          if (callback == "set_gbuffer_type_points")
-            mode = gua::WarpPassDescription::GBUFFER_POINTS;
-          if (callback == "set_gbuffer_type_scaled_points")
-            mode = gua::WarpPassDescription::GBUFFER_SCALED_POINTS;
-          if (callback == "set_gbuffer_type_quads_screen_aligned")
-            mode = gua::WarpPassDescription::GBUFFER_QUADS_SCREEN_ALIGNED;
-          if (callback == "set_gbuffer_type_quads_normal_aligned")
-            mode = gua::WarpPassDescription::GBUFFER_QUADS_NORMAL_ALIGNED;
-          if (callback == "set_gbuffer_type_quads_depth_aligned")
-            mode = gua::WarpPassDescription::GBUFFER_QUADS_DEPTH_ALIGNED;
-          if (callback == "set_gbuffer_type_grid_depth_theshold")
-            mode = gua::WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD;
-          if (callback == "set_gbuffer_type_grid_surface_estimation")
-            mode = gua::WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION;
-          if (callback == "set_gbuffer_type_grid_advanced_surface_estimation")
-            mode = gua::WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION;
-          if (callback == "set_gbuffer_type_grid_non_uniform_surface_estimation")
-            mode = gua::WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION;
-          if (callback == "set_gbuffer_type_none")
-            mode = gua::WarpPassDescription::GBUFFER_NONE;
-
-          warp_pass->gbuffer_warp_mode(mode);
-          grid_pass->mode(mode);
-          render_grid_pass->mode(mode);
-        }
-      } else if (callback == "set_abuffer_type_points"
-               | callback == "set_abuffer_type_quads"
-               | callback == "set_abuffer_type_scaled_points"
-               | callback == "set_abuffer_type_none") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
-          if (callback == "set_abuffer_type_points")        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_POINTS);
-          if (callback == "set_abuffer_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
-          if (callback == "set_abuffer_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
-          if (callback == "set_abuffer_type_none")          warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-        }
-      } else if (callback == "set_manipulation_object"
-              || callback == "set_manipulation_camera"
-              || callback == "set_manipulation_navigator") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
-          manipulation_object = false;
-          manipulation_camera = false;
-          manipulation_navigator = false;
-
-          if (callback == "set_manipulation_camera") manipulation_camera = true;
-          if (callback == "set_manipulation_object") manipulation_object = true;
-          if (callback == "set_manipulation_navigator") manipulation_navigator = true;
-        }
-      } else if (callback == "set_scene_one_oilrig" ||
-                 callback == "set_scene_many_oilrigs" ||
-                 callback == "set_scene_sponza" ||
-                 callback == "set_scene_teapot" ||
-                 callback == "set_scene_sphere" ||
-                 callback == "set_scene_textured_quads") {
-        set_scene(callback);
+        warp_pass->gbuffer_warp_mode(mode);
+        grid_pass->mode(mode);
+        render_grid_pass->mode(mode);
       }
-    });
+    } else if (callback == "set_abuffer_type_points"
+             | callback == "set_abuffer_type_quads"
+             | callback == "set_abuffer_type_scaled_points"
+             | callback == "set_abuffer_type_none") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      if (checked) {
+        if (callback == "set_abuffer_type_points")        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_POINTS);
+        if (callback == "set_abuffer_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
+        if (callback == "set_abuffer_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
+        if (callback == "set_abuffer_type_none")          warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
+      }
+    } else if (callback == "set_manipulation_object"
+            || callback == "set_manipulation_camera"
+            || callback == "set_manipulation_navigator") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      if (checked) {
+        manipulation_object = false;
+        manipulation_camera = false;
+        manipulation_navigator = false;
 
-    gui_quad->data.texture() = "gui";
-    gui_quad->data.size() = gua::math::vec2ui(330, 740);
-    gui_quad->data.anchor() = gua::math::vec2(1.f, 0.f);
+        if (callback == "set_manipulation_camera") manipulation_camera = true;
+        if (callback == "set_manipulation_object") manipulation_object = true;
+        if (callback == "set_manipulation_navigator") manipulation_navigator = true;
+      }
+    } else if (callback == "set_scene_one_oilrig" ||
+               callback == "set_scene_many_oilrigs" ||
+               callback == "set_scene_sponza" ||
+               callback == "set_scene_teapot" ||
+               callback == "set_scene_sphere" ||
+               callback == "set_scene_textured_quads") {
+      set_scene(callback);
+    }
+  });
 
-    graph.add_node("/", gui_quad);
+  gui_quad->data.texture() = "gui";
+  gui_quad->data.size() = gua::math::vec2ui(330, 820);
+  gui_quad->data.anchor() = gua::math::vec2(1.f, 0.f);
 
-    // bottom gui --------------------------------------------------------------
-    stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(1210, 30));
+  graph.add_node("/", gui_quad);
 
-    stats->on_loaded.connect([&]() {
-      stats->call_javascript("init");
-    });
+  // bottom gui --------------------------------------------------------------
+  stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(1210, 30));
 
-    stats_quad->data.texture() = "stats";
-    stats_quad->data.size() = gua::math::vec2ui(1210, 30);
-    stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
+  stats->on_loaded.connect([&]() {
+    stats->call_javascript("init");
+  });
 
-    graph.add_node("/", stats_quad);
-  }
+  stats_quad->data.texture() = "stats";
+  stats_quad->data.size() = gua::math::vec2ui(1210, 30);
+  stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
+
+  graph.add_node("/", stats_quad);
 
 
   // ---------------------------------------------------------------------------
   // ----------------------------- setup windows -------------------------------
   // ---------------------------------------------------------------------------
 
-  std::shared_ptr<gua::WindowBase> window;
-  std::shared_ptr<gua::WindowBase> hidden_window;
+  window->config.set_fullscreen_mode(fullscreen);
+  window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
+    resolution = new_size;
+    window->config.set_resolution(new_size);
+    slow_cam->config.set_resolution(new_size);
+    slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+    fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+  });
+  window->on_button_press.connect([&](int key, int action, int mods) {
+    gui->inject_mouse_button(gua::Button(key), action, mods);
 
-
-  if (CLIENT_SERVER) {
-    window = std::make_shared<gua::Window>();
-
-    hidden_window = std::make_shared<gua::HeadlessSurface>();
-    hidden_window->config.set_size(resolution);
-    hidden_window->config.set_resolution(resolution);
-    hidden_window->config.set_enable_vsync(false);
-    hidden_window->config.set_context_share("window");
-
-    gua::WindowDatabase::instance()->add("hidden_window", hidden_window);
-  } else {
-    auto glfw = std::make_shared<gua::GlfwWindow>();
-    glfw->config.set_fullscreen_mode(fullscreen);
-    glfw->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-      resolution = new_size;
-      glfw->config.set_resolution(new_size);
-      slow_cam->config.set_resolution(new_size);
-      slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
-      fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
-    });
-    glfw->on_button_press.connect([&](int key, int action, int mods) {
-      gui->inject_mouse_button(gua::Button(key), action, mods);
-
-      nav.set_mouse_button(key, action);
-      warp_nav.set_mouse_button(key, action);
-    
-    });
-    glfw->on_key_press.connect([&](int key, int scancode, int action, int mods) {
-      if (manipulation_navigator) {
-        nav.set_key_press(static_cast<gua::Key>(key), action);
-      } else if (manipulation_camera) {
-        warp_nav.set_key_press(static_cast<gua::Key>(key), action);
-      }
-      gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
-      if (key == 72 && action == 1) {
-        // hide gui
-        if (gui_quad->get_tags().has_tag("invisible")) {
-          gui_quad->get_tags().remove_tag("invisible");
-          stats_quad->get_tags().remove_tag("invisible");
-        } else {
-          gui_quad->get_tags().add_tag("invisible");
-          stats_quad->get_tags().add_tag("invisible");
-        }
-      }
-    });
-    glfw->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-      gua::math::vec2 hit_pos;
-      if (gui_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
-        gui->inject_mouse_position_relative(hit_pos);
+    nav.set_mouse_button(key, action);
+    warp_nav.set_mouse_button(key, action);
+  
+  });
+  window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+    if (manipulation_navigator) {
+      nav.set_key_press(static_cast<gua::Key>(key), action);
+    } else if (manipulation_camera) {
+      warp_nav.set_key_press(static_cast<gua::Key>(key), action);
+    }
+    gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
+    if (key == 72 && action == 1) {
+      // hide gui
+      if (gui_quad->get_tags().has_tag("invisible")) {
+        gui_quad->get_tags().remove_tag("invisible");
+        stats_quad->get_tags().remove_tag("invisible");
       } else {
-        if (manipulation_object) {
-          object_trackball.motion(pos.x, pos.y);
-        } else if (manipulation_navigator) {
-          nav.set_mouse_position(gua::math::vec2i(pos));
-        } else {
-          warp_nav.set_mouse_position(gua::math::vec2i(pos));
-          view_trackball.motion(pos.x, pos.y);
-        }
+        gui_quad->get_tags().add_tag("invisible");
+        stats_quad->get_tags().add_tag("invisible");
       }
-    });
-    glfw->on_button_press.connect(std::bind(mouse_button, std::ref(view_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    glfw->on_button_press.connect(std::bind(mouse_button, std::ref(object_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    window = glfw;
-  }
+    }
+  });
+  window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
+    gua::math::vec2 hit_pos;
+    if (gui_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
+      gui->inject_mouse_position_relative(hit_pos);
+    } else {
+      if (manipulation_object) {
+        object_trackball.motion(pos.x, pos.y);
+      } else if (manipulation_navigator) {
+        nav.set_mouse_position(gua::math::vec2i(pos));
+      } else {
+        warp_nav.set_mouse_position(gua::math::vec2i(pos));
+        view_trackball.motion(pos.x, pos.y);
+      }
+    }
+  });
+  window->on_button_press.connect(std::bind(mouse_button, std::ref(view_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+  window->on_button_press.connect(std::bind(mouse_button, std::ref(object_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
@@ -605,9 +577,7 @@ int main(int argc, char** argv) {
 
   ticker.on_tick.connect([&]() {
 
-    if (!CLIENT_SERVER) {
-      gua::Interface::instance()->update();
-    }
+    gua::Interface::instance()->update();
 
     nav.update();
     warp_nav.update();
@@ -620,66 +590,48 @@ int main(int argc, char** argv) {
                                     gua::math::float_t(view_trackball.shiftx()),
                                     gua::math::float_t(view_trackball.shifty()),
                                     gua::math::float_t(view_trackball.distance())) * gua::math::mat4(view_trackball.rotation()));
-    gua::Frustum target_frustum;
-    gua::Frustum source_frustum;
 
-    if (CLIENT_SERVER) {
-      // fast_screen->rotate(0.1, 0, 1, 0);
-      if (SHOW_FRAME_RATE && ctr++ % 300 == 0) {
-        // slow_screen->set_transform(fast_screen->get_transform());
-        std::cout << "Slow fps: " << hidden_window->get_rendering_fps()
-                  << ", Fast fps: " << window->get_rendering_fps()
-                  << ", App fps: " << renderer.get_application_fps() << std::endl;
-      }
-      target_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
-      source_frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
-    } else {
-      slow_cam->set_transform(gua::math::mat4(nav.get_transform()));
-      fast_cam->set_transform(gua::math::mat4(nav.get_transform())* gua::math::mat4(warp_nav.get_transform()));
-      transform->set_transform(modelmatrix);
-      if (ctr++ % 100 == 0) {
-        if (SHOW_FRAME_RATE) {
-          std::cout << "Render fps: " << window->get_rendering_fps()
-                    << ", App fps: " << renderer.get_application_fps() << std::endl;
+    slow_cam->set_transform(gua::math::mat4(nav.get_transform()));
+    fast_cam->set_transform(gua::math::mat4(nav.get_transform())* gua::math::mat4(warp_nav.get_transform()));
+    transform->set_transform(modelmatrix);
+    if (ctr++ % 100 == 0) {
+
+      double trimesh_time(0);
+      double gbuffer_warp_time(0);
+      double abuffer_warp_time(0);
+      double grid_time(0);
+      int gbuffer_primitives(0);
+      int abuffer_primitives(0);
+
+      for (auto const& result: window->get_context()->time_query_results) {
+        if (result.first.find("GPU") != std::string::npos) {
+          if (result.first.find("Trimesh") != std::string::npos) trimesh_time += result.second;
+          if (result.first.find("Resolve") != std::string::npos) trimesh_time += result.second;
+          if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time = result.second;
+          if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time = result.second;
+          if (result.first.find("WarpGridGenerator") != std::string::npos) grid_time += result.second;
         }
-
-        double trimesh_time(0);
-        double gbuffer_warp_time(0);
-        double abuffer_warp_time(0);
-        double grid_time(0);
-        int gbuffer_primitives(0);
-        int abuffer_primitives(0);
-
-        for (auto const& result: window->get_context()->time_query_results) {
-          if (result.first.find("GPU") != std::string::npos) {
-            if (result.first.find("Trimesh") != std::string::npos) trimesh_time += result.second;
-            if (result.first.find("Resolve") != std::string::npos) trimesh_time += result.second;
-            if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time = result.second;
-            if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time = result.second;
-            if (result.first.find("WarpGridGenerator") != std::string::npos) grid_time += result.second;
-          }
-        }
-
-        for (auto const& result: window->get_context()->primitive_query_results) {
-          if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_primitives = result.second.first;
-          if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives = result.second.first;
-        }
-
-        stats->call_javascript("set_stats", renderer.get_application_fps(),
-                             window->get_rendering_fps(), trimesh_time, grid_time,
-                             gbuffer_warp_time, abuffer_warp_time, gbuffer_primitives,
-                             abuffer_primitives);
       }
 
-      target_frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
-      source_frustum = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+      for (auto const& result: window->get_context()->primitive_query_results) {
+        if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_primitives = result.second.first;
+        if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives = result.second.first;
+      }
+
+      stats->call_javascript("set_stats", renderer.get_application_fps(),
+                           window->get_rendering_fps(), trimesh_time, grid_time,
+                           gbuffer_warp_time, abuffer_warp_time, gbuffer_primitives,
+                           abuffer_primitives);
     }
 
-    gua::math::mat4f target_projection(target_frustum.get_projection());
-    gua::math::mat4f target_view(target_frustum.get_view());
-    gua::math::mat4f source_projection(source_frustum.get_projection());
-    gua::math::mat4f source_view(source_frustum.get_view());
-    warp_pass->warp_matrix(target_projection * target_view * scm::math::inverse(source_projection * source_view));
+    gua::Frustum s_c = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+    gua::Frustum t_c = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+    gua::Frustum t_l = fast_cam->get_rendering_frustum(graph, gua::CameraMode::LEFT);
+    gua::Frustum t_r = fast_cam->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
+
+    warp_pass->warp_matrix(      gua::math::mat4f(t_c.get_projection() * t_c.get_view() * scm::math::inverse(s_c.get_projection() * s_c.get_view())));
+    warp_pass->warp_matrix_left( gua::math::mat4f(t_l.get_projection() * t_l.get_view() * scm::math::inverse(s_c.get_projection() * s_c.get_view())));
+    warp_pass->warp_matrix_right(gua::math::mat4f(t_r.get_projection() * t_r.get_view() * scm::math::inverse(s_c.get_projection() * s_c.get_view())));
 
     window->process_events();
     if (window->should_close()) {

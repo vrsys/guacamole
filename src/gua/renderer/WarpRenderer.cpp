@@ -46,7 +46,7 @@ WarpRenderer::WarpRenderer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
+void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc, bool left_eye)
 {
 
   auto& ctx(pipe.get_context());
@@ -143,6 +143,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   if (description->gbuffer_warp_mode() != WarpPassDescription::GBUFFER_NONE) {
     warp_gbuffer_program_->use(ctx);
     pipe.bind_gbuffer_input(warp_gbuffer_program_);
+    warp_gbuffer_program_->set_uniform(ctx, left_eye, "warp_left_eye");
     for (auto const& u : desc.uniforms) {
       u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
     }

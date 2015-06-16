@@ -195,7 +195,6 @@
         init_radio("#scene_sphere", "scene_sphere");
         init_radio("#scene_textured_quads", "scene_textured_quads");
 
-        init_checkbox("#orthographic", "orthographic");
         init_checkbox("#depth_test", "depth_test");
         init_checkbox("#backface_culling", "backface_culling");
         init_checkbox("#background", "background");
@@ -221,17 +220,20 @@
         init_checkbox("#debug_cell_colors", "debug_cell_colors");
         init_checkbox("#debug_cell_gap", "debug_cell_gap");
 
-
         init_radio("#grid_surface", "grid_surface");
         init_radio("#grid_adaptive_surface", "grid_adaptive_surface");
         init_radio("#grid_depth_threshold", "grid_depth_threshold");
 
+        init_radio("#view_mono_warped", "view_mono_warped");
+        init_radio("#view_stereo_warped", "view_stereo_warped");
+        init_radio("#view_mono", "view_mono");
+        init_radio("#view_stereo", "view_stereo");
 
         init_slider("#preview-panel .depth_layers", "depth_layers");
         init_slider("#preview-panel .split_threshold", "split_threshold");
         init_slider("#preview-panel .cell_size", "cell_size");
 
-        add_texture_select("#control-panel", "bg_tex", "Background Texture");
+        add_texture_select("#control-panel", "bg_tex", "Background");
 
         $("body").addClass("on");
       }
@@ -284,14 +286,6 @@
               <button onclick="gua.reset_view()" class="btn btn-block"><i class="fa fa-undo"></i> Reset</button>
               <button onclick="gua.render_view()" class="btn btn-block"><i class="fa fa-desktop"></i> Render Current</button>
 
-
-              <div class="checkbox">
-                <label>
-                  <input id="orthographic" type="checkbox" value="">
-                  <span>Orthographic</span>
-                </label>
-              </div>
-
               <div class="checkbox">
                 <label>
                   <input id="depth_test" type="checkbox" value="">
@@ -313,6 +307,31 @@
                 </label>
               </div>
 
+               <div class="radio">
+                <label>
+                  <input type="radio" name="stereoRadios" id="view_mono_warped" value="" checked>
+                  <span>Mono Warped</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="stereoRadios" id="view_stereo_warped" value="">
+                  <span>Stereo Warped</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="stereoRadios" id="view_mono" value="">
+                  <span>Mono</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="stereoRadios" id="view_stereo" value="">
+                  <span>Stereo</span>
+                </label>
+              </div>
+
             </div>
           </div>
 
@@ -329,33 +348,6 @@
 
           <hr />
 
-          <div class="row">
-            <div class="col-xs-5">
-            Manipulation:
-            </div>
-            <div class="col-xs-7">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="manipulationRadios" id="manipulation_navigator" value="" checked>
-                  <span>Navigation</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="manipulationRadios" id="manipulation_camera" value="">
-                  <span>Warp Camera</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="manipulationRadios" id="manipulation_object" value="">
-                  <span>Object</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <hr />
           <div class="row">
             <div class="col-xs-5">
             Scene:
@@ -402,6 +394,45 @@
 
         </div>
       </div>
+
+
+
+      <div class="side-panel">
+        <div id="input-panel" class="panel-inner">
+
+          <h4><i class="fa fa-gamepad"></i> Input Options</h4>
+
+          <div class="row">
+            <div class="col-xs-5">
+            Manipulation:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="manipulationRadios" id="manipulation_navigator" value="" checked>
+                  <span>Navigation</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="manipulationRadios" id="manipulation_camera" value="">
+                  <span>Warp Camera</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="manipulationRadios" id="manipulation_object" value="">
+                  <span>Object</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+          
+        </div>
+      </div>
+
 
 
       <div class="side-panel">

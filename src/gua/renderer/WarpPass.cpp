@@ -41,6 +41,7 @@ WarpPassDescription::WarpPassDescription()
   , depth_test_(true)
   , debug_cell_colors_(false)
   , debug_cell_gap_(false)
+  , stereo_mode_(StereoMode::MONO)
   , gbuffer_warp_mode_(GBUFFER_POINTS)
   , abuffer_warp_mode_(ABUFFER_POINTS)
 {
@@ -52,6 +53,8 @@ WarpPassDescription::WarpPassDescription()
   rendermode_ = RenderMode::Custom;
 
   uniforms["warp_matrix"] = scm::math::make_translation(0.f, 0.f, 0.f);
+  uniforms["warp_matrix_left"] = scm::math::make_translation(0.f, 0.f, 0.f);
+  uniforms["warp_matrix_right"] = scm::math::make_translation(0.f, 0.f, 0.f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,6 +81,48 @@ WarpPassDescription& WarpPassDescription::warp_matrix(math::mat4f const& mat) {
 
 math::mat4f const& WarpPassDescription::warp_matrix() const {
   auto uniform(uniforms.find("warp_matrix"));
+  return boost::get<math::mat4f>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription& WarpPassDescription::stereo_mode(StereoMode val) {
+  stereo_mode_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+StereoMode WarpPassDescription::stereo_mode() const {
+  return stereo_mode_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription& WarpPassDescription::warp_matrix_left(math::mat4f const& mat) {
+  uniforms["warp_matrix_left"] = mat;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::mat4f const& WarpPassDescription::warp_matrix_left() const {
+  auto uniform(uniforms.find("warp_matrix_left"));
+  return boost::get<math::mat4f>(uniform->second.data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription& WarpPassDescription::warp_matrix_right(math::mat4f const& mat) {
+  uniforms["warp_matrix_right"] = mat;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::mat4f const& WarpPassDescription::warp_matrix_right() const {
+  auto uniform(uniforms.find("warp_matrix_right"));
   return boost::get<math::mat4f>(uniform->second.data);
 }
 
@@ -179,14 +224,21 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
   substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
   substitution_map["warping_max_layers"] = std::to_string(max_layers_);
+  substitution_map["warping_stereo_mode"] = std::to_string(static_cast<int>(stereo_mode_));
   PipelinePass pass{*this, ctx, substitution_map};
 
   auto renderer = std::make_shared<WarpRenderer>();
   renderer->set_global_substitution_map(substitution_map);
 
-  pass.process_ = [renderer](
+  pass.process_ = [renderer, this](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
+
+    if (stereo_mode_ == StereoMode::MONO) {
+      renderer->render(pipe, desc, true);
+    } else {
+      renderer->render(pipe, desc, true);
+      renderer->render(pipe, desc, false);
+    }
 
     auto description(dynamic_cast<WarpPassDescription const*>(&desc));
   };
