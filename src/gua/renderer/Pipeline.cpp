@@ -218,9 +218,11 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     gbuffer_->toggle_ping_pong();
 
+
   // add texture to texture database
-  auto const& tex(depth_cube_map_->get_depth_buffer());
-  // auto const& tex(gbuffer_->get_color_buffer());
+  // auto const& tex = shadow_map_res_->used_shadow_maps.begin()->second.begin()->shadow_map->get_depth_buffer();
+  // auto const& tex(depth_cube_map_->get_depth_buffer());
+  auto const& tex(gbuffer_->get_color_buffer());
   auto const& depth_tex(gbuffer_->get_depth_buffer());
   auto tex_name(camera.config.get_output_texture_name());
 
@@ -350,7 +352,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   { 
     unsigned viewport_size(resolution);
     unsigned map_width(resolution*6);
-    // unsigned map_width(resolution);
 
     if (!depth_cube_map_) {
       depth_cube_map_ = std::make_shared<DepthCubeMap>(context_, math::vec2ui(map_width, viewport_size));;
@@ -389,16 +390,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     };
 
     for (unsigned i(0); i < screen_transforms.size(); ++i) {
-    // for (unsigned i(0); i < 1; ++i) {
 
-      math::mat4 identity(scm::math::mat4::identity());
-      math::mat4 transform(identity * screen_transforms[i]);
-
+      math::mat4 transform(current_viewstate_.camera.transform * screen_transforms[i]);
       auto frustum(
         Frustum::perspective(
-        identity, transform,
+        current_viewstate_.camera.transform, transform,
         current_viewstate_.camera.config.near_clip(),
-        scm::math::length(math::get_translation(transform))
+        current_viewstate_.camera.config.far_clip()
+        // scm::math::length(math::get_translation(transform))
         )
         );
 
