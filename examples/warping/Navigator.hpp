@@ -15,6 +15,7 @@ class Navigator {
     void update();
 
     void set_transform(scm::math::mat4f const& transform);
+    void reset();
     scm::math::mat4f const& get_transform() const;
 
     void set_key_press(gua::Key key, int action);

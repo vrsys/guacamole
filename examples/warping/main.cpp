@@ -84,6 +84,7 @@ int main(int argc, char** argv) {
   gua::utils::Trackball view_trackball(0.01, 0.002, 0.2, 0.2);
   gua::utils::Trackball object_trackball(0.01, 0.002, 0, 0.2);
   Navigator nav;
+  Navigator warp_nav;
   nav.set_transform(scm::math::make_translation(0.f, 0.f, 3.f));
 
   // initialize guacamole
@@ -101,11 +102,11 @@ int main(int argc, char** argv) {
 
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SUN);
-  light->data.set_brightness(3.f);
-  light->data.set_shadow_cascaded_splits({0.1f, 0.6f, 1.5f, 4.f});
+  light->data.set_brightness(4.f);
+  light->data.set_shadow_cascaded_splits({0.1f, 0.6f, 1.5f, 6.f});
   light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
   light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
-  light->data.set_max_shadow_dist(8.0f);
+  light->data.set_max_shadow_dist(20.0f);
   light->data.set_shadow_offset(0.0002f);
   light->data.set_enable_shadows(true);
   light->data.set_shadow_map_size(2048);
@@ -220,21 +221,19 @@ int main(int argc, char** argv) {
   fast_cam->config.set_resolution(resolution);
   fast_cam->config.set_screen_path("/fast_cam/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
+  fast_cam->config.set_far_clip(slow_cam->config.get_far_clip()*1.5f);
 
   auto warp_pass(std::make_shared<gua::WarpPassDescription>());
   auto grid_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
   auto render_grid_pass(std::make_shared<gua::RenderWarpGridPassDescription>());
   auto trimesh_pass(std::make_shared<gua::TriMeshPassDescription>());
-  auto background_pass(std::make_shared<gua::BackgroundPassDescription>());
-  background_pass->mode(gua::BackgroundPassDescription::COLOR).
-                   texture("data/textures/bg0.png").
-                   repeat(gua::math::vec2f(12, 7.5)).
-                   color(gua::utils::Color3f(0.1, 0.1, 0.1));
   auto res_pass(std::make_shared<gua::ResolvePassDescription>());
-  res_pass->ssao_enable(true).
+  res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
+            background_texture("/opt/guacamole/resources/skymaps/cycles_island.jpg").
             background_color(gua::utils::Color3f(0.1, 0.1, 0.1)).
-            environment_lighting(gua::utils::Color3f(0.3, 0.3, 0.3)).
-            horizon_fade(0.1f).
+            ssao_enable(true).
+            environment_lighting(gua::utils::Color3f(0.05, 0.1, 0.2)).
+            horizon_fade(0.2f).
             ssao_intensity(2.f).
             ssao_radius(5.f);
 
@@ -266,7 +265,6 @@ int main(int argc, char** argv) {
     pipe->add_pass(res_pass);
     pipe->add_pass(grid_pass);
     pipe->add_pass(warp_pass);
-    pipe->add_pass(background_pass);
     pipe->add_pass(render_grid_pass);
     pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
     pipe->set_enable_abuffer(true);
@@ -295,7 +293,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
       gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
       gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
-      gui->add_javascript_getter("get_background", [&](){ return std::to_string(background_pass->mode() == gua::BackgroundPassDescription::QUAD_TEXTURE);});
+      gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
       gui->add_javascript_getter("get_orthographic", [&](){ return std::to_string(orthographic);});
       gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
       gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
@@ -357,7 +355,7 @@ int main(int argc, char** argv) {
         str >> split_threshold;
         grid_pass->split_threshold(split_threshold);
       } else if (callback == "set_bg_tex") {
-        background_pass->texture(params[0]);
+        res_pass->background_texture(params[0]);
       } else if (callback == "set_cell_size") {
         std::stringstream str(params[0]);
         int cell_size;
@@ -375,7 +373,7 @@ int main(int argc, char** argv) {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
-        background_pass->mode(checked ? gua::BackgroundPassDescription::QUAD_TEXTURE : gua::BackgroundPassDescription::COLOR);
+        res_pass->background_mode(checked ? gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE : gua::ResolvePassDescription::BackgroundMode::COLOR);
       } else if (callback == "set_orthographic") {
         std::stringstream str(params[0]);
         str >> orthographic;
@@ -408,10 +406,12 @@ int main(int argc, char** argv) {
         trimesh_pass->adaptive_abuffer(checked);
       } else if (callback == "reset_view") {
         view_trackball.reset();
+        warp_nav.reset();
       } else if (callback == "reset_object") {
         object_trackball.reset();
       } else if (callback == "render_view") {
         view_trackball.reset();
+        warp_nav.reset();
         nav.set_transform(gua::math::mat4f(fast_cam->get_transform()));
       } else if (callback == "set_gbuffer_type_points"
                | callback == "set_gbuffer_type_scaled_points"
@@ -546,11 +546,14 @@ int main(int argc, char** argv) {
       gui->inject_mouse_button(gua::Button(key), action, mods);
 
       nav.set_mouse_button(key, action);
+      warp_nav.set_mouse_button(key, action);
     
     });
     glfw->on_key_press.connect([&](int key, int scancode, int action, int mods) {
       if (manipulation_navigator) {
         nav.set_key_press(static_cast<gua::Key>(key), action);
+      } else if (manipulation_camera) {
+        warp_nav.set_key_press(static_cast<gua::Key>(key), action);
       }
       gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
       if (key == 72 && action == 1) {
@@ -574,6 +577,7 @@ int main(int argc, char** argv) {
         } else if (manipulation_navigator) {
           nav.set_mouse_position(gua::math::vec2i(pos));
         } else {
+          warp_nav.set_mouse_position(gua::math::vec2i(pos));
           view_trackball.motion(pos.x, pos.y);
         }
       }
@@ -606,6 +610,7 @@ int main(int argc, char** argv) {
     }
 
     nav.update();
+    warp_nav.update();
 
     // apply view_trackball matrix to object
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(object_trackball.shiftx()),
@@ -630,7 +635,7 @@ int main(int argc, char** argv) {
       source_frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     } else {
       slow_cam->set_transform(gua::math::mat4(nav.get_transform()));
-      fast_cam->set_transform(viewmatrix * gua::math::mat4(nav.get_transform()));
+      fast_cam->set_transform(gua::math::mat4(nav.get_transform())* gua::math::mat4(warp_nav.get_transform()));
       transform->set_transform(modelmatrix);
       if (ctr++ % 100 == 0) {
         if (SHOW_FRAME_RATE) {

@@ -2,7 +2,6 @@
 
 #include <scm/gl_core/math.h>
 #include <gua/math/math.hpp>
-#include <GL/freeglut.h>
 #include <chrono>
 #include <iostream>
 
@@ -75,6 +74,12 @@ void Navigator::update() {
 void Navigator::set_transform(scm::math::mat4f const& transform) {
   transform_ = transform;
   current_location_ = scm::math::vec4f(transform_[12], transform_[13], transform_[14], 1.0f);
+}
+
+void Navigator::reset() {
+  transform_ = scm::math::mat4f::identity();
+  current_location_ = scm::math::vec4f(0.f, 0.f, 0.f, 1.0f);
+  current_rotation_ = scm::math::vec2f(0.0);
 }
 
 scm::math::mat4f const& Navigator::get_transform() const {

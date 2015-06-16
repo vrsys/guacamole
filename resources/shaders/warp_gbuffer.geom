@@ -122,21 +122,21 @@ void emit_pixel(uvec2 offset) {
 
   const float depth = gua_get_depth_raw(varying_position[0].xy + offset);
 
-  if (depth < 1) {
+  // if (depth < 1) {
     cellsize = 1;
     emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   0),   depth);
     emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, 0),   depth);
     emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   GAP), depth);
     emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, GAP), depth);
     EndPrimitive();
-  }
+  // }
 }
 
 void emit_pixel(uvec2 offset, uint do_emit) {
 
   const float depth = gua_get_depth_raw(varying_position[0].xy + offset);
 
-  if (depth < 1 && do_emit > 0) {
+  if (do_emit > 0) {
     cellsize = 1;
     emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   0),   depth);
     emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, 0),   depth);
@@ -238,7 +238,7 @@ void emit_primitive(vec2 tex_coords) {
   float depth = gua_get_depth(tex_coords);
   vec2 frag_pos = tex_coords*2-1;
 
-  if (depth < 1) {
+  // if (depth < 1) {
 
   #if WARP_MODE == WARP_MODE_QUADS_SCREEN_ALIGNED
     const vec2 half_pixel = vec2(1.0) / vec2(gua_resolution);
@@ -322,7 +322,7 @@ void emit_primitive(vec2 tex_coords) {
 
     EndPrimitive();
   #endif
-  }
+  // }
 }
 
 void main() {

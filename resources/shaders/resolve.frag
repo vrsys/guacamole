@@ -217,6 +217,11 @@ float get_vignette(float coverage, float softness, float intensity) {
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
 
+  float depth = gua_get_depth();
+
+  // WARP TODO: Why is this necessary?
+  gl_FragDepth = depth-0.000001;
+
   ivec2 frag_pos = ivec2(gl_FragCoord.xy);
 
   // init light bitset
@@ -229,10 +234,6 @@ void main() {
   vec4 abuffer_accumulation_color = vec4(0);
   float abuffer_accumulation_emissivity = 0.0;
   vec3 gbuffer_color = vec3(0);
-
-  float depth = gua_get_depth();
-
-  gl_FragDepth = depth*0.5+0.5;
 
 #if @enable_abuffer@
   bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
@@ -266,7 +267,6 @@ void main() {
     float vignetting = get_vignette(gua_vignette_coverage, gua_vignette_softness, gua_vignette_color.a);
     gua_out_color = mix(gua_vignette_color.rgb, gua_out_color, vignetting);
   }
-
   // color correction
 
 #if @gua_debug_tiles@

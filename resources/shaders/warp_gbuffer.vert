@@ -53,21 +53,21 @@ void main() {
 
   float depth = gua_get_depth(tex_coords);
 
-  if (depth < 1) {
+  // if (depth < 1) {
     color = gua_get_color(tex_coords);
     normal = gua_get_normal(tex_coords);
     vec3 screen_space_pos = vec3(tex_coords*2-1, depth);
-    gl_Position = warp_matrix * vec4(screen_space_pos, 1);
+    gl_Position = warp_matrix * vec4(screen_space_pos, 1 + 0.000000000000001*foo);
 
     #if WARP_MODE == WARP_MODE_SCALED_POINTS
-      gl_PointSize = 15*(1-gl_Position.z/gl_Position.w);
+      gl_PointSize = min(15, 15*(1-gl_Position.z/gl_Position.w));
     #else
       gl_PointSize = 1;
     #endif
-  } else {
-    gl_Position = vec4(10, 10, 10, 1 + 0.000000000000001*foo);
-    gl_PointSize = 0;
-  }
+  // } else {
+  //   gl_Position = vec4(10, 10, 10, 1 + 0.000000000000001*foo);
+  //   gl_PointSize = 0;
+  // }
 }
 
 
