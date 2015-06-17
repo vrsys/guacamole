@@ -49,11 +49,14 @@ class DepthCubeMap : public RenderTarget {
 
   virtual void remove_buffers(RenderContext const& ctx) override;
 
+  void retrieve_data(RenderContext const& ctx);
+
   virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const override;
 
  private:
   scm::gl::frame_buffer_ptr fbo_;
   std::shared_ptr<Texture2D> depth_buffer_;
+  int16_t* cpu_data_;
   math::vec2f viewport_offset_;
   math::vec2f viewport_size_;
 

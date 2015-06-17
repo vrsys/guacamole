@@ -48,6 +48,9 @@ DepthCubeMap::DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolut
 
   depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D16, 1, state);
 
+  int size = viewport_size_.x * viewport_size_.y * 6 * sizeof(int16_t); 
+  cpu_data_ = (int16_t*)malloc(size);
+
   fbo_ = ctx.render_device->create_frame_buffer();
   fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx), 0, 0);
 }
@@ -102,6 +105,42 @@ void DepthCubeMap::remove_buffers(RenderContext const& ctx) {
   if (depth_buffer_) {
     depth_buffer_->make_non_resident(ctx);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DepthCubeMap::retrieve_data(RenderContext const& ctx){
+  int size = (int)viewport_size_.x;
+
+  for (int side = 0; side < 6; side++){
+    for (int i = 0; i<size; i++){
+      for (int j = 0; j<size; j++){
+        cpu_data_[side * size*size + i*size + j] = 2;
+      }
+    }
+  }  
+  
+  auto texture_handle = depth_buffer_->get_buffer(ctx);
+  ctx.render_context->retrieve_texture_data(texture_handle, 0, cpu_data_);
+
+  for (int side = 0; side < 3; side++){
+    std::cout << "SIDE: " << side <<  std::endl;
+    for (int i = 0; i<size; i++){
+      for (int j = 0; j<size; j++){
+        // std::cout << cpu_data_[side * size*size + i*size + j];
+        if (cpu_data_[i*size*6 + j + side * size] == -1)
+        {
+          std::cout << "..";
+        }
+        else
+        {
+          std::cout << "##";
+        }
+      }
+      std::cout << std::endl;
+    }
+  }  
+  std::cout << "============================" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -431,16 +431,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     }
 
-  // depth_cube_map->bind(ctx, write_depth);
-  // depth_cube_map->set_viewport(ctx);
-
-  // RenderTarget* prev_target = pipe.current_viewstate().target;
-  // bool prev_shadow = pipe.current_viewstate().shadow_mode;
-  // pipe.set_target_and_shadow(depth_cube_map.get(), true);
-
-
-  // depth_cube_map->unbind(ctx);
-  // pipe.set_target_and_shadow(prev_target, prev_shadow);
 
     // restore previous configuration
     current_viewstate_.target = gbuffer_.get();
@@ -453,6 +443,12 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
                          current_viewstate_.camera.config.get_view_id(),
                          current_viewstate_.camera.config.get_resolution());
     bind_camera_uniform_block(0);
+
+    // TESTTESTTEST
+    if (context_.framecount % 60 == 0) {
+      depth_cube_map_->retrieve_data(context_);
+    }
+
   }
   ////////////////////////////////////////////////////////////////////////////////
 
