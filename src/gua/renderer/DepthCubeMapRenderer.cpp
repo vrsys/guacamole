@@ -32,7 +32,7 @@
 
 #include <scm/core/math/math.h>
 
-#define RESOLUTION 64 
+#define RESOLUTION 16 
 
 namespace gua {
 
