@@ -134,11 +134,11 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   // ---------------------------------------------------------------------------
 
   std::string const gpu_query_name_a = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass GBuffer";
-  std::string const cpu_query_name_a = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass GBuffer";
+  // std::string const cpu_query_name_a = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass GBuffer";
   std::string const pri_query_name_a = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass GBuffer";
-  pipe.begin_primitive_query(ctx, pri_query_name_a);
   pipe.begin_gpu_query(ctx, gpu_query_name_a);
-  pipe.begin_cpu_query(cpu_query_name_a);
+  pipe.begin_primitive_query(ctx, pri_query_name_a);
+  // pipe.begin_cpu_query(cpu_query_name_a);
 
   if (description->gbuffer_warp_mode() != WarpPassDescription::GBUFFER_NONE) {
     warp_gbuffer_program_->use(ctx);
@@ -153,7 +153,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
         description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
         description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION ||
         description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION) {
-      auto res(ctx.resources.get<WarpGridGenerator::SharedResource>());
+      auto res(ctx.resources.get_dont_create<WarpGridGenerator::SharedResource>());
       if (res) {
         ctx.render_context->bind_vertex_array(res->grid_vao[res->current_vbo()]);
         ctx.render_context->apply();
@@ -171,17 +171,17 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   pipe.end_primitive_query(ctx, pri_query_name_a);
   pipe.end_gpu_query(ctx, gpu_query_name_a);
-  pipe.end_cpu_query(cpu_query_name_a);
+  // pipe.end_cpu_query(cpu_query_name_a);
 
   // ---------------------------------------------------------------------------
   // --------------------------------- warp abuffer ----------------------------
   // ---------------------------------------------------------------------------
 
   std::string const gpu_query_name_b = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass ABuffer";
-  std::string const cpu_query_name_b = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass ABuffer";
+  // std::string const cpu_query_name_b = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass ABuffer";
   std::string const pri_query_name_b = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass ABuffer";
   pipe.begin_gpu_query(ctx, gpu_query_name_b);
-  pipe.begin_cpu_query(cpu_query_name_b);
+  // pipe.begin_cpu_query(cpu_query_name_b);
   pipe.begin_primitive_query(ctx, pri_query_name_b);
 
   if (description->abuffer_warp_mode() != WarpPassDescription::ABUFFER_NONE) {
@@ -222,7 +222,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   pipe.end_primitive_query(ctx, pri_query_name_b);
   pipe.end_gpu_query(ctx, gpu_query_name_b);
-  pipe.end_cpu_query(cpu_query_name_b);
+  // pipe.end_cpu_query(cpu_query_name_b);
 
   target.unbind(ctx);
 

@@ -89,7 +89,7 @@ void WarpGridRenderer::render(Pipeline& pipe, PipelinePassDescription const& des
       scm::gl::FUNC_ONE), false);
   }
 
-  auto res(ctx.resources.get<WarpGridGenerator::SharedResource>());
+  auto res(ctx.resources.get_dont_create<WarpGridGenerator::SharedResource>());
 
   if (res) {
     std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpGridRenderer";

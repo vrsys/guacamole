@@ -216,6 +216,8 @@ int main(int argc, char** argv) {
   fast_cam->config.set_scene_graph_name("main_scenegraph");
   fast_cam->config.set_far_clip(slow_cam->config.get_far_clip()*1.5);
 
+  auto tex_quad_pass(std::make_shared<gua::TexturedQuadPassDescription>());
+  auto light_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   auto warp_pass(std::make_shared<gua::WarpPassDescription>());
   auto grid_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
   auto render_grid_pass(std::make_shared<gua::RenderWarpGridPassDescription>());
@@ -234,8 +236,8 @@ int main(int argc, char** argv) {
 
   auto warp_pipe = std::make_shared<gua::PipelineDescription>();
   warp_pipe->add_pass(trimesh_pass);
-  warp_pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
-  warp_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  warp_pipe->add_pass(tex_quad_pass);
+  warp_pipe->add_pass(light_pass);
   warp_pipe->add_pass(res_pass);
   warp_pipe->add_pass(grid_pass);
   warp_pipe->add_pass(warp_pass);
@@ -246,8 +248,8 @@ int main(int argc, char** argv) {
 
   auto normal_pipe = std::make_shared<gua::PipelineDescription>();
   normal_pipe->add_pass(trimesh_pass);
-  normal_pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
-  normal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  normal_pipe->add_pass(tex_quad_pass);
+  normal_pipe->add_pass(light_pass);
   normal_pipe->add_pass(res_pass);
   normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   normal_pipe->set_enable_abuffer(true);
@@ -333,11 +335,18 @@ int main(int argc, char** argv) {
     } else if (callback == "set_view_mono_warped") {
       slow_cam->set_pipeline_description(warp_pipe);
       slow_cam->config.set_enable_stereo(false);
+      slow_cam->config.set_eye_dist(0.07f);
       window->config.set_stereo_mode(gua::StereoMode::MONO);
     } else if (callback == "set_view_stereo_warped") {
       slow_cam->set_pipeline_description(warp_pipe);
       slow_cam->config.set_enable_stereo(true);
       slow_cam->config.set_eye_dist(0.f);
+      trimesh_pass->set_enable_for_right_eye(false);
+      tex_quad_pass->set_enable_for_right_eye(false);
+      light_pass->set_enable_for_right_eye(false);
+      res_pass->set_enable_for_right_eye(false);
+      grid_pass->set_enable_for_right_eye(false);
+      render_grid_pass->set_enable_for_right_eye(false);
       window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
     } else if (callback == "set_view_mono") {
       slow_cam->set_pipeline_description(normal_pipe);
@@ -347,6 +356,12 @@ int main(int argc, char** argv) {
       slow_cam->set_pipeline_description(normal_pipe);
       slow_cam->config.set_enable_stereo(true);
       slow_cam->config.set_eye_dist(0.07f);
+      trimesh_pass->set_enable_for_right_eye(true);
+      tex_quad_pass->set_enable_for_right_eye(true);
+      light_pass->set_enable_for_right_eye(true);
+      res_pass->set_enable_for_right_eye(true);
+      grid_pass->set_enable_for_right_eye(true);
+      render_grid_pass->set_enable_for_right_eye(true);
       window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
     } else if (callback == "set_split_threshold") {
       std::stringstream str(params[0]);
@@ -593,18 +608,18 @@ int main(int argc, char** argv) {
         if (result.first.find("GPU") != std::string::npos) {
           if (result.first.find("Trimesh") != std::string::npos) trimesh_time += result.second;
           if (result.first.find("Resolve") != std::string::npos) trimesh_time += result.second;
-          if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time = result.second;
-          if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time = result.second;
+          if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time += result.second;
+          if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time += result.second;
           if (result.first.find("WarpGridGenerator") != std::string::npos) grid_time += result.second;
         }
       }
 
       for (auto const& result: window->get_context()->primitive_query_results) {
-        if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_primitives = result.second.first;
-        if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives = result.second.first;
+        if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_primitives += result.second.first;
+        if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives += result.second.first;
       }
 
-      stats->call_javascript("set_stats", renderer.get_application_fps(),
+      stats->call_javascript("set_stats", 1000.f / window->get_rendering_fps(),
                            window->get_rendering_fps(), trimesh_time, grid_time,
                            gbuffer_warp_time, abuffer_warp_time, gbuffer_primitives,
                            abuffer_primitives);
