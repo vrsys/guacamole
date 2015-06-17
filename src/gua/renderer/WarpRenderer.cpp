@@ -46,7 +46,7 @@ WarpRenderer::WarpRenderer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc, bool left_eye)
+void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
 
   auto& ctx(pipe.get_context());
@@ -143,10 +143,11 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc, b
   if (description->gbuffer_warp_mode() != WarpPassDescription::GBUFFER_NONE) {
     warp_gbuffer_program_->use(ctx);
     pipe.bind_gbuffer_input(warp_gbuffer_program_);
-    warp_gbuffer_program_->set_uniform(ctx, left_eye, "warp_left_eye");
-    for (auto const& u : desc.uniforms) {
-      u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
-    }
+
+    std::string warp_matrix("warp_matrix");
+    if (ctx.mode == CameraMode::LEFT) warp_matrix = "warp_matrix_left";
+    if (ctx.mode == CameraMode::RIGHT) warp_matrix = "warp_matrix_right";
+    warp_gbuffer_program_->apply_uniform(ctx, "warp_matrix", desc.uniforms.find(warp_matrix)->second);
 
     if (description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
         description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
@@ -185,9 +186,12 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc, b
 
   if (description->abuffer_warp_mode() != WarpPassDescription::ABUFFER_NONE) {
     warp_abuffer_program_->use(ctx);
-    for (auto const& u : desc.uniforms) {
-      u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
-    }
+
+    std::string warp_matrix("warp_matrix");
+    if (ctx.mode == CameraMode::LEFT) warp_matrix = "warp_matrix_left";
+    if (ctx.mode == CameraMode::RIGHT) warp_matrix = "warp_matrix_right";
+    // std::cout << warp_matrix << " " <<  boost::get<math::mat4f>(desc.uniforms.find(warp_matrix)->second.data) << std::endl;
+    warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", desc.uniforms.find(warp_matrix)->second);
 
     ABuffer a_buffer;
     a_buffer.allocate_shared(ctx);

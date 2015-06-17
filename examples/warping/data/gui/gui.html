@@ -283,8 +283,6 @@
             Camera:
             </div>
             <div class="col-xs-7">
-              <button onclick="gua.reset_view()" class="btn btn-block"><i class="fa fa-undo"></i> Reset</button>
-              <button onclick="gua.render_view()" class="btn btn-block"><i class="fa fa-desktop"></i> Render Current</button>
 
               <div class="checkbox">
                 <label>
@@ -332,17 +330,6 @@
                 </label>
               </div>
 
-            </div>
-          </div>
-
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-            Object:
-            </div>
-            <div class="col-xs-7">
-              <button onclick="gua.reset_object()" class="btn btn-block"><i class="fa fa-undo"></i> Reset</button>
             </div>
           </div>
 
@@ -429,7 +416,19 @@
           </div>
 
           <hr />
-          
+
+          <div class="row">
+            <div class="col-xs-5">
+            Reset:
+            </div>
+            <div class="col-xs-7">
+              <button onclick="gua.reset_view()" class="btn btn-block"><i class="fa fa-undo"></i> Warp Camera</button>
+              <button onclick="gua.reset_object()" class="btn btn-block"><i class="fa fa-undo"></i> Object</button>
+            </div>
+          </div>
+
+          <hr />
+
         </div>
       </div>
 

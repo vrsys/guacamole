@@ -73,6 +73,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
   pipe_ = &pipe;
 
+  auto description(dynamic_cast<GenerateWarpGridPassDescription const*>(&desc));
 
   math::vec2ui resolution(pipe.current_viewstate().camera.config.get_resolution());
   size_t pixel_count(resolution.x * resolution.y);
@@ -87,7 +88,6 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
     min_max_filter_program_->set_shaders(min_max_filter_program_stages_, {}, false, global_substitution_map_);
   }
 
-  auto description(dynamic_cast<GenerateWarpGridPassDescription const*>(&desc));
 
   int current_level(std::log2(description->cell_size()));
 

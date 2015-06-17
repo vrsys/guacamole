@@ -131,11 +131,12 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
             if (mode == CameraMode::RIGHT) clipping_offset = eye_dist_in_screen_direction;
         }
 
-        if (mode != CameraMode::RIGHT) {
-            eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() - 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
-        } else {
-            eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() + 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
-        }
+    }
+
+    if (mode != CameraMode::RIGHT) {
+        eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() - 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
+    } else {
+        eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() + 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
     }
 
     if (config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {

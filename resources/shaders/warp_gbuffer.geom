@@ -27,7 +27,7 @@
 uniform mat4 warp_matrix;
 
 float gua_get_depth_raw(vec2 frag_pos) {
-  return texelFetch(sampler2D(gua_gbuffer_depth), ivec2(frag_pos), 0).x * 2.0 - 1.0;
+  return texelFetch(sampler2D(gua_gbuffer_depth), ivec2(frag_pos), 0).x;
 }
 
 // -----------------------------------------------------------------------------
@@ -58,14 +58,16 @@ void emit_grid_vertex(vec2 position, float depth) {
 
 void emit_quad(uvec2 offset, uvec2 size) {
 
-  vec2 position = varying_position[0].xy+offset;
-  float depth = gua_get_depth_raw(position);
 
-  if (depth < 1 && size.x > 0 && size.y > 0) {
+  if (size.x > 0 && size.y > 0) {
 
     cellsize = min(size.x, size.y);
+    float depth;
+    vec2 position;
 
     #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
+      position = varying_position[0].xy+offset;
+      depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(0, 0), depth);
 
       position = varying_position[0].xy+offset + vec2(size.x-1, 0);
@@ -94,22 +96,22 @@ void emit_quad(uvec2 offset, uvec2 size) {
 
       position = varying_position[0].xy+offset;
       vec2 lookup_offset = vec2(-cont_l, -cont_b) * cont_bl;
-      depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
+      depth = gua_get_unscaled_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(0, 0), depth);
 
       position = varying_position[0].xy+offset + vec2(size.x-1, 0);
       lookup_offset = vec2(cont_r, -cont_b) * cont_br;
-      depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
+      depth = gua_get_unscaled_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(GAP, 0), depth);
 
       position = varying_position[0].xy+offset + vec2(0, size.y-1);
       lookup_offset = vec2(-cont_l, cont_t) * cont_tl;
-      depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
+      depth = gua_get_unscaled_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(0, GAP), depth);
 
       position = varying_position[0].xy+offset + vec2(size.x-1, size.y-1);
       lookup_offset = vec2(cont_r, cont_t) * cont_tr;
-      depth = gua_get_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
+      depth = gua_get_unscaled_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
       emit_grid_vertex(position + vec2(GAP, GAP), depth);
 
     #endif // ------------------------------------------------------------------
@@ -122,22 +124,19 @@ void emit_pixel(uvec2 offset) {
 
   const float depth = gua_get_depth_raw(varying_position[0].xy + offset);
 
-  // if (depth < 1) {
-    cellsize = 1;
-    emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   0),   depth);
-    emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, 0),   depth);
-    emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   GAP), depth);
-    emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, GAP), depth);
-    EndPrimitive();
-  // }
+  cellsize = 1;
+  emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   0),   depth);
+  emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, 0),   depth);
+  emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   GAP), depth);
+  emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, GAP), depth);
+  EndPrimitive();
 }
 
 void emit_pixel(uvec2 offset, uint do_emit) {
 
-  const float depth = gua_get_depth_raw(varying_position[0].xy + offset);
-
   if (do_emit > 0) {
     cellsize = 1;
+    const float depth = gua_get_depth_raw(varying_position[0].xy + offset);
     emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   0),   depth);
     emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, 0),   depth);
     emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   GAP), depth);
@@ -235,10 +234,8 @@ out vec3 normal;
 
 
 void emit_primitive(vec2 tex_coords) {
-  float depth = gua_get_depth(tex_coords);
+  float depth = gua_get_unscaled_depth(tex_coords);
   vec2 frag_pos = tex_coords*2-1;
-
-  // if (depth < 1) {
 
   #if WARP_MODE == WARP_MODE_QUADS_SCREEN_ALIGNED
     const vec2 half_pixel = vec2(1.0) / vec2(gua_resolution);
@@ -322,7 +319,6 @@ void emit_primitive(vec2 tex_coords) {
 
     EndPrimitive();
   #endif
-  // }
 }
 
 void main() {

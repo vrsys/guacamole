@@ -32,6 +32,8 @@
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
 
+#include <gua/renderer/WarpPass.hpp>
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +62,9 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d,
   , needs_color_buffer_as_input_(d.needs_color_buffer_as_input_)
   , writes_only_color_buffer_(d.writes_only_color_buffer_)
   , enable_for_shadows_(d.enable_for_shadows_)
+  , enable_for_left_eye_(d.enable_for_left_eye_)
+  , enable_for_right_eye_(d.enable_for_right_eye_)
+  , enable_for_cyclops_eye_(d.enable_for_cyclops_eye_)
   , rendermode_(d.rendermode_)
   , process_(d.process_)
   , name_(d.name_)

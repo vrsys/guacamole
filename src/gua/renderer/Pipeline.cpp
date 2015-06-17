@@ -194,17 +194,22 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   // process all passes
   for (unsigned i(0); i < passes_.size(); ++i) {
-    if (passes_[i].needs_color_buffer_as_input()) {
-      gbuffer_->toggle_ping_pong();
+    if ((mode == CameraMode::LEFT && passes_[i].get_enable_for_left_eye())
+     || (mode == CameraMode::RIGHT && passes_[i].get_enable_for_right_eye())
+     || (mode == CameraMode::CENTER && passes_[i].get_enable_for_cyclops_eye())) {
+
+      if (passes_[i].needs_color_buffer_as_input()) {
+        gbuffer_->toggle_ping_pong();
+      }
+
+      gbuffer_->bind(context_, !passes_[i].writes_only_color_buffer());
+
+      if (passes_[i].needs_color_buffer_as_input()) {
+        gbuffer_->clear(context_, 1.f, 1);
+      }
+
+      passes_[i].process(*last_description_.get_passes()[i], *this);
     }
-
-    gbuffer_->bind(context_, !passes_[i].writes_only_color_buffer());
-
-    if (passes_[i].needs_color_buffer_as_input()) {
-      gbuffer_->clear(context_, 1.f, 1);
-    }
-
-    passes_[i].process(*last_description_.get_passes()[i], *this);
   }
 
   gbuffer_->clear_abuffer(context_);
@@ -216,28 +221,28 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 
 
-    if (context_.framecount % 60 == 0) {
-      math::vec2ui resolution(current_viewstate().camera.config.get_resolution());
-      std::cout << resolution.x * resolution.y << std::endl;
-      std::cout << "===== Time Queries for Context: " << context_.id
-        << " ============================" << std::endl;
-      for (auto const& t : context_.time_query_results) {
-        std::cout << t.first << " : " << t.second << " ms" << std::endl;
-      }
-      std::cout << std::endl;
-    }
+    // if (context_.framecount % 60 == 0) {
+    //   math::vec2ui resolution(current_viewstate().camera.config.get_resolution());
+    //   std::cout << resolution.x * resolution.y << std::endl;
+    //   std::cout << "===== Time Queries for Context: " << context_.id
+    //     << " ============================" << std::endl;
+    //   for (auto const& t : context_.time_query_results) {
+    //     std::cout << t.first << " : " << t.second << " ms" << std::endl;
+    //   }
+    //   std::cout << std::endl;
+    // }
 #endif
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
 
-    if (context_.framecount % 60 == 0) {
-      std::cout << "===== Primitive Queries for Context: " << context_.id
-        << " ============================" << std::endl;
-      for (auto const& t : context_.primitive_query_results) {
-        std::cout << t.first << " : Generated: " << t.second.first << " Written: " << t.second.second << std::endl;
-      }
-      std::cout << std::endl;
-    }
+    // if (context_.framecount % 60 == 0) {
+    //   std::cout << "===== Primitive Queries for Context: " << context_.id
+    //     << " ============================" << std::endl;
+    //   for (auto const& t : context_.primitive_query_results) {
+    //     std::cout << t.first << " : Generated: " << t.second.first << " Written: " << t.second.second << std::endl;
+    //   }
+    //   std::cout << std::endl;
+    // }
 #endif
 
 

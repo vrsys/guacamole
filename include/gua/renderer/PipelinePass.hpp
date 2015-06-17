@@ -44,6 +44,14 @@ class GUA_DLL PipelinePassDescription {
   friend class Pipeline;
   friend class PipelinePass;
 
+  bool get_enable_for_left_eye() const { return enable_for_left_eye_; }
+  bool get_enable_for_right_eye() const { return enable_for_right_eye_; }
+  bool get_enable_for_cyclops_eye() const { return enable_for_cyclops_eye_; }
+
+  void set_enable_for_left_eye(bool val) { enable_for_left_eye_ = val; }
+  void set_enable_for_right_eye(bool val) { enable_for_right_eye_ = val; }
+  void set_enable_for_cyclops_eye(bool val) { enable_for_cyclops_eye_ = val; }
+
   void touch();
   std::string const& name() const;
   unsigned mod_count() const;
@@ -67,7 +75,11 @@ class GUA_DLL PipelinePassDescription {
   bool writes_only_color_buffer_ = false;
 
   bool enable_for_shadows_ = false;
-  unsigned mod_count_ = 0; 
+  bool enable_for_left_eye_ = true;
+  bool enable_for_right_eye_ = true;
+  bool enable_for_cyclops_eye_ = true;
+
+  unsigned mod_count_ = 0;
 
   mutable bool recompile_shaders_ = true;
 
@@ -100,15 +112,18 @@ class GUA_DLL PipelinePassDescription {
 class GUA_DLL PipelinePass {
  public:
 
-  inline bool needs_color_buffer_as_input() const {
-    return needs_color_buffer_as_input_;
-  }
-  inline bool writes_only_color_buffer() const {
-    return writes_only_color_buffer_;
-  }
-  inline bool enable_for_shadows() const {
-    return enable_for_shadows_;
-  }
+  bool needs_color_buffer_as_input() const { return needs_color_buffer_as_input_; }
+  bool writes_only_color_buffer() const { return writes_only_color_buffer_; }
+
+  bool get_enable_for_left_eye() const { return enable_for_left_eye_; }
+  bool get_enable_for_right_eye() const { return enable_for_right_eye_; }
+  bool get_enable_for_cyclops_eye() const { return enable_for_cyclops_eye_; }
+
+  void set_enable_for_left_eye(bool val) { enable_for_left_eye_ = val; }
+  void set_enable_for_right_eye(bool val) { enable_for_right_eye_ = val; }
+  void set_enable_for_cyclops_eye(bool val) { enable_for_cyclops_eye_ = val; }
+
+  bool enable_for_shadows() const { return enable_for_shadows_; }
 
   void process(PipelinePassDescription const& desc, Pipeline& pipe);
   virtual void on_delete(Pipeline* pipe) {}
@@ -132,7 +147,12 @@ class GUA_DLL PipelinePass {
 
   bool needs_color_buffer_as_input_ = false;
   bool writes_only_color_buffer_ = false;
+
   bool enable_for_shadows_ = false;
+  bool enable_for_left_eye_ = true;
+  bool enable_for_right_eye_ = true;
+  bool enable_for_cyclops_eye_ = true;
+
   RenderMode rendermode_ = RenderMode::Custom;
   std::string name_ = "PipelinePass";
 

@@ -72,12 +72,11 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 int main(int argc, char** argv) {
   bool fullscreen = (argc == 2);
 
-  auto resolution = gua::math::vec2ui(1920, 1080);
+  // auto resolution = gua::math::vec2ui(1920, 1080);
   // auto resolution = gua::math::vec2ui(1600, 900);
-  // auto resolution = gua::math::vec2ui(1280, 768);
+  auto resolution = gua::math::vec2ui(1280, 768);
 
   // add mouse interaction
-  gua::utils::Trackball view_trackball(0.01, 0.002, 0.2, 0.2);
   gua::utils::Trackball object_trackball(0.01, 0.002, 0, 0.2);
   Navigator nav;
   Navigator warp_nav;
@@ -215,7 +214,7 @@ int main(int argc, char** argv) {
   fast_cam->config.set_resolution(resolution);
   fast_cam->config.set_screen_path("/fast_cam/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
-  fast_cam->config.set_far_clip(slow_cam->config.get_far_clip()*1.5f);
+  fast_cam->config.set_far_clip(slow_cam->config.get_far_clip()*1.5);
 
   auto warp_pass(std::make_shared<gua::WarpPassDescription>());
   auto grid_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
@@ -266,7 +265,7 @@ int main(int argc, char** argv) {
   auto stats_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("stats_quad");
 
   // right side gui ----------------------------------------------------------
-  gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 820));
+  gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 750));
 
   gui->on_loaded.connect([&]() {
     gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
@@ -321,7 +320,6 @@ int main(int argc, char** argv) {
 
     gui->add_javascript_callback("reset_view");
     gui->add_javascript_callback("reset_object");
-    gui->add_javascript_callback("render_view");
 
     gui->call_javascript("init");
   });
@@ -335,13 +333,12 @@ int main(int argc, char** argv) {
     } else if (callback == "set_view_mono_warped") {
       slow_cam->set_pipeline_description(warp_pipe);
       slow_cam->config.set_enable_stereo(false);
-      warp_pass->stereo_mode(gua::StereoMode::MONO);
       window->config.set_stereo_mode(gua::StereoMode::MONO);
     } else if (callback == "set_view_stereo_warped") {
       slow_cam->set_pipeline_description(warp_pipe);
-      slow_cam->config.set_enable_stereo(false);
-      warp_pass->stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
-      window->config.set_stereo_mode(gua::StereoMode::MONO);
+      slow_cam->config.set_enable_stereo(true);
+      slow_cam->config.set_eye_dist(0.f);
+      window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
     } else if (callback == "set_view_mono") {
       slow_cam->set_pipeline_description(normal_pipe);
       slow_cam->config.set_enable_stereo(false);
@@ -349,6 +346,7 @@ int main(int argc, char** argv) {
     } else if (callback == "set_view_stereo") {
       slow_cam->set_pipeline_description(normal_pipe);
       slow_cam->config.set_enable_stereo(true);
+      slow_cam->config.set_eye_dist(0.07f);
       window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
     } else if (callback == "set_split_threshold") {
       std::stringstream str(params[0]);
@@ -396,14 +394,9 @@ int main(int argc, char** argv) {
       str >> checked;
       trimesh_pass->adaptive_abuffer(checked);
     } else if (callback == "reset_view") {
-      view_trackball.reset();
       warp_nav.reset();
     } else if (callback == "reset_object") {
       object_trackball.reset();
-    } else if (callback == "render_view") {
-      view_trackball.reset();
-      warp_nav.reset();
-      nav.set_transform(gua::math::mat4f(fast_cam->get_transform()));
     } else if (callback == "set_gbuffer_type_points"
              | callback == "set_gbuffer_type_scaled_points"
              | callback == "set_gbuffer_type_quads_screen_aligned"
@@ -485,8 +478,8 @@ int main(int argc, char** argv) {
   });
 
   gui_quad->data.texture() = "gui";
-  gui_quad->data.size() = gua::math::vec2ui(330, 820);
-  gui_quad->data.anchor() = gua::math::vec2(1.f, 0.f);
+  gui_quad->data.size() = gua::math::vec2ui(330, 750);
+  gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
   graph.add_node("/", gui_quad);
 
@@ -521,7 +514,7 @@ int main(int argc, char** argv) {
 
     nav.set_mouse_button(key, action);
     warp_nav.set_mouse_button(key, action);
-  
+
   });
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
     if (manipulation_navigator) {
@@ -552,11 +545,9 @@ int main(int argc, char** argv) {
         nav.set_mouse_position(gua::math::vec2i(pos));
       } else {
         warp_nav.set_mouse_position(gua::math::vec2i(pos));
-        view_trackball.motion(pos.x, pos.y);
       }
     }
   });
-  window->on_button_press.connect(std::bind(mouse_button, std::ref(view_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
   window->on_button_press.connect(std::bind(mouse_button, std::ref(object_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
   window->config.set_size(resolution);
@@ -582,14 +573,9 @@ int main(int argc, char** argv) {
     nav.update();
     warp_nav.update();
 
-    // apply view_trackball matrix to object
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(object_trackball.shiftx()),
                                                               gua::math::float_t(object_trackball.shifty()),
                                                               gua::math::float_t(object_trackball.distance())) * gua::math::mat4(object_trackball.rotation());
-    gua::math::mat4 viewmatrix = scm::math::inverse(scm::math::make_translation(
-                                    gua::math::float_t(view_trackball.shiftx()),
-                                    gua::math::float_t(view_trackball.shifty()),
-                                    gua::math::float_t(view_trackball.distance())) * gua::math::mat4(view_trackball.rotation()));
 
     slow_cam->set_transform(gua::math::mat4(nav.get_transform()));
     fast_cam->set_transform(gua::math::mat4(nav.get_transform())* gua::math::mat4(warp_nav.get_transform()));
@@ -625,13 +611,15 @@ int main(int argc, char** argv) {
     }
 
     gua::Frustum s_c = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+    gua::math::mat4 original_projection(scm::math::inverse(s_c.get_projection() * s_c.get_view()));
+
     gua::Frustum t_c = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     gua::Frustum t_l = fast_cam->get_rendering_frustum(graph, gua::CameraMode::LEFT);
     gua::Frustum t_r = fast_cam->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
 
-    warp_pass->warp_matrix(      gua::math::mat4f(t_c.get_projection() * t_c.get_view() * scm::math::inverse(s_c.get_projection() * s_c.get_view())));
-    warp_pass->warp_matrix_left( gua::math::mat4f(t_l.get_projection() * t_l.get_view() * scm::math::inverse(s_c.get_projection() * s_c.get_view())));
-    warp_pass->warp_matrix_right(gua::math::mat4f(t_r.get_projection() * t_r.get_view() * scm::math::inverse(s_c.get_projection() * s_c.get_view())));
+    warp_pass->warp_matrix(      gua::math::mat4f(t_c.get_projection() * t_c.get_view() * original_projection));
+    warp_pass->warp_matrix_left( gua::math::mat4f(t_l.get_projection() * t_l.get_view() * original_projection));
+    warp_pass->warp_matrix_right(gua::math::mat4f(t_r.get_projection() * t_r.get_view() * original_projection));
 
     window->process_events();
     if (window->should_close()) {

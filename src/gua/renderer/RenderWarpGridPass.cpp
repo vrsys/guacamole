@@ -89,15 +89,17 @@ PipelinePass RenderWarpGridPassDescription::make_pass(RenderContext const& ctx, 
   auto grid_renderer = std::make_shared<WarpGridRenderer>();
   PipelinePass pass{*this, ctx, substitution_map};
 
-  pass.process_ = [grid_renderer, this](
+  WarpPassDescription::GBufferWarpMode mode(mode_);
+
+  pass.process_ = [grid_renderer, mode](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
 
     auto description(dynamic_cast<RenderWarpGridPassDescription const*>(&desc));
     if (description->show_warp_grid() && (
-        mode_ == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
-        mode_ == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
-        mode_ == WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION ||
-        mode_ == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION)) {
+        mode == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
+        mode == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
+        mode == WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION ||
+        mode == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION)) {
       grid_renderer->render(pipe, desc);
     }
   };
