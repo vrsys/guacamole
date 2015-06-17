@@ -205,6 +205,7 @@ int main(int argc, char** argv) {
   slow_cam->config.set_screen_path("/slow_cam/slow_screen");
   slow_cam->config.set_scene_graph_name("main_scenegraph");
   slow_cam->config.mask().blacklist.add_tag("invisible");
+  slow_cam->config.set_near_clip(0.01f);
 
   // fast client ---------------------------------------------------------------
   auto fast_cam = graph.add_node<gua::node::CameraNode>("/", "fast_cam");
@@ -215,6 +216,7 @@ int main(int argc, char** argv) {
   fast_cam->config.set_screen_path("/fast_cam/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
   fast_cam->config.set_far_clip(slow_cam->config.get_far_clip()*1.5);
+  fast_cam->config.set_near_clip(0.01f);
 
   auto tex_quad_pass(std::make_shared<gua::TexturedQuadPassDescription>());
   auto light_pass(std::make_shared<gua::LightVisibilityPassDescription>());
