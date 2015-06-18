@@ -28,7 +28,7 @@ void Navigator::update() {
     frame_time_ = timer_.get_elapsed();
 
     const float rotation_speed = 0.2f;
-    const float motion_speed = 0.002f;
+    const float motion_speed = 0.02f;
 
     auto y_rot(scm::math::mat4f::identity());
     auto x_rot(scm::math::mat4f::identity());

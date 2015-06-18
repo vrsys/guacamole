@@ -29,6 +29,9 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
+#include <scm/input/tracking/art_dtrack.h>
+#include <scm/input/tracking/target.h>
+
 #include <gua/gui.hpp>
 
 #define COUNT 6
@@ -38,6 +41,8 @@ bool backface_culling       = true;
 bool manipulation_navigator = true;
 bool manipulation_camera    = false;
 bool manipulation_object    = false;
+
+bool power_wall = true;
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods) {
@@ -72,9 +77,14 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 int main(int argc, char** argv) {
   bool fullscreen = (argc == 2);
 
-  // auto resolution = gua::math::vec2ui(1920, 1080);
+  auto resolution = gua::math::vec2ui(1920, 1080);
   // auto resolution = gua::math::vec2ui(1600, 900);
-  auto resolution = gua::math::vec2ui(1280, 768);
+  // auto resolution = gua::math::vec2ui(1280, 768);
+
+  if (power_wall) {
+    fullscreen = true;
+    resolution = gua::math::vec2ui(1920, 1200);
+  }
 
   // add mouse interaction
   gua::utils::Trackball object_trackball(0.01, 0.002, 0, 0.2);
@@ -195,28 +205,33 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------------
   // ------------------------ setup rendering pipelines ------------------------
   // ---------------------------------------------------------------------------
+  auto navigation = graph.add_node<gua::node::TransformNode>("/", "navigation");
 
   // slow client ---------------------------------------------------------------
-  auto slow_cam = graph.add_node<gua::node::CameraNode>("/", "slow_cam");
-  auto slow_screen = graph.add_node<gua::node::ScreenNode>("/slow_cam", "slow_screen");
-  slow_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
-  slow_screen->translate(0, 0, -2.0);
+  auto slow_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "slow_screen");
+  auto slow_cam = graph.add_node<gua::node::CameraNode>("/navigation", "slow_cam");
+  slow_screen->data.set_size(gua::math::vec2(3, 2));
+  slow_screen->translate(0, 1.7, -1.6);
+  slow_cam->translate(0, 1.7, 1.6);
   slow_cam->config.set_resolution(resolution);
-  slow_cam->config.set_screen_path("/slow_cam/slow_screen");
+  slow_cam->config.set_screen_path("/navigation/slow_screen");
   slow_cam->config.set_scene_graph_name("main_scenegraph");
   slow_cam->config.mask().blacklist.add_tag("invisible");
-  slow_cam->config.set_near_clip(0.01f);
+  slow_cam->config.set_near_clip(0.1f);
 
   // fast client ---------------------------------------------------------------
-  auto fast_cam = graph.add_node<gua::node::CameraNode>("/", "fast_cam");
-  auto fast_screen = graph.add_node<gua::node::ScreenNode>("/fast_cam", "fast_screen");
-  fast_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
-  fast_screen->translate(0, 0, -2.0);
+  auto warp_navigation = graph.add_node<gua::node::TransformNode>("/navigation", "warp");
+
+  auto fast_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "fast_screen");
+  auto fast_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "fast_cam");
+  fast_screen->data.set_size(gua::math::vec2(3, 2));
+  fast_screen->translate(0, 1.7, -1.6);
+  fast_cam->translate(0, 1.7, 1.6);
   fast_cam->config.set_resolution(resolution);
-  fast_cam->config.set_screen_path("/fast_cam/fast_screen");
+  fast_cam->config.set_screen_path("/navigation/warp/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
   fast_cam->config.set_far_clip(slow_cam->config.get_far_clip()*1.5);
-  fast_cam->config.set_near_clip(0.01f);
+  fast_cam->config.set_near_clip(0.1f);
 
   auto tex_quad_pass(std::make_shared<gua::TexturedQuadPassDescription>());
   auto light_pass(std::make_shared<gua::LightVisibilityPassDescription>());
@@ -267,6 +282,18 @@ int main(int argc, char** argv) {
 
   auto stats = std::make_shared<gua::GuiResource>();
   auto stats_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("stats_quad");
+
+  auto mouse = std::make_shared<gua::GuiResource>();
+  auto mouse_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("mouse_quad");
+  mouse->init("mouse", "asset://gua/data/gui/mouse.html", gua::math::vec2ui(50, 50));
+  mouse_quad->data.texture() = "mouse";
+  mouse_quad->data.size() = gua::math::vec2ui(50, 50);
+  mouse_quad->data.anchor() = gua::math::vec2(-1.f, -1.f);
+
+  gua::Interface::instance()->on_cursor_change.connect([&](gua::Cursor pointer){
+    mouse->call_javascript("set_active", pointer == gua::Cursor::HAND);
+    return true;
+  });
 
   // right side gui ----------------------------------------------------------
   gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 750));
@@ -349,7 +376,7 @@ int main(int argc, char** argv) {
       res_pass->set_enable_for_right_eye(false);
       grid_pass->set_enable_for_right_eye(false);
       render_grid_pass->set_enable_for_right_eye(false);
-      window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+      window->config.set_stereo_mode(power_wall ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
     } else if (callback == "set_view_mono") {
       slow_cam->set_pipeline_description(normal_pipe);
       slow_cam->config.set_enable_stereo(false);
@@ -364,7 +391,7 @@ int main(int argc, char** argv) {
       res_pass->set_enable_for_right_eye(true);
       grid_pass->set_enable_for_right_eye(true);
       render_grid_pass->set_enable_for_right_eye(true);
-      window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+      window->config.set_stereo_mode(power_wall ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
     } else if (callback == "set_split_threshold") {
       std::stringstream str(params[0]);
       float split_threshold;
@@ -512,6 +539,7 @@ int main(int argc, char** argv) {
   stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
 
   graph.add_node("/", stats_quad);
+  graph.add_node("/", mouse_quad);
 
 
   // ---------------------------------------------------------------------------
@@ -519,12 +547,15 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------------
 
   window->config.set_fullscreen_mode(fullscreen);
+  window->cursor_mode(gua::GlfwWindow::CursorMode::HIDDEN);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-    resolution = new_size;
-    window->config.set_resolution(new_size);
-    slow_cam->config.set_resolution(new_size);
-    slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
-    fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+    if (!power_wall) {
+      resolution = new_size;
+      window->config.set_resolution(new_size);
+      slow_cam->config.set_resolution(new_size);
+      slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+      fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+    }
   });
   window->on_button_press.connect([&](int key, int action, int mods) {
     gui->inject_mouse_button(gua::Button(key), action, mods);
@@ -552,6 +583,7 @@ int main(int argc, char** argv) {
     }
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
+    mouse_quad->data.offset() = pos + gua::math::vec2i(-5, -45);
     gua::math::vec2 hit_pos;
     if (gui_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
       gui->inject_mouse_position_relative(hit_pos);
@@ -567,12 +599,22 @@ int main(int argc, char** argv) {
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(object_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-  window->config.set_size(resolution);
+  window->config.set_size(power_wall ? gua::math::vec2ui(1920*2, 1200) : resolution);
+  window->config.set_right_position(power_wall ? gua::math::vec2ui(1920, 0) : gua::math::vec2ui(0, 0));
   window->config.set_resolution(resolution);
   window->config.set_enable_vsync(false);
   gua::WindowDatabase::instance()->add("window", window);
   window->open();
 
+  // tracking ------------------------------------------------------------------
+  scm::inp::tracker::target_container tracking_targets_;
+  tracking_targets_.insert(scm::inp::tracker::target_container::value_type(5, scm::inp::target(5)));
+
+  scm::inp::art_dtrack* dtrack(new scm::inp::art_dtrack(5000));
+  if (!dtrack->initialize()) {
+    std::cerr << std::endl << "Tracking System Fault" << std::endl;
+    return 1;
+  }
 
   // render setup --------------------------------------------------------------
   gua::Renderer renderer;
@@ -587,6 +629,18 @@ int main(int argc, char** argv) {
 
     gua::Interface::instance()->update();
 
+    // if (power_wall) {
+      dtrack->update(tracking_targets_);
+      auto t = tracking_targets_.find(5)->second.transform();
+      t[12] /= 1000.f;
+      t[13] /= 1000.f;
+      t[14] /= 1000.f;
+
+      slow_cam->set_transform(gua::math::mat4(t));
+      fast_cam->set_transform(gua::math::mat4(t));
+    // }
+
+
     nav.update();
     warp_nav.update();
 
@@ -594,8 +648,8 @@ int main(int argc, char** argv) {
                                                               gua::math::float_t(object_trackball.shifty()),
                                                               gua::math::float_t(object_trackball.distance())) * gua::math::mat4(object_trackball.rotation());
 
-    slow_cam->set_transform(gua::math::mat4(nav.get_transform()));
-    fast_cam->set_transform(gua::math::mat4(nav.get_transform())* gua::math::mat4(warp_nav.get_transform()));
+    navigation->set_transform(gua::math::mat4(nav.get_transform()));
+    warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
     transform->set_transform(modelmatrix);
     if (ctr++ % 100 == 0) {
 
