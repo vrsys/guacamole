@@ -565,6 +565,12 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   
   ////////////////////////////////////////////////////////////////////////////////
 
+  RenderContext& Pipeline::get_context() {
+    return context_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
   RenderContext const& Pipeline::get_context() const {
     return context_;
   }
