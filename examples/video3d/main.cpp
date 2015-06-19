@@ -79,8 +79,8 @@ int main(int argc, char** argv) {
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  screen->translate(0, 0, 1.0);
-
+  screen->translate(0, 0, 1.0); 
+   
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
