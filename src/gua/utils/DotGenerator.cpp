@@ -30,7 +30,7 @@
 #include <gua/node/ScreenNode.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/node/TexturedQuadNode.hpp>
-#if GUACAMOLE_ENABLE_PHYSICS
+#ifdef GUACAMOLE_ENABLE_PHYSICS
 #include <gua/physics/RigidBodyNode.hpp>
 #include <gua/physics/CollisionShapeNode.hpp>
 #endif

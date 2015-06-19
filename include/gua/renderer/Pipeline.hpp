@@ -103,6 +103,7 @@ public:
 
   PipelineViewState const&           current_viewstate() const;
 
+  RenderContext&                     get_context();
   RenderContext const&               get_context() const;
   LightTable&                        get_light_table();
 
