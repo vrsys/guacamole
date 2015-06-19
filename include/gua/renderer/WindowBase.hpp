@@ -30,6 +30,7 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/configuration_macro.hpp>
+#include <gua/events/Signal.hpp>
 
 // external headers
 #include <atomic>
@@ -58,6 +59,9 @@ class GUA_DLL WindowBase {
     CHECKER_EVEN,
     CHECKER_ODD
   };
+
+  events::Signal<> on_start_frame;
+  events::Signal<> on_finish_frame;
 
   /**
    * A description of a window.

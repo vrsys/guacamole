@@ -132,6 +132,8 @@ void Renderer::renderclient(Mailbox in) {
 
         window->rendering_fps = fpsc.fps;
 
+        window->on_start_frame.emit();
+
         if (cmd.serialized_cam->config.get_enable_stereo()) {
           auto img(pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs));
           if (img) window->display(img, true);
@@ -148,6 +150,8 @@ void Renderer::renderclient(Mailbox in) {
         // swap buffers
         window->finish_frame();
         ++(window->get_context()->framecount);
+
+        window->on_finish_frame.emit();
 
         fpsc.step();
       }

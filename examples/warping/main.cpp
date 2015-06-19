@@ -41,8 +41,15 @@ bool backface_culling       = true;
 bool manipulation_navigator = true;
 bool manipulation_camera    = false;
 bool manipulation_object    = false;
+bool latency_reduction      = true;
 
 bool power_wall = true;
+
+gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
+
+gua::math::mat4 current_warping_matrix_center(gua::math::mat4::identity());
+gua::math::mat4 current_warping_matrix_right(gua::math::mat4::identity());
+gua::math::mat4 current_warping_matrix_left(gua::math::mat4::identity());
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods) {
@@ -168,7 +175,7 @@ int main(int argc, char** argv) {
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
-  scene_root->scale(10);
+  scene_root->scale(20);
   auto sponza(loader.create_geometry_from_file("sponza", "/opt/3d_models/Sponza/sponza.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
@@ -211,8 +218,8 @@ int main(int argc, char** argv) {
   auto slow_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "slow_screen");
   auto slow_cam = graph.add_node<gua::node::CameraNode>("/navigation", "slow_cam");
   slow_screen->data.set_size(gua::math::vec2(3, 2));
-  slow_screen->translate(0, 1.7, -1.6);
-  slow_cam->translate(0, 1.7, 1.6);
+  slow_screen->translate(0, 1.8, -1.7);
+  slow_cam->translate(0, 1.8, 1.7);
   slow_cam->config.set_resolution(resolution);
   slow_cam->config.set_screen_path("/navigation/slow_screen");
   slow_cam->config.set_scene_graph_name("main_scenegraph");
@@ -225,8 +232,8 @@ int main(int argc, char** argv) {
   auto fast_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "fast_screen");
   auto fast_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "fast_cam");
   fast_screen->data.set_size(gua::math::vec2(3, 2));
-  fast_screen->translate(0, 1.7, -1.6);
-  fast_cam->translate(0, 1.7, 1.6);
+  fast_screen->translate(0, 1.8, -1.7);
+  fast_cam->translate(0, 1.8, 1.7);
   fast_cam->config.set_resolution(resolution);
   fast_cam->config.set_screen_path("/navigation/warp/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
@@ -271,7 +278,6 @@ int main(int argc, char** argv) {
   normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   normal_pipe->set_enable_abuffer(true);
 
-
   // ---------------------------------------------------------------------------
   // ----------------------------- setup gui -----------------------------------
   // ---------------------------------------------------------------------------
@@ -304,6 +310,7 @@ int main(int argc, char** argv) {
     gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
     gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
     gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
+    gui->add_javascript_getter("get_latency_reduction", [&](){ return std::to_string(latency_reduction);});
     gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
     gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
     gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
@@ -316,6 +323,7 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_depth_test");
     gui->add_javascript_callback("set_backface_culling");
     gui->add_javascript_callback("set_background");
+    gui->add_javascript_callback("set_latency_reduction");
     gui->add_javascript_callback("set_gbuffer_type_none");
     gui->add_javascript_callback("set_gbuffer_type_points");
     gui->add_javascript_callback("set_gbuffer_type_scaled_points");
@@ -412,6 +420,9 @@ int main(int argc, char** argv) {
       std::stringstream str(params[0]);
       str >> backface_culling;
       show_backfaces(transform);
+    } else if (callback == "set_latency_reduction") {
+      std::stringstream str(params[0]);
+      str >> latency_reduction;
     } else if (callback == "set_background") {
       std::stringstream str(params[0]);
       bool checked;
@@ -599,22 +610,76 @@ int main(int argc, char** argv) {
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(object_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-  window->config.set_size(power_wall ? gua::math::vec2ui(1920*2, 1200) : resolution);
-  window->config.set_right_position(power_wall ? gua::math::vec2ui(1920, 0) : gua::math::vec2ui(0, 0));
-  window->config.set_resolution(resolution);
+  if (power_wall) {
+    window->config.set_size(gua::math::vec2ui(1920*2, 1200));
+    window->config.set_right_position(gua::math::vec2ui(1920, 0));
+    window->config.set_right_resolution(gua::math::vec2ui(1780, 1185));
+    window->config.set_left_position(gua::math::vec2ui(140, 0));
+    window->config.set_left_resolution(gua::math::vec2ui(1780, 1185));
+  } else {
+    window->config.set_size(resolution);
+    window->config.set_resolution(resolution);
+  }
   window->config.set_enable_vsync(false);
   gua::WindowDatabase::instance()->add("window", window);
   window->open();
 
   // tracking ------------------------------------------------------------------
-  scm::inp::tracker::target_container tracking_targets_;
-  tracking_targets_.insert(scm::inp::tracker::target_container::value_type(5, scm::inp::target(5)));
+  warp_pass->supply_warp_matrix([&](gua::CameraMode mode){
+    if (latency_reduction) {
+      fast_cam->set_transform(current_tracking_matrix);
 
-  scm::inp::art_dtrack* dtrack(new scm::inp::art_dtrack(5000));
-  if (!dtrack->initialize()) {
-    std::cerr << std::endl << "Tracking System Fault" << std::endl;
-    return 1;
-  }
+      gua::Frustum frustum = fast_cam->get_rendering_frustum(graph, mode);
+      gua::math::mat4 t(frustum.get_projection() * frustum.get_view());
+      if (mode == gua::CameraMode::CENTER) {
+        current_warping_matrix_center = t;
+      } else if (mode == gua::CameraMode::LEFT) {
+        current_warping_matrix_left = t;
+      } else {
+        current_warping_matrix_right = t;
+      }
+    } 
+
+    if (mode == gua::CameraMode::CENTER) {
+      return gua::math::mat4f(current_warping_matrix_center);
+    } else if (mode == gua::CameraMode::LEFT) {
+      return gua::math::mat4f(current_warping_matrix_left);
+    } else {
+      return gua::math::mat4f(current_warping_matrix_right);
+    }
+  });
+
+  std::thread tracking_thread([&]() {
+    if (power_wall) {
+
+      scm::inp::tracker::target_container targets;
+      targets.insert(scm::inp::tracker::target_container::value_type(5, scm::inp::target(5)));
+      
+      scm::inp::art_dtrack* dtrack(new scm::inp::art_dtrack(5000));
+      if (!dtrack->initialize()) {
+        std::cerr << std::endl << "Tracking System Fault" << std::endl;
+        return;
+      }
+      while (true) {
+        dtrack->update(targets);
+        auto t = targets.find(5)->second.transform();
+        t[12] /= 1000.f; t[13] /= 1000.f; t[14] /= 1000.f;
+        current_tracking_matrix = t;
+      }
+    }
+  });
+
+  window->on_start_frame.connect([&](){
+    if (!latency_reduction) {
+      fast_cam->set_transform(current_tracking_matrix);
+      gua::Frustum frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+      current_warping_matrix_center = frustum.get_projection() * frustum.get_view();
+      frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::LEFT);
+      current_warping_matrix_left = frustum.get_projection() * frustum.get_view();
+      frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
+      current_warping_matrix_right = frustum.get_projection() * frustum.get_view();
+    }
+  });
 
   // render setup --------------------------------------------------------------
   gua::Renderer renderer;
@@ -629,30 +694,24 @@ int main(int argc, char** argv) {
 
     gua::Interface::instance()->update();
 
-    // if (power_wall) {
-      dtrack->update(tracking_targets_);
-      auto t = tracking_targets_.find(5)->second.transform();
-      t[12] /= 1000.f;
-      t[13] /= 1000.f;
-      t[14] /= 1000.f;
-
-      slow_cam->set_transform(gua::math::mat4(t));
-      fast_cam->set_transform(gua::math::mat4(t));
-    // }
-
+    slow_cam->set_transform(current_tracking_matrix);
 
     nav.update();
     warp_nav.update();
+
+    navigation->set_transform(gua::math::mat4(nav.get_transform()));
+    warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
+
+    gua::Frustum frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
 
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(object_trackball.shiftx()),
                                                               gua::math::float_t(object_trackball.shifty()),
                                                               gua::math::float_t(object_trackball.distance())) * gua::math::mat4(object_trackball.rotation());
 
-    navigation->set_transform(gua::math::mat4(nav.get_transform()));
-    warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
     transform->set_transform(modelmatrix);
-    if (ctr++ % 100 == 0) {
 
+
+    if (ctr++ % 100 == 0) {
       double trimesh_time(0);
       double gbuffer_warp_time(0);
       double abuffer_warp_time(0);
@@ -680,17 +739,6 @@ int main(int argc, char** argv) {
                            gbuffer_warp_time, abuffer_warp_time, gbuffer_primitives,
                            abuffer_primitives);
     }
-
-    gua::Frustum s_c = slow_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
-    gua::math::mat4 original_projection(scm::math::inverse(s_c.get_projection() * s_c.get_view()));
-
-    gua::Frustum t_c = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
-    gua::Frustum t_l = fast_cam->get_rendering_frustum(graph, gua::CameraMode::LEFT);
-    gua::Frustum t_r = fast_cam->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
-
-    warp_pass->warp_matrix(      gua::math::mat4f(t_c.get_projection() * t_c.get_view() * original_projection));
-    warp_pass->warp_matrix_left( gua::math::mat4f(t_l.get_projection() * t_l.get_view() * original_projection));
-    warp_pass->warp_matrix_right(gua::math::mat4f(t_r.get_projection() * t_r.get_view() * original_projection));
 
     window->process_events();
     if (window->should_close()) {

@@ -50,10 +50,6 @@ WarpPassDescription::WarpPassDescription()
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Custom;
-
-  uniforms["warp_matrix"] = scm::math::make_translation(0.f, 0.f, 0.f);
-  uniforms["warp_matrix_left"] = scm::math::make_translation(0.f, 0.f, 0.f);
-  uniforms["warp_matrix_right"] = scm::math::make_translation(0.f, 0.f, 0.f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,44 +67,16 @@ std::string const& WarpPassDescription::use_abuffer_from_window() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::warp_matrix(math::mat4f const& mat) {
-  uniforms["warp_matrix"] = mat;
+WarpPassDescription& WarpPassDescription::supply_warp_matrix(std::function<math::mat4f(CameraMode mode)> const& f) {
+  get_warp_matrix_ = f;
+  touch();
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::mat4f const& WarpPassDescription::warp_matrix() const {
-  auto uniform(uniforms.find("warp_matrix"));
-  return boost::get<math::mat4f>(uniform->second.data);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription& WarpPassDescription::warp_matrix_left(math::mat4f const& mat) {
-  uniforms["warp_matrix_left"] = mat;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-math::mat4f const& WarpPassDescription::warp_matrix_left() const {
-  auto uniform(uniforms.find("warp_matrix_left"));
-  return boost::get<math::mat4f>(uniform->second.data);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription& WarpPassDescription::warp_matrix_right(math::mat4f const& mat) {
-  uniforms["warp_matrix_right"] = mat;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-math::mat4f const& WarpPassDescription::warp_matrix_right() const {
-  auto uniform(uniforms.find("warp_matrix_right"));
-  return boost::get<math::mat4f>(uniform->second.data);
+std::function<math::mat4f(CameraMode mode)> const& WarpPassDescription::supply_warp_matrix() const {
+  return get_warp_matrix_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

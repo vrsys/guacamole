@@ -198,6 +198,7 @@
         init_checkbox("#depth_test", "depth_test");
         init_checkbox("#backface_culling", "backface_culling");
         init_checkbox("#background", "background");
+        init_checkbox("#latency_reduction", "latency_reduction");
 
         init_radio("#gbuffer_type_none", "gbuffer_type_none");
         init_radio("#gbuffer_type_points", "gbuffer_type_points");
@@ -302,6 +303,13 @@
                 <label>
                   <input id="background" type="checkbox" value="">
                   <span>Background</span>
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label>
+                  <input id="latency_reduction" type="checkbox" value="">
+                  <span>Latency Reduction</span>
                 </label>
               </div>
 

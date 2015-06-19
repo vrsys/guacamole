@@ -127,7 +127,9 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_, 1);
   }
 
-
+  // get warp matrix -----------------------------------------------------------
+  auto frustum(pipe.current_viewstate().frustum);
+  math::mat4f warp_matrix(description->supply_warp_matrix()(ctx.mode) * scm::math::inverse(gua::math::mat4f(frustum.get_projection() * frustum.get_view())));
 
   // ---------------------------------------------------------------------------
   // --------------------------------- warp gbuffer ----------------------------
@@ -142,12 +144,9 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   if (description->gbuffer_warp_mode() != WarpPassDescription::GBUFFER_NONE) {
     warp_gbuffer_program_->use(ctx);
-    pipe.bind_gbuffer_input(warp_gbuffer_program_);
+    warp_gbuffer_program_->apply_uniform(ctx, "warp_matrix", warp_matrix);
 
-    std::string warp_matrix("warp_matrix");
-    if (ctx.mode == CameraMode::LEFT) warp_matrix = "warp_matrix_left";
-    if (ctx.mode == CameraMode::RIGHT) warp_matrix = "warp_matrix_right";
-    warp_gbuffer_program_->apply_uniform(ctx, "warp_matrix", desc.uniforms.find(warp_matrix)->second);
+    pipe.bind_gbuffer_input(warp_gbuffer_program_);
 
     if (description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
         description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
@@ -186,12 +185,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   if (description->abuffer_warp_mode() != WarpPassDescription::ABUFFER_NONE) {
     warp_abuffer_program_->use(ctx);
-
-    std::string warp_matrix("warp_matrix");
-    if (ctx.mode == CameraMode::LEFT) warp_matrix = "warp_matrix_left";
-    if (ctx.mode == CameraMode::RIGHT) warp_matrix = "warp_matrix_right";
-    // std::cout << warp_matrix << " " <<  boost::get<math::mat4f>(desc.uniforms.find(warp_matrix)->second.data) << std::endl;
-    warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", desc.uniforms.find(warp_matrix)->second);
+    warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", warp_matrix);
 
     ABuffer a_buffer;
     a_buffer.allocate_shared(ctx);

@@ -76,14 +76,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& abuffer_warp_mode(ABufferWarpMode abuffer_warp_mode);
   ABufferWarpMode abuffer_warp_mode() const;
 
-  WarpPassDescription& warp_matrix(math::mat4f const& mat);
-  math::mat4f const& warp_matrix() const;
-
-  WarpPassDescription& warp_matrix_left(math::mat4f const& mat);
-  math::mat4f const& warp_matrix_left() const;
-
-  WarpPassDescription& warp_matrix_right(math::mat4f const& mat);
-  math::mat4f const& warp_matrix_right() const;
+  WarpPassDescription& supply_warp_matrix(std::function<math::mat4f(CameraMode mode)> const& f);
+  std::function<math::mat4f(CameraMode mode)> const& supply_warp_matrix() const;
 
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
@@ -100,9 +94,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   GBufferWarpMode gbuffer_warp_mode_;
   ABufferWarpMode abuffer_warp_mode_;
 
-  math::mat4f warp_matrix_;
-  math::mat4f warp_matrix_left_;
-  math::mat4f warp_matrix_right_;
+  std::function<math::mat4f(CameraMode mode)> get_warp_matrix_;
 };
 
 }
