@@ -20,7 +20,7 @@ layout(location=2) in vec2 gua_in_texcoord;
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
 
-  gua_position   = vec3(0);
+  gua_world_position = vec3(0);
   gua_normal     = vec3(0);
   gua_tangent    = vec3(0);
   gua_bitangent  = vec3(0);

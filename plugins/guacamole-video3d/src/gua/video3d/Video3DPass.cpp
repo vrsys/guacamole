@@ -34,6 +34,7 @@ Video3DPassDescription::Video3DPassDescription()
 
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
+  enable_for_shadows_ = true;
   rendermode_ = RenderMode::Custom;
 }
 
