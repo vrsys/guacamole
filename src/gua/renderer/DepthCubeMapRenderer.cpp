@@ -32,7 +32,7 @@
 
 #include <scm/core/math/math.h>
 
-#define RESOLUTION 16 
+#define RESOLUTION 64 
 
 namespace gua {
 
@@ -63,8 +63,6 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
 
   pipe.begin_gpu_query(ctx, gpu_query_name);
   pipe.begin_cpu_query(cpu_query_name);
-
-  bool write_depth = true;
 
   pipe.generate_depth_cubemap(RESOLUTION);
 
