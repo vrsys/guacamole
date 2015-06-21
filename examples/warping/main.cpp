@@ -35,21 +35,15 @@
 #include <gua/gui.hpp>
 
 #define COUNT 6
+#define POWER_WALL false
 
 bool depth_test             = true;
 bool backface_culling       = true;
 bool manipulation_navigator = true;
 bool manipulation_camera    = false;
 bool manipulation_object    = false;
-bool latency_reduction      = true;
-
-bool power_wall = true;
 
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
-
-gua::math::mat4 current_warping_matrix_center(gua::math::mat4::identity());
-gua::math::mat4 current_warping_matrix_right(gua::math::mat4::identity());
-gua::math::mat4 current_warping_matrix_left(gua::math::mat4::identity());
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods) {
@@ -88,7 +82,7 @@ int main(int argc, char** argv) {
   // auto resolution = gua::math::vec2ui(1600, 900);
   // auto resolution = gua::math::vec2ui(1280, 768);
 
-  if (power_wall) {
+  if (POWER_WALL) {
     fullscreen = true;
     resolution = gua::math::vec2ui(1920, 1200);
   }
@@ -115,7 +109,7 @@ int main(int argc, char** argv) {
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SUN);
   light->data.set_brightness(4.f);
-  light->data.set_shadow_cascaded_splits({0.1f, 0.6f, 1.5f, 6.f});
+  light->data.set_shadow_cascaded_splits({0.1f, 2.f, 8.f, 20.f});
   light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
   light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
   light->data.set_max_shadow_dist(20.0f);
@@ -310,7 +304,6 @@ int main(int argc, char** argv) {
     gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
     gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
     gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
-    gui->add_javascript_getter("get_latency_reduction", [&](){ return std::to_string(latency_reduction);});
     gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
     gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
     gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
@@ -323,7 +316,6 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_depth_test");
     gui->add_javascript_callback("set_backface_culling");
     gui->add_javascript_callback("set_background");
-    gui->add_javascript_callback("set_latency_reduction");
     gui->add_javascript_callback("set_gbuffer_type_none");
     gui->add_javascript_callback("set_gbuffer_type_points");
     gui->add_javascript_callback("set_gbuffer_type_scaled_points");
@@ -384,7 +376,7 @@ int main(int argc, char** argv) {
       res_pass->set_enable_for_right_eye(false);
       grid_pass->set_enable_for_right_eye(false);
       render_grid_pass->set_enable_for_right_eye(false);
-      window->config.set_stereo_mode(power_wall ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
+      window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
     } else if (callback == "set_view_mono") {
       slow_cam->set_pipeline_description(normal_pipe);
       slow_cam->config.set_enable_stereo(false);
@@ -399,7 +391,7 @@ int main(int argc, char** argv) {
       res_pass->set_enable_for_right_eye(true);
       grid_pass->set_enable_for_right_eye(true);
       render_grid_pass->set_enable_for_right_eye(true);
-      window->config.set_stereo_mode(power_wall ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
+      window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
     } else if (callback == "set_split_threshold") {
       std::stringstream str(params[0]);
       float split_threshold;
@@ -420,9 +412,6 @@ int main(int argc, char** argv) {
       std::stringstream str(params[0]);
       str >> backface_culling;
       show_backfaces(transform);
-    } else if (callback == "set_latency_reduction") {
-      std::stringstream str(params[0]);
-      str >> latency_reduction;
     } else if (callback == "set_background") {
       std::stringstream str(params[0]);
       bool checked;
@@ -560,7 +549,7 @@ int main(int argc, char** argv) {
   window->config.set_fullscreen_mode(fullscreen);
   window->cursor_mode(gua::GlfwWindow::CursorMode::HIDDEN);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-    if (!power_wall) {
+    if (!POWER_WALL) {
       resolution = new_size;
       window->config.set_resolution(new_size);
       slow_cam->config.set_resolution(new_size);
@@ -610,7 +599,7 @@ int main(int argc, char** argv) {
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(object_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-  if (power_wall) {
+  if (POWER_WALL) {
     window->config.set_size(gua::math::vec2ui(1920*2, 1200));
     window->config.set_right_position(gua::math::vec2ui(1920, 0));
     window->config.set_right_resolution(gua::math::vec2ui(1780, 1185));
@@ -625,36 +614,30 @@ int main(int argc, char** argv) {
   window->open();
 
   // tracking ------------------------------------------------------------------
-  warp_pass->supply_warp_matrix([&](gua::CameraMode mode){
-    if (latency_reduction) {
+  warp_pass->get_warp_state([&](){
+    if (POWER_WALL) {
       fast_cam->set_transform(current_tracking_matrix);
-
-      gua::Frustum frustum = fast_cam->get_rendering_frustum(graph, mode);
-      gua::math::mat4 t(frustum.get_projection() * frustum.get_view());
-      if (mode == gua::CameraMode::CENTER) {
-        current_warping_matrix_center = t;
-      } else if (mode == gua::CameraMode::LEFT) {
-        current_warping_matrix_left = t;
-      } else {
-        current_warping_matrix_right = t;
-      }
-    } 
-
-    if (mode == gua::CameraMode::CENTER) {
-      return gua::math::mat4f(current_warping_matrix_center);
-    } else if (mode == gua::CameraMode::LEFT) {
-      return gua::math::mat4f(current_warping_matrix_left);
-    } else {
-      return gua::math::mat4f(current_warping_matrix_right);
     }
+
+    gua::WarpPassDescription::WarpState state;
+
+    gua::Frustum frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+    state.projection_view_center = frustum.get_projection() * frustum.get_view();
+
+    frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::LEFT);
+    state.projection_view_left = frustum.get_projection() * frustum.get_view();
+
+    frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
+    state.projection_view_right = frustum.get_projection() * frustum.get_view();
+
+    return state;
   });
 
   std::thread tracking_thread([&]() {
-    if (power_wall) {
-
+    if (POWER_WALL) {
       scm::inp::tracker::target_container targets;
       targets.insert(scm::inp::tracker::target_container::value_type(5, scm::inp::target(5)));
-      
+
       scm::inp::art_dtrack* dtrack(new scm::inp::art_dtrack(5000));
       if (!dtrack->initialize()) {
         std::cerr << std::endl << "Tracking System Fault" << std::endl;
@@ -666,18 +649,6 @@ int main(int argc, char** argv) {
         t[12] /= 1000.f; t[13] /= 1000.f; t[14] /= 1000.f;
         current_tracking_matrix = t;
       }
-    }
-  });
-
-  window->on_start_frame.connect([&](){
-    if (!latency_reduction) {
-      fast_cam->set_transform(current_tracking_matrix);
-      gua::Frustum frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
-      current_warping_matrix_center = frustum.get_projection() * frustum.get_view();
-      frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::LEFT);
-      current_warping_matrix_left = frustum.get_projection() * frustum.get_view();
-      frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
-      current_warping_matrix_right = frustum.get_projection() * frustum.get_view();
     }
   });
 
@@ -694,7 +665,9 @@ int main(int argc, char** argv) {
 
     gua::Interface::instance()->update();
 
-    slow_cam->set_transform(current_tracking_matrix);
+    if (POWER_WALL) {
+      slow_cam->set_transform(current_tracking_matrix);
+    }
 
     nav.update();
     warp_nav.update();

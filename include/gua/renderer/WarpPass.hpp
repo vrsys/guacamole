@@ -33,6 +33,18 @@ class Pipeline;
 class GUA_DLL WarpPassDescription : public PipelinePassDescription {
  public:
 
+  struct WarpState {
+    math::mat4f projection_view_center;
+    math::mat4f projection_view_right;
+    math::mat4f projection_view_left;
+
+    math::mat4f const& get(CameraMode mode) {
+      if (mode == CameraMode::LEFT)  return projection_view_left;
+      if (mode == CameraMode::RIGHT) return projection_view_right;
+      return projection_view_center;
+    }
+  };
+
   enum GBufferWarpMode {
     GBUFFER_NONE,
     GBUFFER_POINTS,
@@ -76,8 +88,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& abuffer_warp_mode(ABufferWarpMode abuffer_warp_mode);
   ABufferWarpMode abuffer_warp_mode() const;
 
-  WarpPassDescription& supply_warp_matrix(std::function<math::mat4f(CameraMode mode)> const& f);
-  std::function<math::mat4f(CameraMode mode)> const& supply_warp_matrix() const;
+  WarpPassDescription& get_warp_state(std::function<WarpState()> const& f);
+  std::function<WarpState()> const& get_warp_state() const;
 
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
@@ -94,7 +106,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   GBufferWarpMode gbuffer_warp_mode_;
   ABufferWarpMode abuffer_warp_mode_;
 
-  std::function<math::mat4f(CameraMode mode)> get_warp_matrix_;
+  std::function<WarpState()> get_warp_state_;
 };
 
 }

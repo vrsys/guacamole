@@ -129,7 +129,10 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   // get warp matrix -----------------------------------------------------------
   auto frustum(pipe.current_viewstate().frustum);
-  math::mat4f warp_matrix(description->supply_warp_matrix()(ctx.mode) * scm::math::inverse(gua::math::mat4f(frustum.get_projection() * frustum.get_view())));
+  if (ctx.mode != CameraMode::RIGHT) {
+    cached_warp_state_ = description->get_warp_state()();
+  }
+  math::mat4f warp_matrix(cached_warp_state_.get(ctx.mode) * scm::math::inverse(gua::math::mat4f(frustum.get_projection() * frustum.get_view())));
 
   // ---------------------------------------------------------------------------
   // --------------------------------- warp gbuffer ----------------------------

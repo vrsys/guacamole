@@ -67,16 +67,16 @@ std::string const& WarpPassDescription::use_abuffer_from_window() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::supply_warp_matrix(std::function<math::mat4f(CameraMode mode)> const& f) {
-  get_warp_matrix_ = f;
+WarpPassDescription& WarpPassDescription::get_warp_state(std::function<WarpPassDescription::WarpState()> const& f) {
+  get_warp_state_ = f;
   touch();
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::function<math::mat4f(CameraMode mode)> const& WarpPassDescription::supply_warp_matrix() const {
-  return get_warp_matrix_;
+std::function<WarpPassDescription::WarpState()> const& WarpPassDescription::get_warp_state() const {
+  return get_warp_state_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

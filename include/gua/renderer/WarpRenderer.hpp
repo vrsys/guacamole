@@ -25,6 +25,7 @@
 #include <map>
 #include <unordered_map>
 
+#include <gua/renderer/WarpPass.hpp>
 #include <gua/platform.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 
@@ -47,6 +48,8 @@ class WarpRenderer {
   void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
  private:
+
+  WarpPassDescription::WarpState   cached_warp_state_;
 
   scm::gl::vertex_array_ptr        empty_vao_;
   scm::gl::rasterizer_state_ptr    points_;
