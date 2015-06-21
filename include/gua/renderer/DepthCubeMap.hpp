@@ -46,6 +46,7 @@ class DepthCubeMap : public RenderTarget {
   virtual void set_viewport(RenderContext const& context) override;
   void set_viewport_offset(math::vec2f const& offset);
   void set_viewport_size(math::vec2f const& size);
+  math::vec2f get_viewport_size();
 
   virtual void remove_buffers(RenderContext const& ctx) override;
 

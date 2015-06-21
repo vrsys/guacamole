@@ -32,13 +32,13 @@
 
 #include <scm/core/math/math.h>
 
-#define RESOLUTION 64 
-
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
 DepthCubeMapRenderer::DepthCubeMapRenderer()
+  : mode_(DepthCubeMapRenderer::ONE_SIDE_PER_FRAME),
+    face_counter_(0)
 {
 }
 
@@ -63,8 +63,22 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
 
   pipe.begin_gpu_query(ctx, gpu_query_name);
   pipe.begin_cpu_query(cpu_query_name);
-
-  pipe.generate_depth_cubemap(RESOLUTION);
+  
+  if (mode_ == DepthCubeMapRenderer::COMPLETE){
+    pipe.reset_depth_cubemap();
+    pipe.generate_depth_cubemap_face(0);
+    pipe.generate_depth_cubemap_face(1);
+    pipe.generate_depth_cubemap_face(2);
+    pipe.generate_depth_cubemap_face(3);
+    pipe.generate_depth_cubemap_face(4);
+    pipe.generate_depth_cubemap_face(5);
+  } else if (mode_ == DepthCubeMapRenderer::ONE_SIDE_PER_FRAME) {
+    if (face_counter_ == 0){
+      pipe.reset_depth_cubemap();
+    }
+    pipe.generate_depth_cubemap_face(face_counter_);
+    face_counter_ = (face_counter_+1)%6;
+  }
 
   pipe.end_gpu_query(ctx, gpu_query_name);
   pipe.end_cpu_query(cpu_query_name);
