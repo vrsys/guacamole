@@ -22,9 +22,6 @@
 #ifndef GUA_DEPTH_CUBEMAP_RENDERER_HPP
 #define GUA_DEPTH_CUBEMAP_RENDERER_HPP
 
-#include <map>
-#include <unordered_map>
-
 #include <gua/platform.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 
@@ -32,13 +29,17 @@
 
 namespace gua {
 
-class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
 class DepthCubeMapRenderer {
 
  public:
+
+  enum Mode {
+    COMPLETE            = 0,
+    ONE_SIDE_PER_FRAME  = 1
+  };
 
   DepthCubeMapRenderer();
   virtual ~DepthCubeMapRenderer() {}
@@ -51,12 +52,13 @@ class DepthCubeMapRenderer {
 
  private:
 
-  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
-  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
+  Mode                            mode_;
+  unsigned                        face_counter_;
 
-  std::vector<ShaderProgramStage>                                     program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
-  SubstitutionMap                                                     global_substitution_map_;
+  scm::gl::rasterizer_state_ptr   rs_cull_back_;
+  scm::gl::rasterizer_state_ptr   rs_cull_none_;
+
+  SubstitutionMap                 global_substitution_map_;
 };
 
 }

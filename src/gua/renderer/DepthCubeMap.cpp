@@ -92,6 +92,13 @@ void DepthCubeMap::set_viewport_size(math::vec2f const& size) {
   viewport_size_ = size;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+ 
+math::vec2f DepthCubeMap::get_viewport_size(){
+    return viewport_size_;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<Texture2D> const& DepthCubeMap::get_depth_buffer() const {
@@ -129,10 +136,10 @@ void DepthCubeMap::retrieve_data(RenderContext const& ctx, float near_clip, floa
     }
   }  
 
-  int side(0);
+  int side(1);
   int x(32);
   int y(32);
-  std::cout << raw_depth_data_[y*size*6 + x + side * size] << std::endl;
+  // std::cout << raw_depth_data_[y*size*6 + x + side * size] << std::endl;
   std::cout << world_depth_data_[y*size*6 + x + side * size] << std::endl;
 
   // ASCII OUTPUT

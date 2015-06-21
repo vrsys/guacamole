@@ -101,7 +101,8 @@ public:
     std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
   void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
-  void generate_depth_cubemap(unsigned resolution);
+  void generate_depth_cubemap_face(unsigned face);
+  void reset_depth_cubemap();
 
   PipelineViewState const&           current_viewstate() const;
 
