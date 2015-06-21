@@ -390,6 +390,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     };
 
     for (unsigned i(0); i < screen_transforms.size(); ++i) {
+    // for (unsigned i(0); i < 1; ++i) {
 
       math::mat4 transform(current_viewstate_.camera.transform * screen_transforms[i]);
       auto frustum(
@@ -446,7 +447,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     // TESTTESTTEST
     if (context_.framecount % 60 == 0) {
-      depth_cube_map_->retrieve_data(context_);
+      depth_cube_map_->retrieve_data(context_, current_viewstate_.camera.config.near_clip(), current_viewstate_.camera.config.far_clip());
     }
 
   }
