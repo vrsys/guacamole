@@ -13,6 +13,7 @@ LINK_DIRECTORIES(${LIB_PATHS})
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}/include
                      ${AWESOMIUM_INCLUDE_DIR}
+                     ${GUACAMOLE_PLOD_INCLUDE_DIR}
                      ${GUACAMOLE_GUI_INCLUDE_DIR}
 )
 
@@ -20,9 +21,9 @@ ADD_EXECUTABLE( ${_EXE_NAME}
     ${EXAMPLE_SRC}
 )
 
-ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui)
+ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui guacamole-plod)
 
-LIST(APPEND LIBS guacamole-gui guacamole udev)
+LIST(APPEND LIBS guacamole-gui guacamole-plod guacamole udev)
 
 IF (MSVC)
   TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}

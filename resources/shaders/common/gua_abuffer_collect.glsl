@@ -108,7 +108,7 @@ void submit_fragment(float depth)
 
 
     // // always abuffer
-    // #if @_adaptive_abuffer@ == 1
+    // #if adaptive_abuffer@ == 1
     //   uint is_surface = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(gl_FragCoord.xy/16), 3).x;
     //   if ((is_surface & 1) == 0) {
     //     abuf_insert(depth);

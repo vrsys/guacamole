@@ -54,6 +54,7 @@ examples/smooth_lighting/example-smooth_lighting
 examples/clipping/clipping
 examples/oit_demo/example-oit_demo
 examples/warping/example-warping
+examples/warping/data/objects/car
 
 
 install

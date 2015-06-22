@@ -27,7 +27,10 @@
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
-
+#include <gua/renderer/PLODPass.hpp>
+#include <gua/renderer/PLODLoader.hpp>
+#include <gua/node/PLODNode.hpp>
+ 
 #include <scm/input/tracking/art_dtrack.h>
 #include <scm/input/tracking/target.h>
 
@@ -160,6 +163,33 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(teapot);
 
+  // car --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "car");
+  auto car(loader.create_geometry_from_file("car", "data/objects/car/car.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  scene_root->scale(2);
+  scene_root->add_child(car);
+
+  for (auto& child: car->get_children()) {
+    auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(child));
+    if (casted) {
+      casted->get_material()->set_show_back_faces(true);
+      casted->get_material()->set_uniform("Metalness", 0.5f);
+      casted->get_material()->set_uniform("Roughness", 0.5f);
+    }
+  }
+
+  // pitoti --------------------------------------------------------------------
+  gua::PLODLoader plodloader;
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
+  auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/valley/sera_part_01.kdn", 
+  // auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P01-4_knn.kdn", 
+    gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+  scene_root->scale(30);
+  scene_root->add_child(pitoti);
+
   // bottle --------------------------------------------------------------------
   auto load_mat = [](std::string const& file){
     auto desc(std::make_shared<gua::MaterialShaderDescription>());
@@ -189,7 +219,7 @@ int main(int argc, char** argv) {
   auto clouds(std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("clouds", "data/objects/plane.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE)));
-  clouds->translate(0, 1, 0);
+  clouds->translate(0, 0.05, 0);
   clouds->get_material()->set_uniform("ColorMap", std::string("data/textures/clouds.png"));
   clouds->get_material()->set_uniform("Roughness", 1.f);
   clouds->get_material()->set_uniform("Metalness", 0.f);
@@ -225,6 +255,8 @@ int main(int argc, char** argv) {
     graph["/transform/one_oilrig"]->get_tags().add_tag("invisible");
     graph["/transform/textured_quads"]->get_tags().add_tag("invisible");
     graph["/transform/teapot"]->get_tags().add_tag("invisible");
+    graph["/transform/car"]->get_tags().add_tag("invisible");
+    graph["/transform/pitoti"]->get_tags().add_tag("invisible");
     graph["/transform/bottle"]->get_tags().add_tag("invisible");
     graph["/transform/mountains"]->get_tags().add_tag("invisible");
     graph["/transform/sphere"]->get_tags().add_tag("invisible");
@@ -239,6 +271,10 @@ int main(int argc, char** argv) {
       graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_teapot")
       graph["/transform/teapot"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_car")
+      graph["/transform/car"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_pitoti")
+      graph["/transform/pitoti"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_bottle")
       graph["/transform/bottle"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_mountains")
@@ -286,12 +322,12 @@ int main(int argc, char** argv) {
   auto grid_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
   auto render_grid_pass(std::make_shared<gua::RenderWarpGridPassDescription>());
   auto trimesh_pass(std::make_shared<gua::TriMeshPassDescription>());
+  auto plod_pass(std::make_shared<gua::PLODPassDescription>());
   auto res_pass(std::make_shared<gua::ResolvePassDescription>());
   res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
             background_texture("/opt/guacamole/resources/skymaps/cycles_island.jpg").
             background_color(gua::utils::Color3f(0, 0, 0)).
             ssao_enable(true).
-            environment_lighting(gua::utils::Color3f(0.05, 0.1, 0.2)).
             horizon_fade(0.2f).
             ssao_intensity(2.f).
             ssao_radius(5.f);
@@ -301,6 +337,7 @@ int main(int argc, char** argv) {
   auto warp_pipe = std::make_shared<gua::PipelineDescription>();
   warp_pipe->add_pass(trimesh_pass);
   warp_pipe->add_pass(tex_quad_pass);
+  warp_pipe->add_pass(plod_pass);
   warp_pipe->add_pass(light_pass);
   warp_pipe->add_pass(res_pass);
   warp_pipe->add_pass(grid_pass);
@@ -313,6 +350,7 @@ int main(int argc, char** argv) {
   auto normal_pipe = std::make_shared<gua::PipelineDescription>();
   normal_pipe->add_pass(trimesh_pass);
   normal_pipe->add_pass(tex_quad_pass);
+  normal_pipe->add_pass(plod_pass);
   normal_pipe->add_pass(light_pass);
   normal_pipe->add_pass(res_pass);
   normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
@@ -342,7 +380,7 @@ int main(int argc, char** argv) {
   });
 
   // right side gui ----------------------------------------------------------
-  gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 750));
+  gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 800));
 
   gui->on_loaded.connect([&]() {
     gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
@@ -381,6 +419,8 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_scene_many_oilrigs");
     gui->add_javascript_callback("set_scene_sponza");
     gui->add_javascript_callback("set_scene_teapot");
+    gui->add_javascript_callback("set_scene_pitoti");
+    gui->add_javascript_callback("set_scene_car");
     gui->add_javascript_callback("set_scene_bottle");
     gui->add_javascript_callback("set_scene_mountains");
     gui->add_javascript_callback("set_scene_sphere");
@@ -419,6 +459,7 @@ int main(int argc, char** argv) {
       slow_cam->config.set_enable_stereo(true);
       slow_cam->config.set_eye_dist(0.f);
       trimesh_pass->set_enable_for_right_eye(false);
+      plod_pass->set_enable_for_right_eye(false);
       tex_quad_pass->set_enable_for_right_eye(false);
       light_pass->set_enable_for_right_eye(false);
       res_pass->set_enable_for_right_eye(false);
@@ -434,6 +475,7 @@ int main(int argc, char** argv) {
       slow_cam->config.set_enable_stereo(true);
       slow_cam->config.set_eye_dist(0.07f);
       trimesh_pass->set_enable_for_right_eye(true);
+      plod_pass->set_enable_for_right_eye(true);
       tex_quad_pass->set_enable_for_right_eye(true);
       light_pass->set_enable_for_right_eye(true);
       res_pass->set_enable_for_right_eye(true);
@@ -563,6 +605,8 @@ int main(int argc, char** argv) {
                callback == "set_scene_many_oilrigs" ||
                callback == "set_scene_sponza" ||
                callback == "set_scene_teapot" ||
+               callback == "set_scene_pitoti" ||
+               callback == "set_scene_car" ||
                callback == "set_scene_bottle" ||
                callback == "set_scene_mountains" ||
                callback == "set_scene_sphere" ||
@@ -572,7 +616,7 @@ int main(int argc, char** argv) {
   });
 
   gui_quad->data.texture() = "gui";
-  gui_quad->data.size() = gua::math::vec2ui(330, 750);
+  gui_quad->data.size() = gua::math::vec2ui(330, 800);
   gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
   graph.add_node("/", gui_quad);

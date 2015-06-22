@@ -190,7 +190,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   bind_camera_uniform_block(0);
 
   current_viewstate_.target = gbuffer_.get();
-  // gbuffer_->clear(context_, 1.f, 1);
+  
 
   // process all passes
   for (unsigned i(0); i < passes_.size(); ++i) {
@@ -828,6 +828,9 @@ void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::clear_frame_cache() {
+
+  gbuffer_->clear(context_, 1.f, 1);
+
   if (!shadow_map_res_) {
     shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
   }
