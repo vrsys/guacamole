@@ -48,9 +48,9 @@ class GUA_DLL PipelinePassDescription {
   bool get_enable_for_right_eye() const { return enable_for_right_eye_; }
   bool get_enable_for_cyclops_eye() const { return enable_for_cyclops_eye_; }
 
-  void set_enable_for_left_eye(bool val) { enable_for_left_eye_ = val; }
-  void set_enable_for_right_eye(bool val) { enable_for_right_eye_ = val; }
-  void set_enable_for_cyclops_eye(bool val) { enable_for_cyclops_eye_ = val; }
+  void set_enable_for_left_eye(bool val) { enable_for_left_eye_ = val; touch(); }
+  void set_enable_for_right_eye(bool val) { enable_for_right_eye_ = val; touch(); }
+  void set_enable_for_cyclops_eye(bool val) { enable_for_cyclops_eye_ = val; touch(); }
 
   void touch();
   std::string const& name() const;

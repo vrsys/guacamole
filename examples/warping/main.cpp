@@ -22,7 +22,6 @@
 #include <functional>
 
 #include <gua/guacamole.hpp>
-#include "Navigator.hpp"
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
@@ -34,8 +33,10 @@
 
 #include <gua/gui.hpp>
 
+#include "Navigator.hpp"
+
 #define COUNT 6
-#define POWER_WALL false
+#define POWER_WALL true
 
 bool depth_test             = true;
 bool backface_culling       = true;
@@ -78,13 +79,13 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 int main(int argc, char** argv) {
   bool fullscreen = (argc == 2);
 
-  auto resolution = gua::math::vec2ui(1920, 1080);
+  auto resolution = gua::math::vec2ui(1920, 1200);
   // auto resolution = gua::math::vec2ui(1600, 900);
   // auto resolution = gua::math::vec2ui(1280, 768);
 
   if (POWER_WALL) {
     fullscreen = true;
-    resolution = gua::math::vec2ui(1920, 1200);
+    resolution = gua::math::vec2ui(1780, 1185);
   }
 
   // add mouse interaction
@@ -212,8 +213,8 @@ int main(int argc, char** argv) {
   auto slow_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "slow_screen");
   auto slow_cam = graph.add_node<gua::node::CameraNode>("/navigation", "slow_cam");
   slow_screen->data.set_size(gua::math::vec2(3, 2));
-  slow_screen->translate(0, 1.8, -1.7);
-  slow_cam->translate(0, 1.8, 1.7);
+  slow_screen->translate(0, 1.5, -1.7);
+  slow_cam->translate(0, 1.5, 1.7);
   slow_cam->config.set_resolution(resolution);
   slow_cam->config.set_screen_path("/navigation/slow_screen");
   slow_cam->config.set_scene_graph_name("main_scenegraph");
@@ -226,8 +227,8 @@ int main(int argc, char** argv) {
   auto fast_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "fast_screen");
   auto fast_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "fast_cam");
   fast_screen->data.set_size(gua::math::vec2(3, 2));
-  fast_screen->translate(0, 1.8, -1.7);
-  fast_cam->translate(0, 1.8, 1.7);
+  fast_screen->translate(0, 1.5, -1.7);
+  fast_cam->translate(0, 1.5, 1.7);
   fast_cam->config.set_resolution(resolution);
   fast_cam->config.set_screen_path("/navigation/warp/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
