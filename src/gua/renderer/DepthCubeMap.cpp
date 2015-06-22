@@ -46,12 +46,14 @@ DepthCubeMap::DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolut
   state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
   state._max_anisotropy = 16;
 
-  depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D16, 1, state);
+  depth_buffer_ = std::make_shared<TextureDistance>(resolution.x, resolution.y, scm::gl::FORMAT_D16, 1, state);
+
+  TextureDatabase::instance()->add("DepthCubeMapTestTexture", std::dynamic_pointer_cast<TextureDistance>(depth_buffer_));
 
   int pixel_size = viewport_size_.x * viewport_size_.y * 6; 
   int byte_size = pixel_size * sizeof(uint16_t); 
 
-  raw_depth_data_ = (uint16_t*)malloc(byte_size);
+  // raw_depth_data_ = (uint16_t*)malloc(byte_size);
   world_depth_data_.reserve(pixel_size);
 
   fbo_ = ctx.render_device->create_frame_buffer();
@@ -121,33 +123,16 @@ void DepthCubeMap::remove_buffers(RenderContext const& ctx) {
 
 void DepthCubeMap::retrieve_data(RenderContext const& ctx, float near_clip, float far_clip){
   int size = (int)viewport_size_.x;
-  int pixel_size = size * size * 6; 
+
+  world_depth_data_ = std::dynamic_pointer_cast<TextureDistance>(depth_buffer_)->retrieve_data(ctx, near_clip, far_clip, world_depth_data_);
   
-  auto texture_handle = depth_buffer_->get_buffer(ctx);
-  ctx.render_context->retrieve_texture_data(texture_handle, 0, raw_depth_data_);
-
-  for (int pixel = 0; pixel < pixel_size; ++pixel){
-    if (raw_depth_data_[pixel] == 65535){
-      world_depth_data_[pixel] = -1.0;
-    }else{
-      // world_depth_data_[pixel] = (float)raw_depth_data_[pixel] / 65535.0;
-      float z_n = (float)raw_depth_data_[pixel] / 65535.0;
-      world_depth_data_[pixel] = 2.0 * near_clip * far_clip / (far_clip + near_clip - z_n * (far_clip - near_clip));
-    }
-  }  
-
-  int side(1);
-  int x(32);
-  int y(32);
-  // std::cout << raw_depth_data_[y*size*6 + x + side * size] << std::endl;
-  std::cout << world_depth_data_[y*size*6 + x + side * size] << std::endl;
 
   // ASCII OUTPUT
-  // for (int side = 0; side < 1; side++){
+  // for (int side = 0; side < 6; side++){
   //   std::cout << "SIDE: " << side <<  std::endl;
   //   for (int i = 0; i<size; i++){
   //     for (int j = 0; j<size; j++){
-  //       if (raw_depth_data_[i*size*6 + j + side * size] == 65535)
+  //       if (world_depth_data_[i*size*6 + j + side * size] == -1.0f)
   //       {
   //         std::cout << "..";
   //       }
@@ -158,7 +143,7 @@ void DepthCubeMap::retrieve_data(RenderContext const& ctx, float near_clip, floa
   //     }
   //     std::cout << std::endl;
   //   }
-  // }  
+  // }
   // std::cout << "============================" << std::endl;
 }
 

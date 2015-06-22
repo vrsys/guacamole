@@ -37,7 +37,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 DepthCubeMapRenderer::DepthCubeMapRenderer()
-  : mode_(DepthCubeMapRenderer::ONE_SIDE_PER_FRAME),
+  : mode_(DepthCubeMapRenderer::COMPLETE),
     face_counter_(0)
 {
 }
