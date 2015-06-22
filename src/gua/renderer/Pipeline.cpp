@@ -447,9 +447,9 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     if (!depth_cube_map_) {
       depth_cube_map_ = std::make_shared<DepthCubeMap>(context_, math::vec2ui(map_width, viewport_size));;
     } else {
-      // if (context_.framecount % 60 == 0) {
+      if (context_.framecount % 60 == 0) {
         depth_cube_map_->retrieve_data(context_, current_viewstate_.camera.config.near_clip(), current_viewstate_.camera.config.far_clip());
-      // }
+      }
     }
 
 

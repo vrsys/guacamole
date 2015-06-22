@@ -19,53 +19,44 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_DEPTH_CUBEMAP_HPP
-#define GUA_DEPTH_CUBEMAP_HPP
+// class header
+#include <gua/renderer/TextureDistance.hpp>
 
 // guacamole headers
-#include <gua/renderer/RenderTarget.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/renderer/TextureDistance.hpp>
-#include <gua/utils/Mask.hpp>
+#include <gua/platform.hpp>
+#include <gua/utils/Logger.hpp>
+#include <gua/math/math.hpp>
+
+// external headers
+#include <scm/gl_util/data/imaging/texture_loader.h>
+#include <iostream>
 
 namespace gua {
 
+TextureDistance::TextureDistance(unsigned width,
+                 unsigned height,
+                 scm::gl::data_format color_format,
+                 unsigned mipmap_layers,
+                 scm::gl::sampler_state_desc const& state_descripton)
+  : Texture2D(width, height, color_format, mipmap_layers, state_descripton){
 
-class Pipeline;
-
-/**
- *
- */
-class DepthCubeMap : public RenderTarget {
- public:
-
-  DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolution);
-
-  virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;  
-  virtual void bind(RenderContext const& context, bool write_depth) override;
-
-  virtual void set_viewport(RenderContext const& context) override;
-  void set_viewport_offset(math::vec2f const& offset);
-  void set_viewport_size(math::vec2f const& size);
-  math::vec2f get_viewport_size();
-
-  virtual void remove_buffers(RenderContext const& ctx) override;
-
-  void retrieve_data(RenderContext const& ctx, float near_clip, float far_clip);
-
-  virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const override;
-
- private:
-  scm::gl::frame_buffer_ptr fbo_;
-  std::shared_ptr<Texture2D> depth_buffer_;
-  uint16_t* raw_depth_data_;
-  std::vector<float> world_depth_data_;
-  math::vec2f viewport_offset_;
-  math::vec2f viewport_size_;
-  std::shared_ptr<Texture2D> texture2D_ptr;
-
-};
-
+  int byte_size = height_ * width_ * sizeof(uint16_t); 
+  texture_data_ = (uint16_t*)malloc(byte_size);
 }
 
-#endif  // GUA_DEPTH_CUBEMAP_HPP
+
+std::vector<float> & TextureDistance::retrieve_data(RenderContext const& ctx, float near_clip, float far_clip, std::vector<float> & data){
+  ctx.render_context->retrieve_texture_data(get_buffer(ctx), 0, texture_data_);
+  unsigned size = height_*width_;
+  for (int texel = 0; texel < size; ++texel){
+    if (texture_data_[texel] == 65535){
+      data[texel] = -1.0;
+    }else{
+      float z_n = (float)texture_data_[texel] / 65535.0;
+      data[texel] = 2.0 * near_clip * far_clip / (far_clip + near_clip - z_n * (far_clip - near_clip));
+    }
+  } 
+  return data;
+}
+
+}
