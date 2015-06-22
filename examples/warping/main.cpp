@@ -125,11 +125,11 @@ int main(int argc, char** argv) {
   auto add_oilrig = [&](int x, int y, int c, std::string const& parent) {
     auto t = graph.add_node<gua::node::TransformNode>(parent, "t");
     t->translate((x - c*0.5 + 0.5)/1.5, (y - c*0.5 + 0.8)/2, 0);
-    auto teapot(loader.create_geometry_from_file("teapot", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    auto oilrig(loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
-    t->add_child(teapot);
+    t->add_child(oilrig);
 
   };
 
@@ -160,6 +160,45 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(teapot);
 
+  // bottle --------------------------------------------------------------------
+  auto load_mat = [](std::string const& file){
+    auto desc(std::make_shared<gua::MaterialShaderDescription>());
+    desc->load_from_file(file);
+    auto shader(std::make_shared<gua::MaterialShader>(file, desc));
+    gua::MaterialShaderDatabase::instance()->add(shader);
+    return shader->make_new_material();
+  };
+
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "bottle");
+  auto mat_bottle(load_mat("../transparency/data/materials/Bottle.gmd"));
+  mat_bottle->set_uniform("ColorMap",     std::string("../transparency/data/objects/bottle/albedo.png"))
+             .set_uniform("RoughnessMap", std::string("../transparency/data/objects/bottle/roughness.jpg"))
+             .set_show_back_faces(true);
+
+  // Original bottle model is taken from http://www.sweethome3d->com (Licensed under Free Art License)
+  auto bottle(loader.create_geometry_from_file("bottle", "../transparency/data/objects/bottle/bottle.obj", mat_bottle,
+                                               gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  scene_root->add_child(bottle);
+
+  // mountains --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "mountains");
+  auto mountains(loader.create_geometry_from_file("mountains", "/home/rufu1194/Desktop/island/guacamole-restricted/vr_hyperspace/data/objects/terrain/lod0.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto clouds(std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("clouds", "data/objects/plane.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE)));
+  clouds->translate(0, 1, 0);
+  clouds->get_material()->set_uniform("ColorMap", std::string("data/textures/clouds.png"));
+  clouds->get_material()->set_uniform("Roughness", 1.f);
+  clouds->get_material()->set_uniform("Metalness", 0.f);
+  clouds->get_material()->set_show_back_faces(false);
+  clouds->set_shadow_mode(gua::ShadowMode::HIGH_QUALITY);
+  scene_root->scale(30);
+  scene_root->add_child(mountains);
+  scene_root->add_child(clouds);
+
   // spheres -------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sphere");
   auto sphere(loader.create_geometry_from_file("sphere", "data/objects/sphere.obj",
@@ -186,6 +225,8 @@ int main(int argc, char** argv) {
     graph["/transform/one_oilrig"]->get_tags().add_tag("invisible");
     graph["/transform/textured_quads"]->get_tags().add_tag("invisible");
     graph["/transform/teapot"]->get_tags().add_tag("invisible");
+    graph["/transform/bottle"]->get_tags().add_tag("invisible");
+    graph["/transform/mountains"]->get_tags().add_tag("invisible");
     graph["/transform/sphere"]->get_tags().add_tag("invisible");
 
     if (name == "set_scene_many_oilrigs")
@@ -198,6 +239,10 @@ int main(int argc, char** argv) {
       graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_teapot")
       graph["/transform/teapot"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_bottle")
+      graph["/transform/bottle"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_mountains")
+      graph["/transform/mountains"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_sphere")
       graph["/transform/sphere"]->get_tags().remove_tag("invisible");
   };
@@ -336,6 +381,8 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_scene_many_oilrigs");
     gui->add_javascript_callback("set_scene_sponza");
     gui->add_javascript_callback("set_scene_teapot");
+    gui->add_javascript_callback("set_scene_bottle");
+    gui->add_javascript_callback("set_scene_mountains");
     gui->add_javascript_callback("set_scene_sphere");
     gui->add_javascript_callback("set_scene_textured_quads");
     gui->add_javascript_callback("set_manipulation_navigator");
@@ -516,6 +563,8 @@ int main(int argc, char** argv) {
                callback == "set_scene_many_oilrigs" ||
                callback == "set_scene_sponza" ||
                callback == "set_scene_teapot" ||
+               callback == "set_scene_bottle" ||
+               callback == "set_scene_mountains" ||
                callback == "set_scene_sphere" ||
                callback == "set_scene_textured_quads") {
       set_scene(callback);
@@ -673,8 +722,8 @@ int main(int argc, char** argv) {
     nav.update();
     warp_nav.update();
 
-    navigation->set_transform(gua::math::mat4(nav.get_transform()));
-    warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
+    navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
+    warp_navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
 
     gua::Frustum frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
 

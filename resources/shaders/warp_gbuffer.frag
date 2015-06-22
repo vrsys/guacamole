@@ -39,7 +39,7 @@ layout(location=0) out vec3 gua_out_color;
 void main() {
   #if @debug_cell_colors@ == 1
     float intensity = log2(cellsize) / 5.0;
-    gua_out_color =  0.6*(vec3(0.1, 0.1, 0.1) * (1-intensity) + vec3(0.9, 0.9, 0.9) * intensity);
+    gua_out_color =  0.8*(vec3(0.5, 0.3, 0.1) * (1-intensity) + vec3(0.6, 0.9, 0.4) * intensity);
   #else
     gua_out_color = gua_get_color(texcoords);
   #endif

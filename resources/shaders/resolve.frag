@@ -260,6 +260,7 @@ void main() {
     abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
   }
 
+  // color correction
   gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
 
   // vignette
@@ -267,7 +268,6 @@ void main() {
     float vignetting = get_vignette(gua_vignette_coverage, gua_vignette_softness, gua_vignette_color.a);
     gua_out_color = mix(gua_vignette_color.rgb, gua_out_color, vignetting);
   }
-  // color correction
 
 #if @gua_debug_tiles@
   vec3 color_codes[] = {vec3(1,0,0), vec3(0,1,0), vec3(0,0,1), vec3(1,1,0), vec3(1,0,1), vec3(0,1,1)};

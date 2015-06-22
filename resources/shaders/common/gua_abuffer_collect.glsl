@@ -98,17 +98,17 @@ void submit_fragment(float depth)
       discard;
     }
 
-    // if (gua_alpha > @abuf_insertion_threshold@) {
-    //   @_include "gua_write_gbuffer.glsl"
-    // }
-    // else {
-    //   if (abuf_insert(depth))
-    //     discard;
-    // }
+    if (gua_alpha > @abuf_insertion_threshold@) {
+      @include "gua_write_gbuffer.glsl"
+    }
+    else {
+      if (abuf_insert(depth))
+        discard;
+    }
 
 
-    // always abuffer
-    // #if @adaptive_abuffer@ == 1
+    // // always abuffer
+    // #if @_adaptive_abuffer@ == 1
     //   uint is_surface = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(gl_FragCoord.xy/16), 3).x;
     //   if ((is_surface & 1) == 0) {
     //     abuf_insert(depth);
@@ -117,8 +117,8 @@ void submit_fragment(float depth)
     //   abuf_insert(depth);
     // #endif
 
-    // always gbuffer
-    @include "gua_write_gbuffer.glsl"
+    // // always gbuffer
+    // @_include "gua_write_gbuffer.glsl"
 
 #endif
   }

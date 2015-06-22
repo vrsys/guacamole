@@ -257,6 +257,13 @@ void emit_primitive(vec2 tex_coords) {
     const vec2 offsets[4] = {vec2(half_pixel), vec2(-half_pixel.x, half_pixel.y),
                               vec2(half_pixel.x, -half_pixel.y), vec2(-half_pixel)};
 
+    // normal = (transpose(gua_inverse_projection_matrix) * vec4(gua_get_normal(tex_coords), 0)).xyz;
+    // vec3 pos = vec3(frag_pos, depth);
+    // vec3 direction = pos;
+
+    color = gua_get_normal(tex_coords);
+
+
     for (int v=0; v<4; ++v) {
       vec3 screen_space_pos = vec3(frag_pos + offsets[v], depth);
       gl_Position = warp_matrix * vec4(screen_space_pos, 1 + 0.000000000000001*bar[0]);
