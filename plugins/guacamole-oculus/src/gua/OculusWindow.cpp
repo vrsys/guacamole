@@ -28,7 +28,7 @@
 namespace gua {
 
 OculusWindow::OculusWindow(std::string const& display):
-  Window(),
+  GlfwWindow(),
   distortion_(4) {
 
   config.set_size(math::vec2ui(1280, 800));

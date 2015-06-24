@@ -21,6 +21,10 @@
 
 #include <functional>
 
+#include <scm/input/tracking/art_dtrack.h>
+#include <scm/input/tracking/target.h>
+#include <OVR.h>
+ 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
@@ -30,16 +34,18 @@
 #include <gua/renderer/PLODPass.hpp>
 #include <gua/renderer/PLODLoader.hpp>
 #include <gua/node/PLODNode.hpp>
- 
-#include <scm/input/tracking/art_dtrack.h>
-#include <scm/input/tracking/target.h>
-
+#include <gua/OculusWindow.hpp>
 #include <gua/gui.hpp>
 
 #include "Navigator.hpp"
 
 #define COUNT 6
-#define POWER_WALL true
+#define POWER_WALL false
+#define OCULUS false
+
+#define LOAD_CAR false
+#define LOAD_PITOTI false
+#define LOAD_MOUNTAINS false
 
 bool depth_test             = true;
 bool backface_culling       = true;
@@ -48,6 +54,29 @@ bool manipulation_camera    = false;
 bool manipulation_object    = false;
 
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
+
+#if OCULUS
+  OVR::SensorFusion* init_oculus() {
+    OVR::System::Init(OVR::Log::ConfigureDefaultLog(OVR::LogMask_All));
+    OVR::DeviceManager* device_manager  = OVR::DeviceManager::Create();
+    OVR::SensorDevice*  sensor_device   = device_manager->EnumerateDevices<OVR::SensorDevice>().CreateDevice();
+    if (sensor_device) {
+      OVR::SensorFusion* sensor_fusion = new OVR::SensorFusion();
+      sensor_fusion->AttachToSensor(sensor_device);
+      return sensor_fusion;
+    }
+    return nullptr;
+  }
+
+  gua::math::mat4 const get_oculus_transform(OVR::SensorFusion* sensor) {
+    OVR::Quatf orient = sensor->GetPredictedOrientation();
+    OVR::Matrix4f mat(orient.Inverted());
+    return gua::math::mat4( mat.M[0][0], mat.M[0][1], mat.M[0][2], mat.M[0][3],
+                            mat.M[1][0], mat.M[1][1], mat.M[1][2], mat.M[1][3],
+                            mat.M[2][0], mat.M[2][1], mat.M[2][2], mat.M[2][3],
+                            mat.M[3][0], mat.M[3][1], mat.M[3][2], mat.M[3][3]);
+  }
+#endif
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods) {
@@ -80,16 +109,24 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 }
 
 int main(int argc, char** argv) {
-  bool fullscreen = (argc == 2);
 
-  auto resolution = gua::math::vec2ui(1920, 1200);
-  // auto resolution = gua::math::vec2ui(1600, 900);
-  // auto resolution = gua::math::vec2ui(1280, 768);
+  #if POWER_WALL
+    bool fullscreen = true;
+    auto resolution = gua::math::vec2ui(1780, 1185);
+  #elif OCULUS
+    bool fullscreen = true;
+    auto resolution = gua::math::vec2ui(640, 800);
 
-  if (POWER_WALL) {
-    fullscreen = true;
-    resolution = gua::math::vec2ui(1780, 1185);
-  }
+    // initialize Oculus SDK
+    OVR::SensorFusion* oculus_sensor = init_oculus();
+    if (!oculus_sensor) {
+      gua::Logger::LOG_WARNING << "Could not connect to Oculus Rift! " << std::endl;
+      return -1;
+    }
+  #else
+    bool fullscreen = (argc == 2);
+    auto resolution = gua::math::vec2ui(1920, 1200);
+  #endif
 
   // add mouse interaction
   gua::utils::Trackball object_trackball(0.01, 0.002, 0, 0.2);
@@ -107,6 +144,7 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------------
 
   gua::TriMeshLoader loader;
+  gua::PLODLoader plodloader;
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
 
@@ -165,30 +203,32 @@ int main(int argc, char** argv) {
 
   // car --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "car");
-  auto car(loader.create_geometry_from_file("car", "data/objects/car/car.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  scene_root->scale(2);
-  scene_root->add_child(car);
+  #if LOAD_CAR
+    auto car(loader.create_geometry_from_file("car", "data/objects/car/car.dae",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
+    scene_root->scale(2);
+    scene_root->add_child(car);
 
-  for (auto& child: car->get_children()) {
-    auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(child));
-    if (casted) {
-      casted->get_material()->set_show_back_faces(true);
-      casted->get_material()->set_uniform("Metalness", 0.5f);
-      casted->get_material()->set_uniform("Roughness", 0.5f);
+    for (auto& child: car->get_children()) {
+      auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(child));
+      if (casted) {
+        casted->get_material()->set_show_back_faces(true);
+        casted->get_material()->set_uniform("Metalness", 0.5f);
+        casted->get_material()->set_uniform("Roughness", 0.5f);
+      }
     }
-  }
+  #endif
 
   // pitoti --------------------------------------------------------------------
-  gua::PLODLoader plodloader;
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
-  auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/valley/sera_part_01.kdn", 
-  // auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area-2_Plowing-scene_P01-4_knn.kdn", 
-    gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-  scene_root->scale(30);
-  scene_root->add_child(pitoti);
+  #if LOAD_PITOTI
+    auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/valley/sera_part_14.kdn", 
+      gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+    scene_root->scale(30);
+    scene_root->add_child(pitoti);
+  #endif
 
   // bottle --------------------------------------------------------------------
   auto load_mat = [](std::string const& file){
@@ -212,22 +252,24 @@ int main(int argc, char** argv) {
 
   // mountains --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "mountains");
-  auto mountains(loader.create_geometry_from_file("mountains", "/home/rufu1194/Desktop/island/guacamole-restricted/vr_hyperspace/data/objects/terrain/lod0.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  auto clouds(std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("clouds", "data/objects/plane.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE)));
-  clouds->translate(0, 0.05, 0);
-  clouds->get_material()->set_uniform("ColorMap", std::string("data/textures/clouds.png"));
-  clouds->get_material()->set_uniform("Roughness", 1.f);
-  clouds->get_material()->set_uniform("Metalness", 0.f);
-  clouds->get_material()->set_show_back_faces(false);
-  clouds->set_shadow_mode(gua::ShadowMode::HIGH_QUALITY);
-  scene_root->scale(30);
-  scene_root->add_child(mountains);
-  scene_root->add_child(clouds);
+  #if LOAD_MOUNTAINS
+    auto mountains(loader.create_geometry_from_file("mountains", "/home/rufu1194/Desktop/island/guacamole-restricted/vr_hyperspace/data/objects/terrain/lod0.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
+    auto clouds(std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("clouds", "data/objects/plane.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::NORMALIZE_SCALE)));
+    clouds->translate(0, 0.05, 0);
+    clouds->get_material()->set_uniform("ColorMap", std::string("data/textures/clouds.png"));
+    clouds->get_material()->set_uniform("Roughness", 1.f);
+    clouds->get_material()->set_uniform("Metalness", 0.f);
+    clouds->get_material()->set_show_back_faces(false);
+    clouds->set_shadow_mode(gua::ShadowMode::HIGH_QUALITY);
+    scene_root->scale(30);
+    scene_root->add_child(mountains);
+    scene_root->add_child(clouds);
+  #endif
 
   // spheres -------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sphere");
@@ -289,29 +331,60 @@ int main(int argc, char** argv) {
   // ------------------------ setup rendering pipelines ------------------------
   // ---------------------------------------------------------------------------
   auto navigation = graph.add_node<gua::node::TransformNode>("/", "navigation");
+  auto warp_navigation = graph.add_node<gua::node::TransformNode>("/navigation", "warp");
 
   // slow client ---------------------------------------------------------------
-  auto slow_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "slow_screen");
-  auto slow_cam = graph.add_node<gua::node::CameraNode>("/navigation", "slow_cam");
-  slow_screen->data.set_size(gua::math::vec2(3, 2));
-  slow_screen->translate(0, 1.5, -1.7);
-  slow_cam->translate(0, 1.5, 1.7);
-  slow_cam->config.set_resolution(resolution);
-  slow_cam->config.set_screen_path("/navigation/slow_screen");
+  #if OCULUS
+    auto slow_cam = graph.add_node<gua::node::CameraNode>("/navigation", "slow_cam");
+    auto slow_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/slow_cam", "slow_screen_left");
+    auto slow_screen_right = graph.add_node<gua::node::ScreenNode>("/navigation/slow_cam", "slow_screen_right");
+    slow_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
+    slow_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
+    slow_screen_right->translate(0.04, 0, -0.05f);
+    slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+    slow_cam->config.set_eye_dist(0.f);
+    slow_cam->config.set_resolution(resolution);
+    slow_cam->config.set_left_screen_path("/navigation/slow_cam/slow_screen_left");
+    slow_cam->config.set_right_screen_path("/navigation/slow_cam/slow_screen_right");
+  #else
+    auto slow_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "slow_screen");
+    auto slow_cam = graph.add_node<gua::node::CameraNode>("/navigation", "slow_cam");
+    slow_screen->data.set_size(gua::math::vec2(3, 2));
+    slow_screen->translate(0, 1.5, -1.7);
+    slow_cam->translate(0, 1.5, 1.7);
+    slow_cam->config.set_eye_dist(0.f);
+    slow_cam->config.set_resolution(resolution);
+    slow_cam->config.set_screen_path("/navigation/slow_screen");
+  #endif
+
   slow_cam->config.set_scene_graph_name("main_scenegraph");
   slow_cam->config.mask().blacklist.add_tag("invisible");
   slow_cam->config.set_near_clip(0.1f);
 
   // fast client ---------------------------------------------------------------
-  auto warp_navigation = graph.add_node<gua::node::TransformNode>("/navigation", "warp");
+  #if OCULUS
+    auto fast_cam = graph.add_node<gua::node::CameraNode>("/navigation", "fast_cam");
+    auto fast_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/fast_cam", "fast_screen_left");
+    auto fast_screen_right = graph.add_node<gua::node::ScreenNode>("/navigation/fast_cam", "fast_screen_right");
+    fast_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
+    fast_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
+    fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+    fast_screen_right->translate(0.04, 0, -0.05f);
+    fast_cam->config.set_eye_dist(0.f);
+    fast_cam->config.set_resolution(resolution);
+    fast_cam->config.set_left_screen_path("/navigation/fast_cam/fast_screen_left");
+    fast_cam->config.set_right_screen_path("/navigation/fast_cam/fast_screen_right");
+  #else
+    auto fast_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "fast_screen");
+    auto fast_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "fast_cam");
+    fast_screen->data.set_size(gua::math::vec2(3, 2));
+    fast_screen->translate(0, 1.5, -1.7);
+    fast_cam->translate(0, 1.5, 1.7);
+    fast_cam->config.set_eye_dist(0.f);
+    fast_cam->config.set_resolution(resolution);
+    fast_cam->config.set_screen_path("/navigation/warp/fast_screen");
+  #endif
 
-  auto fast_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "fast_screen");
-  auto fast_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "fast_cam");
-  fast_screen->data.set_size(gua::math::vec2(3, 2));
-  fast_screen->translate(0, 1.5, -1.7);
-  fast_cam->translate(0, 1.5, 1.7);
-  fast_cam->config.set_resolution(resolution);
-  fast_cam->config.set_screen_path("/navigation/warp/fast_screen");
   fast_cam->config.set_scene_graph_name("main_scenegraph");
   fast_cam->config.set_far_clip(slow_cam->config.get_far_clip()*1.5);
   fast_cam->config.set_near_clip(0.1f);
@@ -359,7 +432,11 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------------
   // ----------------------------- setup gui -----------------------------------
   // ---------------------------------------------------------------------------
-  auto window = std::make_shared<gua::GlfwWindow>();
+  #if OCULUS
+    auto window = std::make_shared<gua::OculusWindow>();
+  #else
+    auto window = std::make_shared<gua::GlfwWindow>();
+  #endif
 
   auto gui = std::make_shared<gua::GuiResource>();
   auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
@@ -391,7 +468,7 @@ int main(int argc, char** argv) {
     gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
     gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
     gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
-    gui->add_javascript_getter("get_debug_cell_gap", [&](){ return std::to_string(warp_pass->debug_cell_gap());});
+    gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size());});
     gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
     gui->add_javascript_callback("set_depth_layers");
@@ -430,7 +507,7 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_manipulation_object");
     gui->add_javascript_callback("set_show_warp_grid");
     gui->add_javascript_callback("set_debug_cell_colors");
-    gui->add_javascript_callback("set_debug_cell_gap");
+    gui->add_javascript_callback("set_pixel_size");
     gui->add_javascript_callback("set_bg_tex");
     gui->add_javascript_callback("set_view_mono_warped");
     gui->add_javascript_callback("set_view_stereo_warped");
@@ -452,12 +529,21 @@ int main(int argc, char** argv) {
     } else if (callback == "set_view_mono_warped") {
       slow_cam->set_pipeline_description(warp_pipe);
       slow_cam->config.set_enable_stereo(false);
-      slow_cam->config.set_eye_dist(0.07f);
-      window->config.set_stereo_mode(gua::StereoMode::MONO);
+      slow_cam->config.set_eye_dist(0.f);
+      fast_cam->config.set_eye_dist(0.f);
+
+      #if OCULUS
+        slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+      #else
+        window->config.set_stereo_mode(gua::StereoMode::MONO);
+      #endif
+
     } else if (callback == "set_view_stereo_warped") {
       slow_cam->set_pipeline_description(warp_pipe);
       slow_cam->config.set_enable_stereo(true);
       slow_cam->config.set_eye_dist(0.f);
+      fast_cam->config.set_eye_dist(0.064f);
       trimesh_pass->set_enable_for_right_eye(false);
       plod_pass->set_enable_for_right_eye(false);
       tex_quad_pass->set_enable_for_right_eye(false);
@@ -465,15 +551,32 @@ int main(int argc, char** argv) {
       res_pass->set_enable_for_right_eye(false);
       grid_pass->set_enable_for_right_eye(false);
       render_grid_pass->set_enable_for_right_eye(false);
-      window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
+
+      #if OCULUS
+        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
+        fast_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
+        slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+        slow_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+      #else
+        window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
+      #endif
+
     } else if (callback == "set_view_mono") {
       slow_cam->set_pipeline_description(normal_pipe);
       slow_cam->config.set_enable_stereo(false);
-      window->config.set_stereo_mode(gua::StereoMode::MONO);
+      slow_cam->config.set_eye_dist(0.f);
+
+      #if OCULUS
+        slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+      #else
+        window->config.set_stereo_mode(gua::StereoMode::MONO);
+      #endif
+
     } else if (callback == "set_view_stereo") {
       slow_cam->set_pipeline_description(normal_pipe);
       slow_cam->config.set_enable_stereo(true);
-      slow_cam->config.set_eye_dist(0.07f);
+      slow_cam->config.set_eye_dist(0.064f);
       trimesh_pass->set_enable_for_right_eye(true);
       plod_pass->set_enable_for_right_eye(true);
       tex_quad_pass->set_enable_for_right_eye(true);
@@ -481,12 +584,26 @@ int main(int argc, char** argv) {
       res_pass->set_enable_for_right_eye(true);
       grid_pass->set_enable_for_right_eye(true);
       render_grid_pass->set_enable_for_right_eye(true);
-      window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
+
+      #if OCULUS
+        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
+        fast_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
+        slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
+        slow_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
+      #else
+        window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
+      #endif
+
     } else if (callback == "set_split_threshold") {
       std::stringstream str(params[0]);
       float split_threshold;
       str >> split_threshold;
       grid_pass->split_threshold(split_threshold);
+    } else if (callback == "set_pixel_size") {
+      std::stringstream str(params[0]);
+      float pixel_size;
+      str >> pixel_size;
+      warp_pass->pixel_size(pixel_size);
     } else if (callback == "set_bg_tex") {
       res_pass->background_texture(params[0]);
     } else if (callback == "set_cell_size") {
@@ -517,11 +634,6 @@ int main(int argc, char** argv) {
       bool checked;
       str >> checked;
       warp_pass->debug_cell_colors(checked);
-    } else if (callback == "set_debug_cell_gap") {
-      std::stringstream str(params[0]);
-      bool checked;
-      str >> checked;
-      warp_pass->debug_cell_gap(checked);
     } else if (callback == "set_adaptive_abuffer") {
       std::stringstream str(params[0]);
       bool checked;
@@ -622,14 +734,14 @@ int main(int argc, char** argv) {
   graph.add_node("/", gui_quad);
 
   // bottom gui --------------------------------------------------------------
-  stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(1210, 30));
+  stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(1000, 60));
 
   stats->on_loaded.connect([&]() {
     stats->call_javascript("init");
   });
 
   stats_quad->data.texture() = "stats";
-  stats_quad->data.size() = gua::math::vec2ui(1210, 30);
+  stats_quad->data.size() = gua::math::vec2ui(1000, 60);
   stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
 
   graph.add_node("/", stats_quad);
@@ -642,15 +754,17 @@ int main(int argc, char** argv) {
 
   window->config.set_fullscreen_mode(fullscreen);
   window->cursor_mode(gua::GlfwWindow::CursorMode::HIDDEN);
-  window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-    if (!POWER_WALL) {
+  
+  #if (!POWER_WALL && !OCULUS) 
+    window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
       resolution = new_size;
       window->config.set_resolution(new_size);
       slow_cam->config.set_resolution(new_size);
       slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
       fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
-    }
-  });
+    });
+  #endif
+
   window->on_button_press.connect([&](int key, int action, int mods) {
     gui->inject_mouse_button(gua::Button(key), action, mods);
 
@@ -658,6 +772,7 @@ int main(int argc, char** argv) {
     warp_nav.set_mouse_button(key, action);
 
   });
+
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
     if (manipulation_navigator) {
       nav.set_key_press(static_cast<gua::Key>(key), action);
@@ -676,10 +791,11 @@ int main(int argc, char** argv) {
       }
     }
   });
+
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
     mouse_quad->data.offset() = pos + gua::math::vec2i(-5, -45);
     gua::math::vec2 hit_pos;
-    if (gui_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
+    if (gui_quad->pixel_to_texcoords(pos, resolution, hit_pos) && !gui_quad->get_tags().has_tag("invisible")) {
       gui->inject_mouse_position_relative(hit_pos);
     } else {
       if (manipulation_object) {
@@ -691,27 +807,30 @@ int main(int argc, char** argv) {
       }
     }
   });
+
   window->on_button_press.connect(std::bind(mouse_button, std::ref(object_trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-  if (POWER_WALL) {
+  #if POWER_WALL
     window->config.set_size(gua::math::vec2ui(1920*2, 1200));
     window->config.set_right_position(gua::math::vec2ui(1920, 0));
     window->config.set_right_resolution(gua::math::vec2ui(1780, 1185));
     window->config.set_left_position(gua::math::vec2ui(140, 0));
     window->config.set_left_resolution(gua::math::vec2ui(1780, 1185));
-  } else {
+  #elif !OCULUS
     window->config.set_size(resolution);
     window->config.set_resolution(resolution);
-  }
+  #endif
   window->config.set_enable_vsync(false);
   gua::WindowDatabase::instance()->add("window", window);
   window->open();
 
   // tracking ------------------------------------------------------------------
   warp_pass->get_warp_state([&](){
-    if (POWER_WALL) {
+    #if POWER_WALL
       fast_cam->set_transform(current_tracking_matrix);
-    }
+    #elif OCULUS
+      fast_cam->set_transform(get_oculus_transform(oculus_sensor));
+    #endif
 
     gua::WarpPassDescription::WarpState state;
 
@@ -727,8 +846,8 @@ int main(int argc, char** argv) {
     return state;
   });
 
-  std::thread tracking_thread([&]() {
-    if (POWER_WALL) {
+  #if POWER_WALL
+    std::thread tracking_thread([&]() {
       scm::inp::tracker::target_container targets;
       targets.insert(scm::inp::tracker::target_container::value_type(5, scm::inp::target(5)));
 
@@ -743,8 +862,8 @@ int main(int argc, char** argv) {
         t[12] /= 1000.f; t[13] /= 1000.f; t[14] /= 1000.f;
         current_tracking_matrix = t;
       }
-    }
-  });
+    });
+  #endif
 
   // render setup --------------------------------------------------------------
   gua::Renderer renderer;
@@ -759,22 +878,26 @@ int main(int argc, char** argv) {
 
     gua::Interface::instance()->update();
 
-    if (POWER_WALL) {
+    #if POWER_WALL
       slow_cam->set_transform(current_tracking_matrix);
-    }
+    #elif OCULUS
+      slow_cam->set_transform(get_oculus_transform(oculus_sensor));
+    #endif
 
     nav.update();
     warp_nav.update();
 
-    navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
-    warp_navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
-
-    gua::Frustum frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+    #if OCULUS
+      navigation->set_transform(gua::math::mat4(nav.get_transform()));
+      warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
+    #else
+      navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
+      warp_navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
+    #endif
 
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(object_trackball.shiftx()),
                                                               gua::math::float_t(object_trackball.shifty()),
                                                               gua::math::float_t(object_trackball.distance())) * gua::math::mat4(object_trackball.rotation());
-
     transform->set_transform(modelmatrix);
 
 

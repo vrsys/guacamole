@@ -18,7 +18,6 @@ set(LIBS
   ${JSON_LIBRARIES}
   ${Boost_LIBRARIES}
   )
-# link_libraries(${LIBS})
 
 set(INCLUDE_PATHS
   ${SCHISM_INCLUDE_DIRS}
@@ -52,7 +51,7 @@ IF (GUACAMOLE_EXAMPLES)
 
   # oculus example requires oculus-plugin
   IF (${PLUGIN_guacamole-oculus})
-    # add_subdirectory(oculus)
+    add_subdirectory(oculus)
   ENDIF (${PLUGIN_guacamole-oculus})
 
   # plod example requires plod-plugin

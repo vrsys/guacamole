@@ -34,11 +34,7 @@ float gua_get_depth_raw(vec2 frag_pos) {
 #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 // -----------------------------------------------------------------------------
 
-#if @debug_cell_gap@ == 1
-  #define GAP 0.49
-#else
-  #define GAP 1.0
-#endif
+#define GAP @pixel_size@
 
 layout(points) in;
 layout(triangle_strip, max_vertices = 16) out;
@@ -68,19 +64,19 @@ void emit_quad(uvec2 offset, uvec2 size) {
     #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
       position = varying_position[0].xy+offset;
       depth = gua_get_depth_raw(position);
-      emit_grid_vertex(position + vec2(0, 0), depth);
+      emit_grid_vertex(position + vec2(0, 0) + vec2(-GAP, -GAP), depth);
 
       position = varying_position[0].xy+offset + vec2(size.x-1, 0);
       depth = gua_get_depth_raw(position);
-      emit_grid_vertex(position + vec2(GAP, 0), depth);
+      emit_grid_vertex(position + vec2(1, 0) + vec2(GAP, -GAP), depth);
 
       position = varying_position[0].xy+offset + vec2(0, size.y-1);
       depth = gua_get_depth_raw(position);
-      emit_grid_vertex(position + vec2(0, GAP), depth);
+      emit_grid_vertex(position + vec2(0, 1) + vec2(-GAP, GAP), depth);
 
       position = varying_position[0].xy+offset + vec2(size.x-1, size.y-1);
       depth = gua_get_depth_raw(position);
-      emit_grid_vertex(position + vec2(GAP, GAP), depth);
+      emit_grid_vertex(position + vec2(1, 1) + vec2(GAP, GAP), depth);
 
     #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 
@@ -97,22 +93,22 @@ void emit_quad(uvec2 offset, uvec2 size) {
       position = varying_position[0].xy+offset;
       vec2 lookup_offset = vec2(-cont_l, -cont_b) * cont_bl;
       depth = gua_get_unscaled_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
-      emit_grid_vertex(position + vec2(0, 0), depth);
+      emit_grid_vertex(position + vec2(0, 0) + vec2(-GAP, -GAP), depth);
 
       position = varying_position[0].xy+offset + vec2(size.x-1, 0);
       lookup_offset = vec2(cont_r, -cont_b) * cont_br;
       depth = gua_get_unscaled_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
-      emit_grid_vertex(position + vec2(GAP, 0), depth);
+      emit_grid_vertex(position + vec2(1, 0) + vec2(GAP, -GAP), depth);
 
       position = varying_position[0].xy+offset + vec2(0, size.y-1);
       lookup_offset = vec2(-cont_l, cont_t) * cont_tl;
       depth = gua_get_unscaled_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
-      emit_grid_vertex(position + vec2(0, GAP), depth);
+      emit_grid_vertex(position + vec2(0, 1) + vec2(-GAP, GAP), depth);
 
       position = varying_position[0].xy+offset + vec2(size.x-1, size.y-1);
       lookup_offset = vec2(cont_r, cont_t) * cont_tr;
       depth = gua_get_unscaled_depth( (position + 0.5*(1+lookup_offset)) / gua_resolution);
-      emit_grid_vertex(position + vec2(GAP, GAP), depth);
+      emit_grid_vertex(position + vec2(1, 1) + vec2(GAP, GAP), depth);
 
     #endif // ------------------------------------------------------------------
 
@@ -125,10 +121,10 @@ void emit_pixel(uvec2 offset) {
   const float depth = gua_get_depth_raw(varying_position[0].xy + offset);
 
   cellsize = 1;
-  emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   0),   depth);
-  emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, 0),   depth);
-  emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   GAP), depth);
-  emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, GAP), depth);
+  emit_grid_vertex(varying_position[0].xy + offset + vec2(0, 0) + vec2(-GAP, -GAP), depth);
+  emit_grid_vertex(varying_position[0].xy + offset + vec2(1, 0) + vec2( GAP, -GAP), depth);
+  emit_grid_vertex(varying_position[0].xy + offset + vec2(0, 1) + vec2(-GAP,  GAP), depth);
+  emit_grid_vertex(varying_position[0].xy + offset + vec2(1, 1) + vec2( GAP,  GAP), depth);
   EndPrimitive();
 }
 
@@ -137,10 +133,10 @@ void emit_pixel(uvec2 offset, uint do_emit) {
   if (do_emit > 0) {
     cellsize = 1;
     const float depth = gua_get_depth_raw(varying_position[0].xy + offset);
-    emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   0),   depth);
-    emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, 0),   depth);
-    emit_grid_vertex(varying_position[0].xy + offset + vec2(0,   GAP), depth);
-    emit_grid_vertex(varying_position[0].xy + offset + vec2(GAP, GAP), depth);
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(0, 0) + vec2(-GAP, -GAP), depth);
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(1, 0) + vec2( GAP, -GAP), depth);
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(0, 1) + vec2(-GAP,  GAP), depth);
+    emit_grid_vertex(varying_position[0].xy + offset + vec2(1, 1) + vec2( GAP,  GAP), depth);
     EndPrimitive();
   }
 }
@@ -202,7 +198,10 @@ void main() {
   emit_pixel(quad3.xy, quad3.z);
 
 #else
-
+  
+  #if WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
+    emit_quad(uvec2(0), uvec2(1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)));
+  #else
   if ((varying_position[0].z & 1) > 0) {
     uvec2 scale = 1 + uvec2((varying_position[0].z >> BIT_EXPAND_X) & 1, (varying_position[0].z >> BIT_EXPAND_Y) & 1);
     emit_quad(uvec2(0), (1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)) * scale);
@@ -212,6 +211,7 @@ void main() {
     emit_pixel(uvec2(1, 1));
     emit_pixel(uvec2(0, 1));
   }
+  #endif
 
 #endif
 }

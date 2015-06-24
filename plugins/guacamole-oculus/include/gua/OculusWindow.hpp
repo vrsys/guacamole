@@ -33,14 +33,14 @@
 #endif // #if defined(_MSC_VER)
 
 // guacamole headers
-#include <gua/renderer/Window.hpp>
+#include <gua/renderer/GlfwWindow.hpp>
 
 namespace gua {
 
-class GUA_OCULUS_DLL OculusWindow : public Window {
+class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
  public:
 
-  OculusWindow(std::string const& display);
+  OculusWindow(std::string const& display = ":0.0");
   virtual ~OculusWindow();
 
   void init_context() override;

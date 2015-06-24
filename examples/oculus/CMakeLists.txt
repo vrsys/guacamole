@@ -22,7 +22,7 @@ ADD_EXECUTABLE( ${_EXE_NAME}
 
 ADD_DEPENDENCIES(${_EXE_NAME} guacamole-oculus)
 
-LIST(APPEND LIBS guacamole-oculus guacamole ${OVR_LIBRARIES})
+LIST(APPEND LIBS guacamole-oculus guacamole)
 
 IF (MSVC)
   TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}

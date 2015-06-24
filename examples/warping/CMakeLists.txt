@@ -15,15 +15,16 @@ INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${AWESOMIUM_INCLUDE_DIR}
                      ${GUACAMOLE_PLOD_INCLUDE_DIR}
                      ${GUACAMOLE_GUI_INCLUDE_DIR}
+                     ${GUACAMOLE_OCULUS_INCLUDE_DIR}
+                     ${OVR_INCLUDE_DIR} 
 )
 
 ADD_EXECUTABLE( ${_EXE_NAME}
     ${EXAMPLE_SRC}
 )
 
-ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui guacamole-plod)
-
-LIST(APPEND LIBS guacamole-gui guacamole-plod guacamole udev)
+ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui guacamole-plod guacamole-oculus)
+LIST(APPEND LIBS guacamole-oculus guacamole-gui guacamole-plod guacamole ${OVR_LIBRARY})
 
 IF (MSVC)
   TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}

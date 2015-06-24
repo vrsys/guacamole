@@ -222,7 +222,6 @@
 
         init_checkbox("#show_warp_grid", "show_warp_grid");
         init_checkbox("#debug_cell_colors", "debug_cell_colors");
-        init_checkbox("#debug_cell_gap", "debug_cell_gap");
 
         init_radio("#grid_surface", "grid_surface");
         init_radio("#grid_adaptive_surface", "grid_adaptive_surface");
@@ -234,6 +233,7 @@
         init_radio("#view_stereo", "view_stereo");
 
         init_slider("#preview-panel .depth_layers", "depth_layers");
+        init_slider("#preview-panel .pixel_size", "pixel_size");
         init_slider("#preview-panel .split_threshold", "split_threshold");
         init_slider("#preview-panel .cell_size", "cell_size");
 
@@ -340,7 +340,7 @@
         </div>
       </div>
 
-      <div class="side-panel expanded">
+      <div class="side-panel">
         <div id="control-panel" class="panel-inner">
 
           <h4><i class="fa fa-picture-o"></i> Scene Options</h4>
@@ -352,7 +352,7 @@
             <div class="col-xs-7">
               <div class="radio">
                 <label>
-                  <input type="radio" name="sceneRadios" id="scene_one_oilrig" value="">
+                  <input type="radio" name="sceneRadios" id="scene_one_oilrig" value="" checked="">
                   <span>One Oilrig</span>
                 </label>
               </div>
@@ -574,7 +574,6 @@
                   <span>Display Grid</span>
                 </label>
               </div>
-
               <div class="checkbox">
                 <label>
                   <input id="debug_cell_colors" type="checkbox" value="">
@@ -582,12 +581,16 @@
                 </label>
               </div>
 
-              <div class="checkbox">
-                <label>
-                  <input id="debug_cell_gap" type="checkbox" value="">
-                  <span>Cell Gap</span>
-                </label>
-              </div>
+            </div>
+          </div>
+
+
+          <div class="row">
+            <div class="col-xs-5">
+              Pixel Size:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider pixel_size" data-slider-tooltip="hide" data-slider-id="pixel_size" type="text" data-slider-min="-1.0" data-slider-max="15.0" data-slider-step="0.1" handle="custom"/>
             </div>
           </div>
 

@@ -40,7 +40,7 @@ WarpPassDescription::WarpPassDescription()
   , max_layers_(2)
   , depth_test_(true)
   , debug_cell_colors_(false)
-  , debug_cell_gap_(false)
+  , pixel_size_(0.5f)
   , gbuffer_warp_mode_(GBUFFER_POINTS)
   , abuffer_warp_mode_(ABUFFER_POINTS)
 {
@@ -123,16 +123,16 @@ bool WarpPassDescription::debug_cell_colors() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::debug_cell_gap(bool val) {
-  debug_cell_gap_ = val;
+WarpPassDescription& WarpPassDescription::pixel_size(float val) {
+  pixel_size_ = val;
   touch();
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool WarpPassDescription::debug_cell_gap() const {
-  return debug_cell_gap_;
+float WarpPassDescription::pixel_size() const {
+  return pixel_size_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,7 +173,7 @@ std::shared_ptr<PipelinePassDescription> WarpPassDescription::make_copy() const 
 PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
   substitution_map["gua_debug_tiles"] = "0";
   substitution_map["debug_cell_colors"] = debug_cell_colors_ ? "1" : "0";
-  substitution_map["debug_cell_gap"] = debug_cell_gap_ ? "1" : "0";
+  substitution_map["pixel_size"] = gua::string_utils::to_string(pixel_size_);
   substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
   substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
   substitution_map["warping_max_layers"] = std::to_string(max_layers_);
