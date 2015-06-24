@@ -93,6 +93,17 @@ ResolvePassDescription::ResolvePassDescription()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::compositing_enable(bool value) {
+  compositing_enable_ = value;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool ResolvePassDescription::compositing_enable() const {
+  return compositing_enable_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::background_mode(BackgroundMode mode) {
   uniforms["gua_background_mode"] = static_cast<int>(mode);
   return *this;
@@ -450,6 +461,7 @@ std::shared_ptr<PipelinePassDescription> ResolvePassDescription::make_copy() con
 PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
   substitution_map["gua_debug_tiles"] = debug_tiles() ? "1" : "0";
+  substitution_map["gua_compositing_enable"] = compositing_enable() ? "1" : "0";
   substitution_map["gua_tone_mapping_method"] = std::to_string(static_cast<int>(tone_mapping_method()));
 
   PipelinePass pass{*this, ctx, substitution_map};

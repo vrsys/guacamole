@@ -214,10 +214,11 @@
         init_radio("#gbuffer_type_grid_advanced_surface_estimation", "gbuffer_type_grid_advanced_surface_estimation");
         init_radio("#gbuffer_type_grid_non_uniform_surface_estimation", "gbuffer_type_grid_non_uniform_surface_estimation");
 
-        init_radio("#abuffer_type_none", "abuffer_type_none");
-        init_radio("#abuffer_type_quads", "abuffer_type_quads");
-        init_radio("#abuffer_type_points", "abuffer_type_points");
-        init_radio("#abuffer_type_scaled_points", "abuffer_type_scaled_points");
+        init_radio("#transparency_type_none", "transparency_type_none");
+        init_radio("#transparency_type_gbuffer", "transparency_type_gbuffer");
+        init_radio("#transparency_type_quads", "transparency_type_quads");
+        init_radio("#transparency_type_points", "transparency_type_points");
+        init_radio("#transparency_type_scaled_points", "transparency_type_scaled_points");
         init_checkbox("#adaptive_abuffer", "adaptive_abuffer");
 
         init_checkbox("#show_warp_grid", "show_warp_grid");
@@ -590,7 +591,7 @@
               Pixel Size:
             </div>
             <div class="col-xs-7">
-              <input class="slider pixel_size" data-slider-tooltip="hide" data-slider-id="pixel_size" type="text" data-slider-min="-1.0" data-slider-max="15.0" data-slider-step="0.1" handle="custom"/>
+              <input class="slider pixel_size" data-slider-tooltip="hide" data-slider-id="pixel_size" type="text" data-slider-min="0" data-slider-max="5.0" data-slider-step="0.1" handle="custom"/>
             </div>
           </div>
 
@@ -618,34 +619,61 @@
       <div class="side-panel">
         <div id="preview-panel" class="panel-inner">
 
-          <h4><i class="fa fa-magic"></i> Hole Filling Options</h4>
+          <h4><i class="fa fa-magic"></i> Transparency Options</h4>
+
+          <div class="row">
+            <div class="col-xs-5">
+            Disable:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="transparencyRadios" id="transparency_type_none" value="">
+                  <span>None</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            GBuffer:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="transparencyRadios" id="transparency_type_gbuffer" value="">
+                  <span>Paint on GBuffer</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr />
 
            <div class="row">
             <div class="col-xs-5">
             ABuffer:
             </div>
             <div class="col-xs-7">
+        
               <div class="radio">
                 <label>
-                  <input type="radio" name="abufferRadios" id="abuffer_type_none" value="">
-                  <span>None</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="abufferRadios" id="abuffer_type_points" value="" checked>
+                  <input type="radio" name="transparencyRadios" id="transparency_type_points" value="" checked>
                   <span>Points</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="abufferRadios" id="abuffer_type_scaled_points" value="">
+                  <input type="radio" name="transparencyRadios" id="transparency_type_scaled_points" value="">
                   <span>Scaled Points</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="abufferRadios" id="abuffer_type_quads" value="">
+                  <input type="radio" name="transparencyRadios" id="transparency_type_quads" value="">
                   <span>Quads</span>
                 </label>
               </div>

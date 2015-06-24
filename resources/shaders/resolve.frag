@@ -17,7 +17,7 @@ in vec2 gua_quad_coords;
 @include "ssao.frag"
 @include "screen_space_shadow.frag"
 
-#define ABUF_MODE readonly
+// #define ABUF_MODE readonly
 #define ABUF_SHADE_FUNC abuf_shade
 @include "common/gua_abuffer_resolve.glsl"
 
@@ -123,7 +123,6 @@ vec4 abuf_shade(uint pos, float depth) {
   vec3 color = vec3(unpackUnorm2x16(data.x), unpackUnorm2x16(data.y).x);
   vec3 normal = vec3(unpackSnorm2x16(data.y).y, unpackSnorm2x16(data.z));
   vec3 pbr = unpackUnorm4x8(data.w).xyz;
-  // uint flags = bitfieldExtract(data.w, 24, 8);
 
   vec4 screen_space_pos = vec4(gua_get_quad_coords() * 2.0 - 1.0, depth, 1.0);
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;

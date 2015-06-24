@@ -39,13 +39,13 @@
 
 #include "Navigator.hpp"
 
-#define COUNT 6
-#define POWER_WALL false
-#define OCULUS false
+#define COUNT           6
+#define POWER_WALL      false
+#define OCULUS          true
 
-#define LOAD_CAR false
-#define LOAD_PITOTI false
-#define LOAD_MOUNTAINS false
+#define LOAD_CAR        true
+#define LOAD_PITOTI     false
+#define LOAD_MOUNTAINS  false
 
 bool depth_test             = true;
 bool backface_culling       = true;
@@ -350,8 +350,11 @@ int main(int argc, char** argv) {
     auto slow_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "slow_screen");
     auto slow_cam = graph.add_node<gua::node::CameraNode>("/navigation", "slow_cam");
     slow_screen->data.set_size(gua::math::vec2(3, 2));
-    slow_screen->translate(0, 1.5, -1.7);
-    slow_cam->translate(0, 1.5, 1.7);
+    slow_screen->translate(0, 0, -1.7);
+    #if POWER_WALL
+      slow_screen->translate(0, 1.5, 0);
+      slow_cam->translate(0, 1.5, 0);
+    #endif
     slow_cam->config.set_eye_dist(0.f);
     slow_cam->config.set_resolution(resolution);
     slow_cam->config.set_screen_path("/navigation/slow_screen");
@@ -378,8 +381,11 @@ int main(int argc, char** argv) {
     auto fast_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "fast_screen");
     auto fast_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "fast_cam");
     fast_screen->data.set_size(gua::math::vec2(3, 2));
-    fast_screen->translate(0, 1.5, -1.7);
-    fast_cam->translate(0, 1.5, 1.7);
+    fast_screen->translate(0, 0, -1.7);
+    #if POWER_WALL
+      fast_screen->translate(0, 1.5, 0);
+      fast_cam->translate(0, 1.5, 0);
+    #endif
     fast_cam->config.set_eye_dist(0.f);
     fast_cam->config.set_resolution(resolution);
     fast_cam->config.set_screen_path("/navigation/warp/fast_screen");
@@ -402,6 +408,7 @@ int main(int argc, char** argv) {
             background_color(gua::utils::Color3f(0, 0, 0)).
             ssao_enable(true).
             horizon_fade(0.2f).
+            compositing_enable(false).
             ssao_intensity(2.f).
             ssao_radius(5.f);
 
@@ -468,7 +475,7 @@ int main(int argc, char** argv) {
     gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
     gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
     gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
-    gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size());});
+    gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size()+0.5);});
     gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
     gui->add_javascript_callback("set_depth_layers");
@@ -487,10 +494,11 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation");
     gui->add_javascript_callback("set_gbuffer_type_grid_advanced_surface_estimation");
     gui->add_javascript_callback("set_gbuffer_type_grid_non_uniform_surface_estimation");
-    gui->add_javascript_callback("set_abuffer_type_none");
-    gui->add_javascript_callback("set_abuffer_type_points");
-    gui->add_javascript_callback("set_abuffer_type_quads");
-    gui->add_javascript_callback("set_abuffer_type_scaled_points");
+    gui->add_javascript_callback("set_transparency_type_none");
+    gui->add_javascript_callback("set_transparency_type_points");
+    gui->add_javascript_callback("set_transparency_type_gbuffer");
+    gui->add_javascript_callback("set_transparency_type_quads");
+    gui->add_javascript_callback("set_transparency_type_scaled_points");
     gui->add_javascript_callback("set_adaptive_abuffer");
     gui->add_javascript_callback("set_scene_one_oilrig");
     gui->add_javascript_callback("set_scene_many_oilrigs");
@@ -531,6 +539,7 @@ int main(int argc, char** argv) {
       slow_cam->config.set_enable_stereo(false);
       slow_cam->config.set_eye_dist(0.f);
       fast_cam->config.set_eye_dist(0.f);
+      res_pass->compositing_enable(false);
 
       #if OCULUS
         slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -551,6 +560,7 @@ int main(int argc, char** argv) {
       res_pass->set_enable_for_right_eye(false);
       grid_pass->set_enable_for_right_eye(false);
       render_grid_pass->set_enable_for_right_eye(false);
+      res_pass->compositing_enable(false);
 
       #if OCULUS
         fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
@@ -565,6 +575,7 @@ int main(int argc, char** argv) {
       slow_cam->set_pipeline_description(normal_pipe);
       slow_cam->config.set_enable_stereo(false);
       slow_cam->config.set_eye_dist(0.f);
+      res_pass->compositing_enable(true);
 
       #if OCULUS
         slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -584,6 +595,7 @@ int main(int argc, char** argv) {
       res_pass->set_enable_for_right_eye(true);
       grid_pass->set_enable_for_right_eye(true);
       render_grid_pass->set_enable_for_right_eye(true);
+      res_pass->compositing_enable(true);
 
       #if OCULUS
         fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
@@ -603,7 +615,7 @@ int main(int argc, char** argv) {
       std::stringstream str(params[0]);
       float pixel_size;
       str >> pixel_size;
-      warp_pass->pixel_size(pixel_size);
+      warp_pass->pixel_size(pixel_size-0.5);
     } else if (callback == "set_bg_tex") {
       res_pass->background_texture(params[0]);
     } else if (callback == "set_cell_size") {
@@ -685,18 +697,31 @@ int main(int argc, char** argv) {
         grid_pass->mode(mode);
         render_grid_pass->mode(mode);
       }
-    } else if (callback == "set_abuffer_type_points"
-             | callback == "set_abuffer_type_quads"
-             | callback == "set_abuffer_type_scaled_points"
-             | callback == "set_abuffer_type_none") {
+    } else if (callback == "set_transparency_type_points"
+             | callback == "set_transparency_type_quads"
+             | callback == "set_transparency_type_gbuffer"
+             | callback == "set_transparency_type_scaled_points"
+             | callback == "set_transparency_type_none") {
       std::stringstream str(params[0]);
       bool checked;
       str >> checked;
+
+      normal_pipe->set_enable_abuffer(true);
+      warp_pipe->set_enable_abuffer(true);
+      res_pass->compositing_enable(false);
       if (checked) {
-        if (callback == "set_abuffer_type_points")        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_POINTS);
-        if (callback == "set_abuffer_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
-        if (callback == "set_abuffer_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
-        if (callback == "set_abuffer_type_none")          warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
+        if (callback == "set_transparency_type_points")        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_POINTS);
+        if (callback == "set_transparency_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
+        if (callback == "set_transparency_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
+        if (callback == "set_transparency_type_none") {
+          warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
+          normal_pipe->set_enable_abuffer(false);
+          warp_pipe->set_enable_abuffer(false);
+        }
+        if (callback == "set_transparency_type_gbuffer") {
+          warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
+          res_pass->compositing_enable(true);
+        }
       }
     } else if (callback == "set_manipulation_object"
             || callback == "set_manipulation_camera"
@@ -793,7 +818,7 @@ int main(int argc, char** argv) {
   });
 
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    mouse_quad->data.offset() = pos + gua::math::vec2i(-5, -45);
+    mouse_quad->data.offset() = pos + gua::math::vec2i(-2, -45);
     gua::math::vec2 hit_pos;
     if (gui_quad->pixel_to_texcoords(pos, resolution, hit_pos) && !gui_quad->get_tags().has_tag("invisible")) {
       gui->inject_mouse_position_relative(hit_pos);
@@ -887,12 +912,12 @@ int main(int argc, char** argv) {
     nav.update();
     warp_nav.update();
 
-    #if OCULUS
-      navigation->set_transform(gua::math::mat4(nav.get_transform()));
-      warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
-    #else
+    #if POWER_WALL
       navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
       warp_navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
+    #else
+      navigation->set_transform(gua::math::mat4(nav.get_transform()));
+      warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
     #endif
 
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(object_trackball.shiftx()),

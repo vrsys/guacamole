@@ -199,9 +199,6 @@ void main() {
 
 #else
   
-  #if WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
-    emit_quad(uvec2(0), uvec2(1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)));
-  #else
   if ((varying_position[0].z & 1) > 0) {
     uvec2 scale = 1 + uvec2((varying_position[0].z >> BIT_EXPAND_X) & 1, (varying_position[0].z >> BIT_EXPAND_Y) & 1);
     emit_quad(uvec2(0), (1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)) * scale);
@@ -211,7 +208,6 @@ void main() {
     emit_pixel(uvec2(1, 1));
     emit_pixel(uvec2(0, 1));
   }
-  #endif
 
 #endif
 }

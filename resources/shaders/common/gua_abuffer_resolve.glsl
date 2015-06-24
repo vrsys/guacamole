@@ -21,27 +21,35 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
   while (frag_count < ABUF_MAX_FRAGMENTS) {
 
     uvec2 frag = unpackUint2x32(frag_list[current]);
-    current = frag.x;
-    if (current == 0) {
+    if (frag.x == 0) {
       break;
     } 
     ++frag_count;
 
     float z = unpack_depth24(frag.y);
-    if (z - 0.000001 > opaque_depth) { // fix depth-fighting artifacts
-      break;
-    }
 
     float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
-    vec4 shaded_color_emit = ABUF_SHADE_FUNC(current - abuf_list_offset, fma(z, 2.0, -1.0));
+    vec4 shaded_color_emit = ABUF_SHADE_FUNC(frag.x - abuf_list_offset, fma(z, 2.0, -1.0));
     vec4 shaded_color = vec4(shaded_color_emit.rgb, frag_alpha);
 
-    emissivity = min(1.0, emissivity + (1-color.a)*shaded_color_emit.w*frag_alpha);
-    abuf_mix_frag(shaded_color, color);
-
-    if (color.a > @abuf_blending_termination_threshold@) {
-      return false;
+    if (@gua_compositing_enable@ == 1) {
+      if (z - 0.000001 > opaque_depth) { // fix depth-fighting artifacts
+        break;
+      }
+      emissivity = min(1.0, emissivity + (1-color.a)*shaded_color_emit.w*frag_alpha);
+      abuf_mix_frag(shaded_color, color);
+      if (color.a > @abuf_blending_termination_threshold@) {
+        return false;
+      }
+    } else {
+      shaded_color.rgb = mix(toneMap(shaded_color.rgb), shaded_color.rgb, shaded_color_emit.w*frag_alpha);
+      float normal_x = unpackSnorm2x16(frag_data[frag.x - abuf_list_offset].y).y;
+      uint col_norm = bitfieldInsert(packUnorm2x16(shaded_color.bb),
+                                     packSnorm2x16(vec2(normal_x)), 16, 16);
+      frag_data[frag.x - abuf_list_offset].xy = uvec2(packUnorm2x16(shaded_color.rg), col_norm);
     }
+
+    current = frag.x;
   }
   return true;
 }

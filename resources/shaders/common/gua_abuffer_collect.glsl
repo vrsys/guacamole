@@ -52,9 +52,9 @@ bool abuf_insert(float depth)
         if (!success) {
           float current_frag_alpha = float(bitfieldExtract(unpackUint2x32(old).y, 0, 8)) / 255.0;
           accum_alpha += mix(current_frag_alpha, 0.0, accum_alpha);
-          // if (accum_alpha > @abuf_blending_termination_threshold@) {
-          //   break;
-          // }
+          if (accum_alpha > @abuf_blending_termination_threshold@) {
+            break;
+          }
         }
       }
       else { // inserted
@@ -68,9 +68,7 @@ bool abuf_insert(float depth)
 
   if (success) {
     // write data
-
     uint pbr = packUnorm4x8(vec4(gua_emissivity, gua_roughness, gua_metalness, 0.0));
-    pbr = bitfieldInsert(pbr, /*((gua_flags_passthrough)?1u:0u*/0u, 24, 8);
 
     uint col_norm = bitfieldInsert(packUnorm2x16(gua_color.bb),
                                    packSnorm2x16(gua_normal.xx), 16, 16);
@@ -91,7 +89,7 @@ void submit_fragment(float depth)
   // if abuffer enabled and not rendering shadows
   if ((bool)@enable_abuffer@ && gua_rendering_mode == 0) {
 #if @enable_abuffer@
-    float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
+    // float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
     // if (abs(depth - z) < 0.0001) discard;
 
     if (gua_alpha < 1.0 - @abuf_insertion_threshold@) {
@@ -102,8 +100,9 @@ void submit_fragment(float depth)
       @include "gua_write_gbuffer.glsl"
     }
     else {
-      if (abuf_insert(depth))
+      if (abuf_insert(depth)) {
         discard;
+      }
     }
 
 
@@ -118,7 +117,7 @@ void submit_fragment(float depth)
     // #endif
 
     // // always gbuffer
-    // @_include "gua_write_gbuffer.glsl"
+    // include "gua_write_gbuffer.glsl"
 
 #endif
   }

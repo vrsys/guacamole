@@ -85,11 +85,11 @@ void main() {
   uint current = vertex_id[0];
 
   // skip first abuffer layer
-  uvec2 frag = unpackUint2x32(frag_list[current]);
-  if (frag.x == 0) {
-    return;
-  }
-  current = frag.x;
+  // uvec2 frag = unpackUint2x32(frag_list[current]);
+  // if (frag.x == 0) {
+  //   return;
+  // }
+  // current = frag.x;
 
   // following layers from abuffer
   for (int i=0; i<MAX_LAYERS; ++i) {

@@ -54,6 +54,9 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
 
   ResolvePassDescription();
 
+  ResolvePassDescription& compositing_enable(bool enable);
+  bool compositing_enable() const;
+
   /////////////////////////////////////////////////////////////////////////////
   // background
   /////////////////////////////////////////////////////////////////////////////
@@ -170,10 +173,11 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   friend class Pipeline;
 
  protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+  virtual PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
   ToneMappingMethod tone_mapping_method_ = ToneMappingMethod::LINEAR;
   bool debug_tiles_ = false;
+  bool compositing_enable_ = true;
 };
 }
 
