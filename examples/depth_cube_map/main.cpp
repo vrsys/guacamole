@@ -22,6 +22,7 @@
 #include <functional>
 
 #include <gua/guacamole.hpp>
+#include <gua/node/CubemapNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
@@ -59,8 +60,15 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform", teapot);
+  auto cube(loader.create_geometry_from_file("cube", "data/objects/cube_with_arrow.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
+  cube->scale(0.5);
+  graph.add_node("/transform", cube);
+
+  auto cmn = graph.add_node<gua::node::CubemapNode>("/transform", "test");
+  
+  auto teapot2(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  teapot2->translate(0.6, 0.0, 0.0);
+  graph.add_node("/", teapot2);
   // teapot->set_draw_bounding_box(true);
 
   //auto light = graph.add_node<gua::node::LightNode>("/", "light");
@@ -97,6 +105,7 @@ int main(int argc, char** argv) {
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
+  
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
