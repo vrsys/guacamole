@@ -23,6 +23,8 @@
 #include <gua/renderer/DepthCubeMapRenderer.hpp>
 
 #include <gua/config.hpp>
+#include <gua/node/CubemapNode.hpp>
+
 #include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
@@ -55,6 +57,10 @@ void DepthCubeMapRenderer::create_state_objects(RenderContext const& ctx)
 void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
 
+  auto& scene = *pipe.current_viewstate().scene;
+  auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::CubemapNode))));
+
+  auto transform = sorted_objects->second[0]->get_cached_world_transform();
 
   RenderContext const& ctx(pipe.get_context());
   
@@ -66,17 +72,17 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
   
   if (mode_ == DepthCubeMapRenderer::COMPLETE){
     pipe.reset_depth_cubemap();
-    pipe.generate_depth_cubemap_face(0);
-    pipe.generate_depth_cubemap_face(1);
-    pipe.generate_depth_cubemap_face(2);
-    pipe.generate_depth_cubemap_face(3);
-    pipe.generate_depth_cubemap_face(4);
-    pipe.generate_depth_cubemap_face(5);
+    pipe.generate_depth_cubemap_face(0, transform);
+    pipe.generate_depth_cubemap_face(1, transform);
+    pipe.generate_depth_cubemap_face(2, transform);
+    pipe.generate_depth_cubemap_face(3, transform);
+    pipe.generate_depth_cubemap_face(4, transform);
+    pipe.generate_depth_cubemap_face(5, transform);
   } else if (mode_ == DepthCubeMapRenderer::ONE_SIDE_PER_FRAME) {
     if (face_counter_ == 0){
       pipe.reset_depth_cubemap();
     }
-    pipe.generate_depth_cubemap_face(face_counter_);
+    pipe.generate_depth_cubemap_face(face_counter_, transform);
     face_counter_ = (face_counter_+1)%6;
   }
 

@@ -145,6 +145,7 @@ void DepthCubeMap::retrieve_data(RenderContext const& ctx, float near_clip, floa
   //   }
   // }
   // std::cout << "============================" << std::endl;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

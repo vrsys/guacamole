@@ -348,7 +348,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void Pipeline::generate_depth_cubemap_face(unsigned face)
+  void Pipeline::generate_depth_cubemap_face(unsigned face, math::mat4 node_transform)
   {
     math::vec2ui viewport_size(depth_cube_map_->get_viewport_size());
 
@@ -382,12 +382,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     };
 
 
-    math::mat4 transform(current_viewstate_.camera.transform * screen_transforms[face]);
+    math::mat4 transform(node_transform * screen_transforms[face]);
     auto frustum(
       Frustum::perspective(
-      current_viewstate_.camera.transform, transform,
-      current_viewstate_.camera.config.near_clip(),
-      current_viewstate_.camera.config.far_clip()
+      node_transform, transform,
+      0.5, 10.0
+      // current_viewstate_.camera.config.near_clip(),
+      // current_viewstate_.camera.config.far_clip()
       // scm::math::length(math::get_translation(transform))
       )
       );
@@ -440,14 +441,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   
   void Pipeline::reset_depth_cubemap()
   {
-    unsigned resolution = 64;
+    unsigned resolution = 32;
     unsigned viewport_size(resolution);
     unsigned map_width(resolution*6);
 
     if (!depth_cube_map_) {
       depth_cube_map_ = std::make_shared<DepthCubeMap>(context_, math::vec2ui(map_width, viewport_size));;
     } else {
-      if (context_.framecount % 60 == 0) {
+      if (context_.framecount % 120 == 0) {
         depth_cube_map_->retrieve_data(context_, current_viewstate_.camera.config.near_clip(), current_viewstate_.camera.config.far_clip());
       }
     }
