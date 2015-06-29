@@ -43,7 +43,7 @@
 #define POWER_WALL      false
 #define OCULUS          false
 
-#define LOAD_CAR        false
+#define LOAD_CAR        true
 #define LOAD_PITOTI     false
 #define LOAD_MOUNTAINS  false
 
@@ -111,6 +111,7 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 int main(int argc, char** argv) {
 
   #if POWER_WALL
+    bool fullscreen = true;
     bool fullscreen = true;
     auto resolution = gua::math::vec2ui(1780, 1185);
   #elif OCULUS
@@ -521,6 +522,7 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_transparency_type_gbuffer");
     gui->add_javascript_callback("set_transparency_type_quads");
     gui->add_javascript_callback("set_transparency_type_scaled_points");
+    gui->add_javascript_callback("set_transparency_type_raycasting");
     gui->add_javascript_callback("set_adaptive_abuffer");
     gui->add_javascript_callback("set_scene_one_oilrig");
     gui->add_javascript_callback("set_scene_many_oilrigs");
@@ -728,6 +730,7 @@ int main(int argc, char** argv) {
              | callback == "set_transparency_type_quads"
              | callback == "set_transparency_type_gbuffer"
              | callback == "set_transparency_type_scaled_points"
+             | callback == "set_transparency_type_raycasting"
              | callback == "set_transparency_type_none") {
       std::stringstream str(params[0]);
       bool checked;
@@ -740,6 +743,7 @@ int main(int argc, char** argv) {
         if (callback == "set_transparency_type_points")        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_POINTS);
         if (callback == "set_transparency_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
         if (callback == "set_transparency_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
+        if (callback == "set_transparency_type_raycasting") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
         if (callback == "set_transparency_type_none") {
           warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
           normal_pipe->set_enable_abuffer(false);

@@ -84,14 +84,6 @@ void main() {
 
   uint current = vertex_id[0];
 
-  // skip first abuffer layer
-  // uvec2 frag = unpackUint2x32(frag_list[current]);
-  // if (frag.x == 0) {
-  //   return;
-  // }
-  // current = frag.x;
-
-  // following layers from abuffer
   for (int i=0; i<MAX_LAYERS; ++i) {
 
     uvec2 frag = unpackUint2x32(frag_list[current]);
@@ -103,7 +95,6 @@ void main() {
 
     uvec4 data = frag_data[current - gua_resolution.x*gua_resolution.y];
     color = vec3(unpackUnorm2x16(data.x), unpackUnorm2x16(data.y).x);
-    normal = vec3(unpackSnorm2x16(data.y).y, unpackSnorm2x16(data.z));
 
     float z = unpack_depth24(frag.y);
     float depth = fma(z, 2.0, -1.0);

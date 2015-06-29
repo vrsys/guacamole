@@ -219,6 +219,7 @@
         init_radio("#transparency_type_quads", "transparency_type_quads");
         init_radio("#transparency_type_points", "transparency_type_points");
         init_radio("#transparency_type_scaled_points", "transparency_type_scaled_points");
+        init_radio("#transparency_type_raycasting", "transparency_type_raycasting");
         init_checkbox("#adaptive_abuffer", "adaptive_abuffer");
 
         init_checkbox("#show_warp_grid", "show_warp_grid");
@@ -685,6 +686,12 @@
                 <label>
                   <input type="radio" name="transparencyRadios" id="transparency_type_quads" value="">
                   <span>Quads</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="transparencyRadios" id="transparency_type_raycasting" value="">
+                  <span>Raycasting</span>
                 </label>
               </div>
               <div class="checkbox">

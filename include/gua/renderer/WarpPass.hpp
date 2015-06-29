@@ -62,7 +62,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
     ABUFFER_NONE,
     ABUFFER_POINTS,
     ABUFFER_QUADS,
-    ABUFFER_SCALED_POINTS
+    ABUFFER_SCALED_POINTS,
+    ABUFFER_RAYCASTING
   };
 
   WarpPassDescription();

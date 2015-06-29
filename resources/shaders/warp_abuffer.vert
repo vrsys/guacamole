@@ -20,14 +20,35 @@
  ******************************************************************************/
 
 @include "common/header.glsl"
+@include "common/gua_camera_uniforms.glsl"
+@include "abuffer_warp_modes.glsl"
 
-layout(location=0) in float foo;
+#if WARP_MODE == WARP_MODE_RAYCASTING
 
-flat out uint vertex_id;
-out float bar;
+  // input
+  layout(location=0) in vec3 gua_in_position;
+  layout(location=2) in vec2 gua_in_texcoord;
 
-void main() {
-  vertex_id = gl_VertexID;
-  bar = foo;
-}
+  // output
+  out vec2 gua_quad_coords;
 
+  // body
+  void main() {
+    // gua_quad_coords = (gua_in_texcoord * (gua_resolution - 1) + 0.5) / gua_resolution;
+    gua_quad_coords = gua_in_texcoord;
+    gl_Position = vec4(gua_in_position, 1.0);
+  }
+
+#else
+
+  layout(location=0) in float foo;
+
+  flat out uint vertex_id;
+  out float bar;
+
+  void main() {
+    vertex_id = gl_VertexID;
+    bar = foo;
+  }
+
+#endif
