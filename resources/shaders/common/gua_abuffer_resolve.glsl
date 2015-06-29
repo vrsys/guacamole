@@ -32,7 +32,7 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
     vec4 shaded_color_emit = ABUF_SHADE_FUNC(frag.x - abuf_list_offset, fma(z, 2.0, -1.0));
     vec4 shaded_color = vec4(shaded_color_emit.rgb, frag_alpha);
 
-    if (@gua_compositing_enable@ == 1) {
+    #if @gua_compositing_enable@
       if (z - 0.000001 > opaque_depth) { // fix depth-fighting artifacts
         break;
       }
@@ -41,13 +41,13 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
       if (color.a > @abuf_blending_termination_threshold@) {
         return false;
       }
-    } else {
-      shaded_color.rgb = mix(toneMap(shaded_color.rgb), shaded_color.rgb, shaded_color_emit.w*frag_alpha);
+    #else
+      shaded_color.rgb = mix(toneMap(shaded_color.rgb), shaded_color.rgb, shaded_color_emit.w);
       float normal_x = unpackSnorm2x16(frag_data[frag.x - abuf_list_offset].y).y;
       uint col_norm = bitfieldInsert(packUnorm2x16(shaded_color.bb),
                                      packSnorm2x16(vec2(normal_x)), 16, 16);
       frag_data[frag.x - abuf_list_offset].xy = uvec2(packUnorm2x16(shaded_color.rg), col_norm);
-    }
+    #endif
 
     current = frag.x;
   }

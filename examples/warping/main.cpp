@@ -41,9 +41,9 @@
 
 #define COUNT           6
 #define POWER_WALL      false
-#define OCULUS          true
+#define OCULUS          false
 
-#define LOAD_CAR        true
+#define LOAD_CAR        false
 #define LOAD_PITOTI     false
 #define LOAD_MOUNTAINS  false
 
@@ -160,6 +160,22 @@ int main(int argc, char** argv) {
   light->data.set_shadow_map_size(2048);
   light->rotate(-95, 1, 0.5, 0);
 
+  // floor
+  auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  plane->translate(0, -0.25, 0);
+  plane->scale(2);
+  auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(plane));
+  if (casted) {
+    casted->get_material()->set_show_back_faces(true);
+    casted->get_material()->set_uniform("Metalness", 0.1f);
+    casted->get_material()->set_uniform("Roughness", 0.5f);
+    casted->get_material()->set_uniform("RoughnessMap", std::string("data/textures/tiles_specular.jpg"));
+    casted->get_material()->set_uniform("ColorMap", std::string("data/textures/tiles_diffuse.jpg"));
+    casted->get_material()->set_uniform("NormalMap", std::string("data/textures/tiles_normal.jpg"));
+  }
+
   // many oilrigs scene --------------------------------------------------------
   auto scene_root = graph.add_node<gua::node::TransformNode>("/transform", "many_oilrigs");
   scene_root->rotate(-90, 1, 0, 0);
@@ -200,6 +216,7 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(teapot);
+  scene_root->add_child(plane);
 
   // car --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "car");
@@ -220,6 +237,7 @@ int main(int argc, char** argv) {
       }
     }
   #endif
+  scene_root->add_child(plane);
 
   // pitoti --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
@@ -249,6 +267,7 @@ int main(int argc, char** argv) {
   auto bottle(loader.create_geometry_from_file("bottle", "../transparency/data/objects/bottle/bottle.obj", mat_bottle,
                                                gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(bottle);
+  scene_root->add_child(plane);
 
   // mountains --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "mountains");
@@ -278,6 +297,7 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(sphere);
+  scene_root->add_child(plane);
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
@@ -469,6 +489,7 @@ int main(int argc, char** argv) {
   gui->on_loaded.connect([&]() {
     gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
     gui->add_javascript_getter("get_split_threshold", [&](){ return gua::string_utils::to_string(grid_pass->split_threshold());});
+    gui->add_javascript_getter("get_max_split_depth", [&](){ return gua::string_utils::to_string(grid_pass->max_split_depth());});
     gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
     gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
     gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
@@ -480,6 +501,7 @@ int main(int argc, char** argv) {
 
     gui->add_javascript_callback("set_depth_layers");
     gui->add_javascript_callback("set_split_threshold");
+    gui->add_javascript_callback("set_max_split_depth");
     gui->add_javascript_callback("set_cell_size");
     gui->add_javascript_callback("set_depth_test");
     gui->add_javascript_callback("set_backface_culling");
@@ -611,6 +633,11 @@ int main(int argc, char** argv) {
       float split_threshold;
       str >> split_threshold;
       grid_pass->split_threshold(split_threshold);
+    } else if (callback == "set_max_split_depth") {
+      std::stringstream str(params[0]);
+      float max_split_depth;
+      str >> max_split_depth;
+      grid_pass->max_split_depth(max_split_depth);
     } else if (callback == "set_pixel_size") {
       std::stringstream str(params[0]);
       float pixel_size;

@@ -200,8 +200,7 @@ void main() {
 #else
   
   if ((varying_position[0].z & 1) > 0) {
-    uvec2 scale = 1 + uvec2((varying_position[0].z >> BIT_EXPAND_X) & 1, (varying_position[0].z >> BIT_EXPAND_Y) & 1);
-    emit_quad(uvec2(0), (1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)) * scale);
+    emit_quad(uvec2(0), (1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)));
   } else {
     emit_pixel(uvec2(0, 0));
     emit_pixel(uvec2(1, 0));

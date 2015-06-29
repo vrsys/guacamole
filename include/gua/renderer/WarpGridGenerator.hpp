@@ -67,8 +67,8 @@ class WarpGridGenerator {
   std::vector<ShaderProgramStage>  grid_generation_program_stages_;
   std::shared_ptr<ShaderProgram>   grid_generation_program_;
 
-  std::vector<ShaderProgramStage>  min_max_filter_program_stages_;
-  std::shared_ptr<ShaderProgram>   min_max_filter_program_;
+  std::vector<ShaderProgramStage>  surface_detection_program_stages_;
+  std::shared_ptr<ShaderProgram>   surface_detection_program_;
 
   Pipeline* pipe_;
 };

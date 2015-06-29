@@ -237,6 +237,7 @@
         init_slider("#preview-panel .pixel_size", "pixel_size");
         init_slider("#preview-panel .split_threshold", "split_threshold");
         init_slider("#preview-panel .cell_size", "cell_size");
+        init_slider("#preview-panel .max_split_depth", "max_split_depth");
 
         add_texture_select("#control-panel", "bg_tex", "Background");
 
@@ -601,6 +602,15 @@
             </div>
             <div class="col-xs-7">
               <input class="slider split_threshold" data-slider-tooltip="hide" data-slider-id="split_threshold" type="text" data-slider-min="0" data-slider-max="0.01" data-slider-step="0.0001" handle="custom"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Max Depth:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider max_split_depth" data-slider-tooltip="hide" data-slider-id="max_split_depth" type="text" data-slider-min="0.8" data-slider-max="1" data-slider-step="0.001" handle="custom"/>
             </div>
           </div>
 
