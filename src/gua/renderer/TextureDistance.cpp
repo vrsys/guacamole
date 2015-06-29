@@ -32,7 +32,7 @@
 #include <iostream>
 
 namespace gua {
-
+ 
 TextureDistance::TextureDistance(unsigned width,
                  unsigned height,
                  scm::gl::data_format color_format,
@@ -40,23 +40,46 @@ TextureDistance::TextureDistance(unsigned width,
                  scm::gl::sampler_state_desc const& state_descripton)
   : Texture2D(width, height, color_format, mipmap_layers, state_descripton){
 
-  int byte_size = height_ * width_ * sizeof(uint16_t); 
+  int pixel_size = height_ * width_ * 6; 
+  int byte_size = pixel_size * sizeof(uint16_t); 
   texture_data_ = (uint16_t*)malloc(byte_size);
+  world_depth_data_ = std::vector<float>(pixel_size, -1.0f);
 }
 
 
-std::vector<float> & TextureDistance::retrieve_data(RenderContext const& ctx, float near_clip, float far_clip, std::vector<float> & data){
+void TextureDistance::download_data(RenderContext const& ctx, float near_clip, float far_clip){
   ctx.render_context->retrieve_texture_data(get_buffer(ctx), 0, texture_data_);
   unsigned size = height_*width_;
   for (int texel = 0; texel < size; ++texel){
     if (texture_data_[texel] == 65535){
-      data[texel] = -1.0;
+      world_depth_data_[texel] = -1.0;
     }else{
       float z_n = (float)texture_data_[texel] / 65535.0;
-      data[texel] = 2.0 * near_clip * far_clip / (far_clip + near_clip - z_n * (far_clip - near_clip));
+      world_depth_data_[texel] = 2.0 * near_clip * far_clip / (far_clip + near_clip - z_n * (far_clip - near_clip));
     }
   } 
-  return data;
+}
+
+std::vector<float> const& TextureDistance::get_data(){
+  // ASCII OUTPUT
+  // for (int side = 0; side < 6; side++){
+  //   std::cout << "SIDE: " << side <<  std::endl;
+  //   for (int i = 0; i<height_; i++){
+  //     for (int j = 0; j<height_; j++){
+  //       if (world_depth_data_[i*height_*6 + j + side * height_] == -1.0f)
+  //       {
+  //         std::cout << "..";
+  //       }
+  //       else
+  //       {
+  //         std::cout << "##";
+  //       }
+  //     }
+  //     std::cout << std::endl;
+  //   }
+  // }
+  // std::cout << "============================" << std::endl;
+  return world_depth_data_;
 }
 
 }

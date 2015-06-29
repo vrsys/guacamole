@@ -58,8 +58,6 @@ class DepthCubeMap : public RenderTarget {
  private:
   scm::gl::frame_buffer_ptr fbo_;
   std::shared_ptr<Texture2D> depth_buffer_;
-  uint16_t* raw_depth_data_;
-  std::vector<float> world_depth_data_;
   math::vec2f viewport_offset_;
   math::vec2f viewport_size_;
   std::shared_ptr<Texture2D> texture2D_ptr;

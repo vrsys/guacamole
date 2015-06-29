@@ -81,13 +81,15 @@ namespace gua {
 
   ///@}
 
-  std::vector<float> & retrieve_data(RenderContext const& ctx, float near_clip, float far_clip, std::vector<float> & data);
+  void download_data(RenderContext const& ctx, float near_clip, float far_clip);
+  std::vector<float> const& get_data();
 
  protected:
 
  private:
 
   uint16_t* texture_data_;
+  std::vector<float> world_depth_data_;
 
 };
 
