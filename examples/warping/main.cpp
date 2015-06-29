@@ -151,11 +151,11 @@ int main(int argc, char** argv) {
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SUN);
   light->data.set_brightness(4.f);
-  light->data.set_shadow_cascaded_splits({0.1f, 2.f, 8.f, 20.f});
+  light->data.set_shadow_cascaded_splits({0.1f, 0.5f, 1.5f, 5.f, 20.f});
   light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
   light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
-  light->data.set_max_shadow_dist(20.0f);
-  light->data.set_shadow_offset(0.0002f);
+  light->data.set_max_shadow_dist(50.0f);
+  light->data.set_shadow_offset(0.0005f);
   light->data.set_enable_shadows(true);
   light->data.set_shadow_map_size(2048);
   light->rotate(-95, 1, 0.5, 0);
@@ -786,14 +786,14 @@ int main(int argc, char** argv) {
   graph.add_node("/", gui_quad);
 
   // bottom gui --------------------------------------------------------------
-  stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(1000, 60));
+  stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(resolution.x, 60));
 
   stats->on_loaded.connect([&]() {
     stats->call_javascript("init");
   });
 
   stats_quad->data.texture() = "stats";
-  stats_quad->data.size() = gua::math::vec2ui(1000, 60);
+  stats_quad->data.size() = gua::math::vec2ui(resolution.x, 60);
   stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
 
   graph.add_node("/", stats_quad);
