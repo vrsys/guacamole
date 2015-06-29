@@ -47,14 +47,7 @@ DepthCubeMap::DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolut
   state._max_anisotropy = 16;
 
   depth_buffer_ = std::make_shared<TextureDistance>(resolution.x, resolution.y, scm::gl::FORMAT_D16, 1, state);
-
   TextureDatabase::instance()->add("DepthCubeMapTestTexture", std::dynamic_pointer_cast<TextureDistance>(depth_buffer_));
-
-  int pixel_size = viewport_size_.x * viewport_size_.y * 6; 
-  int byte_size = pixel_size * sizeof(uint16_t); 
-
-  // raw_depth_data_ = (uint16_t*)malloc(byte_size);
-  world_depth_data_.reserve(pixel_size);
 
   fbo_ = ctx.render_device->create_frame_buffer();
   fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx), 0, 0);
@@ -122,9 +115,9 @@ void DepthCubeMap::remove_buffers(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void DepthCubeMap::retrieve_data(RenderContext const& ctx, float near_clip, float far_clip){
-  int size = (int)viewport_size_.x;
 
-  world_depth_data_ = std::dynamic_pointer_cast<TextureDistance>(depth_buffer_)->retrieve_data(ctx, near_clip, far_clip, world_depth_data_);
+  std::dynamic_pointer_cast<TextureDistance>(depth_buffer_)->download_data(ctx, near_clip, far_clip);
+  // auto depth_data = std::dynamic_pointer_cast<TextureDistance>(depth_buffer_)->retrieve_data(ctx, near_clip, far_clip);
   
 
   // ASCII OUTPUT
@@ -132,7 +125,7 @@ void DepthCubeMap::retrieve_data(RenderContext const& ctx, float near_clip, floa
   //   std::cout << "SIDE: " << side <<  std::endl;
   //   for (int i = 0; i<size; i++){
   //     for (int j = 0; j<size; j++){
-  //       if (world_depth_data_[i*size*6 + j + side * size] == -1.0f)
+  //       if (depth_data[i*size*6 + j + side * size] == -1.0f)
   //       {
   //         std::cout << "..";
   //       }

@@ -24,16 +24,52 @@
 
 // guacamole headers
 #include <gua/scenegraph/NodeVisitor.hpp>
+#include <gua/databases.hpp>
+#include <gua/renderer/TextureDistance.hpp>
+
+#include <limits>
+#include <climits>
 
 namespace gua {
 namespace node {
 
 CubemapNode::CubemapNode(std::string const& name, math::mat4 const& transform)
-    : SerializableNode(name, transform) {}
+    : SerializableNode(name, transform) {
+      texture_name_ = name + "_texture";
+    }
 
 /* virtual */ void CubemapNode::accept(NodeVisitor& visitor) {
 
   visitor.visit(this);
+}
+
+void CubemapNode::set_texture_name(std::string const& name){
+  // TODO remove old Texture in database
+  texture_name_ = name;
+}
+
+std::string CubemapNode::get_texture_name() const{
+  // TODO create new texture in database
+  return texture_name_;
+}
+
+float CubemapNode::get_closest_distance() const{
+
+  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup("DepthCubeMapTestTexture"));
+  if (texture){
+    std::vector<float> const& v = texture->get_data();
+
+    float closest(std::numeric_limits<float>::max());
+    for (const float &f : v){
+      if ( (f < closest) && (f!=-1.f) ){
+        closest = f;
+      }
+    }
+    return closest;
+
+  }
+  return -1.0f;
+
 }
 
 std::shared_ptr<Node> CubemapNode::copy() const {

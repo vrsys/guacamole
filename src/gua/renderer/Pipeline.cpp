@@ -386,9 +386,9 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     auto frustum(
       Frustum::perspective(
       node_transform, transform,
-      0.5, 10.0
-      // current_viewstate_.camera.config.near_clip(),
-      // current_viewstate_.camera.config.far_clip()
+      // 0.5, 10.0
+      current_viewstate_.camera.config.near_clip(),
+      current_viewstate_.camera.config.far_clip()
       // scm::math::length(math::get_translation(transform))
       )
       );
@@ -441,7 +441,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   
   void Pipeline::reset_depth_cubemap()
   {
-    unsigned resolution = 32;
+    unsigned resolution = 128;
     unsigned viewport_size(resolution);
     unsigned map_width(resolution*6);
 

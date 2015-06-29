@@ -65,9 +65,16 @@ class GUA_DLL CubemapNode : public SerializableNode {
    */
   void accept(NodeVisitor& visitor) override;
 
+  void set_texture_name(std::string const& name);
+  std::string get_texture_name() const;
+
+  float get_closest_distance() const;
+
  private:
 
   std::shared_ptr<Node> copy() const override;
+
+  std::string texture_name_;
 };
 
 } // namespace node {
