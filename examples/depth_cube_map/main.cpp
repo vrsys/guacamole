@@ -28,6 +28,9 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/DepthCubeMapPass.hpp>
 #include <gua/utils/Trackball.hpp>
+#include <gua/gui.hpp>
+ 
+#include "Navigator.hpp"
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -51,6 +54,11 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 
 int main(int argc, char** argv) {
 
+  // add interaction
+  // gua::utils::Trackball object_trackball(0.01, 0.002, 0, 0.2);
+  Navigator nav;
+  nav.set_transform(scm::math::make_translation(0.f, 0.f, 3.f));
+
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -59,17 +67,26 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader loader;
 
-  auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto cube(loader.create_geometry_from_file("cube", "data/objects/cube_with_arrow.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
-  cube->scale(0.5);
-  graph.add_node("/transform", cube);
 
-  auto cmn = graph.add_node<gua::node::CubemapNode>("/transform", "test");
+  auto navigation = graph.add_node<gua::node::TransformNode>("/", "navigation");
+
+  auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+  // auto cube(loader.create_geometry_from_file("cube", "data/objects/cube_with_arrow.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
+  // cube->scale(0.5);
+  // graph.add_node("/transform", cube);
+
   
-  auto teapot2(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  teapot2->translate(0.6, 0.0, 0.0);
-  graph.add_node("/", teapot2);
-  // teapot->set_draw_bounding_box(true);
+  // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  // graph.add_node("/transform", teapot);
+
+  auto oilrig(loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+
+  oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+
+  graph.add_node("/transform", oilrig);
 
   //auto light = graph.add_node<gua::node::LightNode>("/", "light");
   //light->data.set_type(gua::node::LightNode::Type::SPOT);
@@ -85,27 +102,27 @@ int main(int argc, char** argv) {
   light2->translate(-3.f, 5.f, 5.f);
   // light2->data.set_enable_shadows(true);
 
-  auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
+  auto screen = graph.add_node<gua::node::ScreenNode>("/navigation", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  screen->translate(0, 0, 1.0);
-
-  // add mouse interaction
-  gua::utils::Trackball trackball(0.01, 0.002, 0.2);
+  screen->translate(0, 0, -2.0);
 
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
 
-  auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 2.0);
+  auto camera = graph.add_node<gua::node::CameraNode>("/navigation", "cam");
   camera->config.set_resolution(resolution);
-  camera->config.set_screen_path("/screen");
+  camera->config.set_screen_path("/navigation/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
 
+  camera->config.set_near_clip(0.01f);
+  camera->config.set_far_clip(50.0f);
+
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
   
+  auto cmn = graph.add_node<gua::node::CubemapNode>("/navigation", "test");
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -119,9 +136,17 @@ int main(int argc, char** argv) {
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    trackball.motion(pos.x, pos.y);
+    // trackball.motion(pos.x, pos.y);
+    nav.set_mouse_position(gua::math::vec2i(pos));
   });
-  window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+  window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+    nav.set_key_press(static_cast<gua::Key>(key), action);
+  });  
+
+  window->on_button_press.connect([&](int key, int action, int mods) {
+    nav.set_mouse_button(key, action);
+  });
 
   window->open();
 
@@ -135,11 +160,21 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
-                                                              gua::math::float_t(trackball.shifty()),
-                                                              gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
+    float closest_distance = cmn->get_closest_distance();
+    float motion_speed = 0.03f;
+    if ((closest_distance != -1.0) && (closest_distance < 30.0f)){
+      motion_speed = closest_distance / 1000.0f;
+    }
+    nav.set_motion_speed(motion_speed);
+    std::cout << motion_speed << std::endl;
+    nav.update();
+    navigation->set_transform(gua::math::mat4(nav.get_transform()));
+    
+    // gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
+                                                              // gua::math::float_t(trackball.shifty()),
+                                                              // gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
 
-    transform->set_transform(modelmatrix);
+    // transform->set_transform(modelmatrix);
 
     window->process_events();
     if (window->should_close()) {
