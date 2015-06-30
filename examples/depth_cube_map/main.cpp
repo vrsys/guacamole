@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
   // add interaction
   // gua::utils::Trackball object_trackball(0.01, 0.002, 0, 0.2);
   Navigator nav;
-  nav.set_transform(scm::math::make_translation(0.f, 0.f, 3.f));
+  nav.set_transform(scm::math::make_translation(0.f, 0.f, 60.f));
 
   // initialize guacamole
   gua::init(argc, argv);
@@ -79,14 +79,52 @@ int main(int argc, char** argv) {
   // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   // graph.add_node("/transform", teapot);
 
+  auto much_big_oilrig(loader.create_geometry_from_file("much_big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+
+  much_big_oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+  much_big_oilrig->scale(100.0);
+
+  graph.add_node(transform, much_big_oilrig);
+
+
+  auto big_oilrig(loader.create_geometry_from_file("big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+
+  big_oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+  big_oilrig->scale(10);
+  big_oilrig->translate(18.f, 1.0f, 8.f);
+
+  graph.add_node(transform, big_oilrig);
+
+
   auto oilrig(loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
 
   oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+  // oilrig->scale(0.1);
+  oilrig->translate(19.8f, 1.1f, 8.8f);
 
-  graph.add_node("/transform", oilrig);
+  graph.add_node(transform, oilrig);
+
+
+  auto small_oilrig(loader.create_geometry_from_file("small_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+
+  small_oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+  small_oilrig->scale(0.1);
+  small_oilrig->translate(19.98f, 1.11f, 8.88f);
+
+  graph.add_node(transform, small_oilrig);
+
 
   //auto light = graph.add_node<gua::node::LightNode>("/", "light");
   //light->data.set_type(gua::node::LightNode::Type::SPOT);
@@ -97,9 +135,9 @@ int main(int argc, char** argv) {
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::POINT);
-  light2->data.brightness = 150.0f;
+  light2->data.brightness = 1.0f;
   light2->scale(12.f);
-  light2->translate(-3.f, 5.f, 5.f);
+  light2->translate(19.98f, 1.11f, 8.88f);
   // light2->data.set_enable_shadows(true);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/navigation", "screen");
@@ -116,8 +154,8 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
 
-  camera->config.set_near_clip(0.01f);
-  camera->config.set_far_clip(50.0f);
+  camera->config.set_near_clip(0.002f);
+  camera->config.set_far_clip(200.0f);
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
@@ -164,6 +202,7 @@ int main(int argc, char** argv) {
     float motion_speed = 0.03f;
     if ((closest_distance != -1.0) && (closest_distance < 30.0f)){
       motion_speed = closest_distance / 1000.0f;
+      // motion_speed = 0.008f;
     }
     nav.set_motion_speed(motion_speed);
     std::cout << motion_speed << std::endl;
