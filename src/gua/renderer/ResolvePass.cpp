@@ -42,7 +42,7 @@ ResolvePassDescription::ResolvePassDescription()
   name_ = "ResolvePass";
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Quad;
+  rendermode_ = RenderMode::Callback;
   depth_stencil_state_ = boost::make_optional(
     scm::gl::depth_stencil_state_desc(
       true, true, scm::gl::COMPARISON_LESS, true, 1, 0,
@@ -465,6 +465,17 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
   substitution_map["gua_tone_mapping_method"] = std::to_string(static_cast<int>(tone_mapping_method()));
 
   PipelinePass pass{*this, ctx, substitution_map};
+
+  pass.process_ = [](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+
+    auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
+    if (gbuffer) {
+      gbuffer->update_a_buffer_min_max_buffer();
+    }
+
+    pipe.draw_quad();
+  };
+
   return pass;
 }
 

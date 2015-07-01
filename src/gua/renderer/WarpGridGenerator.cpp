@@ -60,8 +60,8 @@ WarpGridGenerator::WarpGridGenerator()
 ////////////////////////////////////////////////////////////////////////////////
 
 WarpGridGenerator::~WarpGridGenerator() {
-  if (res_ && res_->min_max_depth_buffer) {
-    res_->min_max_depth_buffer->make_non_resident(pipe_->get_context());
+  if (res_ && res_->surface_detection_buffer) {
+    res_->surface_detection_buffer->make_non_resident(pipe_->get_context());
   }
 }
 
@@ -109,8 +109,8 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
       res_->cell_count = pixel_count;
 
 
-      if (res_->min_max_depth_buffer) {
-        res_->min_max_depth_buffer->make_non_resident(ctx);
+      if (res_->surface_detection_buffer) {
+        res_->surface_detection_buffer->make_non_resident(ctx);
       }
 
 
@@ -121,18 +121,18 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
         scm::gl::WRAP_CLAMP_TO_EDGE);
 
       if (description->mode() == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD) {
-        res_->min_max_depth_buffer = std::make_shared<Texture2D>(size.x, size.y,
+        res_->surface_detection_buffer = std::make_shared<Texture2D>(size.x, size.y,
             scm::gl::FORMAT_RGB_16, mip_map_levels, state);
       } else {
-        res_->min_max_depth_buffer = std::make_shared<Texture2D>(size.x, size.y,
+        res_->surface_detection_buffer = std::make_shared<Texture2D>(size.x, size.y,
             scm::gl::FORMAT_R_16UI, mip_map_levels, state);
       }
 
-      res_->min_max_depth_buffer_fbos.clear();
+      res_->surface_detection_buffer_fbos.clear();
 
       for (int i(0); i<mip_map_levels; ++i) {
-        res_->min_max_depth_buffer_fbos.push_back(ctx.render_device->create_frame_buffer());
-        res_->min_max_depth_buffer_fbos.back()->attach_color_buffer(0, res_->min_max_depth_buffer->get_buffer(ctx),i,0);
+        res_->surface_detection_buffer_fbos.push_back(ctx.render_device->create_frame_buffer());
+        res_->surface_detection_buffer_fbos.back()->attach_color_buffer(0, res_->surface_detection_buffer->get_buffer(ctx),i,0);
       }
     }
   }
@@ -148,11 +148,11 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
   surface_detection_program_->use(ctx);
   surface_detection_program_->set_uniform(ctx, gbuffer->get_depth_buffer_write()->get_handle(ctx), "depth_buffer");
-  surface_detection_program_->set_uniform(ctx, res_->min_max_depth_buffer->get_handle(ctx), "min_max_depth_buffer");
+  surface_detection_program_->set_uniform(ctx, res_->surface_detection_buffer->get_handle(ctx), "surface_detection_buffer");
 
-  for (int i(0); i<res_->min_max_depth_buffer_fbos.size(); ++i) {
+  for (int i(0); i<res_->surface_detection_buffer_fbos.size(); ++i) {
     math::vec2ui level_size(scm::gl::util::mip_level_dimensions(resolution/2, i));
-    ctx.render_context->set_frame_buffer(res_->min_max_depth_buffer_fbos[i]);
+    ctx.render_context->set_frame_buffer(res_->surface_detection_buffer_fbos[i]);
     ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(level_size)));
     surface_detection_program_->set_uniform(ctx, i, "current_level");
     pipe.draw_quad();
@@ -187,7 +187,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
   pipe.begin_gpu_query(ctx, gpu_query_name_b);
 
   grid_generation_program_->use(ctx);
-  grid_generation_program_->set_uniform(ctx, res_->min_max_depth_buffer->get_handle(ctx), "min_max_depth_buffer");
+  grid_generation_program_->set_uniform(ctx, res_->surface_detection_buffer->get_handle(ctx), "surface_detection_buffer");
   grid_generation_program_->set_uniform(ctx, current_level, "current_level");
 
   // first subdivision

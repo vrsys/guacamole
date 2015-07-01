@@ -50,8 +50,8 @@ class WarpGridGenerator {
     scm::gl::vertex_array_ptr       grid_vao[2];
     size_t                          cell_count = 0;
 
-    std::shared_ptr<Texture>                min_max_depth_buffer;
-    std::vector<scm::gl::frame_buffer_ptr>  min_max_depth_buffer_fbos;
+    std::shared_ptr<Texture>                surface_detection_buffer;
+    std::vector<scm::gl::frame_buffer_ptr>  surface_detection_buffer_fbos;
   };
 
   WarpGridGenerator();

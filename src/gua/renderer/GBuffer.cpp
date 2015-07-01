@@ -82,8 +82,14 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::allocate_a_buffer(RenderContext& ctx, size_t buffer_size) {
-  abuffer_.allocate(ctx, buffer_size, get_resolution());
+void GBuffer::allocate_a_buffer(Pipeline& pipe, size_t buffer_size) {
+  abuffer_.allocate(pipe, buffer_size, get_resolution());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GBuffer::update_a_buffer_min_max_buffer() {
+  abuffer_.update_min_max_buffer();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

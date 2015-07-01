@@ -30,6 +30,8 @@
 
 namespace gua {
 
+class Pipeline;
+
 class GUA_DLL GBuffer : public RenderTarget {
  public:
 
@@ -43,7 +45,9 @@ class GUA_DLL GBuffer : public RenderTarget {
 
   void toggle_ping_pong();
 
-  void allocate_a_buffer(RenderContext& ctx, size_t buffer_size);
+  void allocate_a_buffer(Pipeline& pipe, size_t buffer_size);
+  void update_a_buffer_min_max_buffer();
+
   void remove_buffers(RenderContext const& ctx) override;
 
   std::shared_ptr<Texture2D> const& get_color_buffer()  const;

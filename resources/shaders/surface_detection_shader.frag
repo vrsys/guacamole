@@ -23,7 +23,7 @@
 @include "gbuffer_warp_modes.glsl"
 
 uniform uvec2 depth_buffer;
-uniform uvec2 min_max_depth_buffer;
+uniform uvec2 surface_detection_buffer;
 uniform int   current_level;
 
 in vec2 gua_quad_coords;
@@ -111,10 +111,10 @@ void main() {
     // |   |
     // s2-s3
 
-    uint s0 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 1)).x;
-    uint s1 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 1)).x;
-    uint s2 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 0)).x;
-    uint s3 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 0)).x;
+    uint s0 = texelFetchOffset(usampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 1)).x;
+    uint s1 = texelFetchOffset(usampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 1)).x;
+    uint s2 = texelFetchOffset(usampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 0)).x;
+    uint s3 = texelFetchOffset(usampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 0)).x;
 
     // if each child has been a connected surface, the parent is as a surface as well
     const uint is_surface = s0 & s1 & s2 & s3;
@@ -230,10 +230,10 @@ void main() {
     // |   |
     // s2-s3
 
-    const uint s0 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 1)).x;
-    const uint s1 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 1)).x;
-    const uint s2 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 0)).x;
-    const uint s3 = texelFetchOffset(usampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 0)).x;
+    const uint s0 = texelFetchOffset(usampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 1)).x;
+    const uint s1 = texelFetchOffset(usampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 1)).x;
+    const uint s2 = texelFetchOffset(usampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 0)).x;
+    const uint s3 = texelFetchOffset(usampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 0)).x;
 
     // check for internal continuity
     const uint internal_continuity = (s0 >> BIT_CONTINUOUS_R)
@@ -325,10 +325,10 @@ void main() {
     result.x = abs(result.y - result.z) > @split_threshold@ ? 0 : 1;
 
   } else {
-    const vec3 sample_0 = texelFetchOffset(sampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 0)).xyz;
-    const vec3 sample_1 = texelFetchOffset(sampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 0)).xyz;
-    const vec3 sample_2 = texelFetchOffset(sampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 1)).xyz;
-    const vec3 sample_3 = texelFetchOffset(sampler2D(min_max_depth_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 1)).xyz;
+    const vec3 sample_0 = texelFetchOffset(sampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 0)).xyz;
+    const vec3 sample_1 = texelFetchOffset(sampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 0)).xyz;
+    const vec3 sample_2 = texelFetchOffset(sampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 1)).xyz;
+    const vec3 sample_3 = texelFetchOffset(sampler2D(surface_detection_buffer), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 1)).xyz;
 
     result.x = min(min(sample_0.x, sample_1.x), min(sample_2.x, sample_3.x));
 

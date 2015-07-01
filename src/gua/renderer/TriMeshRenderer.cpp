@@ -161,8 +161,8 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
           // bind warp grid for adaptive abuffer filling
           auto res(ctx.resources.get<WarpGridGenerator::SharedResource>());
-          if (description->adaptive_abuffer() && res && res->min_max_depth_buffer) {
-            current_shader->set_uniform(ctx, res->min_max_depth_buffer->get_handle(ctx),  "gua_warp_grid_tex");
+          if (description->adaptive_abuffer() && res && res->surface_detection_buffer) {
+            current_shader->set_uniform(ctx, res->surface_detection_buffer->get_handle(ctx),  "gua_warp_grid_tex");
           }
         }
       }

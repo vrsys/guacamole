@@ -110,7 +110,7 @@ layout(location=0) out vec3 gua_out_color;
 
     vec3 s, e;
 
-    #if 0
+    #if 1
       // draw line
       vec2 cur_pos = preview_coords*2-1;
       get_ray(vec2(0.5), s, e);
@@ -139,10 +139,10 @@ layout(location=0) out vec3 gua_out_color;
     float min_depth = 1-i_min_depth*0.001;
     float max_depth = i_max_depth*0.001;
     
-    // if ((max_depth - min_depth) + 0.001 > 0) {
-      gua_out_color = vec3(max_depth, min_depth, 0);
+    // // if ((max_depth - min_depth) + 0.001 > 0) {
+      gua_out_color = vec3(max_depth);
       return;
-    // }
+    // // }
 
 
     get_ray(gua_quad_coords, s, e);
@@ -168,10 +168,9 @@ layout(location=0) out vec3 gua_out_color;
       float depth_start = s.z + step_size.z * (i+0);
       float depth_end   = s.z + step_size.z * (i+1);
 
-      uvec2 frag = unpackUint2x32(frag_list[gua_resolution.x * int(current.y) + int(current.x)]);
-
       float thickness = 0.000;
 
+      uvec2 frag = unpackUint2x32(frag_list[gua_resolution.x * int(current.y) + int(current.x)]);
       while (frag.x != 0) {
         
         float z = unpack_depth24(frag.y)*2-1;
@@ -184,7 +183,7 @@ layout(location=0) out vec3 gua_out_color;
         }
 
         frag = unpackUint2x32(frag_list[frag.x]);
-      } 
+      }
     }
     abuf_mix_frag(texture2D(sampler2D(warped_color_buffer), gua_quad_coords), color);
     gua_out_color = toneMap(color.rgb);

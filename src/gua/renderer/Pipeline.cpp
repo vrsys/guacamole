@@ -137,7 +137,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
 
   if (reload_abuffer) {
-    gbuffer_->allocate_a_buffer(context_,
+    gbuffer_->allocate_a_buffer(*this,
                       last_description_.get_enable_abuffer()
                           ? last_description_.get_abuffer_size()
                           : 0);
