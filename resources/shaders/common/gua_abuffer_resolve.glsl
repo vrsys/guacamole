@@ -40,11 +40,8 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
         return false;
       }
     #else
-      shaded_color.rgb = mix(toneMap(shaded_color.rgb), shaded_color.rgb, shaded_color.w);
-      float normal_x = unpackSnorm2x16(frag_data[frag.x - abuf_list_offset].y).y;
-      uint col_norm = bitfieldInsert(packUnorm2x16(shaded_color.bb),
-                                     packSnorm2x16(vec2(normal_x)), 16, 16);
-      frag_data[frag.x - abuf_list_offset].xy = uvec2(packUnorm2x16(shaded_color.rg), col_norm);
+      // shaded_color.rgb = mix(toneMap(shaded_color.rgb), shaded_color.rgb, shaded_color.w);
+      frag_data[frag.x - abuf_list_offset].rgb = uvec3(shaded_color.rgb*1000);
     #endif
 
     current = frag.x;

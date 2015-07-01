@@ -212,8 +212,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     }
   }
 
-  gbuffer_->clear_abuffer(context_);
-
   gbuffer_->toggle_ping_pong();
 
   // add texture to texture database
@@ -828,8 +826,6 @@ void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::clear_frame_cache() {
-
-  gbuffer_->clear(context_, 1.f, 1);
 
   if (!shadow_map_res_) {
     shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();

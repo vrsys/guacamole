@@ -259,8 +259,12 @@ void main() {
     abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
   }
 
-  // color correction
-  gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
+  #if @gua_compositing_enable@
+    // color correction
+    gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
+  #else
+    gua_out_color = abuffer_accumulation_color.rgb;
+  #endif
 
   // vignette
   if (gua_vignette_color.a > 0) {

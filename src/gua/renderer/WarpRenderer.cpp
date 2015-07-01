@@ -103,12 +103,6 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     p_desc._point_state = scm::gl::point_raster_state(true);
     points_ = ctx.render_device->create_rasterizer_state(p_desc);
 
-    alpha_blend_ = ctx.render_device->create_blend_state(true,
-                         scm::gl::FUNC_SRC_ALPHA,
-                         scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
-                         scm::gl::FUNC_SRC_ALPHA,
-                         scm::gl::FUNC_ONE_MINUS_SRC_ALPHA);
-
     depth_stencil_state_yes_ = ctx.render_device->create_depth_stencil_state(
         true, true, scm::gl::COMPARISON_LESS, true, 1, 0,
         scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
@@ -198,7 +192,10 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     }
 
     auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
-    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_depth_buffer_write()->get_handle(ctx), "depth_buffer");
+    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_depth_buffer_write()->get_handle(ctx), "warped_depth_buffer");
+    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_color_buffer_write()->get_handle(ctx), "warped_color_buffer");
+    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_depth_buffer()->get_handle(ctx), "orig_depth_buffer");
+    
 
     ABuffer a_buffer;
     a_buffer.allocate_shared(ctx);
@@ -219,7 +216,6 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     a_buffer.bind(ctx);
 
     if (description->abuffer_warp_mode() == WarpPassDescription::ABUFFER_RAYCASTING) {
-      ctx.render_context->set_blend_state(alpha_blend_);
       ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_, 1);
       ctx.render_context->apply();
       pipe.draw_quad();

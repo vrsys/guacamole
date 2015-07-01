@@ -20,64 +20,50 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/ToneMappingPass.hpp>
+#include <gua/renderer/ClearPass.hpp>
 
+#include <gua/renderer/GBuffer.hpp>
+#include <gua/renderer/ABuffer.hpp>
+#include <gua/renderer/WarpRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/Resources.hpp>
+#include <gua/utils/Logger.hpp>
+
+#include <boost/variant.hpp>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
-
-ToneMappingPassDescription::ToneMappingPassDescription()
-  : PipelinePassDescription()
-{
-  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
-  fragment_shader_ = "shaders/tone_mapping.frag";
-  name_ = "ToneMappingPass";
-
-  needs_color_buffer_as_input_ = true;
-  writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Quad;
-  depth_stencil_state_ = boost::make_optional(
-      scm::gl::depth_stencil_state_desc(false, false));
-  uniforms["gua_tone_mapping_exposure"] = 1.0f;
-  uniforms["gua_tone_mapping_operator"] = static_cast<int>(Method::LINEAR);
+ClearPassDescription::ClearPassDescription()
+  : PipelinePassDescription() {
+  vertex_shader_ = "";
+  fragment_shader_ = "";
+  name_ = "ClearPass";
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = false;
+  rendermode_ = RenderMode::Custom;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ToneMappingPassDescription& ToneMappingPassDescription::exposure(float e) {
-  uniforms["gua_tone_mapping_exposure"] = e;
-  return *this;
+std::shared_ptr<PipelinePassDescription> ClearPassDescription::make_copy() const {
+  return std::make_shared<ClearPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+PipelinePass ClearPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
+  PipelinePass pass{*this, ctx, substitution_map};
+  pass.process_ = [](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+    auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
+    if (gbuffer) {
+      auto& ctx(pipe.get_context());
+      gbuffer->clear(ctx, 1.f, 1);
+      gbuffer->clear_abuffer(ctx);
+    }
+  };
 
-float ToneMappingPassDescription::exposure() const {
-  auto uniform(uniforms.find("gua_tone_mapping_exposure"));
-  return boost::get<float>(uniform->second.data);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-ToneMappingPassDescription& ToneMappingPassDescription::method(
-    ToneMappingPassDescription::Method m) {
-  uniforms["gua_tone_mapping_operator"] = static_cast<int>(m);
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<PipelinePassDescription> ToneMappingPassDescription::make_copy() const {
-  return std::make_shared<ToneMappingPassDescription>(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-ToneMappingPassDescription::Method ToneMappingPassDescription::method() const {
-  auto uniform(uniforms.find("gua_tone_mapping_operator"));
-  return ToneMappingPassDescription::Method(
-      boost::get<int>(uniform->second.data));
+  return pass;
 }
 
 }

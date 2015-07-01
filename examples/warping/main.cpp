@@ -28,7 +28,6 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 #include <gua/renderer/PLODPass.hpp>
@@ -45,7 +44,7 @@
 
 #define LOAD_CAR        true
 #define LOAD_PITOTI     false
-#define LOAD_MOUNTAINS  false
+#define LOAD_MOUNTAINS  true
 
 bool depth_test             = true;
 bool backface_culling       = true;
@@ -165,7 +164,7 @@ int main(int argc, char** argv) {
   auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
-  plane->translate(0, -0.25, 0);
+  plane->translate(0, -0.26, 0);
   plane->scale(2);
   auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(plane));
   if (casted) {
@@ -264,10 +263,12 @@ int main(int argc, char** argv) {
              .set_uniform("RoughnessMap", std::string("../transparency/data/objects/bottle/roughness.jpg"))
              .set_show_back_faces(true);
 
-  // Original bottle model is taken from http://www.sweethome3d->com (Licensed under Free Art License)
-  auto bottle(loader.create_geometry_from_file("bottle", "../transparency/data/objects/bottle/bottle.obj", mat_bottle,
-                                               gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  scene_root->add_child(bottle);
+  for (int i(-1); i<=1; ++i) {
+    auto bottle(loader.create_geometry_from_file("bottle", "../transparency/data/objects/bottle/bottle.obj", mat_bottle,
+                                                 gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+    bottle->translate(i*0.75, 0, 0);
+    scene_root->add_child(bottle);
+  }
   scene_root->add_child(plane);
 
   // mountains --------------------------------------------------------------------
@@ -416,6 +417,7 @@ int main(int argc, char** argv) {
   fast_cam->config.set_far_clip(slow_cam->config.get_far_clip()*1.5);
   fast_cam->config.set_near_clip(0.1f);
 
+  auto clear_pass(std::make_shared<gua::ClearPassDescription>());
   auto tex_quad_pass(std::make_shared<gua::TexturedQuadPassDescription>());
   auto light_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   auto warp_pass(std::make_shared<gua::WarpPassDescription>());
@@ -436,6 +438,7 @@ int main(int argc, char** argv) {
   slow_cam->config.set_output_window_name("window");
 
   auto warp_pipe = std::make_shared<gua::PipelineDescription>();
+  warp_pipe->add_pass(clear_pass);
   warp_pipe->add_pass(trimesh_pass);
   warp_pipe->add_pass(tex_quad_pass);
   warp_pipe->add_pass(plod_pass);
@@ -449,6 +452,7 @@ int main(int argc, char** argv) {
   slow_cam->set_pipeline_description(warp_pipe);
 
   auto normal_pipe = std::make_shared<gua::PipelineDescription>();
+  normal_pipe->add_pass(std::make_shared<gua::ClearPassDescription>());
   normal_pipe->add_pass(trimesh_pass);
   normal_pipe->add_pass(tex_quad_pass);
   normal_pipe->add_pass(plod_pass);
@@ -564,6 +568,7 @@ int main(int argc, char** argv) {
       slow_cam->config.set_eye_dist(0.f);
       fast_cam->config.set_eye_dist(0.f);
       res_pass->compositing_enable(false);
+      clear_pass->set_enable_for_right_eye(true);
 
       #if OCULUS
         slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -577,6 +582,7 @@ int main(int argc, char** argv) {
       slow_cam->config.set_enable_stereo(true);
       slow_cam->config.set_eye_dist(0.f);
       fast_cam->config.set_eye_dist(0.064f);
+      clear_pass->set_enable_for_right_eye(false);
       trimesh_pass->set_enable_for_right_eye(false);
       plod_pass->set_enable_for_right_eye(false);
       tex_quad_pass->set_enable_for_right_eye(false);

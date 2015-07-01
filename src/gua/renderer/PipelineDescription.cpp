@@ -32,7 +32,6 @@
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
