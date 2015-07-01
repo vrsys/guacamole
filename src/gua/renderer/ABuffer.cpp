@@ -24,7 +24,7 @@
 
 namespace gua {
 
-void ABuffer::allocate(RenderContext& ctx, size_t buffer_size) {
+void ABuffer::allocate(RenderContext& ctx, size_t buffer_size, math::vec2ui const& resolution) {
 
   if (!buffer_size) {
     res_ = nullptr;
@@ -56,6 +56,10 @@ void ABuffer::allocate(RenderContext& ctx, size_t buffer_size) {
                                          scm::gl::USAGE_DYNAMIC_COPY,
                                          frag_count * FRAG_DATA_WORD_SIZE);
   }
+
+  resource->max_depth = ctx.render_device->create_texture_2d(resolution, scm::gl::data_format::FORMAT_R_32I);
+  resource->min_depth = ctx.render_device->create_texture_2d(resolution, scm::gl::data_format::FORMAT_R_32I);
+
   res_ = resource;
 }
 
@@ -82,6 +86,8 @@ void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution) {
                                             FRAG_LIST_WORD_SIZE * resolution.x
                                                                 * resolution.y,
                                             0);
+  ctx.render_context->clear_image_data(res_->min_depth, 0, scm::gl::data_format::FORMAT_R_32I, 0);
+  ctx.render_context->clear_image_data(res_->max_depth, 0, scm::gl::data_format::FORMAT_R_32I, 0);
 }
 
 void ABuffer::bind(RenderContext const& ctx) {
@@ -93,6 +99,12 @@ void ABuffer::bind(RenderContext const& ctx) {
   ctx.render_context->bind_atomic_counter_buffer(res_->counter, 0);
   ctx.render_context->bind_storage_buffer(res_->frag_list, 0);
   ctx.render_context->bind_storage_buffer(res_->frag_data, 1);
+  ctx.render_context->bind_image(res_->min_depth, 
+                                 scm::gl::data_format::FORMAT_R_32I, 
+                                 scm::gl::access_mode::ACCESS_READ_WRITE, 0);
+  ctx.render_context->bind_image(res_->max_depth, 
+                                 scm::gl::data_format::FORMAT_R_32I, 
+                                 scm::gl::access_mode::ACCESS_READ_WRITE, 1);
 }
 
 void ABuffer::unbind(RenderContext const& ctx) {}

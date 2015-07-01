@@ -28,12 +28,10 @@ layout(location=0) out vec3 gua_out_color;
 
 #if WARP_MODE == WARP_MODE_RAYCASTING
 
-  @include "common/gua_abuffer.glsl"
-
   uniform float gua_tone_mapping_exposure = 1.0;
 
+  @include "common/gua_abuffer.glsl"
   @include "common/gua_tone_mapping.glsl"
-
 
   in vec2 gua_quad_coords;
 
@@ -110,28 +108,41 @@ layout(location=0) out vec3 gua_out_color;
 
     vec2 preview_coords = gua_quad_coords*5-0.1;
 
-    // draw line
-    vec2 cur_pos = preview_coords*2-1;
     vec3 s, e;
-    get_ray(vec2(0.5), s, e);
-    if(abs((e.y-s.y)*cur_pos.x - (e.x-s.x)*cur_pos.y + e.x*s.y - e.y*s.x) / (length(s.xy-e.xy)+0.00001) < 0.01
-       && length(e.xy-cur_pos.xy) + length(s.xy-cur_pos.xy) - 0.01 < length(s.xy-e.xy)) {
 
-      gua_out_color = mix(vec3(1, 0, 0), vec3(0, 1, 0), length(e.xy-cur_pos.xy)/(length(s.xy-e.xy)+0.00001));
-      return;
-    }
+    #if 0
+      // draw line
+      vec2 cur_pos = preview_coords*2-1;
+      get_ray(vec2(0.5), s, e);
+      if(abs((e.y-s.y)*cur_pos.x - (e.x-s.x)*cur_pos.y + e.x*s.y - e.y*s.x) / (length(s.xy-e.xy)+0.00001) < 0.01
+         && length(e.xy-cur_pos.xy) + length(s.xy-cur_pos.xy) - 0.01 < length(s.xy-e.xy)) {
+
+        gua_out_color = mix(vec3(1, 0, 0), vec3(0, 1, 0), length(e.xy-cur_pos.xy)/(length(s.xy-e.xy)+0.00001));
+        return;
+      }
+      
+      // draw mini version of original depth buffer
+      if (preview_coords.x < 1 && preview_coords.y < 1 && preview_coords.x > 0 && preview_coords.y > 0) {
+        gua_out_color = vec3(texture2D(sampler2D(orig_depth_buffer), preview_coords).x);
+        return;
+      }
+
+      // draw center dot
+      if (length(vec2(0.5) - gua_quad_coords) < 0.001) {
+        gua_out_color = vec3(1, 0, 1);
+        return;
+      }
+    #endif
+
+    int i_min_depth = imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy));
+    int i_max_depth = imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy));
+    float min_depth = 1-i_min_depth*0.001;
+    float max_depth = i_max_depth*0.001;
     
-    // draw mini version of original depth buffer
-    if (preview_coords.x < 1 && preview_coords.y < 1 && preview_coords.x > 0 && preview_coords.y > 0) {
-      gua_out_color = vec3(texture2D(sampler2D(orig_depth_buffer), preview_coords).x);
+    // if ((max_depth - min_depth) + 0.001 > 0) {
+      gua_out_color = vec3(max_depth, min_depth, 0);
       return;
-    }
-
-    // draw center dot
-    if (length(vec2(0.5) - gua_quad_coords) < 0.001) {
-      gua_out_color = vec3(1, 0, 1);
-      return;
-    }
+    // }
 
 
     get_ray(gua_quad_coords, s, e);

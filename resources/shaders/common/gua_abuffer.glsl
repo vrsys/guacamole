@@ -27,6 +27,9 @@ layout (std430, binding = 1) ABUF_MODE coherent buffer abuf_data {
   uvec4 frag_data[];
 };
 
+layout (r32i, binding = 0) uniform iimage2D abuf_min_depth;
+layout (r32i, binding = 1) uniform iimage2D abuf_max_depth;
+
 // helper macros
 #define UINT24_MAX           0xFFFFFF
 #define UINT_MAX             0xFFFFFFFF

@@ -34,16 +34,18 @@ class GUA_DLL ABuffer {
  public:
 
   struct SharedResource {
-    scm::gl::buffer_ptr counter;
-    scm::gl::buffer_ptr frag_list;
-    scm::gl::buffer_ptr frag_data;
-    size_t              frag_count = 0;
+    scm::gl::buffer_ptr  counter;
+    scm::gl::buffer_ptr  frag_list;
+    scm::gl::buffer_ptr  frag_data;
+    size_t               frag_count = 0;
+    scm::gl::texture_image_ptr max_depth;
+    scm::gl::texture_image_ptr min_depth;
   };
 
   ABuffer() {}
   virtual ~ABuffer() {}
 
-  void allocate(RenderContext& ctx, size_t buffer_size);
+  void allocate(RenderContext& ctx, size_t buffer_size, math::vec2ui const& resolution);
   void allocate_shared(RenderContext const& with_ctx);
   void clear(RenderContext const& ctx, math::vec2ui const& resolution);
   void bind(RenderContext const& ctx);

@@ -75,6 +75,9 @@ bool abuf_insert(float depth)
 
     frag_data[ctr] = uvec4(packUnorm2x16(gua_color.rg), col_norm,
                            packSnorm2x16(gua_normal.yz), pbr);
+
+    imageAtomicMax(abuf_min_depth, ivec2(gl_FragCoord.xy), int((1-depth)*1000));
+    imageAtomicMax(abuf_max_depth, ivec2(gl_FragCoord.xy), int(depth*1000));
   }
   return success;
 }
