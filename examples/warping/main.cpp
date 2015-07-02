@@ -23,29 +23,35 @@
 
 #include <scm/input/tracking/art_dtrack.h>
 #include <scm/input/tracking/target.h>
-#include <OVR.h>
- 
+
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
-#include <gua/renderer/PLODPass.hpp>
-#include <gua/renderer/PLODLoader.hpp>
-#include <gua/node/PLODNode.hpp>
-#include <gua/OculusWindow.hpp>
 #include <gua/gui.hpp>
 
 #include "Navigator.hpp"
 
 #define COUNT           6
 #define POWER_WALL      false
-#define OCULUS          true
+#define OCULUS          false
 
-#define LOAD_CAR        true
+#define LOAD_CAR        false
 #define LOAD_PITOTI     false
 #define LOAD_MOUNTAINS  false
+
+#if OCULUS
+#include <OVR.h>
+#include <gua/OculusWindow.hpp>
+#endif
+
+#if LOAD_PITOTI
+#include <gua/renderer/PLODPass.hpp>
+#include <gua/renderer/PLODLoader.hpp>
+#include <gua/node/PLODNode.hpp>
+#endif
 
 bool depth_test             = true;
 bool backface_culling       = true;
@@ -144,7 +150,6 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------------
 
   gua::TriMeshLoader loader;
-  gua::PLODLoader plodloader;
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
 
@@ -224,7 +229,8 @@ int main(int argc, char** argv) {
   // pitoti --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
   #if LOAD_PITOTI
-    auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/valley/sera_part_14.kdn", 
+    gua::PLODLoader plodloader;
+    auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/valley/sera_part_14.kdn",
       gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
     scene_root->scale(30);
     scene_root->add_child(pitoti);
@@ -401,7 +407,9 @@ int main(int argc, char** argv) {
   auto grid_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
   auto render_grid_pass(std::make_shared<gua::RenderWarpGridPassDescription>());
   auto trimesh_pass(std::make_shared<gua::TriMeshPassDescription>());
+  #if LOAD_PITOTI
   auto plod_pass(std::make_shared<gua::PLODPassDescription>());
+  #endif
   auto res_pass(std::make_shared<gua::ResolvePassDescription>());
   res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
             background_texture("/opt/guacamole/resources/skymaps/cycles_island.jpg").
@@ -417,7 +425,9 @@ int main(int argc, char** argv) {
   auto warp_pipe = std::make_shared<gua::PipelineDescription>();
   warp_pipe->add_pass(trimesh_pass);
   warp_pipe->add_pass(tex_quad_pass);
+  #if LOAD_PITOTI
   warp_pipe->add_pass(plod_pass);
+  #endif
   warp_pipe->add_pass(light_pass);
   warp_pipe->add_pass(res_pass);
   warp_pipe->add_pass(grid_pass);
@@ -430,7 +440,9 @@ int main(int argc, char** argv) {
   auto normal_pipe = std::make_shared<gua::PipelineDescription>();
   normal_pipe->add_pass(trimesh_pass);
   normal_pipe->add_pass(tex_quad_pass);
+  #if LOAD_PITOTI
   normal_pipe->add_pass(plod_pass);
+  #endif
   normal_pipe->add_pass(light_pass);
   normal_pipe->add_pass(res_pass);
   normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
@@ -554,7 +566,9 @@ int main(int argc, char** argv) {
       slow_cam->config.set_eye_dist(0.f);
       fast_cam->config.set_eye_dist(0.064f);
       trimesh_pass->set_enable_for_right_eye(false);
+      #if LOAD_PITOTI
       plod_pass->set_enable_for_right_eye(false);
+      #endif
       tex_quad_pass->set_enable_for_right_eye(false);
       light_pass->set_enable_for_right_eye(false);
       res_pass->set_enable_for_right_eye(false);
@@ -589,7 +603,9 @@ int main(int argc, char** argv) {
       slow_cam->config.set_enable_stereo(true);
       slow_cam->config.set_eye_dist(0.064f);
       trimesh_pass->set_enable_for_right_eye(true);
+      #if LOAD_PITOTI
       plod_pass->set_enable_for_right_eye(true);
+      #endif
       tex_quad_pass->set_enable_for_right_eye(true);
       light_pass->set_enable_for_right_eye(true);
       res_pass->set_enable_for_right_eye(true);
@@ -779,8 +795,8 @@ int main(int argc, char** argv) {
 
   window->config.set_fullscreen_mode(fullscreen);
   window->cursor_mode(gua::GlfwWindow::CursorMode::HIDDEN);
-  
-  #if (!POWER_WALL && !OCULUS) 
+
+  #if (!POWER_WALL && !OCULUS)
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
       resolution = new_size;
       window->config.set_resolution(new_size);
