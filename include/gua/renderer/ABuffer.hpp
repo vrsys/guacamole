@@ -28,6 +28,7 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/Texture2D.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
 namespace gua {
 
@@ -48,15 +49,15 @@ class GUA_DLL ABuffer {
     std::vector<scm::gl::frame_buffer_ptr> min_max_buffer_fbos;
   };
 
-  ABuffer() {}
+  ABuffer();
   virtual ~ABuffer();
 
   void allocate(Pipeline& pipe, size_t buffer_size, math::vec2ui const& resolution);
-  void allocate_shared(RenderContext const& with_ctx);
 
   void clear(RenderContext const& ctx, math::vec2ui const& resolution);
 
   void update_min_max_buffer();
+  void bind_min_max_buffer(std::shared_ptr<ShaderProgram> const& shader);
 
   void bind(RenderContext const& ctx);
   void unbind(RenderContext const& ctx);
@@ -66,6 +67,7 @@ class GUA_DLL ABuffer {
   const size_t FRAG_LIST_WORD_SIZE = 8;
   const size_t FRAG_DATA_WORD_SIZE = 16;
 
+  std::shared_ptr<ShaderProgram>  min_max_program_;
   std::shared_ptr<SharedResource> res_ = nullptr;
   Pipeline* pipe_;
 };

@@ -134,15 +134,17 @@ layout(location=0) out vec3 gua_out_color;
       }
     #endif
 
-    int i_min_depth = imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy));
-    int i_max_depth = imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy));
-    float min_depth = 1-i_min_depth*0.001;
-    float max_depth = i_max_depth*0.001;
-    
-    // // if ((max_depth - min_depth) + 0.001 > 0) {
-      gua_out_color = vec3(max_depth);
-      return;
-    // // }
+    float min_depth = 1-unpack_depth(imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy)/2));
+    float max_depth =   unpack_depth(imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy)/2));
+
+    for (int i=0; i<5; ++i) {
+      uvec2 min_max_depth = texelFetch(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy)/(1 << (i+2)), i).xy;
+      min_depth += 1-unpack_depth(min_max_depth.x);
+      max_depth +=   unpack_depth(min_max_depth.y);
+    }
+    gua_out_color = vec3(max_depth/6);
+    return;
+
 
 
     get_ray(gua_quad_coords, s, e);
@@ -178,7 +180,7 @@ layout(location=0) out vec3 gua_out_color;
         if (depth_end + thickness > z && depth_start - thickness <= z && z-0.00001 < e.z) {
           uvec4 data = frag_data[frag.x - abuf_list_offset];
           float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
-          vec3  frag_color = vec3(data.rgb)*0.001;
+          vec3  frag_color = uintBitsToFloat(data.rgb);
           abuf_mix_frag(vec4(frag_color, frag_alpha), color);
         }
 

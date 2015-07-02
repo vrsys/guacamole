@@ -94,7 +94,7 @@ void main() {
     current = frag.x;
 
     uvec4 data = frag_data[current - gua_resolution.x*gua_resolution.y];
-    color = vec3(data.rgb)*0.001;
+    color = uintBitsToFloat(data.rgb);
 
     float z = unpack_depth24(frag.y);
     float depth = fma(z, 2.0, -1.0);

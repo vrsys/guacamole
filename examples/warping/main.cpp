@@ -42,9 +42,9 @@
 #define POWER_WALL      false
 #define OCULUS          false
 
-#define LOAD_CAR        true
+#define LOAD_CAR        false
 #define LOAD_PITOTI     false
-#define LOAD_MOUNTAINS  true
+#define LOAD_MOUNTAINS  false
 
 bool depth_test             = true;
 bool backface_culling       = true;

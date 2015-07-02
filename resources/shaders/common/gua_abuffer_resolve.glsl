@@ -40,8 +40,7 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
         return false;
       }
     #else
-      // shaded_color.rgb = mix(toneMap(shaded_color.rgb), shaded_color.rgb, shaded_color.w);
-      frag_data[frag.x - abuf_list_offset].rgb = uvec3(shaded_color.rgb*1000);
+      frag_data[frag.x - abuf_list_offset].rgb = floatBitsToUint(shaded_color.rgb);
     #endif
 
     current = frag.x;

@@ -234,10 +234,16 @@ void main() {
   float abuffer_accumulation_emissivity = 0.0;
   vec3 gbuffer_color = vec3(0);
 
-#if @enable_abuffer@
-  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
-#else
   bool res = true;
+#if @enable_abuffer@
+  
+  int level = 0;
+  uvec2 min_max_depth = texelFetch(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy)/(1 << (level+2)), level).xy;
+  float max_depth = unpack_depth(min_max_depth.y);
+  if (max_depth > 0) {
+    res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
+  }
+
 #endif
 
   if (res) {

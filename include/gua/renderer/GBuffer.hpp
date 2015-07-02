@@ -45,8 +45,7 @@ class GUA_DLL GBuffer : public RenderTarget {
 
   void toggle_ping_pong();
 
-  void allocate_a_buffer(Pipeline& pipe, size_t buffer_size);
-  void update_a_buffer_min_max_buffer();
+  ABuffer& get_abuffer();
 
   void remove_buffers(RenderContext const& ctx) override;
 

@@ -22,21 +22,34 @@
 // class header
 #include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/databases/Resources.hpp>
 
 namespace gua {
+
+////////////////////////////////////////////////////////////////////////////////
+
+ABuffer::ABuffer()
+  : pipe_(nullptr) {}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void ABuffer::allocate(Pipeline& pipe, size_t buffer_size, math::vec2ui const& resolution) {
 
   auto& ctx(pipe.get_context());
   pipe_ = &pipe;
 
+  // get a per-context resource
+  res_ = ctx.resources.get<SharedResource>();
+
+  if (res_->min_max_buffer) {
+    res_->min_max_buffer->make_non_resident(ctx);
+  }
+
   if (!buffer_size) {
     res_ = nullptr;
     return;
   }
 
-  // get a per-context resource
-  res_ = ctx.resources.get<SharedResource>();
 
   // compute memory allowance
   size_t frag_count = (buffer_size * 1024u * 1024u)
@@ -62,40 +75,47 @@ void ABuffer::allocate(Pipeline& pipe, size_t buffer_size, math::vec2ui const& r
 
   }
 
-  res_->max_depth = ctx.render_device->create_texture_2d(resolution, scm::gl::data_format::FORMAT_R_32I);
-  res_->min_depth = ctx.render_device->create_texture_2d(resolution, scm::gl::data_format::FORMAT_R_32I);
+  res_->max_depth = ctx.render_device->create_texture_2d(resolution/2, scm::gl::data_format::FORMAT_R_32UI);
+  res_->min_depth = ctx.render_device->create_texture_2d(resolution/2, scm::gl::data_format::FORMAT_R_32UI);
 
-  // if (res_->min_max_buffer) {
-  //   res_->min_max_buffer->make_non_resident(ctx);
-  // }
+  int mip_map_levels = 5;
+  math::vec2 size(resolution/4);
+  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
+    scm::gl::WRAP_CLAMP_TO_EDGE,
+    scm::gl::WRAP_CLAMP_TO_EDGE);
 
-  // int mip_map_levels = 5;
-  // math::vec2 size(resolution/2);
-  // scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
-  //   scm::gl::WRAP_CLAMP_TO_EDGE,
-  //   scm::gl::WRAP_CLAMP_TO_EDGE);
+  res_->min_max_buffer = std::make_shared<Texture2D>(size.x, size.y,
+    scm::gl::FORMAT_RG_32UI, mip_map_levels, state);
 
-  // res_->min_max_buffer = std::make_shared<Texture2D>(size.x, size.y,
-  //   scm::gl::FORMAT_RG_32I, mip_map_levels, state);
+  res_->min_max_buffer_fbos.clear();
 
-  // res_->min_max_buffer_fbos.clear();
+  for (int i(0); i<mip_map_levels; ++i) {
+    res_->min_max_buffer_fbos.push_back(ctx.render_device->create_frame_buffer());
+    res_->min_max_buffer_fbos.back()->attach_color_buffer(0, res_->min_max_buffer->get_buffer(ctx),i,0);
+  }
 
-  // for (int i(0); i<mip_map_levels; ++i) {
-  //   res_->min_max_buffer_fbos.push_back(ctx.render_device->create_frame_buffer());
-  //   res_->min_max_buffer_fbos.back()->attach_color_buffer(0, res_->min_max_buffer->get_buffer(ctx),i,0);
-  // }
+  #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+    ResourceFactory factory;
+    std::string v_shader = factory.read_shader_file("shaders/common/fullscreen_quad.vert");
+    std::string f_shader = factory.read_shader_file("shaders/abuf_min_max.frag");
+  #else
+    std::string v_shader = Resources::lookup_shader("shaders/common/fullscreen_quad.vert");
+    std::string f_shader = Resources::lookup_shader("shaders/abuf_min_max.frag");
+  #endif
 
+  min_max_program_ = std::make_shared<ShaderProgram>();
+  min_max_program_->create_from_sources(v_shader, f_shader);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 ABuffer::~ABuffer() {
-  // if (res_ && res_->min_max_buffer) {
-  //   res_->min_max_buffer->make_non_resident(pipe_->get_context());
-  // }
+  if (res_ && res_->min_max_buffer) {
+    res_->min_max_buffer->make_non_resident(pipe_->get_context());
+  }
 }
 
-void ABuffer::allocate_shared(RenderContext const& with_ctx) {
-  res_ = with_ctx.resources.get_dont_create<SharedResource>();
-}
+////////////////////////////////////////////////////////////////////////////////
 
 void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution) {
 
@@ -120,29 +140,42 @@ void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution) {
   ctx.render_context->clear_image_data(res_->max_depth, 0, scm::gl::data_format::FORMAT_R_32I, 0);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void ABuffer::update_min_max_buffer() {
 
-  // auto& ctx(pipe_->get_context());
-  // std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe_->current_viewstate().viewpoint_uuid) + " / ABuffer MinMaxMap";
-  // pipe_->begin_gpu_query(ctx, gpu_query_name);
+  if (res_) {
+    auto& ctx(pipe_->get_context());
+    std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe_->current_viewstate().viewpoint_uuid) + " / ABuffer MinMaxMap";
+    pipe_->begin_gpu_query(ctx, gpu_query_name);
 
+    bind(ctx);
 
-  // auto gbuffer = dynamic_cast<GBuffer*>(pipe_->current_viewstate().target);
+    min_max_program_->use(ctx);
 
-  // // surface_detection_program_->use(ctx);
-  // // surface_detection_program_->set_uniform(ctx, gbuffer->get_depth_buffer_write()->get_handle(ctx), "depth_buffer");
-  // // surface_detection_program_->set_uniform(ctx, res_->surface_detection_buffer->get_handle(ctx), "surface_detection_buffer");
+    bind_min_max_buffer(min_max_program_);
 
-  // // for (int i(0); i<res_->surface_detection_buffer_fbos.size(); ++i) {
-  // //   math::vec2ui level_size(scm::gl::util::mip_level_dimensions(resolution/2, i));
-  // //   ctx.render_context->set_frame_buffer(res_->surface_detection_buffer_fbos[i]);
-  // //   ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(level_size)));
-  // //   surface_detection_program_->set_uniform(ctx, i, "current_level");
-  // //   pipe_->draw_quad();
-  // // }
+    for (int i(0); i<res_->min_max_buffer_fbos.size(); ++i) {
+      math::vec2ui level_size(scm::gl::util::mip_level_dimensions(math::vec2ui(res_->min_max_buffer->width(), res_->min_max_buffer->height()), i));
+      ctx.render_context->set_frame_buffer(res_->min_max_buffer_fbos[i]);
+      ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(level_size)));
+      min_max_program_->set_uniform(ctx, i, "current_level");
+      pipe_->draw_quad();
+    }
 
-  // pipe_->end_gpu_query(ctx, gpu_query_name);
+    pipe_->end_gpu_query(ctx, gpu_query_name);
+  }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ABuffer::bind_min_max_buffer(std::shared_ptr<ShaderProgram> const& shader) {
+  if (pipe_ && res_ && res_->min_max_buffer) {
+    shader->set_uniform(pipe_->get_context(), res_->min_max_buffer->get_handle(pipe_->get_context()), "abuf_min_max_depth");
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void ABuffer::bind(RenderContext const& ctx) {
 
@@ -161,6 +194,12 @@ void ABuffer::bind(RenderContext const& ctx) {
                                  scm::gl::access_mode::ACCESS_READ_WRITE, 1);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void ABuffer::unbind(RenderContext const& ctx) {}
 
+////////////////////////////////////////////////////////////////////////////////
+
 }
+
+////////////////////////////////////////////////////////////////////////////////
