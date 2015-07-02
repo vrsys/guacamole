@@ -41,6 +41,9 @@ class GUA_DLL GenerateWarpGridPassDescription : public PipelinePassDescription {
   GenerateWarpGridPassDescription& split_threshold(float val);
   float split_threshold() const;
 
+  GenerateWarpGridPassDescription& max_split_depth(float val);
+  float max_split_depth() const;
+
   GenerateWarpGridPassDescription& mode(WarpPassDescription::GBufferWarpMode mode);
   WarpPassDescription::GBufferWarpMode mode() const;
 
@@ -52,6 +55,7 @@ class GUA_DLL GenerateWarpGridPassDescription : public PipelinePassDescription {
 
   int cell_size_;
   float split_threshold_;
+  float max_split_depth_;
   WarpPassDescription::GBufferWarpMode mode_;
 };
 

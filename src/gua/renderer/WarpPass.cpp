@@ -40,7 +40,7 @@ WarpPassDescription::WarpPassDescription()
   , max_layers_(2)
   , depth_test_(true)
   , debug_cell_colors_(false)
-  , pixel_size_(0.5f)
+  , pixel_size_(0.4f)
   , gbuffer_warp_mode_(GBUFFER_POINTS)
   , abuffer_warp_mode_(ABUFFER_POINTS)
 {

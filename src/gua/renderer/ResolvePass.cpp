@@ -42,7 +42,7 @@ ResolvePassDescription::ResolvePassDescription()
   name_ = "ResolvePass";
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Quad;
+  rendermode_ = RenderMode::Custom;
   depth_stencil_state_ = boost::make_optional(
     scm::gl::depth_stencil_state_desc(
       true, true, scm::gl::COMPARISON_LESS, true, 1, 0,
@@ -465,6 +465,43 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
   substitution_map["gua_tone_mapping_method"] = std::to_string(static_cast<int>(tone_mapping_method()));
 
   PipelinePass pass{*this, ctx, substitution_map};
+
+  pass.process_ = [](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+
+    auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
+    if (gbuffer) {
+      gbuffer->get_abuffer().update_min_max_buffer();
+      gbuffer->get_abuffer().bind_min_max_buffer(pass.shader_);
+    }
+
+    auto& target = *pipe.current_viewstate().target;
+    auto const& ctx(pipe.get_context());
+
+    target.bind(ctx, !pass.writes_only_color_buffer_);
+    target.set_viewport(ctx);
+    if (pass.depth_stencil_state_)
+      ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
+    
+    pass.shader_->use(ctx);
+
+    for (auto const& u : desc.uniforms) {
+      u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
+    }
+
+    pipe.bind_gbuffer_input(pass.shader_);
+    pipe.bind_light_table(pass.shader_);
+
+    std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + pass.name_;
+    pipe.begin_gpu_query(ctx, gpu_query_name);
+
+    pipe.draw_quad();
+
+    pipe.end_gpu_query(ctx, gpu_query_name);
+
+    target.unbind(ctx);
+    ctx.render_context->reset_state_objects();
+  };
+
   return pass;
 }
 

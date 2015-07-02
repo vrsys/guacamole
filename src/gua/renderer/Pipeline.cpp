@@ -137,10 +137,10 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
 
   if (reload_abuffer) {
-    gbuffer_->allocate_a_buffer(context_,
+    gbuffer_->get_abuffer().allocate(*this,
                       last_description_.get_enable_abuffer()
                           ? last_description_.get_abuffer_size()
-                          : 0);
+                          : 0, gbuffer_->get_resolution());
   }
 
 
@@ -211,8 +211,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       passes_[i].process(*last_description_.get_passes()[i], *this);
     }
   }
-
-  gbuffer_->clear_abuffer(context_);
 
   gbuffer_->toggle_ping_pong();
 
@@ -828,8 +826,6 @@ void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::clear_frame_cache() {
-
-  gbuffer_->clear(context_, 1.f, 1);
 
   if (!shadow_map_res_) {
     shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();

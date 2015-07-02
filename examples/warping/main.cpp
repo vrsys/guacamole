@@ -27,7 +27,6 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 #include <gua/gui.hpp>
@@ -118,6 +117,7 @@ int main(int argc, char** argv) {
 
   #if POWER_WALL
     bool fullscreen = true;
+    bool fullscreen = true;
     auto resolution = gua::math::vec2ui(1780, 1185);
   #elif OCULUS
     bool fullscreen = true;
@@ -156,14 +156,30 @@ int main(int argc, char** argv) {
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SUN);
   light->data.set_brightness(4.f);
-  light->data.set_shadow_cascaded_splits({0.1f, 2.f, 8.f, 20.f});
+  light->data.set_shadow_cascaded_splits({0.1f, 0.5f, 1.5f, 5.f, 20.f});
   light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
   light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
-  light->data.set_max_shadow_dist(20.0f);
-  light->data.set_shadow_offset(0.0002f);
+  light->data.set_max_shadow_dist(50.0f);
+  light->data.set_shadow_offset(0.0005f);
   light->data.set_enable_shadows(true);
   light->data.set_shadow_map_size(2048);
   light->rotate(-95, 1, 0.5, 0);
+
+  // floor
+  auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  plane->translate(0, -0.26, 0);
+  plane->scale(2);
+  auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(plane));
+  if (casted) {
+    casted->get_material()->set_show_back_faces(true);
+    casted->get_material()->set_uniform("Metalness", 0.1f);
+    casted->get_material()->set_uniform("Roughness", 0.5f);
+    casted->get_material()->set_uniform("RoughnessMap", std::string("data/textures/tiles_specular.jpg"));
+    casted->get_material()->set_uniform("ColorMap", std::string("data/textures/tiles_diffuse.jpg"));
+    casted->get_material()->set_uniform("NormalMap", std::string("data/textures/tiles_normal.jpg"));
+  }
 
   // many oilrigs scene --------------------------------------------------------
   auto scene_root = graph.add_node<gua::node::TransformNode>("/transform", "many_oilrigs");
@@ -205,6 +221,7 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(teapot);
+  scene_root->add_child(plane);
 
   // car --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "car");
@@ -225,6 +242,7 @@ int main(int argc, char** argv) {
       }
     }
   #endif
+  scene_root->add_child(plane);
 
   // pitoti --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
@@ -251,10 +269,13 @@ int main(int argc, char** argv) {
              .set_uniform("RoughnessMap", std::string("../transparency/data/objects/bottle/roughness.jpg"))
              .set_show_back_faces(true);
 
-  // Original bottle model is taken from http://www.sweethome3d->com (Licensed under Free Art License)
-  auto bottle(loader.create_geometry_from_file("bottle", "../transparency/data/objects/bottle/bottle.obj", mat_bottle,
-                                               gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  scene_root->add_child(bottle);
+  for (int i(-1); i<=1; ++i) {
+    auto bottle(loader.create_geometry_from_file("bottle", "../transparency/data/objects/bottle/bottle.obj", mat_bottle,
+                                                 gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+    bottle->translate(i*0.75, 0, 0);
+    scene_root->add_child(bottle);
+  }
+  scene_root->add_child(plane);
 
   // mountains --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "mountains");
@@ -284,6 +305,7 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(sphere);
+  scene_root->add_child(plane);
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
@@ -401,6 +423,7 @@ int main(int argc, char** argv) {
   fast_cam->config.set_far_clip(slow_cam->config.get_far_clip()*1.5);
   fast_cam->config.set_near_clip(0.1f);
 
+  auto clear_pass(std::make_shared<gua::ClearPassDescription>());
   auto tex_quad_pass(std::make_shared<gua::TexturedQuadPassDescription>());
   auto light_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   auto warp_pass(std::make_shared<gua::WarpPassDescription>());
@@ -423,6 +446,7 @@ int main(int argc, char** argv) {
   slow_cam->config.set_output_window_name("window");
 
   auto warp_pipe = std::make_shared<gua::PipelineDescription>();
+  warp_pipe->add_pass(clear_pass);
   warp_pipe->add_pass(trimesh_pass);
   warp_pipe->add_pass(tex_quad_pass);
   #if LOAD_PITOTI
@@ -438,6 +462,7 @@ int main(int argc, char** argv) {
   slow_cam->set_pipeline_description(warp_pipe);
 
   auto normal_pipe = std::make_shared<gua::PipelineDescription>();
+  normal_pipe->add_pass(std::make_shared<gua::ClearPassDescription>());
   normal_pipe->add_pass(trimesh_pass);
   normal_pipe->add_pass(tex_quad_pass);
   #if LOAD_PITOTI
@@ -481,6 +506,7 @@ int main(int argc, char** argv) {
   gui->on_loaded.connect([&]() {
     gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
     gui->add_javascript_getter("get_split_threshold", [&](){ return gua::string_utils::to_string(grid_pass->split_threshold());});
+    gui->add_javascript_getter("get_max_split_depth", [&](){ return gua::string_utils::to_string(grid_pass->max_split_depth());});
     gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
     gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
     gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
@@ -492,6 +518,7 @@ int main(int argc, char** argv) {
 
     gui->add_javascript_callback("set_depth_layers");
     gui->add_javascript_callback("set_split_threshold");
+    gui->add_javascript_callback("set_max_split_depth");
     gui->add_javascript_callback("set_cell_size");
     gui->add_javascript_callback("set_depth_test");
     gui->add_javascript_callback("set_backface_culling");
@@ -511,6 +538,7 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_transparency_type_gbuffer");
     gui->add_javascript_callback("set_transparency_type_quads");
     gui->add_javascript_callback("set_transparency_type_scaled_points");
+    gui->add_javascript_callback("set_transparency_type_raycasting");
     gui->add_javascript_callback("set_adaptive_abuffer");
     gui->add_javascript_callback("set_scene_one_oilrig");
     gui->add_javascript_callback("set_scene_many_oilrigs");
@@ -552,6 +580,7 @@ int main(int argc, char** argv) {
       slow_cam->config.set_eye_dist(0.f);
       fast_cam->config.set_eye_dist(0.f);
       res_pass->compositing_enable(false);
+      clear_pass->set_enable_for_right_eye(true);
 
       #if OCULUS
         slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -565,6 +594,7 @@ int main(int argc, char** argv) {
       slow_cam->config.set_enable_stereo(true);
       slow_cam->config.set_eye_dist(0.f);
       fast_cam->config.set_eye_dist(0.064f);
+      clear_pass->set_enable_for_right_eye(false);
       trimesh_pass->set_enable_for_right_eye(false);
       #if LOAD_PITOTI
       plod_pass->set_enable_for_right_eye(false);
@@ -627,6 +657,11 @@ int main(int argc, char** argv) {
       float split_threshold;
       str >> split_threshold;
       grid_pass->split_threshold(split_threshold);
+    } else if (callback == "set_max_split_depth") {
+      std::stringstream str(params[0]);
+      float max_split_depth;
+      str >> max_split_depth;
+      grid_pass->max_split_depth(max_split_depth);
     } else if (callback == "set_pixel_size") {
       std::stringstream str(params[0]);
       float pixel_size;
@@ -717,6 +752,7 @@ int main(int argc, char** argv) {
              | callback == "set_transparency_type_quads"
              | callback == "set_transparency_type_gbuffer"
              | callback == "set_transparency_type_scaled_points"
+             | callback == "set_transparency_type_raycasting"
              | callback == "set_transparency_type_none") {
       std::stringstream str(params[0]);
       bool checked;
@@ -729,6 +765,7 @@ int main(int argc, char** argv) {
         if (callback == "set_transparency_type_points")        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_POINTS);
         if (callback == "set_transparency_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
         if (callback == "set_transparency_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
+        if (callback == "set_transparency_type_raycasting") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
         if (callback == "set_transparency_type_none") {
           warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
           normal_pipe->set_enable_abuffer(false);
@@ -775,14 +812,14 @@ int main(int argc, char** argv) {
   graph.add_node("/", gui_quad);
 
   // bottom gui --------------------------------------------------------------
-  stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(1000, 60));
+  stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(resolution.x, 60));
 
   stats->on_loaded.connect([&]() {
     stats->call_javascript("init");
   });
 
   stats_quad->data.texture() = "stats";
-  stats_quad->data.size() = gua::math::vec2ui(1000, 60);
+  stats_quad->data.size() = gua::math::vec2ui(resolution.x, 60);
   stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
 
   graph.add_node("/", stats_quad);

@@ -50,8 +50,8 @@ class WarpGridGenerator {
     scm::gl::vertex_array_ptr       grid_vao[2];
     size_t                          cell_count = 0;
 
-    std::shared_ptr<Texture>                min_max_depth_buffer;
-    std::vector<scm::gl::frame_buffer_ptr>  min_max_depth_buffer_fbos;
+    std::shared_ptr<Texture>                surface_detection_buffer;
+    std::vector<scm::gl::frame_buffer_ptr>  surface_detection_buffer_fbos;
   };
 
   WarpGridGenerator();
@@ -67,8 +67,8 @@ class WarpGridGenerator {
   std::vector<ShaderProgramStage>  grid_generation_program_stages_;
   std::shared_ptr<ShaderProgram>   grid_generation_program_;
 
-  std::vector<ShaderProgramStage>  min_max_filter_program_stages_;
-  std::shared_ptr<ShaderProgram>   min_max_filter_program_;
+  std::vector<ShaderProgramStage>  surface_detection_program_stages_;
+  std::shared_ptr<ShaderProgram>   surface_detection_program_;
 
   Pipeline* pipe_;
 };

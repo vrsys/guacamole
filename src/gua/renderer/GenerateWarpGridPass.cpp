@@ -39,7 +39,8 @@ GenerateWarpGridPassDescription::GenerateWarpGridPassDescription()
   : PipelinePassDescription()
   , cell_size_(32)
   , mode_(WarpPassDescription::GBUFFER_POINTS)
-  , split_threshold_(0.0001)
+  , split_threshold_(0.0001f)
+  , max_split_depth_(1.f)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
@@ -79,6 +80,20 @@ float GenerateWarpGridPassDescription::split_threshold() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+GenerateWarpGridPassDescription& GenerateWarpGridPassDescription::max_split_depth(float val) {
+  max_split_depth_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float GenerateWarpGridPassDescription::max_split_depth() const {
+  return max_split_depth_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 GenerateWarpGridPassDescription& GenerateWarpGridPassDescription::mode(WarpPassDescription::GBufferWarpMode mode) {
   mode_ = mode;
   touch();
@@ -104,6 +119,8 @@ PipelinePass GenerateWarpGridPassDescription::make_pass(RenderContext const& ctx
 
   substitution_map["gbuffer_warp_mode"] = std::to_string(mode_);
   substitution_map["split_threshold"] = gua::string_utils::to_string(split_threshold_);
+  substitution_map["max_split_depth"] = gua::string_utils::to_string(max_split_depth_);
+  substitution_map["use_max_split_depth"] = (max_split_depth_ == 1.0) ? "0" : "1";
 
   auto renderer = std::make_shared<WarpGridGenerator>();
   renderer->set_global_substitution_map(substitution_map);

@@ -4,3 +4,4 @@
 #define WARP_MODE_POINTS             1
 #define WARP_MODE_QUADS              2
 #define WARP_MODE_SCALED_POINTS      3
+#define WARP_MODE_RAYCASTING         4

@@ -219,6 +219,7 @@
         init_radio("#transparency_type_quads", "transparency_type_quads");
         init_radio("#transparency_type_points", "transparency_type_points");
         init_radio("#transparency_type_scaled_points", "transparency_type_scaled_points");
+        init_radio("#transparency_type_raycasting", "transparency_type_raycasting");
         init_checkbox("#adaptive_abuffer", "adaptive_abuffer");
 
         init_checkbox("#show_warp_grid", "show_warp_grid");
@@ -237,6 +238,7 @@
         init_slider("#preview-panel .pixel_size", "pixel_size");
         init_slider("#preview-panel .split_threshold", "split_threshold");
         init_slider("#preview-panel .cell_size", "cell_size");
+        init_slider("#preview-panel .max_split_depth", "max_split_depth");
 
         add_texture_select("#control-panel", "bg_tex", "Background");
 
@@ -606,6 +608,15 @@
 
           <div class="row">
             <div class="col-xs-5">
+              Max Depth:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider max_split_depth" data-slider-tooltip="hide" data-slider-id="max_split_depth" type="text" data-slider-min="0.8" data-slider-max="1" data-slider-step="0.001" handle="custom"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
               Cell Size:
             </div>
             <div class="col-xs-7">
@@ -675,6 +686,12 @@
                 <label>
                   <input type="radio" name="transparencyRadios" id="transparency_type_quads" value="">
                   <span>Quads</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="transparencyRadios" id="transparency_type_raycasting" value="">
+                  <span>Raycasting</span>
                 </label>
               </div>
               <div class="checkbox">

@@ -27,6 +27,11 @@ layout (std430, binding = 1) ABUF_MODE coherent buffer abuf_data {
   uvec4 frag_data[];
 };
 
+layout (r32ui, binding = 0) uniform uimage2D abuf_min_depth;
+layout (r32ui, binding = 1) uniform uimage2D abuf_max_depth;
+
+uniform uvec2 abuf_min_max_depth;
+
 // helper macros
 #define UINT24_MAX           0xFFFFFF
 #define UINT_MAX             0xFFFFFFFF
@@ -40,4 +45,12 @@ uint pack_depth24(float z) {
 
 float unpack_depth24(uint z) {
   return float((UINT_MAX - z) >> 8) / float(UINT24_MAX);
+}
+
+uint pack_depth(float z) {
+  return floatBitsToUint(z);
+}
+
+float unpack_depth(uint z) {
+  return uintBitsToFloat(z);
 }

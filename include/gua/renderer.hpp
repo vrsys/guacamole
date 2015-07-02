@@ -35,12 +35,12 @@
 #include <gua/renderer/LightVisibilityPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
+#include <gua/renderer/ClearPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/SkyMapPass.hpp>
 #include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/FullscreenPass.hpp>
 #include <gua/renderer/GenerateWarpGridPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/Window.hpp>
 #include <gua/renderer/HeadlessSurface.hpp>

@@ -19,39 +19,28 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TONEMAPPING_PASS_HPP
-#define GUA_TONEMAPPING_PASS_HPP
+#ifndef GUA_CLEAR_PASS_HPP
+#define GUA_CLEAR_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
+
+#include <memory>
 
 namespace gua {
 
 class Pipeline;
 
-class GUA_DLL ToneMappingPassDescription : public PipelinePassDescription {
+class GUA_DLL ClearPassDescription : public PipelinePassDescription {
  public:
-   enum class Method {
-     LINEAR = 0,
-     HEJL = 1
-   };
-  ToneMappingPassDescription();
 
-  ToneMappingPassDescription& exposure(float);
-
-  float exposure() const;
-
-  ToneMappingPassDescription& method(Method);
-  ToneMappingPassDescription::Method method() const;
+  ClearPassDescription();
 
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
-
   friend class Pipeline;
  protected:
-  PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) override {
-    return PipelinePass{*this, ctx, substitution_map};
-  }
+  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
 }
 
-#endif  // GUA_TONEMAPPING_PASS_HPP
+#endif  // GUA_CLEAR_PASS_HPP

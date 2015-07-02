@@ -29,7 +29,7 @@ layout(points, max_vertices = 4) out;
 
 in uvec3 varying_position[];
 
-uniform uvec2 min_max_depth_buffer;
+uniform uvec2 surface_detection_buffer;
 uniform int current_level;
 
 out uvec3 xfb_output;
@@ -55,7 +55,7 @@ void main() {
 
   #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD
 
-    float is_surface = texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << current_level)), int(new_level)).x;
+    float is_surface = texelFetch(sampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << current_level)), int(new_level)).x;
     if (is_surface == 0) {
 
       if (current_level == 2) {
@@ -66,15 +66,15 @@ void main() {
         // |   |
         // s2-s3
 
-        s0 = uint(texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 1), int(new_level-1)).x == 1);
-        s1 = uint(texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 1), int(new_level-1)).x == 1);
-        s2 = uint(texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 0), int(new_level-1)).x == 1);
-        s3 = uint(texelFetch(sampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 0), int(new_level-1)).x == 1);
+        s0 = uint(texelFetch(sampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 1), int(new_level-1)).x == 1);
+        s1 = uint(texelFetch(sampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 1), int(new_level-1)).x == 1);
+        s2 = uint(texelFetch(sampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 0), int(new_level-1)).x == 1);
+        s3 = uint(texelFetch(sampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 0), int(new_level-1)).x == 1);
       }
 
   #else
 
-    bit_data = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << current_level)), int(new_level)).x;
+    bit_data = texelFetch(usampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << current_level)), int(new_level)).x;
 
     if (current_level == 2) {
 
@@ -85,10 +85,10 @@ void main() {
       // |   |
       // s2-s3
 
-      s0 = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 1), int(new_level-1)).x;
-      s1 = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 1), int(new_level-1)).x;
-      s2 = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 0), int(new_level-1)).x;
-      s3 = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 0), int(new_level-1)).x;
+      s0 = texelFetch(usampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 1), int(new_level-1)).x;
+      s1 = texelFetch(usampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 1), int(new_level-1)).x;
+      s2 = texelFetch(usampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(0, 0), int(new_level-1)).x;
+      s3 = texelFetch(usampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << new_level)) + ivec2(1, 0), int(new_level-1)).x;
     }
 
     if ((bit_data & ALL_MERGE_TYPE_BITS) == MERGE_NONE) {
@@ -138,13 +138,13 @@ void main() {
   #if WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 
       if ((varying_position[0].z & (1<<BIT_EXPAND_X)) == (1<<BIT_EXPAND_X)) {
-        uint n = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << current_level)) + ivec2(1, 0), int(new_level)).x;
+        uint n = texelFetch(usampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << current_level)) + ivec2(1, 0), int(new_level)).x;
         bit_data = (n            & ((1<<BIT_CONTINUOUS_R) | (1<<BIT_CONTINUOUS_TR) | (1<<BIT_CONTINUOUS_BR)))
                  | (bit_data     & ((1<<BIT_CONTINUOUS_L) | (1<<BIT_CONTINUOUS_TL) | (1<<BIT_CONTINUOUS_BL)))
                  | (n & bit_data & ((1<<BIT_CONTINUOUS_B) | (1<<BIT_CONTINUOUS_T)));
 
       } else if ((varying_position[0].z & (1<<BIT_EXPAND_Y)) == (1<<BIT_EXPAND_Y)) {
-        uint n = texelFetch(usampler2D(min_max_depth_buffer), ivec2(varying_position[0].xy/(1 << current_level)) + ivec2(0, 1), int(new_level)).x;
+        uint n = texelFetch(usampler2D(surface_detection_buffer), ivec2(varying_position[0].xy/(1 << current_level)) + ivec2(0, 1), int(new_level)).x;
         bit_data = (n            & ((1<<BIT_CONTINUOUS_T) | (1<<BIT_CONTINUOUS_TR) | (1<<BIT_CONTINUOUS_TL)))
                  | (bit_data     & ((1<<BIT_CONTINUOUS_B) | (1<<BIT_CONTINUOUS_BL) | (1<<BIT_CONTINUOUS_BR)))
                  | (n & bit_data & ((1<<BIT_CONTINUOUS_L) | (1<<BIT_CONTINUOUS_R)));
