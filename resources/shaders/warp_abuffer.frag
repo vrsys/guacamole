@@ -47,8 +47,8 @@ layout(location=0) out vec3 gua_out_color;
     vec4 s = vec4(coords, -1, 1);
     vec4 e = vec4(coords, depth*2-1, 1);
 
-    s = warp_matrix * s; 
-    e = warp_matrix * e; 
+    s = warp_matrix * s;
+    e = warp_matrix * e;
 
     // viewport clipping
 
@@ -120,7 +120,7 @@ layout(location=0) out vec3 gua_out_color;
         gua_out_color = mix(vec3(1, 0, 0), vec3(0, 1, 0), length(e.xy-cur_pos.xy)/(length(s.xy-e.xy)+0.00001));
         return;
       }
-      
+
       // draw mini version of original depth buffer
       if (preview_coords.x < 1 && preview_coords.y < 1 && preview_coords.x > 0 && preview_coords.y > 0) {
         gua_out_color = vec3(texture2D(sampler2D(orig_depth_buffer), preview_coords).x);
@@ -142,7 +142,7 @@ layout(location=0) out vec3 gua_out_color;
       min_depth += 1-unpack_depth(min_max_depth.x);
       max_depth +=   unpack_depth(min_max_depth.y);
     }
-    gua_out_color = vec3(max_depth/6);
+    gua_out_color = vec3(min_depth/6);
     return;
 
 
@@ -166,7 +166,7 @@ layout(location=0) out vec3 gua_out_color;
     for (float i=0; i<n; ++i) {
 
       vec2 current = s.xy + step_size.xy * i;
-      
+
       float depth_start = s.z + step_size.z * (i+0);
       float depth_end   = s.z + step_size.z * (i+1);
 
@@ -174,7 +174,7 @@ layout(location=0) out vec3 gua_out_color;
 
       uvec2 frag = unpackUint2x32(frag_list[gua_resolution.x * int(current.y) + int(current.x)]);
       while (frag.x != 0) {
-        
+
         float z = unpack_depth24(frag.y)*2-1;
 
         if (depth_end + thickness > z && depth_start - thickness <= z && z-0.00001 < e.z) {

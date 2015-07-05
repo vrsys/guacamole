@@ -316,6 +316,38 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(sponza);
 
+  // buddha --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");
+  // auto buddha(loader.create_geometry_from_file("buddha", "/opt/3d_models/TestModels/buddha.obj",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // scene_root->add_child(buddha);
+  // scene_root->add_child(plane);
+
+  // dragon --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "dragon");
+  // auto dragon(loader.create_geometry_from_file("dragon", "/opt/3d_models/TestModels/dragon.obj",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // scene_root->add_child(dragon);
+  // scene_root->add_child(plane);
+
+  // hairball --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "hairball");
+  auto hairball(loader.create_geometry_from_file("hairball", "/home/simon/test.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  scene_root->add_child(hairball);
+
+  // sanmiguel --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sanmiguel");
+  // scene_root->scale(20);
+  // auto sanmiguel(loader.create_geometry_from_file("sanmiguel", "/opt/3d_models/TestModels/SanMiguel/san-miguel.obj",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // scene_root->add_child(sanmiguel);
+
 
   show_backfaces(transform);
 
@@ -330,6 +362,10 @@ int main(int argc, char** argv) {
     graph["/transform/bottle"]->get_tags().add_tag("invisible");
     graph["/transform/mountains"]->get_tags().add_tag("invisible");
     graph["/transform/sphere"]->get_tags().add_tag("invisible");
+    graph["/transform/sanmiguel"]->get_tags().add_tag("invisible");
+    graph["/transform/dragon"]->get_tags().add_tag("invisible");
+    graph["/transform/buddha"]->get_tags().add_tag("invisible");
+    graph["/transform/hairball"]->get_tags().add_tag("invisible");
 
     if (name == "set_scene_many_oilrigs")
       graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
@@ -351,6 +387,14 @@ int main(int argc, char** argv) {
       graph["/transform/mountains"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_sphere")
       graph["/transform/sphere"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_sanmiguel")
+      graph["/transform/sanmiguel"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_dragon")
+      graph["/transform/dragon"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_hairball")
+      graph["/transform/hairball"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_buddha")
+      graph["/transform/buddha"]->get_tags().remove_tag("invisible");
   };
 
   set_scene("set_scene_one_oilrig");
@@ -550,6 +594,10 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_scene_mountains");
     gui->add_javascript_callback("set_scene_sphere");
     gui->add_javascript_callback("set_scene_textured_quads");
+    gui->add_javascript_callback("set_scene_dragon");
+    gui->add_javascript_callback("set_scene_buddha");
+    gui->add_javascript_callback("set_scene_hairball");
+    gui->add_javascript_callback("set_scene_sanmiguel");
     gui->add_javascript_callback("set_manipulation_navigator");
     gui->add_javascript_callback("set_manipulation_camera");
     gui->add_javascript_callback("set_manipulation_object");
@@ -791,15 +839,19 @@ int main(int argc, char** argv) {
         if (callback == "set_manipulation_object") manipulation_object = true;
         if (callback == "set_manipulation_navigator") manipulation_navigator = true;
       }
-    } else if (callback == "set_scene_one_oilrig" ||
-               callback == "set_scene_many_oilrigs" ||
-               callback == "set_scene_sponza" ||
-               callback == "set_scene_teapot" ||
-               callback == "set_scene_pitoti" ||
-               callback == "set_scene_car" ||
-               callback == "set_scene_bottle" ||
-               callback == "set_scene_mountains" ||
-               callback == "set_scene_sphere" ||
+    } else if (callback == "set_scene_one_oilrig"        ||
+               callback == "set_scene_many_oilrigs"      ||
+               callback == "set_scene_sponza"            ||
+               callback == "set_scene_teapot"            ||
+               callback == "set_scene_pitoti"            ||
+               callback == "set_scene_car"               ||
+               callback == "set_scene_bottle"            ||
+               callback == "set_scene_mountains"         ||
+               callback == "set_scene_sphere"            ||
+               callback == "set_scene_dragon"            ||
+               callback == "set_scene_hairball"          ||
+               callback == "set_scene_sanmiguel"         ||
+               callback == "set_scene_buddha"            ||
                callback == "set_scene_textured_quads") {
       set_scene(callback);
     }
