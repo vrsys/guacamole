@@ -23,8 +23,11 @@
 @include "common/gua_camera_uniforms.glsl"
 @include "abuffer_warp_modes.glsl"
 
+layout(pixel_center_integer) in vec4 gl_FragCoord;
+
 // output
 layout(location=0) out vec3 gua_out_color;
+
 
 #if WARP_MODE == WARP_MODE_RAYCASTING
 
@@ -37,7 +40,6 @@ layout(location=0) out vec3 gua_out_color;
 
   uniform mat4 warp_matrix;
   uniform uvec2 warped_depth_buffer;
-  uniform uvec2 orig_depth_buffer;
   uniform uvec2 warped_color_buffer;
 
   void get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end) {
@@ -121,9 +123,9 @@ layout(location=0) out vec3 gua_out_color;
         return;
       }
 
-      // draw mini version of original depth buffer
+      // draw mini version of transparent depth buffer
       if (preview_coords.x < 1 && preview_coords.y < 1 && preview_coords.x > 0 && preview_coords.y > 0) {
-        gua_out_color = vec3(texture2D(sampler2D(orig_depth_buffer), preview_coords).x);
+        gua_out_color = vec3(1-unpack_depth(imageLoad(abuf_min_depth, ivec2(preview_coords*gua_resolution)/2)));
         return;
       }
 
@@ -134,20 +136,20 @@ layout(location=0) out vec3 gua_out_color;
       }
     #endif
 
-    float min_depth = 1-unpack_depth(imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy)/2));
-    float max_depth =   unpack_depth(imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy)/2));
+    // float min_depth = 1-unpack_depth(imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy)/2));
+    // float max_depth =   unpack_depth(imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy)/2));
 
-    for (int i=0; i<5; ++i) {
-      uvec2 min_max_depth = texelFetch(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy)/(1 << (i+2)), i).xy;
-      min_depth += 1-unpack_depth(min_max_depth.x);
-      max_depth +=   unpack_depth(min_max_depth.y);
-    }
-    gua_out_color = vec3(min_depth/6);
-    return;
+    // for (int i=0; i<5; ++i) {
+    //   uvec2 min_max_depth = texelFetch(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy)/(1 << (i+2)), i).xy;
+    //   min_depth += 1-unpack_depth(min_max_depth.x);
+    //   max_depth +=   unpack_depth(min_max_depth.y);
+    // }
+    // gua_out_color = vec3(min_depth/6);
+    // return;
 
 
 
-    get_ray(gua_quad_coords, s, e);
+    get_ray(gl_FragCoord.xy/vec2(gua_resolution), s, e);
 
     s.xy = vec2(vec2(gua_resolution) * (0.5 * s.xy + 0.5));
     e.xy = vec2(vec2(gua_resolution) * (0.5 * e.xy + 0.5));
@@ -172,7 +174,7 @@ layout(location=0) out vec3 gua_out_color;
 
       float thickness = 0.000;
 
-      uvec2 frag = unpackUint2x32(frag_list[gua_resolution.x * int(current.y) + int(current.x)]);
+      uvec2 frag = unpackUint2x32(frag_list[gua_resolution.x * int(current.y+0.5) + int(current.x+0.5)]);
       while (frag.x != 0) {
 
         float z = unpack_depth24(frag.y)*2-1;

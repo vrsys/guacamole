@@ -195,7 +195,6 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     gbuffer->get_abuffer().bind_min_max_buffer(warp_abuffer_program_);
     warp_abuffer_program_->set_uniform(ctx, gbuffer->get_depth_buffer_write()->get_handle(ctx), "warped_depth_buffer");
     warp_abuffer_program_->set_uniform(ctx, gbuffer->get_color_buffer_write()->get_handle(ctx), "warped_color_buffer");
-    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_depth_buffer()->get_handle(ctx), "orig_depth_buffer");
     
     // if (description->use_abuffer_from_window() != "") {
     //   auto shared_window(WindowDatabase::instance()->lookup(description->use_abuffer_from_window()));

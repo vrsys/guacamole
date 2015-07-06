@@ -49,7 +49,8 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   enum class EnvironmentLightingMode {
     SPHEREMAP = 0,
     CUBEMAP = 1,
-    AMBIENT_COLOR = 2
+    AMBIENT_COLOR = 2,
+    SKYMAP_TEXTURE = 3
   };
 
   ResolvePassDescription();

@@ -55,6 +55,10 @@ examples/clipping/clipping
 examples/oit_demo/example-oit_demo
 examples/warping/example-warping
 examples/warping/data/objects/car
-
+examples/warping/data/objects/sanmiguel
+examples/warping/data/objects/sibenik
+examples/warping/data/objects/dragon.dae
+examples/warping/data/objects/hairball.dae
+examples/warping/data/objects/buddha.dae
 
 install

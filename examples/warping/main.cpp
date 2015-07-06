@@ -59,6 +59,7 @@ bool manipulation_camera    = false;
 bool manipulation_object    = false;
 
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
+std::string     current_transparency_mode("set_transparency_type_gbuffer");
 
 #if OCULUS
   OVR::SensorFusion* init_oculus() {
@@ -155,7 +156,7 @@ int main(int argc, char** argv) {
 
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SUN);
-  light->data.set_brightness(4.f);
+  light->data.set_brightness(3.f);
   light->data.set_shadow_cascaded_splits({0.1f, 0.5f, 1.5f, 5.f, 20.f});
   light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
   light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
@@ -318,35 +319,50 @@ int main(int argc, char** argv) {
 
   // buddha --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");
-  // auto buddha(loader.create_geometry_from_file("buddha", "/opt/3d_models/TestModels/buddha.obj",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // scene_root->add_child(buddha);
-  // scene_root->add_child(plane);
+  auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE);
+  buddha->translate(0, -0.16, 0);
+  for (auto c: buddha->get_children()) {
+    auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
+    node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
+    node->get_material()->set_uniform("Roughness", 0.2f);
+    node->get_material()->set_uniform("Metalness", 1.0f);
+  }
+  scene_root->add_child(buddha);
+  scene_root->add_child(plane);
 
   // dragon --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "dragon");
-  // auto dragon(loader.create_geometry_from_file("dragon", "/opt/3d_models/TestModels/dragon.obj",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // scene_root->add_child(dragon);
-  // scene_root->add_child(plane);
+  auto dragon(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.4f));
+
+  dragon->translate(0.6, -0.17, 0);
+  transp_dragon->translate(-0.6, -0.17, 0);
+  scene_root->add_child(dragon);
+  scene_root->add_child(transp_dragon);
+  scene_root->add_child(plane);
 
   // hairball --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "hairball");
-  auto hairball(loader.create_geometry_from_file("hairball", "/home/simon/test.dae",
+  auto hairball(loader.create_geometry_from_file("hairball", "data/objects/hairball.dae",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(hairball);
 
-  // sanmiguel --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sanmiguel");
-  // scene_root->scale(20);
-  // auto sanmiguel(loader.create_geometry_from_file("sanmiguel", "/opt/3d_models/TestModels/SanMiguel/san-miguel.obj",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // scene_root->add_child(sanmiguel);
+  // sibenik --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sibenik");
+  scene_root->scale(20);
+  auto sibenik(loader.create_geometry_from_file("sibenik", "data/objects/sibenik/sibenik.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  scene_root->add_child(sibenik);
 
 
   show_backfaces(transform);
@@ -362,7 +378,7 @@ int main(int argc, char** argv) {
     graph["/transform/bottle"]->get_tags().add_tag("invisible");
     graph["/transform/mountains"]->get_tags().add_tag("invisible");
     graph["/transform/sphere"]->get_tags().add_tag("invisible");
-    graph["/transform/sanmiguel"]->get_tags().add_tag("invisible");
+    graph["/transform/sibenik"]->get_tags().add_tag("invisible");
     graph["/transform/dragon"]->get_tags().add_tag("invisible");
     graph["/transform/buddha"]->get_tags().add_tag("invisible");
     graph["/transform/hairball"]->get_tags().add_tag("invisible");
@@ -387,8 +403,8 @@ int main(int argc, char** argv) {
       graph["/transform/mountains"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_sphere")
       graph["/transform/sphere"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_sanmiguel")
-      graph["/transform/sanmiguel"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_sibenik")
+      graph["/transform/sibenik"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_dragon")
       graph["/transform/dragon"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_hairball")
@@ -479,8 +495,10 @@ int main(int argc, char** argv) {
   #endif
   auto res_pass(std::make_shared<gua::ResolvePassDescription>());
   res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
-            background_texture("/opt/guacamole/resources/skymaps/cycles_island.jpg").
+            background_texture("/opt/guacamole/resources/skymaps/uffizi.jpg").
+            environment_lighting_texture("/opt/guacamole/resources/skymaps/uffizi.jpg").
             background_color(gua::utils::Color3f(0, 0, 0)).
+            environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SKYMAP_TEXTURE).
             ssao_enable(true).
             horizon_fade(0.2f).
             compositing_enable(false).
@@ -516,6 +534,28 @@ int main(int argc, char** argv) {
   normal_pipe->add_pass(res_pass);
   normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   normal_pipe->set_enable_abuffer(true);
+
+  auto update_transparency_mode([&](){
+    normal_pipe->set_enable_abuffer(true);
+    warp_pipe->set_enable_abuffer(true);
+    res_pass->compositing_enable(false);
+
+    if (current_transparency_mode == "set_transparency_type_points")        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_POINTS);
+    if (current_transparency_mode == "set_transparency_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
+    if (current_transparency_mode == "set_transparency_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
+    if (current_transparency_mode == "set_transparency_type_raycasting")    warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
+    if (current_transparency_mode == "set_transparency_type_none") {
+      warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
+      normal_pipe->set_enable_abuffer(false);
+      warp_pipe->set_enable_abuffer(false);
+    }
+    if (current_transparency_mode == "set_transparency_type_gbuffer") {
+      warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
+      res_pass->compositing_enable(true);
+    }
+  });
+
+  update_transparency_mode();
 
   // ---------------------------------------------------------------------------
   // ----------------------------- setup gui -----------------------------------
@@ -597,7 +637,7 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_scene_dragon");
     gui->add_javascript_callback("set_scene_buddha");
     gui->add_javascript_callback("set_scene_hairball");
-    gui->add_javascript_callback("set_scene_sanmiguel");
+    gui->add_javascript_callback("set_scene_sibenik");
     gui->add_javascript_callback("set_manipulation_navigator");
     gui->add_javascript_callback("set_manipulation_camera");
     gui->add_javascript_callback("set_manipulation_object");
@@ -627,8 +667,8 @@ int main(int argc, char** argv) {
       slow_cam->config.set_enable_stereo(false);
       slow_cam->config.set_eye_dist(0.f);
       fast_cam->config.set_eye_dist(0.f);
-      res_pass->compositing_enable(false);
       clear_pass->set_enable_for_right_eye(true);
+      update_transparency_mode();
 
       #if OCULUS
         slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -652,8 +692,8 @@ int main(int argc, char** argv) {
       res_pass->set_enable_for_right_eye(false);
       grid_pass->set_enable_for_right_eye(false);
       render_grid_pass->set_enable_for_right_eye(false);
-      res_pass->compositing_enable(false);
-
+      
+      update_transparency_mode();
       #if OCULUS
         fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
         fast_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
@@ -667,8 +707,8 @@ int main(int argc, char** argv) {
       slow_cam->set_pipeline_description(normal_pipe);
       slow_cam->config.set_enable_stereo(false);
       slow_cam->config.set_eye_dist(0.f);
-      res_pass->compositing_enable(true);
-
+      
+      update_transparency_mode();
       #if OCULUS
         slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
         fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -689,8 +729,8 @@ int main(int argc, char** argv) {
       res_pass->set_enable_for_right_eye(true);
       grid_pass->set_enable_for_right_eye(true);
       render_grid_pass->set_enable_for_right_eye(true);
-      res_pass->compositing_enable(true);
-
+      
+      update_transparency_mode();
       #if OCULUS
         fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
         fast_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
@@ -802,28 +842,10 @@ int main(int argc, char** argv) {
              | callback == "set_transparency_type_scaled_points"
              | callback == "set_transparency_type_raycasting"
              | callback == "set_transparency_type_none") {
-      std::stringstream str(params[0]);
-      bool checked;
-      str >> checked;
 
-      normal_pipe->set_enable_abuffer(true);
-      warp_pipe->set_enable_abuffer(true);
-      res_pass->compositing_enable(false);
-      if (checked) {
-        if (callback == "set_transparency_type_points")        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_POINTS);
-        if (callback == "set_transparency_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
-        if (callback == "set_transparency_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
-        if (callback == "set_transparency_type_raycasting") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
-        if (callback == "set_transparency_type_none") {
-          warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-          normal_pipe->set_enable_abuffer(false);
-          warp_pipe->set_enable_abuffer(false);
-        }
-        if (callback == "set_transparency_type_gbuffer") {
-          warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-          res_pass->compositing_enable(true);
-        }
-      }
+      current_transparency_mode = callback;
+      update_transparency_mode();
+
     } else if (callback == "set_manipulation_object"
             || callback == "set_manipulation_camera"
             || callback == "set_manipulation_navigator") {
@@ -850,7 +872,7 @@ int main(int argc, char** argv) {
                callback == "set_scene_sphere"            ||
                callback == "set_scene_dragon"            ||
                callback == "set_scene_hairball"          ||
-               callback == "set_scene_sanmiguel"         ||
+               callback == "set_scene_sibenik"           ||
                callback == "set_scene_buddha"            ||
                callback == "set_scene_textured_quads") {
       set_scene(callback);
