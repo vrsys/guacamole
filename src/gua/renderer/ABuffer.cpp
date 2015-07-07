@@ -78,8 +78,8 @@ void ABuffer::allocate(Pipeline& pipe, size_t buffer_size, math::vec2ui const& r
   res_->max_depth = ctx.render_device->create_texture_2d(resolution/2, scm::gl::data_format::FORMAT_R_32UI);
   res_->min_depth = ctx.render_device->create_texture_2d(resolution/2, scm::gl::data_format::FORMAT_R_32UI);
 
-  int mip_map_levels = 5;
-  math::vec2 size(resolution/4);
+  math::vec2 size(resolution/2);
+  int mip_map_levels = scm::gl::util::max_mip_levels(math::vec2ui(size));
   scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
     scm::gl::WRAP_CLAMP_TO_EDGE,
     scm::gl::WRAP_CLAMP_TO_EDGE);

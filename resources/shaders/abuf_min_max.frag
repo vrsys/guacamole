@@ -35,20 +35,10 @@ layout(location=0) out uvec2 result;
 void main() {
 
   if (current_level == 0) {
-    const uint min_0 = imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy*2) + ivec2(0, 0));
-    const uint min_1 = imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy*2) + ivec2(1, 0));
-    const uint min_2 = imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy*2) + ivec2(0, 1));
-    const uint min_3 = imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy*2) + ivec2(1, 1));
+    const uint min_0 = imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy));
+    const uint max_0 = imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy));
 
-    const uint max_0 = imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy*2) + ivec2(0, 0));
-    const uint max_1 = imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy*2) + ivec2(1, 0));
-    const uint max_2 = imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy*2) + ivec2(0, 1));
-    const uint max_3 = imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy*2) + ivec2(1, 1));
-
-    result = uvec2(
-      max(max(min_0, min_1), max(min_2, min_3)),
-      max(max(max_0, max_1), max(max_2, max_3))
-    );
+    result = uvec2(min_0, max_0);
 
   } else {
     const uvec2 sample_0 = texelFetchOffset(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 0)).xy;

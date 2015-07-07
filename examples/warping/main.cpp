@@ -39,7 +39,7 @@
 
 #define LOAD_CAR        false
 #define LOAD_PITOTI     false
-#define LOAD_MOUNTAINS  false
+#define LOAD_MOUNTAINS  true
 
 #if OCULUS
 #include <OVR.h>
@@ -117,7 +117,6 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 int main(int argc, char** argv) {
 
   #if POWER_WALL
-    bool fullscreen = true;
     bool fullscreen = true;
     auto resolution = gua::math::vec2ui(1780, 1185);
   #elif OCULUS
@@ -310,59 +309,59 @@ int main(int argc, char** argv) {
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
-  scene_root->scale(20);
-  auto sponza(loader.create_geometry_from_file("sponza", "/opt/3d_models/Sponza/sponza.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  scene_root->add_child(sponza);
+  // scene_root->scale(20);
+  // auto sponza(loader.create_geometry_from_file("sponza", "/opt/3d_models/Sponza/sponza.obj",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // scene_root->add_child(sponza);
 
   // buddha --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");
-  auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE);
-  buddha->translate(0, -0.16, 0);
-  for (auto c: buddha->get_children()) {
-    auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
-    node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
-    node->get_material()->set_uniform("Roughness", 0.2f);
-    node->get_material()->set_uniform("Metalness", 1.0f);
-  }
-  scene_root->add_child(buddha);
-  scene_root->add_child(plane);
+  // auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE);
+  // buddha->translate(0, -0.16, 0);
+  // for (auto c: buddha->get_children()) {
+  //   auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
+  //   node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
+  //   node->get_material()->set_uniform("Roughness", 0.2f);
+  //   node->get_material()->set_uniform("Metalness", 1.0f);
+  // }
+  // scene_root->add_child(buddha);
+  // scene_root->add_child(plane);
 
   // dragon --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "dragon");
-  auto dragon(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.4f));
+  // auto dragon(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.4f));
 
-  dragon->translate(0.6, -0.17, 0);
-  transp_dragon->translate(-0.6, -0.17, 0);
-  scene_root->add_child(dragon);
-  scene_root->add_child(transp_dragon);
-  scene_root->add_child(plane);
+  // dragon->translate(0.6, -0.17, 0);
+  // transp_dragon->translate(-0.6, -0.17, 0);
+  // scene_root->add_child(dragon);
+  // scene_root->add_child(transp_dragon);
+  // scene_root->add_child(plane);
 
   // hairball --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "hairball");
-  auto hairball(loader.create_geometry_from_file("hairball", "data/objects/hairball.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  scene_root->add_child(hairball);
+  // auto hairball(loader.create_geometry_from_file("hairball", "data/objects/hairball.dae",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // scene_root->add_child(hairball);
 
   // sibenik --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sibenik");
-  scene_root->scale(20);
-  auto sibenik(loader.create_geometry_from_file("sibenik", "data/objects/sibenik/sibenik.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  scene_root->add_child(sibenik);
+  // scene_root->scale(20);
+  // auto sibenik(loader.create_geometry_from_file("sibenik", "data/objects/sibenik/sibenik.obj",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // scene_root->add_child(sibenik);
 
 
   show_backfaces(transform);
