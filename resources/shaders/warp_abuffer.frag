@@ -43,7 +43,7 @@ layout(location=0) out vec3 gua_out_color;
   uniform uvec2 warped_depth_buffer;
   uniform uvec2 warped_color_buffer;
 
-  void get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_depth) {
+  bool get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_depth) {
     vec2 coords = screen_space_pos * 2 - 1;
     float depth = texture2D(sampler2D(warped_depth_buffer), screen_space_pos).x;
 
@@ -53,18 +53,27 @@ layout(location=0) out vec3 gua_out_color;
     s = warp_matrix * s;
     e = warp_matrix * e;
 
-    // viewport clipping
+    // remove flip version at the back
+    // if (e.w < 0) {
+    //   return false;
+    // }
 
+    // move start into original frustum
     if (s.w < 0) {
       s = mix(s, e, (s.z) / (s.z - e.z));
     }
 
+    // perspective division
     s /= s.w;
     e /= e.w;
 
-    // if (s.z > 1)
+    // move end into original frustum
+    // if (s.z > 1) {
     //   s = mix(s, e, (1 - s.z) / (e.z - s.z));
+    // }
 
+
+    // viewport clipping
     if (s.x > 1) {
       s.yz = mix(s.yz, e.yz, (1 - s.x) / (e.x - s.x));
       s.x = 1;
@@ -109,15 +118,23 @@ layout(location=0) out vec3 gua_out_color;
     start = s.xyz * 0.5 + 0.5;
     end   = e.xyz * 0.5 + 0.5;
 
+    if ((start.z < crop_depth.x && end.z < crop_depth.x) || (start.z > crop_depth.y && end.z > crop_depth.y) || 
+        any(lessThan(start.xy, vec2(0))) || any(greaterThan(start.xy, vec2(1))) ) {
+      return false;
+    }
+
     if (start.z < crop_depth.x) {
       start.xy = mix(end.xy, start.xy, (crop_depth.x - end.z) / (start.z - end.z));
       start.z = crop_depth.x;
     }
 
     if (end.z > crop_depth.y) {
-      end.xz = mix(end.xz, start.xz, (crop_depth.y - end.z) / (start.z - end.z));
+      end.xy = mix(end.xy, start.xy, (crop_depth.y - end.z) / (start.z - end.z));
       end.z = crop_depth.y;
     }
+
+
+    return true;
 
   }
 
@@ -147,14 +164,13 @@ layout(location=0) out vec3 gua_out_color;
     vec2 preview_coords = gua_quad_coords*3-vec2(0.09, 0.12);
     
     // center ray preview
-    #if 1
+    #if 0
       // draw mini version of depth buffer
       if (preview_coords.x < 1 && preview_coords.y < 1 && preview_coords.x > 0 && preview_coords.y > 0) {
         gua_out_color = vec3(get_min_max_depth(ivec2(preview_coords*gua_resolution)/2, 1).x);
       }
 
       {
-        
         const int max_level = textureQueryLevels(usampler2D(abuf_min_max_depth));
         const vec2 total_min_max_depth = get_min_max_depth(ivec2(0), max_level);
 
@@ -164,7 +180,9 @@ layout(location=0) out vec3 gua_out_color;
 
         vec2 ref = preview_coords*gua_resolution;
         vec3 s, e;
-        get_ray(vec2(0.5), s, e, total_min_max_depth);
+        if (!get_ray(vec2(0.5), s, e, total_min_max_depth)) {
+          return;
+        }
 
         s.xy = vec2(gua_resolution) * s.xy;
         e.xy = vec2(gua_resolution) * e.xy;
@@ -276,59 +294,108 @@ layout(location=0) out vec3 gua_out_color;
 
     vec4 color = vec4(0);
 
+    const int max_level = textureQueryLevels(usampler2D(abuf_min_max_depth));
+    const vec2 total_min_max_depth = get_min_max_depth(ivec2(0), max_level);
+
+    int sample_count = 0;
+    if (total_min_max_depth.x > total_min_max_depth.y) {
+      sample_count = MAX_RAY_STEPS;
+    }
+
     vec3 s, e;
-    get_ray(gl_FragCoord.xy/vec2(gua_resolution), s, e, vec2(0, 1));
+    if (!get_ray(gua_quad_coords, s, e, total_min_max_depth)) {
+      sample_count = MAX_RAY_STEPS;
+    }
 
     s.xy = vec2(gua_resolution) * s.xy;
     e.xy = vec2(gua_resolution) * e.xy;
 
-    vec3 direction = e.xyz - s.xyz;
 
-    #if 0
+          vec2 pos = s.xy;
+    const vec3 dir = e-s;
 
-      int n = max(1, min(MAX_RAY_STEPS, max(int(abs(direction.x)), int(abs(direction.y)))));
-      vec3 step_size = direction/n;
+    const vec2 signs = vec2(s.x <= e.x ? 1 : -1, s.y <= e.y ? 1 : -1);
+    const vec2 flip  = vec2(s.x <= e.x ? 1 :  0, s.y <= e.y ? 1 :  0);
 
-      for (float i=0; i<n; ++i) {
+    int current_level = max_level;
+    // int current_level = min(max_level, int(log2(max(abs(dir.x), abs(dir.y))+1)+1));
 
-        vec2 current = s.xy + step_size.xy * i;
+    while(++sample_count < MAX_RAY_STEPS) {
 
-        float depth_start = s.z + step_size.z * (i+0);
-        float depth_end   = s.z + step_size.z * (i+1);
+      const float cell_size   = 1<<current_level;
+      const vec2  cell_origin = cell_size * mix(ceil(pos/cell_size-1), floor(pos/cell_size), flip);
+      const vec2  min_max_depth = get_min_max_depth(ivec2(cell_origin.xy/max(2, cell_size)), max(1, current_level));
+      const vec2  corner_in_ray_direction = cell_origin + flip*cell_size;
+      const vec2  t = (corner_in_ray_direction - pos) / dir.xy;
 
-        float thickness = 0.000;
+      vec2 d_range;
+      vec2 new_pos;
 
-        uvec2 frag = unpackUint2x32(frag_list[gua_resolution.x * int(current.y+0.5) + int(current.x+0.5)]);
+      if (t.x < t.y) {
+        new_pos = vec2(cell_origin.x + flip.x*cell_size, pos.y + dir.y*t.x);
+        d_range = s.z + dir.z / dir.x * vec2(pos.x-s.x, new_pos.x-s.x);
+
+      } else {
+        new_pos = vec2(pos.x + dir.x*t.y, cell_origin.y + flip.y*cell_size);
+        d_range = s.z + dir.z / dir.y * vec2(pos.y-s.y, new_pos.y-s.y);
+      }
+
+      const bool at_end = any(greaterThan((new_pos.xy - e.xy)*signs, vec2(0)));
+
+      if (at_end) {
+        d_range.y = e.z;
+      }
+
+      const bool intersects = !(d_range.x > min_max_depth.y || min_max_depth.x > d_range.y);
+
+
+      if (intersects && current_level == 0) {
+        // check abuffer
+        uvec2 frag = unpackUint2x32(frag_list[gua_resolution.x * int(cell_origin.y) + int(cell_origin.x)]);
         while (frag.x != 0) {
 
-          float z = unpack_depth24(frag.y)*2-1;
-
-          if (depth_end + thickness > z && depth_start - thickness <= z && z-0.00001 < e.z) {
+          float z = unpack_depth24(frag.y);
+          const float thickness = 0.000;
+          if (d_range.y + thickness > z && d_range.x - thickness <= z) {
             uvec4 data = frag_data[frag.x - abuf_list_offset];
             float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
             vec3  frag_color = uintBitsToFloat(data.rgb);
             abuf_mix_frag(vec4(frag_color, frag_alpha), color);
+            // break;
           }
 
           frag = unpackUint2x32(frag_list[frag.x]);
         }
+
       }
 
-    #elif 0
+      // draw debug hierachy
+      if (current_level == 0 && intersects) {
+        abuf_mix_frag(vec4(vec3(1, 0, 0), 1), color);
+      }
+      abuf_mix_frag(vec4(heat(1-float(current_level) / max_level), 0.03), color);
 
-      int sample_count = 0;
-      int current_level = 8;
+    
+      if (!intersects || current_level == 0) {
+        pos = new_pos;
 
-      while(sample_count < MAX_RAY_STEPS) {
-
-        vec2 min_max_depth = get_min_max_depth(ivec2(s.xy), current_level);
-        
-
-
-        sample_count += 1;
+        if (any(equal(mod(pos / cell_size, 2), vec2(0)))) {
+          current_level = min(current_level+1, max_level);
+        }
+      } else {
+        --current_level;
       }
 
-    #endif
+
+      if (!intersects && at_end) {
+        break;
+      }
+    }
+
+
+
+
+
 
     abuf_mix_frag(texture2D(sampler2D(warped_color_buffer), gua_quad_coords), color);
     gua_out_color = toneMap(color.rgb);

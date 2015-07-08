@@ -47,5 +47,18 @@ void main() {
     const uvec2 sample_3 = texelFetchOffset(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 1)).xy;
 
     result = uvec2(max(max(sample_0, sample_1), max(sample_2, sample_3)));
+
+    ivec2 last_layer_size = textureSize(usampler2D(abuf_min_max_depth), current_level-1);
+
+    // include border pixels of last layer if it had odd resolution
+    if (last_layer_size.x % 2 == 1 && gl_FragCoord.x+1 == last_layer_size.x/2) {
+      result = max(result, texelFetchOffset(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(2, 0)).xy);
+      result = max(result, texelFetchOffset(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(2, 1)).xy);
+    }
+
+    if (last_layer_size.y % 2 == 1 && gl_FragCoord.y+1 == last_layer_size.y/2) {
+      result = max(result, texelFetchOffset(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(0, 2)).xy);
+      result = max(result, texelFetchOffset(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy*2), current_level-1, ivec2(1, 2)).xy);
+    }
   }
 }
