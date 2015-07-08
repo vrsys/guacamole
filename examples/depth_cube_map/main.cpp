@@ -27,6 +27,7 @@
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/DepthCubeMapPass.hpp>
+#include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/utils/Trackball.hpp>
 #include <gua/gui.hpp>
  
@@ -79,6 +80,8 @@ int main(int argc, char** argv) {
   // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   // graph.add_node("/transform", teapot);
 
+  
+  // MODELS
   auto much_big_oilrig(loader.create_geometry_from_file("much_big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
@@ -135,9 +138,10 @@ int main(int argc, char** argv) {
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::POINT);
-  light2->data.brightness = 1.0f;
-  light2->scale(12.f);
+  light2->data.brightness = 2.0f;
+  light2->scale(100.f);
   light2->translate(19.98f, 1.11f, 8.88f);
+  // light2->translate(0.f, 2.f, 0.f);
   // light2->data.set_enable_shadows(true);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/navigation", "screen");
@@ -159,8 +163,23 @@ int main(int argc, char** argv) {
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
+
+  // GUI
+  // auto gui = std::make_shared<gua::GuiResource>();
+  // auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
   
+  // gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2(resolution.x, 60));
+
+  // gui_quad->data.texture() = "gui";
+  // gui_quad->data.size() = gua::math::vec2ui(resolution.x, 60);
+  // gui_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
+
+  // graph.add_node("/", gui_quad);
+  
+  // CUBEMAP NAVIGATION
+  bool adaptive_navigation(true);
   auto cmn = graph.add_node<gua::node::CubemapNode>("/navigation", "test");
+  float motion_speed = 0.03f;
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -180,6 +199,15 @@ int main(int argc, char** argv) {
 
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
     nav.set_key_press(static_cast<gua::Key>(key), action);
+    // std::cout << key << " " << action << std::endl;       
+    if ((key == 257) && (action == 1)){
+      adaptive_navigation = !adaptive_navigation;
+      if (adaptive_navigation){
+        std::cout << "Adaptive locomotion turned on: " << std::endl;       
+      }else{
+        std::cout << "Adaptive locomotion turned off: " << std::endl;       
+      }
+    }
   });  
 
   window->on_button_press.connect([&](int key, int action, int mods) {
@@ -198,14 +226,19 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    float closest_distance = cmn->get_closest_distance();
-    float motion_speed = 0.03f;
-    if ((closest_distance != -1.0) && (closest_distance < 30.0f)){
-      motion_speed = closest_distance / 1000.0f;
-      // motion_speed = 0.008f;
+    float new_motion_speed = motion_speed;
+    if (adaptive_navigation) {
+
+      float closest_distance = cmn->get_closest_distance();
+      if ((closest_distance != -1.0) && (closest_distance < 30.0f)){
+        new_motion_speed = closest_distance / 1000.0f;
+      }
+      nav.set_motion_speed(new_motion_speed);
+
+      // std::cout << motion_speed << std::endl;
+    } else {
+      nav.set_motion_speed(new_motion_speed);
     }
-    nav.set_motion_speed(motion_speed);
-    std::cout << motion_speed << std::endl;
     nav.update();
     navigation->set_transform(gua::math::mat4(nav.get_transform()));
     

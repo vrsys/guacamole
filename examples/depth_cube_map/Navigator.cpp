@@ -42,25 +42,42 @@ void Navigator::update() {
 
     auto rotation = y_rot * x_rot;
 
+    float current_motion_speed = motion_speed_;
+
+    if (shift_pressed_) {
+      current_motion_speed *= 1.5f;
+    }
+
     if (w_pressed_) {
-      current_location_ += (rotation * scm::math::make_translation(0.f, 0.f, -motion_speed_))
+      current_location_ += (rotation * scm::math::make_translation(0.f, 0.f, -current_motion_speed))
                            * scm::math::vec4f(0.f, 0.f, 0.f, 1.f);
     }
 
     if (s_pressed_) {
-      current_location_ += (rotation * scm::math::make_translation(0.f, 0.f, motion_speed_))
+      current_location_ += (rotation * scm::math::make_translation(0.f, 0.f, current_motion_speed))
                            * scm::math::vec4f(0.f, 0.f, 0.f, 1.f);
     }
 
     if (a_pressed_) {
-      current_location_ += (rotation * scm::math::make_translation(-motion_speed_, 0.f, 0.f))
+      current_location_ += (rotation * scm::math::make_translation(-current_motion_speed, 0.f, 0.f))
                            * scm::math::vec4f(0.f, 0.f, 0.f, 1.f);
     }
 
     if (d_pressed_) {
-      current_location_ += (rotation * scm::math::make_translation(motion_speed_, 0.f, 0.f))
+      current_location_ += (rotation * scm::math::make_translation(current_motion_speed, 0.f, 0.f))
                            * scm::math::vec4f(0.f, 0.f, 0.f, 1.f);
     }
+
+    if (space_pressed_) {
+      current_location_ += (rotation * scm::math::make_translation(0.f, current_motion_speed*0.7f, 0.f))
+                           * scm::math::vec4f(0.f, 0.f, 0.f, 1.f);
+    }
+
+    if (ctrl_pressed_) {
+      current_location_ += (rotation * scm::math::make_translation(0.f, current_motion_speed*-0.7f, 0.f))
+                           * scm::math::vec4f(0.f, 0.f, 0.f, 1.f);
+    }
+
 
     auto target = scm::math::make_translation(current_location_.x, current_location_.y, current_location_.z) * rotation;
     float smoothness = frame_time_ * 10;
@@ -102,6 +119,18 @@ void Navigator::set_key_press(gua::Key key, int action) {
 
     case gua::Key::D:
       d_pressed_ = action != 0;
+      break;
+
+    case gua::Key::SPACE:
+      space_pressed_ = action != 0;
+      break;
+
+    case gua::Key::LEFT_CONTROL:
+      ctrl_pressed_ = action != 0;
+      break;
+      
+    case gua::Key::LEFT_SHIFT:
+      shift_pressed_ = action != 0;
       break;
   }
 }

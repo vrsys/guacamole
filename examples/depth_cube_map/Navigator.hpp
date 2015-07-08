@@ -39,6 +39,9 @@ class Navigator {
     bool s_pressed_;
     bool a_pressed_;
     bool d_pressed_;
+    bool space_pressed_;
+    bool ctrl_pressed_;
+    bool shift_pressed_;
     bool mlb_pressed_;
 
     gua::Timer timer_;
