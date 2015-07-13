@@ -45,7 +45,7 @@ void Navigator::update() {
     float current_motion_speed = motion_speed_;
 
     if (shift_pressed_) {
-      current_motion_speed *= 1.5f;
+      current_motion_speed *= 1.9f;
     }
 
     if (w_pressed_) {
