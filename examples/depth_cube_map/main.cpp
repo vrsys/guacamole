@@ -27,6 +27,7 @@
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/DepthCubeMapPass.hpp>
+#include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/utils/Trackball.hpp>
 #include <gua/gui.hpp>
@@ -72,13 +73,7 @@ int main(int argc, char** argv) {
   auto navigation = graph.add_node<gua::node::TransformNode>("/", "navigation");
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  // auto cube(loader.create_geometry_from_file("cube", "data/objects/cube_with_arrow.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
-  // cube->scale(0.5);
-  // graph.add_node("/transform", cube);
 
-  
-  // auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  // graph.add_node("/transform", teapot);
 
   
   // MODELS
@@ -128,28 +123,32 @@ int main(int argc, char** argv) {
 
   graph.add_node(transform, small_oilrig);
 
+  // auto cake(loader.create_geometry_from_file("cake", "/opt/3d_models/animals/good/dino_1/Dinosaur 2.3DS",
+  auto cake(loader.create_geometry_from_file("cake", "/opt/3d_models/animals/elephant/elephant.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  //auto light = graph.add_node<gua::node::LightNode>("/", "light");
-  //light->data.set_type(gua::node::LightNode::Type::SPOT);
-  //light->data.set_enable_shadows(true);
-  //light->scale(10.f);
-  //light->rotate(-20, 0.f, 1.f, 0.f);
-  //light->translate(-1.f, 0.f,  3.f);
+  cake->rotate(-180.0f, 1.0f, 0.0f, 0.0f);
+  cake->rotate(90.0f, 0.0f, 1.0f, 0.0f);
+  cake->scale(0.002);
+  cake->translate(19.957f, 1.1201f, 8.892f);
 
-  auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
-  light2->data.set_type(gua::node::LightNode::Type::POINT);
-  light2->data.brightness = 2.0f;
-  light2->scale(100.f);
-  light2->translate(19.98f, 1.11f, 8.88f);
-  // light2->translate(0.f, 2.f, 0.f);
-  // light2->data.set_enable_shadows(true);
+  graph.add_node(transform, cake);
+
+
+  auto light = graph.add_node<gua::node::LightNode>("/", "light");
+  light->data.set_type(gua::node::LightNode::Type::SUN);
+  light->rotate(-60.f, 1.f, 0.f, 0.f);
+  light->data.brightness = 0.5f;
+
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/navigation", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, -2.0);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1920, 1080);
+  auto resolution = gua::math::vec2ui(2560, 1440);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/navigation", "cam");
   camera->config.set_resolution(resolution);
@@ -162,17 +161,22 @@ int main(int argc, char** argv) {
   camera->config.set_far_clip(200.0f);
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+  camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+  camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/textures/skymap.jpg");
+
+
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
+  camera->get_pipeline_description()->add_pass(std::make_shared<gua::SSAAPassDescription>());
 
   // GUI
+  // gua::math::vec2 gui_size(150.f, 80.f);
   // auto gui = std::make_shared<gua::GuiResource>();
-  // auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
+  // gui->init("gui", "asset://gua/data/gui/fps.html", gui_size);
   
-  // gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2(resolution.x, 60));
-
+  // auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
   // gui_quad->data.texture() = "gui";
-  // gui_quad->data.size() = gua::math::vec2ui(resolution.x, 60);
-  // gui_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
+  // gui_quad->data.size() = gui_size;
+  // gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
   // graph.add_node("/", gui_quad);
   
@@ -185,6 +189,7 @@ int main(int argc, char** argv) {
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
+  window->config.set_fullscreen_mode(true);
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::MONO);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
@@ -203,9 +208,9 @@ int main(int argc, char** argv) {
     if ((key == 257) && (action == 1)){
       adaptive_navigation = !adaptive_navigation;
       if (adaptive_navigation){
-        std::cout << "Adaptive locomotion turned on: " << std::endl;       
+        std::cout << "Adaptive locomotion turned on" << std::endl;       
       }else{
-        std::cout << "Adaptive locomotion turned off: " << std::endl;       
+        std::cout << "Adaptive locomotion turned off" << std::endl;       
       }
     }
   });  
@@ -223,7 +228,17 @@ int main(int argc, char** argv) {
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0/500.0);
 
+  int count(0);
+
   ticker.on_tick.connect([&]() {
+  //   std::stringstream sstr;
+  //   sstr.precision(1);
+  //   sstr.setf(std::ios::fixed, std::ios::floatfield);
+  //   sstr << "FPS: " << renderer.get_application_fps()
+  //        << " / " << window->get_rendering_fps();
+  //   // std::cout << sstr.str() << std::endl;
+  //   gui->call_javascript("set_fps_text", sstr.str());
+
 
     // apply trackball matrix to object
     float new_motion_speed = motion_speed;
@@ -241,7 +256,14 @@ int main(int argc, char** argv) {
     }
     nav.update();
     navigation->set_transform(gua::math::mat4(nav.get_transform()));
+    // std::cout << nav.get_transform() << std::endl;
     
+    count++;
+    if(count == 60){
+      count = 0;
+      std::cout << new_motion_speed*60 << std::endl;
+    }
+
     // gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
                                                               // gua::math::float_t(trackball.shifty()),
                                                               // gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
