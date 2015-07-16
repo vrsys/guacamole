@@ -54,7 +54,7 @@ namespace gua {
   template <typename T>
   std::size_t size_in_bytes(T const& container)
   {
-    typedef typename T::value_type value_type;
+    using value_type = typename T::value_type;
     return container.size() * sizeof(value_type);
   };
 
@@ -67,7 +67,7 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
  public : // c'tor / d'tor
 
    NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
-                  unsigned pre_subdivision_u, 
+                  unsigned pre_subdivision_u,
                   unsigned pre_subdivision_v,
                   scm::gl::fill_mode in_fill_mode = scm::gl::FILL_SOLID
                   //scm::gl::fill_mode in_fill_mode = scm::gl::FILL_WIREFRAME
