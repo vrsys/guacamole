@@ -79,7 +79,8 @@ struct GUA_DLL GetGlslType : public boost::static_visitor<std::string> {
 
 class GUA_DLL UniformValue {
 
-  typedef boost::variant<int,
+  using Data = boost::variant<
+                         int,
                          bool,
                          float,
                          math::mat3f,
@@ -93,7 +94,7 @@ class GUA_DLL UniformValue {
                          math::vec2ui,
                          math::vec3ui,
                          math::vec4ui,
-                         std::string> Data;
+                         std::string>;
 
  public:
   UniformValue() = default;
@@ -292,14 +293,14 @@ GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<std::string>(
 //operators
 std::ostream& operator<<(std::ostream& os, UniformValue const& val);
 
-template<typename T> struct UniformCompatible { typedef T type; };
+template<typename T> struct UniformCompatible { using type =T; };
 
-template <> struct UniformCompatible<math::mat4d>  { typedef math::mat4f type; };
-template <> struct UniformCompatible<math::mat3d>  { typedef math::mat3f type; };
+template <> struct UniformCompatible<math::mat4d>  { using type = math::mat4f; };
+template <> struct UniformCompatible<math::mat3d>  { using type = math::mat3f; };
 
-template <> struct UniformCompatible<math::vec4d>  { typedef math::vec4f type; };
-template <> struct UniformCompatible<math::vec3d>  { typedef math::vec3f type; };
-template <> struct UniformCompatible<math::vec2d>  { typedef math::vec2f type; };
+template <> struct UniformCompatible<math::vec4d>  { using type = math::vec4f; };
+template <> struct UniformCompatible<math::vec3d>  { using type = math::vec3f; };
+template <> struct UniformCompatible<math::vec2d>  { using type = math::vec2f; };
 
 template<typename T>
 typename UniformCompatible<T>::type uniform_compatible_type(T value)

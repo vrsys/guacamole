@@ -41,7 +41,7 @@ public:
     math::mat4f transforms[100];
   };
 
-  typedef scm::gl::uniform_block<BoneTransformBlock> block_type;
+  using block_type = scm::gl::uniform_block<BoneTransformBlock>;
 
   BoneTransformUniformBlock(scm::gl::render_device_ptr const& device);
   ~BoneTransformUniformBlock();
