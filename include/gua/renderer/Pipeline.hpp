@@ -101,8 +101,8 @@ public:
     std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
   void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
-  void generate_depth_cubemap_face(unsigned face, math::mat4 node_transform);
-  void reset_depth_cubemap(std::string const& texture_name);
+  void generate_depth_cubemap_face(unsigned face, node::CubemapNode* cube_map_node);
+  void reset_depth_cubemap(node::CubemapNode* cube_map_node);
 
   PipelineViewState const&           current_viewstate() const;
 
@@ -147,7 +147,7 @@ public:
   RenderContext&                            context_;
   std::unique_ptr<GBuffer>                  gbuffer_;
   std::shared_ptr<SharedShadowMapResource>  shadow_map_res_;
-  std::shared_ptr<DepthCubeMap>             depth_cube_map_;
+  std::shared_ptr<SharedDepthCubeMapResource> depth_cube_map_res_;
   CameraUniformBlock                        camera_block_;
   std::unique_ptr<LightTable>               light_table_;
 
