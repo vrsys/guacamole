@@ -24,34 +24,29 @@
 
 // guacamole headers
 #include <gua/config.hpp>
+#include <gua/platform.hpp>
+#include <gua/utils/fbxfwd.hpp>
 
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
 #include <vector>
 
-namespace fbxsdk_2015_1{
-  class FbxMesh;
-
-  template<class T>
-  class FbxLayerElementTemplate;
-}
-
-class aiMesh;
+struct aiMesh;
 
 namespace gua {
 
 /**
  * @brief holds vertex information of one mesh
  */
-struct Mesh {
+struct GUA_DLL Mesh {
  public:
   Mesh();
 
   Mesh(aiMesh const& mesh);
   
 #ifdef GUACAMOLE_FBX
-  Mesh(fbxsdk_2015_1::FbxMesh& mesh, int material_index = -1);
+  Mesh(FbxMesh& mesh, int material_index = -1);
 #endif
 
   /**
@@ -119,7 +114,7 @@ struct Mesh {
    */
   struct temp_tri {
     temp_tri(unsigned a, unsigned b, unsigned c):
-     verts{a, b, c}
+     verts({a, b, c})
     {}
     std::array<unsigned, 3> verts;
   };
@@ -133,7 +128,7 @@ struct Mesh {
    * 
    * @return indices of triangles that were added to this mesh
    */
-  std::vector<unsigned> construct(fbxsdk_2015_1::FbxMesh& mesh, int material_index);
+  std::vector<unsigned> construct(FbxMesh& mesh, int material_index);
 
   /**
    * @brief gets function to acces fbx vertex attribute
@@ -142,7 +137,7 @@ struct Mesh {
    * @return access function
    */
   template<typename T>
-  static std::function<unsigned(temp_vert const&)> get_access_function(fbxsdk_2015_1::FbxLayerElementTemplate<T> const& layer);
+  static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);
 };
 
 

@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/node/GeometryNode.hpp>
+#include <gua/utils/SkeletalAnimation.hpp>
 
 namespace gua {
 
@@ -41,7 +42,7 @@ namespace node {
  * the blend factor controls how much theseconds pose influecnes the first
  * 
  */
-class GUA_DLL SkeletalAnimationNode : public GeometryNode {
+  class GUA_SKELANIM_DLL SkeletalAnimationNode : public GeometryNode {
 
  public:  // c'tor / d'tor
 
@@ -68,7 +69,7 @@ class GUA_DLL SkeletalAnimationNode : public GeometryNode {
   * Set the string referring to an entry in guacamole's GeometryDatabase.
   */
   void set_geometry_description(std::string const& geometry_description,
-                                uint index);
+                                unsigned index);
 
   /**
   * This is only for the multifield handling in avango
@@ -80,9 +81,9 @@ class GUA_DLL SkeletalAnimationNode : public GeometryNode {
 
   std::vector<std::shared_ptr<Material> > const& get_materials() const;
 
-  std::shared_ptr<Material> const& get_material(uint index) const;
+  std::shared_ptr<Material> const& get_material(unsigned index) const;
 
-  void set_material(std::shared_ptr<Material> material, uint index);
+  void set_material(std::shared_ptr<Material> material, unsigned index);
 
   inline void clear_materials() { materials_.clear(); }
 
@@ -182,7 +183,7 @@ class GUA_DLL SkeletalAnimationNode : public GeometryNode {
 
   bool first_run_;
   bool has_anims_;
-  uint num_bones_;
+  unsigned num_bones_;
 
   const static std::string none_loaded;
 

@@ -23,6 +23,7 @@
 #define GUA_SKELETAL_ANIMATION_RENDERER_HPP
 
 // guacamole headers
+#include <gua/Skelanim.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/BoneTransformUniformBlock.hpp>
 
@@ -36,7 +37,7 @@ class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
-class SkeletalAnimationRenderer {
+class GUA_SKELANIM_DLL SkeletalAnimationRenderer {
 
  public:
 

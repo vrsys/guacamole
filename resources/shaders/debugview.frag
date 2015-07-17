@@ -39,7 +39,7 @@ void main() {
         // output position
       gua_out_color = gua_get_position(texcoord);
     } else if ( fragment_position.x < 5*debug_window_width) {
-      uint nlights = gua_sun_lights_num;
+      unsigned int nlights = gua_sun_lights_num;
       int bitset_words = ((gua_lights_num - 1) >> 5) + 1;
 
       ivec2 tile = ivec2(mod(fragment_position.x, debug_window_width ),

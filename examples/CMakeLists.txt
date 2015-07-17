@@ -64,6 +64,12 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(oculus)
   ENDIF (${PLUGIN_guacamole-oculus})
 
+  
+  # plod example requires plod-plugin
+  IF (${PLUGIN_guacamole-plod})
+    add_subdirectory(plod)
+  ENDIF (${PLUGIN_guacamole-plod})
+  
   # gui example requires gui-plugin
   IF (${PLUGIN_guacamole-gui})
    add_subdirectory(gui)

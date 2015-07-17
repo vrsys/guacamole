@@ -129,7 +129,7 @@ T BoneAnimation::calculate_value(float time,
   }
 
   int last_index = find_key(time, keys);
-  uint next_index = (last_index + 1);
+  unsigned next_index = (last_index + 1);
 
   if (last_index == -1) {
     return keys[0].value;

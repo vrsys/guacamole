@@ -19,58 +19,39 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_MATERIAL_LOADER_HPP
-#define GUA_MATERIAL_LOADER_HPP
+#ifndef GUA_FBXFWD_HPP
+#define GUA_FBXFWD_HPP
 
-// guacamole headers
-#include <gua/config.hpp>
-#include <gua/renderer/Material.hpp>
-#include <gua/utils/fbxfwd.hpp>
-
-// external headers
-#include <string>
-#include <memory>
-
-
-
-namespace Assimp { class Importer; }
-struct aiMaterial;
-
-namespace gua {
-
-class Node;
-class GeometryNode;
-
-/**
- * Loads and draws meshes.
- *
- * This class can load mesh data from files and display them in multiple
- * contexts. A MaterialLoader object is made of several Mesh objects.
- */
-class GUA_DLL MaterialLoader {
- public:
-
-  std::shared_ptr<Material> load_material(aiMaterial const* material,
-                                std::string const& assets_directory,
-                                bool optimize_material = true) const;
-#ifdef GUACAMOLE_FBX
-  std::shared_ptr<Material> load_material(FbxSurfaceMaterial const& material,
-                                std::string const& assets_directory,
-                                bool optimize_material = true) const;
-
-	std::shared_ptr<Material> load_unreal(std::string const& file_name,
-															 	std::string const& assets_directory,
-															 	bool optimize_material = true) const;
+#if WIN32
+  #define FBX_NAMESPACE fbxsdk
+#else
+  #define FBX_NAMESPACE fbxsdk_2015_1
 #endif
-  std::shared_ptr<Material> load_material(std::string const& file_name,
-                                std::string const& assets_directory,
-                                bool optimize_material = true) const;
 
-  static std::string get_file_name(std::string const& path);
-  inline static bool file_exists(std::string const& path);
-};
+namespace FBX_NAMESPACE {
+  class FbxMesh;
+  class FbxNode;
+  class FbxManager;
+  class FbxAnimStack;
+  class FbxScene;
+  class FbxTakeInfo;
+  class FbxSurfaceMaterial;
+  class FbxAMatrix;
+  class FbxQuaternion;
 
+  template<class T>
+  class FbxLayerElementTemplate;
 }
 
-#endif  // GUA_MATERIAL_LOADER_HPP
+using FBX_NAMESPACE::FbxAnimStack;
+using FBX_NAMESPACE::FbxTakeInfo;
+using FBX_NAMESPACE::FbxAMatrix;
+using FBX_NAMESPACE::FbxQuaternion;
+using FBX_NAMESPACE::FbxNode;
+using FBX_NAMESPACE::FbxManager;
+using FBX_NAMESPACE::FbxScene;
+using FBX_NAMESPACE::FbxMesh;
+using FBX_NAMESPACE::FbxLayerElementTemplate;
+using FBX_NAMESPACE::FbxSurfaceMaterial;
 
+#endif  // GUA_FBXFWD_HPP

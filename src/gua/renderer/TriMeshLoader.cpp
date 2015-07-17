@@ -323,7 +323,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
       if(fbx_node.GetMaterialCount() > 1) {
         Logger::LOG_WARNING << "Trimesh has more than one material, using only first one" << std::endl;
       }
-      fbxsdk_2015_1::FbxSurfaceMaterial* mat = fbx_node.GetMaterial(0);
+      FbxSurfaceMaterial* mat = fbx_node.GetMaterial(0);
       material = material_loader.load_material(*mat, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS);
     }
 

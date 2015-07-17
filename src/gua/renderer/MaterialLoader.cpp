@@ -33,6 +33,7 @@
 #include <assimp/scene.h>
 #include <fstream>
 #include <jsoncpp/json/json.h>
+
 #ifdef GUACAMOLE_FBX
   #include <fbxsdk.h>
 #endif
@@ -250,13 +251,18 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     assert(0);
   }
 
-  std::string uniform_color_map{get_sampler(FbxSurfaceMaterial::sDiffuse)};
-  std::string uniform_ambient_map{get_sampler(FbxSurfaceMaterial::sAmbient)};
-  std::string uniform_emit_map{get_sampler(FbxSurfaceMaterial::sEmissive)};
-  std::string uniform_normal_map{get_sampler(FbxSurfaceMaterial::sNormalMap)};
+  std::string uniform_ambient_map{ get_sampler(FbxSurfaceMaterial::sAmbient) };
+  std::string uniform_color_map{ get_sampler(FbxSurfaceMaterial::sDiffuse) };
+  std::string uniform_emit_map{ get_sampler(FbxSurfaceMaterial::sEmissive) };
+  std::string uniform_normal_map{ get_sampler(FbxSurfaceMaterial::sNormalMap) };
+
   //check bump slot if no normalmap found
   if(uniform_normal_map == "") {
+#if WIN32
+    uniform_normal_map = get_sampler("Bump");
+#else
     uniform_normal_map = get_sampler(FbxSurfaceMaterial::sBump);
+#endif
   }
 
   unsigned capabilities;
@@ -455,7 +461,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   auto get_float = [&properties](std::string const& name)->float {
     if(properties[name] != Json::Value::null && (properties[name].isDouble() || properties[name].isInt())) {
-      return properties[name].asFloat();
+      return float(properties[name].asDouble());
     }
     else {
       return NAN;
@@ -474,10 +480,10 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     if(properties[name] != Json::Value::null && properties[name].isArray()) {
       size_t num_values = properties[name].size(); 
       if(num_values == 4) {
-        return scm::math::vec4f{properties[name][0].asFloat(), properties[name][1].asFloat(), properties[name][2].asFloat(), properties[name][3].asFloat()};
+        return scm::math::vec4f{ float(properties[name][0U].asDouble()), float(properties[name][1U].asDouble()), float(properties[name][2U].asDouble()), float(properties[name][3U].asDouble()) };
       }
       else if(num_values == 3) {
-        return scm::math::vec4f{properties[name][0].asFloat(), properties[name][1].asFloat(), properties[name][2].asFloat(), 1.0f};
+        return scm::math::vec4f{ float(properties[name][0U].asDouble()), float(properties[name][1U].asDouble()), float(properties[name][2U].asDouble()), 1.0f };
       }
       else {
         Logger::LOG_WARNING << "Color property '" << name << "' has unsupported value number of " << num_values << std::endl;

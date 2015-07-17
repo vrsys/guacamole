@@ -44,7 +44,7 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class SkinnedMeshResource : public GeometryResource {
+class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource {
  public:
 
   /**

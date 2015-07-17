@@ -149,15 +149,15 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
       Logger::LOG_WARNING << "Object \"" << file_name
                           << "\" contains no animations!" << std::endl;
 
-    std::vector<fbxsdk_2015_1::FbxNode*> nodes {}
+    std::vector<FbxNode*> nodes {}
     ;
     // traverse hierarchy and collect pointers to all nodes
-    std::queue<fbxsdk_2015_1::FbxNode*> node_stack {}
+    std::queue<FbxNode*> node_stack {}
     ;
 
     node_stack.push(scene->GetRootNode());
     while (!node_stack.empty()) {
-      fbxsdk_2015_1::FbxNode* curr_node = node_stack.front();
+      FbxNode* curr_node = node_stack.front();
       nodes.push_back(curr_node);
 
       for (int i = 0; i < curr_node->GetChildCount(); ++i) {
@@ -174,7 +174,7 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
       node_stack.pop();
     }
 
-    for (uint i = 0; i < num_anims; ++i) {
+    for (unsigned i = 0; i < num_anims; ++i) {
       std::string new_name =
           (num_anims == 1) ? animation_name
                            : animation_name + std::to_string(i);
@@ -209,7 +209,7 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
 
     if (scene->HasAnimations()) {
       // do actual importing
-      for (uint i = 0; i < scene->mNumAnimations; ++i) {
+      for (unsigned i = 0; i < scene->mNumAnimations; ++i) {
         std::string new_name =
             (scene->mNumAnimations == 1) ? animation_name
                                          : animation_name + std::to_string(i);
