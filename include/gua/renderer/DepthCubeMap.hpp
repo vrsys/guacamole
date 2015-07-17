@@ -30,6 +30,9 @@
 
 namespace gua {
 
+namespace node {
+  class CubemapNode;
+}
 
 class Pipeline;
 
@@ -62,6 +65,10 @@ class DepthCubeMap : public RenderTarget {
   math::vec2f viewport_size_;
   std::shared_ptr<Texture2D> texture2D_ptr;
 
+};
+
+struct SharedDepthCubeMapResource {
+  std::unordered_map<node::CubemapNode*, std::shared_ptr<DepthCubeMap>> cube_maps_;
 };
 
 }

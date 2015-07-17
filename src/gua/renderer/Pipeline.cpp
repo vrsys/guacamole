@@ -33,6 +33,7 @@
 #include <gua/renderer/Frustum.hpp>
 #include <gua/node/CameraNode.hpp>
 #include <gua/node/LightNode.hpp>
+#include <gua/node/CubemapNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
 #include <gua/renderer/CameraUniformBlock.hpp>
@@ -348,11 +349,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void Pipeline::generate_depth_cubemap_face(unsigned face, math::mat4 node_transform)
+  void Pipeline::generate_depth_cubemap_face(unsigned face, node::CubemapNode* cube_map_node)
   {
-    math::vec2ui viewport_size(depth_cube_map_->get_viewport_size());
+    auto depth_cube_map = depth_cube_map_res_->cube_maps_.find(cube_map_node)->second;
 
-    current_viewstate_.target = depth_cube_map_.get();
+    auto node_transform(cube_map_node->get_cached_world_transform());
+    math::vec2ui viewport_size(depth_cube_map->get_viewport_size());
+
+    current_viewstate_.target = depth_cube_map.get();
     auto orig_scene(current_viewstate_.scene);
 
     // set view parameters
@@ -393,7 +397,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       )
       );
 
-    depth_cube_map_->set_viewport_offset(math::vec2f(face, 0.f));
+    depth_cube_map->set_viewport_offset(math::vec2f(face, 0.f));
 
     current_viewstate_.view_direction = view_directions[face];
 
@@ -439,21 +443,29 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
   ////////////////////////////////////////////////////////////////////////////////
   
-  void Pipeline::reset_depth_cubemap(std::string const& texture_name)
+  void Pipeline::reset_depth_cubemap(node::CubemapNode* cube_map_node)
   {
     unsigned resolution = 64;
     unsigned viewport_size(resolution);
     unsigned map_width(resolution*6);
 
-    if (!depth_cube_map_) {
-      depth_cube_map_ = std::make_shared<DepthCubeMap>(context_, math::vec2ui(map_width, viewport_size), texture_name);;
+    if (!depth_cube_map_res_) {
+      depth_cube_map_res_ = context_.resources.get<SharedDepthCubeMapResource>();
+    }
+    std::shared_ptr<DepthCubeMap> current_depth_cube_map(nullptr);
+    auto depth_cube_map = depth_cube_map_res_->cube_maps_.find(cube_map_node);
+
+    if (depth_cube_map == depth_cube_map_res_->cube_maps_.end()){
+      auto texture_name(cube_map_node->get_texture_name());
+      current_depth_cube_map = std::make_shared<DepthCubeMap>(context_, math::vec2ui(map_width, viewport_size), texture_name);;
+      depth_cube_map_res_->cube_maps_[cube_map_node] = current_depth_cube_map;
     } else {
-      depth_cube_map_->retrieve_data(context_, current_viewstate_.camera.config.near_clip(), current_viewstate_.camera.config.far_clip());
+      current_depth_cube_map = depth_cube_map->second;
+      current_depth_cube_map->retrieve_data(context_, current_viewstate_.camera.config.near_clip(), current_viewstate_.camera.config.far_clip());
     }
 
-
-    depth_cube_map_->clear(context_);
-    depth_cube_map_->set_viewport_size(math::vec2f(viewport_size));
+    current_depth_cube_map->clear(context_);
+    current_depth_cube_map->set_viewport_size(math::vec2f(viewport_size));
   }
   ////////////////////////////////////////////////////////////////////////////////
 
