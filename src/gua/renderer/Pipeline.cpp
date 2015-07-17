@@ -439,14 +439,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
   ////////////////////////////////////////////////////////////////////////////////
   
-  void Pipeline::reset_depth_cubemap()
+  void Pipeline::reset_depth_cubemap(std::string const& texture_name)
   {
-    unsigned resolution = 128;
+    unsigned resolution = 64;
     unsigned viewport_size(resolution);
     unsigned map_width(resolution*6);
 
     if (!depth_cube_map_) {
-      depth_cube_map_ = std::make_shared<DepthCubeMap>(context_, math::vec2ui(map_width, viewport_size));;
+      depth_cube_map_ = std::make_shared<DepthCubeMap>(context_, math::vec2ui(map_width, viewport_size), texture_name);;
     } else {
       depth_cube_map_->retrieve_data(context_, current_viewstate_.camera.config.near_clip(), current_viewstate_.camera.config.far_clip());
     }
