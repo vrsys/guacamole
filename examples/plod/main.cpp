@@ -466,7 +466,7 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, LensConfi
 /////////////////////////////////////////////////////////////////////////////
 // example configuration
 /////////////////////////////////////////////////////////////////////////////
-#define RENDER_PITOTI_HUNTING_SCENE 1
+#define RENDER_PITOTI_HUNTING_SCENE 0
 #define RENDER_EXAMPLE_STEREO 0
 
 int main(int argc, char** argv) {
@@ -583,29 +583,22 @@ int main(int argc, char** argv) {
 
 #endif
 
+#else
+  plod_geometrys.push_back(plodLoader.load_geometry("plod_pig", "data/objects/rock.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE));
+
+#endif 
+
   for (auto p : plod_geometrys){
-      setup_plod_node(p);
+    setup_plod_node(p);
   }
 
   // connect scene graph
   for (auto p : plod_geometrys){
-      graph.add_node("/transform/model_xf", p);
+    graph.add_node("/transform/model_xf", p);
   }
 
-
-    
   model_xf->translate(-plod_geometrys[0]->get_bounding_box().center());
-
-#else
-  auto plod_geometry(plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE));
-  setup_plod_node(plod_geometry);
-  graph.add_node("/transform/model_xf", plod_geometry);
-
-  auto teapot(trimesh_loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
-  graph.add_node("/transform/model_xf", teapot);
-  teapot->translate(0.6, 0.0, 0.0);
-
-#endif 
+  //plod_geometrys[0]->translate(plod_geometrys[0]->get_bounding_box().center());
 
   auto bb = plod_geometrys[0]->get_bounding_box();
 
@@ -652,12 +645,6 @@ int main(int argc, char** argv) {
 
 
   lens_config.vis_plane_v = gua::math::vec3(bb_ranges.x * 0.5f + bb.min.x, bb_ranges.y * 0.5f + bb.min.y, bb_ranges.z * 0.5f + bb.min.z);
-
-  //std::cout << "min: " << bb.min << std::endl;
-  //std::cout << "max: " << bb.max << std::endl;
-  //std::cout << "range: " << bb_ranges << std::endl;
-  //std::cout << "visplane_V: " << lens_config.vis_plane_v << std::endl;
-  //getchar();
 
   if (0u == min_dim){
       lens_config.vis_plane_n = gua::math::vec3(1.0f, 0.0f, 0.0f);
@@ -714,7 +701,7 @@ int main(int argc, char** argv) {
   /////////////////////////////////////////////////////////////////////////////
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 10.0);
+  camera->translate(0, 10, 10.0);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_eye_dist(0.06f);

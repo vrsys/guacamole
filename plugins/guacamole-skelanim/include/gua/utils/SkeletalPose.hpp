@@ -22,19 +22,21 @@
 #ifndef GUA_POSE_HPP
 #define GUA_POSE_HPP
 
+#include <gua/Skelanim.hpp>
+
 //external headers
 #include <map>
 #include <memory>
 
 namespace gua {
 class Bone;
-class BonePose;
+struct BonePose;
 
 /**
  * @brief holds transformations for bones at one point in an anim
  * @details used to accumulate and blend boneposes
  */
-class SkeletalPose {
+class GUA_SKELANIM_DLL SkeletalPose {
  public:
   SkeletalPose();
 

@@ -24,17 +24,13 @@
  
 // guacamole headers
 #include <gua/config.hpp>
+#include <gua/utils/fbxfwd.hpp>
 
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
 
-namespace fbxsdk_2015_1{
-  class FbxTakeInfo;
-  class FbxNode;
-}
-
-class aiNodeAnim;
+struct aiNodeAnim;
 
 namespace gua {
   
@@ -68,7 +64,7 @@ class BoneAnimation {
   BoneAnimation(aiNodeAnim* anim);
 
 #ifdef GUACAMOLE_FBX
-  BoneAnimation(fbxsdk_2015_1::FbxTakeInfo const& take, fbxsdk_2015_1::FbxNode& node);
+  BoneAnimation(FbxTakeInfo const& take, FbxNode& node);
 #endif
   ~BoneAnimation();
 

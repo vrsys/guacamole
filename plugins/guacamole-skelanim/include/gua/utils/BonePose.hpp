@@ -22,6 +22,8 @@
 #ifndef GUA_BONEPOSE_HPP
 #define GUA_BONEPOSE_HPP
 
+#include <gua/Skelanim.hpp>
+
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
@@ -32,7 +34,7 @@ namespace gua {
  * @brief holds transformation of bone
  * @details can be blended with another bone pose
  */
-struct BonePose {
+struct GUA_SKELANIM_DLL BonePose {
  public:
   BonePose();
 

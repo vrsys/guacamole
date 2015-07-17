@@ -32,12 +32,12 @@ layout (std430, binding = 1) ABUF_MODE coherent buffer abuf_data {
 #define UINT_MAX             0xFFFFFFFF
 #define LSB64(a)             (uint32_t(a))
 
-const uint abuf_list_offset = gua_resolution.x * gua_resolution.y;
+const unsigned int abuf_list_offset = gua_resolution.x * gua_resolution.y;
 
-uint pack_depth24(float z) {
-  return (UINT_MAX - uint(round(z * float(UINT24_MAX)))) << 8;
+unsigned int pack_depth24(float z) {
+  return (UINT_MAX - unsigned int(round(z * float(UINT24_MAX)))) << 8;
 }
 
-float unpack_depth24(uint z) {
+float unpack_depth24(unsigned int z) {
   return float((UINT_MAX - z) >> 8) / float(UINT24_MAX);
 }

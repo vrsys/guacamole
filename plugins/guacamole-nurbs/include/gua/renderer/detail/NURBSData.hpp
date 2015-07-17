@@ -68,7 +68,7 @@ struct NURBSData
 
   //Data for Trimming
   std::vector<scm::math::vec4f> trim_partition;
-  std::vector<scm::math::vec2f> trim_contourlist;
+  std::vector<scm::math::vec4f> trim_contourlist;
   std::vector<scm::math::vec4f> trim_curvelist;
   std::vector<float>            trim_curvedata;
   std::vector<scm::math::vec3f> trim_pointdata;

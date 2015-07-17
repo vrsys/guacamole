@@ -24,21 +24,18 @@
 
 // guacamole headers
 #include <gua/config.hpp>
+#include <gua/platform.hpp>
+#include <gua/utils/fbxfwd.hpp>
 
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
 #include <assimp/scene.h>       // for ainodeanim
 
-namespace fbxsdk_2015_1{
-  class FbxAMatrix;
-  class FbxQuaternion;
-}
+namespace to_gua {
 
-namespace to_gua{
-
-scm::math::mat4f mat4f(aiMatrix4x4 const& m);
-scm::math::quatf quatf(aiQuaternion const& q);
+GUA_DLL scm::math::mat4f mat4f(aiMatrix4x4 const& m);
+GUA_DLL scm::math::quatf quatf(aiQuaternion const& q);
 
 template<typename T>
 scm::math::vec3f vec3f(T const& v) {
@@ -59,9 +56,9 @@ scm::math::vec4f vec4f(T const& v) {
 }
 
 #ifdef GUACAMOLE_FBX
-  scm::math::mat4f mat4f(fbxsdk_2015_1::FbxAMatrix const& m);
-  scm::math::mat4d mat4d(fbxsdk_2015_1::FbxAMatrix const& m);
-  scm::math::quatf quatf(fbxsdk_2015_1::FbxQuaternion const& q);
+GUA_DLL scm::math::mat4f mat4f(FbxAMatrix const& m);
+GUA_DLL scm::math::mat4d mat4d(FbxAMatrix const& m);
+GUA_DLL scm::math::quatf quatf(FbxQuaternion const& q);
 #endif
 }
 

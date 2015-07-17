@@ -25,19 +25,16 @@
 // guacamole headers
 #include <gua/config.hpp>
 #include <gua/platform.hpp>
+#include <gua/Skelanim.hpp>
+#include <gua/utils/fbxfwd.hpp>
 
 // external headers
 #include <string>
 #include <memory>
 #include <vector>
 
-namespace fbxsdk_2015_1 {
-class FbxScene;
-class FbxManager;
-}
-
 namespace Assimp { class Importer; }
-class aiScene;
+struct aiScene;
 
 namespace gua {
 class SkeletalAnimation;
@@ -56,7 +53,7 @@ class SkeletalAnimationNode;
  * This class can load mesh and animation data from files and returns
  * SkeletalanimationNodes.
  */
-class GUA_DLL SkeletalAnimationLoader {
+class GUA_SKELANIM_DLL SkeletalAnimationLoader {
 
  public:  // typedefs, enums
 
@@ -161,7 +158,7 @@ class GUA_DLL SkeletalAnimationLoader {
    */
 #ifdef GUACAMOLE_FBX
   static std::shared_ptr<node::SkeletalAnimationNode> get_node(
-      fbxsdk_2015_1::FbxScene* fbx_scene,
+      FbxScene* fbx_scene,
       std::string const& file_name,
       std::string const& node_name,
       unsigned flags);
@@ -206,8 +203,8 @@ class GUA_DLL SkeletalAnimationLoader {
    * @return loaded scene
    */
 #ifdef GUACAMOLE_FBX
-  static fbxsdk_2015_1::FbxScene* load_fbx_file(
-      fbxsdk_2015_1::FbxManager* manager,
+  static FbxScene* load_fbx_file(
+      FbxManager* manager,
       std::string const& file_path);
 #endif
 };

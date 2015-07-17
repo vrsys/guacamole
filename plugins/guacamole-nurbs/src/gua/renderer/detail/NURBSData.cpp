@@ -46,7 +46,7 @@ namespace gua {
     object->init(pre_subdivision_u, pre_subdivision_v);
   }
 
-  unsigned patch_id = tess_attribute_data.size();
+  unsigned int patch_id = unsigned int(tess_attribute_data.size());
 
   // serialize trim domain
   std::unordered_map<gpucast::trimdomain_serializer_contour_map_binary::curve_ptr, unsigned>       referenced_curves;

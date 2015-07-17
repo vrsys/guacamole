@@ -23,15 +23,15 @@
 #define GUA_SLELETAL_ANIMATION_PASS_HPP
 
 // guacamole headers
+#include <gua/Skelanim.hpp>
 #include <gua/renderer/PipelinePass.hpp>
-#include <gua/platform.hpp>
 
 // external headers
 #include <scm/gl_core/buffer_objects.h>
 
 namespace gua {
 
-class GUA_DLL SkeletalAnimationPassDescription
+  class GUA_SKELANIM_DLL SkeletalAnimationPassDescription
     : public PipelinePassDescription {
  public:
   SkeletalAnimationPassDescription();
