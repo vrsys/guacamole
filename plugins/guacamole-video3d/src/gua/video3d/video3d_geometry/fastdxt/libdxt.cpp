@@ -30,7 +30,7 @@
 #include <malloc.h>
 #endif
 
-#if WIN32 
+#if WIN32
   #include <thread>
   #include <memory>
   #include <vector>

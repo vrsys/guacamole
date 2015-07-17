@@ -35,8 +35,8 @@ namespace math {
  * A math representation of a bounding box.
  */
 template <typename V> struct BoundingBox {
-  typedef typename traits::scalar<V>::type scalar_type;
-  typedef V point_type;
+  using scalar_type = typename traits::scalar<V>::type;
+  using point_type = V;
 
   point_type min;
   point_type max;

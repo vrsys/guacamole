@@ -29,7 +29,7 @@ public:
     float        clip_far;
   };
 
-  typedef scm::gl::uniform_block<CameraBlock> block_type;
+  using block_type = scm::gl::uniform_block<CameraBlock>;
 
   CameraUniformBlock(scm::gl::render_device_ptr const& device);
   ~CameraUniformBlock();
