@@ -28,14 +28,14 @@
 namespace gua {
 namespace events {
 
-typedef NumericProperty<double> Double;
-typedef NumericProperty<float> Float;
-typedef NumericProperty<int> Int;
-typedef NumericProperty<char> Char;
-typedef NumericProperty<unsigned> UInt;
-typedef NumericProperty<unsigned char> UChar;
+using Double = NumericProperty<double>;
+using Float = NumericProperty<float>;
+using Int = NumericProperty<int>;
+using Char = NumericProperty<char>;
+using UInt = NumericProperty<unsigned>;
+using UChar = NumericProperty<unsigned char>;
 
-typedef LogicalProperty<bool> Bool;
+using Bool = LogicalProperty<bool>;
 
 }
 }

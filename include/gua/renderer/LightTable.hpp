@@ -55,8 +55,8 @@ public:
 
   };
 
-  typedef scm::gl::uniform_block_array<LightBlock> uniform_array_type;
-  typedef std::vector<LightBlock> array_type;
+  using uniform_array_type = scm::gl::uniform_block_array<LightBlock>;
+  using array_type = std::vector<LightBlock>;
 
 
   virtual ~LightTable() {}
