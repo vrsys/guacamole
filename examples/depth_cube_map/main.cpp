@@ -35,6 +35,9 @@
 #include "Navigator.hpp"
 
  #define FULLSCREEN false
+ #define RECURSIVE_OILRIGS true
+ #define ELEPHANT true
+ #define SKYMAP true
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -79,65 +82,69 @@ int main(int argc, char** argv) {
 
   
   // MODELS
-  auto much_big_oilrig(loader.create_geometry_from_file("much_big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
+  if (RECURSIVE_OILRIGS)
+  {
+    auto much_big_oilrig(loader.create_geometry_from_file("much_big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  much_big_oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-  much_big_oilrig->scale(100.0);
+    much_big_oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+    much_big_oilrig->scale(100.0);
 
-  graph.add_node(transform, much_big_oilrig);
-
-
-  auto big_oilrig(loader.create_geometry_from_file("big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-
-  big_oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-  big_oilrig->scale(10);
-  big_oilrig->translate(18.f, 1.0f, 8.f);
-
-  graph.add_node(transform, big_oilrig);
+    graph.add_node(transform, much_big_oilrig);
 
 
-  auto oilrig(loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
+    auto big_oilrig(loader.create_geometry_from_file("big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-  // oilrig->scale(0.1);
-  oilrig->translate(19.8f, 1.1f, 8.8f);
+    big_oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+    big_oilrig->scale(10);
+    big_oilrig->translate(18.f, 1.0f, 8.f);
 
-  graph.add_node(transform, oilrig);
+    graph.add_node(transform, big_oilrig);
 
 
-  auto small_oilrig(loader.create_geometry_from_file("small_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
+    auto oilrig(loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  small_oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-  small_oilrig->scale(0.1);
-  small_oilrig->translate(19.98f, 1.11f, 8.88f);
+    oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+    // oilrig->scale(0.1);
+    oilrig->translate(19.8f, 1.1f, 8.8f);
 
-  graph.add_node(transform, small_oilrig);
+    graph.add_node(transform, oilrig);
 
-  // auto cake(loader.create_geometry_from_file("cake", "/opt/3d_models/animals/good/dino_1/Dinosaur 2.3DS",
-  auto cake(loader.create_geometry_from_file("cake", "/opt/3d_models/animals/elephant/elephant.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  cake->rotate(-180.0f, 1.0f, 0.0f, 0.0f);
-  cake->rotate(90.0f, 0.0f, 1.0f, 0.0f);
-  cake->scale(0.002);
-  cake->translate(19.957f, 1.1201f, 8.892f);
+    auto small_oilrig(loader.create_geometry_from_file("small_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
 
-  graph.add_node(transform, cake);
+    small_oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+    small_oilrig->scale(0.1);
+    small_oilrig->translate(19.98f, 1.11f, 8.88f);
 
+    graph.add_node(transform, small_oilrig);
+  }
+
+  if (ELEPHANT)
+  {
+    auto elephant(loader.create_geometry_from_file("elephant", "/opt/3d_models/animals/elephant/elephant.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
+
+    elephant->rotate(-180.0f, 1.0f, 0.0f, 0.0f);
+    elephant->rotate(90.0f, 0.0f, 1.0f, 0.0f);
+    elephant->scale(0.002);
+    elephant->translate(19.957f, 1.1201f, 8.892f);
+
+    graph.add_node(transform, elephant);
+  }
 
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SUN);
@@ -163,9 +170,12 @@ int main(int argc, char** argv) {
   camera->config.set_far_clip(200.0f);
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+
+  if (SKYMAP)
+  {
   camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
   camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/textures/skymap.jpg");
-
+  }
 
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::SSAAPassDescription>());
@@ -184,8 +194,8 @@ int main(int argc, char** argv) {
   
   // CUBEMAP NAVIGATION
   bool adaptive_navigation(true);
-  auto cmn = graph.add_node<gua::node::CubemapNode>("/navigation", "test");
-  cmn.set_texture_name("navigation_depth_texture");
+  auto cmn(graph.add_node<gua::node::CubemapNode>("/navigation", "test"));
+  cmn->set_texture_name("navigation_depth_texture");
   float motion_speed = 0.03f;
 
   auto window = std::make_shared<gua::GlfwWindow>();
