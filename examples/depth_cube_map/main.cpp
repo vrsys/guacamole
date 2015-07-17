@@ -34,6 +34,8 @@
  
 #include "Navigator.hpp"
 
+ #define FULLSCREEN false
+
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -183,13 +185,14 @@ int main(int argc, char** argv) {
   // CUBEMAP NAVIGATION
   bool adaptive_navigation(true);
   auto cmn = graph.add_node<gua::node::CubemapNode>("/navigation", "test");
+  cmn.set_texture_name("navigation_depth_texture");
   float motion_speed = 0.03f;
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
-  window->config.set_fullscreen_mode(true);
+  window->config.set_fullscreen_mode(FULLSCREEN);
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::MONO);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {

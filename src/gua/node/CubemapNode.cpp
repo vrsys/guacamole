@@ -55,7 +55,7 @@ std::string CubemapNode::get_texture_name() const{
 
 float CubemapNode::get_closest_distance() const{
 
-  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup("DepthCubeMapTestTexture"));
+  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(texture_name_));
   if (texture){
     std::vector<float> const& v = texture->get_data();
 

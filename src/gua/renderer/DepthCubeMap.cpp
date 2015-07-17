@@ -34,7 +34,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-DepthCubeMap::DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolution) :
+DepthCubeMap::DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolution, std::string const& tex_name)  :
   RenderTarget(resolution),
   viewport_offset_(math::vec2f(0.f, 0.f)),
   viewport_size_(math::vec2f(resolution)) {
@@ -47,7 +47,7 @@ DepthCubeMap::DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolut
   state._max_anisotropy = 16;
 
   depth_buffer_ = std::make_shared<TextureDistance>(resolution.x, resolution.y, scm::gl::FORMAT_D16, 1, state);
-  TextureDatabase::instance()->add("DepthCubeMapTestTexture", std::dynamic_pointer_cast<TextureDistance>(depth_buffer_));
+  TextureDatabase::instance()->add(tex_name, std::dynamic_pointer_cast<TextureDistance>(depth_buffer_));
 
   fbo_ = ctx.render_device->create_frame_buffer();
   fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx), 0, 0);

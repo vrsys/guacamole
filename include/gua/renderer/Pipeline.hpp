@@ -102,7 +102,7 @@ public:
 
   void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
   void generate_depth_cubemap_face(unsigned face, math::mat4 node_transform);
-  void reset_depth_cubemap();
+  void reset_depth_cubemap(std::string const& texture_name);
 
   PipelineViewState const&           current_viewstate() const;
 

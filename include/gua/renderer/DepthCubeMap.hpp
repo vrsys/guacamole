@@ -39,7 +39,7 @@ class Pipeline;
 class DepthCubeMap : public RenderTarget {
  public:
 
-  DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolution);
+  DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolution, std::string const& tex_name);
 
   virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;  
   virtual void bind(RenderContext const& context, bool write_depth) override;
