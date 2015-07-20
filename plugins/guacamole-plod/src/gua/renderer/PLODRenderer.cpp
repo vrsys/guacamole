@@ -285,20 +285,11 @@ namespace gua {
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   pbr::context_t PLODRenderer::_register_context_in_cut_update(gua::RenderContext const& ctx) {
-    
-    pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+    pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance(); 
     if (previous_frame_count_ != ctx.framecount) {
       controller->ResetSystem();
-    
-      //dispatch cut updates when all info has been uploaded
-      previous_frame_count_ = ctx.framecount;
-      pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-      controller->Dispatch(context_id, ctx.render_device);
-      return context_id;
     }
-     
     return controller->DeduceContextId(ctx.id);
-   
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -817,14 +808,18 @@ namespace gua {
       }
 
     }
-     //////////////////////////////////////////////////////////////////////////
-     // Draw finished -> unbind g-buffer
-     //////////////////////////////////////////////////////////////////////////
-     target.unbind(ctx);
+    //////////////////////////////////////////////////////////////////////////
+    // Draw finished -> unbind g-buffer
+    //////////////////////////////////////////////////////////////////////////
+    target.unbind(ctx);
 
-     pipe.end_cpu_query(cpu_query_name_plod_total); 
-
- 
+    pipe.end_cpu_query(cpu_query_name_plod_total); 
+    
+    //dispatch cut updates
+    if (previous_frame_count_ != ctx.framecount) {
+      previous_frame_count_ = ctx.framecount;
+      controller->Dispatch(controller->DeduceContextId(ctx.id), ctx.render_device);
+    }
   } 
 
 }
