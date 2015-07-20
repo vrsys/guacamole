@@ -289,9 +289,16 @@ namespace gua {
     pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
     if (previous_frame_count_ != ctx.framecount) {
       controller->ResetSystem();
+    
+      //dispatch cut updates when all info has been uploaded
+      previous_frame_count_ = ctx.framecount;
+      pbr::context_t context_id = controller->DeduceContextId(ctx.id);
+      controller->Dispatch(context_id, ctx.render_device);
+      return context_id;
     }
+     
     return controller->DeduceContextId(ctx.id);
-      
+   
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -479,10 +486,10 @@ namespace gua {
       std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
 
       //perform frustum culling 
-      pbr::ren::KdnTree const* kdn_tree = database->GetModel(model_id)->kdn_tree();
+      pbr::ren::Bvh const* bvh = database->GetModel(model_id)->bvh();
       scm::gl::frustum const& culling_frustum = cut_update_cam.GetFrustumByModel(math::mat4f(scm_model_matrix));
 
-      std::vector<scm::gl::boxf> const& model_bounding_boxes = kdn_tree->bounding_boxes();
+      std::vector<scm::gl::boxf> const& model_bounding_boxes = bvh->bounding_boxes();
 
       std::unordered_set<pbr::node_t>& nodes_out_of_frustum = nodes_out_of_frustum_per_model[model_id];
 
@@ -816,14 +823,6 @@ namespace gua {
      target.unbind(ctx);
 
      pipe.end_cpu_query(cpu_query_name_plod_total); 
- 
-    //dispatch cut updates when all info has been uploaded
-    if (previous_frame_count_ != ctx.framecount) {
-      previous_frame_count_ = ctx.framecount;
-      pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-      controller->Dispatch(context_id, ctx.render_device);
-
-    }
 
  
   } 
