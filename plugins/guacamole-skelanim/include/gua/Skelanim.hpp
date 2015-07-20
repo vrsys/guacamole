@@ -29,7 +29,7 @@
 #define GUA_SKELANIM_DLL __declspec( dllimport )
 #endif
 #else
-#define GUA_PLOD_DLL
+#define GUA_SKELANIM_DLL
 #endif // #if defined(_MSC_VER)
 
 #include <gua/node/SkeletalAnimationNode.hpp>
