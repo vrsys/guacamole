@@ -195,7 +195,9 @@ int main(int argc, char** argv) {
   // CUBEMAP NAVIGATION
   bool adaptive_navigation(true);
   auto cmn(graph.add_node<gua::node::CubemapNode>("/navigation", "test"));
-  cmn->set_texture_name("navigation_depth_texture");
+  cmn->config.set_texture_name("navigation_depth_texture");
+  cmn->config.set_near_clip(0.002f);
+  cmn->config.set_far_clip(200.0f);
   float motion_speed = 0.03f;
 
   auto window = std::make_shared<gua::GlfwWindow>();

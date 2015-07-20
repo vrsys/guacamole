@@ -24,6 +24,9 @@
 
 #include <gua/platform.hpp>
 #include <gua/node/SerializableNode.hpp>
+#include <gua/utils/configuration_macro.hpp>
+
+#include <string>
 
 namespace gua {
 namespace node {
@@ -35,6 +38,32 @@ namespace node {
  */
 class GUA_DLL CubemapNode : public SerializableNode {
  public:
+
+  struct Configuration {
+    /**
+     * Sets the size in pixel of each side of the texture used for depth cube map generation.
+     */
+    GUA_ADD_PROPERTY(unsigned,        resolution,                  64);
+
+    /**
+     * near clipping distance for depth value generation
+     */
+    GUA_ADD_PROPERTY(float,           near_clip,                 0.1f);
+
+    /**
+     * far clipping distance for depth value generation
+     */
+    GUA_ADD_PROPERTY(float,           far_clip,                  10.f);
+    /**
+     * Name of the depth texture in the texture database
+     */
+    GUA_ADD_PROPERTY(std::string,     texture_name,       "depth_cube_texture");
+  };
+
+  /**
+   * The CubemapNode's configuration.
+   */
+  Configuration config;
 
   /**
    * Constructor.
@@ -50,11 +79,14 @@ class GUA_DLL CubemapNode : public SerializableNode {
    * This constructs a CubemapNode with the given parameters.
    *
    * \param name           The name of the new CubemapNode.
+   * \param configuration  A configuration struct to define the CubemapNodes's
+   *                       properties.
    * \param transform      A matrix to describe the CubemapNode's
    *                       transformation.
    */
   CubemapNode(std::string const& name,
-            math::mat4 const& transform = math::mat4::identity());
+              Configuration const& configuration = Configuration(),
+              math::mat4 const& transform = math::mat4::identity());
 
   /**
    * Accepts a visitor and calls concrete visit method.

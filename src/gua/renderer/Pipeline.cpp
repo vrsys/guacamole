@@ -390,10 +390,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     auto frustum(
       Frustum::perspective(
       node_transform, transform,
-      // 0.5, 10.0
-      current_viewstate_.camera.config.near_clip(),
-      current_viewstate_.camera.config.far_clip()
-      // scm::math::length(math::get_translation(transform))
+      cube_map_node->config.near_clip(),
+      cube_map_node->config.far_clip()
       )
       );
 
@@ -401,7 +399,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     current_viewstate_.view_direction = view_directions[face];
 
-    // render_shadow_map(light_block, frustum, i, viewport_size, redraw);
     current_viewstate_.scene = current_viewstate_.graph->serialize(frustum, frustum,
       math::get_translation(current_viewstate_.camera.transform),
       current_viewstate_.camera.config.enable_frustum_culling(),
@@ -445,7 +442,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   
   void Pipeline::reset_depth_cubemap(node::CubemapNode* cube_map_node)
   {
-    unsigned resolution = 64;
+    unsigned resolution = cube_map_node->config.resolution();
     unsigned viewport_size(resolution);
     unsigned map_width(resolution*6);
 
@@ -461,7 +458,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       depth_cube_map_res_->cube_maps_[cube_map_node] = current_depth_cube_map;
     } else {
       current_depth_cube_map = depth_cube_map->second;
-      current_depth_cube_map->retrieve_data(context_, current_viewstate_.camera.config.near_clip(), current_viewstate_.camera.config.far_clip());
+      current_depth_cube_map->retrieve_data(context_, cube_map_node->config.near_clip(), cube_map_node->config.far_clip());
     }
 
     current_depth_cube_map->clear(context_);

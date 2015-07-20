@@ -33,10 +33,10 @@
 namespace gua {
 namespace node {
 
-CubemapNode::CubemapNode(std::string const& name, math::mat4 const& transform)
-    : SerializableNode(name, transform) {
-      texture_name_ = name + "_texture";
-    }
+CubemapNode::CubemapNode(std::string const& name,
+                         Configuration const& configuration,
+                         math::mat4 const& transform)
+  : SerializableNode(name, transform), config(configuration) {}
 
 /* virtual */ void CubemapNode::accept(NodeVisitor& visitor) {
 
