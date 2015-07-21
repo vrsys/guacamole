@@ -34,11 +34,9 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 Mask::Mask(std::vector<std::string> const& whitelist_tags,
-           std::vector<std::string> const& blacklist_tags,
-           bool allow_ut)
+           std::vector<std::string> const& blacklist_tags)
     : whitelist(whitelist_tags),
-      blacklist(blacklist_tags),
-      allow_untagged(allow_ut) {}
+      blacklist(blacklist_tags) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,11 +48,7 @@ bool Mask::check(gua::utils::TagList const& tags) const {
     auto const& bl(blacklist.get_bits());
 
     if (wl.any()) {
-      bool on_whitelist = (wl & t).any();
-      if (!on_whitelist && allow_untagged) {
-        return true;
-      }
-      return on_whitelist;
+      return (wl & t).any();
     } else if (bl.any()) {
       return !(bl & t).any();
     }
