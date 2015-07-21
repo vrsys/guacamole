@@ -24,8 +24,10 @@
 #include <gua/guacamole.hpp>
 #include <gua/node/CubemapNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+
 #include <gua/renderer/PLODLoader.hpp>
 #include <gua/node/PLODNode.hpp>
+#include <gua/renderer/PLODPass.hpp>
 
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
@@ -46,7 +48,7 @@
  
  #define PITOTI true
 
- #define SKYMAP false
+ #define SKYMAP true
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -73,7 +75,7 @@ int main(int argc, char** argv) {
   // add interaction
   // gua::utils::Trackball object_trackball(0.01, 0.002, 0, 0.2);
   Navigator nav;
-  nav.set_transform(scm::math::make_translation(0.f, 0.f, 60.f));
+  nav.set_transform(scm::math::make_translation(0.f, 0.f, 4.f));
 
   // initialize guacamole
   gua::init(argc, argv);
@@ -91,7 +93,7 @@ int main(int argc, char** argv) {
 
 
   auto navigation = graph.add_node<gua::node::TransformNode>("/", "navigation");
-  auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+  auto scene = graph.add_node<gua::node::TransformNode>("/", "scene");
 
   
   // MODELS
@@ -105,7 +107,7 @@ int main(int argc, char** argv) {
     much_big_oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
     much_big_oilrig->scale(100.0);
 
-    graph.add_node(transform, much_big_oilrig);
+    graph.add_node(scene, much_big_oilrig);
 
 
     auto big_oilrig(trimesh_loader.create_geometry_from_file("big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
@@ -117,7 +119,7 @@ int main(int argc, char** argv) {
     big_oilrig->scale(10);
     big_oilrig->translate(18.f, 1.0f, 8.f);
 
-    graph.add_node(transform, big_oilrig);
+    graph.add_node(scene, big_oilrig);
 
 
     auto oilrig(trimesh_loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
@@ -129,7 +131,7 @@ int main(int argc, char** argv) {
     // oilrig->scale(0.1);
     oilrig->translate(19.8f, 1.1f, 8.8f);
 
-    graph.add_node(transform, oilrig);
+    graph.add_node(scene, oilrig);
 
 
     auto small_oilrig(trimesh_loader.create_geometry_from_file("small_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
@@ -141,7 +143,7 @@ int main(int argc, char** argv) {
     small_oilrig->scale(0.1);
     small_oilrig->translate(19.98f, 1.11f, 8.88f);
 
-    graph.add_node(transform, small_oilrig);
+    graph.add_node(scene, small_oilrig);
   }
 
   if (ELEPHANT)
@@ -156,14 +158,69 @@ int main(int argc, char** argv) {
     elephant->scale(0.002);
     elephant->translate(19.957f, 1.1201f, 8.892f);
 
-    graph.add_node(transform, elephant);
+    graph.add_node(scene, elephant);
   }
   if (PITOTI)
   {
-    auto node = plod_loader.load_geometry("test",
-                                          "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area_4_hunter_with_bow_knn.kdn",
-                                          gua::PLODLoader::DEFAULTS | 
-                                          gua::PLODLoader::MAKE_PICKABLE);
+    auto rot_offset_mat = gua::math::mat4(0.088, 0.996, -0.007, 0.0,
+                                          0.016, 0.005, 1.0, 0.0,
+                                          0.996, -0.088, -0.016, 0.0,
+                                          0.0, 0.0, 0.0, 1.0);
+    rot_offset_mat = scm::math::transpose(rot_offset_mat);
+
+    auto offset_mat = rot_offset_mat * scm::math::make_translation(-604050.0, -5098490.0, -400.0);
+
+    // SERADINA FLYOVER
+    std::vector<std::string> model_paths{
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00010_knobi_cutout_flagged.kdn",
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00011_knobi_cutout_flagged.kdn",
+
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00001_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00002_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00003_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00004_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00005_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00006_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00007_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00008_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00009_knobi.kdn",
+    };
+
+    auto rot_mat = gua::math::mat4(-0.57732352, 0.040792, -0.8154959, 0.0,
+                              0.816437476, 0.042645956, -0.5758569, 0.0,
+                              0.0112872, -0.998257147, -0.057924671, 0.0,
+                              0.0, 0.0, 0.0, 1.0);
+    rot_mat = scm::math::transpose(rot_mat);
+
+    auto mat = scm::math::make_translation(603956.727956973, 5098223.502562742, 819.626837676) * rot_mat * scm::math::make_scale(gua::math::vec3(31.261682663898622)); 
+    mat = offset_mat * mat;
+
+    auto seradina_flyover_group = graph.add_node<gua::node::TransformNode>("/scene", "seradina_flyover_group");
+    seradina_flyover_group->set_transform(mat);
+
+    for (const auto path: model_paths)
+    {
+      auto plod_node = plod_loader.load_geometry(path, gua::PLODLoader::DEFAULTS);
+      graph.add_node(seradina_flyover_group, plod_node);  
+    }
+
+    // SERADINA 12C
+    model_paths = std::vector<std::string>{
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/rocks/seradina12c/TLS_Seradina_Rock-12C_knn_cutout_flagged.kdn",
+      "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area_4_hunter_with_bow_knn.kdn",
+    };
+
+    mat = offset_mat * scm::math::make_translation(604050.0, 5098490.0, 400.0);
+
+    auto seradina_12c_group = graph.add_node<gua::node::TransformNode>("/scene", "seradina_12c_group");
+    seradina_12c_group->set_transform(mat);
+
+    for (const auto path: model_paths)
+    {
+      auto plod_node = plod_loader.load_geometry(path, gua::PLODLoader::DEFAULTS);
+      graph.add_node(seradina_12c_group, plod_node);  
+    }
+
   }
 
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
@@ -186,8 +243,8 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
 
-  camera->config.set_near_clip(0.002f);
-  camera->config.set_far_clip(200.0f);
+  camera->config.set_near_clip(1.0f);
+  camera->config.set_far_clip(1000.0f);
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
@@ -196,8 +253,8 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
   camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/textures/skymap.jpg");
   }
-
-  camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
+  camera->get_pipeline_description()->add_pass(std::make_shared<gua::PLODPassDescription>());
+  // camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::SSAAPassDescription>());
 
   // GUI
@@ -216,9 +273,9 @@ int main(int argc, char** argv) {
   bool adaptive_navigation(true);
   auto cmn(graph.add_node<gua::node::CubemapNode>("/navigation", "test"));
   cmn->config.set_texture_name("navigation_depth_texture");
-  cmn->config.set_near_clip(0.002f);
-  cmn->config.set_far_clip(200.0f);
-  float motion_speed = 0.03f;
+  cmn->config.set_near_clip(1.0f);
+  cmn->config.set_far_clip(1000.0f);
+  float motion_speed = 0.1f;
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -275,27 +332,27 @@ int main(int argc, char** argv) {
   //   gui->call_javascript("set_fps_text", sstr.str());
 
 
-    // apply trackball matrix to object
+    // adaptive speed 
     float new_motion_speed = motion_speed;
     if (adaptive_navigation) {
 
       float closest_distance = cmn->get_closest_distance();
-      if ((closest_distance != -1.0) && (closest_distance < 30.0f)){
+      if ((closest_distance != -1.0) && (closest_distance < 1000.0f)){
         new_motion_speed = closest_distance / 1000.0f;
       }
       nav.set_motion_speed(new_motion_speed);
-
+      
       // std::cout << motion_speed << std::endl;
     } else {
       nav.set_motion_speed(new_motion_speed);
     }
     nav.update();
     navigation->set_transform(gua::math::mat4(nav.get_transform()));
-    // std::cout << nav.get_transform() << std::endl;
     
     count++;
     if(count == 60){
       count = 0;
+      // std::cout << nav.get_transform() << std::endl;
       std::cout << new_motion_speed*60 << std::endl;
     }
 
