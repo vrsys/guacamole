@@ -36,8 +36,8 @@ namespace math {
  * A math representation of a bounding sphere.
  */
 template <typename V> struct BoundingSphere {
-  typedef typename traits::scalar<V>::type scalar_type;
-  typedef V point_type;
+  using scalar_type = typename traits::scalar<V>::type;
+  using point_type = V;
 
   point_type center;
   scalar_type radius;

@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/utils/Mesh.hpp>
 #include <gua/utils/Bone.hpp>
+#include <gua/utils/fbxfwd.hpp>
 #include <gua/config.hpp>
 
 // external headers
@@ -32,9 +33,7 @@
 #include <scm/core/math/quat.h>
 #include <vector>
 
-namespace fbxsdk_2015_1 { class FbxMesh; }
-
-class aiMesh;
+struct aiMesh;
 
 namespace gua {
   class Bone;
@@ -42,7 +41,7 @@ namespace gua {
 /**
  * @brief mesh with vertex-bone mapping
  */
-struct SkinnedMesh : public Mesh {
+  struct GUA_SKELANIM_DLL SkinnedMesh : public Mesh {
  public:
   SkinnedMesh();
 
@@ -51,7 +50,7 @@ struct SkinnedMesh : public Mesh {
   });
 
 #ifdef GUACAMOLE_FBX
-  SkinnedMesh(fbxsdk_2015_1::FbxMesh& mesh,
+  SkinnedMesh(FbxMesh& mesh,
               Bone const& root = Bone {
   },
               unsigned const material_index = 0);
@@ -65,8 +64,8 @@ struct SkinnedMesh : public Mesh {
     scm::math::vec3f normal;
     scm::math::vec3f tangent;
     scm::math::vec3f bitangent;
-    uint bone_id_offset;
-    uint nr_of_bones;
+    unsigned int bone_id_offset;
+    unsigned int nr_of_bones;
   };
 
   /**
@@ -77,7 +76,7 @@ struct SkinnedMesh : public Mesh {
    * @param vertex_buffer buffer to write to
    * @param resource_offset weight info offset
    */
-  void copy_to_buffer(Vertex* vertex_buffer, uint resource_offset) const;
+  void copy_to_buffer(Vertex* vertex_buffer, unsigned int resource_offset) const;
 
   /**
    * @brief returns vertex layout for skinned mesh vertex
@@ -85,11 +84,11 @@ struct SkinnedMesh : public Mesh {
    */
   scm::gl::vertex_format get_vertex_format() const override;
 
-  std::vector<uint> bone_ids;
-  std::vector<float> bone_weights;
-  std::vector<unsigned> bone_counts;
+  std::vector<unsigned int> bone_ids;
+  std::vector<float>        bone_weights;
+  std::vector<unsigned int> bone_counts;
 
-  std::vector<uint> const& get_bone_ids() const;
+  std::vector<unsigned int> const& get_bone_ids() const;
   std::vector<float> const& get_bone_weights() const;
 
  private:
@@ -97,7 +96,7 @@ struct SkinnedMesh : public Mesh {
    * @brief holds information for influences on one vertex
    */
   struct bone_influences {
-    std::vector<uint> IDs;
+    std::vector<unsigned int> IDs;
     std::vector<float> weights;
 
     bone_influences() : IDs {}
@@ -105,7 +104,7 @@ struct SkinnedMesh : public Mesh {
     {}
     ;
 
-    void add_bone(uint bone_ID, float weight) {
+    void add_bone(unsigned int bone_ID, float weight) {
       IDs.push_back(bone_ID);
       weights.push_back(weight);
     }
@@ -135,7 +134,7 @@ struct SkinnedMesh : public Mesh {
    */
 #ifdef GUACAMOLE_FBX
   static std::vector<bone_influences> get_weights(
-      fbxsdk_2015_1::FbxMesh const& mesh,
+      FbxMesh const& mesh,
       Bone const& root);
 #endif
 };

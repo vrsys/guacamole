@@ -40,7 +40,8 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(depth_cube_map)
     add_subdirectory(projective_texturing)
     add_subdirectory(nice_and_shiny)
-  add_subdirectory(smooth_lighting)
+    add_subdirectory(smooth_lighting)
+    add_subdirectory(video3d)
     add_subdirectory(stress_test)
     add_subdirectory(transparency)
     add_subdirectory(oit_demo)
@@ -64,14 +65,20 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(oculus)
   ENDIF (${PLUGIN_guacamole-oculus})
 
+  
+  # plod example requires plod-plugin
+  IF (${PLUGIN_guacamole-plod})
+    add_subdirectory(plod)
+  ENDIF (${PLUGIN_guacamole-plod})
+  
   # gui example requires gui-plugin
-  #IF (${PLUGIN_guacamole-gui})
-  #  add_subdirectory(gui)
+  IF (${PLUGIN_guacamole-gui})
+   add_subdirectory(gui)
     # volume example requires volume-plugin and gui-plugin
-  #  IF (${PLUGIN_guacamole-volume})
-  #    add_subdirectory(volume)
-  #  ENDIF (${PLUGIN_guacamole-volume})
-  #ENDIF (${PLUGIN_guacamole-gui})
+   IF (${PLUGIN_guacamole-volume})
+     add_subdirectory(volume)
+   ENDIF (${PLUGIN_guacamole-volume})
+  ENDIF (${PLUGIN_guacamole-gui})
 
 
   # multicontext example requires nurbs-plugin

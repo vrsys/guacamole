@@ -145,7 +145,8 @@ void Video3DRenderer::render(Pipeline& pipe)
 
       auto model_matrix(video_node->get_cached_world_transform());
       auto normal_matrix(scm::math::transpose(scm::math::inverse(video_node->get_cached_world_transform())));
-
+      auto view_matrix(pipe.current_viewstate().frustum.get_view());
+      const float scaling = scm::math::length( (model_matrix * view_matrix) * scm::math::vec4d(1.0,0.0,0.0,0.0));
       {
         // single texture only
         scm::gl::context_all_guard guard(ctx.render_context);
@@ -255,9 +256,9 @@ void Video3DRenderer::render(Pipeline& pipe)
           {
             current_shader->apply_uniform(ctx, "gua_normal_matrix", gua::math::mat4f(normal_matrix));
             current_shader->apply_uniform(ctx, "gua_model_matrix", gua::math::mat4f(model_matrix));
-
+	    
             // needs to be multiplied with scene scaling
-            current_shader->set_uniform(ctx, 0.075f, "epsilon");
+            current_shader->set_uniform(ctx, 0.075f * scaling, "epsilon");
             current_shader->set_uniform(ctx, int(video3d_ressource->number_of_cameras()), "numlayers");
             current_shader->set_uniform(ctx, int(video3d_ressource->do_overwrite_normal()), "overwrite_normal");
             current_shader->set_uniform(ctx, video3d_ressource->get_overwrite_normal(), "o_normal");

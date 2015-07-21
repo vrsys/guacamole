@@ -22,6 +22,8 @@
 #ifndef GUA_SKELETALTRANSFORMATION_HPP
 #define GUA_SKELETALTRANSFORMATION_HPP
 
+#include <gua/Skelanim.hpp>
+
 // external headers
 #include <scm/gl_core.h>
 #include <vector>
@@ -41,7 +43,7 @@ namespace SkeletalTransformation {
  * @param anim_start_node_ node from which to start calculating transforms
  * @param Transforms vector to write transforms to
  */
-void from_hierarchy(std::shared_ptr<Bone> const& anim_start_node_,
+  GUA_SKELANIM_DLL void from_hierarchy(std::shared_ptr<Bone> const& anim_start_node_,
                     std::vector<scm::math::mat4f>& Transforms);
 /**
  * @brief creates transformations from anim at given time
@@ -52,7 +54,7 @@ void from_hierarchy(std::shared_ptr<Bone> const& anim_start_node_,
  * @param anim anim from which to calculate pose
  * @param Transforms vector to write transforms to
  */
-void from_anim(std::shared_ptr<Bone> const& anim_start_node_,
+  GUA_SKELANIM_DLL void from_anim(std::shared_ptr<Bone> const& anim_start_node_,
                float time_normalized,
                SkeletalAnimation const& anim,
                std::vector<scm::math::mat4f>& Transforms);
@@ -68,7 +70,7 @@ void from_anim(std::shared_ptr<Bone> const& anim_start_node_,
  * @param anim_2 second anim
  * @param transforms vector to write transforms to
  */
-void blend_anims(std::shared_ptr<Bone> const& anim_start_node_,
+  GUA_SKELANIM_DLL void blend_anims(std::shared_ptr<Bone> const& anim_start_node_,
                  float blend_factor,
                  float time_normalized1,
                  float time_normalized2,
@@ -87,7 +89,7 @@ void blend_anims(std::shared_ptr<Bone> const& anim_start_node_,
  * @param node_name node form which to start overwriting pose1 with pose2
  * @param transforms vector to write transforms to
  */
-void partial_blend(std::shared_ptr<Bone> const& anim_start_node_,
+  GUA_SKELANIM_DLL void partial_blend(std::shared_ptr<Bone> const& anim_start_node_,
                    float time_normalized1,
                    float time_normalized2,
                    SkeletalAnimation const& anim_1,

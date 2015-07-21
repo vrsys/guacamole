@@ -117,7 +117,7 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/ {
       resource->bone_ids_ = ctx.render_device
           ->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
                           scm::gl::USAGE_STREAM_COPY,
-                          mesh_.get_bone_ids().size() * sizeof(uint),
+                          mesh_.get_bone_ids().size() * sizeof(unsigned),
                           &mesh_.get_bone_ids()[0]);
 
       //new storage buffer
@@ -133,34 +133,34 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/ {
     } else {
 
       //read old data
-      char* old_ids = new char[resource->offset * sizeof(uint)];
+      char* old_ids = new char[resource->offset * sizeof(unsigned)];
       {
         scm::gl::scoped_buffer_map read_ids_map(ctx.render_context,
                                                 resource->bone_ids_,
                                                 0,
-                                                resource->offset * sizeof(uint),
+                                                resource->offset * sizeof(unsigned),
                                                 scm::gl::ACCESS_READ_WRITE);
         memcpy(
-            old_ids, read_ids_map.data_ptr(), resource->offset * sizeof(uint));
+            old_ids, read_ids_map.data_ptr(), resource->offset * sizeof(unsigned));
       }
 
       //resize id buffer:
       ctx.render_device->resize_buffer(
           resource->bone_ids_,
-          (resource->offset + mesh_.get_bone_ids().size()) * sizeof(uint));
+          (resource->offset + mesh_.get_bone_ids().size()) * sizeof(unsigned));
       // write old and new data:
       {
         scm::gl::scoped_buffer_map write_ids_map(
             ctx.render_context,
             resource->bone_ids_,
             0,
-            (resource->offset + mesh_.get_bone_ids().size()) * sizeof(uint),
+            (resource->offset + mesh_.get_bone_ids().size()) * sizeof(unsigned),
             scm::gl::ACCESS_WRITE_ONLY);
         memcpy(
-            write_ids_map.data_ptr(), old_ids, resource->offset * sizeof(uint));
-        memcpy(write_ids_map.data_ptr() + resource->offset * sizeof(uint),
+            write_ids_map.data_ptr(), old_ids, resource->offset * sizeof(unsigned));
+        memcpy(write_ids_map.data_ptr() + resource->offset * sizeof(unsigned),
                &mesh_.get_bone_ids()[0],
-               mesh_.get_bone_ids().size() * sizeof(uint));
+               mesh_.get_bone_ids().size() * sizeof(unsigned));
       }
 
       //read old data:
@@ -191,7 +191,7 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/ {
         memcpy(write_weights_map.data_ptr(),
                old_weights,
                resource->offset * sizeof(float));
-        memcpy(write_weights_map.data_ptr() + resource->offset * sizeof(uint),
+        memcpy(write_weights_map.data_ptr() + resource->offset * sizeof(unsigned),
                &mesh_.get_bone_weights()[0],
                mesh_.get_bone_weights().size() * sizeof(float));
       }
@@ -234,7 +234,7 @@ std::vector<math::BoundingBox<math::vec3> > SkinnedMeshResource::get_bone_boxes(
   auto tmp_boxes = std::vector<math::BoundingBox<math::vec3> >(
       100, math::BoundingBox<math::vec3>());
 
-  for (uint b(0); b < bone_boxes_.size(); ++b) {
+  for (unsigned b(0); b < bone_boxes_.size(); ++b) {
 
     if (!bone_boxes_[b].isEmpty() && b < bone_transforms.size()) {
       tmp_boxes[b] =
