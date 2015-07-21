@@ -58,8 +58,7 @@ class GUA_DLL Mask {
    * \param render_mask      The Mask's string representation.
    */
   Mask(std::vector<std::string> const& whitelist_tags = std::vector<std::string>(),
-       std::vector<std::string> const& blacklist_tags = std::vector<std::string>(),
-       bool allow_untagged = false);
+       std::vector<std::string> const& blacklist_tags = std::vector<std::string>());
 
   /**
    * Checks a given list of groups against this mask.
@@ -72,11 +71,6 @@ class GUA_DLL Mask {
 
   gua::utils::TagList whitelist;
   gua::utils::TagList blacklist;
-  bool                allow_untagged; // Only matters if whitelist is set.
-                                      // If allow_untagged is set to true, empty
-                                      // tag lists will pass the check as well
-                                      // as tag lists containing white list tags.
-                                      // Default value is false.
 
    void set_user_data(void* data) {
     user_data_ = data;
