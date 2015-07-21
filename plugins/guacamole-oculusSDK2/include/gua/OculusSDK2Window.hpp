@@ -19,17 +19,17 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_OCULUS_WINDOW_HPP
-#define GUA_OCULUS_WINDOW_HPP
+#ifndef GUA_OCULUSSDK2_WINDOW_HPP
+#define GUA_OCULUSSDK2_WINDOW_HPP
 
 #if defined (_MSC_VER)
-  #if defined (GUA_OCULUS_LIBRARY)
-    #define GUA_OCULUS_DLL __declspec( dllexport )
+  #if defined (GUA_OCULUSSDK2_LIBRARY)
+    #define GUA_OCULUSSDK2_DLL __declspec( dllexport )
   #else
-#define GUA_OCULUS_DLL __declspec( dllimport )
+#define GUA_OCULUSSDK2_DLL __declspec( dllimport )
   #endif
 #else
-  #define GUA_OCULUS_DLL
+  #define GUA_OCULUSSDK2_DLL
 #endif // #if defined(_MSC_VER)
 
 // guacamole headers
@@ -37,11 +37,11 @@
 
 namespace gua {
 
-class GUA_OCULUS_DLL OculusWindow : public Window {
+class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
  public:
 
-  OculusWindow(std::string const& display);
-  virtual ~OculusWindow();
+  OculusSDK2Window(std::string const& display);
+  virtual ~OculusSDK2Window();
 
   void init_context() override;
 
@@ -57,4 +57,4 @@ class GUA_OCULUS_DLL OculusWindow : public Window {
 
 }
 
-#endif  // GUA_OCULUS_WINDOW_HPP
+#endif  // GUA_OCULUSSDK2_WINDOW_HPP

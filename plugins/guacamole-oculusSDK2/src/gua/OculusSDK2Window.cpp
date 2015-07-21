@@ -20,25 +20,25 @@
  ******************************************************************************/
 
 // class header
-#include <gua/OculusWindow.hpp>
+#include <gua/OculusSDK2Window.hpp>
 
 // external headers
 #include <iostream>
 
 namespace gua {
 
-OculusWindow::OculusWindow(std::string const& display):
+OculusSDK2Window::OculusSDK2Window(std::string const& display):
   Window(),
   distortion_(4) {
 
-  config.set_size(math::vec2ui(1280, 800));
+  config.set_size(math::vec2ui(1920, 1080));
   config.set_title("guacamole");
   config.set_display_name(display);
   config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
-  config.set_left_resolution(math::vec2ui(1280/2, 800));
+  config.set_left_resolution(math::vec2ui(1920/2, 1080));
   config.set_left_position(math::vec2ui(0, 0));
-  config.set_right_resolution(math::vec2ui(1280/2, 800));
-  config.set_right_position(math::vec2ui(1280/2, 0));
+  config.set_right_resolution(math::vec2ui(1920/2, 1080));
+  config.set_right_position(math::vec2ui(1920/2, 0));
 
   // for now fixed distortion values TODO should be set dynamically by OVR
   set_distortion(1.0, 0.22, 0.24, 0.0);
@@ -47,13 +47,13 @@ OculusWindow::OculusWindow(std::string const& display):
 
 ////////////////////////////////////////////////////////////////////////////////
 
-OculusWindow::~OculusWindow() {
+OculusSDK2Window::~OculusSDK2Window() {
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusWindow::init_context() {
+void OculusSDK2Window::init_context() {
   fullscreen_shader_.create_from_sources(R"(
       #version 420
       #extension GL_NV_bindless_texture : require
@@ -138,13 +138,13 @@ void OculusWindow::init_context() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusWindow::set_distortion(math::vec4 const& distortion) {
+void OculusSDK2Window::set_distortion(math::vec4 const& distortion) {
   distortion_ = distortion;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusWindow::set_distortion(float distortion0, float distortion1, float distortion2, float distortion3) {
+void OculusSDK2Window::set_distortion(float distortion0, float distortion1, float distortion2, float distortion3) {
   distortion_[0] = distortion0;
   distortion_[1] = distortion1;
   distortion_[2] = distortion2;
@@ -153,7 +153,7 @@ void OculusWindow::set_distortion(float distortion0, float distortion1, float di
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusWindow::display(std::shared_ptr<Texture> const& texture, bool is_left) {
+void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_left) {
 
   fullscreen_shader_.use(*get_context());
   fullscreen_shader_.set_uniform(*get_context(), texture->get_handle(ctx_), "sampler");
