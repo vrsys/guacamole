@@ -33,7 +33,7 @@
 
 namespace gua {
 
-typedef std::unordered_map<std::string, std::string> SubstitutionMap;
+using SubstitutionMap = std::unordered_map<std::string, std::string>;
 
 class GUA_DLL ResourceFactory {
  public:

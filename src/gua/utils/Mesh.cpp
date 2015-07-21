@@ -41,8 +41,8 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   }
   std::function<unsigned(unsigned)> get_material;
 
-  if(material_layer->GetMappingMode() == FbxGeometryElement::eByPolygon) {
-    if(material_layer->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+  if (material_layer->GetMappingMode() == FbxGeometryElement::eByPolygon) {
+    if (material_layer->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
       get_material = [&material_layer](unsigned polygon_index)->unsigned {
         return material_layer->GetIndexArray().GetAt(polygon_index);
       };
@@ -377,7 +377,7 @@ Mesh::Mesh(aiMesh const& mesh) {
 
 
   // Populate the vertex attribute vectors
-  for (uint i = 0 ; i < mesh.mNumVertices ; i++) {
+  for (unsigned int i = 0 ; i < mesh.mNumVertices ; i++) {
     
     scm::math::vec3f pPos = scm::math::vec3f(0.0f);
     if(mesh.HasPositions()) {
@@ -410,7 +410,7 @@ Mesh::Mesh(aiMesh const& mesh) {
   }
   
   // Populate the index buffer
-  for (uint i = 0 ; i < mesh.mNumFaces ; i++) {
+  for (unsigned int i = 0 ; i < mesh.mNumFaces ; i++) {
     const aiFace& face = mesh.mFaces[i];
     // triangulate face if necessary
     for(unsigned j = 2; j < face.mNumIndices; ++j) {

@@ -41,7 +41,9 @@ namespace gua {
 
 /////////////////////////////////////////////////////////////////////////////
 PLODLoader::PLODLoader() : _supported_file_extensions() {
+  _supported_file_extensions.insert("bvh");
   _supported_file_extensions.insert("kdn");
+  _supported_file_extensions.insert("BVH");
   _supported_file_extensions.insert("KDN");
 }
 
@@ -63,7 +65,7 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& nod
       pbr::model_t model_id = database->AddModel(filename, desc.unique_key());
 
       //math::mat4 local_transform = _load_local_transform(filename);
-      math::mat4 local_transform = scm::math::make_translation(math::vec3(database->GetModel(model_id)->kdn_tree()->translation()));
+      math::mat4 local_transform = scm::math::make_translation(math::vec3(database->GetModel(model_id)->bvh()->translation()));
 
       auto resource = std::make_shared<PLODResource>(model_id, flags & PLODLoader::MAKE_PICKABLE, local_transform);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
@@ -168,7 +170,7 @@ std::pair<std::string, math::vec3> PLODLoader::pick_plod_bvh(math::vec3 const& r
   std::pair<std::string, math::vec3> result = std::make_pair("", math::vec3::zero());
 
   if (ray.IntersectBvh(model_filenames, aabb_scale, intersection)) {
-     result = std::make_pair(intersection.kdn_filename_, intersection.position_);
+     result = std::make_pair(intersection.bvh_filename_, intersection.position_);
 
   }
 

@@ -24,19 +24,16 @@
 
 // guacamole headers
 #include <gua/config.hpp>
+#include <gua/utils/fbxfwd.hpp>
+#include <gua/Skelanim.hpp>
 
 // external headers
 #include <scm/gl_core.h>
 #include <vector>
 #include <map>
 
-class aiScene;
-class aiNode;
-
-namespace fbxsdk_2015_1 {
-class FbxNode;
-class FbxScene;
-}
+struct aiScene;
+struct aiNode;
 
 namespace gua {
 
@@ -46,15 +43,15 @@ class SkeletalPose;
  * @brief represents one node in skeletal hierarchy
  * @details has methods to traverse skeleton hierarchy
  */
-class Bone {
+class GUA_SKELANIM_DLL Bone {
  public:
   Bone();
   Bone(aiNode const& node);
   Bone(aiScene const& scene);
 
 #ifdef GUACAMOLE_FBX
-  Bone(fbxsdk_2015_1::FbxNode& node);
-  Bone(fbxsdk_2015_1::FbxScene& scene);
+  Bone(FbxNode& node);
+  Bone(FbxScene& scene);
 #endif
   
   ~Bone();
@@ -76,7 +73,7 @@ class Bone {
    * @param infos map with index and offset matrix of each bone
    */
   void set_properties(
-      std::map<std::string, std::pair<uint, scm::math::mat4f> > const& infos);
+      std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > const& infos);
 
 
   /**

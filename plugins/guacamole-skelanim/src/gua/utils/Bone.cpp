@@ -41,11 +41,11 @@ Bone::Bone(aiScene const& scene) {
   *this = Bone { *(scene.mRootNode) }
   ;
 
-  std::map<std::string, std::pair<uint, scm::math::mat4f> > bone_info {}
+  std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > bone_info {}
   ;
   unsigned num_bones = 0;
-  for (uint i = 0; i < scene.mNumMeshes; i++) {
-    for (uint b = 0; b < scene.mMeshes[i]->mNumBones; ++b) {
+  for (unsigned int i = 0; i < scene.mNumMeshes; i++) {
+    for (unsigned int b = 0; b < scene.mMeshes[i]->mNumBones; ++b) {
 
       std::string BoneName(scene.mMeshes[i]->mBones[b]->mName.data);
       if (bone_info.find(BoneName) == bone_info.end()) {
@@ -66,10 +66,10 @@ Bone::Bone(FbxScene& scene) {
   *this = Bone { *(scene.GetRootNode()) }
   ;
 
-  std::map<std::string, std::pair<uint, scm::math::mat4f> > bone_info {}
+  std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > bone_info{}
   ;
   unsigned num_bones = 0;
-  for (uint i = 0; i < scene.GetGeometryCount(); i++) {
+  for (unsigned int i = 0; i < scene.GetGeometryCount(); i++) {
     FbxGeometry* geo = scene.GetGeometry(i);
     if (geo->GetAttributeType() == FbxNodeAttribute::eMesh) {
 
@@ -183,7 +183,7 @@ void Bone::collect_indices(std::map<std::string, int>& ids) const {
 }
 
 void Bone::set_properties(
-    std::map<std::string, std::pair<uint, scm::math::mat4f> > const& infos) {
+    std::map<std::string, std::pair<unsigned, scm::math::mat4f> > const& infos) {
   if (infos.find(name) != infos.end()) {
     offsetMatrix = infos.at(name).second;
     index = infos.at(name).first;

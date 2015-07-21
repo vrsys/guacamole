@@ -25,17 +25,16 @@
 // guacamole headers
 #include <gua/config.hpp>
 #include <gua/renderer/Material.hpp>
+#include <gua/utils/fbxfwd.hpp>
 
 // external headers
 #include <string>
 #include <memory>
 
-namespace fbxsdk_2015_1{
-  class FbxSurfaceMaterial;
-}
+
 
 namespace Assimp { class Importer; }
-class aiMaterial;
+struct aiMaterial;
 
 namespace gua {
 
@@ -55,7 +54,7 @@ class GUA_DLL MaterialLoader {
                                 std::string const& assets_directory,
                                 bool optimize_material = true) const;
 #ifdef GUACAMOLE_FBX
-  std::shared_ptr<Material> load_material(fbxsdk_2015_1::FbxSurfaceMaterial const& material,
+  std::shared_ptr<Material> load_material(FbxSurfaceMaterial const& material,
                                 std::string const& assets_directory,
                                 bool optimize_material = true) const;
 

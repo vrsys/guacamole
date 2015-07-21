@@ -56,7 +56,7 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh,
       bone_influences const& curr_influence { ctrlpt_weights[index] }
       ;
       //push all bone influences for current vert
-      for (uint j = 0; j < curr_influence.weights.size(); ++j) {
+      for (unsigned j = 0; j < curr_influence.weights.size(); ++j) {
         bone_ids.push_back(curr_influence.IDs[j]);
         bone_weights.push_back(curr_influence.weights[j]);
       }
@@ -104,7 +104,7 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
 
     std::string bone_name { bone->GetName() }
     ;
-    uint bone_index;
+    unsigned bone_index;
     if (bone_mapping_.find(bone_name) != bone_mapping_.end()) {
       bone_index = bone_mapping_.at(bone_name);
     } else {
@@ -131,7 +131,7 @@ SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root) : Mesh { mesh }
   //get weights and write them to vectors
   auto temp_weights = get_weights(mesh, root);
   for (auto const& w : temp_weights) {
-    for (uint i(0); i < w.weights.size(); ++i) {
+    for (unsigned i(0); i < w.weights.size(); ++i) {
       bone_ids.push_back(w.IDs[i]);
       bone_weights.push_back(w.weights[i]);
     }
@@ -148,13 +148,13 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
   std::vector<bone_influences> temp_weights { mesh.mNumVertices }
   ;
 
-  for (uint i = 0; i < mesh.mNumBones; i++) {
+  for (unsigned i = 0; i < mesh.mNumBones; i++) {
     std::string bone_name { mesh.mBones[i]->mName.data }
     ;
-    uint bone_index = bone_mapping_.at(bone_name);
+    unsigned bone_index = bone_mapping_.at(bone_name);
 
-    for (uint j = 0; j < mesh.mBones[i]->mNumWeights; j++) {
-      uint vertex_index = mesh.mBones[i]->mWeights[j].mVertexId;
+    for (unsigned j = 0; j < mesh.mBones[i]->mNumWeights; j++) {
+      unsigned vertex_index = mesh.mBones[i]->mWeights[j].mVertexId;
       float weight = mesh.mBones[i]->mWeights[j].mWeight;
       temp_weights[vertex_index].add_bone(bone_index, weight);
     }
@@ -164,8 +164,8 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
 }
 
 void SkinnedMesh::copy_to_buffer(Vertex* vertex_buffer,
-                                 uint resource_offset) const {
-  uint bone_offset { resource_offset }
+  unsigned resource_offset) const {
+  unsigned bone_offset{ resource_offset }
   ;
   for (unsigned v(0); v < num_vertices; ++v) {
 
@@ -197,7 +197,7 @@ scm::gl::vertex_format SkinnedMesh::get_vertex_format() const {
       0, 6, scm::gl::TYPE_UINT, sizeof(Vertex));
 }
 
-std::vector<uint> const& SkinnedMesh::get_bone_ids() const { return bone_ids; }
+std::vector<unsigned> const& SkinnedMesh::get_bone_ids() const { return bone_ids; }
 
 std::vector<float> const& SkinnedMesh::get_bone_weights() const {
   return bone_weights;

@@ -137,10 +137,10 @@ class GUA_DLL Constraint {
    */
   virtual void update_constraint() = 0;
 
-  typedef std::pair<math::mat4, bool> Mat4Field;
-  typedef std::pair<math::vec3, bool> Vec3Field;
-  typedef std::pair<float, bool> FloatField;
-  typedef std::pair<bool, bool> BoolField;
+  using Mat4Field = std::pair<math::mat4, bool>;
+  using Vec3Field = std::pair<math::vec3, bool>;
+  using FloatField = std::pair<float, bool>;
+  using BoolField = std::pair<bool, bool>;
 
   SpinLock lock_;
 

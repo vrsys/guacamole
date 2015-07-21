@@ -23,6 +23,7 @@
 #define GUA_BONE_TRANSFORM_UNIFORM_BLOCK_HPP
 
 // guacamole headers
+#include <gua/platform.hpp>
 #include <gua/math/math.hpp>
 
 // external headers
@@ -34,14 +35,14 @@ namespace gua {
  * @brief holds the transformations of all bones
  * of skeletalanimationnodes
  */
-class BoneTransformUniformBlock
+class GUA_DLL BoneTransformUniformBlock
 {
 public:
   struct BoneTransformBlock {
     math::mat4f transforms[100];
   };
 
-  typedef scm::gl::uniform_block<BoneTransformBlock> block_type;
+  using block_type = scm::gl::uniform_block<BoneTransformBlock>;
 
   BoneTransformUniformBlock(scm::gl::render_device_ptr const& device);
   ~BoneTransformUniformBlock();

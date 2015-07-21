@@ -46,8 +46,8 @@ namespace gua {
  */
 template <typename T, typename K = std::string> class Database {
  public:
-  typedef K key_type;
-  typedef std::shared_ptr<T> mapped_type;
+  using key_type = K;
+  using mapped_type = std::shared_ptr<T>;
 
   /**
    * Adds a new entry to the data base.

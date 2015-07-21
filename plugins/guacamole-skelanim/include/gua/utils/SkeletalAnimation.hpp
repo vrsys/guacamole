@@ -24,33 +24,30 @@
 
 // guacamole headers
 #include <gua/config.hpp>
+#include <gua/utils/fbxfwd.hpp>
+#include <gua/utils/BoneAnimation.hpp>
+#include <gua/Skelanim.hpp>
  
 // external headers
 #include <vector>
 #include <string>
 
-namespace fbxsdk_2015_1 {
-class FbxNode;
-class FbxAnimStack;
-}
-
-class aiAnimation;
+struct aiAnimation;
 
 namespace gua {
 class SkeletalPose;
-class BoneAnimation;
 
 /**
  * @brief holds bone animations for one animation
  */
-class SkeletalAnimation {
+class GUA_SKELANIM_DLL SkeletalAnimation {
  public:
   SkeletalAnimation();
 
   SkeletalAnimation(aiAnimation const& anim, std::string const& name = "");
 #ifdef GUACAMOLE_FBX
-  SkeletalAnimation(fbxsdk_2015_1::FbxAnimStack* anim,
-                    std::vector<fbxsdk_2015_1::FbxNode*> const& bones,
+  SkeletalAnimation(FbxAnimStack* anim,
+                    std::vector<FbxNode*> const& bones,
                     std::string const& name = "");
 #endif
   ~SkeletalAnimation();

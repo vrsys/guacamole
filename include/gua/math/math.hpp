@@ -40,7 +40,7 @@ namespace math {
  * Some basic math types, typedef'ed from schism.
  */
 
-typedef double float_t;
+using float_t = double;
 
 // cpu types
 template<typename T> using M44 = scm::math::mat<T, 4, 4>;
@@ -160,15 +160,15 @@ namespace gua {
 namespace traits {
 
 template <> struct scalar<math::vec2d> {
-  typedef math::vec2d::value_type type;
+  using type = math::vec2d::value_type;
 };
 
 template <> struct scalar<math::vec3d> {
-  typedef math::vec3d::value_type type;
+  using type = math::vec3d::value_type;
 };
 
 template <> struct scalar<math::vec4d> {
-  typedef math::vec4d::value_type type;
+  using type = math::vec4d::value_type;
 };
 
 template <> struct dimension<math::vec2d> {

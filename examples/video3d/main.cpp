@@ -57,24 +57,30 @@ int main(int argc, char** argv) {
 
   gua::Video3DLoader vloader;
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto steppo(vloader.create_geometry_from_file("steppo","/opt/kinect-resources/shot_steppo_animation_01.ks"));
+  auto steppo(vloader.create_geometry_from_file("steppo","/opt/kinect-resources/kinect_surfaceLCD.ks"));
   graph.add_node("/transform", steppo);
 
   gua::TriMeshLoader mloader;
-  auto teapot(mloader.create_geometry_from_file("teapot", "data/objects/teapot.obj"));
-  teapot->translate(0, -2, 0);
-  graph.add_node("/transform", teapot);
+  auto plane(mloader.create_geometry_from_file("plane", "data/objects/plane.obj"));
+  plane->scale(10);
+  graph.add_node("/transform", plane);
 
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
-  light->data.set_type(gua::node::LightNode::Type::POINT);
-  light->data.brightness = 150.0f;
-  light->scale(100.f);
-  light->translate(-3.f, 5.f, 5.f);
+  light->data.set_type(gua::node::LightNode::Type::SUN);
+  light->data.set_brightness(4.f);
+  light->data.set_shadow_cascaded_splits({0.1f, 1.f, 10.f, 50.f});
+  light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
+  light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
+  light->data.set_max_shadow_dist(80.0f);
+  light->data.set_shadow_offset(0.002f);
+  light->data.set_enable_shadows(true);
+  light->data.set_shadow_map_size(2048);
+  light->rotate(-65, 1, 0, 0);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  screen->translate(0, 0, 1.0);
-
+  screen->translate(0, 0, 1.0); 
+   
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
@@ -84,8 +90,8 @@ int main(int argc, char** argv) {
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pipe->add_pass(std::make_shared<gua::Video3DPassDescription>());
-  pipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
-  pipe->add_pass(std::make_shared<gua::PhysicallyBasedShadingPassDescription>());
+  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);

@@ -32,15 +32,9 @@
 #include <list>
 #include <memory>
 
-namespace fbxsdk_2015_1{
-  class FbxNode;
-  class FbxManager;
-  class FbxScene;
-}
-
 namespace Assimp { class Importer; }
-class aiScene;
-class aiNode;
+struct aiScene;
+struct aiNode;
 
 namespace gua {
 
@@ -138,11 +132,11 @@ public:
                 bool no_shared_materials);
 
 #ifdef GUACAMOLE_FBX
-  static std::shared_ptr<node::Node> get_tree(fbxsdk_2015_1::FbxNode& node,
+  static std::shared_ptr<node::Node> get_tree(FbxNode& node,
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);
 
-  static fbxsdk_2015_1::FbxScene* load_fbx_file(fbxsdk_2015_1::FbxManager* manager, std::string const& file_path);
+  static FbxScene* load_fbx_file(FbxManager* manager, std::string const& file_path);
 #endif
 
 private: // attributes
