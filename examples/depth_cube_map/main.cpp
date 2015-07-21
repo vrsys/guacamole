@@ -24,6 +24,9 @@
 #include <gua/guacamole.hpp>
 #include <gua/node/CubemapNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/PLODLoader.hpp>
+#include <gua/node/PLODNode.hpp>
+
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/DepthCubeMapPass.hpp>
@@ -32,12 +35,18 @@
 #include <gua/utils/Trackball.hpp>
 #include <gua/gui.hpp>
  
+#include <boost/filesystem.hpp>
+
 #include "Navigator.hpp"
 
  #define FULLSCREEN false
- #define RECURSIVE_OILRIGS true
- #define ELEPHANT true
- #define SKYMAP true
+
+ #define RECURSIVE_OILRIGS false
+ #define ELEPHANT false
+ 
+ #define PITOTI true
+
+ #define SKYMAP false
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -72,19 +81,23 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  gua::TriMeshLoader loader;
+  // loaders
+  gua::PLODLoader plod_loader;
+  gua::TriMeshLoader trimesh_loader;
+
+  plod_loader.set_upload_budget_in_mb(128);
+  plod_loader.set_render_budget_in_mb(4048);
+  plod_loader.set_out_of_core_budget_in_mb(4096);
 
 
   auto navigation = graph.add_node<gua::node::TransformNode>("/", "navigation");
-
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-
 
   
   // MODELS
   if (RECURSIVE_OILRIGS)
   {
-    auto much_big_oilrig(loader.create_geometry_from_file("much_big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    auto much_big_oilrig(trimesh_loader.create_geometry_from_file("much_big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -95,7 +108,7 @@ int main(int argc, char** argv) {
     graph.add_node(transform, much_big_oilrig);
 
 
-    auto big_oilrig(loader.create_geometry_from_file("big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    auto big_oilrig(trimesh_loader.create_geometry_from_file("big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -107,7 +120,7 @@ int main(int argc, char** argv) {
     graph.add_node(transform, big_oilrig);
 
 
-    auto oilrig(loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    auto oilrig(trimesh_loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -119,7 +132,7 @@ int main(int argc, char** argv) {
     graph.add_node(transform, oilrig);
 
 
-    auto small_oilrig(loader.create_geometry_from_file("small_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    auto small_oilrig(trimesh_loader.create_geometry_from_file("small_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -133,7 +146,7 @@ int main(int argc, char** argv) {
 
   if (ELEPHANT)
   {
-    auto elephant(loader.create_geometry_from_file("elephant", "/opt/3d_models/animals/elephant/elephant.obj",
+    auto elephant(trimesh_loader.create_geometry_from_file("elephant", "/opt/3d_models/animals/elephant/elephant.obj",
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -144,6 +157,13 @@ int main(int argc, char** argv) {
     elephant->translate(19.957f, 1.1201f, 8.892f);
 
     graph.add_node(transform, elephant);
+  }
+  if (PITOTI)
+  {
+    auto node = plod_loader.load_geometry("test",
+                                          "/mnt/pitoti/3d_pitoti/seradina_12c/areas/Area_4_hunter_with_bow_knn.kdn",
+                                          gua::PLODLoader::DEFAULTS | 
+                                          gua::PLODLoader::MAKE_PICKABLE);
   }
 
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
