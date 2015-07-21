@@ -50,9 +50,11 @@ bool Mask::check(gua::utils::TagList const& tags) const {
     auto const& bl(blacklist.get_bits());
 
     if (wl.any()) {
-      if (!allow_untagged) {
-        return (wl & t).any();
+      bool on_whitelist = (wl & t).any();
+      if (!on_whitelist && allow_untagged) {
+        return true;
       }
+      return on_whitelist;
     } else if (bl.any()) {
       return !(bl & t).any();
     }
