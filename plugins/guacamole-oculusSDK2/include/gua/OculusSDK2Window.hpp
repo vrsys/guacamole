@@ -38,6 +38,10 @@
 //for internal distortion mesh handling
 #include <OVR.h>
 
+#define min(a,b)                      (((a) < (b)) ? (a) : (b))
+#define max(a,b)                      (((a) > (b)) ? (a) : (b))
+#define clamp(value, lb, ub)          max( lb, min( ub, value ))
+
 namespace gua {
 
 struct GUA_DLL OculusSDK2DistortionMesh {
@@ -97,25 +101,61 @@ struct GUA_DLL OculusSDK2DistortionMesh {
       scm::math::vec2f vPos( corrected_x_pos ,
                             distortion_vertex.ScreenPosNDC.y);
 
-      std::cout << "VPos: " << vPos.x << " " << vPos.y << "\n";
+      float tmp_red_x_tex_coord = distortion_vertex.TanEyeAnglesR.x 
+          * UVScaleOffset[0].x + UVScaleOffset[1].x;
+      float tmp_green_x_tex_coord = distortion_vertex.TanEyeAnglesG.x 
+          * UVScaleOffset[0].x + UVScaleOffset[1].x;
+      float tmp_blue_x_tex_coord = distortion_vertex.TanEyeAnglesB.x 
+          * UVScaleOffset[0].x + UVScaleOffset[1].x;
+
+      float tmp_red_y_tex_coord = distortion_vertex.TanEyeAnglesR.y 
+          * UVScaleOffset[0].y + UVScaleOffset[1].y;
+      float tmp_green_y_tex_coord = distortion_vertex.TanEyeAnglesG.y
+          * UVScaleOffset[0].y + UVScaleOffset[1].y;
+      float tmp_blue_y_tex_coord = distortion_vertex.TanEyeAnglesB.y
+          * UVScaleOffset[0].y + UVScaleOffset[1].y;
+
+      if(tmp_red_x_tex_coord > 1.0)
+        tmp_red_x_tex_coord -= 1.0;
+      else if(tmp_red_x_tex_coord < -1.0)
+        tmp_red_x_tex_coord += 1.0;
+
+      if(tmp_green_x_tex_coord > 1.0)
+        tmp_green_x_tex_coord -= 1.0;
+      else if(tmp_green_x_tex_coord < -1.0)
+        tmp_green_x_tex_coord += 1.0;
+
+      if(tmp_blue_x_tex_coord > 1.0)
+        tmp_blue_x_tex_coord -= 1.0;
+      else if(tmp_blue_x_tex_coord < -1.0)
+        tmp_blue_x_tex_coord += 1.0;
+
+      if(tmp_red_y_tex_coord > 1.0)
+        tmp_red_y_tex_coord -= 1.0;
+      else if(tmp_red_y_tex_coord < -1.0)
+        tmp_red_y_tex_coord += 1.0;
+
+      if(tmp_green_y_tex_coord > 1.0)
+        tmp_green_y_tex_coord -= 1.0;
+      else if(tmp_green_y_tex_coord < -1.0)
+        tmp_green_y_tex_coord += 1.0;
+
+      if(tmp_blue_y_tex_coord > 1.0)
+        tmp_blue_y_tex_coord -= 1.0;
+      else if(tmp_blue_y_tex_coord < -1.0)
+        tmp_blue_y_tex_coord += 1.0;
 
       scm::math::vec2f vTexCoordsRed(
-        (distortion_vertex.TanEyeAnglesR.x 
-          * UVScaleOffset[0].x + UVScaleOffset[1].x)/2.0,
-        distortion_vertex.TanEyeAnglesR.y 
-          * UVScaleOffset[0].y + UVScaleOffset[1].y);
+        tmp_red_x_tex_coord,
+        1.0-tmp_red_y_tex_coord );
 
       scm::math::vec2f vTexCoordsGreen(
-        (distortion_vertex.TanEyeAnglesG.x 
-          * UVScaleOffset[0].x + UVScaleOffset[1].x)/2.0,
-        distortion_vertex.TanEyeAnglesG.y 
-          * UVScaleOffset[0].y + UVScaleOffset[1].y);
+        tmp_green_x_tex_coord,
+        1.0-tmp_green_y_tex_coord );
 
       scm::math::vec2f vTexCoordsBlue(
-        (distortion_vertex.TanEyeAnglesB.x 
-          * UVScaleOffset[0].x + UVScaleOffset[1].x)/2.0,
-        distortion_vertex.TanEyeAnglesB.y 
-          * UVScaleOffset[0].y + UVScaleOffset[1].y);
+        tmp_blue_x_tex_coord,
+        1.0-tmp_blue_y_tex_coord );
 
 
       ndc_2d_positions.push_back(vPos);
@@ -140,8 +180,7 @@ struct GUA_DLL OculusSDK2DistortionMesh {
       }
 
       indices.push_back(current_index);
-
-      std::cout << current_index << "\n";
+      
     }
 
     index_buffer_component_offset = highest_index;
@@ -189,9 +228,6 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
 
   void init_context() override;
 
-  void set_distortion(math::vec4 const& distortion);
-  void set_distortion(float distortion0, float distortion1, float distortion2, float distortion3);
-
   // virtual
   void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
@@ -203,7 +239,6 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
     scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
 
     unsigned num_distortion_mesh_indices[2];
-    math::vec4 distortion_;
 
     ovrHmd registeredHMD;
 };
