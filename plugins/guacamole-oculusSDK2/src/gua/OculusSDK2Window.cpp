@@ -38,9 +38,6 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
 
   OculusSDK2DistortionMesh distortion_mesh_cpu_buffer[2];
 
-
-
-
   unsigned index_buffer_offset = 0;
   for ( int eyeNum = 0; eyeNum < 2; eyeNum ++ )
   {
@@ -71,59 +68,18 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
       ovrHmd_GetRenderScaleAndOffset( eyeRenderDesc[eyeNum].Fov,
           eyeTextureSize, viewports[eyeNum],
           UVScaleOffset);
-     // params = mMatLeft->getTechnique(0)->getPass(0)->getVertexProgramParameters();
     } else {
       ovrHmd_GetRenderScaleAndOffset( eyeRenderDesc[eyeNum].Fov,
           eyeTextureSize, viewports[eyeNum],
           UVScaleOffset);
-     // params = mMatRight->getTechnique(0)->getPass(0)->getVer texProgramParameters();
     }
 
     bool isLeftEye = 0 == eyeNum;
 
     distortion_mesh_cpu_buffer[eyeNum].add_distortion_mesh_component(meshData, UVScaleOffset, isLeftEye);
 
-//TODO: SHADER UPLOAD HERE!
-/*
-    params->setNamedConstant( "eyeToSourceUVScale",
-        Ogre::Vector2( UVScaleOffset[0].x, UVScaleOffset[0].y ) );
-    params->setNamedConstant( "eyeToSourceUVOffset",
-        Ogre::Vector2( UVScaleOffset[1].x, UVScaleOffset[1].y ) );
-*/
-    std::cout << "UVScaleOffset[0]: " << UVScaleOffset[0].x << ", " << UVScaleOffset[0].y << std::endl;
-    std::cout << "UVScaleOffset[1]: " << UVScaleOffset[1].x << ", " << UVScaleOffset[1].y << std::endl;
-
-
-
-    std::cout << "Distortion Mesh " << eyeNum << " :\n";
-    for( unsigned int i = 0; i < meshData.VertexCount; i++ )
-    {
-      //ovrDistortionVertex v = meshData.pVertexData[i];
-      //std::cout << (UVScaleOffset[0].x*v.TanEyeAnglesR.x + UVScaleOffset[1].x) / 2.0  
-      //          << " " << UVScaleOffset[0].y*v.TanEyeAnglesR.y + UVScaleOffset[1].y << " " << 0.0 << "\n";
-
-/*
-      manual->position( v.ScreenPosNDC.x,
-          v.ScreenPosNDC.y, 0 );
-      manual->textureCoord( v.TanEyeAnglesR.x,//*UVScaleOffset[0].x + UVScaleOffset[1].x,
-          v.TanEyeAnglesR.y);//*UVScaleOffset[0].y + UVScaleOffset[1].y);
-      manual->textureCoord( v.TanEyeAnglesG.x,//*UVScaleOffset[0].x + UVScaleOffset[1].x,
-          v.TanEyeAnglesG.y);//*UVScaleOffset[0].y + UVScaleOffset[1].y);
-      manual->textureCoord( v.TanEyeAnglesB.x,//*UVScaleOffset[0].x + UVScaleOffset[1].x,
-          v.TanEyeAnglesB.y);//*UVScaleOffset[0].y + UVScaleOffset[1].y);
-      float vig = std::max( v.VignetteFactor, (float)0.0 );
-      manual->colour( vig, vig, vig, vig );
-*/
-    }
-
 
     ovrHmd_DestroyDistortionMesh( &meshData );
-
-
-  std::cout << "Before first accessing context.\n";
-
-  //create gpu buffer for distortion mesh vertices
-  std::cout << "Num vertices: " << distortion_mesh_cpu_buffer[eyeNum].num_vertices << "\n";
 
   distortion_mesh_vertices_[eyeNum] = 
     ctx.render_device
@@ -132,7 +88,6 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
                       distortion_mesh_cpu_buffer[eyeNum].num_vertices
                         * sizeof(OculusSDK2DistortionMesh::DistortionVertex),
                       0);
-  std::cout << "After first accessing context.\n";
 
   //map it to cpu
   OculusSDK2DistortionMesh::DistortionVertex* 
@@ -168,15 +123,11 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
 
   }
 
-
-
-  std::cout << "After doing everything.\n";
 }
 
 OculusSDK2Window::OculusSDK2Window(std::string const& display, ovrHmd const& hmd):
   Window(),
-  num_distortion_mesh_indices({0,0}),
-  distortion_(4) {
+  num_distortion_mesh_indices{0,0} {
 
   config.set_size(math::vec2ui(1920, 1080));
   config.set_title("guacamole");
@@ -187,8 +138,6 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display, ovrHmd const& hmd
   config.set_right_resolution(math::vec2ui(1920/2, 1080));
   config.set_right_position(math::vec2ui(1920/2, 0));
 
-  // for now fixed distortion values TODO should be set dynamically by OVR
-  set_distortion(1.0, 0.0, 0.0, 0.0);
 
   registeredHMD = hmd;
 }
@@ -202,63 +151,6 @@ OculusSDK2Window::~OculusSDK2Window() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void OculusSDK2Window::init_context() {
-/*
-  fullscreen_shader_.create_from_sources(R"(
-      #version 420
-      #extension GL_NV_bindless_texture : require
-
-      layout(location=0) in vec3 in_position;
-
-      out vec2 tex_coord;
-
-      void main() {
-          tex_coord = in_position.xy*0.5 + 0.5;
-          gl_Position = vec4(in_position, 1.0);
-      }
-    )", R"(
-      #version 420
-      #extension GL_NV_bindless_texture : require
-      #extension GL_NV_gpu_shader5      : enable
-
-      in vec2 tex_coord;
-
-      uniform uvec2 sampler;
-
-      // oculus parameters
-      uniform vec2 lens_center;
-      uniform vec2 scale;
-      uniform vec4 hmd_warp_param;
-
-      layout (location = 0) out vec3 out_color;
-
-      sampler2D get_tex(uvec2 handle) {
-          return sampler2D(uint64_t(handle.x) + uint64_t(handle.y) * 4294967295);
-      }
-
-      vec2 hmd_warp(vec2 in_texcoord) {
-          vec2 theta = (in_texcoord - lens_center) * 2.0; // Scales to [-1, 1]
-          float rSq = theta.x * theta.x + theta.y * theta.y;
-          vec2 rvector = theta * (hmd_warp_param.x+hmd_warp_param.y*rSq
-                                                  +hmd_warp_param.z*rSq*rSq
-                                                  +hmd_warp_param.w*rSq*rSq*rSq);
-          return lens_center + scale * rvector;
-      }
-
-      vec3 get_color() {
-
-          vec2 tc = hmd_warp(tex_coord);
-
-          if (tc.x < 0.0 || tc.y < 0.0 || tc.x > 1.0 || tc.y > 1.0 )
-              return vec3(0);
-
-          return vec3(texture2D( get_tex(sampler), tc).rgb);
-      }
-
-      void main() {
-          out_color = get_color();
-      }
-    )");
-*/
 
   fullscreen_shader_.create_from_sources(R"(
       #version 420
@@ -269,10 +161,14 @@ void OculusSDK2Window::init_context() {
       layout(location=2) in vec2 in_tex_coords_g;
       layout(location=3) in vec2 in_tex_coords_b;
 
-      out vec2 tex_coord;
+      out vec2 tex_coord_r;
+      out vec2 tex_coord_g;
+      out vec2 tex_coord_b;
 
       void main() {
-          //tex_coord = in_position.xy*0.5 + 0.5;
+          tex_coord_r = in_tex_coords_r;
+          tex_coord_g = in_tex_coords_g;
+          tex_coord_b = in_tex_coords_b;
           gl_Position = vec4(in_position, 0.0, 1.0);
       }
     )", R"(
@@ -280,7 +176,10 @@ void OculusSDK2Window::init_context() {
       #extension GL_NV_bindless_texture : require
       #extension GL_NV_gpu_shader5      : enable
 
-      //in vec2 tex_coord;
+      in vec2 tex_coord_r;
+      in vec2 tex_coord_g;
+      in vec2 tex_coord_b;
+
 
       uniform uvec2 sampler;
 
@@ -295,23 +194,13 @@ void OculusSDK2Window::init_context() {
           return sampler2D(uint64_t(handle.x) + uint64_t(handle.y) * 4294967295);
       }
 
-      vec2 hmd_warp(vec2 in_texcoord) {
-          vec2 theta = (in_texcoord - lens_center) * 2.0; // Scales to [-1, 1]
-          float rSq = theta.x * theta.x + theta.y * theta.y;
-          vec2 rvector = theta * (hmd_warp_param.x+hmd_warp_param.y*rSq
-                                                  +hmd_warp_param.z*rSq*rSq
-                                                  +hmd_warp_param.w*rSq*rSq*rSq);
-          return lens_center + scale * rvector;
-      }
 
       vec3 get_color() {
+          float red_component   = texture2D( get_tex(sampler), tex_coord_r).r;
+          float green_component = texture2D( get_tex(sampler), tex_coord_g).g;
+          float blue_component  = texture2D( get_tex(sampler), tex_coord_b).b;
 
-          //vec2 tc = hmd_warp(tex_coord);
-          vec2 tc = vec2(1.0, 1.0);
-          if (tc.x < 0.0 || tc.y < 0.0 || tc.x > 1.0 || tc.y > 1.0 )
-              return vec3(0);
-
-          return vec3(texture2D( get_tex(sampler), tc).rgb);
+          return vec3(red_component, green_component, blue_component);
       }
 
       void main() {
@@ -328,9 +217,6 @@ void OculusSDK2Window::init_context() {
   }
 
   ctx_.render_window = this;
-
-  fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
-    ctx_.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f)));
 
   initialize_distortion_meshes(registeredHMD, *get_context());
 
@@ -351,21 +237,6 @@ void OculusSDK2Window::init_context() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusSDK2Window::set_distortion(math::vec4 const& distortion) {
-  distortion_ = distortion;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void OculusSDK2Window::set_distortion(float distortion0, float distortion1, float distortion2, float distortion3) {
-  distortion_[0] = distortion0;
-  distortion_[1] = distortion1;
-  distortion_[2] = distortion2;
-  distortion_[3] = distortion3;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_left) {
 
   fullscreen_shader_.use(*get_context());
@@ -377,7 +248,6 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
     fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.4f, 0.5f), "lens_center");
 
   fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.4f, 0.4f), "scale");
-  fullscreen_shader_.set_uniform(*get_context(), math::vec4f(distortion_), "hmd_warp_param");
 
   if (is_left)
     get_context()->render_context->set_viewport(scm::gl::viewport(config.get_left_position(), config.get_left_resolution()));
@@ -391,11 +261,6 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
 
       );
 
-  //get_context()->render_context->apply();
-
-  //fullscreen_quad_->draw(get_context()->render_context);
-
-
   unsigned current_eye_num = is_left ? 0 : 1;
 
   get_context()->render_context->bind_vertex_array(distortion_mesh_vertex_array_[current_eye_num]);
@@ -404,11 +269,8 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
 
   get_context()->render_context->apply();
 
-  //get_context()->render_context->draw_elements(3);
-
-  
   get_context()->render_context->draw_elements(num_distortion_mesh_indices[current_eye_num]);
-  std::cout << "Num distortion mesh indices: " << num_distortion_mesh_indices[current_eye_num] << "\n";
+
   get_context()->render_context->reset_state_objects();
   
   fullscreen_shader_.unuse(*get_context());
