@@ -115,6 +115,14 @@ struct GUA_DLL OculusSDK2DistortionMesh {
       float tmp_blue_y_tex_coord = distortion_vertex.TanEyeAnglesB.y
           * UVScaleOffset[0].y + UVScaleOffset[1].y;
 
+
+      if(isLeftEye) {
+        tmp_red_x_tex_coord -= 1.0;
+        tmp_blue_x_tex_coord -= 1.0;
+        tmp_green_x_tex_coord -= 1.0;
+      }
+
+/*
       if(tmp_red_x_tex_coord > 1.0)
         tmp_red_x_tex_coord -= 1.0;
       else if(tmp_red_x_tex_coord < -1.0)
@@ -144,7 +152,7 @@ struct GUA_DLL OculusSDK2DistortionMesh {
         tmp_blue_y_tex_coord -= 1.0;
       else if(tmp_blue_y_tex_coord < -1.0)
         tmp_blue_y_tex_coord += 1.0;
-
+*/
       scm::math::vec2f vTexCoordsRed(
         tmp_red_x_tex_coord,
         1.0-tmp_red_y_tex_coord );
@@ -241,6 +249,8 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
     unsigned num_distortion_mesh_indices[2];
 
     ovrHmd registeredHMD;
+
+    ovrVector2f UVScaleOffset[2];
 };
 
 }
