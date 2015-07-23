@@ -52,7 +52,7 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
 
     OVR::Sizei eyeTextureSize = OVR::Sizei(1920/2, 1080);
 
-    ovrVector2f UVScaleOffset[2];
+
     ovrRecti viewports[2];
     viewports[0].Pos.x = 0;
     viewports[0].Pos.y = 0;
@@ -205,6 +205,7 @@ void OculusSDK2Window::init_context() {
 
       void main() {
           out_color = get_color();
+          //out_color = vec3(tex_coord_r, 0.0);
       }
     )");
 
@@ -249,7 +250,7 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
 
   fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.4f, 0.4f), "scale");
 
-  if (is_left)
+  if (!is_left)
     get_context()->render_context->set_viewport(scm::gl::viewport(config.get_left_position(), config.get_left_resolution()));
   else
     get_context()->render_context->set_viewport(scm::gl::viewport(config.get_right_position(), config.get_right_resolution()));
