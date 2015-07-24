@@ -135,14 +135,14 @@ if (ts.StatusFlags & (ovrStatus_OrientationTracked | ovrStatus_PositionTracked))
   // The cpp compatibility layer is used to convert ovrPosef to Posef (see OVR_Math.h)
   auto pose = ts.HeadPose.ThePose;
 
-  scm::math::quat<double> rot_quat(pose.Orientation.x,
+  scm::math::quat<double> rot_quat(pose.Orientation.w,
+                           pose.Orientation.x,
                            pose.Orientation.y,
-                           pose.Orientation.z,
-                           pose.Orientation.w);
+                           pose.Orientation.z);
 
   ovrHmd_EndFrameTiming(hmd);
 
-  return scm::math::inverse(rot_quat.to_matrix());
+  return (rot_quat.to_matrix());
 }
 
 
