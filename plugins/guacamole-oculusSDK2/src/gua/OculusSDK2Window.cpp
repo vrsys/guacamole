@@ -250,7 +250,7 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
 
   fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.4f, 0.4f), "scale");
 
-  if (!is_left)
+  if (is_left)
     get_context()->render_context->set_viewport(scm::gl::viewport(config.get_left_position(), config.get_left_resolution()));
   else
     get_context()->render_context->set_viewport(scm::gl::viewport(config.get_right_position(), config.get_right_resolution()));

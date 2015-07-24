@@ -38,10 +38,6 @@
 //for internal distortion mesh handling
 #include <OVR.h>
 
-#define min(a,b)                      (((a) < (b)) ? (a) : (b))
-#define max(a,b)                      (((a) > (b)) ? (a) : (b))
-#define clamp(value, lb, ub)          max( lb, min( ub, value ))
-
 namespace gua {
 
 struct GUA_DLL OculusSDK2DistortionMesh {
@@ -121,38 +117,10 @@ struct GUA_DLL OculusSDK2DistortionMesh {
         tmp_blue_x_tex_coord -= 1.0;
         tmp_green_x_tex_coord -= 1.0;
       }
+        tmp_red_x_tex_coord = 1.0 - tmp_red_x_tex_coord ;
+        tmp_blue_x_tex_coord = 1.0 - tmp_blue_x_tex_coord;
+        tmp_green_x_tex_coord = 1.0 - tmp_green_x_tex_coord;
 
-/*
-      if(tmp_red_x_tex_coord > 1.0)
-        tmp_red_x_tex_coord -= 1.0;
-      else if(tmp_red_x_tex_coord < -1.0)
-        tmp_red_x_tex_coord += 1.0;
-
-      if(tmp_green_x_tex_coord > 1.0)
-        tmp_green_x_tex_coord -= 1.0;
-      else if(tmp_green_x_tex_coord < -1.0)
-        tmp_green_x_tex_coord += 1.0;
-
-      if(tmp_blue_x_tex_coord > 1.0)
-        tmp_blue_x_tex_coord -= 1.0;
-      else if(tmp_blue_x_tex_coord < -1.0)
-        tmp_blue_x_tex_coord += 1.0;
-
-      if(tmp_red_y_tex_coord > 1.0)
-        tmp_red_y_tex_coord -= 1.0;
-      else if(tmp_red_y_tex_coord < -1.0)
-        tmp_red_y_tex_coord += 1.0;
-
-      if(tmp_green_y_tex_coord > 1.0)
-        tmp_green_y_tex_coord -= 1.0;
-      else if(tmp_green_y_tex_coord < -1.0)
-        tmp_green_y_tex_coord += 1.0;
-
-      if(tmp_blue_y_tex_coord > 1.0)
-        tmp_blue_y_tex_coord -= 1.0;
-      else if(tmp_blue_y_tex_coord < -1.0)
-        tmp_blue_y_tex_coord += 1.0;
-*/
       scm::math::vec2f vTexCoordsRed(
         tmp_red_x_tex_coord,
         1.0-tmp_red_y_tex_coord );
